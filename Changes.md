@@ -113,6 +113,20 @@ Breaking Changes
 0.55.x.x (relative to 0.55.3.0)
 ========
 
+Improvements
+------------
+
+- Spreadsheet : Added sections for the logical grouping of columns in large spreadsheets.
+
+Fixes
+-----
+
+- ImageTransform : Fixed bug in channel data hashing.
+- Spreadsheet :
+  - Fixed bug that could break promoted Spreadsheet UIs.
+  - Fixed bug that meant the current width was not checked in the row name width popup menu.
+  - Fixed bug when undoing section resize.
+
 API
 ---
 
@@ -356,6 +370,11 @@ Breaking Changes
 - CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
+
+0.54.2.x (relative to 0.54.2.5)
+========
+
+- ImageTransform : Fixed bug in channel data hashing.
 
 0.54.2.5 (relative to 0.54.2.4)
 ========
