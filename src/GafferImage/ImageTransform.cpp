@@ -82,6 +82,12 @@ Box2f transform( const Box2f &b, const M33f &m )
 	return r;
 }
 
+Imath::Box2i samplerWindow( const Imath::V2i &tileOrigin, const Imath::M33f &samplerMatrix )
+{
+	const Box2f tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+	return box2fToBox2i( transform( tileBound, samplerMatrix ) );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -295,16 +301,15 @@ void ImageTransform::hashChannelData( const GafferImage::ImagePlug *parent, cons
 	}
 	else
 	{
-		// Rotation of either the input or the resampled input.
+		// Rotation of the resampled input.
 		FlatImageProcessor::hashChannelData( parent, context, h );
 
-		const ImagePlug *samplerImage; M33f samplerMatrix;
-		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
+		const M33f samplerMatrix = matrix.inverse() * resampleMatrix;
 
 		Sampler sampler(
-			samplerImage,
+			resampledInPlug(),
 			context->get<std::string>( ImagePlug::channelNameContextName ),
-			samplerRegion
+			samplerWindow( context->get<V2i>( ImagePlug::tileOriginContextName ), samplerMatrix )
 		);
 		sampler.hash( h );
 
@@ -322,15 +327,14 @@ IECore::ConstFloatVectorDataPtr ImageTransform::computeChannelData( const std::s
 	}
 	else
 	{
-		// Rotation of either the input or the resampled input.
+		// Rotation of the resampled input.
 
-		const ImagePlug *samplerImage; M33f samplerMatrix;
-		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
+		const M33f samplerMatrix = matrix.inverse() * resampleMatrix;
 
 		Sampler sampler(
-			samplerImage,
+			resampledInPlug(),
 			channelName,
-			samplerRegion
+			samplerWindow( tileOrigin, samplerMatrix )
 		);
 
 		FloatVectorDataPtr resultData = new FloatVectorData;
@@ -392,23 +396,4 @@ unsigned ImageTransform::operation( Imath::M33f &matrix, Imath::M33f &resampleMa
 	}
 
 	return op;
-}
-
-Imath::Box2i ImageTransform::sampler( unsigned op, const Imath::M33f &matrix, const Imath::M33f &resampleMatrix, const Imath::V2i &tileOrigin, const ImagePlug *&samplerImage, Imath::M33f &samplerMatrix ) const
-{
-	assert( op & Rotate );
-
-	if( op & ( Scale | Translate ) )
-	{
-		samplerImage = resampledInPlug();
-		samplerMatrix = matrix.inverse() * resampleMatrix;
-	}
-	else
-	{
-		samplerImage = inPlug();
-		samplerMatrix = matrix.inverse();
-	}
-
-	const Box2f tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	return box2fToBox2i( transform( tileBound, samplerMatrix ) );
 }
