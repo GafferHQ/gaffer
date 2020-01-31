@@ -296,7 +296,7 @@ void ImageTransform::hashChannelData( const GafferImage::ImagePlug *parent, cons
 	else
 	{
 		// Rotation of either the input or the resampled input.
-		ImageProcessor::hashChannelData( parent, context, h );
+		FlatImageProcessor::hashChannelData( parent, context, h );
 
 		const ImagePlug *samplerImage; M33f samplerMatrix;
 		const Box2i samplerRegion = sampler( op, matrix, resampleMatrix, context->get<V2i>( ImagePlug::tileOriginContextName ), samplerImage, samplerMatrix );
