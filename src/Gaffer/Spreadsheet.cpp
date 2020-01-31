@@ -121,13 +121,13 @@ void Spreadsheet::RowsPlug::removeColumn( size_t columnIndex )
 		throw IECore::Exception( "Column index out of range" );
 	}
 
-	for( auto &row : RowPlug::Range( *this ) )
-	{
-		row->cellsPlug()->removeChild( row->cellsPlug()->getChild( columnIndex ) );
-	}
 	for( auto o : outPlugs() )
 	{
 		o->removeChild( o->getChild( columnIndex ) );
+	}
+	for( auto &row : RowPlug::Range( *this ) )
+	{
+		row->cellsPlug()->removeChild( row->cellsPlug()->getChild( columnIndex ) );
 	}
 }
 

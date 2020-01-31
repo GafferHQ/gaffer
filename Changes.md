@@ -110,7 +110,7 @@ Breaking Changes
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:ornamentScale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
 
-0.55.x.x (relative to 0.55.3.0)
+0.55.4.0 (relative to 0.55.3.0)
 ========
 
 Improvements
@@ -126,6 +126,7 @@ Fixes
   - Fixed bug that could break promoted Spreadsheet UIs.
   - Fixed bug that meant the current width was not checked in the row name width popup menu.
   - Fixed bug when undoing section resize.
+  - Spreadsheet : Fixed crashes caused by removing a column.
 
 API
 ---
@@ -371,7 +372,7 @@ Breaking Changes
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
 
-0.54.2.x (relative to 0.54.2.5)
+0.54.2.6 (relative to 0.54.2.5)
 ========
 
 - ImageTransform : Fixed bug in channel data hashing.
