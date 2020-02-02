@@ -441,9 +441,58 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		InternedString sourceName = connection.source.name;
 		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
 
+		// Need to create converters if only one of a color or vector's components is connected
+		std::vector<std::string> splitName;
+		boost::split( splitName, sourceName.string(), boost::is_any_of( "." ) );
+		if( splitName.size() > 1 )
+		{
+			ccl::ShaderNode *snode;
+			std::string baseSourceName = splitName.front();
+			std::string component = splitName.back();
+			std::string input;
+			if( ( component == "r" ) || ( component == "g" ) || ( component == "b" ) )
+			{
+				input = "color";
+				ccl::SeparateRGBNode *separateRGBNode = new ccl::SeparateRGBNode();
+				snode = (ccl::ShaderNode*)separateRGBNode;
+				snode = shaderGraph->add( snode );
+			}
+			else if( ( component == "x" ) || ( component == "y" ) || ( component == "z" ) )
+			{
+				input = "vector";
+				ccl::SeparateXYZNode *separateXYZNode = new ccl::SeparateXYZNode();
+				snode = (ccl::ShaderNode*)separateXYZNode;
+				snode = shaderGraph->add( snode );
+			}
+			else
+			{
+				continue;
+			}
+
+			if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( sourceNode, baseSourceName ) )
+			{
+				if( ccl::ShaderInput *shaderSepInput = IECoreCycles::ShaderNetworkAlgo::input( snode, input ) )
+				{
+					shaderGraph->connect( shaderOutput, shaderSepInput );
+					if( ccl::ShaderOutput *shaderSepOutput = IECoreCycles::ShaderNetworkAlgo::output( snode, component ) )
+					{
+						if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) )
+						{
+							shaderGraph->connect( shaderSepOutput, shaderInput );
+						}
+					}
+				}
+			}
+			continue;
+		}
+
 		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( sourceNode, sourceName ) )
+		{
 			if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( node, parameterName ) )
+			{
 				shaderGraph->connect( shaderOutput, shaderInput );
+			}
+		}
 	}
 
 	if( !isOutput && ( shaderNetwork->outputShader() == shader ) && !isAOV )
