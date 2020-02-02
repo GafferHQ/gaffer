@@ -3631,13 +3631,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_outputs[name] = new CyclesOutput( output, m_scene );
 					}
 				}
-				else if( !ccl::Pass::contains( film->passes, passType ) )
-				{
-					m_outputs[name] = new CyclesOutput( output );
-				}
 				else
 				{
-					return;
+					m_outputs[name] = new CyclesOutput( output );
 				}
 			}
 		}
