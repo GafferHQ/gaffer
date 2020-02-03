@@ -238,7 +238,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 			s["r"]["state"].setValue( s["r"].State.Running )
 
-			handler.waitFor( 0.5 )
+			handler.waitFor( 1.0 )
 
 			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 
@@ -248,7 +248,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 			# and we should get the same result as before.
 			s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
 
-			handler.waitFor( 0.5 )
+			handler.waitFor( 1.0 )
 
 			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 
