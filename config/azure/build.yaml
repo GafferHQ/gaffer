@@ -86,6 +86,7 @@ jobs:
        DISPLAY: :99.0
        AZURE: 1
        USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
+       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
 
    - script: |
        ./config/validateRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz
