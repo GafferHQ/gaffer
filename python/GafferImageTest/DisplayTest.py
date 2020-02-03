@@ -260,8 +260,16 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		display = GafferImage.Display()
 		self.assertTrue( display.getDriver() is None )
 
+		dirtiedPlugs = GafferTest.CapturingSlot( display.plugDirtiedSignal() )
+
 		display.setDriver( driversCreated[0][0] )
 		self.assertTrue( display.getDriver().isSame( driversCreated[0][0] ) )
+
+		# Ensure all the output plugs have been dirtied
+		expectedDirty = { "__driverCount", "out" }.union( { c.getName() for c in display["out"].children() } )
+		self.assertEqual( expectedDirty, set( e[0].getName() for e in dirtiedPlugs ) )
+
+		del dirtiedPlugs[:]
 
 		driver.sendBucket( dataWindow, [ IECore.FloatVectorData( [ 0.5 ] * dataWindow.size().x * dataWindow.size().y ) ] )
 
@@ -272,6 +280,10 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			display["out"].channelData( "Y", imath.V2i( 0 ) ),
 			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		)
+
+		# Ensure only channel data has been dirtied
+		expectedDirty = { "channelData", "__channelDataCount", "out" }
+		self.assertEqual( set( e[0].getName() for e in dirtiedPlugs ), expectedDirty )
 
 		display2 = GafferImage.Display()
 		display2.setDriver( display.getDriver(), copy = True )
