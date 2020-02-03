@@ -1939,7 +1939,7 @@ class InstanceCache : public IECore::RefCounted
 					cobject = ObjectAlgo::convert( object, nodeName, m_scene );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
-				cobject->mesh->name = "instance:" + hash.toString();
+				cobject->mesh->name = hash.toString();
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
 			else
@@ -1950,8 +1950,6 @@ class InstanceCache : public IECore::RefCounted
 				cobject = new ccl::Object();
 				cobject->random_id = (unsigned)IECore::hash_value( instanceHash );
 				cobject->mesh = a->second.get();
-				string instanceName = "instance:" + hash.toString();
-				cobject->mesh->name = ccl::ustring( instanceName.c_str() );
 				cobject->name = ccl::ustring( nodeName.c_str() );
 			}
 
@@ -1982,6 +1980,17 @@ class InstanceCache : public IECore::RefCounted
 
 			ccl::Object *cobject = nullptr;
 
+			IECore::MurmurHash hash;
+			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+			{
+				(*it)->hash( hash );
+			}
+			for( std::vector<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; ++it )
+			{
+				hash.append( *it );
+			}
+			cyclesAttributes->hashGeometry( samples.front(), hash );
+
 			if( const IECoreScene::PointsPrimitive *points = IECore::runTimeCast<const IECoreScene::PointsPrimitive>( samples.front() ) )
 			{
 				MeshPrimitivePtr sphere = MeshPrimitive::createSphere( 1.0f, -1.0f, 1.0f, 360.0f, V2i( 12, 24 ) );
@@ -2003,6 +2012,7 @@ class InstanceCache : public IECore::RefCounted
 			{
 				cobject = ObjectAlgo::convert( samples, nodeName, m_scene );
 				cobject->random_id = (unsigned)IECore::hash_value( samples.front()->hash() );
+				cobject->mesh->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
 				// Push-back to vector needs thread locking.
@@ -2014,17 +2024,6 @@ class InstanceCache : public IECore::RefCounted
 				return Instance( cobjectPtr, cmeshPtr );
 			}
 
-			IECore::MurmurHash hash;
-			for( std::vector<const IECore::Object *>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
-			{
-				(*it)->hash( hash );
-			}
-			for( std::vector<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; ++it )
-			{
-				hash.append( *it );
-			}
-			cyclesAttributes->hashGeometry( samples.front(), hash );
-
 			Cache::accessor a;
 			m_instancedMeshes.insert( a, hash );
 
@@ -2033,14 +2032,15 @@ class InstanceCache : public IECore::RefCounted
 #ifdef WITH_CYCLES_OPENVDB
 				if( const IECoreVDB::VDBObject *vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
 				{
-					cobject = VDBAlgo::convert( vdbObject, "instance:" + hash.toString(), m_scene, cyclesAttributes->getVolumeIsovalue() );
+					cobject = VDBAlgo::convert( vdbObject, nodeName, m_scene, cyclesAttributes->getVolumeIsovalue() );
 				}
 				else
 #endif
 				{
-					cobject = ObjectAlgo::convert( samples, "instance:" + hash.toString(), m_scene );
+					cobject = ObjectAlgo::convert( samples, nodeName, m_scene );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
+				cobject->mesh->name = hash.toString();
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
 			else
@@ -2051,8 +2051,7 @@ class InstanceCache : public IECore::RefCounted
 				cobject = new ccl::Object();
 				cobject->random_id = (unsigned)IECore::hash_value( instanceHash );
 				cobject->mesh = a->second.get();
-				string instanceName = "instance:" + hash.toString();
-				cobject->name = ccl::ustring( instanceName.c_str() );
+				cobject->name = nodeName;
 			}
 
 			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
