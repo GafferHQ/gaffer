@@ -34,7 +34,10 @@
 #
 ##########################################################################
 
+import imath
+
 import Gaffer
+import GafferUI
 import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
@@ -54,5 +57,83 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"viewer:shortCut", "C",
+	"viewer:shouldAutoActivate", False,
+
+	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+
+	"toolbarLayout:customWidget:SelectionWidget:widgetType", "GafferSceneUI.CropWindowToolUI._StatusWidget",
+	"toolbarLayout:customWidget:SelectionWidget:section", "Bottom",
+
+	# So our widget doesn't center, add a stretchy spacer to the right
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.CropWindowToolUI._RightSpacer",
+	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
+	"toolbarLayout:customWidget:RightSpacer:index", -1,
 
 )
+
+class _RightSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 0 ) )
+
+class _StatusWidget( GafferUI.Frame ) :
+
+	def __init__( self, tool, **kw ) :
+
+		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
+
+		self.__tool = tool
+
+		with self :
+			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__row :
+				self.__infoIcon = GafferUI.Image( "infoSmall.png" )
+				self.__errorIcon = GafferUI.Image( "errorNotificationSmall.png" )
+				self.__warningIcon = GafferUI.Image( "warningSmall.png" )
+				GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
+				self.__label = GafferUI.Label( "" )
+
+		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ), scoped = False )
+
+		self.__update()
+
+	def context( self ) :
+
+		return self.ancestor( GafferUI.NodeToolbar ).getContext()
+
+	def getToolTip( self ) :
+
+		toolTip = GafferUI.Frame.getToolTip( self )
+		if toolTip :
+			return toolTip
+
+		return self.__tool.status()
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def __update( self, *unused ) :
+
+		if not self.__tool["active"].getValue() :
+			# We're about to be made invisible so all our update
+			# would do is cause unnecessary flickering in Qt's
+			# redraw.
+			return
+
+		status = self.__tool.status()
+		self.setVisible( bool(status) )
+
+		state, _, message = status.partition( ":" )
+
+		self.__label.setText( message.strip() )
+
+		state = state.strip().lower()
+		info = warn = error = False
+		if state == "error" :
+			error = True
+		elif state == "warning" :
+			warn = True
+		else :
+			info = True
+
+		self.__infoIcon.setVisible( info )
+		self.__warningIcon.setVisible( warn )
+		self.__errorIcon.setVisible( error )
