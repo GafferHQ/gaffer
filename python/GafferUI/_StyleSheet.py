@@ -118,7 +118,8 @@ _styleColors = {
 _themeVariables = {
 	"roundedCornerRadius" : "6px",
 	"widgetCornerRadius" : "4px",
-	"controlCornerRadius" : "2px"
+	"controlCornerRadius" : "2px",
+	"toolOverlayInset" : "44px"
 }
 
 substitutions = {
@@ -1211,12 +1212,25 @@ _styleSheet = string.Template(
 	}
 
 	#gafferColorInspector,
-	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"]
+	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
+	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"]
 	{
 		background: rgba( 42, 42, 42, 200 );
 		border-color: rgba( 30, 30, 30, 200 );
 		border-radius: 2px;
 		padding: 2px;
+	}
+
+	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"]
+	{
+		margin-left: $toolOverlayInset;
+		margin-right: auto;
+	}
+
+	#gafferColorInspector
+	{
+		margin-left: $toolOverlayInset;
+		margin-right: $toolOverlayInset;
 	}
 
 	/* Corner Rounding - also allow squaring based on adjacency of other widgets */

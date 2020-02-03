@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENEUI_CROPWINDOWTOOL_H
 #define GAFFERSCENEUI_CROPWINDOWTOOL_H
 
+#include "GafferImageUI/ImageView.h"
+
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
 
@@ -58,9 +60,14 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 
 	public :
 
-		CropWindowTool( SceneView *view, const std::string &name = defaultName<CropWindowTool>() );
+		CropWindowTool( GafferUI::View *view, const std::string &name = defaultName<CropWindowTool>() );
 
 		~CropWindowTool() override;
+
+		std::string status() const;
+
+		using StatusChangedSignal = boost::signal<void (CropWindowTool &)>;
+		StatusChangedSignal &statusChangedSignal();
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::CropWindowTool, CropWindowToolTypeId, GafferUI::Tool );
 
@@ -73,6 +80,16 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 		// scene changes.
 		GafferScene::ScenePlug *scenePlug();
 		const GafferScene::ScenePlug *scenePlug() const;
+		GafferImage::ImagePlug *imagePlug();
+		const GafferImage::ImagePlug *imagePlug() const;
+
+		// We hold separate state here as the tool requires data from several
+		// sources, that have their own invalidation life cycles.
+		void setOverlayMessage( const std::string &message );
+		void setErrorMessage( const std::string &message );
+
+		void setOverlayVisible( bool visible );
+		bool getOverlayVisible() const;
 
 		void viewportChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
@@ -81,12 +98,20 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 
 		void preRender();
 
+		void findScenePlug();
 		void findCropWindowPlug();
 		bool findCropWindowPlug( const GafferScene::SceneAlgo::History *history, bool enabledOnly  );
 		bool findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, bool enabledOnly  );
 
+		Imath::Box2f resolutionGate() const;
+
 		boost::signals::scoped_connection m_overlayRectangleChangedConnection;
 
+		std::string m_overlayMessage;
+		std::string m_errorMessage;
+		StatusChangedSignal m_statusChangedSignal;
+
+		bool m_needScenePlugSearch;
 		bool m_needCropWindowPlugSearch;
 		Gaffer::Box2fPlugPtr m_cropWindowPlug;
 		Gaffer::BoolPlugPtr m_cropWindowEnabledPlug; // may be null, even when m_cropWindowPlug is not
@@ -96,9 +121,12 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 		RectanglePtr m_overlay;
 
 		static size_t g_firstPlugIndex;
-		static ToolDescription<CropWindowTool, SceneView> g_toolDescription;
+		static ToolDescription<CropWindowTool, SceneView> g_sceneToolDescription;
+		static ToolDescription<CropWindowTool, GafferImageUI::ImageView> g_imageToolDescription;
 
 };
+
+IE_CORE_DECLAREPTR( CropWindowTool )
 
 } // namespace GafferSceneUI
 

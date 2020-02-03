@@ -1236,7 +1236,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		{
 			ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
 			RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
-			RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
+			RendererAlgo::outputOutputs( m_scene.get(), globals.get(), m_globals.get(), m_renderer.get() );
 			if( !m_globals || *m_globals != *globals )
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;

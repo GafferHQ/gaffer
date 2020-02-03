@@ -44,6 +44,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Process.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ClippingPlane.h"
@@ -572,4 +573,36 @@ ShaderTweaks *SceneAlgo::shaderTweaks( const ScenePlug *scene, const ScenePlug::
 		inheritancePath.pop_back();
 	}
 	return nullptr;
+}
+
+std::string SceneAlgo::sourceSceneName( const GafferImage::ImagePlug *image )
+{
+	if( !image )
+	{
+		return "";
+	}
+
+	// See if the image has the `gaffer:sourceScene` metadata entry that gives
+	// the root-relative path to the source scene plug
+	const ConstCompoundDataPtr metadata = image->metadata();
+	const StringData *plugPathData = metadata->member<StringData>( "gaffer:sourceScene" );
+
+	return plugPathData ? plugPathData->readable() : "";
+}
+
+ScenePlug *SceneAlgo::sourceScene( GafferImage::ImagePlug *image )
+{
+	const std::string path = sourceSceneName( image );
+	if( path.empty() )
+	{
+		return nullptr;
+	}
+
+	ScriptNode *scriptNode = image->source()->node()->scriptNode();
+	if( !scriptNode )
+	{
+		return nullptr;
+	}
+
+	return scriptNode->descendant<ScenePlug>( path );
 }

@@ -292,7 +292,7 @@ void Render::execute() const
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	RendererAlgo::outputOptions( globals.get(), renderer.get() );
-	RendererAlgo::outputOutputs( globals.get(), renderer.get() );
+	RendererAlgo::outputOutputs( inPlug(), globals.get(), renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`

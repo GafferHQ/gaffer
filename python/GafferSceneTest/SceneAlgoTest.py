@@ -34,12 +34,14 @@
 #
 ##########################################################################
 
-import unittest
 import imath
+import os
+import unittest
 
 import IECore
 
 import Gaffer
+import GafferImage
 import GafferScene
 import GafferSceneTest
 
@@ -564,6 +566,67 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		planeTweaks["shader"].setValue( "test:surface" )
 
 		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( planeTweaks["out"], "/plane", "test:surface" ), planeTweaks )
+
+	def testSourceScene( self ) :
+
+		b = Gaffer.Box()
+		b2 = Gaffer.Box()
+		p = GafferScene.Plane()
+		b["Box2"] = b2
+		b2["Plane"] = p
+
+		expectedPath = "Box.Box2.Plane.out"
+		self.assertEqual( p["out"].fullName(), expectedPath )
+
+		# Make a test image, we don't have a renderer to use to invoke the real output
+		# mechanism so we'll mock the result here.
+
+		c = GafferImage.Constant()
+		m = GafferImage.ImageMetadata()
+		o = GafferImage.ImageWriter()
+		m["in"].setInput( c["out"] )
+		o["in"].setInput( m["out"] )
+
+		pathWithoutMeta = os.path.join( self.temporaryDirectory(), "sceneAlgoSourceSceneWithoutMeta.exr" )
+		o["fileName"].setValue( pathWithoutMeta )
+		o.execute()
+
+		pathWithMeta = os.path.join( self.temporaryDirectory(), "sceneAlgoSourceSceneWithMeta.exr" )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "gaffer:sourceScene", IECore.StringData( expectedPath ), True, "sourceScene" ) )
+		o["fileName"].setValue( pathWithMeta )
+		o.execute()
+
+		inm = GafferImage.ImageReader()
+		im = GafferImage.ImageReader()
+		inm["fileName"].setValue( pathWithoutMeta )
+		im["fileName"].setValue( pathWithMeta )
+		self.assertTrue( "gaffer:sourceScene" not in inm["out"].metadata().keys() )
+		self.assertTrue( "gaffer:sourceScene" in im["out"].metadata().keys() )
+
+		# Test path retrieval
+		self.assertEqual( GafferScene.SceneAlgo.sourceSceneName( inm["out"] ), "" )
+		self.assertEqual( GafferScene.SceneAlgo.sourceSceneName( im["out"] ), expectedPath )
+
+		# Check plug retrieval without a script node
+		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( inm["out"] ) )
+		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( im["out"] ) )
+
+		# Add to a script
+
+		s = Gaffer.ScriptNode()
+		s["Box"] = b
+		s["ImageNoMeta"] = inm
+		s["ImageMeta"] = im
+
+		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( inm["out"] ) )
+		self.assertTrue( p["out"].isSame( GafferScene.SceneAlgo.sourceScene( im["out"] ) ) )
+
+		# Remove target plug
+
+		del s["Box"]["Box2"]
+
+		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( inm["out"] ) )
+		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( im["out"] ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -63,6 +63,22 @@ using namespace GafferSceneUI;
 namespace
 {
 
+struct StatusChangedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, CropWindowTool &t )
+	{
+		try
+		{
+			slot( CropWindowToolPtr( &t ) );
+		}
+		catch( const error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 boost::python::list selection( const TransformTool &tool )
 {
 	vector<TransformTool::Selection> selection;
@@ -140,7 +156,15 @@ void GafferSceneUIModule::bindTools()
 {
 
 	GafferBindings::NodeClass<SelectionTool>( nullptr, no_init );
-	GafferBindings::NodeClass<CropWindowTool>( nullptr, no_init );
+
+	{
+		GafferBindings::NodeClass<CropWindowTool>( nullptr, no_init )
+			.def( "status", &CropWindowTool::status )
+			.def( "statusChangedSignal", &CropWindowTool::statusChangedSignal, return_internal_reference<1>() )
+		;
+
+		GafferBindings::SignalClass<CropWindowTool::StatusChangedSignal, GafferBindings::DefaultSignalCaller<CropWindowTool::StatusChangedSignal>, StatusChangedSlotCaller>( "StatusChangedSignal" );
+	}
 
 	{
 		scope s = GafferBindings::NodeClass<TransformTool>( nullptr, no_init )

@@ -40,6 +40,8 @@
 #include "GafferScene/Filter.h"
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferImage/ImagePlug.h"
+
 #include "Gaffer/NumericPlug.h"
 
 #include "IECore/Export.h"
@@ -190,6 +192,27 @@ GAFFERSCENE_API SceneProcessor *objectTweaks( const ScenePlug *scene, const Scen
 
 /// Returns the last ShaderTweaks node to edit the specified attribute.
 GAFFERSCENE_API ShaderTweaks *shaderTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path, const IECore::InternedString &attributeName );
+
+/// Render Metadata
+/// ===============
+///
+/// Methods to determine information about the scene that produced an image.
+/// Gaffer's output code adds the name of the source ScenePlug into the image
+/// headers for renders, this metadata (or equivalent) must be present for
+/// these methods to function.
+/// NOTE: No attempts are made to track renaming or re-connections, so if the
+/// graph topology has changed since the image was rendered, results may vary.
+
+/// Returns the script-relative name of the source ScenePlug referenced by the
+/// supplied image. Note: this is the exact plug that was rendered so may
+/// include internal processing nodes not visible in the user-land node graph.
+/// If no metadata is present, and empty string is returned.
+GAFFERSCENE_API std::string sourceSceneName( const GafferImage::ImagePlug *image );
+
+/// Returns the source ScenePlug for the supplied image as per
+/// SceneAlgo::sourceSceneName or a nullptr if no metadata exists or the plug
+/// can't be found.
+GAFFERSCENE_API ScenePlug *sourceScene( GafferImage::ImagePlug *image );
 
 } // namespace SceneAlgo
 

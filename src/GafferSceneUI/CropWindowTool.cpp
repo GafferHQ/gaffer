@@ -36,10 +36,14 @@
 
 #include "GafferSceneUI/CropWindowTool.h"
 
+#include "GafferImageUI/ImageGadget.h"
+
 #include "GafferSceneUI/SceneView.h"
 
 #include "GafferScene/Options.h"
 #include "GafferScene/ScenePlug.h"
+
+#include "GafferImage/ImagePlug.h"
 
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
@@ -61,6 +65,50 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+using namespace GafferImage;
+using namespace GafferImageUI;
+
+
+//////////////////////////////////////////////////////////////////////////
+// Helpers
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void flipNDCOrigin( Box2f &box )
+{
+	const float tmp = box.min.y;
+	box.min.y = 1.0f - box.max.y;
+	box.max.y = 1.0f - tmp;
+}
+
+// This may well be useful in other tools. It simply finds the 'in' (or failing
+// that, 'out') ScenePlug of the node that produced the supplied image, based
+// on the render node reference in the image's metadata.
+GafferScene::ScenePlug *findSceneForImage( GafferImage::ImagePlug *image, std::string &message )
+{
+	const std::string scenePlugName = SceneAlgo::sourceSceneName( image );
+	if( scenePlugName.empty() )
+	{
+		message = "Error: No <b>gaffer:sourceScene</b> metadata in image";
+		return nullptr;
+	}
+
+	ScenePlug *scenePlug = SceneAlgo::sourceScene( image );
+	if( !scenePlug )
+	{
+		// Often the source plug is an internal plug such as __adaptedIn, we don't
+		// want to show this to users, so we just use the node name.
+		size_t separatorPos = scenePlugName.rfind( "." );
+		message = "Error: Unable to find the source node <b>" + scenePlugName.substr( 0, separatorPos ) + "</b>";
+		return nullptr;
+	}
+	return scenePlug;
+}
+
+} // namespace
+
 
 //////////////////////////////////////////////////////////////////////////
 // Overlay implementation
@@ -85,8 +133,8 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			DragEnd
 		};
 
-		Rectangle()
-			:	Gadget(), m_editable( true ), m_masked( false ), m_xDragEdge( 0 ), m_yDragEdge( 0 )
+		Rectangle( bool rasterSpace )
+			:	Gadget(), m_rasterSpace( rasterSpace ), m_editable( true ), m_masked( false ), m_dragInside( false ), m_xDragEdge( 0 ), m_yDragEdge( 0 )
 		{
 			mouseMoveSignal().connect( boost::bind( &Rectangle::mouseMove, this, ::_2 ) );
 			buttonPressSignal().connect( boost::bind( &Rectangle::buttonPress, this, ::_2 ) );
@@ -99,8 +147,19 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 		Imath::Box3f bound() const override
 		{
-			// We draw in raster space so don't have a sensible bound
 			return Box3f();
+			if( m_rasterSpace )
+			{
+				// We draw in raster space so don't have a sensible bound
+				return Box3f();
+			}
+			else
+			{
+				return Box3f(
+					V3f( m_rectangle.min.x, m_rectangle.min.y, 0 ),
+					V3f( m_rectangle.max.x, m_rectangle.max.y, 0 )
+				);
+			}
 		}
 
 		void setRectangle( const Imath::Box2f &rectangle )
@@ -144,21 +203,6 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			return m_rectangleChangedSignal;
 		}
 
-		void setCaption( const std::string &caption )
-		{
-			if( caption == m_caption )
-			{
-				return;
-			}
-			m_caption = caption;
-			requestRender();
-		}
-
-		const std::string &getCaption() const
-		{
-			return m_caption;
-		}
-
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override
@@ -178,8 +222,11 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			/// raster scope bit manually? Maybe that would let us write more reusable
 			/// gadgets, which could be used in any space, and we wouldn't need
 			/// eventPosition().
-			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-			ViewportGadget::RasterScope rasterScope( viewportGadget );
+			boost::optional<ViewportGadget::RasterScope> rasterScope;
+			if( m_rasterSpace )
+			{
+				rasterScope.emplace( ancestor<ViewportGadget>() );
+			}
 
 			glPushAttrib( GL_CURRENT_BIT | GL_LINE_BIT | GL_ENABLE_BIT );
 
@@ -187,14 +234,15 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 				{
 					if( m_editable )
 					{
-						style->renderSolidRectangle( m_rectangle );
+						static const Box2f extents( V2f( -100000 ), V2f( 100000 ) );
+						style->renderSolidRectangle( extents );
 					}
 				}
 				else
 				{
 					if( m_masked )
 					{
-						glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
+						glColor4f( 0.0f, 0.0f, 0.0f, 0.2f );
 						style->renderSolidRectangle( Box2f(
 							V2f( m_rectangle.min.x - 100000, m_rectangle.min.y ),
 							V2f( m_rectangle.max.x + 100000, m_rectangle.min.y - 100000 )
@@ -217,17 +265,6 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 					glLineWidth( 2.5f );
 					glColor4f( 1.0f, 0.33f, 0.33f, 1.0f );
 					style->renderRectangle( m_rectangle );
-
-					if( m_caption.size() )
-					{
-						glPushMatrix();
-
-							glTranslatef( m_rectangle.min.x + 5, m_rectangle.max.y + 10, 0.0f );
-							glScalef( 10.0f, -10.0f, 10.0f );
-							style->renderText( Style::LabelText, m_caption );
-
-						glPopMatrix();
-					}
 				}
 
 			glPopAttrib();
@@ -254,10 +291,18 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		bool mouseMove( const ButtonEvent &event )
 		{
 			int x, y;
-			hoveredEdges( event, x, y );
-			if( x && y )
+			bool inside;
+
+			hoveredEdges( event, x, y, inside );
+
+			if( !inside || event.modifiers == ButtonEvent::Modifiers::Shift )
 			{
-				Pointer::setCurrent( x * y > 0 ? "moveDiagonallyDown" : "moveDiagonallyUp" );
+				Pointer::setCurrent( "crossHair" );
+			}
+			else if( x && y )
+			{
+				const bool isDown = m_rasterSpace ? ( x * y > 0 ) : ( x * y < 0 );
+				Pointer::setCurrent( isDown ? "moveDiagonallyDown" : "moveDiagonallyUp" );
 			}
 			else if( x )
 			{
@@ -269,8 +314,9 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			}
 			else
 			{
-				Pointer::setCurrent( "" );
+				Pointer::setCurrent( "move" );
 			}
+
 			return false;
 		}
 
@@ -281,19 +327,20 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 				return false;
 			}
 
-			hoveredEdges( event, m_xDragEdge, m_yDragEdge );
-			return m_xDragEdge || m_yDragEdge;
+			hoveredEdges( event, m_xDragEdge, m_yDragEdge, m_dragInside );
+			return true;
 		}
 
 		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 		{
+			m_dragStart = eventPosition( event );
 			m_dragStartRectangle = m_rectangle;
 			return IECore::NullObject::defaultNullObject();
 		}
 
 		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 		{
-			if( gadget != this )
+			if( event.sourceGadget != this )
 			{
 				return false;
 			}
@@ -318,22 +365,37 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		{
 			const V2f p = eventPosition( event );
 			Box2f b = m_dragStartRectangle;
-			if( m_xDragEdge == -1 )
-			{
-				b.min.x = p.x;
-			}
-			else if( m_xDragEdge == 1 )
-			{
-				b.max.x = p.x;
-			}
 
-			if( m_yDragEdge == -1 )
+			if( !m_dragInside || event.modifiers == ButtonEvent::Modifiers::Shift )
 			{
-				b.min.y = p.y;
+				b.min = m_dragStart;
+				b.max = p;
 			}
-			else if( m_yDragEdge == 1 )
+			else if( m_xDragEdge || m_yDragEdge )
 			{
-				b.max.y = p.y;
+				if( m_xDragEdge == -1 )
+				{
+					b.min.x = p.x;
+				}
+				else if( m_xDragEdge == 1 )
+				{
+					b.max.x = p.x;
+				}
+
+				if( m_yDragEdge == -1 )
+				{
+					b.min.y = p.y;
+				}
+				else if( m_yDragEdge == 1 )
+				{
+					b.max.y = p.y;
+				}
+			}
+			else
+			{
+				const V2f offset = p - m_dragStart;
+				b.min += offset;
+				b.max += offset;
 			}
 
 			// fix max < min issues
@@ -349,12 +411,20 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			Pointer::setCurrent( "" );
 		}
 
-		void hoveredEdges( const ButtonEvent &event, int &x, int &y ) const
+		void hoveredEdges( const ButtonEvent &event, int &x, int &y, bool &inside ) const
 		{
-			const float threshold = 10;
+			static const float threshold = 10;
+			static const V2f threshold2f( threshold );
+
 			x = y = 0;
 
 			const V2f p = eventPosition( event );
+
+			Box2f thresholdRegion = m_rectangle;
+			thresholdRegion.min -= threshold2f;
+			thresholdRegion.max += threshold2f;
+
+			inside = thresholdRegion.intersects( p );
 
 			const float xMinDelta = fabs( p.x - m_rectangle.min.x );
 			const float xMaxDelta = fabs( p.x - m_rectangle.max.x );
@@ -382,18 +452,28 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		V2f eventPosition( const ButtonEvent &event ) const
 		{
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-			return viewportGadget->gadgetToRasterSpace( event.line.p1, this );
+			if( m_rasterSpace )
+			{
+				return viewportGadget->gadgetToRasterSpace( event.line.p1, this );
+			}
+			else
+			{
+				const ImageGadget *imageGadget = static_cast<const ImageGadget *>( viewportGadget->getPrimaryChild() );
+				return imageGadget->pixelAt( event.line );
+			}
 		}
+
+		bool m_rasterSpace;
 
 		Imath::Box2f m_rectangle;
 		UnarySignal m_rectangleChangedSignal;
-
-		std::string m_caption;
 
 		bool m_editable;
 		bool m_masked;
 
 		Imath::Box2f m_dragStartRectangle;
+		Imath::V2f m_dragStart;
+		bool m_dragInside;
 		int m_xDragEdge;
 		int m_yDragEdge;
 
@@ -406,14 +486,20 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CropWindowTool );
 
 size_t CropWindowTool::g_firstPlugIndex = 0;
-CropWindowTool::ToolDescription<CropWindowTool, SceneView> CropWindowTool::g_toolDescription;
+CropWindowTool::ToolDescription<CropWindowTool, SceneView> CropWindowTool::g_sceneToolDescription;
+CropWindowTool::ToolDescription<CropWindowTool, ImageView> CropWindowTool::g_imageToolDescription;
 
-CropWindowTool::CropWindowTool( SceneView *view, const std::string &name )
-	:	Tool( view, name ), m_needCropWindowPlugSearch( true ), m_overlayDirty( true ), m_overlay( new Rectangle() )
+CropWindowTool::CropWindowTool( View *view, const std::string &name )
+	:	Tool( view, name ), m_needScenePlugSearch( true ), m_needCropWindowPlugSearch( true ), m_overlayDirty( true )
 {
+	const bool rasterSpace = runTimeCast<SceneView>( view );
+	m_overlay = new Rectangle( rasterSpace );
+
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "__scene", Plug::In ) );
+	addChild( new ImagePlug( "__image", Plug::In ) );
 	scenePlug()->setInput( view->inPlug<ScenePlug>() );
+	imagePlug()->setInput( view->inPlug<ImagePlug>() );
 
 	m_overlay->setVisible( false );
 	m_overlay->setMasked( true );
@@ -432,6 +518,16 @@ CropWindowTool::~CropWindowTool()
 {
 }
 
+std::string CropWindowTool::status() const
+{
+	return getOverlayVisible() ? m_overlayMessage : m_errorMessage;
+}
+
+CropWindowTool::StatusChangedSignal &CropWindowTool::statusChangedSignal()
+{
+	return m_statusChangedSignal;
+}
+
 GafferScene::ScenePlug *CropWindowTool::scenePlug()
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );
@@ -442,6 +538,78 @@ const GafferScene::ScenePlug *CropWindowTool::scenePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
+GafferImage::ImagePlug *CropWindowTool::imagePlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 1 );
+}
+
+const GafferImage::ImagePlug *CropWindowTool::imagePlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 1 );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Overlay management and messaging
+//////////////////////////////////////////////////////////////////////////
+
+// We consider the tool to have two states, one where the overlay is visible and
+// the tool is considered 'working', the other when we hide the overlay for
+// some error reason.
+// Ideally, we'd just have a single message. When used with a SceneView though,
+// we need to consider both the input scene, and the viewers look-through
+// camera. This means that our resolution gate may vary independently of our
+// other dirty tracking for our scene/cropWindow plugs.
+// In order to be as lazy as possible, we check the gate is valid in preRender.
+// Most common status messages are generated during the search for either the
+// scene or crop window plug. If only the gate has changed (ie. the user has
+// changed the look-through camera), there is no need to go looking for any
+// plugs again. This is only ever an error state. If we over-wrote the 'working'
+// message for the overlay, we'd have to re-do our whole setup process even though
+// nothing has changed just to get the status message back.
+// Instead, we make the separation of an 'error message' (when the overlay
+// is hidden as we don't have enough information), and an 'overlay message', when
+// we have enough knowledge to present the tool to the user.
+// The public `status` method returns the appropriate message depending on
+// the state of the overlay.
+// This isn't great by any stretch of the imagination and there will most certainly
+// be some edge cases in here, were soon to have a revamp of tool status though as
+// part of Edit Scopes, so here it lies for now.
+
+void CropWindowTool::setOverlayMessage( const std::string &message )
+{
+	m_overlayMessage = message;
+	statusChangedSignal()( *this );
+}
+
+void CropWindowTool::setErrorMessage( const std::string &message )
+{
+	m_errorMessage = message;
+	statusChangedSignal()( *this );
+}
+
+void CropWindowTool::setOverlayVisible( bool visible )
+{
+	if( visible != getOverlayVisible() )
+	{
+		m_overlay->setVisible( visible );
+		statusChangedSignal()( *this );
+	}
+}
+
+bool CropWindowTool::getOverlayVisible() const
+{
+	return m_overlay->getVisible();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// State tracking
+//////////////////////////////////////////////////////////////////////////
+
+// NOTE: The whole way we track and report state here needs refactoring.
+// There are too many side effects. We need to prepare the state lazily on demand
+// for either status/preRender, rather than status being a push side effect of
+// render-driven state updates.
+
 void CropWindowTool::viewportChanged()
 {
 	m_overlayDirty = true;
@@ -449,18 +617,32 @@ void CropWindowTool::viewportChanged()
 
 void CropWindowTool::plugDirtied( const Gaffer::Plug *plug )
 {
+	// When hosted in an ImageView, the view isn't dirtied by scene changes
+	// (naturally) so just flagging the overlay dirty isn't enough.
+	bool requestRender = false;
+
 	if( plug == activePlug() )
 	{
-		m_overlay->setVisible( activePlug()->getValue() );
-		m_needCropWindowPlugSearch = m_overlayDirty = true;
+		m_needScenePlugSearch = m_needCropWindowPlugSearch = m_overlayDirty = true;
 	}
 	else if( plug == scenePlug()->globalsPlug() )
 	{
-		m_needCropWindowPlugSearch = m_overlayDirty = true;
+		requestRender = m_needCropWindowPlugSearch = m_overlayDirty = true;
 	}
-	else if( plug == m_cropWindowPlug || plug == m_cropWindowEnabledPlug )
+	else if( plug == imagePlug()->metadataPlug() )
 	{
-		m_overlayDirty = true;
+		m_needScenePlugSearch = m_needCropWindowPlugSearch = m_overlayDirty = true;
+	}
+	else if( plug == m_cropWindowPlug || plug == m_cropWindowEnabledPlug || plug == imagePlug()->formatPlug() )
+	{
+		requestRender = m_overlayDirty = true;
+	}
+
+	if( requestRender && runTimeCast<ImageView>( view() ) )
+	{
+		view()->viewportGadget()->renderRequestSignal()(
+			view()->viewportGadget()
+		);
 	}
 }
 
@@ -502,17 +684,22 @@ void CropWindowTool::overlayRectangleChanged( unsigned reason )
 	}
 
 	Box2f b = m_overlay->getRectangle();
-	Box2f resolutionGate = static_cast<SceneView *>( view() )->resolutionGate();
+	const Box2f r = resolutionGate();
 	b = Box2f(
 		V2f(
-			lerpfactor( b.min.x, resolutionGate.min.x, resolutionGate.max.x ),
-			lerpfactor( b.min.y, resolutionGate.min.y, resolutionGate.max.y )
+			lerpfactor( b.min.x, r.min.x, r.max.x ),
+			lerpfactor( b.min.y, r.min.y, r.max.y )
 		),
 		V2f(
-			lerpfactor( b.max.x, resolutionGate.min.x, resolutionGate.max.x ),
-			lerpfactor( b.max.y, resolutionGate.min.y, resolutionGate.max.y )
+			lerpfactor( b.max.x, r.min.x, r.max.x ),
+			lerpfactor( b.max.y, r.min.y, r.max.y )
 		)
 	);
+
+	if( runTimeCast<ImageView>( view() ) )
+	{
+		flipNDCOrigin( b );
+	}
 
 	UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
 
@@ -527,22 +714,43 @@ void CropWindowTool::overlayRectangleChanged( unsigned reason )
 
 void CropWindowTool::preRender()
 {
-	const Box2f resolutionGate = static_cast<SceneView *>( view() )->resolutionGate();
-	if( resolutionGate.isEmpty() )
+	if( !activePlug()->getValue() )
 	{
 		m_overlay->setVisible( false );
 		return;
 	}
 
-	if( !activePlug()->getValue() )
-	{
-		return;
-	}
+	const Box2f r = resolutionGate();
 
-	m_overlay->setVisible( true );
+	if( runTimeCast<SceneView>( view() ) )
+	{
+		// This is the only check we have that tells us whether we have an
+		// appropriate camera to support the presentation of a crop window.
+		// We don't have any other signals tied to this, hence the need to
+		// check here before render.
+		if( r.isEmpty() )
+		{
+			setErrorMessage( "Error: No applicable crop window for this view" );
+			setOverlayVisible( false );
+			return;
+		}
+
+		setOverlayVisible( true );
+	}
 
 	if( !m_overlayDirty )
 	{
+		return;
+	}
+	m_overlayDirty = false;
+
+	findScenePlug();
+
+	// This occurs in the ImageView hosted case, when we don't know which node
+	// may have rendered the image being viewed.
+	if( !scenePlug()->getInput() )
+	{
+		setOverlayVisible( false );
 		return;
 	}
 
@@ -552,23 +760,50 @@ void CropWindowTool::preRender()
 	{
 		cropWindow = m_cropWindowPlug->getValue();
 	}
+	if( runTimeCast<ImageView>( view() ) )
+	{
+		flipNDCOrigin( cropWindow );
+	}
 
 	BlockedConnection blockedConnection( m_overlayRectangleChangedConnection );
 	m_overlay->setRectangle(
 		Box2f(
 			V2f(
-				lerp( resolutionGate.min.x, resolutionGate.max.x, cropWindow.min.x ),
-				lerp( resolutionGate.min.y, resolutionGate.max.y, cropWindow.min.y )
+				lerp( r.min.x, r.max.x, cropWindow.min.x ),
+				lerp( r.min.y, r.max.y, cropWindow.min.y )
 			),
 			V2f(
-				lerp( resolutionGate.min.x, resolutionGate.max.x, cropWindow.max.x ),
-				lerp( resolutionGate.min.y, resolutionGate.max.y, cropWindow.max.y )
+				lerp( r.min.x, r.max.x, cropWindow.max.x ),
+				lerp( r.min.y, r.max.y, cropWindow.max.y )
 			)
 		)
 	);
 
-	m_overlayDirty = false;
+	setOverlayVisible( true );
 }
+
+void CropWindowTool::findScenePlug()
+{
+	if ( !m_needScenePlugSearch )
+	{
+		return;
+	}
+
+	if( runTimeCast<ImageView>( view() ) )
+	{
+		std::string msg;
+		ScenePlug *scene = findSceneForImage( imagePlug(), msg );
+		scenePlug()->setInput( scene );
+		if( !scene )
+		{
+			setErrorMessage( msg );
+		}
+	}
+
+	m_needScenePlugSearch = false;
+}
+
+
 
 void CropWindowTool::findCropWindowPlug()
 {
@@ -580,6 +815,8 @@ void CropWindowTool::findCropWindowPlug()
 	m_cropWindowPlug = nullptr;
 
 	Context::Scope scopedContext( view()->getContext() );
+
+	findScenePlug();
 
 	const GafferScene::ScenePlug::ScenePath rootPath;
 	SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
@@ -600,7 +837,7 @@ void CropWindowTool::findCropWindowPlug()
 		if( MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
 		{
 			m_overlay->setEditable( false );
-			m_overlay->setCaption( plugName + " is locked" );
+			setOverlayMessage( "Warning: <b>" + plugName + "</b> is locked" );
 		}
 		else
 		{
@@ -614,7 +851,10 @@ void CropWindowTool::findCropWindowPlug()
 			}
 
 			m_overlay->setEditable( plugEditable );
-			m_overlay->setCaption( plugEditable ? plugName : ( plugName + " isn't editable" ) );
+			setOverlayMessage( plugEditable
+				? ( "Info: Editing <b>" + plugName + "</b>" )
+				: ( "Warning: <b>" + plugName + "</b> isn't editable" )
+			);
 		}
 
 		m_cropWindowPlugDirtiedConnection = m_cropWindowPlug->node()->plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
@@ -622,7 +862,7 @@ void CropWindowTool::findCropWindowPlug()
 	else
 	{
 		m_overlay->setEditable( false );
-		m_overlay->setCaption( "No crop window found. Insert a StandardOptions node." );
+		setOverlayMessage( "Error: No crop window found. Insert a <b>StandardOptions</b> node." );
 		m_cropWindowPlugDirtiedConnection.disconnect();
 	}
 
@@ -685,4 +925,21 @@ bool CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, 
 	}
 
 	return false;
+}
+
+Box2f CropWindowTool::resolutionGate() const
+{
+	Box2f resolutionGate;
+	if( const SceneView *sceneView = runTimeCast<const SceneView>( view() ) )
+	{
+		resolutionGate = sceneView->resolutionGate();
+	}
+	else if( const ImageView *imageView = runTimeCast<const ImageView>( view() ) )
+	{
+		if( const ImagePlug *in = imageView->inPlug<ImagePlug>() )
+		{
+			resolutionGate = Box2f( V2f( 0 ), V2f( in->format().width(), in->format().height() ) );
+		}
+	}
+	return resolutionGate;
 }

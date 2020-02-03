@@ -248,6 +248,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
+				GafferUI.Spacer( imath.V2i( 0, 10 ) )
+
 				self.__positionLabel = GafferUI.Label()
 				self.__positionLabel._qtWidget().setFixedWidth( 90 )
 
@@ -262,6 +264,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Spacer( imath.V2i( 20, 10 ), imath.V2i( 20, 10 ) )
 
 				self.__hsvLabel = GafferUI.Label()
+
+				GafferUI.Spacer( imath.V2i( 0, 10 ) )
 
 		self.__pixel = imath.V2f( 0 )
 

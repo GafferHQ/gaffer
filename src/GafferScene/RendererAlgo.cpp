@@ -43,6 +43,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ClippingPlane.h"
@@ -1260,6 +1261,24 @@ struct ObjectOutput : public LocationOutput
 // Public methods for outputting globals.
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *scene )
+{
+	CompoundDataPtr param = output->parametersData()->copy();
+
+	const Node *node = scene->node();
+	const ScriptNode *script = node->scriptNode();
+
+	// Include the path to the render node to allow tools to back-track from the image
+	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
+
+	return new Output( output->getName(), output->getType(), output->getData(), param );
+}
+
+} // namespace
+
 namespace GafferScene
 {
 
@@ -1330,12 +1349,12 @@ void outputOptions( const IECore::CompoundObject *globals, const IECore::Compoun
 	}
 }
 
-void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
+void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
 {
-	outputOutputs( globals, /* previousGlobals = */ nullptr, renderer );
+	outputOutputs( scene, globals, /* previousGlobals = */ nullptr, renderer );
 }
 
-void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
+void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
 {
 	static const std::string prefix( "output:" );
 
@@ -1360,7 +1379,8 @@ void outputOutputs( const IECore::CompoundObject *globals, const IECore::Compoun
 			}
 			if( changedOrAdded )
 			{
-				renderer->output( it->first.string().substr( prefix.size() ), output );
+				ConstOutputPtr updatedOutput = addGafferOutputHeaders( output, scene );
+				renderer->output( it->first.string().substr( prefix.size() ), updatedOutput.get() );
 			}
 		}
 		else
