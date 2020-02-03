@@ -91,8 +91,8 @@ GAFFERSCENE_API SceneProcessorPtr createAdaptors();
 GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
-GAFFERSCENE_API void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 /// Utility class to handle all the set computations needed for a render.
 class GAFFERSCENE_API RenderSets : boost::noncopyable

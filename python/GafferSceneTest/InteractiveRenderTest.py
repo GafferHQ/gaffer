@@ -95,6 +95,36 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
+	def testMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 1.0 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertEqual( image.blindData(), IECore.CompoundData({"gaffer:sourceScene": IECore.StringData( "r.__adaptedIn" )}) )
+
 	def testAddAndRemoveOutput( self ):
 
 		s = Gaffer.ScriptNode()
