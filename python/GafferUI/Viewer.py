@@ -340,7 +340,9 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.primaryToolChangedSignal = Gaffer.Signal0()
 
 			if len( self.tools ) :
-				self.tools[0]["active"].setValue( True )
+				autoActivate = Gaffer.Metadata.value( self.tools[0], "viewer:shouldAutoActivate" )
+				if autoActivate is None or autoActivate :
+					self.tools[0]["active"].setValue( True )
 
 		def __toolPlugSet( self, plug ) :
 
