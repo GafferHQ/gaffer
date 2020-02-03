@@ -340,7 +340,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 		{
-			if( gadget != this )
+			if( event.sourceGadget != this )
 			{
 				return false;
 			}
