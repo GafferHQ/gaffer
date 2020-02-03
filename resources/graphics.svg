@@ -5028,6 +5028,30 @@
          id="path1604"
          sodipodi:nodetypes="ccccc" />
     </g>
+    <g
+       id="forExport:move"
+       inkscape:label="#move">
+      <rect
+         y="143.61218"
+         x="589"
+         height="8.75"
+         width="9.125"
+         id="rect1573"
+         style="opacity:1;fill:#fefefe;fill-opacity:1;stroke:none;stroke-width:2.41889763;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill" />
+      <path
+         sodipodi:nodetypes="ccccccccccccccccccccccccc"
+         inkscape:connector-curvature="0"
+         id="path1565"
+         d="m 593.58594,139.3432 -3.3463,3.82447 h 2.39025 v 3.82441 h -3.82441 v -2.39026 l -3.82447,3.3463 3.82447,3.34642 v -2.39026 h 3.82441 v 3.82441 h -2.39025 l 3.3463,3.82436 3.34642,-3.82436 h -2.39026 v -3.82441 h 3.82441 v 2.39026 l 3.82436,-3.34642 -3.82436,-3.3463 v 2.39026 h -3.82441 v -3.82441 h 2.39026 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:2.41889763;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill" />
+    </g>
+    <path
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       d="m 637,87 v 7 h -7 v 2 h 7 v 7 h 2 v -7 h 7 v -2 h -7 v -7 z"
+       transform="translate(0,52.362183)"
+       id="forExport:pointerCrossHair"
+       inkscape:connector-curvature="0"
+       inkscape:label="#pointerCrossHair" />
     <path
        sodipodi:nodetypes="cccccccc"
        inkscape:connector-curvature="0"

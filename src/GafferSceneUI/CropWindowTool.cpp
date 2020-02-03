@@ -134,7 +134,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		};
 
 		Rectangle( bool rasterSpace )
-			:	Gadget(), m_rasterSpace( rasterSpace ), m_editable( true ), m_masked( false ), m_xDragEdge( 0 ), m_yDragEdge( 0 )
+			:	Gadget(), m_rasterSpace( rasterSpace ), m_editable( true ), m_masked( false ), m_dragInside( false ), m_xDragEdge( 0 ), m_yDragEdge( 0 )
 		{
 			mouseMoveSignal().connect( boost::bind( &Rectangle::mouseMove, this, ::_2 ) );
 			buttonPressSignal().connect( boost::bind( &Rectangle::buttonPress, this, ::_2 ) );
@@ -234,7 +234,8 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 				{
 					if( m_editable )
 					{
-						style->renderSolidRectangle( m_rectangle );
+						static const Box2f extents( V2f( -100000 ), V2f( 100000 ) );
+						style->renderSolidRectangle( extents );
 					}
 				}
 				else
@@ -290,8 +291,15 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		bool mouseMove( const ButtonEvent &event )
 		{
 			int x, y;
-			hoveredEdges( event, x, y );
-			if( x && y )
+			bool inside;
+
+			hoveredEdges( event, x, y, inside );
+
+			if( !inside || event.modifiers == ButtonEvent::Modifiers::Shift )
+			{
+				Pointer::setCurrent( "crossHair" );
+			}
+			else if( x && y )
 			{
 				const bool isDown = m_rasterSpace ? ( x * y > 0 ) : ( x * y < 0 );
 				Pointer::setCurrent( isDown ? "moveDiagonallyDown" : "moveDiagonallyUp" );
@@ -306,8 +314,9 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			}
 			else
 			{
-				Pointer::setCurrent( "" );
+				Pointer::setCurrent( "move" );
 			}
+
 			return false;
 		}
 
@@ -318,12 +327,13 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 				return false;
 			}
 
-			hoveredEdges( event, m_xDragEdge, m_yDragEdge );
-			return m_xDragEdge || m_yDragEdge;
+			hoveredEdges( event, m_xDragEdge, m_yDragEdge, m_dragInside );
+			return true;
 		}
 
 		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 		{
+			m_dragStart = eventPosition( event );
 			m_dragStartRectangle = m_rectangle;
 			return IECore::NullObject::defaultNullObject();
 		}
@@ -355,22 +365,37 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		{
 			const V2f p = eventPosition( event );
 			Box2f b = m_dragStartRectangle;
-			if( m_xDragEdge == -1 )
-			{
-				b.min.x = p.x;
-			}
-			else if( m_xDragEdge == 1 )
-			{
-				b.max.x = p.x;
-			}
 
-			if( m_yDragEdge == -1 )
+			if( !m_dragInside || event.modifiers == ButtonEvent::Modifiers::Shift )
 			{
-				b.min.y = p.y;
+				b.min = m_dragStart;
+				b.max = p;
 			}
-			else if( m_yDragEdge == 1 )
+			else if( m_xDragEdge || m_yDragEdge )
 			{
-				b.max.y = p.y;
+				if( m_xDragEdge == -1 )
+				{
+					b.min.x = p.x;
+				}
+				else if( m_xDragEdge == 1 )
+				{
+					b.max.x = p.x;
+				}
+
+				if( m_yDragEdge == -1 )
+				{
+					b.min.y = p.y;
+				}
+				else if( m_yDragEdge == 1 )
+				{
+					b.max.y = p.y;
+				}
+			}
+			else
+			{
+				const V2f offset = p - m_dragStart;
+				b.min += offset;
+				b.max += offset;
 			}
 
 			// fix max < min issues
@@ -386,12 +411,20 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			Pointer::setCurrent( "" );
 		}
 
-		void hoveredEdges( const ButtonEvent &event, int &x, int &y ) const
+		void hoveredEdges( const ButtonEvent &event, int &x, int &y, bool &inside ) const
 		{
-			const float threshold = 10;
+			static const float threshold = 10;
+			static const V2f threshold2f( threshold );
+
 			x = y = 0;
 
 			const V2f p = eventPosition( event );
+
+			Box2f thresholdRegion = m_rectangle;
+			thresholdRegion.min -= threshold2f;
+			thresholdRegion.max += threshold2f;
+
+			inside = thresholdRegion.intersects( p );
 
 			const float xMinDelta = fabs( p.x - m_rectangle.min.x );
 			const float xMaxDelta = fabs( p.x - m_rectangle.max.x );
@@ -439,6 +472,8 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		bool m_masked;
 
 		Imath::Box2f m_dragStartRectangle;
+		Imath::V2f m_dragStart;
+		bool m_dragInside;
 		int m_xDragEdge;
 		int m_yDragEdge;
 
@@ -818,7 +853,8 @@ void CropWindowTool::findCropWindowPlug()
 			m_overlay->setEditable( plugEditable );
 			setOverlayMessage( plugEditable
 				? ( "Info: Editing <b>" + plugName + "</b>" )
-				: ( "Warning: <b>" + plugName + "</b> isn't editable" ) );
+				: ( "Warning: <b>" + plugName + "</b> isn't editable" )
+			);
 		}
 
 		m_cropWindowPlugDirtiedConnection = m_cropWindowPlug->node()->plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
