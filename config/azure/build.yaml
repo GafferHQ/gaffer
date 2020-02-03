@@ -80,7 +80,7 @@ jobs:
        AZURE: 1
 
    - script: |
-       ./install/$(Gaffer.Build.Name)/bin/gaffer test
+       ./install/$(Gaffer.Build.Name)/bin/gaffer test -stopOnFailure
      displayName: 'Test'
      env:
        DISPLAY: :99.0
