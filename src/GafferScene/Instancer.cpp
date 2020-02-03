@@ -37,6 +37,10 @@
 
 #include "GafferScene/Instancer.h"
 
+#include "GafferScene/SceneAlgo.h"
+
+#include "GafferScene/Private/ChildNamesMap.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
@@ -44,6 +48,7 @@
 
 #include "IECore/DataAlgo.h"
 #include "IECore/MessageHandler.h"
+#include "IECore/ObjectVector.h"
 #include "IECore/NullObject.h"
 #include "IECore/VectorTypedData.h"
 
@@ -64,6 +69,13 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
+namespace
+{
+
+InternedString g_prototypeRootName( "root" );
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 // EngineData
 //////////////////////////////////////////////////////////////////////////
@@ -78,7 +90,11 @@ class Instancer::EngineData : public Data
 
 		EngineData(
 			ConstObjectPtr object,
+			PrototypeMode mode,
 			const std::string &index,
+			const std::string &rootsVariable,
+			const StringVectorData *rootsList,
+			const ScenePlug *prototypes,
 			const std::string &id,
 			const std::string &position,
 			const std::string &orientation,
@@ -99,21 +115,14 @@ class Instancer::EngineData : public Data
 				return;
 			}
 
-			if( const IntVectorData *indices = m_primitive->variableData<IntVectorData>( index ) )
-			{
-				m_indices = &indices->readable();
-				if( m_indices->size() != numPoints() )
-				{
-					throw IECore::Exception( "Index primitive variable has incorrect size" );
-				}
-			}
+			initPrototypes( mode, index, rootsVariable, rootsList, prototypes );
 
 			if( const IntVectorData *ids = m_primitive->variableData<IntVectorData>( id ) )
 			{
 				m_ids = &ids->readable();
 				if( m_ids->size() != numPoints() )
 				{
-					throw IECore::Exception( "Id primitive variable has incorrect size" );
+					throw IECore::Exception( boost::str( boost::format( "Id primitive variable \"%1%\" has incorrect size" ) % id ) );
 				}
 			}
 
@@ -122,7 +131,7 @@ class Instancer::EngineData : public Data
 				m_positions = &p->readable();
 				if( m_positions->size() != numPoints() )
 				{
-					throw IECore::Exception( "Position primitive variable has incorrect size" );
+					throw IECore::Exception( boost::str( boost::format( "Position primitive variable \"%1%\" has incorrect size" ) % position ) );
 				}
 			}
 
@@ -131,7 +140,7 @@ class Instancer::EngineData : public Data
 				m_orientations = &o->readable();
 				if( m_orientations->size() != numPoints() )
 				{
-					throw IECore::Exception( "Orientation primitive variable has incorrect size" );
+					throw IECore::Exception( boost::str( boost::format( "Orientation primitive variable \"%1%\" has incorrect size" ) % orientation ) );
 				}
 			}
 
@@ -140,7 +149,7 @@ class Instancer::EngineData : public Data
 				m_scales = &s->readable();
 				if( m_scales->size() != numPoints() )
 				{
-					throw IECore::Exception( "Scale primitive variable has incorrect size" );
+					throw IECore::Exception( boost::str( boost::format( "Scale primitive variable \"%1%\" has incorrect size" ) % scale ) );
 				}
 			}
 			else if( const FloatVectorData *s = m_primitive->variableData<FloatVectorData>( scale ) )
@@ -148,7 +157,7 @@ class Instancer::EngineData : public Data
 				m_uniformScales = &s->readable();
 				if( m_uniformScales->size() != numPoints() )
 				{
-					throw IECore::Exception( "Scale primitive variable has incorrect size" );
+					throw IECore::Exception( boost::str( boost::format( "Uniform scale primitive variable \"%1%\" has incorrect size" ) % scale ) );
 				}
 			}
 
@@ -186,15 +195,30 @@ class Instancer::EngineData : public Data
 			IdsToPointIndices::const_iterator it = m_idsToPointIndices.find( i );
 			if( it == m_idsToPointIndices.end() )
 			{
-				throw IECore::Exception( "Invalid id" );
+				throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid" ) % name ) );
 			}
 
 			return it->second;
 		}
 
-		size_t prototypeIndex( size_t pointIndex ) const
+		size_t numValidPrototypes() const
 		{
-			return m_indices ? (*m_indices)[pointIndex] : 0;
+			return m_numValidPrototypes;
+		}
+
+		int prototypeIndex( size_t pointIndex ) const
+		{
+			return m_prototypeIndexRemap[ ( m_indices ? (*m_indices)[pointIndex] : 0 ) % m_numPrototypes ];
+		}
+
+		const ScenePlug::ScenePath &prototypeRoot( const InternedString &name ) const
+		{
+			return runTimeCast<const InternedStringVectorData>( m_roots[m_names->input( name ).index] )->readable();
+		}
+
+		const InternedStringVectorData *prototypeNames() const
+		{
+			return m_names->outputChildNames();
 		}
 
 		M44f instanceTransform( size_t pointIndex ) const
@@ -323,7 +347,128 @@ class Instancer::EngineData : public Data
 			}
 		}
 
+		void initPrototypes( PrototypeMode mode, const std::string &index, const std::string &rootsVariable, const StringVectorData *rootsList, const ScenePlug *prototypes )
+		{
+			const std::vector<std::string> *rootStrings = nullptr;
+
+			switch( mode )
+			{
+				case PrototypeMode::IndexedRootsList :
+				{
+					if( const auto *indices = m_primitive->variableData<IntVectorData>( index ) )
+					{
+						m_indices = &indices->readable();
+						if( m_indices->size() != numPoints() )
+						{
+							throw IECore::Exception( boost::str( boost::format( "prototypeIndex primitive variable \"%1%\" has incorrect size" ) % index ) );
+						}
+					}
+
+					rootStrings = &rootsList->readable();
+
+					break;
+				}
+				case PrototypeMode::IndexedRootsVariable :
+				{
+					if( const auto *indices = m_primitive->variableData<IntVectorData>( index ) )
+					{
+						m_indices = &indices->readable();
+						if( m_indices->size() != numPoints() )
+						{
+							throw IECore::Exception( boost::str( boost::format( "prototypeIndex primitive variable \"%1%\" has incorrect size" ) % index ) );
+						}
+					}
+
+					const auto *roots = m_primitive->variableData<StringVectorData>( rootsVariable, PrimitiveVariable::Constant );
+					if( !roots )
+					{
+						std::string message = boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must be Constant StringVectorData when using IndexedRootsVariable mode" ) % rootsVariable );
+						if( m_primitive->variables.find( rootsVariable ) == m_primitive->variables.end() )
+						{
+							message += ", but it does not exist";
+						}
+						throw IECore::Exception( message );
+					}
+
+					rootStrings = &roots->readable();
+					if( rootStrings->empty() )
+					{
+						throw IECore::Exception( boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must specify at least one root location" ) % rootsVariable ) );
+					}
+
+					break;
+				}
+				case PrototypeMode::RootPerVertex :
+				{
+					const auto view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Vertex );
+					if( !view )
+					{
+						std::string message = boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must be Vertex StringVectorData when using RootPerVertex mode" ) % rootsVariable );
+						if( m_primitive->variables.find( rootsVariable ) == m_primitive->variables.end() )
+						{
+							message += ", but it does not exist";
+						}
+						throw IECore::Exception( message );
+					}
+
+					m_indices = view->indices();
+					rootStrings = &view->data();
+					if( rootStrings->empty() )
+					{
+						throw IECore::Exception( boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must specify at least one root location" ) % rootsVariable ) );
+					}
+
+					break;
+				}
+			}
+
+			std::vector<ConstInternedStringVectorDataPtr> inputNames;
+			inputNames.reserve( rootStrings->size() );
+			m_roots.reserve( rootStrings->size() );
+			m_prototypeIndexRemap.reserve( rootStrings->size() );
+
+			size_t i = 0;
+			ScenePlug::ScenePath path;
+			for( const auto &root : *rootStrings )
+			{
+				ScenePlug::stringToPath( root, path );
+				if( !SceneAlgo::exists( prototypes, path ) )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Prototype root \"%1%\" does not exist in the `prototypes` scene" ) % root ) );
+				}
+
+				if( path.empty() )
+				{
+					if( root == "/" )
+					{
+						inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
+						m_roots.emplace_back( new InternedStringVectorData( path ) );
+						m_prototypeIndexRemap.emplace_back( i++ );
+					}
+					else
+					{
+						m_prototypeIndexRemap.emplace_back( -1 );
+					}
+				}
+				else
+				{
+					inputNames.emplace_back( new InternedStringVectorData( { path.back() } ) );
+					m_roots.emplace_back( new InternedStringVectorData( path ) );
+					m_prototypeIndexRemap.emplace_back( i++ );
+				}
+			}
+
+			m_names = new Private::ChildNamesMap( inputNames );
+			m_numPrototypes = m_prototypeIndexRemap.size();
+			m_numValidPrototypes = m_names->outputChildNames()->readable().size();
+		}
+
 		IECoreScene::ConstPrimitivePtr m_primitive;
+		size_t m_numPrototypes;
+		size_t m_numValidPrototypes;
+		Private::ChildNamesMapPtr m_names;
+		std::vector<InternedStringVectorDataPtr> m_roots;
+		std::vector<int> m_prototypeIndexRemap;
 		const std::vector<int> *m_indices;
 		const std::vector<int> *m_ids;
 		const std::vector<Imath::V3f> *m_positions;
@@ -355,7 +500,10 @@ Instancer::Instancer( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name", Plug::In, "instances" ) );
 	addChild( new ScenePlug( "prototypes" ) );
+	addChild( new IntPlug( "prototypeMode", Plug::In, (int)PrototypeMode::IndexedRootsList, /* min */ (int)PrototypeMode::IndexedRootsList, /* max */ (int)PrototypeMode::RootPerVertex ) );
 	addChild( new StringPlug( "prototypeIndex", Plug::In, "instanceIndex" ) );
+	addChild( new StringPlug( "prototypeRoots", Plug::In, "prototypeRoots" ) );
+	addChild( new StringVectorDataPlug( "prototypeRootsList", Plug::In, new StringVectorData ) );
 	addChild( new StringPlug( "id", Plug::In, "instanceId" ) );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "orientation", Plug::In ) );
@@ -390,94 +538,124 @@ const ScenePlug *Instancer::prototypesPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::IntPlug *Instancer::prototypeModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::IntPlug *Instancer::prototypeModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::StringPlug *Instancer::prototypeIndexPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::StringPlug *Instancer::prototypeIndexPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *Instancer::prototypeRootsPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *Instancer::prototypeRootsPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::StringVectorDataPlug *Instancer::prototypeRootsListPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::StringVectorDataPlug *Instancer::prototypeRootsListPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::StringPlug *Instancer::idPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::StringPlug *Instancer::idPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::StringPlug *Instancer::positionPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::StringPlug *Instancer::positionPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::StringPlug *Instancer::orientationPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::StringPlug *Instancer::orientationPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::StringPlug *Instancer::scalePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::StringPlug *Instancer::scalePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringPlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::StringPlug *Instancer::attributesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 10 );
 }
 
 const Gaffer::StringPlug *Instancer::attributesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 10 );
 }
 
 Gaffer::StringPlug *Instancer::attributePrefixPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+	return getChild<StringPlug>( g_firstPlugIndex + 11 );
 }
 
 const Gaffer::StringPlug *Instancer::attributePrefixPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+	return getChild<StringPlug>( g_firstPlugIndex + 11 );
 }
 
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 9 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 12 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 9 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 12 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::prototypeChildNamesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 10 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 13 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::prototypeChildNamesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 10 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 13 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -486,7 +664,11 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 
 	if(
 		input == inPlug()->objectPlug() ||
+		input == prototypeModePlug() ||
 		input == prototypeIndexPlug() ||
+		input == prototypeRootsPlug() ||
+		input == prototypeRootsListPlug() ||
+		input == prototypesPlug()->childNamesPlug() ||
 		input == idPlug() ||
 		input == positionPlug() ||
 		input == orientationPlug() ||
@@ -498,14 +680,10 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		outputs.push_back( enginePlug() );
 	}
 
-	if(
-		input == enginePlug() ||
-		input == prototypesPlug()->childNamesPlug()
-	)
+	if( input == enginePlug() )
 	{
 		outputs.push_back( prototypeChildNamesPlug() );
 	}
-
 }
 
 void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -515,7 +693,13 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	if( output == enginePlug() )
 	{
 		inPlug()->objectPlug()->hash( h );
+
+		prototypeModePlug()->hash( h );
 		prototypeIndexPlug()->hash( h );
+		prototypeRootsPlug()->hash( h );
+		prototypeRootsListPlug()->hash( h );
+		h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
+
 		idPlug()->hash( h );
 		positionPlug()->hash( h );
 		orientationPlug()->hash( h );
@@ -526,7 +710,6 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	else if( output == prototypeChildNamesPlug() )
 	{
 		enginePlug()->hash( h );
-		h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
 	}
 }
 
@@ -537,10 +720,27 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	// branch.
 	if( output == enginePlug() )
 	{
+		PrototypeMode mode = (PrototypeMode)prototypeModePlug()->getValue();
+		ConstStringVectorDataPtr prototypeRootsList = prototypeRootsListPlug()->getValue();
+		if( mode == PrototypeMode::IndexedRootsList && prototypeRootsList->readable().empty() )
+		{
+			const auto childNames = prototypesPlug()->childNames( ScenePath() );
+			prototypeRootsList = new StringVectorData(
+				std::vector<string>(
+					childNames->readable().begin(),
+					childNames->readable().end()
+				)
+			);
+		}
+
 		static_cast<ObjectPlug *>( output )->setValue(
 			new EngineData(
 				inPlug()->objectPlug()->getValue(),
+				mode,
 				prototypeIndexPlug()->getValue(),
+				prototypeRootsPlug()->getValue(),
+				prototypeRootsList.get(),
+				prototypesPlug(),
 				idPlug()->getValue(),
 				positionPlug()->getValue(),
 				orientationPlug()->getValue(),
@@ -560,23 +760,26 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		// passes over the input points, where N is the number
 		// of prototypes.
 		ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug()->getValue() );
-		ConstInternedStringVectorDataPtr prototypeNames = prototypesPlug()->childNames( ScenePath() );
+		const auto &prototypeNames = engine->prototypeNames()->readable();
 
 		vector<vector<size_t>> indexedPrototypeChildIds;
 
-		int numPrototypes = prototypeNames->readable().size();
+		size_t numPrototypes = engine->numValidPrototypes();
 		if( numPrototypes )
 		{
 			indexedPrototypeChildIds.resize( numPrototypes );
 			for( size_t i = 0, e = engine->numPoints(); i < e; ++i )
 			{
-				size_t prototypeIndex = engine->prototypeIndex( i ) % numPrototypes;
-				indexedPrototypeChildIds[prototypeIndex].push_back( engine->instanceId( i ) );
+				int prototypeIndex = engine->prototypeIndex( i );
+				if( prototypeIndex != -1 )
+				{
+					indexedPrototypeChildIds[prototypeIndex].push_back( engine->instanceId( i ) );
+				}
 			}
 		}
 
 		CompoundDataPtr result = new CompoundData;
-		for( int i = 0; i < numPrototypes; i++ )
+		for( size_t i = 0; i < numPrototypes; ++i )
 		{
 			// Sort and uniquify ids before converting to string
 			std::sort( indexedPrototypeChildIds[i].begin(), indexedPrototypeChildIds[i].end() );
@@ -586,9 +789,9 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			InternedStringVectorDataPtr prototypeChildNames = new InternedStringVectorData;
 			for( size_t id : indexedPrototypeChildIds[i] )
 			{
-				prototypeChildNames->writable().push_back( InternedString( id ) );
+				prototypeChildNames->writable().emplace_back( id );
 			}
-			result->writable()[prototypeNames->readable()[i]] = prototypeChildNames;
+			result->writable()[prototypeNames[i]] = prototypeChildNames;
 		}
 
 		static_cast<AtomicCompoundDataPlug *>( output )->setValue( result );
@@ -632,7 +835,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		h.append( branchPath.back() );
 
 		{
-			PrototypeScope scope( context, branchPath );
+			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 			prototypesPlug()->transformPlug()->hash( h );
 			prototypesPlug()->boundPlug()->hash( h );
 		}
@@ -640,7 +843,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		h = prototypesPlug()->boundPlug()->hash();
 	}
 }
@@ -673,7 +876,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 		M44f childTransform;
 		Box3f childBound;
 		{
-			PrototypeScope scope( context, branchPath );
+			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 			childTransform = prototypesPlug()->transformPlug()->getValue();
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
@@ -709,7 +912,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		return prototypesPlug()->boundPlug()->getValue();
 	}
 }
@@ -734,7 +937,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 		// "/instances/<prototypeName>/<id>"
 		BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
 		{
-			PrototypeScope scope( context, branchPath );
+			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 			prototypesPlug()->transformPlug()->hash( h );
 		}
 		engineHash( parentPath, context, h );
@@ -743,7 +946,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		h = prototypesPlug()->transformPlug()->hash();
 	}
 }
@@ -760,7 +963,7 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 		// "/instances/<prototypeName>/<id>"
 		M44f result;
 		{
-			PrototypeScope scope( context, branchPath );
+			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 			result = prototypesPlug()->transformPlug()->getValue();
 		}
 		ConstEngineDataPtr e = engine( parentPath, context );
@@ -771,7 +974,7 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		return prototypesPlug()->transformPlug()->getValue();
 	}
 }
@@ -786,20 +989,22 @@ bool Instancer::affectsBranchAttributes( const Gaffer::Plug *input ) const
 
 void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath.size() <= 2 )
+	if( branchPath.size() <= 1 )
 	{
-		// "/" or "/instances" or "/instances/<prototypeName>"
+		// "/" or "/instances"
 		h = outPlug()->attributesPlug()->defaultValue()->Object::hash();
+	}
+	else if( branchPath.size() == 2 )
+	{
+		// "/instances/<prototypeName>"
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		h = prototypesPlug()->attributesPlug()->hash();
 	}
 	else if( branchPath.size() == 3 )
 	{
 		// "/instances/<prototypeName>/<id>"
 		BranchCreator::hashBranchAttributes( parentPath, branchPath, context, h );
 		{
-			{
-				PrototypeScope scope( context, branchPath );
-				prototypesPlug()->attributesPlug()->hash( h );
-			}
 			ConstEngineDataPtr e = engine( parentPath, context );
 			if( e->numInstanceAttributes() )
 			{
@@ -810,47 +1015,41 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		h = prototypesPlug()->attributesPlug()->hash();
 	}
 }
 
 IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath.size() <= 2 )
+	if( branchPath.size() <= 1 )
 	{
-		// "/" or "/instances" or "/instances/<prototypeName>"
+		// "/" or "/instances"
 		return outPlug()->attributesPlug()->defaultValue();
+	}
+	else if( branchPath.size() == 2 )
+	{
+		// "/instances/<prototypeName>"
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		return prototypesPlug()->attributesPlug()->getValue();
 	}
 	else if( branchPath.size() == 3 )
 	{
 		// "/instances/<prototypeName>/<id>"
-		ConstCompoundObjectPtr baseAttributes;
-		{
-			PrototypeScope scope( context, branchPath );
-			baseAttributes = prototypesPlug()->attributesPlug()->getValue();
-		}
-
 		ConstEngineDataPtr e = engine( parentPath, context );
 		if( e->numInstanceAttributes() )
 		{
-			CompoundObjectPtr attributes = e->instanceAttributes( e->pointIndex( branchPath[2] ) );
-			CompoundObject::ObjectMap &writableAttributes = attributes->members();
-			for( auto &attribute : baseAttributes->members() )
-			{
-				writableAttributes.insert( attribute );
-			}
-			return attributes;
+			return e->instanceAttributes( e->pointIndex( branchPath[2] ) );
 		}
 		else
 		{
-			return baseAttributes;
+			return outPlug()->attributesPlug()->defaultValue();
 		}
 	}
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		return prototypesPlug()->attributesPlug()->getValue();
 	}
 }
@@ -862,7 +1061,10 @@ bool Instancer::processesRootObject() const
 
 bool Instancer::affectsBranchObject( const Gaffer::Plug *input ) const
 {
-	return input == prototypesPlug()->objectPlug();
+	return
+		input == prototypesPlug()->objectPlug() ||
+		input == enginePlug()
+	;
 }
 
 void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -875,7 +1077,7 @@ void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		h = prototypesPlug()->objectPlug()->hash();
 	}
 }
@@ -890,7 +1092,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		return prototypesPlug()->objectPlug()->getValue();
 	}
 }
@@ -900,7 +1102,7 @@ bool Instancer::affectsBranchChildNames( const Gaffer::Plug *input ) const
 	return
 		input == namePlug() ||
 		input == prototypeChildNamesPlug() ||
-		input == prototypesPlug()->childNamesPlug()
+		input == enginePlug()
 	;
 }
 
@@ -915,7 +1117,8 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	else if( branchPath.size() == 1 )
 	{
 		// "/instances"
-		h = prototypesPlug()->childNamesHash( ScenePath() );
+		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
+		engineHash( parentPath, context, h );
 	}
 	else if( branchPath.size() == 2 )
 	{
@@ -927,7 +1130,7 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		h = prototypesPlug()->childNamesPlug()->hash();
 	}
 }
@@ -949,7 +1152,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	else if( branchPath.size() == 1 )
 	{
 		// "/instances"
-		return prototypesPlug()->childNames( ScenePath() );
+		return engine( parentPath, context )->prototypeNames();
 	}
 	else if( branchPath.size() == 2 )
 	{
@@ -960,7 +1163,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( context, branchPath );
+		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
 		return prototypesPlug()->childNamesPlug()->getValue();
 	}
 }
@@ -985,7 +1188,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchSetNames( const
 bool Instancer::affectsBranchSet( const Gaffer::Plug *input ) const
 {
 	return
-		input == prototypesPlug()->childNamesPlug() ||
+		input == enginePlug() ||
 		input == prototypesPlug()->setPlug() ||
 		input == prototypeChildNamesPlug() ||
 		input == namePlug()
@@ -996,7 +1199,7 @@ void Instancer::hashBranchSet( const ScenePath &parentPath, const IECore::Intern
 {
 	BranchCreator::hashBranchSet( parentPath, setName, context, h );
 
-	h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
+	engineHash( parentPath, context, h );
 	prototypeChildNamesHash( parentPath, context, h );
 	prototypesPlug()->setPlug()->hash( h );
 	namePlug()->hash( h );
@@ -1004,7 +1207,6 @@ void Instancer::hashBranchSet( const ScenePath &parentPath, const IECore::Intern
 
 IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
-	ConstInternedStringVectorDataPtr prototypeNames = prototypesPlug()->childNames( ScenePath() );
 	IECore::ConstCompoundDataPtr prototypeChildNames = this->prototypeChildNames( parentPath, context );
 	ConstPathMatcherDataPtr inputSet = prototypesPlug()->setPlug()->getValue();
 
@@ -1012,19 +1214,18 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &pa
 	PathMatcher &outputSet = outputSetData->writable();
 
 	vector<InternedString> branchPath( { namePlug()->getValue() } );
-	vector<InternedString> instancePath( 1 );
 
-	for( const auto &prototypeName : prototypeNames->readable() )
+	ConstEngineDataPtr engine = this->engine( parentPath, context );
+	for( const auto &prototypeName : engine->prototypeNames()->readable() )
 	{
 		branchPath.resize( 2 );
 		branchPath.back() = prototypeName;
-		instancePath.back() = prototypeName;
 
-		PathMatcher instanceSet = inputSet->readable().subTree( instancePath );
+		PathMatcher instanceSet = inputSet->readable().subTree( engine->prototypeRoot( prototypeName ) );
 
 		const vector<InternedString> &childNames = prototypeChildNames->member<InternedStringVectorData>( prototypeName )->readable();
 
-		branchPath.push_back( InternedString() );
+		branchPath.emplace_back( InternedString() );
 		for( const auto &childName : childNames )
 		{
 			branchPath.back() = childName;
@@ -1059,16 +1260,23 @@ void Instancer::prototypeChildNamesHash( const ScenePath &parentPath, const Gaff
 	prototypeChildNamesPlug()->hash( h );
 }
 
-Instancer::PrototypeScope::PrototypeScope( const Gaffer::Context *context, const ScenePath &branchPath )
-	:	EditableScope( context )
+Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath &parentPath, const ScenePath &branchPath )
+	:	Gaffer::Context::EditableScope( context )
 {
 	assert( branchPath.size() >= 2 );
-	ScenePath prototypePath;
-	prototypePath.reserve( 1 + ( branchPath.size() > 3 ? branchPath.size() - 3 : 0 ) );
-	prototypePath.push_back( branchPath[1] );
+
+	set( ScenePlug::scenePathContextName, parentPath );
+	const ScenePlug::ScenePath &prototypeRoot = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() )->prototypeRoot( branchPath[1] );
+
 	if( branchPath.size() > 3 )
 	{
+		ScenePlug::ScenePath prototypePath( prototypeRoot );
+		prototypePath.reserve( prototypeRoot.size() + branchPath.size() - 3 );
 		prototypePath.insert( prototypePath.end(), branchPath.begin() + 3, branchPath.end() );
+		set( ScenePlug::scenePathContextName, prototypePath );
 	}
-	set( ScenePlug::scenePathContextName, prototypePath );
+	else
+	{
+		set( ScenePlug::scenePathContextName, prototypeRoot );
+	}
 }

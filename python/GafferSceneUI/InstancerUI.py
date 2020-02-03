@@ -59,6 +59,10 @@ Gaffer.Metadata.registerNode(
 	"layout:section:Settings.Transforms:collapsed", False,
 	"layout:section:Settings.Attributes:collapsed", False,
 
+	"layout:activator:modeIsIndexedRootsList", lambda node : node["prototypeMode"].getValue() == GafferScene.Instancer.PrototypeMode.IndexedRootsList,
+	"layout:activator:modeIsNotIndexedRootsList", lambda node : node["prototypeMode"].getValue() != GafferScene.Instancer.PrototypeMode.IndexedRootsList,
+	"layout:activator:modeIsNotRootPerVertex", lambda node : node["prototypeMode"].getValue() != GafferScene.Instancer.PrototypeMode.RootPerVertex,
+
 	plugs = {
 
 		"parent" : [
@@ -95,19 +99,52 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The scene containing the prototypes to be applied to
-			each vertex. Specify multiple prototypes by parenting
-			them at the root of the scene :
+			each vertex. Use the `prototypeMode` and associated
+			plugs to control the mapping between prototypes and
+			instances.
 
-			- /prototype0
-			- /prototype1
-			- /prototype2
-
-			Note that the prototypes are not limited to being a
-			single object : they can each have arbitrary child
-			hierarchies.
+			Note that the prototypes are not limited to being a single
+			object - they can have arbitrary child hierarchies.
 			""",
 
 			"plugValueWidget:type", "",
+
+		],
+
+		"prototypeMode" : [
+
+			"description",
+			"""
+			The method used to define how the prototypes map
+			onto each instance.
+
+			- In "Indexed (Roots List)" mode, the `prototypeIndex`
+			  primitive variable must be an integer per-vertex.
+			  Optionally, a path in the prototypes scene corresponding
+			  to each index can be specified via the `prototypeRootsList`
+			  plug. If no roots are specified, an index of 0 applies the
+			  first location from the prototypes scene, an index of 1
+			  applies the second, and so on.
+
+			- In "Indexed (Roots Variable)" mode, the `prototypeIndex`
+			  primitive variable must be an integer per-vertex, and
+			  the `prototypeRoots` primitive variable must be a separate
+			  constant string array specifying a path in the prototypes
+			  scene corresponding to each index.
+
+			- In "Root per Vertex" mode, the `prototypeRoots` primitive
+			  variable must be a string per-vertex which will be used to
+			  specify a path in the prototypes scene for each instance.
+
+			  > Note : it is advisable to provide an indexed string
+			  array in order to limit the number of unique prototypes.
+			""",
+
+			"preset:Indexed (Roots List)", GafferScene.Instancer.PrototypeMode.IndexedRootsList,
+			"preset:Indexed (Roots Variable)", GafferScene.Instancer.PrototypeMode.IndexedRootsVariable,
+			"preset:Root per Vertex", GafferScene.Instancer.PrototypeMode.RootPerVertex,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:section", "Prototypes",
 
 		],
 
@@ -115,15 +152,51 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of a per-vertex integer primitive variable
-			used to determine which prototype is applied to the
-			vertex. An index of 0 applies the first location from
-			the prototypes scene, an index of 1 applies the second
-			and so on.
+			The name of a per-vertex integer primitive variable used
+			to determine which prototype is applied to the vertex.
+			This plug is used in "Indexed (Roots List)" mode as well
+			as "Indexed (Roots Variable)" mode.
 			""",
 
 			"userDefault", "prototypeIndex",
-			"layout:section", "Settings.General",
+			"layout:section", "Prototypes",
+			"layout:visibilityActivator", "modeIsNotRootPerVertex",
+
+		],
+
+		"prototypeRoots" : [
+
+			"description",
+			"""
+			If `prototypeMode` is set to "Indexed (Roots Variable)",
+			then this should specify the name of a constant string
+			array primitive variable used to map between `prototypeIndex`
+			and paths in the prototypes scene.
+
+			If `prototypeMode` is set to "Root per Vertex", then this
+			should specify the name of a per-vertex string primitive
+			variable used to specify a path in the prototypes scene
+			for each instance.
+
+			This plug is not used in "Indexed (Roots List)" mode.
+			""",
+
+			"layout:section", "Prototypes",
+			"layout:visibilityActivator", "modeIsNotIndexedRootsList",
+
+		],
+
+		"prototypeRootsList" : [
+
+			"description",
+			"""
+			An explicit list of paths used to map between `prototypeIndex`
+			and paths in the prototypes scene. This plug is only used in
+			"Indexed (Roots List)" mode.
+			""",
+
+			"layout:section", "Prototypes",
+			"layout:visibilityActivator", "modeIsIndexedRootsList",
 
 		],
 
