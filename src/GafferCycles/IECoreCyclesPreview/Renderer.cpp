@@ -1088,6 +1088,11 @@ class ShaderCache : public IECore::RefCounted
 			m_shaderAssignPairs.push_back( shaderAssign );
 		}
 
+		void addDisplacedObject( const IECore::Object *object, const std::string &name )
+		{
+			m_objects[name] = IECore::ConstObjectPtr( object );
+		}
+
 	private :
 
 		void updateShaders()
@@ -1108,6 +1113,37 @@ class ShaderCache : public IECore::RefCounted
 			// Do the shader assignment here
 			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
 			{
+				// If the previous shader had a displacement hash, we will compare it with the new one if it's the same
+				ccl::Shader *oldShader = nullptr;
+				if( ( !shaderAssignPair.first->used_shaders.empty() ) && ( oldShader = shaderAssignPair.first->used_shaders.front() ) )
+				{
+					if( oldShader->has_displacement && oldShader->displacement_method != ccl::DISPLACE_BUMP )
+					{
+						const char *oldHash = (oldShader->graph) ? oldShader->graph->displacement_hash.c_str() : "";
+						const char *newHash = (shaderAssignPair.second->graph) ? shaderAssignPair.second->graph->displacement_hash.c_str() : "";
+
+						if( strcmp( oldHash, newHash ) != 0 )
+						{
+							shaderAssignPair.second->need_update_mesh = true;
+
+							ccl::Mesh *mesh = shaderAssignPair.first;
+							const auto objIt = m_objects.find( mesh->name.c_str() );
+							if( objIt != m_objects.end() )
+							{
+								ccl::Object *object = ObjectAlgo::convert( objIt->second.get(), "baseMesh" );
+								if( object->mesh )
+								{
+									mesh->verts.steal_data( object->mesh->verts );
+									delete object;
+								}
+							}
+						}
+						else
+						{
+							shaderAssignPair.second->need_update_mesh = false;
+						}
+					}
+				}
 				shaderAssignPair.first->used_shaders.clear();
 				shaderAssignPair.first->used_shaders.push_back( shaderAssignPair.second );
 			}
@@ -1123,6 +1159,9 @@ class ShaderCache : public IECore::RefCounted
 		// Need to assign shaders in a deferred manner
 		typedef tbb::concurrent_vector<ShaderAssignPair> ShaderAssignVector;
 		ShaderAssignVector m_shaderAssignPairs;
+		// Objects (Need to store the Objects for displacement changes)
+		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstObjectPtr> ObjectMap;
+		ObjectMap m_objects;
 
 };
 
@@ -1865,10 +1904,14 @@ class InstanceCache : public IECore::RefCounted
 				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
 			}
 
+			IECore::MurmurHash hash = object->hash();
+			cyclesAttributes->hashGeometry( object, hash );
+
 			if( !cyclesAttributes->canInstanceGeometry( object ) )
 			{
 				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
 				cobject->random_id = (unsigned)IECore::hash_value( object->hash() );
+				cobject->mesh->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
 				// Push-back to vector needs thread locking.
@@ -1880,9 +1923,6 @@ class InstanceCache : public IECore::RefCounted
 				return Instance( cobjectPtr, cmeshPtr );
 			}
 
-			IECore::MurmurHash hash = object->hash();
-			cyclesAttributes->hashGeometry( object, hash );
-
 			Cache::accessor a;
 			m_instancedMeshes.insert( a, hash );
 
@@ -1891,14 +1931,15 @@ class InstanceCache : public IECore::RefCounted
 #ifdef WITH_CYCLES_OPENVDB
 				if( const IECoreVDB::VDBObject *vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
 				{
-					cobject = VDBAlgo::convert( vdbObject, "instance:" + hash.toString(), m_scene, cyclesAttributes->getVolumeIsovalue() );
+					cobject = VDBAlgo::convert( vdbObject, nodeName, m_scene, cyclesAttributes->getVolumeIsovalue() );
 				}
 				else
 #endif
 				{
-					cobject = ObjectAlgo::convert( object, "instance:" + hash.toString(), m_scene );
+					cobject = ObjectAlgo::convert( object, nodeName, m_scene );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
+				cobject->mesh->name = "instance:" + hash.toString();
 				a->second = SharedCMeshPtr( cobject->mesh );
 			}
 			else
@@ -1910,7 +1951,8 @@ class InstanceCache : public IECore::RefCounted
 				cobject->random_id = (unsigned)IECore::hash_value( instanceHash );
 				cobject->mesh = a->second.get();
 				string instanceName = "instance:" + hash.toString();
-				cobject->name = ccl::ustring( instanceName.c_str() );
+				cobject->mesh->name = ccl::ustring( instanceName.c_str() );
+				cobject->name = ccl::ustring( nodeName.c_str() );
 			}
 
 			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
@@ -3685,6 +3727,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 			Instance instance = m_instanceCache->get( object, attributes, name );
+
+			// Store the mesh for displacement changes
+			if( m_renderType == Interactive )
+			{
+				m_shaderCache->addDisplacedObject( object, instance.mesh()->name.c_str() );
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
 			result->attributes( attributes );
