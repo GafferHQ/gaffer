@@ -43,6 +43,8 @@
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/ShaderTweaks.h"
 
+#include "GafferImage/ImagePlug.h"
+
 #include "IECoreScene/Camera.h"
 
 #include "IECorePython/RefCountedBinding.h"
@@ -166,6 +168,16 @@ ShaderTweaksPtr shaderTweaksWrapper( const ScenePlug &scene, const ScenePlug::Sc
 	return SceneAlgo::shaderTweaks( &scene, path, attributeName );
 }
 
+std::string sourceSceneNameWrapper( const GafferImage::ImagePlug &image )
+{
+	return SceneAlgo::sourceSceneName( &image );
+}
+
+ScenePlugPtr sourceSceneWrapper( GafferImage::ImagePlug &image )
+{
+	return SceneAlgo::sourceScene( &image );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -215,6 +227,8 @@ void bindSceneAlgo()
 	def( "source", &sourceWrapper );
 	def( "objectTweaks", &objectTweaksWrapper );
 	def( "shaderTweaks", &shaderTweaksWrapper );
+	def( "sourceSceneName", &sourceSceneNameWrapper );
+	def( "sourceScene", &sourceSceneWrapper );
 
 }
 
