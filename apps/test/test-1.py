@@ -113,6 +113,12 @@ class test( Gaffer.Application ) :
 					defaultValue = "",
 					allowEmptyString = True,
 					extensions = "json",
+				),
+
+				IECore.BoolParameter(
+					name = "stopOnFailure",
+					description = "Stops on the first failure, instead of running the remaining tests.",
+					defaultValue = False,
 				)
 			]
 
@@ -139,6 +145,9 @@ class test( Gaffer.Application ) :
 		for i in range( 0, args["repeat"].value ) :
 
 			testRunner = GafferTest.TestRunner( previousResultsFile = args["previousOutputFile"].value )
+			if args["stopOnFailure"].value :
+				testRunner.failfast = True
+
 			testResult = testRunner.run( testSuite )
 
 			if args["outputFile"].value :
