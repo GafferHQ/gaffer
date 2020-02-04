@@ -122,7 +122,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testTiffWrite( self ) :
 
 		options = {}
-		options['maxError'] = 0.003
+		options['maxError'] = 0.0032
 		options['metadata'] = { 'compression' : IECore.StringData( "zip" ), 'tiff:Compression' : IECore.IntData( 8 ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
@@ -1244,7 +1244,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			self.failUnless( os.path.exists( writer["fileName"].getValue() ), "Failed to create file : {}".format( writer["fileName"].getValue() ) )
 
 			resultReader["colorSpace"].setValue( colorSpace )
-			self.assertImagesEqual( resultReader["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0007 )
+			self.assertImagesEqual( resultReader["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0008 )
 
 	def testDependencyNode( self ) :
 
