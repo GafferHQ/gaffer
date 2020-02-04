@@ -444,6 +444,14 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void render( IECoreGL::State *currentState, const IECore::PathMatcher &selection ) const
 		{
+			const Visualisations &attrVis = visualisations( *m_attributes );
+			const bool haveVisualisations = attrVis.size() > 0 || m_objectVisualisations.size() > 0;
+
+			if( !haveVisualisations && !m_renderable )
+			{
+				return;
+			}
+
 			IECoreGL::State::ScopedBinding scope( *m_attributes->state(), *currentState );
 			IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, selected( selection ) );
 
@@ -451,41 +459,49 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			// first and real geometry last, so that they sit on top. This is
 			// still prone to flicker, but seems to provide the best results.
 
-			const Visualisations &attrVis = visualisations( *m_attributes );
 
-			Visualisation::Category categories = Visualisation::Category::Generic;
-			if( m_attributes->drawFrustum() )
+			if( haveVisualisations )
 			{
-				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
-			}
-
-			if( m_attributes->visualiserScale() > 0.0f )
-			{
-				if( haveMatchingVisualisations( Visualisation::Scale::Visualiser, categories, attrVis, m_objectVisualisations ) )
+				Visualisation::Category categories = Visualisation::Category::Generic;
+				if( m_attributes->drawFrustum() )
 				{
-					ScopedTransform v( visualiserTransform( false ) );
-					renderMatchingVisualisations( Visualisation::Scale::Visualiser, categories, currentState, attrVis, m_objectVisualisations );
+					categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
 				}
 
-				if( haveMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, attrVis, m_objectVisualisations ) )
+				if( m_attributes->visualiserScale() > 0.0f )
 				{
-					ScopedTransform c( visualiserTransform( true ) );
-					renderMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, currentState, attrVis, m_objectVisualisations );
+					if( haveMatchingVisualisations( Visualisation::Scale::Visualiser, categories, attrVis, m_objectVisualisations ) )
+					{
+						ScopedTransform v( visualiserTransform( false ) );
+						renderMatchingVisualisations( Visualisation::Scale::Visualiser, categories, currentState, attrVis, m_objectVisualisations );
+					}
+
+					if( haveMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, attrVis, m_objectVisualisations ) )
+					{
+						ScopedTransform c( visualiserTransform( true ) );
+						renderMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, currentState, attrVis, m_objectVisualisations );
+					}
 				}
-			}
 
-			if( haveMatchingVisualisations( Visualisation::Scale::None, categories, attrVis, m_objectVisualisations ) )
-			{
-				ScopedTransform l( m_transformSansScale );
-				renderMatchingVisualisations( Visualisation::Scale::None, categories, currentState, attrVis, m_objectVisualisations );
-			}
+				if( haveMatchingVisualisations( Visualisation::Scale::None, categories, attrVis, m_objectVisualisations ) )
+				{
+					ScopedTransform l( m_transformSansScale );
+					renderMatchingVisualisations( Visualisation::Scale::None, categories, currentState, attrVis, m_objectVisualisations );
+				}
 
-			if( m_renderable || haveMatchingVisualisations( Visualisation::Scale::Local, categories, attrVis, m_objectVisualisations ) )
+				if( m_renderable || haveMatchingVisualisations( Visualisation::Scale::Local, categories, attrVis, m_objectVisualisations ) )
+				{
+					ScopedTransform l( m_transform );
+
+					renderMatchingVisualisations( Visualisation::Scale::Local, categories, currentState, attrVis, m_objectVisualisations );
+					if( m_renderable ) { m_renderable->render( currentState ); }
+				}
+
+			}
+			else if( m_renderable )
 			{
 				ScopedTransform l( m_transform );
-
-				renderMatchingVisualisations( Visualisation::Scale::Local, categories, currentState, attrVis, m_objectVisualisations );
-				if( m_renderable ) { m_renderable->render( currentState ); }
+				m_renderable->render( currentState );
 			}
 		}
 
