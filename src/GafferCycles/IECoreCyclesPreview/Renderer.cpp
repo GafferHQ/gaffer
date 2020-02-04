@@ -2771,7 +2771,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_useOptixDenoising( false ),
 				m_writeDenoisingPasses( false )
 		{
-			// Set path to find shaders
+			// Set path to find shaders & cuda cubins. This code exists as well in the python module, but left here if ever IECoreCycles is split away from GafferCycles.
 			#ifdef _WIN32
 			string paths = boost::str( boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
 			#else

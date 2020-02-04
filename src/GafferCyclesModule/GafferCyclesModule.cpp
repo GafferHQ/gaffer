@@ -50,10 +50,14 @@
 #include "GafferCycles/CyclesRender.h"
 #include "GafferCycles/InteractiveCyclesRender.h"
 
+#include "IECore/MessageHandler.h"
+#include "IECore/SearchPath.h"
+
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
 #include "util/util_logging.h"
+#include "util/util_path.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -446,6 +450,32 @@ static py::dict getLights()
 BOOST_PYTHON_MODULE( _GafferCycles )
 {
 
+	// Set path to find shaders & cuda cubins
+	#ifdef _WIN32
+	std::string paths = boost::str( boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+	#else
+	std::string paths = boost::str( boost::format( "%s:%s/cycles:%s" ) % getenv( "GAFFERCYCLES" ) % getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+	#endif
+	const char *kernelFile = "source/kernel/kernel_globals.h";
+	IECore::SearchPath searchPath( paths );
+	boost::filesystem::path path = searchPath.find( kernelFile );
+	if( path.empty() )
+	{
+		IECore::msg( IECore::Msg::Error, "CyclesRenderer", "Cannot find GafferCycles location. Have you set the GAFFERCYCLES environment variable?" );
+	}
+	else
+	{
+		std::string cclPath = path.string();
+		cclPath.erase( cclPath.end() - strlen( kernelFile ), cclPath.end() );
+		ccl::path_init( cclPath );
+	}
+
+	// This is a global thing for logging
+	const char* argv[] = { "-", "v", "1" };
+	ccl::util_logging_init( argv[0] );
+	ccl::util_logging_start();
+	ccl::util_logging_verbosity_set( 0 );
+
 	py::scope().attr( "devices" ) = getDevices();
 	py::scope().attr( "nodes" ) = getNodes();
 	py::scope().attr( "shaders" ) = getShaders();
@@ -482,11 +512,5 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	DependencyNodeClass<CyclesShader>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
-
-	// This is a global thing for logging
-	const char* argv[] = { "-", "v", "1" };
-	ccl::util_logging_init( argv[0] );
-	ccl::util_logging_start();
-	ccl::util_logging_verbosity_set( 0 );
 
 }
