@@ -42,10 +42,13 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "Gaffer/Expression.h"
+
 #include "IECoreGL/Selector.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
@@ -79,9 +82,19 @@ template<typename Visitor>
 void visitAuxiliaryConnections( const GraphGadget *graphGadget, const NodeGadget *dstNodeGadget, Visitor visitor )
 {
 	const Gaffer::Node *dstNode = dstNodeGadget->node();
+	/// \todo Once the expression node refactor is done, it shouldn't be using
+	/// private plugs for its inputs, and we can ignore all private plugs
+	/// unconditionally.
+	const bool ignorePrivatePlugs = !runTimeCast<const Expression>( dstNode );
 	for( Gaffer::RecursivePlugIterator it( dstNode ); !it.done(); ++it )
 	{
 		const Gaffer::Plug *dstPlug = it->get();
+		if( ignorePrivatePlugs && boost::starts_with( dstPlug->getName().c_str(), "__" ) )
+		{
+			it.prune();
+			continue;
+		}
+
 		const Gaffer::Plug *srcPlug = dstPlug->getInput();
 		if( !srcPlug )
 		{
