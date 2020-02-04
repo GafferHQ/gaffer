@@ -191,14 +191,6 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["Light"] = GafferArnold.ArnoldLight( "skydome_light" )
 		s["Light"].loadShader( "skydome_light" )
 
-		s["FloatToRGB"] = GafferArnold.ArnoldShader( "FloatToRGB" )
-		s["FloatToRGB"].loadShader( "float_to_rgb" )
-		s["FloatToRGB"]["parameters"]["r"].setValue( 1.0 )
-		s["FloatToRGB"]["parameters"]["g"].setValue( 1.0 )
-		s["FloatToRGB"]["parameters"]["b"].setValue( 1.0 )
-
-		s["Light"]["parameters"]["color"].setInput( s["FloatToRGB"]["out"] )
-
 		s["c"] = GafferScene.Camera()
 		s["c"]["transform"]["translate"]["z"].setValue( 2 )
 
@@ -238,21 +230,25 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 			s["r"]["state"].setValue( s["r"].State.Running )
 
-			handler.waitFor( 0.5 )
+			handler.waitFor( 1.0 )
 
-			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-
-			self.assertEqual( c, imath.Color3f( 1.0 ) )
+			self.assertAlmostEqual(
+				self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
+				1,
+				delta = 0.01
+			)
 
 			# Change a value on the light. The light should still be linked to the sphere
 			# and we should get the same result as before.
 			s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
 
-			handler.waitFor( 0.5 )
+			handler.waitFor( 1.0 )
 
-			c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-
-			self.assertEqual( c, imath.Color3f( 1.0 ) )
+			self.assertAlmostEqual(
+				self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
+				1,
+				delta = 0.01
+			)
 
 			s["r"]["state"].setValue( s["r"].State.Stopped )
 
