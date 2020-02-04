@@ -978,7 +978,7 @@ class ShaderCache : public IECore::RefCounted
 						const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
 						if( aovShader )
 						{
-							h.append( hash_value( aovShader->getOutput() ) );
+							h.append( aovShader->Object::hash() );
 						}
 					}
 				}
@@ -1088,11 +1088,6 @@ class ShaderCache : public IECore::RefCounted
 			m_shaderAssignPairs.push_back( shaderAssign );
 		}
 
-		void addDisplacedObject( const IECore::Object *object, const std::string &name )
-		{
-			m_objects[name] = IECore::ConstObjectPtr( object );
-		}
-
 	private :
 
 		void updateShaders()
@@ -1113,37 +1108,6 @@ class ShaderCache : public IECore::RefCounted
 			// Do the shader assignment here
 			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
 			{
-				// If the previous shader had a displacement hash, we will compare it with the new one if it's the same
-				ccl::Shader *oldShader = nullptr;
-				if( ( !shaderAssignPair.first->used_shaders.empty() ) && ( oldShader = shaderAssignPair.first->used_shaders.front() ) )
-				{
-					if( oldShader->has_displacement && oldShader->displacement_method != ccl::DISPLACE_BUMP )
-					{
-						const char *oldHash = (oldShader->graph) ? oldShader->graph->displacement_hash.c_str() : "";
-						const char *newHash = (shaderAssignPair.second->graph) ? shaderAssignPair.second->graph->displacement_hash.c_str() : "";
-
-						if( strcmp( oldHash, newHash ) != 0 )
-						{
-							shaderAssignPair.second->need_update_mesh = true;
-
-							ccl::Mesh *mesh = shaderAssignPair.first;
-							const auto objIt = m_objects.find( mesh->name.c_str() );
-							if( objIt != m_objects.end() )
-							{
-								ccl::Object *object = ObjectAlgo::convert( objIt->second.get(), "baseMesh" );
-								if( object->mesh )
-								{
-									mesh->verts.steal_data( object->mesh->verts );
-									delete object;
-								}
-							}
-						}
-						else
-						{
-							shaderAssignPair.second->need_update_mesh = false;
-						}
-					}
-				}
 				shaderAssignPair.first->used_shaders.clear();
 				shaderAssignPair.first->used_shaders.push_back( shaderAssignPair.second );
 			}
@@ -1159,9 +1123,6 @@ class ShaderCache : public IECore::RefCounted
 		// Need to assign shaders in a deferred manner
 		typedef tbb::concurrent_vector<ShaderAssignPair> ShaderAssignVector;
 		ShaderAssignVector m_shaderAssignPairs;
-		// Objects (Need to store the Objects for displacement changes)
-		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstObjectPtr> ObjectMap;
-		ObjectMap m_objects;
 
 };
 
@@ -1280,7 +1241,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( surfaceShaderAttribute )
 			{
-				m_shaderHash.append( hash_value( surfaceShaderAttribute->getOutput() ) );
+				m_shaderHash.append( surfaceShaderAttribute->Object::hash() );
 				m_shader = m_shaderCache->get( surfaceShaderAttribute, attributes );
 
 				// AOV hash
@@ -1291,7 +1252,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
 						if( aovShader )
 						{
-							m_shaderHash.append( hash_value( aovShader->getOutput() ) );
+							m_shaderHash.append( aovShader->Object::hash() );
 						}
 					}
 				}
@@ -1320,6 +1281,43 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes ) const
 		{
+			// Re-issue a new object if displacement or subdivision has changed
+			if( previousAttributes )
+			{
+				if( previousAttributes->m_shader && m_shader )
+				{
+					if( previousAttributes->m_shader->has_displacement && previousAttributes->m_shader->displacement_method != ccl::DISPLACE_BUMP )
+					{
+						const char *oldHash = (previousAttributes->m_shader->graph) ? previousAttributes->m_shader->graph->displacement_hash.c_str() : "";
+						const char *newHash = (m_shader->graph) ? m_shader->graph->displacement_hash.c_str() : "";
+
+						if( strcmp( oldHash, newHash ) != 0 )
+						{
+							m_shader->need_update_mesh = true;
+							return false;
+						}
+						else
+						{
+							// In Blender a shader->set_graph(graph); is called which handles the hashing similar to the code above. In GafferCycles
+							// we re-create a fresh shader which is easier to manage, however it misses this call to set need_update_mesh to false.
+							// We set false here, but we also need to make sure all the attribute requests are the same to prevent the flag to be set
+							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating 
+							// the same shader so this should be safe.
+							m_shader->attributes = previousAttributes->m_shader->attributes;
+							m_shader->need_update_mesh = false;
+						}
+					}
+				}
+
+				if( object->mesh && object->mesh->subd_params )
+				{
+					if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
+					{
+						return false;
+					}
+				}
+			}
+
 			object->visibility = m_visibility;
 			object->use_holdout = m_useHoldout;
 			object->is_shadow_catcher = m_isShadowCatcher;
@@ -3726,12 +3724,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 			Instance instance = m_instanceCache->get( object, attributes, name );
-
-			// Store the mesh for displacement changes
-			if( m_renderType == Interactive )
-			{
-				m_shaderCache->addDisplacedObject( object, instance.mesh()->name.c_str() );
-			}
 
 			ObjectInterfacePtr result = new CyclesObject( instance );
 			result->attributes( attributes );
