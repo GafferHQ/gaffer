@@ -59,7 +59,7 @@ Improvements
 - Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
 - Documentation : Added examples for OSLImage and OSLObject nodes.
 - Rendering : Added the name of the render node to image metadata via the `gaffer:renderNode` header (#2835).
-- Test app : Added `stopOnFailure` arguments
+- Test app : Added `stopOnFailure` arguments.
 
 Fixes
 -----
@@ -103,7 +103,7 @@ API
 - IECoreGLPreview :
   - Added `VisualisationType` and `VisualisationMap` to allow classification of renderables returned by visualisers.
   - IECoreGLPreview : Added support for more flexible visualisations via the `Visualisation` struct (#3569).
-  SceneAlgo : 
+- SceneAlgo :
   - `history()` now returns History items for all upstream plugs in the history chain, not just those where a computation was performed.
   - Added `sourceSceneName` and `sourceScene` methods to retrieve source scene information from an ImagePlug (#3582).
 - Process : Added `destinationPlug()` method.
@@ -112,8 +112,7 @@ API
 Breaking Changes
 ----------------
 
-- Resize : A bug fix means that results are changed significantly when changing pixel aspect
-  ratios.
+- Resize : A bug fix means that results are changed significantly when changing pixel aspect ratios.
 - Instancer :
   - Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a config file.
   - Attributes assigned to a prototype root are now instanced onto `<prototypeName>` rather then `<prototypeName>/<id>` (eg `/instances/robot` rather than `/instances/robot/0`)
@@ -135,7 +134,7 @@ Breaking Changes
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
 - OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to visualisations unless they need to invert this scale for any geometry-related components of the visualisation.
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:scale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
-- IECoreGLPreview : 
+- IECoreGLPreview :
   - Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
   - Changed the return type of `(Light|LightFilter|Attribute)Visualiser` classes. Visualisations are now a vector of `Visualisation` structs(#3569).
   - Changed `ObjectVisualiser` return type to `Visualisations`.
