@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,50 @@
 #
 ##########################################################################
 
-import Gaffer
+import imath
+
+import IECore
+import IECoreScene
+
+import GafferUITest
 import GafferScene
 
-def __lightGetItemWrapper( originalGetItem ) :
+# Needs to be imported to register the visualisers
+import GafferSceneUI
 
-	def getItem( self, key ) :
+class VisualiserTest( GafferUITest.TestCase ) :
 
-		if key == "visualiserScale" :
-			visualiserAttr = originalGetItem( self, "visualiserAttributes" )
-			visualiserAttr[ "scale" ][ "enabled" ].setValue( True )
-			return visualiserAttr[ "scale" ][ "value" ]
-		else :
-			return originalGetItem( self, key )
+	def testCameraVisualiserFramingBound( self )  :
 
-	return getItem
+		# Certain visualisations should be able to opt-out of affecting
+		# a locations bounds (generally to prevent 'large' visualisations
+		# from breaking 'f' to fit to the viewer).
 
-GafferScene.Light.__getitem__ = __lightGetItemWrapper( GafferScene.Light.__getitem__ )
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
 
+		camera = IECoreScene.Camera()
+		camera.setProjection( "perspective" )
+
+		# The expected bound is the size of the green camera body visualisation.
+		# We want to make sure the renderer bound it doesn't contain the frustum
+		# visualisation which extends to the far clipping plane.
+		expectedBodyBound = imath.Box3f( imath.V3f( -5, -5, -5 ), imath.V3f( 5, 5, 2 ) )
+
+		# Make sure the far plane is bigger than the camera body visualisation
+		clippingPlanes = camera.getClippingPlanes()
+		self.assertTrue( clippingPlanes[1] > abs(expectedBodyBound.min()[2]) )
+
+		_ =	renderer.object(
+			"/camera",
+			camera,
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		cameraBound = renderer.command( "gl:queryBound", {} )
+
+		self.assertEqual( cameraBound, expectedBodyBound )
+
+if __name__ == "__main__":
+	unittest.main()

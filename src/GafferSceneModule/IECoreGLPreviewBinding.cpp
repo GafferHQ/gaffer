@@ -36,6 +36,7 @@
 
 #include "IECoreGLPreviewBinding.h"
 
+#include "GafferScene/Private/IECoreGLPreview/Visualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/AttributeVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
@@ -66,5 +67,46 @@ void GafferSceneModule::bindIECoreGLPreview()
 	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
 		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )
 		.staticmethod( "registerLightVisualiser" )
+	;
+
+	auto v = class_<Visualisation>( "Visualisation", no_init );
+	{
+		scope visualisationScope( v );
+
+		enum_<Visualisation::Scale>("Scale")
+			.value( "None", Visualisation::Scale::None )
+			.value( "Local", Visualisation::Scale::Local )
+			.value( "Visualiser", Visualisation::Scale::Visualiser )
+			.value( "LocalAndVisualiser", Visualisation::Scale::LocalAndVisualiser )
+		;
+		enum_<Visualisation::Category>("Category")
+			.value( "Generic", Visualisation::Category::Generic )
+			.value( "Frustum", Visualisation::Category::Frustum )
+		;
+	}
+	v.def( init<
+				IECoreGL::ConstRenderablePtr,
+				Visualisation::Scale,
+				Visualisation::Category,
+				bool
+			>(
+				(
+					arg( "renderable" ),
+					arg( "scale" ) = Visualisation::Scale::Local,
+					arg( "category" ) = Visualisation::Category::Generic,
+					arg( "affectsFramingBound" ) = true
+				)
+			)
+		)
+		.def_readwrite( "scale", &Visualisation::scale )
+		.def_readwrite( "category", &Visualisation::category )
+		.def_readwrite( "affectsFramingBound", &Visualisation::affectsFramingBound )
+		.def( "renderable", &Visualisation::renderable, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "createGeometry", &Visualisation::createGeometry )
+		.staticmethod( "createGeometry" )
+		.def( "createOrnament", &Visualisation::createOrnament )
+		.staticmethod( "createOrnament" )
+		.def( "createFrustum", &Visualisation::createFrustum )
+		.staticmethod( "createFrustum" )
 	;
 }

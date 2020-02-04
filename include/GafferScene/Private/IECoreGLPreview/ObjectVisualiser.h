@@ -39,6 +39,8 @@
 
 #include "GafferScene/Export.h"
 
+#include "GafferScene/Private/IECoreGLPreview/Visualiser.h"
+
 #include "IECoreGL/Renderable.h"
 
 #include "IECore/Object.h"
@@ -66,7 +68,7 @@ class GAFFERSCENE_API ObjectVisualiser : public IECore::RefCounted
 
 		/// Must be implemented by derived classes to return a suitable
 		/// visualisation of the object.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const = 0;
+		virtual Visualisations visualise( const IECore::Object *object ) const = 0;
 
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////

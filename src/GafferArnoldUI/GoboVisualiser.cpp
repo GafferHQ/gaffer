@@ -260,9 +260,7 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 
 	result->addChild( new IECoreGL::QuadPrimitive( 1.0f, 1.0f ) );
 
-	Visualisations v;
-	v[ VisualisationType::Ornament ] = result;
-	return v;
+	return { Visualisation::createOrnament( result, true ) };
 }
 
 } // namespace

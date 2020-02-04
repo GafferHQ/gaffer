@@ -362,7 +362,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.visualiserOrnamentScale" : [
+		"attributes.visualiserScale" : [
 
 			"description",
 			"""
@@ -371,7 +371,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Visualisers",
-			"label", "Ornament Scale",
+			"label", "Scale",
 
 		],
 
@@ -385,6 +385,19 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visualisers",
 			"label", "Max Texture Resolution",
+
+		],
+
+		"attributes.visualiserFrustum" : [
+
+			"description",
+			"""
+			Controls whether applicable locations draw a representation of
+			their projection or frustum.
+			""",
+
+			"layout:section", "Visualisers",
+			"label", "Frustum",
 
 		],
 
@@ -410,6 +423,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.lightFrustumScale" : [
+
+			"description",
+			"""
+			Allows light projections to be scaled to better suit the scene.
+			""",
+
+			"layout:section", "Visualisers",
+		],
 
 
 	}

@@ -91,6 +91,82 @@ using namespace IECoreGLPreview;
 
 namespace
 {
+class ScopedTransform
+{
+	public:
+		ScopedTransform( const M44f &transform )
+		{
+			m_nonIdentity = transform != M44f();
+			if( m_nonIdentity )
+			{
+				glPushMatrix();
+				glMultMatrixf( transform.getValue() );
+			}
+		}
+
+		~ScopedTransform()
+		{
+			if( m_nonIdentity )
+			{
+				glPopMatrix();
+			}
+		}
+
+	private :
+		bool m_nonIdentity;
+};
+
+template <class... Vs>
+bool haveMatchingVisualisations( Visualisation::Scale scale, Visualisation::Category category, const Vs & ... visualisations )
+{
+	for( auto vs : { visualisations... } )
+	{
+		for( auto v : vs )
+		{
+			if( v.scale == scale && v.category & category )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+template <class... Vs>
+void renderMatchingVisualisations( Visualisation::Scale scale, Visualisation::Category category, IECoreGL::State *state, const Vs & ... visualisations )
+{
+	for( auto vs : { visualisations... } )
+	{
+		for( auto v : vs )
+		{
+			if( v.scale == scale && v.category & category )
+			{
+				v.renderable()->render( state );
+			}
+		}
+	}
+}
+
+template <class... Vs>
+void accumulateVisualisationBounds( Box3f &target, Visualisation::Scale scale, Visualisation::Category category, const M44f &transform, const Vs & ... visualisations )
+{
+	for( auto vs : { visualisations... } )
+	{
+		for( auto v : vs )
+		{
+			if( !v.affectsFramingBound || v.scale != scale || !(v.category & category) )
+			{
+				continue;
+			}
+
+			const Box3f b = v.renderable()->bound();
+			if( !b.isEmpty() )
+			{
+				target.extendBy( Imath::transform( b, transform ) );
+			}
+		}
+	}
+}
 
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
@@ -153,8 +229,11 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
 		{
-			const FloatData *ornamentScaleData = attributes->member<FloatData>( "gl:visualiser:ornamentScale" );
-			m_ornamentScale = ornamentScaleData ? ornamentScaleData->readable() : 1.0;
+			const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
+			m_visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
+
+			const BoolData *drawFrustumData = attributes->member<BoolData>( "gl:visualiser:frustum" );
+			m_drawFrustum = drawFrustumData ? drawFrustumData->readable() : true;
 
 			m_state = static_pointer_cast<const State>(
 				CachedConverter::defaultCachedConverter()->convert( attributes )
@@ -176,10 +255,9 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					// Light filter visualisers are in `m_lightFilterVisualisations` and light visualisers are in
 					// `m_lightVisualisations`. Combine them both into `m_lightVisualisations` so that
 					// filters attached to light locations are drawn as expected.
-					Visualisations allVisualisation;
-					Private::collectVisualisations( m_lightVisualisations, allVisualisation );
-					Private::collectVisualisations( m_lightFilterVisualisations, allVisualisation );
-					m_lightVisualisations = allVisualisation;
+					m_lightVisualisations.insert( m_lightVisualisations.end(),
+						m_lightFilterVisualisations.begin(), m_lightFilterVisualisations.end()
+					);
 				}
 				else
 				{
@@ -216,34 +294,40 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_state.get();
 		}
 
-		const IECoreGL::Renderable *visualisation( VisualisationType type ) const
+		const IECoreGLPreview::Visualisations &visualisations() const
 		{
-			return m_visualisations[ type ].get();
+			return m_visualisations;
 		}
 
-		const IECoreGL::Renderable *lightVisualisation( VisualisationType type ) const
+		const IECoreGLPreview::Visualisations &lightVisualisations() const
 		{
-			return m_lightVisualisations[ type ].get();
+			return m_lightVisualisations;
 		}
 
-		const IECoreGL::Renderable *lightFilterVisualisation( VisualisationType type ) const
+		const IECoreGLPreview::Visualisations &lightFilterVisualisations() const
 		{
-			return m_lightFilterVisualisations[ type  ].get();
+			return m_lightFilterVisualisations;
 		}
 
-		float ornamentScale() const
+		float visualiserScale() const
 		{
-			return m_ornamentScale;
+			return m_visualiserScale;
+		}
+
+		bool drawFrustum() const
+		{
+			return m_drawFrustum;
 		}
 
 	private :
 
 		ConstStatePtr m_state;
+		bool m_drawFrustum;
 		Visualisations m_visualisations;
 		Visualisations m_lightVisualisations;
 		Visualisations m_lightFilterVisualisations;
 
-		float m_ornamentScale = 1.0f;
+		float m_visualiserScale = 1.0f;
 };
 
 IE_CORE_DECLAREPTR( OpenGLAttributes )
@@ -276,7 +360,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( const ObjectVisualiser *visualiser = IECoreGLPreview::ObjectVisualiser::acquire( object->typeId() ) )
 				{
-					m_renderable = visualiser->visualise( object );
+					m_objectVisualisations = visualiser->visualise( object );
+					m_renderable = nullptr;
 				}
 				else
 				{
@@ -297,7 +382,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			m_editQueue.push( [this, transform]() {
 				m_transform = transform;
-				updateOrnamentTransform();
+				m_transformSansScale = sansScalingAndShear( transform );
 			} );
 		}
 
@@ -311,7 +396,6 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ConstOpenGLAttributesPtr openGLAttributes = static_cast<const OpenGLAttributes *>( attributes );
 			m_editQueue.push( [this, openGLAttributes]() {
 				m_attributes = openGLAttributes;
-				updateOrnamentTransform();
 			} );
 			return true;
 		}
@@ -322,40 +406,29 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		Box3f transformedBound() const
 		{
-			// Note: Imath::transform with a non-identify matrix on an empty
-			// box results in a box that returns false to isEmpty, hence the
-			// checks below.
 			Box3f b;
+
 			if( m_renderable )
 			{
-				b.extendBy( m_renderable->bound() );
-			}
-
-			if( auto v = visualisation( *m_attributes, VisualisationType::Geometry ) )
-			{
-				b.extendBy( v->bound() );
-			}
-
-			if( !b.isEmpty() )
-			{
-				b = Imath::transform( b, m_transform );
-			}
-			else
-			{
-				// We only consider ornaments if there is no geometric representation.
-				// As we don't use the bounds for culling, we can get away with this,
-				// and it means sizable visualisations don't mess up the framing when there
-				// is a geometric component.
-				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				const Box3f renderableBound = m_renderable->bound();
+				if( !renderableBound.isEmpty() )
 				{
-					const Box3f ornamentB = v->bound();
-					if( !ornamentB.isEmpty() )
-					{
-						b.extendBy( Imath::transform( ornamentB, m_ornamentTransform ) );
-					}
+					b.extendBy( Imath::transform( renderableBound, m_transform ) );
 				}
 			}
 
+			Visualisation::Category categories = Visualisation::Category::Generic;
+			if( m_attributes->drawFrustum() )
+			{
+				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
+			}
+
+			const Visualisations &attrVis = visualisations( *m_attributes );
+
+			accumulateVisualisationBounds( b, Visualisation::Scale::None, categories, m_transformSansScale, attrVis, m_objectVisualisations );
+			accumulateVisualisationBounds( b, Visualisation::Scale::Local, categories, m_transform, attrVis, m_objectVisualisations );
+			accumulateVisualisationBounds( b, Visualisation::Scale::Visualiser, categories, visualiserTransform( false ), attrVis, m_objectVisualisations );
+			accumulateVisualisationBounds( b, Visualisation::Scale::LocalAndVisualiser, categories, visualiserTransform( true ), attrVis, m_objectVisualisations );
 			return b;
 		}
 
@@ -371,53 +444,48 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void render( IECoreGL::State *currentState, const IECore::PathMatcher &selection ) const
 		{
-			const bool haveTransform = m_transform != M44f();
-			if( haveTransform )
-			{
-				glPushMatrix();
-				glMultMatrixf( m_transform.getValue() );
-			}
-
 			IECoreGL::State::ScopedBinding scope( *m_attributes->state(), *currentState );
 			IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, selected( selection ) );
 
-			if( m_renderable )
+			// In order to minimize z-fighting, we draw non-geometric visualisations
+			// first and real geometry last, so that they sit on top. This is
+			// still prone to flicker, but seems to provide the best results.
+
+			const Visualisations &attrVis = visualisations( *m_attributes );
+
+			Visualisation::Category categories = Visualisation::Category::Generic;
+			if( m_attributes->drawFrustum() )
 			{
-				m_renderable->render( currentState );
+				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
 			}
 
-			// Local space visualisations
-
-			if( auto v = visualisation( *m_attributes, VisualisationType::Geometry ) )
+			if( m_attributes->visualiserScale() > 0.0f )
 			{
-				v->render( currentState );
-			}
-
-			if( haveTransform )
-			{
-				glPopMatrix();
-			}
-
-			// Local-scale-free visualisations, that use the attribute driven
-			// visualiserScale for size adjustments.
-			if( m_attributes->ornamentScale() > 0 )
-			{
-				if( auto v = visualisation( *m_attributes, VisualisationType::Ornament ) )
+				if( haveMatchingVisualisations( Visualisation::Scale::Visualiser, categories, attrVis, m_objectVisualisations ) )
 				{
-					const bool haveOrnamentTransform = m_ornamentTransform != M44f();
-					if( haveOrnamentTransform )
-					{
-						glPushMatrix();
-						glMultMatrixf( m_ornamentTransform.getValue() );
-					}
-
-					v->render( currentState );
-
-					if( haveOrnamentTransform )
-					{
-						glPopMatrix();
-					}
+					ScopedTransform v( visualiserTransform( false ) );
+					renderMatchingVisualisations( Visualisation::Scale::Visualiser, categories, currentState, attrVis, m_objectVisualisations );
 				}
+
+				if( haveMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, attrVis, m_objectVisualisations ) )
+				{
+					ScopedTransform c( visualiserTransform( true ) );
+					renderMatchingVisualisations( Visualisation::Scale::LocalAndVisualiser, categories, currentState, attrVis, m_objectVisualisations );
+				}
+			}
+
+			if( haveMatchingVisualisations( Visualisation::Scale::None, categories, attrVis, m_objectVisualisations ) )
+			{
+				ScopedTransform l( m_transformSansScale );
+				renderMatchingVisualisations( Visualisation::Scale::None, categories, currentState, attrVis, m_objectVisualisations );
+			}
+
+			if( m_renderable || haveMatchingVisualisations( Visualisation::Scale::Local, categories, attrVis, m_objectVisualisations ) )
+			{
+				ScopedTransform l( m_transform );
+
+				renderMatchingVisualisations( Visualisation::Scale::Local, categories, currentState, attrVis, m_objectVisualisations );
+				if( m_renderable ) { m_renderable->render( currentState ); }
 			}
 		}
 
@@ -433,25 +501,30 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			return m_editQueue;
 		}
 
-		virtual const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes, VisualisationType type ) const
+		virtual const Visualisations &visualisations( const OpenGLAttributes &attributes ) const
 		{
-			return attributes.visualisation( type );
+			return attributes.visualisations();
 		}
 
 	private :
 
-		void updateOrnamentTransform()
+		// sansScalingAndShear is expensive, so we store that, the other
+		// visualiser scaled variants we compute in transformedBound/render
+		// to save memory.
+
+		M44f visualiserTransform( bool includeLocal ) const
 		{
-			M44f ornamentTransform = sansScalingAndShear( m_transform );
-			ornamentTransform.scale( V3f( m_attributes->ornamentScale() ) );
-			m_ornamentTransform = ornamentTransform;
+			M44f t = includeLocal ? m_transform : m_transformSansScale;
+			t.scale( V3f( m_attributes->visualiserScale() ) );
+			return t;
 		}
 
 		IECore::TypeId m_objectType;
 		M44f m_transform;
-		M44f m_ornamentTransform;
+		M44f m_transformSansScale;
 		ConstOpenGLAttributesPtr m_attributes;
 		IECoreGL::ConstRenderablePtr m_renderable;
+		Visualisations m_objectVisualisations;
 		vector<InternedString> m_name;
 		EditQueue &m_editQueue;
 
@@ -538,9 +611,9 @@ class OpenGLLight : public OpenGLObject
 
 	protected :
 
-		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes, VisualisationType type ) const override
+		const Visualisations &visualisations( const OpenGLAttributes &attributes ) const override
 		{
-			return attributes.lightVisualisation( type );
+			return attributes.lightVisualisations();
 		}
 
 };
@@ -559,9 +632,9 @@ class OpenGLLightFilter : public OpenGLObject
 
 	protected :
 
-		const IECoreGL::Renderable *visualisation( const OpenGLAttributes &attributes, VisualisationType type ) const override
+		const Visualisations &visualisations( const OpenGLAttributes &attributes ) const override
 		{
-			return attributes.lightFilterVisualisation( type );
+			return attributes.lightFilterVisualisations();
 		}
 
 };

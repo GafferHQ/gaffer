@@ -48,6 +48,7 @@ from ScaleToolTest import ScaleToolTest
 from RotateToolTest import RotateToolTest
 from ContextAlgoTest import ContextAlgoTest
 from CameraToolTest import CameraToolTest
+from VisualiserTest import VisualiserTest
 
 if __name__ == "__main__":
 	unittest.main()

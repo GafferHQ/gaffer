@@ -225,6 +225,13 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+		m.append( "/Lights/OptionsDivider", { "divider" : True } )
+
+		self.__appendValuePresetMenu(
+			m, self.getPlug()["light"]["frustumScale"],
+			"/Lights/Frustum Scale", ( 1, 10, 100 ), "Other Scale"
+		)
+
 		for n in ( "useGLLines", "interpolate" ) :
 			plug = self.getPlug()["curvesPrimitive"][n]
 			m.append(
@@ -244,32 +251,51 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
-		m.append( "/__visualiserDivider__", { "divider" : True } )
+		m.append( "/VisualisersDivider", { "divider" : True } )
 
-		visScaleIsOther = True
-		visScalePlug = self.getPlug()["visualiserOrnamentScale"]
-		for scale in ( 1, 10, 100 ) :
-			isSelected = visScalePlug.getValue() == scale
+		frustumPlug = self.getPlug()["visualiser"]["frustum"]
+		m.append(
+			"/Visualisers/Frustum",
+			{
+				"command" : frustumPlug.setValue,
+				"checkBox" : frustumPlug.getValue()
+			}
+		)
+
+		self.__appendValuePresetMenu(
+			m, self.getPlug()["visualiser"]["scale"],
+			"/Visualisers/Scale", ( 1, 10, 100 ), "Other Scale"
+		)
+
+		return m
+
+	def __appendValuePresetMenu( self, menu, plug, title, presets, otherDialogTitle = None  ) :
+
+		if not otherDialogTitle :
+			otherDialogTitle = title
+
+		valueIsOther = True
+		for preset in presets :
+			isSelected = plug.getValue() == preset
 			if isSelected :
-				visScaleIsOther = False
-			m.append(
-				"/Visualiser Scale/%d" % scale,
+				valueIsOther = False
+			menu.append(
+				"%s/%s" % ( title, preset ),
 				{
-					"command" : functools.partial( lambda s, _ : visScalePlug.setValue( s ), scale ),
+					"command" : functools.partial( lambda s, _ : plug.setValue( s ), preset ),
 					"checkBox" : isSelected
 				}
 			)
 
-		m.append( "/Visualiser Scale/__divider__", { "divider" : True } )
-		m.append(
-			"/Visualiser Scale/Other...",
+		menu.append( "%s/__divider__" % title, { "divider" : True } )
+
+		menu.append(
+			"%s/Other..." % title,
 			{
-				"command" : functools.partial(  Gaffer.WeakMethod( self.__popupPlugWidget ), visScalePlug, "Other Scale" ),
-				"checkBox" : visScaleIsOther
+				"command" : functools.partial(  Gaffer.WeakMethod( self.__popupPlugWidget ), plug, otherDialogTitle ),
+				"checkBox" : valueIsOther
 			}
 		)
-
-		return m
 
 	def __popupPlugWidget( self, plug, title, *unused ) :
 
