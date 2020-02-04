@@ -415,7 +415,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w1.setPosition( imath.V2i( 100 ) )
 		w2.setPosition( imath.V2i( 300 ) )
 
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		self.assertTrue( GafferUI.Widget.widgetAt( w1.bound().center() ) is t1 )
 		self.assertTrue( GafferUI.Widget.widgetAt( w2.bound().center() ) is t2 )

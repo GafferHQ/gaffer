@@ -75,7 +75,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 
 		w.setVisible( True )
 
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		self.assertTrue( GafferUI.Widget.widgetAt( w.bound().min() + imath.V2i( 4 ) ) is b )
 
@@ -91,14 +91,14 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		f.setChild( b )
 
 		w.setVisible( True )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 
 		w.setPosition( imath.V2i( 100 ) )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 		b1 = b.bound()
 
 		w.setPosition( imath.V2i( 200 ) )
-		self.waitForIdle( 1000 )
+		self.waitForIdle( 10000 )
 		b2 = b.bound()
 
 		self.assertEqual( b2.min(), b1.min() + imath.V2i( 100 ) )
