@@ -1,5 +1,5 @@
-0.56.x.x
-========
+0.56.0.0b1
+==========
 
 Features
 --------
@@ -9,6 +9,8 @@ Features
   - Added new nodes for processing deep images : DeepToFlat, FlatToDeep, DeepMerge, DeepRecolor, DeepHoldout, DeepState, DeepTidy, Empty, DeepSampleCounts and DeepSampler.
   - Updated existing nodes to support deep images where relevant.
 - SphereLevelSet : Added new node for creating a level set representation of a sphere.
+- Viewer : Added the Crop Window Tool to image views to allow a scenes crop window to be adjusted directly from the rendered image (#2835).
+- Image : Added support for transform concatenation. This improves speed and filtering quality for chains of adjacent ImageTransforms (#2842).
 
 Improvements
 ------------
@@ -27,6 +29,12 @@ Improvements
     - Added an approximation of Arnold area light spread.
     - Added menu items to control visualiser scale.
     - Added menu items to control the default drawing mode for lights.
+    - Changed Crop Window Tool status presentation to match other tools (#2835).
+    - Added menu items to control frustrum visualisations. These can also be controlled via the `OpenGLAttributes` node (#3569).
+    - Added visualisation of camera frustums and spot light cones (#3569).
+    - Improved <kbd>f</kbd> framing behaviour for light visualisations (#3569).
+- CropWindowTool : Added new mouse interactions to edit the crop region. Dragging outside creates a new region. Dragging inside moves the existing region. <kbd>Shift</kbd>-dragging inside creates a new region.
+- Camera : Added Visualisation controls to the Camera node to allow frustum visualisation to be easily overridden per-camera (#3569).
 - Set expressions :
   - Added `in` operator. The expression `A in B` selects all locations from set A which are descendants of a location from set B.
   - Added `containing` operator. The expression `A containing B` selects all locations from set A which are ancestors of a location from set B.
@@ -35,6 +43,7 @@ Improvements
   - Renamed `instances` plug to `prototypes` and `index` plug to `prototypeIndex`. This clarifies their meaning and matches the terminology used in USD.
   - Organised UI into sections.
   - Added better defaults for the `orientation` and `scale` plugs.
+  - Added control over prototype root locations via a string array, which can be optionally specified using a plug, Constant primvar, or Vertex primvar.
 - InteractiveArnoldRender : Enabled progressive refinement.
 - OSLObject : Added non-uniform scale to standard primitive variable menu.
 - View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
@@ -49,6 +58,8 @@ Improvements
 - OpenGLAttributes : Added sensible limits on attribute value plugs to prevent invalid settings.
 - Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
 - Documentation : Added examples for OSLImage and OSLObject nodes.
+- Rendering : Added the name of the render node to image metadata via the `gaffer:renderNode` header (#2835).
+- Test app : Added `stopOnFailure` arguments.
 
 Fixes
 -----
@@ -61,6 +72,7 @@ Fixes
 - Viewer :
   - Fixed bug that caused the StandardLightVisualiser to be used instead of render-specific ones (#3407).
   - Fixed bug that caused duplicate drawing of inherited light filter state (#3502).
+  - Fixed bug that caused unexpected results when dragging into the Viewer when the Crop Window Tool was active (#2385).
 - ParallelAlgo :
   - Fixed handling of Python exceptions thrown from UIThreadCallHandler.
   - Fixed GIL management for `popUIThreadCallHandler()`.
@@ -68,6 +80,8 @@ Fixes
 - OSLLight : Fixed bug which prevented visualisation attributes taking effect.
 - BoolWidget : Fixed unwanted horizontal expansion.
 - Style : Fixed Qt application style to use the same style on all platforms.
+- Display : Fixed dirty propagation for new drivers and ensured that only the channelData plug is dirtied when new data is received (#2845).
+- ImageTransform : Fixed inconsistent filtering of transforms containing rotation but no translation.
 
 API
 ---
@@ -86,18 +100,22 @@ API
 - FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
 - GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
 - StandardLightVisualiser : Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
-- IECoreGLPreview : Added `VisualisationType` and `VisualisationMap` to allow classification of renderables returned by visualisers.
-  SceneAlgo : `history()` now returns History items for all upstream plugs in the history chain, not just those where a computation was performed.
+- IECoreGLPreview :
+  - Added `VisualisationType` and `VisualisationMap` to allow classification of renderables returned by visualisers.
+  - IECoreGLPreview : Added support for more flexible visualisations via the `Visualisation` struct (#3569).
+- SceneAlgo :
+  - `history()` now returns History items for all upstream plugs in the history chain, not just those where a computation was performed.
+  - Added `sourceSceneName` and `sourceScene` methods to retrieve source scene information from an ImagePlug (#3582).
 - Process : Added `destinationPlug()` method.
 - GafferVDB : Added Interrupter class to forward Gaffer's cancellation to OpenVDB's algorithms.
 
 Breaking Changes
 ----------------
 
-- Resize : A bug fix means that results are changed significantly when changing pixel aspect
-  ratios.
-- Instancer : Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a
-  config file.
+- Resize : A bug fix means that results are changed significantly when changing pixel aspect ratios.
+- Instancer :
+  - Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a config file.
+  - Attributes assigned to a prototype root are now instanced onto `<prototypeName>` rather then `<prototypeName>/<id>` (eg `/instances/robot` rather than `/instances/robot/0`)
 - OSLObject : Removed support for the `GAFFEROSL_OSLOBJECT_CONTEXTCOMPATIBILITY` environment variable.
 - ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
@@ -116,8 +134,23 @@ Breaking Changes
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
 - OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to visualisations unless they need to invert this scale for any geometry-related components of the visualisation.
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:scale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
-- IECoreGLPreview : Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
+- IECoreGLPreview :
+  - Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
+  - Changed the return type of `(Light|LightFilter|Attribute)Visualiser` classes. Visualisations are now a vector of `Visualisation` structs(#3569).
+  - Changed `ObjectVisualiser` return type to `Visualisations`.
 - Arnold : Raised minimum required version to 5.4.
+- RendererAlgo : Changed signature for `outputOutput` to include the source scene plug (#2835).
+- ViewportGadget : Made the SelectionScope and RasterScope classes non-copyable.
+
+Build
+-----
+
+- Gaffer Dependencies : Updated to version 1.0.0 (#3585).
+- Cortex : Updated to version 10.0.0-a72 (#3585).
+- USD : Updated to version 20.02 (#3585).
+- OpenVDB : Updated to version 7.0.0 (#3585).
+- Arnold : Updated to version 6.0.1.0 (#3585)
+
 
 0.55.4.0 (relative to 0.55.3.0)
 ========
