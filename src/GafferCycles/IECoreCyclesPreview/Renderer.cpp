@@ -2773,9 +2773,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Set path to find shaders & cuda cubins. This code exists as well in the python module, but left here if ever IECoreCycles is split away from GafferCycles.
 			#ifdef _WIN32
-			string paths = boost::str( boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+			std::string paths = ccl::string_printf( "%s;%s\\\\cycles;%s", getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
 			#else
-			string paths = boost::str( boost::format( "%s:%s/cycles:%s" ) % getenv( "GAFFERCYCLES" ) % getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+			std::string paths = ccl::string_printf( "%s:%s/cycles:%s" , getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
 			#endif
 			const char *kernelFile = "source/kernel/kernel_globals.h";
 			SearchPath searchPath( paths );
