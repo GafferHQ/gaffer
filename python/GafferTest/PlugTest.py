@@ -911,5 +911,85 @@ class PlugTest( GafferTest.TestCase ) :
 			[ n["c2"], n["c3"]["gc2"] ]
 		)
 
+	def testRangesForPythonTypes( self ) :
+
+		class DerivedPlug( Gaffer.Plug ) :
+
+			def __init__( self, name = "DerivedPlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.Default ) :
+
+				Gaffer.Plug.__init__( self, name, direction, flags )
+
+		IECore.registerRunTimeTyped( DerivedPlug )
+
+		n = Gaffer.Node()
+
+		n["c1"] = Gaffer.Plug()
+		n["c1"]["gc1"] = DerivedPlug()
+		n["c2"] = DerivedPlug( direction = Gaffer.Plug.Direction.Out )
+		n["c3"] = DerivedPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs )
+		n["c3"]["gc2"] = DerivedPlug()
+		n["c3"]["gc3"] = DerivedPlug( direction = Gaffer.Plug.Direction.Out )
+		n["c3"]["gc4"] = Gaffer.IntPlug()
+
+		self.assertEqual(
+			list( Gaffer.Plug.Range( n ) ),
+			[ n["user"], n["c1"], n["c2"], n["c3"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.InputRange( n ) ),
+			[ n["user"], n["c1"], n["c3"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.OutputRange( n ) ),
+			[ n["c2"] ],
+		)
+
+		self.assertEqual(
+			list( DerivedPlug.Range( n ) ),
+			[ n["c2"], n["c3"] ],
+		)
+
+		self.assertEqual(
+			list( DerivedPlug.InputRange( n ) ),
+			[ n["c3"] ],
+		)
+
+		self.assertEqual(
+			list( DerivedPlug.OutputRange( n ) ),
+			[ n["c2"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.RecursiveRange( n ) ),
+			[ n["user"], n["c1"], n["c1"]["gc1"], n["c2"], n["c3"], n["c3"]["gc2"], n["c3"]["gc3"], n["c3"]["gc4"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.RecursiveInputRange( n ) ),
+			[ n["user"], n["c1"], n["c1"]["gc1"], n["c3"], n["c3"]["gc2"], n["c3"]["gc4"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Plug.RecursiveOutputRange( n ) ),
+			[ n["c2"], n["c3"]["gc3"] ],
+		)
+
+		self.assertEqual(
+			list( DerivedPlug.RecursiveRange( n ) ),
+			[ n["c1"]["gc1"], n["c2"], n["c3"], n["c3"]["gc2"], n["c3"]["gc3"] ],
+		)
+
+		self.assertEqual(
+			list( DerivedPlug.RecursiveInputRange( n ) ),
+			[ n["c1"]["gc1"], n["c3"], n["c3"]["gc2"] ],
+		)
+
+		self.assertEqual(
+			list( DerivedPlug.RecursiveOutputRange( n ) ),
+			[ n["c2"], n["c3"]["gc3"] ],
+		)
+
 if __name__ == "__main__":
 	unittest.main()
