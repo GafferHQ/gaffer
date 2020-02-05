@@ -753,6 +753,11 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 	V3fVectorDataPtr p = new V3fVectorData;
 	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
 
+	if( fabs( innerAngle - outerAngle ) > 0.1 )
+	{
+		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
+	}
+
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
@@ -760,25 +765,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 	group->addChild( curves );
-
-	if( fabs( innerAngle - outerAngle ) > 0.1 )
-	{
-		IECoreGL::GroupPtr outerGroup = new Group;
-		outerGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f * lineWidthScale ) );
-
-		IntVectorDataPtr vertsPerCurve = new IntVectorData;
-		V3fVectorDataPtr p = new V3fVectorData;
-		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
-
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-
-		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
-
-		outerGroup->addChild( curves );
-
-		group->addChild( outerGroup );
-	}
 
 	return group;
 }
@@ -948,10 +934,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::
 
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &size )
 {
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-	addConstantShader( group.get() );
-
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
 
@@ -968,9 +950,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
-	group->addChild( curves );
-
-	return group;
+	return curves;
 }
 
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size )
@@ -1072,10 +1052,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &siz
 
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe( float radius, const Vec3<bool> &axisRings )
 {
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-	addConstantShader( group.get() );
-
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
 
@@ -1096,9 +1072,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
 
-	group->addChild( curves );
-
-	return group;
+	return curves;
 }
 
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( IECore::ConstDataPtr texture, int maxTextureResolution, const Imath::Color3f &fallbackColor )
@@ -1150,10 +1124,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius,
 
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radius )
 {
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-	addConstantShader( group.get() );
-
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
 
@@ -1163,9 +1133,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radiu
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
 
-	group->addChild( curves );
-
-	return group;
+	return curves;
 }
 
 
