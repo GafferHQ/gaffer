@@ -420,11 +420,24 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
 		expectedFile = "{base}.{ext}".format( base=self.__rgbFilePath, ext=ext )
 
-		tests = [ {
-			'name': "default",
-			'plugs': {},
-			'metadata': options.get( "metadata", {} ),
-			'maxError': options.get( "maxError", 0.0 ) } ]
+		tests = [
+			{
+				'name': "default",
+				'plugs': {},
+				'metadata': options.get( "metadata", {} ),
+				'maxError': options.get( "maxError", 0.0 )
+			}, 
+			{
+				'name': "defaultNoAlpha",
+				'removeAlpha': True,
+				'plugs': {},
+				'metadata': options.get( "metadata", {} ),
+				# The expected images were written out with an alpha.  Removing two unpremults/premults from the
+				# color space processing chain produces slightly different results ( in low precision file formats,
+				# like PNG, this error accumulates to be a bit large )
+				'maxError': 0.011
+			}
+		]
 
 		for optPlugName in options['plugs'] :
 			for optPlugVal in options['plugs'][optPlugName] :
@@ -443,6 +456,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			maxError = test['maxError']
 			overrideMetadata = test['metadata']
 			testFile = self.__testFile( name, "RGBA", ext )
+			removeAlpha = "removeAlpha" in test
 
 			self.failIf( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
@@ -450,7 +464,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			w = GafferImage.ImageWriter()
 			w["in"].setInput( r["out"] )
 			w["fileName"].setValue( testFile )
-			w["channels"].setValue( "*" )
+			w["channels"].setValue( "[RGB]" if removeAlpha else "*" )
 
 			for opt in test['plugs']:
 				w[formatName][opt].setValue( test['plugs'][opt] )
@@ -496,7 +510,14 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				self.assertTrue( metaName in writerMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {} ({})".format(metaName, str(expectedMetadata[metaName]), ext, name) )
 				self.assertEqual( expectedMetadata[metaName], writerMetadata[metaName], "Metadata does not match for key \"{}\" : {} ({})".format(metaName, ext, name) )
 
-			self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True )
+			if not removeAlpha:
+				self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True )
+			else:
+				deleteChannels = GafferImage.DeleteChannels()
+				deleteChannels["channels"].setValue( "A" )
+				deleteChannels["in"].setInput( expectedOutput["out"] )
+
+				self.assertImagesEqual( deleteChannels["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True )
 
 	def __addExpectedIPTCMetadata( self, metadata, expectedMetadata ) :
 
