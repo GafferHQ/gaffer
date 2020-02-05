@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,23 +34,33 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from HierarchyViewTest import HierarchyViewTest
-from DocumentationTest import DocumentationTest
+import unittest
+
+import Gaffer
+import GafferScene
+import GafferTest
+
 from SceneUITestCase import SceneUITestCase
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
-from RotateToolTest import RotateToolTest
-from ContextAlgoTest import ContextAlgoTest
-from CameraToolTest import CameraToolTest
-from VisualiserTest import VisualiserTest
-from RendererTest import RendererTest
+
+@unittest.skipIf( GafferTest.inCI(), "OpenGL not set up" )
+class RendererTest( SceneUITestCase ) :
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testViewportDrawPerformanceEmpty( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["group"] = GafferScene.Group()
+
+		self.benchmarkRender( script["group"]["out"], frames = 10000 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testViewportDrawPerformanceCubes( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
+		instancerOut = self.setupInstancer( script["cube"]["out"] )
+
+		self.benchmarkRender( instancerOut, frames = 500 )
 
 if __name__ == "__main__":
 	unittest.main()
