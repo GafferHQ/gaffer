@@ -595,18 +595,26 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	Visualisations result;
 	if( !geometry->children().empty() )
 	{
+		addWireframeCurveState( geometry.get() );
+		addConstantShader( geometry.get() );
 		result.push_back( Visualisation::createGeometry( geometry ) );
 	}
 	if( !ornaments->children().empty() )
 	{
+		addWireframeCurveState( ornaments.get() );
+		addConstantShader( ornaments.get() );
 		result.push_back( Visualisation::createOrnament( ornaments, false ) );
 	}
 	if( !boundOrnaments->children().empty() )
 	{
+		addWireframeCurveState( boundOrnaments.get() );
+		addConstantShader( boundOrnaments.get() );
 		result.push_back( Visualisation::createOrnament( boundOrnaments, true ) );
 	}
 	if( !frustum->children().empty() )
 	{
+		addWireframeCurveState( frustum.get() );
+		addConstantShader( frustum.get() );
 		result.push_back( Visualisation::createFrustum( frustum, Visualisation::Scale::Visualiser ) );
 	}
 	return result;
@@ -739,9 +747,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length, float lineWidthScale )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
-	addConstantShader( group.get(), false );
-
 	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f * lineWidthScale ) );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
@@ -929,10 +934,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::
 	{
 		addTexturedConstantShader( group.get(), textureData, maxTextureResolution );
 	}
-	else
-	{
-		addConstantShader( group.get(), true );
-	}
 
 	IECoreGL::QuadPrimitivePtr textureQuad = new IECoreGL::QuadPrimitive( size.x, size.y );
 	textureQuad->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
@@ -1109,10 +1110,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( 
 	{
 		addTexturedConstantShader( sphereGroup.get(), texture, maxTextureResolution );
 	}
-	else
-	{
-		addConstantShader( sphereGroup.get(), true );
-	}
 
 	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
 	sphere->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
@@ -1134,10 +1131,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius,
 	if( textureData )
 	{
 		addTexturedConstantShader( group.get(), textureData, maxTextureResolution );
-	}
-	else
-	{
-		addConstantShader( group.get(), true );
 	}
 
 	IntVectorDataPtr vertsPerPoly = new IntVectorData;
