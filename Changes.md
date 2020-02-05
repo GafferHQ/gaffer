@@ -30,7 +30,7 @@ Improvements
     - Added menu items to control visualiser scale.
     - Added menu items to control the default drawing mode for lights.
     - Changed Crop Window Tool status presentation to match other tools (#2835).
-    - Added menu items to control frustrum visualisations. These can also be controlled via the `OpenGLAttributes` node (#3569).
+    - Added menu items to control frustum visualisations. These can also be controlled via the `OpenGLAttributes` node (#3569).
     - Added visualisation of camera frustums and spot light cones (#3569).
     - Improved <kbd>f</kbd> framing behaviour for light visualisations (#3569).
 - CropWindowTool : Added new mouse interactions to edit the crop region. Dragging outside creates a new region. Dragging inside moves the existing region. <kbd>Shift</kbd>-dragging inside creates a new region.
@@ -58,7 +58,7 @@ Improvements
 - OpenGLAttributes : Added sensible limits on attribute value plugs to prevent invalid settings.
 - Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
 - Documentation : Added examples for OSLImage and OSLObject nodes.
-- Rendering : Added the name of the render node to image metadata via the `gaffer:renderNode` header (#2835).
+- Rendering : Added the name of the render node to image metadata via the `gaffer:sourceScene` header (#2835).
 - Test app : Added `stopOnFailure` arguments.
 
 Fixes
@@ -135,7 +135,6 @@ Breaking Changes
 - OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to visualisations unless they need to invert this scale for any geometry-related components of the visualisation.
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:scale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview :
-  - Refactored the visualisation methods of `LightVisualiser`, `LightFilterVisualiser` and to support categorisation of renderables via `VisualisationMap`.
   - Changed the return type of `(Light|LightFilter|Attribute)Visualiser` classes. Visualisations are now a vector of `Visualisation` structs(#3569).
   - Changed `ObjectVisualiser` return type to `Visualisations`.
 - Arnold : Raised minimum required version to 5.4.
