@@ -91,6 +91,11 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
+		self.assertTrue(
+			o["out"].channelData( "R", imath.V2i( 0 ), _copy = False ).isSame(
+				n["out"].channelData( "R", imath.V2i( 0 ), _copy = False )
+			)
+		)
 
 		o["enabled"].setValue( True )
 
@@ -102,6 +107,11 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
+		self.assertTrue(
+			o["out"].channelData( "R", imath.V2i( 0 ), _copy = False ).isSame(
+				n["out"].channelData( "R", imath.V2i( 0 ), _copy = False )
+			)
+		)
 
 	def testImageHashPassThrough( self ) :
 

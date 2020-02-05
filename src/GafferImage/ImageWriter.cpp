@@ -1259,10 +1259,18 @@ ImageWriter::ImageWriter( const std::string &name )
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 
+	ColorSpacePtr colorSpaceUnpremultedChild = new ColorSpace( "__colorSpaceUnpremulted" );
+	colorSpaceUnpremultedChild->processUnpremultipliedPlug()->setValue( true );
+	addChild( colorSpaceUnpremultedChild );
+
 	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
 	addChild( colorSpaceChild );
 
 	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+	colorSpaceUnpremultedChild->inputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
+	colorSpaceUnpremultedChild->inPlug()->setInput( inPlug() );
+	colorSpaceUnpremultedChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
+
 	colorSpaceChild->inputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
 	colorSpaceChild->inPlug()->setInput( inPlug() );
 
@@ -1388,14 +1396,24 @@ const GafferImage::ImagePlug *ImageWriter::outPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex+4 );
 }
 
-GafferImage::ColorSpace *ImageWriter::colorSpaceNode()
+GafferImage::ColorSpace *ImageWriter::colorSpaceUnpremultedNode()
 {
 	return getChild<ColorSpace>( g_firstPlugIndex+5 );
 }
 
-const GafferImage::ColorSpace *ImageWriter::colorSpaceNode() const
+const GafferImage::ColorSpace *ImageWriter::colorSpaceUnpremultedNode() const
 {
 	return getChild<ColorSpace>( g_firstPlugIndex+5 );
+}
+
+GafferImage::ColorSpace *ImageWriter::colorSpaceNode()
+{
+	return getChild<ColorSpace>( g_firstPlugIndex+6 );
+}
+
+const GafferImage::ColorSpace *ImageWriter::colorSpaceNode() const
+{
+	return getChild<ColorSpace>( g_firstPlugIndex+6 );
 }
 
 Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string &fileFormat )
@@ -1582,6 +1600,7 @@ void ImageWriter::execute() const
 		throw IECore::Exception( "No channels to write" );
 	}
 
+	bool hasAlpha = false;
 	spec.nchannels = channelsToWrite.size();
 	spec.channelnames.clear();
 	for( vector<string>::const_iterator it = channelsToWrite.begin(), eIt = channelsToWrite.end(); it != eIt; ++it )
@@ -1590,6 +1609,7 @@ void ImageWriter::execute() const
 		// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
 		if( *it == "A" )
 		{
+			hasAlpha = true;
 			spec.alpha_channel = it - channelsToWrite.begin();
 		}
 		else if( *it == "Z" )
@@ -1618,6 +1638,8 @@ void ImageWriter::execute() const
 	}
 
 	// Write out the channel data
+	
+	const ColorSpace *appropriateColorSpaceNode = hasAlpha ? colorSpaceUnpremultedNode() : colorSpaceNode();
 
 	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );
 	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
@@ -1630,13 +1652,13 @@ void ImageWriter::execute() const
 		if ( spec.tile_width == 0 )
 		{
 			FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
-			ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
 			flatScanlineWriter.finish();
 		}
 		else
 		{
 			FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
-			ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
 			flatTileWriter.finish();
 		}
 
@@ -1646,19 +1668,19 @@ void ImageWriter::execute() const
 		TileSampleOffsetsProcessor sampleOffsetsProcessor;
 
 		SampleOffsetsAccumulator sampleOffsetsAccumulator;
-		ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), sampleOffsetsProcessor, sampleOffsetsAccumulator, processDataWindow );
+		ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), sampleOffsetsProcessor, sampleOffsetsAccumulator, processDataWindow );
 
 		TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
 
 		if( spec.tile_width == 0 )
 		{
 			DeepScanlineWriter deepScanlineWriter( out, fileName, processDataWindow, imageFormat, sampleOffsetsAccumulator.m_sampleOffsets );
-			ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), spec.channelnames, channelDataProcessor, deepScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, channelDataProcessor, deepScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
 		}
 		else
 		{
 			DeepTileWriter deepTileWriter( out, fileName, processDataWindow, imageFormat, sampleOffsetsAccumulator.m_sampleOffsets );
-			ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), spec.channelnames, channelDataProcessor, deepTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, channelDataProcessor, deepTileWriter, processDataWindow, ImageAlgo::TopToBottom );
 		}
 	}
 

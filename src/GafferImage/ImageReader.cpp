@@ -159,6 +159,7 @@ ImageReader::ImageReader( const std::string &name )
 	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
 	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
 	colorSpace->outputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
+	colorSpace->processUnpremultipliedPlug()->setValue( true );
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 }
 
