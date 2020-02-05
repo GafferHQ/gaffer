@@ -452,9 +452,9 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 
 	// Set path to find shaders & cuda cubins
 	#ifdef _WIN32
-	std::string paths = boost::str( boost::format( "%s;%s\\\\cycles;%s" ) % getenv( "GAFFERCYCLES" ) %  getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+	std::string paths = ccl::string_printf( "%s;%s\\\\cycles;%s", getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
 	#else
-	std::string paths = boost::str( boost::format( "%s:%s/cycles:%s" ) % getenv( "GAFFERCYCLES" ) % getenv( "GAFFER_ROOT" ) % getenv( "GAFFER_EXTENSION_PATHS" ) );
+	std::string paths = ccl::string_printf( "%s:%s/cycles:%s" , getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
 	#endif
 	const char *kernelFile = "source/kernel/kernel_globals.h";
 	IECore::SearchPath searchPath( paths );
