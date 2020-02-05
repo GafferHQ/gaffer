@@ -51,13 +51,15 @@
 #include "GafferCycles/InteractiveCyclesRender.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/SearchPath.h"
 
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
 #include "util/util_logging.h"
 #include "util/util_path.h"
+
+// Header needs to be here on Windows
+#include "IECore/SearchPath.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
