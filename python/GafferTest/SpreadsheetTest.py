@@ -565,5 +565,46 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		] :
 			self.assertEqual( ss["s"]["rows"][i]["cells"]["v"]["value"].getValue(), v )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testAddRowPerformance( self ) :
+
+		s = Gaffer.Spreadsheet()
+		for i in range( 0, 10000 ) :
+			s["rows"].addRow()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testAddRowsPerformance( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addRows( 10000 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testSavePerformance( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+		for i in range( 0, 10000 ) :
+			s["s"]["rows"].addRow()["cells"]["v"]["value"].setValue( i )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			s.serialise()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testLoadPerformance( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+		for i in range( 0, 10000 ) :
+			s["s"]["rows"].addRow()["cells"]["v"]["value"].setValue( i )
+
+		serialised = s.serialise()
+		s = Gaffer.ScriptNode()
+		with GafferTest.TestRunner.PerformanceScope() :
+			s.execute( serialised )
+
 if __name__ == "__main__":
 	unittest.main()
