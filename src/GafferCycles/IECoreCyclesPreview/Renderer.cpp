@@ -41,6 +41,7 @@
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
 #include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ParticleAlgo.h"
@@ -2771,25 +2772,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_useOptixDenoising( false ),
 				m_writeDenoisingPasses( false )
 		{
-			// Set path to find shaders & cuda cubins. This code exists as well in the python module, but left here if ever IECoreCycles is split away from GafferCycles.
-			#ifdef _WIN32
-			std::string paths = ccl::string_printf( "%s;%s\\\\cycles;%s", getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
-			#else
-			std::string paths = ccl::string_printf( "%s:%s/cycles:%s" , getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
-			#endif
-			const char *kernelFile = "source/kernel/kernel_globals.h";
-			SearchPath searchPath( paths );
-			boost::filesystem::path path = searchPath.find( kernelFile );
-			if( path.empty() )
-			{
-				IECore::msg( IECore::Msg::Error, "CyclesRenderer", "Cannot find GafferCycles location. Have you set the GAFFERCYCLES environment variable?" );
-			}
-			else
-			{
-				string cclPath = path.string();
-				cclPath.erase( cclPath.end() - strlen( kernelFile ), cclPath.end() );
-				ccl::path_init( cclPath );
-			}
 			// Define internal device names
 			getCyclesDevices();
 			// Session Defaults
@@ -4362,15 +4344,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void getCyclesDevices()
 		{
 			DeviceMap retvar;
-			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
-#ifdef WITH_OPTIX
-				| ccl::DEVICE_MASK_OPTIX
-#endif
-			);
 			int indexCuda = 0;
 			int indexOpenCL = 0;
 			int indexOptiX = 0;
-			for( const ccl::DeviceInfo &device : devices ) 
+			for( const ccl::DeviceInfo &device : IECoreCycles::devices() ) 
 			{
 				if( device.type == ccl::DEVICE_CPU )
 				{

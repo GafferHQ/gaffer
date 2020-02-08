@@ -41,6 +41,7 @@
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
 #include "GafferCycles/CyclesAttributes.h"
 #include "GafferCycles/CyclesBackground.h"
 #include "GafferCycles/CyclesOptions.h"
@@ -55,11 +56,6 @@
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
-#include "util/util_logging.h"
-#include "util/util_path.h"
-
-// Header needs to be here on Windows
-#include "IECore/SearchPath.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -73,12 +69,8 @@ static py::list getDevices()
 {
 	py::list result;
 
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
-#ifdef WITH_OPTIX
-	| ccl::DEVICE_MASK_OPTIX
-#endif
-	);
-	devices.push_back( ccl::Device::get_multi_device( devices, 0, true ) );
+	std::vector<ccl::DeviceInfo> devices = IECoreCycles::devices();
+
 	for( const ccl::DeviceInfo &device : devices ) 
 	{
 		py::dict d;
@@ -452,31 +444,7 @@ static py::dict getLights()
 BOOST_PYTHON_MODULE( _GafferCycles )
 {
 
-	// Set path to find shaders & cuda cubins
-	#ifdef _WIN32
-	std::string paths = ccl::string_printf( "%s;%s\\\\cycles;%s", getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
-	#else
-	std::string paths = ccl::string_printf( "%s:%s/cycles:%s" , getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
-	#endif
-	const char *kernelFile = "source/kernel/kernel_globals.h";
-	IECore::SearchPath searchPath( paths );
-	boost::filesystem::path path = searchPath.find( kernelFile );
-	if( path.empty() )
-	{
-		IECore::msg( IECore::Msg::Error, "CyclesRenderer", "Cannot find GafferCycles location. Have you set the GAFFERCYCLES environment variable?" );
-	}
-	else
-	{
-		std::string cclPath = path.string();
-		cclPath.erase( cclPath.end() - strlen( kernelFile ), cclPath.end() );
-		ccl::path_init( cclPath );
-	}
-
-	// This is a global thing for logging
-	const char* argv[] = { "-", "v", "1" };
-	ccl::util_logging_init( argv[0] );
-	ccl::util_logging_start();
-	ccl::util_logging_verbosity_set( 0 );
+	IECoreCycles::init();
 
 	py::scope().attr( "devices" ) = getDevices();
 	py::scope().attr( "nodes" ) = getNodes();
