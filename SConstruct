@@ -509,6 +509,8 @@ if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 	sys.stderr.write( "ERROR : Inkscape not found. Check INKSCAPE build variable.\n" )
 	Exit( 1 )
 
+haveSphinx = conf.checkSphinx()
+
 if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
 	Exit( 1 )
@@ -1302,7 +1304,7 @@ def buildDocs( target, source, env ) :
 		env = env["ENV"]
 	)
 
-if conf.checkSphinx() :
+if haveSphinx and haveInkscape :
 
 	docEnv = commandEnv.Clone()
 
@@ -1339,8 +1341,13 @@ if conf.checkSphinx() :
 		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed" )
 		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
+	#  Docs graphics generation
+	docGraphicsCommand = docEnv.Command( os.path.join( "$BUILD_DIR/doc/gaffer/graphics", "mouse.png" ), "resources/docGraphics.svg", buildGraphics )
+	docEnv.NoCache( docGraphicsCommand )
+	docEnv.Alias( "docs", docGraphicsCommand )
 	docSource, docGenerationCommands = locateDocs( "doc/source", docEnv )
 	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
+	docEnv.Depends( docGenerationCommands, docGraphicsCommand )
 	docEnv.Depends( docs, docGenerationCommands )
 	docEnv.Depends( docs, "build" )
 	if resources is not None :
@@ -1349,7 +1356,11 @@ if conf.checkSphinx() :
 
 else :
 
-	sys.stderr.write( "WARNING : Sphinx not found - not building docs. Check SPHINX build variable.\n" )
+	if not haveSphinx :
+		sys.stderr.write( "WARNING : Sphinx not found - not building docs. Check SPHINX build variable.\n" )
+
+	if not haveInkscape :
+		sys.stderr.write( "WARNING : Inkscape not found - not building docs. Check INKSCAPE build variable.\n" )
 
 #########################################################################################################
 # Example files
