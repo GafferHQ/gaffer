@@ -33,8 +33,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -71,16 +71,20 @@ ccl::TypeDesc typeDesc( IECore::TypeId dataType )
 	switch( dataType )
 	{
 		case FloatVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case IntDataTypeId:
 			return ccl::TypeDesc::TypeFloat;
 		case Color3fVectorDataTypeId :
 		case Color4fVectorDataTypeId :
 			return ccl::TypeDesc::TypeColor;
 		case V2fVectorDataTypeId :
 		case V2iVectorDataTypeId :
+			return ccl::TypeFloat2;
 		case V3fVectorDataTypeId :
 		case V3iVectorDataTypeId :
 			return ccl::TypeDesc::TypeVector;
 		case M44fVectorDataTypeId :
+		case M44fDataTypeId :
 			return ccl::TypeDesc::TypeMatrix;
 		default :
 			return ccl::TypeDesc::TypeVector;
@@ -110,7 +114,13 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
 {
-	ccl::TypeDesc ctype = typeDesc( primitiveVariable.data.get()->typeId() );
+	IECore::TypeId dataType = primitiveVariable.data.get()->typeId();
+	if( dataType == StringDataTypeId )
+	{
+		//msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
+		return;
+	}
+	ccl::TypeDesc ctype = typeDesc( dataType );
 	ccl::Attribute *attr = nullptr;
 	bool exists = false;
 	if( name == "N" )
@@ -147,11 +157,10 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 				ctype = typeFromGeometricDataInterpretation( data->getInterpretation() );
 		}
 		ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
-		bool isUV = false;
 		switch( primitiveVariable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				celem = ccl::ATTR_ELEMENT_MESH;
+				celem = ccl::ATTR_ELEMENT_OBJECT;
 				break;
 			case PrimitiveVariable::Vertex :
 				if( attributes.curve_mesh )
@@ -182,54 +191,206 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 
 	if( ctype == ccl::TypeDesc::TypeFloat )
 	{
-		const FloatVectorData *data = runTimeCast<const FloatVectorData>( primitiveVariable.data.get() );
-		if( data )
+		if( const FloatVectorData *data = runTimeCast<const FloatVectorData>( primitiveVariable.data.get() ) )
 		{
 			const std::vector<float> &floatData = data->readable();
 
 			size_t num = floatData.size();
 			float *cdata = attr->data_float();
 
-			if( !cdata )
+			if( cdata )
 			{
-				msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData)." ) % name % primitiveVariable.data->typeName() );
-				attributes.remove( attr );
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = floatData[i];
+				cdata = attr->data_float();
+				return;
 			}
+		}
 
-			for( size_t i = 0; i < num; ++i )
-				*(cdata++) = floatData[i];
-			cdata = attr->data_float();
-		}
-		else
+		if( const IntData *data = runTimeCast<const IntData>( primitiveVariable.data.get() ) )
 		{
-			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData)." ) % name % primitiveVariable.data->typeName() );
-			attributes.remove( attr );
+			const int &intData = data->readable();
+			float *cdata = attr->data_float();
+
+			if( cdata )
+			{
+				*(cdata) = (float)intData;
+				return;
+			}
 		}
+
+		if( const IntVectorData *data = runTimeCast<const IntVectorData>( primitiveVariable.data.get() ) )
+		{
+			const std::vector<int> &intData = data->readable();
+
+			size_t num = intData.size();
+			float *cdata = attr->data_float();
+
+			if( cdata )
+			{
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = (float)intData[i];
+				cdata = attr->data_float();
+				return;
+			}
+		}
+
+		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData or IntVectorData)." ) % name % primitiveVariable.data->typeName() );
+		attributes.remove( attr );
+		return;
 	}
-	else
+	else if( ctype == ccl::TypeDesc::TypeVector )
 	{
-		const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
-		if( data )
+		if( const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() ) )
 		{
 			const std::vector<V3f> &v3fData = data->readable();
 			size_t num = v3fData.size();
 			ccl::float3 *cdata = attr->data_float3();
 
-			if( !cdata )
+			if( cdata )
 			{
-				msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData)." ) % name % primitiveVariable.data->typeName() );
-				attributes.remove( attr );
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = ccl::make_float3( v3fData[i].x, v3fData[i].y, v3fData[i].z );
+				cdata = attr->data_float3();
+				return;
 			}
+		}
 
-			for( size_t i = 0; i < num; ++i )
-				*(cdata++) = ccl::make_float3( v3fData[i].x, v3fData[i].y, v3fData[i].z );
-			cdata = attr->data_float3();
-		}
-		else
+		if( const V2fVectorData *data = runTimeCast<const V2fVectorData>( primitiveVariable.data.get() ) )
 		{
-			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData)." ) % name % primitiveVariable.data->typeName() );
-			attributes.remove( attr );
+			const std::vector<V2f> &v2fData = data->readable();
+			size_t num = v2fData.size();
+			ccl::float2 *cdata = attr->data_float2();
+
+			if( cdata )
+			{
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = ccl::make_float2( v2fData[i].x, v2fData[i].y );
+				cdata = attr->data_float2();
+				return;
+			}
 		}
+
+		if( const Color3fVectorData *data = runTimeCast<const Color3fVectorData>( primitiveVariable.data.get() ) )
+		{
+			const std::vector<Color3f> &colorData = data->readable();
+			size_t num = colorData.size();
+			ccl::float3 *cdata = attr->data_float3();
+
+			if( cdata )
+			{
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = ccl::make_float3( colorData[i].x, colorData[i].y, colorData[i].z );
+				cdata = attr->data_float3();
+				return;
+			}
+		}
+
+		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData, Color3fVectorData or V2fVectorData)." ) % name % primitiveVariable.data->typeName() );
+		attributes.remove( attr );
+		return;
+	}
+	else if( PrimitiveVariable::Constant )
+	{
+		if( const FloatData *data = runTimeCast<const FloatData>( primitiveVariable.data.get() ) )
+		{
+			const float &floatData = data->readable();
+			float *cdata = attr->data_float();
+
+			if( cdata )
+			{
+				*(cdata) = floatData;
+				return;
+			}
+		}
+
+		if( const IntData *data = runTimeCast<const IntData>( primitiveVariable.data.get() ) )
+		{
+			const int &intData = data->readable();
+			float *cdata = attr->data_float();
+
+			if( cdata )
+			{
+				*(cdata) = (float)intData;
+				return;
+			}
+		}
+
+		if( const V3fData *data = runTimeCast<const V3fData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::V3f &v3fData = data->readable();
+			ccl::float3 *cdata = attr->data_float3();
+
+			if( cdata )
+			{
+				*(cdata) = SocketAlgo::setVector( v3fData );
+				return;
+			}
+		}
+
+		if( const V3dData *data = runTimeCast<const V3dData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::V3d &v3dData = data->readable();
+			ccl::float3 *cdata = attr->data_float3();
+
+			if( cdata )
+			{
+				*(cdata) = SocketAlgo::setVector( v3dData );
+				return;
+			}
+		}
+
+		if( const Color3fVectorData *data = runTimeCast<const Color3fVectorData>( primitiveVariable.data.get() ) )
+		{
+			const std::vector<Color3f> &colorData = data->readable();
+			ccl::float3 *cdata = attr->data_float3();
+
+			if( cdata )
+			{
+				*(cdata) = SocketAlgo::setColor( colorData.front() );
+				return;
+			}
+		}
+
+		if( const Color3fData *data = runTimeCast<const Color3fData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::Color3f &colorData = data->readable();
+			ccl::float3 *cdata = attr->data_float3();
+
+			if( cdata )
+			{
+				*(cdata) = SocketAlgo::setColor( colorData );
+				return;
+			}
+		}
+
+		if( const M44fData *data = runTimeCast<const M44fData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::M44f &m44fData = data->readable();
+			ccl::Transform *cdata = attr->data_transform();
+
+			if( cdata )
+			{
+				*(cdata) = SocketAlgo::setTransform( m44fData );
+				return;
+			}
+		}
+
+		if( const M44dData *data = runTimeCast<const M44dData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::M44d &m44dData = data->readable();
+			ccl::Transform *cdata = attr->data_transform();
+
+			if( cdata )
+			{
+				*(cdata) = SocketAlgo::setTransform( m44dData );
+				return;
+			}
+		}
+
+		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatData, IntData, V3fData, Color3fData or M44fData)." ) % name % primitiveVariable.data->typeName() );
+		attributes.remove( attr );
+		return;
 	}
 }
 

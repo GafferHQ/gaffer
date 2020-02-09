@@ -124,7 +124,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 	}
 }
 
-void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs )
+void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs )//, ccl::Mesh *cmesh )
 {
 	size_t numFaces = mesh->numFaces();
 	const V2fVectorData *uvData = runTimeCast<V2fVectorData>( uvVariable.data.get() );
@@ -149,9 +149,25 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 	// Default UVs are named "uv"
 	ccl::Attribute *uv_attr = nullptr;
 	if( uvSet == "uv" )
+	{
 		uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
+	}
+	else if( uvSet == "st" )
+	{
+		// First check if UV exists on the mesh already so we don't override it, otherwise we will use it as a second uvset.
+		if( mesh->variables.find( "uv" ) != mesh->variables.end() )
+		{
+			uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeFloat2, ccl::ATTR_ELEMENT_CORNER );
+		}
+		else
+		{
+			uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
+		}
+	}
 	else
+	{
 		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeFloat2, ccl::ATTR_ELEMENT_CORNER );
+	}
 	ccl::float2 *fdata = uv_attr->data_float2();
 
 	if( subdivision_uvs )
@@ -161,28 +177,67 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 	const vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 
 	size_t vertex = 0;
-	for( size_t i = 0; i < numFaces; ++i )
+	if( uvVariable.indices )
 	{
-		if( uvVariable.indices )
+		const vector<int> &indices = uvVariable.indices->readable();
+
+		size_t numVerts = 0;
+		for( auto vert : vertsPerFace )
 		{
-			const vector<int> &indices = uvVariable.indices->readable();
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			numVerts += vert;
+		}
+
+		if( ( indices.size() < numVerts ) && uvVariable.interpolation != PrimitiveVariable::Vertex )
+		{
+			msg(
+				Msg::Warning, "IECoreCycles::MeshAlgo::convertUVSet",
+				boost::format( "Variable \"%s\" has an invalid index size \"%d\" to vertex size \"%d\"." ) % uvSet % indices.size() % numVerts
+			);
+			attributes.remove( uv_attr );
+			return;
+		}
+
+		if( uvVariable.interpolation == PrimitiveVariable::Vertex )
+		{
+			for( size_t i = 0; i < numFaces; ++i )
 			{
-				*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
+				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				{
+					*(fdata++) = ccl::make_float2(uvs[indices[vertexIds[vertex]]].x, uvs[indices[vertexIds[vertex]]].y);
+				}
 			}
 		}
-		else if( uvVariable.interpolation == PrimitiveVariable::FaceVarying )
+		else // FaceVarying/Varying
 		{
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			for( size_t i = 0; i < numFaces; ++i )
 			{
-				*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
+				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				{
+					*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
+				}
 			}
 		}
-		else
+	}
+	else
+	{
+		if( uvVariable.interpolation == PrimitiveVariable::Vertex )
 		{
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			for( size_t i = 0; i < numFaces; ++i )
 			{
-				*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
+				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				{
+					*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
+				}
+			}
+		}
+		else // FaceVarying/Varying
+		{
+			for( size_t i = 0; i < numFaces; ++i )
+			{
+				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				{
+					*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
+				}
 			}
 		}
 	}
@@ -336,7 +391,8 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	{
 		if( const V2fVectorData *data = runTimeCast<const V2fVectorData>( it->second.data.get() ) )
 		{
-			if( data->getInterpretation() == GeometricData::UV )
+			if( ( data->getInterpretation() == GeometricData::UV ) ||
+				( data->getInterpretation() == GeometricData::Numeric ) )
 			{
 				if ( subdivision || triangles )
 					convertUVSet( it->first, it->second, mesh, attributes, subdivision );
