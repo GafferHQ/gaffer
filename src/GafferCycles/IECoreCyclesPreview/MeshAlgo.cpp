@@ -229,6 +229,43 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			cmesh->add_subd_face( const_cast<int*>(&vertexIds[index_offset]), vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
 			index_offset += vertsPerFace[i];
 		}
+
+		// Creases
+		size_t numEdges = mesh->cornerIds()->readable().size();
+		for( int length : mesh->creaseLengths()->readable() )
+		{
+			numEdges += length - 1;
+		}
+
+		if( numEdges )
+		{
+			cmesh->subd_creases.resize( numEdges );
+			ccl::Mesh::SubdEdgeCrease *crease = cmesh->subd_creases.data();
+
+			auto id = mesh->creaseIds()->readable().begin();
+			auto sharpness = mesh->creaseSharpnesses()->readable().begin();
+			for( int length : mesh->creaseLengths()->readable() )
+			{
+				for( int j = 0; j < length - 1; ++j )
+				{
+					crease->v[0] = *id++;
+					crease->v[1] = *id;
+					crease->crease = *sharpness;
+					crease++;
+				}
+				id++;
+				sharpness++;
+			}
+
+			sharpness = mesh->cornerSharpnesses()->readable().begin();
+			for( int cornerId : mesh->cornerIds()->readable() )
+			{
+				crease->v[0] = cornerId;
+				crease->v[1] = cornerId;
+				crease->crease = *sharpness++;
+				crease++;
+			}
+		}
 	}
 	else
 	{
