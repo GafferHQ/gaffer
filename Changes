@@ -1,7 +1,7 @@
 0.55.4.1 (relative to 0.55.4.0)
 ========
 
- Fixes
+Fixes
 -----
 
 - Catalogue :
@@ -24,7 +24,7 @@ Fixes
   - Fixed bug that could break promoted Spreadsheet UIs.
   - Fixed bug that meant the current width was not checked in the row name width popup menu.
   - Fixed bug when undoing section resize.
-  - Spreadsheet : Fixed crashes caused by removing a column.
+  - Fixed crashes caused by removing a column.
 
 API
 ---
