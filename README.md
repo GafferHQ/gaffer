@@ -19,7 +19,7 @@ Participating in the Gaffer community requires abiding by the project's [Code of
 
 Compiled binary releases are available for download from the [releases page](https://github.com/GafferHQ/gaffer/releases).
 
-Gaffer is officially supported and tested on **Linux** (Centos 7) and **macOS** (macOS 10.14).
+Gaffer is officially supported and tested on **Linux** (CentOS 7) and **macOS** (macOS 10.14).
 
 
 ## Building ##
@@ -28,7 +28,7 @@ Gaffer is officially supported and tested on **Linux** (Centos 7) and **macOS** 
 
 Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2018**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
 
-> Note: From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
+> **Note:** From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
 
 ### Build requirements ###
 
@@ -86,7 +86,7 @@ You can then build Gaffer itself:
 scons build BUILD_DIR=../gaffer-build
 ```
 
-> Note: If `scons` has any issues finding dependencies or tools, see `SConstruct` for the various options that can be set to specify their location.
+> **Note:** If `scons` has any issues finding dependencies or tools, see `SConstruct` for the various options that can be set to specify their location.
 
 With any luck, you now have a functioning version of Gaffer.
 
