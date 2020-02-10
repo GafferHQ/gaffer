@@ -55,23 +55,6 @@ static bool acceptsParent( const T &p, const Gaffer::GraphComponent *potentialPa
 	return p.T::acceptsParent( potentialParent );
 }
 
-template<typename RangeType>
-static boost::python::object range( Gaffer::GraphComponent &graphComponent )
-{
-	boost::python::list l;
-	for( auto &c : RangeType( graphComponent ) )
-	{
-		l.append( c );
-	}
-	// We could just return a list object, but instead we're returning an
-	// iterator to a list. This gives us a bit more latitude to
-	// replace with a true iterator in future, to avoid fully generating the
-	// range before returning. The reason we don't do that now is that
-	// if a python script modified the graph while iterating, it would
-	// invalidate the iterator it was using, leading to crashes.
-	return l.attr( "__iter__" )();
-}
-
 } // namespace Detail
 
 template<typename T, typename TWrapper>
@@ -80,10 +63,6 @@ GraphComponentClass<T, TWrapper>::GraphComponentClass( const char *docString )
 {
 	this->def( "acceptsChild", &Detail::acceptsChild<T> );
 	this->def( "acceptsParent", &Detail::acceptsParent<T> );
-	this->def( "Range", &Detail::range<typename T::Range> );
-	this->staticmethod( "Range" );
-	this->def( "RecursiveRange", &Detail::range<typename T::RecursiveRange> );
-	this->staticmethod( "RecursiveRange" );
 }
 
 } // namespace GafferBindings
