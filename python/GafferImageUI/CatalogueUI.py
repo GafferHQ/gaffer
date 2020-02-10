@@ -484,9 +484,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			orderedImages = self.__orderedImages()
+			reselectionIndex = len( orderedImages )
+
 			for index in reversed( sorted( indices ) ) :
 				image = self.__images()[ index ]
 				uiIndex = orderedImages.index( image )
+				reselectionIndex = min( max( 0, uiIndex - 1 ), reselectionIndex )
 				self.__images().removeChild( image )
 				orderedImages.remove( image )
 
@@ -494,7 +497,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 			# Figure out new selection
 			if orderedImages :
-				selectionIndex = self.__uiIndexToIndex( max( 0, uiIndex - 1 ) )
+				selectionIndex = self.__uiIndexToIndex( reselectionIndex )
 				self.getPlug().setValue( selectionIndex )
 
 	def __extractClicked( self, *unused ) :
