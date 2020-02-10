@@ -164,6 +164,15 @@ Build
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
 
+0.55.4.1 (relative to 0.55.4.0)
+========
+
+Fixes
+-----
+
+- Catalogue :
+  - Fixed a rare inconsistency with re-selection after deleting re-ordered images.
+  - Fixed bug which prevented the Viewer hotkeys from working with Catalogues inside Boxes (#3605).
 
 0.55.4.0 (relative to 0.55.3.0)
 ========
