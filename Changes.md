@@ -1,3 +1,16 @@
+0.56.0.0b2
+==========
+
+Fixes
+-----
+
+- ImageReader/ImageWriter : Fixed bug which caused colour transforms to be performed on premultiplied pixel data.
+
+Breaking Changes
+----------------
+
+- ImageReader/ImageWriter : A bug fix means that results will now differ when applying colour transforms to images with alpha.
+
 0.56.0.0b1
 ==========
 
