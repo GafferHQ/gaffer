@@ -834,7 +834,7 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 	{
 		directory = script->context()->substitute( directory );
 	}
-	else if( Context::hasSubstitutions( directory ) )
+	else if( IECore::StringAlgo::hasSubstitutions( directory ) )
 	{
 		// Its possible for a Catalogue to have been removed from its script
 		// and still receive an image. If it will attempt to save that image
