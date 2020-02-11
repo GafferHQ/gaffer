@@ -73,8 +73,22 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} build ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
      displayName: 'Build'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+
+   - script: |
+       scons -j ${{ parameters.threads }} docs ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+     displayName: 'Build Docs'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+
+   - script: |
+       ./install/$(Gaffer.Build.Name)/bin/gaffer install
+     displayName: 'Install'
      env:
        DISPLAY: :99.0
        AZURE: 1
@@ -87,6 +101,13 @@ jobs:
        AZURE: 1
        USER: azureTestUser # ImageWriterTest requires $USER but by default Azure doesn't provide it
        ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
+
+   - script: |
+       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+     displayName: 'Package'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
 
    - script: |
        ./config/validateRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz
