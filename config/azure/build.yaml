@@ -29,6 +29,18 @@ jobs:
    steps:
 
    - script: |
+        pip install --user azure-common==1.1.23 azure-nspkg==3.0.2 azure-storage-blob==2.1.0 azure-storage-common==2.1.0 azure-storage-nspkg==3.1.0 PyGithub==1.45
+     displayName: 'Install Toolchain'
+
+   - script: |
+       pip install sphinx==1.8.0 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12 &&
+       brew update &&
+       brew install scons doxygen &&
+       brew cask install xquartz inkscape
+     displayName: 'Install Toolchain (Darwin)'
+     condition: eq( variables['Agent.OS'], 'Darwin' )
+
+   - script: |
        sudo /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate off &&
        defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true &&
        sudo killall NotificationCenter &&
@@ -38,19 +50,10 @@ jobs:
 
    # Provides $(Gaffer.*) variables
    - script: |
-       pip install --user PyGithub==1.45 &&
        ./config/azure/setBuildVars.py
      displayName: 'Set Custom Variables'
      env:
        GITHUB_ACCESS_TOKEN: $(githubAccessToken)
-
-   - script: |
-       pip install sphinx==1.8.0 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12 &&
-       brew update &&
-       brew install scons doxygen &&
-       brew cask install xquartz inkscape
-     displayName: 'Install Toolchain (Darwin)'
-     condition: eq( variables['Agent.OS'], 'Darwin' )
 
    - script: |
        ./config/installDelight.sh &&
@@ -116,7 +119,6 @@ jobs:
    - ${{ if eq(parameters.publish, true) }}:
 
      - script: |
-         pip install --user azure-common==1.1.23 azure-nspkg==3.0.2 azure-storage-blob==2.1.0 azure-storage-common==2.1.0 azure-storage-nspkg==3.1.0 PyGithub==1.45 &&
          ./config/azure/publishBuild.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --commit $(Gaffer.Source.Commit)
        displayName: "Publish Build"
        condition: and( succeeded(), or( eq( variables['Build.Reason'], 'PullRequest' ), eq( variables['Build.Reason'], 'Schedule' ) ) )
@@ -125,7 +127,6 @@ jobs:
          AZURE_ACCESS_TOKEN: $(azureBlobAccessToken)
 
      - script: |
-         pip install --user PyGithub==1.45 &&
          ./config/azure/publishRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --releaseId $(Gaffer.GitHub.ReleaseID)
        displayName: "Publish Release"
        condition: and( succeeded(), ne( variables['Gaffer.GitHub.ReleaseID'], '' ) )
