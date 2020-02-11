@@ -13,6 +13,9 @@ Fixes
 -----
 
 - ImageReader/ImageWriter : Fixed bug which caused colour transforms to be performed on premultiplied pixel data.
+- Catalogue :
+  - Fixed a rare inconsistency with re-selection after deleting re-ordered images.
+  - Fixed bug which prevented the Viewer hotkeys from working with Catalogues inside Boxes (#3605).
 
 Breaking Changes
 ----------------
