@@ -305,7 +305,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 				{
 					crease->v[0] = *id++;
 					crease->v[1] = *id;
-					crease->crease = *sharpness;
+					crease->crease = (*sharpness) * 0.1f;
 					crease++;
 				}
 				id++;
@@ -317,7 +317,8 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			{
 				crease->v[0] = cornerId;
 				crease->v[1] = cornerId;
-				crease->crease = *sharpness++;
+				crease->crease = (*sharpness) * 0.1f;
+				sharpness++;
 				crease++;
 			}
 		}
