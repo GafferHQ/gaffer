@@ -1,3 +1,11 @@
+0.54.2.x (relative to 0.54.2.6)
+========
+
+Fixes
+-----
+
+- GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441).
+
 0.54.2.6 (relative to 0.54.2.5)
 ========
 
