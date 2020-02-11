@@ -66,18 +66,13 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 		ccam->fov = M_PI_2;
 		if( camera->getFStop() > 0.0f )
 		{
-			ccam->aperturesize = camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop();
+			ccam->aperturesize = 0.5f * camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop();
 			ccam->focaldistance = camera->getFocusDistance();
 		}
 	}
 	else if( projection == "orthographic" )
 	{
 		ccam->type = ccl::CAMERA_ORTHOGRAPHIC;
-	}
-	else if( projection == "panorama" )
-	{
-		ccam->type = ccl::CAMERA_PANORAMA;
-		// TODO: Spec out panorama data
 	}
 	else
 	{
@@ -87,7 +82,7 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 
 	// Screen window/resolution TODO: full_ might be something to do with cropping?
 	const Imath::Box2f &frustum = camera->frustum();
-	const Imath::V2i &resolution = camera->getResolution();
+	const Imath::V2i &resolution = camera->renderResolution();
 	const float pixelAspectRatio = camera->getPixelAspectRatio();
 	ccam->width = resolution[0];
 	ccam->height = resolution[1];
@@ -95,8 +90,9 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	ccam->full_height = resolution[1];
 	ccam->viewplane.left = frustum.min.x;
 	ccam->viewplane.right = frustum.max.x;
-	ccam->viewplane.bottom = frustum.min.y;
-	ccam->viewplane.top = frustum.max.y;
+	// Invert the viewplane in Y so Gaffer's aperture offsets and overscan are applied in the correct direction
+	ccam->viewplane.bottom = -frustum.max.y;
+	ccam->viewplane.top = -frustum.min.y;
 	ccam->aperture_ratio = pixelAspectRatio; // This is more for the bokeh, maybe it should be a separate parameter?
 
 	// Clipping planes
@@ -136,6 +132,42 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
 		ccam->shuttertime = 1.0;
+	}
+
+	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )
+	{
+		if( it->first == "panoramaType" )
+		{
+			if( const StringData *data = static_cast<const StringData *>( it->second.get() ) )
+			{
+				std::string panoType = data->readable();
+
+				if( panoType == "equirectangular" )
+				{
+					ccam->type = ccl::CAMERA_PANORAMA;
+					ccam->panorama_type = ccl::PANORAMA_EQUIRECTANGULAR;
+				}
+				else if( panoType == "mirrorball" )
+				{
+					ccam->type = ccl::CAMERA_PANORAMA;
+					ccam->panorama_type = ccl::PANORAMA_MIRRORBALL;
+				}
+				else if( panoType == "fisheyeEquidistant" )
+				{
+					ccam->type = ccl::CAMERA_PANORAMA;
+					ccam->panorama_type = ccl::PANORAMA_FISHEYE_EQUIDISTANT;
+				}
+				else if( panoType == "fisheyeEquisolid" )
+				{
+					ccam->type = ccl::CAMERA_PANORAMA;
+					ccam->panorama_type = ccl::PANORAMA_FISHEYE_EQUISOLID;
+				}
+			}
+		}
+		else
+		{
+			SocketAlgo::setSocket( ccam, it->first, it->second.get() );
+		}
 	}
 
 	return ccam;
