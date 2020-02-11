@@ -91,7 +91,7 @@ void GafferTest::testManySubstitutions()
 	const std::string expectedResult( "smoke me a kipper" );
 
 	Timer t;
-	for( int i = 0; i < 100000; ++i )
+	for( int i = 0; i < 1000000; ++i )
 	{
 		const std::string s = context->substitute( phrase );
 		GAFFERTEST_ASSERT( s == expectedResult );
