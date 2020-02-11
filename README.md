@@ -19,36 +19,30 @@ Participating in the Gaffer community requires abiding by the project's [Code of
 
 Compiled binary releases are available for download from the [releases page](https://github.com/GafferHQ/gaffer/releases).
 
+Gaffer is officially supported and tested on **Linux** (CentOS 7) and **macOS** (macOS 10.14).
+
 
 ## Building ##
 
 [![Build Status](https://dev.azure.com/GafferHQ/Gaffer/_apis/build/status/GafferHQ.gaffer?branchName=master)](https://dev.azure.com/GafferHQ/Gaffer/_build/latest?definitionId=1&branchName=master)
 
-Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, make sure you have the following prerequisites installed on your system, which will be used to perform the build itself.
+Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2018**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
 
+> **Note:** From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
 
 ### Build requirements ###
 
-From time to time, this list may change. For a complete, accurate, and up-to-date method of installing the prerequisites on CentOS, refer to the [Docker setup](https://github.com/GafferHQ/build/blob/master/Dockerfile) we use for building automatic releases.
 
 > **Note:** Specific package names may differ depending on your Linux distribution and repository.
 
-
 #### Main build requirements ####
 
-> **Note:** Large Linux distros focused on usability, such as CentOS and Ubuntu, ship with many of these packages by default.
 
-Package Name | Minimum Version
+Package Name | Version
 ------------ |:--------------:
-**General** | -
-[gcc](https://gcc.gnu.org/index.html) | 6.3.1
-[scons](http://www.scons.org) |
-**OpenGL** | -
-[libX11-devel](https://www.x.org) |
-[libXi-devel](https://www.x.org) |
-[libXmu-devel](https://www.x.org) |
-[mesa-libGL-devel](https://www.mesa3d.org) |
-[mesa-libGLU-devel](https://www.mesa3d.org) |
+[`gcc`](https://gcc.gnu.org/index.html) | 6.3.1
+[`scons`](http://www.scons.org) |
+[`inkscape`](http://inkscape.org) |
 
 
 #### Documentation build requirements ####
@@ -57,36 +51,61 @@ Package Name | Minimum Version
 
 Package Name | Minimum Version
 ------------ |:--------------:
-[sphinx](http://www.sphinx-doc.org/) | 1.4
-[inkscape](http://inkscape.org) |
+[`sphinx`](http://www.sphinx-doc.org/) | 1.8
 
-> **Note:** We recommend using [pip](https://pypi.org/project/pip) to manage Python modules.
-
-Python Module |
----------- |
-sphinx_rtd_theme |
-recommonmark |
+Python Module | Required version
+------------- |:---------------:
+`sphinx_rtd_theme` | 0.4.3
+`recommonmark` | 0.5.0
+`docutils` | 0.12
 
 
 ### Build process ###
-
-Gaffer also depends on a number of 3rd-party libraries and python modules, many of which are not entirely straightforward to build. We therefore recommend using the latest pre-built dependencies from the [Gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up-to-date with Gaffer's requirements.
-
-Once you've downloaded the dependencies, unpack them and move/rename them to the directory in which you want to make your Gaffer build. We'll refer to this location as `<BUILD_DIR>` in the instructions below. Before continuing, make sure the dependencies are unpacked as `<BUILD_DIR>/include`, `<BUILD_DIR>/lib`, etc.
-
-Next, clone the Gaffer source and `cd` into its directory:
 
 ```bash
 git clone https://github.com/GafferHQ/gaffer.git
 cd gaffer
 ```
 
-You can then build Gaffer with `scons`:
+Gaffer depends on a number of 3rd-party libraries. We recommend using the pre-built dependencies from the [Gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up-to-date with Gaffer's requirements.
+
+The dependencies distribution forms the basis of a Gaffer build and the root of the expanded archive becomes the `BUILD_DIRECTORY` we pass to `scons`.
+
+The easiest way to get the right dependencies version is to use the `config/installDependencies.sh` script included in the Gaffer source tree. This downloads the correct version for the version of Gaffer you are building and unpacks them to a directory of your choice.
+
+In this example we're going to build gaffer to a `gaffer-build` directory next to our checkout.
+
 
 ```bash
-scons BUILD_DIR=<BUILD_DIR> build
+./config/installDependencies.sh ../gaffer-build
 ```
 
+You can then build Gaffer itself:
+
+```bash
+scons build BUILD_DIR=../gaffer-build
+```
+
+> **Note:** If `scons` has any issues finding dependencies or tools, see `SConstruct` for the various options that can be set to specify their location.
+
+With any luck, you now have a functioning version of Gaffer.
+
+```bash
+../gaffer-build/bin/gaffer
+```
+
+### Building with third-party renderer support
+
+Gaffer dependencies ships with Appleseed, but to build the modules for one of the other supported third-party renderers, you will need to set appropriate `scons` options pointing to your installation. The options are:
+
+- Arnold: `ARNOLD_ROOT`
+- 3Delight: `DELIGHT_ROOT`
+
+For example, the following command builds Gaffer with Arnold support:
+
+```bash
+scons build ARNOLD_ROOT=/path/to/arnold/6 BUILD_DIR=...
+````
 
 ## Questions and troubleshooting ##
 
@@ -105,8 +124,10 @@ Please see the project's [contribution guidelines](CONTRIBUTING.md).
 
 ## Copyright and license ##
 
-© 2011–2019 John Haddon. All rights reserved.
+© 2011–2020 John Haddon. All rights reserved.
 
-© 2011–2019 Image Engine Design Inc. All rights reserved.
+© 2011–2020 Image Engine Design Inc. All rights reserved.
+
+© 2011–2020 Cinesite VFX Ltd. All rights reserved.
 
 Distributed under the [BSD license](LICENSE).
