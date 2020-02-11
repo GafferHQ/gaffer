@@ -73,14 +73,6 @@ PlugClass<T, TWrapper>::PlugClass( const char *docString )
 	this->def( "acceptsInput", &Detail::acceptsInput<T> );
 	this->def( "setInput", &Detail::setInput<T> );
 	this->def( "createCounterpart", &Detail::createCounterpart<T> );
-	this->def( "InputRange", &Detail::range<typename T::InputRange> );
-	this->staticmethod( "InputRange" );
-	this->def( "OutputRange", &Detail::range<typename T::OutputRange> );
-	this->staticmethod( "OutputRange" );
-	this->def( "RecursiveInputRange", &Detail::range<typename T::RecursiveInputRange> );
-	this->staticmethod( "RecursiveInputRange" );
-	this->def( "RecursiveOutputRange", &Detail::range<typename T::RecursiveOutputRange> );
-	this->staticmethod( "RecursiveOutputRange" );
 }
 
 } // namespace GafferBindings

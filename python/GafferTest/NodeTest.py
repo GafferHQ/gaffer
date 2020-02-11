@@ -379,5 +379,34 @@ class NodeTest( GafferTest.TestCase ) :
 			[ n["c2"], n["c3"]["gc2"], n["c3"]["gc3"] ],
 		)
 
+	def testRangesForPythonTypes( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = GafferTest.AddNode()
+		n["b"] = Gaffer.Node()
+		n["c"] = GafferTest.AddNode()
+		n["d"] = Gaffer.Node()
+		n["d"]["e"] = GafferTest.AddNode()
+
+		self.assertEqual(
+			list( Gaffer.Node.Range( n ) ),
+			[ n["a"], n["b"], n["c"], n["d"] ],
+		)
+
+		self.assertEqual(
+			list( GafferTest.AddNode.Range( n ) ),
+			[ n["a"], n["c"] ],
+		)
+
+		self.assertEqual(
+			list( Gaffer.Node.RecursiveRange( n ) ),
+			[ n["a"], n["b"], n["c"], n["d"], n["d"]["e"] ],
+		)
+
+		self.assertEqual(
+			list( GafferTest.AddNode.RecursiveRange( n ) ),
+			[ n["a"], n["c"], n["d"]["e"] ],
+		)
+
 if __name__ == "__main__" :
 	unittest.main()
