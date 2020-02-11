@@ -74,8 +74,22 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} build ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
      displayName: 'Build'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+
+   - script: |
+       scons -j ${{ parameters.threads }} docs ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+     displayName: 'Build Docs'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+
+   - script: |
+       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+     displayName: 'Package'
      env:
        DISPLAY: :99.0
        AZURE: 1
