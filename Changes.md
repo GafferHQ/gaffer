@@ -4,9 +4,9 @@
 Fixes
 -----
 
-- GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441).
+- GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441). [from 0.54.2.x]
 
-0.56.0.0b2
+0.56.0.0b2 (relative to 0.56.0.0b1)
 ==========
 
 Fixes
@@ -14,8 +14,8 @@ Fixes
 
 - ImageReader/ImageWriter : Fixed bug which caused colour transforms to be performed on premultiplied pixel data.
 - Catalogue :
-  - Fixed a rare inconsistency with re-selection after deleting re-ordered images.
-  - Fixed bug which prevented the Viewer hotkeys from working with Catalogues inside Boxes (#3605).
+  - Fixed a rare inconsistency with re-selection after deleting re-ordered images. [from 0.55.4.1]
+  - Fixed bug which prevented the Viewer hotkeys from working with Catalogues inside Boxes (#3605). [from 0.55.4.1]
 
 Breaking Changes
 ----------------
