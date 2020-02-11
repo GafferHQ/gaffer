@@ -38,7 +38,7 @@ jobs:
 
    # Provides $(Gaffer.*) variables
    - script: |
-       pip install --user PyGithub &&
+       pip install --user PyGithub==1.45 &&
        ./config/azure/setBuildVars.py
      displayName: 'Set Custom Variables'
      env:
@@ -94,7 +94,7 @@ jobs:
    - ${{ if eq(parameters.publish, true) }}:
 
      - script: |
-         pip install --user azure-common==1.1.23 azure-nspkg==3.0.2 azure-storage-blob==2.1.0 azure-storage-common==2.1.0 azure-storage-nspkg==3.1.0 PyGithub &&
+         pip install --user azure-common==1.1.23 azure-nspkg==3.0.2 azure-storage-blob==2.1.0 azure-storage-common==2.1.0 azure-storage-nspkg==3.1.0 PyGithub==1.45 &&
          ./config/azure/publishBuild.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --commit $(Gaffer.Source.Commit)
        displayName: "Publish Build"
        condition: and( succeeded(), or( eq( variables['Build.Reason'], 'PullRequest' ), eq( variables['Build.Reason'], 'Schedule' ) ) )
@@ -103,7 +103,7 @@ jobs:
          AZURE_ACCESS_TOKEN: $(azureBlobAccessToken)
 
      - script: |
-         pip install --user PyGithub &&
+         pip install --user PyGithub==1.45 &&
          ./config/azure/publishRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --releaseId $(Gaffer.GitHub.ReleaseID)
        displayName: "Publish Release"
        condition: and( succeeded(), ne( variables['Gaffer.GitHub.ReleaseID'], '' ) )
