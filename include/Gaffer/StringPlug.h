@@ -38,6 +38,8 @@
 #ifndef GAFFER_STRINGPLUG_H
 #define GAFFER_STRINGPLUG_H
 
+#include "IECore/StringAlgo.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
 
@@ -93,7 +95,7 @@ class GAFFER_API StringPlug : public ValuePlug
 			Direction direction=In,
 			const std::string &defaultValue = "",
 			unsigned flags = Default,
-			unsigned substitutions = Context::AllSubstitutions
+			unsigned substitutions = IECore::StringAlgo::AllSubstitutions
 		);
 		~StringPlug() override;
 

@@ -217,6 +217,14 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["n"]["user"]["p"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
 
+	def testLoadSubstitutionsVersion0_55( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.55.4.0.gfr" ) )
+		s.load()
+
+		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
+
 	def testSubstitutionsRepr( self ) :
 
 		p = Gaffer.StringPlug(

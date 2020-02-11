@@ -71,7 +71,7 @@ Expression::Expression( const std::string &name )
 			Plug::In,
 			"",
 			Plug::Default & ~( Plug::AcceptsInputs | Plug::Serialisable ),
-			Context::NoSubstitutions
+			IECore::StringAlgo::NoSubstitutions
 		)
 	);
 	addChild(
@@ -80,7 +80,7 @@ Expression::Expression( const std::string &name )
 			Plug::In,
 			"",
 			Plug::Default & ~( Plug::AcceptsInputs | Plug::Serialisable ),
-			Context::NoSubstitutions
+			IECore::StringAlgo::NoSubstitutions
 		)
 	);
 

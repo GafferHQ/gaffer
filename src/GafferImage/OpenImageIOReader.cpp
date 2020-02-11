@@ -764,7 +764,7 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 		new StringPlug(
 			"fileName", Plug::In, "",
 			/* flags */ Plug::Default,
-			/* substitutions */ Context::AllSubstitutions & ~Context::FrameSubstitutions
+			/* substitutions */ IECore::StringAlgo::AllSubstitutions & ~IECore::StringAlgo::FrameSubstitutions
 		)
 	);
 	addChild( new IntPlug( "refreshCount" ) );
@@ -960,7 +960,7 @@ void OpenImageIOReader::hashFileName( const Gaffer::Context *context, IECore::Mu
 	// when the value contains FrameSubstitutions.
 	const std::string fileName = fileNamePlug()->getValue();
 	h.append( fileName );
-	if( Context::substitutions( fileName ) & Context::FrameSubstitutions )
+	if( IECore::StringAlgo::substitutions( fileName ) & IECore::StringAlgo::FrameSubstitutions )
 	{
 		h.append( context->getFrame() );
 	}
