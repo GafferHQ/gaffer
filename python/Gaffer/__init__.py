@@ -38,6 +38,7 @@
 __import__( "IECore" )
 
 from _Gaffer import *
+import _Range
 from About import About
 from Application import Application
 from WeakMethod import WeakMethod

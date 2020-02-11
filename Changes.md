@@ -164,6 +164,14 @@ Build
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
 
+0.55.x.x (relative to 0.55.4.1)
+========
+
+Fixes
+-----
+
+- GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441).
+
 0.55.4.1 (relative to 0.55.4.0)
 ========
 
@@ -190,7 +198,7 @@ Fixes
   - Fixed bug that could break promoted Spreadsheet UIs.
   - Fixed bug that meant the current width was not checked in the row name width popup menu.
   - Fixed bug when undoing section resize.
-  - Spreadsheet : Fixed crashes caused by removing a column.
+  - Fixed crashes caused by removing a column.
 
 API
 ---
@@ -435,6 +443,14 @@ Breaking Changes
 - CopyAttributes : Replaced input array with separate "in" and "source" plugs, and renamed `copyFrom` plug to `sourceLocation`. A config file will automatically convert old scripts on load (#3389).
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
+
+0.54.2.x (relative to 0.54.2.6)
+========
+
+Fixes
+-----
+
+- GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441).
 
 0.54.2.6 (relative to 0.54.2.5)
 ========
