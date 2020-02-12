@@ -51,6 +51,11 @@ using namespace GafferBindings;
 namespace
 {
 
+Spreadsheet::RowPlugPtr defaultRow( Spreadsheet::RowsPlug &rowsPlug )
+{
+	return rowsPlug.defaultRow();
+}
+
 size_t addColumn( Spreadsheet::RowsPlug &rowsPlug, ValuePlug &value, IECore::InternedString name )
 {
 	ScopedGILRelease gilRelease;
@@ -138,6 +143,7 @@ void GafferModule::bindSpreadsheet()
 				)
 			)
 		)
+		.def( "defaultRow", &defaultRow )
 		.def( "addColumn", &addColumn, ( arg( "value" ), arg( "name" ) = "" ) )
 		.def( "removeColumn", &removeColumn )
 		.def( "addRow", &addRow )

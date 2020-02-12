@@ -1849,7 +1849,7 @@ def __addToSpreadsheet( plug, spreadsheet, sectionName = None ) :
 		columnIndex = __addColumn( spreadsheet, plug )
 		if sectionName is not None :
 			_SectionChooser.setSection(
-				spreadsheet["rows"]["default"]["cells"][columnIndex].source(),
+				spreadsheet["rows"].defaultRow()["cells"][columnIndex].source(),
 				sectionName
 			)
 		plug.setInput( spreadsheet["out"][columnIndex] )

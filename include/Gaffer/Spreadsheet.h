@@ -67,6 +67,9 @@ class GAFFER_API Spreadsheet : public ComputeNode
 		/// Top level plug that has a child for each row in the spreadsheet.
 		/// This also provides methods for adding and removing rows and columns.
 		/// Accessed via `Spreadsheet::rowsPlug()`.
+		///
+		/// > Note : It is strongly recommended that the child RowPlugs are
+		/// > accessed via their numeric indices and never via their names.
 		class RowsPlug : public ValuePlug
 		{
 
