@@ -465,7 +465,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "quad" )
 	{
-		const V2f size( 2 );
+		const V2f size(
+			parameter<float>( metadataTarget, shaderParameters, "widthParameter", 2.0f ),
+			parameter<float>( metadataTarget, shaderParameters, "heightParameter", 2.0f )
+		);
 		// Cycles/Arnold define portals via a parameter on a quad, rather than as it's own light type.
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
