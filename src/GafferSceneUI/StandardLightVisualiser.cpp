@@ -420,11 +420,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	GroupPtr ornaments = new Group;
 	// Bound ornaments are considered when 'f' is pressed in the viewer to fit.
 	GroupPtr boundOrnaments = new Group;
+	// As part of our assumption that renderer's largely ignore scale, this is
+	// contains anything that should always be in fixed world scale and not be
+	// affected by visualiser scale.
+	GroupPtr fixedScaleOrnaments = new Group;
 	// Geometry is only affected by local scale (its size matters for rendering).
 	GroupPtr geometry = new Group;
-	// Generally speaking we assume renderers ignore light scale and
-	// we don't have any real frustums, just projections, so our
-	// frustum group ignores local, and inherits visualiser scale.
+	// As 'projections' are largely for display, and lights don't generally
+	// scale this group only follows visualiser scale.
 	GroupPtr frustum = new Group;
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
@@ -448,6 +451,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	geometry->setTransform( topTransform );
 	ornaments->setTransform( topTransform );
 	boundOrnaments->setTransform( topTransform );
+	fixedScaleOrnaments->setTransform( topTransform );
 	frustum->setTransform( topTransform );
 
 	if( type && type->readable() == "environment" )
@@ -550,7 +554,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
@@ -561,10 +565,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
 		}
 
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 
 	}
@@ -581,6 +585,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	if( !boundOrnaments->children().empty() )
 	{
 		result.push_back( Visualisation::createOrnament( boundOrnaments, true ) );
+	}
+	if( !fixedScaleOrnaments->children().empty() )
+	{
+		result.push_back( Visualisation( fixedScaleOrnaments, Visualisation::Scale::None ) );
 	}
 	if( !frustum->children().empty() )
 	{
