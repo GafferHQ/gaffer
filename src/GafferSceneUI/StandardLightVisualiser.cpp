@@ -211,13 +211,14 @@ const char *constantFragSource()
 		"in vec3 fragmentCs;"
 		""
 		"uniform int linearColor;"
+		"uniform vec3 tint;"
 		""
 		"void main()"
 		"{"
 			"if( linearColor == 1 ) {"
-				"gl_FragColor = vec4( ieLinToSRGB( fragmentCs ), 1 );"
+				"gl_FragColor = vec4( ieLinToSRGB( fragmentCs * tint ), 1 );"
 			"} else {"
-				"gl_FragColor = vec4( fragmentCs, 1 );"
+				"gl_FragColor = vec4( fragmentCs * tint, 1 );"
 			"}"
 		"}"
 	;
@@ -236,11 +237,12 @@ const char *texturedConstantFragSource()
 		""
 		"in vec2 fragmentuv;"
 		"uniform sampler2D texture;"
+		"uniform vec3 tint;"
 		""
 		"void main()"
 		"{"
 			"vec3 c = texture2D( texture, fragmentuv ).xyz;"
-			"gl_FragColor = vec4( ieLinToSRGB( c ), 1.0 );"
+			"gl_FragColor = vec4( ieLinToSRGB( c * tint ), 1.0 );"
 		"}"
 	;
 }
@@ -337,7 +339,7 @@ void addWireframeCurveState( IECoreGL::Group *group, float lineWidthScale = 1.0f
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
 }
 
-void addConstantShader( IECoreGL::Group *group, bool linearColor = false, int aimType = -1 )
+void addConstantShader( IECoreGL::Group *group, const Imath::Color3f &tint, bool linearColor = false, int aimType = -1 )
 {
 	IECore::CompoundObjectPtr parameters = new CompoundObject;
 
@@ -347,6 +349,7 @@ void addConstantShader( IECoreGL::Group *group, bool linearColor = false, int ai
 	}
 
 	parameters->members()["linearColor"] = new IntData( linearColor ? 1 : 0 );
+	parameters->members()["tint"] = new Color3fData( tint );
 
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent(
@@ -360,12 +363,18 @@ void addConstantShader( IECoreGL::Group *group, bool linearColor = false, int ai
 	);
 }
 
-void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr textureData, int maxTextureResolution )
+void addConstantShader( IECoreGL::Group *group, bool linearColor = false, int aimType = -1 )
+{
+	addConstantShader( group, Color3f( 1.0f ), linearColor, aimType );
+}
+
+void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr textureData, const Color3f &tint, int maxTextureResolution )
 {
 	IECore::CompoundObjectPtr shaderParameters = new CompoundObject;
 
 	shaderParameters->members()["texture"] = const_cast<Data *>( textureData.get() );
 	shaderParameters->members()["texture:maxResolution"] = new IntData( maxTextureResolution );
+	shaderParameters->members()["tint"] = new Color3fData( tint );
 
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent(
@@ -405,6 +414,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
 
 	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
+	const Color3f tint = parameter<Color3f>( metadataTarget, shaderParameters, "tintParameter", Color3f( 1.0f ) );
 
 	// Ornaments are affected by visualiser:scale and not local scale.
 	GroupPtr ornaments = new Group;
@@ -449,7 +459,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( drawShaded )
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, maxTextureResolution, color ) ) );
+			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, tint, maxTextureResolution, color ) ) );
 		}
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
 	}
@@ -481,11 +491,11 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			if( drawShaded )
 			{
 				ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-				geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( size, textureData, maxTextureResolution, color ) ) );
+				geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( size, textureData, tint, maxTextureResolution, color ) ) );
 			}
 			else
 			{
-				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
 			}
 			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe( size ) ) );
 
@@ -504,11 +514,11 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( drawShaded )
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskSurface( radius, textureData, maxTextureResolution, color ) ) );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskSurface( radius, textureData, tint, maxTextureResolution, color ) ) );
 		}
 		else
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
@@ -522,11 +532,11 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	else if( type && type->readable() == "cylinder" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, drawShaded, color ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, drawShaded, color * tint ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
 		if( !drawShaded )
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
 		}
 	}
 	else if( type && type->readable() == "mesh" )
@@ -936,16 +946,16 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::areaSpread( float spread )
 
 // Quads
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, int maxTextureResolution,  const Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, const Color3f &tint, int maxTextureResolution,  const Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader( group.get(), textureData, maxTextureResolution );
+		addTexturedConstantShader( group.get(), textureData, tint, maxTextureResolution );
 	}
 	else
 	{
-		addConstantShader( group.get(), true );
+		addConstantShader( group.get(), tint, true );
 	}
 
 	IECoreGL::QuadPrimitivePtr textureQuad = new IECoreGL::QuadPrimitive( size.x, size.y );
@@ -1122,18 +1132,18 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float rad
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( IECore::ConstDataPtr texture, int maxTextureResolution, const Imath::Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( IECore::ConstDataPtr texture, const Color3f &tint, int maxTextureResolution, const Imath::Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr sphereGroup = new IECoreGL::Group();
 	sphereGroup->getState()->add( new IECoreGL::DoubleSidedStateComponent( false ) );
 
 	if( texture )
 	{
-		addTexturedConstantShader( sphereGroup.get(), texture, maxTextureResolution );
+		addTexturedConstantShader( sphereGroup.get(), texture, tint, maxTextureResolution );
 	}
 	else
 	{
-		addConstantShader( sphereGroup.get(), true );
+		addConstantShader( sphereGroup.get(), tint, true );
 	}
 
 	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
@@ -1150,16 +1160,16 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereSurface( 
 
 // Disk
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius, IECore::ConstDataPtr textureData, int maxTextureResolution, const Imath::Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius, IECore::ConstDataPtr textureData, const Color3f &tint, int maxTextureResolution, const Imath::Color3f &fallbackColor )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
 	{
-		addTexturedConstantShader( group.get(), textureData, maxTextureResolution );
+		addTexturedConstantShader( group.get(), textureData, tint, maxTextureResolution );
 	}
 	else
 	{
-		addConstantShader( group.get(), true );
+		addConstantShader( group.get(), tint, true );
 	}
 
 	IntVectorDataPtr vertsPerPoly = new IntVectorData;
