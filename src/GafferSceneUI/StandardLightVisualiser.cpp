@@ -330,12 +330,12 @@ const char *faceCameraVertexSource()
 
 // Shader state helpers
 
-void addWireframeCurveState( IECoreGL::Group *group )
+void addWireframeCurveState( IECoreGL::Group *group, float lineWidthScale = 1.0f )
 {
 	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
 	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
 	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f * lineWidthScale ) );
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
 }
 
@@ -461,13 +461,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, tint, maxTextureResolution, color ) ) );
 		}
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
 		float innerAngle, outerAngle, radius, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
+		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ) ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.2f ) ) );
@@ -554,7 +555,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
@@ -727,10 +728,8 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length, float lineWidthScale )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	addConstantShader( group.get(), false );
-
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f * lineWidthScale ) );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
@@ -747,7 +746,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 	if( fabs( innerAngle - outerAngle ) > 0.1 )
 	{
 		IECoreGL::GroupPtr outerGroup = new Group;
-		outerGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f * lineWidthScale ) );
+		outerGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f * lineWidthScale ) );
 
 		IntVectorDataPtr vertsPerCurve = new IntVectorData;
 		V3fVectorDataPtr p = new V3fVectorData;
@@ -856,7 +855,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), 0.5f );
 	addConstantShader( group.get(), false, 1 );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
@@ -912,9 +911,8 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::areaSpread( float spread )
 	// Simple spaced parallel arrows that diverge by 45 degrees as spread approaches 1.
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), 0.5f );
 	addConstantShader( group.get() );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
@@ -1103,10 +1101,10 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &siz
 
 // Spheres
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe( float radius, const Vec3<bool> &axisRings )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float radius, const Vec3<bool> &axisRings, float lineWidthScale, const V3f &center )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
@@ -1114,15 +1112,15 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe
 
 	if( axisRings.x )
 	{
-		addCircle( Axis::X,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+		addCircle( Axis::X,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 	if( axisRings.y )
 	{
-		addCircle( Axis::Y,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+		addCircle( Axis::Y,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 	if( axisRings.z )
 	{
-		addCircle( Axis::Z,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+		addCircle( Axis::Z,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );

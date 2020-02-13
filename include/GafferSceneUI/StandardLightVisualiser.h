@@ -102,7 +102,6 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		// textureData should be as per return type of surfaceTexture
 
-		static IECoreGL::ConstRenderablePtr environmentSphereWireframe( float radius, const Imath::Vec3<bool> &axisRings );
 		static IECoreGL::ConstRenderablePtr environmentSphereSurface( IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
 		// Spread is generally rendered as an angle, rather than in light space,
@@ -114,6 +113,8 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		static IECoreGL::ConstRenderablePtr diskWireframe( float radius );
 		static IECoreGL::ConstRenderablePtr diskSurface( float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
+
+		static IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Imath::Vec3<bool> &axisRings, float lineWidthScale = 1.0f, const Imath::V3f &center = Imath::V3f( 0.0f ) );
 
 		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
 
