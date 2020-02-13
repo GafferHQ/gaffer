@@ -60,6 +60,14 @@ class GAFFERBINDINGS_API Serialisation
 		/// within the serialisation. Returns the empty string if the object is not
 		/// to be included in the serialisation.
 		std::string identifier( const Gaffer::GraphComponent *graphComponent ) const;
+		/// Returns an identifier for a child relative to its parent identifier. This
+		/// is quicker than calling `identifier( child )` if you already have the
+		/// parent identifier to hand.
+		std::string childIdentifier( const std::string &parentIdentifier, const Gaffer::GraphComponent *child ) const;
+		/// \todo This overload provides improved performance in some situations,
+		/// but we should instead optimise GraphComponent storage so that it is not
+		/// necessary.
+		std::string childIdentifier( const std::string &parentIdentifier, Gaffer::GraphComponent::ChildIterator child ) const;
 
 		/// Returns the result of the serialisation.
 		std::string result() const;

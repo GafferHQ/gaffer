@@ -82,34 +82,6 @@ bool keyedByIndex( const GraphComponent *parent )
 	;
 }
 
-std::string childKey( const GraphComponent *g )
-{
-	const GraphComponent *parent = g->parent();
-	if( keyedByIndex( parent ) )
-	{
-		return boost::lexical_cast<std::string>(
-			std::find( parent->children().begin(), parent->children().end(), g ) - parent->children().begin()
-		);
-	}
-	else
-	{
-		return "\"" + g->getName().string() + "\"";
-	}
-}
-
-// Overload for when an iterator is available. This gives constant-time index computation.
-std::string childKey( const GraphComponent *parent, GraphComponent::ChildIterator childIt )
-{
-	if( keyedByIndex( parent ) )
-	{
-		return boost::lexical_cast<std::string>( childIt - parent->children().begin() );
-	}
-	else
-	{
-		return "\"" + (*childIt)->getName().string() + "\"";
-	}
-}
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -305,11 +277,11 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		std::string childIdentifier;
 		if( parent == m_parent && childConstructor.size() && m_protectParentNamespace )
 		{
-			childIdentifier = "__children[" + childKey( parent, it ) + "]";
+			childIdentifier = this->childIdentifier( "__children", it );
 		}
 		else
 		{
-			childIdentifier = parentIdentifier + "[" + childKey( parent, it ) + "]";
+			childIdentifier = this->childIdentifier( parentIdentifier, it );
 		}
 
 		if( childConstructor.size() )
@@ -342,31 +314,82 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 
 std::string Serialisation::identifier( const Gaffer::GraphComponent *graphComponent ) const
 {
-	std::string result;
-	while( graphComponent )
+	if( !graphComponent )
 	{
-		const GraphComponent *parent = graphComponent->parent();
-		if( parent == m_parent )
-		{
-			if( m_filter && !m_filter->contains( graphComponent ) )
-			{
-				return "";
-			}
-			const Serialiser *parentSerialiser = acquireSerialiser( parent );
-			if( m_protectParentNamespace && parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
-			{
-				return "__children[" + childKey( graphComponent ) + "]" + result;
-			}
-			else
-			{
-				return m_parentName + "[" + childKey( graphComponent ) + "]" + result;
-			}
-		}
-		result = "[" + childKey( graphComponent ) + "]" + result;
-		graphComponent = parent;
+		return "";
 	}
 
-	return "";
+	std::string parentIdentifier;
+	const GraphComponent *parent = graphComponent->parent();
+	if( parent == m_parent )
+	{
+		if( m_filter && !m_filter->contains( graphComponent ) )
+		{
+			return "";
+		}
+		const Serialiser *parentSerialiser = acquireSerialiser( parent );
+		if( m_protectParentNamespace && parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
+		{
+			parentIdentifier = "__children";
+		}
+		else
+		{
+			parentIdentifier = m_parentName;
+		}
+	}
+	else
+	{
+		parentIdentifier = identifier( parent );
+	}
+
+	if( parentIdentifier.empty() )
+	{
+		return "";
+	}
+	else
+	{
+		return childIdentifier( parentIdentifier, graphComponent );
+	}
+}
+
+std::string Serialisation::childIdentifier( const std::string &parentIdentifier, const Gaffer::GraphComponent *child ) const
+{
+	const GraphComponent *parent = child->parent();
+	std::string result = parentIdentifier;
+	if( keyedByIndex( parent ) )
+	{
+		result += "[";
+		result += boost::lexical_cast<std::string>(
+			std::find( parent->children().begin(), parent->children().end(), child ) - parent->children().begin()
+		);
+		result += "]";
+	}
+	else
+	{
+		result += "[\"";
+		result += child->getName().string();
+		result += "\"]";
+	}
+	return result;
+}
+
+std::string Serialisation::childIdentifier( const std::string &parentIdentifier, Gaffer::GraphComponent::ChildIterator child ) const
+{
+	const GraphComponent *parent = (*child)->parent();
+	std::string result = parentIdentifier;
+	if( keyedByIndex( parent ) )
+	{
+		result += "[";
+		result += boost::lexical_cast<std::string>( child - parent->children().begin() );
+		result += "]";
+	}
+	else
+	{
+		result += "[\"";
+		result += (*child)->getName().string();
+		result += "\"]";
+	}
+	return result;
 }
 
 void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser )
