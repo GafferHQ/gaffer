@@ -108,7 +108,7 @@ std::string valueRepr( boost::python::object &o )
 	return extract<std::string>( repr( o ) );
 }
 
-std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const Serialisation &serialisation, bool &canCondense )
+std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, const Serialisation &serialisation, bool &canCondense )
 {
 	// There's nothing to do if the plug isn't serialisable.
 	if( !plug->getFlags( Plug::Serialisable ) )
@@ -124,7 +124,8 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const Seriali
 	bool canCondenseChildren = true;
 	for( ValuePlugIterator childIt( plug ); !childIt.done(); ++childIt )
 	{
-		childSerialisations += valueSerialisationWalk( childIt->get(), serialisation, canCondenseChildren );
+		const std::string childIdentifier = serialisation.childIdentifier( identifier, childIt.base() );
+		childSerialisations += valueSerialisationWalk( childIt->get(), childIdentifier, serialisation, canCondenseChildren );
 	}
 
 	// The child results alone are sufficient for a complete
@@ -173,7 +174,7 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const Seriali
 		}
 	}
 
-	return serialisation.identifier( plug ) + ".setValue( " + valueRepr( pythonValue ) + " )\n";;
+	return identifier + ".setValue( " + valueRepr( pythonValue ) + " )\n";
 }
 
 } // namespace
@@ -286,7 +287,7 @@ std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *gr
 		if( !shouldResetPlugDefault( plug, &serialisation ) )
 		{
 			bool unused;
-			result = valueSerialisationWalk( plug, serialisation, unused ) + result;
+			result = valueSerialisationWalk( plug, identifier, serialisation, unused ) + result;
 		}
 
 	}
