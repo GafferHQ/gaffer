@@ -234,9 +234,10 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 
 	float innerAngle;
 	float coneAngle;
+	float radius;
 	float lensRadius;
 
-	StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderNetwork, innerAngle, coneAngle, lensRadius );
+	StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderNetwork, innerAngle, coneAngle, radius, lensRadius );
 
 	float halfPi = 0.5 * M_PI;
 

@@ -455,8 +455,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "spot" )
 	{
-		float innerAngle, outerAngle, lensRadius;
-		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
+		float innerAngle, outerAngle, radius, lensRadius;
+		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
@@ -599,7 +599,7 @@ IECore::DataPtr StandardLightVisualiser::surfaceTexture( const IECoreScene::Shad
 	return nullptr;
 }
 
-void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius )
+void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &radius, float &lensRadius )
 {
 
 	InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
@@ -643,6 +643,10 @@ void StandardLightVisualiser::spotlightParameters( const InternedString &attribu
 	{
 		lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
 	}
+
+	radius = 0.0f;
+	radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0.0f );
+
 }
 
 
