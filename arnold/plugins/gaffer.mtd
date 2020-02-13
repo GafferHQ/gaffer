@@ -817,19 +817,49 @@
 	gaffer.nodeMenu.category STRING "Surface"
 
 
+[node aov_read_float]
+
+	gaffer.nodeMenu.category STRING "AOV"
+
+
+[node aov_read_int]
+
+	gaffer.nodeMenu.category STRING "AOV"
+
+
+[node aov_read_rgb]
+
+	gaffer.nodeMenu.category STRING "AOV"
+
+
+[node aov_read_rgba]
+
+	gaffer.nodeMenu.category STRING "AOV"
+
+
 [node aov_write_float]
 
-	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "AOV"
 
 
 [node aov_write_int]
 
-	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "AOV"
 
 
 [node aov_write_rgb]
 
-	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "AOV"
+
+
+[node aov_write_rgba]
+
+	gaffer.nodeMenu.category STRING "AOV"
+
+
+[node aov_write_vector]
+
+	gaffer.nodeMenu.category STRING "AOV"
 
 
 [node atan]
@@ -931,6 +961,92 @@
 		gaffer.plugType STRING ""
 
 
+[node car_paint]
+	
+	gaffer.nodeMenu.category STRING "Surface"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+
+	[attr base]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Base"
+	[attr base_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Base"
+	[attr base_roughness]
+		page STRING "Base"
+		gaffer.graphEditorLayout.visible BOOL true
+
+	[attr specular]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+	[attr specular_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+	[attr specular_roughness]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Specular"
+	[attr specular_IOR]
+		page STRING "Specular"
+
+	[attr specular_flip_flop]
+		page STRING "Specular"
+	[attr specular_light_facing]
+		page STRING "Specular"
+	[attr specular_falloff]
+		page STRING "Specular"
+
+	[attr transmission_color]
+		page STRING "Transmission"
+
+	[attr flake_color]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Flake"
+	[attr flake_roughness]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Flake"
+	[attr flake_IOR]
+		page STRING "Flake"
+
+	[attr flake_scale]
+		page STRING "Flake"
+	[attr flake_density]
+		page STRING "Flake"
+	[attr flake_layers]
+		page STRING "Flake"
+	[attr flake_normal_randomize]
+		page STRING "Flake"
+	[attr flake_coord_space]
+		page STRING "Flake"
+	[attr pref_name]
+		page STRING "Flake"
+
+	[attr flake_flip_flop]
+		page STRING "Flake"
+	[attr flake_light_facing]
+		page STRING "Flake"
+	[attr flake_falloff]
+		page STRING "Flake"
+
+	[attr coat]
+		page STRING "Coat"
+	[attr coat_color]
+		page STRING "Coat"
+	[attr coat_roughness]
+		page STRING "Coat"
+	[attr coat_IOR]
+		page STRING "Coat"
+	[attr coat_normal]
+		gaffer.graphEditorLayout.visible BOOL true
+		page STRING "Coat"
+
+
+[node cell_noise]
+
+	gaffer.nodeMenu.category STRING "Texture"
+
+
 [node checkerboard]
 
 	gaffer.nodeMenu.category STRING "Texture"
@@ -940,6 +1056,11 @@
 
 	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Maths"
+
+
+[node clip_geo]
+
+	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node color_convert]
@@ -986,6 +1107,11 @@
 
 	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Maths"
+
+
+[node cryptomatte]
+
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node curvature]
@@ -1091,6 +1217,21 @@
 	gaffer.nodeMenu.category STRING "Surface"
 
 
+[node layer_float]
+
+	gaffer.nodeMenu.category STRING "Utility"
+
+
+[node layer_rgba]
+
+	gaffer.nodeMenu.category STRING "Utility"
+
+
+[node layer_shader]
+
+	gaffer.nodeMenu.category STRING "Surface"
+
+
 [node length]
 
 	gaffer.nodeMenu.category STRING "Maths"
@@ -1156,6 +1297,21 @@
 [node log]
 
 	primaryInput STRING "input"
+	gaffer.nodeMenu.category STRING "Maths"
+
+
+[node matrix_interpolate]
+
+	gaffer.nodeMenu.category STRING "Maths"
+
+
+[node matrix_multiply_vector]
+
+	gaffer.nodeMenu.category STRING "Maths"
+
+
+[node matrix_transform]
+
 	gaffer.nodeMenu.category STRING "Maths"
 
 
@@ -1305,6 +1461,11 @@
 
 
 [node rgba_to_float]
+
+	gaffer.nodeMenu.category STRING "Utility"
+
+
+[node round_corners]
 
 	gaffer.nodeMenu.category STRING "Utility"
 
@@ -1882,6 +2043,11 @@
 
 
 [node utility]
+
+	gaffer.nodeMenu.category STRING "Utility"
+
+
+[node uv_projection]
 
 	gaffer.nodeMenu.category STRING "Utility"
 
