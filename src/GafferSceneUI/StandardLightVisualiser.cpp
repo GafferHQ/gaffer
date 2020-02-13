@@ -479,6 +479,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		// Cycles/Arnold define portals via a parameter on a quad, rather than as it's own light type.
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
+			// Because we don't support variable size lights, we keep a fixed hatching scale
 			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size ) ) );
 		}
 		else
@@ -986,7 +987,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size, float hatchingScale )
 {
 	// Portals visualise differently as they only allow light through
 	// their area. Effectively a hole cut in a big plane. We try to
@@ -1006,72 +1007,80 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &siz
 	p.push_back( V3f( size.x/2, size.y/2, 0 ) );
 	p.push_back( V3f( -size.x/2, size.y/2, 0 ) );
 
-	// 45 degree hatch outside the area (-1 / 1 space)
+	// 45 degree hatch outside the portal area (when centered at the origin)
 
 	// Space between the lines
-	static const float spacing = 0.05f;
-	// size.x of the shaded frame area
-	static const float fw = 0.25f;
+	const float spacing = 0.05f * hatchingScale;
+	// Thickness of the shaded frame area
+	const float fw = 0.25f * std::max( size.x, size.y );
 	// Dimension of the shaded area
-	const float dw = size.x + ( 2 * fw );
-	const float dh = size.y + ( 2 * fw );
-	const float d = std::max( dw, dh );
+	const float dw = size.x + ( 2.0f * fw );
+	const float dh = size.y + ( 2.0f * fw );
 
 	// Working with a bottom left origin makes the maths easier for the lines
 	const V3f origin( -(size.x/2)-fw, -(size.y/2)-fw, 0 );
 	// Alternating line lengths creates a softer edge
 	bool alt = true;
 
-	// Offset along the edges. We use the largest dimension and skip lines
-	// once we've gone past the edge of the shorter side.
-	for( float o = spacing; o < d; o += spacing, alt = !alt )
+	// We iterate outwards from the bottom left corner drawing lines as we go.
+	// We need different behaviour depending on whether we're overlapping the
+	// portal region or not.
+	const float oMax = dw + dh;
+	for( float o = spacing; o < oMax; o += spacing, alt = !alt )
 	{
 		// extra length for alternate lines
-		const float e = alt ? spacing * 1.5f : 0.0f;
+		const float e = alt ? fw * 0.1f : 0.0f;
 
-		if( o <= fw * 2 )
+		if( o <= fw * 2.0f )
 		{
-			// A single line will do near the edges as we don't intersect the portal
-
-			// near
+			// A single line will do near the origin as we don't intersect the portal
 			vertsPerCurve.push_back( 2 );
 			p.push_back( origin + V3f( -e, o+e, 0 ) );
 			p.push_back( origin + V3f( o+e, -e, 0 ) );
-
-			// opposite
-			vertsPerCurve.push_back( 2 );
-			p.push_back( origin + V3f( dw-o-e, dh+e, 0 ) );
-			p.push_back( origin + V3f( dw+e, dh-o-e, 0 ) );
 		}
-		else
+		else if( o <= oMax - fw * 2.0f )
 		{
 			// We need to split either side of the central portal space
+			// whilst we overlap it. As the iteration covers the maximum
+			// dimension we need for non-square portals, we don't always
+			// draw lines on each side.
 
-			if( o-2*fw <= size.y )
+			if( o <= dh )
 			{
-				// near edge-to-frame
+				// Left edge-to-frame
 				vertsPerCurve.push_back( 2 );
 				p.push_back( origin + V3f( -e, o+e, 0 ) );
 				p.push_back( origin + V3f( fw, o-fw, 0 ) );
-
-				// opposite frame-to-edge
-				vertsPerCurve.push_back( 2 );
-				p.push_back( origin + V3f( dw-fw, dh-o+fw, 0 ) );
-				p.push_back( origin + V3f( dw+e, dh-o-e, 0 ) );
 			}
-
-			if( o-2*fw <= size.x )
+			else if( o <= dh + size.x )
 			{
-				// near frame-to-edge
+				// Top edge-to-frame
 				vertsPerCurve.push_back( 2 );
-				p.push_back( origin + V3f( o-fw, +fw, 0 ) );
-				p.push_back( origin + V3f( o+e, -e, 0 ) );
-
-				// opposite edge-to-frame
-				vertsPerCurve.push_back( 2 );
-				p.push_back( origin + V3f( dw-o-e, dh+e, 0 ) );
-				p.push_back( origin + V3f( dw-o+fw, dh-fw, 0 ) );
+				p.push_back( origin + V3f( o-dh-e, dh+e, 0 ) );
+				p.push_back( origin + V3f( o-dh+fw, dh-fw, 0 ) );
 			}
+
+			if( o <= dw )
+			{
+				// Bottom frame-to-edge
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( o-fw, fw, 0 ) );
+				p.push_back( origin + V3f( o+e, -e, 0 ) );
+			}
+			else if( o <= dw + size.y )
+			{
+				// Right frame-to-edge
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( dw-fw, o-dw+fw, 0 ) );
+				p.push_back( origin + V3f( dw+e, o-dw-e, 0 ) );
+			}
+		}
+		else
+		{
+			// Single line at top-right corner
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( o-dh-e, dh+e, 0 ) );
+			p.push_back( origin + V3f( dw+e, dh-oMax+o-e, 0 ) );
 		}
 	}
 
