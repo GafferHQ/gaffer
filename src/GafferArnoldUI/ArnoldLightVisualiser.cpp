@@ -441,6 +441,13 @@ Visualisations ArnoldLightVisualiser::visualise( const IECore::InternedString &a
 			IECoreGL::RenderablePtr iesVis = iesVisualisation( iesFilenameData->readable() );
 			if( iesVis )
 			{
+				if( ConstM44fDataPtr visOrientationData = Gaffer::Metadata::value<M44fData>( "ai:light:photometric_light", "visualiserOrientation" ) )
+				{
+					IECoreGL::GroupPtr group = new IECoreGL::Group();
+					group->addChild( iesVis );
+					group->setTransform( visOrientationData->readable() );
+					iesVis = group;
+				}
 				v.push_back( Visualisation::createOrnament( iesVis, true ) );
 			}
 		}
