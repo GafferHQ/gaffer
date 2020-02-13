@@ -218,9 +218,10 @@ Visualisations BarndoorVisualiser::visualise( const IECore::InternedString &attr
 
 		float innerAngle;
 		float coneAngle;
+		float radius;
 		float lensRadius;
 
-		StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderNetwork, innerAngle, coneAngle, lensRadius );
+		StandardLightVisualiser::spotlightParameters( "ai:light", lightShaderNetwork, innerAngle, coneAngle, radius, lensRadius );
 
 		const float halfAngle = 0.5 * M_PI * coneAngle / 180.0;
 		const float baseRadius = sin( halfAngle ) + lensRadius;
