@@ -107,6 +107,9 @@ Gaffer.Metadata.registerNode(
 		"parameters.*" : [
 
 			"labelPlugValueWidget:renameable", True,
+			# Since the names are used directly as variable names in the code,
+			# it's best to avoid any fancy label formatting for them.
+			"label", lambda plug : plug.getName(),
 
 		],
 
@@ -131,6 +134,7 @@ Gaffer.Metadata.registerNode(
 		"out.*" : [
 
 			"labelPlugValueWidget:renameable", True,
+			"label", lambda plug : plug.getName(),
 
 		],
 
