@@ -47,7 +47,8 @@ jobs:
    - script: |
        pip install sphinx==1.8.0 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12 &&
        brew update &&
-       brew install scons doxygen &&
+       brew install doxygen &&
+       brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/bb50e09187595c6a0ef68761e1c6457d8f7b2461/Formula/scons.rb &&
        brew cask install xquartz inkscape
      displayName: 'Install Toolchain (Darwin)'
      condition: eq( variables['Agent.OS'], 'Darwin' )
