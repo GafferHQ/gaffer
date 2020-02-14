@@ -73,6 +73,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr pointRays( float radius = 0 );
 		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length = 1.0f, float lineWidthScale = 1.0f );
+		static IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Imath::Vec3<bool> &axisRings, float lineWidthScale = 1.0f, const Imath::V3f &center = Imath::V3f( 0.0f ) );
 
 		static IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &size, float hatchingScale = 1.0f );
 
@@ -113,8 +114,6 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		static IECoreGL::ConstRenderablePtr diskWireframe( float radius );
 		static IECoreGL::ConstRenderablePtr diskSurface( float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
-
-		static IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Imath::Vec3<bool> &axisRings, float lineWidthScale = 1.0f, const Imath::V3f &center = Imath::V3f( 0.0f ) );
 
 		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
 
