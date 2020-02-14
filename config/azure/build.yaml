@@ -46,7 +46,6 @@ jobs:
 
    - script: |
        pip install sphinx==1.8.0 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12 &&
-       brew update &&
        brew install scons doxygen &&
        brew cask install xquartz inkscape
      displayName: 'Install Toolchain (Darwin)'

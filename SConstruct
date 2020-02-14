@@ -46,6 +46,9 @@ import platform
 import py_compile
 import subprocess
 
+# Debug which python version we're using
+print( sys.version )
+
 ###############################################################################################
 # Version
 ###############################################################################################
