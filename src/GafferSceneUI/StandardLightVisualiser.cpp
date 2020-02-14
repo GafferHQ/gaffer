@@ -141,6 +141,29 @@ void addCircle( Axis axis, const V3f &center, float radius, vector<int> &vertsPe
 	vertsPerCurve.push_back( numDivisions );
 }
 
+void addArc( Axis axis, const V3f &center, float radius, float startAngle, float stopAngle, vector<int> &vertsPerCurve, vector<V3f> &p )
+{
+	const int numSegmentsForCircle = 100;
+	int numSegments = max( 1, (int)ceil( fabs(stopAngle - startAngle) / 360.0f * numSegmentsForCircle ) );
+	for( int i = 0; i < numSegments + 1; ++i )
+	{
+		const float angle = 2 * M_PI / 360.0f * ( startAngle + ( stopAngle - startAngle ) * (float)i/(float)(numSegments) );
+		if( axis == Axis::Z )
+		{
+			p.push_back( center + radius * V3f( cos( angle ), sin( angle ), 0 ) );
+		}
+		else if( axis == Axis::X )
+		{
+			p.push_back( center + radius * V3f( 0, cos( angle ), sin( angle ) ) );
+		}
+		else
+		{
+			p.push_back( center + radius * V3f( cos( angle ), 0, sin( angle ) ) );
+		}
+	}
+	vertsPerCurve.push_back( numSegments + 1 );
+}
+
 void addSolidArc( Axis axis, const V3f &center, float majorRadius, float minorRadius, float startFraction, float stopFraction, vector<int> &vertsPerPoly, vector<int> &vertIds, vector<V3f> &p )
 {
 	const int numSegmentsForCircle = 100;
@@ -468,7 +491,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		float innerAngle, outerAngle, radius, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
-		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, true, true ), 0.5f ) ) );
+		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotRadius( radius, visualiserScale  ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.2f ) ) );
@@ -1125,6 +1148,43 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float rad
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+
+	group->addChild( curves );
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotRadius( float radius, float visualiserScale )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+	addWireframeCurveState( group.get(), 0.5f );
+	addConstantShader( group.get() );
+
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+	std::vector< V3f > &p = pData->writable();
+	std::vector< int > &vertsPerCurve = vertsPerCurveData->writable();
+
+	addArc( Axis::Z,  V3f( 0 ), radius, -40, 40, vertsPerCurve, p );
+	addArc( Axis::Z,  V3f( 0 ), radius, 140, 220, vertsPerCurve, p );
+
+	float tickSize = visualiserScale * 0.05f;
+	p.push_back( V3f( radius, 0, 0 ) );
+	p.push_back( V3f( radius + tickSize, tickSize, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( radius, 0,  0 ) );
+	p.push_back( V3f( radius + tickSize, -tickSize, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( -radius, 0, 0 ) );
+	p.push_back( V3f( -radius - tickSize, tickSize, 0 ) );
+	vertsPerCurve.push_back( 2 );
+	p.push_back( V3f( -radius, 0, 0 ) );
+	p.push_back( V3f( -radius - tickSize, -tickSize, 0 ) );
+	vertsPerCurve.push_back( 2 );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
 
 	group->addChild( curves );

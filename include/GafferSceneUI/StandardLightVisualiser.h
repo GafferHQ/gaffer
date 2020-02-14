@@ -99,6 +99,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr cylinderShape( float radius, bool filled = false, const Imath::Color3f &color = Imath::Color3f( 1.0f ) );
 		static IECoreGL::ConstRenderablePtr pointShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
+		static IECoreGL::ConstRenderablePtr spotRadius( float radius, float visualiserScale );
 
 		// textureData should be as per return type of surfaceTexture
 
