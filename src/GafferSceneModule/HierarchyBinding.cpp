@@ -45,6 +45,7 @@
 #include "GafferScene/Group.h"
 #include "GafferScene/Instancer.h"
 #include "GafferScene/Isolate.h"
+#include "GafferScene/MergeScenes.h"
 #include "GafferScene/Parent.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/Seeds.h"
@@ -113,12 +114,21 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<Encapsulate>();
 
 	{
+		scope s = GafferBindings::DependencyNodeClass<MergeScenes>();
+		enum_<MergeScenes::Mode>( "Mode" )
+			.value( "Keep", MergeScenes::Mode::Keep )
+			.value( "Replace", MergeScenes::Mode::Replace )
+			.value( "Merge", MergeScenes::Mode::Merge )
+		;
+	}
+
+	{
 		scope s = GafferBindings::DependencyNodeClass<Instancer>();
 		enum_<Instancer::PrototypeMode>( "PrototypeMode" )
 			.value( "IndexedRootsList", Instancer::PrototypeMode::IndexedRootsList )
 			.value( "IndexedRootsVariable", Instancer::PrototypeMode::IndexedRootsVariable )
 			.value( "RootPerVertex", Instancer::PrototypeMode::RootPerVertex )
-			;
+		;
 	}
 
 }
