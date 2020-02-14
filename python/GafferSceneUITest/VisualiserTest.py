@@ -64,7 +64,7 @@ class VisualiserTest( GafferUITest.TestCase ) :
 		# The expected bound is the size of the green camera body visualisation.
 		# We want to make sure the renderer bound it doesn't contain the frustum
 		# visualisation which extends to the far clipping plane.
-		expectedBodyBound = imath.Box3f( imath.V3f( -5, -5, -5 ), imath.V3f( 5, 5, 2 ) )
+		expectedBodyBound = imath.Box3f( imath.V3f( -0.85, -0.85, -0.75 ), imath.V3f( 0.85, 0.85, 1.8 ) )
 
 		# Make sure the far plane is bigger than the camera body visualisation
 		clippingPlanes = camera.getClippingPlanes()
