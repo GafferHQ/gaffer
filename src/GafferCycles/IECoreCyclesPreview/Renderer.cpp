@@ -3829,13 +3829,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
 
-			ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA 
-#ifdef WITH_OPTIX
-			| ccl::DEVICE_MASK_OPTIX 
-#endif
-			);
 			bool device_available = false;
-			for( ccl::DeviceInfo& device : devices ) 
+			for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
 			{
 				if( device_type_fallback == device.type )
 				{
@@ -3852,7 +3847,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				for( ccl::DeviceInfo& device : devices ) 
+				for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
 				{
 					if( m_deviceName ==  device.id ) 
 					{
