@@ -599,7 +599,7 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( shaderName == "distant_light" )
 	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "angle", plugsParent, Gaffer::Plug::In, 0.0f ) );
 	}
 
 	// Remove any old plugs which it turned out we didn't need.

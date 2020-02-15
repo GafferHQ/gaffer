@@ -1389,6 +1389,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->is_portal = clight->is_portal;
 				light->is_enabled = clight->is_enabled;
 				light->strength = clight->strength;
+				light->angle = clight->angle;
 #ifdef WITH_CYCLES_LIGHTGROUPS
 				light->lightgroups = clight->lightgroups;
 #endif
@@ -3923,11 +3924,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::Integrator *integrator = m_scene->integrator;
 			ccl::Background *background = m_scene->background;
 
+			bool lightBackground = false;
 			for( ccl::Light *light : m_scene->lights )
 			{
 				if( light->type == ccl::LIGHT_BACKGROUND )
 				{
 					background->shader = light->shader;
+					lightBackground = true;
 #ifdef WITH_CYCLES_LIGHTGROUPS
 					integrator->background_lightgroups = light->lightgroups;
 #endif
@@ -3993,7 +3996,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			if( m_backgroundShader )
+			{
 				background->shader = m_backgroundShader.get();
+			}
+			else if( !lightBackground )
+			{
+				// Fallback to default background
+				background->shader = m_scene->default_background;
+			}
 
 			if( integrator->modified( m_integrator ) )
 			{

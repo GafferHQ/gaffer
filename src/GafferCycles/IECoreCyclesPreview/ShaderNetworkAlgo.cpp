@@ -649,6 +649,14 @@ ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 				{
 					continue;
 				}
+			if( namedParameter.first == "angle" )
+			{
+				if( const FloatData *data = static_cast<const FloatData *>( namedParameter.second.get() ) )
+				{
+					result->angle = 2 * M_PI * ( data->readable() / 360.0f );
+				}
+				continue;
+			}
 			SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
 		}
 	}

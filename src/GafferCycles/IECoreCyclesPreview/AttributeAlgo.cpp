@@ -160,7 +160,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		switch( primitiveVariable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				celem = ccl::ATTR_ELEMENT_OBJECT;
+				celem = ccl::ATTR_ELEMENT_MESH;
 				break;
 			case PrimitiveVariable::Vertex :
 				if( attributes.curve_mesh )
