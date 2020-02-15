@@ -3846,17 +3846,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_deviceName == "MULTI" )
 			{
-				if( m_sessionParams.progressive )
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Multi-device is only compatible with Branched Path mode and progressive refine disabled, reverting to CPU." );
-					device_available = false;
-				}
-				else
-				{
-					ccl::DeviceInfo multidevice = ccl::Device::get_multi_device( m_multiDevices, m_sessionParams.threads, m_sessionParams.background );
-					m_sessionParams.device = multidevice;
-					device_available = true;
-				}
+				ccl::DeviceInfo multidevice = ccl::Device::get_multi_device( m_multiDevices, m_sessionParams.threads, m_sessionParams.background );
+				m_sessionParams.device = multidevice;
+				device_available = true;
 			}
 			else
 			{
@@ -3992,7 +3984,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_useDenoising )
 			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Denoising is not compatible with progressive refine, disabling progressive refine." );
 				m_sessionParams.progressive_refine = false;
+			}
+
+			if( m_deviceName == "MULTI" )
+			{
+				if( m_sessionParams.progressive_refine )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Multi-device is not compatible with progressive refine, disabling progressive refine." );
+					m_sessionParams.progressive_refine = false;
+				}
 			}
 
 			if( m_backgroundShader )
