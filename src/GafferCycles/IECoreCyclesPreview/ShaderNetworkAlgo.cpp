@@ -433,10 +433,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		// We needed to change any "." found in the socket input names to
 		// "__", revert that change here.
 		string parameterName = boost::replace_first_copy( connection.destination.name.string(), "__", "." );
-		if( isOSLShader )
-		{
-			parameterName = "param_" + connection.destination.name.string();
-		}
 
 		InternedString sourceName = connection.source.name;
 		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
