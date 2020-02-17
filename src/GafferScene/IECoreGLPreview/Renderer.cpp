@@ -228,12 +228,22 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		OpenGLAttributes( const IECore::CompoundObject *attributes )
+			: m_frustumMode( FrustumMode::WhenSelected )
 		{
 			const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
 			m_visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
 
-			const BoolData *drawFrustumData = attributes->member<BoolData>( "gl:visualiser:frustum" );
-			m_drawFrustum = drawFrustumData ? drawFrustumData->readable() : true;
+			if( const StringData *drawFrustumData = attributes->member<StringData>( "gl:visualiser:frustum" ) )
+			{
+				if( drawFrustumData->readable() == "off" )
+				{
+					m_frustumMode = FrustumMode::Off;
+				}
+				else if( drawFrustumData->readable() == "on" )
+				{
+					m_frustumMode = FrustumMode::On;
+				}
+			}
 
 			m_state = static_pointer_cast<const State>(
 				CachedConverter::defaultCachedConverter()->convert( attributes )
@@ -314,18 +324,33 @@ class OpenGLAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_visualiserScale;
 		}
 
-		bool drawFrustum() const
+		bool drawFrustum( bool isSelected ) const
 		{
-			return m_drawFrustum;
+			switch ( m_frustumMode )
+			{
+				case FrustumMode::WhenSelected :
+					return isSelected;
+				case FrustumMode::On :
+					return true;
+				default :
+					return false;
+			}
 		}
 
 	private :
 
 		ConstStatePtr m_state;
-		bool m_drawFrustum;
 		Visualisations m_visualisations;
 		Visualisations m_lightVisualisations;
 		Visualisations m_lightFilterVisualisations;
+
+		enum class FrustumMode : char
+		{
+			Off,
+			WhenSelected,
+			On
+		};
+		FrustumMode m_frustumMode;
 
 		float m_visualiserScale = 1.0f;
 };
@@ -418,7 +443,9 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			Visualisation::Category categories = Visualisation::Category::Generic;
-			if( m_attributes->drawFrustum() )
+			// Note: We don't have access to selection state here, so we assume it is
+			// selected to make sure we consider the frustum if it's enabled.
+			if( m_attributes->drawFrustum( true ) )
 			{
 				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
 			}
@@ -444,8 +471,10 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void render( IECoreGL::State *currentState, const IECore::PathMatcher &selection ) const
 		{
+			const bool isSelected = selected( selection );
+
 			IECoreGL::State::ScopedBinding scope( *m_attributes->state(), *currentState );
-			IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, selected( selection ) );
+			IECoreGL::State::ScopedBinding selectionScope( selectionState(), *currentState, isSelected );
 
 			// In order to minimize z-fighting, we draw non-geometric visualisations
 			// first and real geometry last, so that they sit on top. This is
@@ -454,7 +483,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			const Visualisations &attrVis = visualisations( *m_attributes );
 
 			Visualisation::Category categories = Visualisation::Category::Generic;
-			if( m_attributes->drawFrustum() )
+			if( m_attributes->drawFrustum( isSelected ) )
 			{
 				categories = Visualisation::Category( categories | Visualisation::Category::Frustum );
 			}

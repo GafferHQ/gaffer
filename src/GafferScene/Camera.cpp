@@ -89,7 +89,7 @@ Camera::Camera( const std::string &name )
 
 	addChild( new CompoundDataPlug( "visualiserAttributes" ) );
 	visualiserAttributesPlug()->addChild( new Gaffer::NameValuePlug( "gl:visualiser:scale", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.01f ), false, "scale" ) );
-	visualiserAttributesPlug()->addChild( new NameValuePlug( "gl:visualiser:frustum", new BoolData( true ), false, "frustum" ) );
+	visualiserAttributesPlug()->addChild( new NameValuePlug( "gl:visualiser:frustum", new StringData( "whenSelected" ), false, "frustum" ) );
 }
 
 Camera::~Camera()

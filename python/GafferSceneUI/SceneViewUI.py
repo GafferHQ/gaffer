@@ -254,13 +254,14 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/VisualisersDivider", { "divider" : True } )
 
 		frustumPlug = self.getPlug()["visualiser"]["frustum"]
-		m.append(
-			"/Visualisers/Frustum",
-			{
-				"command" : frustumPlug.setValue,
-				"checkBox" : frustumPlug.getValue()
-			}
-		)
+		for mode in ( "off", "whenSelected", "on" ) :
+			m.append(
+				"/Visualisers/Frustum/" + IECore.CamelCase.toSpaced( mode ),
+				{
+					"command" : functools.partial( lambda m, _ : frustumPlug.setValue( m ), mode ),
+					"checkBox" : frustumPlug.getValue() == mode
+				}
+			)
 
 		self.__appendValuePresetMenu(
 			m, self.getPlug()["visualiser"]["scale"],
