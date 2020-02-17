@@ -55,6 +55,8 @@ IECORECYCLES_API ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, c
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
 IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, const std::string &nodeName, const ccl::Scene *scene = nullptr );
+/// Compute tangents.
+IECORECYCLES_API void computeTangents( ccl::Mesh *cmesh, const IECoreScene::MeshPrimitive *mesh, bool needsign );
 
 } // namespace MeshAlgo
 

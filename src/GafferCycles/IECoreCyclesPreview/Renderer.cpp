@@ -1053,6 +1053,7 @@ class ShaderCache : public IECore::RefCounted
 				}
 				
 			}
+			a->second->tag_update( m_scene );
 			return a->second;
 		}
 
@@ -1335,6 +1336,21 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( m_shader )
 				{
+					ccl::AttributeSet &attributes = ( mesh->subd_faces.size() ) ? mesh->subd_attributes : mesh->attributes;
+					if( m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
+					{
+						if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
+						{
+							return false;
+						}
+					}
+					if( m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
+					{
+						if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
+						{
+							return false;
+						}
+					}
 					m_shaderCache->addShaderAssignment( ShaderAssignPair( mesh, m_shader.get() ) );
 				}
 			}
@@ -1428,6 +1444,13 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						h.append( m_dicingRate );
 						h.append( m_maxLevel );
 					}
+					if( m_shader )
+					{
+						if( needTangents() )
+							h.append( "tangent" );
+						if( needTangentSign() )
+							h.append( "tangent_sign" );
+					}
 					break;
 				case IECoreScene::CurvesPrimitiveTypeId :
 					break;
@@ -1499,6 +1522,20 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				return 0.0f;
 			}
+		}
+
+		bool needTangents() const
+		{
+			if( !m_shader )
+				return false;
+			return m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT );
+		}
+
+		bool needTangentSign() const
+		{
+			if( !m_shader )
+				return false;
+			return m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN );
 		}
 
 	private :
@@ -1884,6 +1921,9 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
 
+			const bool tangent = cyclesAttributes->needTangents();
+			const bool needsign = cyclesAttributes->needTangentSign();
+
 			ccl::Object *cobject = nullptr;
 
 			if( const IECoreScene::PointsPrimitive *points = IECore::runTimeCast<const IECoreScene::PointsPrimitive>( object ) )
@@ -1910,6 +1950,9 @@ class InstanceCache : public IECore::RefCounted
 			if( !cyclesAttributes->canInstanceGeometry( object ) )
 			{
 				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
+				if( tangent )
+					if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
+						MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
 				cobject->random_id = (unsigned)IECore::hash_value( object->hash() );
 				cobject->mesh->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
@@ -1937,6 +1980,9 @@ class InstanceCache : public IECore::RefCounted
 #endif
 				{
 					cobject = ObjectAlgo::convert( object, nodeName, m_scene );
+					if( tangent )
+						if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
+							MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				cobject->mesh->name = hash.toString();
@@ -1978,6 +2024,9 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
 
+			const bool tangent = cyclesAttributes->needTangents();
+			const bool needsign = cyclesAttributes->needTangentSign();
+
 			ccl::Object *cobject = nullptr;
 
 			IECore::MurmurHash hash;
@@ -2011,6 +2060,9 @@ class InstanceCache : public IECore::RefCounted
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
 				cobject = ObjectAlgo::convert( samples, nodeName, m_scene );
+				if( tangent )
+					if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( samples.front() ) )
+						MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
 				cobject->random_id = (unsigned)IECore::hash_value( samples.front()->hash() );
 				cobject->mesh->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
@@ -2038,6 +2090,9 @@ class InstanceCache : public IECore::RefCounted
 #endif
 				{
 					cobject = ObjectAlgo::convert( samples, nodeName, m_scene );
+					if( tangent )
+						if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( samples.front() ) )
+							MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				cobject->mesh->name = hash.toString();
