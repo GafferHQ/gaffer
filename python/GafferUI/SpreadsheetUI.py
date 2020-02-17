@@ -510,12 +510,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if mode in ( self.Mode.Cells, self.Mode.Defaults ) :
 
-			for index, plug in enumerate( plug["default"]["cells"] ) :
-				width = Gaffer.Metadata.value( plug, "spreadsheet:columnWidth" )
-				if width is not None :
-					tableView.horizontalHeader().resizeSection( index, width )
-				visualIndex = Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" )
-
+			self.__applyColumnWidthMetadata()
 			self.__applySectionOrderMetadata()
 
 			tableView.horizontalHeader().setSectionsMovable( True )
@@ -642,6 +637,31 @@ class _PlugTableView( GafferUI.Widget ) :
 			with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
 				Gaffer.Metadata.registerValue( plug, "spreadsheet:columnWidth", newSize )
 
+	def __applyColumnWidthMetadata( self, cellPlug = None ) :
+
+		defaultCells = self._qtWidget().model().rowsPlug()["default"]["cells"]
+
+		if cellPlug is not None :
+			indicesAndPlugs = [ ( defaultCells.children().index( cellPlug ), cellPlug ) ]
+		else :
+			indicesAndPlugs = enumerate( defaultCells )
+
+		try :
+
+			self.__ignoreSectionResized = True
+
+			for index, plug in indicesAndPlugs :
+
+				width = Gaffer.Metadata.value( plug, "spreadsheet:columnWidth" )
+				if width is None :
+					width = self._qtWidget().horizontalHeader().defaultSectionSize()
+
+				self._qtWidget().horizontalHeader().resizeSection( index, width )
+
+		finally :
+
+			self.__ignoreSectionResized = False
+
 	def __applySectionOrderMetadata( self ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
@@ -688,13 +708,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if key == "spreadsheet:columnWidth" :
 
-			column = rowsPlug["default"]["cells"].children().index( plug )
-			self.__ignoreSectionResized = True
-			width = Gaffer.Metadata.value( plug, "spreadsheet:columnWidth" )
-			if width is None :
-				width = self._qtWidget().horizontalHeader().defaultSectionSize()
-			self._qtWidget().horizontalHeader().resizeSection( column, width )
-			self.__ignoreSectionResized = False
+			if plug.parent() == rowsPlug["default"]["cells"] :
+				self.__applyColumnWidthMetadata( cellPlug = plug )
 
 		elif key == "spreadsheet:columnIndex" :
 
@@ -817,6 +832,7 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __modelReset( self ) :
 
 		self.__applyColumnVisibility()
+		self.__applyColumnWidthMetadata()
 
 	def __moveToSection( self, cellPlug, sectionName = None ) :
 
