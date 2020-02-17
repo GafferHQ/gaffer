@@ -196,7 +196,7 @@ def __correspondingDefaultPlug( plug ) :
 
 	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 	rowsPlug = rowPlug.parent()
-	return rowsPlug["default"].descendant( plug.relativeName( rowPlug ) )
+	return rowsPlug.defaultRow().descendant( plug.relativeName( rowPlug ) )
 
 def __defaultCellMetadata( plug, key ) :
 
@@ -272,13 +272,13 @@ def _affectsRowNameWidth( key ) :
 def _getRowNameWidth( rowsPlug ) :
 
 	assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
-	width = Gaffer.Metadata.value( rowsPlug["default"], "spreadsheet:rowNameWidth" )
+	width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
 	return width if width is not None else GafferUI.PlugWidget.labelWidth()
 
 def _setRowNameWidth( rowsPlug, width ) :
 
 	assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
-	Gaffer.Metadata.registerValue( rowsPlug["default"], "spreadsheet:rowNameWidth", width )
+	Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )
 
 # _RowsPlugValueWidget
 # ====================
@@ -442,7 +442,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if plug is not None :
 
 			rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
-			if rowPlug.getName() == "default" :
+			if rowPlug == rowPlug.parent().defaultRow() :
 				rowName = "Default"
 			else :
 				with self.getContext() :
@@ -639,7 +639,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applyColumnWidthMetadata( self, cellPlug = None ) :
 
-		defaultCells = self._qtWidget().model().rowsPlug()["default"]["cells"]
+		defaultCells = self._qtWidget().model().rowsPlug().defaultRow()["cells"]
 
 		if cellPlug is not None :
 			indicesAndPlugs = [ ( defaultCells.children().index( cellPlug ), cellPlug ) ]
@@ -666,7 +666,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
 		header = self._qtWidget().horizontalHeader()
-		for index, plug in enumerate( rowsPlug["default"]["cells"] ) :
+		for index, plug in enumerate( rowsPlug.defaultRow()["cells"] ) :
 			visualIndex = Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" )
 			self.__callingMoveSection = True
 			header.moveSection( header.visualIndex( index ), visualIndex if visualIndex is not None else index )
@@ -680,7 +680,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__ignoreSectionResized = True
 		try :
 			rowsPlug = self._qtWidget().model().rowsPlug()
-			for i, plug in enumerate( rowsPlug["default"]["cells"].children() ) :
+			for i, plug in enumerate( rowsPlug.defaultRow()["cells"].children() ) :
 				if self.__visibleSection is not None :
 					visible = _SectionChooser.getSection( plug ) == self.__visibleSection
 				else :
@@ -708,7 +708,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if key == "spreadsheet:columnWidth" :
 
-			if plug.parent() == rowsPlug["default"]["cells"] :
+			if plug.parent() == rowsPlug.defaultRow()["cells"] :
 				self.__applyColumnWidthMetadata( cellPlug = plug )
 
 		elif key == "spreadsheet:columnIndex" :
@@ -763,7 +763,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			return False
 
 		cellPlug = self.plugAt( event.line.p0 )
-		assert( cellPlug.ancestor( Gaffer.Spreadsheet.RowPlug ).getName() == "default" )
+		assert( cellPlug.ancestor( Gaffer.Spreadsheet.RowPlug ) == cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug ).defaultRow() )
 
 		menuDefinition = IECore.MenuDefinition()
 		menuDefinition.append(
@@ -864,8 +864,8 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__plugDirtiedConnection = rowsPlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 		self.__rowAddedConnection = rowsPlug.childAddedSignal().connect( Gaffer.WeakMethod( self.__rowAdded ) )
 		self.__rowRemovedConnection = rowsPlug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__rowRemoved ) )
-		self.__columnAddedConnection = rowsPlug["default"]["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ) )
-		self.__columnRemovedConnection = rowsPlug["default"]["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ) )
+		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ) )
+		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ) )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
@@ -957,7 +957,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		if role == QtCore.Qt.DisplayRole :
 			if orientation == QtCore.Qt.Horizontal and self.__mode != _PlugTableView.Mode.RowNames :
-				cellPlug = self.__rowsPlug["default"]["cells"][section]
+				cellPlug = self.__rowsPlug.defaultRow()["cells"][section]
 				label = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" )
 				if not label :
 					label = IECore.CamelCase.toSpaced( cellPlug.getName() )
@@ -1372,8 +1372,8 @@ class _SectionChooser( GafferUI.Widget ) :
 		self.__ignoreCurrentChanged = False
 		tabBar.tabMoved.connect( Gaffer.WeakMethod( self.__tabMoved ) )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-		self.__rowsPlug["default"]["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = False )
-		self.__rowsPlug["default"]["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = False )
+		self.__rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = False )
+		self.__rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = False )
 
 		self.__updateTabs()
 
@@ -1392,7 +1392,7 @@ class _SectionChooser( GafferUI.Widget ) :
 	def sectionNames( cls, rowsPlug ) :
 
 		names = set()
-		for cellPlug in rowsPlug["default"]["cells"] :
+		for cellPlug in rowsPlug.defaultRow()["cells"] :
 			names.add( cls.getSection( cellPlug ) )
 
 		if names == { "Other" } :
@@ -1549,7 +1549,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		with Gaffer.UndoScope( self.__rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 
 			# Move appropriate columns to renamed section
-			for cellPlug in self.__rowsPlug["default"]["cells"] :
+			for cellPlug in self.__rowsPlug.defaultRow()["cells"] :
 				if self.getSection( cellPlug ) == sectionName :
 					# Using `__registerSectionMetadata()` rather than `setSection()`
 					# because we call `__assignSectionOrder()` ourselves.
@@ -1572,7 +1572,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		with Gaffer.UndoScope( self.__rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 			# Iterate in reverse to avoid invalidating column indices we're
 			# about to visit.
-			for columnIndex, cellPlug in reversed( list( enumerate( self.__rowsPlug["default"]["cells"] ) ) ) :
+			for columnIndex, cellPlug in reversed( list( enumerate( self.__rowsPlug.defaultRow()["cells"] ) ) ) :
 				if self.getSection( cellPlug ) == sectionName :
 					self.__rowsPlug.removeColumn( columnIndex )
 			# Reassign section indices to remove gap.
@@ -1589,7 +1589,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		with Gaffer.UndoScope( self.__rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 
 			# Move columns
-			for cellPlug in self.__rowsPlug["default"]["cells"] :
+			for cellPlug in self.__rowsPlug.defaultRow()["cells"] :
 				if self.getSection( cellPlug ) == fromSectionName :
 					# Using `__registerSectionMetadata()` rather than `setSection()`
 					# because we call `__assignSectionOrder()` ourselves.
@@ -1606,7 +1606,7 @@ class _SectionChooser( GafferUI.Widget ) :
 
 		with Gaffer.UndoScope( self.__rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 
-			for cellPlug in self.__rowsPlug["default"]["cells"] :
+			for cellPlug in self.__rowsPlug.defaultRow()["cells"] :
 				# Using `__registerSectionMetadata()` rather than `setSection()`
 				# because we call `__assignSectionOrder()` ourselves.
 				self.__registerSectionMetadata( cellPlug, "Other" )
@@ -1760,7 +1760,7 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	if rowPlug is None :
 		return
 
-	if rowPlug.getName() == "default" :
+	if rowPlug == rowPlug.parent().defaultRow() :
 		return
 
 	menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
@@ -1826,7 +1826,7 @@ def __addColumn( spreadsheet, plug ) :
 	# the spreadsheet.
 	rowsPlug = spreadsheet["rows"].source()
 	columnIndex = rowsPlug.addColumn( plug, columnName )
-	valuePlug = rowsPlug["default"]["cells"][columnIndex]["value"]
+	valuePlug = rowsPlug.defaultRow()["cells"][columnIndex]["value"]
 	Gaffer.MetadataAlgo.copy( plug, valuePlug, exclude = "spreadsheet:columnName layout:* deletable" )
 
 	return columnIndex
