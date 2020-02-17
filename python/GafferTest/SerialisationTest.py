@@ -227,6 +227,24 @@ class SerialisationTest( GafferTest.TestCase ) :
 		self.assertNotIn( "a1", scope["parent"] )
 		self.assertEqual( scope["parent"]["b"]["op1"].getInput(), scope["parent"]["a"]["sum"] )
 
+	def testChildIdentifier( self ) :
+
+		node = Gaffer.Node()
+		node["a"] = GafferTest.AddNode()
+		node["b"] = GafferTest.AddNode()
+
+		filter = Gaffer.StandardSet( [ node["a"] ] )
+		serialisation = Gaffer.Serialisation( node, filter = filter )
+
+		aIdentifier = serialisation.identifier( node["a"] )
+		self.assertEqual(
+			serialisation.identifier( node["a"]["op1"] ),
+			serialisation.childIdentifier( aIdentifier, node["a"]["op1"] )
+		)
+
+		bIdentifier = serialisation.identifier( node["b"] )
+		self.assertEqual( bIdentifier, "" )
+		self.assertEqual( serialisation.childIdentifier( bIdentifier, node["b"]["op1"] ), "" )
 
 if __name__ == "__main__":
 	unittest.main()

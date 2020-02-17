@@ -342,18 +342,16 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 		parentIdentifier = identifier( parent );
 	}
 
-	if( parentIdentifier.empty() )
-	{
-		return "";
-	}
-	else
-	{
-		return childIdentifier( parentIdentifier, graphComponent );
-	}
+	return childIdentifier( parentIdentifier, graphComponent );
 }
 
 std::string Serialisation::childIdentifier( const std::string &parentIdentifier, const Gaffer::GraphComponent *child ) const
 {
+	if( parentIdentifier.empty() )
+	{
+		return "";
+	}
+
 	const GraphComponent *parent = child->parent();
 	std::string result = parentIdentifier;
 	if( keyedByIndex( parent ) )
@@ -375,6 +373,11 @@ std::string Serialisation::childIdentifier( const std::string &parentIdentifier,
 
 std::string Serialisation::childIdentifier( const std::string &parentIdentifier, Gaffer::GraphComponent::ChildIterator child ) const
 {
+	if( parentIdentifier.empty() )
+	{
+		return "";
+	}
+
 	const GraphComponent *parent = (*child)->parent();
 	std::string result = parentIdentifier;
 	if( keyedByIndex( parent ) )
