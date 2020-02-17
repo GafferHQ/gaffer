@@ -275,6 +275,7 @@ class CameraVisualiser : public ObjectVisualiser
 			ornamentGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
 			ornamentGroup->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
 			ornamentGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
+			ornamentGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
 
 			// The ornament uses fixed near/far planes so it's manageable
 			ornamentGroup->addChild( createFrustum( projection, screenWindow, V2f( 0.0f, 0.75f ), 0.1f ) );
@@ -286,7 +287,8 @@ class CameraVisualiser : public ObjectVisualiser
 			frustumGroup->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
 			frustumGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
 			frustumGroup->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-			frustumGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.4, 0.4, 0.4, 1 ) ) );
+			frustumGroup->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0, 0.25, 0, 1 ) ) );
+			frustumGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f ) );
 
 			frustumGroup->addChild( createFrustum( projection, screenWindow, camera->getClippingPlanes() ) );
 
