@@ -372,5 +372,130 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( renderer.capturedObject( "/group/defaultLight" ) )
 		self.assertEqual( capturedPlane.capturedLinks( "lights" ), set() )
 
+	def testAttributeDirtyPropagation( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		options = GafferScene.StandardOptions()
+
+		sphereSet = GafferScene.Set()
+		sphereSet["name"].setValue( "render:spheres" )
+		setFilter = GafferScene.PathFilter()
+		setFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		sphereSet["filter"].setInput( setFilter["out"] )
+
+		group["in"][0].setInput( sphere["out"] )
+		options["in"].setInput( group["out"] )
+		sphereSet["in"].setInput( options["out"] )
+
+		globalAttr = GafferScene.CustomAttributes()
+		globalAttrPlug = Gaffer.NameValuePlug( "user:globalAttr", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		globalAttr["attributes"].addChild( globalAttrPlug )
+		globalAttr["global"].setValue( True )
+
+		groupAttr = GafferScene.CustomAttributes()
+		groupAttrPlug = Gaffer.NameValuePlug( "localAttr1", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		groupAttr["attributes"].addChild( groupAttrPlug )
+		groupAttrFilter = GafferScene.PathFilter()
+		groupAttr["filter"].setInput( groupAttrFilter["out"] )
+		groupAttrFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		sphereAttr = GafferScene.CustomAttributes()
+		sphereAttrPlug = Gaffer.NameValuePlug( "user:localAttr2", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		sphereAttr["attributes"].addChild( sphereAttrPlug )
+		sphereAttrFilter = GafferScene.PathFilter()
+		sphereAttr["filter"].setInput( sphereAttrFilter["out"] )
+		sphereAttrFilter["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+
+		globalAttr["in"].setInput( sphereSet["out"] )
+		groupAttr["in"].setInput( globalAttr["out"] )
+		sphereAttr["in"].setInput( groupAttr["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( sphereAttr["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
+		capturedSphere = renderer.capturedObject( "/group/sphere" )
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 1 )
+		self.assertEqual(
+			capturedSphere.capturedAttributes().attributes(),
+			IECore.CompoundObject( {
+				"user:globalAttr" : IECore.IntData( 0 ),
+				"localAttr1" : IECore.IntData( 0 ),
+				"user:localAttr2" : IECore.IntData( 0 ),
+				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
+			} )
+		)
+
+		sphereAttrPlug["value"].setValue( 1 )
+		controller.update()
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 2 )
+		self.assertEqual(
+			capturedSphere.capturedAttributes().attributes(),
+			IECore.CompoundObject( {
+				"user:globalAttr" : IECore.IntData( 0 ),
+				"localAttr1" : IECore.IntData( 0 ),
+				"user:localAttr2" : IECore.IntData( 1 ),
+				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
+			} )
+		)
+
+		groupAttrPlug["value"].setValue( 2 )
+		controller.update()
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 3 )
+		self.assertEqual(
+			capturedSphere.capturedAttributes().attributes(),
+			IECore.CompoundObject( {
+				"user:globalAttr" : IECore.IntData( 0 ),
+				"localAttr1" : IECore.IntData( 2 ),
+				"user:localAttr2" : IECore.IntData( 1 ),
+				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
+			} )
+		)
+
+		globalAttrPlug["value"].setValue( 3 )
+		controller.update()
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 4 )
+		self.assertEqual(
+			capturedSphere.capturedAttributes().attributes(),
+			IECore.CompoundObject( {
+				"user:globalAttr" : IECore.IntData( 3 ),
+				"localAttr1" : IECore.IntData( 2 ),
+				"user:localAttr2" : IECore.IntData( 1 ),
+				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
+			} )
+		)
+
+		sphereSet["enabled"].setValue( False )
+		controller.update()
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 5 )
+		self.assertEqual(
+			capturedSphere.capturedAttributes().attributes(),
+			IECore.CompoundObject( {
+				"user:globalAttr" : IECore.IntData( 3 ),
+				"localAttr1" : IECore.IntData( 2 ),
+				"user:localAttr2" : IECore.IntData( 1 ),
+				"sets" : IECore.InternedStringVectorData( [ ] )
+			} )
+		)
+
+		options["options"]["renderCamera"]["enabled"].setValue( True )
+		controller.update()
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 5 )
+
+		options["options"]["renderCamera"]["value"].setValue( "/camera" )
+		controller.update()
+
+		self.assertEqual( capturedSphere.numAttributeEdits(), 5 )
+
+		del capturedSphere
+
 if __name__ == "__main__":
 	unittest.main()

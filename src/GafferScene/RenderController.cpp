@@ -48,6 +48,7 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
+#include "boost/container/flat_set.hpp"
 #include "boost/make_unique.hpp"
 
 #include "tbb/task.h"
@@ -93,6 +94,61 @@ bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *
 	RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals, scene );
 
 	return *camera1 != *camera2;
+}
+
+// This is for the very specific case of determining change for global
+// attributes, where we need to avoid comparisons of certain synthetic members
+// that are only present in previousFullAttributes.
+bool globalAttributesChanged( const CompoundObject* globalAttributes, const CompoundObject* previousFullAttributes )
+{
+	static const boost::container::flat_set<IECore::InternedString> ignoredMembers = { IECore::InternedString( "sets" ) };
+
+	if( !previousFullAttributes )
+	{
+		return true;
+	}
+
+	if( ( globalAttributes->members().size() + ignoredMembers.size() ) != previousFullAttributes->members().size() )
+	{
+		return true;
+	}
+
+	// Borrowed from IECore::CompoundObject, uses a std::map so we can assume iteration
+	// order is the same for both containers.
+
+	const CompoundObject::ObjectMap::const_iterator end = previousFullAttributes->members().end();
+	CompoundObject::ObjectMap::const_iterator it1 = previousFullAttributes->members().begin();
+	CompoundObject::ObjectMap::const_iterator it2 = globalAttributes->members().begin();
+	while( it1 != end )
+	{
+		if( ignoredMembers.find( it1->first ) != ignoredMembers.end() )
+		{
+			it1++;
+			continue;
+		}
+
+		if( it1->first != it2->first )
+		{
+			return true;
+		}
+
+		if ( it1->second != it2->second )
+		{
+			if ( !it1->second || !it2->second )
+			{
+				/// either one of the pointers is NULL
+				return true;
+			}
+			if( ! it1->second->isEqualTo( it2->second.get() ) )
+			{
+				return true;
+			}
+		}
+		it1++;
+		it2++;
+	}
+
+	return false;
 }
 
 /// Acts like an ObjectInterfacePtr, with additional functionality
@@ -495,7 +551,19 @@ class RenderController::SceneGraph
 			assert( !m_parent );
 
 			ConstCompoundObjectPtr globalAttributes = GafferScene::SceneAlgo::globalAttributes( globals );
-			if( m_fullAttributes && *m_fullAttributes == *globalAttributes )
+
+			// m_fullAttributes contains things other than just the globals attributes
+			// (@see updateRenderSets). We have a couple of options here:
+			//
+			//  1) Tracks set changes separately to attributes, and create
+			//     fullAttributes on the fly.
+			//  2) Minimise held state and the needs to recreate fullAttributes,
+			//     at the expense of maintaining custom comparison code.
+			//
+			//  The second options seems preferable, given a direct comparison
+			//  already involves a full iteration over attributes, and as such
+			//  we're not adding much overhead.
+			if( !globalAttributesChanged( globalAttributes.get(), m_fullAttributes.get() ) )
 			{
 				return false;
 			}

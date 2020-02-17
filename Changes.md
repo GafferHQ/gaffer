@@ -177,6 +177,12 @@ Build
 0.55.x.x (relative to 0.55.4.1)
 ========
 
+Improvements
+------------
+
+- Viewer : Added overscan display when looking through a suitably configured render camera.
+- Viewer/InteractiveRender : Fixed bug that caused unnecessary attribute updates when changing globals.
+
 Fixes
 -----
 
