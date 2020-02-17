@@ -400,7 +400,7 @@ elif env["PLATFORM"] == "posix" :
 
 	if "g++" in os.path.basename( env["CXX"] ) :
 
-		gccVersion = subprocess.Popen( [ env["CXX"], "-dumpversion" ], env=env["ENV"], stdout=subprocess.PIPE ).stdout.read().strip()
+		gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"] ).decode().strip()
 		gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
 
 		# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
@@ -447,7 +447,7 @@ def findOnPath( file, path ) :
 	if os.path.isabs( file ) :
 		return file if os.path.exists( file ) else None
 	else :
-		if isinstance( path, basestring ) :
+		if isinstance( path, str ) :
 			path = path.split( os.pathsep )
 		for p in path :
 			f = os.path.join( p, file )
@@ -561,7 +561,7 @@ def runCommand( command ) :
 # Determine python version
 ###############################################################################################
 
-pythonVersion = subprocess.Popen( [ "python", "--version" ], env=commandEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().strip()
+pythonVersion = subprocess.Popen( [ "python", "--version" ], env=commandEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().decode().strip()
 pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
 
 env["PYTHON_VERSION"] = pythonVersion
@@ -1179,10 +1179,7 @@ def buildGraphics( target, source, env ) :
 		os.makedirs( dir )
 
 	queryCommand = env["INKSCAPE"] + " --query-all \"" + svgFileName + "\""
-	inkscape = subprocess.Popen( queryCommand, stdout=subprocess.PIPE, shell=True )
-	objects, stderr = inkscape.communicate()
-	if inkscape.returncode :
-		raise subprocess.CalledProcessError( inkscape.returncode, queryCommand )
+	objects = subprocess.check_output( queryCommand, shell=True ).decode()
 
 	for object in objects.split( "\n" ) :
 		tokens = object.split( "," )
@@ -1269,7 +1266,7 @@ def locateDocs( docRoot, env ) :
 			sources.append( sourceFile )
 			ext = os.path.splitext( f )[1]
 			if ext in ( ".py", ".sh" ) :
-				with file( sourceFile ) as s :
+				with open( sourceFile ) as s :
 					line = s.readline()
 					# the first line in a shell script is the language
 					# specifier so we need the second line
