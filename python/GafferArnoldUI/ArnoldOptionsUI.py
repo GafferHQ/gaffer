@@ -111,6 +111,12 @@ def __subdivisionSummary( plug ) :
 	info = []
 	if plug["maxSubdivisions"]["enabled"].getValue():
 		info.append( "Max Subdivisions  %d" % plug["maxSubdivisions"]["value"].getValue() )
+	if plug["subdivDicingCamera"]["enabled"].getValue():
+		info.append( "Dicing Camera %s" % plug["subdivDicingCamera"]["value"].getValue() )
+	if plug["subdivFrustumCulling"]["enabled"].getValue():
+		info.append( "Frustum Culling %s" % ( "On" if plug["subdivFrustumCulling"]["value"].getValue() else "Off" ) )
+	if plug["subdivFrustumPadding"]["enabled"].getValue():
+		info.append( "Frustum Padding %s" % GafferUI.NumericWidget.valueToString( plug["subdivFrustumPadding"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __texturingSummary( plug ) :
@@ -625,6 +631,53 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Subdivision",
 			"label", "Max Subdivisions",
+		],
+
+		"options.subdivDicingCamera" : [
+
+			"description",
+			"""
+			If specified, adaptive subdivision will be performed
+			relative to this camera, instead of the render camera.
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "Subdiv Dicing Camera",
+		],
+
+		"options.subdivDicingCamera.value" : [
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"path:valid", True,
+			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
+			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
+		],
+
+		"options.subdivFrustumCulling" : [
+
+			"description",
+			"""
+			Disable subdivision of polygons outside the camera frustum.
+			( Uses dicing camera if one has been set ).
+			Saves performance, at the cost of inaccurate reflections
+			and shadows.
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "Subdiv Frustum Culling",
+		],
+
+		"options.subdivFrustumPadding" : [
+
+			"description",
+			"""
+			When using subdivFrustumCulling, adds a world space bound
+			around the frustum where subdivision still occurs.  Can be
+			used to improve shadows, reflections, and objects the motion
+			blur into frame.
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "Subdiv Frustum Padding",
 		],
 
 		# Texturing
