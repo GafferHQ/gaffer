@@ -1364,7 +1364,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			m_particle.apply( object );
+			if( !m_particle.apply( object ) )
+				return false;
 
 			// Cryptomatte asset name
 			if( m_sets && m_sets->readable().size() )
@@ -1509,16 +1510,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		bool hasParticleInfo() const
 		{
-			if( m_particle.index || m_particle.age || m_particle.lifetime || 
-				m_particle.location || m_particle.rotation || m_particle.size || 
-				m_particle.velocity || m_particle.angular_velocity )
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return m_particle.hasParticleInfo();
 		}
 
 		float getVolumeIsovalue() const
@@ -1634,9 +1626,25 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			boost::optional<V3f> velocity;
 			boost::optional<V3f> angular_velocity;
 
-			void apply( ccl::Object *object ) const
+			const bool hasParticleInfo() const
 			{
-				if( ccl::ParticleSystem *psys = object->particle_system )
+				if( index || age || lifetime || location || rotation || size || velocity || angular_velocity )
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			bool apply( ccl::Object *object ) const
+			{
+				if( !hasParticleInfo() )
+				{
+					return true;
+				}
+				else if( ccl::ParticleSystem *psys = object->particle_system )
 				{
 					size_t idx = object->particle_index;
 					if( idx < psys->particles.size() )
@@ -1658,6 +1666,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						if( angular_velocity )
 							psys->particles[idx].angular_velocity = SocketAlgo::setVector( angular_velocity.get() );
 					}
+					return true;
+				}
+				else
+				{
+					return false;
 				}
 			}
 		};
@@ -1946,12 +1959,10 @@ class InstanceCache : public IECore::RefCounted
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
 				cobject->particle_system = cpsysPtr.get();
-				// Push-back to vector needs thread locking.
-				{
-					tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-					m_objects.push_back( cobjectPtr );
-					m_uniqueMeshes.push_back( cmeshPtr );
-				}
+
+				m_objects.push_back( cobjectPtr );
+				m_uniqueMeshes.push_back( cmeshPtr );
+
 				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
 			}
 
@@ -1968,13 +1979,20 @@ class InstanceCache : public IECore::RefCounted
 				cobject->mesh->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
-				// Push-back to vector needs thread locking.
+				// Set particle system to mesh
+				SharedCParticleSystemPtr cpsysPtr;
+				if( cyclesAttributes->hasParticleInfo() )
 				{
-					tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-					m_objects.push_back( cobjectPtr );
-					m_uniqueMeshes.push_back( cmeshPtr );
+					tbb::spin_mutex::scoped_lock lock( m_particlesMutex );
+					cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+					cobject->particle_system = cpsysPtr.get();
+					cobject->particle_index = cpsysPtr.get()->particles.size() - 1;
 				}
-				return Instance( cobjectPtr, cmeshPtr );
+
+				m_objects.push_back( cobjectPtr );
+				m_uniqueMeshes.push_back( cmeshPtr );
+
+				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
 			}
 
 			Cache::accessor a;
@@ -2011,23 +2029,19 @@ class InstanceCache : public IECore::RefCounted
 			}
 
 			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-			SharedCParticleSystemPtr cparticleSysPtr;
-			// Push-back to vector needs thread locking.
+			// Set particle system to mesh
+			SharedCParticleSystemPtr cpsysPtr;
+			if( cyclesAttributes->hasParticleInfo() )
 			{
-				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-
-				// Set particle system to mesh
-				if( cyclesAttributes->hasParticleInfo() )
-				{
-					cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
-					cobject->particle_system = cparticleSysPtr.get();
-					cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
-				}
-
-				m_objects.push_back( cobjectPtr );
+				tbb::spin_mutex::scoped_lock lock( m_particlesMutex );
+				cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+				cobject->particle_system = cpsysPtr.get();
+				cobject->particle_index = cpsysPtr.get()->particles.size() - 1;
 			}
 
-			return Instance( cobjectPtr, a->second, cparticleSysPtr );
+			m_objects.push_back( cobjectPtr );
+
+			return Instance( cobjectPtr, a->second, cpsysPtr );
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -2059,12 +2073,10 @@ class InstanceCache : public IECore::RefCounted
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
 				cobject->particle_system = cpsysPtr.get();
-				// Push-back to vector needs thread locking.
-				{
-					tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-					m_objects.push_back( cobjectPtr );
-					m_uniqueMeshes.push_back( cmeshPtr );
-				}
+
+				m_objects.push_back( cobjectPtr );
+				m_uniqueMeshes.push_back( cmeshPtr );
+
 				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
 			}
 
@@ -2078,13 +2090,20 @@ class InstanceCache : public IECore::RefCounted
 				cobject->mesh->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
 				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
-				// Push-back to vector needs thread locking.
+				// Set particle system to mesh
+				SharedCParticleSystemPtr cpsysPtr;
+				if( cyclesAttributes->hasParticleInfo() )
 				{
-					tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-					m_objects.push_back( cobjectPtr );
-					m_uniqueMeshes.push_back( cmeshPtr );
+					tbb::spin_mutex::scoped_lock lock( m_particlesMutex );
+					cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+					cobject->particle_system = cpsysPtr.get();
+					cobject->particle_index = cpsysPtr.get()->particles.size() - 1;
 				}
-				return Instance( cobjectPtr, cmeshPtr );
+
+				m_objects.push_back( cobjectPtr );
+				m_uniqueMeshes.push_back( cmeshPtr );
+
+				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
 			}
 
 			Cache::accessor a;
@@ -2121,31 +2140,27 @@ class InstanceCache : public IECore::RefCounted
 			}
 
 			SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-			SharedCParticleSystemPtr cparticleSysPtr;
-			// Push-back to vector needs thread locking.
+			// Set particle system to mesh
+			SharedCParticleSystemPtr cpsysPtr;
+			if( cyclesAttributes->hasParticleInfo() )
 			{
-				tbb::spin_mutex::scoped_lock lock( m_objectsMutex );
-
-				// Set particle system to mesh
-				if( cyclesAttributes->hasParticleInfo() )
-				{
-					cparticleSysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
-					cobject->particle_system = cparticleSysPtr.get();
-					cobject->particle_index = cparticleSysPtr.get()->particles.size() - 1;
-				}
-
-				m_objects.push_back( cobjectPtr );
+				tbb::spin_mutex::scoped_lock lock( m_particlesMutex );
+				cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( hash ) );
+				cobject->particle_system = cpsysPtr.get();
+				cobject->particle_index = cpsysPtr.get()->particles.size() - 1;
 			}
 
-			return Instance( cobjectPtr, a->second, cparticleSysPtr );
+			m_objects.push_back( cobjectPtr );
+
+			return Instance( cobjectPtr, a->second, cpsysPtr );
 		}
 
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
 			// Unique meshes
-			vector<SharedCMeshPtr> meshesKeep;
-			for( vector<SharedCMeshPtr>::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
+			UniqueMeshes meshesKeep;
+			for( UniqueMeshes::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
 			{
 				if( !it->unique() )
 				{
@@ -2174,8 +2189,8 @@ class InstanceCache : public IECore::RefCounted
 			updateMeshes();
 
 			// Objects
-			vector<SharedCObjectPtr> objectsKeep;
-			for( vector<SharedCObjectPtr>::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
+			Objects objectsKeep;
+			for( Objects::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
 			{
 				if( !it->unique() )
 				{
@@ -2221,7 +2236,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			auto &objects = m_scene->objects;
 			objects.clear();
-			for( vector<SharedCObjectPtr>::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
+			for( Objects::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
 			{
 				if( it->get() )
 				{
@@ -2237,7 +2252,7 @@ class InstanceCache : public IECore::RefCounted
 			meshes.clear();
 
 			// Unique meshes
-			for( vector<SharedCMeshPtr>::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
+			for( UniqueMeshes::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
 			{
 				if( it->get() )
 				{
@@ -2258,12 +2273,14 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		vector<SharedCObjectPtr> m_objects;
-		vector<SharedCMeshPtr> m_uniqueMeshes;
+		typedef tbb::concurrent_vector<SharedCObjectPtr> Objects;
+		Objects m_objects;
+		typedef tbb::concurrent_vector<SharedCMeshPtr> UniqueMeshes;
+		UniqueMeshes m_uniqueMeshes;
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCMeshPtr> Cache;
 		Cache m_instancedMeshes;
 		ParticleSystemsCachePtr m_particleSystemsCache;
-		tbb::spin_mutex m_objectsMutex;
+		tbb::spin_mutex m_particlesMutex;
 
 };
 
@@ -2299,19 +2316,17 @@ class LightCache : public IECore::RefCounted
 		{
 			auto clight = SharedCLightPtr( new ccl::Light() );
 			clight.get()->name = nodeName.c_str();
-			// Push-back to vector needs thread locking.
-			{
-				tbb::spin_mutex::scoped_lock lock( m_lightsMutex );
-				m_lights.push_back( clight );
-			}
+
+			m_lights.push_back( clight );
+
 			return clight;
 		}
 
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			vector<SharedCLightPtr> lightsKeep;
-			for( vector<SharedCLightPtr>::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
+			Lights lightsKeep;
+			for( Lights::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
 			{
 				if( !it->unique() )
 				{
@@ -2332,7 +2347,7 @@ class LightCache : public IECore::RefCounted
 		{
 			auto &lights = m_scene->lights;
 			lights.clear();
-			for( vector<SharedCLightPtr>::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
+			for( Lights::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
 			{
 				if( it->get() )
 				{
@@ -2343,8 +2358,8 @@ class LightCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		vector<SharedCLightPtr> m_lights;
-		tbb::spin_mutex m_lightsMutex;
+		typedef tbb::concurrent_vector<SharedCLightPtr> Lights;
+		Lights m_lights;
 
 };
 
