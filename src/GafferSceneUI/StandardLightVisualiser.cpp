@@ -98,10 +98,8 @@ T parameter( InternedString metadataTarget, const IECore::CompoundData *paramete
 	return defaultValue;
 }
 
-void addRay( const V3f &start, const V3f &end, vector<int> &vertsPerCurve, vector<V3f> &p )
+void addRay( const V3f &start, const V3f &end, vector<int> &vertsPerCurve, vector<V3f> &p, float arrowScale = 0.05f )
 {
-	const float arrowScale = 0.05;
-
 	const V3f dir = end - start;
 	V3f perp = dir % V3f( 1, 0, 0 );
 	if( perp.length() == 0.0f )
@@ -697,7 +695,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 	{
 		const float angle = M_PI * 2.0f * float(i)/(float)numRays;
 		const V3f dir( 0.0, sin( angle ), -cos( angle ) );
-		addRay( dir * ( 0.2f + radius ), dir * ( 0.5f + radius ), vertsPerCurve->writable(), p->writable() );
+		addRay( dir * ( 0.2f + radius ), dir * ( 0.6f + radius ), vertsPerCurve->writable(), p->writable(), 0.1f );
 	}
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
