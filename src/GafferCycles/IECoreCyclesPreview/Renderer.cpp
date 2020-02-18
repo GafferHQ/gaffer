@@ -2205,19 +2205,6 @@ class InstanceCache : public IECore::RefCounted
 			updateObjects();
 		}
 
-		void updateDicingCamera( ccl::Camera *camera )
-		{
-			auto &meshes = m_scene->meshes;
-			for( ccl::Mesh *mesh : meshes )
-			{
-				if( mesh->subd_params )
-				{
-					mesh->subd_params->camera = camera;
-				}
-			}
-			m_scene->mesh_manager->tag_update( m_scene );
-		}
-
 		void clearMissingShaders()
 		{
 			// Make sure there are no nullptrs in used_shaders
@@ -2965,6 +2952,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
+			m_scene->dicing_camera = m_defaultDicingCamera;
 
 			delete m_session;
 			delete m_imageManagerOld;
@@ -3963,6 +3951,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Grab the default camera from cycles.
 			m_defaultCamera = m_scene->camera;
+			m_defaultDicingCamera = m_scene->dicing_camera;
 
 			m_scene->camera->need_update = true;
 			m_scene->camera->update( m_scene );
@@ -4281,6 +4270,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->particle_systems.clear();
 			// Cycles created the defaultCamera, so we give it back for it to delete.
 			m_scene->camera = m_defaultCamera;
+			m_scene->dicing_camera = m_defaultDicingCamera;
 			// Give back a dummy ImageManager for Cycles to "delete"
 			m_scene->image_manager = m_imageManagerOld;
 
@@ -4395,13 +4385,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							boost::format( "Dicing camera \"%s\" does not exist" ) % m_dicingCamera
 						);
 					}
-					m_instanceCache->updateDicingCamera( nullptr );
+					*m_scene->dicing_camera = *m_scene->camera;
 				}
 				else
 				{
 					auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
-					m_instanceCache->updateDicingCamera( ccamera.get() );
+					*m_scene->dicing_camera = *(ccamera.get());
 				}
+				m_scene->dicing_camera->need_update = true;
+				m_scene->dicing_camera->update( m_scene );
 			}
 		}
 
@@ -4484,6 +4476,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::TextureCacheParams m_textureCacheParams;
 #endif
 		ccl::Camera *m_defaultCamera;
+		ccl::Camera *m_defaultDicingCamera;
 		ccl::Integrator m_integrator;
 		ccl::Background m_background;
 		ccl::Film m_film;
