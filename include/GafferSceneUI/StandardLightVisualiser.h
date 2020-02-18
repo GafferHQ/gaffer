@@ -65,7 +65,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		IECoreGLPreview::Visualisations visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const override;
 
-		static void spotlightParameters( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius );
+		static void spotlightParameters( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &radius, float &lensRadius );
 
 	protected :
 
@@ -73,8 +73,9 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 		static IECoreGL::ConstRenderablePtr pointRays( float radius = 0 );
 		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length = 1.0f, float lineWidthScale = 1.0f );
+		static IECoreGL::ConstRenderablePtr sphereWireframe( float radius, const Imath::Vec3<bool> &axisRings, float lineWidthScale = 1.0f, const Imath::V3f &center = Imath::V3f( 0.0f ) );
 
-		static IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &size );
+		static IECoreGL::ConstRenderablePtr quadPortal( const Imath::V2f &size, float hatchingScale = 1.0f );
 
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color );
 
@@ -102,7 +103,6 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		// textureData should be as per return type of surfaceTexture
 
-		static IECoreGL::ConstRenderablePtr environmentSphereWireframe( float radius, const Imath::Vec3<bool> &axisRings );
 		static IECoreGL::ConstRenderablePtr environmentSphereSurface( IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
 		// Spread is generally rendered as an angle, rather than in light space,

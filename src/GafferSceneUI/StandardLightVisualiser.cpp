@@ -166,7 +166,7 @@ void addSolidArc( Axis axis, const V3f &center, float majorRadius, float minorRa
 	}
 }
 
-void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector<V3f> &p, float length )
+void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector<V3f> &p, float length, bool spokes )
 {
 	const float halfAngle = 0.5 * M_PI * angle / 180.0;
 	const float baseRadius = length * sin( halfAngle );
@@ -178,21 +178,24 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 	}
 	addCircle( Axis::Z, V3f( 0, 0, -baseDistance ), baseRadius + startRadius, vertsPerCurve, p );
 
-	p.push_back( V3f( 0, startRadius, 0 ) );
-	p.push_back( V3f( 0, baseRadius + startRadius, -baseDistance ) );
-	vertsPerCurve.push_back( 2 );
+	if( spokes )
+	{
+		p.push_back( V3f( 0, startRadius, 0 ) );
+		p.push_back( V3f( 0, baseRadius + startRadius, -baseDistance ) );
+		vertsPerCurve.push_back( 2 );
 
-	p.push_back( V3f( startRadius, 0, 0 ) );
-	p.push_back( V3f( baseRadius + startRadius, 0, -baseDistance ) );
-	vertsPerCurve.push_back( 2 );
+		p.push_back( V3f( startRadius, 0, 0 ) );
+		p.push_back( V3f( baseRadius + startRadius, 0, -baseDistance ) );
+		vertsPerCurve.push_back( 2 );
 
-	p.push_back( V3f( 0, -startRadius, 0 ) );
-	p.push_back( V3f( 0, -baseRadius - startRadius, -baseDistance ) );
-	vertsPerCurve.push_back( 2 );
+		p.push_back( V3f( 0, -startRadius, 0 ) );
+		p.push_back( V3f( 0, -baseRadius - startRadius, -baseDistance ) );
+		vertsPerCurve.push_back( 2 );
 
-	p.push_back( V3f( -startRadius, 0, 0 ) );
-	p.push_back( V3f( -baseRadius - startRadius, 0, -baseDistance ) );
-	vertsPerCurve.push_back( 2 );
+		p.push_back( V3f( -startRadius, 0, 0 ) );
+		p.push_back( V3f( -baseRadius - startRadius, 0, -baseDistance ) );
+		vertsPerCurve.push_back( 2 );
+	}
 }
 
 // Shaders
@@ -330,12 +333,12 @@ const char *faceCameraVertexSource()
 
 // Shader state helpers
 
-void addWireframeCurveState( IECoreGL::Group *group )
+void addWireframeCurveState( IECoreGL::Group *group, float lineWidthScale = 1.0f )
 {
 	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
 	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
 	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f * lineWidthScale ) );
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
 }
 
@@ -420,11 +423,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	GroupPtr ornaments = new Group;
 	// Bound ornaments are considered when 'f' is pressed in the viewer to fit.
 	GroupPtr boundOrnaments = new Group;
+	// As part of our assumption that renderer's largely ignore scale, this is
+	// contains anything that should always be in fixed world scale and not be
+	// affected by visualiser scale.
+	GroupPtr fixedScaleOrnaments = new Group;
 	// Geometry is only affected by local scale (its size matters for rendering).
 	GroupPtr geometry = new Group;
-	// Generally speaking we assume renderers ignore light scale and
-	// we don't have any real frustums, just projections, so our
-	// frustum group ignores local, and inherits visualiser scale.
+	// As 'projections' are largely for display, and lights don't generally
+	// scale this group only follows visualiser scale.
 	GroupPtr frustum = new Group;
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
@@ -448,6 +454,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	geometry->setTransform( topTransform );
 	ornaments->setTransform( topTransform );
 	boundOrnaments->setTransform( topTransform );
+	fixedScaleOrnaments->setTransform( topTransform );
 	frustum->setTransform( topTransform );
 
 	if( type && type->readable() == "environment" )
@@ -457,16 +464,17 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, tint, maxTextureResolution, color ) ) );
 		}
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
-		float innerAngle, outerAngle, lensRadius;
-		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, lensRadius );
+		float innerAngle, outerAngle, radius, lensRadius;
+		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
+		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ) ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
-		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.2f ) ) );
+		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f ) ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
@@ -479,6 +487,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		// Cycles/Arnold define portals via a parameter on a quad, rather than as it's own light type.
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
+			// Because we don't support variable size lights, we keep a fixed hatching scale
 			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size ) ) );
 		}
 		else
@@ -549,7 +558,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereWireframe( radius, Vec3<bool>( true, false, true ) ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
@@ -560,10 +569,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
 		}
 
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 
 	}
@@ -580,6 +589,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	if( !boundOrnaments->children().empty() )
 	{
 		result.push_back( Visualisation::createOrnament( boundOrnaments, true ) );
+	}
+	if( !fixedScaleOrnaments->children().empty() )
+	{
+		result.push_back( Visualisation( fixedScaleOrnaments, Visualisation::Scale::None ) );
 	}
 	if( !frustum->children().empty() )
 	{
@@ -601,7 +614,7 @@ IECore::DataPtr StandardLightVisualiser::surfaceTexture( const IECoreScene::Shad
 	return nullptr;
 }
 
-void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &lensRadius )
+void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &radius, float &lensRadius )
 {
 
 	InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
@@ -645,6 +658,9 @@ void StandardLightVisualiser::spotlightParameters( const InternedString &attribu
 	{
 		lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
 	}
+
+	radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0.0f );
+
 }
 
 
@@ -715,14 +731,15 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length, float lineWidthScale )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	addConstantShader( group.get(), false );
-
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.0f * lineWidthScale ) );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
-	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
+
+	const bool drawSecondaryCone = fabs( innerAngle - outerAngle ) > 0.1;
+
+	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length, !drawSecondaryCone );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
@@ -732,14 +749,16 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 	group->addChild( curves );
 
-	if( fabs( innerAngle - outerAngle ) > 0.1 )
+	if( drawSecondaryCone )
 	{
 		IECoreGL::GroupPtr outerGroup = new Group;
-		outerGroup->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f * lineWidthScale ) );
+		// Make the outer wireframe slightly thinner, as
+		// inner cone is where we reach full light output.
+		addWireframeCurveState( outerGroup.get(), 0.5f * lineWidthScale );
 
 		IntVectorDataPtr vertsPerCurve = new IntVectorData;
 		V3fVectorDataPtr p = new V3fVectorData;
-		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length );
+		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length, true );
 
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
@@ -844,7 +863,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), 0.5f );
 	addConstantShader( group.get(), false, 1 );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
@@ -900,9 +919,8 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::areaSpread( float spread )
 	// Simple spaced parallel arrows that diverge by 45 degrees as spread approaches 1.
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), 0.5f );
 	addConstantShader( group.get() );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 0.5f ) );
 
 	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
@@ -986,7 +1004,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size, float hatchingScale )
 {
 	// Portals visualise differently as they only allow light through
 	// their area. Effectively a hole cut in a big plane. We try to
@@ -1006,72 +1024,80 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &siz
 	p.push_back( V3f( size.x/2, size.y/2, 0 ) );
 	p.push_back( V3f( -size.x/2, size.y/2, 0 ) );
 
-	// 45 degree hatch outside the area (-1 / 1 space)
+	// 45 degree hatch outside the portal area (when centered at the origin)
 
 	// Space between the lines
-	static const float spacing = 0.05f;
-	// size.x of the shaded frame area
-	static const float fw = 0.25f;
+	const float spacing = 0.05f * hatchingScale;
+	// Thickness of the shaded frame area
+	const float fw = 0.25f * std::max( size.x, size.y );
 	// Dimension of the shaded area
-	const float dw = size.x + ( 2 * fw );
-	const float dh = size.y + ( 2 * fw );
-	const float d = std::max( dw, dh );
+	const float dw = size.x + ( 2.0f * fw );
+	const float dh = size.y + ( 2.0f * fw );
 
 	// Working with a bottom left origin makes the maths easier for the lines
 	const V3f origin( -(size.x/2)-fw, -(size.y/2)-fw, 0 );
 	// Alternating line lengths creates a softer edge
 	bool alt = true;
 
-	// Offset along the edges. We use the largest dimension and skip lines
-	// once we've gone past the edge of the shorter side.
-	for( float o = spacing; o < d; o += spacing, alt = !alt )
+	// We iterate outwards from the bottom left corner drawing lines as we go.
+	// We need different behaviour depending on whether we're overlapping the
+	// portal region or not.
+	const float oMax = dw + dh;
+	for( float o = spacing; o < oMax; o += spacing, alt = !alt )
 	{
 		// extra length for alternate lines
-		const float e = alt ? spacing * 1.5f : 0.0f;
+		const float e = alt ? fw * 0.1f : 0.0f;
 
-		if( o <= fw * 2 )
+		if( o <= fw * 2.0f )
 		{
-			// A single line will do near the edges as we don't intersect the portal
-
-			// near
+			// A single line will do near the origin as we don't intersect the portal
 			vertsPerCurve.push_back( 2 );
 			p.push_back( origin + V3f( -e, o+e, 0 ) );
 			p.push_back( origin + V3f( o+e, -e, 0 ) );
-
-			// opposite
-			vertsPerCurve.push_back( 2 );
-			p.push_back( origin + V3f( dw-o-e, dh+e, 0 ) );
-			p.push_back( origin + V3f( dw+e, dh-o-e, 0 ) );
 		}
-		else
+		else if( o <= oMax - fw * 2.0f )
 		{
 			// We need to split either side of the central portal space
+			// whilst we overlap it. As the iteration covers the maximum
+			// dimension we need for non-square portals, we don't always
+			// draw lines on each side.
 
-			if( o-2*fw <= size.y )
+			if( o <= dh )
 			{
-				// near edge-to-frame
+				// Left edge-to-frame
 				vertsPerCurve.push_back( 2 );
 				p.push_back( origin + V3f( -e, o+e, 0 ) );
 				p.push_back( origin + V3f( fw, o-fw, 0 ) );
-
-				// opposite frame-to-edge
-				vertsPerCurve.push_back( 2 );
-				p.push_back( origin + V3f( dw-fw, dh-o+fw, 0 ) );
-				p.push_back( origin + V3f( dw+e, dh-o-e, 0 ) );
 			}
-
-			if( o-2*fw <= size.x )
+			else if( o <= dh + size.x )
 			{
-				// near frame-to-edge
+				// Top edge-to-frame
 				vertsPerCurve.push_back( 2 );
-				p.push_back( origin + V3f( o-fw, +fw, 0 ) );
-				p.push_back( origin + V3f( o+e, -e, 0 ) );
-
-				// opposite edge-to-frame
-				vertsPerCurve.push_back( 2 );
-				p.push_back( origin + V3f( dw-o-e, dh+e, 0 ) );
-				p.push_back( origin + V3f( dw-o+fw, dh-fw, 0 ) );
+				p.push_back( origin + V3f( o-dh-e, dh+e, 0 ) );
+				p.push_back( origin + V3f( o-dh+fw, dh-fw, 0 ) );
 			}
+
+			if( o <= dw )
+			{
+				// Bottom frame-to-edge
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( o-fw, fw, 0 ) );
+				p.push_back( origin + V3f( o+e, -e, 0 ) );
+			}
+			else if( o <= dw + size.y )
+			{
+				// Right frame-to-edge
+				vertsPerCurve.push_back( 2 );
+				p.push_back( origin + V3f( dw-fw, o-dw+fw, 0 ) );
+				p.push_back( origin + V3f( dw+e, o-dw-e, 0 ) );
+			}
+		}
+		else
+		{
+			// Single line at top-right corner
+			vertsPerCurve.push_back( 2 );
+			p.push_back( origin + V3f( o-dh-e, dh+e, 0 ) );
+			p.push_back( origin + V3f( dw+e, dh-oMax+o-e, 0 ) );
 		}
 	}
 
@@ -1083,10 +1109,10 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &siz
 
 // Spheres
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe( float radius, const Vec3<bool> &axisRings )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float radius, const Vec3<bool> &axisRings, float lineWidthScale, const V3f &center )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get() );
+	addWireframeCurveState( group.get(), lineWidthScale );
 	addConstantShader( group.get() );
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
@@ -1094,15 +1120,15 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphereWireframe
 
 	if( axisRings.x )
 	{
-		addCircle( Axis::X,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+		addCircle( Axis::X,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 	if( axisRings.y )
 	{
-		addCircle( Axis::Y,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+		addCircle( Axis::Y,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 	if( axisRings.z )
 	{
-		addCircle( Axis::Z,  V3f( 0 ), radius, vertsPerCurve->writable(), p->writable() );
+		addCircle( Axis::Z,  center, radius, vertsPerCurve->writable(), p->writable() );
 	}
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
