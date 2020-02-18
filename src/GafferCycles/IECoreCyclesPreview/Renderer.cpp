@@ -1853,6 +1853,9 @@ class ParticleSystemsCache : public IECore::RefCounted
 			{
 				m_cache.erase( *it );
 			}
+
+			if( toErase.size() )
+				updateParticleSystems();
 		}
 
 	private :
