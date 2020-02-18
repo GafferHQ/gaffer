@@ -177,7 +177,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		s["rows"].addColumn( Gaffer.IntPlug( "column1" ) )
 		s["rows"].addColumn( Gaffer.IntPlug( "column2" ) )
 
-		defaultRow = s["rows"]["default"]
+		defaultRow = s["rows"].defaultRow()
 		row1 = s["rows"].addRow()
 		row1["name"].setValue( "row1" )
 		row2 = s["rows"].addRow()
@@ -193,7 +193,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		for selector in ( "", "woteva", "row1", "row2" ) :
 
 			s["selector"].setValue( selector )
-			expectedRow = s["rows"].getChild( selector ) or s["rows"]["default"]
+			expectedRow = s["rows"].getChild( selector ) or s["rows"].defaultRow()
 
 			for out in s["out"] :
 
@@ -201,7 +201,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 				self.assertEqual( out.getValue(), expectedRow["cells"][out.getName()]["value"].getValue() )
 
 				s["enabled"].setValue( False )
-				self.assertEqual( out.getValue(), s["rows"]["default"]["cells"][out.getName()]["value"].getValue() )
+				self.assertEqual( out.getValue(), s["rows"].defaultRow()["cells"][out.getName()]["value"].getValue() )
 
 	def testSerialisation( self ) :
 
@@ -308,7 +308,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		s["rows"].addColumn( Gaffer.IntPlug( "column1" ) )
 		s["rows"].addRows( 2 )
 
-		self.assertEqual( s.correspondingInput( s["out"]["column1"] ), s["rows"]["default"]["cells"]["column1"]["value"] )
+		self.assertEqual( s.correspondingInput( s["out"]["column1"] ), s["rows"].defaultRow()["cells"]["column1"]["value"] )
 		self.assertEqual( s.correspondingInput( s["out"] ), None )
 
 	def testPromotion( self ) :
@@ -345,11 +345,11 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		def assertOutputsValid( spreadsheet ) :
 
-			self.assertEqual( spreadsheet["rows"]["default"]["cells"].keys(), spreadsheet["out"].keys() )
+			self.assertEqual( spreadsheet["rows"].defaultRow()["cells"].keys(), spreadsheet["out"].keys() )
 			for o in spreadsheet["out"] :
 				self.assertEqual(
 					spreadsheet.correspondingInput( o ),
-					spreadsheet["rows"]["default"]["cells"][o.getName()]["value"]
+					spreadsheet["rows"].defaultRow()["cells"][o.getName()]["value"]
 				)
 
 		s = Gaffer.ScriptNode()
@@ -447,9 +447,9 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		with Gaffer.Context() as c :
 
-			self.assertEqual( s.activeInPlug( s["out"]["v"] ), s["rows"]["default"]["cells"]["v"]["value"] )
-			self.assertEqual( s.activeInPlug( s["out"]["v"]["x"] ), s["rows"]["default"]["cells"]["v"]["value"]["x"] )
-			self.assertEqual( s.activeInPlug( s["out"]["i"] ), s["rows"]["default"]["cells"]["i"]["value"] )
+			self.assertEqual( s.activeInPlug( s["out"]["v"] ), s["rows"].defaultRow()["cells"]["v"]["value"] )
+			self.assertEqual( s.activeInPlug( s["out"]["v"]["x"] ), s["rows"].defaultRow()["cells"]["v"]["value"]["x"] )
+			self.assertEqual( s.activeInPlug( s["out"]["i"] ), s["rows"].defaultRow()["cells"]["i"]["value"] )
 
 			c["testSelector"] = "a"
 			self.assertEqual( s.activeInPlug( s["out"]["v"] ), s["rows"][1]["cells"]["v"]["value"] )
@@ -462,15 +462,15 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			self.assertEqual( s.activeInPlug( s["out"]["i"] ), s["rows"][2]["cells"]["i"]["value"] )
 
 			c["testSelector"] = "x"
-			self.assertEqual( s.activeInPlug( s["out"]["v"] ), s["rows"]["default"]["cells"]["v"]["value"] )
-			self.assertEqual( s.activeInPlug( s["out"]["v"]["x"] ), s["rows"]["default"]["cells"]["v"]["value"]["x"] )
-			self.assertEqual( s.activeInPlug( s["out"]["i"] ), s["rows"]["default"]["cells"]["i"]["value"] )
+			self.assertEqual( s.activeInPlug( s["out"]["v"] ), s["rows"].defaultRow()["cells"]["v"]["value"] )
+			self.assertEqual( s.activeInPlug( s["out"]["v"]["x"] ), s["rows"].defaultRow()["cells"]["v"]["value"]["x"] )
+			self.assertEqual( s.activeInPlug( s["out"]["i"] ), s["rows"].defaultRow()["cells"]["i"]["value"] )
 
 	def testAddColumnWithName( self ) :
 
 		s = Gaffer.Spreadsheet()
 		i = s["rows"].addColumn( Gaffer.IntPlug( "x" ), name = "y" )
-		self.assertEqual( s["rows"]["default"]["cells"][0].getName(), "y" )
+		self.assertEqual( s["rows"].defaultRow()["cells"][0].getName(), "y" )
 		self.assertEqual( s["out"][0].getName(), "y" )
 
 	def testAddColumnCopiesCurrentValue( self ) :
@@ -493,7 +493,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		s = Gaffer.Spreadsheet()
 		s2 = Gaffer.Spreadsheet( "other" )
 
-		defaultRow = s["rows"]["default"]
+		defaultRow = s["rows"].defaultRow()
 		row1 = s["rows"].addRow()
 		row2 = s["rows"].addRow()
 		otherRow = s2["rows"].addRow()
@@ -542,6 +542,69 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( values ), 6 )
 		self.assertEqual( len( exceptions ), 0 )
+
+	def testDeleteRowsAndSerialise( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addRows( 3 )
+		s["s"]["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+
+		for i in range( 0, 4 ) :
+			s["s"]["rows"][i]["cells"]["v"]["value"].setValue( i )
+
+		s["s"]["rows"].removeRow( s["s"]["rows"][1] )
+
+		ss = Gaffer.ScriptNode()
+		ss.execute( s.serialise() )
+
+		for i, v in [
+			( 0, 0 ),
+			( 1, 2 ),
+			( 2, 3 ),
+		] :
+			self.assertEqual( ss["s"]["rows"][i]["cells"]["v"]["value"].getValue(), v )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testAddRowPerformance( self ) :
+
+		s = Gaffer.Spreadsheet()
+		for i in range( 0, 10000 ) :
+			s["rows"].addRow()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testAddRowsPerformance( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addRows( 10000 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testSavePerformance( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+		for i in range( 0, 10000 ) :
+			s["s"]["rows"].addRow()["cells"]["v"]["value"].setValue( i )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			s.serialise()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testLoadPerformance( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+		for i in range( 0, 10000 ) :
+			s["s"]["rows"].addRow()["cells"]["v"]["value"].setValue( i )
+
+		serialised = s.serialise()
+		s = Gaffer.ScriptNode()
+		with GafferTest.TestRunner.PerformanceScope() :
+			s.execute( serialised )
 
 if __name__ == "__main__":
 	unittest.main()
