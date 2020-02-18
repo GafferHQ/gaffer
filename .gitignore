@@ -10,7 +10,7 @@
 .sconf_temp
 .sconsign.dblite
 .vscode
-cmake-build-*/
+cmake-build-*
 config.log
 doc/html
 doc/python
