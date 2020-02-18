@@ -739,6 +739,11 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length, !drawSecondaryCone );
 
+	if( drawSecondaryCone )
+	{
+		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length, true );
+	}
+
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
@@ -746,27 +751,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 	group->addChild( curves );
-
-	if( drawSecondaryCone )
-	{
-		IECoreGL::GroupPtr outerGroup = new Group;
-		// Make the outer wireframe slightly thinner, as
-		// inner cone is where we reach full light output.
-		addWireframeCurveState( outerGroup.get(), 0.5f * lineWidthScale );
-
-		IntVectorDataPtr vertsPerCurve = new IntVectorData;
-		V3fVectorDataPtr p = new V3fVectorData;
-		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable(), length, true );
-
-		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-
-		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
-
-		outerGroup->addChild( curves );
-
-		group->addChild( outerGroup );
-	}
 
 	return group;
 }
