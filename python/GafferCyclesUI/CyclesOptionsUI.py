@@ -448,6 +448,18 @@ def __textureCacheSummary( plug ) :
 
 	return ", ".join( info )
 
+def __logSummary( plug ) :
+
+	info = []
+
+	if plug["logLevel"]["enabled"].getValue() :
+		info.append( "Log level {}".format( plug["logLevel"]["value"].getValue() ) )
+
+	if plug["progressLevel"]["enabled"].getValue() :
+		info.append( "Progress level {}".format( plug["progressLevel"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 def __devicePresetNames( plug ) :
 
 	presetNames = IECore.StringVectorData()
@@ -540,6 +552,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Curves:summary", __curvesSummary,
 			"layout:section:Background:summary", __backgroundSummary,
 			"layout:section:Texture Cache:summary", __textureCacheSummary,
+			"layout:section:Log:summary", __logSummary,
 
 		],
 
@@ -2047,6 +2060,8 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Texture Cache
+
 		"options.useTextureCache" : [
 
 			"description",
@@ -2172,6 +2187,50 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Texture Cache",
+		],
+
+		# Log
+
+		"options.logLevel" : [
+
+			"description",
+			"""
+			Internal Cycles debugging log-level.
+			""",
+
+			"layout:section", "Log",
+		],
+
+		"options.logLevel.value" : [
+
+			"preset:Off", 0,
+			"preset:On", 1,
+			"preset:Debug", 2,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.progressLevel" : [
+
+			"description",
+			"""
+			Progress level based on Cortex Message Handler values.
+			""",
+
+			"layout:section", "Log",
+		],
+
+		"options.progressLevel.value" : [
+
+			"preset:Error", 0,
+			"preset:Warning", 1,
+			"preset:Info", 2,
+			"preset:Debug", 3,
+			"preset:Invalid", 4,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 	}
