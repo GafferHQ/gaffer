@@ -51,7 +51,7 @@ def __visibilitySummary( plug ) :
 def __shadingSummary( plug ) :
 
 	info = []
-	for childName in ( "useHoldout", "isShadowCatcher", "color", "lightGroup" ) :
+	for childName in ( "useHoldout", "isShadowCatcher", "color", "dupliGenerated", "dupliUV", "lightGroup" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -210,6 +210,28 @@ Gaffer.Metadata.registerNode(
 			Set a unique color per-object. This is intended for setting
 			a unique constant color that can be accessed from an object_info
 			shader, even if the object is being instanced.
+			""",
+
+			"layout:section", "Shading",
+		],
+
+		"attributes.dupliGenerated" : [
+
+			"description",
+			"""
+			Set a unique position offset. Accessible from a texture_coordinate
+			via the generated output plug and from_dupli enabled.
+			""",
+
+			"layout:section", "Shading",
+		],
+
+		"attributes.dupliUV" : [
+
+			"description",
+			"""
+			Set a unique UV offset. Accessible from either a texture_coordinate
+			or uv_map node via the UV output plug and from_dupli enabled.
 			""",
 
 			"layout:section", "Shading",

@@ -1155,6 +1155,9 @@ IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
 IECore::InternedString g_colorAttributeName( "Cs" );
 // Cycles Light
 IECore::InternedString g_lightAttributeName( "ccl:light" );
+// Dupli
+IECore::InternedString g_dupliGeneratedAttributeName( "ccl:dupli_generated" );
+IECore::InternedString g_dupliUVAttributeName( "ccl:dupli_uv" );
 // Particle
 std::array<IECore::InternedString, 2> g_particleIndexAttributeNames = { {
 	"index",
@@ -1214,6 +1217,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_maxLevel( 12 ), 
 				m_dicingRate( 1.0f ), 
 				m_color( Color3f( 0.0f ) ), 
+				m_dupliGenerated( V3f( 0.0f ) ),
+				m_dupliUV( V2f( 0.0f) ),
 				m_particle( attributes ), 
 				m_volume( attributes ), 
 				m_lightGroup( -1 ),
@@ -1231,6 +1236,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
 			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
+			m_dupliGenerated = attributeValue<V3f>( g_dupliGeneratedAttributeName, attributes, m_dupliGenerated );
+			m_dupliUV = attributeValue<V2f>( g_dupliUVAttributeName, attributes, m_dupliUV );
 			m_lightGroup = attributeValue<int>( g_lightGroupAttributeName, attributes, m_lightGroup );
 
 			m_sets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
@@ -1324,6 +1331,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->use_holdout = m_useHoldout;
 			object->is_shadow_catcher = m_isShadowCatcher;
 			object->color = SocketAlgo::setColor( m_color );
+			object->dupli_generated = SocketAlgo::setVector( m_dupliGenerated );
+			object->dupli_uv = SocketAlgo::setVector( m_dupliUV );
 
 			if( object->mesh )
 			{
@@ -1674,6 +1683,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		float m_dicingRate;
 		IECore::ConstInternedStringVectorDataPtr m_sets;
 		Color3f m_color;
+		V3f m_dupliGenerated;
+		V2f m_dupliUV;
 		Particle m_particle;
 		Volume m_volume;
 		int m_lightGroup;

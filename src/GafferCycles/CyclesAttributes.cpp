@@ -49,7 +49,6 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
 	// Visibility parameters
-
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:camera", new IECore::BoolData( true ), false, "cameraVisibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:diffuse", new IECore::BoolData( true ), false, "diffuseVisibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:glossy", new IECore::BoolData( true ), false, "glossyVisibility" ) );
@@ -58,7 +57,6 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:visibility:scatter", new IECore::BoolData( true ), false, "scatterVisibility" ) );
 
 	// Shading parameters
-
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:use_holdout", new IECore::BoolData( false ), false, "useHoldout" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:is_shadow_catcher", new IECore::BoolData( false ), false, "isShadowCatcher" ) );
 
@@ -74,6 +72,10 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 
 	// Volume
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_isovalue", new IECore::FloatData( 0.0f ), false, "volumeIsovalue" ) );
+
+	// Per-object parameters
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dupli_generated", new IECore::V3fData( Imath::V3f( 0.0f ) ), false, "dupliGenerated" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dupli_uv", new IECore::V2fData( Imath::V2f( 0.0f ) ), false, "dupliUV" ) );
 
 }
 
