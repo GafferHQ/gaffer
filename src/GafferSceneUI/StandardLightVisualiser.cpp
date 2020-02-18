@@ -338,7 +338,7 @@ void addWireframeCurveState( IECoreGL::Group *group, float lineWidthScale = 1.0f
 	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
 	group->getState()->add( new IECoreGL::Primitive::DrawSolid( true ) );
 	group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
-	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f * lineWidthScale ) );
+	group->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 1.5f * lineWidthScale ) );
 	group->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
 }
 
