@@ -102,3 +102,7 @@ class MenuButton( GafferUI.Button ) :
 
 		if not menu.visible() :
 			self._qtWidget().setDown( False )
+			# There is a bug whereby Button never receives the event for __leave,
+			# if the menu is shown. This results in the image highlight state sticking.
+			if self.widgetAt( self.mousePosition() ) is not self :
+				self.setHighlighted( False )
