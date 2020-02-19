@@ -1266,7 +1266,8 @@ Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug,
 	assert( branchPath.size() >= 2 );
 
 	set( ScenePlug::scenePathContextName, parentPath );
-	const ScenePlug::ScenePath &prototypeRoot = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() )->prototypeRoot( branchPath[1] );
+	ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
+	const ScenePlug::ScenePath &prototypeRoot = engine->prototypeRoot( branchPath[1] );
 
 	if( branchPath.size() > 3 )
 	{
