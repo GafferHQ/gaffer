@@ -36,6 +36,7 @@
 
 from DocumentationTest import DocumentationTest
 from ArnoldShaderUITest import ArnoldShaderUITest
+from LightVisualiserTest import LightVisualiserTest
 
 if __name__ == "__main__":
 	unittest.main()
