@@ -129,7 +129,7 @@ class dispatch( Gaffer.Application ) :
 
 				IECore.StringVectorParameter(
 					name = "settings",
-					description = "The values to be set on the nodes, dispatcher, or context. Values "
+					description = "The values to be set on the nodes, dispatcher, or Context. Values "
 						"should be in the format -nodeA.plugA value -nodeA.plugB value -nodeB.plugC value "
 						"-dispatcher.plugD value -LocalDispatcher.plugE value -context.entry value",
 					defaultValue = IECore.StringVectorData( [] ),

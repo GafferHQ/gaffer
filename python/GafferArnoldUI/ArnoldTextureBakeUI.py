@@ -80,7 +80,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Sets the context variable used in the default file name to control where all the bakes will be stored.
+			Sets the Context Variable used in the default file name to control where all the bakes will be stored.
 			""",
 		],
 

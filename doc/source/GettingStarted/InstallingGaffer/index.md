@@ -5,7 +5,7 @@
 The Gaffer package is a self-contained directory, so you will need to manually install it, and later manually configure it, if necessary. Once extracted, the Gaffer directory contains the complete application, ready for use.
 
 > Note :
-> In keeping with Linux/OSX best practices, we will demonstrate how to install Gaffer in the `/opt/` directory. However, you could install it to any location on your file system to which you have write and execute access.
+> In keeping with Linux/macOS best practices, we will demonstrate how to install Gaffer in the `/opt/` directory. However, you could install it to any location on your file system to which you have write and execute access.
 
 
 ## Installing in Linux ##
@@ -26,11 +26,11 @@ To install Gaffer in Linux:
 Gaffer is now installed to `/opt/gaffer-!GAFFER_VERSION!-linux`.
 
 
-## Installing in OSX ##
+## Installing in macOS ##
 
-To install Gaffer in OSX:
+To install Gaffer in macOS:
 
-1. Download the [latest OSX package of Gaffer](https://github.com/GafferHQ/gaffer/releases/download/!GAFFER_VERSION!/gaffer-!GAFFER_VERSION!-osx.tar.gz).
+1. Download the [latest macOS package of Gaffer](https://github.com/GafferHQ/gaffer/releases/download/!GAFFER_VERSION!/gaffer-!GAFFER_VERSION!-macos.tar.gz).
 
 2. Open the terminal (Finder > Go > Utilities > Terminal).
 
@@ -38,10 +38,10 @@ To install Gaffer in OSX:
     
     ```bash
     MacBook:~ user$ cd ~/Downloads
-    MacBook:~/Downloads user$ tar -xzf gaffer-!GAFFER_VERSION!-osx.tar.gz -C /opt/
+    MacBook:~/Downloads user$ tar -xzf gaffer-!GAFFER_VERSION!-macos.tar.gz -C /opt/
     ```
 
-Gaffer is now installed to `/opt/gaffer-!GAFFER_VERSION!-osx`.
+Gaffer is now installed to `/opt/gaffer-!GAFFER_VERSION!-macos`.
 
 
 ## See also ##

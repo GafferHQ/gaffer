@@ -48,8 +48,8 @@ Gaffer.Metadata.registerNode(
 	- Click or drag to set selection
 	- Shift-click or shift-drag to add to selection
 	- Drag and drop selected objects
-		- Drag to PythonEditor to get their names
-		- Drag to PathFilter or Sets node to add/remove their paths
+		- Drag to Python Editor to get their names
+		- Drag to PathFilter or Set node to add/remove their paths
 	""",
 
 	"viewer:shortCut", "Q",

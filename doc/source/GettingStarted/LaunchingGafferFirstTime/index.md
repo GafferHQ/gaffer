@@ -26,16 +26,16 @@ To launch Gaffer for the first time in Linux:
 Gaffer will launch in a new window.
 
 
-## Launching in OSX ##
+## Launching in macOS ##
 
-To launch Gaffer for the first time in OSX:
+To launch Gaffer for the first time in macOS:
 
 1. Open the terminal (Finder > Go > Utilities > Terminal).
 
 2. Navigate to the Gaffer binary directory and run the Gaffer application:
     ```shell
-    MacBook:~ user$ cd /opt/gaffer-!GAFFER_VERSION!-osx/bin
-    MacBook:/opt/gaffer-!GAFFER_VERSION!-osx/bin user$ ./gaffer
+    MacBook:~ user$ cd /opt/gaffer-!GAFFER_VERSION!-macos/bin
+    MacBook:/opt/gaffer-!GAFFER_VERSION!-macos/bin user$ ./gaffer
     ```
 
 Gaffer will launch in a new window.

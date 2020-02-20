@@ -43,7 +43,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Base class for nodes which allow the user to make modifications to
-	the upstream evaluation context.
+	the upstream evaluation Context.
 	""",
 
 	# Add + buttons for creating new plugs in the GraphEditor

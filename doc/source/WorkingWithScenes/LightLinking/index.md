@@ -13,7 +13,7 @@ When lighting a scene, you will sometimes need to selectively control whether a 
 
 ## Mechanics of light linking ##
 
-From the light side of things, by default, each light is a member of a set named **"defaultLights"**, and will cast light on every object in the scene. Each light's node has a _Default Light_ plug, which is checked by default. If unchecked, the light is removed from "defaultLights", and, from then on, will only illuminate objects that are expressly linked to it.
+From the light side of things, by default, each light is a member of a set named **"defaultLights"**, and will cast light on every object in the scene. Each light's node has a Default Light plug, which is checked by default. If unchecked, the light is removed from "defaultLights", and, from then on, will only illuminate objects that are expressly linked to it.
 
 ![](images/interfaceDefaultLightPlug.png "The Default Light plug of a light")
 
@@ -30,17 +30,17 @@ From the object side of things, by default, an object is lit by all lights belon
 
 ## Instructions ##
 
-In a graph, in order to actually link a light to an object, you must connect a StandardAttributes node downstream of the object, filter for the object's location, and then add a set expression to the _Linked Lights_ plug.
+In a graph, in order to actually link a light to an object, you must connect a StandardAttributes node downstream of the object, filter for the object's location, and then add a set expression to the Linked Lights plug.
 
 ![](images/interfaceLightLinkSetupGraphEditor.png "A StandardAttributes node downstream of an object node")
 
 ![](images/interfaceLinkedLightsPlug.png "The Linked Lights plug of an object")
 
-Once the _Linked Lights_ plug is toggled on, the `linkedLights` attribute is added to the object's location. The value of the _Linked Lights_ plug is a [set expression](../../Reference/ScriptingReference/SetExpressions/index.md), which can consist of individual light locations, set names, or both. We will cover how to filter for both types below.
+Once the Linked Lights plug is toggled on, the `linkedLights` attribute is added to the object's location. The value of the Linked Lights plug is a [set expression](../../Reference/ScriptingReference/SetExpressions/index.md), which can consist of individual light locations, set names, or both. We will cover how to filter for both types below.
 
 > Important :
-> The _Linked Lights_ plug is an exclusive list. If you toggle the plug and leave the list blank, the object will not be illuminated by any lights **at all**. 
-> In order to link a particular light **in addition to** all default lights to an object, you must include `defaultLights` in the set expression, for example `"defaultLights /group/light"`.
+> The Linked Lights plug is an exclusive list. If you toggle the plug and leave the list blank, the object will not be illuminated by any lights **at all**. 
+> In order to link a particular light **in addition to** all default lights to an object, you must include `defaultLights` in the set expression, for example `defaultLights /group/light`.
 
 
 ### Linking by location ###
@@ -57,7 +57,7 @@ To link a light by location, simply add the light's full location to the set exp
 
 In setups with more than a few lights, managing a set expression with multiple light locations is prone to user error, and tedious to maintain. That's why it's usually better to link objects to one or more sets containing lights, as the term _set expression_ suggests. Put another way, you can perform **set**-centric light linking. The end result would still be the same, in that specific objects are linked to specific lights.
 
-A light can be added to any number of custom sets using the _Sets_ plug on the light's node, or a separate Set node. Custom sets are separate and do not affect the "defaultLights" set.
+A light can be added to any number of custom sets using the Sets plug on the light's node, or a separate Set node. Custom sets are separate and do not affect the "defaultLights" set.
 
 ![](images/interfaceLightSetGraphEditor.png "A Set node downstream of a light node in the Graph Editor")
 
@@ -95,7 +95,7 @@ Let's consider a possible light link setup for this scene, with the goal of achi
 
 ```eval_rst
 =============================== =============================== ===============================
-Location                        `Default Light` plug value      Special light sets
+Location                        Default Light plug value        Special light sets
 =============================== =============================== ===============================
 /lights/sky                     :code:`True`
 /lights/moon                    :code:`True`

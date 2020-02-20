@@ -99,8 +99,8 @@ class execute( Gaffer.Application ) :
 
 				IECore.StringVectorParameter(
 					name = "context",
-					description = "The context used during execution. Note that the frames "
-						"parameter will be used to vary the context frame entry.",
+					description = "The Context used during execution. Note that the frames "
+						"parameter will be used to vary the Context frame entry.",
 					defaultValue = IECore.StringVectorData( [] ),
 					userData = {
 						"parser" : {

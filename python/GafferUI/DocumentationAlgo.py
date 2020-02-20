@@ -158,7 +158,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 		gaffer appName -arg value -arg value ...
 		```
 
-		If the `appName` is not specified it defaults to `"gui"`, and
+		If the `appName` is not specified it defaults to `gui`, and
 		the familiar main interface is loaded. This shortcut also allows
 		a file to load to be specified :
 

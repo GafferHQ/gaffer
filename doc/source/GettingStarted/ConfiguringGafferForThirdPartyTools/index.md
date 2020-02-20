@@ -13,7 +13,7 @@ Gaffer comes with Appleseed, so it will require no additional configuration. For
 > If you do not use Appleseed in production, you can hide its nodes and presets from the UI by setting the `GAFFERAPPLESEED_HIDE_UI` environment variable to `1`. Even when set, Appleseed will still be available for OSL shader previews and example scenes.
 
 > Note :
-> For the following Linux instructions, we will assume you are using the _bash_ shell and are familiar with terminal commands. Other shells will have comparable methods for setting environment variables.
+> For the following Linux instructions, we will assume you are using the bash shell and are familiar with terminal commands. Other shells will have comparable methods for setting environment variables.
 
 
 ## Configuring Gaffer for Arnold ##
@@ -40,12 +40,12 @@ To create the `ARNOLD_ROOT` environment variable in Linux:
     ```
 
 
-### Arnold in OSX ###
+### Arnold in macOS ###
 
 > Note :
 > For this instruction, we will assume you have Arnold !ARNOLD_VERSION! installed to `!ARNOLD_PATH_OSX!`.
 
-To create the `ARNOLD_ROOT` environment variable in OSX:
+To create the `ARNOLD_ROOT` environment variable in macOS:
 
 1. Open `~/.bash_profile` with a text editor.
 
@@ -63,7 +63,7 @@ To create the `ARNOLD_ROOT` environment variable in OSX:
 
 ### Verifying Arnold is loaded ###
 
-The next time you start Gaffer, the Arnold nodes will be available from the node creation menu (right-click inside the _Graph Editor_).
+The next time you start Gaffer, the Arnold nodes will be available from the node creation menu (right-click inside the Graph Editor).
 
 <!-- TODO: ![](images/arnoldNodes.png "Arnold node menu") -->
 
@@ -92,12 +92,12 @@ To create the `DELIGHT` environment variable in Linux:
     ```
 
 
-### 3Delight in OSX ###
+### 3Delight in macOS ###
 
 > Note :
 > For this instruction, we will assume you have 3Delight !DELIGHT_VERSION! installed to `!DELIGHT_PATH_OSX!`.
 
-To create the `DELIGHT` environment variable in OSX:
+To create the `DELIGHT` environment variable in macOS:
 
 1. Open `~/.bash_profile` with a text editor.
 
@@ -115,7 +115,7 @@ To create the `DELIGHT` environment variable in OSX:
 
 ### Verifying 3Delight is loaded ###
 
-The next time you start Gaffer, the 3Delight nodes will be available from the node creation menu (right-click inside the _Graph Editor_).
+The next time you start Gaffer, the 3Delight nodes will be available from the node creation menu (right-click inside the Graph Editor).
 
 <!-- TODO: ![](images/delightNodes.png "Delight node menu") -->
 
@@ -147,12 +147,12 @@ To add the Tractor python module to the `PYTHONPATH` environment variable in Lin
 > Depending on your system's configuration, your `PYTHONPATH` variable might not appear exactly as above. What's important is whether `:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages` appears in the path.
 
 
-### Tractor in OSX ###
+### Tractor in macOS ###
 
 > Note :
 > For this instruction, we will assume you have Tractor !TRACTOR_VERSION! installed to `!TRACTOR_PATH_OSX!`.
 
-To add the Tractor python module to the `PYTHONPATH` environment variable in OSX:
+To add the Tractor python module to the `PYTHONPATH` environment variable in macOS:
 
 1. Open `~/.bash_profile` with a text editor.
 
@@ -179,7 +179,7 @@ Once the tractor folder has been added to your `PYTHONPATH`, you can then verify
 
 2. Create and select a SystemCommand node (_Dispatch_ > _SystemCommand_).
 
-3. In the _Node Editor_, click _Execute_. The _Dispatcher_ window will open.
+3. In the Node Editor, click _Execute_. The _Dispatcher_ window will open.
 
 4. _Tractor_ will be available in the _Dispatcher_ drop-down menu.
 

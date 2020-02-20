@@ -98,7 +98,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The value that the row names will be matched against.
-			Typically this will refer to a context variable using
+			Typically this will refer to a Context Variable using
 			the `${variableName}` syntax.
 			""",
 

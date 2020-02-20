@@ -5,11 +5,11 @@
 
 # The Python Editor #
 
-The _Python Editor_ is a type of editor in the main Gaffer application that can execute arbitrary Python code with a built-in interpreter. It enables you to modify the node graph, try commands and syntax, and inspect data. In the default layout, it resides in the bottom-right panel, in a tab next to the _Hierarchy View_.
+The Python Editor is a type of editor in the main Gaffer application that can execute arbitrary Python code with a built-in interpreter. It enables you to modify the node graph, try commands and syntax, and inspect data. In the default layout, it resides in the bottom-right panel, in a tab next to the Hierarchy View.
 
-Each _Python Editor_ is a separate instance. Python modules that you `import` will remain loaded in that particular editor for its lifetime. However, you never need to `import` the [Gaffer](../../Reference/NodeReference/Gaffer/index.md) or IECore modules. They are loaded by default.
+Each Python Editor is a separate instance. Python modules that you `import` will remain loaded in that particular editor for its lifetime. However, you never need to `import` the [Gaffer](../../Reference/NodeReference/Gaffer/index.md) or IECore modules. They are loaded by default.
 
-The _Python Editor_ is split into two areas. The bottom-half is the input field. The top-half is the output. The input field of the _Python Editor_ functions like a basic plain text editor. You can type, select, cut, copy, paste, and execute code.
+The Python Editor is split into two areas. The bottom-half is the input field. The top-half is the output. The input field of the Python Editor functions like a basic plain text editor. You can type, select, cut, copy, paste, and execute code.
 
 ![](images/interfacePythonEditorOutput.png "A Python Editor with its input and the output field")
 
@@ -18,7 +18,7 @@ The output field behaves like a typical console output. It records the output st
 ![](images/interfacePythonEditorError.png "Errors in a Python Editor's output field")
 
 > Caution :
-> Code in Expression nodes is handled by a separate interpreter, and the syntax between them and the _Python Editor_ should not be considered safely compatible.
+> Code in Expression nodes is handled by a separate interpreter, and the syntax between them and the Python Editor should not be considered safely compatible.
 
 
 ## Instructions ##
@@ -28,7 +28,7 @@ The output field behaves like a typical console output. It records the output st
 
 Executing code will erase the input field, just like in a debug console. However, if you highlight any part of the code, only that part will execute, and the whole input will be preserved.
 
-To execute code with the _Python Editor:_
+To execute code with the Python Editor:
 
 1. Enter code into the input field.
 2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd>.
@@ -39,7 +39,7 @@ To execute code with the _Python Editor:_
 
 ### Accessing elements and data from other editors ###
 
-The _Python Editor_ can access the same graph elements (nodes and plugs) and scene and image data results (locations, objects, and so on) visible in the various other editors. However, this requires inputting precise dictionary syntax, data types, and code. Instead of typing out the exact code, you can use a shortcut: simply click and drag the element or data from the editor into the _Python Editor's_ input field.
+The Python Editor can access the same graph elements (nodes and plugs) and scene and image data results (locations, objects, and so on) visible in the various other editors. However, this requires inputting precise dictionary syntax, data types, and code. Instead of typing out the exact code, you can use a shortcut: simply click and drag the element or data from the editor into the Python Editor's input field.
 
 ![](images/taskAccessingElementsPythonEditor.gif "Dragging elements of the graph from the Graph Editor to the Python Editor")
 
@@ -50,12 +50,12 @@ The specific shortcut for dragging depends on the source editor:
 ======================== ================= ====================== ============ ============================
 Element                  Source editor     Shortcut               Cursor       Example code result
 ======================== ================= ====================== ============ ============================
-Node(s)                  *Graph Editor*    Middle-click and drag  |nodes|      ``root['Sphere']``
-Plug                     *Node Editor*     Click and drag         |plug|       ``root['Sphere']['radius']``
-Plug value               *Node Editor*     Middle-click and drag  |values|     ``2.7``
-Object(s)                *Viewer*          Click and drag         |objects|    ``['/sphere']``
-Scene location(s)        *Hierarchy View*  Click and drag         |objects|    ``['/sphere']``
-Scene data               *Scene Inspector* Click and drag         |values|     ``V3f(1.5, 2.7, 3.9)``
+Node(s)                  Graph Editor      Middle-click and drag  |nodes|      ``root['Sphere']``
+Plug                     Node Editor       Click and drag         |plug|       ``root['Sphere']['radius']``
+Plug value               Node Editor       Middle-click and drag  |values|     ``2.7``
+Object(s)                Viewer            Click and drag         |objects|    ``['/sphere']``
+Scene location(s)        Hierarchy View    Click and drag         |objects|    ``['/sphere']``
+Scene data               Scene Inspector   Click and drag         |values|     ``V3f(1.5, 2.7, 3.9)``
 ======================== ================= ====================== ============ ============================
 
 .. |nodes| image:: images/nodes.png

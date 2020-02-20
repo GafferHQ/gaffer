@@ -58,7 +58,7 @@ After `import`ing the necessary modules, the first and simplest step is to decla
     	return Gaffer.Reference( "MacbethTexture" )
 ```
 
-There is one small detail we should note. On load, references can modify their containing Reference node's UI metadata, but not the node's name. We therefore have to set the node's name ourselves (line 8, `"MacbethTexture"`). Otherwise, the node would appear in the graph with the generic name _Reference_. The same must be done when renaming any standard node.
+There is one small detail we should note. On load, references can modify their containing Reference node's UI metadata, but not the node's name. We therefore have to set the node's name ourselves (line 8, `MacbethTexture`). Otherwise, the node would appear in the graph with the generic name _Reference_. The same must be done when renaming any standard node.
 
 
 ### The node post-creation function ###
@@ -90,7 +90,7 @@ Next, onto the post-creation function, which modifies the recently-created node.
     With this approach, you can integrate contextual paths from your pipeline directly into the config.
 ```
 
-In this particular example of a node menu function, we don't modify any of the node's plugs, but we could – such as automatically setting its _Mode_ plug to 1. Any such additional node customization would go into the function, here.
+In this particular example of a node menu function, we don't modify any of the node's plugs, but we could – such as automatically setting its Mode plug to 1. Any such additional node customization would go into the function, here.
 
 
 ### Adding the functions to the node menu ###
@@ -124,7 +124,7 @@ That's all! You can add more customized nodes to this config with similar ease, 
 
 ## Testing the node menu entry ##
 
-Let's try testing the custom node. If you haven't already, save the startup config, then launch a new instance of Gaffer. In the _Graph Editor_, the new entry should appear in the node menu under _Custom_ > _MacbethTexture_, and will create a MacbethTexture node when selected.
+Let's try testing the custom node. If you haven't already, save the startup config, then launch a new instance of Gaffer. In the Graph Editor, the new entry should appear in the node menu under _Custom_ > _MacbethTexture_, and will create a MacbethTexture node when selected.
 
 ![](images/tutorialMacbethTextureNode.png "The MacbethTexture node in the Graph Editor")
 

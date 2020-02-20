@@ -66,21 +66,21 @@ That's all we need to add a default bookmark to Gaffer's file browsers. Try test
 
 1. If you haven't already, save `customBookmarks.py`, then launch a new instance of Gaffer.
 2. Create a SceneReader node (_Scene_ > _File_ > _Reader_).
-3. In the _Node Editor_, click ![](images/pathChooser.png "file browser").
+3. In the Node Editor, click ![](images/pathChooser.png "file browser").
 4. In the file browser, click ![](images/bookmarks.png "bookmarks").
 
 If all goes well, _Resources_ should be in the list of bookmarks:
 
 ![](images/tutorialDefaultBookmark.png "A custom default bookmark in a file browser")
 
-You may have noticed that we used a global context variable for a path in the first startup config of this tutorial, but not here. The reason is simply that global context variables are plugs stored per-node graph, whereas path bookmarks are stored in the application.
+You may have noticed that we used a global Context Variable for a path in the first startup config of this tutorial, but not here. The reason is simply that global Context Variables are plugs stored per-node graph, whereas path bookmarks are stored in the application.
 
 
 ### Adding a category-specific default bookmark ###
 
 The next section of the code adds another default bookmark, but this time to a specific **category**, which is a string keyword you can associate with various parts of the GUI. If a node has a category that matches a bookmark's category, file browsers for that node will contain that bookmark.
 
-To add a bookmark to a category, we acquire all of the application's the bookmarks like before, only we provide a string as the `category` keyword argument. The category keyword for the default image nodes is simply `"image"`.
+To add a bookmark to a category, we acquire all of the application's the bookmarks like before, only we provide a string as the `category` keyword argument. The category keyword for the default image nodes is simply image`.
 
 ```eval_rst
 .. code-block:: python
@@ -94,19 +94,19 @@ To add a bookmark to a category, we acquire all of the application's the bookmar
 This should bookmark your `~/Pictures` direcotry for all image node file browsers. Try testing it:
 
 1. Create a Catalogue node.
-2. In the _Node Editor_, In the _Images_ tab, click ![](images/pathChooser.png "file browser").
+2. In the Node Editor, In the _Images_ tab, click ![](images/pathChooser.png "file browser").
 3. In the file browser, click ![](images/bookmarks.png "bookmark"). _Pictures_ should be in the list of bookmarks.
 
 ![](images/tutorialDefaultImageNodeBookmark.png "A custom default bookmark in an image node's file browser")
 
-Since this points to a directory in the user's home folder, this isn't the most realistic example for a bookmark in a studio pipeline, but it should provide an example basis from which to incorporate your own asset and resource locations as bookmarks. Using Python string manipulation, you can compose multi-component strings from several context variables or environment variables that point to locations in your file system.
+Since this points to a directory in the user's home folder, this isn't the most realistic example for a bookmark in a studio pipeline, but it should provide an example basis from which to incorporate your own asset and resource locations as bookmarks. Using Python string manipulation, you can compose multi-component strings from several Context Variables or environment variables that point to locations in your file system.
 
 
 ### Setting the file browser default path ###
 
 When you open the file browser for an empty string plug, it begins at a default path. This path is actually another bookmark, which you can also change through the API. Let's try setting the default path for all image nodes.
 
-Since the `bookmarks` variable we declared earlier only contains bookmarks belonging to the `"image"` category, and we already have the `picturesPath` variable that points to `~/Pictures`,  we can reuse both in combination with the `setDefault()` method.
+Since the `bookmarks` variable we declared earlier only contains bookmarks belonging to the `image` category, and we already have the `picturesPath` variable that points to `~/Pictures`,  we can reuse both in combination with the `setDefault()` method.
 
 Add the following to the end of the config:
 
@@ -121,7 +121,7 @@ Now, try testing an image node's default file browser path:
 
 1. Save `customBookmarks.py`, then launch a new instance of Gaffer.
 2. Create a Catalogue node.
-3. In the _Node Editor_, in the _Images_ tab, click ![](images/pathChooser.png "file browser").
+3. In the Node Editor, in the _Images_ tab, click ![](images/pathChooser.png "file browser").
 
 If all goes well, the file path should default to `~/Pictures`.
 

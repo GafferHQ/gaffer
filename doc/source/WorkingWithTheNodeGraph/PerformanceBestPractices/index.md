@@ -13,11 +13,11 @@ A very rough estimate for the complexity of a scene can be made by considering t
 
 Consider a scene containing 4 assets, with the geometry cache for each imported into Gaffer through separate SceneReader nodes. Each asset has a lookdev setup from an accompanying Reference node, placed downstream of the SceneReader nodes. This presents us with two options for structuring the node graph. We can either:
 
-- _Graph1:_ Group all the assets together, and then apply the lookdev nodes in series.
+- Graph1: Group all the assets together, and then apply the lookdev nodes in series.
 
 ![](images/graphEditorGroupFirst.png "Grouping, then applying lookdev")
 
-- _Graph2:_ First apply the lookdev nodes, and then group all the resulting scenes together.
+- Graph2: First apply the lookdev nodes, and then group all the resulting scenes together.
 
 ![](images/graphEditorGroupSecond.png "Applying lookdev, then grouping")
 
@@ -58,12 +58,12 @@ This can be very useful, but it comes at a price. Certain operations in Gaffer r
 > Caution :
 > Limit the use of `'...'` in path expressions.
 
-The most expensive expression possible is `'/.../something'`, because it instructs Gaffer to "search _every_ location of the whole scene." While this can be necessary at times, it is likely that a more precise wildcard search will provide the same results, with better performance. 
+The most expensive expression possible is `'/.../something'`, because it instructs Gaffer to "search **every** location of the whole scene." While this can be necessary at times, it is likely that a more precise wildcard search will provide the same results, with better performance. 
 
 For instance, if you know that all the matching results are within a single asset, an expression such as `/AssetA/.../something` will limit the search to that asset only. Alternatively, if you know that all the matches are at a specific depth, expressions such as `/*/something` or `/*/*/something` would yield the same result without needing to visit deeper locations. Small changes such as this can have a significant impact on scene performance, so it is always worth your time to make your expressions as precise as possible.
 
 > Note :
-> The `'...'` wildcard is not _always_ costly. For simple nodes such as ShaderAssignment and Attributes, the performance difference is negligible. Those nodes can operate on a single location in isolation, and never need to consider the big picture of the scene as a whole. Generally, only hierarchy-altering nodes such as Prune and Isolate are particularly performance sensitive to the `'...'` wildcard. In general, it is best to keep wary of `'...'`.
+> The `'...'` wildcard isn't always costly. For simple nodes such as ShaderAssignment and Attributes, the performance difference is negligible. Those nodes can operate on a single location in isolation, and never need to consider the big picture of the scene as a whole. Generally, only hierarchy-altering nodes such as Prune and Isolate are particularly performance sensitive to the `'...'` wildcard. In general, it is best to keep wary of `'...'`.
 
 
 ## Expressions ##
@@ -83,7 +83,7 @@ The Instancer node is capable of generating a very high number of locations, so 
 Keep in mind the rough complexity metric of `complexity = numberOfLocations * numberOfNodes` from earlier, and consider these guidelines when using the Instancer node:
 
 - Use the Instancer node carefully and with moderation.
-- Use a minimum of nodes to generate the input for the upstream instance graph that connects to the _instance_ input plug. If necessary, consider baking the instance graph to a cache and loading it in with a SceneReader node.
+- Use a minimum of nodes to generate the input for the upstream instance graph that connects to the Instancer node's in plug. If necessary, consider baking the instance graph to a cache and loading it in with a SceneReader node.
 - Use a minimum of nodes below the Instancer node to modify the scene containing all the resulting instances.
 - Group or parent the instances into the main scene as late as possible in the node graph.
 - Try and assign shaders and set attributes at a location in the scene hierarchy above all the instances, rather than on a per-instance basis.

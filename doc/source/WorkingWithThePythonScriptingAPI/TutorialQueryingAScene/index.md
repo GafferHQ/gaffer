@@ -5,7 +5,7 @@ Gaffer has a simple API for querying the scenes that are output from nodes. In t
 Making a scene
 --------------
 
-First off, we'll create a simple scene using a network of basic nodes. Cut and paste the following into the _Graph Editor_ to build the network. There's no need to worry about the details of this part - it's just a convenient way to create the network we need for the tutorial. If you do take a look though, you'll see examples of the commands needed to create nodes, set values and make connections.
+First off, we'll create a simple scene using a network of basic nodes. Cut and paste the following into the Graph Editor to build the network. There's no need to worry about the details of this part - it's just a convenient way to create the network we need for the tutorial. If you do take a look though, you'll see examples of the commands needed to create nodes, set values and make connections.
 
 ```
 import Gaffer
@@ -193,13 +193,13 @@ del __children
 Our first scene queries
 -----------------------
 
-Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the _Python Editor_, we can either type a reference to it in directly, or middle-mouse drag it from the GraphEditor to the _Python Editor_. To query the output of the StandardOptions node we'll be using the following :
+Scenes are output from nodes through the out plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the Python Editor, we can either type a reference to it in directly, or middle-mouse drag it from the Graph Editor to the Python Editor. To query the output of the StandardOptions node we'll be using the following :
 
 ```
 root["StandardOptions"]["out"]
 ```
 
-Note that we're just using Python dictionary syntax to access a Node by name and then to access a named Plug within it. This plug is the gateway to our queries, so let's make our first query by getting the global settings from within the scene - these are settings created by the various Options nodes.
+Note that we're just using Python dictionary syntax to access a node by name and then to access a named plug within it. This plug is the gateway to our queries, so let's make our first query by getting the global settings from within the scene - these are settings created by the various Options nodes.
 
 ```
 g = root["StandardOptions"]["out"]["globals"].getValue()
@@ -209,16 +209,16 @@ print g["option:render:camera"].value
 print g["option:render:resolution"].value
 ```
 
-There are a couple of things to note here. Firstly, although the `out` plug appears as a single plug in the GraphEditor, it actually has several child plugs, which allow different aspects of the scene to be queried. We accessed the `globals` plug using dictionary syntax, and then retrieved its value using the getValue() method. The result was an IECore::CompoundObject which we can pretty much treat like a dictionary, with the minor annoyance that we need to use `.value` to actually retrieve the final value we want.
+There are a couple of things to note here. Firstly, although the out plug appears as a single plug in the Graph Editor, it actually has several child plugs, which allow different aspects of the scene to be queried. We accessed the `globals` plug using dictionary syntax, and then retrieved its value using the `getValue()` method. The result was an `IECore::CompoundObject` which we can pretty much treat like a dictionary, with the minor annoyance that we need to use `.value` to actually retrieve the final value we want.
 
-The `"option:render:camera"` globals entry tells us that the user wants to render through a camera called `"/world/camera"`, so let's try to retrieve the object representing the camera. Just as the globals within the scene were represented by a `globals` plug, the objects are represented by an `object` plug. Maybe we can get the camera out using a simple getValue() call as before?
+The `option:render:camera` globals entry tells us that the user wants to render through a camera called `/world/camera`, so let's try to retrieve the object representing the camera. Just as the globals within the scene were represented by a `globals` plug, the objects are represented by an `object` plug. Maybe we can get the camera out using a simple `getValue()` call as before?
 
 ```
 g = root["StandardOptions"]["out"]["object"].getValue()
 RuntimeError : line 1 : Exception : Context has no entry named "scene:path"
 ```
 
-That didn't work out so well did it? The problem is that whereas the globals are _global_, different objects are potentially available at each point in the scene hierarchy - we need to say which part of the hierarchy we want the object from. We do that as follows :
+That didn't work out so well did it? The problem is that whereas the globals are **global**, different objects are potentially available at each point in the scene hierarchy - we need to say which part of the hierarchy we want the object from. We do that as follows :
 
 ```
 with Gaffer.Context( root.context() ) as context :
@@ -227,7 +227,7 @@ with Gaffer.Context( root.context() ) as context :
 	print camera
 ```
 
-The Context class is central to the way Gaffer works - a single plug can output entirely different values depending on the context in which getValue() is called. Here we provided a context as a path within the scene, but for an image node we'd provide a context with a tile location and channel name. Contexts allow Gaffer to multithread efficiently - each thread uses it's own Context so each thread can be querying a different part of the scene or a different location in an image. That was a bit wordy though wasn't it? For now let's pretend we didn't even take this detour and let's use a utility method that does the same thing instead :
+The `Context` class is central to the way Gaffer works - a single plug can output entirely different values depending on the Context in which `getValue()` is called. Here we provided a Context as a path within the scene, but for an image node we'd provide a Context with a tile location and channel name. Contexts allow Gaffer to multithread efficiently - each thread uses it's own Context so each thread can be querying a different part of the scene or a different location in an image. That was a bit wordy though wasn't it? For now let's pretend we didn't even take this detour and let's use a utility method that does the same thing instead :
 
 ```
 camera = root["StandardOptions"]["out"].object( "/world/camera" )
@@ -276,7 +276,7 @@ If the sphere had a shader assigned to it, that would appear as `a["shader"]`, b
 Traversing the hierarchy
 ------------------------
 
-One of the key features of the queries above was that they were random access - we could query any location in the scene at any time, without needing to query the parent locations first. That's all well and good, but until now we've been using prior knowledge of the scene structure to decide what to query. In a real situation, our code doesn't know that `"/world/geometry/sphere"` even exists. We need a means of querying the structure of the scene first, so that we can then query the contents at each location. Oddly enough, the structure is just communicated with another plug alongside the others - this time one called `"childNames"`. And oddly enough, there's a utility method to help us get its value in context. Let's start at the root and see what we can find :
+One of the key features of the queries above was that they were random access - we could query any location in the scene at any time, without needing to query the parent locations first. That's all well and good, but until now we've been using prior knowledge of the scene structure to decide what to query. In a real situation, our code doesn't know that `/world/geometry/sphere` even exists. We need a means of querying the structure of the scene first, so that we can then query the contents at each location. Oddly enough, the structure is just communicated with another plug alongside the others - this time one called `childNames`. And oddly enough, there's a utility method to help us get its value within the proper Context. Let's start at the root and see what we can find :
 
 ```
 print root["StandardOptions"]["out"].childNames( "/" )

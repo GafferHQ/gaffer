@@ -8,7 +8,7 @@ import GafferOSL
 GafferUI.Examples.registerExample(
 	"Rendering/Wedge Tests",
 	"$GAFFER_ROOT/resources/examples/rendering/wedgeTests.gfr",
-	description = "Demonstrates how to use the Wedge node to render Shader wedge tests",
+	description = "Demonstrates how to use the Wedge node to render shader wedge tests.",
 	notableNodes = [
 		GafferDispatch.Wedge,
 		GafferDispatch.SystemCommand,
@@ -20,7 +20,7 @@ GafferUI.Examples.registerExample(
 )
 
 GafferUI.Examples.registerExample(
-	"Rendering/Anamorphic Cameras",
+	"Rendering/Anamorphic Camera",
 	"$GAFFER_ROOT/resources/examples/rendering/anamorphicCameraSetup.gfr",
 	description = "Demonstrates how to set up a Camera with a non-square pixel aspect ratio.",
 	notableNodes = [
@@ -43,7 +43,7 @@ GafferUI.Examples.registerExample(
 GafferUI.Examples.registerExample(
 	"Compositing/Contact Sheet Generation",
 	"$GAFFER_ROOT/resources/examples/compositing/contactSheet.gfr",
-	description = "Demonstrates how to use the Loop node to build a Contact Sheet of Shader variations",
+	description = "Demonstrates how to use the Loop node to build a contact sheet of shader variations.",
 	notableNodes = [
 		Gaffer.Loop,
 		GafferImage.ImageTransform,

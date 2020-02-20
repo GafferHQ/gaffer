@@ -45,8 +45,8 @@ Gaffer.Metadata.registerNode(
 	"""
 	Builds a scene by bundling multiple input scenes together, each
 	under their own root location. Instead of using an array of inputs
-	like the Group node, a single input is used instead, and a context
-	variable is provided so that a different hierarchy can be generated
+	like the Group node, a single input is used instead, and a Context
+	Variable is provided so that a different hierarchy can be generated
 	under each root location. This is especially powerful for building
 	dynamic scenes where the number of inputs is not known prior to
 	building the node graph.
@@ -80,7 +80,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of a context variable that is set to the current
+			The name of a Context Variable that is set to the current
 			root name when evaluating the input scene. This can be used
 			in upstream expressions and string substitutions to generate
 			a different hierarchy under each root location.
