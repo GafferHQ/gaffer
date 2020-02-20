@@ -49,7 +49,7 @@ def __renderingSummary( plug ) :
 	if plug["bucketScanning"]["enabled"].getValue() :
 		info.append( "Bucket Scanning %s" % plug["bucketScanning"]["value"].getValue().capitalize() )
 	if plug["parallelNodeInit"]["enabled"].getValue() :
-		info.append( "Parallel Init %s" % plug["parallelNodeInit"]["value"].getValue() )
+		info.append( "Parallel Init %s" % ( "On" if plug["parallelNodeInit"]["value"].getValue() else "Off" ) )
 	if plug["threads"]["enabled"].getValue() :
 		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
 	return ", ".join( info )
@@ -77,6 +77,10 @@ def __samplingSummary( plug ) :
 		info.append( "Clamp {0}".format( GafferUI.NumericWidget.valueToString( plug["aaSampleClamp"]["value"].getValue() ) ) )
 	if plug["aaSampleClampAffectsAOVs"]["enabled"].getValue() :
 		info.append( "Clamp AOVs {0}".format( "On" if plug["aaSampleClampAffectsAOVs"]["value"].getValue() else "Off" ) )
+	if plug["indirectSampleClamp"]["enabled"].getValue() :
+		info.append( "Indirect Clamp {0}".format( GafferUI.NumericWidget.valueToString( plug["indirectSampleClamp"]["value"].getValue() ) ) )
+	if plug["lowLightThreshold"]["enabled"].getValue() :
+		info.append( "Low Light {0}".format( GafferUI.NumericWidget.valueToString( plug["lowLightThreshold"]["value"].getValue() ) ) )
 	return ", ".join( info )
 
 def __adaptiveSamplingSummary( plug ) :
@@ -87,7 +91,7 @@ def __adaptiveSamplingSummary( plug ) :
 	if plug["aaSamplesMax"]["enabled"].getValue() :
 		info.append( "AA Max %d" % plug["aaSamplesMax"]["value"].getValue() )
 	if plug["aaAdaptiveThreshold"]["enabled"].getValue() :
-		info.append( "Threshold %d" % plug["aaAdaptiveThreshold"]["value"].getValue() )
+		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["aaAdaptiveThreshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
