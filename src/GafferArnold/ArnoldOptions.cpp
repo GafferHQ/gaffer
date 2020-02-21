@@ -86,6 +86,9 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	// Subdivision
 
 	options->addChild( new Gaffer::NameValuePlug( "ai:max_subdivisions", new IECore::IntData(999), false, "maxSubdivisions" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:subdiv_dicing_camera", new IECore::StringData( "" ), false, "subdivDicingCamera" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:subdiv_frustum_culling", new IECore::BoolData( false ), false, "subdivFrustumCulling" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:subdiv_frustum_padding", new IECore::FloatData( 0.0f ), false, "subdivFrustumPadding" ) );
 
 	// Texturing parameters
 

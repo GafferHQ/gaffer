@@ -300,6 +300,7 @@ const AtString g_sphereArnoldString("sphere");
 const AtString g_sssSetNameArnoldString( "sss_setname" );
 const AtString g_stepSizeArnoldString( "step_size" );
 const AtString g_stepScaleArnoldString( "step_scale" );
+const AtString g_subdivDicingCameraString( "subdiv_dicing_camera" );
 const AtString g_subdivIterationsArnoldString( "subdiv_iterations" );
 const AtString g_subdivAdaptiveErrorArnoldString( "subdiv_adaptive_error" );
 const AtString g_subdivAdaptiveMetricArnoldString( "subdiv_adaptive_metric" );
@@ -2549,6 +2550,7 @@ IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
 IECore::InternedString g_backgroundOptionName( "ai:background" );
+IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -2609,6 +2611,19 @@ class ArnoldGlobals
 				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
 				{
 					m_cameraName = d->readable();
+
+				}
+				return;
+			}
+			else if( name == g_subdivDicingCameraOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_subdivDicingCameraName = "";
+				}
+				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
+				{
+					m_subdivDicingCameraName = d->readable();
 
 				}
 				return;
@@ -2910,11 +2925,31 @@ class ArnoldGlobals
 		{
 			updateCameraMeshes();
 
+			AtNode *options = AiUniverseGetOptions();
+
 			AiNodeSetInt(
-				AiUniverseGetOptions(), g_aaSeedArnoldString,
+				options, g_aaSeedArnoldString,
 				m_aaSeed.get_value_or( m_frame.get_value_or( 1 ) )
 			);
 
+			AtNode *dicingCamera = nullptr;
+			if( m_subdivDicingCameraName.size() )
+			{
+				dicingCamera = AiNodeLookUpByName( AtString( m_subdivDicingCameraName.c_str() ) );
+				if( !dicingCamera )
+				{
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", "Could not find dicing camera named: " + m_subdivDicingCameraName );
+				}
+			}
+
+			if( dicingCamera )
+			{
+				AiNodeSetPtr( options, g_subdivDicingCameraString, dicingCamera );
+			}
+			else
+			{
+				AiNodeResetParameter( options, g_subdivDicingCameraString );
+			}
 
 			// Do the appropriate render based on
 			// m_renderType.
@@ -3253,6 +3288,7 @@ class ArnoldGlobals
 		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		SharedAtNodePtr m_defaultCamera;
+		std::string m_subdivDicingCameraName;
 
 		int m_logFileFlags;
 		int m_consoleFlags;
