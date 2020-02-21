@@ -191,7 +191,7 @@ class SceneView::DrawingMode : public boost::signals::trackable
 
 			//    gl:visualiser:frustum
 
-			BoolPlugPtr frustrumAttrValuePlug = new BoolPlug( "value", Plug::In, true );
+			StringPlugPtr frustrumAttrValuePlug = new StringPlug( "value", Plug::In, "whenSelected" );
 
 			NameValuePlugPtr frustumAttrPlug = new Gaffer::NameValuePlug( "gl:visualiser:frustum", frustrumAttrValuePlug, true, "frustum" );
 			attr->addChild( frustumAttrPlug );

@@ -139,6 +139,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"visualiserAttributes.frustum.value" : [
+
+			"preset:Off", "off",
+			"preset:When Selected", "whenSelected",
+			"preset:On", "on",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
+		],
+
 		"visualiserAttributes.lightFrustumScale" : [
 
 			"description",

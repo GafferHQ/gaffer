@@ -369,6 +369,15 @@ plugsMetadata = {
 
 	],
 
+	"visualiserAttributes.frustum.value" : [
+
+			"preset:Off", "off",
+			"preset:When Selected", "whenSelected",
+			"preset:On", "on",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
+	]
+
 }
 
 __sourceMetadata = GafferSceneUI.StandardOptionsUI.plugsMetadata

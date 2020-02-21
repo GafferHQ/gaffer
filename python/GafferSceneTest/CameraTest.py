@@ -89,20 +89,20 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		c["visualiserAttributes"]["frustum"]["enabled"].setValue( True )
 
 		a = c["out"].attributes( path )
-		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( True ) )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.StringData( "whenSelected" ) )
 		self.assertFalse( "gl:visualiser:scale" in a )
 
 		c["visualiserAttributes"]["scale"]["enabled"].setValue( True )
 		a = c["out"].attributes( path )
 
-		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( True ) )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.StringData( "whenSelected" ) )
 		self.assertEqual( a["gl:visualiser:scale"], IECore.FloatData( 1.0 ) )
 
-		c["visualiserAttributes"]["frustum"]["value"].setValue( False )
+		c["visualiserAttributes"]["frustum"]["value"].setValue( "off" )
 		c["visualiserAttributes"]["scale"]["value"].setValue( 12.1 )
 
 		a = c["out"].attributes( path )
-		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( False ) )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.StringData( "off" ) )
 		self.assertEqual( a["gl:visualiser:scale"], IECore.FloatData( 12.1 ) )
 
 	def testHashes( self ) :

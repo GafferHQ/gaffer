@@ -240,7 +240,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		l["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["maxTextureResolution"]["value"].setValue( 123 )
 		l["visualiserAttributes"]["frustum"]["enabled"].setValue( True )
-		l["visualiserAttributes"]["frustum"]["value"].setValue( False )
+		l["visualiserAttributes"]["frustum"]["value"].setValue( "off" )
 		l["visualiserAttributes"]["lightFrustumScale"]["enabled"].setValue( True )
 		l["visualiserAttributes"]["lightFrustumScale"]["value"].setValue( 1.23 )
 
@@ -249,7 +249,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["gl:light:drawingMode"], IECore.StringData( "color" ) )
 		self.assertEqual( a["gl:visualiser:scale"], IECore.FloatData( 12.3 ) )
 		self.assertEqual( a["gl:visualiser:maxTextureResolution"], IECore.IntData( 123 ) )
-		self.assertEqual( a["gl:visualiser:frustum"], IECore.BoolData( False ) )
+		self.assertEqual( a["gl:visualiser:frustum"], IECore.StringData( "off" ) )
 		self.assertEqual( a["gl:light:frustumScale"], IECore.FloatData( 1.23 ) )
 
 if __name__ == "__main__":
