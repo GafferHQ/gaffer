@@ -1,29 +1,11 @@
-0.56.0.0bx (relative to 0.56.0.0b2)
-==========
+0.56.0.0
+========
 
-Fixes
------
+This major feature release brings support for deep images and Arnold 6, and contains a wealth of improvements to light and camera visualisation in the Viewer.
 
-- GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441). [from 0.54.2.x]
+> Caution : Bug fixes to the ImageReader, ImageWriter and Resize nodes mean that the generated images will differ substantially in some circumstances. See the Breaking Changes section for more details.
 
-0.56.0.0b2 (relative to 0.56.0.0b1)
-==========
-
-Fixes
------
-
-- ImageReader/ImageWriter : Fixed bug which caused colour transforms to be performed on premultiplied pixel data.
-- Catalogue :
-  - Fixed a rare inconsistency with re-selection after deleting re-ordered images. [from 0.55.4.1]
-  - Fixed bug which prevented the Viewer hotkeys from working with Catalogues inside Boxes (#3605). [from 0.55.4.1]
-
-Breaking Changes
-----------------
-
-- ImageReader/ImageWriter : A bug fix means that results will now differ when applying colour transforms to images with alpha.
-
-0.56.0.0b1
-==========
+> Note : All official release builds will be for Arnold 6 only, but source-level compatibility remains for Arnold 5.4 for those who wish to make custom builds.
 
 Features
 --------
@@ -32,9 +14,9 @@ Features
   - Updated ImageReader and ImageWriter to support deep images.
   - Added new nodes for processing deep images : DeepToFlat, FlatToDeep, DeepMerge, DeepRecolor, DeepHoldout, DeepState, DeepTidy, Empty, DeepSampleCounts and DeepSampler.
   - Updated existing nodes to support deep images where relevant.
+- Viewer : Added the Crop Window Tool to image views to allow a scene's crop window to be adjusted directly from the rendered image (#2835).
+- ImageTransform : Added support for transform concatenation. This improves speed and filtering quality for chains of adjacent ImageTransforms (#2842).
 - SphereLevelSet : Added new node for creating a level set representation of a sphere.
-- Viewer : Added the Crop Window Tool to image views to allow a scenes crop window to be adjusted directly from the rendered image (#2835).
-- Image : Added support for transform concatenation. This improves speed and filtering quality for chains of adjacent ImageTransforms (#2842).
 
 Improvements
 ------------
@@ -54,9 +36,10 @@ Improvements
     - Added menu items to control visualiser scale.
     - Added menu items to control the default drawing mode for lights.
     - Changed Crop Window Tool status presentation to match other tools (#2835).
-    - Added menu items to control frustum visualisations. These can also be controlled via the `OpenGLAttributes` node (#3569).
-    - Added visualisation of camera frustums and spot light cones (#3569).
+    - Added visualisation of camera frustums and spot light cones. By default these are drawn only for selected objects, but menu items allow them to be enabled or disabled globally. New settings on the `OpenGLAttributes` node allow control at a per-object level (#3569).
     - Improved <kbd>f</kbd> framing behaviour for light visualisations (#3569).
+    - Unified visualisation of light radius.
+  - Improved camera visualisation (#58).
 - CropWindowTool : Added new mouse interactions to edit the crop region. Dragging outside creates a new region. Dragging inside moves the existing region. <kbd>Shift</kbd>-dragging inside creates a new region.
 - Camera : Added Visualisation controls to the Camera node to allow frustum visualisation to be easily overridden per-camera (#3569).
 - Set expressions :
@@ -69,7 +52,9 @@ Improvements
   - Added better defaults for the `orientation` and `scale` plugs.
   - Added control over prototype root locations via a string array, which can be optionally specified using a plug, Constant primvar, or Vertex primvar.
 - InteractiveArnoldRender : Enabled progressive refinement.
+- ArnoldOptions : Added `subdivDicingCamera`, `subdivFrustumCulling` and `subdivFrustumPadding` options.
 - OSLObject : Added non-uniform scale to standard primitive variable menu.
+- OSLCode : Improved labelling of inputs and outputs. Since they represent variables used in the code, they are now labelled verbatim rather than prettified.
 - View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
 - AnimationEditor : Changed the modifier key used to enable single-axis zoom has changed to <kbd>Ctrl</kbd> to allow use in conjunction with precise movement mode (<kbd>Shift</kbd>) (#3324).
 - Error handling : The Cortex exception type is now included in error messages where relevant.
@@ -89,12 +74,14 @@ Fixes
 -----
 
 - Resize : Fixed bug which caused unwanted image distortion when changing pixel aspect ratio.
+- ImageReader/ImageWriter : Fixed bug which caused colour transforms to be performed on premultiplied pixel data.
+- ImageTransform : Fixed inconsistent filtering of transforms containing rotation but no translation.
 - Launch : Fixed bug which prevented gaffer launching when stored on case destroying file systems (#3477).
 - CopyAttributes : Fixed bug loading scripts saved prior to version 0.55.0.0.
-- Mix : Fix wrong behaviour outside of mask data window.
+- Mix : Fixed wrong behaviour outside of mask data window.
 - ImageStats : Fixed bug that would return 1.0 if the 4th channel was missing. Missing channels now always return 0.0.
 - Viewer :
-  - Fixed bug that caused the StandardLightVisualiser to be used instead of render-specific ones (#3407).
+  - Fixed bug that caused the StandardLightVisualiser to be used instead of renderer-specific ones (#3407).
   - Fixed bug that caused duplicate drawing of inherited light filter state (#3502).
   - Fixed bug that caused unexpected results when dragging into the Viewer when the Crop Window Tool was active (#2385).
 - ParallelAlgo :
@@ -105,7 +92,8 @@ Fixes
 - BoolWidget : Fixed unwanted horizontal expansion.
 - Style : Fixed Qt application style to use the same style on all platforms.
 - Display : Fixed dirty propagation for new drivers and ensured that only the channelData plug is dirtied when new data is received (#2845).
-- ImageTransform : Fixed inconsistent filtering of transforms containing rotation but no translation.
+- LabelPlugValueWidget : Fixed bug that prevented updates if the `label` metadata depended on the plug name.
+- ArnoldOptions : Fixed bugs in section summary formatting.
 
 API
 ---
@@ -123,7 +111,10 @@ API
 - FlatImageSource : Added a new base class to help in implementing image sources which generate flat data.
 - FlatImageProcessor : Added a new base class to help in implementing image processors which don't support deep data.
 - GafferOSL : Added ShadingEngineAlgo to simplify the generation of shading point data for images, and rendering networks to textures.
-- StandardLightVisualiser : Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
+- StandardLightVisualiser :
+  - Added `surfaceTexture` virtual method to allow derived classes to provide alternate surface representations (#3407).
+  - Added `sphereWireframe` protected method.
+  - Added support for optional `tintParameter` metadata for `quad`, `disk`, `cylinder` and `environment` type lights. This names a Color3f parameter that will used to tint the light's final appearance.
 - IECoreGLPreview :
   - Added `VisualisationType` and `VisualisationMap` to allow classification of renderables returned by visualisers.
   - IECoreGLPreview : Added support for more flexible visualisations via the `Visualisation` struct (#3569).
@@ -137,6 +128,7 @@ Breaking Changes
 ----------------
 
 - Resize : A bug fix means that results are changed significantly when changing pixel aspect ratios.
+- ImageReader/ImageWriter : A bug fix means that results will now differ when applying colour transforms to images with alpha.
 - Instancer :
   - Renamed `instances` and `index` plugs. Compatibility with old `.gfr` files is maintained via a config file.
   - Attributes assigned to a prototype root are now instanced onto `<prototypeName>` rather then `<prototypeName>/<id>` (eg `/instances/robot` rather than `/instances/robot/0`)
@@ -144,7 +136,7 @@ Breaking Changes
 - ShaderAssignment : Removed support for the `GAFFERSCENE_SHADERASSIGNMENT_CONTEXTCOMPATIBILITY` environment variable.
 - bin : Renamed the `gaffer.py` launch script (to `__gaffer.py`) to avoid a collision with the main `Gaffer` module (see #3477). This will cause the process string to change on systems that don't support process renaming.
 - ViewportGadget : Added private members, ABI break only - source compatibility is maintained (#3324).
-- Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods loose `const`-ness accordingly.
+- Handle : `LinearDrag::position` and `PlanarDrag::position` are no longer `const` methods. `RotateHandle`, `ScaleHandle` and `TranslateHandle` value provider methods lose `const`-ness accordingly.
 - ImagePlug :
   - Removed `image()` and `imageHash()` methods. These are now available in the ImageAlgo namespace.
   - Changed default channel names to an empty list.
@@ -152,11 +144,14 @@ Breaking Changes
 - Light :
   - Changed `Light::computeLight` return type to const (#3407).
   - Added plug and accessors for `visualiserShaded` (#3407).
-- StandardLightVisualiser : Removed protected members `faceCameraVertexSource` and `environmentSphere` (#3407).
+- StandardLightVisualiser :
+  - Removed protected methods `faceCameraVertexSource()` and `environmentSphere()` (#3407).
+  - Changed signature of `quadPortal()` method.
+  - Changed signature of `spotlightParameters()` method.
 - LightFilterVisualiser : Moved `LightFilterVisualiser` into `IECoreGLPreview`, filter visualiser registrations will need updating (#3502).
 - ObjectToImage/ImagePrimitiveSource : Removed.
 - ParallelAlgoTest : Removed `ExpectedUIThreadCall`. Use `UIThreadCallHandler` instead.
-- OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer, Visualisers should no longer apply this attribute to visualisations unless they need to invert this scale for any geometry-related components of the visualisation.
+- OpenGLRenderer : `visualiser:scale` is now handled directly in the renderer. Visualisers should no longer apply this attribute to visualisations unless they need to invert this scale for any geometry-related components of the visualisation.
 - GafferScene : Renamed attribute `visualiser:scale` > `gl:visualiser:scale`. Note : Existing scenes with OpenGLAttribute nodes setting this will need values re-entering.
 - IECoreGLPreview :
   - Changed the return type of `(Light|LightFilter|Attribute)Visualiser` classes. Visualisations are now a vector of `Visualisation` structs(#3569).
