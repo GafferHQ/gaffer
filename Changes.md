@@ -5,7 +5,9 @@ This major feature release brings support for deep images and Arnold 6, and cont
 
 > Caution : Bug fixes to the ImageReader, ImageWriter and Resize nodes mean that the generated images will differ substantially in some circumstances. See the Breaking Changes section for more details.
 
-> Note : All official release builds will be for Arnold 6 only, but source-level compatibility remains for Arnold 5.4 for those who wish to make custom builds.
+> Note : All official release builds are for Arnold 6 only, but source-level compatibility remains for Arnold 5.4 for those who wish to make custom builds.
+
+> Note : The following nodes have renamed plugs and/or added features, such that files saved in 0.56 are not fully compatible with 0.55 : Instancer, OpenGLAttributes, Light and Camera. See Breaking Changes and Improvements sections for more details.
 
 Features
 --------
@@ -22,6 +24,8 @@ Improvements
 ------------
 
 - Viewer :
+  - Added visualisation of camera frustums and spot light cones. By default these are drawn only for selected objects, but menu items allow them to be enabled or disabled globally (#3569).
+  - Improved camera visualisation (#58).
   - Improved visualisation of lights :
     - Added texture previews for Arnold's quad and skydome lights. All OSL shaders are supported, along with a small subset of Arnold shaders.
     - Area lights are now drawn solid by default. This can be controlled via the Visualisation section of the Light node.
@@ -35,13 +39,21 @@ Improvements
     - Added an approximation of Arnold area light spread.
     - Added menu items to control visualiser scale.
     - Added menu items to control the default drawing mode for lights.
-    - Changed Crop Window Tool status presentation to match other tools (#2835).
-    - Added visualisation of camera frustums and spot light cones. By default these are drawn only for selected objects, but menu items allow them to be enabled or disabled globally. New settings on the `OpenGLAttributes` node allow control at a per-object level (#3569).
     - Improved <kbd>f</kbd> framing behaviour for light visualisations (#3569).
     - Unified visualisation of light radius.
-  - Improved camera visualisation (#58).
-- CropWindowTool : Added new mouse interactions to edit the crop region. Dragging outside creates a new region. Dragging inside moves the existing region. <kbd>Shift</kbd>-dragging inside creates a new region.
+- Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
 - Camera : Added Visualisation controls to the Camera node to allow frustum visualisation to be easily overridden per-camera (#3569).
+- OpenGLAttributes :
+  - Added new light and camera visualisation attributes.
+  - Added sensible limits on attribute value plugs to prevent invalid settings.
+- CropWindowTool :
+  - Added new mouse interactions to edit the crop region. Dragging outside creates a new region. Dragging inside moves the existing region. <kbd>Shift</kbd>-dragging inside creates a new region.
+  - Updated status presentation to match other tools (#2835).
+- Tools :
+  - Added generic support for precise tool adjustments by holding down <kbd>Shift</kbd> whilst adjusting tool handles (#3324).
+  - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
+- View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
+- AnimationEditor : Changed the modifier key used to enable single-axis zoom has changed to <kbd>Ctrl</kbd> to allow use in conjunction with precise movement mode (<kbd>Shift</kbd>) (#3324).
 - Set expressions :
   - Added `in` operator. The expression `A in B` selects all locations from set A which are descendants of a location from set B.
   - Added `containing` operator. The expression `A containing B` selects all locations from set A which are ancestors of a location from set B.
@@ -55,17 +67,10 @@ Improvements
 - ArnoldOptions : Added `subdivDicingCamera`, `subdivFrustumCulling` and `subdivFrustumPadding` options.
 - OSLObject : Added non-uniform scale to standard primitive variable menu.
 - OSLCode : Improved labelling of inputs and outputs. Since they represent variables used in the code, they are now labelled verbatim rather than prettified.
-- View navigation : Added support for precise movement adjustments by holding down <kbd>Shift</kbd> whilst using the scroll wheel or moving the camera in the Viewer and other Editors (#3324).
-- AnimationEditor : Changed the modifier key used to enable single-axis zoom has changed to <kbd>Ctrl</kbd> to allow use in conjunction with precise movement mode (<kbd>Shift</kbd>) (#3324).
 - Error handling : The Cortex exception type is now included in error messages where relevant.
-- Tools :
-  - Added generic support for precise tool adjustments by holding down <kbd>Shift</kbd> whilst adjusting tool handles (#3324).
-  - Changed the behaviour of existing precise tool handle adjustments such that the current handle position is maintained when the <kbd>Shift</kbd> key is depressed (#3324).
 - UI : Added the Gaffer version to the window title.
 - Set : Hid unused `paths` plugs from the UI, in preparation for eventual removal of the plug itself. The `filter` plug should now always be used in preference to the `paths` plug.
 - Layouts : Prevented editors pinned to a specific node from restoring with the editor pinned to an empty node set. Specific pinning is no longer saved or recalled.
-- OpenGLAttributes : Added sensible limits on attribute value plugs to prevent invalid settings.
-- Light : Moved light visualisation plugs to the compound data mechanism to allow lights to opt-in to setting a value at their location (#3407).
 - Documentation : Added examples for OSLImage and OSLObject nodes.
 - Rendering : Added the name of the render node to image metadata via the `gaffer:sourceScene` header (#2835).
 - Test app : Added `stopOnFailure` arguments.
