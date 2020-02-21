@@ -105,10 +105,6 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		static IECoreGL::ConstRenderablePtr environmentSphereSurface( IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 
-		// Spread is generally rendered as an angle, rather than in light space,
-		// as such, this should generally only be used as a uniformly scaled visualisation.
-		static IECoreGL::ConstRenderablePtr areaSpread( float spread );
-
 		static IECoreGL::ConstRenderablePtr quadWireframe( const Imath::V2f &size );
 		static IECoreGL::ConstRenderablePtr quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
 

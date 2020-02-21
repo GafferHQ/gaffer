@@ -196,6 +196,27 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 	}
 }
 
+void addAreaSpread( float spread, vector<int> &vertsPerCurve, vector<V3f> &p )
+{
+	// Simple spaced parallel arrows that diverge by 45 degrees as spread approaches 1.
+
+	static const float scale = 0.2f;
+
+	const float spreadOffset = min( 1.0f, max( 0.0f, spread ) );
+
+	// Offset the arrows from the center a little
+	const V3f bl = V3f( -0.1f, -0.1f, 0.0f );
+	const V3f tl = V3f( -0.1f, 0.1f, 0.0f );
+	const V3f br = V3f( 0.1f, -0.1f, 0.0f );
+	const V3f tr = V3f( 0.1f, 0.1f, 0.0f );
+
+	addRay( bl, bl + scale * V3f( -spreadOffset, -spreadOffset, -1.0f ).normalized(), vertsPerCurve, p );
+	addRay( tl, tl + scale * V3f( -spreadOffset, spreadOffset, -1.0f ).normalized(), vertsPerCurve, p );
+	addRay( br, br + scale * V3f( spreadOffset, -spreadOffset, -1.0f ).normalized(), vertsPerCurve, p );
+	addRay( tr, tr + scale * V3f( spreadOffset, spreadOffset, -1.0f ).normalized(), vertsPerCurve, p );
+}
+
+
 // Shaders
 
 const char *constantFragSource()
@@ -455,6 +476,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	fixedScaleOrnaments->setTransform( topTransform );
 	frustum->setTransform( topTransform );
 
+	// A shared curves primitive for ornament wireframes
+	V3fVectorDataPtr ornamentWireframePoints = new V3fVectorData();
+	IntVectorDataPtr ornamentWireframeVertsPerCurve = new IntVectorData();
+
 	if( type && type->readable() == "environment" )
 	{
 		if( drawShaded )
@@ -470,7 +495,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
 		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ) ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f ) ) );
 	}
@@ -504,10 +529,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
 			if( spread >= 0.0f )
 			{
-				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( areaSpread( spread ) ) );
+				addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 			}
 		}
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 	else if( type && type->readable() == "disk" )
 	{
@@ -523,12 +548,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
 		}
 		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
 		if( spread >= 0.0f )
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( areaSpread( spread ) ) );
+			addAreaSpread( spread, ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		}
 	}
 	else if( type && type->readable() == "cylinder" )
@@ -559,7 +584,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 	else
 	{
@@ -572,7 +597,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+	}
 
+	if( ornamentWireframePoints->readable().size() > 0 )
+	{
+		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, ornamentWireframeVertsPerCurve );
+		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, ornamentWireframePoints ) );
+		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+		ornaments->addChild( curves );
 	}
 
 	Visualisations result;
@@ -582,6 +614,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	if( !ornaments->children().empty() )
 	{
+		addWireframeCurveState( ornaments.get() );
 		result.push_back( Visualisation::createOrnament( ornaments, false ) );
 	}
 	if( !boundOrnaments->children().empty() )
@@ -892,44 +925,6 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 	}
 
 	group->setTransform( M44f().rotate( V3f( 0, M_PI / 2.0, 0 ) ) );
-
-	return group;
-}
-
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::areaSpread( float spread )
-{
-	// Simple spaced parallel arrows that diverge by 45 degrees as spread approaches 1.
-
-	IECoreGL::GroupPtr group = new IECoreGL::Group();
-	addWireframeCurveState( group.get(), 0.5f );
-	addConstantShader( group.get() );
-
-	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
-	V3fVectorDataPtr pData = new V3fVectorData;
-
-	std::vector<int> &vpc = vertsPerCurveData->writable();
-	std::vector<V3f> &p = pData->writable();
-
-	static const float scale = 0.2f;
-
-	const float spreadOffset = min( 1.0f, max( 0.0f, spread ) );
-
-	// Offset the arrows from the center a little
-	const V3f bl = V3f( -0.1f, -0.1f, 0.0f );
-	const V3f tl = V3f( -0.1f, 0.1f, 0.0f );
-	const V3f br = V3f( 0.1f, -0.1f, 0.0f );
-	const V3f tr = V3f( 0.1f, 0.1f, 0.0f );
-
-	addRay( bl, bl + scale * V3f( -spreadOffset, -spreadOffset, -1.0f ).normalized(), vpc, p );
-	addRay( tl, tl + scale * V3f( -spreadOffset, spreadOffset, -1.0f ).normalized(), vpc, p );
-	addRay( br, br + scale * V3f( spreadOffset, -spreadOffset, -1.0f ).normalized(), vpc, p );
-	addRay( tr, tr + scale * V3f( spreadOffset, spreadOffset, -1.0f ).normalized(), vpc, p );
-
-	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
-
-	group->addChild( curves );
 
 	return group;
 }
