@@ -67,6 +67,10 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:RightSpacer:section", "Top",
 	"toolbarLayout:customWidget:RightSpacer:index", -2,
 
+	"toolbarLayout:customWidget:BottomRightSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
+	"toolbarLayout:customWidget:BottomRightSpacer:index", 2,
+
 	plugs = {
 
 		"clipping" : [
@@ -130,6 +134,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
 			"label", "",
 			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:index", 1,
 
 		],
 
@@ -248,7 +253,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				GafferUI.Spacer( imath.V2i( 0, 10 ) )
+				GafferUI.Spacer( imath.V2i( 10 ), imath.V2i( 10 ) )
 
 				self.__positionLabel = GafferUI.Label()
 				self.__positionLabel._qtWidget().setFixedWidth( 90 )
@@ -265,7 +270,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__hsvLabel = GafferUI.Label()
 
-				GafferUI.Spacer( imath.V2i( 0, 10 ) )
+				GafferUI.Spacer( imath.V2i( 10 ), imath.V2i( 10 ) )
 
 		self.__pixel = imath.V2f( 0 )
 
