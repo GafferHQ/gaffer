@@ -39,6 +39,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "boost/container/small_vector.hpp"
+#include "boost/lexical_cast.hpp"
 
 using namespace std;
 using namespace IECore;
@@ -135,7 +136,7 @@ Spreadsheet::RowPlug *Spreadsheet::RowsPlug::addRow()
 {
 	// We need to use the `Dynamic` flag so that we get dirty propagation via
 	// `Plug::propagateDirtinessForParentChange()`.
-	RowPlugPtr newRow = new RowPlug( "row1", direction(), Default | Dynamic );
+	RowPlugPtr newRow = new RowPlug( "row" + boost::lexical_cast<std::string>( children().size() ), direction(), Default | Dynamic );
 	for( auto &defaultCell : CellPlug::Range( *defaultRow()->cellsPlug() ) )
 	{
 		CellPlugPtr newCell = boost::static_pointer_cast<CellPlug>(

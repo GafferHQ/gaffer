@@ -42,8 +42,10 @@
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/MetadataBinding.h"
 
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECorePython/ScopedGILLock.h"
 
@@ -57,6 +59,30 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace boost::python;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// Where a parent has dynamically changing numbers of children,
+// and no meaning is attached to their names, we want to
+// access the children by index rather than name. This is faster
+// and more readable, and opens the possibility of omitting the
+// overhead of the names entirely one day.
+/// \todo Consider an official way for GraphComponents to opt in
+/// to this behaviour.
+bool keyedByIndex( const GraphComponent *parent )
+{
+	return
+		runTimeCast<const Spreadsheet::RowsPlug>( parent ) ||
+		runTimeCast<const ArrayPlug>( parent )
+	;
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Serialisation
@@ -251,11 +277,11 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		std::string childIdentifier;
 		if( parent == m_parent && childConstructor.size() && m_protectParentNamespace )
 		{
-			childIdentifier = "__children[\"" + child->getName().string() + "\"]";
+			childIdentifier = this->childIdentifier( "__children", it );
 		}
 		else
 		{
-			childIdentifier = parentIdentifier + "[\"" + child->getName().string() + "\"]";
+			childIdentifier = this->childIdentifier( parentIdentifier, it );
 		}
 
 		if( childConstructor.size() )
@@ -288,31 +314,85 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 
 std::string Serialisation::identifier( const Gaffer::GraphComponent *graphComponent ) const
 {
-	std::string result;
-	while( graphComponent )
+	if( !graphComponent )
 	{
-		const GraphComponent *parent = graphComponent->parent();
-		if( parent == m_parent )
-		{
-			if( m_filter && !m_filter->contains( graphComponent ) )
-			{
-				return "";
-			}
-			const Serialiser *parentSerialiser = acquireSerialiser( parent );
-			if( m_protectParentNamespace && parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
-			{
-				return "__children[\"" + graphComponent->getName().string() + "\"]" + result;
-			}
-			else
-			{
-				return m_parentName + "[\"" + graphComponent->getName().string() + "\"]" + result;
-			}
-		}
-		result = "[\"" + graphComponent->getName().string() + "\"]" + result;
-		graphComponent = parent;
+		return "";
 	}
 
-	return "";
+	std::string parentIdentifier;
+	const GraphComponent *parent = graphComponent->parent();
+	if( parent == m_parent )
+	{
+		if( m_filter && !m_filter->contains( graphComponent ) )
+		{
+			return "";
+		}
+		const Serialiser *parentSerialiser = acquireSerialiser( parent );
+		if( m_protectParentNamespace && parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
+		{
+			parentIdentifier = "__children";
+		}
+		else
+		{
+			parentIdentifier = m_parentName;
+		}
+	}
+	else
+	{
+		parentIdentifier = identifier( parent );
+	}
+
+	return childIdentifier( parentIdentifier, graphComponent );
+}
+
+std::string Serialisation::childIdentifier( const std::string &parentIdentifier, const Gaffer::GraphComponent *child ) const
+{
+	if( parentIdentifier.empty() )
+	{
+		return "";
+	}
+
+	const GraphComponent *parent = child->parent();
+	std::string result = parentIdentifier;
+	if( keyedByIndex( parent ) )
+	{
+		result += "[";
+		result += boost::lexical_cast<std::string>(
+			std::find( parent->children().begin(), parent->children().end(), child ) - parent->children().begin()
+		);
+		result += "]";
+	}
+	else
+	{
+		result += "[\"";
+		result += child->getName().string();
+		result += "\"]";
+	}
+	return result;
+}
+
+std::string Serialisation::childIdentifier( const std::string &parentIdentifier, Gaffer::GraphComponent::ChildIterator child ) const
+{
+	if( parentIdentifier.empty() )
+	{
+		return "";
+	}
+
+	const GraphComponent *parent = (*child)->parent();
+	std::string result = parentIdentifier;
+	if( keyedByIndex( parent ) )
+	{
+		result += "[";
+		result += boost::lexical_cast<std::string>( child - parent->children().begin() );
+		result += "]";
+	}
+	else
+	{
+		result += "[\"";
+		result += (*child)->getName().string();
+		result += "\"]";
+	}
+	return result;
 }
 
 void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser )

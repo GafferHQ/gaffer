@@ -174,19 +174,31 @@ Build
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
 
-0.55.x.x (relative to 0.55.4.1)
+0.55.5.0 (relative to 0.55.4.1)
 ========
 
 Improvements
 ------------
 
 - Viewer : Added overscan display when looking through a suitably configured render camera.
-- Viewer/InteractiveRender : Fixed bug that caused unnecessary attribute updates when changing globals.
+- Spreadsheet : Improved performance when constructing large Spreadsheets.
 
 Fixes
 -----
 
+- Spreadsheet :
+	- Fixed bug which caused incorrect column widths after deleting a column (#3630, #3631).
+	- Fixed bug that caused a load failure if a row had been deleted prior to saving.
+- Viewer/InteractiveRender : Fixed bug that caused unnecessary attribute updates when changing globals.
 - GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441).
+- MenuButton : Fixed bug that caused buttons to remain highlighted after their menu was closed.
+- StringPlug : Added compatibility for loading files saved in a future Gaffer 0.57.0.0 release.
+
+API
+---
+
+- Spreadsheet : Added Python binding for `RowsPlug.defaultRow()`.
+- Serialisation : Added `childIdentifier()` method.
 
 0.55.4.1 (relative to 0.55.4.0)
 ========
@@ -460,13 +472,15 @@ Breaking Changes
 - CopyOptions : Renamed "names" plug to "options". A config file will automatically convert old scripts on load(#3389).
 - BranchCreator : Added virtual method (#3406).
 
-0.54.2.x (relative to 0.54.2.6)
+0.54.2.7 (relative to 0.54.2.6)
 ========
 
 Fixes
 -----
 
 - GraphComponent : Fixed Range and RecursiveRange iterators so that they correctly filter classes defined in Python (#3441).
+- MenuButton : Fixed bug that caused buttons to remain highlighted after their menu was closed.
+- StringPlug : Added compatibility for loading files saved in a future Gaffer 0.57.0.0 release.
 
 0.54.2.6 (relative to 0.54.2.5)
 ========

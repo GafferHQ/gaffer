@@ -68,6 +68,11 @@ GraphComponentPtr parent( const Serialisation &serialisation )
 	return const_cast<GraphComponent *>( serialisation.parent() );
 }
 
+std::string childIdentifier( const Serialisation &serialisation, const std::string &parentIdentifier, const GraphComponent *child )
+{
+	return serialisation.childIdentifier( parentIdentifier, child );
+}
+
 } // namespace
 
 void GafferModule::bindSerialisation()
@@ -86,6 +91,7 @@ void GafferModule::bindSerialisation()
 		)
 		.def( "parent", &parent )
 		.def( "identifier", &Serialisation::identifier )
+		.def( "childIdentifier", &childIdentifier )
 		.def( "result", &Serialisation::result )
 		.def( "modulePath", (std::string (*)( object & ))&Serialisation::modulePath )
 		.staticmethod( "modulePath" )
