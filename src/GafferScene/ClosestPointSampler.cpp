@@ -34,24 +34,70 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "PrimitiveSamplerBinding.h"
-
 #include "GafferScene/ClosestPointSampler.h"
-#include "GafferScene/PrimitiveSampler.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
+using namespace Imath;
+using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
-using namespace GafferBindings;
 using namespace GafferScene;
 
-void GafferSceneModule::bindPrimitiveSampler()
+GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ClosestPointSampler );
+
+size_t ClosestPointSampler::g_firstPlugIndex = 0;
+
+ClosestPointSampler::ClosestPointSampler( const std::string &name )
+	:	PrimitiveSampler( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
 
-	GafferBindings::DependencyNodeClass<GafferScene::PrimitiveSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::ClosestPointSampler>();
-
+	addChild( new StringPlug( "position", Plug::In, "P" ) );
 }
+
+ClosestPointSampler::~ClosestPointSampler()
+{
+}
+
+Gaffer::StringPlug *ClosestPointSampler::positionPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *ClosestPointSampler::positionPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+bool ClosestPointSampler::affectsSamplingFunction( const Gaffer::Plug *input ) const
+{
+	return PrimitiveSampler::affectsSamplingFunction( input ) || input == positionPlug();
+}
+
+void ClosestPointSampler::hashSamplingFunction( IECore::MurmurHash &h ) const
+{
+	PrimitiveSampler::hashSamplingFunction( h );
+	positionPlug()->hash( h );
+}
+
+PrimitiveSampler::SamplingFunction ClosestPointSampler::computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const
+{
+	const std::string position = positionPlug()->getValue();
+	if( position.empty() )
+	{
+		return SamplingFunction();
+	}
+
+	auto it = primitive->variables.find( position );
+	if( it == primitive->variables.end() )
+	{
+		throw IECore::Exception( "No primitive variable named \"" + position + "\"" );
+	}
+
+	interpolation = it->second.interpolation;
+	PrimitiveVariable::IndexedView<V3f> positionView( it->second );
+
+	return [positionView] ( const PrimitiveEvaluator &evaluator, size_t index, const M44f &transform, PrimitiveEvaluator::Result &result ) {
+		return evaluator.closestPoint( positionView[index] * transform, &result );
+	};
+}
+

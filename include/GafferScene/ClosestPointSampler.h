@@ -34,24 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_CLOSESTPOINTSAMPLER_H
+#define GAFFERSCENE_CLOSESTPOINTSAMPLER_H
 
-#include "PrimitiveSamplerBinding.h"
-
-#include "GafferScene/ClosestPointSampler.h"
 #include "GafferScene/PrimitiveSampler.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveSampler()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::PrimitiveSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::ClosestPointSampler>();
+class GAFFERSCENE_API ClosestPointSampler : public PrimitiveSampler
+{
 
-}
+	public :
+
+		ClosestPointSampler( const std::string &name = defaultName<ClosestPointSampler>() );
+		~ClosestPointSampler() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ClosestPointSampler, ClosestPointSamplerTypeId, PrimitiveSampler );
+
+		Gaffer::StringPlug *positionPlug();
+		const Gaffer::StringPlug *positionPlug() const;
+
+	protected :
+
+		bool affectsSamplingFunction( const Gaffer::Plug *input ) const override;
+		void hashSamplingFunction( IECore::MurmurHash &h ) const override;
+		SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( ClosestPointSampler )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_CLOSESTPOINTSAMPLER_H

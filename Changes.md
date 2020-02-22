@@ -1,6 +1,11 @@
 0.57.x.x
 ========
 
+Features
+--------
+
+- ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
+
 API
 ---
 
