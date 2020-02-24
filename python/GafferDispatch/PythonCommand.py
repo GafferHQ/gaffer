@@ -51,7 +51,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 		# Turn off automatic substitutions for the command, since it's a pain
 		# to have to manually escape things, and the context is available
 		# directly anyway.
-		self["command"] = Gaffer.StringPlug( substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
+		self["command"] = Gaffer.StringPlug( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
 		self["variables"] = Gaffer.CompoundDataPlug()
 		self["sequence"] = Gaffer.BoolPlug()
 

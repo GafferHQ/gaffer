@@ -245,14 +245,14 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		n = Gaffer.Node()
 		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
-		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions )
+		self.assertEqual( n["s"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions )
 
 		# adding substitutions should affect the plug
 		p.userData()["gaffer"] = IECore.CompoundObject( {
-			"substitutions" : IECore.IntData( Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions ),
+			"substitutions" : IECore.IntData( IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions ),
 		} )
 		h.setupPlug( n )
-		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+		self.assertEqual( n["s"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
 
 		# make sure connections are maintained as well
 		nn = Gaffer.Node()
@@ -260,10 +260,10 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		n["s"].setInput( nn["driver"] )
 		# we're forcing a re-creation of the plug because substitutions have changed
 		p.userData()["gaffer"] = IECore.CompoundObject( {
-			"substitutions" : IECore.IntData( Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.VariableSubstitutions ),
+			"substitutions" : IECore.IntData( IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.VariableSubstitutions ),
 		} )
 		h.setupPlug( n )
-		self.assertEqual( n["s"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.VariableSubstitutions )
+		self.assertEqual( n["s"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.VariableSubstitutions )
 		self.assertEqual( n["s"].getInput(), nn["driver"] )
 
 if __name__ == "__main__":
