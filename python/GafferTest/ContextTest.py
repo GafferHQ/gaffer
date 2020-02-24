@@ -296,13 +296,13 @@ class ContextTest( GafferTest.TestCase ) :
 		c["a"] = "apple"
 		c["b"] = "bear"
 
-		self.assertEqual( c.substitute( "~", c.Substitutions.AllSubstitutions & ~c.Substitutions.TildeSubstitutions ), "~" )
-		self.assertEqual( c.substitute( "#", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "#" )
-		self.assertEqual( c.substitute( "$a/${b}", c.Substitutions.AllSubstitutions & ~c.Substitutions.VariableSubstitutions ), "$a/${b}" )
-		self.assertEqual( c.substitute( "\\", c.Substitutions.AllSubstitutions & ~c.Substitutions.EscapeSubstitutions ), "\\" )
-		self.assertEqual( c.substitute( "\\$a", c.Substitutions.AllSubstitutions & ~c.Substitutions.EscapeSubstitutions ), "\\apple" )
-		self.assertEqual( c.substitute( "#${a}", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "#apple" )
-		self.assertEqual( c.substitute( "#${a}", c.Substitutions.NoSubstitutions ), "#${a}" )
+		self.assertEqual( c.substitute( "~", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.TildeSubstitutions ), "~" )
+		self.assertEqual( c.substitute( "#", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions ), "#" )
+		self.assertEqual( c.substitute( "$a/${b}", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.VariableSubstitutions ), "$a/${b}" )
+		self.assertEqual( c.substitute( "\\", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.EscapeSubstitutions ), "\\" )
+		self.assertEqual( c.substitute( "\\$a", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.EscapeSubstitutions ), "\\apple" )
+		self.assertEqual( c.substitute( "#${a}", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions ), "#apple" )
+		self.assertEqual( c.substitute( "#${a}", IECore.StringAlgo.Substitutions.NoSubstitutions ), "#${a}" )
 
 	def testFrameAndVariableSubstitutionsAreDifferent( self ) :
 
@@ -311,31 +311,11 @@ class ContextTest( GafferTest.TestCase ) :
 
 		# Turning off variable substitutions should have no effect on '#' substitutions.
 		self.assertEqual( c.substitute( "###.$frame" ), "003.3" )
-		self.assertEqual( c.substitute( "###.$frame", c.Substitutions.AllSubstitutions & ~c.Substitutions.VariableSubstitutions ), "003.$frame" )
+		self.assertEqual( c.substitute( "###.$frame", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.VariableSubstitutions ), "003.$frame" )
 
 		# Turning off '#' substitutions should have no effect on variable substitutions.
 		self.assertEqual( c.substitute( "###.$frame" ), "003.3" )
-		self.assertEqual( c.substitute( "###.$frame", c.Substitutions.AllSubstitutions & ~c.Substitutions.FrameSubstitutions ), "###.3" )
-
-	def testSubstitutions( self ) :
-
-		c = Gaffer.Context
-		self.assertEqual( c.substitutions( "a"), c.Substitutions.NoSubstitutions )
-		self.assertEqual( c.substitutions( "~/something"), c.Substitutions.TildeSubstitutions )
-		self.assertEqual( c.substitutions( "$a"), c.Substitutions.VariableSubstitutions )
-		self.assertEqual( c.substitutions( "${a}"), c.Substitutions.VariableSubstitutions )
-		self.assertEqual( c.substitutions( "###"), c.Substitutions.FrameSubstitutions )
-		self.assertEqual( c.substitutions( "\#"), c.Substitutions.EscapeSubstitutions )
-		self.assertEqual( c.substitutions( "${a}.###"), c.Substitutions.VariableSubstitutions | c.Substitutions.FrameSubstitutions )
-
-	def testHasSubstitutions( self ) :
-
-		c = Gaffer.Context()
-		self.assertFalse( c.hasSubstitutions( "a" ) )
-		self.assertTrue( c.hasSubstitutions( "~something" ) )
-		self.assertTrue( c.hasSubstitutions( "$a" ) )
-		self.assertTrue( c.hasSubstitutions( "${a}" ) )
-		self.assertTrue( c.hasSubstitutions( "###" ) )
+		self.assertEqual( c.substitute( "###.$frame", IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions ), "###.3" )
 
 	def testInternedStringVectorDataSubstitutions( self ) :
 
@@ -580,9 +560,6 @@ class ContextTest( GafferTest.TestCase ) :
 		# the extra slashes are escaping for the python interpreter.
 		self.assertEqual( c.substitute( "\\\\" ), "\\" )
 		self.assertEqual( c.substitute( "\\" ), "" )
-
-		self.assertTrue( c.hasSubstitutions( "\\" ) ) # must return true, because escaping affects substitution
-		self.assertTrue( c.hasSubstitutions( "\\\\" ) ) # must return true, because escaping affects substitution
 
 	def testRemove( self ) :
 

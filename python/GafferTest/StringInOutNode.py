@@ -39,7 +39,7 @@ import Gaffer
 
 class StringInOutNode( Gaffer.ComputeNode ) :
 
-	def __init__( self, name="StringInOutNode", defaultValue="", substitutions = Gaffer.Context.Substitutions.AllSubstitutions ) :
+	def __init__( self, name="StringInOutNode", defaultValue="", substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions ) :
 
 		Gaffer.ComputeNode.__init__( self, name )
 
