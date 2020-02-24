@@ -421,7 +421,13 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 
 	for( const auto &p : process->children )
 	{
-		historyWalk( p.get(), scenePlugChildName, parent );
+		// Parents may spawn other processes in support of the requested plug.
+		// We don't want these to show up in history output, so we only include
+		// ones that are directly in service of the requested plug.
+		if( p->plug->parent<ScenePlug>() && p->plug->getName() == scenePlugChildName )
+		{
+			historyWalk( p.get(), scenePlugChildName, parent );
+		}
 	}
 
 	return result;
