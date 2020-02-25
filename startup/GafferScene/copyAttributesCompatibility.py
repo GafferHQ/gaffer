@@ -63,9 +63,11 @@ def __copyAttributesInGetItem( originalGetItem ) :
 		if key in ( "in0", 0 ) :
 			# First element of old ArrayPlug - redirect to self.
 			return self
-		else :
+		elif key in ( "in1", 1 ) :
 			# Second element of old ArrayPlug - redirect to source.
 			return self.parent()["source"]
+
+		return originalGetItem( self, key )
 
 	return getItem
 
