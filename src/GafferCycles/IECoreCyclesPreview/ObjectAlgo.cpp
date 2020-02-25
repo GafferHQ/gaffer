@@ -110,7 +110,7 @@ ccl::Object *convert( const IECore::Object *object, const std::string &nodeName,
 	return it->second.converter( object, nodeName, scene );
 }
 
-ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene )
 {
 	if( samples.empty() )
 	{
@@ -135,7 +135,7 @@ ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const 
 	}
 	if( it->second.motionConverter )
 	{
-		return it->second.motionConverter( samples, nodeName, scene );
+		return it->second.motionConverter( samples, times, frameIdx, nodeName, scene );
 	}
 	else
 	{

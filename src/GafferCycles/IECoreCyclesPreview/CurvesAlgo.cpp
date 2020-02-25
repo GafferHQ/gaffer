@@ -39,6 +39,7 @@
 
 #include "IECoreScene/CurvesPrimitive.h"
 
+#include "IECore/Interpolator.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
@@ -142,20 +143,80 @@ ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::stri
 	return cobject;
 }
 
-ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene )
 {
-	ccl::Mesh *cmesh = convertCommon(curves[0]);
+	const int numSamples = curves.size();
+
+	ccl::Mesh *cmesh = nullptr;
+	std::vector<const IECoreScene::CurvesPrimitive *> samples;
+	IECoreScene::CurvesPrimitivePtr midMesh;
+
+	if( frameIdx != -1 ) // Start/End frames
+	{
+		cmesh = convertCommon(curves[frameIdx]);
+
+		if( numSamples == 2 ) // Make sure we have 3 samples
+		{
+			const V3fVectorData *p1 = curves[0]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			const V3fVectorData *p2 = curves[1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			if( p1 && p2 )
+			{
+				midMesh = curves[frameIdx]->copy();
+				V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+				IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
+
+				samples.push_back( midMesh.get() );
+			}
+		}
+
+		for( int i = 0; i < numSamples; ++i )
+		{
+			if( i == frameIdx )
+				continue;
+			samples.push_back( curves[i] );
+		}
+	}
+	else if( numSamples % 2 ) // Odd numSamples
+	{
+		int _frameIdx = ( numSamples+1 ) / 2;
+		cmesh = convertCommon(curves[_frameIdx]);
+
+		for( int i = 0; i < numSamples; ++i )
+		{
+			if( i == _frameIdx )
+				continue;
+			samples.push_back( curves[i] );
+		}
+	}
+	else // Even numSamples
+	{
+		int _frameIdx = numSamples / 2 - 1;
+		const V3fVectorData *p1 = curves[_frameIdx]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		const V3fVectorData *p2 = curves[_frameIdx+1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		if( p1 && p2 )
+		{
+			midMesh = curves[_frameIdx]->copy();
+			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
+			cmesh = convertCommon( midMesh.get() );
+		}
+
+		for( int i = 0; i < numSamples; ++i )
+		{
+			samples.push_back( curves[i] );
+		}
+	}
 
 	// Add the motion position/normal attributes
-	cmesh->motion_steps = curves.size();
-	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
+	cmesh->use_motion_blur = true;
+	cmesh->motion_steps = samples.size() + 1;
+	ccl::Attribute *attr_mP = cmesh->curve_attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
 
-	// First sample has already been obtained
-	for( size_t i = 1; i < curves.size(); ++i )
+	for( size_t i = 0; i < samples.size(); ++i )
 	{
-		PrimitiveVariableMap::const_iterator pIt = curves[i]->variables.find( "P" );
-		if( pIt != curves[i]->variables.end() )
+		PrimitiveVariableMap::const_iterator pIt = samples[i]->variables.find( "P" );
+		if( pIt != samples[i]->variables.end() )
 		{
 			const V3fVectorData *p = runTimeCast<const V3fVectorData>( pIt->second.data.get() );
 			if( p )
@@ -164,7 +225,7 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
 				{
 					// Vertex positions
-					const V3fVectorData *p = curves[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+					const V3fVectorData *p = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 					const std::vector<V3f> &points = p->readable();
 					size_t numVerts = p->readable().size();
 
@@ -175,12 +236,14 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 				{
 					msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
 					cmesh->attributes.remove(attr_mP);
+					cmesh->motion_steps = 0;
 				}
 			}
 			else
 			{
 				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
 				cmesh->attributes.remove(attr_mP);
+				cmesh->motion_steps = 0;
 			}
 		}
 	}

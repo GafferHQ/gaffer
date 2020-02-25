@@ -40,6 +40,7 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 
+#include "IECore/Interpolator.h"
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
@@ -680,12 +681,92 @@ ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string 
 	return cobject;
 }
 
-ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene )
 {
-	ccl::Mesh *cmesh = convertCommon(meshes[0]);
+	const int numSamples = meshes.size();
+
+	ccl::Mesh *cmesh = nullptr;
+	std::vector<const IECoreScene::MeshPrimitive *> samples;
+	IECoreScene::MeshPrimitivePtr midMesh;
+
+	if( frameIdx != -1 ) // Start/End frames
+	{
+		cmesh = convertCommon(meshes[frameIdx]);
+
+		if( numSamples == 2 ) // Make sure we have 3 samples
+		{
+			const V3fVectorData *p1 = meshes[0]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			const V3fVectorData *p2 = meshes[1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			if( p1 && p2 )
+			{
+				midMesh = meshes[frameIdx]->copy();
+				V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+				IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
+
+				PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
+				if( normal( meshes[0], nInterpolation ) )
+				{
+					const V3fVectorData *n1 = meshes[0]->variableData<V3fVectorData>( "N", nInterpolation );
+					const V3fVectorData *n2 = meshes[1]->variableData<V3fVectorData>( "N", nInterpolation );
+					V3fVectorData *midN = midMesh->variableData<V3fVectorData>( "N", nInterpolation );
+					IECore::LinearInterpolator<std::vector<V3f>>()( n1->readable(), n2->readable(), 0.5f, midN->writable() );
+				}
+
+				samples.push_back( midMesh.get() );
+			}
+		}
+
+		for( int i = 0; i < numSamples; ++i )
+		{
+			if( i == frameIdx )
+				continue;
+			samples.push_back( meshes[i] );
+		}
+	}
+	else if( numSamples % 2 ) // Odd numSamples
+	{
+		int _frameIdx = ( numSamples+1 ) / 2;
+		cmesh = convertCommon(meshes[_frameIdx]);
+
+		for( int i = 0; i < numSamples; ++i )
+		{
+			if( i == _frameIdx )
+				continue;
+			samples.push_back( meshes[i] );
+		}
+	}
+	else // Even numSamples
+	{
+		int _frameIdx = numSamples / 2 - 1;
+		const V3fVectorData *p1 = meshes[_frameIdx]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		const V3fVectorData *p2 = meshes[_frameIdx+1]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		if( p1 && p2 )
+		{
+			midMesh = meshes[_frameIdx]->copy();
+			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
+
+			PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
+			if( normal( meshes[0], nInterpolation ) )
+			{
+				const V3fVectorData *n1 = meshes[0]->variableData<V3fVectorData>( "N", nInterpolation );
+				const V3fVectorData *n2 = meshes[1]->variableData<V3fVectorData>( "N", nInterpolation );
+				V3fVectorData *midN = midMesh->variableData<V3fVectorData>( "N", nInterpolation );
+				IECore::LinearInterpolator<std::vector<V3f>>()( n1->readable(), n2->readable(), 0.5f, midN->writable() );
+			}
+
+			cmesh = convertCommon( midMesh.get() );
+		}
+
+		for( int i = 0; i < numSamples; ++i )
+		{
+			samples.push_back( meshes[i] );
+		}
+	}
 
 	// Add the motion position/normal attributes
-	cmesh->motion_steps = meshes.size();
+	cmesh->use_motion_blur = true;
+	cmesh->motion_steps = samples.size() + 1;
 	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
 	ccl::Attribute *attr_mN = nullptr;
@@ -694,7 +775,7 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	{
 		if( nInterpolation == PrimitiveVariable::Uniform )
 		{
-			msg( Msg::Warning, "MeshAlgo", "Variable \"N\" has unsupported interpolation type \"Uniform\" for motion steps - not generating normals." );
+			msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"N\" has unsupported interpolation type \"Uniform\" for motion steps - not generating normals." );
 		}
 		else
 		{
@@ -702,11 +783,10 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 		}
 	}
 
-	// First sample has already been obtained, so we start at 1
-	for( size_t i = 1; i < meshes.size(); ++i )
+	for( size_t i = 0; i < samples.size(); ++i )
 	{
-		PrimitiveVariableMap::const_iterator pIt = meshes[i]->variables.find( "P" );
-		if( pIt != meshes[i]->variables.end() )
+		PrimitiveVariableMap::const_iterator pIt = samples[i]->variables.find( "P" );
+		if( pIt != samples[i]->variables.end() )
 		{
 			const V3fVectorData *p = runTimeCast<const V3fVectorData>( pIt->second.data.get() );
 			if( p )
@@ -715,7 +795,7 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
 				{
 					// Vertex positions
-					const V3fVectorData *p = meshes[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+					const V3fVectorData *p = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 					const std::vector<V3f> &points = p->readable();
 					size_t numVerts = p->readable().size();
 
@@ -726,20 +806,22 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 				{
 					msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
 					cmesh->attributes.remove(attr_mP);
+					cmesh->motion_steps = 0;
 				}
 			}
 			else
 			{
 				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
 				cmesh->attributes.remove(attr_mP);
+				cmesh->motion_steps = 0;
 			}
 		}
 
 		if( attr_mN )
 		{
-			if( const V3fVectorData *normals = normal( meshes[i], nInterpolation ) )
+			if( const V3fVectorData *normals = normal( samples[i], nInterpolation ) )
 			{
-				convertN( meshes[i], normals, attr_mN, nInterpolation );
+				convertN( samples[i], normals, attr_mN, nInterpolation );
 			}
 		}
 	}
