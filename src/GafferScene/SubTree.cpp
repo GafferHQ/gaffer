@@ -287,7 +287,7 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, SourceMod
 		// mode so that we output an empty scene. This guarantees that we will never
 		// request an invalid source location from our input, provided that we are not
 		// asked for an invalid output location.
-		if( !SceneAlgo::exists( inPlug(), result ) )
+		if( !inPlug()->exists( result ) )
 		{
 			sourceMode = EmptyRoot;
 		}

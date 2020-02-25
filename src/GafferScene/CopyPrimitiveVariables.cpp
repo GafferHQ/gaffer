@@ -120,11 +120,7 @@ void CopyPrimitiveVariables::hashProcessedObject( const ScenePath &path, const G
 		ScenePlug::stringToPath( sourceLocation, *sourceLocationPath );
 	}
 
-	/// \todo Consider the performance implications of calling `exists()` here.
-	/// Perhaps we need to introduce an element of caching via
-	/// a `ScenePlug::existsPlug()`, the computation of which can depend on the
-	/// (most likely cached) computation of the ancestor location.
-	if( !SceneAlgo::exists( sourcePlug(), sourceLocationPath ? *sourceLocationPath : path ) )
+	if( !sourcePlug()->exists( sourceLocationPath ? *sourceLocationPath : path ) )
 	{
 		h = inPlug()->objectPlug()->hash();
 		return;
@@ -165,7 +161,7 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 		ScenePlug::stringToPath( sourceLocation, *sourceLocationPath );
 	}
 
-	if( !SceneAlgo::exists( sourcePlug(), sourceLocationPath ? *sourceLocationPath : path ) )
+	if( !sourcePlug()->exists( sourceLocationPath ? *sourceLocationPath : path ) )
 	{
 		return inputObject;
 	}

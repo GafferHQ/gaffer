@@ -199,7 +199,7 @@ void SourceSet::updateSourceNode()
 		Context::Scope scope( m_context.get() );
 		try
 		{
-			if( !path.empty() && SceneAlgo::exists( m_scenePlug.get(), path ) )
+			if( !path.empty() && m_scenePlug->exists( path ) )
 			{
 				if( ScenePlug *sourcePlug = SceneAlgo::source( m_scenePlug.get(), path ) )
 				{

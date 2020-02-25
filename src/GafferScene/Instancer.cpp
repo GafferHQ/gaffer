@@ -432,7 +432,7 @@ class Instancer::EngineData : public Data
 			for( const auto &root : *rootStrings )
 			{
 				ScenePlug::stringToPath( root, path );
-				if( !SceneAlgo::exists( prototypes, path ) )
+				if( !prototypes->exists( path ) )
 				{
 					throw IECore::Exception( boost::str( boost::format( "Prototype root \"%1%\" does not exist in the `prototypes` scene" ) % root ) );
 				}

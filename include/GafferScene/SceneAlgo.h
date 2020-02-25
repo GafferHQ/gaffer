@@ -74,9 +74,7 @@ class ShaderTweaks;
 namespace SceneAlgo
 {
 
-/// Returns true if the specified location exists within the scene, and false otherwise.
-/// This operates by traversing the path from the root, ensuring that each location includes
-/// the next path element within its child names.
+/// \deprecated Use `ScenePlug::exists()` instead.
 GAFFERSCENE_API bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Returns true if the specified location is visible, and false otherwise.

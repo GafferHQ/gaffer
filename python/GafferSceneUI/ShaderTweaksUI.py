@@ -160,7 +160,7 @@ def _pathsFromSelection( plugValueWidget ) :
 	paths = paths.paths() if paths else []
 
 	with plugValueWidget.getContext() :
-		paths = [ p for p in paths if GafferScene.SceneAlgo.exists( node["in"], p ) ]
+		paths = [ p for p in paths if node["in"].exists( p ) ]
 
 	return paths
 

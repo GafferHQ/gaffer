@@ -1296,7 +1296,7 @@ class SceneView::Camera : public boost::signals::trackable
 				{
 					ScenePlug::ScenePath cameraPath;
 					ScenePlug::stringToPath( cameraPathString, cameraPath );
-					if( !SceneAlgo::exists( scenePlug(), cameraPath ) )
+					if( !scenePlug()->exists( cameraPath ) )
 					{
 						throw IECore::Exception( "Camera \"" + cameraPathString + "\" does not exist" );
 					}

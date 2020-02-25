@@ -175,7 +175,7 @@ void Duplicate::hash( const ValuePlug *output, const Context *context, IECore::M
 	{
 		ScenePath target;
 		ScenePlug::stringToPath( targetPlug()->getValue(), target );
-		if( !SceneAlgo::exists( inPlug(), target ) )
+		if( !inPlug()->exists( target ) )
 		{
 			h = childNamesPlug()->defaultValue()->Object::hash();
 			return;
@@ -209,7 +209,7 @@ void Duplicate::compute( ValuePlug *output, const Context *context ) const
 		// Get the path to our target, and check it exists.
 		ScenePath target;
 		ScenePlug::stringToPath( targetPlug()->getValue(), target );
-		if( !SceneAlgo::exists( inPlug(), target ) )
+		if( !inPlug()->exists( target ) )
 		{
 			output->setToDefault();
 			return;
