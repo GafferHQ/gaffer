@@ -185,6 +185,7 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// getValue() directly.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		/// Returns the bound for the specified location.
 		Imath::Box3f bound( const ScenePath &scenePath ) const;
 		/// Returns the local transform at the specified scene path.
 		Imath::M44f transform( const ScenePath &scenePath ) const;
@@ -222,11 +223,36 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash setHash( const IECore::InternedString &setName ) const;
 		//@}
 
+		/// Returns true if the specified location exists. This is achieved
+		/// by querying `childNames()` at all ancestor locations, but with
+		/// significantly better performance than is achievable via the public
+		/// API alone.
+		///
+		/// > Note : It is a programming error to trigger a compute for a
+		/// > location which does not exist.
+		bool exists( const ScenePath &scenePath ) const;
+		/// As above, but for the location specified by the current context.
+		bool exists() const;
+
 		/// Utility function to convert a string into a path by splitting on '/'.
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
+
+	private :
+
+		// Private plugs that are used to implement the `exists()` method.
+		// Values for these are computed automatically by SceneNode, hence
+		// the friendship.
+
+		friend class SceneNode;
+
+		Gaffer::BoolPlug *existsPlug();
+		const Gaffer::BoolPlug *existsPlug() const;
+
+		Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug();
+		const Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug() const;
 
 };
 

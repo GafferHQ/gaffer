@@ -139,6 +139,24 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
+	addChild(
+		new BoolPlug(
+			"__exists",
+			direction,
+			true,
+			childFlags
+		)
+	);
+
+	addChild(
+		new InternedStringVectorDataPlug(
+			"__sortedChildNames",
+			direction,
+			new IECore::InternedStringVectorData(),
+			childFlags
+		)
+	);
+
 }
 
 ScenePlug::~ScenePlug()
@@ -151,7 +169,7 @@ bool ScenePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return children().size() != 8;
+	return children().size() != 10;
 }
 
 Gaffer::PlugPtr ScenePlug::createCounterpart( const std::string &name, Direction direction ) const
@@ -252,6 +270,26 @@ const Gaffer::PathMatcherDataPlug *ScenePlug::setPlug() const
 	return getChild<PathMatcherDataPlug>( 7 );
 }
 
+Gaffer::BoolPlug *ScenePlug::existsPlug()
+{
+	return getChild<BoolPlug>( 8 );
+}
+
+const Gaffer::BoolPlug *ScenePlug::existsPlug() const
+{
+	return getChild<BoolPlug>( 8 );
+}
+
+Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug()
+{
+	return getChild<InternedStringVectorDataPlug>( 9 );
+}
+
+const Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug() const
+{
+	return getChild<InternedStringVectorDataPlug>( 9 );
+}
+
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context )
 	:	EditableScope( context )
 {
@@ -329,6 +367,17 @@ ScenePlug::GlobalScope::GlobalScope( const Gaffer::ThreadState &threadState )
 	remove( Filter::inputSceneContextName );
 	remove( scenePathContextName );
 	remove( setNameContextName );
+}
+
+bool ScenePlug::exists() const
+{
+	return existsPlug()->getValue();
+}
+
+bool ScenePlug::exists( const ScenePath &scenePath ) const
+{
+	PathScope scope( Context::current(), scenePath );
+	return existsPlug()->getValue();
 }
 
 Imath::Box3f ScenePlug::bound( const ScenePath &scenePath ) const
