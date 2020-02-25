@@ -725,7 +725,7 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	}
 	else if( numSamples % 2 ) // Odd numSamples
 	{
-		int _frameIdx = ( numSamples+1 ) / 2;
+		int _frameIdx = numSamples / 2;
 		cmesh = convertCommon(meshes[_frameIdx]);
 
 		for( int i = 0; i < numSamples; ++i )
