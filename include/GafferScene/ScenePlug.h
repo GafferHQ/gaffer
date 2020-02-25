@@ -71,26 +71,25 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// child plugs.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// The plug used to pass the bounding box of the current node in
+		/// The plug used to pass the bounding box of the current location in
 		/// the scene graph. The bounding box is supplied /without/ the
 		/// transform applied.
 		Gaffer::AtomicBox3fPlug *boundPlug();
 		const Gaffer::AtomicBox3fPlug *boundPlug() const;
-		/// The plug used to pass the transform for the current node.
+		/// The plug used to pass the transform for the current location.
 		Gaffer::M44fPlug *transformPlug();
 		const Gaffer::M44fPlug *transformPlug() const;
-		/// The plug used to pass the attribute state for the current node.
-		/// This is represented as a collection of IECore::StateRenderables.
+		/// The plug used to pass the attribute state for the current location.
 		Gaffer::CompoundObjectPlug *attributesPlug();
 		const Gaffer::CompoundObjectPlug *attributesPlug() const;
-		/// The plug used to pass the object for the current node.
+		/// The plug used to pass the object for the current location.
 		Gaffer::ObjectPlug *objectPlug();
 		const Gaffer::ObjectPlug *objectPlug() const;
-		/// The plug used to pass the names of the child nodes of the current node
-		/// in the scene graph.
+		/// The plug used to pass the names of the child locations of the current
+		/// location in the scene graph.
 		Gaffer::InternedStringVectorDataPlug *childNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *childNamesPlug() const;
-		/// The plug used to pass renderer options including displays etc,
+		/// The plug used to pass renderer options including output etc,
 		/// represented as a CompoundObject. Note that this is not sensitive
 		/// to the "scene:path" context entry.
 		Gaffer::CompoundObjectPlug *globalsPlug();
