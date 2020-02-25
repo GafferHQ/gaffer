@@ -3938,6 +3938,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
+#ifndef WITH_CYCLES_OPENVDB
+			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
+			{
+				return nullptr;
+			}
+#endif
 			Instance instance = m_instanceCache->get( object, attributes, name );
 
 			ObjectInterfacePtr result = new CyclesObject( instance, m_frame );
@@ -3951,7 +3957,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
-
+#ifndef WITH_CYCLES_OPENVDB
+			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
+			{
+				return nullptr;
+			}
+#endif
 			int frameIdx = -1;
 			if( m_scene->camera->motion_position == ccl::Camera::MOTION_POSITION_START )
 			{
