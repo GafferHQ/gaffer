@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import functools
 import unittest
 import weakref
 
@@ -107,6 +108,52 @@ class MenuTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( l ), 1 )
 		self.failUnless( l[0] is b )
 		self.failUnless( b.getMenu() is m )
+
+	def testBuildFully( self ) :
+
+		callCounts = {
+			"subMenuA" : 0,
+			"subMenuB" : 0,
+			"subMenuC" : 0,
+		}
+
+		def buildSubMenu( identifier ) :
+			callCounts[ identifier ] += 1
+			smd = IECore.MenuDefinition()
+			smd.append( "/%s_itemA" % identifier, {} )
+			return smd
+
+		md = IECore.MenuDefinition()
+		md.append( "/staticItem1", {} )
+		md.append( "/subMenuA", { "subMenu" : functools.partial( buildSubMenu, "subMenuA" ) } )
+		md.append( "/subMenuB", { "subMenu" : functools.partial( buildSubMenu, "subMenuB" ), "hasShortCut" : False } )
+		md.append( "/subMenuC", { "subMenu" : functools.partial( buildSubMenu, "subMenuC" ), "hasShortCut" : True } )
+		md.append( "/subMenuD/staticItemA", {} )
+
+		# Full build
+
+		m = GafferUI.Menu( md )
+		m._buildFully()
+
+		ma = m._qtWidget().actions()
+		self.assertEqual( [ a.text() for a in ma ], [ "staticItem1", "subMenuA", "subMenuB", "subMenuC", "subMenuD" ] )
+		self.assertEqual( [ a.text() for a in ma[1].menu().actions() ], [ "subMenuA_itemA" ] )
+		self.assertEqual( [ a.text() for a in ma[2].menu().actions() ], [ "subMenuB_itemA" ] )
+		self.assertEqual( [ a.text() for a in ma[3].menu().actions() ], [ "subMenuC_itemA" ] )
+		self.assertEqual( [ a.text() for a in ma[4].menu().actions() ], [ "staticItemA" ] )
+		self.assertEqual( callCounts, { "subMenuA" : 1, "subMenuB" : 1, "subMenuC" : 1 } )
+
+		# For short cuts
+
+		m = GafferUI.Menu( md )
+		m._buildFully( forShortCut = True )
+
+		ma = m._qtWidget().actions()
+		self.assertEqual( [ a.text() for a in ma ], [ "staticItem1", "subMenuA", "subMenuC", "subMenuD" ] )
+		self.assertEqual( [ a.text() for a in ma[1].menu().actions() ], [ "subMenuA_itemA" ] )
+		self.assertEqual( [ a.text() for a in ma[2].menu().actions() ], [ "subMenuC_itemA" ] )
+		self.assertEqual( [ a.text() for a in ma[3].menu().actions() ], [ "staticItemA" ] )
+		self.assertEqual( callCounts, { "subMenuA" : 2, "subMenuB" : 1, "subMenuC" : 2 } )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -169,7 +169,7 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 			menuBar = self.__menuBar()
 			for menu in menuBar._MenuBar__subMenus :
 				if menu._qtWidget().isEmpty() :
-					menu._buildFully()
+					menu._buildFully( forShortCut = True )
 				action = self.__matchingAction( keySequence, menu._qtWidget() )
 				if action is not None :
 					# Store for use in KeyPress
