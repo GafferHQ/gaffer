@@ -432,16 +432,9 @@ class stats( Gaffer.Application ) :
 
 	def __writeNodes( self, script ) :
 
-		def countWalk( node, counter ) :
-
-			if not isinstance( node, Gaffer.ScriptNode ) :
-				counter[node.typeName()] += 1
-
-			for c in node.children( Gaffer.Node ) :
-				countWalk( c, counter )
-
 		counter = collections.Counter()
-		countWalk( script, counter )
+		for node in Gaffer.Node.RecursiveRange( script ) :
+			counter[node.typeName()] += 1
 
 		items = [ ( nodeType.rpartition( ":" )[2], count ) for nodeType, count in counter.most_common() ]
 		items.extend( [
