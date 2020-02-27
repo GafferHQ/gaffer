@@ -297,7 +297,7 @@ class Menu( GafferUI.Widget ) :
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
 					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 					if recurse :
-						self.__build( subMenu, recurse )
+						self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
 				else :
 
@@ -315,7 +315,7 @@ class Menu( GafferUI.Widget ) :
 						subMenu.__definition = item.subMenu
 						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 						if recurse :
-							self.__build( subMenu, recurse )
+							self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
 					else :
 
