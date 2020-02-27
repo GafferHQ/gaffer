@@ -302,7 +302,7 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 
 	if( scenePath.empty() )
 	{
-		h.append( connectedInputs().to_ulong() );
+		h.append( (uint64_t)connectedInputs().to_ulong() );
 	}
 	else
 	{
@@ -318,7 +318,7 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 			[&h, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
 				if( SceneAlgo::exists( scene, scenePath ) )
 				{
-					h.append( index );
+					h.append( (uint64_t)index );
 				}
 				return true;
 			}
@@ -543,7 +543,7 @@ Imath::M44f MergeScenes::computeTransform( const ScenePath &path, const Gaffer::
 	M44f result;
 	visit(
 		activeInputsPlug()->getValue(),
-		[&result, &path] ( InputType type, size_t index, const ScenePlug *scene ) {
+		[&result] ( InputType type, size_t index, const ScenePlug *scene ) {
 			result = scene->transformPlug()->getValue();
 			return false;
 		},
