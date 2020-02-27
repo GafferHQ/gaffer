@@ -313,16 +313,25 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 			parentActiveInputs = activeInputsPlug()->getValue();
 		}
 
-		visit(
-			parentActiveInputs,
-			[&h, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
-				if( SceneAlgo::exists( scene, scenePath ) )
-				{
-					h.append( (uint64_t)index );
+		if( parentActiveInputs.count() == 1 )
+		{
+			h.append( (uint64_t)parentActiveInputs.to_ulong() );
+		}
+		else
+		{
+			InputMask activeInputs;
+			visit(
+				parentActiveInputs,
+				[&scenePath, &activeInputs] ( InputType type, size_t index, const ScenePlug *scene ) {
+					if( SceneAlgo::exists( scene, scenePath ) )
+					{
+						activeInputs[index] = true;
+					}
+					return true;
 				}
-				return true;
-			}
-		);
+			);
+			h.append( (uint64_t)activeInputs.to_ulong() );
+		}
 	}
 }
 
@@ -346,21 +355,32 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			parentActiveInputs = activeInputsPlug()->getValue();
 		}
 
-		// Figure out which of those parent inputs are
-		// still active. Using the parent active inputs as
-		// a mask reduces the number of existence queries
-		// we must make when merging many sparsely overlapping
-		// scenes.
-		visit(
-			parentActiveInputs,
-			[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
-				if( SceneAlgo::exists( scene, scenePath ) )
-				{
-					result[index] = true;
+		if( parentActiveInputs.count() == 1 )
+		{
+			// It is forbidden for anyone to evaluate us for a location
+			// that doesn't exist. Therefore, if our parent only has
+			// one active input, then that input must still be active for
+			// us.
+			result = parentActiveInputs;
+		}
+		else
+		{
+			// Figure out which of those parent inputs are
+			// still active. Using the parent active inputs as
+			// a mask reduces the number of existence queries
+			// we must make when merging many sparsely overlapping
+			// scenes.
+			visit(
+				parentActiveInputs,
+				[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
+					if( SceneAlgo::exists( scene, scenePath ) )
+					{
+						result[index] = true;
+					}
+					return true;
 				}
-				return true;
-			}
-		);
+			);
+		}
 	}
 
 	return result.to_ulong();
