@@ -777,7 +777,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( group["out"] )
 
-	def testExistsAndSortedChildNames( self ) :
+	def testExists( self ) :
 
 		sphere = GafferScene.Sphere()
 		cube = GafferScene.Cube()

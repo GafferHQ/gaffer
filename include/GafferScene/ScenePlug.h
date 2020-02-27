@@ -183,6 +183,10 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// multiple plugs in the same context, better performance can be
 		/// achieved using the appropriate scope class and calling hash() or
 		/// getValue() directly.
+		///
+		/// > Note : It is a programming error to trigger a compute for a
+		/// > location which does not exist. Use the `exists()` method to
+		/// > verify existence where necessary.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// Returns the bound for the specified location.
@@ -227,9 +231,6 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// by querying `childNames()` at all ancestor locations, but with
 		/// significantly better performance than is achievable via the public
 		/// API alone.
-		///
-		/// > Note : It is a programming error to trigger a compute for a
-		/// > location which does not exist.
 		bool exists( const ScenePath &scenePath ) const;
 		/// As above, but for the location specified by the current context.
 		bool exists() const;
