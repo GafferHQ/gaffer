@@ -478,7 +478,7 @@ class stats( Gaffer.Application ) :
 		if isinstance( scene, GafferScene.Render ) :
 			scene = scene["task"]
 		elif isinstance( scene, Gaffer.Node ) :
-			scene = next( ( x for x in scene.children( GafferScene.ScenePlug ) ), None )
+			scene = next( GafferScene.ScenePlug.RecursiveOutputRange( scene ), None )
 
 		if scene is None :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
@@ -526,7 +526,7 @@ class stats( Gaffer.Application ) :
 
 		image = script.descendant( args["image"].value )
 		if isinstance( image, Gaffer.Node ) :
-			image = next( ( x for x in image.children( GafferImage.ImagePlug ) ), None )
+			image = next( GafferImage.ImagePlug.RecursiveOutputRange( image ), None )
 
 		if image is None :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
