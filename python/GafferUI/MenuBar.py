@@ -98,7 +98,11 @@ class MenuBar( GafferUI.Widget ) :
 					else :
 						subMenuDefinition = item.subMenu or IECore.MenuDefinition()
 
+					# Nasty workaround for https://github.com/GafferHQ/gaffer/issues/3651.
+					# Because we're splicing the definition, we need to propagate
+					# hasShortCuts as the definition it was on is lost here.
 					menu = GafferUI.Menu( subMenuDefinition, _qtParent=self._qtWidget() )
+					menu.__hasShortCuts = getattr( item, 'hasShortCuts', True )
 					menu._qtWidget().setTitle( name )
 					self._qtWidget().addMenu( menu._qtWidget() )
 					self.__subMenus.append( menu )
@@ -168,6 +172,9 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 			keySequence = self.__keySequence( qEvent )
 			menuBar = self.__menuBar()
 			for menu in menuBar._MenuBar__subMenus :
+				# We stashed this earlier when we spliced the single MenuDefinition
+				if not menu._MenuBar__hasShortCuts :
+					continue
 				if menu._qtWidget().isEmpty() :
 					menu._buildFully( forShortCuts = True )
 				action = self.__matchingAction( keySequence, menu._qtWidget() )
