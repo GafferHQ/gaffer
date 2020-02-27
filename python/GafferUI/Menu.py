@@ -63,7 +63,7 @@ class Menu( GafferUI.Widget ) :
 	# - 'label' in conjunction with 'divider' = True, displays a textual
 	#   divider as opposed to a simple line.
 	#
-	# - 'hasShortCut' = False in conjunction with `subMenu`, instructs the Menu
+	# - 'hasShortCuts' = False in conjunction with `subMenu`, instructs the Menu
 	#   to ignore the subMenu when building for keyboard shortcut discovery.
 	#   This can avoid long blocking waits when the user first presses a key whilst
 	#   the action map is built if your subMenu is particularly slow to build.
@@ -254,15 +254,15 @@ class Menu( GafferUI.Widget ) :
 		self.__lastHoverAction = None
 
 	# May be called to fully build the menu /now/, rather than only do it lazily
-	# when it's shown. This is used by the MenuBar. forShortCut should be set
+	# when it's shown. This is used by the MenuBar. forShortCuts should be set
 	# if the build is for short cut discovery as it will skip dynamic subMenus
 	# that declare they have no shortcuts.
 	#   See https://github.com/GafferHQ/gaffer/issues/3651)
-	def _buildFully( self, forShortCut=False ) :
+	def _buildFully( self, forShortCuts=False ) :
 
-		self.__build( self._qtWidget(), recurse=True, forShortCut=forShortCut )
+		self.__build( self._qtWidget(), recurse=True, forShortCuts=forShortCuts )
 
-	def __build( self, qtMenu, recurse=False, forShortCut=False ) :
+	def __build( self, qtMenu, recurse=False, forShortCuts=False ) :
 
 		if isinstance( qtMenu, weakref.ref ) :
 			qtMenu = qtMenu()
@@ -306,7 +306,7 @@ class Menu( GafferUI.Widget ) :
 						# Skip any subMenus that declare they have no short cuts.
 						# _buildFully can be called blocking on the UI thread so
 						# this facilities to skip potentially expensive custom menus.
-						if forShortCut and not getattr( item, 'hasShortCut', True ) :
+						if forShortCuts and not getattr( item, 'hasShortCuts', True ) :
 							continue
 
 						subMenu = _Menu( qtMenu, name )

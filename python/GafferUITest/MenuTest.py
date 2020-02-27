@@ -126,8 +126,8 @@ class MenuTest( GafferUITest.TestCase ) :
 		md = IECore.MenuDefinition()
 		md.append( "/staticItem1", {} )
 		md.append( "/subMenuA", { "subMenu" : functools.partial( buildSubMenu, "subMenuA" ) } )
-		md.append( "/subMenuB", { "subMenu" : functools.partial( buildSubMenu, "subMenuB" ), "hasShortCut" : False } )
-		md.append( "/subMenuC", { "subMenu" : functools.partial( buildSubMenu, "subMenuC" ), "hasShortCut" : True } )
+		md.append( "/subMenuB", { "subMenu" : functools.partial( buildSubMenu, "subMenuB" ), "hasShortCuts" : False } )
+		md.append( "/subMenuC", { "subMenu" : functools.partial( buildSubMenu, "subMenuC" ), "hasShortCuts" : True } )
 		md.append( "/subMenuD/staticItemA", {} )
 
 		# Full build
@@ -146,7 +146,7 @@ class MenuTest( GafferUITest.TestCase ) :
 		# For short cuts
 
 		m = GafferUI.Menu( md )
-		m._buildFully( forShortCut = True )
+		m._buildFully( forShortCuts = True )
 
 		ma = m._qtWidget().actions()
 		self.assertEqual( [ a.text() for a in ma ], [ "staticItem1", "subMenuA", "subMenuC", "subMenuD" ] )
