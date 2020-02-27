@@ -169,10 +169,13 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
+	# Some operations require a text widget so we can manipulate insertion position, etc...
+	hasTextWidget = hasattr( plugValueWidget, 'textWidget' )
+
 	# get required data
 	acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
 	acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
-	acceptsSetExpression = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" )
+	acceptsSetExpression = hasTextWidget and Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" )
 	if not acceptsSetName and not acceptsSetNames and not acceptsSetExpression :
 		return
 
