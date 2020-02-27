@@ -1,3 +1,11 @@
+0.57.x.x
+========
+
+Build
+-----
+
+- Cortex : Updated to version 10.0.0-a74.
+
 0.56.0.0
 ========
 
