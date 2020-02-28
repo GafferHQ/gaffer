@@ -134,5 +134,42 @@ class BoxPlugTest( GafferTest.TestCase ) :
 		s["n"]["user"]["b"]["min"]["y"].setInput( s["n"]["user"]["i"] )
 		assertExpectedValues( 0 ) # All leaf plugs have inputs, so no setValue() calls needed.
 
+	def testNoRedundantSetInputCalls( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["b1"] = Gaffer.Box2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["b2"] = Gaffer.Box2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		def assertExpectedInputs( numSetInputCalls ) :
+
+			ss = s.serialise()
+			self.assertEqual( ss.count( "setInput" ), numSetInputCalls )
+
+			s2 = Gaffer.ScriptNode()
+			s2.execute( ss )
+
+			for p2 in [ s2["n"]["user"]["b2"] ] + list( Gaffer.Plug.RecursiveRange( s2["n"]["user"]["b2"] ) ) :
+				p = s.descendant( p2.relativeName( s2 ) )
+				i2 = p2.getInput()
+				if i2 is not None :
+					self.assertEqual( p.getInput().relativeName( s ), i2.relativeName( s2 ) )
+				else :
+					self.assertIsNone( p.getInput() )
+
+		assertExpectedInputs( 0 )
+
+		s["n"]["user"]["b2"]["min"]["x"].setInput( s["n"]["user"]["b1"]["min"]["y"] )
+		assertExpectedInputs( 1 )
+
+		s["n"]["user"]["b2"]["max"]["y"].setInput( s["n"]["user"]["b1"]["max"]["x"] )
+		assertExpectedInputs( 2 )
+
+		s["n"]["user"]["b2"]["max"].setInput( s["n"]["user"]["b1"]["max"] )
+		assertExpectedInputs( 2 )
+
+		s["n"]["user"]["b2"].setInput( s["n"]["user"]["b1"] )
+		assertExpectedInputs( 1 )
+
 if __name__ == "__main__":
 	unittest.main()

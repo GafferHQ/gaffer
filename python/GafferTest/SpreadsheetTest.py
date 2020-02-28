@@ -407,6 +407,29 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		assertOutputsValid( s["b"]["s1"] )
 		assertOutputsValid( s["b"]["s2"] )
 
+	def testNoRedundantSetInputCalls( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+
+		s["b"]["s"] = Gaffer.Spreadsheet()
+		s["b"]["s"]["rows"].addColumn( Gaffer.IntPlug( "i" ) )
+		s["b"]["s"]["rows"].addRows( 2 )
+
+		Gaffer.PlugAlgo.promote( s["b"]["s"]["rows"] )
+
+		# We should only need a single `setInput()` call
+		# on `rows` to serialise all the connections
+		# for the entire spreadsheet.
+
+		ss = s.serialise()
+		self.assertEqual( ss.count( "setInput" ), 1 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+
+		self.assertEqual( s2["b"]["s"]["rows"].getInput(), s2["b"]["rows"] )
+
 	def testActiveRowNames( self ) :
 
 		s = Gaffer.Spreadsheet()
