@@ -73,10 +73,12 @@ def __collectScenesInGetItem( originalGetItem ) :
 		if key == "in0" :
 			# First element of old ArrayPlug - redirect to self.
 			return self
-		else :
+		elif isinstance( key, str ) and key.startswith( "in" ) :
 			# Any other element of old ArrayPlug - this should not
 			# have been used.
 			return None
+		else :
+			return originalGetItem( self, key )
 
 	return getItem
 
