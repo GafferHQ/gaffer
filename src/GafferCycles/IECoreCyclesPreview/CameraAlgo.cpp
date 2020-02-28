@@ -113,25 +113,18 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	
 	// Shutter TODO: Need to see if this is correct or not, cycles also has a shutter curve...
 	const Imath::V2f &shutter = camera->getShutter();
-	if ((shutter.x > 0.0) && (shutter.y > 0.0))
+	ccam->shuttertime = abs(shutter.x) + abs(shutter.y);
+	if( (shutter.x == 0.0) && (shutter.y > shutter.x) )
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_START;
-		ccam->shuttertime = shutter.x + shutter.y;
 	}
-	else if ((shutter.x < 0.0) && (shutter.y > 0.0))
-	{
-		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
-		ccam->shuttertime = abs(shutter.x) + shutter.y;
-	}
-	else if ((shutter.x < 0.0) && (shutter.y <= 0.0))
+	else if( (shutter.x < shutter.y) && (shutter.y == 0.0) )
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_END;
-		ccam->shuttertime = abs(shutter.x) + abs(shutter.y);
 	}
 	else
 	{
 		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
-		ccam->shuttertime = 1.0;
 	}
 
 	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )

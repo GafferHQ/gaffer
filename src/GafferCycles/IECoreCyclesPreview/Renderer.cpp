@@ -2463,7 +2463,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			if( object->mesh->use_motion_blur )
 			{
-				object->motion = ccl::array<ccl::Transform>( object->mesh->motion_steps );
+				object->motion.clear();
+				object->motion.resize( object->mesh->motion_steps, ccl::transform_empty() );
 				for( int i = 0; i < object->motion.size(); ++i )
 				{
 					object->motion[i] = object->tfm;
@@ -2486,7 +2487,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				IECore::msg( IECore::Msg::Error, "IECoreCycles::Renderer", boost::format( "Transform step size on \"%s\" must match deformation step size." ) % object->name.c_str() );
 				object->tfm = SocketAlgo::setTransform( samples.front() );
-				object->motion = ccl::array<ccl::Transform>( object->mesh->motion_steps );
+				object->motion.resize( object->mesh->motion_steps, ccl::transform_empty() );
 				for( int i = 0; i < object->motion.size(); ++i )
 				{
 					object->motion[i] = object->tfm;
@@ -2513,7 +2514,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			if( numSamples % 2 ) // Odd numSamples
 			{
-				object->motion = ccl::array<ccl::Transform>( numSamples );
+				object->motion.resize( numSamples, ccl::transform_empty() );
 
 				for( int i = 0; i < numSamples; ++i )
 				{
@@ -2528,7 +2529,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			else if( numSamples == 2 )
 			{
 				Imath::M44f matrix;
-				object->motion = ccl::array<ccl::Transform>( numSamples+1 );
+				object->motion.resize( numSamples+1, ccl::transform_empty() );
 				IECore::LinearInterpolator<Imath::M44f>()( samples[0], samples[1], 0.5f, matrix );
 
 				if( frameIdx == -1 ) // Center frame
@@ -2549,7 +2550,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 			else // Even numSamples
 			{
-				object->motion = ccl::array<ccl::Transform>( numSamples );
+				object->motion.resize( numSamples, ccl::transform_empty() );
 
 				if( frameIdx == -1 ) // Center frame
 				{
@@ -2571,6 +2572,11 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				{
 					object->motion[i] = SocketAlgo::setTransform( samples[i] );
 				}
+			}
+
+			if( !object->mesh->use_motion_blur )
+			{
+				object->mesh->motion_steps = object->motion.size();
 			}
 
 			if( object->mesh->subd_params )
