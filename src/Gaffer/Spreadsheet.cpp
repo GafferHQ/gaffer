@@ -38,8 +38,12 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "IECore/NullObject.h"
+
 #include "boost/container/small_vector.hpp"
 #include "boost/lexical_cast.hpp"
+
+#include <unordered_map>
 
 using namespace std;
 using namespace IECore;
@@ -66,6 +70,100 @@ void appendLeafPlugs( const Gaffer::Plug *p, DependencyNode::AffectedPlugsContai
 		}
 	}
 }
+
+// Data type stored on `rowsMapPlug()` and used for quickly
+// finding the right row for a selector.
+class RowsMap : public IECore::Data
+{
+
+	public :
+
+		// Rows without wildcards. We can look these up
+		// directly.
+		using Map = std::unordered_map<std::string, size_t>;
+		Map plainRows;
+
+		// Rows with wildcards. These require a linear search.
+		struct Row
+		{
+			std::string name;
+			size_t index;
+		};
+		using Vector = std::vector<Row>;
+		Vector wildcardRows;
+
+		// List of active row names for `activeRowNamesPlug()`.
+		ConstStringVectorDataPtr activeRowNames;
+
+};
+
+IE_CORE_DECLAREPTR( RowsMap )
+
+// Context scope used for accessing `rowsMapPlug()`. This
+// removes all context variables referred to by `selectorPlug()`,
+// for two reasons :
+//
+// 1. Performance. A common use case is to use `${someVariable}`
+//    as the selector, and then to have N rows, one for each
+//    value that `${someVariable}` will take. This would lead to
+//    N calls to `Spreadsheet::hash( rowsMapPlug() )` (one per
+//    unique context), each of which would need to visit all N
+//    rows. For some uses of the Spreadsheet, N can be large enough
+//    that the resultant quadratic scaling is unacceptable. We can
+//    avoid this by making a clean context omitting `${someVariable}`,
+//    meaning that `rowsMapPlug()` will be hashed only once.
+// 2. Sanity. We can't think of any good reason to have row names
+//    that include the same context variable as the selector.
+//    Trying to reason about them would be mindbending.
+class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
+{
+
+	public :
+
+		RowsMapScope( const Context *context, const std::string &selector )
+			:	SubstitutionProvider( context ), m_context( context )
+		{
+			// (Ab)use `StringAlgo::substitute()` as a parser for
+			// variable references in the `selector`. We pass
+			// ourselves as the VariableProvider so that
+			// our `variable()` method is called once for each
+			// variable. We could instead implement our
+			// own parsing, but that would be non-trivial, particularly
+			// because `substitute()` allows recursive substitutions.
+			m_selector = IECore::StringAlgo::substitute( selector, *this );
+		}
+
+		// Returns the selector with Context substitutions applied.
+		const std::string &selector() const
+		{
+			return m_selector;
+		}
+
+		// Methods used by `StringAlgo::substitute()`. We use
+		// these to parse variable references in `selector`.
+
+		int frame() const override
+		{
+			return SubstitutionProvider::frame();
+		}
+
+		const std::string &variable( const boost::string_view &name, bool &recurse ) const override
+		{
+			if( !m_scope )
+			{
+				m_scope.emplace( m_context );
+			}
+			m_scope->remove( name );
+			return SubstitutionProvider::variable( name, recurse );
+		}
+
+	private :
+
+		const Context *m_context;
+		mutable boost::optional<Context::EditableScope> m_scope;
+		string m_selector;
+
+};
 
 } // namespace
 
@@ -323,10 +421,11 @@ Spreadsheet::Spreadsheet( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new BoolPlug( "enabled", Plug::In, true ) );
-	addChild( new StringPlug( "selector" ) );
+	addChild( new StringPlug( "selector", Plug::In, "", Plug::Default, IECore::StringAlgo::NoSubstitutions ) );
 	addChild( new RowsPlug( "rows" ) );
 	addChild( new ValuePlug( "out", Plug::Out ) );
 	addChild( new StringVectorDataPlug( "activeRowNames", Plug::Out, new IECore::StringVectorData ) );
+	addChild( new ObjectPlug( "__rowsMap", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new IntPlug( "__rowIndex", Plug::Out ) );
 }
 
@@ -384,26 +483,45 @@ const StringVectorDataPlug *Spreadsheet::activeRowNamesPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
 }
 
+ObjectPlug *Spreadsheet::rowsMapPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+}
+
+const ObjectPlug *Spreadsheet::rowsMapPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+}
+
 IntPlug *Spreadsheet::rowIndexPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
 }
 
 const IntPlug *Spreadsheet::rowIndexPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 5 );
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
 }
 
 void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	const auto *row = input->parent<RowPlug>();
+	if( const auto *row = input->parent<RowPlug>() )
+	{
+		if(
+			input == row->namePlug() ||
+			input == row->enabledPlug()
+		)
+		{
+			outputs.push_back( rowsMapPlug() );
+		}
+	}
+
 	if(
 		input == enabledPlug() ||
 		input == selectorPlug() ||
-		( row && input == row->namePlug() ) ||
-		( row && input == row->enabledPlug() )
+		input == rowsMapPlug()
 	)
 	{
 		outputs.push_back( rowIndexPlug() );
@@ -435,10 +553,7 @@ void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsConta
 		}
 	}
 
-	if(
-		( row && input == row->namePlug() ) ||
-		( row && input == row->enabledPlug() )
-	)
+	if( input == rowsMapPlug() )
 	{
 		outputs.push_back( activeRowNamesPlug() );
 	}
@@ -461,17 +576,24 @@ const Plug *Spreadsheet::correspondingInput( const Plug *output ) const
 
 void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
-	if( output == rowIndexPlug() )
+	if( output == rowsMapPlug() )
 	{
 		ComputeNode::hash( output, context, h );
-		enabledPlug()->hash( h );
-		selectorPlug()->hash( h );
 		for( int i = 1, e = rowsPlug()->children().size(); i < e; ++i )
 		{
 			const auto *row = rowsPlug()->getChild<RowPlug>( i );
 			row->namePlug()->hash( h );
 			row->enabledPlug()->hash( h );
 		}
+		return;
+	}
+	else if( output == rowIndexPlug() )
+	{
+		ComputeNode::hash( output, context, h );
+		enabledPlug()->hash( h );
+		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+		rowsMapPlug()->hash( h );
+		h.append( rowsMapScope.selector() );
 		return;
 	}
 	else if( outPlug()->isAncestorOf( output ) )
@@ -482,12 +604,8 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 	else if( output == activeRowNamesPlug() )
 	{
 		ComputeNode::hash( output, context, h );
-		for( int i = 1, e = rowsPlug()->children().size(); i < e; ++i )
-		{
-			const auto *row = rowsPlug()->getChild<RowPlug>( i );
-			row->namePlug()->hash( h );
-			row->enabledPlug()->hash( h );
-		}
+		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+		rowsMapPlug()->hash( h );
 		return;
 	}
 
@@ -496,22 +614,63 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 
 void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == rowIndexPlug() )
+	if( output == rowsMapPlug() )
 	{
-		int result = 0;
+		StringVectorDataPtr activeRowNamesData = new StringVectorData;
+		vector<string> &activeRowNames = activeRowNamesData->writable();
+		RowsMapPtr result = new RowsMap;
+		result->activeRowNames = activeRowNamesData;
+
+		for( size_t i = 1, e = rowsPlug()->children().size(); i < e; ++i )
+		{
+			const auto *row = rowsPlug()->getChild<RowPlug>( i );
+			if( !row->enabledPlug()->getValue() )
+			{
+				continue;
+			}
+
+			const std::string name = row->namePlug()->getValue();
+			activeRowNames.push_back( name );
+
+			if(
+				StringAlgo::hasWildcards( name ) ||
+				name.find( ' ' ) != string::npos
+			)
+			{
+				result->wildcardRows.push_back( { name, i } );
+			}
+			else
+			{
+				result->plainRows.insert( { name, i } );
+			}
+		}
+
+		static_cast<ObjectPlug *>( output )->setValue( result );
+		return;
+	}
+	else if( output == rowIndexPlug() )
+	{
+		size_t result = 0;
 		if( enabledPlug()->getValue() )
 		{
-			const std::string selector = selectorPlug()->getValue();
-			for( int i = 1, e = rowsPlug()->children().size(); i < e; ++i )
+			RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+			ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
+
+			RowsMap::Map::const_iterator it = rowsMap->plainRows.find( rowsMapScope.selector() );
+			if( it != rowsMap->plainRows.end() )
 			{
-				const auto *row = rowsPlug()->getChild<RowPlug>( i );
-				if( !row->enabledPlug()->getValue() )
+				result = it->second;
+			}
+			for( auto &row : rowsMap->wildcardRows )
+			{
+				if( result && row.index > result )
 				{
-					continue;
+					break;
 				}
-				if( StringAlgo::matchMultiple( selector, row->namePlug()->getValue() ) )
+
+				if( StringAlgo::matchMultiple( rowsMapScope.selector(), row.name ) )
 				{
-					result = i;
+					result = row.index;
 					break;
 				}
 			}
@@ -526,19 +685,9 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( output == activeRowNamesPlug() )
 	{
-		StringVectorDataPtr resultData = new StringVectorData;
-		auto &result = resultData->writable();
-		result.reserve( rowsPlug()->children().size() - 1 );
-
-		for( int i = 1, e = rowsPlug()->children().size(); i < e; ++i )
-		{
-			const auto *row = rowsPlug()->getChild<RowPlug>( i );
-			if( row->enabledPlug()->getValue() )
-			{
-				result.push_back( row->namePlug()->getValue() );
-			}
-		}
-		static_cast<StringVectorDataPlug *>( output )->setValue( resultData );
+		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+		ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
+		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->activeRowNames );
 		return;
 	}
 

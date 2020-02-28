@@ -206,6 +206,9 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 	private :
 
+		ObjectPlug *rowsMapPlug();
+		const ObjectPlug *rowsMapPlug() const;
+
 		IntPlug *rowIndexPlug();
 		const IntPlug *rowIndexPlug() const;
 

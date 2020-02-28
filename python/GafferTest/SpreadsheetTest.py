@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 
 import imath
@@ -565,6 +566,68 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		] :
 			self.assertEqual( ss["s"]["rows"][i]["cells"]["v"]["value"].getValue(), v )
 
+	def testWildcards( self ) :
+
+		s = Gaffer.Spreadsheet()
+
+		s["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+
+		row1 = s["rows"].addRow()
+		row2 = s["rows"].addRow()
+
+		row1["cells"]["v"]["value"].setValue( 1 )
+		row2["cells"]["v"]["value"].setValue( 2 )
+
+		s["selector"].setValue( "cat" )
+		self.assertEqual( s["out"]["v"].getValue(), 0 )
+
+		row1["name"].setValue( "cat" )
+		self.assertEqual( s["out"]["v"].getValue(), 1 )
+
+		row2["name"].setValue( "cat" )
+		self.assertEqual( s["out"]["v"].getValue(), 1 )
+
+		row1["name"].setValue( "ca*" )
+		self.assertEqual( s["out"]["v"].getValue(), 1 )
+
+		row1["name"].setValue( "dog" )
+		self.assertEqual( s["out"]["v"].getValue(), 2 )
+
+		row2["name"].setValue( "ca*" )
+		self.assertEqual( s["out"]["v"].getValue(), 2 )
+
+	def testSelectorVariablesRemovedFromRowNameContext( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.StringPlug( "v" ) )
+
+		# `row` will only be selected if the context is not
+		# cleaned up when evaluating the row name. If it is
+		# selected then the spreadsheet will output "unexpectedVariable"
+		# instead of the "" we expect.
+
+		row = s["s"]["rows"].addRow()
+		row["cells"]["v"]["value"].setValue( "unexpectedVariable" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			a = context.get( "A" )
+			b = context.get( "B" )
+			parent["s"]["rows"]["row1"]["name"] = "*" if ( a or b ) else ""
+			"""
+		) )
+
+		s["s"]["selector"].setValue( "${A}" )
+
+		with Gaffer.Context() as c :
+			c["A"] = "${B}"
+			c["B"] = "boo"
+			self.assertEqual( s["s"]["out"]["v"].getValue(), "" )
+			self.assertEqual( s["s"]["out"]["v"].getValue(), "" )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testAddRowPerformance( self ) :
 
@@ -605,6 +668,28 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		with GafferTest.TestRunner.PerformanceScope() :
 			s.execute( serialised )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testRowIndexPerformance( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["selector"].setValue( "${index}" )
+
+		numRows = 10000
+
+		s["rows"].addColumn( Gaffer.IntPlug( "v" ) )
+		for i in range( 0, numRows ) :
+			row = s["rows"].addRow()
+			row["name"].setValue( str( i ) )
+			row["cells"]["v"]["value"].setValue( i )
+
+		c = Gaffer.Context()
+		out = s["out"]["v"]
+		with c :
+			with GafferTest.TestRunner.PerformanceScope() :
+				for i in range( 0, numRows ) :
+					c["index"] = i
+					self.assertEqual( out.getValue(), i )
 
 if __name__ == "__main__":
 	unittest.main()
