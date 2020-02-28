@@ -67,16 +67,22 @@ std::string getValue( const StringPlug *plug, const IECore::MurmurHash *precompu
 
 std::string substitutionsRepr( unsigned substitutions )
 {
-	static const Context::Substitutions values[] = { Context::FrameSubstitutions, Context::VariableSubstitutions, Context::EscapeSubstitutions, Context::TildeSubstitutions, Context::NoSubstitutions };
+	static const IECore::StringAlgo::Substitutions values[] = {
+		IECore::StringAlgo::FrameSubstitutions,
+		IECore::StringAlgo::VariableSubstitutions,
+		IECore::StringAlgo::EscapeSubstitutions,
+		IECore::StringAlgo::TildeSubstitutions,
+		IECore::StringAlgo::NoSubstitutions
+	};
 	static const char *names[] = { "FrameSubstitutions", "VariableSubstitutions", "EscapeSubstitutions", "TildeSubstitutions", nullptr };
 
-	if( substitutions == Context::AllSubstitutions )
+	if( substitutions == IECore::StringAlgo::AllSubstitutions )
 	{
-		return "Gaffer.Context.Substitutions.AllSubstitutions";
+		return "IECore.StringAlgo.Substitutions.AllSubstitutions";
 	}
-	else if( substitutions == Context::NoSubstitutions )
+	else if( substitutions == IECore::StringAlgo::NoSubstitutions )
 	{
-		return "Gaffer.Context.Substitutions.NoSubstitutions";
+		return "IECore.StringAlgo.Substitutions.NoSubstitutions";
 	}
 
 	std::string result;
@@ -88,7 +94,7 @@ std::string substitutionsRepr( unsigned substitutions )
 			{
 				result += " | ";
 			}
-			result += "Gaffer.Context.Substitutions." + std::string( names[i] );
+			result += "IECore.StringAlgo.Substitutions." + std::string( names[i] );
 		}
 	}
 
@@ -98,7 +104,7 @@ std::string substitutionsRepr( unsigned substitutions )
 std::string serialisationRepr( const Gaffer::StringPlug *plug, const Serialisation *serialisation )
 {
 	std::string extraArguments;
-	if( plug->substitutions() != Context::AllSubstitutions )
+	if( plug->substitutions() != IECore::StringAlgo::AllSubstitutions )
 	{
 		extraArguments = "substitutions = " + substitutionsRepr( plug->substitutions() );
 	}
@@ -135,7 +141,7 @@ void GafferModule::bindStringPlug()
 					boost::python::arg_( "direction" )=Gaffer::Plug::In,
 					boost::python::arg_( "defaultValue" )="",
 					boost::python::arg_( "flags" )=Gaffer::Plug::Default,
-					boost::python::arg_( "substitutions" )=Gaffer::Context::AllSubstitutions
+					boost::python::arg_( "substitutions" )=IECore::StringAlgo::AllSubstitutions
 				)
 			)
 		)

@@ -179,8 +179,8 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testExpansionMask( self ) :
 
-		n1 = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.AllSubstitutions )
-		n2 = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+		n1 = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions )
+		n2 = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
 
 		n1["in"].setValue( "hello.####.${ext}" )
 		n2["in"].setValue( "hello.####.${ext}" )
@@ -201,9 +201,9 @@ class StringPlugTest( GafferTest.TestCase ) :
 		s["n"]["p"] = Gaffer.StringPlug(
 			"p",
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic,
-			substitutions = Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions
+			substitutions = IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions
 		)
-		self.assertEqual( s["n"]["p"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+		self.assertEqual( s["n"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -215,12 +215,20 @@ class StringPlugTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.56.0.0.gfr" ) )
 		s.load()
 
-		self.assertEqual( s["n"]["user"]["p"].substitutions(), Gaffer.Context.Substitutions.AllSubstitutions & ~Gaffer.Context.Substitutions.FrameSubstitutions )
+		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
+
+	def testLoadSubstitutionsVersion0_55( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.55.4.0.gfr" ) )
+		s.load()
+
+		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
 
 	def testSubstitutionsRepr( self ) :
 
 		p = Gaffer.StringPlug(
-			substitutions = Gaffer.Context.Substitutions.TildeSubstitutions | Gaffer.Context.Substitutions.FrameSubstitutions
+			substitutions = IECore.StringAlgo.Substitutions.TildeSubstitutions | IECore.StringAlgo.Substitutions.FrameSubstitutions
 		)
 
 		p2 = eval( repr( p ) )
@@ -229,7 +237,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testSubstitutionsCounterpart( self ) :
 
 		p = Gaffer.StringPlug(
-			substitutions = Gaffer.Context.Substitutions.TildeSubstitutions | Gaffer.Context.Substitutions.FrameSubstitutions
+			substitutions = IECore.StringAlgo.Substitutions.TildeSubstitutions | IECore.StringAlgo.Substitutions.FrameSubstitutions
 		)
 
 		p2 = p.createCounterpart( "p2", p.Direction.In )
@@ -243,7 +251,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 		s["substitionsOn"] = GafferTest.StringInOutNode()
 
 		# Should pass through the input directly, without substitutions.
-		s["substitionsOff"] = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
+		s["substitionsOff"] = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
 
 		# The third case is trickier. The "in" plug on the node
 		# itself requests no substitutions, but it receives its
@@ -261,7 +269,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 		# nodes that know when a substitution is relevant, and the
 		# user shouldn't be burdened with the job of thinking about
 		# them when making intermediate connections to that node.
-		s["substitionsOnIndirectly"] = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
+		s["substitionsOnIndirectly"] = GafferTest.StringInOutNode( substitutions = IECore.StringAlgo.Substitutions.NoSubstitutions )
 		s["substitionsOnIndirectly"]["user"]["in"] = Gaffer.StringPlug()
 		s["substitionsOnIndirectly"]["in"].setInput( s["substitionsOnIndirectly"]["user"]["in"] )
 

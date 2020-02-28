@@ -84,7 +84,7 @@ typename TypedParameterHandler<T>::PlugType::Ptr TypedParameterHandler<T>::creat
 }
 
 template<>
-TypedParameterHandler<std::string>::PlugType::Ptr TypedParameterHandler<std::string>::createPlug( Gaffer::Plug::Direction direction, Gaffer::Context::Substitutions substitutions ) const
+TypedParameterHandler<std::string>::PlugType::Ptr TypedParameterHandler<std::string>::createPlug( Gaffer::Plug::Direction direction, IECore::StringAlgo::Substitutions substitutions ) const
 {
 	return new Gaffer::StringPlug( m_parameter->name(), direction, m_parameter->typedDefaultValue(), Gaffer::Plug::Default, substitutions );
 }
@@ -109,14 +109,14 @@ Gaffer::Plug *TypedParameterHandler<std::string>::setupPlug( Gaffer::GraphCompon
 {
 	// We have to turn off substitutions for FileSequenceParameters because they'd remove the
 	// #### destined for the parameter.
-	Gaffer::Context::Substitutions substitutions = m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) ? Gaffer::Context::NoSubstitutions : Gaffer::Context::AllSubstitutions;
+	IECore::StringAlgo::Substitutions substitutions = m_parameter->isInstanceOf( IECore::FileSequenceParameterTypeId ) ? IECore::StringAlgo::NoSubstitutions : IECore::StringAlgo::AllSubstitutions;
 
 	// We also allow individual parameters to override the substitutions via userData
 	if( const auto *gafferUserData = m_parameter->userData()->member<IECore::CompoundObject>( "gaffer" ) )
 	{
 		if( const auto *substitutionsUserData = gafferUserData->member<IECore::IntData>( "substitutions" ) )
 		{
-			substitutions = (Gaffer::Context::Substitutions)substitutionsUserData->readable();
+			substitutions = (IECore::StringAlgo::Substitutions)substitutionsUserData->readable();
 		}
 	}
 

@@ -87,12 +87,12 @@ class Environment
 			}
 		}
 
-		const char *get( IECore::InternedString name ) const
+		const std::string *get( IECore::InternedString name ) const
 		{
 			Map::const_iterator it = m_map.find( name );
 			if( it != m_map.end() )
 			{
-				return it->second.c_str();
+				return &it->second.string();
 			}
 			return nullptr;
 		}
@@ -340,227 +340,7 @@ bool Context::operator != ( const Context &other ) const
 
 std::string Context::substitute( const std::string &s, unsigned substitutions ) const
 {
-	std::string result;
-	result.reserve( s.size() ); // might need more or less, but this is a decent ballpark
-	substituteInternal( s.c_str(), result, 0, substitutions );
-	return result;
-}
-
-unsigned Context::substitutions( const std::string &input )
-{
-	unsigned result = NoSubstitutions;
-	for( const char *c = input.c_str(); *c; )
-	{
-		switch( *c )
-		{
-			case '$' :
-				result |= VariableSubstitutions;
-				c++;
-				break;
-			case '#' :
-				result |= FrameSubstitutions;
-				c++;
-				break;
-			case '~' :
-				result |= TildeSubstitutions;
-				c++;
-				break;
-			case '\\' :
-				result |= EscapeSubstitutions;
-				c++;
-				if( *c )
-				{
-					c++;
-				}
-				break;
-			default :
-				c++;
-		}
-		if( result == AllSubstitutions )
-		{
-			return result;
-		}
-	}
-	return result;
-}
-
-bool Context::hasSubstitutions( const std::string &input )
-{
-	for( const char *c = input.c_str(); *c; c++ )
-	{
-		switch( *c )
-		{
-			case '$' :
-			case '#' :
-			case '~' :
-			case '\\' :
-				return true;
-			default :
-				; // do nothing
-		}
-	}
-	return false;
-}
-
-void Context::substituteInternal( const char *s, std::string &result, const int recursionDepth, unsigned substitutions ) const
-{
-	if( recursionDepth > 8 )
-	{
-		throw IECore::Exception( "Context::substitute() : maximum recursion depth reached." );
-	}
-
-	while( *s )
-	{
-		switch( *s )
-		{
-			case '\\' :
-			{
-				if( substitutions & EscapeSubstitutions )
-				{
-					s++;
-					if( *s )
-					{
-						result.push_back( *s++ );
-					}
-				}
-				else
-				{
-					// variable substitutions disabled
-					result.push_back( *s++ );
-				}
-				break;
-			}
-			case '$' :
-			{
-				if( substitutions & VariableSubstitutions )
-				{
-					s++; // skip $
-					bool bracketed = *s =='{';
-					const char *variableNameStart = nullptr;
-					const char *variableNameEnd = nullptr;
-					if( bracketed )
-					{
-						s++; // skip initial bracket
-						variableNameStart = s;
-						while( *s && *s != '}' )
-						{
-							s++;
-						}
-						variableNameEnd = s;
-						if( *s )
-						{
-							s++; // skip final bracket
-						}
-					}
-					else
-					{
-						variableNameStart = s;
-						while( isalnum( *s ) )
-						{
-							s++;
-						}
-						variableNameEnd = s;
-					}
-
-					InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
-					const IECore::Data *d = get<IECore::Data>( variableName, nullptr );
-					if( d )
-					{
-						switch( d->typeId() )
-						{
-							case IECore::StringDataTypeId :
-								substituteInternal( static_cast<const IECore::StringData *>( d )->readable().c_str(), result, recursionDepth + 1, substitutions );
-								break;
-							case IECore::FloatDataTypeId :
-								result += boost::lexical_cast<std::string>(
-									static_cast<const IECore::FloatData *>( d )->readable()
-								);
-								break;
-							case IECore::IntDataTypeId :
-								result += boost::lexical_cast<std::string>(
-									static_cast<const IECore::IntData *>( d )->readable()
-								);
-								break;
-							case IECore::InternedStringVectorDataTypeId : {
-								// This is unashamedly tailored to the needs of GafferScene's `${scene:path}`
-								// variable. We could make this cleaner by adding a mechanism for registering custom
-								// formatters, but that would be overkill for this one use case.
-								const auto &v = static_cast<const IECore::InternedStringVectorData *>( d )->readable();
-								if( v.empty() )
-								{
-									result += "/";
-								}
-								else
-								{
-									for( const auto &x : v )
-									{
-										result += "/" + x.string();
-									}
-								}
-								break;
-							}
-							default :
-								break;
-						}
-					}
-					else if( const char *v = g_environment.get( variableName ) )
-					{
-						// variable not in context - try environment
-						result += v;
-					}
-				}
-				else
-				{
-					// variable substitutions disabled
-					result.push_back( *s++ );
-				}
-				break;
-			}
-			case '#' :
-			{
-				if( substitutions & FrameSubstitutions )
-				{
-					int padding = 0;
-					while( *s == '#' )
-					{
-						padding++;
-						s++;
-					}
-					int frame = (int)round( getFrame() );
-					std::ostringstream padder;
-					padder << std::setw( padding ) << std::setfill( '0' ) << frame;
-					result += padder.str();
-				}
-				else
-				{
-					// frame substitutions disabled
-					result.push_back( *s++ );
-				}
-				break;
-			}
-			case '~' :
-			{
-				if( substitutions & TildeSubstitutions && result.size() == 0 )
-				{
-					if( const char *v = getenv( "HOME" ) )
-					{
-						result += v;
-					}
-					++s;
-					break;
-				}
-				else
-				{
-					// tilde substitutions disabled
-					result.push_back( *s++ );
-				}
-				break;
-			}
-			default :
-				result.push_back( *s++ );
-				break;
-		}
-	}
+	return IECore::StringAlgo::substitute( s, SubstitutionProvider( this ), substitutions );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -628,4 +408,72 @@ void Context::EditableScope::removeMatching( const StringAlgo::MatchPattern &pat
 const Context *Context::current()
 {
 	return ThreadState::current().m_context;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// SubstitutionProvider implementation
+//////////////////////////////////////////////////////////////////////////
+
+Context::SubstitutionProvider::SubstitutionProvider( const Context *context )
+	:	m_context( context )
+{
+}
+
+int Context::SubstitutionProvider::frame() const
+{
+	return (int)round( m_context->getFrame() );
+}
+
+const std::string &Context::SubstitutionProvider::variable( const boost::string_view &name, bool &recurse ) const
+{
+	InternedString internedName( name );
+	const IECore::Data *d = m_context->get<IECore::Data>( internedName, nullptr );
+	if( d )
+	{
+		switch( d->typeId() )
+		{
+			case IECore::StringDataTypeId :
+				recurse = true;
+				return static_cast<const IECore::StringData *>( d )->readable();
+			case IECore::FloatDataTypeId :
+				m_formattedString = boost::lexical_cast<std::string>(
+					static_cast<const IECore::FloatData *>( d )->readable()
+				);
+				return m_formattedString;
+			case IECore::IntDataTypeId :
+				m_formattedString = boost::lexical_cast<std::string>(
+					static_cast<const IECore::IntData *>( d )->readable()
+				);
+				return m_formattedString;
+			case IECore::InternedStringVectorDataTypeId : {
+				// This is unashamedly tailored to the needs of GafferScene's `${scene:path}`
+				// variable. We could make this cleaner by adding a mechanism for registering custom
+				// formatters, but that would be overkill for this one use case.
+				const auto &v = static_cast<const IECore::InternedStringVectorData *>( d )->readable();
+				m_formattedString.clear();
+				if( v.empty() )
+				{
+					m_formattedString += "/";
+				}
+				else
+				{
+					for( const auto &x : v )
+					{
+						m_formattedString += "/" + x.string();
+					}
+				}
+				return m_formattedString;
+			}
+			default :
+				break;
+		}
+	}
+	else if( const std::string *v = g_environment.get( internedName ) )
+	{
+		// variable not in context - try environment
+		return *v;
+	}
+
+	m_formattedString.clear();
+	return m_formattedString;
 }

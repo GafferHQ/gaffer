@@ -37,10 +37,14 @@
 import IECore
 import Gaffer
 
-# In an upcoming Gaffer version, `Gaffer.Context.Substitutions` will be
-# replaced by `IECore.StringAlgo.Substitutions`, and will be referenced
-# by StringPlug constructors in `.gfr` files. Support loading of such
-# "files from the future" by monkey patching Cortex.
+# The original Gaffer.Context substitution code was generalised and moved
+# to Cortex. Here we provide some backwards compatibility.
 
-if not hasattr( IECore.StringAlgo, "Substitutions" ) :
-	IECore.StringAlgo.Substitutions = Gaffer.Context.Substitutions
+# This is absolutely necessary for the loading of old files containing
+# dynamic StringPlugs with non-default substitutions.
+Gaffer.Context.Substitutions = IECore.StringAlgo.Substitutions
+# These are just provided as a temporary nicety, since it's much harder
+# to audit Python code to discover dependencies. On the C++ side, we have
+# removed these completely.
+Gaffer.Context.hasSubstitutions = staticmethod( IECore.StringAlgo.hasSubstitutions )
+Gaffer.Context.substitutions = staticmethod( IECore.StringAlgo.substitutions )

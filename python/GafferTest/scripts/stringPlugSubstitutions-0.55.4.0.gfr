@@ -1,0 +1,18 @@
+import Gaffer
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 55, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 4, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["n"] = Gaffer.Node( "n" )
+parent.addChild( __children["n"] )
+__children["n"]["user"].addChild( Gaffer.StringPlug( "p", defaultValue = '', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, substitutions = Gaffer.Context.Substitutions.VariableSubstitutions | Gaffer.Context.Substitutions.EscapeSubstitutions | Gaffer.Context.Substitutions.TildeSubstitutions ) )
+
+
+del __children
+
