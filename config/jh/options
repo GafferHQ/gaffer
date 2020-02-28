@@ -47,3 +47,4 @@ DOXYGEN = "/usr/local/bin/doxygen"
 PYTHON_LINK_FLAGS = [ "-lpython$PYTHON_VERSION" ]
 ENV_VARS_TO_IMPORT = "PATH"
 VTUNE_ROOT = "/disk1/apps/intel/system_studio_2018/vtune_amplifier_2018.1.0.535340"
+GAFFERCORTEX=1
