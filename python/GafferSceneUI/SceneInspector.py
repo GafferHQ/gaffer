@@ -287,7 +287,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			targets = []
 			for scene in self.__scenePlugs :
 				for path in paths :
-					if path is not None and not GafferScene.SceneAlgo.exists( scene, path ) :
+					if path is not None and not scene.exists( path ) :
 						# selection may not be valid for both scenes,
 						# and we can't inspect invalid paths.
 						path = None
@@ -1534,7 +1534,7 @@ class _HistorySection( Section ) :
 			if sourceScene.node() == target.scene.node() :
 				return None
 
-			if not GafferScene.SceneAlgo.exists( sourceScene, target.path ) :
+			if not sourceScene.exists( target.path ) :
 				return None
 
 			return SceneInspector.Target( sourceScene, target.path )

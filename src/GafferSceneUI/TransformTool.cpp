@@ -278,7 +278,7 @@ TransformTool::Selection::Selection(
 	:	scene( scene ), path( path ), context( context )
 {
 	Context::Scope scopedContext( context.get() );
-	if( path.empty() || !SceneAlgo::exists( scene.get(), path ) )
+	if( path.empty() || !scene->exists( path ) )
 	{
 		return;
 	}

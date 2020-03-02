@@ -292,6 +292,50 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( Gaffer.NodeAlgo.presets( n["type"] ), [ "Sphere", "Cube" ] )
 
+	def testExists( self ) :
+
+		cube = GafferScene.Cube()
+
+		for path, exists in [
+			( "/", True ),
+			( "/cube", True ),
+			( "/cube2", False ),
+			( "/cube/child", False ),
+			( "/notHere/notHereEither", False ),
+		] :
+			self.assertEqual( cube["out"].exists( path ), exists )
+
+			with Gaffer.Context() as c :
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				self.assertEqual( cube["out"].exists(), exists )
+
+	def testExistsInternals( self ) :
+
+		cube = GafferScene.Cube()
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData()
+			# When there's only one child, the sorted child names refer
+			# to exactly the same object as the regular child names.
+			self.assertTrue(
+				cube["out"]["__sortedChildNames"].getValue( _copy = False ).isSame(
+					cube["out"]["childNames"].getValue( _copy = False )
+				)
+			)
+			# Likewise when there's none
+			c["scene:path"] = IECore.InternedStringVectorData( [ "cube" ] )
+			self.assertTrue(
+				cube["out"]["__sortedChildNames"].getValue( _copy = False ).isSame(
+					cube["out"]["childNames"].getValue( _copy = False )
+				)
+			)
+
+		cs = GafferTest.CapturingSlot( cube.plugDirtiedSignal() )
+		cube["name"].setValue( "box" )
+		self.assertGreaterEqual(
+			{ x[0] for x in cs },
+			{ cube["out"]["childNames"], cube["out"]["__sortedChildNames"], cube["out"]["__exists"] }
+		)
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

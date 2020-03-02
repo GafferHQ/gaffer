@@ -150,11 +150,10 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		ss = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 
 		s["name"].setValue( "ball" )
-		self.assertEqual( len( ss ), 4 )
-		self.failUnless( ss[0][0].isSame( s["name"] ) )
-		self.failUnless( ss[1][0].isSame( s["out"]["childNames"] ) )
-		self.failUnless( ss[2][0].isSame( s["out"]["set"] ) )
-		self.failUnless( ss[3][0].isSame( s["out"] ) )
+		self.assertEqual(
+			{ x[0] for x in ss if not x[0].getName().startswith( "__" ) },
+			{ s["name"], s["out"]["childNames"], s["out"]["set"], s["out"] }
+		)
 
 		del ss[:]
 

@@ -250,7 +250,7 @@ boost::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
 
 	ScenePlug::ScenePath parent;
 	ScenePlug::stringToPath( parentAsString, parent );
-	if( SceneAlgo::exists( inPlug(), parent ) )
+	if( inPlug()->exists( parent ) )
 	{
 		return parent;
 	}

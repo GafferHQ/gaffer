@@ -294,7 +294,7 @@ void CollectScenes::hashChildNames( const ScenePath &path, const Gaffer::Context
 		if( path.size() == 1 )
 		{
 			const auto &upstreamPath = Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			if( !SceneAlgo::exists( inPlug(), upstreamPath ) )
+			if( !inPlug()->exists( upstreamPath ) )
 			{
 				h = inPlug()->childNamesPlug()->defaultValue()->Object::hash();
 				return;
@@ -335,7 +335,7 @@ IECore::ConstInternedStringVectorDataPtr CollectScenes::computeChildNames( const
 		if( path.size() == 1 )
 		{
 			const auto &upstreamPath = Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			if( !SceneAlgo::exists( inPlug(), upstreamPath ) )
+			if( !inPlug()->exists( upstreamPath ) )
 			{
 				return inPlug()->childNamesPlug()->defaultValue();
 			}

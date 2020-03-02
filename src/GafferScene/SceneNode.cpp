@@ -39,6 +39,8 @@
 
 #include "Gaffer/Context.h"
 
+#include "boost/bind.hpp"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -55,6 +57,8 @@ SceneNode::SceneNode( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "out", Gaffer::Plug::Out ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
+
+	plugInputChangedSignal().connect( boost::bind( &SceneNode::plugInputChanged, this, ::_1 ) );
 }
 
 SceneNode::~SceneNode()
@@ -97,6 +101,21 @@ void SceneNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 				continue;
 			}
 			outputs.push_back( it->get() );
+		}
+	}
+
+	if( auto scenePlug = input->parent<ScenePlug>() )
+	{
+		if( scenePlug->direction() == Plug::Out )
+		{
+			if( input == scenePlug->childNamesPlug() )
+			{
+				outputs.push_back( scenePlug->sortedChildNamesPlug() );
+			}
+			else if( input == scenePlug->sortedChildNamesPlug() )
+			{
+				outputs.push_back( scenePlug->existsPlug() );
+			}
 		}
 	}
 }
@@ -176,6 +195,14 @@ void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::M
 		{
 			const IECore::InternedString &setName = context->get<IECore::InternedString>( ScenePlug::setNameContextName );
 			hashSet( setName, context, scenePlug, h );
+		}
+		else if( output == scenePlug->existsPlug() )
+		{
+			hashExists( context, scenePlug, h );
+		}
+		else if( output == scenePlug->sortedChildNamesPlug() )
+		{
+			hashSortedChildNames( context, scenePlug, h );
 		}
 	}
 	else
@@ -300,6 +327,14 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 					computeSet( setName, context, scenePlug )
 				);
 			}
+			else if( output == scenePlug->existsPlug() )
+			{
+				static_cast<BoolPlug *>( output )->setValue( computeExists( context, scenePlug ) );
+			}
+			else if( output == scenePlug->sortedChildNamesPlug() )
+			{
+				static_cast<InternedStringVectorDataPlug *>( output )->setValue( computeSortedChildNames( context, scenePlug ) );
+			}
 		}
 		else
 		{
@@ -409,4 +444,101 @@ Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, co
 		}
 	}
 	return result;
+}
+
+void SceneNode::plugInputChanged( Gaffer::Plug *plug )
+{
+	// If a node makes a pass-through connection for a `childNamesPlug()` then we
+	// want to automatically create the equivalent pass-throughs for the
+	// `existsPlug()` and `sortedChildNamesPlug()`, to avoid unnecessary computes.
+	// We can't expect derived classes to do this for us, because those plugs are
+	// private, so we do it ourselves here.
+
+	if( plug->direction() != Plug::Out )
+	{
+		return;
+	}
+
+	auto scene = plug->parent<ScenePlug>();
+	if( !scene || plug != scene->childNamesPlug() )
+	{
+		return;
+	}
+
+	ScenePlug *sourceScene = nullptr;
+	if( Plug *source = plug->getInput() )
+	{
+		sourceScene = source->parent<ScenePlug>();
+	}
+
+	scene->existsPlug()->setInput( sourceScene ? sourceScene->existsPlug() : nullptr );
+	scene->sortedChildNamesPlug()->setInput( sourceScene ? sourceScene->sortedChildNamesPlug() : nullptr );
+}
+
+void SceneNode::hashExists( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->existsPlug(), context, h );
+
+	const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+	if( scenePath.empty() )
+	{
+		h.append( true );
+		return;
+	}
+
+	ScenePath parentPath( scenePath ); parentPath.pop_back();
+	ScenePlug::PathScope parentScope( context, parentPath );
+	if( !parent->existsPlug()->getValue() )
+	{
+		h.append( false );
+		return;
+	}
+
+	parent->sortedChildNamesPlug()->hash( h );
+	h.append( scenePath.back() );
+}
+
+bool SceneNode::computeExists( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
+	if( scenePath.empty() )
+	{
+		// Root always exists
+		return true;
+	}
+
+	ScenePath parentPath( scenePath ); parentPath.pop_back();
+	ScenePlug::PathScope parentScope( context, parentPath );
+	if( !parent->existsPlug()->getValue() )
+	{
+		// If `parentPath` doesn't exist, then neither can `scenePath`
+		return false;
+	}
+
+	// Search in the sorted child names of our parent.
+
+	auto sortedChildNamesData = parent->sortedChildNamesPlug()->getValue();
+	auto &sortedChildNames = sortedChildNamesData->readable();
+	return std::binary_search( sortedChildNames.begin(), sortedChildNames.end(), scenePath.back() );
+}
+
+void SceneNode::hashSortedChildNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->sortedChildNamesPlug(), context, h );
+	parent->childNamesPlug()->hash( h );
+}
+
+IECore::ConstInternedStringVectorDataPtr SceneNode::computeSortedChildNames( const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	ConstInternedStringVectorDataPtr childNamesData = parent->childNamesPlug()->getValue();
+	if( childNamesData->readable().size() <= 1 )
+	{
+		// Already sorted
+		return childNamesData;
+	}
+
+	InternedStringVectorDataPtr sorted = new InternedStringVectorData;
+	sorted->writable() = childNamesData->readable();
+	std::sort( sorted->writable().begin(), sorted->writable().end() );
+	return sorted;
 }

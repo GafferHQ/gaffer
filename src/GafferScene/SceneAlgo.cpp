@@ -71,22 +71,7 @@ using namespace GafferScene;
 
 bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	ScenePlug::PathScope pathScope( Context::current() );
-
-	ScenePlug::ScenePath p; p.reserve( path.size() );
-	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
-	{
-		pathScope.setPath( p );
-		ConstInternedStringVectorDataPtr childNamesData = scene->childNamesPlug()->getValue();
-		const vector<InternedString> &childNames = childNamesData->readable();
-		if( find( childNames.begin(), childNames.end(), *it ) == childNames.end() )
-		{
-			return false;
-		}
-		p.push_back( *it );
-	}
-
-	return true;
+	return scene->exists( path );
 }
 
 bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
@@ -191,7 +176,7 @@ Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *global
 		{
 			ScenePlug::ScenePath cameraPath;
 			ScenePlug::stringToPath( cameraOption->readable(), cameraPath );
-			if( SceneAlgo::exists( scene, cameraPath ) )
+			if( scene->exists( cameraPath ) )
 			{
 				camera = runTimeCast< const Camera>( scene->object( cameraPath ).get() );
 			}

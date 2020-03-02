@@ -255,6 +255,18 @@ IECore::MurmurHash setHashWrapper( const ScenePlug &plug, const IECore::Interned
 	return plug.setHash( setName );
 }
 
+bool existsWrapper1( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.exists( scenePath );
+}
+
+bool existsWrapper2( const ScenePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.exists();
+}
+
 IECore::InternedStringVectorDataPtr stringToPathWrapper( const char *s )
 {
 	IECore::InternedStringVectorDataPtr p = new IECore::InternedStringVectorData;
@@ -305,6 +317,9 @@ void GafferSceneModule::bindCore()
 		.def( "globalsHash", &globalsHashWrapper )
 		.def( "setNamesHash", &setNamesHashWrapper )
 		.def( "setHash", &setHashWrapper )
+		// existence queries
+		.def( "exists", &existsWrapper1 )
+		.def( "exists", &existsWrapper2 )
 		// string utilities
 		.def( "stringToPath", &stringToPathWrapper )
 		.staticmethod( "stringToPath" )

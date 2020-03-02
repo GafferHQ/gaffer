@@ -153,7 +153,7 @@ bool ScenePath::isValid() const
 	}
 
 	Context::Scope scopedContext( m_context.get() );
-	return SceneAlgo::exists( m_scene.get(), names() );
+	return m_scene->exists( names() );
 }
 
 bool ScenePath::isLeaf() const

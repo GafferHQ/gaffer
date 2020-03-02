@@ -64,7 +64,9 @@ size_t tbb_hasher( const InternedString &s )
 namespace
 {
 
-InternedString g_internalOut( "__internalOut" );
+const InternedString g_internalOut( "__internalOut" );
+const InternedString g_exists( "__exists" );
+const InternedString g_sortedChildNames( "__sortedChildNames" );
 
 } // namespace
 
@@ -94,7 +96,11 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 			process->plug() != scene->transformPlug() &&
 			process->plug() != scene->attributesPlug() &&
 			process->plug() != scene->objectPlug() &&
-			process->plug() != scene->childNamesPlug()
+			process->plug() != scene->childNamesPlug() &&
+			// Private plugs, so we have no choice but to test
+			// for them by name.
+			process->plug()->getName() != g_exists &&
+			process->plug()->getName() != g_sortedChildNames
 		)
 		{
 			if( process->context()->get<IECore::Data>( ScenePlug::scenePathContextName, nullptr ) )

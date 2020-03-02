@@ -71,26 +71,25 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// child plugs.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// The plug used to pass the bounding box of the current node in
+		/// The plug used to pass the bounding box of the current location in
 		/// the scene graph. The bounding box is supplied /without/ the
 		/// transform applied.
 		Gaffer::AtomicBox3fPlug *boundPlug();
 		const Gaffer::AtomicBox3fPlug *boundPlug() const;
-		/// The plug used to pass the transform for the current node.
+		/// The plug used to pass the transform for the current location.
 		Gaffer::M44fPlug *transformPlug();
 		const Gaffer::M44fPlug *transformPlug() const;
-		/// The plug used to pass the attribute state for the current node.
-		/// This is represented as a collection of IECore::StateRenderables.
+		/// The plug used to pass the attribute state for the current location.
 		Gaffer::CompoundObjectPlug *attributesPlug();
 		const Gaffer::CompoundObjectPlug *attributesPlug() const;
-		/// The plug used to pass the object for the current node.
+		/// The plug used to pass the object for the current location.
 		Gaffer::ObjectPlug *objectPlug();
 		const Gaffer::ObjectPlug *objectPlug() const;
-		/// The plug used to pass the names of the child nodes of the current node
-		/// in the scene graph.
+		/// The plug used to pass the names of the child locations of the current
+		/// location in the scene graph.
 		Gaffer::InternedStringVectorDataPlug *childNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *childNamesPlug() const;
-		/// The plug used to pass renderer options including displays etc,
+		/// The plug used to pass renderer options including output etc,
 		/// represented as a CompoundObject. Note that this is not sensitive
 		/// to the "scene:path" context entry.
 		Gaffer::CompoundObjectPlug *globalsPlug();
@@ -184,8 +183,13 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// multiple plugs in the same context, better performance can be
 		/// achieved using the appropriate scope class and calling hash() or
 		/// getValue() directly.
+		///
+		/// > Note : It is a programming error to trigger a compute for a
+		/// > location which does not exist. Use the `exists()` method to
+		/// > verify existence where necessary.
 		////////////////////////////////////////////////////////////////////
 		//@{
+		/// Returns the bound for the specified location.
 		Imath::Box3f bound( const ScenePath &scenePath ) const;
 		/// Returns the local transform at the specified scene path.
 		Imath::M44f transform( const ScenePath &scenePath ) const;
@@ -223,11 +227,33 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash setHash( const IECore::InternedString &setName ) const;
 		//@}
 
+		/// Returns true if the specified location exists. This is achieved
+		/// by querying `childNames()` at all ancestor locations, but with
+		/// significantly better performance than is achievable via the public
+		/// API alone.
+		bool exists( const ScenePath &scenePath ) const;
+		/// As above, but for the location specified by the current context.
+		bool exists() const;
+
 		/// Utility function to convert a string into a path by splitting on '/'.
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
+
+	private :
+
+		// Private plugs that are used to implement the `exists()` method.
+		// Values for these are computed automatically by SceneNode, hence
+		// the friendship.
+
+		friend class SceneNode;
+
+		Gaffer::BoolPlug *existsPlug();
+		const Gaffer::BoolPlug *existsPlug() const;
+
+		Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug();
+		const Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug() const;
 
 };
 

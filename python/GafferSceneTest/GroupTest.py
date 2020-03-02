@@ -777,6 +777,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( group["out"] )
 
+	def testExists( self ) :
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		self.assertTrue( group["out"].exists( "/" ) )
+		self.assertTrue( group["out"].exists( "/group" ) )
+		self.assertTrue( group["out"].exists( "/group/sphere" ) )
+		self.assertTrue( group["out"].exists( "/group/cube" ) )
+		self.assertFalse( group["out"].exists( "/group2" ) )
+		self.assertFalse( group["out"].exists( "/group/plane" ) )
+		self.assertFalse( group["out"].exists( "/road/to/nowhere" ) )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

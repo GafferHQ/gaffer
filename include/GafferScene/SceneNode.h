@@ -130,6 +130,14 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 
 	private :
 
+		void plugInputChanged( Gaffer::Plug *plug );
+
+		void hashExists( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		bool computeExists( const Gaffer::Context *context, const ScenePlug *parent ) const;
+
+		void hashSortedChildNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		IECore::ConstInternedStringVectorDataPtr computeSortedChildNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
+
 		static size_t g_firstPlugIndex;
 
 };

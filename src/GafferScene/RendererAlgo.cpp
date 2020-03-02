@@ -1418,7 +1418,7 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	if( cameraOption && !cameraOption->readable().empty() )
 	{
 		ScenePlug::ScenePath cameraPath; ScenePlug::stringToPath( cameraOption->readable(), cameraPath );
-		if( !SceneAlgo::exists( scene, cameraPath ) )
+		if( !scene->exists( cameraPath ) )
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" does not exist" );
 		}
