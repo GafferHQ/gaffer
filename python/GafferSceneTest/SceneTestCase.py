@@ -79,9 +79,10 @@ class SceneTestCase( GafferTest.TestCase ) :
 				if not o.arePrimitiveVariablesValid() :
 					self.fail( "Object %s has invalid primitive variables" % scenePath )
 
+			childNames = scenePlug.childNames( scenePath, _copy = False )
+			self.assertEqual( len( childNames ), len( set( childNames ) ) )
 
 			unionOfTransformedChildBounds = imath.Box3f()
-			childNames = scenePlug.childNames( scenePath, _copy = False )
 			for childName in childNames :
 
 				childPath = IECore.InternedStringVectorData( scenePath )

@@ -310,6 +310,7 @@ nodeMenu.append( "/Scene/Filters/Path Filter", GafferScene.PathFilter, searchTex
 nodeMenu.append( "/Scene/Filters/Union Filter", GafferScene.UnionFilter, searchText = "UnionFilter" )
 nodeMenu.append( "/Scene/Hierarchy/Group", GafferScene.Group )
 nodeMenu.append( "/Scene/Hierarchy/Parent", GafferScene.Parent )
+nodeMenu.append( "/Scene/Hierarchy/Merge", GafferScene.MergeScenes, searchText = "MergeScenes" )
 nodeMenu.append( "/Scene/Hierarchy/Duplicate", GafferScene.Duplicate )
 nodeMenu.append( "/Scene/Hierarchy/SubTree", GafferScene.SubTree ) #\todo - rename to 'Subtree' (node needs to change too)
 nodeMenu.append( "/Scene/Hierarchy/Prune", GafferScene.Prune )

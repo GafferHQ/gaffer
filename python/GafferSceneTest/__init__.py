@@ -142,6 +142,7 @@ from OrientationTest import OrientationTest
 from MeshTypeTest import MeshTypeTest
 from CopyPrimitiveVariablesTest import CopyPrimitiveVariablesTest
 from SpreadsheetTest import SpreadsheetTest
+from MergeScenesTest import MergeScenesTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *
