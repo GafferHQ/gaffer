@@ -69,6 +69,8 @@ def __copyAttributesInGetItem( originalGetItem ) :
 		else:
 			return originalGetItem( self, key )
 
+		return originalGetItem( self, key )
+
 	return getItem
 
 GafferScene.CopyAttributes.__getitem__ = __copyAttributesGetItem( GafferScene.CopyAttributes.__getitem__ )

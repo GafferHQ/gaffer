@@ -45,15 +45,13 @@ import Gaffer
 
 def __range( cls, parent ) :
 
-	for i in range( 0, len( parent ) ) :
-		child = parent[i]
+	for child in parent.children() :
 		if isinstance( child, cls ) :
 			yield child
 
 def __recursiveRange( cls, parent ) :
 
-	for i in range( 0, len( parent ) ) :
-		child = parent[i]
+	for child in parent.children() :
 		if isinstance( child, cls ) :
 			yield child
 		for r in __recursiveRange( cls, child ) :

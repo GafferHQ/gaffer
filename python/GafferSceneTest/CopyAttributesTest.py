@@ -162,5 +162,21 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 			parent["out"].attributes( "/sphere" )
 		)
 
+	def testRanges( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["copy"] = GafferScene.CopyAttributes()
+		script["box"] = Gaffer.Box()
+		script["box"]["copy"] = GafferScene.CopyAttributes()
+
+		self.assertEqual(
+			list( GafferScene.CopyAttributes.Range( script ) ),
+			[ script["copy"] ],
+		)
+		self.assertEqual(
+			list( GafferScene.CopyAttributes.RecursiveRange( script ) ),
+			[ script["copy"], script["box"]["copy"] ],
+		)
+
 if __name__ == "__main__":
 	unittest.main()
