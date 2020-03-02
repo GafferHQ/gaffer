@@ -6,6 +6,24 @@ Build
 
 - Cortex : Updated to version 10.0.0-a74.
 
+0.56.1.0
+========
+
+Features
+--------
+
+- MergeScenes : Added a new node for merging the hierarchies from multiple input scenes (#3583).
+
+Fixes
+-----
+
+- Set expression context menus :
+  - Fixed bug that prevented the plug label context menu opening when the plug accepted set expressions.
+  - Fixed bug that prevented the SetFilter's set expression menu from appearing when attached to a CopyAttributes node.
+- CollectScenes : Fixed bug which caused errors when `RecursiveRange` encountered a CollectScenes node.
+- Range/RecursiveRange : Fixed problems caused by visiting CopyAttributes nodes.
+- SceneAlgo : Fixed bug that caused unrelated processes to appear in `history()` results (#3647).
+
 0.56.0.0
 ========
 
@@ -181,6 +199,18 @@ Build
 - USD : Updated to version 20.02 (#3585).
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
+
+0.55.5.1 (relative to 0.55.5.0)
+========
+
+Fixes
+-----
+
+- Set expression context menus :
+  - Fixed bug that prevented the plug label context menu opening when the plug accepted set expressions.
+  - Fixed bug that prevented the SetFilter's set expression menu from appearing when attached to a CopyAttributes node.
+- CollectScenes : Fixed bug which caused errors when `RecursiveRange` encountered a CollectScenes node.
+- Range/RecursiveRange : Fixed problems caused by visiting CopyAttributes nodes.
 
 0.55.5.0 (relative to 0.55.4.1)
 ========

@@ -310,5 +310,21 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		collect2["rootNames"].setValue( IECore.StringVectorData( [ "c", "d" ] ) )
 		self.assertEqual( collect2["out"].set( "__lights" ).value, IECore.PathMatcher( [ "/c/light", "/d/light" ] ) )
 
+	def testRanges( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["collect"] = GafferScene.CollectScenes()
+		script["box"] = Gaffer.Box()
+		script["box"]["collect"] = GafferScene.CollectScenes()
+
+		self.assertEqual(
+			list( GafferScene.CollectScenes.Range( script ) ),
+			[ script["collect"] ],
+		)
+		self.assertEqual(
+			list( GafferScene.CollectScenes.RecursiveRange( script ) ),
+			[ script["collect"], script["box"]["collect"] ],
+		)
+
 if __name__ == "__main__":
 	unittest.main()

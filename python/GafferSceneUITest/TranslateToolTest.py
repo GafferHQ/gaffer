@@ -648,6 +648,44 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		view["in"].setInput( box["out"] )
 		self.assertEqual( tool.selection()[0].scene, box["out"] )
 
+	def testSelectionRefersToCorrectPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["cube"] = GafferScene.Cube()
+		script["freeze"] = GafferScene.FreezeTransform()
+		script["freezeFilter"] = GafferScene.PathFilter()
+		script["freezeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		script["freeze"]["in"].setInput( script["sphere"]["out"] )
+		script["freeze"]["filter"].setInput( script["freezeFilter"]["out"] )
+		script["instancer"] = GafferScene.Instancer()
+		script["instancerFilter"] = GafferScene.PathFilter()
+		script["instancerFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		script["instancer"]["in"].setInput( script["freeze"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["cube"]["out"] )
+		script["instancer"]["filter"].setInput( script["instancerFilter"]["out"] )
+		script["subTree"] = GafferScene.SubTree()
+		script["subTree"]["root"].setValue( "/sphere/instances" )
+		script["subTree"]["in"].setInput( script["instancer"]["out"] )
+		script["plane"] = GafferScene.Plane()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["subTree"]["out"] )
+		script["group"]["in"][1].setInput( script["plane"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		self.assertEqual( tool.selection(), [] )
+
+		view["in"].setInput( script["group"]["out"] )
+		self.assertEqual( tool.selection(), [] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].transformPlug, script["plane"]["transform"] )
+
 	def testLastSelectedObjectWithSharedTransformPlug( self ) :
 
 		script = Gaffer.ScriptNode()
