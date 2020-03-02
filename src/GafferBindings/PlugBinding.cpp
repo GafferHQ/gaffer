@@ -57,8 +57,23 @@ using namespace Gaffer;
 namespace
 {
 
-bool shouldSerialiseInput( const Plug *plug )
+bool shouldSerialiseInput( const Plug *plug, const Serialisation &serialisation )
 {
+	if( !plug->getInput() )
+	{
+		return false;
+	}
+
+	if( auto parent = plug->parent<Plug>() )
+	{
+		if( parent->getInput() && parent != serialisation.parent() )
+		{
+			// Parent plug's input will have been serialised, so a serialisation
+			// for the child would be redundant.
+			return false;
+		}
+	}
+
 	if( !plug->getFlags( Plug::Serialisable ) )
 	{
 		// Removing the Serialisable flag is a common way of
@@ -155,7 +170,8 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 	const Plug *plug = static_cast<const Plug *>( graphComponent );
 
 	std::string result = Serialiser::postHierarchy( graphComponent, identifier, serialisation );
-	if( shouldSerialiseInput( plug ) )
+
+	if( shouldSerialiseInput( plug, serialisation ) )
 	{
 		std::string inputIdentifier = serialisation.identifier( plug->getInput() );
 		if( inputIdentifier.size() )

@@ -357,6 +357,24 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( ss.count( "setValue" ), 2 )
 		self.assertEqual( ss.count( "setInput" ), 1 )
 
+	def testNoRedundantSetInputCalls( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferTest.CompoundNumericNode()
+		s["n2"] = GafferTest.CompoundNumericNode()
+		s["n2"]["p"].setInput( s["n1"]["p"] )
+
+		ss = s.serialise()
+		self.assertEqual( ss.count( "setInput" ), 1 )
+
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+
+		self.assertEqual( s["n2"]["p"].getInput(), s["n1"]["p"] )
+		self.assertEqual( s["n2"]["p"]["x"].getInput(), s["n1"]["p"]["x"] )
+		self.assertEqual( s["n2"]["p"]["y"].getInput(), s["n1"]["p"]["y"] )
+		self.assertEqual( s["n2"]["p"]["z"].getInput(), s["n1"]["p"]["z"] )
+
 	def testUndoMerging( self ) :
 
 		s = Gaffer.ScriptNode()
