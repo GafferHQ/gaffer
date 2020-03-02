@@ -1,3 +1,16 @@
+0.56.1.0
+========
+
+Features
+--------
+
+- MergeScenes : Added a new node for merging the hierarchies from multiple input scenes (#3583).
+
+Fixes
+-----
+
+- SceneAlgo : Fixed bug that caused unrelated processes to appear in `history()` results (#3647).
+
 0.56.0.0
 ========
 
