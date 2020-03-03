@@ -56,6 +56,11 @@ Spreadsheet::RowPlugPtr defaultRow( Spreadsheet::RowsPlug &rowsPlug )
 	return rowsPlug.defaultRow();
 }
 
+Spreadsheet::RowPlugPtr row( Spreadsheet::RowsPlug &rowsPlug, const std::string &name )
+{
+	return rowsPlug.row( name );
+}
+
 size_t addColumn( Spreadsheet::RowsPlug &rowsPlug, ValuePlug &value, IECore::InternedString name )
 {
 	ScopedGILRelease gilRelease;
@@ -144,6 +149,7 @@ void GafferModule::bindSpreadsheet()
 			)
 		)
 		.def( "defaultRow", &defaultRow )
+		.def( "row", &row )
 		.def( "addColumn", &addColumn, ( arg( "value" ), arg( "name" ) = "" ) )
 		.def( "removeColumn", &removeColumn )
 		.def( "addRow", &addRow )

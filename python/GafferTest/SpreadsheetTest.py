@@ -651,6 +651,143 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			self.assertEqual( s["s"]["out"]["v"].getValue(), "" )
 			self.assertEqual( s["s"]["out"]["v"].getValue(), "" )
 
+	def testRowAccessor( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = Gaffer.Spreadsheet()
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), None )
+		self.assertEqual( s["s"]["rows"].row( "y" ), None )
+		self.assertEqual( s["s"]["rows"].row( "z" ), None )
+
+		with Gaffer.UndoContext( s ) :
+			row1 = s["s"]["rows"].addRow()
+			row1["name"].setValue( "x" )
+			row2 = s["s"]["rows"].addRow()
+			row2["name"].setValue( "y" )
+
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), row1 )
+		self.assertEqual( s["s"]["rows"].row( "y" ), row2 )
+		self.assertEqual( s["s"]["rows"].row( "z" ), None )
+
+		with Gaffer.UndoContext( s ) :
+			row2["name"].setValue( "z" )
+
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), row1 )
+		self.assertEqual( s["s"]["rows"].row( "y" ), None )
+		self.assertEqual( s["s"]["rows"].row( "z" ), row2 )
+
+		with Gaffer.UndoContext( s ) :
+			row3 = s["s"]["rows"].addRow()
+			row3["name"].setValue( "y" )
+
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), row1 )
+		self.assertEqual( s["s"]["rows"].row( "y" ), row3 )
+		self.assertEqual( s["s"]["rows"].row( "z" ), row2 )
+
+		s.undo()
+
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), row1 )
+		self.assertEqual( s["s"]["rows"].row( "y" ), None )
+		self.assertEqual( s["s"]["rows"].row( "z" ), row2 )
+
+		s.undo()
+
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), row1 )
+		self.assertEqual( s["s"]["rows"].row( "y" ), row2 )
+		self.assertEqual( s["s"]["rows"].row( "z" ), None )
+
+		s.undo()
+
+		self.assertEqual( s["s"]["rows"].row( "" ), None )
+		self.assertEqual( s["s"]["rows"].row( "x" ), None )
+		self.assertEqual( s["s"]["rows"].row( "y" ), None )
+		self.assertEqual( s["s"]["rows"].row( "z" ), None )
+
+	def testRowAccessorWithEmptyName( self ) :
+
+		s = Gaffer.Spreadsheet()
+		self.assertEqual( s["rows"].row( "" ), None )
+		r = s["rows"].addRow()
+		self.assertEqual( s["rows"].row( "" ), r )
+		r["name"].setValue( "n" )
+		self.assertEqual( s["rows"].row( "" ), None )
+
+	def testRowAccessorWithDuplicateNames( self ) :
+
+		s = Gaffer.Spreadsheet()
+		row1 = s["rows"].addRow()
+		row2 = s["rows"].addRow()
+		row3 = s["rows"].addRow()
+
+		self.assertEqual( s["rows"].row( "" ), row1 )
+		s["rows"].removeRow( row1 )
+		self.assertEqual( s["rows"].row( "" ), row2 )
+		s["rows"].removeRow( row2 )
+		self.assertEqual( s["rows"].row( "" ), row3 )
+
+	def testRowAccessorWithNoParent( self ) :
+
+		rows = Gaffer.Spreadsheet.RowsPlug()
+		row1 = rows.addRow()
+		row2 = rows.addRow()
+		row1["name"].setValue( "x" )
+		row2["name"].setValue( "y" )
+
+		self.assertEqual( rows.row( "x" ), row1 )
+		self.assertEqual( rows.row( "y" ), row2 )
+
+		row1["name"].setValue( "z" )
+		row2["name"].setValue( "w" )
+
+		self.assertEqual( rows.row( "x" ), None )
+		self.assertEqual( rows.row( "y" ), None )
+		self.assertEqual( rows.row( "z" ), row1 )
+		self.assertEqual( rows.row( "w" ), row2 )
+
+	def testRowAccessorWithPromotion( self ) :
+
+		box = Gaffer.Box()
+		box["s"] = Gaffer.Spreadsheet()
+		rows = Gaffer.PlugAlgo.promote( box["s"]["rows"] )
+
+		row1 = rows.addRow()
+		row2 = rows.addRow()
+		row1["name"].setValue( "x" )
+		row2["name"].setValue( "y" )
+
+		self.assertEqual( rows.row( "x" ), row1 )
+		self.assertEqual( rows.row( "y" ), row2 )
+		self.assertEqual( rows.row( "z" ), None )
+
+		self.assertEqual( box["s"]["rows"].row( "x" ).source(), row1 )
+		self.assertEqual( box["s"]["rows"].row( "y" ).source(), row2 )
+		self.assertEqual( box["s"]["rows"].row( "z" ), None )
+
+	def testRowAccessorWithComputedNames( self ) :
+
+		n = GafferTest.StringInOutNode()
+		n["in"].setValue( "x" )
+
+		s = Gaffer.Spreadsheet()
+		r = s["rows"].addRow()
+		r["name"].setInput( n["out"] )
+
+		self.assertEqual( s["rows"].row( "x" ), None )
+
+	def testRowAccessorWithWildcards( self ) :
+
+		s = Gaffer.Spreadsheet()
+		r = s["rows"].addRow()
+		r["name"].setValue( "abc*[0-9]" )
+		self.assertEqual( s["rows"].row( "abc*[0-9]" ), r )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testAddRowPerformance( self ) :
 
@@ -713,6 +850,18 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 				for i in range( 0, numRows ) :
 					c["index"] = i
 					self.assertEqual( out.getValue(), i )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testRowAccessorPerformance( self ) :
+
+		s = Gaffer.Spreadsheet()
+		rows = s["rows"]
+
+		for i in range( 0, 10000 ) :
+			name = "row{}".format( i )
+			r = rows.addRow()
+			r["name"].setValue( name )
+			self.assertEqual( rows.row( name ), r )
 
 if __name__ == "__main__":
 	unittest.main()

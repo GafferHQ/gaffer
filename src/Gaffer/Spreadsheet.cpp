@@ -40,12 +40,17 @@
 
 #include "IECore/NullObject.h"
 
+#include "boost/bind.hpp"
 #include "boost/container/small_vector.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index_container.hpp"
 
 #include <unordered_map>
 
 using namespace std;
+using namespace boost;
 using namespace IECore;
 using namespace Gaffer;
 
@@ -173,11 +178,204 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 
 GAFFER_PLUG_DEFINE_TYPE( Spreadsheet::RowsPlug );
 
+// Manages a data structure mapping between row name
+// and row, so we can implement `RowsPlug::row()` without
+// linear search.
+class Spreadsheet::RowsPlug::RowNameMap
+{
+
+	public :
+
+		RowNameMap( Spreadsheet::RowsPlug *rowsPlug )
+			:	m_rowsPlug( rowsPlug )
+		{
+			rowsPlug->childAddedSignal().connect( boost::bind( &RowNameMap::childAdded, this, ::_2 ) );
+			rowsPlug->childRemovedSignal().connect( boost::bind( &RowNameMap::childRemoved, this, ::_2 ) );
+			rowsPlug->parentChangedSignal().connect( boost::bind( &RowNameMap::parentChanged, this ) );
+		}
+
+		RowPlug *row( const string &rowName )
+		{
+			if( !m_plugSetConnection.connected() )
+			{
+				// If we can't track name changes, we must do
+				// a brute force update. This should basically never
+				// happen, so we put no effort into making something more
+				// performant.
+				updateRowNames();
+			}
+
+			const auto &index = m_map.get<1>();
+			auto range = index.equal_range( rowName );
+			if( range.first == index.end() )
+			{
+				return nullptr;
+			}
+			else if( range.first == range.second )
+			{
+				// Single row with the requested name.
+				// This is the common case we are optimising
+				// for.
+				return range.first->plug;
+			}
+			else
+			{
+				// Multiple rows with the requested name.
+				// We must return the first one.
+				size_t minIndex = std::numeric_limits<size_t>::max();
+				RowPlug *result = nullptr;
+				for( auto it = range.first; it != range.second; ++it )
+				{
+					/// \todo We need GraphComponent to provide constant-time
+					/// access to a child's index.
+					const auto childIt = find( m_rowsPlug->children().begin(), m_rowsPlug->children().end(), it->plug );
+					const size_t index = childIt - m_rowsPlug->children().begin();
+					if( index < minIndex )
+					{
+						minIndex = index;
+						result = it->plug;
+					}
+				}
+				return result;
+			}
+		}
+
+	private :
+
+		string rowName( const RowPlug *row )
+		{
+			auto namePlug = row->namePlug()->source<StringPlug>();
+			if( namePlug->direction() == Plug::Out )
+			{
+				return "__rowNameMap::computedNameSentinel__";
+			}
+			else
+			{
+				return row->namePlug()->getValue();
+			}
+		}
+
+		void childAdded( GraphComponent *child )
+		{
+			auto row = static_cast<RowPlug *>( child ); // Guaranteed by `RowsPlug::acceptsChild()`.
+			if( row != m_rowsPlug->defaultRow() )
+			{
+				m_map.insert( { row, rowName( row ) } );
+			}
+		}
+
+		void childRemoved( GraphComponent *child )
+		{
+			auto row = static_cast<RowPlug *>( child ); // Guaranteed by `RowsPlug::acceptsChild()`.
+			m_map.erase( row );
+		}
+
+		void parentChanged()
+		{
+			if( auto node = m_rowsPlug->node() )
+			{
+				m_plugSetConnection = node->plugSetSignal().connect( boost::bind( &RowNameMap::plugSet, this, ::_1 ) );
+				m_plugInputChangedConnection = node->plugInputChangedSignal().connect( boost::bind( &RowNameMap::plugInputChanged, this, ::_1 ) );
+				// While we had no parent, we couldn't track
+				// value or input changes, so we must manually
+				// update all the names.
+				updateRowNames();
+			}
+			else
+			{
+				m_plugSetConnection.disconnect();
+				m_plugInputChangedConnection.disconnect();
+			}
+		}
+
+		void plugSet( Plug *plug )
+		{
+			updateRowName( plug );
+		}
+
+		void plugInputChanged( Plug *plug )
+		{
+			updateRowName( plug );
+		}
+
+		void updateRowName( Plug *plug )
+		{
+			if( auto row = plug->parent<RowPlug>() )
+			{
+				if( plug == row->namePlug() && row->parent() == m_rowsPlug && row != m_rowsPlug->defaultRow() )
+				{
+					auto it = m_map.find( row );
+					assert( it != m_map.end() );
+					m_map.get<1>().modify_key(
+						m_map.project<1>( it ),
+						[row, this] ( string &name ) {
+							name = this->rowName( row );
+						}
+					);
+				}
+			}
+		}
+
+		void updateRowNames()
+		{
+			auto &index = m_map.get<1>();
+
+			// `modify_key()` doesn't invalidate iterators, but it does
+			// reorder them, so to visit everything we must first grab
+			// all the iterators.
+			std::vector<Map::nth_index<1>::type::iterator> iterators;
+			for( auto it = index.begin(); it != index.end(); ++it )
+			{
+				iterators.push_back( it );
+			}
+
+			for( const auto &it : iterators )
+			{
+				index.modify_key(
+					it,
+					[it, this] ( string &name ) {
+						name = this->rowName( it->plug );
+					}
+				);
+			}
+		}
+
+		RowsPlug *m_rowsPlug;
+
+		boost::signals::scoped_connection m_plugSetConnection;
+		boost::signals::scoped_connection m_plugInputChangedConnection;
+
+		struct Row
+		{
+			RowPlug *plug;
+			string name;
+		};
+
+		using Map = multi_index::multi_index_container<
+			Row,
+			multi_index::indexed_by<
+				multi_index::hashed_unique<
+					multi_index::member<Row, RowPlug *, &Row::plug>
+				>,
+				multi_index::hashed_non_unique<
+					multi_index::member<Row, string, &Row::name>
+				>
+			>
+		>;
+
+		Map m_map;
+
+};
+
 Spreadsheet::RowsPlug::RowsPlug( const std::string &name, Direction direction, unsigned flags )
-	:	ValuePlug( name, direction, flags )
+	:	ValuePlug( name, direction, flags ), m_rowNameMap( new RowNameMap( this ) )
 {
 	RowPlugPtr defaultRow = new RowPlug( "default" );
 	addChild( defaultRow );
+}
+
+Spreadsheet::RowsPlug::~RowsPlug()
+{
 }
 
 Spreadsheet::RowPlug *Spreadsheet::RowsPlug::defaultRow()
@@ -188,6 +386,16 @@ Spreadsheet::RowPlug *Spreadsheet::RowsPlug::defaultRow()
 const Spreadsheet::RowPlug *Spreadsheet::RowsPlug::defaultRow() const
 {
 	return getChild<RowPlug>( 0 );
+}
+
+Spreadsheet::RowPlug *Spreadsheet::RowsPlug::row( const std::string &rowName )
+{
+	return m_rowNameMap->row( rowName );
+}
+
+const Spreadsheet::RowPlug *Spreadsheet::RowsPlug::row( const std::string &rowName ) const
+{
+	return m_rowNameMap->row( rowName );
 }
 
 size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::InternedString name )
@@ -311,6 +519,10 @@ std::vector<Gaffer::ValuePlug *> Spreadsheet::RowsPlug::outPlugs()
 	return result;
 }
 
+bool Spreadsheet::RowsPlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return runTimeCast<const RowPlug>( potentialChild );
+}
 
 Gaffer::PlugPtr Spreadsheet::RowsPlug::createCounterpart( const std::string &name, Direction direction ) const
 {

@@ -76,11 +76,22 @@ class GAFFER_API Spreadsheet : public ComputeNode
 			public :
 
 				RowsPlug( const std::string &name = defaultName<RowsPlug>(), Direction direction = In, unsigned flags = Default );
+				virtual ~RowsPlug();
 
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Spreadsheet::RowsPlug, Gaffer::SpreadsheetRowsPlugTypeId, Gaffer::ValuePlug );
 
+				/// Row accessors
+				/// =============
+
 				RowPlug *defaultRow();
 				const RowPlug *defaultRow() const;
+
+				/// Returns the first row which has a name - as specified by
+				/// `RowPlug::namePlug()->getValue()` - equal to `rowName`.
+				/// Ignores rows with names driven by a ComputeNode, and never
+				/// returns `defaultRow()`.
+				RowPlug *row( const std::string &rowName );
+				const RowPlug *row( const std::string &rowName ) const;
 
 				/// Methods for adjusting spreadsheet size
 				/// ======================================
@@ -103,11 +114,19 @@ class GAFFER_API Spreadsheet : public ComputeNode
 				void addRows( size_t numRows );
 				void removeRow( RowPlugPtr row );
 
+				/// Overrides
+				/// =========
+
+				bool acceptsChild( const GraphComponent *potentialChild ) const override;
 				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 			private :
 
 				std::vector<ValuePlug *> outPlugs();
+
+				// Used to implement the `row()` accessor.
+				class RowNameMap;
+				std::unique_ptr<RowNameMap> m_rowNameMap;
 
 		};
 
