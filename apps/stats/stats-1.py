@@ -432,16 +432,9 @@ class stats( Gaffer.Application ) :
 
 	def __writeNodes( self, script ) :
 
-		def countWalk( node, counter ) :
-
-			if not isinstance( node, Gaffer.ScriptNode ) :
-				counter[node.typeName()] += 1
-
-			for c in node.children( Gaffer.Node ) :
-				countWalk( c, counter )
-
 		counter = collections.Counter()
-		countWalk( script, counter )
+		for node in Gaffer.Node.RecursiveRange( script ) :
+			counter[node.typeName()] += 1
 
 		items = [ ( nodeType.rpartition( ":" )[2], count ) for nodeType, count in counter.most_common() ]
 		items.extend( [
@@ -478,7 +471,7 @@ class stats( Gaffer.Application ) :
 		if isinstance( scene, GafferScene.Render ) :
 			scene = scene["task"]
 		elif isinstance( scene, Gaffer.Node ) :
-			scene = next( ( x for x in scene.children( GafferScene.ScenePlug ) ), None )
+			scene = next( GafferScene.ScenePlug.RecursiveOutputRange( scene ), None )
 
 		if scene is None :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
@@ -526,7 +519,7 @@ class stats( Gaffer.Application ) :
 
 		image = script.descendant( args["image"].value )
 		if isinstance( image, Gaffer.Node ) :
-			image = next( ( x for x in image.children( GafferImage.ImagePlug ) ), None )
+			image = next( GafferImage.ImagePlug.RecursiveOutputRange( image ), None )
 
 		if image is None :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
