@@ -84,7 +84,7 @@ Gaffer.Metadata.registerNode(
 		"user.*" : (
 
 			"deletable", True,
-			"labelPlugValueWidget:renameable", True,
+			"renameable", True,
 
 		),
 

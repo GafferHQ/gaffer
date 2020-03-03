@@ -98,17 +98,25 @@ class NameWidget( GafferUI.TextWidget ) :
 		editable = False
 		if self.__graphComponent is not None :
 			editable = not Gaffer.MetadataAlgo.readOnly( self.__graphComponent )
+			if Gaffer.Metadata.value( self.__graphComponent, "renameable" ) == False :
+				editable = False
 
 		self.setEditable( editable )
 
 	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__graphComponent, nodeTypeId, key, node ) :
+		if (
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__graphComponent, nodeTypeId, key, node ) or
+			node == self.__graphComponent and key == "renameable"
+		) :
 			self.__updateEditability()
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__graphComponent, nodeTypeId, plugPath, key, plug ) :
+		if (
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__graphComponent, nodeTypeId, plugPath, key, plug ) or
+			plug == self.__graphComponent and key == "renameable"
+		) :
 			self.__updateEditability()
 
 class _Validator( QtGui.QValidator ) :
