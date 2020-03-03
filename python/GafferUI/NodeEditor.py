@@ -86,7 +86,6 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			)
 
 		self.__nodeUI = None
-		self.__readOnly = False
 
 		self._updateFromSet()
 
@@ -96,22 +95,6 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		self._doPendingUpdate()
 		return self.__nodeUI
-
-	## \deprecated
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.__readOnly :
-			return
-
-		self.__readOnly = readOnly
-		if self.__nodeUI is not None :
-			self.__nodeUI.setReadOnly( readOnly )
-			self.__nameWidget.setEditable( not readOnly )
-
-	## \deprecated
-	def getReadOnly( self ) :
-
-		return self.__readOnly
 
 	__toolMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create the
@@ -165,7 +148,6 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		self.__header.setVisible( True )
 
 		self.__nodeUI = GafferUI.NodeUI.create( node )
-		self.__nodeUI.setReadOnly( self.getReadOnly() )
 		self.__nodeUIFrame.setChild( self.__nodeUI )
 
 	def _titleFormat( self ) :

@@ -126,25 +126,6 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	## Overridden to propagate status to children.
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__childPlugUIs.values() :
-			if w is None :
-				continue
-			if isinstance( w, GafferUI.PlugValueWidget ) :
-				w.setReadOnly( readOnly )
-			elif isinstance(  w, GafferUI.PlugWidget ) :
-				w.labelPlugValueWidget().setReadOnly( readOnly )
-				w.plugValueWidget().setReadOnly( readOnly )
-			else :
-				w.plugValueWidget().setReadOnly( readOnly )
-
 	def _updateFromPlug( self ) :
 
 		if self.__summary is not None and self.__collapsible is not None :
@@ -209,14 +190,6 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 				widget = self._childPlugWidget( childPlug )
 				assert( isinstance( widget, ( GafferUI.PlugValueWidget, type( None ) ) ) or hasattr( widget, "plugValueWidget" ) )
 				self.__childPlugUIs[childPlug] = widget
-				if widget is not None :
-					if isinstance( widget, GafferUI.PlugValueWidget ) :
-						widget.setReadOnly( self.getReadOnly() )
-					elif isinstance(  widget, GafferUI.PlugWidget ) :
-						widget.labelPlugValueWidget().setReadOnly( self.getReadOnly() )
-						widget.plugValueWidget().setReadOnly( self.getReadOnly() )
-					else :
-						widget.plugValueWidget().setReadOnly( self.getReadOnly() )
 			else :
 				widget = self.__childPlugUIs[childPlug]
 			if widget is not None :

@@ -1023,7 +1023,7 @@ def __appendClippingPlaneMenuItems( menuDefinition, prefix, view, parentWidget )
 	if isinstance( parentWidget, GafferUI.Viewer ) :
 		editable = view.viewportGadget().getCameraEditable()
 	else :
-		editable = not parentWidget.getReadOnly()
+		editable = True
 
 	menuDefinition.append(
 		prefix + "/Fit To Selection",

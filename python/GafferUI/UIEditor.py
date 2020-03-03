@@ -374,7 +374,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.append( "/Edit UI...",
 		{
 			"command" : functools.partial( __editPlugUI, node, plug ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug )
+			"active" : not Gaffer.MetadataAlgo.readOnly( plug )
 		}
 	)
 

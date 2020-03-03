@@ -328,7 +328,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			parameters = {
 				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
 				"checkBox" : setName in currentNames,
-				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
 
 		menuDefinition.prepend( "/Sets/%s" % pathFn( setName ), parameters )

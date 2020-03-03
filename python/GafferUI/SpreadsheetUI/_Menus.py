@@ -216,8 +216,7 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 	menuDefinition.append( "/SpreadsheetDivider", { "divider" : True } )
 
 	itemsActive = (
-		not nodeEditor.getReadOnly()
-		and not Gaffer.MetadataAlgo.readOnly( node )
+		not Gaffer.MetadataAlgo.readOnly( node )
 		and not Gaffer.MetadataAlgo.readOnly( enabledRowNamesConnection )
 		and enabledRowNamesConnection.getInput() is None
 	)

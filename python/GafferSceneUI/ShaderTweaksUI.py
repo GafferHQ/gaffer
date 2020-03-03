@@ -362,7 +362,7 @@ def __setShaderFromPathsMenuDefinition( plugValueWidget, paths ) :
 			"/" + name,
 			{
 				"command" : functools.partial( __setShader, plugValueWidget.getPlug(), name ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
 			}
 		)
 

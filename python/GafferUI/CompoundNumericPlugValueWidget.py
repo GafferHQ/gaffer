@@ -73,17 +73,6 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# End widgets managed by a subclass.
 				break
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			if isinstance( w, GafferUI.PlugValueWidget ) :
-				w.setReadOnly( readOnly )
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		for widget in self.__row :
@@ -173,7 +162,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not all( hasattr( p, "isGanged" ) for p in plugs ) :
 			return
 
-		readOnly = plugValueWidget.getReadOnly() or any( Gaffer.MetadataAlgo.readOnly( p ) for p in plugs )
+		readOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in plugs )
 
 		if all( p.isGanged() for p in plugs ) :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
