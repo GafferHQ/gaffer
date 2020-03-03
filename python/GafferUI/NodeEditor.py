@@ -124,13 +124,6 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 				GafferUI.Label( "<h4>Node Name</h4>" )
 				self.__nameWidget = GafferUI.NameWidget( node )
-				## \todo Make NameWidget support the readOnly metadata internally itself.
-				# We can't do that easily right now, because it would need to be managing
-				# the exact same `setEditable()` call that we're using here to propagate
-				# our Widget readonlyness. Really our Widget readonlyness mechanism is a
-				# bit lacking, and it should really be inherited automatically so we don't
-				# have to propagate it like this.
-				self.__nameWidget.setEditable( not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( node ) )
 
 				with GafferUI.ListContainer(
 					GafferUI.ListContainer.Orientation.Horizontal,
