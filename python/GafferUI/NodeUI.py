@@ -129,13 +129,13 @@ class NodeUI( GafferUI.Widget ) :
 
 		return None
 
-	## Can be called to make the UI read only - must
-	# be implemented appropriately by derived classes.
+	## \deprecated
 	def setReadOnly( self, readOnly ) :
 
 		assert( isinstance( readOnly, bool ) )
 		self.__readOnly = readOnly
 
+	## \deprecated
 	def getReadOnly( self ) :
 
 		return self.__readOnly

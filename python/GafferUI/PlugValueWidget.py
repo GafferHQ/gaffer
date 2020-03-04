@@ -102,10 +102,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return self.__context
 
-	## This method allows editing of the plug value
-	# to be disabled for this ui. Note that even when getReadOnly()
-	# is False, the ui may not allow editing due to the plug
-	# itself being read only for other reasons.
+	## \deprecated
 	def setReadOnly( self, readOnly ) :
 
 		assert( isinstance( readOnly, bool ) )
@@ -115,6 +112,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__readOnly = readOnly
 		self._updateFromPlug()
 
+	## \deprecated
 	def getReadOnly( self ) :
 
 		return self.__readOnly

@@ -67,6 +67,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 		self._doPendingUpdate()
 		return self.__nodeUI
 
+	## \deprecated
 	def setReadOnly( self, readOnly ) :
 
 		if readOnly == self.__readOnly :
@@ -77,6 +78,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			self.__nodeUI.setReadOnly( readOnly )
 			self.__nameWidget.setEditable( not readOnly )
 
+	## \deprecated
 	def getReadOnly( self ) :
 
 		return self.__readOnly
