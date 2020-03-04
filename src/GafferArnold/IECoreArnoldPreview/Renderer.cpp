@@ -3163,7 +3163,18 @@ class ArnoldGlobals
 			std::sort( outputs->writable().begin(), outputs->writable().end() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
-
+		
+			// Set the beauty as the output to get frequent interactive updates	
+			unsigned int primaryOutput = 0;
+			for( unsigned int i = 0; i < outputs->readable().size(); i++ )
+			{
+				if( boost::starts_with( outputs->readable()[i], "RGBA " ) )
+				{
+					primaryOutput = i;
+					break;
+				}
+			}
+			AiRenderSetInteractiveOutput( primaryOutput );
 
 			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( AtString( cameraName.c_str() ) );
