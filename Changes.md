@@ -6,6 +6,7 @@ Breaking Changes
 
 - Gaffer :
   - Removed compatibility shim for loading Expression nodes from version 0.18.0.0 and prior.
+  - Removed compatibility shim for ignoring invalid `Node.user` plug inputs from version 0.18.0.0 and prior.
   - Removed compatibility shim for referencing `GafferCortex` attributes via the `Gaffer` namespace.
 - GafferUI : Removed compatibility shim for referencing `GafferCortexUI` attributes via the `GafferUI` namespace.
 - GafferImage :
