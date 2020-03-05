@@ -234,9 +234,12 @@ class BrowserEditor( GafferUI.Editor ) :
 
 			def showDialogue( menu ) :
 
-				dialogue = GafferUI.OpDialogue(
+				## \todo Remove dependency on GafferCortexUI. See `_createOpMatcher()``.
+				import GafferCortexUI
+
+				dialogue = GafferCortexUI.OpDialogue(
 					op,
-					postExecuteBehaviour = GafferUI.OpDialogue.PostExecuteBehaviour.Close,
+					postExecuteBehaviour = GafferCortexUI.OpDialogue.PostExecuteBehaviour.Close,
 					executeInBackground=True
 				)
 				dialogue.waitForResult( parentWindow = menu.ancestor( GafferUI.Window ) )
