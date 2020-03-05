@@ -59,26 +59,6 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		# This plug is added by the expressionCompatibility.py
-		# config file to provide compatibility for loading old
-		# files, so we must hide it.
-		"engine" : (
-
-			"plugValueWidget:type", "",
-			"nodule:type", "",
-
-		),
-
-		# This plug is added by the expressionCompatibility.py
-		# config file to provide compatibility for loading old
-		# files, so we must hide it.
-		"expression" : (
-
-			"plugValueWidget:type", "",
-			"nodule:type", "",
-
-		),
-
 		"user" : (
 
 			"plugValueWidget:type", "",

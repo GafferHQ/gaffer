@@ -208,8 +208,6 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["m2"]["op2"].setValue( 1 )
 
 		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-
 		s["e"].setExpression( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
 
 		self.failUnless( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
@@ -336,22 +334,6 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.failUnless( s2["e"].getChild("out1") is None )
 		self.failUnless( s2["e"].getChild("in1") is None )
-
-	def testLegacyLoading( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyExpression.gfr" )
-
-		with IECore.CapturingMessageHandler() as mh :
-			s.load( continueOnError = True )
-
-		## \todo: When we run tests without compatibility configs we
-		## expect 4 messages regarding "has no attribute 'CompoundPlug'"
-		self.assertEqual( len( mh.messages ), 0 )
-
-		s.context().setFrame( 3 )
-		with s.context() :
-			self.assertEqual( s["n"]["user"]["o"].getValue(), 6 )
 
 	def testMultipleOutputs( self ) :
 
@@ -818,49 +800,6 @@ class ExpressionTest( GafferTest.TestCase ) :
 			s2["e"].getExpression(),
 			( 'parent["N"]["user"]["B"] = parent["N"]["user"]["A"] * 2', "python" )
 		)
-
-	def testLoadScriptFromVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/expressionVersion-0.15.0.0.gfr" )
-
-		with IECore.CapturingMessageHandler() as mh :
-			s.load( continueOnError = True )
-
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( "rejects input " in mh.messages[0].message )
-
-		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
-		self.assertTrue( s["n"]["user"]["b"].getInput().node().isSame( s["e"] ) )
-
-	def testAPICompatibilityWithVersion0_15( self ) :
-
-		# In version 0.15 and prior, an expression was created
-		# by first setting the engine plug and then setting the
-		# expression plug. For now we still need to provide
-		# backwards compatibility with this method, even though
-		# those plugs are now private.
-
-		s = Gaffer.ScriptNode()
-
-		s["n"] = Gaffer.Node()
-		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["user"]["b"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-
-		s["e"] = Gaffer.Expression()
-		s["e"]["engine"].setValue( "python" )
-		s["e"]["expression"].setValue( inspect.cleandoc(
-			"""
-			if context.getFrame() > 10 :
-				parent["n"]["user"]["a"] = parent["n"]["user"]["b"]
-			else :
-				parent["n"]["user"]["a"] = parent["n"]["user"]["b"] * 2
-			"""
-		) )
-
-		self.assertEqual( len( s["n"]["user"]["b"].outputs() ), 1 )
-		self.assertEqual( len( s["e"]["__in"] ), 1 )
-		self.assertEqual( len( s["e"]["__out"] ), 1 )
 
 	def testIdenticalExpressionWithDifferentPlugTypes( self ) :
 
