@@ -59,6 +59,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"documentation:url", __documentationURL,
+	"renameable", True,
 
 	plugs = {
 

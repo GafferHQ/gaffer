@@ -97,9 +97,7 @@ class NameWidget( GafferUI.TextWidget ) :
 
 		editable = False
 		if self.__graphComponent is not None :
-			editable = not Gaffer.MetadataAlgo.readOnly( self.__graphComponent )
-			if Gaffer.Metadata.value( self.__graphComponent, "renameable" ) == False :
-				editable = False
+			editable = not Gaffer.MetadataAlgo.readOnly( self.__graphComponent ) and Gaffer.Metadata.value( self.__graphComponent, "renameable" )
 
 		self.setEditable( editable )
 

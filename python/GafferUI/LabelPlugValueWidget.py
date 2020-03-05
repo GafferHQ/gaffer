@@ -179,11 +179,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug() is None :
 			return
 
-		# First try old metadata that we are phasing out.
-		renameable = Gaffer.Metadata.value( self.getPlug(), "labelPlugValueWidget:renameable" )
+		# First try the official metadata.
+		renameable = Gaffer.Metadata.value( self.getPlug(), "renameable" )
 		if renameable is None :
-			# Then try the official metadata we are phasing in.
-			renameable = Gaffer.Metadata.value( self.getPlug(), "renameable" )
+			# Then try the old metadata that we are phasing out.
+			renameable = Gaffer.Metadata.value( self.getPlug(), "labelPlugValueWidget:renameable" )
 
 		if renameable != True :
 			return

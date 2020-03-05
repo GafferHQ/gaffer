@@ -322,7 +322,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 			"/Rename...",
 			{
 				"command" : functools.partial( __renamePlug, plug = parentPlug ),
-				"active" : not readOnly and Gaffer.Metadata.value( parentPlug, "renameable" ) != False,
+				"active" : not readOnly and Gaffer.Metadata.value( parentPlug, "renameable" ),
 			}
 		)
 
