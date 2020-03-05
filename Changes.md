@@ -9,6 +9,7 @@ Breaking Changes
 - GafferImage :
   - Removed compatibility for loading old `RemoveChannels` nodes.
   - Removed compatibility for loading old `OpenColorIO` nodes.
+  - Removed compatibility for loading certain ImageWriter settings version 0.17.0.0 and prior.
 
 0.57.1.0 (relative to 0.57.0.0)
 ========
