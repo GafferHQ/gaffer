@@ -338,18 +338,6 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s["r"]["e"]["preTasks"][0].source().isSame( s["e"]["task"] ) )
 
-	def testLoadPromotedRequirementsFromVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsVersion-0.15.0.0.gfr" )
-		s.load()
-
-	def testLoadPromotedRequirementsNetworkFromVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedRequirementsNetworkVersion-0.15.0.0.gfr" )
-		s.load()
-
 	def testPostTasks( self ) :
 
 		writer = GafferDispatchTest.TextWriter()
@@ -359,19 +347,6 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		with c :
 			self.assertEqual( writer["task"].preTasks(), [ GafferDispatch.TaskNode.Task( writer["preTasks"][0], c ) ] )
 			self.assertEqual( writer["task"].postTasks(), [ GafferDispatch.TaskNode.Task( writer["postTasks"][0], c ) ] )
-
-	def testLoadNetworkFromVersion0_19( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/version-0.19.0.0.gfr" )
-		s.load()
-
-		self.assertEqual( len( s["TaskList"]["preTasks"] ), 2 )
-		self.assertEqual( s["TaskList"]["preTasks"][0].getName(), "preTask0" )
-		self.assertEqual( s["TaskList"]["preTasks"][1].getName(), "preTask1" )
-
-		self.assertTrue( s["TaskList"]["preTasks"][0].getInput().isSame( s["SystemCommand"]["task"] ) )
-		self.assertTrue( s["TaskList"]["preTasks"][1].getInput() is None )
 
 	def testExecuteSequenceWithIterable( self ) :
 

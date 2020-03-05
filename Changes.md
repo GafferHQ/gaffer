@@ -15,6 +15,7 @@ Breaking Changes
   - Removed compatibility for loading old `OpenColorIO` nodes.
   - Removed compatibility for loading certain ImageWriter settings version 0.17.0.0 and prior.
   - Removed compatibility shim for loading Reformat nodes from version 0.19.0.0 and prior.
+- GafferDispatch : Removed compatibility shim for loading TaskNodes from version 0.20.0.0 and prior.
 
 0.57.1.0 (relative to 0.57.0.0)
 ========
