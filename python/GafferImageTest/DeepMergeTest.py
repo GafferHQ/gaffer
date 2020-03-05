@@ -340,7 +340,7 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 
 			# If we want to ensure that the two crop areas overlap, extend the second one to a random point
 			# within the first one's area
-			if ensureOverlap and not GafferImage.intersects( crop1Area, crop2Area ):
+			if ensureOverlap and not GafferImage.BufferAlgo.intersects( crop1Area, crop2Area ):
 				crop2Area.extendBy( imath.V2i( int( random.uniform( crop1Area.min().x, crop1Area.max().x ) ), int( random.uniform( crop1Area.min().y, crop1Area.max().y ) ) ) )
 
 			crop1["area"].setValue( crop1Area )
@@ -368,9 +368,9 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 		for y in range( tileOrigin.y, tileOrigin.y + ts ) :
 			for x in range( tileOrigin.x, tileOrigin.x + ts ) :
 				pixel = imath.V2i( x, y )
-				if GafferImage.contains( area1, pixel ) :
+				if GafferImage.BufferAlgo.contains( area1, pixel ) :
 					data.append( area1Value )
-				if GafferImage.contains( area2, pixel ) :
+				if GafferImage.BufferAlgo.contains( area2, pixel ) :
 					data.append( area2Value )
 
 		return IECore.FloatVectorData( data )
@@ -385,9 +385,9 @@ class DeepMergeTest( GafferImageTest.ImageTestCase ) :
 			for x in range( tileOrigin.x, tileOrigin.x + ts ) :
 				pixel = imath.V2i( x, y )
 				data.append( data[-1] if data else 0 )
-				if GafferImage.contains( area1, pixel ) :
+				if GafferImage.BufferAlgo.contains( area1, pixel ) :
 					data[-1] += 1
-				if GafferImage.contains( area2, pixel ) :
+				if GafferImage.BufferAlgo.contains( area2, pixel ) :
 					data[-1] += 1
 
 		return IECore.IntVectorData( data )

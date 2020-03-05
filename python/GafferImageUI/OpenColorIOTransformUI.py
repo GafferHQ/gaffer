@@ -116,7 +116,7 @@ class _ContextFooter( GafferUI.Widget ) :
 
 	def __clicked( self, button ) :
 
-		if Gaffer.readOnly( self.__node["context"] ) :
+		if Gaffer.MetadataAlgo.readOnly( self.__node["context"] ) :
 			return
 
 		with Gaffer.UndoScope( self.__node.ancestor( Gaffer.ScriptNode ) ) :

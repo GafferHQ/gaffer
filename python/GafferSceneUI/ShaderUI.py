@@ -353,7 +353,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 		"/Hide",
 		{
 			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
-			"active" : numConnections == 0 and not Gaffer.readOnly( plug ),
+			"active" : numConnections == 0 and not Gaffer.MetadataAlgo.readOnly( plug ),
 		}
 
 	)
