@@ -272,7 +272,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["wedge"] = Gaffer.Wedge()
+		s["wedge"] = GafferDispatch.Wedge()
 		s["wedge"]["mode"].setValue( int( s["wedge"].Mode.StringList ) )
 		s["wedge"]["strings"].setValue( IECore.StringVectorData( [ "visible", "hidden" ] ) )
 		s["wedge"]["preTasks"][0].setInput( s["render"]["task"] )

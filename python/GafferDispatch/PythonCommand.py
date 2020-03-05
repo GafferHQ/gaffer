@@ -97,7 +97,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 			# At the same time we could look into properly supporting
 			# varying results for requiresSequenceExecution(), with sequences
 			# going into their own batch independent of non-sequence batches.
-			Gaffer.TaskNode.executeSequence( self, frames )
+			GafferDispatch.TaskNode.executeSequence( self, frames )
 			return
 
 		executionDict = self.__executionDict( frames )
