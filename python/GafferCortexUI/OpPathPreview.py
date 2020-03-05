@@ -80,7 +80,7 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 
 	def _deferredUpdate( self, op ) :
 
-		self.__node = Gaffer.ParameterisedHolderNode()
+		self.__node = GafferCortex.ParameterisedHolderNode()
 		self.__node.setParameterised( op )
 		GafferCortexUI.ParameterPresets.autoLoad( self.__node )
 

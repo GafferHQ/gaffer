@@ -1,6 +1,11 @@
 0.58.x.x
 ========
 
+Breaking Changes
+----------------
+
+- Gaffer : Removed compatibility shim for referencing `GafferCortex` attributes via the `Gaffer` namespace.
+
 0.57.1.0 (relative to 0.57.0.0)
 ========
 
