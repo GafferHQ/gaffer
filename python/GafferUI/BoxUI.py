@@ -82,7 +82,7 @@ Gaffer.Metadata.registerNode(
 		"*" : [
 
 			"deletable", True,
-			"labelPlugValueWidget:renameable", True,
+			"renameable", True,
 
 		],
 
@@ -322,7 +322,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 			"/Rename...",
 			{
 				"command" : functools.partial( __renamePlug, plug = parentPlug ),
-				"active" : not readOnly,
+				"active" : not readOnly and Gaffer.Metadata.value( parentPlug, "renameable" ),
 			}
 		)
 
