@@ -62,10 +62,6 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( crop["affectDataWindow"].getValue(), True )
 		self.assertEqual( crop["affectDisplayWindow"].getValue(), True )
 
-	def testCompatibility( self ) :
-
-		self.assertEqual( GafferImage.Crop.AreaSource.Custom, GafferImage.Crop.AreaSource.Area )
-
 	def testPassThrough( self ) :
 
 		i = GafferImage.ImageReader()
