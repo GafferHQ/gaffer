@@ -135,6 +135,8 @@ enum TypeId
 	DeleteContextVariablesTypeId = 110088,
 	SpreadsheetRowsPlugTypeId = 110089,
 	SpreadsheetRowPlugTypeId = 110090,
+	ShufflePlugTypeId = 110091,
+	ShufflesPlugTypeId = 110092,
 
 	LastTypeId = 110159,
 

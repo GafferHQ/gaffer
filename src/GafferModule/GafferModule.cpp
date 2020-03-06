@@ -79,6 +79,7 @@
 #include "UndoScopeBinding.h"
 #include "ValuePlugBinding.h"
 #include "NameValuePlugBinding.h"
+#include "ShufflesBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -222,6 +223,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindProcess();
 	bindSpreadsheet();
 	bindNodeAlgo();
+	bindShuffles();
 
 	NodeClass<Backdrop>();
 
