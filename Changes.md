@@ -5,6 +5,7 @@ Features
 --------
 
 - ShuffleAttributes : Added node for copying/renaming attributes (#3611).
+- ShufflePrimitiveVariables : Added node for copying/renaming primitive variables (#3611).
 
 Improvements
 ------------

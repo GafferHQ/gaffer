@@ -35,22 +35,20 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
-
 import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.ShuffleAttributes,
+	GafferScene.ShufflePrimitiveVariables,
 
 	"description",
 	"""
-	ShuffleAttributes is used to copy or rename arbitrary numbers of attributes at
-	the filtered locations. The deleteSource plugs may be used to remove the original
-	source attribute(s) after the shuffling has been completed.
+	ShufflePrimitiveVariables is used to copy or rename arbitrary numbers of primitive variables
+	at the filtered locations. The deleteSource plugs may be used to remove the original source
+	primitive variable(s) after the shuffling has been completed.
 
-	An additional context variable \"${source}\" can be used on the destination plugs
-	to insert the name of each source attribute. For example, to prefix all attributes
+	An additional context variable \"${source}\" can be used on the destination plugs to insert
+	the name of each source primitive variable. For example, to prefix all primitive variables
 	with \"user:\" set the source to \"*\" and the destination to \"user:${source}\").
 	""",
 
@@ -60,10 +58,12 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The attributes to be shuffled - arbitrary numbers of attributes may be
-			shuffled via the source/destination plugs. The deleteSource plug may be
-			used to remove the original attribute(s).
+			The primitive variables to be shuffled - arbitrary numbers of primitive variables
+			may be shuffled via the source/destination plugs. The deleteSource plug may be used
+			to remove the original primitive variable(s).
 			""",
+
+			"divider", True,
 
 		],
 
