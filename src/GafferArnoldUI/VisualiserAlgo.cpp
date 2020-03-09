@@ -45,8 +45,11 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/join.hpp"
+#include "boost/container/flat_set.hpp"
 
 #include "OSL/oslquery.h"
+
 
 using namespace OSL;
 using namespace IECore;
@@ -218,7 +221,7 @@ IECoreScene::ShaderNetworkPtr GafferArnoldUI::Private::VisualiserAlgo::conformTo
 	oslNetwork->setOutput( output );
 	ShaderNetworkAlgo::removeUnusedShaders( oslNetwork.get() );
 
-	bool hasUnconvertedArnoldShaders = false;
+	boost::container::flat_set<std::string> unsupportedShaders;
 	InternedString fallbackImageHandle;
 
 	for( const auto &s : oslNetwork->shaders() )
@@ -228,7 +231,7 @@ IECoreScene::ShaderNetworkPtr GafferArnoldUI::Private::VisualiserAlgo::conformTo
 		{
 			if( !substituteWithOSL( s.first, oslNetwork.get() ) )
 			{
-				hasUnconvertedArnoldShaders = true;
+				unsupportedShaders.insert( shader->getName() );
 				continue;
 			}
 
@@ -239,10 +242,12 @@ IECoreScene::ShaderNetworkPtr GafferArnoldUI::Private::VisualiserAlgo::conformTo
 		}
 	}
 
-	if( hasUnconvertedArnoldShaders && fallbackImageHandle != "" )
+	if( unsupportedShaders.size() > 0 && fallbackImageHandle != "" )
 	{
-		/// \todo More detailed error reporting
-		msg( Msg::Warning, "GafferArnold::VisualiserAlgo", "Unsupported shaders in network, falling back on " + fallbackImageHandle.string() );
+		std::string message = "Unsupported Arnold shaders in network";
+		message += " (" + boost::join( unsupportedShaders, ", " ) + ")";
+		message += ", falling back on " + fallbackImageHandle.string() + ".";
+		msg( Msg::Warning, "GafferArnold::VisualiserAlgo", message );
 
 		ShaderNetworkPtr minimalNetwork = new ShaderNetwork();
 		minimalNetwork->addShader( "image", oslNetwork->getShader( fallbackImageHandle ) );
