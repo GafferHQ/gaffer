@@ -150,6 +150,7 @@ enum TypeId
 	CollectTransformsTypeId = 110605,
 	CameraTweaksTypeId = 110606,
 	MergeScenesTypeId = 110607,
+	ShuffleAttributesTypeId = 110608,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

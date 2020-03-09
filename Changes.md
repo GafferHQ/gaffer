@@ -1,6 +1,11 @@
 0.56.x.x (relative to 0.56.1.0)
 ========
 
+Features
+--------
+
+- ShuffleAttributes : Added node for copying/renaming attributes (#3611).
+
 Improvements
 ------------
 

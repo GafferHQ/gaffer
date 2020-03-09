@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2020, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_SHUFFLEATTRIBUTES_H
+#define GAFFERSCENE_SHUFFLEATTRIBUTES_H
 
-#include "AttributesBinding.h"
+#include "GafferScene/SceneElementProcessor.h"
 
-#include "GafferScene/AttributeProcessor.h"
-#include "GafferScene/AttributeVisualiser.h"
-#include "GafferScene/Attributes.h"
-#include "GafferScene/CopyAttributes.h"
-#include "GafferScene/CustomAttributes.h"
-#include "GafferScene/DeleteAttributes.h"
-#include "GafferScene/OpenGLAttributes.h"
-#include "GafferScene/ShaderAssignment.h"
-#include "GafferScene/ShuffleAttributes.h"
-#include "GafferScene/StandardAttributes.h"
+#include "Gaffer/ShufflePlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace GafferScene;
-
-void GafferSceneModule::bindAttributes()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<ShaderAssignment>();
-	GafferBindings::DependencyNodeClass<Attributes>();
-	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
-	GafferBindings::DependencyNodeClass<StandardAttributes>();
-	GafferBindings::DependencyNodeClass<CustomAttributes>();
-	GafferBindings::DependencyNodeClass<AttributeProcessor>();
-	GafferBindings::DependencyNodeClass<DeleteAttributes>();
-	GafferBindings::DependencyNodeClass<CopyAttributes>();
-	GafferBindings::DependencyNodeClass<ShuffleAttributes>();
+class GAFFERSCENE_API ShuffleAttributes : public SceneElementProcessor
+{
 
-	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
+	public :
 
-	enum_<AttributeVisualiser::Mode>( "Mode" )
-		.value( "Color", AttributeVisualiser::Color )
-		.value( "FalseColor", AttributeVisualiser::FalseColor )
-		.value( "Random", AttributeVisualiser::Random )
-		.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
-	;
+		ShuffleAttributes( const std::string &name=defaultName<ShuffleAttributes>() );
+		~ShuffleAttributes() override;
 
-}
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShuffleAttributes, ShuffleAttributesTypeId, SceneElementProcessor );
+
+		Gaffer::ShufflesPlug *shufflesPlug();
+		const Gaffer::ShufflesPlug *shufflesPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		bool processesAttributes() const override;
+		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( ShuffleAttributes )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SHUFFLEATTRIBUTES_H

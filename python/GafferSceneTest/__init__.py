@@ -143,6 +143,7 @@ from MeshTypeTest import MeshTypeTest
 from CopyPrimitiveVariablesTest import CopyPrimitiveVariablesTest
 from SpreadsheetTest import SpreadsheetTest
 from MergeScenesTest import MergeScenesTest
+from ShuffleAttributesTest import ShuffleAttributesTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *

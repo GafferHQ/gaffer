@@ -155,6 +155,7 @@ import OrientationUI
 import DeformerUI
 import CopyPrimitiveVariablesUI
 import MergeScenesUI
+import ShuffleAttributesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
