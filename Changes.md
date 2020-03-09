@@ -1,6 +1,11 @@
 0.56.x.x (relative to 0.56.1.0)
 ========
 
+Improvements
+------------
+
+- Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
+
 Fixes
 -----
 
