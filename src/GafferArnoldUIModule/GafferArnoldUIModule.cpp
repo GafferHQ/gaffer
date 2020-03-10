@@ -36,9 +36,33 @@
 
 #include "boost/python.hpp"
 
-// Despite being empty, this module is still necessary because importing it
-// loads libGafferArnolUI, which registers visualisers.
+#include "GafferArnoldUI/Private/VisualiserAlgo.h"
+
+using namespace boost::python;
+using namespace IECoreScene;
+using namespace GafferArnoldUI::Private;
+
+namespace
+{
+
+ShaderNetworkPtr conformToOSLNetwork(
+	const ShaderNetwork::Parameter &output,
+	const ShaderNetwork &shaderNetwork
+) {
+	return VisualiserAlgo::conformToOSLNetwork( output, &shaderNetwork );
+}
+
+}
 
 BOOST_PYTHON_MODULE( _GafferArnoldUI )
 {
+	object privateModule( borrowed( PyImport_AddModule( "GafferArnoldUI.Private" ) ) );
+	scope().attr( "Private" ) = privateModule;
+	scope privateScope( privateModule );
+
+	object visualiserAlgoModule( borrowed( PyImport_AddModule( "GafferArnoldUI.Private.VisualiserAlgo" ) ) );
+	scope().attr( "VisualiserAlgo" ) = visualiserAlgoModule;
+	scope visualiserAlgoScope( visualiserAlgoModule );
+
+	def( "conformToOSLNetwork", &conformToOSLNetwork, ( arg( "output" ), arg( "shaderNetwork" ) ) );
 }

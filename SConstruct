@@ -817,7 +817,7 @@ libraries = {
 			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "Gaffer", "GafferScene", "GafferOSL", "GafferSceneUI", "ai" ],
 			},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferArnoldUI", "GafferSceneUI" ],
+			"LIBS" : [ "GafferArnoldUI", "GafferSceneUI", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
