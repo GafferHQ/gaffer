@@ -57,7 +57,7 @@ namespace VisualiserAlgo
 // OSL shaders. Any Arnold shaders are re-mapped in-place to an OSL equivalent
 // (where available). If any un-converted Arnold shaders remain, attempts are
 // made to build a simple network using the first image shader found. If no
-// image was found then the resulting mixed network is returned.
+// image was found then a nullptr is returned.
 //
 // Stand-in shaders are:
 //

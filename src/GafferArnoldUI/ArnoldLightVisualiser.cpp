@@ -105,8 +105,11 @@ CompoundDataPtr surfaceTextureGetter( const SurfaceTextureCacheGetterKey &key, s
 {
 	cost = key.resolution.x * key.resolution.y * 3 * 4; // 3 x 32bit float channels;
 
-	ShaderNetworkPtr textureNetwork = VisualiserAlgo::conformToOSLNetwork( key.output, key.shaderNetwork );
-	return GafferOSL::ShadingEngineAlgo::shadeUVTexture( textureNetwork.get(), key.resolution );
+	if( ShaderNetworkPtr textureNetwork = VisualiserAlgo::conformToOSLNetwork( key.output, key.shaderNetwork ) )
+	{
+		return GafferOSL::ShadingEngineAlgo::shadeUVTexture( textureNetwork.get(), key.resolution );
+	}
+	return nullptr;
 }
 
 typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, SurfaceTextureCacheGetterKey> SurfaceTextureCache;

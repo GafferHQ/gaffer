@@ -121,8 +121,11 @@ CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 	// make the cost be image data in bytes
 	cost = key.resolution * key.resolution * 3 * 4;
 
-	ShaderNetworkPtr textureNetwork = VisualiserAlgo::conformToOSLNetwork( key.output, key.shaderNetwork );
-	return GafferOSL::ShadingEngineAlgo::shadeUVTexture( textureNetwork.get(), V2i( key.resolution ) );
+	if( ShaderNetworkPtr textureNetwork = VisualiserAlgo::conformToOSLNetwork( key.output, key.shaderNetwork ) )
+	{
+		return GafferOSL::ShadingEngineAlgo::shadeUVTexture( textureNetwork.get(), V2i( key.resolution ) );
+	}
+	return nullptr;
 }
 
 typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;

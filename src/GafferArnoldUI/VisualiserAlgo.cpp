@@ -242,18 +242,29 @@ IECoreScene::ShaderNetworkPtr GafferArnoldUI::Private::VisualiserAlgo::conformTo
 		}
 	}
 
-	if( unsupportedShaders.size() > 0 && fallbackImageHandle != "" )
+	if( unsupportedShaders.size() > 0 )
 	{
 		std::string message = "Unsupported Arnold shaders in network";
 		message += " (" + boost::join( unsupportedShaders, ", " ) + ")";
-		message += ", falling back on " + fallbackImageHandle.string() + ".";
-		msg( Msg::Warning, "GafferArnold::VisualiserAlgo", message );
 
-		ShaderNetworkPtr minimalNetwork = new ShaderNetwork();
-		minimalNetwork->addShader( "image", oslNetwork->getShader( fallbackImageHandle ) );
-		minimalNetwork->setOutput( ShaderNetwork::Parameter( "image", "out" ) );
+		if( fallbackImageHandle != "" )
+		{
+			message += ", falling back on " + fallbackImageHandle.string() + ".";
+			msg( Msg::Warning, "GafferArnold::VisualiserAlgo", message );
 
-		oslNetwork = minimalNetwork;
+			ShaderNetworkPtr minimalNetwork = new ShaderNetwork();
+			minimalNetwork->addShader( "image", oslNetwork->getShader( fallbackImageHandle ) );
+			minimalNetwork->setOutput( ShaderNetwork::Parameter( "image", "out" ) );
+
+			oslNetwork = minimalNetwork;
+		}
+		else
+		{
+			message += ", unable to convert network to OSL.";
+			msg( Msg::Error, "GafferArnold::VisualiserAlgo", message );
+
+			return nullptr;
+		}
 	}
 
 	return oslNetwork;
