@@ -44,6 +44,7 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
+#include "Gaffer/EditScope.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/Reference.h"
 
@@ -176,10 +177,11 @@ class BoxIOSerialiser : public NodeSerialiser
 namespace
 {
 
-void setup( BoxIO &b, const Plug &plug )
+template<typename T>
+void setup( T &n, const Plug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	b.setup( &plug );
+	n.setup( &plug );
 }
 
 void setupPromotedPlug( BoxIO &b )
@@ -196,6 +198,44 @@ PlugPtr plug( BoxIO &b )
 PlugPtr promotedPlug( BoxIO &b )
 {
 	return b.promotedPlug();
+}
+
+DependencyNodePtr acquireProcessor( EditScope &e, const std::string &type, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return e.acquireProcessor( type, createIfNecessary );
+}
+
+list processors( EditScope &e )
+{
+	list result;
+	for( const auto &n : e.processors() )
+	{
+		result.append( DependencyNodePtr( n ) );
+	}
+	return result;
+}
+
+list registeredProcessors()
+{
+	list result;
+	for( const auto &n : EditScope::registeredProcessors() )
+	{
+		result.append( n );
+	}
+	return result;
+}
+
+void registerProcessor( const std::string &name, object creator )
+{
+	EditScope::registerProcessor(
+		name,
+		[creator]() {
+			IECorePython::ScopedGILLock gilLock;
+			object n = creator();
+			return extract<DependencyNodePtr>( n )();
+		}
+	);
 }
 
 } // namespace
@@ -268,7 +308,7 @@ void GafferModule::bindSubGraph()
 	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
 
 	NodeClass<BoxIO>( nullptr, no_init )
-		.def( "setup", &setup, ( arg( "plug" ) = object() ) )
+		.def( "setup", &setup<BoxIO>, ( arg( "plug" ) = object() ) )
 		.def( "setupPromotedPlug", &setupPromotedPlug )
 		.def( "plug", &plug )
 		.def( "promotedPlug", &promotedPlug )
@@ -295,5 +335,17 @@ void GafferModule::bindSubGraph()
 	SignalClass<Reference::ReferenceLoadedSignal, DefaultSignalCaller<Reference::ReferenceLoadedSignal>, ReferenceLoadedSlotCaller >( "ReferenceLoadedSignal" );
 
 	Serialisation::registerSerialiser( Reference::staticTypeId(), new ReferenceSerialiser );
+
+	NodeClass<EditScope>()
+		.def( "setup", &setup<EditScope>, ( arg( "plug" ) ) )
+		.def( "acquireProcessor", &acquireProcessor, ( arg( "type" ), arg( "createIfNecessary" ) = true ) )
+		.def( "processors", &processors )
+		.def( "registerProcessor", &registerProcessor )
+		.staticmethod( "registerProcessor" )
+		.def( "deregisterProcessor", &EditScope::deregisterProcessor )
+		.staticmethod( "deregisterProcessor" )
+		.def( "registeredProcessors", &registeredProcessors )
+		.staticmethod( "registeredProcessors" )
+	;
 
 }

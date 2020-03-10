@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,56 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_EDITSCOPEALGO_H
+#define GAFFERSCENE_EDITSCOPEALGO_H
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
+#include "Gaffer/EditScope.h"
+#include "Gaffer/TransformPlug.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+#include "GafferScene/ScenePlug.h"
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferScene
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
+namespace EditScopeAlgo
+{
 
-}
+// Pruning
+// =======
+
+GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool pruned );
+GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, bool pruned );
+GAFFERSCENE_API bool getPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+
+// Transforms
+// ==========
+//
+// These methods manipulate edits to the local transform of a location.
+
+struct GAFFERSCENE_API TransformEdit
+{
+	const Gaffer::V3fPlugPtr translate;
+	const Gaffer::V3fPlugPtr rotate;
+	const Gaffer::V3fPlugPtr scale;
+	const Gaffer::V3fPlugPtr pivot;
+	Imath::M44f matrix() const;
+};
+
+GAFFERSCENE_API bool hasTransformEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+GAFFERSCENE_API boost::optional<TransformEdit> acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary = true );
+GAFFERSCENE_API void removeTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+
+} // namespace EditScopeAlgo
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_EDITSCOPEALGO_H

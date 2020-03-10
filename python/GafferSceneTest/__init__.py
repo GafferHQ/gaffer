@@ -143,6 +143,7 @@ from MeshTypeTest import MeshTypeTest
 from CopyPrimitiveVariablesTest import CopyPrimitiveVariablesTest
 from SpreadsheetTest import SpreadsheetTest
 from MergeScenesTest import MergeScenesTest
+from EditScopeAlgoTest import EditScopeAlgoTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *

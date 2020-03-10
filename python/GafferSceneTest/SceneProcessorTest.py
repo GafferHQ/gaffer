@@ -119,5 +119,32 @@ class SceneProcessorTest( GafferTest.TestCase ) :
 		self.assertEqual( a["out"].attributes( "/group/sphere" )["user:matteColor"].value, imath.Color3f( 1, 0, 0 ) )
 		self.assertEqual( a["out"].attributes( "/group/sphere1" )["user:matteColor"].value, imath.Color3f( 0, 1, 0 ) )
 
+	def testScriptedSubGraph( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+
+		s["processor"] = GafferScene.SceneProcessor()
+		s["processor"]["a"] = GafferScene.StandardAttributes()
+		s["processor"]["a"]["in"].setInput( s["processor"]["in"] )
+		s["processor"]["a"]["enabled"].setInput( s["processor"]["enabled"] )
+		s["processor"]["a"]["attributes"]["visibility"]["enabled"].setValue( True )
+		Gaffer.PlugAlgo.promoteWithName( s["processor"]["a"]["attributes"]["visibility"]["value"], name = "visibility" )
+		s["processor"]["out"].setInput( s["processor"]["a"]["out"] )
+		s["processor"]["in"].setInput( s["plane"]["out"] )
+
+		self.assertEqual( s["processor"]["out"].attributes( "/plane" )["scene:visible"].value, True )
+		s["processor"]["visibility"].setValue( False )
+		self.assertEqual( s["processor"]["out"].attributes( "/plane" )["scene:visible"].value, False )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["processor"].keys(), s["processor"].keys() )
+		self.assertEqual( s2["processor"]["out"].attributes( "/plane" )["scene:visible"].value, False )
+		s2["processor"]["visibility"].setValue( True )
+		self.assertEqual( s2["processor"]["out"].attributes( "/plane" )["scene:visible"].value, True )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -162,6 +162,7 @@ from ModuleTest import ModuleTest
 from NumericBookmarkSetTest import NumericBookmarkSetTest
 from NameSwitchTest import NameSwitchTest
 from SpreadsheetTest import SpreadsheetTest
+from EditScopeTest import EditScopeTest
 
 from IECorePreviewTest import *
 

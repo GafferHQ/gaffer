@@ -330,6 +330,7 @@ import BoxIOUI
 import BoxInUI
 import BoxOutUI
 import NameSwitchUI
+import EditScopeUI
 
 # backwards compatibility
 ## \todo Remove me

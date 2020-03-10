@@ -50,6 +50,7 @@
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Dot.h"
+#include "Gaffer/EditScope.h"
 #include "Gaffer/Loop.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/Plug.h"
@@ -1347,6 +1348,13 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			{
 				loop->setup( valuePlug );
 			}
+		}
+	}
+	else if( auto editScope = runTimeCast<EditScope>( node ) )
+	{
+		if( !editScope->inPlug() )
+		{
+			editScope->setup( outputPlugs.front() );
 		}
 	}
 
