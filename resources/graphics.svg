@@ -5072,5 +5072,38 @@
        cx="-4.9705095"
        id="ellipse1573"
        style="opacity:1;fill:#3c3c3c;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <g
+       id="forExport:catalogueTypeDisk"
+       inkscape:label="#catalogTypeDisk">
+      <path
+         style="fill:url(#backgroundLighter);fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999994;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:142.99989319;stroke-opacity:1"
+         d="m 353.5,105.86218 h -3.99999 l -5,5.5 v 5.5 H 353.5 Z"
+         id="path2400"
+         sodipodi:nodetypes="cccccc"
+         inkscape:connector-curvature="0" />
+      <path
+         sodipodi:nodetypes="ccc"
+         inkscape:connector-curvature="0"
+         id="path2402"
+         d="m 349.37502,105.98718 v 5.375 h -4.87501"
+         style="fill:none;stroke:#3c3c3c;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    </g>
+    <g
+       id="forExport:catalogueTypeDisplay"
+       transform="translate(-0.87501,-0.124997)"
+       inkscape:label="#catalogueTypeDisplay">
+      <path
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccccc"
+         id="path2408"
+         d="m 367.375,105.98718 h -3.99999 l -5,5.5 v 5.5 h 8.99999 z"
+         style="fill:#9e9e9e;fill-opacity:0.39215686;stroke:#3c3c3c;stroke-width:1;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:2, 2;stroke-dashoffset:0;stroke-opacity:1" />
+      <path
+         style="fill:none;stroke:#3c3c3c;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:2, 1;stroke-dashoffset:0.1;stroke-opacity:1"
+         d="m 363.37501,105.98718 v 5.375 H 358.5"
+         id="path2410"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccc" />
+    </g>
   </g>
 </svg>

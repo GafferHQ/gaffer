@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
+- Catalogue : Added column to help identify the nature of each image (#3646)
 
 Fixes
 -----

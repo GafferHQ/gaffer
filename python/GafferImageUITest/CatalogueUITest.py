@@ -47,10 +47,13 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 	def testStandardColumns( self ) :
 
-		self.assertEqual( CatalogueUI.registeredColumns(), [ "name" ] )
+		self.assertEqual( CatalogueUI.registeredColumns(), [ "typeIcon", "name" ] )
 
 		c = GafferImage.Catalogue()
-		self.assertEqual( Gaffer.Metadata.value( c, "catalogue:columns" ), IECore.StringVectorData( [ "name" ] ) )
+		self.assertEqual(
+			Gaffer.Metadata.value( c, "catalogue:columns" ),
+			IECore.StringVectorData( [ "typeIcon", "name" ] )
+		)
 
 	def testBoxedCatalogue( self ) :
 

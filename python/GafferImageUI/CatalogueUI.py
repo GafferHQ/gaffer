@@ -103,13 +103,19 @@ def registeredColumns() :
 
 	return __registeredColumns.keys()
 
+#
 # Standard Columns
+#
 
+def __typeIconColumnValueProvider( image, catalogue ) :
+	return "catalogueTypeDisk" if image["fileName"].getValue() else "catalogueTypeDisplay"
+
+registerColumn( "typeIcon", "", __typeIconColumnValueProvider, ColumnType.Icon )
 registerColumn( "name", "Name", lambda image, _ : image.getName() )
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "catalogue:columns",
-	IECore.StringVectorData( [ "name" ] )
+	IECore.StringVectorData( [ "typeIcon", "name" ] )
 )
 
 ##########################################################################
