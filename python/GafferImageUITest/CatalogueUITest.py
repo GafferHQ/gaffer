@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,11 +34,38 @@
 #
 ##########################################################################
 
-from FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
-from ImageViewTest import ImageViewTest
-from DocumentationTest import DocumentationTest
-from ImageGadgetTest import ImageGadgetTest
-from CatalogueUITest import CatalogueUITest
+import Gaffer
+import GafferImage
+import GafferUI
+import GafferUITest
+
+from GafferImageUI import CatalogueUI
+
+import IECore
+
+class CatalogueUITest( GafferUITest.TestCase ) :
+
+	def testStandardColumns( self ) :
+
+		self.assertEqual( CatalogueUI.registeredColumns(), [ "name" ] )
+
+		c = GafferImage.Catalogue()
+		self.assertEqual( Gaffer.Metadata.value( c, "catalogue:columns" ), IECore.StringVectorData( [ "name" ] ) )
+
+	def testBoxedCatalogue( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["c"] = GafferImage.Catalogue()
+
+		# 'images' is required to for serialisation if the
+		# catalogue is inside a reference/extension.
+		Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
+		Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
+
+		sw = GafferUI.ScriptWindow.acquire( s )
+		ne = GafferUI.NodeEditor.acquire( s["b"] )
 
 if __name__ == "__main__":
 	unittest.main()
+

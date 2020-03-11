@@ -23,6 +23,7 @@ API
 - NodeEditor : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - NodeUI : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - PlugValueWidget : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- CatalogueUI : Added column configuration API (#3646).
 
 0.56.1.0 (relative to 0.56.0.0)
 ========
