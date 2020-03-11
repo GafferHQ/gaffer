@@ -372,6 +372,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 		self.__childAddedConnection = self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ) )
 		self.__childRemovedConnection = self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ) )
+		self.__cataloguePlugDirtiedConnection = self.__catalogue.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__cataloguePlugDirtied ) )
 		self.__nameChangedConnections = {
 			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
 			for image in self.__images
@@ -398,6 +399,11 @@ class _ImagesPath( Gaffer.Path ) :
 	def __nameChanged( self, child ) :
 
 		self._emitPathChanged()
+
+	def __cataloguePlugDirtied( self, plug ):
+
+		if plug.ancestor( GafferImage.Catalogue.Image ) :
+			self._emitPathChanged()
 
 ##########################################################################
 # _ImageListing
