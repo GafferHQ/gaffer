@@ -67,11 +67,20 @@ namespace
 void titleAndDescriptionFromPlugs( const StringPlug *titlePlug, const StringPlug *descriptionPlug,
 	std::string &title, std::string &description )
 {
+	const auto script = titlePlug->ancestor<ScriptNode>();
+	const Context *context = script ? script->context() : nullptr;
+	Context::Scope scope( context );
+
 	title = "ERROR : Getting title";
 	try
 	{
 		title = titlePlug->getValue();
 		description = descriptionPlug->getValue();
+		if( context )
+		{
+			title = context->substitute( title );
+			description = context->substitute( description );
+		}
 	}
 	catch( const std::exception &e )
 	{
@@ -110,6 +119,12 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	}
 
 	node->plugDirtiedSignal().connect( boost::bind( &BackdropNodeGadget::plugDirtied, this, ::_1 ) );
+	if( auto *script = node->scriptNode() )
+	{
+		script->context()->changedSignal().connect(
+			boost::bind( &BackdropNodeGadget::contextChanged, this )
+		);
+	}
 
 	mouseMoveSignal().connect( boost::bind( &BackdropNodeGadget::mouseMove, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &BackdropNodeGadget::buttonPress, this, ::_1, ::_2 ) );
@@ -314,6 +329,12 @@ void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	}
 
 	glPopMatrix();
+}
+
+void BackdropNodeGadget::contextChanged()
+{
+	// Title and description may depend on the context
+	requestRender();
 }
 
 void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
