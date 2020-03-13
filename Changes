@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Box : Fixed bug that allowed locked plugs to be promoted.
+- TransformTools : Fixed rare crash triggered by selecting multiple objects.
 
 0.55.5.1 (relative to 0.55.5.0)
 ========
