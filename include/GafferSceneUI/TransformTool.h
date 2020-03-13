@@ -90,8 +90,8 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			///
 			/// The scene being viewed.
 			const GafferScene::ScenePlug *scene() const;
-			/// The location within the viewed scene that has been
-			/// selected for editing.
+			/// The location within the viewed scene that is being
+			/// edited.
 			const GafferScene::ScenePlug::ScenePath &path() const;
 			/// The context the scene is being viewed in.
 			const Gaffer::Context *context() const;
@@ -121,6 +121,9 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// Returns true if the selected transform may be edited
 			/// using `transformPlug()` and `transformSpace()`.
 			bool editable() const;
+			/// Returns a warning message, or "" if there are no
+			/// warnings.
+			const std::string &warning() const;
 
 			/// Returns the plug to edit. Throws if `!editable()`.
 			Gaffer::TransformPlug *transformPlug() const;
@@ -157,6 +160,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 				Gaffer::ConstContextPtr m_upstreamContext;
 
 				bool m_editable;
+				std::string m_warning;
 				Gaffer::TransformPlugPtr m_transformPlug;
 				Imath::M44f m_transformSpace;
 

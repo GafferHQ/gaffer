@@ -81,6 +81,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/plane" )
 		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["plane"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].transformSpace(), imath.M44f() )
+		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group" ] ) )
 		self.assertEqual( tool.selection()[0].path(), "/group" )
@@ -89,12 +90,15 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
 		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["group"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].transformSpace(), imath.M44f() )
+		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transformFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["transform"]["transform"] ) )
+		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transformFilter"]["enabled"].setValue( False )
 		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["group"]["transform"] ) )
+		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transformFilter"]["enabled"].setValue( True )
 		self.assertEqual( tool.selection()[0].path(), "/group" )
@@ -103,9 +107,11 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
 		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["transform"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].transformSpace(), imath.M44f() )
+		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transform"]["enabled"].setValue( False )
 		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["group"]["transform"] ) )
+		self.assertEqual( tool.selection()[0].warning(), "" )
 
 	def testTranslate( self ) :
 
@@ -624,6 +630,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( selection ), 1 )
 		self.assertEqual( selection[0].transformPlug(), script["sceneReader"]["transform"] )
 		self.assertEqual( selection[0].path(), "/group" )
+		self.assertEqual( selection[0].warning(), "Editing parent location" )
 
 	def testSelectionRefersToFirstPublicPlug( self ) :
 

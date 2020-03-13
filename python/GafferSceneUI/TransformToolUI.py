@@ -180,12 +180,17 @@ class _SelectionWidget( GafferUI.Frame ) :
 				self.__infoLabel.setText( "Editing {0} transforms".format( len( toolSelection ) ) )
 				self.__nameLabel.setGraphComponent( None )
 
-			editingAncestor = any(
-				not ( selectedPaths.match( s.path() ) & IECore.PathMatcher.Result.ExactMatch )
-				for s in toolSelection
-			)
-			if editingAncestor :
-				self.__warningLabel.setText( "( Parent location )" )
+			warnings = {
+				s.warning() for s in toolSelection
+				if s.warning() != ""
+			}
+			if warnings :
+				if len( warnings ) == 1 :
+					self.__warningLabel.setText( next( iter( warnings ) ) )
+					self.__warningLabel.setToolTip( "" )
+				else :
+					self.__warningLabel.setText( "{} warnings".format( len( warnings ) ) )
+					self.__warningLabel.setToolTip( "\n".join( "- " + w for w in warnings ) )
 				self.__warningRow.setVisible( True )
 			else :
 				self.__warningRow.setVisible( False )

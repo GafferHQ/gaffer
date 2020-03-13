@@ -186,6 +186,7 @@ void GafferSceneUIModule::bindTools()
 			.def( "upstreamContext", &upstreamContext )
 
 			.def( "editable", &TransformTool::Selection::editable )
+			.def( "warning", &TransformTool::Selection::warning, return_value_policy<copy_const_reference>() )
 			.def( "transformPlug", &transformPlug )
 			.def( "transformSpace", &TransformTool::Selection::transformSpace, return_value_policy<copy_const_reference>() )
 

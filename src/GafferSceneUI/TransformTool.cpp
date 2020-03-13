@@ -158,8 +158,28 @@ TransformTool::Selection::Selection(
 		return;
 	}
 
-	SceneAlgo::History::Ptr history = SceneAlgo::history( scene->transformPlug(), path );
-	initWalk( history.get() );
+	while( m_path.size() )
+	{
+		SceneAlgo::History::Ptr history = SceneAlgo::history( scene->transformPlug(), m_path );
+		initWalk( history.get() );
+		if( editable() )
+		{
+			break;
+		}
+		m_path.pop_back();
+	}
+
+	if( m_path.size() != path.size() )
+	{
+		if( editable() )
+		{
+			m_warning = "Editing parent location";
+		}
+		else
+		{
+			m_path = path;
+		}
+	}
 }
 
 bool TransformTool::Selection::init( const GafferScene::SceneAlgo::History *history )
@@ -318,6 +338,11 @@ const Gaffer::Context *TransformTool::Selection::upstreamContext() const
 bool TransformTool::Selection::editable() const
 {
 	return m_editable;
+}
+
+const std::string &TransformTool::Selection::warning() const
+{
+	return m_warning;
 }
 
 Gaffer::TransformPlug *TransformTool::Selection::transformPlug() const
@@ -645,14 +670,7 @@ void TransformTool::updateSelection() const
 
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
-		ScenePlug::ScenePath path = *it;
-		Selection selection;
-		while( path.size() && !selection.editable() )
-		{
-			selection = Selection( scene, path, view()->getContext() );
-			path.pop_back();
-		}
-
+		Selection selection( scene, *it, view()->getContext() );
 		if( !selection.editable() )
 		{
 			// Selection is not editable - give up.
