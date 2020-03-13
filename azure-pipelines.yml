@@ -3,10 +3,15 @@ trigger:
   branches:
     include:
     - master
-    - 0.*_maintenance
+    - '*_maintenance'
   tags:
     include:
-    - 0.*
+    - '*'
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - '*'
 
 jobs :
 
