@@ -1,12 +1,12 @@
-# Strings beginning with * seem to precipitate a syntax error...
 trigger:
   branches:
     include:
-    - master
-    - 0.*_maintenance
+    - '*'
   tags:
     include:
-    - 0.*
+    - '*'
+pr:
+  - '*'
 
 jobs :
 

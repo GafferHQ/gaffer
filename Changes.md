@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Box : Fixed bug that allowed locked plugs to be promoted.
 - NodeEditor : Fixed bug that allowed the node name to be edited on a locked node.
 - InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
 
@@ -208,6 +209,11 @@ Build
 - USD : Updated to version 20.02 (#3585).
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
+
+0.55.5.x (relative to 0.55.5.1)
+========
+
+- Box : Fixed bug that allowed locked plugs to be promoted.
 
 0.55.5.1 (relative to 0.55.5.0)
 ========
