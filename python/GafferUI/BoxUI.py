@@ -82,7 +82,7 @@ Gaffer.Metadata.registerNode(
 		"*" : [
 
 			"deletable", True,
-			"labelPlugValueWidget:renameable", True,
+			"renameable", True,
 
 		],
 
@@ -209,7 +209,7 @@ def __unpromote( plug ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.PlugAlgo.unpromote( plug )
 
-def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
+def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 
 	node = plug.node()
 	if node is None :
@@ -218,6 +218,8 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 	box = node.ancestor( Gaffer.Box )
 	if box is None :
 		return
+
+	readOnly = readOnlyUI or Gaffer.MetadataAlgo.readOnly( plug )
 
 	parentLabel = {
 		Gaffer.ArrayPlug : "Array",
@@ -267,7 +269,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnly = plugValueWidget.getReadOnly() )
+	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnlyUI = plugValueWidget.getReadOnly() )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
@@ -322,7 +324,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 			"/Rename...",
 			{
 				"command" : functools.partial( __renamePlug, plug = parentPlug ),
-				"active" : not readOnly,
+				"active" : not readOnly and Gaffer.Metadata.value( parentPlug, "renameable" ),
 			}
 		)
 

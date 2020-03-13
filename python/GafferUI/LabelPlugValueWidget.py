@@ -44,7 +44,7 @@ from Qt import QtWidgets
 #
 # Supported plug metadata :
 #
-#  - "labelPlugValueWidget:renameable"
+#  - "renameable"
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, **kw ) :
@@ -176,8 +176,16 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateDoubleClickConnection( self ) :
 
 		self.__labelDoubleClickConnection = None
+		if self.getPlug() is None :
+			return
 
-		if self.getPlug() is None or not Gaffer.Metadata.value( self.getPlug(), "labelPlugValueWidget:renameable" ) :
+		# First try the official metadata.
+		renameable = Gaffer.Metadata.value( self.getPlug(), "renameable" )
+		if renameable is None :
+			# Then try the old metadata that we are phasing out.
+			renameable = Gaffer.Metadata.value( self.getPlug(), "labelPlugValueWidget:renameable" )
+
+		if renameable != True :
 			return
 
 		self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )

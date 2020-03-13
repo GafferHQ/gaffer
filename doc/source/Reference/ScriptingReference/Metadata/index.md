@@ -22,6 +22,8 @@ documentation:url   Link to node documentation      http://www.gafferhq.org
 userDefault         Overrides the default value of  10.5
                     a plug
 preset:<name>       Specifies a named preset value  "preset:Max", 1
+renameable          Enables renaming by user        True, False
+deletable           Enables deletion by user        True, False
 =================== =============================== ============================
 ```
 

@@ -6,7 +6,25 @@ Build
 
 - Cortex : Updated to version 10.0.0-a74.
 
-0.56.1.0
+0.56.x.x (relative to 0.56.1.0)
+========
+
+Fixes
+-----
+
+- Box : Fixed bug that allowed locked plugs to be promoted.
+- NodeEditor : Fixed bug that allowed the node name to be edited on a locked node.
+- InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
+
+API
+---
+
+- Metadata : Added support for `renameable` metadata in BoxUI, LabelPlugValueWidget and NameWidget.
+- NodeEditor : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- NodeUI : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- PlugValueWidget : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+
+0.56.1.0 (relative to 0.56.0.0)
 ========
 
 Features
@@ -199,6 +217,11 @@ Build
 - USD : Updated to version 20.02 (#3585).
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
+
+0.55.5.x (relative to 0.55.5.1)
+========
+
+- Box : Fixed bug that allowed locked plugs to be promoted.
 
 0.55.5.1 (relative to 0.55.5.0)
 ========
