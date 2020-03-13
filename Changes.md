@@ -1,4 +1,21 @@
-0.56.1.0
+0.56.x.x (relative to 0.56.1.0)
+========
+
+Fixes
+-----
+
+- NodeEditor : Fixed bug that allowed the node name to be edited on a locked node.
+- InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
+
+API
+---
+
+- Metadata : Added support for `renameable` metadata in BoxUI, LabelPlugValueWidget and NameWidget.
+- NodeEditor : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- NodeUI : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- PlugValueWidget : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+
+0.56.1.0 (relative to 0.56.0.0)
 ========
 
 Features
