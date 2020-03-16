@@ -4,9 +4,12 @@
 Fixes
 -----
 
+- Expression : Fixed retrieval of boolean context variables via the OSL `context()` function.
+- Backdrop : Fixed bug that prevented context variables from being used by the `title` and `description` plugs. All variables from the global script context are now available.
 - Box : Fixed bug that allowed locked plugs to be promoted.
 - NodeEditor : Fixed bug that allowed the node name to be edited on a locked node.
 - InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
+- TransformTools : Fixed rare crash triggered by selecting multiple objects.
 
 API
 ---
@@ -213,7 +216,10 @@ Build
 0.55.5.x (relative to 0.55.5.1)
 ========
 
+- Expression : Fixed retrieval of boolean context variables via the OSL `context()` function.
+- Backdrop : Fixed bug that prevented context variables from being used by the `title` and `description` plugs. All variables from the global script context are now available.
 - Box : Fixed bug that allowed locked plugs to be promoted.
+- TransformTools : Fixed rare crash triggered by selecting multiple objects.
 
 0.55.5.1 (relative to 0.55.5.0)
 ========

@@ -71,6 +71,7 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 
 	private :
 
+		void contextChanged();
 		void plugDirtied( const Gaffer::Plug *plug );
 
 		bool mouseMove( Gadget *gadget, const ButtonEvent &event );
