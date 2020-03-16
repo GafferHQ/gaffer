@@ -249,10 +249,10 @@ void CameraTool::preRenderEnd()
 {
 	const TransformTool::Selection &selection = cameraSelection();
 	bool selectionEditable = false;
-	if( selection.transformPlug )
+	if( selection.editable() )
 	{
 		selectionEditable = true;
-		for( FloatPlugIterator it( selection.transformPlug->translatePlug() ); !it.done(); ++it )
+		for( FloatPlugIterator it( selection.transformPlug()->translatePlug() ); !it.done(); ++it )
 		{
 			if( !canSetValueOrAddKey( it->get() ) )
 			{
@@ -261,7 +261,7 @@ void CameraTool::preRenderEnd()
 			}
 		}
 
-		for( FloatPlugIterator it( selection.transformPlug->rotatePlug() ); !it.done(); ++it )
+		for( FloatPlugIterator it( selection.transformPlug()->rotatePlug() ); !it.done(); ++it )
 		{
 			if( !canSetValueOrAddKey( it->get() ) )
 			{
@@ -279,7 +279,7 @@ void CameraTool::preRenderEnd()
 	if( selectionEditable )
 	{
 		view()->viewportGadget()->setCenterOfInterest(
-			getCameraCenterOfInterest( selection.path )
+			getCameraCenterOfInterest( selection.path() )
 		);
 		m_viewportCameraChangedConnection.unblock();
 	}
@@ -318,7 +318,7 @@ bool CameraTool::viewportButtonPress( const GafferUI::ButtonEvent &event )
 void CameraTool::viewportCameraChanged()
 {
 	const TransformTool::Selection &selection = cameraSelection();
-	if( !selection.transformPlug )
+	if( !selection.editable() )
 	{
 		return;
 	}
@@ -334,8 +334,8 @@ void CameraTool::viewportCameraChanged()
 	const M44f viewportCameraTransform = view()->viewportGadget()->getCameraTransform();
 	M44f cameraTransform;
 	{
-		Context::Scope scopedContext( selection.context.get() );
-		cameraTransform = selection.scene->fullTransform( selection.path );
+		Context::Scope scopedContext( selection.context() );
+		cameraTransform = selection.scene()->fullTransform( selection.path() );
 	}
 
 	if( cameraTransform == viewportCameraTransform )
@@ -357,40 +357,40 @@ void CameraTool::viewportCameraChanged()
 
 	M44f plugTransform;
 	{
-		Context::Scope scopedContext( selection.upstreamContext.get() );
-		plugTransform = selection.transformPlug->matrix();
+		Context::Scope scopedContext( selection.upstreamContext() );
+		plugTransform = selection.transformPlug()->matrix();
 	}
 	plugTransform = plugTransform * transformSpaceOffset;
 	const V3f t = plugTransform.translation();
 
 	Eulerf e; e.extract( plugTransform );
-	e.makeNear( degreesToRadians( selection.transformPlug->rotatePlug()->getValue() ) );
+	e.makeNear( degreesToRadians( selection.transformPlug()->rotatePlug()->getValue() ) );
 	const V3f r = radiansToDegrees( V3f( e ) );
 
-	UndoScope undoScope( selection.transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
+	UndoScope undoScope( selection.transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
 
 	for( int i = 0; i < 3; ++i )
 	{
-		setValueOrAddKey( selection.transformPlug->rotatePlug()->getChild( i ), selection.context->getTime(), r[i] );
-		setValueOrAddKey( selection.transformPlug->translatePlug()->getChild( i ), selection.context->getTime(), t[i] );
+		setValueOrAddKey( selection.transformPlug()->rotatePlug()->getChild( i ), selection.context()->getTime(), r[i] );
+		setValueOrAddKey( selection.transformPlug()->translatePlug()->getChild( i ), selection.context()->getTime(), t[i] );
 	}
 
 	// Create an action to save/restore the current center of interest, so that
 	// when the user undos a framing action, they get back to the old center of
 	// interest as well as the old transform.
 	Action::enact(
-		selection.transformPlug,
+		selection.transformPlug(),
 		// Do
 		boost::bind(
 			&CameraTool::setCameraCenterOfInterest,
-			CameraToolPtr( this ), selection.path,
+			CameraToolPtr( this ), selection.path(),
 			view()->viewportGadget()->getCenterOfInterest()
 		),
 		// Undo
 		boost::bind(
 			&CameraTool::setCameraCenterOfInterest,
-			CameraToolPtr( this ), selection.path,
-			getCameraCenterOfInterest( selection.path )
+			CameraToolPtr( this ), selection.path(),
+			getCameraCenterOfInterest( selection.path() )
 		)
 	);
 }

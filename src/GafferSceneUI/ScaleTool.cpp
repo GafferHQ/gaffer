@@ -130,12 +130,12 @@ void ScaleTool::updateHandles( float rasterScale )
 
 	M44f pivotMatrix;
 	{
-		Context::Scope upstreamScope( primarySelection.upstreamContext.get() );
-		const V3f pivot = primarySelection.transformPlug->pivotPlug()->getValue();
+		Context::Scope upstreamScope( primarySelection.upstreamContext() );
+		const V3f pivot = primarySelection.transformPlug()->pivotPlug()->getValue();
 		pivotMatrix.translate( pivot );
 	}
 
-	M44f handlesMatrix = pivotMatrix * primarySelection.transformPlug->matrix() * primarySelection.sceneToTransformSpace().inverse();
+	M44f handlesMatrix = pivotMatrix * primarySelection.transformPlug()->matrix() * primarySelection.sceneToTransformSpace().inverse();
 	// We want to take the sign of the scaling into account so that
 	// our handles point in the right direction. But we don't want
 	// the magnitude because a non-uniform handle scale breaks the
@@ -183,7 +183,7 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 
 bool ScaleTool::dragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection().back().transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f &scaling = static_cast<ScaleHandle *>( gadget )->scaling( event );
 	for( const auto &s : m_drag )
 	{
@@ -204,10 +204,10 @@ bool ScaleTool::dragEnd()
 
 ScaleTool::Scale::Scale( const Selection &selection )
 {
-	Context::Scope scopedContext( selection.context.get() );
-	m_plug = selection.transformPlug->scalePlug();
+	Context::Scope scopedContext( selection.context() );
+	m_plug = selection.transformPlug()->scalePlug();
 	m_originalScale = m_plug->getValue();
-	m_time = selection.context->getTime();
+	m_time = selection.context()->getTime();
 }
 
 bool ScaleTool::Scale::canApply( const Imath::V3i &axisMask ) const

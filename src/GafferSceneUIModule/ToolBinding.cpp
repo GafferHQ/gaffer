@@ -113,41 +113,41 @@ struct SelectionChangedSlotCaller
 
 ScenePlugPtr scene( const TransformTool::Selection &s )
 {
-	return boost::const_pointer_cast<ScenePlug>( s.scene );
+	return const_cast<ScenePlug *>( s.scene() );
 }
 
 std::string path( const TransformTool::Selection &s )
 {
 	std::string result;
-	ScenePlug::pathToString( s.path, result );
+	ScenePlug::pathToString( s.path(), result );
 	return result;
 }
 
 ContextPtr context( const TransformTool::Selection &s )
 {
-	return boost::const_pointer_cast<Context>( s.context );
+	return const_cast<Context *>( s.context() );
 }
 
 ScenePlugPtr upstreamScene( const TransformTool::Selection &s )
 {
-	return boost::const_pointer_cast<ScenePlug>( s.upstreamScene );
+	return const_cast<ScenePlug *>( s.upstreamScene() );
 }
 
 std::string upstreamPath( const TransformTool::Selection &s )
 {
 	std::string result;
-	ScenePlug::pathToString( s.upstreamPath, result );
+	ScenePlug::pathToString( s.upstreamPath(), result );
 	return result;
 }
 
 ContextPtr upstreamContext( const TransformTool::Selection &s )
 {
-	return boost::const_pointer_cast<Context>( s.context );
+	return const_cast<Context *>( s.upstreamContext() );
 }
 
 TransformPlugPtr transformPlug( const TransformTool::Selection &s )
 {
-	return s.transformPlug;
+	return s.transformPlug();
 }
 
 } // namespace
@@ -175,16 +175,20 @@ void GafferSceneUIModule::bindTools()
 
 		class_<TransformTool::Selection>( "Selection", no_init )
 
-			.add_property( "scene", &scene )
-			.add_property( "path", &path )
-			.add_property( "context", &context )
+			.def( init<const ConstScenePlugPtr &, const ScenePlug::ScenePath &, const ConstContextPtr &>() )
 
-			.add_property( "upstreamScene", &upstreamScene )
-			.add_property( "upstreamPath", &upstreamPath )
-			.add_property( "upstreamContext", &upstreamContext )
+			.def( "scene", &scene )
+			.def( "path", &path )
+			.def( "context", &context )
 
-			.add_property( "transformPlug", &transformPlug )
-			.def_readonly( "transformSpace", &TransformTool::Selection::transformSpace )
+			.def( "upstreamScene", &upstreamScene )
+			.def( "upstreamPath", &upstreamPath )
+			.def( "upstreamContext", &upstreamContext )
+
+			.def( "editable", &TransformTool::Selection::editable )
+			.def( "warning", &TransformTool::Selection::warning, return_value_policy<copy_const_reference>() )
+			.def( "transformPlug", &transformPlug )
+			.def( "transformSpace", &TransformTool::Selection::transformSpace, return_value_policy<copy_const_reference>() )
 
 		;
 

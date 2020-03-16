@@ -246,7 +246,7 @@ IECore::RunTimeTypedPtr RotateTool::handleDragBegin()
 
 bool RotateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection().back().transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f rotation = static_cast<RotateHandle *>( gadget )->rotation( event );
 	for( const auto &r : m_drag )
 	{
@@ -286,7 +286,7 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 		return true;
 	}
 
-	UndoScope undoScope( selection()[0].transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled );
+	UndoScope undoScope( selection()[0].transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled );
 
 	for( const auto &s : selection() )
 	{
@@ -299,14 +299,14 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 		// use rotationMatrix()) calculates in world space tends to add more
 		// roll in local Z.
 
-		Context::Scope scopedContext( s.context.get() );
+		Context::Scope scopedContext( s.context() );
 
-		ScenePlug::ScenePath parentPath( s.path );
+		ScenePlug::ScenePath parentPath( s.path() );
 		parentPath.pop_back();
 
-		const M44f worldParentTransform = s.scene->fullTransform( parentPath );
+		const M44f worldParentTransform = s.scene()->fullTransform( parentPath );
 		const M44f worldParentTransformInverse = worldParentTransform.inverse();
-		const M44f localTransform = s.scene->transform( s.path );
+		const M44f localTransform = s.scene()->transform( s.path() );
 
 		V3f currentYAxis;
 		localTransform.multDirMatrix( V3f( 0.0f, 1.0f, 0.0f ), currentYAxis );
@@ -345,15 +345,15 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 RotateTool::Rotation::Rotation( const Selection &selection, Orientation orientation )
 {
-	Context::Scope scopedContext( selection.context.get() );
+	Context::Scope scopedContext( selection.context() );
 
-	m_plug = selection.transformPlug->rotatePlug();
+	m_plug = selection.transformPlug()->rotatePlug();
 	m_originalRotation = degreesToRadians( m_plug->getValue() );
 
 	const M44f handlesTransform = selection.orientedTransform( orientation );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
 
-	m_time = selection.context->getTime();
+	m_time = selection.context()->getTime();
 }
 
 bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const

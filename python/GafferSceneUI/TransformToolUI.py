@@ -143,11 +143,11 @@ class _SelectionWidget( GafferUI.Frame ) :
 			return ""
 
 		result = ""
-		script = toolSelection[0].transformPlug.ancestor( Gaffer.ScriptNode )
+		script = toolSelection[0].transformPlug().ancestor( Gaffer.ScriptNode )
 		for s in toolSelection :
 			if result :
 				result += "\n"
-			result += "- Transforming {0} using {1}".format( s.path, s.transformPlug.relativeName( script ) )
+			result += "- Transforming {0} using {1}".format( s.path(), s.transformPlug().relativeName( script ) )
 
 		return result
 
@@ -169,23 +169,28 @@ class _SelectionWidget( GafferUI.Frame ) :
 			if len( toolSelection ) == 1 :
 				self.__infoLabel.setText( "Editing " )
 				numComponents = _distance(
-					toolSelection[0].transformPlug.commonAncestor( toolSelection[0].scene ),
-					toolSelection[0].transformPlug,
+					toolSelection[0].transformPlug().commonAncestor( toolSelection[0].scene() ),
+					toolSelection[0].transformPlug(),
 				)
-				if toolSelection[0].scene.node().isAncestorOf( toolSelection[0].transformPlug ) :
+				if toolSelection[0].scene().node().isAncestorOf( toolSelection[0].transformPlug() ) :
 					numComponents += 1
 				self.__nameLabel.setNumComponents( numComponents )
-				self.__nameLabel.setGraphComponent( toolSelection[0].transformPlug )
+				self.__nameLabel.setGraphComponent( toolSelection[0].transformPlug() )
 			else :
 				self.__infoLabel.setText( "Editing {0} transforms".format( len( toolSelection ) ) )
 				self.__nameLabel.setGraphComponent( None )
 
-			editingAncestor = any(
-				not ( selectedPaths.match( s.path ) & IECore.PathMatcher.Result.ExactMatch )
-				for s in toolSelection
-			)
-			if editingAncestor :
-				self.__warningLabel.setText( "( Parent location )" )
+			warnings = {
+				s.warning() for s in toolSelection
+				if s.warning() != ""
+			}
+			if warnings :
+				if len( warnings ) == 1 :
+					self.__warningLabel.setText( next( iter( warnings ) ) )
+					self.__warningLabel.setToolTip( "" )
+				else :
+					self.__warningLabel.setText( "{} warnings".format( len( warnings ) ) )
+					self.__warningLabel.setToolTip( "\n".join( "- " + w for w in warnings ) )
 				self.__warningRow.setVisible( True )
 			else :
 				self.__warningRow.setVisible( False )
