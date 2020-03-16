@@ -1,6 +1,41 @@
 0.57.x.x
 ========
 
+Features
+--------
+
+- EditScope : Added new node which provides a container for node graph edits made by interactive tools in the UI (#3467).
+
+Improvements
+------------
+
+- Spreadsheet : Improved performance of Spreadsheets with many rows.
+- CopyPrimitiveVariables : Improved performance. In one benchmark, scene generation time has been reduced by 50%.
+- MergeScenes : Improved performance when merging overlapping hierarchies.
+- Serialisation : Reduced file size and load time by omitting redundant `setInput()` calls from serialisations.
+
+Fixes
+-----
+
+- Stats app :
+  - Fixed bug which caused the `-scene` and `-image` arguments to evaluate a node's input rather than its output. In particular this affected nodes like ContextVariables.
+  - Fixed bug which meant that the `-scene` and `image` arguments didn't support nested output plugs.
+
+API
+---
+
+- EditScopeAlgo : Added new namespace with utility functions for editing scenes using EditScope nodes.
+- ScenePlug : Added `exists()` method. This provides fast existence queries for locations.
+- SceneAlgo : Deprecated `exists()` function. Use `ScenePlug::exists()` instead
+- Spreadsheet : Added `RowsPlug::row( rowName )` method.
+
+Breaking Changes
+----------------
+
+- Context : Removed `Substitutions`, `substitutions()` and `hasSubstitutions()`. Use the `IECore.StringAlgo` equivalents instead.
+- Stats app : The `-scene` and `-image` arguments now ignore input plugs.
+- Spreadsheet : Broke binary compatibility. Full source compatibility is retained.
+
 Build
 -----
 
