@@ -40,11 +40,13 @@
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/TypeIds.h"
 
+#include "GafferScene/EditScopeAlgo.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferUI/KeyEvent.h"
 
+#include "Gaffer/EditScope.h"
 #include "Gaffer/TransformPlug.h"
 
 namespace GafferSceneUI
@@ -82,7 +84,8 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			Selection(
 				const GafferScene::ConstScenePlugPtr scene,
 				const GafferScene::ScenePlug::ScenePath &path,
-				const Gaffer::ConstContextPtr &context
+				const Gaffer::ConstContextPtr &context,
+				const Gaffer::EditScopePtr &editScope
 			);
 
 			/// Viewed scene
@@ -119,14 +122,25 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// ==================
 
 			/// Returns true if the selected transform may be edited
-			/// using `transformPlug()` and `transformSpace()`.
+			/// using `acquireTransformEdit()` and `transformSpace()`.
 			bool editable() const;
 			/// Returns a warning message, or "" if there are no
 			/// warnings.
 			const std::string &warning() const;
 
-			/// Returns the plug to edit. Throws if `!editable()`.
-			Gaffer::TransformPlug *transformPlug() const;
+			using TransformEdit = GafferScene::EditScopeAlgo::TransformEdit;
+			/// Returns the plugs to edit. Throws if `status() != Editable`.
+			/// > Caution : When using EditScopes, this may edit the graph
+			/// > to create the plug unless `createIfNecessary == false`.
+			boost::optional<TransformEdit> acquireTransformEdit( bool createIfNecessary = true ) const;
+			/// The EditScope passed to the constructor.
+			const Gaffer::EditScope *editScope() const;
+			/// Returns the GraphComponent that will be edited.
+			/// Unlike `acquireTransformEdit()`, this never edits the graph,
+			/// instead returning an `EditScope *` if an EditScope
+			/// is in use but no TransformEdit has been created yet.
+			/// Throws if `status() != Editable`.
+			Gaffer::GraphComponent *editTarget() const;
 			/// Returns the coordinate system within which the
 			/// transform is applied by the upstream node.
 			/// This is relative to the world space of the
@@ -136,6 +150,14 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// Utilities
 			/// =========
 			///
+			/// Returns the equivalent of `acquireTransformEdit()->matrix()` and
+			/// fills `translate`, `rotate`, `scale` and `pivot` with values
+			/// for each component of the edit.
+			/// Throws if `status() != Editable`.
+			/// > Note : Where a TransformEdit has not yet been created for
+			/// > an EditScope, this will return the values that it will
+			/// > be given upon creation. It will never modify the graph.
+			Imath::M44f transform( Imath::V3f &translate, Imath::V3f &rotate, Imath::V3f &scale, Imath::V3f &pivot ) const;
 			/// Returns a matrix which converts from world
 			/// space in `scene` to `transformSpace`.
 			/// Throws if `!editable()`.
@@ -147,8 +169,8 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 			private :
 
-				bool init( const GafferScene::SceneAlgo::History *history );
-				bool initWalk( const GafferScene::SceneAlgo::History *history );
+				void initFromSceneNode( const GafferScene::SceneAlgo::History *history );
+				void initWalk( const GafferScene::SceneAlgo::History *history, bool &editScopeFound );
 				void throwIfNotEditable() const;
 
 				GafferScene::ConstScenePlugPtr m_scene;
@@ -161,7 +183,8 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 				bool m_editable;
 				std::string m_warning;
-				Gaffer::TransformPlugPtr m_transformPlug;
+				Gaffer::EditScopePtr m_editScope;
+				mutable boost::optional<TransformEdit> m_transformEdit;
 				Imath::M44f m_transformSpace;
 
 		};

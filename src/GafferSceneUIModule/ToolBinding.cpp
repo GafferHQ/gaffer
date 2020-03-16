@@ -56,6 +56,7 @@
 
 using namespace std;
 using namespace boost::python;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI;
@@ -145,9 +146,16 @@ ContextPtr upstreamContext( const TransformTool::Selection &s )
 	return const_cast<Context *>( s.upstreamContext() );
 }
 
-TransformPlugPtr transformPlug( const TransformTool::Selection &s )
+EditScopePtr editScope( const TransformTool::Selection &s )
 {
-	return s.transformPlug();
+	return const_cast<EditScope *>( s.editScope() );
+}
+
+object acquireTransformEdit( const TransformTool::Selection &s, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	auto p = s.acquireTransformEdit( createIfNecessary );
+	return p ? object( *p ) : object();
 }
 
 } // namespace
@@ -175,7 +183,7 @@ void GafferSceneUIModule::bindTools()
 
 		class_<TransformTool::Selection>( "Selection", no_init )
 
-			.def( init<const ConstScenePlugPtr &, const ScenePlug::ScenePath &, const ConstContextPtr &>() )
+			.def( init<const ConstScenePlugPtr &, const ScenePlug::ScenePath &, const ConstContextPtr &, const EditScopePtr &>() )
 
 			.def( "scene", &scene )
 			.def( "path", &path )
@@ -187,7 +195,9 @@ void GafferSceneUIModule::bindTools()
 
 			.def( "editable", &TransformTool::Selection::editable )
 			.def( "warning", &TransformTool::Selection::warning, return_value_policy<copy_const_reference>() )
-			.def( "transformPlug", &transformPlug )
+			.def( "editScope", &editScope )
+			.def( "acquireTransformEdit", &acquireTransformEdit, ( boost::python::arg( "createIfNecessary" ) = true ) )
+			.def( "editTarget", &TransformTool::Selection::editTarget, return_value_policy<CastToIntrusivePtr>() )
 			.def( "transformSpace", &TransformTool::Selection::transformSpace, return_value_policy<copy_const_reference>() )
 
 		;

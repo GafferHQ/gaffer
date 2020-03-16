@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import math
+
 import imath
 
 import IECore
@@ -287,6 +289,56 @@ class CameraToolTest( GafferUITest.TestCase ) :
 					0.00001
 				)
 			)
+
+	def testEditScopes( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["camera"] = GafferScene.Camera()
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["camera"]["out"] )
+		script["editScope"]["in"].setInput( script["camera"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+
+		view["camera"]["lookThroughEnabled"].setValue( True )
+		view["camera"]["lookThroughCamera"].setValue( "/camera" )
+
+		tool = GafferSceneUI.CameraTool( view )
+		tool["active"].setValue( True )
+
+		script["camera"]["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		script["camera"]["transform"]["rotate"].setValue( imath.V3f( 1, 2, 3 ) )
+
+		# Without EditScope, should edit Camera node directly.
+
+		cameraTransform = imath.M44f().translate( imath.V3f( 10, 5, 1 ) ).rotate( imath.V3f( math.pi / 4 ) )
+		view.viewportGadget().setCameraTransform( cameraTransform )
+
+		self.assertFalse( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/camera" ) )
+		self.assertTrue(
+			script["camera"]["out"].transform( "/camera" ).equalWithAbsError(
+				cameraTransform, 0.00001
+			),
+		)
+
+		# With EditScope
+
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		cameraTransform.translate( imath.V3f( 1, 2, 3 ) )
+		view.viewportGadget().setCameraTransform(
+			cameraTransform
+		)
+
+		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/camera" ) )
+		self.assertTrue(
+			script["editScope"]["out"].transform( "/camera" ).equalWithAbsError(
+				cameraTransform, 0.00001
+			),
+		)
+		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/camera" ) )
 
 if __name__ == "__main__":
 	unittest.main()

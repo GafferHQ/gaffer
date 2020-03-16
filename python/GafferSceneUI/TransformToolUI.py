@@ -143,11 +143,11 @@ class _SelectionWidget( GafferUI.Frame ) :
 			return ""
 
 		result = ""
-		script = toolSelection[0].transformPlug().ancestor( Gaffer.ScriptNode )
+		script = toolSelection[0].editTarget().ancestor( Gaffer.ScriptNode )
 		for s in toolSelection :
 			if result :
 				result += "\n"
-			result += "- Transforming {0} using {1}".format( s.path(), s.transformPlug().relativeName( script ) )
+			result += "- Transforming {0} using {1}".format( s.path(), s.editTarget().relativeName( script ) )
 
 		return result
 
@@ -169,13 +169,13 @@ class _SelectionWidget( GafferUI.Frame ) :
 			if len( toolSelection ) == 1 :
 				self.__infoLabel.setText( "Editing " )
 				numComponents = _distance(
-					toolSelection[0].transformPlug().commonAncestor( toolSelection[0].scene() ),
-					toolSelection[0].transformPlug(),
+					toolSelection[0].editTarget().commonAncestor( toolSelection[0].scene() ),
+					toolSelection[0].editTarget(),
 				)
-				if toolSelection[0].scene().node().isAncestorOf( toolSelection[0].transformPlug() ) :
+				if toolSelection[0].scene().node().isAncestorOf( toolSelection[0].editTarget() ) :
 					numComponents += 1
 				self.__nameLabel.setNumComponents( numComponents )
-				self.__nameLabel.setGraphComponent( toolSelection[0].transformPlug() )
+				self.__nameLabel.setGraphComponent( toolSelection[0].editTarget() )
 			else :
 				self.__infoLabel.setText( "Editing {0} transforms".format( len( toolSelection ) ) )
 				self.__nameLabel.setGraphComponent( None )
@@ -211,7 +211,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 			else:
 				self.__infoRow.setVisible( False )
 				self.__warningRow.setVisible( True )
-				self.__warningLabel.setText( "Transform not editable - create a Transform node" )
+				self.__warningLabel.setText( "Transform not editable" )
 
 	def __buttonDoubleClick( self, widget, event ) :
 

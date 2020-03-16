@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferUI
 import GafferUITest
 import GafferScene
 import GafferSceneUI
@@ -79,7 +80,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].context(), view.getContext() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["plane"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/plane" )
-		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["plane"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].editTarget().isSame( script["plane"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].transformSpace(), imath.M44f() )
 		self.assertEqual( tool.selection()[0].warning(), "" )
 
@@ -88,16 +89,16 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].context(), view.getContext() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["group"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
-		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["group"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].editTarget().isSame( script["group"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].transformSpace(), imath.M44f() )
 		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transformFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
-		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["transform"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].editTarget().isSame( script["transform"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transformFilter"]["enabled"].setValue( False )
-		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["group"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].editTarget().isSame( script["group"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transformFilter"]["enabled"].setValue( True )
@@ -105,12 +106,12 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( tool.selection()[0].context(), view.getContext() )
 		self.assertTrue( tool.selection()[0].upstreamScene().isSame( script["transform"]["out"] ) )
 		self.assertEqual( tool.selection()[0].upstreamPath(), "/group" )
-		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["transform"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].editTarget().isSame( script["transform"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].transformSpace(), imath.M44f() )
 		self.assertEqual( tool.selection()[0].warning(), "" )
 
 		script["transform"]["enabled"].setValue( False )
-		self.assertTrue( tool.selection()[0].transformPlug().isSame( script["group"]["transform"] ) )
+		self.assertTrue( tool.selection()[0].editTarget().isSame( script["group"]["transform"] ) )
 		self.assertEqual( tool.selection()[0].warning(), "" )
 
 	def testTranslate( self ) :
@@ -513,7 +514,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		selection = tool.selection()
 		self.assertEqual( len( selection ), 2 )
-		self.assertEqual( { s.transformPlug() for s in selection }, { script["plane"]["transform"], script["sphere"]["transform"] } )
+		self.assertEqual( { s.editTarget() for s in selection }, { script["plane"]["transform"], script["sphere"]["transform"] } )
 
 		tool["orientation"].setValue( tool.Orientation.Local )
 		tool.translate( imath.V3f( 1, 0, 0 ) )
@@ -549,7 +550,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		selection = tool.selection()
 		self.assertEqual( len( selection ), 1 )
-		self.assertEqual( selection[0].transformPlug(), script["plane"]["transform"] )
+		self.assertEqual( selection[0].editTarget(), script["plane"]["transform"] )
 
 	def testHandlesFollowLastSelected( self ) :
 
@@ -595,7 +596,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/sphere" )
 
-		self.assertEqual( tool.selection()[0].transformPlug(), script["box"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["box"]["transform"] )
 
 	def testSelectionChangedSignal( self ) :
 
@@ -628,7 +629,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 		selection = tool.selection()
 		self.assertEqual( len( selection ), 1 )
-		self.assertEqual( selection[0].transformPlug(), script["sceneReader"]["transform"] )
+		self.assertEqual( selection[0].editTarget(), script["sceneReader"]["transform"] )
 		self.assertEqual( selection[0].path(), "/group" )
 		self.assertEqual( selection[0].warning(), "Editing parent location" )
 
@@ -691,7 +692,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
 		self.assertEqual( len( tool.selection() ), 1 )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["plane"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["plane"]["transform"] )
 
 	def testLastSelectedObjectWithSharedTransformPlug( self ) :
 
@@ -712,17 +713,17 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/sphere" ] ) )
 		self.assertEqual( len( tool.selection() ), 1 )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["sphere"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["sphere"]["transform"] )
 		self.assertEqual( tool.selection()[0].path(), "/group/sphere" )
 
 		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere1" )
 		self.assertEqual( len( tool.selection() ), 1 )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["sphere"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["sphere"]["transform"] )
 		self.assertEqual( tool.selection()[0].path(), "/group/sphere1" )
 
 		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere" )
 		self.assertEqual( len( tool.selection() ), 1 )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["sphere"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["sphere"]["transform"] )
 		self.assertEqual( tool.selection()[0].path(), "/group/sphere" )
 
 		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
@@ -769,7 +770,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		# The tool should instead choose to transform the root location.
 
 		self.assertEqual( len( tool.selection() ), 1 )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["reader"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["reader"]["transform"] )
 
 	def testSetFilter( self ) :
 
@@ -792,7 +793,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["transform"]["transform"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["transform"]["transform"] )
 
 	def testSpreadsheetAndCollect( self ) :
 
@@ -820,17 +821,199 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere1" ] ) )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["spreadsheet"]["rows"][1]["cells"]["transform"]["value"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["spreadsheet"]["rows"][1]["cells"]["transform"]["value"] )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere2" ] ) )
-		self.assertEqual( tool.selection()[0].transformPlug(), script["spreadsheet"]["rows"][2]["cells"]["transform"]["value"] )
+		self.assertEqual( tool.selection()[0].editTarget(), script["spreadsheet"]["rows"][2]["cells"]["transform"]["value"] )
 
 		# Check that we can work with promoted plugs too
 
 		box = Gaffer.Box.create( script, Gaffer.StandardSet( [ script["collect"], script["sphere"], script["spreadsheet"] ] ) )
 		promotedRowsPlug = Gaffer.PlugAlgo.promote( box["spreadsheet"]["rows"] )
 
-		self.assertEqual( tool.selection()[0].transformPlug(), promotedRowsPlug[2]["cells"]["transform"]["value"] )
+		self.assertEqual( tool.selection()[0].editTarget(), promotedRowsPlug[2]["cells"]["transform"]["value"] )
+
+	def testEditScopes( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["sphere"]["out"] )
+		script["editScope"]["in"].setInput( script["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertFalse( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
+		self.assertEqual( script["editScope"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+
+		tool.translate( imath.V3f( 0, 1, 0 ) )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 1, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
+		self.assertEqual( script["editScope"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 1, 0 ) ) )
+
+	def testParentAndChildInSameEditScope( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 0, 1, 0 ) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["cube"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["group"]["out"] )
+		script["editScope"]["in"].setInput( script["group"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		groupTransformEdit = GafferScene.EditScopeAlgo.acquireTransformEdit( script["editScope"], "/group" )
+		groupTransformEdit.rotate["y"].setValue( 90 )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				groupTransformEdit.matrix() * imath.M44f().translate( imath.V3f( 0, 1, 0 ) ),
+				0.00001
+			)
+		)
+
+		tool.translate( imath.V3f( 1, 0, 0 ) )
+
+		self.assertTrue(
+			script["editScope"]["out"].fullTransform( "/group/cube" ).equalWithAbsError(
+				imath.M44f().translate( imath.V3f( 1, 1, 0 ) ) * groupTransformEdit.matrix(),
+				0.00001
+			)
+		)
+
+		tool.translate( imath.V3f( 1, 0, 0 ) )
+
+		self.assertTrue(
+			script["editScope"]["out"].fullTransform( "/group/cube" ).equalWithAbsError(
+				imath.M44f().translate( imath.V3f( 2, 1, 0 ) ) * groupTransformEdit.matrix(),
+				0.00001
+			)
+		)
+
+	def testAnimationHotkey( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["cube"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		for plug in Gaffer.FloatPlug.RecursiveRange( script["cube"]["transform"] ) :
+			self.assertFalse( Gaffer.Animation.isAnimated( plug ) )
+
+		view.viewportGadget().keyPressSignal()( view.viewportGadget(), GafferUI.KeyEvent( "S" ) )
+
+		for plug in Gaffer.FloatPlug.RecursiveRange( script["cube"]["transform"] ) :
+			self.assertTrue( Gaffer.Animation.isAnimated( plug ) )
+
+	def testAnimationHotkeyWithEditScopes( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["cube"] = GafferScene.Cube()
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["cube"]["out"] )
+		script["editScope"]["in"].setInput( script["cube"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		for plug in Gaffer.FloatPlug.RecursiveRange( script["cube"]["transform"] ) :
+			self.assertFalse( Gaffer.Animation.isAnimated( plug ) )
+		self.assertFalse( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/cube" ) )
+
+		view.viewportGadget().keyPressSignal()( view.viewportGadget(), GafferUI.KeyEvent( "S" ) )
+
+		for plug in Gaffer.FloatPlug.RecursiveRange( script["cube"]["transform"] ) :
+			self.assertFalse( Gaffer.Animation.isAnimated( plug ) )
+		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/cube" ) )
+		edit = GafferScene.EditScopeAlgo.acquireTransformEdit( script["editScope"], "/cube" )
+		for vectorPlug in ( edit.translate, edit.rotate, edit.scale, edit.pivot ) :
+			for plug in vectorPlug :
+				self.assertTrue( Gaffer.Animation.isAnimated( plug ) )
+
+		tool.translate( imath.V3f( 1, 0, 0 ) )
+		self.assertEqual(
+			script["editScope"]["out"].transform( "/cube" ),
+			imath.M44f().translate( imath.V3f( 1, 0, 0 ) )
+		)
+
+	def testTransformInEditScopeButEditScopeOff( self ) :
+
+		# Create an EditScope with an edit in it
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["sphere"]["out"] )
+		script["editScope"]["in"].setInput( script["sphere"]["out"] )
+
+		transformEdit = GafferScene.EditScopeAlgo.acquireTransformEdit( script["editScope"], "/sphere" )
+		transformEdit.translate.setValue( imath.V3f( 1, 0, 0 ) )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		# We want the TranslateTool to pick up and use that edit
+		# even if we haven't told it to use that EditScope.
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertEqual( tool.selection()[0].acquireTransformEdit( createIfNecessary = False ), transformEdit )
+		self.assertEqual(
+			tool.selection()[0].editTarget(),
+			transformEdit.translate.ancestor( Gaffer.Spreadsheet.RowPlug )
+		)
+
+		tool.translate( imath.V3f( 0, 1, 0 ) )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 1, 0 ) ) )
+		self.assertEqual( transformEdit.translate.getValue(), imath.V3f( 1, 1, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

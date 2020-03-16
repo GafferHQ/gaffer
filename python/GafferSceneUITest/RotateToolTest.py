@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import math
+
 import imath
 
 import IECore
@@ -291,6 +293,43 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual(
 			imath.V3f( 0 ) * tool.handlesTransform(),
 			imath.V3f( 1, 0, 0 ),
+		)
+
+	def testEditScopes( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["sphere"]["out"] )
+		script["editScope"]["in"].setInput( script["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertFalse( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
+		self.assertEqual( script["editScope"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+
+		tool.rotate( imath.Eulerf( 0, 90, 0 ) )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
+
+		self.assertEqual(
+			script["editScope"]["out"].transform( "/sphere" ),
+			imath.M44f().translate( imath.V3f( 1, 0, 0 ) ).rotate( imath.V3f( 0, math.pi / 2, 0 ) ),
 		)
 
 if __name__ == "__main__":
