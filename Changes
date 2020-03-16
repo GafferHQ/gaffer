@@ -4,6 +4,8 @@
 Fixes
 -----
 
+- Expression : Fixed retrieval of boolean context variables via the OSL `context()` function.
+- Backdrop : Fixed bug that prevented context variables from being used by the `title` and `description` plugs. All variables from the global script context are now available.
 - Box : Fixed bug that allowed locked plugs to be promoted.
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
 
