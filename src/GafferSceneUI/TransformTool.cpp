@@ -623,7 +623,7 @@ void TransformTool::updateSelection() const
 			{
 				return true;
 			}
-			else if( b.transformPlug.get() > a.transformPlug.get() )
+			else if( b.transformPlug.get() < a.transformPlug.get() )
 			{
 				return false;
 			}
