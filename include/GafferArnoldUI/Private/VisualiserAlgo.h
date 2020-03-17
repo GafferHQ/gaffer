@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine. All rights reserved.
+//  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Cinesite VFX Ltd. nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,35 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERARNOLDUI_VISUALISERALGO_H
+#define GAFFERARNOLDUI_VISUALISERALGO_H
 
-#include "GafferArnoldUI/Private/VisualiserAlgo.h"
+#include "GafferArnoldUI/Export.h"
 
-using namespace boost::python;
-using namespace IECoreScene;
-using namespace GafferArnoldUI::Private;
+#include "IECoreScene/ShaderNetwork.h"
 
-namespace
+namespace GafferArnoldUI
 {
 
-ShaderNetworkPtr conformToOSLNetwork(
-	const ShaderNetwork::Parameter &output,
-	const ShaderNetwork &shaderNetwork
-) {
-	return VisualiserAlgo::conformToOSLNetwork( output, &shaderNetwork );
-}
-
-}
-
-BOOST_PYTHON_MODULE( _GafferArnoldUI )
+namespace Private
 {
-	object privateModule( borrowed( PyImport_AddModule( "GafferArnoldUI.Private" ) ) );
-	scope().attr( "Private" ) = privateModule;
-	scope privateScope( privateModule );
 
-	object visualiserAlgoModule( borrowed( PyImport_AddModule( "GafferArnoldUI.Private.VisualiserAlgo" ) ) );
-	scope().attr( "VisualiserAlgo" ) = visualiserAlgoModule;
-	scope visualiserAlgoScope( visualiserAlgoModule );
+namespace VisualiserAlgo
+{
 
-	def( "conformToOSLNetwork", &conformToOSLNetwork, ( arg( "output" ), arg( "shaderNetwork" ) ) );
-}
+// Shader network conversion
+// =========================
+//
+// Attempts to conform the supplied shaderNetwork such that it only contains
+// OSL shaders. Any Arnold shaders are re-mapped in-place to an OSL equivalent
+// (where available). If any un-converted Arnold shaders remain, attempts are
+// made to build a simple network using the first image shader found. If no
+// image was found then a nullptr is returned.
+//
+// Stand-in shaders are:
+//
+//  - Found in shaders/__viewer/ and prefixed with __arnold.
+//  - Should have identical parameter names/types.
+//  - Should have a single output called 'out'.
+//  - Arnold bool params should be OSL ints.
+//  - Any param name collisions with OSL reserved words should be suffixed
+//    with an '_'.
+//
+GAFFERARNOLDUI_API IECoreScene::ShaderNetworkPtr conformToOSLNetwork(
+	const IECoreScene::ShaderNetwork::Parameter &output,
+	const IECoreScene::ShaderNetwork *shaderNetwork
+);
+
+} // namespace VisualiserAlgo
+
+} // namespace Private
+
+} // namespace GafferArnoldUI
+
+#endif // GAFFERARNOLDUI_VISUALISERALGO_H
