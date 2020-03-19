@@ -43,6 +43,7 @@
 #include "GafferBindings/NodeBinding.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/EditScope.h"
 #include "Gaffer/Plug.h"
 
 #include "IECorePython/ScopedGILRelease.h"
@@ -118,6 +119,7 @@ void bindView()
 {
 	GafferBindings::NodeClass<View, ViewWrapper>( nullptr, no_init )
 		.def( init<const std::string &, PlugPtr>() )
+		.def( "editScope", (EditScope *(View::*)())&View::editScope, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &View::setContext )
 		.def( "contextChangedSignal", &View::contextChangedSignal, return_internal_reference<1>() )

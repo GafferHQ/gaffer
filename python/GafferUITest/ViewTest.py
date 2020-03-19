@@ -45,6 +45,14 @@ import GafferUITest
 
 class ViewTest( GafferUITest.TestCase ) :
 
+	class MyView( GafferUI.View ) :
+
+		def __init__( self, viewedPlug = None ) :
+
+			GafferUI.View.__init__( self, "MyView", Gaffer.IntPlug( "in" ) )
+
+			self["in"].setInput( viewedPlug )
+
 	def testFactory( self ) :
 
 		node = GafferTest.AddNode()
@@ -52,18 +60,10 @@ class ViewTest( GafferUITest.TestCase ) :
 
 		# check that we can make our own view and register it for the node
 
-		class MyView( GafferUI.View ) :
-
-			def __init__( self, viewedPlug = None ) :
-
-				GafferUI.View.__init__( self, "MyView", Gaffer.IntPlug( "in" ) )
-
-				self["in"].setInput( viewedPlug )
-
-		GafferUI.View.registerView( GafferTest.AddNode, "sum", MyView )
+		GafferUI.View.registerView( GafferTest.AddNode, "sum", self.MyView )
 
 		view = GafferUI.View.create( node["sum"] )
-		self.assertTrue( isinstance( view, MyView ) )
+		self.assertTrue( isinstance( view, self.MyView ) )
 		self.assertTrue( view["in"].getInput().isSame( node["sum"] ) )
 
 		# and check that that registration leaves other nodes alone
@@ -72,6 +72,18 @@ class ViewTest( GafferUITest.TestCase ) :
 		n["sum"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 
 		self.assertTrue( GafferUI.View.create( n["sum"] ) is None )
+
+	def testEditScope( self ) :
+
+		view = self.MyView()
+
+		addNode = GafferTest.AddNode()
+		editScope = Gaffer.EditScope()
+		editScope.setup( view["in"] )
+
+		self.assertEqual( view.editScope(), None )
+		view["editScope"].setInput( editScope["out"] )
+		self.assertEqual( view.editScope(), editScope )
 
 if __name__ == "__main__":
 	unittest.main()

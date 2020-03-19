@@ -57,6 +57,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"editScope" : [
+
+			# Most Views don't yet have any functionality that
+			# uses EditScopes, so we'll opt in to showing the
+			# widget on specific subclasses.
+			"plugValueWidget:type", "",
+
+		],
+
 		"user" : [
 
 			"plugValueWidget:type", "",
