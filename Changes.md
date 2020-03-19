@@ -29,6 +29,7 @@ API
 - SceneAlgo : Deprecated `exists()` function. Use `ScenePlug::exists()` instead
 - Spreadsheet : Added `RowsPlug::row( rowName )` method.
 - AttributeProcessor : Refactored to be more widely useful.
+- Spacer : Added optional `preferredSize` constructor argument.
 - View : Added `editScope` plug and `editScope()` accessor method.
 - TransformTool :
   - Added `Selection::editable()` method.

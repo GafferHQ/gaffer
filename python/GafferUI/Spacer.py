@@ -42,15 +42,24 @@ from Qt import QtWidgets
 ## \todo Size accessors
 class Spacer( GafferUI.Widget ) :
 
+	## Spacers range their size between `size` and `maximumSize`,
+	# optionally requesting that if possible they would prefer to be
+	# at a specific size in between.
 	## \todo Rename size to minimumSize. We're just keeping the name
 	# for backwards compatibility for now.
-	def __init__( self, size, maximumSize=None, **kw ) :
+	def __init__( self, size, maximumSize=None, preferredSize=None, **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
-		self._qtWidget().setMinimumWidth( size.x )
-		self._qtWidget().setMinimumHeight( size.y )
+		if preferredSize is not None :
+			layout = QtWidgets.QHBoxLayout()
+			layout.setContentsMargins( 0, 0, 0, 0 )
+			self._qtWidget().setLayout( layout )
+			layout.addSpacerItem(
+				QtWidgets.QSpacerItem( preferredSize.x, preferredSize.y, QtWidgets.QSizePolicy.Preferred )
+			)
+
+		self._qtWidget().setMinimumSize( size.x, size.y )
 
 		if maximumSize is not None :
-			self._qtWidget().setMaximumWidth( maximumSize.x )
-			self._qtWidget().setMaximumHeight( maximumSize.y )
+			self._qtWidget().setMaximumSize( maximumSize.x, maximumSize.y )
