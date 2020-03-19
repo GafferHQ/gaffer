@@ -13,6 +13,7 @@ Improvements
 - CopyPrimitiveVariables : Improved performance. In one benchmark, scene generation time has been reduced by 50%.
 - MergeScenes : Improved performance when merging overlapping hierarchies.
 - Serialisation : Reduced file size and load time by omitting redundant `setInput()` calls from serialisations.
+- Scene node filters : All newly created nodes now require a filter to be connected before they will affect the scene. Previously some nodes affected everything by default and others affected nothing by default, resulting in confusion.
 
 Fixes
 -----

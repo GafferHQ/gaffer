@@ -74,6 +74,14 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "GafferUI::StandardNodule",
 			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",
 
+			# Several of our older nodes default to affecting all
+			# locations if no filter is connected. This was a mistake,
+			# and one day we need to change the defaults and figure out
+			# how to convert old scripts during loading. Until then
+			# we use a `userDefault` so that nodes newly created via the
+			# UI will have the default behaviour we want.
+			"userDefault", IECore.PathMatcher.Result.NoMatch,
+
 		],
 
 	},
