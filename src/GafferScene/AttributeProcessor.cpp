@@ -36,120 +36,95 @@
 
 #include "GafferScene/AttributeProcessor.h"
 
-#include "Gaffer/StringPlug.h"
-
-#include "IECore/StringAlgo.h"
-
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AttributeProcessor );
 
-size_t AttributeProcessor::g_firstPlugIndex = 0;
+AttributeProcessor::AttributeProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault )
+	:	FilteredSceneProcessor( name, filterDefault )
+{
+	init();
+}
 
 AttributeProcessor::AttributeProcessor( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	AttributeProcessor( name, PathMatcher::NoMatch )
 {
-	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "names" ) );
-	addChild( new BoolPlug( "invertNames" ) );
+}
 
+AttributeProcessor::AttributeProcessor( const std::string &name, size_t minInputs, size_t maxInputs )
+	:	FilteredSceneProcessor( name, minInputs, maxInputs )
+{
+	init();
+}
+
+void AttributeProcessor::init()
+{
 	// Fast pass-throughs for things we don't modify
-	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
+	for( auto &p : Plug::Range( *outPlug() ) )
+	{
+		if( p != outPlug()->attributesPlug() )
+		{
+			p->setInput( inPlug()->getChild<Plug>( p->getName() ) );
+		}
+	}
 }
 
 AttributeProcessor::~AttributeProcessor()
 {
 }
 
-Gaffer::StringPlug *AttributeProcessor::namesPlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *AttributeProcessor::namesPlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-Gaffer::BoolPlug *AttributeProcessor::invertNamesPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::BoolPlug *AttributeProcessor::invertNamesPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
-}
-
 void AttributeProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneElementProcessor::affects( input, outputs );
+	FilteredSceneProcessor::affects( input, outputs );
 
-	if( input == namesPlug() || input == invertNamesPlug() )
+	if( !refCount() )
+	{
+		// Avoid calling pure virtual methods while we're still constructing.
+		return;
+	}
+
+	if( affectsProcessedAttributes( input ) )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
 }
 
-bool AttributeProcessor::processesAttributes() const
+bool AttributeProcessor::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	bool invert = invertNamesPlug()->getValue();
-	if( invert )
-	{
-		// we don't know if we're modifying the attributes till we find out what
-		// names they have.
-		return true;
-	}
-	else
-	{
-		// if there are no names, then we know we're not modifying the attributes.
-		std::string names = namesPlug()->getValue();
-		return names.size();
-	}
+	return input == filterPlug() || input == inPlug()->attributesPlug();
 }
 
 void AttributeProcessor::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	namesPlug()->hash( h );
-	invertNamesPlug()->hash( h );
+	FilteredSceneProcessor::hashAttributes( path, context, outPlug(), h );
+	inPlug()->attributesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+void AttributeProcessor::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( inputAttributes->members().empty() )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
-		return inputAttributes;
+		hashProcessedAttributes( path, context, h );
 	}
-
-	const std::string names = namesPlug()->getValue();
-	const bool invert = invertNamesPlug()->getValue();
-
-	CompoundObjectPtr result = new CompoundObject;
-	for( CompoundObject::ObjectMap::const_iterator it = inputAttributes->members().begin(), eIt = inputAttributes->members().end(); it != eIt; ++it )
+	else
 	{
-		ConstObjectPtr attribute = it->second;
-		if( StringAlgo::matchMultiple( it->first, names ) != invert )
-		{
-			attribute = processAttribute( path, context, it->first, attribute.get() );
-		}
-
-		if( attribute )
-		{
-			result->members().insert(
-				CompoundObject::ObjectMap::value_type(
-					it->first,
-					// cast is ok - result is const immediately on
-					// returning from this function, and attribute will
-					// therefore not be modified.
-					boost::const_pointer_cast<Object>( attribute )
-				)
-			);
-		}
+		// pass through
+		h = inPlug()->attributesPlug()->hash();
 	}
-
-	return result;
 }
+
+IECore::ConstCompoundObjectPtr AttributeProcessor::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
+	{
+		ConstCompoundObjectPtr inputAttributes = inPlug()->attributesPlug()->getValue();
+		return computeProcessedAttributes( path, context, inputAttributes.get() );
+	}
+	else
+	{
+		return inPlug()->attributesPlug()->getValue();
+	}
+}
+

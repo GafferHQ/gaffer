@@ -28,6 +28,7 @@ API
 - ScenePlug : Added `exists()` method. This provides fast existence queries for locations.
 - SceneAlgo : Deprecated `exists()` function. Use `ScenePlug::exists()` instead
 - Spreadsheet : Added `RowsPlug::row( rowName )` method.
+- AttributeProcessor : Refactored to be more widely useful.
 - TransformTool :
   - Added `Selection::editable()` method.
   - Added `Selection::warning()` method.
@@ -35,6 +36,10 @@ API
 Breaking Changes
 ----------------
 
+- AttributeProcessor :
+  - Removed `names` and `invertNames` plugs.
+  - Rederived from FilteredSceneProcessor rather than SceneElementProcessor.
+  - Added new pure virtual methods that must be implemented by derived classes.
 - Context : Removed `Substitutions`, `substitutions()` and `hasSubstitutions()`. Use the `IECore.StringAlgo` equivalents instead.
 - TransformTool : The `Selection` class now uses accessor methods rather than exposing data members directly.
 - Stats app : The `-scene` and `-image` arguments now ignore input plugs.
