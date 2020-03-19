@@ -63,7 +63,7 @@ ShufflePlug::ShufflePlug( const std::string &name, Direction direction, unsigned
 	addChild( new BoolPlug( "enabled", direction, true ) );
 	// Disable substitutions on the destination since we'll be performing our own substitution
 	// during `ShufflesPlug::shuffle()`, in order to account for the ${source} variable.
-	addChild( new StringPlug( "destination", direction, "", Plug::Default, Context::NoSubstitutions ) );
+	addChild( new StringPlug( "destination", direction, "", Plug::Default, IECore::StringAlgo::NoSubstitutions ) );
 	addChild( new BoolPlug( "deleteSource", direction ) );
 }
 
