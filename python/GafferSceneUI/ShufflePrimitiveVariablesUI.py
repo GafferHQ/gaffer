@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,39 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from ArnoldShaderUITest import ArnoldShaderUITest
-from VisualiserAlgoTest import VisualiserAlgoTest
+import Gaffer
+import GafferScene
 
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferScene.ShufflePrimitiveVariables,
+
+	"description",
+	"""
+	ShufflePrimitiveVariables is used to copy or rename arbitrary numbers of primitive variables
+	at the filtered locations. The deleteSource plugs may be used to remove the original source
+	primitive variable(s) after the shuffling has been completed.
+
+	An additional context variable \"${source}\" can be used on the destination plugs to insert
+	the name of each source primitive variable. For example, to prefix all primitive variables
+	with \"user:\" set the source to \"*\" and the destination to \"user:${source}\").
+	""",
+
+	plugs = {
+
+		"shuffles" : [
+
+			"description",
+			"""
+			The primitive variables to be shuffled - arbitrary numbers of primitive variables
+			may be shuffled via the source/destination plugs. The deleteSource plug may be used
+			to remove the original primitive variable(s).
+			""",
+
+			"divider", True,
+
+		],
+
+	}
+
+)

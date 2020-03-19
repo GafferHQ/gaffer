@@ -306,6 +306,8 @@ from AnimationEditor import AnimationEditor
 import CompoundNumericNoduleUI
 import Examples
 from NameValuePlugValueWidget import NameValuePlugValueWidget
+from ShufflePlugValueWidget import ShufflePlugValueWidget
+from ShufflePlugValueWidget import ShufflesPlugValueWidget
 
 # and then specific node uis
 

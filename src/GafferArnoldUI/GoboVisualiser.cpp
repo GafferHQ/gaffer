@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferArnoldUI/Private/VisualiserAlgo.h"
+
 #include "GafferOSL/ShadingEngineAlgo.h"
 
 #include "GafferSceneUI/StandardLightVisualiser.h"
@@ -64,6 +66,7 @@ using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace IECoreGLPreview;
 using namespace GafferSceneUI;
+using namespace GafferArnoldUI::Private;
 
 namespace
 {
@@ -117,7 +120,12 @@ CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 {
 	// make the cost be image data in bytes
 	cost = key.resolution * key.resolution * 3 * 4;
-	return GafferOSL::ShadingEngineAlgo::shadeUVTexture( key.shaderNetwork, V2i( key.resolution ), key.output );
+
+	if( ShaderNetworkPtr textureNetwork = VisualiserAlgo::conformToOSLNetwork( key.output, key.shaderNetwork ) )
+	{
+		return GafferOSL::ShadingEngineAlgo::shadeUVTexture( textureNetwork.get(), V2i( key.resolution ) );
+	}
+	return nullptr;
 }
 
 typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
@@ -189,7 +197,11 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 
 		try
 		{
-			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( slideMapInput, shaderNetwork, resolution ) );
+			const OSLTextureCacheGetterKey key( slideMapInput, shaderNetwork, resolution );
+			if( CompoundDataPtr shadedImageData = g_oslTextureCache.get( key ) )
+			{
+				imageData = shadedImageData;
+			}
 		}
 		catch( const Exception &e )
 		{

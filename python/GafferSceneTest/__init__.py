@@ -143,6 +143,8 @@ from MeshTypeTest import MeshTypeTest
 from CopyPrimitiveVariablesTest import CopyPrimitiveVariablesTest
 from SpreadsheetTest import SpreadsheetTest
 from MergeScenesTest import MergeScenesTest
+from ShuffleAttributesTest import ShuffleAttributesTest
+from ShufflePrimitiveVariablesTest import ShufflePrimitiveVariablesTest
 from EditScopeAlgoTest import EditScopeAlgoTest
 
 from IECoreScenePreviewTest import *
