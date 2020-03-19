@@ -5,6 +5,9 @@ Features
 --------
 
 - EditScope : Added new node which provides a container for node graph edits made by interactive tools in the UI (#3467).
+  - The current EditScope may be chosen from a new menu in the Viewer toolbar.
+  - The TransformTools and CameraTool will now automatically create edits in the chosen EditScope, enabling edits without the need to manually create a Transform node.
+  - Added a `Delete` hotkey which prunes the currently selected objects using the current EditScope.
 
 Improvements
 ------------
