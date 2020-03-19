@@ -44,7 +44,8 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ShuffleAttributes );
 
 size_t ShuffleAttributes::g_firstPlugIndex = 0;
 
-ShuffleAttributes::ShuffleAttributes( const std::string &name ) : SceneElementProcessor( name )
+ShuffleAttributes::ShuffleAttributes( const std::string &name )
+	:	SceneElementProcessor( name, PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShufflesPlug( "shuffles" ) );
