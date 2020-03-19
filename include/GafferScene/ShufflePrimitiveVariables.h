@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2020, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,34 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_SHUFFLEPRIMITIVEVARIABLES_H
+#define GAFFERSCENE_SHUFFLEPRIMITIVEVARIABLES_H
 
-#include "PrimitiveVariablesBinding.h"
+#include "GafferScene/Deformer.h"
 
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/MapOffset.h"
-#include "GafferScene/MapProjection.h"
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-#include "GafferScene/CollectPrimitiveVariables.h"
-#include "GafferScene/PrimitiveVariableExists.h"
-#include "GafferScene/ShufflePrimitiveVariables.h"
+#include "Gaffer/ShufflePlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveVariables()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<MapProjection>();
-	GafferBindings::DependencyNodeClass<MapOffset>();
-	GafferBindings::DependencyNodeClass<CollectPrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariableExists>();
-	GafferBindings::DependencyNodeClass<ShufflePrimitiveVariables>();
+class GAFFERSCENE_API ShufflePrimitiveVariables : public Deformer
+{
 
-}
+	public :
+
+		ShufflePrimitiveVariables( const std::string &name=defaultName<ShufflePrimitiveVariables>() );
+		~ShufflePrimitiveVariables() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShufflePrimitiveVariables, ShufflePrimitiveVariablesTypeId, Deformer );
+
+		Gaffer::ShufflesPlug *shufflesPlug();
+		const Gaffer::ShufflesPlug *shufflesPlug() const;
+
+	protected :
+
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+		bool adjustBounds() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( ShufflePrimitiveVariables )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_SHUFFLEPRIMITIVEVARIABLES_H

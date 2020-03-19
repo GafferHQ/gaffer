@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2020, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,34 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERMODULE_SHUFFLESBINDING_H
+#define GAFFERMODULE_SHUFFLESBINDING_H
 
-#include "PrimitiveVariablesBinding.h"
-
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/MapOffset.h"
-#include "GafferScene/MapProjection.h"
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-#include "GafferScene/CollectPrimitiveVariables.h"
-#include "GafferScene/PrimitiveVariableExists.h"
-#include "GafferScene/ShufflePrimitiveVariables.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveVariables()
+namespace GafferModule
 {
 
-	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<MapProjection>();
-	GafferBindings::DependencyNodeClass<MapOffset>();
-	GafferBindings::DependencyNodeClass<CollectPrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariableExists>();
-	GafferBindings::DependencyNodeClass<ShufflePrimitiveVariables>();
+void bindShuffles();
 
-}
+} // namespace GafferModule
+
+#endif // GAFFERMODULE_SHUFFLESBINDING_H

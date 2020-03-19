@@ -44,6 +44,7 @@
 namespace GafferImage
 {
 
+/// \todo: Refactor using Gaffer::ShufflesPlug
 class GAFFERIMAGE_API Shuffle : public ImageProcessor
 {
 

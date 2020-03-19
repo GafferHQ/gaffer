@@ -1,6 +1,12 @@
 0.56.x.x (relative to 0.56.1.0)
 ========
 
+Features
+--------
+
+- ShuffleAttributes : Added node for copying/renaming attributes (#3611).
+- ShufflePrimitiveVariables : Added node for copying/renaming primitive variables (#3611).
+
 Improvements
 ------------
 
@@ -19,6 +25,7 @@ Fixes
 API
 ---
 
+- Gaffer : Added ShufflePlug and ShufflesPlug which facilitate renaming key/value pairs (#3611).
 - Metadata : Added support for `renameable` metadata in BoxUI, LabelPlugValueWidget and NameWidget.
 - NodeEditor : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - NodeUI : Deprecated `setReadOnly()` and `getReadOnly()` methods.
