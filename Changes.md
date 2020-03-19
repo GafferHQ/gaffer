@@ -40,6 +40,15 @@ Breaking Changes
   - Removed `names` and `invertNames` plugs.
   - Rederived from FilteredSceneProcessor rather than SceneElementProcessor.
   - Added new pure virtual methods that must be implemented by derived classes.
+  - Changed base class of several nodes from SceneElementProcessor to AttributeProcessor :
+    - Attributes
+    - ShuffleAttributes
+    - DeleteAttributes
+    - ShaderTweaks
+    - ShaderAssignment
+    - SetVisualiser
+    - AttributeVisualiser
+    - CollectTransforms
 - Context : Removed `Substitutions`, `substitutions()` and `hasSubstitutions()`. Use the `IECore.StringAlgo` equivalents instead.
 - TransformTool : The `Selection` class now uses accessor methods rather than exposing data members directly.
 - Stats app : The `-scene` and `-image` arguments now ignore input plugs.

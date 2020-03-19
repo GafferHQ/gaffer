@@ -44,15 +44,11 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ShuffleAttributes );
 
 size_t ShuffleAttributes::g_firstPlugIndex = 0;
 
-ShuffleAttributes::ShuffleAttributes( const std::string &name ) : SceneElementProcessor( name )
+ShuffleAttributes::ShuffleAttributes( const std::string &name )
+	:	AttributeProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShufflesPlug( "shuffles" ) );
-
-	// Fast pass-throughs for the things we don't alter.
-	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 ShuffleAttributes::~ShuffleAttributes()
@@ -69,29 +65,25 @@ const Gaffer::ShufflesPlug *ShuffleAttributes::shufflesPlug() const
 	return getChild<Gaffer::ShufflesPlug>( g_firstPlugIndex );
 }
 
-void ShuffleAttributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool ShuffleAttributes::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( shufflesPlug()->isAncestorOf( input ) )
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-bool ShuffleAttributes::processesAttributes() const
-{
-	// Although the base class says that we should return a constant, it should
-	// be OK to return this because it's constant across the hierarchy.
-	return !shufflesPlug()->children().empty();
+	return AttributeProcessor::affectsProcessedAttributes( input ) || shufflesPlug()->isAncestorOf( input );
 }
 
 void ShuffleAttributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	shufflesPlug()->hash( h );
+	if( shufflesPlug()->children().empty() )
+	{
+		h = inPlug()->attributesPlug()->hash();
+	}
+	else
+	{
+		AttributeProcessor::hashProcessedAttributes( path, context, h );
+		shufflesPlug()->hash( h );
+	}
 }
 
-IECore::ConstCompoundObjectPtr ShuffleAttributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShuffleAttributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	if( shufflesPlug()->children().empty() || inputAttributes->members().empty() )
 	{

@@ -59,15 +59,10 @@ const InternedString g_oslTarget( g_oslPrefix ? std::string( g_oslPrefix ) + ":s
 size_t ShaderAssignment::g_firstPlugIndex = 0;
 
 ShaderAssignment::ShaderAssignment( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	AttributeProcessor( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShaderPlug( "shader" ) );
-
-	// Fast pass-throughs for the things we don't alter.
-	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 ShaderAssignment::~ShaderAssignment()
@@ -84,28 +79,19 @@ const GafferScene::ShaderPlug *ShaderAssignment::shaderPlug() const
 	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-void ShaderAssignment::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool ShaderAssignment::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == shaderPlug() )
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-bool ShaderAssignment::processesAttributes() const
-{
-	return true;
+	return AttributeProcessor::affectsProcessedAttributes( input ) || input == shaderPlug();
 }
 
 void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	AttributeProcessor::hashProcessedAttributes( path, context, h );
 	ScenePlug::GlobalScope globalScope( context );
 	h.append( shaderPlug()->attributesHash() );
 }
 
-IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	ScenePlug::GlobalScope globalScope( context );
 	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();

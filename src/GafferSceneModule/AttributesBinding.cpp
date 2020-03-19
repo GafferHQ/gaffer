@@ -41,10 +41,12 @@
 #include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/AttributeVisualiser.h"
 #include "GafferScene/Attributes.h"
+#include "GafferScene/CollectTransforms.h"
 #include "GafferScene/CopyAttributes.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteAttributes.h"
 #include "GafferScene/OpenGLAttributes.h"
+#include "GafferScene/SetVisualiser.h"
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/ShuffleAttributes.h"
 #include "GafferScene/StandardAttributes.h"
@@ -57,15 +59,17 @@ using namespace GafferScene;
 void GafferSceneModule::bindAttributes()
 {
 
+	GafferBindings::DependencyNodeClass<AttributeProcessor>();
 	GafferBindings::DependencyNodeClass<ShaderAssignment>();
 	GafferBindings::DependencyNodeClass<Attributes>();
 	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
 	GafferBindings::DependencyNodeClass<StandardAttributes>();
 	GafferBindings::DependencyNodeClass<CustomAttributes>();
-	GafferBindings::DependencyNodeClass<AttributeProcessor>();
 	GafferBindings::DependencyNodeClass<DeleteAttributes>();
 	GafferBindings::DependencyNodeClass<CopyAttributes>();
 	GafferBindings::DependencyNodeClass<ShuffleAttributes>();
+	GafferBindings::DependencyNodeClass<SetVisualiser>();
+	GafferBindings::DependencyNodeClass<CollectTransforms>();
 
 	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
 

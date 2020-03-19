@@ -54,7 +54,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AttributeVisualiser );
 size_t AttributeVisualiser::g_firstPlugIndex = 0;
 
 AttributeVisualiser::AttributeVisualiser( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::EveryMatch )
+	:	AttributeProcessor( name, IECore::PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -72,11 +72,6 @@ AttributeVisualiser::AttributeVisualiser( const std::string &name )
 	addChild( new StringPlug( "shaderType", Plug::In, "gl:surface" ) );
 	addChild( new StringPlug( "shaderName", Plug::In, "Constant" ) );
 	addChild( new StringPlug( "shaderParameter", Plug::In, "Cs" ) );
-
-	// Fast pass-throughs for the things we don't alter.
-	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 AttributeVisualiser::~AttributeVisualiser()
@@ -163,11 +158,10 @@ const Gaffer::StringPlug *AttributeVisualiser::shaderParameterPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
-void AttributeVisualiser::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool AttributeVisualiser::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if(
+	return
+		AttributeProcessor::affectsProcessedAttributes( input ) ||
 		input == attributeNamePlug() ||
 		input == modePlug() ||
 		input == minPlug() ||
@@ -176,19 +170,12 @@ void AttributeVisualiser::affects( const Gaffer::Plug *input, AffectedPlugsConta
 		input == shaderNamePlug() ||
 		input == shaderParameterPlug() ||
 		rampPlug()->isAncestorOf( input )
-	)
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
-}
-
-bool AttributeVisualiser::processesAttributes() const
-{
-	return true;
+	;
 }
 
 void AttributeVisualiser::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	AttributeProcessor::hashProcessedAttributes( path, context, h );
 	attributeNamePlug()->hash( h );
 	modePlug()->hash( h );
 	minPlug()->hash( h );
@@ -199,7 +186,7 @@ void AttributeVisualiser::hashProcessedAttributes( const ScenePath &path, const 
 	shaderParameterPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
+IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const std::string attributeName = attributeNamePlug()->getValue();
 	if( !attributeName.size() )

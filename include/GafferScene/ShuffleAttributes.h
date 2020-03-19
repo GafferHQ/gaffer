@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_SHUFFLEATTRIBUTES_H
 #define GAFFERSCENE_SHUFFLEATTRIBUTES_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/AttributeProcessor.h"
 
 #include "Gaffer/ShufflePlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API ShuffleAttributes : public SceneElementProcessor
+class GAFFERSCENE_API ShuffleAttributes : public AttributeProcessor
 {
 
 	public :
@@ -52,18 +52,16 @@ class GAFFERSCENE_API ShuffleAttributes : public SceneElementProcessor
 		ShuffleAttributes( const std::string &name=defaultName<ShuffleAttributes>() );
 		~ShuffleAttributes() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShuffleAttributes, ShuffleAttributesTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShuffleAttributes, ShuffleAttributesTypeId, AttributeProcessor );
 
 		Gaffer::ShufflesPlug *shufflesPlug();
 		const Gaffer::ShufflesPlug *shufflesPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesAttributes() const override;
+		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
 		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

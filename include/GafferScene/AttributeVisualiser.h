@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_ATTRIBUTEVISUALISER_H
 #define GAFFERSCENE_ATTRIBUTEVISUALISER_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/AttributeProcessor.h"
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/SplinePlug.h"
@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API AttributeVisualiser : public SceneElementProcessor
+class GAFFERSCENE_API AttributeVisualiser : public AttributeProcessor
 {
 
 	public :
@@ -60,7 +60,7 @@ class GAFFERSCENE_API AttributeVisualiser : public SceneElementProcessor
 		AttributeVisualiser( const std::string &name=defaultName<AttributeVisualiser>() );
 		~AttributeVisualiser() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::AttributeVisualiser, AttributeVisualiserTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::AttributeVisualiser, AttributeVisualiserTypeId, AttributeProcessor );
 
 		enum Mode
 		{
@@ -94,13 +94,11 @@ class GAFFERSCENE_API AttributeVisualiser : public SceneElementProcessor
 		Gaffer::StringPlug *shaderParameterPlug();
 		const Gaffer::StringPlug *shaderParameterPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesAttributes() const override;
+		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
 		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

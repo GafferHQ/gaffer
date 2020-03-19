@@ -89,6 +89,9 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 		/// for new nodes.
 		AttributeProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault );
 		friend class DeleteAttributes;
+		friend class ShaderAssignment;
+		friend class Attributes;
+		friend class AttributeVisualiser;
 
 };
 
