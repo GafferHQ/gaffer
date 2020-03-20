@@ -129,12 +129,15 @@ void bindEditScopeAlgo()
 	def( "setPruned", &setPrunedWrapper2 );
 	def( "getPruned", &getPrunedWrapper );
 
-	class_<EditScopeAlgo::TransformEdit>( "TransformEdit" )
+	class_<EditScopeAlgo::TransformEdit>( "TransformEdit", no_init )
+		.def( init<const V3fPlugPtr &, const V3fPlugPtr &, const V3fPlugPtr &, const V3fPlugPtr &>() )
 		.add_property( "translate", &translateAccessor )
 		.add_property( "rotate", &rotateAccessor )
 		.add_property( "scale", &scaleAccessor )
 		.add_property( "pivot", &pivotAccessor )
 		.def( "matrix", &matrixWrapper )
+		.def( self == self )
+		.def( self != self )
 	;
 
 	def( "acquireTransformEdit", &acquireTransformEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "createIfNecessary" ) = true ) );

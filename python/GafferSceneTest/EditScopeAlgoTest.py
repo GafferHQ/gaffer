@@ -176,5 +176,30 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 				editScope, "/plane/instances/cube/{}".format( name )
 			)
 
+	def testTransformEditMethods( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		planeEdit = GafferScene.EditScopeAlgo.TransformEdit(
+			plane["transform"]["translate"],
+			plane["transform"]["rotate"],
+			plane["transform"]["scale"],
+			plane["transform"]["pivot"]
+		)
+		sphereEdit = GafferScene.EditScopeAlgo.TransformEdit(
+			sphere["transform"]["translate"],
+			sphere["transform"]["rotate"],
+			sphere["transform"]["scale"],
+			sphere["transform"]["pivot"]
+		)
+
+		self.assertEqual( planeEdit, planeEdit )
+		self.assertFalse( planeEdit != planeEdit )
+		self.assertEqual( sphereEdit, sphereEdit )
+		self.assertFalse( sphereEdit != sphereEdit )
+		self.assertNotEqual( sphereEdit, planeEdit )
+		self.assertTrue( sphereEdit != planeEdit )
+
 if __name__ == "__main__":
 	unittest.main()

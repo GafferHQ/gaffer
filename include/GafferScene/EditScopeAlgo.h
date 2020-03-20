@@ -62,11 +62,25 @@ GAFFERSCENE_API bool getPruned( Gaffer::EditScope *scope, const ScenePlug::Scene
 
 struct GAFFERSCENE_API TransformEdit
 {
-	const Gaffer::V3fPlugPtr translate;
-	const Gaffer::V3fPlugPtr rotate;
-	const Gaffer::V3fPlugPtr scale;
-	const Gaffer::V3fPlugPtr pivot;
+
+	TransformEdit(
+		const Gaffer::V3fPlugPtr &translate,
+		const Gaffer::V3fPlugPtr &rotate,
+		const Gaffer::V3fPlugPtr &scale,
+		const Gaffer::V3fPlugPtr &pivot
+	);
+	TransformEdit( const TransformEdit &rhs ) = default;
+
+	Gaffer::V3fPlugPtr translate;
+	Gaffer::V3fPlugPtr rotate;
+	Gaffer::V3fPlugPtr scale;
+	Gaffer::V3fPlugPtr pivot;
+
 	Imath::M44f matrix() const;
+
+	bool operator == ( const TransformEdit &rhs ) const;
+	bool operator != ( const TransformEdit &rhs ) const;
+
 };
 
 GAFFERSCENE_API bool hasTransformEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
