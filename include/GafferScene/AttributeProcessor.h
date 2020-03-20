@@ -70,8 +70,10 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 		virtual bool affectsProcessedAttributes( const Gaffer::Plug *input ) const = 0;
 		/// Must be implemented by derived classes to do one of the following :
 		///
-		/// - Call `AttributeProcessor::hashProcessedAttributes()` and then append to the hash with all plugs used in `computeProcessedAttributes()`.
-		/// - Assign `h = inPlug()->attributesPlug()->hash()` to signify that `computeProcessedAttributes()` will pass through `inputAttributes`
+		/// - Call `AttributeProcessor::hashProcessedAttributes()` and then append to the hash
+		///   with all plugs used in `computeProcessedAttributes()`.
+		/// - Assign `h = inPlug()->attributesPlug()->hash()` to signify that
+		///   `computeProcessedAttributes()` will pass through `inputAttributes`
 		///   unchanged.
 		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented by derived classes to return the processed attributes.
