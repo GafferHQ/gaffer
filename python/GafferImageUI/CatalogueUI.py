@@ -490,6 +490,13 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		self._updateFromPlug()
 
+	def getToolTip( self ) :
+
+		# Suppress the default imageIndex tool-tip until we can do something
+		# more intelligent. We can't use setToolTip as PlugValueWidget defaults
+		# to the plug description for 'falsy' values.
+		return None
+
 	def _updateFromPlug( self ) :
 
 		with self.getContext() :
