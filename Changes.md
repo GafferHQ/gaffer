@@ -20,6 +20,8 @@ Improvements
 Fixes
 -----
 
+- RotateTool : Fixed bug which caused aiming clicks to change the selection in some circumstances.
+- TranslateTool : Fixed bug which caused snapping clicks to change the selection in some circumstances.
 - Stats app :
   - Fixed bug which caused the `-scene` and `-image` arguments to evaluate a node's input rather than its output. In particular this affected nodes like ContextVariables.
   - Fixed bug which meant that the `-scene` and `image` arguments didn't support nested output plugs.
