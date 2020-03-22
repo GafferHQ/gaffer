@@ -39,6 +39,8 @@
 
 #include "GafferScene/AttributeProcessor.h"
 
+#include "Gaffer/StringPlug.h"
+
 namespace GafferScene
 {
 
@@ -52,9 +54,21 @@ class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeleteAttributes, DeleteAttributesTypeId, AttributeProcessor );
 
+		Gaffer::StringPlug *namesPlug();
+		const Gaffer::StringPlug *namesPlug() const;
+
+		Gaffer::BoolPlug *invertNamesPlug();
+		const Gaffer::BoolPlug *invertNamesPlug() const;
+
 	protected :
 
-		IECore::ConstObjectPtr processAttribute( const ScenePath &path, const Gaffer::Context *context, const IECore::InternedString &attributeName, const IECore::Object *inputAttribute ) const override;
+		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
+		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 

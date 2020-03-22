@@ -171,13 +171,8 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SetVisualiser );
 
 size_t SetVisualiser::g_firstPlugIndex = 0;
 
-
-// NoMatch is the Gaffer standard default behaviour for nodes that accept
-// filters. It may seem more intuitive to have a visualisation node affect
-// everything by default - but consistency across Gaffer is more important.
-// Even at the expense of inconsistency with existing vis nodes.
 SetVisualiser::SetVisualiser( const std::string &name )
-	: SceneElementProcessor( name, PathMatcher::NoMatch )
+	: AttributeProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -187,11 +182,6 @@ SetVisualiser::SetVisualiser( const std::string &name )
 
 	addChild( new CompoundDataPlug( "colorOverrides", Plug::In ) );
 	addChild( new AtomicCompoundDataPlug( "__outSets", Plug::Out, new CompoundData() ) );
-
-	// Fast pass-throughs for the things we don't alter.
-	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
-	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
-	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 }
 
 SetVisualiser::~SetVisualiser()
@@ -250,7 +240,7 @@ const Gaffer::AtomicCompoundDataPlug *SetVisualiser::outSetsPlug() const
 
 void SetVisualiser::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneElementProcessor::affects( input, outputs );
+	AttributeProcessor::affects( input, outputs );
 
 	// Making attributes depend on outSets as much as possible (instead of
 	// the input plugs directly) allows us to better take advantage of Gaffers
@@ -264,20 +254,11 @@ void SetVisualiser::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	{
 		outputs.push_back( outSetsPlug() );
 	}
-	else if (
-		input == includeInheritedPlug() ||
-		input == stripeWidthPlug() ||
-		input == outSetsPlug() ||
-		input == inPlug()->setPlug()
-	)
-	{
-		outputs.push_back( outPlug()->attributesPlug() );
-	}
 }
 
 void SetVisualiser::hash( const ValuePlug *output, const Context *context, MurmurHash &h ) const
 {
-	SceneElementProcessor::hash( output, context, h );
+	AttributeProcessor::hash( output, context, h );
 
 	if( output == outSetsPlug() )
 	{
@@ -336,17 +317,25 @@ void SetVisualiser::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 	}
 	else
 	{
-		SceneElementProcessor::compute( output, context );
+		AttributeProcessor::compute( output, context );
 	}
 }
 
-bool SetVisualiser::processesAttributes() const
+bool SetVisualiser::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	return true;
+	return
+		AttributeProcessor::affectsProcessedAttributes( input ) ||
+		input == includeInheritedPlug() ||
+		input == stripeWidthPlug() ||
+		input == outSetsPlug() ||
+		input == inPlug()->setPlug()
+	;
 }
 
 void SetVisualiser::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, MurmurHash &h ) const
 {
+	AttributeProcessor::hashProcessedAttributes( path, context, h );
+
 	ConstCompoundDataPtr outSetsData = outSetsPlug()->getValue();
 
 	outSetsData->hash( h );
@@ -365,7 +354,7 @@ void SetVisualiser::hashProcessedAttributes( const ScenePath &path, const Gaffer
 	stripeWidthPlug()->hash( h );
 }
 
-ConstCompoundObjectPtr SetVisualiser::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, ConstCompoundObjectPtr inputAttributes ) const
+ConstCompoundObjectPtr SetVisualiser::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	CompoundObjectPtr result = new CompoundObject;
 

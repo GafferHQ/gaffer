@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_SHADERTWEAKS_H
 #define GAFFERSCENE_SHADERTWEAKS_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/TweakPlug.h"
 
 #include "Gaffer/StringPlug.h"
@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
+class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 {
 
 	public :
@@ -53,7 +53,7 @@ class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
 		ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
 		~ShaderTweaks() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, AttributeProcessor );
 
 		Gaffer::StringPlug *shaderPlug();
 		const Gaffer::StringPlug *shaderPlug() const;
@@ -64,13 +64,11 @@ class GAFFERSCENE_API ShaderTweaks : public SceneElementProcessor
 		GafferScene::TweaksPlug *tweaksPlug();
 		const GafferScene::TweaksPlug *tweaksPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesAttributes() const override;
+		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
 		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 		static size_t g_firstPlugIndex;
 

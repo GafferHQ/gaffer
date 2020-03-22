@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_COLLECTTRANSFORMS_H
 #define GAFFERSCENE_COLLECTTRANSFORMS_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/AttributeProcessor.h"
 
 namespace Gaffer
 {
@@ -49,7 +49,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API CollectTransforms : public SceneElementProcessor
+class GAFFERSCENE_API CollectTransforms : public AttributeProcessor
 {
 
 	public :
@@ -57,7 +57,7 @@ class GAFFERSCENE_API CollectTransforms : public SceneElementProcessor
 		CollectTransforms( const std::string &name=defaultName<CollectTransforms>() );
 		~CollectTransforms() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CollectTransforms, CollectTransformsTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CollectTransforms, CollectTransformsTypeId, AttributeProcessor );
 
 		Gaffer::StringVectorDataPlug *attributesPlug();
 		const Gaffer::StringVectorDataPlug *attributesPlug() const;
@@ -77,13 +77,13 @@ class GAFFERSCENE_API CollectTransforms : public SceneElementProcessor
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
-
-		bool processesAttributes() const override;
+		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
 		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputObject ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

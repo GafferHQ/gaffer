@@ -38,13 +38,13 @@
 #ifndef GAFFERSCENE_SHADERASSIGNMENT_H
 #define GAFFERSCENE_SHADERASSIGNMENT_H
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/ShaderPlug.h"
 
 namespace GafferScene
 {
 
-class GAFFERSCENE_API ShaderAssignment : public SceneElementProcessor
+class GAFFERSCENE_API ShaderAssignment : public AttributeProcessor
 {
 
 	public :
@@ -52,18 +52,16 @@ class GAFFERSCENE_API ShaderAssignment : public SceneElementProcessor
 		ShaderAssignment( const std::string &name=defaultName<ShaderAssignment>() );
 		~ShaderAssignment() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, AttributeProcessor );
 
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesAttributes() const override;
+		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
 		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 	private :
 

@@ -36,21 +36,92 @@
 
 #include "GafferScene/DeleteAttributes.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteAttributes );
 
+size_t DeleteAttributes::g_firstPlugIndex = 0;
+
 DeleteAttributes::DeleteAttributes( const std::string &name )
-	:	AttributeProcessor( name )
+	:	AttributeProcessor( name, IECore::PathMatcher::EveryMatch )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "names" ) );
+	addChild( new BoolPlug( "invertNames" ) );
 }
 
 DeleteAttributes::~DeleteAttributes()
 {
 }
 
-IECore::ConstObjectPtr DeleteAttributes::processAttribute( const ScenePath &path, const Gaffer::Context *context, const IECore::InternedString &attributeName, const IECore::Object *inputAttribute ) const
+Gaffer::StringPlug *DeleteAttributes::namesPlug()
 {
-	return nullptr;
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *DeleteAttributes::namesPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::BoolPlug *DeleteAttributes::invertNamesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::BoolPlug *DeleteAttributes::invertNamesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
+}
+
+bool DeleteAttributes::affectsProcessedAttributes( const Gaffer::Plug *input ) const
+{
+	return
+		AttributeProcessor::affectsProcessedAttributes( input ) ||
+		input == namesPlug() ||
+		input == invertNamesPlug()
+	;
+}
+
+void DeleteAttributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	const std::string names = namesPlug()->getValue();
+	const bool invert = invertNamesPlug()->getValue();
+	if( !invert && names.empty() )
+	{
+		h = inPlug()->attributesPlug()->hash();
+		return;
+	}
+
+	AttributeProcessor::hashProcessedAttributes( path, context, h );
+	h.append( names );
+	h.append( invert );
+}
+
+IECore::ConstCompoundObjectPtr DeleteAttributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
+{
+	if( inputAttributes->members().empty() )
+	{
+		return inputAttributes;
+	}
+
+	const std::string names = namesPlug()->getValue();
+	const bool invert = invertNamesPlug()->getValue();
+	if( !invert && names.empty() )
+	{
+		return inputAttributes;
+	}
+
+	CompoundObjectPtr result = new CompoundObject;
+	for( const auto &a : inputAttributes->members() )
+	{
+		if( StringAlgo::matchMultiple( a.first, names ) == invert )
+		{
+			result->members().insert( a );
+		}
+	}
+
+	return result;
 }
