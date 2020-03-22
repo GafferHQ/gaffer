@@ -39,6 +39,7 @@ API
 - TransformTool :
   - Added `Selection::editable()` method.
   - Added `Selection::warning()` method.
+  - Added `selectionEditable()` method.
 
 Breaking Changes
 ----------------

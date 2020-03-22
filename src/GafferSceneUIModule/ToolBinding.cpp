@@ -96,6 +96,12 @@ boost::python::list selection( const TransformTool &tool )
 	return result;
 }
 
+bool selectionEditable( const TransformTool &tool )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return tool.selectionEditable();
+}
+
 struct SelectionChangedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, TransformTool &t )
@@ -177,6 +183,7 @@ void GafferSceneUIModule::bindTools()
 	{
 		scope s = GafferBindings::NodeClass<TransformTool>( nullptr, no_init )
 			.def( "selection", &selection )
+			.def( "selectionEditable", &selectionEditable )
 			.def( "selectionChangedSignal", &TransformTool::selectionChangedSignal, return_internal_reference<1>() )
 			.def( "handlesTransform", &TransformTool::handlesTransform )
 		;

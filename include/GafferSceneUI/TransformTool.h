@@ -189,7 +189,11 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 		};
 
+		/// Returns the current selection.
 		const std::vector<Selection> &selection() const;
+		/// Returns true only if the selection is non-empty
+		/// and every item is editable.
+		bool selectionEditable() const;
 
 		using SelectionChangedSignal = boost::signal<void (TransformTool &)>;
 		SelectionChangedSignal &selectionChangedSignal();

@@ -275,7 +275,7 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 	//
 	// We always return true to prevent the SelectTool defaults.
 
-	if( selection().size() == 0 )
+	if( !selectionEditable() )
 	{
 		return true;
 	}
