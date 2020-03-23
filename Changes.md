@@ -30,7 +30,9 @@ API
 - EditScopeAlgo : Added new namespace with utility functions for editing scenes using EditScope nodes.
 - ScenePlug : Added `exists()` method. This provides fast existence queries for locations.
 - SceneAlgo : Deprecated `exists()` function. Use `ScenePlug::exists()` instead
-- Spreadsheet : Added `RowsPlug::row( rowName )` method.
+- Spreadsheet :
+  - Added `RowsPlug::row( rowName )` method.
+  - Added support for `spreadsheet:defaultRowVisible` metadata, which can be used to hide the default row.
 - AttributeProcessor : Refactored to be more widely useful.
 - Spacer : Added optional `preferredSize` constructor argument.
 - View : Added `editScope` plug and `editScope()` accessor method.
