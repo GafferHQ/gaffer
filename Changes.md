@@ -21,6 +21,7 @@ Fixes
 - NodeEditor : Fixed bug that allowed the node name to be edited on a locked node.
 - InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
+- SceneAlgo : Fixed bug which could cause hangs when retrieving the source scene from an image via Python.
 
 API
 ---

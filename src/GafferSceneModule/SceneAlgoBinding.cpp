@@ -170,11 +170,13 @@ ShaderTweaksPtr shaderTweaksWrapper( const ScenePlug &scene, const ScenePlug::Sc
 
 std::string sourceSceneNameWrapper( const GafferImage::ImagePlug &image )
 {
+	IECorePython::ScopedGILRelease r;
 	return SceneAlgo::sourceSceneName( &image );
 }
 
 ScenePlugPtr sourceSceneWrapper( GafferImage::ImagePlug &image )
 {
+	IECorePython::ScopedGILRelease r;
 	return SceneAlgo::sourceScene( &image );
 }
 
