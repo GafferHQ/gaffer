@@ -42,6 +42,7 @@
 #include "GafferScene/Transform.h"
 
 #include "Gaffer/EditScope.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/StringPlug.h"
@@ -165,7 +166,10 @@ SceneProcessorPtr transformProcessor()
 		plug->setInput( spreadsheet->outPlug()->getChild<Plug>( name ) );
 	}
 
-	PlugAlgo::promoteWithName( spreadsheet->rowsPlug(), "edits" );
+	auto rowsPlug = static_cast<Spreadsheet::RowsPlug *>( PlugAlgo::promoteWithName( spreadsheet->rowsPlug(), "edits" ) );
+	Metadata::registerValue( rowsPlug, "spreadsheet:defaultRowVisible", new BoolData( false ) );
+	Metadata::registerValue( rowsPlug->defaultRow(), "spreadsheet:rowNameWidth", new IntData( 300 ) );
+
 	result->outPlug()->setInput( transform->outPlug() );
 
 	return result;
