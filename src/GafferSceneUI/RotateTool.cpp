@@ -246,9 +246,9 @@ IECore::RunTimeTypedPtr RotateTool::handleDragBegin()
 
 bool RotateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f rotation = static_cast<RotateHandle *>( gadget )->rotation( event );
-	for( const auto &r : m_drag )
+	for( auto &r : m_drag )
 	{
 		r.apply( rotation );
 	}
@@ -286,7 +286,7 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 		return true;
 	}
 
-	UndoScope undoScope( selection()[0].transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled );
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>() );
 
 	for( const auto &s : selection() )
 	{
@@ -344,22 +344,24 @@ bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 //////////////////////////////////////////////////////////////////////////
 
 RotateTool::Rotation::Rotation( const Selection &selection, Orientation orientation )
+	:	m_selection( selection )
 {
-	Context::Scope scopedContext( selection.context() );
-
-	m_plug = selection.transformPlug()->rotatePlug();
-	m_originalRotation = degreesToRadians( m_plug->getValue() );
-
 	const M44f handlesTransform = selection.orientedTransform( orientation );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
-
-	m_time = selection.context()->getTime();
 }
 
 bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 {
+	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
+	if( !edit )
+	{
+		// Edit will be created on demand in apply(), at which point we know
+		// it will be editable.
+		return true;
+	}
+
 	Imath::V3f current;
-	const Imath::V3f updated = updatedRotateValue( V3f( axisMask ), &current );
+	const Imath::V3f updated = updatedRotateValue( edit->rotate.get(), V3f( axisMask ), &current );
 	for( int i = 0; i < 3; ++i )
 	{
 		if( updated[i] == current[i] )
@@ -367,7 +369,7 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 			continue;
 		}
 
-		if( !canSetValueOrAddKey( m_plug->getChild( i ) ) )
+		if( !canSetValueOrAddKey( edit->rotate->getChild( i ) ) )
 		{
 			return false;
 		}
@@ -375,21 +377,28 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 	return true;
 }
 
-void RotateTool::Rotation::apply( const Imath::Eulerf &rotation ) const
+void RotateTool::Rotation::apply( const Imath::Eulerf &rotation )
 {
-	const Imath::V3f e = updatedRotateValue( rotation );
+	V3fPlug *rotatePlug = m_selection.acquireTransformEdit()->rotate.get();
+	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation );
 	for( int i = 0; i < 3; ++i )
 	{
-		FloatPlug *p = m_plug->getChild( i );
+		FloatPlug *p = rotatePlug->getChild( i );
 		if( canSetValueOrAddKey( p ) )
 		{
-			setValueOrAddKey( p, m_time, e[i] );
+			setValueOrAddKey( p, m_selection.context()->getTime(), e[i] );
 		}
 	}
 }
 
-Imath::V3f RotateTool::Rotation::updatedRotateValue( const Imath::Eulerf &rotation, Imath::V3f *currentValue ) const
+Imath::V3f RotateTool::Rotation::updatedRotateValue( const Gaffer::V3fPlug *rotatePlug, const Imath::Eulerf &rotation, Imath::V3f *currentValue ) const
 {
+	if( !m_originalRotation )
+	{
+		Context::Scope scopedContext( m_selection.context() );
+		m_originalRotation = degreesToRadians( rotatePlug->getValue() );
+	}
+
 	// Convert the rotation into the space of the
 	// upstream transform.
 	Quatf q = rotation.toQuat();
@@ -400,12 +409,12 @@ Imath::V3f RotateTool::Rotation::updatedRotateValue( const Imath::Eulerf &rotati
 	// Compose it with the original.
 
 	M44f m = q.toMatrix44();
-	m.rotate( m_originalRotation );
+	m.rotate( *m_originalRotation );
 
 	// Convert to the euler angles closest to
 	// those we currently have.
 
-	const V3f current = m_plug->getValue();
+	const V3f current = rotatePlug->getValue();
 	if( currentValue )
 	{
 		*currentValue = current;

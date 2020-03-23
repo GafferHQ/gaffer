@@ -99,3 +99,138 @@ Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxIn.name", "readOnly", True 
 Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxOut.name", "readOnly", True )
 Gaffer.Metadata.registerValue( Gaffer.BoxIn, "renameable", lambda node : not isinstance( node.parent(), Gaffer.EditScope ) or node.getName() != "BoxIn" )
 Gaffer.Metadata.registerValue( Gaffer.BoxOut, "renameable", lambda node : not isinstance( node.parent(), Gaffer.EditScope ) or node.getName() != "BoxOut" )
+
+# EditScopePlugValueWidget
+# ========================
+
+class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		frame = GafferUI.Frame( borderWidth = 0 )
+		GafferUI.PlugValueWidget.__init__( self, frame, plug, **kw )
+
+		with frame :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
+				GafferUI.Label( "Edit Scope" )
+				self.__menuButton = GafferUI.MenuButton(
+					"",
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+				)
+				self.__menuButton._qtWidget().setFixedWidth( 100 )
+				self.__navigationMenuButton = GafferUI.MenuButton(
+					image = "navigationArrow.png",
+					hasFrame = False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__navigationMenuDefinition ) )
+				)
+				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
+
+		self._updateFromPlug()
+
+	def hasLabel( self ) :
+
+		return True
+
+	def _updateFromPlug( self ) :
+
+		editScope = self.__editScope()
+		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
+		self.__navigationMenuButton.setEnabled( editScope is not None )
+
+	def __editScope( self ) :
+
+		input = self.getPlug().getInput()
+		return input.ancestor( Gaffer.EditScope ) if input is not None else None
+
+	def __editScopePredicate( self, node ) :
+
+		if not isinstance( node, Gaffer.EditScope ) :
+			return False
+
+		if "out" not in node or not self.getPlug().acceptsInput( node["out"] ) :
+			return False
+
+		return True
+
+	def __connectEditScope( self, editScope, *ignored ) :
+
+		self.getPlug().setInput( editScope["out"] )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		node = self.getPlug().node()
+		if isinstance( node, GafferUI.View ) and self.getPlug() == node["editScope"] :
+			if node["in"].getInput() is None :
+				return
+			else :
+				node = node["in"].getInput().node()
+
+		currentEditScope = None
+		if self.getPlug().getInput() is not None :
+			currentEditScope = self.getPlug().getInput().parent()
+
+		def addItem( editScope, enabled = True ) :
+
+			result.append(
+				"/" + editScope.relativeName( editScope.scriptNode() ).replace( ".", "/" ),
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__connectEditScope ), editScope ),
+					"active" : enabled,
+					"checkBox" : editScope == currentEditScope,
+				}
+			)
+
+		upstream = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
+		if self.__editScopePredicate( node ) :
+			upstream.insert( 0, node )
+
+		result.append( "/__UpstreamDivider__", { "divider" : True, "label" : "Upstream" } )
+		if upstream :
+			for editScope in upstream :
+				addItem( editScope )
+		else :
+			result.append( "/None Available", { "active" : False } )
+
+		downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
+		if downstream :
+			result.append( "/__DownstreamDivider__", { "divider" : True, "label" : "Downstream" } )
+			for editScope in downstream :
+				addItem( editScope, enabled = False )
+
+		result.append( "/__NoneDivider__", { "divider" : True } )
+		result.append(
+			"/None", { "command" : functools.partial( self.getPlug().setInput, None ) },
+		)
+
+		return result
+
+	def __navigationMenuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		editScope = self.__editScope()
+		if editScope is None :
+			result.append(
+				"/No EditScope Selected",
+				{ "active" : False },
+			)
+			return result
+
+		if editScope.processors() :
+			for processor in editScope.processors() :
+				result.append(
+					"/" + processor.getName(),
+					{
+						"command" : functools.partial( GafferUI.NodeEditor.acquire, processor )
+					}
+				)
+		else :
+			result.append(
+				"/EditScope is Empty",
+				{ "active" : False },
+			)
+
+		return result

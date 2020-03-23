@@ -194,3 +194,4 @@ if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
 GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys, scoped = False )
+GafferUI.Editor.instanceCreatedSignal().connect( GafferSceneUI.EditScopeUI.addPruningActions, scoped = False )

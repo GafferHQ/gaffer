@@ -245,9 +245,9 @@ IECore::RunTimeTypedPtr TranslateTool::handleDragBegin()
 
 bool TranslateTool::handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection()[0].transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f translation = static_cast<TranslateHandle *>( gadget )->translation( event );
-	for( const auto &t : m_drag )
+	for( auto &t : m_drag )
 	{
 		t.apply( translation );
 	}
@@ -298,7 +298,7 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 		selectionCentroids.extendBy( s.scene()->bound( s.path() ).center() * worldTransform );
 	}
 
-	UndoScope undoScope( selection()[0].transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled );
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>() );
 
 	const V3f offset = targetPos - selectionCentroids.center();
 	for( const auto &s : selection() )
@@ -314,20 +314,22 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 //////////////////////////////////////////////////////////////////////////
 
 TranslateTool::Translation::Translation( const Selection &selection, Orientation orientation )
+	:	m_selection( selection )
 {
-	Context::Scope scopedContext( selection.context() );
-
-	m_plug = selection.transformPlug()->translatePlug();
-	m_origin = m_plug->getValue();
-
 	const M44f handlesTransform = selection.orientedTransform( orientation );
 	m_gadgetToTransform = handlesTransform * selection.sceneToTransformSpace();
-
-	m_time = selection.context()->getTime();
 }
 
 bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
 {
+	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
+	if( !edit )
+	{
+		// Plugs will be created on demand in apply(), at which point we know
+		// it will be editable.
+		return true;
+	}
+
 	V3f offsetInTransformSpace;
 	m_gadgetToTransform.multDirMatrix( offset, offsetInTransformSpace );
 
@@ -335,7 +337,7 @@ bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
 	{
 		if( offsetInTransformSpace[i] != 0.0f )
 		{
-			if( !canSetValueOrAddKey( m_plug->getChild( i ) ) )
+			if( !canSetValueOrAddKey( edit->translate->getChild( i ) ) )
 			{
 				return false;
 			}
@@ -345,19 +347,27 @@ bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
 	return true;
 }
 
-void TranslateTool::Translation::apply( const Imath::V3f &offset ) const
+void TranslateTool::Translation::apply( const Imath::V3f &offset )
 {
+	V3fPlug *translatePlug = m_selection.acquireTransformEdit()->translate.get();
+	if( !m_origin )
+	{
+		// First call to `apply()`.
+		Context::Scope scopedContext( m_selection.context() );
+		m_origin = translatePlug->getValue();
+	}
+
 	V3f offsetInTransformSpace;
 	m_gadgetToTransform.multDirMatrix( offset, offsetInTransformSpace );
 	for( int i = 0; i < 3; ++i )
 	{
-		FloatPlug *plug = m_plug->getChild( i );
+		FloatPlug *plug = translatePlug->getChild( i );
 		if( canSetValueOrAddKey( plug ) )
 		{
 			setValueOrAddKey(
 				plug,
-				m_time,
-				m_origin[i] + offsetInTransformSpace[i]
+				m_selection.context()->getTime(),
+				(*m_origin)[i] + offsetInTransformSpace[i]
 			);
 		}
 	}

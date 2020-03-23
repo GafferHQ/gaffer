@@ -48,6 +48,7 @@ from FilterPlugValueWidget import FilterPlugValueWidget
 from ScenePathPlugValueWidget import ScenePathPlugValueWidget
 from TweakPlugValueWidget import TweakPlugValueWidget
 import SceneHistoryUI
+import EditScopeUI
 
 import SceneNodeUI
 import SceneReaderUI

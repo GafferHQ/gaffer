@@ -128,14 +128,10 @@ void ScaleTool::updateHandles( float rasterScale )
 {
 	const Selection &primarySelection = this->selection().back();
 
-	M44f pivotMatrix;
-	{
-		Context::Scope upstreamScope( primarySelection.upstreamContext() );
-		const V3f pivot = primarySelection.transformPlug()->pivotPlug()->getValue();
-		pivotMatrix.translate( pivot );
-	}
+	V3f translate, rotate, scale, pivot;
+	const M44f transform = primarySelection.transform( translate, rotate, scale, pivot );
 
-	M44f handlesMatrix = pivotMatrix * primarySelection.transformPlug()->matrix() * primarySelection.sceneToTransformSpace().inverse();
+	M44f handlesMatrix = M44f().translate( pivot ) * transform * primarySelection.sceneToTransformSpace().inverse();
 	// We want to take the sign of the scaling into account so that
 	// our handles point in the right direction. But we don't want
 	// the magnitude because a non-uniform handle scale breaks the
@@ -183,9 +179,9 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 
 bool ScaleTool::dragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoScope undoScope( selection().back().transformPlug()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const V3f &scaling = static_cast<ScaleHandle *>( gadget )->scaling( event );
-	for( const auto &s : m_drag )
+	for( auto &s : m_drag )
 	{
 		s.apply( scaling );
 	}
@@ -203,18 +199,23 @@ bool ScaleTool::dragEnd()
 //////////////////////////////////////////////////////////////////////////
 
 ScaleTool::Scale::Scale( const Selection &selection )
+	:	m_selection( selection )
 {
-	Context::Scope scopedContext( selection.context() );
-	m_plug = selection.transformPlug()->scalePlug();
-	m_originalScale = m_plug->getValue();
-	m_time = selection.context()->getTime();
 }
 
 bool ScaleTool::Scale::canApply( const Imath::V3i &axisMask ) const
 {
+	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
+	if( !edit )
+	{
+		// Edit will be created on demand in apply(), at which point we know
+		// it will be editable.
+		return true;
+	}
+
 	for( int i = 0; i < 3; ++i )
 	{
-		if( axisMask[i] && !canSetValueOrAddKey( m_plug->getChild( i ) ) )
+		if( axisMask[i] && !canSetValueOrAddKey( edit->scale->getChild( i ) ) )
 		{
 			return false;
 		}
@@ -223,14 +224,22 @@ bool ScaleTool::Scale::canApply( const Imath::V3i &axisMask ) const
 	return true;
 }
 
-void ScaleTool::Scale::apply( const Imath::V3f &scale ) const
+void ScaleTool::Scale::apply( const Imath::V3f &scale )
 {
+	V3fPlug *scalePlug = m_selection.acquireTransformEdit()->scale.get();
+	if( !m_originalScale )
+	{
+		// First call to `apply()`.
+		Context::Scope scopedContext( m_selection.context() );
+		m_originalScale = scalePlug->getValue();
+	}
+
 	for( int i = 0; i < 3; ++i )
 	{
-		FloatPlug *plug = m_plug->getChild( i );
+		FloatPlug *plug = scalePlug->getChild( i );
 		if( canSetValueOrAddKey( plug ) )
 		{
-			setValueOrAddKey( plug, m_time, m_originalScale[i] * scale[i] );
+			setValueOrAddKey( plug, m_selection.context()->getTime(), (*m_originalScale)[i] * scale[i] );
 		}
 	}
 }

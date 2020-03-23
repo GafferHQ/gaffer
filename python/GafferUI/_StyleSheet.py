@@ -1183,7 +1183,13 @@ _styleSheet = string.Template(
 		border: none;
 	}
 
-	/* frame variants */
+	/*
+	 * Frame variants
+	 * --------------
+	 *
+	 * \todo Add a `setRole/getRole` methods to GafferUI.Frame
+	 * and use that to drive the styling.
+	 */
 
 	*[gafferDiff="A"] {
 		background: solid rgba( 181, 30, 0, 80 );
@@ -1213,7 +1219,8 @@ _styleSheet = string.Template(
 
 	#gafferColorInspector,
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
-	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"]
+	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
+	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame
 	{
 		background: rgba( 42, 42, 42, 200 );
 		border-color: rgba( 30, 30, 30, 200 );

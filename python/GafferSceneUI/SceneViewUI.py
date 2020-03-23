@@ -51,19 +51,36 @@ Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SceneView,
 
-	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
+	# We want our EditScopePlugValueWidget and _StateWidget to be grouped on the
+	# right, and we want our other settings to be grouped in the centre. To achieve
+	# this we use _LeftSpacer to occupy the same amount of space on the left as the
+	# right hand group does on the right. Then we use CenterLeftSpacer and
+	# CenterRightSpacer to sandwich the centre group, pushing it into the middle.
+
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.SceneViewUI._LeftSpacer",
 	"toolbarLayout:customWidget:LeftSpacer:section", "Top",
 	"toolbarLayout:customWidget:LeftSpacer:index", 0,
 
-	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
-	"toolbarLayout:customWidget:RightSpacer:section", "Top",
-	"toolbarLayout:customWidget:RightSpacer:index", -2,
+	"toolbarLayout:customWidget:CenterLeftSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
+	"toolbarLayout:customWidget:CenterLeftSpacer:section", "Top",
+	"toolbarLayout:customWidget:CenterLeftSpacer:index", 1,
+
+	"toolbarLayout:customWidget:CenterRightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
+	"toolbarLayout:customWidget:CenterRightSpacer:section", "Top",
+	"toolbarLayout:customWidget:CenterRightSpacer:index", -3,
 
 	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferSceneUI.SceneViewUI._StateWidget",
 	"toolbarLayout:customWidget:StateWidget:section", "Top",
 	"toolbarLayout:customWidget:StateWidget:index", -1,
 
 	plugs = {
+
+		"editScope" : [
+
+			"toolbarLayout:index", -2,
+			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+
+		],
 
 		"drawingMode" : [
 
@@ -883,14 +900,29 @@ def __plugValueWidgetContextMenu( menuDefinition, plugValueWidget ) :
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu, scoped = False )
 
 ##########################################################################
-# _StateWidget
+# _Spacers
 ##########################################################################
+
+class _LeftSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			maximumSize = imath.V2i( 250, 1 ),
+			preferredSize = imath.V2i( 250, 1 )
+		)
 
 class _Spacer( GafferUI.Spacer ) :
 
 	def __init__( self, sceneView, **kw ) :
 
-		GafferUI.Spacer.__init__( self, size = imath.V2i( 0 ) )
+		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
+
+##########################################################################
+# _StateWidget
+##########################################################################
 
 ## \todo This widget is basically the same as the UVView and ImageView ones. Perhaps the
 # View base class should provide standard functionality for pausing and state, and we could

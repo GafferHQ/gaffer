@@ -75,5 +75,72 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		script.undo()
 		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), imath.V3f( 1, 1, 1 ) )
 
+	def testHandles( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+
+		tool = GafferSceneUI.ScaleTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+
+		script["plane"]["transform"]["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
+		self.assertEqual(
+			tool.handlesTransform(),
+			imath.M44f().translate( imath.V3f( 1, 0, 0 ) )
+		)
+
+		script["plane"]["transform"]["translate"].setValue( imath.V3f( 0, 1, 0 ) )
+		self.assertEqual(
+			tool.handlesTransform(),
+			imath.M44f().translate( imath.V3f( 1, 1, 0 ) )
+		)
+
+		script["plane"]["transform"]["scale"].setValue( imath.V3f( 1, -2, 3 ) )
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				imath.M44f().translate( imath.V3f( 1, 1, 0 ) ).scale( imath.V3f( 1, -1, 1 ) ),
+				0.000001
+			)
+		)
+
+	def testEditScopes( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["sphere"]["out"] )
+		script["editScope"]["in"].setInput( script["sphere"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.ScaleTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertFalse( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
+		self.assertEqual( script["editScope"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+
+		tool.scale( imath.V3f( 2, 2, 2 ) )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selection()[0].editable() )
+		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
+		self.assertEqual( script["editScope"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ).scale( imath.V3f( 2, 2, 2 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011, John Haddon. All rights reserved.
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,31 +34,39 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferUI
+import GafferScene
+import GafferSceneUI
 
-from Qt import QtWidgets
+def addPruningActions( editor ) :
 
-## \todo Size accessors
-class Spacer( GafferUI.Widget ) :
+	if isinstance( editor, GafferUI.Viewer ) :
+		editor.keyPressSignal().connect( __pruningKeyPress, scoped = False )
 
-	## Spacers range their size between `size` and `maximumSize`,
-	# optionally requesting that if possible they would prefer to be
-	# at a specific size in between.
-	## \todo Rename size to minimumSize. We're just keeping the name
-	# for backwards compatibility for now.
-	def __init__( self, size, maximumSize=None, preferredSize=None, **kw ) :
+def __pruningKeyPress( viewer, event ) :
 
-		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
+	if event.key not in ( "Backspace", "Delete" ) :
+		return False
 
-		if preferredSize is not None :
-			layout = QtWidgets.QHBoxLayout()
-			layout.setContentsMargins( 0, 0, 0, 0 )
-			self._qtWidget().setLayout( layout )
-			layout.addSpacerItem(
-				QtWidgets.QSpacerItem( preferredSize.x, preferredSize.y, QtWidgets.QSizePolicy.Preferred )
-			)
+	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
+		return False
 
-		self._qtWidget().setMinimumSize( size.x, size.y )
+	editScope = viewer.view().editScope()
+	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
+		# We return True even when we don't do anything, so the keypress doesn't
+		# leak out and get used to delete nodes in the node graph.
+		## \todo Add a discreet notification system to the Viewer so we can
+		# prompt the user to select a scope etc when necessary. Maybe we might
+		# also want to ask them if we can prune a common ancestor in the case
+		# that all its descendants are selected?
+		return True
 
-		if maximumSize is not None :
-			self._qtWidget().setMaximumSize( maximumSize.x, maximumSize.y )
+	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
+	selection = sceneGadget.getSelection()
+	if not selection.isEmpty() :
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
+
+	return True
+

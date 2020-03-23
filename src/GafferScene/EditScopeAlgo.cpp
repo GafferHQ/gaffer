@@ -191,6 +191,16 @@ void GafferScene::EditScopeAlgo::removeTransformEdit( Gaffer::EditScope *scope, 
 	row->parent()->removeChild( row );
 }
 
+EditScopeAlgo::TransformEdit::TransformEdit(
+	const Gaffer::V3fPlugPtr &translate,
+	const Gaffer::V3fPlugPtr &rotate,
+	const Gaffer::V3fPlugPtr &scale,
+	const Gaffer::V3fPlugPtr &pivot
+)
+	:	translate( translate ), rotate( rotate ), scale( scale ), pivot( pivot )
+{
+}
+
 Imath::M44f EditScopeAlgo::TransformEdit::matrix() const
 {
 	const V3f pivot = this->pivot->getValue();
@@ -200,6 +210,21 @@ Imath::M44f EditScopeAlgo::TransformEdit::matrix() const
 	result.scale( scale->getValue() );
 	result.translate( -pivot );
 	return result;
+}
+
+bool EditScopeAlgo::TransformEdit::operator == ( const TransformEdit &rhs ) const
+{
+	return
+		translate == rhs.translate &&
+		rotate == rhs.rotate &&
+		scale == rhs.scale &&
+		pivot == rhs.pivot
+	;
+}
+
+bool EditScopeAlgo::TransformEdit::operator != ( const TransformEdit &rhs ) const
+{
+	return !(*this == rhs);
 }
 
 boost::optional<GafferScene::EditScopeAlgo::TransformEdit> GafferScene::EditScopeAlgo::acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary )
