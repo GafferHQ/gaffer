@@ -430,10 +430,10 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				_ImagesPath( self.__images(), [] ),
 				columns = columns,
-				allowMultipleSelection = True
+				allowMultipleSelection = True,
+				sortable = False
 			)
 			self.__pathListing.setDragPointer( "" )
-			self.__pathListing.setSortable( False )
 			self.__pathListing.setHeaderVisible( len(columns) >  1 )
 			self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingSelectionChanged ), scoped = False
