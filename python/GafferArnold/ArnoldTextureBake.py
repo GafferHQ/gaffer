@@ -83,21 +83,13 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			self["__chunkExpression"] = Gaffer.Expression()
 			self["__chunkExpression"].setExpression( inspect.cleandoc(
 				"""
-				# Locate the next point in the list of files to bake where we can split the list into chunks without
-				# seperating two files that need to get combined into the same texture
-				def nextChunkBreak( i, l ):
-					while i > 0 and i < len( l ) and (
-							l[i - 1].get("udim") == l[i].get("udim") and
-							l[i - 1].get("fileName") == l[i].get("fileName") ):
-						i += 1
-					return i
-
+				import collections
 				rawInfo = parent["__udimQuery"]["out"]
 
 				defaultFileName = parent["defaultFileName"]
 				defaultResolution = parent["defaultResolution"]
 
-				listInfo = []
+				allMeshes = collections.defaultdict( lambda : [] )
 				for udim, meshes in rawInfo.items():
 					for mesh, extraAttributes in meshes.items():
 						resolution = defaultResolution
@@ -108,40 +100,43 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 						if "bake:fileName" in extraAttributes:
 							fileName = extraAttributes["bake:fileName"].value
 
-						listInfo.append( { "udim" : int( udim ), "mesh" : mesh, "resolution" : resolution, "fileName" : fileName } )
+						allMeshes[ (fileName, udim) ].append( { "mesh" : mesh, "resolution" : resolution } )
 
-				listInfo.sort( key = lambda i: (i["fileName"], i["udim"] ) )
+				fileList = sorted( allMeshes.keys() )
 
 				info = IECore.CompoundObject()
 
-				numTasks = parent["tasks"]
+				numTasks = min( parent["tasks"], len( fileList ) )
 				taskIndex = parent["taskIndex"]
 
-				chunkStart = nextChunkBreak( ( taskIndex * len( listInfo ) ) / numTasks, listInfo )
-				chunkEnd = nextChunkBreak( ( ( taskIndex + 1 ) * len( listInfo ) ) / numTasks, listInfo )
+				if taskIndex < numTasks:
 
-				dupeCount = 0
-				prevFileName = ""
-				for i in listInfo[chunkStart:chunkEnd]:
-					o = IECore.CompoundObject()
-					o["mesh"] = IECore.StringData( i["mesh"] )
-					o["udim"] = IECore.IntData( i["udim"] )
-					o["resolution"] = IECore.IntData( i["resolution"] )
+					chunkStart = ( taskIndex * len( fileList ) ) / numTasks
+					chunkEnd = ( ( taskIndex + 1 ) * len( fileList ) ) / numTasks
 
-					udimStr = str( i["udim"] )
-					fileName = i["fileName"].replace( "<UDIM>", udimStr )
+					dupeCount = 0
+					prevFileName = ""
+					for fileNameTemplate, udim in fileList[chunkStart:chunkEnd]:
+						for meshData in allMeshes[(fileNameTemplate, udim)]:
+							o = IECore.CompoundObject()
+							o["mesh"] = IECore.StringData( meshData["mesh"] )
+							o["udim"] = IECore.IntData( int( udim ) )
+							o["resolution"] = IECore.IntData( meshData["resolution"] )
 
-					if fileName == prevFileName:
-						dupeCount += 1
-						fileName = fileName + ".layer" + str( dupeCount )
-					else:
-						prevFileName = fileName
-						dupeCount = 0
+							udimStr = str( udim )
+							fileName = fileNameTemplate.replace( "<UDIM>", udimStr )
 
-					o["fileName"] = IECore.StringData( fileName )
+							if fileName == prevFileName:
+								dupeCount += 1
+								fileName = fileName + ".layer" + str( dupeCount )
+							else:
+								prevFileName = fileName
+								dupeCount = 0
 
-					name = o["mesh"].value.replace( "/", "_" ) + "." + udimStr
-					info[ name ] = o
+							o["fileName"] = IECore.StringData( fileName )
+
+							name = o["mesh"].value.replace( "/", "_" ) + "." + udimStr
+							info[ name ] = o
 				parent["__chunkedBakeInfo"] = info
 
 				fileList = []
