@@ -664,10 +664,6 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 			self.ancestor( GafferUI.Window ).addChildWindow( self.__settingsWindow )
-
-			# Force layout to build immediately, so we can then match
-			# the window size to it.
-			layout.plugValueWidget( self.getPlug()["fieldOfView"] )
 			self.__settingsWindow.resizeToFitChild()
 
 		self.__settingsWindow.setVisible( True )

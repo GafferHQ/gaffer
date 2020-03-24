@@ -136,9 +136,8 @@ class PlugLayout( GafferUI.Widget ) :
 		scriptNode = self.__node() if isinstance( self.__node(), Gaffer.ScriptNode ) else self.__node().scriptNode()
 		self.setContext( scriptNode.context() if scriptNode is not None else self.__fallbackContext )
 
-		# schedule our first update, which will take place when we become
-		# visible for the first time.
-		self.__updateLazily()
+		# Build the layout
+		self.__update()
 
 	def getReadOnly( self ) :
 

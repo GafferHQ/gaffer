@@ -118,17 +118,8 @@ def preferences( menu ) :
 		window.__closeButtonConnection = closeButton.clickedSignal().connect( __closePreferences )
 		saveButton = window._addButton( "Save" )
 		window.__saveButtonConnection = saveButton.clickedSignal().connect( __savePreferences )
-
 		window._setWidget( GafferUI.NodeUI.create( application["preferences"] ) )
-
 		__preferencesWindows[application] = weakref.ref( window )
-
-		# The NodeUI builds lazily, so we force it to build now so we can
-		# resize the window to fit. Since the plugs are configured per
-		# application, we need to build them all.
-		for plug in application["preferences"].children( Gaffer.Plug ) :
-			window._getWidget().plugValueWidget( plug )
-		window.resizeToFitChild()
 		scriptWindow.addChildWindow( window )
 
 	window.setVisible( True )

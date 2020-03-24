@@ -384,10 +384,6 @@ def showSettings( menu ) :
 		settingsWindow = GafferUI.Window( "Settings", borderWidth=8 )
 		settingsWindow._settingsEditor = True
 		settingsWindow.setChild( GafferUI.NodeUI.create( scriptWindow.scriptNode() ) )
-		# The NodeUI builds lazily, so we force it to build now so we can
-		# resize the window to fit.
-		settingsWindow.getChild().plugValueWidget( scriptWindow.scriptNode()["fileName"] )
-		settingsWindow.resizeToFitChild()
 		scriptWindow.addChildWindow( settingsWindow )
 
 	settingsWindow.setVisible( True )
