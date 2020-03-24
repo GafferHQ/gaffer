@@ -133,6 +133,11 @@ V3fPlug *spreadsheetAwareSource( V3fPlug *plug, std::string &failureReason )
 	return plug->source<V3fPlug>();
 }
 
+GraphComponent *editTargetOrNull( const TransformTool::Selection &selection )
+{
+	return selection.editable() ? selection.editTarget() : nullptr;
+}
+
 class HandlesGadget : public Gadget
 {
 
@@ -650,6 +655,23 @@ const std::vector<TransformTool::Selection> &TransformTool::selection() const
 	return m_selection;
 }
 
+bool TransformTool::selectionEditable() const
+{
+	const auto &s = selection();
+	if( s.empty() )
+	{
+		return false;
+	}
+	for( const auto &e : s )
+	{
+		if( !e.editable() )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 TransformTool::SelectionChangedSignal &TransformTool::selectionChangedSignal()
 {
 	return m_selectionChangedSignal;
@@ -658,9 +680,9 @@ TransformTool::SelectionChangedSignal &TransformTool::selectionChangedSignal()
 Imath::M44f TransformTool::handlesTransform()
 {
 	updateSelection();
-	if( m_selection.empty() )
+	if( !selectionEditable() )
 	{
-		throw IECore::Exception( "Selection not valid" );
+		throw IECore::Exception( "Selection not editable" );
 	}
 
 	if( m_handlesDirty )
@@ -854,13 +876,6 @@ void TransformTool::updateSelection() const
 	for( PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
 	{
 		Selection selection( scene, *it, view()->getContext(), const_cast<EditScope *>( view()->editScope() ) );
-		if( !selection.editable() )
-		{
-			// Selection is not editable - give up.
-			m_selection.clear();
-			return;
-		}
-
 		m_selection.push_back( selection );
 		if( *it == lastSelectedPath )
 		{
@@ -881,11 +896,13 @@ void TransformTool::updateSelection() const
 		m_selection.begin(), m_selection.end(),
 		[&lastSelectedPath]( const Selection &a, const Selection &b )
 		{
-			if( a.editTarget() < b.editTarget() )
+			const auto ta = editTargetOrNull( a );
+			const auto tb = editTargetOrNull( b );
+			if( ta < tb )
 			{
 				return true;
 			}
-			else if( b.editTarget() < a.editTarget() )
+			else if( tb < ta )
 			{
 				return false;
 			}
@@ -900,8 +917,14 @@ void TransformTool::updateSelection() const
 		m_selection.begin(), m_selection.end(),
 		[]( const Selection &a, const Selection &b )
 		{
-			auto ta = a.editTarget(), tb = b.editTarget();
-			return ta != a.editScope() && tb != b.editScope() && ta == tb;
+			const auto ta = editTargetOrNull( a );
+			const auto tb = editTargetOrNull( b );
+			return
+				ta && tb &&
+				ta != a.editScope() &&
+				tb != b.editScope() &&
+				ta == tb
+			;
 		}
 	);
 	m_selection.erase( last, m_selection.end() );
@@ -951,7 +974,7 @@ void TransformTool::preRender()
 		}
 	}
 
-	if( m_selection.empty() )
+	if( !selectionEditable() )
 	{
 		m_handles->setVisible( false );
 		return;
@@ -992,7 +1015,7 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 
 	if( event.key == "S" && !event.modifiers )
 	{
-		if( selection().empty() )
+		if( !selectionEditable() )
 		{
 			return false;
 		}

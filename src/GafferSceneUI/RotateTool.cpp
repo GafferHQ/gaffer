@@ -263,17 +263,19 @@ bool RotateTool::handleDragEnd()
 
 bool RotateTool::buttonPress( const GafferUI::ButtonEvent &event )
 {
-	if( event.buttons != ButtonEvent::Left
-		|| !activePlug()->getValue()
-		|| !getTargetedMode()
-		|| selection().size() == 0
-	) {
+	if( event.buttons != ButtonEvent::Left || !activePlug()->getValue() || !getTargetedMode() )
+	{
 		return false;
 	}
 
 	// In targeted mode, we orient the selection so -z aims towards the clicked point.
 	//
 	// We always return true to prevent the SelectTool defaults.
+
+	if( !selectionEditable() )
+	{
+		return true;
+	}
 
 	GafferScene::ScenePlug::ScenePath _;
 	Imath::V3f targetPos;

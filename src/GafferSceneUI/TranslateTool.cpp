@@ -262,11 +262,8 @@ bool TranslateTool::handleDragEnd()
 
 bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 {
-	if( event.buttons != ButtonEvent::Left
-		|| !activePlug()->getValue()
-		|| !getTargetedMode()
-		|| selection().size() == 0
-	) {
+	if( event.buttons != ButtonEvent::Left || !activePlug()->getValue() || !getTargetedMode() )
+	{
 		return false;
 	}
 
@@ -277,6 +274,11 @@ bool TranslateTool::buttonPress( const GafferUI::ButtonEvent &event )
 	// bounds should be used, so they retain their existing relative spacing.
 	//
 	// We always return true to prevent the SelectTool defaults.
+
+	if( !selectionEditable() )
+	{
+		return true;
+	}
 
 	GafferScene::ScenePlug::ScenePath _;
 	Imath::V3f targetPos;

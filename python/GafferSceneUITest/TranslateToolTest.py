@@ -512,6 +512,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane", "/group/sphere" ] ) )
 
+		self.assertTrue( tool.selectionEditable() )
 		selection = tool.selection()
 		self.assertEqual( len( selection ), 2 )
 		self.assertEqual( { s.editTarget() for s in selection }, { script["plane"]["transform"], script["sphere"]["transform"] } )
@@ -550,6 +551,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		selection = tool.selection()
 		self.assertEqual( len( selection ), 1 )
+		self.assertTrue( tool.selectionEditable() )
 		self.assertEqual( selection[0].editTarget(), script["plane"]["transform"] )
 
 	def testHandlesFollowLastSelected( self ) :
@@ -713,16 +715,19 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/sphere" ] ) )
 		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selectionEditable() )
 		self.assertEqual( tool.selection()[0].editTarget(), script["sphere"]["transform"] )
 		self.assertEqual( tool.selection()[0].path(), "/group/sphere" )
 
 		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere1" )
 		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selectionEditable() )
 		self.assertEqual( tool.selection()[0].editTarget(), script["sphere"]["transform"] )
 		self.assertEqual( tool.selection()[0].path(), "/group/sphere1" )
 
 		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/group/sphere" )
 		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selectionEditable() )
 		self.assertEqual( tool.selection()[0].editTarget(), script["sphere"]["transform"] )
 		self.assertEqual( tool.selection()[0].path(), "/group/sphere" )
 
@@ -1004,6 +1009,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selectionEditable() )
 		self.assertTrue( tool.selection()[0].editable() )
 		self.assertEqual( tool.selection()[0].acquireTransformEdit( createIfNecessary = False ), transformEdit )
 		self.assertEqual(
@@ -1014,6 +1020,30 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool.translate( imath.V3f( 0, 1, 0 ) )
 		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( imath.V3f( 1, 1, 0 ) ) )
 		self.assertEqual( transformEdit.translate.getValue(), imath.V3f( 1, 1, 0 ) )
+
+	def testNonEditableSelections( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["sphere"] = GafferScene.Sphere()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["sphere"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube", "/plane" ] ) )
+
+		# We want the tool selection to tell us when something is wrong.
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		self.assertEqual( len( tool.selection() ), 2 )
+		self.assertFalse( tool.selectionEditable() )
+		self.assertEqual(
+			{ s.path() for s in tool.selection() },
+			{ "/cube", "/plane" },
+		)
+		self.assertEqual(
+			{ s.warning() for s in tool.selection() },
+			{ "Location does not exist" }
+		)
 
 if __name__ == "__main__":
 	unittest.main()

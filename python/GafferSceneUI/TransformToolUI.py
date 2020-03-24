@@ -161,29 +161,37 @@ class _SelectionWidget( GafferUI.Frame ) :
 			return
 
 		toolSelection = self.__tool.selection()
-		selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.context() )
 
 		if len( toolSelection ) :
 
-			self.__infoRow.setVisible( True )
-			if len( toolSelection ) == 1 :
+			# Get unique edit targets and warnings
+
+			editTargets = { s.editTarget() for s in toolSelection if s.editable() }
+			warnings = { s.warning() for s in toolSelection if s.warning() }
+
+			# Update info row to show what we're editing
+
+			if not self.__tool.selectionEditable() :
+				self.__infoRow.setVisible( False )
+			elif len( editTargets ) == 1 :
+				self.__infoRow.setVisible( True )
 				self.__infoLabel.setText( "Editing " )
+				editTarget = next( iter( editTargets ) )
 				numComponents = _distance(
-					toolSelection[0].editTarget().commonAncestor( toolSelection[0].scene() ),
-					toolSelection[0].editTarget(),
+					editTarget.commonAncestor( toolSelection[0].scene() ),
+					editTarget,
 				)
-				if toolSelection[0].scene().node().isAncestorOf( toolSelection[0].editTarget() ) :
+				if toolSelection[0].scene().node().isAncestorOf( editTarget ) :
 					numComponents += 1
 				self.__nameLabel.setNumComponents( numComponents )
-				self.__nameLabel.setGraphComponent( toolSelection[0].editTarget() )
+				self.__nameLabel.setGraphComponent( editTarget )
 			else :
-				self.__infoLabel.setText( "Editing {0} transforms".format( len( toolSelection ) ) )
+				self.__infoRow.setVisible( True )
+				self.__infoLabel.setText( "Editing {0} transforms".format( len( editTargets ) ) )
 				self.__nameLabel.setGraphComponent( None )
 
-			warnings = {
-				s.warning() for s in toolSelection
-				if s.warning() != ""
-			}
+			# Update warning row
+
 			if warnings :
 				if len( warnings ) == 1 :
 					self.__warningLabel.setText( next( iter( warnings ) ) )
@@ -197,21 +205,10 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 		else :
 
-			validSelectedPaths = IECore.PathMatcher()
-			with self.context() :
-				GafferScene.SceneAlgo.matchingPaths(
-					selectedPaths, self.__tool.view()["in"], validSelectedPaths
-				)
-
-			if validSelectedPaths.isEmpty() :
-				self.__infoRow.setVisible( True )
-				self.__warningRow.setVisible( False )
-				self.__infoLabel.setText( "Select something to transform" )
-				self.__nameLabel.setGraphComponent( None )
-			else:
-				self.__infoRow.setVisible( False )
-				self.__warningRow.setVisible( True )
-				self.__warningLabel.setText( "Transform not editable" )
+			self.__infoRow.setVisible( True )
+			self.__warningRow.setVisible( False )
+			self.__infoLabel.setText( "Select something to transform" )
+			self.__nameLabel.setGraphComponent( None )
 
 	def __buttonDoubleClick( self, widget, event ) :
 
