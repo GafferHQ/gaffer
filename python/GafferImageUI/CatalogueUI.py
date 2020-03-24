@@ -74,6 +74,7 @@ import GafferImageUI
 ##########################################################################
 
 __registeredColumns = OrderedDict()
+_columnsMetadataKey = "catalogue:columns"
 
 # The Column class defines a single column in the Catalogue UI.
 # The column class is responsible for providing its header title, and the
@@ -219,12 +220,12 @@ class __TypeIconColumn( IconColumn ) :
 		return "catalogueTypeDisk" if image["fileName"].getValue() else "catalogueTypeDisplay"
 
 registerColumn( "typeIcon", __TypeIconColumn() )
-registerColumn( "name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
 
 Gaffer.Metadata.registerValue(
-	GafferImage.Catalogue, "imageIndex", "catalogue:columns",
-	IECore.StringVectorData( [ "typeIcon", "name" ] )
+	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
+	IECore.StringVectorData( [ "typeIcon", "Name" ] )
 )
 
 ##########################################################################
@@ -597,6 +598,10 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 					GafferUI.Label( "Description" )
 					self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
 
+		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
+
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
+
 		self._updateFromPlug()
 
 	def getToolTip( self ) :
@@ -625,11 +630,52 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		self.__column.setEnabled( self._editable() )
 
+	def __plugMetadataValueChanged( self, typeId, plugPath, key, plug ) :
+
+		if key != _columnsMetadataKey :
+			return
+
+		if plug and not plug.isSame( self.getPlug() ) :
+			return
+
+		self.__pathListing.setColumns( self.__listingColumns() )
+
+	def __getColumns( self ) :
+
+		# Support for promoted plugs.
+		# The plug data may have been reset, or it may have been promoted in a
+		# previous version of gaffer. As such, we can't assume there is a
+		# registered class value for our plug. Fall back on the Catalogue nodes
+		# plug's value as this will consider the class default columns value.
+		## \todo Refactor when we get metadata delegation for promoted plugs
+		return Gaffer.Metadata.value( self.getPlug(), _columnsMetadataKey ) \
+			or Gaffer.Metadata.value( self.__catalogue()["imageIndex"], _columnsMetadataKey )
+
+	def __setColumns( self, columns ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue( self.getPlug(), _columnsMetadataKey, IECore.StringVectorData( columns ) )
+
+	def __resetColumns( self, *unused ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.deregisterValue( self.getPlug(), _columnsMetadataKey )
+
+	def __toggleColumn( self, column, visible ) :
+
+		columns = list( self.__getColumns() )
+		if visible :
+			columns.append( column )
+		else :
+			columns.remove( column )
+
+		self.__setColumns( columns )
+
 	def __listingColumns( self ) :
 
 		columns = []
 
-		for name in Gaffer.Metadata.value( self.getPlug(), "catalogue:columns" ) :
+		for name in self.__getColumns() :
 
 			definition = column( name )
 
@@ -952,5 +998,41 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return True
 
 		return False
+
+	def __columnContextMenuDefinition( self ) :
+
+		columns = self.__getColumns()
+		allColumnsSorted = sorted( registeredColumns() )
+
+		menu = IECore.MenuDefinition()
+		menu.append( "/Reset", { "command" : Gaffer.WeakMethod( self.__resetColumns ) } )
+		menu.append( "/__resetDivider__", { "divider" : True } )
+
+		for column in allColumnsSorted :
+
+			menu.append( "/%s" % column, {
+				"checkBox" : column in columns,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__toggleColumn ), column ),
+				# Prevent the last column being removed
+				"active": False if column in columns and len(columns) == 1 else True
+			} )
+
+		return menu
+
+	def __contextMenu( self, *unused ) :
+
+		if self.getPlug() is None :
+			return False
+
+		# This signal is called anywhere in the listing, check we're over the header.
+		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self.__pathListing )
+		headerRect = self.__pathListing._qtWidget().header().rect()
+		if not headerRect.contains( mousePosition[0], mousePosition[1] ) :
+			return False
+
+		self.__popupMenu = GafferUI.Menu( self.__columnContextMenuDefinition(), "Columns" )
+		self.__popupMenu.popup( parent = self )
+
+		return True
 
 GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )

@@ -48,12 +48,12 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 	def testStandardColumns( self ) :
 
 		self.assertTrue( "typeIcon" in CatalogueUI.registeredColumns() )
-		self.assertTrue( "name" in CatalogueUI.registeredColumns() )
+		self.assertTrue( "Name" in CatalogueUI.registeredColumns() )
 
 		c = GafferImage.Catalogue()
 		self.assertEqual(
 			Gaffer.Metadata.value( c["imageIndex"], "catalogue:columns" ),
-			IECore.StringVectorData( [ "typeIcon", "name" ] )
+			IECore.StringVectorData( [ "typeIcon", "Name" ] )
 		)
 
 	def testBoxedCatalogue( self ) :
@@ -67,8 +67,33 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
 		Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
 
+		# Test metadata reset data or missing due to earlier promotion
+		Gaffer.Metadata.deregisterValue( s["b"]["imageIndex"], "catalogue:columns" )
+
 		sw = GafferUI.ScriptWindow.acquire( s )
 		ne = GafferUI.NodeEditor.acquire( s["b"] )
+
+	def testInvalidColumns( self ) :
+
+		# Check we don't abort - columns may have been removed
+		# from config but still be referenced by plug metadata.
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Catalogue()
+
+		Gaffer.Metadata.registerValue(
+			s["c"]["imageIndex"], "catalogue:columns",
+			IECore.StringVectorData( [ "Name", "Unknown" ] )
+		)
+
+		sw = GafferUI.ScriptWindow.acquire( s )
+
+		with IECore.CapturingMessageHandler() as mh :
+			ne = GafferUI.NodeEditor.acquire( s["c"] )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertTrue( "Unknown" in mh.messages[0].message )
 
 	def testImageHeaderColumns( self ) :
 
