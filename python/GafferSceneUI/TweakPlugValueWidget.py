@@ -88,7 +88,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__row :
 			if w.getPlug().isSame( childPlug ) :

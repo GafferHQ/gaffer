@@ -386,7 +386,7 @@ def showSettings( menu ) :
 		settingsWindow.setChild( GafferUI.NodeUI.create( scriptWindow.scriptNode() ) )
 		# The NodeUI builds lazily, so we force it to build now so we can
 		# resize the window to fit.
-		settingsWindow.getChild().plugValueWidget( scriptWindow.scriptNode()["fileName"], lazy=False )
+		settingsWindow.getChild().plugValueWidget( scriptWindow.scriptNode()["fileName"] )
 		settingsWindow.resizeToFitChild()
 		scriptWindow.addChildWindow( settingsWindow )
 

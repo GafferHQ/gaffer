@@ -667,7 +667,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			# Force layout to build immediately, so we can then match
 			# the window size to it.
-			layout.plugValueWidget( self.getPlug()["fieldOfView"], lazy = False )
+			layout.plugValueWidget( self.getPlug()["fieldOfView"] )
 			self.__settingsWindow.resizeToFitChild()
 
 		self.__settingsWindow.setVisible( True )

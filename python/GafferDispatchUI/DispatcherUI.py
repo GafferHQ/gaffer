@@ -310,7 +310,7 @@ class DispatcherWindow( GafferUI.Window ) :
 
 		if resizeToFit :
 			# Force the node UI to build so we fit to the right contents
-			nodeUI.plugValueWidget( self.__currentDispatcher["framesMode"], lazy = False )
+			nodeUI.plugValueWidget( self.__currentDispatcher["framesMode"] )
 			self.resizeToFitChild()
 
 	def __updateTitle( self ) :

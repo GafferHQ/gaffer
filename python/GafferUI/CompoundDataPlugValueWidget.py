@@ -92,9 +92,9 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__layout.setReadOnly( readOnly )
 
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
-		return self.__layout.plugValueWidget( childPlug, lazy )
+		return self.__layout.plugValueWidget( childPlug )
 
 	def _updateFromPlug( self ) :
 

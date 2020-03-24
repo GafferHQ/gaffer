@@ -166,13 +166,9 @@ class PlugLayout( GafferUI.Widget ) :
 			self.__applyContext( widget, context )
 
 	## Returns a PlugValueWidget representing the specified child plug.
-	# Because the layout is built lazily on demand, this might return None due
-	# to the user not having opened up the ui - in this case lazy=False may
-	# be passed to force the creation of the ui.
-	def plugValueWidget( self, childPlug, lazy=True ) :
+	def plugValueWidget( self, childPlug ) :
 
-		if not lazy :
-			self.__updateLazily.flush( self )
+		self.__updateLazily.flush( self )
 
 		w = self.__widgets.get( childPlug, None )
 		if w is None :
@@ -183,13 +179,9 @@ class PlugLayout( GafferUI.Widget ) :
 			return w.plugValueWidget()
 
 	## Returns the custom widget registered with the specified name.
-	# Because the layout is built lazily on demand, this might return None due
-	# to the user not having opened up the ui - in this case lazy=False may
-	# be passed to force the creation of the ui.
-	def customWidget( self, name, lazy=True ) :
+	def customWidget( self, name ) :
 
-		if not lazy :
-			self.__updateLazily.flush( self )
+		self.__updateLazily.flush( self )
 
 		return self.__widgets.get( name )
 

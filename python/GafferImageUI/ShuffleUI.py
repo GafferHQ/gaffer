@@ -124,7 +124,7 @@ class _ShuffleChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row[0].setPlug( plug[0] )
 		self.__row[2].setPlug( plug[1] )
 
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__row[0], self.__row[2] :
 			if childPlug.isSame( w.getPlug() ) :

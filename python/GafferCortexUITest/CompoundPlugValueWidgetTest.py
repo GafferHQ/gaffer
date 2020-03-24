@@ -51,14 +51,9 @@ class CompoundPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		pw = CompoundPlugValueWidget( n["c"] )
 
-		# shouldn't get anything because the ui is being built lazily
-		self.assertEqual( pw.childPlugValueWidget( n["c"]["i"] ), None )
-		self.assertEqual( pw.childPlugValueWidget( n["c"]["s"] ), None )
-		# but should be able to force the creation
-		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["i"], lazy=False ), GafferUI.PlugValueWidget ) )
-		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["s"], lazy=False ), GafferUI.PlugValueWidget ) )
+		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget ) )
+		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["s"] ), GafferUI.PlugValueWidget ) )
 
-		# shouldn't need to force with lazy=False if the ui is user-visible.
 		pw = CompoundPlugValueWidget( n["c"], collapsed=None )
 		w = GafferUI.Window()
 		w.setChild( pw )
@@ -76,8 +71,8 @@ class CompoundPlugValueWidgetTest( GafferUITest.TestCase ) :
 		w = CompoundPlugValueWidget( n["c"] )
 		w.setReadOnly( True )
 
-		iw = w.childPlugValueWidget( n["c"]["i"], lazy=False )
-		sw = w.childPlugValueWidget( n["c"]["s"], lazy=False )
+		iw = w.childPlugValueWidget( n["c"]["i"] )
+		sw = w.childPlugValueWidget( n["c"]["s"] )
 
 		self.assertEqual( iw.getReadOnly(), True )
 		self.assertEqual( sw.getReadOnly(), True )

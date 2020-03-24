@@ -127,7 +127,7 @@ def preferences( menu ) :
 		# resize the window to fit. Since the plugs are configured per
 		# application, we need to build them all.
 		for plug in application["preferences"].children( Gaffer.Plug ) :
-			window._getWidget().plugValueWidget( plug, lazy=False )
+			window._getWidget().plugValueWidget( plug )
 		window.resizeToFitChild()
 		scriptWindow.addChildWindow( window )
 

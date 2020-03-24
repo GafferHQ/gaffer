@@ -75,7 +75,7 @@ class BoxPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for c in self.__column :
 			c.setReadOnly( readOnly )
 
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__column :
 			if childPlug.isSame( w.getPlug() ) :

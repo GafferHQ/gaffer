@@ -64,6 +64,9 @@ Breaking Changes
 - TransformTool : The `Selection` class now uses accessor methods rather than exposing data members directly.
 - Stats app : The `-scene` and `-image` arguments now ignore input plugs.
 - Spreadsheet : Broke binary compatibility. Full source compatibility is retained.
+- NodeUI : Removed `lazy` argument from `plugValueWidget()` method.
+- PlugValueWidget : Removed `lazy` argument from `plugValueWidget()` method.
+- PlugLayout : Removed `lazy` argument from `plugValueWidget()` and `customWidget()` methods.
 
 Build
 -----

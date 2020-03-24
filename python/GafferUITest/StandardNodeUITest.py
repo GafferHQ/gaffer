@@ -51,11 +51,10 @@ class StandardNodeUITest( GafferUITest.TestCase ) :
 
 		u = GafferUI.StandardNodeUI( n )
 
-		self.assertTrue( isinstance( u.plugValueWidget( n["c"], lazy=False ), GafferUI.PlugValueWidget ) )
+		self.assertTrue( isinstance( u.plugValueWidget( n["c"] ), GafferUI.PlugValueWidget ) )
 		self.assertTrue( u.plugValueWidget( n["c"] ).getPlug().isSame( n["c"] ) )
 
-		self.assertEqual( u.plugValueWidget( n["c"]["i"] ), None )
-		self.assertTrue( isinstance( u.plugValueWidget( n["c"]["i"], lazy=False ), GafferUI.PlugValueWidget ) )
+		self.assertTrue( isinstance( u.plugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget ) )
 		self.assertTrue( u.plugValueWidget( n["c"]["i"] ).getPlug().isSame( n["c"]["i"] ) )
 
 	def testSetReadOnlyForUserPlugs( self ) :
@@ -64,13 +63,13 @@ class StandardNodeUITest( GafferUITest.TestCase ) :
 		n["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		u = GafferUI.StandardNodeUI( n )
-		self.assertEqual( u.plugValueWidget( n["user"]["a"], lazy=False ).getReadOnly(), False )
+		self.assertEqual( u.plugValueWidget( n["user"]["a"] ).getReadOnly(), False )
 
 		u.setReadOnly( True )
 		self.assertEqual( u.plugValueWidget( n["user"]["a"] ).getReadOnly(), True )
 
 		u = GafferUI.StandardNodeUI( n )
-		w = u.plugValueWidget( n["user"]["a"], lazy=False )
+		w = u.plugValueWidget( n["user"]["a"] )
 
 		u.setReadOnly( True )
 		self.assertEqual( w.getReadOnly(), True )

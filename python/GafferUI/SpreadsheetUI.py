@@ -1341,7 +1341,7 @@ class _EditWindow( GafferUI.Window ) :
 		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
 			return plugValueWidget.textWidget()
 		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
-			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0], lazy = False ) )
+			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0] ) )
 
 	@classmethod
 	def __fixedWidth( cls, plugValueWidget ) :
@@ -1361,7 +1361,7 @@ class _EditWindow( GafferUI.Window ) :
 		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
 			w = 0
 			for p in plugValueWidget.getPlug() :
-				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p, lazy = False ) ) )
+				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p ) ) )
 			return GafferUI.PlugWidget.labelWidth() + w
 
 		return None
