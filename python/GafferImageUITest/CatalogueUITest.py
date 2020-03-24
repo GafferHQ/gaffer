@@ -47,7 +47,8 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 	def testStandardColumns( self ) :
 
-		self.assertEqual( CatalogueUI.registeredColumns(), [ "typeIcon", "name" ] )
+		self.assertTrue( "typeIcon" in CatalogueUI.registeredColumns() )
+		self.assertTrue( "name" in CatalogueUI.registeredColumns() )
 
 		c = GafferImage.Catalogue()
 		self.assertEqual(

@@ -220,6 +220,7 @@ class __TypeIconColumn( IconColumn ) :
 
 registerColumn( "typeIcon", __TypeIconColumn() )
 registerColumn( "name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", "catalogue:columns",
