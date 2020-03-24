@@ -310,7 +310,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			) :
 
-				GafferUI.Label( "Default" )._qtWidget().setIndent( 6 )
+				self.__defaultLabel = GafferUI.Label( "Default" )
+				self.__defaultLabel._qtWidget().setIndent( 6 )
 				GafferUI.Spacer( imath.V2i( 1, 8 ) )
 
 			self.__defaultTable = _PlugTableView(
@@ -383,6 +384,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		self.__updateVisibleSections()
+		self.__updateDefaultRowVisibility()
 
 	def hasLabel( self ) :
 
@@ -463,11 +465,28 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__rowNamesTable._qtWidget().setFixedWidth( _getRowNameWidth( self.getPlug() ) )
 
+	def __updateDefaultRowVisibility( self ) :
+
+		visible = Gaffer.Metadata.value( self.getPlug(), "spreadsheet:defaultRowVisible" )
+		if visible is None :
+			visible = True
+		self.__defaultLabel.setVisible( visible )
+		## \todo We shouldn't really be reaching into the protected
+		# `_qtWidget()` implementation here. Soon enough we will want
+		# to implement searching/filtering of rows, and when we implement
+		# that we should do it via a simple abstraction on `_PlugTableView`
+		# and use that here too. Perhaps just `setRowFilter( matchPattern )`
+		# would do the trick?
+		self.__defaultTable._qtWidget().setRowHidden( 0, not visible )
+
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if plug is not None and _affectsRowNameWidth( key ) :
 			if self.getPlug().isAncestorOf( plug ) :
 				self.__updateRowNamesWidth()
+
+		if plug == self.getPlug() and key == "spreadsheet:defaultRowVisible" :
+			self.__updateDefaultRowVisibility()
 
 	def __currentSectionChanged( self, tabBar ) :
 
