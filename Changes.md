@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
+- Catalogue : Added column to help identify the nature of each image (#3646)
 
 Fixes
 -----
@@ -31,6 +32,10 @@ API
 - NodeEditor : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - NodeUI : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - PlugValueWidget : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- CatalogueUI : Added column configuration API (#3646).
+- PathListingWidget :
+	- Added `sortable` kwarg to avoid premature sorting of the path passed to the constructor (#3684).
+	- Deprecated `setSortable` and `getSortable` in favour of the constructor argument.
 
 0.56.1.0 (relative to 0.56.0.0)
 ========

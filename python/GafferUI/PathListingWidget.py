@@ -91,6 +91,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		columns = defaultFileSystemColumns,
 		allowMultipleSelection = False,
 		displayMode = DisplayMode.List,
+		sortable = True,
 		**kw
 	) :
 
@@ -107,7 +108,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			self._qtWidget().header().setMovable( False )
 
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
-		self._qtWidget().setSortingEnabled( True )
+		self._qtWidget().setSortingEnabled( sortable )
 
 		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
@@ -280,6 +281,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return not self._qtWidget().header().isHidden()
 
+	## \deprecated Use constructor argument instead.
 	def setSortable( self, sortable ) :
 
 		if sortable == self.getSortable() :
@@ -289,6 +291,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		if not sortable :
 			self._qtWidget().model().sort( -1 )
 
+	## \deprecated
 	def getSortable( self ) :
 
 		return self._qtWidget().isSortingEnabled()

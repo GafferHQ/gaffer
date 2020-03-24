@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,11 +34,41 @@
 #
 ##########################################################################
 
-from FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
-from ImageViewTest import ImageViewTest
-from DocumentationTest import DocumentationTest
-from ImageGadgetTest import ImageGadgetTest
-from CatalogueUITest import CatalogueUITest
+import os
+import GafferImageUI
+import GafferScene
 
-if __name__ == "__main__":
-	unittest.main()
+from GafferImageUI import CatalogueUI
+
+# We provide extended info in the Catalogue's type column
+# to reflect interactive/batch renders triggered from the UI.
+
+imageNameMap = {
+	GafferScene.InteractiveRender : "catalogueTypeInteractiveRender",
+	GafferScene.Render : "catalogueTypeBatchRender",
+}
+
+typeIconColumnDefinition = CatalogueUI.columnDefinition( "typeIcon" )
+if typeIconColumnDefinition :
+
+	def typeIconColumnValueProvider( image, catalogue ):
+
+		iconName = typeIconColumnDefinition.valueProvider( image, catalogue )
+
+		scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
+		if not scenePlug :
+			return iconName
+
+		for type_ in imageNameMap.keys() :
+			if isinstance( scenePlug.node(), type_ ) :
+				suffix = "Complete" if image["fileName"].getValue() else "Running"
+				return imageNameMap[type_] + suffix
+
+		return iconName
+
+	CatalogueUI.registerColumn(
+		"typeIcon",
+		typeIconColumnDefinition.title,
+		typeIconColumnValueProvider,
+		CatalogueUI.ColumnType.Icon
+	)
