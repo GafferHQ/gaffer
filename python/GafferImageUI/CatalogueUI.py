@@ -222,6 +222,7 @@ class __StatusIconColumn( IconColumn ) :
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
+registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription" ) )
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,

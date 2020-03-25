@@ -12,9 +12,7 @@ Improvements
 
 - Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
 - Render nodes : Added context variables to image metadata (#3646). Currently only a subset of variable types is supported, depending on the renderer used.
-- Catalogue :
-  - Added column to help identify the nature of each image (#3646).
-  - Added frame column preset (#3646).
+- Catalogue : Added customisable columns to display image information (#3646).
 
 Fixes
 -----
