@@ -170,16 +170,7 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 
 unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
-	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
-	if( pathData )
-	{
-		// If we have a precomputed PathMatcher, we use that to compute matches, otherwise
-		// we grab the PathMatcher from the intermediate plug (which is a bit more expensive
-		// as it involves graph evaluations):
-
-		ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : pathMatcherPlug()->getValue();
-		return pathMatcher->readable().match( pathData->readable() );
-	}
-	return IECore::PathMatcher::NoMatch;
+	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : pathMatcherPlug()->getValue();
+	return pathMatcher->readable().match( path );
 }
