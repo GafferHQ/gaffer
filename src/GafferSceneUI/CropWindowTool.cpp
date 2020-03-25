@@ -459,7 +459,10 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			else
 			{
 				const ImageGadget *imageGadget = static_cast<const ImageGadget *>( viewportGadget->getPrimaryChild() );
-				return imageGadget->pixelAt( event.line );
+				V2f pixel = imageGadget->pixelAt( event.line );
+				Context::Scope contextScope( imageGadget->getContext() );
+				pixel.x *= imageGadget->getImage()->format().getPixelAspect();
+				return pixel;
 			}
 		}
 
@@ -938,7 +941,9 @@ Box2f CropWindowTool::resolutionGate() const
 	{
 		if( const ImagePlug *in = imageView->inPlug<ImagePlug>() )
 		{
-			resolutionGate = Box2f( V2f( 0 ), V2f( in->format().width(), in->format().height() ) );
+			Context::Scope contextScope( imageView->getContext() );
+			const Format format = in->format();
+			resolutionGate = Box2f( V2f( 0 ), V2f( format.width() * format.getPixelAspect(), format.height() ) );
 		}
 	}
 	return resolutionGate;
