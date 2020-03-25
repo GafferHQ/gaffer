@@ -40,18 +40,18 @@ import GafferScene
 
 from GafferImageUI import CatalogueUI
 
-# We provide extended info in the Catalogue's type column
+# We provide extended info in the Catalogue's status column
 # to reflect interactive/batch renders triggered from the UI.
 
 imageNameMap = {
-	GafferScene.InteractiveRender : "catalogueTypeInteractiveRender",
-	GafferScene.Render : "catalogueTypeBatchRender",
+	GafferScene.InteractiveRender : "catalogueStatusInteractiveRender",
+	GafferScene.Render : "catalogueStatusBatchRender",
 }
 
-typeIconColumn = CatalogueUI.column( "typeIcon" )
-if typeIconColumn :
+statusIconColumn = CatalogueUI.column( "Status" )
+if statusIconColumn :
 
-	class __ExtededTypeIconColumn( CatalogueUI.IconColumn ) :
+	class __ExtededStatusIconColumn( CatalogueUI.IconColumn ) :
 
 		def __init__( self ) :
 
@@ -59,7 +59,7 @@ if typeIconColumn :
 
 		def value( self, image, catalogue ) :
 
-			iconName = typeIconColumn.value( image, catalogue )
+			iconName = statusIconColumn.value( image, catalogue )
 
 			scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
 			if not scenePlug :
@@ -72,4 +72,4 @@ if typeIconColumn :
 
 			return iconName
 
-	CatalogueUI.registerColumn( "typeIcon", __ExtededTypeIconColumn() )
+	CatalogueUI.registerColumn( "Status", __ExtededStatusIconColumn() )

@@ -209,7 +209,7 @@ class ContextVariableColumn( ImageMetadataColumn ) :
 # Standard Columns
 #
 
-class __TypeIconColumn( IconColumn ) :
+class __StatusIconColumn( IconColumn ) :
 
 	def __init__( self ) :
 
@@ -219,13 +219,13 @@ class __TypeIconColumn( IconColumn ) :
 
 		return "catalogueTypeDisk" if image["fileName"].getValue() else "catalogueTypeDisplay"
 
-registerColumn( "typeIcon", __TypeIconColumn() )
+registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
-	IECore.StringVectorData( [ "typeIcon", "Name" ] )
+	IECore.StringVectorData( [ "Status", "Name" ] )
 )
 
 ##########################################################################
