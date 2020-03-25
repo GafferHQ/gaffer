@@ -224,6 +224,44 @@ registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() 
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
 registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription" ) )
 
+# Image properties
+
+def __resolutionColumnValueProvider( image, catalogue ) :
+
+	format_ = catalogue["out"].format()
+	return "%d x %d" % ( format_.width(), format_.height() )
+
+def __formatBox( box ) :
+
+	return "(%d %d) - (%d, %d)" % ( box.min().x, box.min().y, box.max().x, box.max().y )
+
+registerColumn(
+	"Image/Resolution",
+	SimpleColumn( "Resolution", __resolutionColumnValueProvider )
+)
+registerColumn(
+	"Image/Channels",
+	SimpleColumn( "Channels", lambda _, c : ", ".join( c["out"].channelNames() ) )
+)
+registerColumn(
+	"Image/Type",
+	SimpleColumn( "Image Type", lambda _, c : "Deep" if c["out"].deep() else "Flat" )
+)
+registerColumn(
+	"Image/Pixel Aspect Ratio",
+	SimpleColumn( "P. Aspect", lambda _, c : c["out"].format().getPixelAspect() )
+)
+registerColumn(
+	"Image/Data Window",
+	SimpleColumn( "Data Window", lambda _, c : __formatBox( c["out"].dataWindow() ) )
+)
+registerColumn(
+	"Image/Display Window",
+	SimpleColumn( "Display Window", lambda _, c : __formatBox( c["out"].format().getDisplayWindow() ) )
+)
+
+# Default visible column set
+
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
 	IECore.StringVectorData( [ "Status", "Name" ] )
