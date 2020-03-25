@@ -23,6 +23,9 @@ Fixes
 - InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
 - SceneAlgo : Fixed bug which could cause hangs when retrieving the source scene from an image via Python.
+- Floating Editors : Fixed keyboard shortcuts (#3632).
+- ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
+- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 
 API
 ---
