@@ -1688,6 +1688,14 @@ class _LinkedScrollBar( GafferUI.Widget ) :
 					container._qtWidget().setVerticalScrollBar( _StepsChangedScrollBar( QtCore.Qt.Orientation.Vertical ) )
 				self.__scrollBars.append( container._qtWidget().verticalScrollBar() )
 
+		# Set size policy to `Ignored` in the direction of scrolling, so sizing is determined entirely
+		# by the `scrolledContainers`. Otherwise, showing the scrollbar in `__rangeChanged` can lead to
+		# another change of range, making an infinite loop where the scrollbar flickers on and off.
+		if orientation == GafferUI.ListContainer.Orientation.Vertical :
+			self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Ignored )
+		else :
+			self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+
 		self._qtWidget().setValue( self.__scrollBars[1].value() )
 		self._qtWidget().setRange( self.__scrollBars[1].minimum(), self.__scrollBars[1].maximum() )
 		self._qtWidget().setPageStep( self.__scrollBars[1].pageStep() )
