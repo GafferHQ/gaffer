@@ -240,5 +240,10 @@ class ShuffleAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s3.execute( s2.serialise() )
 		self.assertPromotedAttribute( s3 )
 
+	def testFilterDefault( self ) :
+
+		s = GafferScene.ShuffleAttributes()
+		self.assertEqual( s["filter"].defaultValue(), IECore.PathMatcher.Result.NoMatch )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -83,6 +83,7 @@ Improvements
 ------------
 
 - Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
+- Catalogue : Added column to help identify the nature of each image (#3646)
 
 Fixes
 -----
@@ -93,6 +94,10 @@ Fixes
 - NodeEditor : Fixed bug that allowed the node name to be edited on a locked node.
 - InteractiveArnoldRender : Fixed problem that could potentially stop the main RGBA AOV from receiving priority for progressive updates.
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
+- SceneAlgo : Fixed bug which could cause hangs when retrieving the source scene from an image via Python.
+- Floating Editors : Fixed keyboard shortcuts (#3632).
+- ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
+- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 
 API
 ---
@@ -102,6 +107,10 @@ API
 - NodeEditor : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - NodeUI : Deprecated `setReadOnly()` and `getReadOnly()` methods.
 - PlugValueWidget : Deprecated `setReadOnly()` and `getReadOnly()` methods.
+- CatalogueUI : Added column configuration API (#3646).
+- PathListingWidget :
+	- Added `sortable` kwarg to avoid premature sorting of the path passed to the constructor (#3684).
+	- Deprecated `setSortable` and `getSortable` in favour of the constructor argument.
 
 0.56.1.0 (relative to 0.56.0.0)
 ========
@@ -304,6 +313,9 @@ Build
 - Backdrop : Fixed bug that prevented context variables from being used by the `title` and `description` plugs. All variables from the global script context are now available.
 - Box : Fixed bug that allowed locked plugs to be promoted.
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
+- Floating Editors : Fixed keyboard shortcuts (#3632).
+- ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
+- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 
 0.55.5.1 (relative to 0.55.5.0)
 ========
