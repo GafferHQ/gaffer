@@ -544,7 +544,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				sortable = False
 			)
 			self.__pathListing.setDragPointer( "" )
-			self.__pathListing.setHeaderVisible( len(columns) >  1 )
+			self.__pathListing.setHeaderVisible( True )
 			self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingSelectionChanged ), scoped = False
 			)
