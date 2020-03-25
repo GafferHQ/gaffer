@@ -639,6 +639,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applyColumnWidthMetadata( self, cellPlug = None ) :
 
+		if self._qtWidget().model().mode() == self.Mode.RowNames :
+			return
+
 		defaultCells = self._qtWidget().model().rowsPlug().defaultRow()["cells"]
 
 		if cellPlug is not None :
@@ -664,6 +667,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applySectionOrderMetadata( self ) :
 
+		if self._qtWidget().model().mode() == self.Mode.RowNames :
+			return
+
 		rowsPlug = self._qtWidget().model().rowsPlug()
 		header = self._qtWidget().horizontalHeader()
 		for index, plug in enumerate( rowsPlug.defaultRow()["cells"] ) :
@@ -673,6 +679,9 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__callingMoveSection = False
 
 	def __applyColumnVisibility( self ) :
+
+		if self._qtWidget().model().mode() == self.Mode.RowNames :
+			return
 
 		# Changing column visibility seems to cause the
 		# `sectionResized()` signal to be emitted unnecessarily,
@@ -871,6 +880,10 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 	# Methods of our own
 	# ------------------
+
+	def mode( self ) :
+
+		return self.__mode
 
 	def rowsPlug( self ) :
 
