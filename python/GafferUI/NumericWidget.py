@@ -64,6 +64,8 @@ class NumericWidget( GafferUI.TextWidget ) :
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
 
+		self.setPreferredCharacterWidth( 10 )
+
 		self.__numericType = None
 		self.setValue( value )
 
