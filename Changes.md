@@ -238,6 +238,9 @@ Build
 - Backdrop : Fixed bug that prevented context variables from being used by the `title` and `description` plugs. All variables from the global script context are now available.
 - Box : Fixed bug that allowed locked plugs to be promoted.
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
+- Floating Editors : Fixed keyboard shortcuts (#3632).
+- ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
+- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 
 0.55.5.1 (relative to 0.55.5.0)
 ========

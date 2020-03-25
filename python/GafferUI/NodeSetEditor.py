@@ -325,6 +325,8 @@ class NodeSetEditor( GafferUI.Editor ) :
 			scriptWindow.getLayout().addEditor( editor )
 		else :
 			window = _EditorWindow( scriptWindow, editor )
+			# Ensure keyboard shortcuts are relayed to the main menu bar
+			scriptWindow.menuBar().addShortcutTarget( window )
 			## \todo Can we do better using `window.resizeToFitChild()`?
 			# Our problem is that some NodeEditors (for GafferImage.Text for instance)
 			# are very large, whereas some (GafferScene.Shader) don't have
