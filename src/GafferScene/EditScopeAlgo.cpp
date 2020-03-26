@@ -169,6 +169,10 @@ SceneProcessorPtr transformProcessor()
 	auto rowsPlug = static_cast<Spreadsheet::RowsPlug *>( PlugAlgo::promoteWithName( spreadsheet->rowsPlug(), "edits" ) );
 	Metadata::registerValue( rowsPlug, "spreadsheet:defaultRowVisible", new BoolData( false ) );
 	Metadata::registerValue( rowsPlug->defaultRow(), "spreadsheet:rowNameWidth", new IntData( 300 ) );
+	for( auto &cell : Spreadsheet::CellPlug::Range( *rowsPlug->defaultRow()->cellsPlug() ) )
+	{
+		Metadata::registerValue( cell.get(), "spreadsheet:columnWidth", new IntData( 200 ) );
+	}
 
 	result->outPlug()->setInput( transform->outPlug() );
 
