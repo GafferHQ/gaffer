@@ -75,7 +75,7 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		] :
 
 			with Gaffer.Context() as c :
-				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				self.assertEqual( f["out"].getValue(), int( result ) )
 
 	def testNullPaths( self ) :
@@ -144,7 +144,7 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		] :
 
 			with Gaffer.Context() as c :
-				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				self.assertEqual( b["f"]["out"].getValue(), int( result ) )
 
 	def testPathPlugExpression( self ) :
