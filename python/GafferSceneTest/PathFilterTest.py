@@ -202,5 +202,176 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
 			self.assertEqual( f["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
 
+	def testRoots( self ) :
+
+		#  /outerGroup
+		#     /sphere
+		#     /cube
+		#     /innerGroup/
+		#         /sphere
+		#         /cube
+		#  /sphere
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		innerGroup = GafferScene.Group()
+		innerGroup["in"][0].setInput( sphere["out"] )
+		innerGroup["in"][1].setInput( cube["out"] )
+		innerGroup["name"].setValue( "innerGroup" )
+
+		outerGroup = GafferScene.Group()
+		outerGroup["in"][0].setInput( sphere["out"] )
+		outerGroup["in"][1].setInput( cube["out"] )
+		outerGroup["in"][2].setInput( innerGroup["out"] )
+		outerGroup["name"].setValue( "outerGroup" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( outerGroup["out"] )
+		parent["children"][0].setInput( sphere["out"] )
+		parent["parent"].setValue( "/" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		def assertMatchingPaths( scene, filter, expectedPaths ) :
+
+			matchingPaths = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( filter, scene, matchingPaths )
+			self.assertEqual( set( matchingPaths.paths() ), expectedPaths )
+
+		assertMatchingPaths(
+			parent["out"], pathFilter["out"],
+			{ "/sphere" }
+		)
+
+		rootsFilter = GafferScene.PathFilter()
+		pathFilter["roots"].setInput( rootsFilter["out"] )
+
+		assertMatchingPaths(
+			parent["out"], pathFilter["out"],
+			set()
+		)
+
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+		assertMatchingPaths(
+			parent["out"], pathFilter["out"],
+			{ "/sphere" }
+		)
+
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/outerGroup" ] ) )
+		assertMatchingPaths(
+			parent["out"], pathFilter["out"],
+			{ "/sphere", "/outerGroup/sphere" }
+		)
+
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/outerGroup", "/outerGroup/innerGroup" ] ) )
+		assertMatchingPaths(
+			parent["out"], pathFilter["out"],
+			{ "/sphere", "/outerGroup/sphere", "/outerGroup/innerGroup/sphere" }
+		)
+
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/outerGroup", "/outerGroup/innerGroup" ] ) )
+		assertMatchingPaths(
+			parent["out"], pathFilter["out"],
+			{ "/outerGroup/sphere", "/outerGroup/innerGroup/sphere" }
+		)
+
+	def testSpecificRootsMatches( self ) :
+
+		rootsFilter = GafferScene.PathFilter()
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/nested/root" ] ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["roots"].setInput( rootsFilter["out"] )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/matchLocation" ] ) )
+
+		with Gaffer.Context() as c :
+
+			for path, expectedResult in [
+
+				( "/", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested/root", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested/root/matchLocation", IECore.PathMatcher.Result.ExactMatch ),
+				( "/nested/root/matchLocation/childLocation", IECore.PathMatcher.Result.AncestorMatch ),
+				( "/matchLocation", IECore.PathMatcher.Result.ExactMatch ),
+				( "/matchLocation/childLocation", IECore.PathMatcher.Result.AncestorMatch ),
+				( "/matchLocation/childLocation/grandChildLocation", IECore.PathMatcher.Result.AncestorMatch ),
+
+			] :
+
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				self.assertEqual( pathFilter["out"].getValue(), expectedResult )
+
+	def testRootsWithEmptyPaths( self ) :
+
+		rootsFilter = GafferScene.PathFilter()
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/path/to/root" ] ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["roots"].setInput( rootsFilter["out"] )
+
+		with Gaffer.Context() as c :
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "path", "to" ] )
+			self.assertEqual( pathFilter["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
+
+	def testRootsWithEllipsis( self ) :
+
+		rootsFilter = GafferScene.PathFilter()
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["roots"].setInput( rootsFilter["out"] )
+
+		# Regular roots, paths with ellipsis
+
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/nested/root" ] ) )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/.../matchLocation" ] ) )
+
+		with Gaffer.Context() as c :
+
+			for path, expectedResult in [
+
+				( "/", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested/root", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested/root/matchLocation", IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested/root/matchLocation/childLocation", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nested/root/anything", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation", IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation/childLocation", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation/childLocation/grandChildLocation", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation/anything", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+
+			] :
+
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				self.assertEqual( pathFilter["out"].getValue(), expectedResult )
+
+		# Regular paths, roots with ellipsis
+
+		rootsFilter["paths"].setValue( IECore.StringVectorData( [ "/", "/.../nestedRoot" ] ) )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/matchLocation" ] ) )
+
+		with Gaffer.Context() as c :
+
+			for path, expectedResult in [
+
+				( "/", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nestedRoot", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nestedRoot/matchLocation", IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/nestedRoot/matchLocation/childLocation", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/deeply/nestedRoot", IECore.PathMatcher.Result.DescendantMatch ),
+				( "/deeply/nestedRoot/matchLocation", IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation", IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation/childLocation", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+				( "/matchLocation/childLocation/grandChildLocation", IECore.PathMatcher.Result.AncestorMatch | IECore.PathMatcher.Result.DescendantMatch ),
+
+			] :
+
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				self.assertEqual( pathFilter["out"].getValue(), expectedResult )
+
 if __name__ == "__main__":
 	unittest.main()

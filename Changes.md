@@ -13,6 +13,7 @@ Features
 Improvements
 ------------
 
+- PathFilter : Added `roots`, an optional filter input to provide multiple root locations which the `paths` are relative to. This can be useful when working on a single asset in isolation, and then placing it into multiple locations within a layout.
 - Spreadsheet : Improved performance of Spreadsheets with many rows.
 - CopyPrimitiveVariables : Improved performance. In one benchmark, scene generation time has been reduced by 50%.
 - MergeScenes : Improved performance when merging overlapping hierarchies.

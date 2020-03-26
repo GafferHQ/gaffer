@@ -95,6 +95,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"roots" : [
+
+			"description",
+			"""
+			An optional filter input used to provide multiple root locations
+			which the `paths` are relative to. This can be useful when working
+			on a single asset in isolation, and then placing it into multiple
+			locations within a layout. When no filter is connected, all `paths`
+			are treated as being relative to `/`, the true scene root.
+			""",
+
+			"plugValueWidget:type", "",
+
+		],
+
 	}
 
 )
