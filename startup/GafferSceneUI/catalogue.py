@@ -48,27 +48,28 @@ imageNameMap = {
 	GafferScene.Render : "catalogueTypeBatchRender",
 }
 
-typeIconColumnDefinition = CatalogueUI.columnDefinition( "typeIcon" )
-if typeIconColumnDefinition :
+typeIconColumn = CatalogueUI.columnDefinition( "typeIcon" )
+if typeIconColumn :
 
-	def typeIconColumnValueProvider( image, catalogue ):
+	class __ExtededTypeIconColumn( CatalogueUI.IconColumn ) :
 
-		iconName = typeIconColumnDefinition.valueProvider( image, catalogue )
+		def __init__( self ) :
 
-		scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
-		if not scenePlug :
+			CatalogueUI.IconColumn.__init__( self, "" )
+
+		def value( self, image, catalogue ) :
+
+			iconName = typeIconColumn.value( image, catalogue )
+
+			scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
+			if not scenePlug :
+				return iconName
+
+			for type_ in imageNameMap.keys() :
+				if isinstance( scenePlug.node(), type_ ) :
+					suffix = "Complete" if image["fileName"].getValue() else "Running"
+					return imageNameMap[type_] + suffix
+
 			return iconName
 
-		for type_ in imageNameMap.keys() :
-			if isinstance( scenePlug.node(), type_ ) :
-				suffix = "Complete" if image["fileName"].getValue() else "Running"
-				return imageNameMap[type_] + suffix
-
-		return iconName
-
-	CatalogueUI.registerColumn(
-		"typeIcon",
-		typeIconColumnDefinition.title,
-		typeIconColumnValueProvider,
-		CatalogueUI.ColumnType.Icon
-	)
+	CatalogueUI.registerColumn( "typeIcon", __ExtededTypeIconColumn() )
