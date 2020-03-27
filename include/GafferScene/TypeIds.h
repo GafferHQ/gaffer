@@ -152,6 +152,7 @@ enum TypeId
 	MergeScenesTypeId = 110607,
 	ShuffleAttributesTypeId = 110608,
 	ShufflePrimitiveVariablesTypeId = 110609,
+	LocaliseAttributesTypeId = 110610,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

@@ -146,6 +146,7 @@ from MergeScenesTest import MergeScenesTest
 from ShuffleAttributesTest import ShuffleAttributesTest
 from ShufflePrimitiveVariablesTest import ShufflePrimitiveVariablesTest
 from EditScopeAlgoTest import EditScopeAlgoTest
+from LocaliseAttributesTest import LocaliseAttributesTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *
