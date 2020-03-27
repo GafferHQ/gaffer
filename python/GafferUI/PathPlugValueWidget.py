@@ -136,7 +136,7 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 			bookmarks = pathChooserDialogueKeywords.get( "bookmarks", None )
 			if bookmarks is not None :
 				pathCopy.setFromString( bookmarks.getDefault() )
-			else :
+			elif isinstance( pathCopy, Gaffer.FileSystemPath ) :
 				pathCopy.setFromString( os.path.expanduser( "~" ) )
 
 		return GafferUI.PathChooserDialogue( pathCopy, **pathChooserDialogueKeywords )
