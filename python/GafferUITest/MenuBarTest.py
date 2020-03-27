@@ -206,6 +206,36 @@ class MenuBarTest( GafferUITest.TestCase ) :
 		self.waitForIdle( 1000 )
 		self.assertEqual( len( commandInvocations ), 2 )
 
+	def testShortcutDiscoveryOptimisations( self ) :
+
+		callCounts = {
+			"MenuA" : 0,
+			"MenuB" : 0
+		}
+
+		def buildMenu( identifier ) :
+			callCounts[ identifier ] += 1
+			smd = IECore.MenuDefinition()
+			smd.append( "/%s_item" % identifier, {} )
+			return smd
+
+		definition = IECore.MenuDefinition()
+		definition.append( "/MenuA", { "subMenu" : functools.partial( buildMenu, "MenuA" ) } )
+		definition.append( "/MenuB", { "subMenu" : functools.partial( buildMenu, "MenuB" ), "hasShortCuts" : False } )
+
+		with GafferUI.Window() as window :
+			with GafferUI.ListContainer() :
+				menuBar = GafferUI.MenuBar( definition )
+				label = GafferUI.Label( "test" )
+
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		self.__simulateShortcut( label )
+		self.waitForIdle( 1000 )
+
+		self.assertEqual( callCounts, { "MenuA" : 1, "MenuB" : 0 } )
+
 	def __simulateShortcut( self, widget ) :
 
 		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
