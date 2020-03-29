@@ -41,6 +41,7 @@
 #include "GafferCycles/TypeIds.h"
 
 #include "GafferScene/Light.h"
+#include "Gaffer/Version.h"
 
 namespace GafferCycles
 {
@@ -60,7 +61,11 @@ class GAFFERCYCLES_API CyclesLight : public GafferScene::Light
 	protected :
 
 		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+#ifdef GAFFER_MAJOR_VERSION >= 56
+		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
+#else
 		IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
+#endif
 
 	private :
 

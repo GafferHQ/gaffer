@@ -102,7 +102,11 @@ void CyclesLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 	shaderNamePlug()->hash( h );
 }
 
+#ifdef GAFFER_MAJOR_VERSION >= 56
+IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *context ) const
+#else
 IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *context ) const
+#endif
 {
 	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
 	// Light shader
