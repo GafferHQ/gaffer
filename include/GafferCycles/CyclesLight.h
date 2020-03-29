@@ -61,7 +61,7 @@ class GAFFERCYCLES_API CyclesLight : public GafferScene::Light
 	protected :
 
 		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-#ifdef GAFFER_MAJOR_VERSION >= 56
+#ifdef GAFFER_MAJOR_VERSION > 55
 		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
 #else
 		IECoreScene::ShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
