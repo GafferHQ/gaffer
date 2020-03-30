@@ -48,7 +48,7 @@ imageNameMap = {
 	GafferScene.Render : "catalogueTypeBatchRender",
 }
 
-typeIconColumn = CatalogueUI.columnDefinition( "typeIcon" )
+typeIconColumn = CatalogueUI.column( "typeIcon" )
 if typeIconColumn :
 
 	class __ExtededTypeIconColumn( CatalogueUI.IconColumn ) :

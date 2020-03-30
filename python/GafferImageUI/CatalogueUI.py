@@ -177,7 +177,7 @@ registerColumn( "typeIcon", __TypeIconColumn() )
 registerColumn( "name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
 
 Gaffer.Metadata.registerValue(
-	GafferImage.Catalogue, "catalogue:columns",
+	GafferImage.Catalogue, "imageIndex", "catalogue:columns",
 	IECore.StringVectorData( [ "typeIcon", "name" ] )
 )
 
@@ -583,7 +583,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		columns = []
 
-		for name in Gaffer.Metadata.value( self.__catalogue(), "catalogue:columns" ) :
+		for name in Gaffer.Metadata.value( self.getPlug(), "catalogue:columns" ) :
 
 			definition = column( name )
 

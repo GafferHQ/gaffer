@@ -51,7 +51,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 		c = GafferImage.Catalogue()
 		self.assertEqual(
-			Gaffer.Metadata.value( c, "catalogue:columns" ),
+			Gaffer.Metadata.value( c["imageIndex"], "catalogue:columns" ),
 			IECore.StringVectorData( [ "typeIcon", "name" ] )
 		)
 
