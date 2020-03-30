@@ -75,7 +75,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 			"/a/b/c/d",
 		] :
 			with Gaffer.Context() as c :
-				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				self.assertEqual( u["out"].getValue(), f1["out"].getValue() )
 
 		u["in"][1].setInput( f2["out"] )
@@ -93,7 +93,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 			( "/a/b/c/e/f/g/h", IECore.PathMatcher.Result.AncestorMatch ),
 		] :
 			with Gaffer.Context() as c :
-				c["scene:path"] = IECore.InternedStringVectorData( path[1:].split( "/" ) )
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				self.assertEqual( u["out"].getValue(), int( result ) )
 
 		f2["paths"].setValue( IECore.StringVectorData( [

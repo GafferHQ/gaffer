@@ -58,6 +58,9 @@ class GAFFERSCENE_API PathFilter : public Filter
 		Gaffer::StringVectorDataPlug *pathsPlug();
 		const Gaffer::StringVectorDataPlug *pathsPlug() const;
 
+		FilterPlug *rootsPlug();
+		const FilterPlug *rootsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
@@ -68,21 +71,28 @@ class GAFFERSCENE_API PathFilter : public Filter
 		void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const override;
 
+		bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const override;
+
 	private :
 
-		// Filter matches are computed using a PathMatcher data structure in one of two ways:
-		// if pathsPlug() is receiving data from an output plug, we compute the PathMatcher
-		// using an intermediate plug called __pathMatcher, as it's possible the paths we're
-		// testing against could vary depending on the context:
-
+		// Used to compute a PathMatcher from `pathsPlug()`.
 		Gaffer::PathMatcherDataPlug *pathMatcherPlug();
 		const Gaffer::PathMatcherDataPlug *pathMatcherPlug() const;
 
-		// If that's not the case, we can improve performance by precomputing the PathMatcher
-		// whenever the plug is dirtied, which saves on graph evaluations:
+		// Used to compute a list containing the lengths of
+		// all the relevant roots matched by `rootsPlug()`.
+		// This is computed on a per-location basis, and roots
+		// are ordered by length with the shortest appearing first.
+		Gaffer::IntVectorDataPlug *rootSizesPlug();
+		const Gaffer::IntVectorDataPlug *rootSizesPlug() const;
 
+		void hashRootSizes( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		IECore::ConstIntVectorDataPtr computeRootSizes( const Gaffer::Context *context ) const;
+
+		// Optimisation for when `pathsPlug()` contains a constant
+		// value. We can store a constant `m_pathMatcher` instead
+		// of needing to compute `pathMatcherPlug()`.
 		void plugDirtied( const Gaffer::Plug *plug );
-
 		IECore::PathMatcherDataPtr m_pathMatcher;
 
 		static size_t g_firstPlugIndex;
