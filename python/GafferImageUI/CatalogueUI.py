@@ -160,6 +160,51 @@ def registeredColumns() :
 	return __registeredColumns.keys()
 
 #
+# Convenience Column classes
+#
+
+# A Columns class that retrieves its value from the catalogue item's image
+# metadata. If multiple names are provided, the first one present will be used,
+# allowing a single column to support several source names depending on the
+# image's origin.
+class ImageMetadataColumn( Column ) :
+
+	def __init__( self, title, nameOrNames, defaultValue = None ) :
+
+		Column.__init__( self, title )
+
+		if isinstance( nameOrNames, basestring ) :
+			nameOrNames = [ nameOrNames, ]
+
+		self.__names = nameOrNames
+		self.__defaultValue = defaultValue
+
+	def value( self, image, catalogue ) :
+
+		metadata = catalogue["out"].metadata()
+		for name in self.__names :
+			value = metadata.get( name, None )
+			if value is not None :
+				return value
+
+		return self.__defaultValue
+
+# A Column class that retrieves its value from render-time context variable
+# values passed through the catalogue item's image metadata.  If multiple names
+# are provided, the first present context entry will be used. Note: Not all
+# context variables are available via image metadata, the exact list is renderer
+# dependent, but it is generally limited to basic value types
+class ContextVariableColumn( ImageMetadataColumn ) :
+
+	def __init__( self, title, nameOrNames, defaultValue = None ) :
+
+		if isinstance( nameOrNames, basestring ) :
+			nameOrNames = [ nameOrNames, ]
+
+		names = [ "gaffer:context:%s" % name for name in nameOrNames ]
+		ImageMetadataColumn.__init__( self, title, names, defaultValue )
+
+#
 # Standard Columns
 #
 
