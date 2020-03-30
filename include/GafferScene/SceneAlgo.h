@@ -50,6 +50,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathVec.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include <unordered_set>
+
 namespace IECore
 {
 
@@ -61,6 +63,7 @@ namespace GafferScene
 {
 
 class SceneProcessor;
+class FilteredSceneProcessor;
 class ShaderTweaks;
 
 namespace SceneAlgo
@@ -68,6 +71,10 @@ namespace SceneAlgo
 
 /// Filter queries
 /// ==============
+
+/// Returns all the nodes which are filtered by the specified filter,
+/// whether directly or indirectly via an intermediate filter.
+GAFFERSCENE_API std::unordered_set<FilteredSceneProcessor *> filteredNodes( Filter *filter );
 
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
 GAFFERSCENE_API void matchingPaths( const Filter *filter, const ScenePlug *scene, IECore::PathMatcher &paths );

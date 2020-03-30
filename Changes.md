@@ -34,7 +34,10 @@ API
 
 - EditScopeAlgo : Added new namespace with utility functions for editing scenes using EditScope nodes.
 - ScenePlug : Added `exists()` method. This provides fast existence queries for locations.
-- SceneAlgo : Deprecated `exists()` function. Use `ScenePlug::exists()` instead
+- SceneAlgo :
+  - Added `filteredNodes()` function, returning all the FilteredSceneProcessors affected by a
+    particular filter.
+  - Deprecated `exists()` function. Use `ScenePlug::exists()` instead
 - Spreadsheet :
   - Added `RowsPlug::row( rowName )` method.
   - Added support for `spreadsheet:defaultRowVisible` metadata, which can be used to hide the default row.

@@ -38,6 +38,8 @@
 
 #include "GafferScene/CameraTweaks.h"
 #include "GafferScene/Filter.h"
+#include "GafferScene/FilterProcessor.h"
+#include "GafferScene/PathFilter.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/ShaderTweaks.h"
 
@@ -76,6 +78,35 @@ using namespace GafferScene;
 namespace
 {
 
+void filteredNodesWalk( Plug *filterPlug, std::unordered_set<FilteredSceneProcessor *> &result )
+{
+	for( const auto &o : filterPlug->outputs() )
+	{
+		if( auto filteredSceneProcessor = runTimeCast<FilteredSceneProcessor>( o->node() ) )
+		{
+			if( o == filteredSceneProcessor->filterPlug() )
+			{
+				result.insert( filteredSceneProcessor );
+			}
+		}
+		else if( auto filterProcessor = runTimeCast<FilterProcessor>( o->node() ) )
+		{
+			if( o == filterProcessor->inPlug() || o->parent() == filterProcessor->inPlugs() )
+			{
+				filteredNodesWalk( filterProcessor->outPlug(), result );
+			}
+		}
+		else if( auto pathFilter = runTimeCast<PathFilter>( o->node() ) )
+		{
+			if( o == pathFilter->rootsPlug() )
+			{
+				filteredNodesWalk( pathFilter->outPlug(), result );
+			}
+		}
+		filteredNodesWalk( o, result );
+	}
+}
+
 struct ThreadablePathAccumulator
 {
 	ThreadablePathAccumulator( PathMatcher &result): m_result( result ){}
@@ -93,6 +124,13 @@ struct ThreadablePathAccumulator
 };
 
 } // namespace
+
+std::unordered_set<FilteredSceneProcessor *> GafferScene::SceneAlgo::filteredNodes( Filter *filter )
+{
+	std::unordered_set<FilteredSceneProcessor *> result;
+	filteredNodesWalk( filter->outPlug(), result );
+	return result;
+}
 
 void GafferScene::SceneAlgo::matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
