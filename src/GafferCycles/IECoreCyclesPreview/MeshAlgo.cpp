@@ -37,6 +37,7 @@
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
+#include "IECoreScene/MeshNormalsOp.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 
@@ -64,7 +65,7 @@ namespace
 
 struct MikkUserData {
 	MikkUserData( const char *layer_name,
-				  const ccl::Mesh *mesh,
+				  ccl::Mesh *mesh,
 				  ccl::float3 *tangent,
 				  float *tangent_sign )
 		: mesh( mesh ), texface( NULL ), tangent( tangent ), tangent_sign( tangent_sign )
@@ -73,6 +74,12 @@ struct MikkUserData {
 																		  mesh->attributes;
 
 		ccl::Attribute *attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
+		if( !attr_vN )
+		{
+			mesh->add_face_normals();
+			mesh->add_vertex_normals();
+			attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
+		}
 		vertex_normal = attr_vN->data_float3();
 
 		ccl::Attribute *attr_uv = attributes.find( ccl::ustring( layer_name ) );
@@ -82,7 +89,7 @@ struct MikkUserData {
 		}
 	}
 
-	const ccl::Mesh *mesh;
+	ccl::Mesh *mesh;
 	int num_faces;
 
 	ccl::float3 *vertex_normal;
@@ -609,10 +616,46 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	// Convert Normals
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
+	if( !triangles )
 	{
-		ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
-		convertN( mesh, normals, attr_N, nInterpolation );
+		if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
+		{
+			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+			convertN( trimesh.get(), normals, attr_N, nInterpolation );
+		}
+		else if( mesh->interpolation() != "catmullClark" )
+		{
+			IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
+			normalOp->inputParameter()->setValue( trimesh );
+			normalOp->copyParameter()->setTypedValue( false );
+			normalOp->operate();
+			if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
+			{
+				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+				convertN( trimesh.get(), normals, attr_N, PrimitiveVariable::Vertex );
+			}
+		}
+	}
+	else
+	{
+		if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
+		{
+			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+			convertN( mesh, normals, attr_N, nInterpolation );
+		}
+		else if( mesh->interpolation() != "catmullClark" )
+		{
+			IECoreScene::MeshPrimitivePtr normalmesh = mesh->copy();
+			IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
+			normalOp->inputParameter()->setValue( normalmesh );
+			normalOp->copyParameter()->setTypedValue( false );
+			normalOp->operate();
+			if( const V3fVectorData *normals = normal( normalmesh.get(), nInterpolation ) )
+			{
+				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+				convertN( normalmesh.get(), normals, attr_N, PrimitiveVariable::Vertex );
+			}
+		}
 	}
 
 	// Convert primitive variables.
