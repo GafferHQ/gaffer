@@ -23,6 +23,7 @@ Improvements
 Fixes
 -----
 
+- Filter : Fixed bug which prevented "Select Affected Objects" menu items from working in cases where there was another filter in between the filter and the nodes it was applied to.
 - RotateTool : Fixed bug which caused aiming clicks to change the selection in some circumstances.
 - TranslateTool : Fixed bug which caused snapping clicks to change the selection in some circumstances.
 - Stats app :
