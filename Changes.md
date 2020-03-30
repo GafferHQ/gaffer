@@ -27,6 +27,7 @@ Fixes
 - ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
 - Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 - Viewer : Fixed bug when using the Crop Window Tool with anamorphic images (#3690).
+- UI : Fixed bug that could cause header views to show scroll bars unnecessarily.
 
 API
 ---

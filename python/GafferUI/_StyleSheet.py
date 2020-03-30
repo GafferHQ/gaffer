@@ -781,15 +781,14 @@ _styleSheet = string.Template(
 		border-top-right-radius: $widgetCornerRadius;
 	}
 
-	/* tuck adjacent header sections beneath one another so we only get */
-	/* a single width line between them                                 */
+	/* Remove left/top borders so we don't get a double-width line between columns */
 
 	QHeaderView::section:horizontal:!first:!only-one {
-		margin-left: -1px;
+		border-left-color: transparent;
 	}
 
 	QHeaderView::section:vertical:!first:!only-one {
-		margin-top: -1px;
+		border-top-color: transparent;
 	}
 
 	QHeaderView::down-arrow {
@@ -894,11 +893,40 @@ _styleSheet = string.Template(
 		spacing: 5px;
 	}
 
-	QTreeView QHeaderView {
-		/* tuck header border inside the treeview border */
-		margin-top: -1px;
-		margin-left: -1px;
-		margin-right: -1px;
+	/* Avoid a double border with the tree view's border */
+
+	QTreeView QHeaderView::section:horizontal {
+		border-top-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:horizontal:only-one {
+		border-left-color: transparent;
+		border-right-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:horizontal:first {
+		border-left-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:horizontal:last {
+		border-right-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:vertical {
+		border-left-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:vertical:only-one {
+		border-top-color: transparent;
+		border-bottom-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:vertical:first {
+		border-top-color: transparent;
+	}
+
+	QTreeView QHeaderView::section:vertical:last {
+		border-bottom-color: transparent;
 	}
 
 	QTreeView::branch {
