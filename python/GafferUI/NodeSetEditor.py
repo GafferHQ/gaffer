@@ -329,6 +329,17 @@ class NodeSetEditor( GafferUI.Editor ) :
 			scriptWindow.menuBar().addShortcutTarget( window )
 			window.setVisible( True )
 
+			if isinstance( editor, GafferUI.NodeEditor ) :
+				# The window will have opened at the perfect size for the
+				# contained widgets. But some NodeEditors have expanding
+				# sections and buttons to add new widgets, and for that
+				# reason, a minimum height of 400px has been deemed more
+				# suitable.
+				size = window._qtWidget().size()
+				if size.height() < 400 :
+					size.setHeight( 400 )
+					window._qtWidget().resize( size )
+
 		return editor
 
 	def _lastAddedNode( self ) :
