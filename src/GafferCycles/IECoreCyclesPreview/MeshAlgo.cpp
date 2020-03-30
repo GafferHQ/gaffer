@@ -609,21 +609,36 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	// TODO: Maybe move this to attibutes so it can be shared between meshes?
 	if( ( subdivision ) && ( cmesh->subdivision_type != ccl::Mesh::SUBDIVISION_NONE ) && ( !cmesh->subd_params ) )
+	{
 		cmesh->subd_params = new ccl::SubdParams( cmesh );
+		cmesh->subd_params->test_steps = 1;
+		cmesh->subd_params->split_threshold = 1;
+		cmesh->subd_params->dicing_rate = 1.0f;
+		cmesh->subd_params->max_level = 1;
+		cmesh->subd_params->camera = NULL;
+	}
 
 	// Primitive Variables are Attributes in Cycles
 	ccl::AttributeSet& attributes = (subdivision) ? cmesh->subd_attributes : cmesh->attributes;
 
 	// Convert Normals
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	if( !triangles )
+	if( ( !triangles ) && ( mesh->interpolation() == "catmullClark" ) )
+	{
+		if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
+		{
+			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+			convertN( mesh, normals, attr_N, nInterpolation );
+		}
+	}
+	else if( !triangles )
 	{
 		if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
 		{
 			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
 			convertN( trimesh.get(), normals, attr_N, nInterpolation );
 		}
-		else if( mesh->interpolation() != "catmullClark" )
+		else
 		{
 			IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
 			normalOp->inputParameter()->setValue( trimesh );

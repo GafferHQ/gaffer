@@ -61,7 +61,7 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:is_shadow_catcher", new IECore::BoolData( false ), false, "isShadowCatcher" ) );
 
 	// Subdivision parameters
-	attributes->addChild( new Gaffer::NameValuePlug( "ccl:max_level", new IECore::IntData( 12 ), false, "maxLevel" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:max_level", new IECore::IntData( 1 ), false, "maxLevel" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dicing_rate", new IECore::FloatData( 1.0f ), false, "dicingScale" ) );
 
 	// Color

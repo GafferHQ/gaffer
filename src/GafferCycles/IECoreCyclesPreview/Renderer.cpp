@@ -1215,7 +1215,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_visibility( ~0 ), 
 				m_useHoldout( false ), 
 				m_isShadowCatcher( false ), 
-				m_maxLevel( 12 ), 
+				m_maxLevel( 1 ), 
 				m_dicingRate( 1.0f ), 
 				m_color( Color3f( 0.0f ) ), 
 				m_dupliGenerated( V3f( 0.0f ) ),
