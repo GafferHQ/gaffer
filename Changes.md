@@ -49,6 +49,7 @@ API
   - Added `Selection::editable()` method.
   - Added `Selection::warning()` method.
   - Added `selectionEditable()` method.
+- TweakPlug : Changed `applyTweak(s)` return type to `bool` - indicating if any tweaks were actually performed (#3699).
 
 Breaking Changes
 ----------------

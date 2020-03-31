@@ -106,8 +106,9 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 		};
 
 		/// \deprecated. Use `TweaksPlug::applyTweaks()` instead.
-		void applyTweak( IECore::CompoundData *parameters, MissingMode missingMode = MissingMode::Error ) const;
-		static void applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, MissingMode missingMode = MissingMode::Error );
+		bool applyTweak( IECore::CompoundData *parameters, MissingMode missingMode = MissingMode::Error ) const;
+		/// \returns true if any tweaks were applied
+		static bool applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, MissingMode missingMode = MissingMode::Error );
 
 	private :
 
@@ -141,9 +142,10 @@ class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
 
 		/// Tweak application
 		/// =================
+		/// Functions return true if any tweaks were applied.
 
-		void applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
-		void applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
+		bool applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
+		bool applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
 
 };
 
