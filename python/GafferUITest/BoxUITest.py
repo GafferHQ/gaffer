@@ -126,12 +126,12 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		ui = GafferUI.NodeUI.create( box )
 
-		w = ui.plugValueWidget( box["user"]["a"], lazy=False )
+		w = ui.plugValueWidget( box["user"]["a"] )
 		self.assertTrue( w is not None )
 
 		box["user"]["a"].setName( "b" )
 
-		w2 = ui.plugValueWidget( box["user"]["b"], lazy=False )
+		w2 = ui.plugValueWidget( box["user"]["b"] )
 		self.assertTrue( w2 is not None )
 		self.assertTrue( w2 is w )
 
@@ -144,7 +144,7 @@ class BoxUITest( GafferUITest.TestCase ) :
 		box["node"]["i"].setInput( box["user"]["b"] )
 
 		ui = GafferUI.NodeUI.create( box )
-		w = ui.plugValueWidget( box["user"]["b"], lazy=False )
+		w = ui.plugValueWidget( box["user"]["b"] )
 
 		self.assertTrue( isinstance( w, GafferUI.BoolPlugValueWidget ) )
 
@@ -157,8 +157,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 		nodeUI = GafferUI.NodeUI.create( box["node"] )
 		boxUI = GafferUI.NodeUI.create( box )
 
-		nodeWidget = nodeUI.plugValueWidget( box["node"]["outColor"], lazy = False )
-		boxWidget = boxUI.plugValueWidget( p, lazy = False )
+		nodeWidget = nodeUI.plugValueWidget( box["node"]["outColor"] )
+		boxWidget = boxUI.plugValueWidget( p )
 
 		self.assertTrue( type( boxWidget ) is type( nodeWidget ) )
 

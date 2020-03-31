@@ -121,12 +121,10 @@ class NodeUI( GafferUI.Widget ) :
 		return self.__node
 
 	## Should be implemented by derived classes to return
-	# a PlugValueWidget they are using to represent the
-	# specified plug. Since many UIs are built lazily on
-	# demand, this may return None unless lazy=False is
-	# passed to force creation of parts of the UI that
-	# otherwise are not yet visible to the user.
-	def plugValueWidget( self, plug, lazy=True ) :
+	# the PlugValueWidget they are using to represent the
+	# specified plug. Returns `None` if there is no such
+	# widget.
+	def plugValueWidget( self, plug ) :
 
 		return None
 

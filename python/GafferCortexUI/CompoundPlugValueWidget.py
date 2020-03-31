@@ -110,13 +110,9 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		CompoundPlugValueWidget._updateFromPlug( self )
 
 	## Returns a PlugValueWidget representing the specified child plug.
-	# Because the ui is built lazily on demand, this might return None due
-	# to the user not having opened up the ui - in this case lazy=False may
-	# be passed to force the creation of the ui.
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
-		if not lazy and len( self.__childPlugUIs ) == 0 :
-			self.__updateChildPlugUIs()
+		self.__updateChildPlugUIs()
 
 		w = self.__childPlugUIs.get( childPlug, None )
 		if w is None :

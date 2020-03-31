@@ -150,11 +150,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	## Because Plugs may have child Plugs, so too PlugValueWidgets may
 	# have child PlugValueWidgets to represent the children of their plug.
-	# This method should be reimplemented to return such children. Because
-	# UIs may be built lazily on demand, the lazy flag is provided to
-	# determine whether or not the query should force a build in the case
-	# that one has not been performed yet.
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	# This method should be reimplemented to return such children, or `None`
+	# if no appropriate child exists.
+	def childPlugValueWidget( self, childPlug ) :
 
 		return None
 
@@ -165,7 +163,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		editor = GafferUI.NodeEditor.acquire( plug.node() )
 
-		plugValueWidget = editor.nodeUI().plugValueWidget( plug, lazy=False )
+		plugValueWidget = editor.nodeUI().plugValueWidget( plug )
 		if not plugValueWidget :
 			return None
 

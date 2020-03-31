@@ -87,7 +87,7 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__row :
 			if w.getPlug().isSame( childPlug ) :
@@ -167,9 +167,9 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
 		self.__plugLayout.setReadOnly( readOnly )
 
-	def childPlugValueWidget( self, childPlug, lazy=True ) :
+	def childPlugValueWidget( self, childPlug ) :
 
-		return self.__plugLayout.plugValueWidget( childPlug, lazy )
+		return self.__plugLayout.plugValueWidget( childPlug )
 
 	def _updateFromPlug( self ) :
 

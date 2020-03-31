@@ -52,19 +52,19 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 		with self.__mainColumn :
 			self.__plugLayout = GafferUI.PlugLayout( node )
 
-	def plugValueWidget( self, plug, lazy=True ) :
+	def plugValueWidget( self, plug ) :
 
 		hierarchy = []
 		while not plug.isSame( self.node() ) :
 			hierarchy.insert( 0, plug )
 			plug = plug.parent()
 
-		widget = self.__plugLayout.plugValueWidget( hierarchy[0], lazy=lazy )
+		widget = self.__plugLayout.plugValueWidget( hierarchy[0] )
 		if widget is None :
 			return None
 
 		for i in range( 1, len( hierarchy ) ) :
-			widget = widget.childPlugValueWidget( hierarchy[i], lazy=lazy )
+			widget = widget.childPlugValueWidget( hierarchy[i] )
 			if widget is None :
 				return None
 

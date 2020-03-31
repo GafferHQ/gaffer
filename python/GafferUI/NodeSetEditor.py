@@ -327,12 +327,18 @@ class NodeSetEditor( GafferUI.Editor ) :
 			window = _EditorWindow( scriptWindow, editor )
 			# Ensure keyboard shortcuts are relayed to the main menu bar
 			scriptWindow.menuBar().addShortcutTarget( window )
-			## \todo Can we do better using `window.resizeToFitChild()`?
-			# Our problem is that some NodeEditors (for GafferImage.Text for instance)
-			# are very large, whereas some (GafferScene.Shader) don't have
-			# a valid size until the UI has been built lazily.
-			window._qtWidget().resize( 400, 400 )
 			window.setVisible( True )
+
+			if isinstance( editor, GafferUI.NodeEditor ) :
+				# The window will have opened at the perfect size for the
+				# contained widgets. But some NodeEditors have expanding
+				# sections and buttons to add new widgets, and for that
+				# reason, a minimum height of 400px has been deemed more
+				# suitable.
+				size = window._qtWidget().size()
+				if size.height() < 400 :
+					size.setHeight( 400 )
+					window._qtWidget().resize( size )
 
 		return editor
 
