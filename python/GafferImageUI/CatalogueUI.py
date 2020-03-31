@@ -56,66 +56,215 @@ import GafferImageUI
 ##########################################################################
 # Column Configuration
 #
-# All of the Catalogue's columns are configurable. Columns are identified by
-# a unique name along with a display title, value provider and type. Gaffer
-# provides a default set of columns that can be extended or replaced via
-# the registration of new names or re-registration of existing ones.
+# All of the Catalogue's columns are configurable. Gaffer provides a default
+# set of columns that can be extended or replaced via the registration of new
+# names or re-registration of existing ones.
 #
-# The columns displayed by a Catalogue are controlled by its
-# "catalogue:columns" metadata value [StringVectorData].
+# The columns displayed by a Catalogue are controlled by the
+# "catalogue:columns" [StringVectorData] metadata on it's `imageIndex` plug.
+# Default columns are stored via a class registration, ie:
 #
-# Value providers for Standard type columns must return basic-typed IECore.Data
-# (incl. DateTimeData), those for Icon type columns return the name of an image
-# on Gaffer's image paths. They are called with two arguments:
+#   Gaffer.Metadata.registerValue(
+#       GafferImage.Catalogue, "imageIndex",
+#       "catalogue:columns", [ ... ]
+#   )
 #
-#  - image : A GafferImage.Catalogue.Image plug (not to be confused with
-#      a standard ImagePlug).
-#
-#  - catalogue: The GafferImage.Catalogue instance attached to the UI.
-#
-#  A suitable context is scoped around the call such that catalogue["out"] will
-#  provide the image for the row the value is being generated for, rather than
-#  the user's current selection.
+# This should consist of an ordered list of the `names` of columns registered
+# via the `CatalogueUI.registerColumns` method.
 ##########################################################################
 
 __registeredColumns = OrderedDict()
+_columnsMetadataKey = "catalogue:columns"
 
-ColumnType = IECore.Enum.create( "Standard", "Icon" )
-ColumnDefinition = namedtuple( "ColumnDefinition", ( "title", "valueProvider", "type" ) )
+# The Column class defines a single column in the Catalogue UI.
+# The column class is responsible for providing its header title, and the
+# displayed value for each image in the Catalogue.
+class Column :
 
-# We don't take a ColumnDefinition here as their constructors are a little
-# opaque, and this makes it a bit easier to work out the right order.
-def registerColumn( name, title, valueProvider, type = ColumnType.Standard ) :
+	def __init__( self, title ) :
 
-	definition = ColumnDefinition( title, valueProvider, type )
-	__registeredColumns[ name ] = definition
+		self.__title = title
 
+	def title( self ) :
+
+		return self.__title
+
+	# Must be implemented by all column classes. It should return basic-typed
+	# IECore.Data (incl. DateTimeData) which will be presented as a string in
+	# the Catalogue UI. The method is called with:
+	#
+	#  - image : A GafferImage.Catalogue.Image plug (not to be confused with
+	#      a standard ImagePlug).
+	#
+	#  - catalogue: The GafferImage.Catalogue instance attached to the UI.
+	#
+	#  A suitable context is scoped around the call such that catalogue["out"] will
+	#  provide the image for the row the value is being generated for, rather than
+	#  the user's current selection.
+	def value( self, image, catalogue ) :
+
+		raise NotImplementedError
+
+# A abstract base column type for Columns that wish to present an image rather
+# than a text value
+class IconColumn( Column ) :
+
+	# Columns that derive from IconColumn should instead return the name of an
+	# image on Gaffer's image path, see Column.value for details on the arguments
+	# passed to this method, and the calling context.
+	def value( self, image, catalogue ) :
+
+		raise NotImplementedError
+
+# An abstract base column type for Columns that can derive their value with
+# simple callables or lamdas, eg:
+#
+#   column = SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+#
+class SimpleColumn( Column ) :
+
+	def __init__( self, title, valueProvider ) :
+
+		Column.__init__( self, title )
+		self.__valueProvider = valueProvider
+
+	def value( self, image, catalogue ) :
+
+		return self.__valueProvider( image, catalogue )
+
+# Register a new column or overwrite an existing column. Registered columns
+# appear in the Catalogue header context menu, and can be set as default
+# columns in the "catalogue:columns" metadata on Catalogue's `imageIndex` plug.
+# The registered name is used for the menu path when presenting available columns
+# to the user. As such, it can contain `/` for sub-menus and should be formatted
+# with appropriate case/spaces.
+def registerColumn( name, column ) :
+
+	__registeredColumns[ name ] = column
+
+# Removes a column. It will no longer show up in the Catalogue UI and can't be
+# set as a default column.
 def deregisterColumn( name ) :
 
 	if name in __registeredColumns :
 		del __registeredColumns[ name ]
 
-def columnDefinition( name ) :
+# Returns the instance of a Column class registered for `name` or
+# None if no column has been registered.
+def column( name ) :
 
 	return __registeredColumns.get( name, None )
 
+# Returns all registered column names
 def registeredColumns() :
 
 	return __registeredColumns.keys()
 
 #
+# Convenience Column classes
+#
+
+# A Columns class that retrieves its value from the catalogue item's image
+# metadata. If multiple names are provided, the first one present will be used,
+# allowing a single column to support several source names depending on the
+# image's origin.
+class ImageMetadataColumn( Column ) :
+
+	def __init__( self, title, nameOrNames, defaultValue = None ) :
+
+		Column.__init__( self, title )
+
+		if isinstance( nameOrNames, basestring ) :
+			nameOrNames = [ nameOrNames, ]
+
+		self.__names = nameOrNames
+		self.__defaultValue = defaultValue
+
+	def value( self, image, catalogue ) :
+
+		metadata = catalogue["out"].metadata()
+		for name in self.__names :
+			value = metadata.get( name, None )
+			if value is not None :
+				return value
+
+		return self.__defaultValue
+
+# A Column class that retrieves its value from render-time context variable
+# values passed through the catalogue item's image metadata.  If multiple names
+# are provided, the first present context entry will be used. Note: Not all
+# context variables are available via image metadata, the exact list is renderer
+# dependent, but it is generally limited to basic value types
+class ContextVariableColumn( ImageMetadataColumn ) :
+
+	def __init__( self, title, nameOrNames, defaultValue = None ) :
+
+		if isinstance( nameOrNames, basestring ) :
+			nameOrNames = [ nameOrNames, ]
+
+		names = [ "gaffer:context:%s" % name for name in nameOrNames ]
+		ImageMetadataColumn.__init__( self, title, names, defaultValue )
+
+#
 # Standard Columns
 #
 
-def __typeIconColumnValueProvider( image, catalogue ) :
-	return "catalogueTypeDisk" if image["fileName"].getValue() else "catalogueTypeDisplay"
+class __StatusIconColumn( IconColumn ) :
 
-registerColumn( "typeIcon", "", __typeIconColumnValueProvider, ColumnType.Icon )
-registerColumn( "name", "Name", lambda image, _ : image.getName() )
+	def __init__( self ) :
+
+		IconColumn.__init__( self, "" )
+
+	def value( self, image, catalogue ) :
+
+		return "catalogueTypeDisk" if image["fileName"].getValue() else "catalogueTypeDisplay"
+
+registerColumn( "Status", __StatusIconColumn() )
+registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
+registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription" ) )
+
+# Image properties
+
+def __resolutionColumnValueProvider( image, catalogue ) :
+
+	format_ = catalogue["out"].format()
+	return "%d x %d" % ( format_.width(), format_.height() )
+
+def __formatBox( box ) :
+
+	return "(%d %d) - (%d, %d)" % ( box.min().x, box.min().y, box.max().x, box.max().y )
+
+registerColumn(
+	"Image/Resolution",
+	SimpleColumn( "Resolution", __resolutionColumnValueProvider )
+)
+registerColumn(
+	"Image/Channels",
+	SimpleColumn( "Channels", lambda _, c : ", ".join( c["out"].channelNames() ) )
+)
+registerColumn(
+	"Image/Type",
+	SimpleColumn( "Image Type", lambda _, c : "Deep" if c["out"].deep() else "Flat" )
+)
+registerColumn(
+	"Image/Pixel Aspect Ratio",
+	SimpleColumn( "P. Aspect", lambda _, c : c["out"].format().getPixelAspect() )
+)
+registerColumn(
+	"Image/Data Window",
+	SimpleColumn( "Data Window", lambda _, c : __formatBox( c["out"].dataWindow() ) )
+)
+registerColumn(
+	"Image/Display Window",
+	SimpleColumn( "Display Window", lambda _, c : __formatBox( c["out"].format().getDisplayWindow() ) )
+)
+
+# Default visible column set
 
 Gaffer.Metadata.registerValue(
-	GafferImage.Catalogue, "catalogue:columns",
-	IECore.StringVectorData( [ "typeIcon", "name" ] )
+	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
+	IECore.StringVectorData( [ "Status", "Name" ] )
 )
 
 ##########################################################################
@@ -334,7 +483,7 @@ class _ImagesPath( Gaffer.Path ) :
 		if name not in registeredColumns() :
 			return Gaffer.Path.property( self, name )
 
-		definition = columnDefinition( name )
+		definition = column( name )
 
 		imageName = self[ -1 ]
 		image = self.__images[ imageName ]
@@ -345,7 +494,7 @@ class _ImagesPath( Gaffer.Path ) :
 		# without needing to understand the internal workings.
 		with Gaffer.Context(  self.__catalogue.scriptNode().context() ) as context :
 			context[ "catalogue:imageName" ] = imageName
-			return definition.valueProvider( image, self.__catalogue )
+			return definition.value( image, self.__catalogue )
 
 	def _orderedImages( self ) :
 
@@ -435,7 +584,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 			self.__pathListing.setDragPointer( "" )
-			self.__pathListing.setHeaderVisible( len(columns) >  1 )
+			self.__pathListing.setHeaderVisible( True )
 			self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingSelectionChanged ), scoped = False
 			)
@@ -489,6 +638,10 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 					GafferUI.Label( "Description" )
 					self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
 
+		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
+
+		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
+
 		self._updateFromPlug()
 
 	def getToolTip( self ) :
@@ -517,13 +670,54 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		self.__column.setEnabled( self._editable() )
 
+	def __plugMetadataValueChanged( self, typeId, plugPath, key, plug ) :
+
+		if key != _columnsMetadataKey :
+			return
+
+		if plug and not plug.isSame( self.getPlug() ) :
+			return
+
+		self.__pathListing.setColumns( self.__listingColumns() )
+
+	def __getColumns( self ) :
+
+		# Support for promoted plugs.
+		# The plug data may have been reset, or it may have been promoted in a
+		# previous version of gaffer. As such, we can't assume there is a
+		# registered class value for our plug. Fall back on the Catalogue nodes
+		# plug's value as this will consider the class default columns value.
+		## \todo Refactor when we get metadata delegation for promoted plugs
+		return Gaffer.Metadata.value( self.getPlug(), _columnsMetadataKey ) \
+			or Gaffer.Metadata.value( self.__catalogue()["imageIndex"], _columnsMetadataKey )
+
+	def __setColumns( self, columns ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue( self.getPlug(), _columnsMetadataKey, IECore.StringVectorData( columns ) )
+
+	def __resetColumns( self, *unused ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.deregisterValue( self.getPlug(), _columnsMetadataKey )
+
+	def __toggleColumn( self, column, visible ) :
+
+		columns = list( self.__getColumns() )
+		if visible :
+			columns.append( column )
+		else :
+			columns.remove( column )
+
+		self.__setColumns( columns )
+
 	def __listingColumns( self ) :
 
 		columns = []
 
-		for name in Gaffer.Metadata.value( self.__catalogue(), "catalogue:columns" ) :
+		for name in self.__getColumns() :
 
-			definition = columnDefinition( name )
+			definition = column( name )
 
 			if not definition :
 				IECore.msg(
@@ -532,12 +726,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				)
 				continue
 
-			if definition.type == ColumnType.Icon :
-				column = GafferUI.PathListingWidget.IconColumn( definition.title, "", name )
+			if isinstance( definition, IconColumn ) :
+				c = GafferUI.PathListingWidget.IconColumn( definition.title(), "", name )
 			else :
-				column = GafferUI.PathListingWidget.StandardColumn( definition.title, name )
+				c = GafferUI.PathListingWidget.StandardColumn( definition.title(), name )
 
-			columns.append( column )
+			columns.append( c )
 
 		return columns
 
@@ -844,5 +1038,41 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return True
 
 		return False
+
+	def __columnContextMenuDefinition( self ) :
+
+		columns = self.__getColumns()
+		allColumnsSorted = sorted( registeredColumns() )
+
+		menu = IECore.MenuDefinition()
+		menu.append( "/Reset", { "command" : Gaffer.WeakMethod( self.__resetColumns ) } )
+		menu.append( "/__resetDivider__", { "divider" : True } )
+
+		for column in allColumnsSorted :
+
+			menu.append( "/%s" % column, {
+				"checkBox" : column in columns,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__toggleColumn ), column ),
+				# Prevent the last column being removed
+				"active": False if column in columns and len(columns) == 1 else True
+			} )
+
+		return menu
+
+	def __contextMenu( self, *unused ) :
+
+		if self.getPlug() is None :
+			return False
+
+		# This signal is called anywhere in the listing, check we're over the header.
+		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self.__pathListing )
+		headerRect = self.__pathListing._qtWidget().header().rect()
+		if not headerRect.contains( mousePosition[0], mousePosition[1] ) :
+			return False
+
+		self.__popupMenu = GafferUI.Menu( self.__columnContextMenuDefinition(), "Columns" )
+		self.__popupMenu.popup( parent = self )
+
+		return True
 
 GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )

@@ -55,6 +55,7 @@
 #include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
+#include "IECore/Data.h"
 #include "IECore/Interpolator.h"
 #include "IECore/NullObject.h"
 
@@ -1273,6 +1274,39 @@ ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *sc
 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );
+
+	// Include the current context
+	const Context *context = Context::current();
+	std::vector<IECore::InternedString> names;
+	context->names( names );
+	for( const auto &name : names )
+	{
+		// Output params are never mutated, so this is 'safe'...
+		DataPtr data = const_cast<Data*>( context->get<Data>( name ) );
+		// The requires a round-trip through the renderer's native type system, as such, it requires
+		// bi-directional conversion in Cortex. Unsupported types result in a slew of warning messages
+		// in render output. As many facilities employ un-supported types in their contexts as standard,
+		// we whitelist known supported types, and bump the output for unsupported types to Debug messages
+		// to avoid noise in the log.
+		switch( data->typeId() )
+		{
+			case IECore::BoolDataTypeId :
+			case IECore::IntDataTypeId :
+			case IECore::FloatDataTypeId :
+			case IECore::StringDataTypeId :
+			case IECore::V3fDataTypeId :
+			case IECore::Color3fDataTypeId :
+			case IECore::Color4fDataTypeId :
+				param->writable()["header:gaffer:context:" + name.string()] = data;
+				break;
+			default :
+				IECore::msg(
+					IECore::Msg::Debug,
+					"GafferScene::RendereAlgo",
+					boost::format(  "Unsupported data type for Context variable \"%s\" (%s), unable to add header" ) % name % data->typeName()
+				);
+		};
+	}
 
 	return new Output( output->getName(), output->getType(), output->getData(), param );
 }

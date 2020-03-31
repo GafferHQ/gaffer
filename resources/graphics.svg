@@ -5130,7 +5130,7 @@
        id="ellipse1573"
        style="opacity:1;fill:#3c3c3c;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
-       id="forExport:catalogueTypeDisk"
+       id="forExport:catalogueStatusDisk"
        inkscape:label="#catalogTypeDisk">
       <path
          style="fill:url(#linearGradient1627);fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999994;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:142.99989319;stroke-opacity:1"
@@ -5146,9 +5146,9 @@
          style="fill:none;stroke:#3c3c3c;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
     <g
-       id="forExport:catalogueTypeDisplay"
+       id="forExport:catalogueStatusDisplay"
        transform="translate(-0.87501,-0.124997)"
-       inkscape:label="#catalogueTypeDisplay">
+       inkscape:label="#catalogueStatusDisplay">
       <path
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="cccccc"
@@ -5165,7 +5165,7 @@
     <path
        sodipodi:nodetypes="ccccccccccc"
        inkscape:connector-curvature="0"
-       id="forExport:catalogueTypeBatchRenderComplete"
+       id="forExport:catalogueStatusBatchRenderComplete"
        d="m 425,98.362183 v 2.999997 h -3.4 -6.1 v 1 h 6.1 c 1.10962,-10e-5 3.4,0 3.4,0 v 3 h 1.18359 v -6.999997 z"
        style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:url(#linearGradient1645);fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke markers fill;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        inkscape:label="#path24667" />
@@ -5173,17 +5173,17 @@
        inkscape:label="#path24667"
        style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#cccccc;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke markers fill;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        d="m 407,98.362183 v 2.999997 h -0.15 l -3.25,-1.999997 v 1.999997 h -6.1 v 1 h 6.1 v 2 l 3.25,-2 H 407 v 3 h 1.18359 v -6.999997 z"
-       id="forExport:catalogueTypeBatchRenderRunning"
+       id="forExport:catalogueStatusBatchRenderRunning"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccccccccccccc" />
     <path
        inkscape:connector-curvature="0"
-       id="forExport:catalogueTypeInteractiveRenderComplete"
+       id="forExport:catalogueStatusInteractiveRenderComplete"
        d="m 423.73483,114.37685 c -2.1616,-1.22715 -4.96606,-0.92558 -6.8059,0.91426 -1.83984,1.83984 -2.1411,4.64399 -0.91426,6.80591 l 0.99436,-0.99437 c -0.7383,-1.6005 -0.46097,-3.54689 0.86179,-4.86964 1.32276,-1.32276 3.26952,-1.60047 4.86965,-0.86179 z m 2.12132,2.12132 -0.99436,0.99437 c 0.73867,1.60012 0.46097,3.54688 -0.86179,4.86964 -1.32276,1.32276 -3.26915,1.60009 -4.86965,0.86179 l -0.99436,0.99437 c 2.16192,1.22683 4.96606,0.92558 6.8059,-0.91427 1.83984,-1.83984 2.14141,-4.6443 0.91426,-6.8059 z"
        style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:url(#linearGradient1639);fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:stroke markers fill;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        inkscape:label="#path1610" />
     <path
-       id="forExport:catalogueTypeInteractiveRenderRunning"
+       id="forExport:catalogueStatusInteractiveRenderRunning"
        style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#cccccc;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:2;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:stroke markers fill;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
        d="m 400.13599,124.21833 c 2.1616,1.22715 4.96606,0.92558 6.8059,-0.91426 1.83984,-1.83984 2.1411,-4.64399 0.91426,-6.80591 l -0.99436,0.99437 c 0.7383,1.6005 0.46097,3.54689 -0.86179,4.86964 -0.62513,0.62513 -1.38963,1.01685 -2.19105,1.17819 -0.14351,0.0289 -0.87354,-1.74277 -0.87354,-1.74277 0,0 -1.61537,1.23668 -2.79942,2.42074 z m 5.59884,-9.84148 c -2.1616,-1.22715 -4.96606,-0.92558 -6.8059,0.91426 -1.83984,1.83984 -2.1411,4.64399 -0.91426,6.80591 l 0.99436,-0.99437 c -0.7383,-1.6005 -0.46097,-3.54689 0.86179,-4.86964 0.62513,-0.62513 1.38963,-1.01685 2.19105,-1.17819 0.14351,-0.0289 0.87354,1.74277 0.87354,1.74277 0,0 1.61537,-1.23668 2.79942,-2.42074 z"
        inkscape:connector-curvature="0"
