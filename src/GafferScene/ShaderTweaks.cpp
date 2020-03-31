@@ -189,8 +189,10 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
-		tweaksPlug->applyTweaks( tweakedNetwork.get(), ignoreMissing ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error );
-		out[attribute.first] = tweakedNetwork;
+		if( tweaksPlug->applyTweaks( tweakedNetwork.get(), ignoreMissing ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error ) )
+		{
+			out[attribute.first] = tweakedNetwork;
+		}
 	}
 
 	return result;

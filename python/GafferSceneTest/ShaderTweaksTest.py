@@ -398,7 +398,9 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["in"].setInput( assignment["out"] )
 		tweaks["shader"].setValue( "light" )
 		tweaks["filter"].setInput( planeFilter["out"] )
-		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", imath.Color3f( 3, 2, 1 ) ) )
+
+		colorTweak = GafferScene.TweakPlug( "c", imath.Color3f( 3, 2, 1 ) )
+		tweaks["tweaks"].addChild( colorTweak )
 
 		self.assertEqual( tweaks["localise"].getValue(), False )
 
@@ -423,6 +425,11 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 			planeAttr["surface"].getShader( "surface" ).parameters["c"].value,
 			imath.Color3f( 3, 2, 1 )
 		)
+
+		# Test disabling tweak results in no localisation
+
+		colorTweak["enabled"].setValue( False )
+		self.assertTrue( "surface" not in tweaks["out"].attributes( "/group/plane" ) )
 
 if __name__ == "__main__":
 	unittest.main()
