@@ -62,6 +62,13 @@ def __pruningKeyPress( viewer, event ) :
 		# that all its descendants are selected?
 		return True
 
+	viewedNode = viewer.view()["in"].getInput().node()
+	if editScope != viewedNode and editScope not in Gaffer.NodeAlgo.upstreamNodes( viewedNode ) :
+		# Spare folks from deleting things in a downstream EditScope.
+		## \todo When we have a nice Viewer notification system we
+		# should emit a warning here.
+		return True
+
 	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
 	selection = sceneGadget.getSelection()
 	if not selection.isEmpty() :
