@@ -63,6 +63,7 @@ ShaderTweaks::ShaderTweaks( const std::string &name )
 	addChild( new StringPlug( "shader" ) );
 	addChild( new BoolPlug( "ignoreMissing", Plug::In, false ) );
 	addChild( new TweaksPlug( "tweaks" ) );
+	addChild( new BoolPlug( "localise", Plug::In, false ) );
 }
 
 ShaderTweaks::~ShaderTweaks()
@@ -99,13 +100,24 @@ const GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug() const
 	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::BoolPlug *ShaderTweaks::localisePlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *ShaderTweaks::localisePlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
+}
+
 bool ShaderTweaks::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
 	return
 		AttributeProcessor::affectsProcessedAttributes( input ) ||
 		tweaksPlug()->isAncestorOf( input ) ||
 		input == shaderPlug() ||
-		input == ignoreMissingPlug()
+		input == ignoreMissingPlug() ||
+		input == localisePlug()
 	;
 }
 
@@ -121,6 +133,12 @@ void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer:
 		shaderPlug()->hash( h );
 		tweaksPlug()->hash( h );
 		ignoreMissingPlug()->hash( h );
+		localisePlug()->hash( h );
+
+		if( localisePlug()->getValue() )
+		{
+			h.append( inPlug()->fullAttributesHash( path ) );
+		}
 	}
 }
 
@@ -141,25 +159,38 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 	const bool ignoreMissing = ignoreMissingPlug()->getValue();
 
 	CompoundObjectPtr result = new CompoundObject;
-	const CompoundObject::ObjectMap &in = inputAttributes->members();
+	result->members() = inputAttributes->members();
 	CompoundObject::ObjectMap &out = result->members();
-	for( CompoundObject::ObjectMap::const_iterator it = in.begin(), eIt = in.end(); it != eIt; ++it )
+
+	// We switch our source attributes depending on whether we are
+	// localising inherited shaders or just using the ones at the location.
+
+	const CompoundObject::ObjectMap *source = &inputAttributes->members();
+
+	// If we're using fullAttributes, we need to keep them alive.
+	ConstCompoundObjectPtr fullAttributes;
+	if( localisePlug()->getValue() )
 	{
-		if( !StringAlgo::matchMultiple( it->first, shader ) )
+		fullAttributes = inPlug()->fullAttributes( path );
+		source = &fullAttributes->members();
+	}
+
+	for( const auto &attribute : *source )
+	{
+		if( !StringAlgo::matchMultiple( attribute.first, shader ) )
 		{
-			out.insert( *it );
 			continue;
 		}
-		const ShaderNetwork *network = runTimeCast<const ShaderNetwork>( it->second.get() );
+
+		const ShaderNetwork *network = runTimeCast<const ShaderNetwork>( attribute.second.get() );
 		if( !network )
 		{
-			out.insert( *it );
 			continue;
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
 		tweaksPlug->applyTweaks( tweakedNetwork.get(), ignoreMissing ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error );
-		out[it->first] = tweakedNetwork;
+		out[attribute.first] = tweakedNetwork;
 	}
 
 	return result;

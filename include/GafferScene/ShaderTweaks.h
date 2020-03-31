@@ -64,6 +64,9 @@ class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 		GafferScene::TweaksPlug *tweaksPlug();
 		const GafferScene::TweaksPlug *tweaksPlug() const;
 
+		Gaffer::BoolPlug *localisePlug();
+		const Gaffer::BoolPlug *localisePlug() const;
+
 	protected :
 
 		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
