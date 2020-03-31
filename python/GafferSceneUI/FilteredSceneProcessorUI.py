@@ -112,15 +112,7 @@ def __selectAffected( node, context ) :
 		scenes = [ node["in"] ]
 	else :
 		filter = node
-		scenes = []
-		def walkOutputs( plug ) :
-			for output in plug.outputs() :
-				node = output.node()
-				if isinstance( node, GafferScene.FilteredSceneProcessor ) and output.isSame( node["filter"] ) :
-					scenes.append( node["in"] )
-				walkOutputs( output )
-
-		walkOutputs( filter["out"] )
+		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filter ) ]
 
 	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
 

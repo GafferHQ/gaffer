@@ -38,6 +38,8 @@
 
 #include "GafferScene/CameraTweaks.h"
 #include "GafferScene/Filter.h"
+#include "GafferScene/FilterProcessor.h"
+#include "GafferScene/PathFilter.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/ShaderTweaks.h"
 
@@ -69,34 +71,41 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
-{
-	return scene->exists( path );
-}
-
-bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
-{
-	ScenePlug::PathScope pathScope( Context::current() );
-
-	ScenePlug::ScenePath p; p.reserve( path.size() );
-	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
-	{
-		p.push_back( *it );
-		pathScope.setPath( p );
-
-		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
-		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
-		if( visibilityData && !visibilityData->readable() )
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
+//////////////////////////////////////////////////////////////////////////
+// Filter queries
+//////////////////////////////////////////////////////////////////////////
 
 namespace
 {
+
+void filteredNodesWalk( Plug *filterPlug, std::unordered_set<FilteredSceneProcessor *> &result )
+{
+	for( const auto &o : filterPlug->outputs() )
+	{
+		if( auto filteredSceneProcessor = runTimeCast<FilteredSceneProcessor>( o->node() ) )
+		{
+			if( o == filteredSceneProcessor->filterPlug() )
+			{
+				result.insert( filteredSceneProcessor );
+			}
+		}
+		else if( auto filterProcessor = runTimeCast<FilterProcessor>( o->node() ) )
+		{
+			if( o == filterProcessor->inPlug() || o->parent() == filterProcessor->inPlugs() )
+			{
+				filteredNodesWalk( filterProcessor->outPlug(), result );
+			}
+		}
+		else if( auto pathFilter = runTimeCast<PathFilter>( o->node() ) )
+		{
+			if( o == pathFilter->rootsPlug() )
+			{
+				filteredNodesWalk( pathFilter->outPlug(), result );
+			}
+		}
+		filteredNodesWalk( o, result );
+	}
+}
 
 struct ThreadablePathAccumulator
 {
@@ -116,6 +125,13 @@ struct ThreadablePathAccumulator
 
 } // namespace
 
+std::unordered_set<FilteredSceneProcessor *> GafferScene::SceneAlgo::filteredNodes( Filter *filter )
+{
+	std::unordered_set<FilteredSceneProcessor *> result;
+	filteredNodesWalk( filter->outPlug(), result );
+	return result;
+}
+
 void GafferScene::SceneAlgo::matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	matchingPaths( filter->outPlug(), scene, paths );
@@ -132,6 +148,10 @@ void GafferScene::SceneAlgo::matchingPaths( const PathMatcher &filter, const Sce
 	ThreadablePathAccumulator f( paths );
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filter, f );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Globals
+//////////////////////////////////////////////////////////////////////////
 
 IECore::ConstCompoundObjectPtr GafferScene::SceneAlgo::globalAttributes( const IECore::CompoundObject *globals )
 {
@@ -250,34 +270,6 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 		result->writable()[setNames[i]] = boost::const_pointer_cast<PathMatcherData>( setsVector[i] );
 	}
 	return result;
-}
-
-Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
-{
-	if( const IECoreScene::VisibleRenderable *renderable = IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
-	{
-		return renderable->bound();
-	}
-	else if( object->isInstanceOf( IECoreScene::Camera::staticTypeId() ) )
-	{
-		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
-	}
-	else if( object->isInstanceOf( IECoreScene::CoordinateSystem::staticTypeId() ) )
-	{
-		return Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
-	}
-	else if( object->isInstanceOf( IECoreScene::ClippingPlane::staticTypeId() ) )
-	{
-		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5 ) );
-	}
-	else if( !object->isInstanceOf( IECore::NullObject::staticTypeId() ) )
-	{
-		return Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
-	}
-	else
-	{
-		return Imath::Box3f();
-	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -596,4 +588,62 @@ ScenePlug *SceneAlgo::sourceScene( GafferImage::ImagePlug *image )
 	}
 
 	return scriptNode->descendant<ScenePlug>( path );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Miscellaneous
+//////////////////////////////////////////////////////////////////////////
+
+bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	return scene->exists( path );
+}
+
+bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	ScenePlug::PathScope pathScope( Context::current() );
+
+	ScenePlug::ScenePath p; p.reserve( path.size() );
+	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
+	{
+		p.push_back( *it );
+		pathScope.setPath( p );
+
+		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
+		if( visibilityData && !visibilityData->readable() )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
+{
+	if( const IECoreScene::VisibleRenderable *renderable = IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
+	{
+		return renderable->bound();
+	}
+	else if( object->isInstanceOf( IECoreScene::Camera::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
+	}
+	else if( object->isInstanceOf( IECoreScene::CoordinateSystem::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
+	}
+	else if( object->isInstanceOf( IECoreScene::ClippingPlane::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5 ) );
+	}
+	else if( !object->isInstanceOf( IECore::NullObject::staticTypeId() ) )
+	{
+		return Imath::Box3f( Imath::V3f( -0.5 ), Imath::V3f( 0.5 ) );
+	}
+	else
+	{
+		return Imath::Box3f();
+	}
 }

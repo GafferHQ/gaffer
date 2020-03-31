@@ -152,6 +152,33 @@ def __dropMode( nodeGadget, event ) :
 	else :
 		return __DropMode.Replace
 
+def __dropPaths( paths, pathsPlug ) :
+
+	if pathsPlug is None :
+		return paths
+
+	if not isinstance( pathsPlug.node(), GafferScene.PathFilter ) :
+		return paths
+
+	pathFilter = pathsPlug.node()
+	if not pathFilter["roots"].getInput() :
+		return paths
+
+	with pathsPlug.ancestor( Gaffer.ScriptNode ).context() :
+		rootPaths = IECore.PathMatcher()
+		for node in GafferScene.SceneAlgo.filteredNodes( pathFilter ) :
+			scene = node["in"][0] if isinstance( node["in"], Gaffer.ArrayPlug ) else node["in"]
+			GafferScene.matchingPaths( pathFilter["roots"], scene, rootPaths )
+
+	paths = IECore.PathMatcher( paths )
+	relativePaths = IECore.PathMatcher()
+	for rootPath in rootPaths.paths() :
+		relativePaths.addPaths(
+			paths.subTree( rootPath )
+		)
+
+	return relativePaths.paths()
+
 def __dragEnter( nodeGadget, event ) :
 
 	if not isinstance( event.data, IECore.StringVectorData ) :
@@ -200,16 +227,18 @@ def __drop( nodeGadget, event ) :
 	if pathsPlug is None :
 		pathsPlug = __pathsPlug( nodeGadget.node()["filter"].source().node() )
 
+	dropPaths = __dropPaths( event.data, pathsPlug )
+
 	dropMode = __dropMode( nodeGadget, event )
 	if dropMode == __DropMode.Replace :
-		paths = sorted( event.data )
+		paths = sorted( dropPaths )
 	elif dropMode == __DropMode.Add :
 		paths = set( pathsPlug.getValue() )
-		paths.update( event.data )
+		paths.update( dropPaths )
 		paths = sorted( paths )
 	else :
 		paths = set( pathsPlug.getValue() )
-		paths.difference_update( event.data )
+		paths.difference_update( dropPaths )
 		paths = sorted( paths )
 
 	with Gaffer.UndoScope( nodeGadget.node().ancestor( Gaffer.ScriptNode ) ) :

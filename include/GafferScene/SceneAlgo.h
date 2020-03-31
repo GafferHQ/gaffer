@@ -50,6 +50,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathVec.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include <unordered_set>
+
 namespace IECore
 {
 
@@ -57,30 +59,22 @@ IE_CORE_FORWARDDECLARE( CompoundData )
 
 } // namespace IECore
 
-namespace IECoreScene
-{
-
-IE_CORE_FORWARDDECLARE( Transform )
-IE_CORE_FORWARDDECLARE( Camera )
-
-} // namespace IECoreScene
-
 namespace GafferScene
 {
 
 class SceneProcessor;
+class FilteredSceneProcessor;
 class ShaderTweaks;
 
 namespace SceneAlgo
 {
 
-/// \deprecated Use `ScenePlug::exists()` instead.
-GAFFERSCENE_API bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+/// Filter queries
+/// ==============
 
-/// Returns true if the specified location is visible, and false otherwise.
-/// This operates by traversing the path from the root, terminating if
-/// the "scene:visible" attribute is false.
-GAFFERSCENE_API bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+/// Returns all the nodes which are filtered by the specified filter,
+/// whether directly or indirectly via an intermediate filter.
+GAFFERSCENE_API std::unordered_set<FilteredSceneProcessor *> filteredNodes( Filter *filter );
 
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
 GAFFERSCENE_API void matchingPaths( const Filter *filter, const ScenePlug *scene, IECore::PathMatcher &paths );
@@ -89,6 +83,9 @@ GAFFERSCENE_API void matchingPaths( const Filter *filter, const ScenePlug *scene
 GAFFERSCENE_API void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a PathMatcher.
 GAFFERSCENE_API void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
+
+/// Parallel scene traversal
+/// ========================
 
 /// Invokes the ThreadableFunctor at every location in the scene,
 /// visiting parent locations before their children, but
@@ -137,11 +134,17 @@ void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *fi
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f );
 
+/// Globals
+/// =======
+
 /// Returns just the global attributes from the globals (everything prefixed with "attribute:").
 GAFFERSCENE_API IECore::ConstCompoundObjectPtr globalAttributes( const IECore::CompoundObject *globals );
 
 /// Calculates the shutter specified by the globals ( potentially overridden by a camera )
 GAFFERSCENE_API Imath::V2f shutter( const IECore::CompoundObject *globals, const ScenePlug *scene );
+
+/// Sets
+/// ====
 
 /// Returns true if the specified set exists within the scene, and false otherwise.
 /// This simply searches for the set name in the result of scene->setNamesPlug()->getValue().
@@ -152,11 +155,6 @@ GAFFERSCENE_API bool setExists( const ScenePlug *scene, const IECore::InternedSt
 GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
 /// As above, but returning only the requested sets.
 GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames );
-
-/// Returns a bounding box for the specified object. Typically
-/// this is provided by the VisibleRenderable::bound() method, but
-/// for other object types we must return a synthetic bound.
-GAFFERSCENE_API Imath::Box3f bound( const IECore::Object *object );
 
 /// History
 /// =======
@@ -211,6 +209,22 @@ GAFFERSCENE_API std::string sourceSceneName( const GafferImage::ImagePlug *image
 /// SceneAlgo::sourceSceneName or a nullptr if no metadata exists or the plug
 /// can't be found.
 GAFFERSCENE_API ScenePlug *sourceScene( GafferImage::ImagePlug *image );
+
+/// Miscellaneous
+/// =============
+
+/// \deprecated Use `ScenePlug::exists()` instead.
+GAFFERSCENE_API bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+
+/// Returns true if the specified location is visible, and false otherwise.
+/// This operates by traversing the path from the root, terminating if
+/// the "scene:visible" attribute is false.
+GAFFERSCENE_API bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+
+/// Returns a bounding box for the specified object. Typically
+/// this is provided by the VisibleRenderable::bound() method, but
+/// for other object types we must return a synthetic bound.
+GAFFERSCENE_API Imath::Box3f bound( const IECore::Object *object );
 
 } // namespace SceneAlgo
 

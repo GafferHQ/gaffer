@@ -74,6 +74,19 @@ bool visibleWrapper( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 	return SceneAlgo::visible( scene, path );
 }
 
+object filteredNodesWrapper( Filter &filter )
+{
+	const auto nodes = SceneAlgo::filteredNodes( &filter );
+	list nodesList;
+	for( const auto &n : nodes )
+	{
+		nodesList.append( FilteredSceneProcessorPtr( n ) );
+	}
+
+	PyObject *nodesSet = PySet_New( nodesList.ptr() );
+	return object( handle<>( nodesSet ) );
+}
+
 void matchingPathsWrapper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
@@ -193,6 +206,8 @@ void bindSceneAlgo()
 
 	def( "exists", &existsWrapper );
 	def( "visible", visibleWrapper );
+
+	def( "filteredNodes", &filteredNodesWrapper );
 	def( "matchingPaths", &matchingPathsWrapper1 );
 	def( "matchingPaths", &matchingPathsWrapper2 );
 	def( "matchingPaths", &matchingPathsWrapper3 );

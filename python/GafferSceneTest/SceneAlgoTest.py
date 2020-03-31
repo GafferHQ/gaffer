@@ -628,5 +628,66 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( inm["out"] ) )
 		self.assertIsNone( GafferScene.SceneAlgo.sourceScene( im["out"] ) )
 
+	def testFilteredNodes( self ) :
+
+		pathFilter = GafferScene.PathFilter()
+
+		unionFilter = GafferScene.UnionFilter()
+		unionFilter["in"][0].setInput( pathFilter["out"] )
+		unionFilter["in"][1].setInput( pathFilter["out"] )
+
+		dot1 = Gaffer.Dot()
+		dot1.setup( pathFilter["out"] )
+		dot1["in"].setInput( pathFilter["out"] )
+
+		dot2 = Gaffer.Dot()
+		dot2.setup( unionFilter["out"] )
+		dot2["in"].setInput( unionFilter["out"] )
+
+		node1 = GafferScene.ShaderAssignment()
+		node1["filter"].setInput( pathFilter["out"] )
+
+		node2 = GafferScene.ShaderAssignment()
+		node2["filter"].setInput( dot1["out"] )
+
+		node3 = GafferScene.ShaderAssignment()
+		node3["filter"].setInput( unionFilter["out"] )
+
+		node4 = GafferScene.ShaderAssignment()
+		node4["filter"].setInput( dot2["out"] )
+
+		node5 = GafferScene.ShaderAssignment()
+		node5["in"].setInput( node4["out"] )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.filteredNodes( pathFilter ),
+			{ node1, node2, node3, node4 },
+		)
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.filteredNodes( unionFilter ),
+			{ node3, node4 },
+		)
+
+		unconnectedFilter = GafferScene.PathFilter()
+		self.assertEqual(
+			GafferScene.SceneAlgo.filteredNodes( unconnectedFilter ),
+			set(),
+		)
+
+	def testFilteredNodesForPathFilterRoots( self ) :
+
+		rootsFilter = GafferScene.SetFilter()
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["roots"].setInput( rootsFilter["out"] )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["filter"].setInput( pathFilter["out"] )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.filteredNodes( rootsFilter ),
+			{ shaderAssignment }
+		)
+
 if __name__ == "__main__":
 	unittest.main()
