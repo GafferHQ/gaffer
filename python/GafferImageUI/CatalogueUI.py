@@ -431,7 +431,8 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				_ImagesPath( self.__images(), [] ),
 				columns = columns,
 				allowMultipleSelection = True,
-				sortable = False
+				sortable = False,
+				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 			self.__pathListing.setDragPointer( "" )
 			self.__pathListing.setHeaderVisible( len(columns) >  1 )

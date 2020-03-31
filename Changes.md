@@ -27,6 +27,7 @@ Fixes
 - ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
 - Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 - Viewer : Fixed bug when using the Crop Window Tool with anamorphic images (#3690).
+- UI : Fixed bug that could cause header views to show scroll bars unnecessarily.
 
 API
 ---
@@ -39,6 +40,7 @@ API
 - CatalogueUI : Added column configuration API (#3646).
 - PathListingWidget :
 	- Added `sortable` kwarg to avoid premature sorting of the path passed to the constructor (#3684).
+	- Added `horizontalScrollMode` kwarg to control scroll bar behaviour (#3684).
 	- Deprecated `setSortable` and `getSortable` in favour of the constructor argument.
 
 0.56.1.0 (relative to 0.56.0.0)
