@@ -139,7 +139,7 @@ class _SelectionWidget( GafferUI.Frame ) :
 			return toolTip
 
 		toolSelection = self.__tool.selection()
-		if not toolSelection :
+		if not toolSelection or not self.__tool.selectionEditable() :
 			return ""
 
 		result = ""
