@@ -56,15 +56,25 @@
 
 #include "IECore/MessageHandler.h"
 
+#ifdef _MSC_VER
+#include "boost/algorithm/string/classification.hpp"
+#include "boost/algorithm/string/find_iterator.hpp"
+#endif
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 
 #include <memory>
 
+#ifdef _MSC_VER
+using namespace std;
+using namespace boost;
+#endif
+
 using namespace Gaffer;
 using namespace GafferBindings;
 
+#ifndef _MSC_VER
 //////////////////////////////////////////////////////////////////////////
 // Access to Python AST
 //////////////////////////////////////////////////////////////////////////
@@ -102,6 +112,8 @@ struct base_type_traits<PyCodeObject>
 } // namespace python
 } // namespace boost
 
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 // Serialisation
 //////////////////////////////////////////////////////////////////////////
@@ -119,10 +131,11 @@ const std::string formattedErrorContext( int lineNumber, const std::string &cont
 	);
 }
 
+#ifndef _MSC_VER
 // Execute the script one top level statement at a time,
 // reporting errors that occur, but otherwise continuing
 // with execution.
-bool tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
+bool tolerantExec( const std::string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
 {
 	// The python parsing framework uses an arena to simplify memory allocation,
 	// which is handy for us, since we're going to manipulate the AST a little.
@@ -131,7 +144,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 	// Parse the whole script, getting an abstract syntax tree for a
 	// module which would execute everything.
 	mod_ty mod = PyParser_ASTFromString(
-		pythonScript,
+		pythonScript.c_str(),
 		"<string>",
 		Py_file_input,
 		nullptr,
@@ -195,6 +208,40 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 
 	return result;
 }
+
+#else
+// Execute the script one line at a time, reporting errors that occur,
+// but otherwise continuing with execution.
+bool tolerantExec( const string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
+{
+	bool result = false;
+	int lineNumber = 1;
+
+	const IECore::Canceller *canceller = Context::current()->canceller();
+
+	auto it = make_split_iterator( pythonScript, token_finder( is_any_of( "\n" ) ) );
+	while( it != split_iterator<string::const_iterator>() )
+	{
+		IECore::Canceller::check( canceller );
+
+		const string line( it->begin(), it->end() );
+		try
+		{
+			exec( line.c_str(), globals, locals );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			const string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false );
+			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
+			result = true;
+		}
+		++it; ++lineNumber;
+	}
+
+	return result;
+}
+
+#endif
 
 // The dict returned will form both the locals and the globals for
 // the execute() methods. It's not possible to have a separate locals
@@ -342,7 +389,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 		}
 		else
 		{
-			result = tolerantExec( toExecute.c_str(), e, e, context );
+			result = tolerantExec( toExecute, e, e, context );
 		}
 	}
 	catch( boost::python::error_already_set &e )
