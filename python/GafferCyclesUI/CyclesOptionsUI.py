@@ -758,7 +758,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Adaptive sampling.
+			Automatically reduce the number of samples per pixel based on estimated noise level.
 			""",
 
 			"layout:section", "Session",
@@ -1082,7 +1082,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Zero for automatic setting based on AA samples.
+			Noise level step to stop sampling at, lower values reduce noise the cost of render time. 
+			Zero for automatic setting based on number of AA samples.
 			""",
 
 			"layout:section", "Sampling",
@@ -1093,7 +1094,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Minimum AA samples for adaptive sampling. Zero for automatic setting based on AA samples.
+			Minimum AA samples for adaptive sampling, to discover noisy features before stopping sampling. 
+			Zero for automatic setting based on number of AA samples.
 			""",
 
 			"layout:section", "Sampling",

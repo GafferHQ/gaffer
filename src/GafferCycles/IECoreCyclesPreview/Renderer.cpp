@@ -227,10 +227,8 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS( "bvh_intersections", ccl::PASS_BVH_INTERSECTIONS );
 	MAP_PASS( "ray_bounces", ccl::PASS_RAY_BOUNCES );
 #endif
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 	MAP_PASS( "debug_sample_count", ccl::PASS_SAMPLE_COUNT );
 	MAP_PASS( "adaptive_aux_buffer", ccl::PASS_ADAPTIVE_AUX_BUFFER );
-#endif
 	MAP_PASS( "diffuse_direct", ccl::PASS_DIFFUSE_DIRECT );
 	MAP_PASS( "diffuse_indirect", ccl::PASS_DIFFUSE_INDIRECT );
 	MAP_PASS( "diffuse_color", ccl::PASS_DIFFUSE_COLOR );
@@ -309,12 +307,10 @@ int passComponents( ccl::PassType type )
 #endif
 		case ccl::PASS_RENDER_TIME:
 			return 0;
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 		case ccl::PASS_SAMPLE_COUNT:
 			return 1;
 		case ccl::PASS_ADAPTIVE_AUX_BUFFER:
 			return 4;
-#endif
 		case ccl::PASS_DIFFUSE_COLOR:
 		case ccl::PASS_GLOSSY_COLOR:
 		case ccl::PASS_TRANSMISSION_COLOR:
@@ -2895,9 +2891,7 @@ IECore::InternedString g_cancelTimeoutOptionName( "ccl:session:cancel_timeout" )
 IECore::InternedString g_resetTimeoutOptionName( "ccl:session:reset_timeout" );
 IECore::InternedString g_textTimeoutOptionName( "ccl:session:text_timeout" );
 IECore::InternedString g_progressiveUpdateTimeoutOptionName( "ccl:session:progressive_update_timeout" );
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 IECore::InternedString g_adaptiveSamplingOptionName( "ccl:session:adaptive_sampling" );
-#endif
 // Scene
 IECore::InternedString g_bvhTypeOptionName( "ccl:scene:bvh_type" );
 IECore::InternedString g_bvhLayoutOptionName( "ccl:scene:bvh_layout" );
@@ -3101,9 +3095,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_meshLightSamples = m_integrator.mesh_light_samples;
 			m_subsurfaceSamples = m_integrator.subsurface_samples;
 			m_volumeSamples = m_integrator.volume_samples;
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 			m_adaptiveMinSamples = m_integrator.adaptive_min_samples;
-#endif
 
 			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
@@ -3441,7 +3433,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 				}
 
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 				if( name == g_adaptiveSamplingOptionName )
 				{
 					if( value == nullptr )
@@ -3457,7 +3448,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						return;
 					}
 				}
-#endif
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -3745,12 +3735,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						return;
 					}
 				}
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 				if( name == g_adaptiveMinSamplesOptionName )
 				{
 					if( value == nullptr )
 					{
-						m_adaptiveMinSamples = 1;
+						m_adaptiveMinSamples = 0;
 						return;
 					}
 					else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
@@ -3759,7 +3748,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						return;
 					}
 				}
-#endif
 				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
 				if( value && input )
 				{
@@ -4210,9 +4198,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				integrator->mesh_light_samples = m_meshLightSamples * m_meshLightSamples;
 				integrator->subsurface_samples = m_subsurfaceSamples * m_subsurfaceSamples;
 				integrator->volume_samples = m_volumeSamples * m_volumeSamples;
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 				integrator->adaptive_min_samples = m_adaptiveMinSamples * m_adaptiveMinSamples;
-#endif
 			}
 			else
 			{
@@ -4225,9 +4211,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				integrator->mesh_light_samples = m_meshLightSamples;
 				integrator->subsurface_samples = m_subsurfaceSamples;
 				integrator->volume_samples = m_volumeSamples;
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 				integrator->adaptive_min_samples = m_adaptiveMinSamples;
-#endif
 			}
 
 			integrator->method = (ccl::Integrator::Method)m_sessionParams.progressive;
@@ -4241,6 +4225,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_sessionParams.full_denoising = m_useDenoising && !m_useOptixDenoising;
 			m_sessionParams.optix_denoising = m_useDenoising && m_useOptixDenoising;
 			m_sessionParams.write_denoising_passes = m_writeDenoisingPasses && !m_useOptixDenoising;
+
+			if( m_sessionParams.adaptive_sampling )
+			{
+				integrator->sampling_pattern = ccl::SAMPLING_PATTERN_PMJ;
+			}
 
 			m_session->set_samples( m_sessionParams.samples );
 
@@ -4404,14 +4393,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
 			// Adaptive
 			if( m_sessionParams.adaptive_sampling )
 			{
 				ccl::Pass::add( ccl::PASS_ADAPTIVE_AUX_BUFFER, m_bufferParamsModified.passes );
 				ccl::Pass::add( ccl::PASS_SAMPLE_COUNT, m_bufferParamsModified.passes );
 			}
-#endif
 
 			m_bufferParamsModified.denoising_data_pass = m_sessionParams.run_denoising;
 			m_bufferParamsModified.denoising_clean_pass = ( m_scene->film->denoising_flags & ccl::DENOISING_CLEAN_ALL_PASSES );

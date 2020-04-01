@@ -451,11 +451,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "shaders" ) = getShaders();
 	py::scope().attr( "lights" ) = getLights();
 
-#ifdef WITH_CYCLES_ADAPTIVE_SAMPLING
-	py::scope().attr( "withAdaptiveSampling" ) = true;
-#else
-	py::scope().attr( "withAdaptiveSampling" ) = false;
-#endif
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 	py::scope().attr( "withTextureCache" ) = true;
 #else
