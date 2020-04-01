@@ -44,7 +44,7 @@ import Gaffer
 import GafferTest
 import GafferAppleseed
 
-from AppleseedTest import appleseedProjectSchemaPath
+from .AppleseedTest import appleseedProjectSchemaPath
 
 class AppleseedLightTest( GafferTest.TestCase ) :
 

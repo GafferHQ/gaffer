@@ -42,9 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
-import _GafferSceneUI
+from . import _GafferSceneUI
 
-import ContextAlgo
+from . import ContextAlgo
 
 ##########################################################################
 # HierarchyView

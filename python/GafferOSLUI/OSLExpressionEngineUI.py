@@ -39,7 +39,7 @@ import functools
 import Gaffer
 import GafferUI
 
-import _CodeMenu
+from . import _CodeMenu
 
 def __oslPopupMenu( menuDefinition, widget ) :
 

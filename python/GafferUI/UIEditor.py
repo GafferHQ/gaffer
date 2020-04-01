@@ -46,7 +46,7 @@ import IECore
 
 import Gaffer
 import GafferUI
-import MetadataWidget
+from . import MetadataWidget
 
 ## The UIEditor class allows the user to edit the interfaces for nodes.
 class UIEditor( GafferUI.NodeSetEditor ) :

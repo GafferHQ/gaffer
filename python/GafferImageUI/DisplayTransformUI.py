@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
-import OpenColorIOTransformUI
+from . import OpenColorIOTransformUI
 
 
 def __displayPresetNames( plug ) :

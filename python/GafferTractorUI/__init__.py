@@ -34,6 +34,6 @@
 #
 ##########################################################################
 
-import TractorDispatcherUI
+from . import TractorDispatcherUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferTractorUI" )

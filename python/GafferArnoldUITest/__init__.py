@@ -34,9 +34,9 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from ArnoldShaderUITest import ArnoldShaderUITest
-from VisualiserAlgoTest import VisualiserAlgoTest
+from .DocumentationTest import DocumentationTest
+from .ArnoldShaderUITest import ArnoldShaderUITest
+from .VisualiserAlgoTest import VisualiserAlgoTest
 
 if __name__ == "__main__":
 	unittest.main()

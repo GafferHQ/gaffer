@@ -36,8 +36,8 @@
 
 __import__( "GafferScene" )
 
-from _GafferAppleseed import *
+from ._GafferAppleseed import *
 
-from AppleseedShaderBall import AppleseedShaderBall
+from .AppleseedShaderBall import AppleseedShaderBall
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferAppleseed" )

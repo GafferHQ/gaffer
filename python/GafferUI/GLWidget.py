@@ -50,7 +50,7 @@ import IECoreGL
 
 import Gaffer
 import GafferUI
-import _GafferUI
+from . import _GafferUI
 
 import OpenGL.GL as GL
 

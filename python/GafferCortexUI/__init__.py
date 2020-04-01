@@ -37,35 +37,35 @@
 
 # PathPreviewWidgets and browser modes
 
-from FileIndexedIOPathPreview import FileIndexedIOPathPreview
-from OpPathPreview import OpPathPreview
-import OpBrowserMode
+from .FileIndexedIOPathPreview import FileIndexedIOPathPreview
+from .OpPathPreview import OpPathPreview
+from . import OpBrowserMode
 
 # UI for Parameters and ParameterisedHolders
 
-from OpDialogue import OpDialogue
-from ParameterValueWidget import ParameterValueWidget
-from PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
-from CompoundParameterValueWidget import CompoundParameterValueWidget
-from PathParameterValueWidget import PathParameterValueWidget
-from DirNameParameterValueWidget import DirNameParameterValueWidget
-from PathVectorParameterValueWidget import PathVectorParameterValueWidget
-from StringParameterValueWidget import StringParameterValueWidget
-from CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
-from FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
-from DateTimeParameterValueWidget import DateTimeParameterValueWidget
-from ClassParameterValueWidget import ClassParameterValueWidget
-from FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
-from ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
-from ToolParameterValueWidget import ToolParameterValueWidget
-import ParameterPresets
+from .OpDialogue import OpDialogue
+from .ParameterValueWidget import ParameterValueWidget
+from .PresetsOnlyParameterValueWidget import PresetsOnlyParameterValueWidget
+from .CompoundParameterValueWidget import CompoundParameterValueWidget
+from .PathParameterValueWidget import PathParameterValueWidget
+from .DirNameParameterValueWidget import DirNameParameterValueWidget
+from .PathVectorParameterValueWidget import PathVectorParameterValueWidget
+from .StringParameterValueWidget import StringParameterValueWidget
+from .CompoundVectorParameterValueWidget import CompoundVectorParameterValueWidget
+from .FileSequenceParameterValueWidget import FileSequenceParameterValueWidget
+from .DateTimeParameterValueWidget import DateTimeParameterValueWidget
+from .ClassParameterValueWidget import ClassParameterValueWidget
+from .FileSequenceVectorParameterValueWidget import FileSequenceVectorParameterValueWidget
+from .ClassVectorParameterValueWidget import ClassVectorParameterValueWidget
+from .ToolParameterValueWidget import ToolParameterValueWidget
+from . import ParameterPresets
 
 # Specific node uis
 
-import ParameterisedHolderUI
-import ObjectReaderUI
-import ObjectWriterUI
-import OpHolderUI
-import ExecutableOpHolderUI
+from . import ParameterisedHolderUI
+from . import ObjectReaderUI
+from . import ObjectWriterUI
+from . import OpHolderUI
+from . import ExecutableOpHolderUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferCortexUI" )

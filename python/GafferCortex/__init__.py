@@ -37,15 +37,15 @@
 __import__( "Gaffer" )
 __import__( "GafferDispatch" )
 
-from _GafferCortex import *
+from ._GafferCortex import *
 
-from ObjectReader import ObjectReader
-from ObjectWriter import ObjectWriter
-from IndexedIOPath import IndexedIOPath
-from ClassLoaderPath import ClassLoaderPath
-from ClassParameterHandler import ClassParameterHandler
-from ClassVectorParameterHandler import ClassVectorParameterHandler
-from ParameterPath import ParameterPath
-from OpMatcher import OpMatcher
+from .ObjectReader import ObjectReader
+from .ObjectWriter import ObjectWriter
+from .IndexedIOPath import IndexedIOPath
+from .ClassLoaderPath import ClassLoaderPath
+from .ClassParameterHandler import ClassParameterHandler
+from .ClassVectorParameterHandler import ClassVectorParameterHandler
+from .ParameterPath import ParameterPath
+from .OpMatcher import OpMatcher
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferCortex" )

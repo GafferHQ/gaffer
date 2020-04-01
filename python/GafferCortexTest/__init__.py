@@ -34,13 +34,13 @@
 #
 ##########################################################################
 
-from ParameterisedHolderTest import ParameterisedHolderTest
-from ParameterHandlerTest import ParameterHandlerTest
-from ObjectReaderTest import ObjectReaderTest
-from OpHolderTest import OpHolderTest
-from ObjectWriterTest import ObjectWriterTest
-from ClassLoaderPathTest import ClassLoaderPathTest
-from OpMatcherTest import OpMatcherTest
-from ParameterPathTest import ParameterPathTest
-from ExecutableOpHolderTest import ExecutableOpHolderTest
-from IndexedIOPathTest import IndexedIOPathTest
+from .ParameterisedHolderTest import ParameterisedHolderTest
+from .ParameterHandlerTest import ParameterHandlerTest
+from .ObjectReaderTest import ObjectReaderTest
+from .OpHolderTest import OpHolderTest
+from .ObjectWriterTest import ObjectWriterTest
+from .ClassLoaderPathTest import ClassLoaderPathTest
+from .OpMatcherTest import OpMatcherTest
+from .ParameterPathTest import ParameterPathTest
+from .ExecutableOpHolderTest import ExecutableOpHolderTest
+from .IndexedIOPathTest import IndexedIOPathTest

@@ -37,25 +37,25 @@
 
 __import__( "IECore" )
 
-from _Gaffer import *
-import _Range
-from About import About
-from Application import Application
-from WeakMethod import WeakMethod
-from BlockedConnection import BlockedConnection
-from FileNamePathFilter import FileNamePathFilter
-from UndoScope import UndoScope
-from Context import Context
-from InfoPathFilter import InfoPathFilter
-from LazyModule import lazyImport, LazyModule
-from DictPath import DictPath
-from PythonExpressionEngine import PythonExpressionEngine
-from SequencePath import SequencePath
-from GraphComponentPath import GraphComponentPath
-from OutputRedirection import OutputRedirection
-from Monitor import Monitor
+from ._Gaffer import *
+from .import _Range
+from .About import About
+from .Application import Application
+from .WeakMethod import WeakMethod
+from .BlockedConnection import BlockedConnection
+from .FileNamePathFilter import FileNamePathFilter
+from .UndoScope import UndoScope
+from .Context import Context
+from .InfoPathFilter import InfoPathFilter
+from .LazyModule import lazyImport, LazyModule
+from .DictPath import DictPath
+from .PythonExpressionEngine import PythonExpressionEngine
+from .SequencePath import SequencePath
+from .GraphComponentPath import GraphComponentPath
+from .OutputRedirection import OutputRedirection
+from .Monitor import Monitor
 
-import NodeAlgo
-import ExtensionAlgo
+from . import NodeAlgo
+from . import ExtensionAlgo
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )

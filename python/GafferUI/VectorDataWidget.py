@@ -42,7 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
-from _TableView import _TableView
+from ._TableView import _TableView
 
 from Qt import QtCore
 from Qt import QtGui
