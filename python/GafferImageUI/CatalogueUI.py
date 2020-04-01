@@ -217,7 +217,7 @@ class __StatusIconColumn( IconColumn ) :
 
 	def value( self, image, catalogue ) :
 
-		return "catalogueTypeDisk" if image["fileName"].getValue() else "catalogueTypeDisplay"
+		return "catalogueStatusDisk" if image["fileName"].getValue() else "catalogueStatusDisplay"
 
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
