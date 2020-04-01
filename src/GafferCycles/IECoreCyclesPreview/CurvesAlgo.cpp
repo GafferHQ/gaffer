@@ -44,7 +44,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/mesh.h"
+#include "render/geometry.h"
+#include "render/hair.h"
 
 using namespace std;
 using namespace Imath;
@@ -55,10 +56,10 @@ using namespace IECoreCycles;
 namespace
 {
 
-ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
+ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 {
 	assert( curve->typeId() == IECoreScene::CurvesPrimitive::staticTypeId() );
-	ccl::Mesh *cmesh = new ccl::Mesh();
+	ccl::Hair *hair = new ccl::Hair();
 
 	size_t numCurves = curve->numCurves();
 	size_t numKeys = 0;
@@ -68,7 +69,7 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	for( int i = 0; i < verticesPerCurve.size(); ++i )
 		numKeys += verticesPerCurve[i];
 
-	cmesh->reserve_curves( numCurves, numKeys );
+	hair->reserve_curves( numCurves, numKeys );
 
 	const V3fVectorData *p = curve->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 	const vector<Imath::V3f> &points = p->readable();
@@ -82,9 +83,9 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 		{
 			size_t firstKey = key;
 			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
-				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] / 2.0f );
+				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] / 2.0f );
 
-			cmesh->add_curve( firstKey, 0 );
+			hair->add_curve( firstKey, 0 );
 		}
 	}
 	else
@@ -101,9 +102,9 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 		{
 			size_t firstKey = key;
 			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
-				cmesh->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), constantWidth / 2.0f );
+				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), constantWidth / 2.0f );
 
-			cmesh->add_curve( firstKey, 0 );
+			hair->add_curve( firstKey, 0 );
 		}
 	}
 
@@ -114,9 +115,9 @@ ccl::Mesh *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 
 	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
 	{
-		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, cmesh->curve_attributes );
+		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, hair->attributes );
 	}
-	return cmesh;
+	return hair;
 }
 
 ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( CurvesAlgo::convert, CurvesAlgo::convert );
@@ -138,7 +139,7 @@ namespace CurvesAlgo
 ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, const ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->mesh = convertCommon(curve);
+	cobject->geometry = (ccl::Geometry*)convertCommon(curve);
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -147,13 +148,13 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 {
 	const int numSamples = curves.size();
 
-	ccl::Mesh *cmesh = nullptr;
+	ccl::Hair *hair = nullptr;
 	std::vector<const IECoreScene::CurvesPrimitive *> samples;
 	IECoreScene::CurvesPrimitivePtr midMesh;
 
 	if( frameIdx != -1 ) // Start/End frames
 	{
-		cmesh = convertCommon(curves[frameIdx]);
+		hair = convertCommon(curves[frameIdx]);
 
 		if( numSamples == 2 ) // Make sure we have 3 samples
 		{
@@ -179,7 +180,7 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 	else if( numSamples % 2 ) // Odd numSamples
 	{
 		int _frameIdx = ( numSamples+1 ) / 2;
-		cmesh = convertCommon(curves[_frameIdx]);
+		hair = convertCommon(curves[_frameIdx]);
 
 		for( int i = 0; i < numSamples; ++i )
 		{
@@ -198,7 +199,7 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 			midMesh = curves[_frameIdx]->copy();
 			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-			cmesh = convertCommon( midMesh.get() );
+			hair = convertCommon( midMesh.get() );
 		}
 
 		for( int i = 0; i < numSamples; ++i )
@@ -208,9 +209,9 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 	}
 
 	// Add the motion position/normal attributes
-	cmesh->use_motion_blur = true;
-	cmesh->motion_steps = samples.size() + 1;
-	ccl::Attribute *attr_mP = cmesh->curve_attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
+	hair->use_motion_blur = true;
+	hair->motion_steps = samples.size() + 1;
+	ccl::Attribute *attr_mP = hair->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
 
 	for( size_t i = 0; i < samples.size(); ++i )
@@ -235,22 +236,22 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 				else
 				{
 					msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					cmesh->attributes.remove(attr_mP);
-					cmesh->motion_steps = 0;
+					hair->attributes.remove(attr_mP);
+					hair->motion_steps = 0;
 				}
 			}
 			else
 			{
 				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
-				cmesh->attributes.remove(attr_mP);
-				cmesh->motion_steps = 0;
+				hair->attributes.remove(attr_mP);
+				hair->motion_steps = 0;
 			}
 		}
 	}
 	mP = attr_mP->data_float3();
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->mesh = cmesh;
+	cobject->geometry = (ccl::Geometry*)hair;
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }

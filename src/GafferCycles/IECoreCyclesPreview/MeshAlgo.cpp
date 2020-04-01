@@ -46,6 +46,7 @@
 
 // Cycles
 #include "kernel/kernel_types.h"
+#include "render/geometry.h"
 #include "render/mesh.h"
 #include "subd/subd_dice.h"
 #include "util/util_param.h"
@@ -734,7 +735,7 @@ namespace MeshAlgo
 ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, const ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->mesh = convertCommon(mesh);
+	cobject->geometry = (ccl::Geometry*)convertCommon(mesh);
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -885,7 +886,7 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	}
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->mesh = cmesh;
+	cobject->geometry = (ccl::Geometry*)cmesh;
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }

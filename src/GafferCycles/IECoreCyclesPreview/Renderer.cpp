@@ -95,7 +95,9 @@
 #include "render/buffers.h"
 #include "render/curves.h"
 #include "render/film.h"
+#include "render/geometry.h"
 #include "render/graph.h"
+#include "render/hair.h"
 #include "render/integrator.h"
 #include "render/light.h"
 #include "render/mesh.h"
@@ -141,11 +143,11 @@ typedef std::unique_ptr<ccl::Light> CLightPtr;
 typedef std::shared_ptr<ccl::Camera> SharedCCameraPtr;
 typedef std::shared_ptr<ccl::Object> SharedCObjectPtr;
 typedef std::shared_ptr<ccl::Light> SharedCLightPtr;
-typedef std::shared_ptr<ccl::Mesh> SharedCMeshPtr;
+typedef std::shared_ptr<ccl::Geometry> SharedCGeometryPtr;
 typedef std::shared_ptr<ccl::Shader> SharedCShaderPtr;
 typedef std::shared_ptr<ccl::ParticleSystem> SharedCParticleSystemPtr;
 
-typedef std::pair<ccl::Mesh*, ccl::Shader*> ShaderAssignPair;
+typedef std::pair<ccl::Geometry*, ccl::Shader*> ShaderAssignPair;
 
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
@@ -238,9 +240,6 @@ ccl::PassType nameToPassType( const std::string &name )
 	MAP_PASS( "transmission_direct", ccl::PASS_TRANSMISSION_DIRECT );
 	MAP_PASS( "transmission_indirect", ccl::PASS_TRANSMISSION_INDIRECT );
 	MAP_PASS( "transmission_color", ccl::PASS_TRANSMISSION_COLOR );
-	MAP_PASS( "subsurface_direct", ccl::PASS_SUBSURFACE_DIRECT );
-	MAP_PASS( "subsurface_indirect", ccl::PASS_SUBSURFACE_INDIRECT );
-	MAP_PASS( "subsurface_color", ccl::PASS_SUBSURFACE_COLOR );
 	MAP_PASS( "volume_direct", ccl::PASS_VOLUME_DIRECT );
 	MAP_PASS( "volume_indirect", ccl::PASS_VOLUME_INDIRECT );
 	MAP_PASS_STARTSWITH( "cryptomatte", ccl::PASS_CRYPTOMATTE );
@@ -319,15 +318,12 @@ int passComponents( ccl::PassType type )
 		case ccl::PASS_DIFFUSE_COLOR:
 		case ccl::PASS_GLOSSY_COLOR:
 		case ccl::PASS_TRANSMISSION_COLOR:
-		case ccl::PASS_SUBSURFACE_COLOR:
 		case ccl::PASS_DIFFUSE_DIRECT:
 		case ccl::PASS_DIFFUSE_INDIRECT:
 		case ccl::PASS_GLOSSY_DIRECT:
 		case ccl::PASS_GLOSSY_INDIRECT:
 		case ccl::PASS_TRANSMISSION_DIRECT:
 		case ccl::PASS_TRANSMISSION_INDIRECT:
-		case ccl::PASS_SUBSURFACE_DIRECT:
-		case ccl::PASS_SUBSURFACE_INDIRECT:
 		case ccl::PASS_VOLUME_DIRECT:
 		case ccl::PASS_VOLUME_INDIRECT:
 			return 3;
@@ -1303,7 +1299,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 						if( strcmp( oldHash, newHash ) != 0 )
 						{
-							m_shader->need_update_mesh = true;
+							m_shader->need_update_geometry = true;
 							return false;
 						}
 						else
@@ -1314,16 +1310,23 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating 
 							// the same shader so this should be safe.
 							m_shader->attributes = previousAttributes->m_shader->attributes;
-							m_shader->need_update_mesh = false;
+							m_shader->need_update_geometry = false;
 						}
 					}
 				}
 
-				if( object->mesh && object->mesh->subd_params )
+				if( object->geometry )
 				{
-					if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
+					ccl::Mesh *mesh = nullptr;
+					if( object->geometry->type == ccl::Geometry::MESH )
+						ccl::Mesh *mesh = (ccl::Mesh*)object->geometry;
+
+					if( mesh && mesh->subd_params )
 					{
-						return false;
+						if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
+						{
+							return false;
+						}
 					}
 				}
 			}
@@ -1335,33 +1338,39 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->dupli_generated = SocketAlgo::setVector( m_dupliGenerated );
 			object->dupli_uv = SocketAlgo::setVector( m_dupliUV );
 
-			if( object->mesh )
+			if( object->geometry )
 			{
-				ccl::Mesh *mesh = object->mesh;
-				if( mesh->subd_params )
-				{
-					mesh->subd_params->max_level = m_maxLevel;
-					mesh->subd_params->dicing_rate = m_dicingRate;
-				}
+				ccl::Mesh *mesh = nullptr;
+				if( object->geometry->type == ccl::Geometry::MESH )
+					mesh = (ccl::Mesh*)object->geometry;
 
-				if( m_shader )
+				if( mesh )
 				{
-					ccl::AttributeSet &attributes = ( mesh->subd_faces.size() ) ? mesh->subd_attributes : mesh->attributes;
-					if( m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
+					if( mesh->subd_params )
 					{
-						if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
-						{
-							return false;
-						}
+						mesh->subd_params->max_level = m_maxLevel;
+						mesh->subd_params->dicing_rate = m_dicingRate;
 					}
-					if( m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
+
+					if( m_shader )
 					{
-						if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
+						ccl::AttributeSet &attributes = ( mesh->subd_faces.size() ) ? mesh->subd_attributes : mesh->attributes;
+						if( m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
 						{
-							return false;
+							if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
+							{
+								return false;
+							}
 						}
+						if( m_shader->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
+						{
+							if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
+							{
+								return false;
+							}
+						}
+						m_shaderCache->addShaderAssignment( ShaderAssignPair( mesh, m_shader.get() ) );
 					}
-					m_shaderCache->addShaderAssignment( ShaderAssignPair( mesh, m_shader.get() ) );
 				}
 			}
 
@@ -1899,8 +1908,8 @@ class Instance
 
 	public :
 
-		Instance( const SharedCObjectPtr object, const SharedCMeshPtr mesh, const SharedCParticleSystemPtr particleSystem = nullptr )
-			:	m_object( object ), m_mesh( mesh ), m_particleSystem( particleSystem )
+		Instance( const SharedCObjectPtr object, const SharedCGeometryPtr geometry, const SharedCParticleSystemPtr particleSystem = nullptr )
+			:	m_object( object ), m_geometry( geometry ), m_particleSystem( particleSystem )
 		{
 		}
 
@@ -1909,9 +1918,9 @@ class Instance
 			return m_object.get();
 		}
 
-		ccl::Mesh *mesh()
+		ccl::Geometry *geometry()
 		{
-			return m_mesh.get();
+			return m_geometry.get();
 		}
 
 		ccl::ParticleSystem *particleSystem()
@@ -1922,7 +1931,7 @@ class Instance
 	private :
 
 		SharedCObjectPtr m_object;
-		SharedCMeshPtr m_mesh;
+		SharedCGeometryPtr m_geometry;
 		SharedCParticleSystemPtr m_particleSystem;
 
 };
@@ -1941,7 +1950,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			m_scene = scene;
 			updateObjects();
-			updateMeshes();
+			updateGeometry();
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -1961,13 +1970,13 @@ class InstanceCache : public IECore::RefCounted
 				cobject = ObjectAlgo::convert( sphere.get(), nodeName );
 				SharedCParticleSystemPtr cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( points ) );
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
+				SharedCGeometryPtr cgeomPtr = SharedCGeometryPtr( cobject->geometry );
 				cobject->particle_system = cpsysPtr.get();
 
 				m_objects.push_back( cobjectPtr );
-				m_uniqueMeshes.push_back( cmeshPtr );
+				m_uniqueGeometry.push_back( cgeomPtr );
 
-				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
+				return Instance( cobjectPtr, cgeomPtr, cpsysPtr );
 			}
 
 			IECore::MurmurHash hash = object->hash();
@@ -1978,11 +1987,11 @@ class InstanceCache : public IECore::RefCounted
 				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
 				if( tangent )
 					if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
-						MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
+						MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
 				cobject->random_id = (unsigned)IECore::hash_value( object->hash() );
-				cobject->mesh->name = hash.toString();
+				cobject->geometry->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
+				SharedCGeometryPtr cgeomPtr = SharedCGeometryPtr( cobject->geometry );
 				// Set particle system to mesh
 				SharedCParticleSystemPtr cpsysPtr;
 				if( cyclesAttributes->hasParticleInfo() )
@@ -1994,13 +2003,13 @@ class InstanceCache : public IECore::RefCounted
 				}
 
 				m_objects.push_back( cobjectPtr );
-				m_uniqueMeshes.push_back( cmeshPtr );
+				m_uniqueGeometry.push_back( cgeomPtr );
 
-				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
+				return Instance( cobjectPtr, cgeomPtr, cpsysPtr );
 			}
 
 			Cache::accessor a;
-			m_instancedMeshes.insert( a, hash );
+			m_instancedGeometry.insert( a, hash );
 
 			if( !a->second )
 			{
@@ -2015,11 +2024,11 @@ class InstanceCache : public IECore::RefCounted
 					cobject = ObjectAlgo::convert( object, nodeName, m_scene );
 					if( tangent )
 						if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
-							MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
+							MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
-				cobject->mesh->name = hash.toString();
-				a->second = SharedCMeshPtr( cobject->mesh );
+				cobject->geometry->name = hash.toString();
+				a->second = SharedCGeometryPtr( cobject->geometry );
 			}
 			else
 			{
@@ -2028,7 +2037,7 @@ class InstanceCache : public IECore::RefCounted
 				instanceHash.append( nodeName );
 				cobject = new ccl::Object();
 				cobject->random_id = (unsigned)IECore::hash_value( instanceHash );
-				cobject->mesh = a->second.get();
+				cobject->geometry = a->second.get();
 				cobject->name = ccl::ustring( nodeName.c_str() );
 			}
 
@@ -2079,13 +2088,13 @@ class InstanceCache : public IECore::RefCounted
 				cobject = ObjectAlgo::convert( sphere.get(), nodeName );
 				SharedCParticleSystemPtr cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( points ) );
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
+				SharedCGeometryPtr cgeomPtr = SharedCGeometryPtr( cobject->geometry );
 				cobject->particle_system = cpsysPtr.get();
 
 				m_objects.push_back( cobjectPtr );
-				m_uniqueMeshes.push_back( cmeshPtr );
+				m_uniqueGeometry.push_back( cgeomPtr );
 
-				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
+				return Instance( cobjectPtr, cgeomPtr, cpsysPtr );
 			}
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
@@ -2093,11 +2102,11 @@ class InstanceCache : public IECore::RefCounted
 				cobject = ObjectAlgo::convert( samples, times, frameIdx, nodeName, m_scene );
 				if( tangent )
 					if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( samples.front() ) )
-						MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
+						MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
 				cobject->random_id = (unsigned)IECore::hash_value( samples.front()->hash() );
-				cobject->mesh->name = hash.toString();
+				cobject->geometry->name = hash.toString();
 				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-				SharedCMeshPtr cmeshPtr = SharedCMeshPtr( cobject->mesh );
+				SharedCGeometryPtr cgeomPtr = SharedCGeometryPtr( cobject->geometry );
 				// Set particle system to mesh
 				SharedCParticleSystemPtr cpsysPtr;
 				if( cyclesAttributes->hasParticleInfo() )
@@ -2109,13 +2118,13 @@ class InstanceCache : public IECore::RefCounted
 				}
 
 				m_objects.push_back( cobjectPtr );
-				m_uniqueMeshes.push_back( cmeshPtr );
+				m_uniqueGeometry.push_back( cgeomPtr );
 
-				return Instance( cobjectPtr, cmeshPtr, cpsysPtr );
+				return Instance( cobjectPtr, cgeomPtr, cpsysPtr );
 			}
 
 			Cache::accessor a;
-			m_instancedMeshes.insert( a, hash );
+			m_instancedGeometry.insert( a, hash );
 
 			if( !a->second )
 			{
@@ -2130,11 +2139,11 @@ class InstanceCache : public IECore::RefCounted
 					cobject = ObjectAlgo::convert( samples, times, frameIdx, nodeName, m_scene );
 					if( tangent )
 						if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( samples.front() ) )
-							MeshAlgo::computeTangents( cobject->mesh, mesh, needsign );
+							MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
 				}
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
-				cobject->mesh->name = hash.toString();
-				a->second = SharedCMeshPtr( cobject->mesh );
+				cobject->geometry->name = hash.toString();
+				a->second = SharedCGeometryPtr( cobject->geometry );
 			}
 			else
 			{
@@ -2143,7 +2152,7 @@ class InstanceCache : public IECore::RefCounted
 				instanceHash.append( nodeName );
 				cobject = new ccl::Object();
 				cobject->random_id = (unsigned)IECore::hash_value( instanceHash );
-				cobject->mesh = a->second.get();
+				cobject->geometry = a->second.get();
 				cobject->name = nodeName;
 			}
 
@@ -2166,19 +2175,19 @@ class InstanceCache : public IECore::RefCounted
 		// Must not be called concurrently with anything.
 		void clearUnused()
 		{
-			// Unique meshes
-			UniqueMeshes meshesKeep;
-			for( UniqueMeshes::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
+			// Unique geometry
+			UniqueGeometry geomKeep;
+			for( UniqueGeometry::const_iterator it = m_uniqueGeometry.begin(), eIt = m_uniqueGeometry.end(); it != eIt; ++it )
 			{
 				if( !it->unique() )
 				{
-					meshesKeep.push_back( *it );
+					geomKeep.push_back( *it );
 				}
 			}
 
-			// Instanced meshes
+			// Instanced geometry
 			vector<IECore::MurmurHash> toErase;
-			for( Cache::iterator it = m_instancedMeshes.begin(), eIt = m_instancedMeshes.end(); it != eIt; ++it )
+			for( Cache::iterator it = m_instancedGeometry.begin(), eIt = m_instancedGeometry.end(); it != eIt; ++it )
 			{
 				if( it->second.unique() )
 				{
@@ -2190,11 +2199,11 @@ class InstanceCache : public IECore::RefCounted
 			}
 			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
 			{
-				m_instancedMeshes.erase( *it );
+				m_instancedGeometry.erase( *it );
 			}
 
-			m_uniqueMeshes = meshesKeep;
-			updateMeshes();
+			m_uniqueGeometry = geomKeep;
+			updateGeometry();
 
 			// Objects
 			Objects objectsKeep;
@@ -2213,9 +2222,9 @@ class InstanceCache : public IECore::RefCounted
 		void clearMissingShaders()
 		{
 			// Make sure there are no nullptrs in used_shaders
-			for( ccl::Mesh *mesh : m_scene->meshes )
+			for( ccl::Geometry *geom : m_scene->geometry )
 			{
-				for( ccl::Shader *shader : mesh->used_shaders )
+				for( ccl::Shader *shader : geom->used_shaders )
 				{
 					if( shader == nullptr )
 					{
@@ -2241,39 +2250,39 @@ class InstanceCache : public IECore::RefCounted
 			m_scene->object_manager->tag_update( m_scene );
 		}
 
-		void updateMeshes()
+		void updateGeometry()
 		{
-			auto &meshes = m_scene->meshes;
-			meshes.clear();
+			auto &geoms = m_scene->geometry;
+			geoms.clear();
 
-			// Unique meshes
-			for( UniqueMeshes::const_iterator it = m_uniqueMeshes.begin(), eIt = m_uniqueMeshes.end(); it != eIt; ++it )
+			// Unique geometry
+			for( UniqueGeometry::const_iterator it = m_uniqueGeometry.begin(), eIt = m_uniqueGeometry.end(); it != eIt; ++it )
 			{
 				if( it->get() )
 				{
-					meshes.push_back( it->get() );
+					geoms.push_back( it->get() );
 				}
 			}
 
 			// Instanced meshes
-			for( Cache::const_iterator it = m_instancedMeshes.begin(), eIt = m_instancedMeshes.end(); it != eIt; ++it )
+			for( Cache::const_iterator it = m_instancedGeometry.begin(), eIt = m_instancedGeometry.end(); it != eIt; ++it )
 			{
 				if( it->second )
 				{
-					meshes.push_back( it->second.get() );
+					geoms.push_back( it->second.get() );
 				}
 			}
 			clearMissingShaders();
-			m_scene->mesh_manager->tag_update( m_scene );
+			m_scene->geometry_manager->tag_update( m_scene );
 		}
 
 		ccl::Scene *m_scene;
 		typedef tbb::concurrent_vector<SharedCObjectPtr> Objects;
 		Objects m_objects;
-		typedef tbb::concurrent_vector<SharedCMeshPtr> UniqueMeshes;
-		UniqueMeshes m_uniqueMeshes;
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCMeshPtr> Cache;
-		Cache m_instancedMeshes;
+		typedef tbb::concurrent_vector<SharedCGeometryPtr> UniqueGeometry;
+		UniqueGeometry m_uniqueGeometry;
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr> Cache;
+		Cache m_instancedGeometry;
 		ParticleSystemsCachePtr m_particleSystemsCache;
 		tbb::spin_mutex m_particlesMutex;
 
@@ -2456,15 +2465,19 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object )
 				return;
 			object->tfm = SocketAlgo::setTransform( transform );
-			if( object->mesh->subd_params )
+			ccl::Mesh *mesh = nullptr;
+			if( object->geometry->type == ccl::Geometry::MESH )
+				mesh = (ccl::Mesh*)object->geometry;
+
+			if( mesh && mesh->subd_params )
 			{
-				object->mesh->subd_params->objecttoworld = object->tfm;
+				mesh->subd_params->objecttoworld = object->tfm;
 			}
 
-			if( object->mesh->use_motion_blur )
+			if( object->geometry->use_motion_blur )
 			{
 				object->motion.clear();
-				object->motion.resize( object->mesh->motion_steps, ccl::transform_empty() );
+				object->motion.resize( object->geometry->motion_steps, ccl::transform_empty() );
 				for( int i = 0; i < object->motion.size(); ++i )
 				{
 					object->motion[i] = object->tfm;
@@ -2483,11 +2496,11 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				return;
 
 			object->motion.clear();
-			if( object->mesh->use_motion_blur && object->mesh->motion_steps != samples.size() )
+			if( object->geometry->use_motion_blur && object->geometry->motion_steps != samples.size() )
 			{
 				IECore::msg( IECore::Msg::Error, "IECoreCycles::Renderer", boost::format( "Transform step size on \"%s\" must match deformation step size." ) % object->name.c_str() );
 				object->tfm = SocketAlgo::setTransform( samples.front() );
-				object->motion.resize( object->mesh->motion_steps, ccl::transform_empty() );
+				object->motion.resize( object->geometry->motion_steps, ccl::transform_empty() );
 				for( int i = 0; i < object->motion.size(); ++i )
 				{
 					object->motion[i] = object->tfm;
@@ -2574,14 +2587,18 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				}
 			}
 
-			if( !object->mesh->use_motion_blur )
+			if( !object->geometry->use_motion_blur )
 			{
-				object->mesh->motion_steps = object->motion.size();
+				object->geometry->motion_steps = object->motion.size();
 			}
 
-			if( object->mesh->subd_params )
+			ccl::Mesh *mesh = nullptr;
+			if( object->geometry->type == ccl::Geometry::MESH )
+				mesh = (ccl::Mesh*)object->geometry;
+
+			if( mesh && mesh->subd_params )
 			{
-				object->mesh->subd_params->objecttoworld = object->tfm;
+				mesh->subd_params->objecttoworld = object->tfm;
 			}
 		}
 
@@ -2917,8 +2934,6 @@ IECore::InternedString g_denoisingGlossyDirectOptionName( "ccl:film:denoising_gl
 IECore::InternedString g_denoisingGlossyIndirectOptionName( "ccl:film:denoising_glossy_indirect" );
 IECore::InternedString g_denoisingTransmissionDirectOptionName( "ccl:film:denoising_transmission_direct" );
 IECore::InternedString g_denoisingTransmissionIndirectOptionName( "ccl:film:denoising_transmission_indirect" );
-IECore::InternedString g_denoisingSubsurfaceDirectOptionName( "ccl:film:denoising_subsurface_direct" );
-IECore::InternedString g_denoisingSubsurfaceIndirectOptionName( "ccl:film:denoising_subsurface_indirect" );
 
 ccl::DenoiseFlag nameToDenoiseFlag( const IECore::InternedString &name )
 {
@@ -2929,8 +2944,6 @@ ccl::DenoiseFlag nameToDenoiseFlag( const IECore::InternedString &name )
 	MAP_FLAG(g_denoisingGlossyIndirectOptionName, ccl::DENOISING_CLEAN_GLOSSY_IND);
 	MAP_FLAG(g_denoisingTransmissionDirectOptionName, ccl::DENOISING_CLEAN_TRANSMISSION_DIR);
 	MAP_FLAG(g_denoisingTransmissionIndirectOptionName, ccl::DENOISING_CLEAN_TRANSMISSION_IND);
-	MAP_FLAG(g_denoisingSubsurfaceDirectOptionName, ccl::DENOISING_CLEAN_SUBSURFACE_DIR);
-	MAP_FLAG(g_denoisingSubsurfaceIndirectOptionName, ccl::DENOISING_CLEAN_SUBSURFACE_IND);
 #undef MAP_FLAG
 
 	return (ccl::DenoiseFlag)0;
@@ -3115,7 +3128,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_particleSystemsCache.reset();
 			// Gaffer has already deleted these, so we can't double-delete
 			m_scene->shaders.clear();
-			m_scene->meshes.clear();
+			m_scene->geometry.clear();
 			m_scene->objects.clear();
 			m_scene->lights.clear();
 			m_scene->particle_systems.clear();
@@ -3572,8 +3585,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_FLAG(g_denoisingGlossyIndirectOptionName);
 				OPTION_FLAG(g_denoisingTransmissionDirectOptionName);
 				OPTION_FLAG(g_denoisingTransmissionIndirectOptionName);
-				OPTION_FLAG(g_denoisingSubsurfaceDirectOptionName);
-				OPTION_FLAG(g_denoisingSubsurfaceIndirectOptionName);
 				#undef OPTION_FLAG
 
 				if( name == g_cryptomatteAccurateOptionName )
@@ -4447,7 +4458,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_rendering = false;
 			// This is so cycles doesn't delete the objects that Gaffer manages.
 			m_scene->objects.clear();
-			m_scene->meshes.clear();
+			m_scene->geometry.clear();
 			m_scene->shaders.clear();
 			m_scene->lights.clear();
 			m_scene->particle_systems.clear();
