@@ -310,6 +310,8 @@ class Menu( GafferUI.Widget ) :
 							continue
 
 						subMenu = _Menu( qtMenu, name )
+						active = self.__evaluateItemValue( item.active )
+						subMenu.setEnabled( active )
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
