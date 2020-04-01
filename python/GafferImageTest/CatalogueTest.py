@@ -37,6 +37,7 @@
 import os
 import threading
 import stat
+import shutil
 import imath
 
 import IECore
@@ -712,6 +713,21 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		script.undo()
 		assertPreconditions()
+
+	def testLoadWithInvalidNames( self ) :
+
+		sourceFile = os.path.join( os.path.dirname( __file__ ), "images", "blurRange.exr" )
+
+		for name, expectedName in [
+			( "0", "_0" ),
+			( "[]", "__" ),
+			( "(", "_" ),
+			( "%", "_" ),
+		] :
+
+			fileName = os.path.join( self.temporaryDirectory(), name + ".exr" )
+			shutil.copyfile( sourceFile, fileName )
+			GafferImage.Catalogue.Image.load( fileName )
 
 if __name__ == "__main__":
 	unittest.main()

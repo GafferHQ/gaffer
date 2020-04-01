@@ -29,6 +29,9 @@ Fixes
 - Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 - Viewer : Fixed bug when using the Crop Window Tool with anamorphic images (#3690).
 - UI : Fixed bug that could cause header views to show scroll bars unnecessarily.
+- Catalogue :
+  - Fixed bug that prevented the loading of images with non-alphanumeric filenames.
+  - Fixed bug that prevented drag and drop of certain images into the Catalogue.
 
 API
 ---
