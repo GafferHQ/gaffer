@@ -2009,19 +2009,17 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = Fa
 # NodeEditor tool menu
 # ====================
 
-def __createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue ) :
+def __createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		spreadsheet = Gaffer.Spreadsheet( node.getName() + "Spreadsheet" )
-		# We don't need to worry about uiParent here as it's a new sheet so there will be no conflicts.
-		__connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, None, spreadsheet )
+		__connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu )
 		node.parent().addChild( spreadsheet )
 
 	GafferUI.NodeEditor.acquire( spreadsheet )
 
-# uiParent is used to find the parent window for the 'are you sure' confirmation dialogue - if required.
-def __connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, uiParent, spreadsheet ) :
+def __connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu ) :
 
 	node = activeRowNamesConnection.node()
 
@@ -2049,12 +2047,7 @@ def __connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePl
 			confirmLabel = "Continue"
 		)
 
-		if uiParent is None :
-			window = GafferUI.ScriptWindow.acquire( node.scriptNode() )
-		else :
-			window = uiParent.ancestor( GafferUI.Window )
-
-		if not confirm.waitForConfirmation( parentWindow = window ) :
+		if not confirm.waitForConfirmation( parentWindow = menu.ancestor( GafferUI.Window ) ) :
 			return
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
@@ -2117,7 +2110,7 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 		}
 	)
 
-	connectCommand = functools.partial( __connectPlugToRowNames, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, nodeEditor )
+	connectCommand = functools.partial( __connectPlugToRowNames, activeRowNamesConnection, selectorContextVariablePlug, selectorValue )
 	menuDefinition.append(
 		"/Connect to Spreadsheet",
 		{
