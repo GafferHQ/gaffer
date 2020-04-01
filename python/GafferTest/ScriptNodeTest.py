@@ -1146,7 +1146,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["n"] = GafferTest.AddNode()
 
 		with IECore.CapturingMessageHandler() as c :
-			s.execute( 'parent["n"]["op1"].setValue( 101 )\niWillFail(); parent["n"]["op2"].setValue( 102 )', continueOnError=True )
+			s.execute( 'parent["n"]["op1"].setValue( 101 )\niWillFail()\nparent["n"]["op2"].setValue( 102 )', continueOnError=True )
 
 		self.assertEqual( s["n"]["op1"].getValue(), 101 )
 		self.assertEqual( s["n"]["op2"].getValue(), 102 )
