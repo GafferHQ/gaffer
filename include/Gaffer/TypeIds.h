@@ -138,6 +138,7 @@ enum TypeId
 	ShufflePlugTypeId = 110091,
 	ShufflesPlugTypeId = 110092,
 	EditScopeTypeId = 110093,
+	InternedStringDataPlugTypeId = 110094,
 
 	LastTypeId = 110159,
 

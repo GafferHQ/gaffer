@@ -43,6 +43,7 @@ namespace Gaffer
 {
 
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::ObjectPlug, ObjectPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::InternedStringDataPlug, InternedStringDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::BoolVectorDataPlug, BoolVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::IntVectorDataPlug, IntVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::FloatVectorDataPlug, FloatVectorDataPlugTypeId )
@@ -59,6 +60,7 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::PathMatcherDataPlug, PathMatcherDataPl
 
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
+template class TypedObjectPlug<IECore::InternedStringData>;
 template class TypedObjectPlug<IECore::BoolVectorData>;
 template class TypedObjectPlug<IECore::IntVectorData>;
 template class TypedObjectPlug<IECore::FloatVectorData>;

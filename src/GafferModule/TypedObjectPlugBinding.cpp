@@ -47,6 +47,7 @@
 void GafferModule::bindTypedObjectPlug()
 {
 	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::InternedStringDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::BoolVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::IntVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::FloatVectorDataPlug>();

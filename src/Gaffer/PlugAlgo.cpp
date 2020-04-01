@@ -459,6 +459,8 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 			return new M44fData( static_cast<const TransformPlug *>( plug )->matrix() );
 		case M44fPlugTypeId :
 			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
+		case InternedStringDataPlugTypeId :
+			return static_cast<const InternedStringDataPlug *>( plug )->getValue()->copy();
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )

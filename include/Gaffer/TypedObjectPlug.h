@@ -51,6 +51,7 @@
 #include "IECore/Object.h"
 #include "IECore/ObjectVector.h"
 #include "IECore/PathMatcherData.h"
+#include "IECore/SimpleTypedData.h"
 
 namespace Gaffer
 {
@@ -123,6 +124,7 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 #ifndef Gaffer_EXPORTS
 
 extern template class TypedObjectPlug<IECore::Object>;
+extern template class TypedObjectPlug<IECore::InternedStringData>;
 extern template class TypedObjectPlug<IECore::BoolVectorData>;
 extern template class TypedObjectPlug<IECore::IntVectorData>;
 extern template class TypedObjectPlug<IECore::FloatVectorData>;
@@ -140,6 +142,7 @@ extern template class TypedObjectPlug<IECore::PathMatcherData>;
 #endif
 
 typedef TypedObjectPlug<IECore::Object> ObjectPlug;
+typedef TypedObjectPlug<IECore::InternedStringData> InternedStringDataPlug;
 typedef TypedObjectPlug<IECore::BoolVectorData> BoolVectorDataPlug;
 typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
 typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
@@ -155,6 +158,7 @@ typedef TypedObjectPlug<IECore::CompoundData> AtomicCompoundDataPlug;
 typedef TypedObjectPlug<IECore::PathMatcherData> PathMatcherDataPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
+IE_CORE_DECLAREPTR( InternedStringDataPlug );
 IE_CORE_DECLAREPTR( BoolVectorDataPlug );
 IE_CORE_DECLAREPTR( IntVectorDataPlug );
 IE_CORE_DECLAREPTR( FloatVectorDataPlug );
@@ -172,6 +176,10 @@ IE_CORE_DECLAREPTR( PathMatcherDataPlug );
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectPlug> > OutputObjectPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, InternedStringDataPlug> > InternedStringDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, InternedStringDataPlug> > InputInternedStringDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, InternedStringDataPlug> > OutputInternedStringDataPlugIterator;
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, BoolVectorDataPlug> > BoolVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, BoolVectorDataPlug> > InputBoolVectorDataPlugIterator;
@@ -224,6 +232,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicCompoundDataPlug> >
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug>, PlugPredicate<> > RecursiveObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ObjectPlug>, PlugPredicate<> > RecursiveInputObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ObjectPlug>, PlugPredicate<> > RecursiveOutputObjectPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, InternedStringDataPlug>, PlugPredicate<> > RecursiveInternedStringDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, InternedStringDataPlug>, PlugPredicate<> > RecursiveInputInternedStringDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, InternedStringDataPlug>, PlugPredicate<> > RecursiveOutputInternedStringDataPlugIterator;
 
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, BoolVectorDataPlug>, PlugPredicate<> > RecursiveBoolVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, BoolVectorDataPlug>, PlugPredicate<> > RecursiveInputBoolVectorDataPlugIterator;
