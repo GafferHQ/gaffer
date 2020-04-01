@@ -13,6 +13,7 @@ Improvements
 - Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
 - Render nodes : Added context variables to image metadata (#3646). Currently only a subset of variable types is supported, depending on the renderer used.
 - Catalogue : Added customisable columns to display image information (#3646).
+- Spreadsheet : Added NodeEditor tool menu items to connect relevant nodes to existing spreadsheet `activeRowNames` plugs.
 
 Fixes
 -----
@@ -46,6 +47,7 @@ API
 	- Added `sortable` kwarg to avoid premature sorting of the path passed to the constructor (#3684).
 	- Added `horizontalScrollMode` kwarg to control scroll bar behaviour (#3684).
 	- Deprecated `setSortable` and `getSortable` in favour of the constructor argument.
+- Menu : Added support for the `active` field on dynamic sub-menu definitions.
 
 0.56.1.0 (relative to 0.56.0.0)
 ========
