@@ -252,7 +252,10 @@ Build
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
 - Floating Editors : Fixed keyboard shortcuts (#3632).
 - ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
-- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+- StandardOptions : Fixed bug which meant that the camera chooser dialogue started browsing in the user's home directory, not the root of the scene (#3695).
+- Spreadsheet :
+  - Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+  - Fixed bug which changed the width of the row name column when new rows were added.
 
 0.55.5.1 (relative to 0.55.5.0)
 ========
