@@ -280,12 +280,11 @@ private:
 	const std::string &m_tweakName;
 };
 
-void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode )
+bool applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const std::string &tweakName, const InternedString &parameterName, IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode )
 {
 	if( mode == TweakPlug::Remove )
 	{
-		parameters->writable().erase( parameterName );
-		return;
+		return parameters->writable().erase( parameterName );
 	}
 
 	Data *parameterValue = parameters->member<Data>( parameterName );
@@ -305,7 +304,7 @@ void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const
 	{
 		if( missingMode == TweakPlug::MissingMode::Ignore )
 		{
-			return;
+			return false;
 		}
 		else if( !( mode == TweakPlug::Replace && missingMode == TweakPlug::MissingMode::IgnoreOrReplace ) )
 		{
@@ -316,36 +315,38 @@ void applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const
 	if( mode == TweakPlug::Replace )
 	{
 		parameters->writable()[parameterName] = newData;
-		return;
+		return true;
 	}
 
 	NumericTweak t( newData.get(), mode, tweakName );
 	dispatch( parameterValue, t );
+	return true;
 }
 
 } // namespace
 
-void TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
+bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
 {
 	if( !enabledPlug()->getValue() )
 	{
-		return;
+		return false;
 	}
 
 	const std::string name = namePlug()->getValue();
 	if( name.empty() )
 	{
-		return;
+		return false;
 	}
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
-	applyTweakInternal( mode, this->valuePlug(), name, name, parameters, missingMode );
+	return applyTweakInternal( mode, this->valuePlug(), name, name, parameters, missingMode );
 }
 
-void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode )
+bool TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode )
 {
 	unordered_map<InternedString, IECoreScene::ShaderPtr> modifiedShaders;
 
+	bool appliedTweaks = false;
 	bool removedConnections = false;
 	for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
 	{
@@ -423,6 +424,7 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 				}
 				const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
 				shaderNetwork->addConnection( { inputParameter, parameter } );
+				appliedTweaks = true;
 			}
 		}
 		else
@@ -434,7 +436,10 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 				modifiedShader.first->second = shader->copy();
 			}
 
-			applyTweakInternal( mode, tweakPlug->valuePlug(), name, parameter.name, modifiedShader.first->second->parametersData(), missingMode );
+			if( applyTweakInternal( mode, tweakPlug->valuePlug(), name, parameter.name, modifiedShader.first->second->parametersData(), missingMode ) )
+			{
+				appliedTweaks = true;
+			}
 		}
 	}
 
@@ -447,6 +452,8 @@ void TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 	{
 		ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
 	}
+
+	return appliedTweaks || removedConnections;
 }
 
 std::pair<const GafferScene::Shader *, const Gaffer::Plug *> TweakPlug::shaderOutput() const
@@ -525,15 +532,20 @@ Gaffer::PlugPtr TweaksPlug::createCounterpart( const std::string &name, Directio
 	return result;
 }
 
-void TweaksPlug::applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode ) const
+bool TweaksPlug::applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode ) const
 {
+	bool applied = false;
 	for( TweakPlugIterator it( this ); !it.done(); ++it )
 	{
-		(*it)->applyTweak( parameters, missingMode );
+		if( (*it)->applyTweak( parameters, missingMode ) )
+		{
+			applied = true;
+		}
 	}
+	return applied;
 }
 
-void TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode ) const
+bool TweaksPlug::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode ) const
 {
-	TweakPlug::applyTweaks( this, shaderNetwork, missingMode );
+	return TweakPlug::applyTweaks( this, shaderNetwork, missingMode );
 }

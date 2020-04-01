@@ -61,22 +61,22 @@ TweakPlugPtr constructUsingData( const std::string &tweakName, IECore::ConstData
 	return new TweakPlug( tweakName, tweakValue.get(), mode, enabled );
 }
 
-void applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
+bool applyTweak( const TweakPlug &plug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	plug.applyTweak( &parameters, missingMode );
+	return plug.applyTweak( &parameters, missingMode );
 }
 
-void applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork, TweakPlug::MissingMode missingMode )
+bool applyTweaks( const Plug &tweaksPlug, IECoreScene::ShaderNetwork &shaderNetwork, TweakPlug::MissingMode missingMode )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork, missingMode );
+	return TweakPlug::applyTweaks( &tweaksPlug, &shaderNetwork, missingMode );
 }
 
-void applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
+bool applyTweaksToParameters( const TweaksPlug &tweaksPlug, IECore::CompoundData &parameters, TweakPlug::MissingMode missingMode )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	tweaksPlug.applyTweaks( &parameters, missingMode );
+	return tweaksPlug.applyTweaks( &parameters, missingMode );
 }
 
 class TweakPlugSerialiser : public ValuePlugSerialiser

@@ -18,6 +18,7 @@ Improvements
 - CopyPrimitiveVariables : Improved performance. In one benchmark, scene generation time has been reduced by 50%.
 - MergeScenes : Improved performance when merging overlapping hierarchies.
 - Serialisation : Reduced file size and load time by omitting redundant `setInput()` calls from serialisations.
+- ShaderTweaks : Added `localise` option to allow location-specific tweaks to be made to inherited shaders.
 
 Fixes
 -----
@@ -48,6 +49,7 @@ API
   - Added `Selection::editable()` method.
   - Added `Selection::warning()` method.
   - Added `selectionEditable()` method.
+- TweakPlug : Changed `applyTweak(s)` return type to `bool` - indicating if any tweaks were actually performed (#3699).
 
 Breaking Changes
 ----------------

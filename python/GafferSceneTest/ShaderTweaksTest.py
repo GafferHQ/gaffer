@@ -370,5 +370,66 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegexp( Gaffer.ProcessException, "Cannot apply tweak \"badShader.p\" because shader \"badShader\" does not exist" ) :
 			t["out"].attributes( "/light" )
 
+	def testLocalise( self ) :
+
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		shader = GafferSceneTest.TestShader( "surface" )
+		shader["type"].setValue( "surface" )
+		shader["parameters"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( group["out"] )
+		assignment["filter"].setInput( groupFilter["out"] )
+		assignment["shader"].setInput( shader["out"] )
+
+		self.assertTrue( "surface" in assignment["out"].attributes( "/group" ) )
+		self.assertTrue( "surface" not in assignment["out"].attributes( "/group/plane" ) )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( assignment["out"] )
+		tweaks["shader"].setValue( "light" )
+		tweaks["filter"].setInput( planeFilter["out"] )
+
+		colorTweak = GafferScene.TweakPlug( "c", imath.Color3f( 3, 2, 1 ) )
+		tweaks["tweaks"].addChild( colorTweak )
+
+		self.assertEqual( tweaks["localise"].getValue(), False )
+
+		self.assertScenesEqual( tweaks["out"], tweaks["in"] )
+
+		tweaks["localise"].setValue( True )
+
+		# We have no matching shader yet
+		self.assertScenesEqual( tweaks["out"], tweaks["in"] )
+
+		tweaks["shader"].setValue( "surf*" )
+
+		groupAttr = tweaks["out"].attributes( "/group" )
+		self.assertEqual(
+			groupAttr["surface"].getShader( "surface" ).parameters["c"].value,
+			imath.Color3f( 1, 2, 3 )
+		)
+
+		planeAttr = tweaks["out"].attributes( "/group/plane" )
+		self.assertTrue( "surface" in planeAttr )
+		self.assertEqual(
+			planeAttr["surface"].getShader( "surface" ).parameters["c"].value,
+			imath.Color3f( 3, 2, 1 )
+		)
+
+		# Test disabling tweak results in no localisation
+
+		colorTweak["enabled"].setValue( False )
+		self.assertTrue( "surface" not in tweaks["out"].attributes( "/group/plane" ) )
+
 if __name__ == "__main__":
 	unittest.main()
