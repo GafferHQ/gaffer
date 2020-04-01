@@ -414,7 +414,7 @@ class PlugTest( GafferTest.TestCase ) :
 		p1 = Gaffer.Plug(
 			"p",
 			Gaffer.Plug.Direction.Out,
-			Gaffer.Plug.Flags.None,
+			Gaffer.Plug.Flags.None_,
 		)
 
 		p2 = eval( repr( p1 ) )

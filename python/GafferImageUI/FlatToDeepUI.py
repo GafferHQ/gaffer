@@ -94,7 +94,7 @@ Gaffer.Metadata.registerNode(
 			the depth range over which the opacity gradually increases from 0 to the alpha value.
 			""",
 
-			"preset:None", GafferImage.FlatToDeep.ZBackMode.None,
+			"preset:None", GafferImage.FlatToDeep.ZBackMode.None_,
 			"preset:Thickness", GafferImage.FlatToDeep.ZBackMode.Thickness,
 			"preset:Channel", GafferImage.FlatToDeep.ZBackMode.Channel,
 

@@ -659,7 +659,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__settingsWindow = GafferUI.Window( title = "Camera Settings" )
 			with self.__settingsWindow :
 				with GafferUI.ListContainer() :
-					with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None, borderWidth = 4 ) :
+					with GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, borderWidth = 4 ) :
 						layout = GafferUI.PlugLayout( self.getPlug() )
 					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 

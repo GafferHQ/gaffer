@@ -108,7 +108,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 					splitContainer.setSizes( [ 2, 1 ] ) # give priority to the listing over the preview
 
 				# filter section
-				self.__filterFrame = GafferUI.Frame( borderWidth=4, borderStyle=GafferUI.Frame.BorderStyle.None )
+				self.__filterFrame = GafferUI.Frame( borderWidth=4, borderStyle=GafferUI.Frame.BorderStyle.None_ )
 				self.__filter = None
 
 			# path

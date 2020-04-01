@@ -44,7 +44,7 @@ __all__ = [ "HorizontalAlignment", "VerticalAlignment", "Edge", "ScrollMode" ]
 
 # HorizontalAlignment
 
-HorizontalAlignment = IECore.Enum.create( "None", "Left", "Right", "Center", "Justify" )
+HorizontalAlignment = IECore.Enum.create( "None_", "Left", "Right", "Center", "Justify" )
 
 @staticmethod
 def __horizontalFromQt( a ) :
@@ -59,7 +59,7 @@ def __horizontalFromQt( a ) :
 	elif a == QtCore.Qt.AlignJustify :
 		return HorizontalAlignment.AlignJustify
 
-	return HorizontalAlignment.None
+	return HorizontalAlignment.None_
 
 @staticmethod
 def __horizontalToQt( a ) :
@@ -80,7 +80,7 @@ HorizontalAlignment._toQt = __horizontalToQt
 
 # VerticalAlignment
 
-VerticalAlignment = IECore.Enum.create( "None", "Top", "Bottom", "Center" )
+VerticalAlignment = IECore.Enum.create( "None_", "Top", "Bottom", "Center" )
 
 @staticmethod
 def __verticalFromQt( a ) :
@@ -93,7 +93,7 @@ def __verticalFromQt( a ) :
 	elif a == QtCore.Qt.AlignVCenter :
 		return VerticalAlignment.Center
 
-	return VerticalAlignment.None
+	return VerticalAlignment.None_
 
 @staticmethod
 def __verticalToQt( a ) :

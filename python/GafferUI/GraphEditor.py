@@ -361,7 +361,7 @@ class GraphEditor( GafferUI.Editor ) :
 				needsModifiers = not GraphEditor.__childrenViewable( selection[0] )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
-					( not needsModifiers and event.modifiers == event.modifiers.None )
+					( not needsModifiers and event.modifiers == event.modifiers.None_ )
 				) :
 					self.graphGadget().setRoot( selection[0] )
 					return True

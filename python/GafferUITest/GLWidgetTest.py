@@ -71,7 +71,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 
 		w.setChild( g )
 		g.addOverlay( c )
-		c.addChild( b, alignment = ( GafferUI.HorizontalAlignment.None, GafferUI.VerticalAlignment.Top ) )
+		c.addChild( b, alignment = ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Top ) )
 
 		w.setVisible( True )
 

@@ -758,7 +758,7 @@ class Widget( Gaffer.Trackable ) :
 	@staticmethod
 	def _buttons( qtButtons ) :
 
-		result = GafferUI.ButtonEvent.Buttons.None
+		result = GafferUI.ButtonEvent.Buttons.None_
 		if qtButtons & QtCore.Qt.LeftButton :
 			result |= GafferUI.ButtonEvent.Buttons.Left
 		if qtButtons & QtCore.Qt.MidButton :
@@ -772,7 +772,7 @@ class Widget( Gaffer.Trackable ) :
 	@staticmethod
 	def _modifiers( qtModifiers ) :
 
-		modifiers = GafferUI.ModifiableEvent.Modifiers.None
+		modifiers = GafferUI.ModifiableEvent.Modifiers.None_
 		if qtModifiers & QtCore.Qt.ShiftModifier :
 			modifiers = modifiers | GafferUI.ModifiableEvent.Modifiers.Shift
 		if qtModifiers & QtCore.Qt.ControlModifier :
@@ -1151,7 +1151,7 @@ class _EventFilter( QtCore.QObject ) :
 		if widget._wheelSignal is not None :
 
 			event = GafferUI.ButtonEvent(
-				GafferUI.ButtonEvent.Buttons.None,
+				GafferUI.ButtonEvent.Buttons.None_,
 				Widget._buttons( qEvent.buttons() ),
 				self.__positionToLine( qEvent.pos() ),
 				qEvent.delta() / 8.0,

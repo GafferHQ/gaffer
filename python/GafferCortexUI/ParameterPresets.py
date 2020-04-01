@@ -139,7 +139,7 @@ class SavePresetDialogue( PresetDialogue ) :
 						"index" : ( 0, 0 ),
 						"alignment" : (
 							GafferUI.Label.HorizontalAlignment.Right,
-							GafferUI.Label.VerticalAlignment.None,
+							GafferUI.Label.VerticalAlignment.None_,
 						),
 					}
 				)
@@ -151,7 +151,7 @@ class SavePresetDialogue( PresetDialogue ) :
 						"index" : ( 0, 1 ),
 						"alignment" : (
 							GafferUI.Label.HorizontalAlignment.Right,
-							GafferUI.Label.VerticalAlignment.None,
+							GafferUI.Label.VerticalAlignment.None_,
 						),
 					}
 				)

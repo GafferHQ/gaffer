@@ -138,8 +138,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		# event itself.
 		p = self.mousePosition( relativeTo = self )
 		event = GafferUI.ButtonEvent(
-			GafferUI.ButtonEvent.Buttons.None,
-			GafferUI.ButtonEvent.Buttons.None,
+			GafferUI.ButtonEvent.Buttons.None_,
+			GafferUI.ButtonEvent.Buttons.None_,
 			IECore.LineSegment3f(
 				imath.V3f( p.x, p.y, 1 ),
 				imath.V3f( p.x, p.y, 0 )
@@ -157,8 +157,8 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		p = self.mousePosition( relativeTo = self )
 		event = GafferUI.ButtonEvent(
-			GafferUI.ButtonEvent.Buttons.None,
-			GafferUI.ButtonEvent.Buttons.None,
+			GafferUI.ButtonEvent.Buttons.None_,
+			GafferUI.ButtonEvent.Buttons.None_,
 			IECore.LineSegment3f(
 				imath.V3f( p.x, p.y, 1 ),
 				imath.V3f( p.x, p.y, 0 )

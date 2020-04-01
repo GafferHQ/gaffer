@@ -222,7 +222,7 @@ class DispatcherWindow( GafferUI.Window ) :
 					self.__dispatchersMenu.setSelection( [ defaultType ] )
 					self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ), scoped = False )
 
-				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
+				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
 				self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ), scoped = False )
 

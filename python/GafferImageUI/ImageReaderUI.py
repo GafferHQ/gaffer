@@ -130,7 +130,7 @@ Gaffer.Metadata.registerNode(
 			The mode used detemine the mask behaviour for the start frame.
 			""",
 
-			"preset:None", GafferImage.ImageReader.FrameMaskMode.None,
+			"preset:None", GafferImage.ImageReader.FrameMaskMode.None_,
 			"preset:Black Outside", GafferImage.ImageReader.FrameMaskMode.BlackOutside,
 			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
 
@@ -172,7 +172,7 @@ Gaffer.Metadata.registerNode(
 			The mode used detemine the mask behaviour for the end frame.
 			""",
 
-			"preset:None", GafferImage.ImageReader.FrameMaskMode.None,
+			"preset:None", GafferImage.ImageReader.FrameMaskMode.None_,
 			"preset:Black Outside", GafferImage.ImageReader.FrameMaskMode.BlackOutside,
 			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
 
@@ -264,4 +264,4 @@ class _FrameMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			mode = self.getPlug()["mode"].getValue()
 
-		self.childPlugValueWidget( self.getPlug()["frame"] ).setEnabled( mode != GafferImage.ImageReader.FrameMaskMode.None )
+		self.childPlugValueWidget( self.getPlug()["frame"] ).setEnabled( mode != GafferImage.ImageReader.FrameMaskMode.None_ )

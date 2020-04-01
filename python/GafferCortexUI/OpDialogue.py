@@ -163,7 +163,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
 
 			self.__progressIconFrame = GafferUI.Frame(
-				borderStyle = GafferUI.Frame.BorderStyle.None,
+				borderStyle = GafferUI.Frame.BorderStyle.None_,
 				parenting = {
 					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center
 				}
@@ -409,7 +409,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			if self.__postExecuteBehaviour == self.PostExecuteBehaviour.Close :
 				self.__close()
 				return
-			elif self.__postExecuteBehaviour == self.PostExecuteBehaviour.None :
+			elif self.__postExecuteBehaviour == self.PostExecuteBehaviour.None_ :
 				self.__initiateParameterEditing()
 				return
 
@@ -462,7 +462,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 						defaultButton = v
 						break
 
-		if defaultButton == self.DefaultButton.None :
+		if defaultButton == self.DefaultButton.None_ :
 			self._qtWidget().setFocus()
 		elif defaultButton == self.DefaultButton.Cancel :
 			self.__backButton._qtWidget().setFocus()

@@ -139,7 +139,7 @@ class GridContainer( GafferUI.ContainerWidget ) :
 
 		return xRange, yRange
 
-	def addChild( self, child, index=( 1, 1 ), alignment = ( GafferUI.HorizontalAlignment.None, GafferUI.VerticalAlignment.None ) ) :
+	def addChild( self, child, index=( 1, 1 ), alignment = ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.None_ ) ) :
 
 		ranges = self.__indexToRanges( index )
 		self.__removeRanges( ranges )

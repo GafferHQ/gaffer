@@ -127,7 +127,7 @@ class _SettingsWindow( GafferUI.Window ) :
 
 		with self :
 			with GafferUI.ListContainer() :
-				self.__frame = GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None, borderWidth = 4 )
+				self.__frame = GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None_, borderWidth = 4 )
 				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__shaderView = shaderView

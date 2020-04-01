@@ -150,6 +150,7 @@ void GafferImageModule::bindIO()
 
 		enum_<ImageReader::FrameMaskMode>( "FrameMaskMode" )
 			.value( "None", ImageReader::None )
+			.value( "None_", ImageReader::None )
 			.value( "BlackOutside", ImageReader::BlackOutside )
 			.value( "ClampToFrame", ImageReader::ClampToFrame )
 		;

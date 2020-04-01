@@ -155,7 +155,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 				)
 
-		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
+		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
 		self.__column.append( frame, expand=True )
 		self.__nodeUI = GafferUI.NodeUI.create( node )
 		self.__nodeUI.setReadOnly( self.getReadOnly() )

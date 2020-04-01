@@ -46,7 +46,7 @@ from Qt import QtCore
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
-	WrapMode = IECore.Enum.create( "None", "Word", "Character", "WordOrCharacter" )
+	WrapMode = IECore.Enum.create( "None_", "Word", "Character", "WordOrCharacter" )
 	Role = IECore.Enum.create( "Text", "Code" )
 
 	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, **kw ) :
@@ -120,7 +120,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setWordWrapMode(
 			{
-				self.WrapMode.None : QtGui.QTextOption.NoWrap,
+				self.WrapMode.None_ : QtGui.QTextOption.NoWrap,
 				self.WrapMode.Word : QtGui.QTextOption.WordWrap,
 				self.WrapMode.Character : QtGui.QTextOption.WrapAnywhere,
 				self.WrapMode.WordOrCharacter : QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere,
@@ -130,7 +130,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def getWrapMode( self ) :
 
 		return {
-			QtGui.QTextOption.NoWrap : self.WrapMode.None,
+			QtGui.QTextOption.NoWrap : self.WrapMode.None_,
 			QtGui.QTextOption.WordWrap : self.WrapMode.Word,
 			QtGui.QTextOption.WrapAnywhere : self.WrapMode.Character,
 			QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,

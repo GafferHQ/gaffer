@@ -53,7 +53,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
-		self.__frame = GafferUI.Frame( borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
+		self.__frame = GafferUI.Frame( borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_ )
 
 		GafferUI.NodeSetEditor.__init__( self, self.__frame, scriptNode, **kw )
 

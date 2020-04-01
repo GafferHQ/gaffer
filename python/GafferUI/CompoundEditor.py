@@ -1488,7 +1488,7 @@ class _PinningWidget( _Frame ) :
 
 	def __init__( self ) :
 
-		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
+		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_ )
 
 		self._qtWidget().setFixedHeight( 15 )
 
