@@ -355,6 +355,7 @@ Gaffer.Metadata.registerNode(
 
 )
 
+Gaffer.Metadata.registerValue( GafferImage.Catalogue.Image, "renameable", True )
 
 ##########################################################################
 # Viewer hot-keys
