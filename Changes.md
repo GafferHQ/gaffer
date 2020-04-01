@@ -27,12 +27,15 @@ Fixes
 - SceneAlgo : Fixed bug which could cause hangs when retrieving the source scene from an image via Python.
 - Floating Editors : Fixed keyboard shortcuts (#3632).
 - ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
-- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
 - Viewer : Fixed bug when using the Crop Window Tool with anamorphic images (#3690).
 - UI : Fixed bug that could cause header views to show scroll bars unnecessarily.
 - Catalogue :
   - Fixed bug that prevented the loading of images with non-alphanumeric filenames.
   - Fixed bug that prevented drag and drop of certain images into the Catalogue.
+- StandardOptions : Fixed bug which meant that the camera chooser dialogue started browsing in the user's home directory, not the root of the scene (#3695).
+- Spreadsheet :
+  - Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+  - Fixed bug which changed the width of the row name column when new rows were added.
 
 API
 ---
