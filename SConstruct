@@ -354,7 +354,6 @@ env = Environment(
 
 	FRAMEWORKPATH = "$BUILD_DIR/lib",
 
-
 )
 
 # include 3rd party headers with -isystem rather than -I.
@@ -363,7 +362,6 @@ env = Environment(
 # in particular that this would be otherwise impossible.
 for path in [
 		"$BUILD_DIR/include",
-		"$BUILD_DIR/include/python$PYTHON_VERSION",
 		"$BUILD_DIR/include/OpenEXR",
 		"$BUILD_DIR/include/GL",
 	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
@@ -565,15 +563,6 @@ def runCommand( command ) :
 	subprocess.check_call( command, shell=True, env=commandEnv["ENV"] )
 
 ###############################################################################################
-# Determine python version
-###############################################################################################
-
-pythonVersion = subprocess.Popen( [ "python", "--version" ], env=commandEnv["ENV"], stderr=subprocess.PIPE ).stderr.read().decode().strip()
-pythonVersion = pythonVersion.split()[1].rpartition( "." )[0]
-
-env["PYTHON_VERSION"] = pythonVersion
-
-###############################################################################################
 # The basic environment for building libraries
 ###############################################################################################
 
@@ -599,11 +588,52 @@ baseLibEnv.Append(
 
 )
 
+# Determine boost version
+
+boostVersionHeader = baseLibEnv.FindFile(
+	"boost/version.hpp",
+	[ "$BUILD_DIR/include" ] +
+	baseLibEnv["LOCATE_DEPENDENCY_SYSTEMPATH"] +
+	baseLibEnv["LOCATE_DEPENDENCY_CPPPATH"]
+)
+
+if not boostVersionHeader :
+	sys.stderr.write( "ERROR : unable to find \"boost/version.hpp\".\n" )
+	Exit( 1 )
+
+with open( str( boostVersionHeader ) ) as f :
+	for line in f.readlines() :
+		m = re.match( "^#define BOOST_LIB_VERSION \"(.*)\"\s*$", line )
+		if m :
+			boostVersion = m.group( 1 )
+			m = re.match( "^([0-9]+)_([0-9]+)(?:_([0-9]+)|)$", boostVersion )
+			baseLibEnv["BOOST_MAJOR_VERSION"] = m.group( 1 )
+			baseLibEnv["BOOST_MINOR_VERSION"] = m.group( 2 )
+
+if "BOOST_MAJOR_VERSION" not in baseLibEnv :
+	sys.stderr.write( "ERROR : unable to determine boost version from \"{}\".\n".format(  boostVersionHeader ) )
+	Exit( 1 )
+
 ###############################################################################################
 # The basic environment for building python modules
 ###############################################################################################
 
 basePythonEnv = baseLibEnv.Clone()
+
+basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
+	[ "python", "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
+	env=commandEnv["ENV"]
+).strip()
+
+basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
+basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
+	[ "python", "-c", "import sysconfig; print( sysconfig.get_config_var( 'abiflags' ) or '' )" ],
+	env=commandEnv["ENV"]
+).strip()
+
+basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = ""
+if ( int( basePythonEnv["BOOST_MAJOR_VERSION"] ), int( basePythonEnv["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
+	basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" )
 
 basePythonEnv.Append(
 
@@ -612,7 +642,7 @@ basePythonEnv.Append(
 	],
 
 	LIBS = [
-		"boost_python$BOOST_LIB_SUFFIX",
+		"boost_python$BOOST_PYTHON_LIB_SUFFIX$BOOST_LIB_SUFFIX",
 		"IECorePython$CORTEX_PYTHON_LIB_SUFFIX",
 		"Gaffer",
 	],
@@ -630,7 +660,7 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 else :
 
 	basePythonEnv.Append(
-		CPPPATH = [ "$BUILD_DIR/include/python$PYTHON_VERSION" ]
+		CPPPATH = [ "$BUILD_DIR/include/python$PYTHON_ABI_VERSION" ]
 	)
 
 ###############################################################################################
@@ -995,7 +1025,6 @@ for library in ( "GafferUI", ) :
 	addQtLibrary( library, "OpenGL" )
 	if int( env["QT_VERSION"] ) > 4 :
 		addQtLibrary( library, "Widgets" )
-
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules
