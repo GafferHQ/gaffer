@@ -40,35 +40,36 @@ import GafferScene
 
 from GafferImageUI import CatalogueUI
 
-# We provide extended info in the Catalogue's type column
+# We provide extended info in the Catalogue's status column
 # to reflect interactive/batch renders triggered from the UI.
 
 imageNameMap = {
-	GafferScene.InteractiveRender : "catalogueTypeInteractiveRender",
-	GafferScene.Render : "catalogueTypeBatchRender",
+	GafferScene.InteractiveRender : "catalogueStatusInteractiveRender",
+	GafferScene.Render : "catalogueStatusBatchRender",
 }
 
-typeIconColumnDefinition = CatalogueUI.columnDefinition( "typeIcon" )
-if typeIconColumnDefinition :
+statusIconColumn = CatalogueUI.column( "Status" )
+if statusIconColumn :
 
-	def typeIconColumnValueProvider( image, catalogue ):
+	class __ExtededStatusIconColumn( CatalogueUI.IconColumn ) :
 
-		iconName = typeIconColumnDefinition.valueProvider( image, catalogue )
+		def __init__( self ) :
 
-		scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
-		if not scenePlug :
+			CatalogueUI.IconColumn.__init__( self, "" )
+
+		def value( self, image, catalogue ) :
+
+			iconName = statusIconColumn.value( image, catalogue )
+
+			scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
+			if not scenePlug :
+				return iconName
+
+			for type_ in imageNameMap.keys() :
+				if isinstance( scenePlug.node(), type_ ) :
+					suffix = "Complete" if image["fileName"].getValue() else "Running"
+					return imageNameMap[type_] + suffix
+
 			return iconName
 
-		for type_ in imageNameMap.keys() :
-			if isinstance( scenePlug.node(), type_ ) :
-				suffix = "Complete" if image["fileName"].getValue() else "Running"
-				return imageNameMap[type_] + suffix
-
-		return iconName
-
-	CatalogueUI.registerColumn(
-		"typeIcon",
-		typeIconColumnDefinition.title,
-		typeIconColumnValueProvider,
-		CatalogueUI.ColumnType.Icon
-	)
+	CatalogueUI.registerColumn( "Status", __ExtededStatusIconColumn() )

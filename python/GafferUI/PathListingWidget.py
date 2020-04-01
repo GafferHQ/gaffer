@@ -92,6 +92,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		allowMultipleSelection = False,
 		displayMode = DisplayMode.List,
 		sortable = True,
+		horizontalScrollMode = GafferUI.ScrollMode.Never,
 		**kw
 	) :
 
@@ -101,6 +102,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setUniformRowHeights( True )
 		self._qtWidget().setEditTriggers( QtWidgets.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
+		self._qtWidget().setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 
 		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
 			self._qtWidget().header().setSectionsMovable( False )
@@ -597,8 +599,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 	def __init__( self ) :
 
 		QtWidgets.QTreeView.__init__( self )
-
-		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )

@@ -93,7 +93,9 @@ Improvements
 ------------
 
 - Viewer : Added visualisation support for Arnold shader networks connected to light gobos (#3667).
-- Catalogue : Added column to help identify the nature of each image (#3646)
+- Render nodes : Added context variables to image metadata (#3646). Currently only a subset of variable types is supported, depending on the renderer used.
+- Catalogue : Added customisable columns to display image information (#3646).
+- Spreadsheet : Added NodeEditor tool menu items to connect relevant nodes to existing spreadsheet `activeRowNames` plugs.
 
 Fixes
 -----
@@ -107,7 +109,15 @@ Fixes
 - SceneAlgo : Fixed bug which could cause hangs when retrieving the source scene from an image via Python.
 - Floating Editors : Fixed keyboard shortcuts (#3632).
 - ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
-- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+- Viewer : Fixed bug when using the Crop Window Tool with anamorphic images (#3690).
+- UI : Fixed bug that could cause header views to show scroll bars unnecessarily.
+- Catalogue :
+  - Fixed bug that prevented the loading of images with non-alphanumeric filenames.
+  - Fixed bug that prevented drag and drop of certain images into the Catalogue.
+- StandardOptions : Fixed bug which meant that the camera chooser dialogue started browsing in the user's home directory, not the root of the scene (#3695).
+- Spreadsheet :
+  - Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+  - Fixed bug which changed the width of the row name column when new rows were added.
 
 API
 ---
@@ -120,7 +130,9 @@ API
 - CatalogueUI : Added column configuration API (#3646).
 - PathListingWidget :
 	- Added `sortable` kwarg to avoid premature sorting of the path passed to the constructor (#3684).
+	- Added `horizontalScrollMode` kwarg to control scroll bar behaviour (#3684).
 	- Deprecated `setSortable` and `getSortable` in favour of the constructor argument.
+- Menu : Added support for the `active` field on dynamic sub-menu definitions.
 
 0.56.1.0 (relative to 0.56.0.0)
 ========
@@ -325,7 +337,10 @@ Build
 - TransformTools : Fixed rare crash triggered by selecting multiple objects.
 - Floating Editors : Fixed keyboard shortcuts (#3632).
 - ArnoldTextureBake :  Fixed imbalanced distribution of work among tasks when some UDIMs contain many more objects than others.
-- Spreadsheet : Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+- StandardOptions : Fixed bug which meant that the camera chooser dialogue started browsing in the user's home directory, not the root of the scene (#3695).
+- Spreadsheet :
+  - Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
+  - Fixed bug which changed the width of the row name column when new rows were added.
 
 0.55.5.1 (relative to 0.55.5.0)
 ========

@@ -658,6 +658,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applyColumnWidthMetadata( self, cellPlug = None ) :
 
+		if self._qtWidget().model().mode() == self.Mode.RowNames :
+			return
+
 		defaultCells = self._qtWidget().model().rowsPlug().defaultRow()["cells"]
 
 		if cellPlug is not None :
@@ -683,6 +686,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applySectionOrderMetadata( self ) :
 
+		if self._qtWidget().model().mode() == self.Mode.RowNames :
+			return
+
 		rowsPlug = self._qtWidget().model().rowsPlug()
 		header = self._qtWidget().horizontalHeader()
 		for index, plug in enumerate( rowsPlug.defaultRow()["cells"] ) :
@@ -692,6 +698,9 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__callingMoveSection = False
 
 	def __applyColumnVisibility( self ) :
+
+		if self._qtWidget().model().mode() == self.Mode.RowNames :
+			return
 
 		# Changing column visibility seems to cause the
 		# `sectionResized()` signal to be emitted unnecessarily,
@@ -890,6 +899,10 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 	# Methods of our own
 	# ------------------
+
+	def mode( self ) :
+
+		return self.__mode
 
 	def rowsPlug( self ) :
 
@@ -1881,7 +1894,7 @@ def __addToSpreadsheet( plug, spreadsheet, sectionName = None ) :
 			)
 		plug.setInput( spreadsheet["out"][columnIndex] )
 
-def __addToSpreadsheetSubMenu( plug ) :
+def __spreadsheetSubMenu( plug, command, showSections = True ) :
 
 	menuDefinition = IECore.MenuDefinition()
 
@@ -1920,7 +1933,7 @@ def __addToSpreadsheetSubMenu( plug ) :
 
 	def addItems( spreadsheet ) :
 
-		sectionNames = _SectionChooser.sectionNames( spreadsheet["rows"].source() )
+		sectionNames = _SectionChooser.sectionNames( spreadsheet["rows"].source() ) if showSections else None
 		if sectionNames :
 
 			for sectionName in sectionNames :
@@ -1928,7 +1941,7 @@ def __addToSpreadsheetSubMenu( plug ) :
 				menuDefinition.append(
 					"/{}/{}".format( spreadsheet.getName(), sectionName ),
 					{
-						"command" : functools.partial( __addToSpreadsheet, plug, spreadsheet, sectionName )
+						"command" : functools.partial( command, spreadsheet, sectionName )
 					}
 				)
 
@@ -1937,7 +1950,7 @@ def __addToSpreadsheetSubMenu( plug ) :
 			menuDefinition.append(
 				"/" + spreadsheet.getName(),
 				{
-					"command" : functools.partial( __addToSpreadsheet, plug, spreadsheet )
+					"command" : functools.partial( command, spreadsheet )
 				}
 			)
 
@@ -1987,7 +2000,7 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 		menuDefinition.prepend(
 			"/Add to Spreadsheet ({})".format( ancestorLabel ),
 			{
-				"subMenu" :  functools.partial( __addToSpreadsheetSubMenu, ancestorPlug )
+				"subMenu" :  functools.partial( __spreadsheetSubMenu, ancestorPlug, functools.partial( __addToSpreadsheet, ancestorPlug ) )
 			}
 		)
 		menuDefinition.prepend(
@@ -2004,7 +2017,7 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 	menuDefinition.prepend(
 		"/Add to Spreadsheet",
 		{
-			"subMenu" :  functools.partial( __addToSpreadsheetSubMenu, plug )
+			"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( __addToSpreadsheet, plug ) )
 		}
 	)
 
@@ -2028,11 +2041,55 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = Fa
 # NodeEditor tool menu
 # ====================
 
-def __createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue ) :
+def __createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :
 
-	with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		spreadsheet = Gaffer.Spreadsheet( node.getName() + "Spreadsheet" )
+		__connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu )
+		node.parent().addChild( spreadsheet )
+
+	GafferUI.NodeEditor.acquire( spreadsheet )
+
+def __connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu ) :
+
+	node = activeRowNamesConnection.node()
+
+	# We defer locking the plug until we know we're going ahead
+	lockSelectorVarPlug = False
+	if selectorValue is None :
+		selectorValue = "${" + selectorContextVariablePlug.getValue() + "}"
+		lockSelectorVarPlug = True
+
+	# Check that the sheet's selector meets requirements before making any changes
+
+	existingSelector = spreadsheet["selector"].getValue()
+	if existingSelector and selectorValue and existingSelector != selectorValue :
+
+		message = "{sheetName}'s selector is set to: '{sheetSelector}'.\n\n" + \
+			"The '{plugName}' plug requires a different selector to work\n" + \
+			"properly. Continuing will reset the selector to '{selector}'."
+
+		confirm = GafferUI.ConfirmationDialogue(
+			"Invalid Selector",
+			message.format(
+				sheetName = spreadsheet.getName(), sheetSelector = existingSelector,
+				plugName = activeRowNamesConnection.getName(), selector = selectorValue
+			),
+			confirmLabel = "Continue"
+		)
+
+		if not confirm.waitForConfirmation( parentWindow = menu.ancestor( GafferUI.Window ) ) :
+			return
+
+	with Gaffer.UndoScope( node.scriptNode() ) :
+
+		if lockSelectorVarPlug :
+			Gaffer.MetadataAlgo.setReadOnly( selectorContextVariablePlug, True )
+
+		if selectorValue :
+			spreadsheet["selector"].setValue( selectorValue )
+			Gaffer.MetadataAlgo.setReadOnly( spreadsheet["selector"], True )
 
 		with node.scriptNode().context() :
 			rowNames = activeRowNamesConnection.getValue()
@@ -2042,19 +2099,11 @@ def __createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextV
 			for rowName in rowNames :
 				spreadsheet["rows"].addRow()["name"].setValue( rowName )
 		else :
-			spreadsheet["rows"].addRow()
-
-		if selectorValue is None :
-			selectorValue = "${" + selectorContextVariablePlug.getValue() + "}"
-			Gaffer.MetadataAlgo.setReadOnly( selectorContextVariablePlug, True )
-
-		if selectorValue :
-			spreadsheet["selector"].setValue( selectorValue )
-			Gaffer.MetadataAlgo.setReadOnly( spreadsheet["selector"], True )
+			# Only a new row to an empty spreadsheet
+			if len( spreadsheet["rows"].children() ) == 1 :
+				spreadsheet["rows"].addRow()
 
 		node.parent().addChild( spreadsheet )
-
-	GafferUI.NodeEditor.acquire( spreadsheet )
 
 def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 
@@ -2077,15 +2126,28 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 	assert( not ( selectorValue and selectorContextVariablePlug ) )
 
 	menuDefinition.append( "/SpreadsheetDivider", { "divider" : True } )
+
+	itemsActive = (
+		not nodeEditor.getReadOnly()
+		and not Gaffer.MetadataAlgo.readOnly( node )
+		and not Gaffer.MetadataAlgo.readOnly( activeRowNamesConnection )
+		and activeRowNamesConnection.getInput() is None
+	)
+
 	menuDefinition.append(
 		"/Create Spreadsheet...",
 		{
 			"command" : functools.partial( __createSpreadsheetForNode, node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue ),
-			"active" : (
-				not nodeEditor.getReadOnly()
-				and not Gaffer.MetadataAlgo.readOnly( node )
-				and not Gaffer.MetadataAlgo.readOnly( activeRowNamesConnection )
-			)
+			"active" : itemsActive
+		}
+	)
+
+	connectCommand = functools.partial( __connectPlugToRowNames, activeRowNamesConnection, selectorContextVariablePlug, selectorValue )
+	menuDefinition.append(
+		"/Connect to Spreadsheet",
+		{
+			"subMenu" :  functools.partial( __spreadsheetSubMenu, activeRowNamesConnection, connectCommand ),
+			"active" : itemsActive
 		}
 	)
 

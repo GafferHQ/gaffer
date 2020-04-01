@@ -62,6 +62,11 @@ class Menu( GafferUI.Widget ) :
 	#
 	# - 'label' in conjunction with 'divider' = True, displays a textual
 	#   divider as opposed to a simple line.
+	#
+	# - 'hasShortCuts' = False in conjunction with `subMenu`, instructs the Menu
+	#   to ignore the subMenu when building for keyboard shortcut discovery.
+	#   This can avoid long blocking waits when the user first presses a key whilst
+	#   the action map is built if your subMenu is particularly slow to build.
 	def __init__( self, definition, _qtParent=None, searchable=False, title=None, **kw ) :
 
 		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
@@ -249,12 +254,15 @@ class Menu( GafferUI.Widget ) :
 		self.__lastHoverAction = None
 
 	# May be called to fully build the menu /now/, rather than only do it lazily
-	# when it's shown. This is used by the MenuBar.
-	def _buildFully( self ) :
+	# when it's shown. This is used by the MenuBar. forShortCuts should be set
+	# if the build is for short cut discovery as it will skip dynamic subMenus
+	# that declare they have no shortcuts.
+	#   See https://github.com/GafferHQ/gaffer/issues/3651)
+	def _buildFully( self, forShortCuts=False ) :
 
-		self.__build( self._qtWidget(), recurse=True )
+		self.__build( self._qtWidget(), recurse=True, forShortCuts=forShortCuts )
 
-	def __build( self, qtMenu, recurse=False ) :
+	def __build( self, qtMenu, recurse=False, forShortCuts=False ) :
 
 		if isinstance( qtMenu, weakref.ref ) :
 			qtMenu = qtMenu()
@@ -289,19 +297,27 @@ class Menu( GafferUI.Widget ) :
 					subMenu.__definition = definition.reRooted( "/" + name + "/" )
 					subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 					if recurse :
-						self.__build( subMenu, recurse )
+						self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
 				else :
 
 					if item.subMenu is not None :
 
+						# Skip any subMenus that declare they have no short cuts.
+						# _buildFully can be called blocking on the UI thread so
+						# this facilities to skip potentially expensive custom menus.
+						if forShortCuts and not getattr( item, 'hasShortCuts', True ) :
+							continue
+
 						subMenu = _Menu( qtMenu, name )
+						active = self.__evaluateItemValue( item.active )
+						subMenu.setEnabled( active )
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
 						subMenu.aboutToShow.connect( IECore.curry( Gaffer.WeakMethod( self.__build ), weakref.ref( subMenu ) ) )
 						if recurse :
-							self.__build( subMenu, recurse )
+							self.__build( subMenu, recurse, forShortCuts=forShortCuts )
 
 					else :
 

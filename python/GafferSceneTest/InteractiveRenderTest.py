@@ -98,6 +98,8 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	def testMetadata( self ) :
 
 		s = Gaffer.ScriptNode()
+		s["variables"].addChild( Gaffer.NameValuePlug( "a", "A", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
 		s["s"] = GafferScene.Sphere()
 
 		s["o"] = GafferScene.Outputs()
@@ -123,7 +125,9 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 1.0 )
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertEqual( image.blindData(), IECore.CompoundData({"gaffer:sourceScene": IECore.StringData( "r.__adaptedIn" )}) )
+		headers = image.blindData()
+		self.assertEqual( headers["gaffer:sourceScene"], IECore.StringData( "r.__adaptedIn" ) )
+		self.assertEqual( headers["gaffer:context:a"], IECore.StringData( "A" ) )
 
 	def testAddAndRemoveOutput( self ):
 
