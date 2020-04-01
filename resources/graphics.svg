@@ -830,26 +830,34 @@
      inkscape:snap-bbox="true"
      inkscape:object-nodes="true"
      inkscape:snap-object-midpoints="false"
-     inkscape:snap-bbox-midpoints="false"
+     inkscape:snap-bbox-midpoints="true"
      inkscape:snap-smooth-nodes="true"
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:snap-grids="true"
      inkscape:object-paths="false"
      inkscape:bbox-paths="true"
-     inkscape:bbox-nodes="false"
-     inkscape:snap-to-guides="false">
+     inkscape:bbox-nodes="true"
+     inkscape:snap-to-guides="true"
+     inkscape:snap-others="true"
+     inkscape:snap-page="false"
+     inkscape:snap-bbox-edge-midpoints="false">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
-       empspacing="10"
+       empspacing="2"
        visible="true"
        enabled="true"
        snapvisiblegridlinesonly="true"
        spacingx="0.5"
        spacingy="0.5"
        originx="0"
-       originy="0" />
+       originy="0"
+       color="#ffffff"
+       opacity="0.08235294"
+       empcolor="#e6e6e6"
+       empopacity="0.2"
+       dotted="false" />
   </sodipodi:namedview>
   <metadata
      id="metadata7">
