@@ -26,9 +26,15 @@ Fixes
 - Filter : Fixed bug which prevented "Select Affected Objects" menu items from working in cases where there was another filter in between the filter and the nodes it was applied to.
 - RotateTool : Fixed bug which caused aiming clicks to change the selection in some circumstances.
 - TranslateTool : Fixed bug which caused snapping clicks to change the selection in some circumstances.
+- Viewer : Fixed problems displaying the "Cs" primitive variable.
+- Alembic :
+  - Fixed loading of "N" and "uv" for curves.
+  - Fixed writing of "N", "uv" and "width" for curves.
+  - Fixed round-tripping of interpretation for secondary UV sets.
 - Stats app :
   - Fixed bug which caused the `-scene` and `-image` arguments to evaluate a node's input rather than its output. In particular this affected nodes like ContextVariables.
   - Fixed bug which meant that the `-scene` and `image` arguments didn't support nested output plugs.
+- ReverseWinding : Fixed incorrect results when two or more primitive variables referenced the same data.
 
 API
 ---
@@ -78,7 +84,7 @@ Breaking Changes
 Build
 -----
 
-- Cortex : Updated to version 10.0.0-a74.
+- Cortex : Updated to version 10.0.0-a76.
 
 0.56.x.x (relative to 0.56.1.0)
 ========
