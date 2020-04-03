@@ -49,6 +49,16 @@ def __pruningKeyPress( viewer, event ) :
 	if event.key not in ( "Backspace", "Delete" ) :
 		return False
 
+	if event.modifiers != event.Modifiers.Control :
+		# We require a modifier for now, because being able to delete
+		# directly in the Viewer is a significant change, and we're
+		# worried it could happen unnoticed by someone trying to
+		# delete a _node_ instead. But we swallow the event anyway, to
+		# reserve the unmodified keypress for our use in a future where
+		# a Gaffer viewer with rich interaction might not be so
+		# unexpected.
+		return True
+
 	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 		return False
 
