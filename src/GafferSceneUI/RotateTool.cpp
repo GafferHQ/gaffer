@@ -357,9 +357,8 @@ bool RotateTool::Rotation::canApply( const Imath::V3i &axisMask ) const
 	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
 	if( !edit )
 	{
-		// Edit will be created on demand in apply(), at which point we know
-		// it will be editable.
-		return true;
+		// Edit will be created on demand in `apply()`.
+		return !MetadataAlgo::readOnly( m_selection.editTarget() );
 	}
 
 	Imath::V3f current;

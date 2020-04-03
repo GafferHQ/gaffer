@@ -208,9 +208,8 @@ bool ScaleTool::Scale::canApply( const Imath::V3i &axisMask ) const
 	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
 	if( !edit )
 	{
-		// Edit will be created on demand in apply(), at which point we know
-		// it will be editable.
-		return true;
+		// Edit will be created on demand in `apply()`.
+		return !MetadataAlgo::readOnly( m_selection.editTarget() );
 	}
 
 	for( int i = 0; i < 3; ++i )
