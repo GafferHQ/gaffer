@@ -189,7 +189,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__UpstreamDivider__", { "divider" : True, "label" : "Upstream" } )
 		if upstream :
-			for editScope in upstream :
+			for editScope in reversed( upstream ) :
 				addItem( editScope )
 		else :
 			result.append( "/None Available", { "active" : False } )
