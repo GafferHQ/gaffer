@@ -36,6 +36,7 @@ Fixes
 - Spreadsheet :
   - Fixed scrollbar flickering in Spreadsheets with two rows (#3628).
   - Fixed bug which changed the width of the row name column when new rows were added.
+- StandardOptions : Fixed bug which meant that the camera chooser dialogue started browsing in the user's home directory, not the root of the scene (#3695).
 
 API
 ---
@@ -246,7 +247,7 @@ Build
 - OpenVDB : Updated to version 7.0.0 (#3585).
 - Arnold : Updated to version 6.0.1.0 (#3585)
 
-0.55.5.x (relative to 0.55.5.1)
+0.55.5.2 (relative to 0.55.5.1)
 ========
 
 - Expression : Fixed retrieval of boolean context variables via the OSL `context()` function.
