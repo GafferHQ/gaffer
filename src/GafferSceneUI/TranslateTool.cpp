@@ -327,9 +327,8 @@ bool TranslateTool::Translation::canApply( const Imath::V3f &offset ) const
 	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
 	if( !edit )
 	{
-		// Plugs will be created on demand in apply(), at which point we know
-		// it will be editable.
-		return true;
+		// Edit will be created on demand in `apply()`.
+		return !MetadataAlgo::readOnly( m_selection.editTarget() );
 	}
 
 	V3f offsetInTransformSpace;
