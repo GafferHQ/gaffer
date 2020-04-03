@@ -69,6 +69,13 @@ def __pruningKeyPress( viewer, event ) :
 		# should emit a warning here.
 		return True
 
+	with viewer.getContext() :
+		if not editScope["enabled"].getValue() :
+			# Spare folks from deleting something when it won't be
+			# apparent what they've done until they reenable the
+			# EditScope.
+			return True
+
 	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
 	selection = sceneGadget.getSelection()
 	if not selection.isEmpty() :
