@@ -1,3 +1,11 @@
+0.57.x.x
+========
+
+API
+---
+
+- PrimitiveSampler : Added a new base class for nodes which sample primitive variables using an `IECoreScene::PrimitiveEvaluator`.
+
 0.57.0.0
 ========
 
