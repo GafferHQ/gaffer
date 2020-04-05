@@ -732,7 +732,7 @@ namespace MeshAlgo
 
 {
 
-ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
 	cobject->geometry = (ccl::Geometry*)convertCommon(mesh);
@@ -740,7 +740,7 @@ ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string 
 	return cobject;
 }
 
-ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	const int numSamples = meshes.size();
 

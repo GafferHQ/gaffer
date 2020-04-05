@@ -104,10 +104,6 @@
 #include "render/nodes.h"
 #include "render/object.h"
 
-#ifdef WITH_CYCLES_OPENVDB
-#include "render/openvdb.h"
-#endif
-
 #include "render/osl.h"
 #include "render/scene.h"
 #include "render/session.h"
@@ -1205,8 +1201,10 @@ IECore::InternedString g_cryptomatteAssetAttributeName( "asset:" );
 // Light-group
 IECore::InternedString g_lightGroupAttributeName( "ccl:light_group" );
 
-// Volume isovalue
-IECore::InternedString g_volumeIsovalueAttributeName( "ccl:volume_isovalue" );
+// Volume
+IECore::InternedString g_volumeClippingAttributeName( "ccl:volume_clipping" );
+IECore::InternedString g_volumeStepSizeAttributeName( "ccl:volume_step_size" );
+IECore::InternedString g_volumeObjectSpaceAttributeName( "ccl:volume_object_space" );
 
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -1388,6 +1386,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( !m_particle.apply( object ) )
 				return false;
 
+			if( !m_volume.apply( object ) )
+				return false;
+
 			// Cryptomatte asset name
 			if( m_sets && m_sets->readable().size() )
 			{
@@ -1490,8 +1491,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				case IECoreScene::ExternalProceduralTypeId :
 					break;
 				case IECoreVDB::VDBObjectTypeId :
-					if( m_volume.isovalue )
-						h.append( m_volume.isovalue.get() );
 					break;
 				default :
 					// No geometry attributes for this type.
@@ -1532,18 +1531,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		bool hasParticleInfo() const
 		{
 			return m_particle.hasParticleInfo();
-		}
-
-		float getVolumeIsovalue() const
-		{
-			if( m_volume.isovalue )
-			{
-				return m_volume.isovalue.get();
-			}
-			else
-			{
-				return 0.0f;
-			}
 		}
 
 		bool needTangents() const
@@ -1700,10 +1687,29 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			Volume( const IECore::CompoundObject *attributes )
 			{
-				isovalue = optionalAttribute<float>( g_volumeIsovalueAttributeName, attributes );
+				clipping = optionalAttribute<float>( g_volumeClippingAttributeName, attributes );
+				stepSize = optionalAttribute<float>( g_volumeStepSizeAttributeName, attributes );
+				objectSpace = optionalAttribute<bool>( g_volumeObjectSpaceAttributeName, attributes );
 			}
 
-			boost::optional<float> isovalue;
+			boost::optional<float> clipping;
+			boost::optional<float> stepSize;
+			boost::optional<bool> objectSpace;
+
+			bool apply( ccl::Object *object ) const
+			{
+				if( object->geometry->type == ccl::Geometry::MESH )
+				{
+					ccl::Mesh *mesh = (ccl::Mesh*)object->geometry;
+					if( clipping )
+						mesh->volume_clipping = clipping.get();
+					if( stepSize )
+						mesh->volume_step_size = stepSize.get();
+					if( objectSpace )
+						mesh->volume_object_space = objectSpace.get();
+				}
+				return true;
+			}
 
 		};
 
@@ -2026,19 +2032,11 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-#ifdef WITH_CYCLES_OPENVDB
-				if( const IECoreVDB::VDBObject *vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
-				{
-					cobject = VDBAlgo::convert( vdbObject, nodeName, m_scene, cyclesAttributes->getVolumeIsovalue() );
-				}
-				else
-#endif
-				{
-					cobject = ObjectAlgo::convert( object, nodeName, m_scene );
-					if( tangent )
-						if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
-							MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
-				}
+				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
+				if( tangent )
+					if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
+						MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
+
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				cobject->geometry->name = hash.toString();
 				a->second = SharedCGeometryPtr( cobject->geometry );
@@ -2141,19 +2139,18 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !a->second )
 			{
-#ifdef WITH_CYCLES_OPENVDB
 				if( const IECoreVDB::VDBObject *vdbObject = IECore::runTimeCast<const IECoreVDB::VDBObject>( samples.front() ) )
 				{
-					cobject = VDBAlgo::convert( vdbObject, nodeName, m_scene, cyclesAttributes->getVolumeIsovalue() );
+					cobject = VDBAlgo::convert( vdbObject, nodeName, m_scene );
 				}
 				else
-#endif
 				{
 					cobject = ObjectAlgo::convert( samples, times, frameIdx, nodeName, m_scene );
 					if( tangent )
 						if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( samples.front() ) )
 							MeshAlgo::computeTangents( (ccl::Mesh*)cobject->geometry, mesh, needsign );
 				}
+
 				cobject->random_id = (unsigned)IECore::hash_value( hash );
 				cobject->geometry->name = hash.toString();
 				a->second = SharedCGeometryPtr( cobject->geometry );
@@ -3097,12 +3094,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
-#ifdef WITH_CYCLES_OPENVDB
-			// OpenVDB
-			ccl::openvdb_initialize();
-			m_sceneParams.intialized_openvdb = true;
-#endif
-
 			init();
 			// Maintain our own ImageManager
 			m_imageManager = new ccl::ImageManager( m_session->device->info );
@@ -3979,12 +3970,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
-#ifndef WITH_CYCLES_OPENVDB
-			if( object->typeId() == IECoreVDB::VDBObject::staticTypeId() )
-			{
-				return nullptr;
-			}
-#endif
+
 			Instance instance = m_instanceCache->get( object, attributes, name );
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
@@ -3998,12 +3984,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				return nullptr;
 			}
-#ifndef WITH_CYCLES_OPENVDB
-			if( samples.front()->typeId() == IECoreVDB::VDBObject::staticTypeId() )
-			{
-				return nullptr;
-			}
-#endif
+
 			int frameIdx = -1;
 			if( m_scene->camera->motion_position == ccl::Camera::MOTION_POSITION_START )
 			{

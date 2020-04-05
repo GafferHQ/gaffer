@@ -456,11 +456,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 #else
 	py::scope().attr( "withTextureCache" ) = false;
 #endif
-#ifdef WITH_CYCLES_OPENVDB
-	py::scope().attr( "withOpenVDB" ) = true;
-#else
-	py::scope().attr( "withOpenVDB" ) = false;
-#endif
 #ifdef WITH_CYCLES_LIGHTGROUPS
 	py::scope().attr( "withLightGroups" ) = true;
 #else

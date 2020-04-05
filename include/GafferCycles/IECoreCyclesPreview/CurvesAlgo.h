@@ -51,10 +51,10 @@ namespace CurvesAlgo
 {
 
 /// Converts the specified IECoreScene::CurvesPrimitive into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECoreScene::CurvesPrimitive *mesh, const std::string &nodeName, const ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Object *convert( const IECoreScene::CurvesPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene = nullptr );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::CurvesPrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene = nullptr );
 
 } // namespace CurvesAlgo
 

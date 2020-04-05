@@ -136,7 +136,7 @@ namespace CurvesAlgo
 
 {
 
-ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
 	cobject->geometry = (ccl::Geometry*)convertCommon(curve);
@@ -144,7 +144,7 @@ ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::stri
 	return cobject;
 }
 
-ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene )
+ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	const int numSamples = curves.size();
 
