@@ -34,28 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_UVSAMPLER_H
+#define GAFFERSCENE_UVSAMPLER_H
 
-#include "PrimitiveSamplerBinding.h"
-
-#include "GafferScene/ClosestPointSampler.h"
-#include "GafferScene/CurveSampler.h"
 #include "GafferScene/PrimitiveSampler.h"
-#include "GafferScene/UVSampler.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveSampler()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::PrimitiveSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::ClosestPointSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::CurveSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::UVSampler>();
+class GAFFERSCENE_API UVSampler : public PrimitiveSampler
+{
 
-}
+	public :
+
+		UVSampler( const std::string &name = defaultName<UVSampler>() );
+		~UVSampler() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::UVSampler, UVSamplerTypeId, PrimitiveSampler );
+
+		Gaffer::StringPlug *uvPlug();
+		const Gaffer::StringPlug *uvPlug() const;
+
+	protected :
+
+		bool affectsSamplingFunction( const Gaffer::Plug *input ) const override;
+		void hashSamplingFunction( IECore::MurmurHash &h ) const override;
+		SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( UVSampler )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_UVSAMPLER_H

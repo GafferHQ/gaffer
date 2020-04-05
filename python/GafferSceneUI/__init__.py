@@ -170,6 +170,7 @@ from . import TransformQueryUI
 from . import BoundQueryUI
 from . import ExistenceQueryUI
 from . import AttributeQueryUI
+from . import UVSamplerUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

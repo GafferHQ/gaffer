@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.1.0)
 ========
 
+Features
+--------
+
+- UVSampler : Added a new node sampling primitive variables from specific UV positions on a source object.
+
 Fixes
 -----
 
