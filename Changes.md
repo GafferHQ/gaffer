@@ -5,6 +5,7 @@ Features
 --------
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
+- CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
 
 API
 ---

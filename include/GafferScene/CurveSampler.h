@@ -34,26 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_CURVESAMPLER_H
+#define GAFFERSCENE_CURVESAMPLER_H
 
-#include "PrimitiveSamplerBinding.h"
-
-#include "GafferScene/ClosestPointSampler.h"
-#include "GafferScene/CurveSampler.h"
 #include "GafferScene/PrimitiveSampler.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindPrimitiveSampler()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::PrimitiveSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::ClosestPointSampler>();
-	GafferBindings::DependencyNodeClass<GafferScene::CurveSampler>();
+class GAFFERSCENE_API CurveSampler : public PrimitiveSampler
+{
 
-}
+	public :
+
+		CurveSampler( const std::string &name = defaultName<CurveSampler>() );
+		~CurveSampler() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CurveSampler, CurveSamplerTypeId, PrimitiveSampler );
+
+		Gaffer::StringPlug *curveIndexPlug();
+		const Gaffer::StringPlug *curveIndexPlug() const;
+
+		Gaffer::StringPlug *vPlug();
+		const Gaffer::StringPlug *vPlug() const;
+
+	protected :
+
+		bool affectsSamplingFunction( const Gaffer::Plug *input ) const override;
+		void hashSamplingFunction( IECore::MurmurHash &h ) const override;
+		SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CurveSampler )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_CURVESAMPLER_H

@@ -161,6 +161,7 @@ import ShufflePrimitiveVariablesUI
 import LocaliseAttributesUI
 import PrimitiveSamplerUI
 import ClosestPointSamplerUI
+import CurveSamplerUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
