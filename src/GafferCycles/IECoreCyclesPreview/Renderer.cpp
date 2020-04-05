@@ -3007,6 +3007,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_dirtyFlag( false ),
 				m_pause( false ),
 				m_progressLevel( IECore::Msg::Info ),
+				m_sceneLockInterval( 1 ),
 				m_squareSamples( true ),
 				m_useDenoising( false ),
 				m_useOptixDenoising( false ),
@@ -3988,46 +3989,55 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_session->set_pause( true );
 			// Clear out any objects which aren't needed in the cache.
-			m_scene->mutex.lock();
+			while( true )
 			{
-				updateSceneObjects();
-				updateOptions();
-
-				if( m_renderType == Interactive )
+				if( m_scene->mutex.try_lock() )
 				{
-					m_cameraCache->clearUnused();
-					m_instanceCache->clearUnused();
-					m_particleSystemsCache->clearUnused();
-					m_lightCache->clearUnused();
-					m_attributesCache->clearUnused();
-					// Clear out any nullptr shaders so we don't crash
-					m_instanceCache->clearMissingShaders();
-				}
+					updateSceneObjects();
+					updateOptions();
 
-				updateCamera();
-				updateOutputs();
+					// Try to lock the scene mutex to clear unused objects, if not we will try again next time.
+					if( m_renderType == Interactive )
+					{
+						m_cameraCache->clearUnused();
+						m_instanceCache->clearUnused();
+						m_particleSystemsCache->clearUnused();
+						m_lightCache->clearUnused();
+						m_attributesCache->clearUnused();
+						// Clear out any nullptr shaders so we don't crash
+						m_instanceCache->clearMissingShaders();
+					}
 
-				if( m_rendering )
-				{
-					m_scene->reset();
-					//m_session->update_scene();
-					m_session->reset( m_bufferParams, m_sessionParams.samples );
-					m_session->set_pause( false );
-				}
+					updateCamera();
+					updateOutputs();
 
-				// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
-				if( !m_dirtyFlag )
-				{
-					m_scene->mutex.unlock();
+					if( m_rendering )
+					{
+						m_scene->reset();
+						//m_session->update_scene();
+						m_session->reset( m_bufferParams, m_sessionParams.samples );
+						m_session->set_pause( false );
+					}
+
+					// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
+					if( !m_dirtyFlag )
+					{
+						m_scene->mutex.unlock();
+					}
+					else
+					{
+						m_dirtyFlag = false;
+					}
+
+					if( m_rendering )
+					{
+						m_session->start();
+					}
+					break; 	
 				}
 				else
 				{
-					m_dirtyFlag = false;
-				}
-
-				if( m_rendering )
-				{
-					m_session->start();
+					std::this_thread::sleep_for( m_sceneLockInterval );
 				}
 			}
 
@@ -4716,6 +4726,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// RenderCallback
 		RenderCallbackPtr m_renderCallback;
+
+		// Scene-Lock interval, how many milliseconds we wait until we try getting the Cycles scene lock again
+		std::chrono::milliseconds m_sceneLockInterval;
 
 		// Registration with factory
 		static Renderer::TypeDescription<CyclesRenderer> g_typeDescription;
