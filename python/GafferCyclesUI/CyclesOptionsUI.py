@@ -308,7 +308,7 @@ def __denoisingSummary( plug ) :
 	if plug["optixDenoising"]["enabled"].getValue() :
 		info.append( "Optix Denoising {}".format( plug["optixDenoising"]["value"].getValue() ) )
 
-	for rayType in ( "Diffuse", "Glossy", "Transmission", "Subsurface" ) :
+	for rayType in ( "Diffuse", "Glossy", "Transmission" ) :
 		for dirType in ( "Direct", "Indirect") :
 			childName = "denoising%s%s" % ( rayType, dirType )
 			if plug[childName]["enabled"].getValue() :
@@ -758,7 +758,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Adaptive sampling.
+			Automatically reduce the number of samples per pixel based on estimated noise level.
 			""",
 
 			"layout:section", "Session",
@@ -1036,7 +1036,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Sobol", 0,
 			"preset:Correlated Multi-Jitter", 1,
-			#"preset:Progressive Multi-Jitter", 2,
+			"preset:Progressive Multi-Jitter", 2,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -1082,7 +1082,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Zero for automatic setting based on AA samples.
+			Noise level step to stop sampling at, lower values reduce noise the cost of render time. 
+			Zero for automatic setting based on number of AA samples.
 			""",
 
 			"layout:section", "Sampling",
@@ -1093,7 +1094,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Minimum AA samples for adaptive sampling. Zero for automatic setting based on AA samples.
+			Minimum AA samples for adaptive sampling, to discover noisy features before stopping sampling. 
+			Zero for automatic setting based on number of AA samples.
 			""",
 
 			"layout:section", "Sampling",
@@ -1786,30 +1788,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.denoisingSubsurfaceDirect" : [
-
-			"description",
-			"""
-			Denoise the direct subsurface lighting.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Subsurface Direct",
-
-		],
-
-		"options.denoisingSubsurfaceIndirect" : [
-
-			"description",
-			"""
-			Denoise the indirect subsurface lighting.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Subsurface Indirect",
-
-		],
-
 		"options.denoiseStrength" : [
 
 			"description",
@@ -2254,13 +2232,3 @@ if not GafferCycles.withTextureCache :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurGlossy", "plugValueWidget:type", "" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useCustomCachePath", "plugValueWidget:type", "" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.customCachePath", "plugValueWidget:type", "" )
-
-if not GafferCycles.withAdaptiveSampling :
-
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useAdaptiveSampling", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.adaptiveSamplingThreshold", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.adaptiveMinSamples", "plugValueWidget:type", "" )
-
-else :
-
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.samplingPattern.value", "preset:Progressive Multi-Jitter", 2 )

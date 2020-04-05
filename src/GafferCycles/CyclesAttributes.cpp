@@ -71,7 +71,9 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:light_group", new IECore::IntData( -1 ), false, "lightGroup" ) );
 
 	// Volume
-	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_isovalue", new IECore::FloatData( 0.0f ), false, "volumeIsovalue" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_clipping", new IECore::FloatData( 0.001f ), false, "volumeClipping" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_step_size", new IECore::FloatData( 0.0f ), false, "volumeStepSize" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_object_space", new IECore::BoolData( true ), false, "volumeObjectSpace" ) );
 
 	// Per-object parameters
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dupli_generated", new IECore::V3fData( Imath::V3f( 0.0f ) ), false, "dupliGenerated" ) );

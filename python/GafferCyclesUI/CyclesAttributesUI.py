@@ -69,8 +69,12 @@ def __subdivisionSummary( plug ) :
 def __volumeSummary( plug ) :
 
 	info = []
-	if plug["volumeIsovalue"]["enabled"].getValue() :
-		info.append( IECore.CamelCase.toSpaced( "volumeIsovalue" ) + ( " On" if plug["volumeIsovalue"]["value"].getValue() else " Off" ) )
+	if plug["volumeClipping"]["enabled"].getValue() :
+		info.append( IECore.CamelCase.toSpaced( "volumeClipping" ) + ( " On" if plug["volumeClipping"]["value"].getValue() else " Off" ) )
+	if plug["volumeStepSize"]["enabled"].getValue() :
+		info.append( IECore.CamelCase.toSpaced( "volumeStepSize" ) + ( " On" if plug["volumeStepSize"]["value"].getValue() else " Off" ) )
+	if plug["volumeObjectSpace"]["enabled"].getValue() :
+		info.append( IECore.CamelCase.toSpaced( "volumeObjectSpace" ) + ( " On" if plug["volumeObjectSpace"]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
@@ -274,11 +278,37 @@ Gaffer.Metadata.registerNode(
 
 		# Volume
 
-		"attributes.volumeIsovalue" : [
+		"attributes.volumeClipping" : [
 
 			"description",
 			"""
-			Set the volume isovalue.
+			Value under which voxels are considered empty space to 
+			optimize rendering.
+			""",
+
+			"layout:section", "Volume",
+
+		],
+
+		"attributes.volumeStepSize" : [
+
+			"description",
+			"""
+			Distance between volume samples. When zero it is automatically 
+			estimated based on the voxel size.
+			""",
+
+			"layout:section", "Volume",
+
+		],
+
+		"attributes.volumeObjectSpace" : [
+
+			"description",
+			"""
+			Specify volume density and step size in object or world space. 
+			By default object space is used, so that the volume opacity and 
+			detail remains the same regardless of object scale.
 			""",
 
 			"layout:section", "Volume",
@@ -292,7 +322,3 @@ Gaffer.Metadata.registerNode(
 if not GafferCycles.withLightGroups :
 
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "attributes.lightGroup", "plugValueWidget:type", "" )
-
-if not GafferCycles.withOpenVDB :
-
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "attributes.volumeIsovalue", "plugValueWidget:type", "" )

@@ -51,10 +51,10 @@ namespace MeshAlgo
 {
 
 /// Converts the specified IECoreScene::MeshPrimitive into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, const ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene = nullptr );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, const ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene = nullptr );
 /// Compute tangents.
 IECORECYCLES_API void computeTangents( ccl::Mesh *cmesh, const IECoreScene::MeshPrimitive *mesh, bool needsign );
 

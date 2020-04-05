@@ -163,7 +163,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 				celem = ccl::ATTR_ELEMENT_MESH;
 				break;
 			case PrimitiveVariable::Vertex :
-				if( attributes.curve_mesh )
+				if( attributes.geometry->type == ccl::Geometry::HAIR )
 				{
 					celem = ccl::ATTR_ELEMENT_CURVE_KEY;
 				}

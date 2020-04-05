@@ -104,8 +104,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_glossy_indirect",       new IECore::BoolData( true ), false, "denoisingGlossyIndirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_transmission_direct",   new IECore::BoolData( true ), false, "denoisingTransmissionDirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_transmission_indirect", new IECore::BoolData( true ), false, "denoisingTransmissionIndirect" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_subsurface_direct",     new IECore::BoolData( true ), false, "denoisingSubsurfaceDirect" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:film:denoising_subsurface_indirect",   new IECore::BoolData( true ), false, "denoisingSubsurfaceIndirect" ) );
 
 	// Scene/BVH
 

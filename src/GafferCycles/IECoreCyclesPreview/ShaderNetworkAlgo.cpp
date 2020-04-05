@@ -267,7 +267,7 @@ InternedString partitionEnd( const InternedString &s, char c )
 	}
 }
 
-ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, const ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
+ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. It is ideal for all assigned
 	// shaders in the graph to funnel through the default "output" so
@@ -299,7 +299,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		{
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
-			node = manager->osl_node( shaderFileName.c_str() );
+			node = manager->osl_node( shaderManager, shaderFileName.c_str() );
 			node = shaderGraph->add( node );
 		}
 		else
@@ -554,7 +554,7 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	return nullptr;
 }
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, const ccl::ShaderManager *shaderManager, const std::string &namePrefix )
+ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
 {
 	ShaderNetworkPtr networkCopy;
 	if( true ) // todo : make conditional on OSL < 1.10
@@ -659,7 +659,7 @@ ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 	return result;
 }
 
-ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, const ccl::ShaderManager *shaderManager, const std::string &namePrefix  )
+ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, ccl::ShaderManager *shaderManager, const std::string &namePrefix  )
 {
 	ShaderMap converted;
 	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, cshader->graph, converted );
