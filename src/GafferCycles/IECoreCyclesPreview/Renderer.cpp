@@ -938,6 +938,7 @@ class ShaderCache : public IECore::RefCounted
 			#ifdef WITH_OSL
 			m_shaderManager = new ccl::OSLShaderManager();
 			#endif
+			m_numDefaultShaders = m_scene->shaders.size();
 			m_defaultSurface = get( nullptr, nullptr );
 		}
 
@@ -1087,9 +1088,27 @@ class ShaderCache : public IECore::RefCounted
 
 		void updateShaders()
 		{
+			// Do the shader assignment here
+			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
+			{
+				shaderAssignPair.first->used_shaders.clear();
+				shaderAssignPair.first->used_shaders.push_back( shaderAssignPair.second );
+			}
+			m_shaderAssignPairs.clear();
+
 			auto &shaders = m_scene->shaders;
-			//shaders.clear();
-			shaders.resize(4); // 4 built-in shaders, wipe the rest as we manage those
+			if( !m_scene->shader_manager->need_update )
+				return;
+
+			// For now objects always need to update on shader changes
+			if( m_scene->geometry_manager )
+				m_scene->geometry_manager->need_update = true;
+			if( m_scene->light_manager )
+				m_scene->light_manager->need_update = true;
+			if( m_scene->background )
+				m_scene->background->need_update = true;
+
+			shaders.resize( m_numDefaultShaders ); // built-in shaders, wipe the rest as we manage those
 			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
 				if( it->second )
@@ -1099,18 +1118,10 @@ class ShaderCache : public IECore::RefCounted
 					cshader->tag_update( m_scene );
 				}
 			}
-
-			// Do the shader assignment here
-			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
-			{
-				shaderAssignPair.first->used_shaders.clear();
-				shaderAssignPair.first->used_shaders.push_back( shaderAssignPair.second );
-			}
-
-			m_shaderAssignPairs.clear();
 		}
 
 		ccl::Scene *m_scene;
+		int m_numDefaultShaders;
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCShaderPtr> Cache;
 		Cache m_cache;
 		ccl::ShaderManager *m_shaderManager;
@@ -1365,8 +1376,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 								return false;
 							}
 						}
-						m_shaderCache->addShaderAssignment( ShaderAssignPair( mesh, m_shader.get() ) );
 					}
+				}
+
+				if( m_shader )
+				{
+					m_shaderCache->addShaderAssignment( ShaderAssignPair( object->geometry, m_shader.get() ) );
 				}
 			}
 
@@ -1426,7 +1441,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->lightgroups = clight->lightgroups;
 #endif
 			}
-			if( m_shader.get() )
+			if( m_shader )
 			{
 				light->shader = m_shader.get();
 			}
@@ -1869,6 +1884,8 @@ class ParticleSystemsCache : public IECore::RefCounted
 		void updateParticleSystems()
 		{
 			auto &pSystems = m_scene->particle_systems;
+			if( !m_scene->particle_system_manager->need_update && pSystems.size() == m_cache.size() )
+				return;
 			pSystems.clear();
 
 			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
@@ -2215,26 +2232,15 @@ class InstanceCache : public IECore::RefCounted
 			updateObjects();
 		}
 
-		void clearMissingShaders()
-		{
-			// Make sure there are no nullptrs in used_shaders
-			for( ccl::Geometry *geom : m_scene->geometry )
-			{
-				for( ccl::Shader *shader : geom->used_shaders )
-				{
-					if( shader == nullptr )
-					{
-						shader = m_scene->default_surface;
-					}
-				}
-			}
-		}
-
 	private :
 
 		void updateObjects()
 		{
 			auto &objects = m_scene->objects;
+
+			if( !m_scene->object_manager->need_update && m_scene->objects.size() == m_objects.size() )
+				return;
+
 			objects.clear();
 			for( Objects::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
 			{
@@ -2249,6 +2255,10 @@ class InstanceCache : public IECore::RefCounted
 		void updateGeometry()
 		{
 			auto &geoms = m_scene->geometry;
+
+			if( !m_scene->geometry_manager->need_update && geoms.size() == ( m_uniqueGeometry.size() + m_instancedGeometry.size() ) )
+				return;
+
 			geoms.clear();
 
 			// Unique geometry
@@ -2268,7 +2278,6 @@ class InstanceCache : public IECore::RefCounted
 					geoms.push_back( it->second.get() );
 				}
 			}
-			clearMissingShaders();
 			m_scene->geometry_manager->tag_update( m_scene );
 		}
 
@@ -2314,8 +2323,10 @@ class LightCache : public IECore::RefCounted
 		// Can be called concurrently with other get() calls.
 		SharedCLightPtr get( const std::string &nodeName )
 		{
-			auto clight = SharedCLightPtr( new ccl::Light() );
-			clight.get()->name = nodeName.c_str();
+			ccl::Light *light = new ccl::Light();
+			light->name = nodeName.c_str();
+			light->tag_update( m_scene );
+			auto clight = SharedCLightPtr( light );
 
 			m_lights.push_back( clight );
 
@@ -2336,6 +2347,7 @@ class LightCache : public IECore::RefCounted
 
 			if( lightsKeep.size() )
 			{
+				m_scene->light_manager->need_update = true;
 				m_lights = lightsKeep;
 				updateLights();
 			}
@@ -2346,15 +2358,35 @@ class LightCache : public IECore::RefCounted
 		void updateLights() const
 		{
 			auto &lights = m_scene->lights;
+			if( !m_scene->light_manager->need_update )
+				return;
+
 			lights.clear();
 			for( Lights::const_iterator it = m_lights.begin(), eIt = m_lights.end(); it != eIt; ++it )
 			{
-				if( it->get() )
+				if( ccl::Light *light = it->get() )
 				{
-					lights.push_back( it->get() );
+					if( light->type == ccl::LIGHT_BACKGROUND )
+					{
+						// Set environment map rotation
+						Imath::M44f transform =  SocketAlgo::getTransform( light->tfm );
+						Imath::Eulerf euler( transform, Imath::Eulerf::Order::XZY );
+
+						for( ccl::ShaderNode *node : light->shader->graph->nodes )
+						{
+							if ( node->type == ccl::EnvironmentTextureNode::node_type )
+							{
+								ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
+								env->tex_mapping.rotation = ccl::make_float3( -euler.x, -euler.y, -euler.z );
+								light->shader->tag_update( m_scene );
+								break;
+							}
+						}
+					}
+
+					lights.push_back( light );
 				}
 			}
-			m_scene->light_manager->tag_update( m_scene );
 		}
 
 		ccl::Scene *m_scene;
@@ -2442,8 +2474,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesObject( const Instance &instance, const float frame )
-			:	m_instance( instance ), m_frame( frame ), m_attributes( nullptr )
+		CyclesObject( ccl::Session *session, const Instance &instance, const float frame )
+			:	m_session( session ), m_instance( instance ), m_frame( frame ), m_attributes( nullptr )
 		{
 		}
 
@@ -2460,10 +2492,16 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ccl::Object *object = m_instance.object();
 			if( !object )
 				return;
+			object->tag_update( m_session->scene );
+
 			object->tfm = SocketAlgo::setTransform( transform );
 			ccl::Mesh *mesh = nullptr;
 			if( object->geometry->type == ccl::Geometry::MESH )
+			{
 				mesh = (ccl::Mesh*)object->geometry;
+				if( mesh->transform_applied )
+					mesh->need_update = true;
+			}
 
 			if( mesh && mesh->subd_params )
 			{
@@ -2490,6 +2528,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ccl::Object *object = m_instance.object();
 			if( !object )
 				return;
+			object->tag_update( m_session->scene );
 
 			object->motion.clear();
 			if( object->geometry->use_motion_blur && object->geometry->motion_steps != samples.size() )
@@ -2590,7 +2629,11 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 			ccl::Mesh *mesh = nullptr;
 			if( object->geometry->type == ccl::Geometry::MESH )
+			{
 				mesh = (ccl::Mesh*)object->geometry;
+				if( mesh->transform_applied )
+					mesh->need_update = true;
+			}
 
 			if( mesh && mesh->subd_params )
 			{
@@ -2609,11 +2652,13 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				return true;
 			}
 
+			object->tag_update( m_session->scene );
 			return false;
 		}
 
 	private :
 
+		ccl::Session *m_session;
 		Instance m_instance;
 		const float m_frame;
 		ConstCyclesAttributesPtr m_attributes;
@@ -2634,8 +2679,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		CyclesLight( SharedCLightPtr &light )
-			: m_light( light ), m_attributes( nullptr )
+		CyclesLight( ccl::Session *session, SharedCLightPtr &light )
+			: m_session( session ), m_light( light ), m_attributes( nullptr )
 		{
 		}
 
@@ -2664,9 +2709,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			light->co = ccl::transform_get_column(&tfm, 3);
 			light->dir = -ccl::transform_get_column(&tfm, 2);
 
-			Imath::Eulerf euler( transform, Imath::Eulerf::Order::XZY );
-
-			rotateEnvironmentTexture( euler, light );
+			light->tag_update( m_session->scene );
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -2689,7 +2732,7 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 
 			Imath::Eulerf euler( samples.front(), Imath::Eulerf::Order::XZY );
 
-			rotateEnvironmentTexture( euler, light );
+			light->tag_update( m_session->scene );
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2703,27 +2746,13 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 				return true;
 			}
 
+			light->tag_update( m_session->scene );
 			return false;
 		}
 
 	private :
 
-		void rotateEnvironmentTexture( const Imath::Eulerf &rotation, ccl::Light *light )
-		{
-			if( ccl::Shader *shader = light->shader )
-			{
-				for( ccl::ShaderNode *node : shader->graph->nodes )
-				{
-					if ( node->type == ccl::EnvironmentTextureNode::node_type )
-					{
-						ccl::EnvironmentTextureNode *env = (ccl::EnvironmentTextureNode *)node;
-						env->tex_mapping.rotation = ccl::make_float3( -rotation.x, -rotation.y, -rotation.z );
-						return;
-					}
-				}
-			}
-		}
-
+		ccl::Session *m_session;
 		SharedCLightPtr m_light;
 		ConstCyclesAttributesPtr m_attributes;
 
@@ -2842,7 +2871,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			return true;
+			return false;
 		}
 
 	private :
@@ -3011,7 +3040,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
 				m_rendering( false ),
-				m_dirtyFlag( false ),
+				m_sceneChanged( true ),
+				m_sessionReset( false ),
 				m_pause( false ),
 				m_progressLevel( IECore::Msg::Info ),
 				m_sceneLockInterval( 1 ),
@@ -3110,6 +3140,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_session->set_pause( true );
 
+			m_scene->mutex.lock();
 			// Reduce the refcount so that it gets cleared.
 			m_backgroundShader = nullptr;
 			m_cameraCache.reset();
@@ -3124,6 +3155,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->objects.clear();
 			m_scene->lights.clear();
 			m_scene->particle_systems.clear();
+			m_scene->mutex.unlock();
 
 			delete m_session;
 			delete m_imageManagerOld;
@@ -3179,6 +3211,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) ) { \
 					CATEGORY.OPTION = data->readable().c_str(); } \
 				return; }
+
+			m_sceneChanged = true;
 
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
@@ -3259,7 +3293,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					m_deviceName = "CPU";
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
 				}
-				m_dirtyFlag = true;
+				m_sessionReset = true;
 				return;
 			}
 			else if( name == g_threadsOptionName )
@@ -3844,6 +3878,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void output( const IECore::InternedString &name, const Output *output ) override
 		{
+			m_sceneChanged = true;
+
 			ccl::Film *film = m_scene->film;
 
 			if( !output )
@@ -3926,7 +3962,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesLight( clight );
+			ObjectInterfacePtr result = new CyclesLight( m_session, clight );
 			result->attributes( attributes );
 			return result;
 		}
@@ -3951,7 +3987,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #endif
 			Instance instance = m_instanceCache->get( object, attributes, name );
 
-			ObjectInterfacePtr result = new CyclesObject( instance, m_frame );
+			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
 			return result;
 		}
@@ -3979,59 +4015,102 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			Instance instance = m_instanceCache->get( samples, times, frameIdx, attributes, name );
 
-			ObjectInterfacePtr result = new CyclesObject( instance, m_frame );
+			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
 			return result;
 		}
 
 		void render() override
 		{
+			// Early-out for camera only changes
+			if( m_rendering )
+			{
+				while( !m_sceneChanged )
+				{
+					if( m_scene->object_manager->need_update )
+					{
+						m_sceneChanged = true;
+					}
+
+					if( m_scene->geometry_manager->need_update )
+					{
+						m_sceneChanged = true;
+					}
+
+					if( m_scene->light_manager->need_update )
+					{
+						m_sceneChanged = true;
+					}
+
+					if( m_scene->particle_system_manager->need_update )
+					{
+						m_sceneChanged = true;
+					}
+
+					if( m_scene->shader_manager->need_update )
+					{
+						m_sceneChanged = true;
+					}
+					break;
+				}
+
+				if( !m_sceneChanged )
+				{
+					updateCamera();
+					m_session->reset( m_bufferParams, m_sessionParams.samples );
+					return;
+				}
+			}
+
 			m_session->set_pause( true );
-			// Clear out any objects which aren't needed in the cache.
+
 			while( true )
 			{
 				if( m_scene->mutex.try_lock() )
 				{
-					updateSceneObjects();
-					updateOptions();
-
-					// Try to lock the scene mutex to clear unused objects, if not we will try again next time.
-					if( m_renderType == Interactive )
+					if( m_rendering && m_renderType == Interactive )
 					{
 						m_cameraCache->clearUnused();
 						m_instanceCache->clearUnused();
 						m_particleSystemsCache->clearUnused();
 						m_lightCache->clearUnused();
 						m_attributesCache->clearUnused();
-						// Clear out any nullptr shaders so we don't crash
-						m_instanceCache->clearMissingShaders();
 					}
 
+					updateSceneObjects();
+					updateOptions();
 					updateCamera();
 					updateOutputs();
 
 					if( m_rendering )
 					{
-						m_scene->reset();
+						//m_scene->reset();
 						//m_session->update_scene();
-						m_session->reset( m_bufferParams, m_sessionParams.samples );
+						
+						if( m_scene->need_reset() )
+						{
+							m_session->reset( m_bufferParams, m_sessionParams.samples );
+						}
 						m_session->set_pause( false );
 					}
 
 					// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
-					if( !m_dirtyFlag )
+					if( !m_sessionReset )
 					{
 						m_scene->mutex.unlock();
 					}
 					else
 					{
-						m_dirtyFlag = false;
+						m_sessionReset = false;
 					}
 
 					if( m_rendering )
 					{
 						m_session->start();
 					}
+
+					m_sceneChanged = false;
+
 					break; 	
 				}
 				else
@@ -4079,10 +4158,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void init()
 		{
-			// Clear scene & session if they exist.
-			if( m_session )
-				delete m_session;
-
 			// Fallback
 			ccl::DeviceType device_type_fallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo device_fallback;
@@ -4122,7 +4197,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = device_fallback;
 			}
 
-			m_session = new ccl::Session( m_sessionParams );
+			if( m_session )
+			{
+				m_session->~Session();
+				new ( m_session ) ccl::Session( m_sessionParams );
+			}
+			else
+			{
+				m_session = new ccl::Session( m_sessionParams );
+			}
 
 			m_session->write_render_tile_cb = function_bind( &CyclesRenderer::writeRenderTile, this, ccl::_1 );
 			m_session->update_render_tile_cb = function_bind( &CyclesRenderer::updateRenderTile, this, ccl::_1, ccl::_2 );
@@ -4287,11 +4370,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
-			    m_session->params.modified( m_sessionParams ) ||
-				m_dirtyFlag )
+				m_session->params.modified( m_sessionParams ) ||
+				m_sessionReset )
 			{
 				// Flag it true here so that we never mutex unlock a different scene pointer due to the reset
-				m_dirtyFlag = true;
+				m_sessionReset = true;
 				reset();
 			}
 		}
@@ -4545,7 +4628,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					*m_scene->camera = *(ccamera.get());
 				}
 				m_scene->camera->need_update = true;
-				m_scene->camera->update( m_scene );
+				m_scene->camera->need_device_update = true;
 			}
 
 			// Dicing camera update
@@ -4568,7 +4651,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					*m_scene->dicing_camera = *(ccamera.get());
 				}
 				m_scene->dicing_camera->need_update = true;
-				m_scene->dicing_camera->update( m_scene );
+				m_scene->dicing_camera->need_device_update = true;
 			}
 		}
 
@@ -4697,7 +4780,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_frame;
 		string m_camera;
 		bool m_rendering;
-		bool m_dirtyFlag;
+		bool m_sceneChanged;
+		bool m_sessionReset;
 		bool m_pause;
 		IECore::Msg::Level m_progressLevel;
 
