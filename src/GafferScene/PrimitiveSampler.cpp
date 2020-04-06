@@ -38,11 +38,16 @@
 
 #include "GafferScene/SceneAlgo.h"
 
+#include "Gaffer/Private/IECorePreview/ParallelAlgo.h"
+
 #include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/PrimitiveEvaluator.h"
 
+#include "tbb/parallel_for.h"
+
 using namespace std;
+using namespace tbb;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
@@ -344,22 +349,39 @@ IECore::ConstObjectPtr PrimitiveSampler::computeProcessedObject( const ScenePath
 		outputPrimitive->variables[status] = PrimitiveVariable( outputInterpolation, statusData );
 	}
 
-	PrimitiveEvaluator::ResultPtr evaluatorResult = evaluator->createResult();
 	const M44f samplingTransform = transform * sourceTransform.inverse();
-	for( size_t i = 0; i < size; ++i )
-	{
-		if( samplingFunction( *evaluator, i, samplingTransform, *evaluatorResult ) )
+
+	auto rangeSampler = [&]( const blocked_range<size_t> &r ) {
+		PrimitiveEvaluator::ResultPtr evaluatorResult = evaluator->createResult();
+		for( size_t i = r.begin(); i != r.end(); ++i )
 		{
-			for( const auto &o : outputVariables )
+			if( samplingFunction( *evaluator, i, samplingTransform, *evaluatorResult ) )
 			{
-				o( i, *evaluatorResult );
-			}
-			if( statusData )
-			{
-				statusData->writable()[i] = true;
+				for( const auto &o : outputVariables )
+				{
+					o( i, *evaluatorResult );
+				}
+				if( statusData )
+				{
+					statusData->writable()[i] = true;
+				}
 			}
 		}
-	}
+	};
+
+	/// \todo We should probably be implementing `ComputeNode::computeCachePolicy()` instead
+	/// of doing our own isolation here, and we might even prefer the `TaskCollaboration`
+	/// that would provide. But we might also be filtered to only affect a single
+	/// object in an entire scene, and it seems that changing cache policy for
+	/// `outPlug()->objectPlug()` might give unwanted overhead for the pass-through
+	/// computations (particulary if we used `TaskCollaboration`). We might be able to
+	/// deal with this in ObjectProcessor by performing the non-pass-through computations
+	/// on an internal plug with a custom policy. But we leave that for another time.
+	IECorePreview::ParallelAlgo::isolate(
+		[&] () {
+			parallel_for( blocked_range<size_t>( 0, size ), rangeSampler );
+		}
+	);
 
 	return outputPrimitive;
 }

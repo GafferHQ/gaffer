@@ -39,6 +39,7 @@ import imath
 import IECore
 import IECoreScene
 
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -236,6 +237,31 @@ class ClosestPointSamplerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( sampler["out"].boundHash( "/plane" ), sampler["in"].boundHash( "/plane" ) )
 		sampler["adjustBounds"].setValue( False )
 		self.assertEqual( sampler["out"].boundHash( "/plane" ), sampler["in"].boundHash( "/plane" ) )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testPerformance( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		plane = GafferScene.Plane()
+		plane["divisions"].setValue( imath.V2i( 1000, 200 ) )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		sampler = GafferScene.ClosestPointSampler()
+		sampler["in"].setInput( plane["out"] )
+		sampler["source"].setInput( sphere["out"] )
+		sampler["filter"].setInput( planeFilter["out"] )
+		sampler["sourceLocation"].setValue( "/sphere" )
+		sampler["primitiveVariables"].setValue( "uv" )
+
+		# Precache the input object so we don't include
+		# it in the performance measurement.
+		sampler["in"].object( "/plane" )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			sampler["out"].object( "/plane" )
 
 if __name__ == "__main__":
 	unittest.main()
