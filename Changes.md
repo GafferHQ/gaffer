@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - Spreadsheet : Added a popup menu item for promoting spreadsheet plugs.
+- InteractiveRender : Improved presentation of render control buttons (#3419).
 
 Fixes
 -----

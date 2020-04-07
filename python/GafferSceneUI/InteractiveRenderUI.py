@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+from Qt import QtCore
+
 import Gaffer
 import GafferScene
 import GafferUI
@@ -50,11 +52,26 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, row, plug )
 
 		with row :
-			self.__startPauseButton = GafferUI.Button( image = 'timelinePlay.png' )
-			self.__stopButton = GafferUI.Button( image = 'timelineStop.png' )
+			self.__startPauseButton = GafferUI.Button( image = 'renderStart.png', highlightOnOver = False )
+			self.__stopButton = GafferUI.Button( image = 'renderStop.png', highlightOnOver = False )
 
-			self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ), scoped = False )
-			self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ), scoped = False )
+		GafferUI.WidgetAlgo.joinEdges( row )
+
+		# Sadly unable to use setFixedWidth on row to take effect, regardless of size policies...
+		self.__startPauseButton._qtWidget().setFixedWidth( 25 )
+		self.__stopButton._qtWidget().setFixedWidth( 25 )
+		# The button retaining focus causes problems when embedding in other UIs
+		self.__startPauseButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+		self.__stopButton._qtWidget().setFocusPolicy( QtCore.Qt.NoFocus )
+
+		self.__startPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startPauseClicked ), scoped = False )
+		self.__stopButton.clickedSignal().connect( Gaffer.WeakMethod( self.__stopClicked ), scoped = False )
+
+		self.__stateIcons = {
+			GafferScene.InteractiveRender.State.Running : 'renderPause.png',
+			GafferScene.InteractiveRender.State.Paused : 'renderResume.png',
+			GafferScene.InteractiveRender.State.Stopped : 'renderStart.png'
+		}
 
 		self._updateFromPlug()
 
@@ -64,21 +81,13 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__startPauseButton.setEnabled( False )
 			self.__stopButton.setEnabled( False )
 			return
-		else :
-			self.__startPauseButton.setEnabled( True )
 
 		with self.getContext() :
 			state = self.getPlug().getValue()
 
-		if state == GafferScene.InteractiveRender.State.Running :
-			self.__startPauseButton.setImage( 'timelinePause.png' )
-			self.__stopButton.setEnabled( True )
-		elif state == GafferScene.InteractiveRender.State.Paused :
-			self.__startPauseButton.setImage( 'timelinePlay.png' )
-			self.__stopButton.setEnabled( True )
-		elif state == GafferScene.InteractiveRender.State.Stopped :
-			self.__startPauseButton.setImage( 'timelinePlay.png' )
-			self.__stopButton.setEnabled( False )
+		self.__startPauseButton.setEnabled( True )
+		self.__startPauseButton.setImage( self.__stateIcons[state] )
+		self.__stopButton.setEnabled( state != GafferScene.InteractiveRender.State.Stopped )
 
 	def __startPauseClicked( self, button ) :
 
@@ -146,6 +155,7 @@ Gaffer.Metadata.registerNode(
 			Turns the rendering on and off, or pauses it.
 			""",
 
+			"label", "Render",
 			"plugValueWidget:type", "GafferSceneUI.InteractiveRenderUI._StatePlugValueWidget",
 
 		],

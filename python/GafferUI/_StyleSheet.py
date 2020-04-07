@@ -1320,6 +1320,39 @@ _styleSheet = string.Template(
 		border-bottom-right-radius: $widgetCornerRadius;
 	}
 
+	/* Adjoined buttons */
+	/* Selector specificity requires radius to be re-specified as the base */
+	/* QPushButton[gafferWithFrame="true"] radius overrides those above. */
+
+	QPushButton[gafferAdjoinedTop="true"] {
+		border-top-left-radius: 0px;
+		border-top-right-radius: 0px;
+		border-top-color: $tintLighter;
+		margin-top: 0;
+	}
+
+	QPushButton[gafferAdjoinedBottom="true"] {
+		border-bottom-left-radius: 0px;
+		border-bottom-right-radius: 0px;
+		border-bottom-color: $tintDarkerSubtle;
+		margin-bottom: 0;
+	}
+
+	QPushButton[gafferAdjoinedLeft="true"] {
+		border-top-left-radius: 0px;
+		border-bottom-left-radius: 0px;
+		border-left-color: $tintLighter;
+		margin-left: 0;
+	}
+
+	QPushButton[gafferAdjoinedRight="true"] {
+		border-top-right-radius: 0px;
+		border-bottom-right-radius: 0px;
+		border-right-color: $tintDarkerSubtle;
+		margin-right: 0;
+	}
+
+
 	/* PathChooseWidget */
 
 	*[gafferClass="GafferUI.PathChooserWidget"] #gafferPathListingContainer {
