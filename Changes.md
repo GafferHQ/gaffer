@@ -4,28 +4,27 @@
 Breaking Changes
 ----------------
 
-- Gaffer :
-  - Removed compatibility shim for loading Expression nodes from version 0.18.0.0 and prior.
-  - Removed compatibility shim for ignoring invalid `Node.user` plug inputs from version 0.18.0.0 and prior.
-  - Removed compatibility shim for referencing `GafferCortex` attributes via the `Gaffer` namespace.
-  - Removed compatibility shim for referencing `GafferDispatch` attributes via the `Gaffer` namespace.
-  - Removed compatibility shim for referencing `MetadataAlgo` and `MonitorAlgo` without namespace qualification.
-  - Removed compatibility shim for referencing `UndoScope` as `UndoContext`.
-- GafferUI :
-  - Removed compatibility shim for referencing `GafferDispatchUI` attributes via the `GafferUI` namespace.
-  - Removed compatibility shim for referencing `GafferCortexUI` attributes via the `GafferUI` namespace.
-- GafferImage :
-  - Removed compatibility for loading old `RemoveChannels` nodes.
-  - Removed compatibility for loading old `OpenColorIO` nodes.
-  - Removed compatibility for loading certain ImageWriter settings version 0.17.0.0 and prior.
-  - Removed compatibility shim for loading Reformat nodes from version 0.19.0.0 and prior.
-  - Removed compatibility shim for loading certain Crop nodes from version 0.20.0.0 and prior.
-  - Removed compatibility shim for referencing `ImageAlgo` and `BufferAlgo` without namespace qualification.
-- GafferScene : Removed compatibility shim for referencing `SceneAlgo` without namespace qualification.
-- GafferDispatch :
-  - Removed compatibility shim for loading TaskNodes from version 0.20.0.0 and prior.
-  - Removed compatibility shim for accessing `GafferDispatch.TaskNode` as `GafferDispatch.ExecutableNode`.
-- GafferCortex : Removed compatibility shim for accessing `GafferCortex.ParameterisedHolderTaskNode` as `GafferCortex.ParameterisedHolderExecutableNode`.
+- Startup :
+  - Removed several compatibility shims for loading files from Gaffer versions prior to 0.20.0.0. Either resave the file from version 0.57.0.0 or adopt the appropriate shim into your own configuration. The following are affected :
+     - RemoveChannels nodes.
+     - OpenColorIO nodes.
+     - Certain ImageWriter settings from version 0.17.0.0 and prior.
+     - Expression nodes from version 0.18.0.0 and prior.
+     - Invalid `Node.user` plug inputs from version 0.18.0.0 and prior.
+     - Reformat nodes from version 0.19.0.0 and prior.
+     - Crop nodes from version 0.20.0.0 and prior.
+     - TaskNodes from version 0.20.0.0 and prior.
+  - Removed several compatibility shims for running old Python code without modification. Either update your code or adopt the appropriate shim into your own configuration.
+    - `Gaffer.MetadataAlgo` and `Gaffer.MonitorAlgo` can no longer be accessed without namespace qualification.
+    - `GafferImage.ImageAlgo` and `GafferImage.BufferAlgo` can no longer be accessed without namespace qualification.
+    - `GafferScene.SceneAlgo` can no longer be accessed without namespace qualification.
+    - `GafferDispatch` attributes can no longer be accessed via the `Gaffer` namespace.
+    - `Gaffer.UndoContext` is no longer an alias for `Gaffer.UndoScope`.
+    - `GafferDispatchUI` attributes can no longer be accessed via the `GafferUI` namespace.
+    - `GafferDispatch.ExecutableNode` is no longer an alias for `GafferDispatch.TaskNode`.
+    - `GafferCortex.ParameterisedHolderExecutableNode` is no longer an alias for `GafferCortex.ParameterisedHolderTaskNode`.
+    - `GafferCortex` attributes can no longer be accessed via the `Gaffer` namespace.
+    - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
 
 0.57.1.0 (relative to 0.57.0.0)
 ========
