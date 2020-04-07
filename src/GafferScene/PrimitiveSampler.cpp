@@ -245,7 +245,7 @@ bool PrimitiveSampler::affectsProcessedObject( const Gaffer::Plug *input ) const
 
 void PrimitiveSampler::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	PrimitiveSampler::Deformer::hashProcessedObject( path, context, h );
+	Deformer::hashProcessedObject( path, context, h );
 
 	const string sourceLocation = sourceLocationPlug()->getValue();
 	const string primitiveVariables = primitiveVariablesPlug()->getValue();
