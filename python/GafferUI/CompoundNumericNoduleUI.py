@@ -41,7 +41,7 @@ import GafferUI
 
 def __applyChildVisibility( plug, visible ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		if visible :
 			Gaffer.Metadata.registerValue( plug, "compoundNumericNodule:childrenVisible", True )
 		else :

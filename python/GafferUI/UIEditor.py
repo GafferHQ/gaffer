@@ -337,7 +337,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	@staticmethod
 	def __setNameVisible( node, nameVisible ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.registerValue(
 				node, "nodeGadget:type",
 				"GafferUI::StandardNodeGadget" if nameVisible else "GafferUI::AuxiliaryNodeGadget"

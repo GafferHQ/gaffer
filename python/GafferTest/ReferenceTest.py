@@ -1154,7 +1154,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p1"], "referenced" ), "original" )
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p2"], "referenced" ), "original" )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( s["r"]["p1"], "referenced", "override" )
 
 		self.assertTrue( s["r"].hasMetadataEdit( s["r"]["p1"], "referenced" ) )
@@ -1163,7 +1163,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p1"], "referenced" ), "override" )
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p2"], "referenced" ), "original" )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( s["r"]["p1"], "referenced", "foo" )
 			Gaffer.Metadata.registerValue( s["r"]["p2"], "referenced", "bar" )
 

@@ -136,7 +136,7 @@ def __createLoop( node ) :
 	def rotate( edge ) :
 		return edges[ ( edges.index( edge ) + 1 ) % 4 ]
 
-	with Gaffer.UndoContext( node.scriptNode() ) :
+	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		plug = node["previous"]
 		edge = Gaffer.Metadata.value( plug, "noduleLayout:section" ) or "bottom"

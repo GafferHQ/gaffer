@@ -1883,7 +1883,7 @@ def __createSpreadsheet( plug ) :
 	else :
 		spreadsheetParent = plug.node().parent()
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		spreadsheetParent.addChild( spreadsheet )
 		plug.setInput( spreadsheet["out"][0] )
 
@@ -1891,7 +1891,7 @@ def __createSpreadsheet( plug ) :
 
 def __addToSpreadsheet( plug, spreadsheet, sectionName = None ) :
 
-	with Gaffer.UndoContext( spreadsheet.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( spreadsheet.ancestor( Gaffer.ScriptNode ) ) :
 		columnIndex = __addColumn( spreadsheet, plug )
 		if sectionName is not None :
 			_SectionChooser.setSection(
