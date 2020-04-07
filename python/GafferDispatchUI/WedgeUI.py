@@ -64,11 +64,11 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:modeIsStringList", lambda node : node["mode"].getValue() == int( node.Mode.StringList ),
 	"layout:activator:modeIsNumeric", lambda node : node["mode"].getValue() in ( int( node.Mode.IntRange ), int( node.Mode.FloatRange ) ),
 
-	"layout:customWidget:numericValues:widgetType", "GafferUI.WedgeUI._NumericValuesPreview",
+	"layout:customWidget:numericValues:widgetType", "GafferDispatchUI.WedgeUI._NumericValuesPreview",
 	"layout:customWidget:numericValues:visibilityActivator", "modeIsNumeric",
 	"layout:customWidget:numericValues:section", "Settings",
 
-	"layout:customWidget:colorValues:widgetType", "GafferUI.WedgeUI._ColorValuesPreview",
+	"layout:customWidget:colorValues:widgetType", "GafferDispatchUI.WedgeUI._ColorValuesPreview",
 	"layout:customWidget:colorValues:visibilityActivator", "modeIsColorRange",
 	"layout:customWidget:colorValues:section", "Settings",
 

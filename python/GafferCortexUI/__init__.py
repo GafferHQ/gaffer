@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+__import__( "GafferDispatchUI" )
+
 # PathPreviewWidgets and browser modes
 
 from .FileIndexedIOPathPreview import FileIndexedIOPathPreview

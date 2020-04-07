@@ -11,7 +11,9 @@ Breaking Changes
   - Removed compatibility shim for referencing `GafferDispatch` attributes via the `Gaffer` namespace.
   - Removed compatibility shim for referencing `MetadataAlgo` and `MonitorAlgo` without namespace qualification.
   - Removed compatibility shim for referencing `UndoScope` as `UndoContext`.
-- GafferUI : Removed compatibility shim for referencing `GafferCortexUI` attributes via the `GafferUI` namespace.
+- GafferUI :
+  - Removed compatibility shim for referencing `GafferDispatchUI` attributes via the `GafferUI` namespace.
+  - Removed compatibility shim for referencing `GafferCortexUI` attributes via the `GafferUI` namespace.
 - GafferImage :
   - Removed compatibility for loading old `RemoveChannels` nodes.
   - Removed compatibility for loading old `OpenColorIO` nodes.

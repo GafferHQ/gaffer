@@ -36,6 +36,7 @@
 ##########################################################################
 
 __import__( "GafferImageUI" )
+__import__( "GafferDispatchUI" )
 __import__( "GafferScene" )
 
 from ._GafferSceneUI import *
