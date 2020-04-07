@@ -355,6 +355,7 @@ IECore::ConstObjectPtr PrimitiveSampler::computeProcessedObject( const ScenePath
 		PrimitiveEvaluator::ResultPtr evaluatorResult = evaluator->createResult();
 		for( size_t i = r.begin(); i != r.end(); ++i )
 		{
+			Canceller::check( context->canceller() );
 			if( samplingFunction( *evaluator, i, samplingTransform, *evaluatorResult ) )
 			{
 				for( const auto &o : outputVariables )
