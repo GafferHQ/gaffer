@@ -98,7 +98,7 @@ void CurveSampler::hashSamplingFunction( IECore::MurmurHash &h ) const
 	vPlug()->hash( h );
 }
 
-PrimitiveSampler::SamplingFunction CurveSampler::computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const
+PrimitiveSampler::SamplingFunction CurveSampler::computeSamplingFunction( const IECoreScene::Primitive *destinationPrimitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const
 {
 	const std::string curveIndex = curveIndexPlug()->getValue();
 	const std::string v = vPlug()->getValue();
@@ -108,8 +108,8 @@ PrimitiveSampler::SamplingFunction CurveSampler::computeSamplingFunction( const 
 
 	if( !curveIndex.empty() )
 	{
-		auto it = primitive->variables.find( curveIndex );
-		if( it == primitive->variables.end() )
+		auto it = destinationPrimitive->variables.find( curveIndex );
+		if( it == destinationPrimitive->variables.end() )
 		{
 			throw IECore::Exception( "No primitive variable named \"" + curveIndex + "\"" );
 		}
@@ -119,8 +119,8 @@ PrimitiveSampler::SamplingFunction CurveSampler::computeSamplingFunction( const 
 
 	if( !v.empty() )
 	{
-		auto it = primitive->variables.find( v );
-		if( it == primitive->variables.end() )
+		auto it = destinationPrimitive->variables.find( v );
+		if( it == destinationPrimitive->variables.end() )
 		{
 			throw IECore::Exception( "No primitive variable named \"" + v + "\"" );
 		}

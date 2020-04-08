@@ -59,7 +59,7 @@ class GAFFERSCENE_API ClosestPointSampler : public PrimitiveSampler
 
 		bool affectsSamplingFunction( const Gaffer::Plug *input ) const override;
 		void hashSamplingFunction( IECore::MurmurHash &h ) const override;
-		SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const override;
+		SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *destinationPrimitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const override;
 
 	private :
 

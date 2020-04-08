@@ -79,7 +79,7 @@ void ClosestPointSampler::hashSamplingFunction( IECore::MurmurHash &h ) const
 	positionPlug()->hash( h );
 }
 
-PrimitiveSampler::SamplingFunction ClosestPointSampler::computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const
+PrimitiveSampler::SamplingFunction ClosestPointSampler::computeSamplingFunction( const IECoreScene::Primitive *destinationPrimitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const
 {
 	const std::string position = positionPlug()->getValue();
 	if( position.empty() )
@@ -87,8 +87,8 @@ PrimitiveSampler::SamplingFunction ClosestPointSampler::computeSamplingFunction(
 		return SamplingFunction();
 	}
 
-	auto it = primitive->variables.find( position );
-	if( it == primitive->variables.end() )
+	auto it = destinationPrimitive->variables.find( position );
+	if( it == destinationPrimitive->variables.end() )
 	{
 		throw IECore::Exception( "No primitive variable named \"" + position + "\"" );
 	}

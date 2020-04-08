@@ -81,17 +81,19 @@ class GAFFERSCENE_API PrimitiveSampler : public Deformer
 		///
 		/// Derived classes are responsible for generating a `SamplingFunction`, which
 		/// performs an `IECoreScene::PrimitiveEvaluator` query for a single index within the
-		/// input primitive. The base class takes care of everything else.
+		/// destination primitive. The base class takes care of everything else.
 
 		using SamplingFunction = std::function<bool (
-			/// The PrimitiveEvaluator to use for sampling.
+			/// The PrimitiveEvaluator to use for sampling
+			/// the source primitive.
 			const IECoreScene::PrimitiveEvaluator &evaluator,
-			/// The index within the input to date to sample for.
+			/// The index within the destination primitive to
+			/// sample for.
 			size_t index,
 			/// A transform that must be applied to any geometric
 			/// data before querying the `evaluator`. This converts
-			/// from the object space of the sampling object into
-			/// the object space of the source object.
+			/// from the object space of the destination primitive into
+			/// the object space of the source primitive.
 			const Imath::M44f &transform,
 			/// The destination for the result of the `evaluator`
 			/// query.
@@ -105,12 +107,12 @@ class GAFFERSCENE_API PrimitiveSampler : public Deformer
 		/// Must be implemented to hash all plugs that are used in `computeSamplingFunction()`.
 		/// All implementation should call the base class implementation first.
 		virtual void hashSamplingFunction( IECore::MurmurHash &h ) const = 0;
-		/// Must be implemented to return an appropriate `SamplingFunction` for the
-		/// specified primitive, and fill `interpolation` with the interpolation of
-		/// the primitive variables being used for the query. The sampling function
-		/// will then be queried with `index` values in the interval
-		/// `[ 0, primitive->variableSize( interpolation ) )`.
-		virtual SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *primitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const = 0;
+		/// Must be implemented to return a `SamplingFunction` that will perform queries
+		/// on behalf of the destination primitive. The `interpolation` output parameter
+		/// must be filled with the interpolation of the primitive variables to be added
+		/// to the destination primitive. The sampling function will then be queried with
+		/// `index` values in the interval `[ 0, destinationPrimitive->variableSize( interpolation ) )`.
+		virtual SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *destinationPrimitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const = 0;
 
 	private :
 
