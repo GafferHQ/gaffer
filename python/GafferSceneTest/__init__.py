@@ -147,6 +147,8 @@ from ShuffleAttributesTest import ShuffleAttributesTest
 from ShufflePrimitiveVariablesTest import ShufflePrimitiveVariablesTest
 from EditScopeAlgoTest import EditScopeAlgoTest
 from LocaliseAttributesTest import LocaliseAttributesTest
+from ClosestPointSamplerTest import ClosestPointSamplerTest
+from CurveSamplerTest import CurveSamplerTest
 
 from IECoreScenePreviewTest import *
 from IECoreGLPreviewTest import *

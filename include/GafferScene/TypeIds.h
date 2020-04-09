@@ -153,6 +153,9 @@ enum TypeId
 	ShuffleAttributesTypeId = 110608,
 	ShufflePrimitiveVariablesTypeId = 110609,
 	LocaliseAttributesTypeId = 110610,
+	PrimitiveSamplerTypeId = 110611,
+	ClosestPointSamplerTypeId = 110612,
+	CurveSamplerTypeId = 110613,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

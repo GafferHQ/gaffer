@@ -1,3 +1,17 @@
+0.57.x.x
+========
+
+Features
+--------
+
+- ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
+- CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+
+API
+---
+
+- PrimitiveSampler : Added a new base class for nodes which sample primitive variables using an `IECoreScene::PrimitiveEvaluator`.
+
 0.57.0.0
 ========
 
