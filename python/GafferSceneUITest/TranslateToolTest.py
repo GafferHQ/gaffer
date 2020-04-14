@@ -1095,5 +1095,29 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			imath.V3f( 0, 10, 10 )
 		)
 
+		# Reset back to ( 0, 10, 0 ) and check the same thing works with
+		# an EditScope.
+
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 0, 10, 0 ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["parent"]["out"] )
+		script["editScope"]["in"].setInput( script["parent"]["out"] )
+		script["aim"]["in"].setInput( script["editScope"]["out"] )
+
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selectionEditable() )
+		self.assertEqual( tool.selection()[0].path(), "/cube" )
+		self.assertEqual( tool.selection()[0].upstreamPath(), "/cube" )
+		self.assertEqual( tool.selection()[0].editTarget(), script["editScope"] )
+
+		tool.translate( imath.V3f( 0, 0, 10 ) )
+		self.assertEqual(
+			script["aim"]["out"].transform( "/cube" ).translation(),
+			imath.V3f( 0, 10, 10 )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

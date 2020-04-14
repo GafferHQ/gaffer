@@ -362,7 +362,7 @@ void TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *
 	// the EditScope not being in the history at all, or it being
 	// overridden downstream.
 	Node *node = history->scene->node();
-	if( node == m_editScope && history->scene == m_editScope->outPlug() )
+	if( !editScopeFound && node == m_editScope && history->scene == m_editScope->outPlug() )
 	{
 		editScopeFound = true;
 		if( !m_upstreamScene )
