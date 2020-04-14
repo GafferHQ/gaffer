@@ -1,4 +1,4 @@
-0.57.x.x
+0.57.x.x (relative to 0.57.0.0)
 ========
 
 Features
@@ -6,6 +6,11 @@ Features
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+
+Fixes
+-----
+
+- TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
 
 API
 ---

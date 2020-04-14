@@ -547,16 +547,33 @@ Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 {
 	throwIfNotEditable();
 
+	// The scenes produced by `scene()` and `upstreamScene()` may
+	// be completely different :
+	//
+	// - The hierarchies may be different, often due to something like
+	//   a Group node inserted between the two.
+	// - The parent transforms of `path()` and `upstreamPath()` may
+	//   be different, either due to a Group or an intermediate edit
+	//   to the parent location.
+	//
+	// To account for this we align the two scenes by finding the
+	// difference between the parent transforms of `path()` and
+	// `upstreamPath()`.
+
 	M44f downstreamMatrix;
+	if( path().size() )
 	{
+		ScenePlug::ScenePath parentPath = path(); parentPath.pop_back();
 		Context::Scope scopedContext( context() );
-		downstreamMatrix = scene()->fullTransform( path() );
+		downstreamMatrix = scene()->fullTransform( parentPath );
 	}
 
 	M44f upstreamMatrix;
+	if( upstreamPath().size() )
 	{
+		ScenePlug::ScenePath upstreamParentPath = upstreamPath(); upstreamParentPath.pop_back();
 		Context::Scope scopedContext( upstreamContext() );
-		upstreamMatrix = upstreamScene()->fullTransform( upstreamPath() );
+		upstreamMatrix = upstreamScene()->fullTransform( upstreamParentPath );
 	}
 
 	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace().inverse();
