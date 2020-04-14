@@ -1562,5 +1562,24 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["filter"].setInput( filter["out"] )
 		self.assertIn( instancer["out"]["childNames"], { x[0] for x in cs } )
 
+	def testNoPrimitiveAtParent( self ) :
+
+		group = GafferScene.Group()
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( group["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["filter"].setInput( groupFilter["out"] )
+
+		self.assertSceneValid( instancer["out"] )
+		self.assertEqual( instancer["out"].childNames( "/group/instances" ) , IECore.InternedStringVectorData() )
+		self.assertEqual( instancer["out"].set( "setA" ) , IECore.PathMatcherData() )
+
 if __name__ == "__main__":
 	unittest.main()
