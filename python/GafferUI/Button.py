@@ -149,7 +149,11 @@ class Button( GafferUI.Widget ) :
 		else :
 			pixmap = self.__image._qtPixmapHighlighted()
 
-		self._qtWidget().setIcon( QtGui.QIcon( pixmap ) )
+		# Qt's built-in disabled state generation doesn't work well with dark schemes
+		icon = QtGui.QIcon( pixmap )
+		icon.addPixmap( self.__image._qtPixmapDisabled(), QtGui.QIcon.Disabled )
+
+		self._qtWidget().setIcon( icon )
 		self._qtWidget().setIconSize( pixmap.size() )
 
 	def __enter( self, widget ) :

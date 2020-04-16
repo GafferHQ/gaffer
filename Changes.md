@@ -20,6 +20,7 @@ Fixes
 - Script Settings :
   - Fixed errors showing the popup menu for the `frameRange` plug.
   - Fixed Spreadsheet menu items.
+- UI : Fixed appearance of button icons when disabled.
 
 API
 ---
