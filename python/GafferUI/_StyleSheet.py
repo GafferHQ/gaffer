@@ -110,6 +110,7 @@ _styleColors = {
 	"tintLighter" :         ( 255, 255, 255, 20 ),
 	"tintLighterStrong" :   ( 255, 255, 255, 40 ),
 	"tintLighterStronger" : ( 255, 255, 255, 100 ),
+	"tintDarkerSubtle" :    ( 0, 0, 0, 10 ),
 	"tintDarker" :          ( 0, 0, 0, 20 ),
 	"tintDarkerStrong" :    ( 0, 0, 0, 40 ),
 	"tintDarkerStronger" :    ( 0, 0, 0, 70 ),
@@ -1248,12 +1249,17 @@ _styleSheet = string.Template(
 	#gafferColorInspector,
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
-	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame
+	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame,
+	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame
 	{
 		background: rgba( 42, 42, 42, 200 );
 		border-color: rgba( 30, 30, 30, 200 );
 		border-radius: 2px;
 		padding: 2px;
+	}
+
+	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
+		padding: 1px;
 	}
 
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"]

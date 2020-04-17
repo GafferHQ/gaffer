@@ -34,11 +34,130 @@
 #
 ##########################################################################
 
+import imath
+
 from Qt import QtCore
 
 import Gaffer
+import GafferImage
 import GafferScene
 import GafferUI
+import GafferImageUI
+
+##########################################################################
+# ImageView UI for the viewed images render node (if available)
+##########################################################################
+
+for key, value in {
+
+	"toolbarLayout:customWidget:RenderControlBalancingSpacer:widgetType" : "GafferSceneUI.InteractiveRenderUI._ViewRenderControlBalancingSpacer",
+	"toolbarLayout:customWidget:RenderControlBalancingSpacer:section" :  "Top",
+	"toolbarLayout:customWidget:RenderControlBalancingSpacer:visibilityActivator" : "viewSupportsRenderControl" ,
+	"toolbarLayout:customWidget:RenderControlBalancingSpacer:index" :  0,
+
+	"toolbarLayout:customWidget:RenderControl:widgetType" : "GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI",
+	"toolbarLayout:customWidget:RenderControl:section" :  "Top",
+	"toolbarLayout:customWidget:RenderControl:visibilityActivator" : "viewSupportsRenderControl" ,
+	"toolbarLayout:customWidget:RenderControl:index" :  -2,
+
+	"toolbarLayout:activator:viewSupportsRenderControl" : lambda view : _ViewRenderControlUI._interactiveRenderNode( view ) is not None,
+
+}.items() :
+	Gaffer.Metadata.registerValue( GafferImageUI.ImageView, key, value )
+
+class _ViewRenderControlBalancingSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			maximumSize = imath.V2i( 100, 1 ),
+			preferredSize = imath.V2i( 100, 1 )
+		)
+
+class _ViewRenderControlUI( GafferUI.Widget ) :
+
+	def __init__( self, view, **kwargs ) :
+
+		self.__frame = GafferUI.Frame( borderWidth = 0 )
+		GafferUI.Widget.__init__( self, self.__frame, **kwargs )
+
+		with self.__frame :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Spacer( imath.V2i( 1, 1 ), imath.V2i( 1, 1 ) )
+				self.__label = GafferUI.Label( "Render" )
+				self.__stateWidget = _StatePlugValueWidget( None )
+
+		self.__view = view
+
+		if isinstance( self.__view["in"], GafferImage.ImagePlug ) :
+			view.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__viewPlugDirtied ), scoped = False )
+
+		self.__update()
+
+	def __update( self ) :
+
+		renderNode = self._interactiveRenderNode( self.__view )
+		if renderNode is not None:
+
+			statePlug = renderNode["state"]
+
+			if not statePlug.isSame( self.__stateWidget.getPlug() ) :
+				self.__stateWidget.setPlug( statePlug )
+				self.__renderNodePlugDirtiedConnection = renderNode.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__renderNodePlugDirtied ) )
+
+			# We disable the controls if a render is in progress, but not being viewed
+			with self.__view.getContext() :
+				renderNodeStopped = statePlug.getValue() == GafferScene.InteractiveRender.State.Stopped
+				viewedImageIsRendering = self.__imageIsRendering( self.__view["in"] )
+				controlsEnabled  = ( viewedImageIsRendering and not renderNodeStopped ) or renderNodeStopped
+
+			self.__stateWidget.setToolTip(
+				"" if controlsEnabled else "Controls disabled because image is not the one currently rendering."
+			)
+			self.__stateWidget.setEnabled( controlsEnabled )
+
+		else :
+			self.__stateWidget.setPlug( None )
+			self.__renderNodePlugDirtiedConnection = None
+
+	@staticmethod
+	def _interactiveRenderNode( view ) :
+
+		if not isinstance( view["in"], GafferImage.ImagePlug ) :
+			return None
+
+		with view.getContext() :
+			renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
+
+		if not renderScene :
+			return None
+
+		node = renderScene.node()
+		return node if isinstance( node, GafferScene.InteractiveRender ) else None
+
+	def __imageIsRendering( self, imagePlug ) :
+
+		# Make-shift detection of an in-progress render.
+		# Finished images have the `fileFormat` key courtesy of OIIO.
+		## \TODO add more formal metadata to determine this
+		return "fileFormat" not in imagePlug.metadata()
+
+	@GafferUI.LazyMethod()
+	def __updateLazily( self ) :
+
+		self.__update()
+
+	def __viewPlugDirtied( self, plug ) :
+
+		if plug.isSame( self.__view["in"]["metadata"] ) :
+			self.__updateLazily()
+
+	def __renderNodePlugDirtied( self, plug ) :
+
+		if plug.getName() == "state" :
+			self.__updateLazily();
 
 ##########################################################################
 # UI for the state plug that allows setting the state through buttons

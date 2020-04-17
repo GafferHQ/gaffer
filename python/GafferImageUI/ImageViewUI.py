@@ -147,6 +147,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
 			"toolbarLayout:index", 1,
+			"toolbarLayout:width", 175,
 			"label", "",
 
 		],
