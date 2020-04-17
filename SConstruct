@@ -1216,7 +1216,7 @@ def buildImageCommand( source, target, env ) :
 	svgFilename = str( source[0] )
 	filename = str( target[0] )
 
-	substitutions = inkscapeArgs( env["buildImageOptions"], svgFilename )
+	substitutions = validateAndFlattenImageOptions( env["buildImageOptions"], svgFilename )
 
 	outputDirectory = os.path.dirname( filename )
 	if not os.path.isdir( outputDirectory ) :
@@ -1236,7 +1236,7 @@ def buildImageCommand( source, target, env ) :
 	)
 	subprocess.check_call( env["INKSCAPE"] + " " + args, shell = True )
 
-def inkscapeArgs( imageOptions, svg ) :
+def validateAndFlattenImageOptions( imageOptions, svg ) :
 
 	id_ = imageOptions["id"]
 
@@ -1246,6 +1246,23 @@ def inkscapeArgs( imageOptions, svg ) :
 
 	width = int( round( svgObjectInfo["width"] ) )
 	height = int( round( svgObjectInfo["height"] ) )
+
+	# Ensure images are properly pixel aligned and optionally, a specific size.
+	# Transparent container objects should be used where the artwork is of a shape that precludes this.
+
+	if imageOptions.get( "validatePixelAlignment", True ):
+		if width != svgObjectInfo["width"] or height != svgObjectInfo["height"] :
+			raise RuntimeError(
+				"Object with id '%s' is not aligned to pixel boundaries w: %s h: %s" %
+					( id_, svgObjectInfo["width"], svgObjectInfo["height"] )
+			)
+
+	# Optional exact dimension validation
+
+	vw = imageOptions.get( "requiredWidth", None )
+	vh = imageOptions.get( "requiredHeight", None )
+	if ( vw and width != vw ) or ( vh and height != vh ) :
+		raise RuntimeError( "Object '%s' is %dx%d must be %dx%d" % ( id_, width, height, vw, vh ) )
 
 	return {
 		"id" : id_,
@@ -1290,12 +1307,25 @@ def imagesToBuild( definitionFile ) :
 
 	toBuild = []
 
-	for i in exports["ids"] :
-		imageOptions = {
-			"id" : i,
-			"filename" : i + ".png"
-		}
-		toBuild.append( imageOptions )
+	# For each image, we must, at the very least, define:
+	#   id  : The svg object id
+	#   filename : The target filename
+
+	def searchWalk( root, parentOptions ) :
+
+		rootOptions = parentOptions.copy()
+		rootOptions.update( root.get( "options", {} ) )
+
+		for i in root.get( "ids", [] ) :
+			imageOptions = rootOptions.copy()
+			imageOptions["id"] = i
+			imageOptions["filename"] = i + ".png"
+			toBuild.append( imageOptions )
+
+		for definition in root.get( "groups", {} ).values() :
+			searchWalk( definition, rootOptions )
+
+	searchWalk( exports, {} )
 
 	return toBuild
 
@@ -1315,7 +1345,22 @@ def imagesToBuild( definitionFile ) :
 # The definition file must be `eval`able to define a single `exports`
 # dictionary, structured as follows:
 #
-#	{ "ids" : [ <id str>, ... ], }
+#	{
+#		# Required (unless "groups" are provided)
+#			"ids" : [ <id str>, ... ],
+#		# Optional
+#			"options" = { ... },
+#			# Each entry in this dict follows the same structure as the outer dict
+#			# to allow different options to be set for groups of images. The keys are
+#			# purely for organisational purposes, and don't affect image generation.
+#			"groups" : { ... }
+#	}
+#
+# Options :
+#
+#	- requiredWidth [int] : If set error if images are not of the supplied width.
+#	- requiredHeight [int] : If set error if images are not of the supplied height.
+#	- validatePixelAlignment [bool] : If True (default), error if objects aren't aligned to the pixel grid.
 #
 def graphicsCommands( env, svg, outputDirectory ) :
 
