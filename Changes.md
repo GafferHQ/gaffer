@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- CopyAttributes : Fixed bugs triggered by non-existent source locations. CopyAttributes now matches the behavior of CopyPrimitiveVariables : if the source location does not exist, nothing is copied and no error is caused.
 - OSLCode : Removed string substitutions on code, so that symbols such as `#` can be used directly. Substitutions were of no use anyway, because they were not being applied in a suitable context.
 
 0.57.2.0 (relative to 0.57.1.0)

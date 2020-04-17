@@ -178,5 +178,38 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 			[ script["copy"], script["box"]["copy"] ],
 		)
 
+	def testNonExistentSourceLocation( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		allFilter = GafferScene.PathFilter()
+		allFilter["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( allFilter["out"] )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
+
+		copyAttributes = GafferScene.CopyAttributes()
+		copyAttributes["in"].setInput( plane["out"] )
+		copyAttributes["filter"].setInput( allFilter["out"] )
+		copyAttributes["attributes"].setValue( "*" )
+
+		# Default source location does not exist in source
+
+		copyAttributes["source"].setInput( sphereAttributes["out"] )
+		self.assertEqual( copyAttributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
+		# Custom source location does not exist in source
+
+		copyAttributes["sourceLocation"].setValue( "/road/to/nowhere" )
+		self.assertEqual( copyAttributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
+		# Valid source location
+
+		copyAttributes["sourceLocation"].setValue( "/sphere" )
+		self.assertEqual( copyAttributes["out"].attributes( "/plane" ), sphereAttributes["out"].attributes( "/sphere" ) )
+
 if __name__ == "__main__":
 	unittest.main()
