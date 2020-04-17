@@ -60,6 +60,13 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 
+		if self.getPlug() is None :
+			self.__startPauseButton.setEnabled( False )
+			self.__stopButton.setEnabled( False )
+			return
+		else :
+			self.__startPauseButton.setEnabled( True )
+
 		with self.getContext() :
 			state = self.getPlug().getValue()
 
