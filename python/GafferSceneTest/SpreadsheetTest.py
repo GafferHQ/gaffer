@@ -73,5 +73,25 @@ class SpreadsheetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( attributes["out"].attributes( "/group/sphere" )["gaffer:deformationBlur"].value, True )
 		self.assertEqual( attributes["out"].attributes( "/group/cube" )["gaffer:deformationBlur"].value, False )
 
+	def testPathMatcherSyntax( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.BoolPlug( "v" ) )
+		row = s["rows"].addRow()
+		row["cells"]["v"]["value"].setValue( True )
+		s["selector"].setValue( "${scene:path}" )
+
+		for path, rowName, match in [
+			( "/foo", "/foo", True ),
+			( "/food", "/foo*", True ),
+			( "/foo/bar", "/foo*", False ),
+			( "/foo/bar/baz", "/foo/.../b*", True ),
+			( "/foo/bar/baz", "/foo/.../bar", False ),
+		] :
+			with Gaffer.Context() as c :
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				row["name"].setValue( rowName )
+				self.assertEqual( s["out"]["v"].getValue(), match )
+
 if __name__ == "__main__":
 	unittest.main()
