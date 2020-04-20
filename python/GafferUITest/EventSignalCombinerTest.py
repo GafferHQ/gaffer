@@ -36,7 +36,7 @@
 
 import unittest
 import sys
-import StringIO
+import six
 
 import IECore
 
@@ -110,7 +110,7 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 		self.assertEqual( self.exceptionSlotCalled, False )
 		self.assertEqual( self.trueSlotCalled, False )
 
-		tmpStdErr = StringIO.StringIO()
+		tmpStdErr = six.moves.cStringIO()
 		sys.stderr = tmpStdErr
 		try :
 			self.assertEqual( s( None, GafferUI.ButtonEvent() ), True )
