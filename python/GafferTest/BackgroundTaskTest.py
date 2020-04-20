@@ -35,8 +35,6 @@
 ##########################################################################
 
 import functools
-import thread
-import threading
 import time
 
 import IECore
