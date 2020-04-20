@@ -122,17 +122,17 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( g.getStyle(), None )
 		self.assertEqual( l.getStyle(), None )
 
-		self.failUnless( g.style().isSame( GafferUI.Style.getDefaultStyle() ) )
-		self.failUnless( l.style().isSame( GafferUI.Style.getDefaultStyle() ) )
+		self.assertTrue( g.style().isSame( GafferUI.Style.getDefaultStyle() ) )
+		self.assertTrue( l.style().isSame( GafferUI.Style.getDefaultStyle() ) )
 
 		s = GafferUI.StandardStyle()
 		l.setStyle( s )
 
-		self.failUnless( l.getStyle().isSame( s ) )
+		self.assertTrue( l.getStyle().isSame( s ) )
 		self.assertEqual( g.getStyle(), None )
 
-		self.failUnless( g.style().isSame( s ) )
-		self.failUnless( l.style().isSame( s ) )
+		self.assertTrue( g.style().isSame( s ) )
+		self.assertTrue( l.style().isSame( s ) )
 
 	def testTypeNamePrefixes( self ) :
 

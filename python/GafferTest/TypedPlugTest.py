@@ -65,14 +65,14 @@ class TypedPlugTest( GafferTest.TestCase ) :
 		p2 = Gaffer.StringPlug( direction=Gaffer.Plug.Direction.In )
 
 		p2.setInput( p1 )
-		self.assert_( p2.getInput().isSame( p1 ) )
+		self.assertTrue( p2.getInput().isSame( p1 ) )
 		p2.setInput( None )
-		self.assert_( p2.getInput() is None )
+		self.assertIsNone( p2.getInput(), None )
 
 	def testAcceptsNoneInput( self ) :
 
 		p = Gaffer.StringPlug( "hello" )
-		self.failUnless( p.acceptsInput( None ) )
+		self.assertTrue( p.acceptsInput( None ) )
 
 	def testRunTimeTyped( self ) :
 

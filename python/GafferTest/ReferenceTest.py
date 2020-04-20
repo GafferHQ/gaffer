@@ -39,6 +39,7 @@ import unittest
 import shutil
 import collections
 import imath
+import six
 
 import IECore
 
@@ -1192,7 +1193,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["r"] = Gaffer.Reference()
 
-		with self.assertRaisesRegexp( Exception, "Could not find file 'thisFileDoesntExist.grf'" ) :
+		with six.assertRaisesRegex( self, Exception, "Could not find file 'thisFileDoesntExist.grf'" ) :
 			s["r"].load( "thisFileDoesntExist.grf" )
 
 	def testHasMetadataEdit( self ) :

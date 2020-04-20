@@ -74,8 +74,8 @@ class RandomTest( GafferTest.TestCase ) :
 
 			r["seed"].setValue( s )
 			v = r["outFloat"].getValue()
-			self.failUnless( v >= r["floatRange"].getValue()[0] )
-			self.failUnless( v <= r["floatRange"].getValue()[1] )
+			self.assertGreaterEqual( v, r["floatRange"].getValue()[0] )
+			self.assertLessEqual( v, r["floatRange"].getValue()[1] )
 
 	def testContext( self ) :
 

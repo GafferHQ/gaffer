@@ -94,8 +94,8 @@ class SelectionMenuTest( GafferUITest.TestCase ) :
 		s = GafferUI.SelectionMenu()
 		s.addItem( "Test" )
 
-		self.failUnless( isinstance( s.getCurrentItem(), str ) )
-		self.failUnless( isinstance( s.getItem( 0 ), str ) )
+		self.assertIsInstance( s.getCurrentItem(), str )
+		self.assertIsInstance( s.getItem( 0 ), str )
 
 if __name__ == "__main__":
 	unittest.main()

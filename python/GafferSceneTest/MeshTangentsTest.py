@@ -108,10 +108,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
 
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
 
 	def testModeFirstEdge( self ) :
 
@@ -136,10 +136,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( biTangent.data ), 3 )
 
 		for v, v1 in zip( tangent.data, [imath.V3f( 1, 0, 0 ), imath.V3f( -1, 0, 0 ), imath.V3f( 0, -1, 0 ) ] ):
-			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 		for v, v1 in zip( biTangent.data, [imath.V3f( 0, -1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( -1, 0, 0 ) ] ):
-			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 	def testModeTwoEdges( self ) :
 
@@ -164,10 +164,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( biTangent.data ), 3 )
 
 		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
-			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
-			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 	def testModeCentroid( self ) :
 
@@ -192,10 +192,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( biTangent.data ), 3 )
 
 		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
-			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 		for v, v1 in zip( tangent.data, [x.normalized() for x in [ imath.V3f( 1, 1, 0 ), imath.V3f( -2, 1, 0 ), imath.V3f( 1, -2, 0 ) ] ] ):
-			self.failUnless( v.equalWithAbsError( v1, 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 
 	def testCanRenameOutputTangents( self ) :
@@ -221,10 +221,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
 
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
 
 	def testCanUseSecondUVSet( self ) :
 
@@ -249,12 +249,12 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
 
 		# really I'd expect the naive answer to the vTangent to be IECore.V3f( 1, 0, 0 )
 		# but the code forces the triple of n, uT, vT to flip the direction of vT if we don't have a correctly handed set of basis vectors
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( -1, 0, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( -1, 0, 0 ), 0.000001 ) )
 
 	def testCanUsePref( self ) :
 
@@ -279,10 +279,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 0, -1, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 0, -1, 0 ), 0.000001 ) )
 
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
+			self.assertTrue( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
 
 
 	def testHandedness( self ) :

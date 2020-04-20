@@ -117,7 +117,7 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 		finally :
 			sys.stderr = sys.__stderr__
 
-		self.assert_( "oops" in tmpStdErr.getvalue() )
+		self.assertIn( "oops", tmpStdErr.getvalue() )
 		self.assertEqual( self.exceptionSlotCalled, True )
 		self.assertEqual( self.trueSlotCalled, True )
 

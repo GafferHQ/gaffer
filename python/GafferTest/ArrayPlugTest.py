@@ -77,19 +77,19 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( n["in"] ), 4 )
 
-		self.assertTrue( n["in"]["e1"].getInput(), a["sum"] )
-		self.assertTrue( n["in"]["e2"].getInput(), a["sum"] )
-		self.assertTrue( n["in"]["e3"].getInput(), a["sum"] )
-		self.assertTrue( n["in"]["e4"].getInput() is None )
+		self.assertEqual( n["in"]["e1"].getInput(), a["sum"] )
+		self.assertEqual( n["in"]["e2"].getInput(), a["sum"] )
+		self.assertEqual( n["in"]["e3"].getInput(), a["sum"] )
+		self.assertIsNone( n["in"]["e4"].getInput() )
 
 		n["in"][1].setInput( None )
 
 		self.assertEqual( len( n["in"] ), 4 )
 
-		self.assertTrue( n["in"]["e1"].getInput(), a["sum"] )
-		self.assertTrue( n["in"]["e2"].getInput() is None )
-		self.assertTrue( n["in"]["e3"].getInput(), a["sum"] )
-		self.assertTrue( n["in"]["e4"].getInput() is None )
+		self.assertEqual( n["in"]["e1"].getInput(), a["sum"] )
+		self.assertIsNone( n["in"]["e2"].getInput() )
+		self.assertEqual( n["in"]["e3"].getInput(), a["sum"] )
+		self.assertIsNone( n["in"]["e4"].getInput() )
 
 	def testSerialisation( self ) :
 
@@ -108,10 +108,10 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( s["n"]["in"]["e3"].isSame( s["n"]["in"][2] ) )
 		self.assertTrue( s["n"]["in"]["e4"].isSame( s["n"]["in"][3] ) )
 
-		self.assertTrue( s["n"]["in"]["e1"].getInput(), s["a"]["sum"] )
-		self.assertTrue( s["n"]["in"]["e2"].getInput() is None )
-		self.assertTrue( s["n"]["in"]["e3"].getInput(), s["a"]["sum"] )
-		self.assertTrue( s["n"]["in"]["e4"].getInput() is None )
+		self.assertEqual( s["n"]["in"]["e1"].getInput(), s["a"]["sum"] )
+		self.assertIsNone( s["n"]["in"]["e2"].getInput() )
+		self.assertEqual( s["n"]["in"]["e3"].getInput(), s["a"]["sum"] )
+		self.assertIsNone( s["n"]["in"]["e4"].getInput() )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -122,10 +122,10 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( s2["n"]["in"]["e3"].isSame( s2["n"]["in"][2] ) )
 		self.assertTrue( s2["n"]["in"]["e4"].isSame( s2["n"]["in"][3] ) )
 
-		self.assertTrue( s2["n"]["in"]["e1"].getInput(), s2["a"]["sum"] )
-		self.assertTrue( s2["n"]["in"]["e2"].getInput() is None )
-		self.assertTrue( s2["n"]["in"]["e3"].getInput(), s2["a"]["sum"] )
-		self.assertTrue( s2["n"]["in"]["e4"].getInput() is None )
+		self.assertEqual( s2["n"]["in"]["e1"].getInput(), s2["a"]["sum"] )
+		self.assertIsNone( s2["n"]["in"]["e2"].getInput() )
+		self.assertEqual( s2["n"]["in"]["e3"].getInput(), s2["a"]["sum"] )
+		self.assertIsNone( s2["n"]["in"]["e4"].getInput() )
 
 	def testMaximumInputs( self ) :
 

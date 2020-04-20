@@ -52,12 +52,12 @@ class ChildSetTest( GafferTest.TestCase ) :
 		p.addChild( g1 )
 
 		self.assertEqual( len( s ), 1 )
-		self.failUnless( s.contains( g1 ) )
-		self.failUnless( s[0].isSame( g1 ) )
+		self.assertTrue( s.contains( g1 ) )
+		self.assertTrue( s[0].isSame( g1 ) )
 
 		p.removeChild( g1 )
 		self.assertEqual( len( s ), 0 )
-		self.failIf( s.contains( g1 ) )
+		self.assertFalse( s.contains( g1 ) )
 
 	def testSignals( self ) :
 

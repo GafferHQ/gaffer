@@ -59,7 +59,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		# the objects should be one and the same, as the second computation
 		# should have shortcut and returned a cached result.
-		self.failUnless( v1.isSame( v2 ) )
+		self.assertTrue( v1.isSame( v2 ) )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
 
@@ -67,7 +67,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( v3, IECore.StringData( "d" ) )
 
 		# the objects should be different, as we cleared the cache.
-		self.failIf( v3.isSame( v2 ) )
+		self.assertFalse( v3.isSame( v2 ) )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__originalCacheMemoryLimit )
 
@@ -78,27 +78,27 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( v1, IECore.StringData( "d" ) )
 
 		# the objects should be one and the same, as we reenabled the cache.
-		self.failUnless( v1.isSame( v2 ) )
+		self.assertTrue( v1.isSame( v2 ) )
 
 		Gaffer.ValuePlug.clearCache()
 		self.assertEqual( Gaffer.ValuePlug.cacheMemoryUsage(), 0 )
 
 		v3 = n["out"].getValue( _copy=False )
-		self.failIf( v3.isSame( v2 ) )
+		self.assertFalse( v3.isSame( v2 ) )
 
 		v4 = n["out"].getValue( _copy=False )
-		self.failUnless( v4.isSame( v3 ) )
+		self.assertTrue( v4.isSame( v3 ) )
 
 	def testSettable( self ) :
 
 		p1 = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.In )
-		self.failUnless( p1.settable() )
+		self.assertTrue( p1.settable() )
 
 		p2 = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-		self.failIf( p2.settable() )
+		self.assertFalse( p2.settable() )
 
 		p1.setInput( p2 )
-		self.failIf( p1.settable() )
+		self.assertFalse( p1.settable() )
 
 	def testUncacheabilityPropagates( self ) :
 
@@ -118,7 +118,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( o2, IECore.StringData( "pig" ) )
 		self.assertEqual( o3, IECore.StringData( "pig" ) )
-		self.failUnless( o2.isSame( o3 ) ) # they share cache entries
+		self.assertTrue( o2.isSame( o3 ) ) # they share cache entries
 
 		n["out"].setFlags( Gaffer.Plug.Flags.Cacheable, False )
 
@@ -127,7 +127,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( o2, IECore.StringData( "pig" ) )
 		self.assertEqual( o3, IECore.StringData( "pig" ) )
-		self.failIf( o2.isSame( o3 ) ) # they shouldn't share cache entries
+		self.assertFalse( o2.isSame( o3 ) ) # they shouldn't share cache entries
 
 	def testSetValueSignalsDirtiness( self ) :
 
@@ -288,7 +288,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		s.execute( ss )
 
 		self.assertEqual( s["n1"]["p"]["f"].getValue(), 10 )
-		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+		self.assertTrue( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
 
 	def testDynamicSerialisation( self ) :
 
@@ -321,21 +321,21 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		n2["c"]["f1"].setInput( n["c"]["f1"] )
 		n2["c"]["f2"].setInput( n["c"]["f2"] )
-		self.failUnless( n2["c"].getInput().isSame( n["c"] ) )
+		self.assertTrue( n2["c"].getInput().isSame( n["c"] ) )
 
 		n2["c"]["f2"].setInput( None )
-		self.failUnless( n2["c"].getInput() is None )
+		self.assertIsNone( n2["c"].getInput() )
 
 		n2["c"]["f2"].setInput( n["c"]["f2"] )
-		self.failUnless( n2["c"].getInput().isSame( n["c"] ) )
+		self.assertTrue( n2["c"].getInput().isSame( n["c"] ) )
 
 		c["f3"] = Gaffer.FloatPlug()
 		c2["f3"] = Gaffer.FloatPlug()
 
-		self.failUnless( n2["c"].getInput() is None )
+		self.assertIsNone( n2["c"].getInput() )
 
 		n2["c"]["f3"].setInput( n["c"]["f3"] )
-		self.failUnless( n2["c"].getInput().isSame( n["c"] ) )
+		self.assertTrue( n2["c"].getInput().isSame( n["c"] ) )
 
 	def testInputChangedCrash( self ) :
 
@@ -368,10 +368,10 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( dirtyPlugs ), 4 )
 
-		self.failUnless( dirtyPlugs[0][0].isSame( n["p"]["f"] ) )
-		self.failUnless( dirtyPlugs[1][0].isSame( n["p"] ) )
-		self.failUnless( dirtyPlugs[2][0].isSame( n["o"]["f"] ) )
-		self.failUnless( dirtyPlugs[3][0].isSame( n["o"] ) )
+		self.assertTrue( dirtyPlugs[0][0].isSame( n["p"]["f"] ) )
+		self.assertTrue( dirtyPlugs[1][0].isSame( n["p"] ) )
+		self.assertTrue( dirtyPlugs[2][0].isSame( n["o"]["f"] ) )
+		self.assertTrue( dirtyPlugs[3][0].isSame( n["o"] ) )
 
 	def testPlugSetPropagation( self ) :
 
@@ -392,7 +392,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		c["f1"].setValue( 10 )
 
-		self.failUnless( self.set )
+		self.assertTrue( self.set )
 
 	def testMultipleLevelsOfPlugSetPropagation( self ) :
 
@@ -413,7 +413,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		c["c1"]["f1"].setValue( 10 )
 
-		self.failUnless( len( self.setPlugs )==3 )
+		self.assertEqual( len( self.setPlugs ), 3 )
 		self.assertEqual( self.setPlugs, [ "f1", "c1", "c" ] )
 
 	def testMultipleLevelsOfPlugSetPropagationWithDifferentParentingOrder( self ) :
@@ -434,10 +434,10 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		n["c"]["c1"]["f1"].setValue( 10 )
 
-		self.failUnless( len( self.setPlugs )==3 )
-		self.failUnless( "c" in self.setPlugs )
-		self.failUnless( "c1" in self.setPlugs )
-		self.failUnless( "f1" in self.setPlugs )
+		self.assertEqual( len( self.setPlugs ), 3 )
+		self.assertIn( "c", self.setPlugs )
+		self.assertIn( "c1", self.setPlugs )
+		self.assertIn( "f1", self.setPlugs )
 
 	def testAcceptsInput( self ) :
 
@@ -448,13 +448,13 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		i.addChild( Gaffer.IntPlug() )
 		o.addChild( Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out ) )
 
-		self.failUnless( i.acceptsInput( o ) )
-		self.failIf( i.acceptsInput( s ) )
+		self.assertTrue( i.acceptsInput( o ) )
+		self.assertFalse( i.acceptsInput( s ) )
 
 	def testAcceptsNoneInput( self ) :
 
 		p = Gaffer.ValuePlug( "hello" )
-		self.failUnless( p.acceptsInput( None ) )
+		self.assertTrue( p.acceptsInput( None ) )
 
 	def testSerialisationOfMasterConnection( self ) :
 
@@ -463,18 +463,18 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		s["n2"] = GafferTest.CompoundPlugNode()
 
 		s["n1"]["p"].setInput( s["n2"]["p"] )
-		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
-		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
-		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+		self.assertTrue( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.assertTrue( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
+		self.assertTrue( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
 
 		ss = s.serialise()
 
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
-		self.failUnless( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
-		self.failUnless( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
+		self.assertTrue( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.assertTrue( s["n1"]["p"]["f"].getInput().isSame( s["n2"]["p"]["f"] ) )
+		self.assertTrue( s["n1"]["p"]["s"].getInput().isSame( s["n2"]["p"]["s"] ) )
 
 	def testSetInputShortcut( self ) :
 
@@ -520,8 +520,8 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		n["c1"]["i"].setInput( n["c2"]["i1"] )
 
-		self.failUnless( n["c1"]["i"].getInput().isSame( n["c2"]["i1"] ) )
-		self.failUnless( n["c1"].getInput().isSame( n["c2"] ) )
+		self.assertTrue( n["c1"]["i"].getInput().isSame( n["c2"]["i1"] ) )
+		self.assertTrue( n["c1"].getInput().isSame( n["c2"] ) )
 
 	def testSerialisationOfDynamicPlugsOnNondynamicParent( self ) :
 
@@ -602,7 +602,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		n = Gaffer.Node()
 		n["p"] = p
 
-		self.failUnless( n["p"] is p )
+		self.assertTrue( n["p"] is p )
 
 	def testNullInputPropagatesToChildren( self ) :
 

@@ -57,7 +57,7 @@ class ButtonTest( GafferUITest.TestCase ) :
 
 		b = GafferUI.Button( "", "arrowRight10.png" )
 		self.assertEqual( b.getText(), "" )
-		self.failUnless( isinstance( b.getImage(), GafferUI.Image ) )
+		self.assertIsInstance( b.getImage(), GafferUI.Image )
 
 	def testAccessors( self ) :
 
@@ -68,10 +68,10 @@ class ButtonTest( GafferUITest.TestCase ) :
 
 		i = GafferUI.Image( "arrowRight10.png" )
 		b.setImage( i )
-		self.failUnless( b.getImage() is i )
+		self.assertTrue( b.getImage() is i )
 
 		b.setImage( "arrowRight10.png" )
-		self.failUnless( isinstance( b.getImage(), GafferUI.Image ) )
+		self.assertIsInstance( b.getImage(), GafferUI.Image )
 
 		b.setImage( None )
 		self.assertEqual( b.getImage(), None )

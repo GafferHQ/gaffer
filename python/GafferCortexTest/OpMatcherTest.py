@@ -65,7 +65,7 @@ class OpMatcherTest( GafferTest.TestCase ) :
 		path = Gaffer.FileSystemPath( exrFile )
 
 		ops = matcher.matches( path )
-		self.failUnless( len( ops ) )
+		self.assertTrue( len( ops ) )
 
 	def testSequences( self ) :
 
@@ -79,19 +79,19 @@ class OpMatcherTest( GafferTest.TestCase ) :
 			if isinstance( op, IECore.SequenceRenumberOp ) :
 				sequenceRenumber = op
 
-		self.failUnless( sequenceRenumber is not None )
+		self.assertIsNotNone( sequenceRenumber )
 		self.assertEqual( sequenceRenumber["src"].getTypedValue(), str( self.__sequence ) )
 
 	def testDefaultInstance( self ) :
 
-		self.failUnless( isinstance( GafferCortex.OpMatcher.defaultInstance(), GafferCortex.OpMatcher ) )
-		self.failUnless( GafferCortex.OpMatcher.defaultInstance() is GafferCortex.OpMatcher.defaultInstance() )
-		self.failUnless( GafferCortex.OpMatcher.defaultInstance( IECore.ClassLoader.defaultOpLoader() ) is GafferCortex.OpMatcher.defaultInstance() )
+		self.assertIsInstance(GafferCortex.OpMatcher.defaultInstance(), GafferCortex.OpMatcher )
+		self.assertTrue( GafferCortex.OpMatcher.defaultInstance() is GafferCortex.OpMatcher.defaultInstance() )
+		self.assertTrue( GafferCortex.OpMatcher.defaultInstance( IECore.ClassLoader.defaultOpLoader() ) is GafferCortex.OpMatcher.defaultInstance() )
 
 		alternativeClassLoader = IECore.ClassLoader( IECore.SearchPath( [ "wherever", "i", "want" ] ) )
 
-		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) )
-		self.failUnless( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is not GafferCortex.OpMatcher.defaultInstance() )
+		self.assertTrue( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) )
+		self.assertTrue( GafferCortex.OpMatcher.defaultInstance( alternativeClassLoader ) is not GafferCortex.OpMatcher.defaultInstance() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -64,7 +64,7 @@ class ContextTest( GafferTest.TestCase ) :
 		changes = []
 		def f( context, name ) :
 
-			self.failUnless( context.isSame( c ) )
+			self.assertTrue( context.isSame( c ) )
 			changes.append( ( name, context.get( name, None ) ) )
 
 		cn = c.changedSignal().connect( f )
@@ -102,49 +102,49 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c.get( "int" ), 1 )
 		c.set( "int", 2 )
 		self.assertEqual( c["int"], 2 )
-		self.failUnless( isinstance( c["int"], int ) )
+		self.assertIsInstance( c["int"], int )
 
 		c["float"] = 1.0
 		self.assertEqual( c["float"], 1.0 )
 		self.assertEqual( c.get( "float" ), 1.0 )
 		c.set( "float", 2.0 )
 		self.assertEqual( c["float"], 2.0 )
-		self.failUnless( isinstance( c["float"], float ) )
+		self.assertIsInstance( c["float"], float )
 
 		c["string"] = "hi"
 		self.assertEqual( c["string"], "hi" )
 		self.assertEqual( c.get( "string" ), "hi" )
 		c.set( "string", "bye" )
 		self.assertEqual( c["string"], "bye" )
-		self.failUnless( isinstance( c["string"], basestring ) )
+		self.assertIsInstance( c["string"], str )
 
 		c["v2i"] = imath.V2i( 1, 2 )
 		self.assertEqual( c["v2i"], imath.V2i( 1, 2 ) )
 		self.assertEqual( c.get( "v2i" ), imath.V2i( 1, 2 ) )
 		c.set( "v2i", imath.V2i( 1, 2 ) )
 		self.assertEqual( c["v2i"], imath.V2i( 1, 2 ) )
-		self.failUnless( isinstance( c["v2i"], imath.V2i ) )
+		self.assertIsInstance( c["v2i"], imath.V2i )
 
 		c["v3i"] = imath.V3i( 1, 2, 3 )
 		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
 		self.assertEqual( c.get( "v3i" ), imath.V3i( 1, 2, 3 ) )
 		c.set( "v3i", imath.V3i( 1, 2, 3 ) )
 		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
-		self.failUnless( isinstance( c["v3i"], imath.V3i ) )
+		self.assertIsInstance( c["v3i"], imath.V3i )
 
 		c["v2f"] = imath.V2f( 1, 2 )
 		self.assertEqual( c["v2f"], imath.V2f( 1, 2 ) )
 		self.assertEqual( c.get( "v2f" ), imath.V2f( 1, 2 ) )
 		c.set( "v2f", imath.V2f( 1, 2 ) )
 		self.assertEqual( c["v2f"], imath.V2f( 1, 2 ) )
-		self.failUnless( isinstance( c["v2f"], imath.V2f ) )
+		self.assertIsInstance( c["v2f"], imath.V2f )
 
 		c["v3f"] = imath.V3f( 1, 2, 3 )
 		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
 		self.assertEqual( c.get( "v3f" ), imath.V3f( 1, 2, 3 ) )
 		c.set( "v3f", imath.V3f( 1, 2, 3 ) )
 		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
-		self.failUnless( isinstance( c["v3f"], imath.V3f ) )
+		self.assertIsInstance( c["v3f"], imath.V3f )
 
 	def testCopying( self ) :
 
@@ -164,12 +164,12 @@ class ContextTest( GafferTest.TestCase ) :
 		c2 = Gaffer.Context()
 
 		self.assertEqual( c, c2 )
-		self.failIf( c != c2 )
+		self.assertFalse( c != c2 )
 
 		c["somethingElse"] = 1
 
 		self.assertNotEqual( c, c2 )
-		self.failIf( c == c2 )
+		self.assertFalse( c == c2 )
 
 	def testCurrent( self ) :
 
@@ -183,32 +183,32 @@ class ContextTest( GafferTest.TestCase ) :
 		c2["something"] = 1
 		with c2 :
 
-			self.failUnless( Gaffer.Context.current().isSame( c2 ) )
+			self.assertTrue( Gaffer.Context.current().isSame( c2 ) )
 			self.assertEqual( Gaffer.Context.current()["something"], 1 )
 
 		# and bounce back to the original
-		self.failUnless( Gaffer.Context.current().isSame( c ) )
+		self.assertTrue( Gaffer.Context.current().isSame( c ) )
 
 	def testCurrentIsThreadSpecific( self ) :
 
 		c = Gaffer.Context()
-		self.failIf( c.isSame( Gaffer.Context.current() ) )
+		self.assertFalse( c.isSame( Gaffer.Context.current() ) )
 
 		def f() :
 
-			self.failIf( c.isSame( Gaffer.Context.current() ) )
+			self.assertFalse( c.isSame( Gaffer.Context.current() ) )
 			with Gaffer.Context() :
 				pass
 
 		with c :
 
-			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+			self.assertTrue( c.isSame( Gaffer.Context.current() ) )
 			t = threading.Thread( target = f )
 			t.start()
 			t.join()
-			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+			self.assertTrue( c.isSame( Gaffer.Context.current() ) )
 
-		self.failIf( c.isSame( Gaffer.Context.current() ) )
+		self.assertFalse( c.isSame( Gaffer.Context.current() ) )
 
 	def testThreading( self ) :
 
@@ -232,10 +232,10 @@ class ContextTest( GafferTest.TestCase ) :
 		c.set( "v", v )
 
 		self.assertEqual( c.get( "v" ), v )
-		self.failIf( c.get( "v" ).isSame( v ) )
+		self.assertFalse( c.get( "v" ).isSame( v ) )
 
 		self.assertEqual( c["v"], v )
-		self.failIf( c["v"].isSame( v ) )
+		self.assertFalse( c["v"].isSame( v ) )
 
 	def testGetFallbackValue( self ) :
 
@@ -249,29 +249,29 @@ class ContextTest( GafferTest.TestCase ) :
 
 		c = Gaffer.Context()
 		with c :
-			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+			self.assertTrue( c.isSame( Gaffer.Context.current() ) )
 			with c :
-				self.failUnless( c.isSame( Gaffer.Context.current() ) )
+				self.assertTrue( c.isSame( Gaffer.Context.current() ) )
 
 	def testLifeTime( self ) :
 
 		c = Gaffer.Context()
 		w = weakref.ref( c )
 
-		self.failUnless( w() is c )
+		self.assertTrue( w() is c )
 
 		with c :
 			pass
 
 		del c
 
-		self.failUnless( w() is None )
+		self.assertIsNone( w() )
 
 	def testWithBlockReturnValue( self ) :
 
 		with Gaffer.Context() as c :
-			self.failUnless( isinstance( c, Gaffer.Context ) )
-			self.failUnless( c.isSame( Gaffer.Context.current() ) )
+			self.assertIsInstance( c, Gaffer.Context )
+			self.assertTrue( c.isSame( Gaffer.Context.current() ) )
 
 	def testSubstitute( self ) :
 

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import six
 
 import imath
 
@@ -117,7 +118,7 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		tweaks = Gaffer.Plug()
 		tweaks.addChild( GafferScene.TweakPlug( "missingShader", 0.5 ) )
 
-		with self.assertRaisesRegexp( RuntimeError, "" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "" ) :
 			GafferScene.TweakPlug.applyTweaks( tweaks, network )
 
 	def testWrongDataType( self ) :
@@ -128,7 +129,7 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		d = IECore.CompoundData( { "test" : 1 } )
 
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak to \"test\" : Value of type \"IntData\" does not match parameter of type \"Color3fData\"" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak to \"test\" : Value of type \"IntData\" does not match parameter of type \"Color3fData\"" ) :
 			p.applyTweak( d )
 
 	def testMissingMode( self ) :
@@ -137,7 +138,7 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		p["t"] = GafferScene.TweakPlug( "test", 0.5, GafferScene.TweakPlug.Mode.Replace )
 
 		d = IECore.CompoundData()
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"test\" : This parameter does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.Error )
 		self.assertEqual( d, IECore.CompoundData() )
 
@@ -151,11 +152,11 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		d = IECore.CompoundData()
 		p["t"]["mode"].setValue( GafferScene.TweakPlug.Mode.Add )
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.Error )
 		self.assertEqual( d, IECore.CompoundData() )
 
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = GafferScene.TweakPlug.MissingMode.IgnoreOrReplace )
 		self.assertEqual( d, IECore.CompoundData() )
 
@@ -192,10 +193,10 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		p["t"] = GafferScene.TweakPlug( "Ks", 0.5, GafferScene.TweakPlug.Mode.Replace )
 
 		networkCopy = network.copy()
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"Ks\" : This parameter does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"Ks\" : This parameter does not exist" ) :
 			p.applyTweaks( networkCopy )
 
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"Ks\" : This parameter does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"Ks\" : This parameter does not exist" ) :
 			p.applyTweaks( networkCopy, missingMode = GafferScene.TweakPlug.MissingMode.Error )
 
 		self.assertEqual( networkCopy, network )
@@ -204,10 +205,10 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 
 		p["t"]["name"].setValue( "missingShader.parameterName" )
 
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak \"missingShader.parameterName\" because shader \"missingShader\" does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak \"missingShader.parameterName\" because shader \"missingShader\" does not exist" ) :
 			p.applyTweaks( networkCopy )
 
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak \"missingShader.parameterName\" because shader \"missingShader\" does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak \"missingShader.parameterName\" because shader \"missingShader\" does not exist" ) :
 			p.applyTweaks( networkCopy, missingMode = GafferScene.TweakPlug.MissingMode.Error )
 
 		self.assertEqual( networkCopy, network )

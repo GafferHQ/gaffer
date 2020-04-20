@@ -38,6 +38,7 @@ import os
 import stat
 import shutil
 import unittest
+import six
 import time
 import inspect
 import functools
@@ -61,8 +62,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatcherRegistration( self ) :
 
-		self.failUnless( "Local" in GafferDispatch.Dispatcher.registeredDispatchers() )
-		self.failUnless( GafferDispatch.Dispatcher.create( "Local" ).isInstanceOf( GafferDispatch.LocalDispatcher.staticTypeId() ) )
+		self.assertIn( "Local", GafferDispatch.Dispatcher.registeredDispatchers() )
+		self.assertIsInstance( GafferDispatch.Dispatcher.create( "Local" ), GafferDispatch.LocalDispatcher )
 
 	def testDispatch( self ) :
 
@@ -328,15 +329,15 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		self.assertEqual( len( preCs ), 1 )
-		self.failUnless( preCs[0][0].isSame( dispatcher ) )
+		self.assertTrue( preCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( preCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( dispatchCs ), 1 )
-		self.failUnless( dispatchCs[0][0].isSame( dispatcher ) )
+		self.assertTrue( dispatchCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
-		self.failUnless( postCs[0][0].isSame( dispatcher ) )
+		self.assertTrue( postCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( postCs[0][1], [ s["n1"] ] )
 
 	def testExecuteInBackground( self ) :
@@ -492,7 +493,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher = self.__createLocalDispatcher()
 
 		# fails because n2 doesn't have a valid fileName
-		self.assertRaisesRegexp( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
+		six.assertRaisesRegex( self, RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
 
 		# it still cleans up the JobPool
 		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )

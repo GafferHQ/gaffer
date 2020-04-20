@@ -57,8 +57,8 @@ class WeakMethodTest( GafferTest.TestCase ) :
 		self.assertEqual( w(), a )
 		self.assertEqual( wm(), 10 )
 
-		self.failUnless( wm.instance() is a )
-		self.failUnless( wm.method() is A.f.__func__ )
+		self.assertTrue( wm.instance() is a )
+		self.assertTrue( wm.method() is A.f.__func__ )
 
 		del a
 
@@ -69,7 +69,7 @@ class WeakMethodTest( GafferTest.TestCase ) :
 		try :
 			wm()
 		except ReferenceError as e :
-			self.failUnless( "f()" in str( e ) )
+			self.assertIn( "f()", str( e ) )
 
 	def testFallbackResult( self ) :
 

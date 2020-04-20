@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import six
 
 import Gaffer
 import GafferTest
@@ -143,10 +144,10 @@ class EditScopeTest( GafferTest.TestCase ) :
 		self.assertEqual( e.processors(), [ p ] )
 
 		p["in"].setInput( None )
-		with self.assertRaisesRegexp( RuntimeError, "Output not linked to input" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Output not linked to input" ) :
 			e.processors()
 
-		with self.assertRaisesRegexp( RuntimeError, "Output not linked to input" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Output not linked to input" ) :
 			e.acquireProcessor( "Test" )
 
 	def testSerialisation( self ) :

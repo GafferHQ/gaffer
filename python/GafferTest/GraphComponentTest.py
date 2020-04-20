@@ -40,6 +40,7 @@ import weakref
 import unittest
 import threading
 import Queue
+import six
 
 import IECore
 
@@ -91,17 +92,17 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testParenting( self ) :
 
 		parent1 = Gaffer.GraphComponent()
-		self.assert_( parent1.parent() is None )
+		self.assertIsNone( parent1.parent() )
 		self.assertEqual( len( parent1.children() ), 0 )
 		child1 = Gaffer.GraphComponent()
-		self.assert_( child1.parent() is None )
+		self.assertIsNone( child1.parent() )
 		self.assertEqual( len( child1.children() ), 0 )
 
 		parent1.addChild( child1 )
-		self.assert_( parent1.parent() is None )
-		self.assert_( parent1.getChild( "GraphComponent" ).isSame( child1 ) )
-		self.assert_( parent1["GraphComponent"].isSame( child1 ) )
-		self.assert_( child1.parent().isSame( parent1 ) )
+		self.assertIsNone( parent1.parent() )
+		self.assertTrue( parent1.getChild( "GraphComponent" ).isSame( child1 ) )
+		self.assertTrue( parent1["GraphComponent"].isSame( child1 ) )
+		self.assertTrue( child1.parent().isSame( parent1 ) )
 
 		parent1.removeChild( child1 )
 		self.assertEqual( parent1.children(), () )
@@ -130,20 +131,20 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		GraphComponentTest.oldParent = None
 		GraphComponentTest.parenting = None
 		parent.addChild( child )
-		self.assert_( GraphComponentTest.newParent.isSame( parent ) )
-		self.assert_( GraphComponentTest.oldParent is None )
-		self.assert_( GraphComponentTest.parenting[0].isSame( parent ) )
-		self.assert_( GraphComponentTest.parenting[1].isSame( child ) )
+		self.assertTrue( GraphComponentTest.newParent.isSame( parent ) )
+		self.assertIsNone( GraphComponentTest.oldParent )
+		self.assertTrue( GraphComponentTest.parenting[0].isSame( parent ) )
+		self.assertTrue( GraphComponentTest.parenting[1].isSame( child ) )
 
 		GraphComponentTest.newParent = "xxx"
 		GraphComponentTest.oldParent = None
 		GraphComponentTest.parenting = None
 		c2 = parent.childRemovedSignal().connect( ff )
 		parent.removeChild( child )
-		self.assert_( GraphComponentTest.newParent is None )
-		self.assert_( GraphComponentTest.oldParent.isSame( parent ) )
-		self.assert_( GraphComponentTest.parenting[0].isSame( parent ) )
-		self.assert_( GraphComponentTest.parenting[1].isSame( child ) )
+		self.assertIsNone( GraphComponentTest.newParent )
+		self.assertTrue( GraphComponentTest.oldParent.isSame( parent ) )
+		self.assertTrue( GraphComponentTest.parenting[0].isSame( parent ) )
+		self.assertTrue( GraphComponentTest.parenting[1].isSame( child ) )
 
 	def testReparentingEmitsOnlyOneParentChangedSignal( self ) :
 
@@ -170,9 +171,9 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		p2["c"] = c
 
-		self.failUnless( GraphComponentTest.newParent.isSame( p2 ) )
-		self.failUnless( GraphComponentTest.oldParent.isSame( p1 ) )
-		self.failUnless( GraphComponentTest.child.isSame( c ) )
+		self.assertTrue( GraphComponentTest.newParent.isSame( p2 ) )
+		self.assertTrue( GraphComponentTest.oldParent.isSame( p1 ) )
+		self.assertTrue( GraphComponentTest.child.isSame( c ) )
 		self.assertEqual( GraphComponentTest.numSignals, 1 )
 
 	def testParentChangedBecauseParentDied( self ) :
@@ -199,8 +200,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		self.assertEqual( w(), None )
 
-		self.failUnless( GraphComponentTest.newParent is None )
-		self.failUnless( GraphComponentTest.previousParent is None )
+		self.assertIsNone( GraphComponentTest.newParent )
+		self.assertIsNone( GraphComponentTest.previousParent )
 
 	def testReparentingDoesntSignal( self ) :
 
@@ -210,7 +211,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		child = Gaffer.GraphComponent()
 
 		parent.addChild( child )
-		self.assert_( child.parent().isSame( parent ) )
+		self.assertTrue( child.parent().isSame( parent ) )
 
 		GraphComponentTest.numSignals = 0
 		def f( a, b=None ) :
@@ -235,27 +236,27 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		p = Gaffer.GraphComponent()
 		c = Gaffer.GraphComponent()
 		p["c"] = c
-		self.assert_( p.getChild( "c" ).isSame( c ) )
-		self.assert_( p["c"].isSame( c ) )
+		self.assertTrue( p.getChild( "c" ).isSame( c ) )
+		self.assertTrue( p["c"].isSame( c ) )
 		self.assertRaises( KeyError, p.__getitem__, "notAChild" )
 
 		# check that setitem removes items with clashing names
 		c2 = Gaffer.GraphComponent()
 		p["c"] = c2
-		self.assert_( p.getChild( "c" ).isSame( c2 ) )
-		self.assert_( c2.parent().isSame( p ) )
-		self.assert_( c.parent() is None )
+		self.assertTrue( p.getChild( "c" ).isSame( c2 ) )
+		self.assertTrue( c2.parent().isSame( p ) )
+		self.assertIsNone( c.parent() )
 
 		# check delitem
 		c3 = Gaffer.GraphComponent()
 		p["c3"] = c3
-		self.assert_( p.getChild( "c3" ).isSame( c3 ) )
-		self.assert_( p["c3"].isSame( c3 ) )
-		self.assert_( "c3" in p )
+		self.assertTrue( p.getChild( "c3" ).isSame( c3 ) )
+		self.assertTrue( p["c3"].isSame( c3 ) )
+		self.assertIn( "c3", p )
 
 		del p["c3"]
 
-		self.assert_( not "c3" in p )
+		self.assertNotIn( "c3", p )
 
 		self.assertRaises( KeyError, p.__delitem__, "xxxx" )
 
@@ -330,8 +331,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		n = GafferTest.AddNode()
 		s["node"] = n
 
-		self.assert_( n.ancestor( Gaffer.ScriptNode ).isSame( s ) )
-		self.assert_( n.ancestor( Gaffer.ApplicationRoot ).isSame( a ) )
+		self.assertTrue( n.ancestor( Gaffer.ScriptNode ).isSame( s ) )
+		self.assertTrue( n.ancestor( Gaffer.ApplicationRoot ).isSame( a ) )
 
 	def testCommonAncestor( self ) :
 
@@ -342,8 +343,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		s["n1"] = Gaffer.Node()
 		s["n2"] = Gaffer.Node()
 
-		self.assert_( s["n1"].commonAncestor( s["n2"], Gaffer.ScriptNode ).isSame( s ) )
-		self.assert_( s["n2"].commonAncestor( s["n1"], Gaffer.ScriptNode ).isSame( s ) )
+		self.assertTrue( s["n1"].commonAncestor( s["n2"], Gaffer.ScriptNode ).isSame( s ) )
+		self.assertTrue( s["n2"].commonAncestor( s["n1"], Gaffer.ScriptNode ).isSame( s ) )
 
 	def testCommonAncestorType( self ) :
 
@@ -375,8 +376,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		p1["p2"] = p2
 		p2["p3"] = p3
 
-		self.failUnless( p1.descendant( "p2" ).isSame( p2 ) )
-		self.failUnless( p1.descendant( "p2.p3" ).isSame( p3 ) )
+		self.assertTrue( p1.descendant( "p2" ).isSame( p2 ) )
+		self.assertTrue( p1.descendant( "p2.p3" ).isSame( p3 ) )
 
 	def testNameConstraints( self ) :
 
@@ -392,9 +393,9 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testContains( self ) :
 
 		n = Gaffer.GraphComponent()
-		self.failIf( "c" in n )
+		self.assertNotIn( "c", n )
 		n["c"] = Gaffer.GraphComponent()
-		self.failUnless( "c" in n )
+		self.assertIn( "c", n )
 
 	def testIsAncestorOf( self ) :
 
@@ -403,11 +404,11 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		n["c"]["c"] = Gaffer.GraphComponent()
 		n2 = Gaffer.GraphComponent()
 
-		self.failUnless( n.isAncestorOf( n["c"]["c"] ) )
-		self.failUnless( n.isAncestorOf( n["c"] ) )
-		self.failIf( n.isAncestorOf( n ) )
-		self.failIf( n2.isAncestorOf( n ) )
-		self.failIf( n.isAncestorOf( n2 ) )
+		self.assertTrue( n.isAncestorOf( n["c"]["c"] ) )
+		self.assertTrue( n.isAncestorOf( n["c"] ) )
+		self.assertFalse( n.isAncestorOf( n ) )
+		self.assertFalse( n2.isAncestorOf( n ) )
+		self.assertFalse( n.isAncestorOf( n2 ) )
 
 	def testDerivingInPython( self ) :
 
@@ -448,10 +449,10 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( g2.acceptsChildCalled, False )
 		self.assertEqual( g2.acceptsParentCalled, False )
 
-		self.failUnless( g1.acceptsChild( g2 ) )
-		self.failUnless( g1.acceptsParent( g2 ) )
-		self.failIf( g1.acceptsChild( Gaffer.Node() ) )
-		self.failIf( g1.acceptsParent( Gaffer.Node() ) )
+		self.assertTrue( g1.acceptsChild( g2 ) )
+		self.assertTrue( g1.acceptsParent( g2 ) )
+		self.assertFalse( g1.acceptsChild( Gaffer.Node() ) )
+		self.assertFalse( g1.acceptsParent( Gaffer.Node() ) )
 
 		self.assertEqual( g1.acceptsChildCalled, True )
 		self.assertEqual( g1.acceptsParentCalled, True )
@@ -529,7 +530,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		child = Gaffer.GraphComponent()
 
 		parent.setChild( "c", child )
-		self.assert_( child.parent().isSame( parent ) )
+		self.assertTrue( child.parent().isSame( parent ) )
 
 		GraphComponentTest.numSignals = 0
 		def f( *args ) :
@@ -800,8 +801,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testDescriptiveKeyErrors( self ) :
 
 		g = Gaffer.GraphComponent()
-		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
-		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
+		six.assertRaisesRegex( self, KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
+		six.assertRaisesRegex( self, KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
 
 	def testNoneIsNotAString( self ) :
 
@@ -992,13 +993,13 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		g = Gaffer.GraphComponent()
 
-		with self.assertRaisesRegexp( Exception, r"did not match C\+\+ signature" ) :
+		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
 			g.addChild( None )
 
-		with self.assertRaisesRegexp( Exception, r"did not match C\+\+ signature" ) :
+		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
 			g.setChild( "x", None )
 
-		with self.assertRaisesRegexp( Exception, r"did not match C\+\+ signature" ) :
+		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
 			g.removeChild( None )
 
 	def testRanges( self ) :

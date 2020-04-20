@@ -74,13 +74,13 @@ class NoduleTest( GafferUITest.TestCase ) :
 		ni = GafferUI.Nodule.create( n["i"] )
 		nc = GafferUI.Nodule.create( n["c"] )
 
-		self.failUnless( isinstance( ni, GafferUI.StandardNodule ) )
-		self.failUnless( isinstance( nc, GafferUI.StandardNodule ) )
+		self.assertIsInstance( ni, GafferUI.StandardNodule )
+		self.assertIsInstance( nc, GafferUI.StandardNodule )
 
 		Gaffer.Metadata.registerValue( NoduleTestNode, "c", "nodule:type", "GafferUI::CompoundNodule" )
 
 		nc = GafferUI.Nodule.create( n["c"] )
-		self.failUnless( isinstance( nc, GafferUI.CompoundNodule ) )
+		self.assertIsInstance( nc, GafferUI.CompoundNodule )
 
 		class NoduleTestNodeSubclass( NoduleTestNode ) :
 
@@ -90,7 +90,7 @@ class NoduleTest( GafferUITest.TestCase ) :
 
 		n2 = NoduleTestNode()
 		nc2 = GafferUI.Nodule.create( n2["c"] )
-		self.failUnless( isinstance( nc2, GafferUI.CompoundNodule ) )
+		self.assertIsInstance( nc2, GafferUI.CompoundNodule )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -65,8 +65,8 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 		n = GafferCortex.ExecutableOpHolder()
 		self.assertEqual( n.typeName(), "GafferCortex::ExecutableOpHolder" )
-		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderTaskNode.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
+		self.assertTrue( n.isInstanceOf( GafferCortex.ParameterisedHolderTaskNode.staticTypeId() ) )
+		self.assertTrue( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
 
 	def testIsTaskNode( self ) :
 

@@ -37,6 +37,7 @@
 import imath
 import os
 import unittest
+import six
 
 import IECore
 
@@ -304,7 +305,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testHistoryWithInvalidPlug( self ) :
 
 		plane = GafferScene.Plane()
-		with self.assertRaisesRegexp( RuntimeError, "is not a child of a ScenePlug" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "is not a child of a ScenePlug" ) :
 			GafferScene.SceneAlgo.history( plane["name"], "/plane" )
 
 	def testHistoryIncludesConnections( self ) :

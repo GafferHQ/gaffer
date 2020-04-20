@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import six
 
 import IECore
 
@@ -161,7 +162,7 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		self.assertRegexpMatches( mh.messages[0].message, "Cycle detected between ScriptNode.s.preTasks.preTask0 and ScriptNode.s.task" )
 
 		d = self.__dispatcher()
-		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["s"] ] )
+		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["s"] ] )
 
 if __name__ == "__main__":
 	unittest.main()

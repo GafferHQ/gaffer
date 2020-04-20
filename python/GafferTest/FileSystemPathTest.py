@@ -53,28 +53,28 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		p = Gaffer.FileSystemPath( __file__ )
 
-		self.assert_( p.isValid() )
-		self.assert_( p.isLeaf() )
+		self.assertTrue( p.isValid() )
+		self.assertTrue( p.isLeaf() )
 
 		while len( p ) :
 
 			del p[-1]
-			self.assert_( p.isValid() )
-			self.assert_( not p.isLeaf() )
+			self.assertTrue( p.isValid() )
+			self.assertFalse( p.isLeaf() )
 
 	def testIsLeaf( self ) :
 
 		path = Gaffer.FileSystemPath( "/this/path/doesnt/exist" )
-		self.assert_( not path.isLeaf() )
+		self.assertFalse( path.isLeaf() )
 
 	def testConstructWithFilter( self ) :
 
 		p = Gaffer.FileSystemPath( __file__ )
-		self.failUnless( p.getFilter() is None )
+		self.assertIsNone( p.getFilter() )
 
 		f = Gaffer.FileNamePathFilter( [ "*.exr" ] )
 		p = Gaffer.FileSystemPath( __file__, filter = f )
-		self.failUnless( p.getFilter().isSame( f ) )
+		self.assertTrue( p.getFilter().isSame( f ) )
 
 	def testBrokenSymbolicLinks( self ) :
 
@@ -95,8 +95,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertEqual( l.isValid(), True )
 
 		# since we said it was valid, it ought to have some info
-		info = l.info()
-		self.failUnless( info is not None )
+		self.assertIsNotNone( l.info() )
 
 	def testSymLinkInfo( self ) :
 

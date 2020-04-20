@@ -120,17 +120,17 @@ class ParameterPathTest( GafferTest.TestCase ) :
 
 		p = GafferCortex.ParameterPath( p, "/" )
 
-		self.failUnless( p.isValid() )
-		self.failIf( p.isLeaf() )
+		self.assertTrue( p.isValid() )
+		self.assertFalse( p.isLeaf() )
 
 		children = p.children()
 		self.assertEqual( len( children ), 4 )
 		for child in children :
-			self.failUnless( isinstance( child, GafferCortex.ParameterPath ) )
+			self.assertIsInstance( child, GafferCortex.ParameterPath )
 			if child[-1] in ( "c", "cv" ) :
-				self.failIf( child.isLeaf() )
+				self.assertFalse( child.isLeaf() )
 			else :
-				self.failUnless( child.isLeaf() )
+				self.assertTrue( child.isLeaf() )
 			self.assertEqual( child[-1], child.info()["parameter:parameter"].name )
 
 	def testChildOrdering( self ) :
@@ -155,12 +155,12 @@ class ParameterPathTest( GafferTest.TestCase ) :
 		pp = p.copy()
 		self.assertEqual( str( pp ), str( p ) )
 		self.assertEqual( pp, p )
-		self.failIf( p != p )
+		self.assertFalse( p != p )
 
 		del pp[-1]
 		self.assertNotEqual( str( pp ), str( p ) )
 		self.assertNotEqual( pp, p )
-		self.failUnless( pp != p )
+		self.assertTrue( pp != p )
 
 	def testRepr( self ) :
 

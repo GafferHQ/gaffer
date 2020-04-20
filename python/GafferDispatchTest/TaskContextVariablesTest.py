@@ -36,6 +36,7 @@
 
 import glob
 import unittest
+import six
 
 import IECore
 
@@ -132,7 +133,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.assertRegexpMatches( mh.messages[0].message, "Cycle detected between ScriptNode.variables.preTasks.preTask0 and ScriptNode.variables.task" )
 
 		d = self.__dispatcher()
-		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["variables"] ] )
+		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["variables"] ] )
 
 	def testStringSubstitutions( self ) :
 

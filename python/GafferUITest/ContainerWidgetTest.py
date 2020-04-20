@@ -71,25 +71,25 @@ class ContainerWidgetTest( GafferUITest.TestCase ) :
 					button6 = GafferUI.Button()
 					button7 = GafferUI.Button()
 
-		self.failUnless( isinstance( window, GafferUI.Window ) )
-		self.failUnless( isinstance( column, GafferUI.ListContainer ) )
-		self.failUnless( isinstance( frame, GafferUI.Frame ) )
-		self.failUnless( isinstance( collapsible, GafferUI.Collapsible ) )
-		self.failUnless( isinstance( tabbed, GafferUI.TabbedContainer ) )
-		self.failUnless( isinstance( scrolled, GafferUI.ScrolledContainer ) )
-		self.failUnless( isinstance( split, GafferUI.SplitContainer ) )
+		self.assertIsInstance( window, GafferUI.Window )
+		self.assertIsInstance( column, GafferUI.ListContainer )
+		self.assertIsInstance( frame, GafferUI.Frame )
+		self.assertIsInstance( collapsible, GafferUI.Collapsible )
+		self.assertIsInstance( tabbed, GafferUI.TabbedContainer )
+		self.assertIsInstance( scrolled, GafferUI.ScrolledContainer )
+		self.assertIsInstance( split, GafferUI.SplitContainer )
 
-		self.failUnless( column.parent() is window )
-		self.failUnless( frame.parent() is column )
-		self.failUnless( button1.parent() is frame )
-		self.failUnless( collapsible.parent() is column )
-		self.failUnless( button2.parent() is collapsible )
-		self.failUnless( tabbed.parent() is column )
-		self.failUnless( button3.parent() is tabbed )
-		self.failUnless( button4.parent() is tabbed )
-		self.failUnless( button5.parent() is scrolled )
-		self.failUnless( button6.parent() is split )
-		self.failUnless( button7.parent() is split )
+		self.assertTrue( column.parent() is window )
+		self.assertTrue( frame.parent() is column )
+		self.assertTrue( button1.parent() is frame )
+		self.assertTrue( collapsible.parent() is column )
+		self.assertTrue( button2.parent() is collapsible )
+		self.assertTrue( tabbed.parent() is column )
+		self.assertTrue( button3.parent() is tabbed )
+		self.assertTrue( button4.parent() is tabbed )
+		self.assertTrue( button5.parent() is scrolled )
+		self.assertTrue( button6.parent() is split )
+		self.assertTrue( button7.parent() is split )
 
 	def testWithContextDoesntBlockExceptions( self ) :
 
@@ -132,10 +132,10 @@ class ContainerWidgetTest( GafferUITest.TestCase ) :
 
 		w = TestWindow()
 
-		self.failUnless( isinstance( w.getChild(), GafferUI.ListContainer ) )
+		self.assertIsInstance( w.getChild(), GafferUI.ListContainer )
 		self.assertEqual( len( w.getChild() ), 2 )
-		self.failUnless( isinstance( w.getChild()[0], GafferUI.TextWidget ) )
-		self.failUnless( isinstance( w.getChild()[1], GafferUI.Button ) )
+		self.assertIsInstance( w.getChild()[0], GafferUI.TextWidget )
+		self.assertIsInstance( w.getChild()[1], GafferUI.Button )
 
 if __name__ == "__main__":
 	unittest.main()

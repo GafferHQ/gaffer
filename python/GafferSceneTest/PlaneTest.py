@@ -104,7 +104,7 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		for ss in s :
 			if ss[0].isSame( p["out"] ) :
 				found = True
-		self.failUnless( found )
+		self.assertTrue( found )
 
 	def testTransform( self ) :
 

@@ -124,7 +124,7 @@ class TestCase( unittest.TestCase ) :
 						inputPlugs.append( child )
 		__walkInputs( node )
 
-		self.failUnless( len( inputPlugs ) > 0 )
+		self.assertGreater( len( inputPlugs ), 0 )
 
 		numTests = 0
 		for inputPlug in inputPlugs :
@@ -162,7 +162,7 @@ class TestCase( unittest.TestCase ) :
 
 				numTests += 1
 
-		self.failUnless( numTests > 0 )
+		self.assertGreater( numTests, 0 )
 
 	def assertTypeNamesArePrefixed( self, module, namesToIgnore = () ) :
 

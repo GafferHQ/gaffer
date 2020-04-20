@@ -37,6 +37,7 @@
 import os
 import unittest
 import itertools
+import six
 
 import IECore
 
@@ -398,7 +399,7 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 			cs = GafferTest.CapturingSlot( n.errorSignal() )
 
-			self.assertRaisesRegexp(
+			six.assertRaisesRegex( self,
 				RuntimeError,
 				"Error in {}".format( f ),
 				getattr( n["task"], f ),

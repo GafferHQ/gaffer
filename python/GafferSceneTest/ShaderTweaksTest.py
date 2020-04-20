@@ -37,6 +37,7 @@
 import os
 import unittest
 import imath
+import six
 
 import IECore
 
@@ -193,7 +194,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( tweakedNetwork.getShader( "texture" ).parameters["c"].value, imath.Color3f( 1, 2, 3 ) )
 
 		tweaks["tweaks"][0]["mode"].setValue( GafferScene.TweakPlug.Mode.Multiply )
-		with self.assertRaisesRegexp( RuntimeError, "Mode must be \"Replace\" when inserting a connection" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Mode must be \"Replace\" when inserting a connection" ) :
 			tweaks["out"].attributes( "/plane" )
 
 	def testConnectSpecificOutputParameter( self ) :
@@ -311,7 +312,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 				continue
 
 			tweaks["tweaks"][0]["mode"].setValue( mode )
-			with self.assertRaisesRegexp( RuntimeError, "Mode must be \"Replace\" when a previous connection exists" ) :
+			with six.assertRaisesRegex( self, RuntimeError, "Mode must be \"Replace\" when a previous connection exists" ) :
 				tweaks["out"].attributes( "/plane" )
 
 	def testPromoteTweaksPlug( self ) :
@@ -357,7 +358,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		badTweak = GafferScene.TweakPlug( "badParameter", 1.0 )
 		t["tweaks"].addChild( badTweak )
 
-		with self.assertRaisesRegexp( RuntimeError, "Cannot apply tweak with mode Replace to \"badParameter\" : This parameter does not exist" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"badParameter\" : This parameter does not exist" ) :
 			t["out"].attributes( "/light" )
 
 		t["ignoreMissing"].setValue( True )
@@ -367,7 +368,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( t["out"].attributes( "/light" ), t["in"].attributes( "/light" ) )
 
 		t["ignoreMissing"].setValue( False )
-		with self.assertRaisesRegexp( Gaffer.ProcessException, "Cannot apply tweak \"badShader.p\" because shader \"badShader\" does not exist" ) :
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, "Cannot apply tweak \"badShader.p\" because shader \"badShader\" does not exist" ) :
 			t["out"].attributes( "/light" )
 
 	def testLocalise( self ) :

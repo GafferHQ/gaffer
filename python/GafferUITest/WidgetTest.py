@@ -71,12 +71,12 @@ class WidgetTest( GafferUITest.TestCase ) :
 	def testOwner( self ) :
 
 		w = TestWidget()
-		self.assert_( GafferUI.Widget._owner( w._qtWidget() ) is w )
+		self.assertTrue( GafferUI.Widget._owner( w._qtWidget() ) is w )
 
 	def testParent( self ) :
 
 		w = TestWidget()
-		self.assert_( w.parent() is None )
+		self.assertIsNone( w.parent() )
 
 	def testCanDie( self ) :
 
@@ -86,8 +86,8 @@ class WidgetTest( GafferUITest.TestCase ) :
 		wr2 = weakref.ref( w._qtWidget() )
 
 		del w
-		self.assert_( wr1() is None )
-		self.assert_( wr2() is None )
+		self.assertIsNone( wr1() )
+		self.assertIsNone( wr2() )
 
 	def testAncestor( self ) :
 
@@ -98,9 +98,9 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		w.setChild( l )
 
-		self.assert_( p.ancestor( GafferUI.ListContainer ) is l )
-		self.assert_( p.ancestor( GafferUI.Window ) is w )
-		self.assert_( p.ancestor( GafferUI.Menu ) is None )
+		self.assertTrue( p.ancestor( GafferUI.ListContainer ) is l )
+		self.assertTrue( p.ancestor( GafferUI.Window ) is w )
+		self.assertIsNone( p.ancestor( GafferUI.Menu ) )
 
 	def testIsAncestorOf( self ) :
 
@@ -131,9 +131,9 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		w = TestWidget2()
 
-		self.assert_( GafferUI.Widget._owner( w._qtWidget() ) is w )
-		self.assert_( w.topLevelGafferWidget.parent() is w )
-		self.assert_( GafferUI.Widget._owner( w.topLevelGafferWidget._qtWidget() ) is not w )
+		self.assertTrue( GafferUI.Widget._owner( w._qtWidget() ) is w )
+		self.assertTrue( w.topLevelGafferWidget.parent() is w )
+		self.assertTrue( GafferUI.Widget._owner( w.topLevelGafferWidget._qtWidget() ) is not w )
 
 	def testToolTip( self ) :
 
@@ -208,8 +208,8 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w.wheelSignal()
 
 		del w
-		self.assert_( wr1() is None )
-		self.assert_( wr2() is None )
+		self.assertIsNone( wr1() )
+		self.assertIsNone( wr2() )
 
 	def testVisibility( self ) :
 
@@ -348,8 +348,8 @@ class WidgetTest( GafferUITest.TestCase ) :
 			( "parentChangedSignal", GafferUI.WidgetSignal ),
 		] :
 
-			self.failUnless( isinstance( getattr( w, s[0] )(), s[1] ) )
-			self.failUnless( getattr( w, s[0] )() is getattr( w, s[0] )() )
+			self.assertIsInstance( getattr( w, s[0] )(), s[1] )
+			self.assertTrue( getattr( w, s[0] )() is getattr( w, s[0] )() )
 
 	def testBound( self ) :
 
@@ -366,9 +366,9 @@ class WidgetTest( GafferUITest.TestCase ) :
 		bb = b.bound()
 		bbw = b.bound( relativeTo = w )
 
-		self.failUnless( isinstance( wb, imath.Box2i ) )
-		self.failUnless( isinstance( bb, imath.Box2i ) )
-		self.failUnless( isinstance( bbw, imath.Box2i ) )
+		self.assertIsInstance( wb, imath.Box2i )
+		self.assertIsInstance( bb, imath.Box2i )
+		self.assertIsInstance( bbw, imath.Box2i )
 
 		self.assertEqual( bb.size(), bbw.size() )
 		self.assertEqual( bbw.min(), bb.min() - wb.min() )

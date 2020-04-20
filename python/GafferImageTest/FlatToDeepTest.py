@@ -36,6 +36,7 @@
 
 import random
 import unittest
+import six
 import imath
 
 import IECore
@@ -102,8 +103,8 @@ class FlatToDeepTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( addDepth["out"]["channelData"].getValue(), IECore.FloatVectorData( [0.2] * tilePixels ) )
 
 			addDepth["zChannel"].setValue( "Q" )
-			self.assertRaisesRegexp( RuntimeError, 'FlatToDeep : Cannot find requested Z channel - no channel "Q" found.', addDepth["out"]["channelData"].hash )
-			self.assertRaisesRegexp( RuntimeError, 'FlatToDeep : Cannot find requested Z channel - no channel "Q" found.', addDepth["out"]["channelData"].getValue )
+			six.assertRaisesRegex( self, RuntimeError, 'FlatToDeep : Cannot find requested Z channel - no channel "Q" found.', addDepth["out"]["channelData"].hash )
+			six.assertRaisesRegex( self, RuntimeError, 'FlatToDeep : Cannot find requested Z channel - no channel "Q" found.', addDepth["out"]["channelData"].getValue )
 
 			addDepth["zChannel"].setValue( "Z" )
 			shuffle["enabled"].setValue( True )
@@ -142,8 +143,8 @@ class FlatToDeepTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( addDepth["out"]["channelData"].getValue(), IECore.FloatVectorData( [0.2] * tilePixels ) )
 
 			addDepth["zBackChannel"].setValue( "Q" )
-			self.assertRaisesRegexp( RuntimeError, 'FlatToDeep : Cannot find requested ZBack channel - no channel "Q" found.', addDepth["out"]["channelData"].hash )
-			self.assertRaisesRegexp( RuntimeError, 'FlatToDeep : Cannot find requested ZBack channel - no channel "Q" found.', addDepth["out"]["channelData"].getValue )
+			six.assertRaisesRegex( self, RuntimeError, 'FlatToDeep : Cannot find requested ZBack channel - no channel "Q" found.', addDepth["out"]["channelData"].hash )
+			six.assertRaisesRegex( self, RuntimeError, 'FlatToDeep : Cannot find requested ZBack channel - no channel "Q" found.', addDepth["out"]["channelData"].getValue )
 
 			addDepth["zBackChannel"].setValue( "ZBack" )
 			shuffle["enabled"].setValue( True )

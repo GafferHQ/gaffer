@@ -49,11 +49,11 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.TextWidget()
 		r = weakref.ref( w )
 
-		self.failUnless( r() is w )
+		self.assertTrue( r() is w )
 
 		del w
 
-		self.failUnless( r() is None )
+		self.assertIsNone( r() )
 
 	def testTextChangedSignal( self ) :
 
@@ -106,7 +106,7 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 
 		w.setSelection( 0, 2 )
 		self.assertEqual( len( c ), 1 )
-		self.failUnless( c[0][0] is w )
+		self.assertTrue( c[0][0] is w )
 
 	def testCharacterWidth( self ) :
 

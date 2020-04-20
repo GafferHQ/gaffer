@@ -39,6 +39,7 @@ import stat
 import unittest
 import functools
 import itertools
+import six
 import time
 
 import IECore
@@ -172,11 +173,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatcherRegistration( self ) :
 
-		self.failUnless( "testDispatcher" in GafferDispatch.Dispatcher.registeredDispatchers() )
-		self.failUnless( GafferDispatch.Dispatcher.create( 'testDispatcher' ).isInstanceOf( DispatcherTest.TestDispatcher.staticTypeId() ) )
+		self.assertIn( "testDispatcher", GafferDispatch.Dispatcher.registeredDispatchers() )
+		self.assertIsInstance( GafferDispatch.Dispatcher.create( 'testDispatcher' ), DispatcherTest.TestDispatcher )
 
 		GafferDispatch.Dispatcher.deregisterDispatcher( "testDispatcher" )
-		self.failUnless( "testDispatcher" not in GafferDispatch.Dispatcher.registeredDispatchers() )
+		self.assertNotIn( "testDispatcher", GafferDispatch.Dispatcher.registeredDispatchers() )
 
 		# testing that deregistering a non-existent dispatcher is safe
 		GafferDispatch.Dispatcher.deregisterDispatcher( "fake" )
@@ -197,15 +198,15 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		self.assertEqual( len( preCs ), 1 )
-		self.failUnless( preCs[0][0].isSame( dispatcher ) )
+		self.assertTrue( preCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( preCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( dispatchCs ), 1 )
-		self.failUnless( dispatchCs[0][0].isSame( dispatcher ) )
+		self.assertTrue( dispatchCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
-		self.failUnless( postCs[0][0].isSame( dispatcher ) )
+		self.assertTrue( postCs[0][0].isSame( dispatcher ) )
 		self.assertEqual( postCs[0][1], [ s["n1"] ] )
 
 	def testCancelDispatch( self ) :
@@ -1086,7 +1087,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertRegexpMatches( mh.messages[0].message, "Cycle detected between ScriptNode.t.preTasks.preTask0 and ScriptNode.t.task" )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
+		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
 
 	def testPostTasks( self ) :
 
@@ -1210,7 +1211,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["t2"]["postTasks"][0].setInput( s["t1"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t2"] ] )
+		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t2"] ] )
 
 	def testImmediateDispatch( self ) :
 
@@ -1620,14 +1621,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		d = self.NullDispatcher()
 		d["framesMode"].setValue( d.FramesMode.FullRange )
-		with self.assertRaisesRegexp( Exception, "Python argument types in" ) :
+		with six.assertRaisesRegex( self, Exception, "Python argument types in" ) :
 			d.frameRange( None, Gaffer.Context() )
 
 	def testNullContextInFrameRangeCall( self ) :
 
 		d = self.NullDispatcher()
 		d["framesMode"].setValue( d.FramesMode.CurrentFrame )
-		with self.assertRaisesRegexp( Exception, "Python argument types in" ) :
+		with six.assertRaisesRegex( self, Exception, "Python argument types in" ) :
 			d.frameRange( Gaffer.ScriptNode(), None )
 
 	def testSwitch( self ) :
@@ -1758,7 +1759,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["taskList"]["preTasks"][0].setInput( s["badNode"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		with self.assertRaisesRegexp( RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
 			dispatcher.dispatch( [ s["taskList"] ] )
 
 if __name__ == "__main__":

@@ -59,30 +59,30 @@ class AppleseedLightTest( GafferTest.TestCase ) :
 		l = GafferAppleseed.AppleseedLight( "latlong_map_environment_edf" )
 		l.loadShader( "latlong_map_environment_edf" )
 
-		self.failUnless( "radiance_map" in l["parameters"] )
-		self.failUnless( l["parameters"]["radiance_map"].typeName() == "Gaffer::StringPlug" )
+		self.assertIn( "radiance_map", l["parameters"] )
+		self.assertEqual( l["parameters"]["radiance_map"].typeName(), "Gaffer::StringPlug" )
 
-		self.failUnless( "radiance_multiplier" in l["parameters"] )
-		self.failUnless( l["parameters"]["radiance_multiplier"].typeName() == "Gaffer::FloatPlug" )
+		self.assertIn( "radiance_multiplier", l["parameters"] )
+		self.assertEqual( l["parameters"]["radiance_multiplier"].typeName(), "Gaffer::FloatPlug" )
 
 	def testAppleseedMirrorBallEnvironmentEDF( self ) :
 
 		l = GafferAppleseed.AppleseedLight( "mirrorball_map_environment_edf" )
 		l.loadShader( "mirrorball_map_environment_edf" )
 
-		self.failUnless( "radiance_map" in l["parameters"] )
-		self.failUnless( l["parameters"]["radiance_map"].typeName() == "Gaffer::StringPlug" )
+		self.assertIn( "radiance_map", l["parameters"] )
+		self.assertEqual( l["parameters"]["radiance_map"].typeName(), "Gaffer::StringPlug" )
 
-		self.failUnless( "radiance_multiplier" in l["parameters"] )
-		self.failUnless( l["parameters"]["radiance_multiplier"].typeName() == "Gaffer::FloatPlug" )
+		self.assertIn( "radiance_multiplier", l["parameters"] )
+		self.assertEqual( l["parameters"]["radiance_multiplier"].typeName(), "Gaffer::FloatPlug" )
 
 	def testFloatMultiplierPlugs( self ) :
 
 		l = GafferAppleseed.AppleseedLight( "point_light" )
 		l.loadShader( "point_light" )
 
-		self.failUnless( "intensity_multiplier" in l["parameters"] )
-		self.failUnless( l["parameters"]["intensity_multiplier"].typeName() == "Gaffer::FloatPlug" )
+		self.assertIn( "intensity_multiplier", l["parameters"] )
+		self.assertEqual( l["parameters"]["intensity_multiplier"].typeName(), "Gaffer::FloatPlug" )
 
 	def testRectLightVisibilityAttributes( self ) :
 

@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import six
 import imath
 
 import IECore
@@ -440,10 +441,10 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( merge["out"] ), GafferImage.ImageAlgo.imageHash( flat["out"] ) )
 
 		merge["in"][0].setInput( deep["out"] )
-		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, merge["out"] )
+		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, merge["out"] )
 		merge["in"][0].setInput( flat["out"] )
 		merge["in"][1].setInput( deep["out"] )
-		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, merge["out"] )
+		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, merge["out"] )
 
 	def testDefaultFormat( self ) :
 

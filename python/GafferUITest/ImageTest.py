@@ -54,7 +54,7 @@ class ImageTest( GafferUITest.TestCase ) :
 		self.assertEqual( i2.width(), 10 )
 		self.assertEqual( i2.height(), 10 )
 
-		self.failUnless( i is i2 )
+		self.assertTrue( i is i2 )
 
 	def testLoadMissing( self ) :
 

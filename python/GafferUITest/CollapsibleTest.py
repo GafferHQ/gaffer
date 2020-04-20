@@ -47,7 +47,7 @@ class CollapsibleTest( GafferUITest.TestCase ) :
 		b = GafferUI.Button( "Hide Me" )
 		c = GafferUI.Collapsible( child = b, collapsed=True )
 
-		self.failUnless( c.getChild() is b )
+		self.assertTrue( c.getChild() is b )
 		self.assertEqual( c.getCollapsed(), True )
 
 	def testSetCollapsed( self ) :
@@ -89,25 +89,25 @@ class CollapsibleTest( GafferUITest.TestCase ) :
 		self.assertEqual( b1.parent(), None )
 
 		c.setCornerWidget( b1 )
-		self.failUnless( c.getCornerWidget() is b1 )
-		self.failUnless( b1.parent() is c )
+		self.assertTrue( c.getCornerWidget() is b1 )
+		self.assertTrue( b1.parent() is c )
 
 		c.setCornerWidget( None )
-		self.failUnless( c.getCornerWidget() is None )
-		self.failUnless( b1.parent() is None )
+		self.assertIsNone( c.getCornerWidget() )
+		self.assertIsNone( b1.parent() )
 
 		c.setCornerWidget( b1 )
-		self.failUnless( c.getCornerWidget() is b1 )
-		self.failUnless( b1.parent() is c )
+		self.assertTrue( c.getCornerWidget() is b1 )
+		self.assertTrue( b1.parent() is c )
 
 		c.setCornerWidget( b2 )
-		self.failUnless( c.getCornerWidget() is b2 )
-		self.failUnless( b2.parent() is c )
-		self.failUnless( b1.parent() is None )
+		self.assertTrue( c.getCornerWidget() is b2 )
+		self.assertTrue( b2.parent() is c )
+		self.assertIsNone( b1.parent() )
 
 		c.removeChild( b2 )
-		self.failUnless( c.getCornerWidget() is None )
-		self.failUnless( b2.parent() is None )
+		self.assertIsNone( c.getCornerWidget() )
+		self.assertIsNone( b2.parent() )
 
 	def testTransferChildren( self ) :
 
@@ -118,10 +118,10 @@ class CollapsibleTest( GafferUITest.TestCase ) :
 		self.assertEqual( b.parent(), None )
 
 		l.append( b )
-		self.failUnless( b.parent() is l )
+		self.assertTrue( b.parent() is l )
 
 		c.setChild( b )
-		self.failUnless( b.parent() is c )
+		self.assertTrue( b.parent() is c )
 
 		self.assertEqual( len( l ), 0 )
 

@@ -65,7 +65,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		n.loadShader( "utility" )
 
 		network = n.attributes()["ai:surface"]
-		self.failUnless( isinstance( network, IECoreScene.ShaderNetwork ) )
+		self.assertTrue( isinstance( network, IECoreScene.ShaderNetwork ) )
 		self.assertEqual( len( network ), 1 )
 
 		self.assertEqual( network.outputShader().name, "utility" )
@@ -75,12 +75,12 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "wireframe" )
 
-		self.failUnless( isinstance( n["parameters"]["line_width"], Gaffer.FloatPlug ) )
-		self.failUnless( isinstance( n["parameters"]["fill_color"], Gaffer.Color3fPlug ) )
-		self.failUnless( isinstance( n["parameters"]["line_color"], Gaffer.Color3fPlug ) )
-		self.failUnless( isinstance( n["parameters"]["raster_space"], Gaffer.BoolPlug ) )
-		self.failUnless( isinstance( n["parameters"]["edge_type"], Gaffer.StringPlug ) )
-		self.failIf( "name" in n["parameters"] )
+		self.assertIsInstance( n["parameters"]["line_width"], Gaffer.FloatPlug )
+		self.assertIsInstance( n["parameters"]["fill_color"], Gaffer.Color3fPlug )
+		self.assertIsInstance( n["parameters"]["line_color"], Gaffer.Color3fPlug )
+		self.assertIsInstance( n["parameters"]["raster_space"], Gaffer.BoolPlug )
+		self.assertIsInstance( n["parameters"]["edge_type"], Gaffer.StringPlug )
+		self.assertNotIn( "name", n["parameters"] )
 
 	def testParameterUse( self ) :
 
@@ -110,11 +110,11 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( isinstance( s["n"]["parameters"]["line_width"], Gaffer.FloatPlug ) )
-		self.failUnless( isinstance( s["n"]["parameters"]["fill_color"], Gaffer.Color3fPlug ) )
-		self.failUnless( isinstance( s["n"]["parameters"]["line_color"], Gaffer.Color3fPlug ) )
-		self.failUnless( isinstance( s["n"]["parameters"]["raster_space"], Gaffer.BoolPlug ) )
-		self.failUnless( isinstance( s["n"]["parameters"]["edge_type"], Gaffer.StringPlug ) )
+		self.assertIsInstance( s["n"]["parameters"]["line_width"], Gaffer.FloatPlug )
+		self.assertIsInstance( s["n"]["parameters"]["fill_color"], Gaffer.Color3fPlug )
+		self.assertIsInstance( s["n"]["parameters"]["line_color"], Gaffer.Color3fPlug )
+		self.assertIsInstance( s["n"]["parameters"]["raster_space"], Gaffer.BoolPlug )
+		self.assertIsInstance( s["n"]["parameters"]["edge_type"], Gaffer.StringPlug )
 
 	def testHash( self ) :
 
@@ -256,10 +256,10 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["parameters"]["emission_color"].setInput( t["out"] )
 
-		self.failUnless( s["parameters"]["emission_color"].getInput().isSame( t["out"] ) )
-		self.failUnless( s["parameters"]["emission_color"][0].getInput().isSame( t["out"][0] ) )
-		self.failUnless( s["parameters"]["emission_color"][1].getInput().isSame( t["out"][1] ) )
-		self.failUnless( s["parameters"]["emission_color"][2].getInput().isSame( t["out"][2] ) )
+		self.assertTrue( s["parameters"]["emission_color"].getInput().isSame( t["out"] ) )
+		self.assertTrue( s["parameters"]["emission_color"][0].getInput().isSame( t["out"][0] ) )
+		self.assertTrue( s["parameters"]["emission_color"][1].getInput().isSame( t["out"][1] ) )
+		self.assertTrue( s["parameters"]["emission_color"][2].getInput().isSame( t["out"][2] ) )
 
 	def testDirtyPropagationThroughNetwork( self ) :
 
@@ -509,7 +509,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( n["parameters"]["start_channel"].defaultValue(), 42 )
 		self.assertAlmostEqual( n["parameters"]["sscale"].defaultValue(), 42.42, places = 5 )
 		self.assertEqual( n["parameters"]["multiply"].defaultValue(), imath.Color3f( 1.2, 3.4, 5.6 ) )
-		# RGBA metadata support added in Arnold 5.3.  Need to wait until we standardise on that 
+		# RGBA metadata support added in Arnold 5.3.  Need to wait until we standardise on that
 		# to add this declaration to the test metadata
 		#self.assertEqual( n["parameters"]["missing_texture_color"].defaultValue(), imath.Color4f( 1.2, 3.4, 5.6, 7.8 ) )
 		self.assertEqual( n["parameters"]["uvcoords"].defaultValue(), imath.V2f( 1.2, 3.4 ) )

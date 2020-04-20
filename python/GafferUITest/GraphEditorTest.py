@@ -58,10 +58,10 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		g = GafferUI.GraphEditor( s )
 
-		self.failUnless( g.graphGadget().nodeGadget( s["add1"] ).node() is s["add1"] )
-		self.failUnless( g.graphGadget().nodeGadget( s["add2"] ).node() is s["add2"] )
+		self.assertTrue( g.graphGadget().nodeGadget( s["add1"] ).node() is s["add1"] )
+		self.assertTrue( g.graphGadget().nodeGadget( s["add2"] ).node() is s["add2"] )
 
-		self.failUnless( g.graphGadget().connectionGadget( s["add1"]["op1"] ).dstNodule().plug().isSame( s["add1"]["op1"] ) )
+		self.assertTrue( g.graphGadget().connectionGadget( s["add1"]["op1"] ).dstNodule().plug().isSame( s["add1"]["op1"] ) )
 
 	def testGraphGadgetAccess( self ) :
 
@@ -70,7 +70,7 @@ class GraphEditorTest( GafferUITest.TestCase ) :
 
 		g = ge.graphGadget()
 
-		self.failUnless( isinstance( g, GafferUI.GraphGadget ) )
+		self.assertIsInstance( g, GafferUI.GraphGadget )
 
 	def testLifetime( self ) :
 

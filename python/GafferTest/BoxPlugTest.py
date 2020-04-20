@@ -47,8 +47,8 @@ class BoxPlugTest( GafferTest.TestCase ) :
 	def testRunTimeTyped( self ) :
 
 		p = Gaffer.Box3fPlug()
-		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
-		self.failUnless( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
+		self.assertTrue( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
+		self.assertTrue( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
 
 		t = p.typeId()
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.ValuePlug.staticTypeId() )

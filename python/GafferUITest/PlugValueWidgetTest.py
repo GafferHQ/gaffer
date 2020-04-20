@@ -53,7 +53,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		s["e"].setExpression( "parent[\"m\"][\"op1\"] = int( context[\"frame\"] )" )
 
 		w = GafferUI.NumericPlugValueWidget( s["m"]["op1"] )
-		self.failUnless( w.getContext().isSame( s.context() ) )
+		self.assertTrue( w.getContext().isSame( s.context() ) )
 
 		s.context().setFrame( 10 )
 		self.assertEqual( w.numericWidget().getValue(), 10 )
@@ -61,7 +61,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		context = Gaffer.Context()
 		context.setFrame( 20 )
 		w.setContext( context )
-		self.failUnless( w.getContext().isSame( context ) )
+		self.assertTrue( w.getContext().isSame( context ) )
 		self.assertEqual( w.numericWidget().getValue(), 20 )
 
 	def testDisableCreationForSpecificTypes( self ) :
