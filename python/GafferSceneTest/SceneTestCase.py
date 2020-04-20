@@ -68,7 +68,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 			o = scenePlug.object( scenePath, _copy = False )
 			if isinstance( o, IECoreScene.VisibleRenderable ) :
-				 if not IECore.BoxAlgo.contains( thisBound, o.bound() ) :
+				if not IECore.BoxAlgo.contains( thisBound, o.bound() ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
 			if isinstance( o, IECoreScene.Primitive ) :
 				if "P" in o :

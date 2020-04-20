@@ -120,13 +120,13 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.IntData( 10 ) )
 		s["n"]["t"].setValue( IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
 
- 		se = s.serialise()
+		se = s.serialise()
 
- 		s2 = Gaffer.ScriptNode()
- 		s2.execute( se )
+		s2 = Gaffer.ScriptNode()
+		s2.execute( se )
 
- 		self.failUnless( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )
- 		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
+		self.failUnless( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )
+		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
 		self.failUnless( s2["n"]["t"].getValue() == IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
 
 	def testConstructCantSpecifyBothInputAndValue( self ) :
@@ -153,12 +153,12 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s["n"] = self.TypedObjectPlugNode()
 		s["n"]["p"].setValue( IECore.IntData( 10 ) )
 
- 		se = s.serialise()
+		se = s.serialise()
 
 		s2 = Gaffer.ScriptNode()
- 		s2.execute( se )
+		s2.execute( se )
 
- 		self.assertEqual( s2["n"]["p"].getValue(), IECore.IntData( 10 ) )
+		self.assertEqual( s2["n"]["p"].getValue(), IECore.IntData( 10 ) )
 
 	def testSetToDefault( self ) :
 

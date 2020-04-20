@@ -54,9 +54,9 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( t.getName(), "Text" )
 		self.assertEqual( t["name"].getValue(), "text" )
 
- 	def testCompute( self ) :
+	def testCompute( self ) :
 
- 		t = GafferScene.Text()
+		t = GafferScene.Text()
 
 		self.assertEqual( t["out"].object( "/" ), IECore.NullObject() )
 		self.assertEqual( t["out"].transform( "/" ), imath.M44f() )

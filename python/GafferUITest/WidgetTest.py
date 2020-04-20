@@ -193,7 +193,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		w.setEnabled( True )
 		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
- 		self.assertEqual( WidgetTest.signalsEmitted, 2 )
+		self.assertEqual( WidgetTest.signalsEmitted, 2 )
 
 	def testCanDieAfterUsingSignals( self ) :
 
