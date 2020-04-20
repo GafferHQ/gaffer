@@ -37,14 +37,22 @@
 import os
 import sys
 
-BUILD_DIR = os.path.expanduser( "~/dev/build/gaffer" )
-BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" )
-INSTALL_DIR = os.path.expanduser( "~/dev/install/gaffer-${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${PLATFORM}" )
-DEPENDENCIES_SRC_DIR = os.path.expanduser( "~/dev/gafferDependencies" )
+pythonVariant = None
+for a in sys.argv :
+	if a.startswith( "PYTHON_VARIANT=" ) :
+		pythonVariant = a[15:]
+
+pythonSuffix = {
+	"2" : "Python2",
+	"3" : "Python3",
+	None : ""
+}[pythonVariant]
+
+BUILD_DIR = os.path.expanduser( "~/dev/build/gaffer" + pythonSuffix )
+BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" + pythonSuffix )
+
+ENV_VARS_TO_IMPORT = "PATH"
 DELIGHT_ROOT = os.environ["DELIGHT"]
 ARNOLD_ROOT = os.environ["ARNOLD_ROOT"]
-DOXYGEN = "/usr/local/bin/doxygen"
-PYTHON_LINK_FLAGS = [ "-lpython$PYTHON_VERSION" ]
-ENV_VARS_TO_IMPORT = "PATH"
 VTUNE_ROOT = "/disk1/apps/intel/system_studio_2018/vtune_amplifier_2018.1.0.535340"
 GAFFERCORTEX=1
