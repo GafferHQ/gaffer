@@ -287,7 +287,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 				def __init__( self ) :
 
-					print A
+					print( A )
 
 			a = A()
 			"""

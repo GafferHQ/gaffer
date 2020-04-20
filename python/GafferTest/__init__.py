@@ -50,7 +50,7 @@ except AttributeError :
 			try :
 				f( self )
 			except :
-				print "Expected failure"
+				print( "Expected failure" )
 		return wrapper
 
 ## Determines if the tests are running in a Continuous Integration
