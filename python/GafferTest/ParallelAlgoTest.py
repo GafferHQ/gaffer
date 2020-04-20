@@ -35,7 +35,6 @@
 ##########################################################################
 
 import six
-import thread
 import threading
 import unittest
 import timeit
@@ -114,7 +113,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		def uiThreadFunction() :
 
 			s.setName( "test" )
-			s.uiThreadId = thread.get_ident()
+			s.uiThreadId = six.moves._thread.get_ident()
 
 		with self.UIThreadCallHandler() as h :
 
@@ -127,7 +126,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			h.assertDone()
 
 		self.assertEqual( s.getName(), "test" )
-		self.assertEqual( s.uiThreadId, thread.get_ident() )
+		self.assertEqual( s.uiThreadId, six.moves._thread.get_ident() )
 
 	def testNestedUIThreadCallHandler( self ) :
 
@@ -139,12 +138,12 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		def uiThreadFunction1() :
 
 			s.setName( "test" )
-			s.uiThreadId1 = thread.get_ident()
+			s.uiThreadId1 = six.moves._thread.get_ident()
 
 		def uiThreadFunction2() :
 
 			s["fileName"].setValue( "test" )
-			s.uiThreadId2 = thread.get_ident()
+			s.uiThreadId2 = six.moves._thread.get_ident()
 
 		with self.UIThreadCallHandler() as h1 :
 
@@ -165,9 +164,9 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 				h2.assertDone()
 
 		self.assertEqual( s.getName(), "test" )
-		self.assertEqual( s.uiThreadId1, thread.get_ident() )
+		self.assertEqual( s.uiThreadId1, six.moves._thread.get_ident() )
 		self.assertEqual( s["fileName"].getValue(), "test" )
-		self.assertEqual( s.uiThreadId2, thread.get_ident() )
+		self.assertEqual( s.uiThreadId2, six.moves._thread.get_ident() )
 
 		t1.join()
 		t2.join()
