@@ -140,7 +140,7 @@ class TestCase( unittest.TestCase ) :
 					increment = 0.1
 				elif isinstance( value, int ) :
 					increment = 1
-				elif isinstance( value, basestring ) :
+				elif isinstance( value, str ) :
 					increment = "a"
 				else :
 					# don't know how to deal with this
