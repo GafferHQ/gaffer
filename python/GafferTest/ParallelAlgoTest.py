@@ -34,11 +34,11 @@
 #
 ##########################################################################
 
+import six
 import thread
 import threading
 import unittest
 import timeit
-import Queue
 
 import IECore
 
@@ -54,7 +54,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		def __enter__( self ) :
 
 			self.__assertDone = False
-			self.__queue = Queue.Queue()
+			self.__queue = six.moves.queue.Queue()
 			Gaffer.ParallelAlgo.pushUIThreadCallHandler( self.__callOnUIThread )
 			return self
 
@@ -64,7 +64,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			while True :
 				try :
 					f = self.__queue.get( block = False )
-				except Queue.Empty:
+				except six.moves.queue.Empty:
 					return
 				if self.__assertDone :
 					raise AssertionError( "UIThread call queue not empty" )
@@ -80,9 +80,9 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 			try :
 				f = self.__queue.get( block = True, timeout = timeout )
-			except Queue.Empty :
+			except six.moves.queue.Empty :
 				raise AssertionError( "UIThread call not made within {} seconds".format( timeout ) )
-			
+
 			f()
 
 		# Asserts that no further uses of `callOnUIThread()` will
@@ -101,7 +101,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			while elapsed < time:
 				try:
 					f = self.__queue.get( block = True, timeout = time - elapsed )
-				except Queue.Empty:
+				except six.moves.queue.Empty:
 					return
 
 				f()

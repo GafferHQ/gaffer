@@ -39,7 +39,6 @@ import gc
 import weakref
 import unittest
 import threading
-import Queue
 import six
 
 import IECore
@@ -309,7 +308,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				q.put( e )
 
 		threads = []
-		q = Queue.Queue()
+		q = six.moves.queue.Queue()
 		for i in range( 0, 500 ) :
 
 			t = threading.Thread( target = f, args = (q,) )
