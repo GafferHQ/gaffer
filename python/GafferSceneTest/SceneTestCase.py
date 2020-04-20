@@ -37,6 +37,7 @@
 
 import os
 import unittest
+import six
 import imath
 
 import IECore
@@ -359,10 +360,10 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 	def __formatPaths( self, path1, path2 ) :
 
-		if not isinstance( path1, basestring ) :
+		if not isinstance( path1, six.string_types ) :
 			path1 = self.__pathToString( path1 )
 
-		if not isinstance( path2, basestring ) :
+		if not isinstance( path2, six.string_types ) :
 			path2 = self.__pathToString( path2 )
 
 		if path1 == path2 :

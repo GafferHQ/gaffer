@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import six
 import imath
 import weakref
 
@@ -204,7 +205,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			Gaffer.Color4fPlug
 		] :
 
-			if isinstance( item, basestring ) :
+			if isinstance( item, six.string_types ) :
 				result.append( "/Custom Parameter/" + item, { "divider" : True } )
 			else :
 				result.append(

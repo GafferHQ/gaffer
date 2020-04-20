@@ -398,7 +398,7 @@ class Menu( GafferUI.Widget ) :
 		# when an icon file path is defined in the menu definition
 		icon = getattr( item, "icon", None )
 		if icon is not None :
-			if isinstance( icon, basestring ) :
+			if isinstance( icon, six.string_types ) :
 				image = GafferUI.Image( icon )
 			else :
 				assert( isinstance( icon, GafferUI.Image ) )

@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import six
 import sys
 import warnings
 import imath
@@ -281,7 +282,7 @@ class Window( GafferUI.ContainerWidget ) :
 
 	def setIcon( self, imageOrImageFileName ) :
 
-		if isinstance( imageOrImageFileName, basestring ) :
+		if isinstance( imageOrImageFileName, six.string_types ) :
 			self.__image = GafferUI.Image( imageOrImageFileName )
 		else :
 			self.__image = imageOrImageFileName

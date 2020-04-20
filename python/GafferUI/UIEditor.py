@@ -38,6 +38,7 @@ import weakref
 import functools
 import types
 import re
+import six
 import collections
 import imath
 import inspect
@@ -246,7 +247,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 			widgetClass = MetadataWidget.BoolMetadataWidget
 
-		elif isinstance( defaultValue, basestring ) :
+		elif isinstance( defaultValue, six.string_types ) :
 
 			widgetClass = MetadataWidget.StringMetadataWidget
 
@@ -309,7 +310,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		if selection is None or isinstance( selection, Gaffer.Plug ) :
 			self.__plugEditor.setPlug( selection )
 			self.__plugAndSectionEditorsContainer.setCurrent( self.__plugEditor )
-		elif isinstance( selection, basestring ) :
+		elif isinstance( selection, six.string_types ) :
 			self.__plugEditor.setPlug( None )
 			self.__sectionEditor.setSection( selection )
 			self.__plugAndSectionEditorsContainer.setCurrent( self.__sectionEditor )
@@ -665,7 +666,7 @@ class _PlugListing( GafferUI.Widget ) :
 				self.__pathListing.setSelectedPaths( [] )
 			else :
 				self.__pathListing.setSelectedPaths( [ path ] )
-		elif isinstance( selection, basestring ) :
+		elif isinstance( selection, six.string_types ) :
 			path = self.__pathListing.getPath().copy()
 			path[:] = selection.split( "." )
 			self.__pathListing.setSelectedPaths( [ path ] )
@@ -1646,7 +1647,7 @@ class _SectionEditor( GafferUI.Widget ) :
 
 	def setSection( self, section ) :
 
-		assert( isinstance( section, basestring ) )
+		assert( isinstance( section, six.string_types ) )
 
 		self.__section = section
 		self.__nameWidget.setText( section.rpartition( "." )[-1] )

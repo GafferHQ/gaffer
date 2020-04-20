@@ -41,6 +41,7 @@ import difflib
 import itertools
 import collections
 import functools
+import six
 import imath
 
 import IECore
@@ -477,7 +478,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], ( float, int ) ) :
 			return self.__formatNumbers( values )
-		elif isinstance( values[0], basestring ) :
+		elif isinstance( values[0], six.string_types ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
 		else :
 			return [ cgi.escape( str( v ) ) for v in values ]
