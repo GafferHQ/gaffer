@@ -1,71 +1,259 @@
 {
+	# \todo Remove once all artwork has been aligned
 	"options" : {
 		"validatePixelAlignment" : False
 	},
 
+	"groups" : {
+
+		"pointers" : {
+
+			"options" : {
+				"requiredWidth" : 32,
+				"requiredHeight" : 32,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"plug", # \todo prefix with 'pointer'
+				"values", # \todo prefix with 'pointer'
+				"rgba", # \todo prefix with 'pointer'
+				"nodes", # \todo prefix with 'pointer'
+				"paths", # \todo prefix with 'pointer'
+				'pointerContextMenu',
+				'pointerTab',
+				'pointerDetachedPanel',
+				"move", # \todo prefix with 'pointer'
+				"moveHorizontally", # \todo prefix with 'pointer',
+				"moveVertically", # \todo prefix with 'pointer'
+				"moveDiagonallyDown", # \todo prefix with 'pointer'
+				"moveDiagonallyUp", # \todo prefix with 'pointer'
+				'pointerTarget',
+				'pointerCrossHair',
+			]
+		},
+
+		"pointers-pathFilterUI" : {
+
+			"options" : {
+				"requiredWidth" : 64,
+				"requiredHeight" : 32,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"objects", # \todo prefix with 'pointer'
+				"addObjects", # \todo prefix with 'pointer'
+				"removeObjects", # \todo prefix with 'pointer'
+				"replaceObjects" # \todo prefix with 'pointer'
+			]
+		},
+
+		"arrows-10x10" : {
+
+			"options" : {
+				"requiredWidth" : 10,
+				"requiredHeight" : 10,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'arrowDown10',
+				'arrowUp10',
+				'arrowLeft10',
+				'arrowRight10',
+				'collapsibleArrowDown',
+				'collapsibleArrowDownHover',
+				'collapsibleArrowRight',
+				'collapsibleArrowRightHover'
+			]
+
+		},
+
+		"catalogueStatus" : {
+
+			"options" : {
+				"requiredWidth" : 13,
+				"requiredHeight" : 13,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'catalogueStatusBatchRenderComplete',
+				'catalogueStatusBatchRenderRunning',
+				'catalogueStatusDisk',
+				'catalogueStatusDisplay',
+				'catalogueStatusInteractiveRenderComplete',
+				'catalogueStatusInteractiveRenderRunning'
+			]
+
+		},
+
+		"sceneView" : {
+
+			"options" : {
+				"requiredWidth" : 25,
+				"requiredHeight" : 25,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'cameraOff',
+				'cameraOn',
+				'drawingStyles',
+				'expansion',
+				'grid', # \todo rename to 'sceneViewGadgets'
+				'selectionMaskOff',
+				'selectionMaskOn',
+				'shading'
+			]
+
+		},
+
+		"imageView" : {
+
+			"options" : {
+				"requiredWidth" : 25,
+				"requiredHeight" : 25,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'clippingOff',
+				'clippingOn',
+				'exposureOff',
+				'exposureOn',
+				'gammaOff',
+				'gammaOn',
+				'soloChannel-1',
+				'soloChannel0',
+				'soloChannel1',
+				'soloChannel2',
+				'soloChannel3'
+			]
+
+		},
+
+		"tools" : {
+
+			"options" : {
+				"requiredWidth" : 25,
+				"requiredHeight" : 25,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'gafferSceneUISelectionTool',
+				'gafferSceneUICameraTool',
+				'gafferSceneUICropWindowTool',
+				'gafferSceneUIRotateTool',
+				'gafferSceneUIScaleTool',
+				'gafferSceneUITranslateTool',
+			]
+
+		},
+
+		"browserIcons" : {
+
+			"options" : {
+				"requiredWidth" : 14,
+				"requiredHeight" : 14,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'bookmarks',
+				'pathChooser',
+				'pathListingList',
+				'pathListingTree',
+				'pathUpArrow',
+				'refresh'
+			]
+
+		},
+
+		"controls-checkBox" : {
+
+			"options" : {
+				"requiredWidth" : 20,
+				"requiredHeight" : 20,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'checkBoxChecked',
+				'checkBoxCheckedDisabled',
+				'checkBoxCheckedHover',
+				'checkBoxIndeterminate',
+				'checkBoxIndeterminateDisabled',
+				'checkBoxIndeterminateHover',
+				'checkBoxUnchecked',
+				'checkBoxUncheckedDisabled',
+				'checkBoxUncheckedHover'
+			]
+
+		},
+
+		"controls-switch" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'toggleIndeterminate',
+				'toggleIndeterminateDisabled',
+				'toggleIndeterminateHover',
+				'toggleOff',
+				'toggleOffDisabled',
+				'toggleOffHover',
+				'toggleOn',
+				'toggleOnDisabled',
+				'toggleOnHover'
+			]
+
+		},
+
+		"viewer" : {
+
+			"options" : {
+				"requiredWidth" : 25,
+				"requiredHeight" : 25,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'viewPause',
+				'viewPaused'
+			]
+
+		}
+
+	},
+
 	"ids" : [
-		'addObjects',
-		'arrowDown10',
-		'arrowLeft10',
-		'arrowRight10',
-		'arrowUp10',
 		'bookmarkStar',
 		'bookmarkStar2',
-		'bookmarks',
 		'boxInNode',
 		'boxNode',
 		'boxOutNode',
-		'cameraOff',
-		'cameraOn',
-		'catalogueStatusBatchRenderComplete',
-		'catalogueStatusBatchRenderRunning',
-		'catalogueStatusDisk',
-		'catalogueStatusDisplay',
-		'catalogueStatusInteractiveRenderComplete',
-		'catalogueStatusInteractiveRenderRunning',
-		'checkBoxChecked',
-		'checkBoxCheckedDisabled',
-		'checkBoxCheckedHover',
-		'checkBoxIndeterminate',
-		'checkBoxIndeterminateDisabled',
-		'checkBoxIndeterminateHover',
-		'checkBoxUnchecked',
-		'checkBoxUncheckedDisabled',
-		'checkBoxUncheckedHover',
 		'classVectorParameterHandle',
-		'clippingOff',
-		'clippingOn',
-		'collapsibleArrowDown',
-		'collapsibleArrowDownHover',
-		'collapsibleArrowRight',
-		'collapsibleArrowRightHover',
 		'debugNotification',
 		'debugSmall',
 		'delete',
 		'deleteSmall',
-		'drawingStyles',
 		'duplicate',
 		'editScopeNode',
 		'editScopeProcessorNode',
 		'errorNotification',
 		'errorSmall',
-		'expansion',
 		'export',
-		'exposureOff',
-		'exposureOn',
 		'extract',
 		'failure',
 		'gadgetError',
-		'gafferSceneUICameraTool',
-		'gafferSceneUICropWindowTool',
-		'gafferSceneUIRotateTool',
-		'gafferSceneUIScaleTool',
-		'gafferSceneUISelectionTool',
-		'gafferSceneUITranslateTool',
-		'gammaOff',
-		'gammaOn',
 		'gear',
-		'grid',
 		'headerSortDown',
 		'headerSortUp',
 		'info',
@@ -79,11 +267,6 @@
 		'menuIndicator',
 		'menuIndicatorDisabled',
 		'minus',
-		'move',
-		'moveDiagonallyDown',
-		'moveDiagonallyUp',
-		'moveHorizontally',
-		'moveVertically',
 		'navigationArrow',
 		'nodeSetDriverNodeSelection',
 		'nodeSetDriverNodeSet',
@@ -92,22 +275,9 @@
 		'nodeSetNumericBookmarkSet',
 		'nodeSetSourceSet',
 		'nodeSetStandardSet',
-		'nodes',
-		'objects',
-		'pathChooser',
-		'pathListingList',
-		'pathListingTree',
-		'pathUpArrow',
-		'paths',
-		'plug',
 		'plugAdder',
 		'plugAdderHighlighted',
 		'plus',
-		'pointerContextMenu',
-		'pointerCrossHair',
-		'pointerDetachedPanel',
-		'pointerTab',
-		'pointerTarget',
 		'railBottom',
 		'railGap',
 		'railLine',
@@ -115,30 +285,17 @@
 		'railSingle',
 		'railTop',
 		'referenceNode',
-		'refresh',
-		'removeObjects',
 		'renderStop',
 		'renderStart',
 		'renderResume',
 		'renderPause',
 		'reorderVertically',
-		'replaceObjects',
-		'rgba',
 		'scene',
 		'sceneInspectorHistory',
 		'sceneInspectorInheritance',
 		'search',
-		'clearSearch',
-		'selectionMaskOff',
-		'selectionMaskOn',
 		'setMembershipDot',
-		'shading',
 		'shuffleArrow',
-		'soloChannel-1',
-		'soloChannel0',
-		'soloChannel1',
-		'soloChannel2',
-		'soloChannel3',
 		'subMenuArrow',
 		'success',
 		'successWarning',
@@ -150,28 +307,17 @@
 		'timelinePlay',
 		'timelineStart',
 		'timelineStop',
-		'toggleIndeterminate',
-		'toggleIndeterminateDisabled',
-		'toggleIndeterminateHover',
-		'toggleOff',
-		'toggleOffDisabled',
-		'toggleOffHover',
-		'toggleOn',
-		'toggleOnDisabled',
-		'toggleOnHover',
 		'valueChanged',
-		'values',
-		'viewPause',
-		'viewPaused',
 		'warningNotification',
 		'warningSmall',
-		'searchFocusOff',
-		'searchFocusOn',
 		'scrollToBottom',
-		"editOn",
-		"editOff",
-		"editDisabled",
-		"lutGPU",
-		"lutCPU",
+		'searchFocusOn',
+		'searchFocusOff',
+		'clearSearch',
+		'lutGPU',
+		'lutCPU',
+		'editDisabled',
+		'editOff',
+		'editOn'
 	]
 }
