@@ -588,7 +588,7 @@ class stats( Gaffer.Application ) :
 
 		objectPool = IECore.ObjectPool.defaultObjectPool()
 
-		items = self.__memory.items()
+		items = list( self.__memory.items() )
 
 		items.extend( [
 			( "", "" ),

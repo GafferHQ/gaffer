@@ -196,7 +196,7 @@ class PlugLayout( GafferUI.Widget ) :
 			sectionName = ".".join( sectionPath )
 			d[sectionName] = 1
 
-		return d.keys()
+		return list( d.keys() )
 
 	## Returns the child plugs of the parent in the order in which they
 	# will be laid out, based on "<layoutName>:index" Metadata entries. If

@@ -180,7 +180,7 @@ class Editor( GafferUI.Widget ) :
 	@classmethod
 	def types( cls ) :
 
-		return cls.__namesToCreators.keys()
+		return list( cls.__namesToCreators.keys() )
 
 	@classmethod
 	def create( cls, name, scriptNode ) :

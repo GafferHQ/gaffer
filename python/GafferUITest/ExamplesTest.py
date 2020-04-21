@@ -154,11 +154,11 @@ class ExamplesTest( GafferUITest.TestCase ) :
 			GafferUI.Examples.registerExample( k, "", notableNodes = [ Gaffer.Box ] )
 
 		examples = GafferUI.Examples.registeredExamples()
-		newKeys = examples.keys()[ lastExistingExampleIndex : ]
+		newKeys = list( examples.keys() )[ lastExistingExampleIndex : ]
 		self.assertEqual( newKeys, self.__testKeys )
 
 		boxExamples = GafferUI.Examples.registeredExamples( node = Gaffer.Box )
-		newBoxKeys = boxExamples.keys()[ lastExistingBoxExampleIndex : ]
+		newBoxKeys = list( boxExamples.keys() )[ lastExistingBoxExampleIndex : ]
 		self.assertEqual( newBoxKeys, self.__testKeys )
 
 		for k in self.__testKeys :
@@ -174,11 +174,11 @@ class ExamplesTest( GafferUITest.TestCase ) :
 			GafferUI.Examples.registerExample( k, "", notableNodes = [ Gaffer.Box ] )
 
 		examples = GafferUI.Examples.registeredExamples()
-		newKeys = examples.keys()[ lastExistingExampleIndex : ]
+		newKeys = list( examples.keys() )[ lastExistingExampleIndex : ]
 		self.assertEqual( newKeys, self.__testKeys[ : : -1 ] )
 
 		boxExamples = GafferUI.Examples.registeredExamples( node = Gaffer.Box )
-		newBoxKeys = boxExamples.keys()[ lastExistingBoxExampleIndex : ]
+		newBoxKeys = list( boxExamples.keys() )[ lastExistingBoxExampleIndex : ]
 		self.assertEqual( newBoxKeys, self.__testKeys[ : : -1 ] )
 
 	def testExampleFilesExist( self ) :
