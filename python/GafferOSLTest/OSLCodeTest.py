@@ -213,7 +213,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		oslCode["code"].setValue( "o = color( 0, 1, 0 );" )
 
-		info = subprocess.check_output( [ "oslinfo", self.__osoFileName( oslCode ) ] )
+		info = subprocess.check_output( [ "oslinfo", self.__osoFileName( oslCode ) ], universal_newlines = True )
 		self.assertTrue(
 			info.startswith( "shader \"{0}\"".format( os.path.basename( self.__osoFileName( oslCode ) ) ) )
 		)

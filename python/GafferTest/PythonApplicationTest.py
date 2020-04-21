@@ -51,6 +51,7 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 		p = subprocess.Popen(
 			[ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/exception.py" ],
 			stderr = subprocess.PIPE,
+			universal_newlines = True,
 		)
 		p.wait()
 
