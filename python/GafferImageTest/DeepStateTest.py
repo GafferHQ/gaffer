@@ -526,7 +526,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 
 				mergedSample["A"] = newSample["A"] + samples[0]["A"] - ( newSample["A"] * samples[0]["A"] )
 
-				MAX = sys.maxint
+				MAX = sys.maxsize
 
 				u1 = -math.log1p( -newSample["A"] )
 				v1 = ( u1 / newSample["A"] ) if ( u1 < ( newSample["A"] * MAX ) ) else 1.0
