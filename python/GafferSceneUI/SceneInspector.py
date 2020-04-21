@@ -531,7 +531,7 @@ class TextDiff( SideBySideDiff ) :
 		# transform back into a list of 2d arrays of
 		# formatted strings.
 		formattedRows = zip( *formattedColumns )
-		values = zip( *( [ iter( formattedRows ) ] * len( values[0] ) ) )
+		values = list( zip( *( [ iter( formattedRows ) ] * len( values[0] ) ) ) )
 
 		# build the tables. it'd be nice to control cellspacing
 		# in the stylesheet, but qt doesn't seem to support that.
