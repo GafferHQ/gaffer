@@ -710,7 +710,7 @@ class Widget( Gaffer.Trackable ) :
 	def __initNesting() :
 
 		widgetsInInit = set()
-		frame = inspect.currentframe( 1 )
+		frame = inspect.currentframe()
 		while frame :
 			if frame.f_code.co_name=="__init__" :
 				frameSelf = frame.f_locals[frame.f_code.co_varnames[0]]
