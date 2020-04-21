@@ -686,7 +686,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		ssLines = ss.split( "\n" )
 		ssLinesEdited = []
 		for l in ssLines:
-			m = re.match( "^__children\[\"e\"\]\[\"__expression\"\].setValue\( '(.*)' \)$", l )
+			m = re.match( r"^__children\[\"e\"\]\[\"__expression\"\].setValue\( '(.*)' \)$", l )
 			if not m:
 				ssLinesEdited.append( l )
 			else:

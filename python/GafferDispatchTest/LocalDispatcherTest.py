@@ -703,7 +703,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		testFile = os.path.join( self.temporaryDirectory(), "test" )
 
 		s["c"] = GafferDispatch.SystemCommand()
-		s["c"]["command"].setValue( "echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
+		s["c"]["command"].setValue( r"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
 
 		dispatcher = self.__createLocalDispatcher()
 		dispatcher["executeInBackground"].setValue( True )
@@ -728,7 +728,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		testFile = os.path.join( self.temporaryDirectory(), "test" )
 
 		s["c"] = GafferDispatch.SystemCommand()
-		s["c"]["command"].setValue( "echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
+		s["c"]["command"].setValue( r"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
 
 		dispatcher = self.__createLocalDispatcher()
 		dispatcher["executeInBackground"].setValue( True )

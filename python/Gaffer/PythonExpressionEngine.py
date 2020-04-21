@@ -208,8 +208,8 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 	def __plugRegex( self, node, plug ) :
 
 		identifier = self.identifier( node, plug )
-		regex = identifier.replace( "[", "\[" )
-		regex = regex.replace( "]", "\]" )
+		regex = identifier.replace( "[", r"\[" )
+		regex = regex.replace( "]", r"\]" )
 		regex = regex.replace( '"', "['\"']" )
 
 		return re.compile( regex )

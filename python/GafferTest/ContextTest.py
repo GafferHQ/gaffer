@@ -553,9 +553,9 @@ class ContextTest( GafferTest.TestCase ) :
 		c["a"] = "apple"
 		c["b"] = "bear"
 
-		self.assertEqual( c.substitute( "\${a}.\$b" ), "${a}.$b" )
-		self.assertEqual( c.substitute( "\~" ), "~" )
-		self.assertEqual( c.substitute( "\#\#\#\#" ), "####" )
+		self.assertEqual( c.substitute( r"\${a}.\$b" ), "${a}.$b" )
+		self.assertEqual( c.substitute( r"\~" ), "~" )
+		self.assertEqual( c.substitute( r"\#\#\#\#" ), "####" )
 		# really we're passing \\ to substitute and getting back \ -
 		# the extra slashes are escaping for the python interpreter.
 		self.assertEqual( c.substitute( "\\\\" ), "\\" )
