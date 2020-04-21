@@ -126,8 +126,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 
 				if taskIndex < numTasks:
 
-					chunkStart = ( taskIndex * len( fileList ) ) / numTasks
-					chunkEnd = ( ( taskIndex + 1 ) * len( fileList ) ) / numTasks
+					chunkStart = ( taskIndex * len( fileList ) ) // numTasks
+					chunkEnd = ( ( taskIndex + 1 ) * len( fileList ) ) // numTasks
 
 					dupeCount = 0
 					prevFileName = ""
