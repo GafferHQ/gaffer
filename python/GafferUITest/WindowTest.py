@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import warnings
 import weakref
 import imath
 
@@ -264,14 +265,21 @@ class WindowTest( GafferUITest.TestCase ) :
 
 	def testResizeable( self ) :
 
-		w = GafferUI.Window()
-		self.assertTrue( w.getResizeable() )
+		# The methods we are testing are deprecated, so we must
+		# ignore the deprecation warnings they emit, as otherwise
+		# they would become exceptions.
+		with warnings.catch_warnings() :
 
-		w.setResizeable( False )
-		self.assertFalse( w.getResizeable() )
+			warnings.simplefilter( "ignore", DeprecationWarning )
 
-		w.setResizeable( True )
-		self.assertTrue( w.getResizeable() )
+			w = GafferUI.Window()
+			self.assertTrue( w.getResizeable() )
+
+			w.setResizeable( False )
+			self.assertFalse( w.getResizeable() )
+
+			w.setResizeable( True )
+			self.assertTrue( w.getResizeable() )
 
 	def testPosition( self ) :
 

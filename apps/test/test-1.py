@@ -38,6 +38,7 @@
 import glob
 import os
 import sys
+import warnings
 
 import IECore
 import Gaffer
@@ -148,7 +149,9 @@ class test( Gaffer.Application ) :
 			if args["stopOnFailure"].value :
 				testRunner.failfast = True
 
-			testResult = testRunner.run( testSuite )
+			with warnings.catch_warnings() :
+				warnings.simplefilter( "error", DeprecationWarning )
+				testResult = testRunner.run( testSuite )
 
 			if args["outputFile"].value :
 				testResult.save( args["outputFile"].value )
