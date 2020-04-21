@@ -83,6 +83,10 @@ class _StdOut( object ) :
 		else :
 			OutputRedirection._originalStdOut.write( text )
 
+	def flush( self ) :
+
+		pass
+
 class _StdErr( object ) :
 
 	def write( self, text ) :
@@ -92,3 +96,7 @@ class _StdErr( object ) :
 			stdErrStack[-1]( text )
 		else :
 			OutputRedirection._originalStdErr.write( text )
+
+	def flush( self ) :
+
+		pass
