@@ -157,7 +157,11 @@ void bind( const char *name )
 	typedef SlotCallRange<typename Signal::slot_call_iterator> Range;
 	boost::python::class_<Range>( "__SignalResultRange", no_init )
 		.def( "__iter__", &Range::iter, return_self<>() )
+#if PY_MAJOR_VERSION >= 3
+		.def( "__next__", &Range::next )
+#else
 		.def( "next", &Range::next )
+#endif
 	;
 
 }
