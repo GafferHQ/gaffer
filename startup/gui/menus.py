@@ -133,7 +133,7 @@ if moduleSearchPath.find( "arnold" ) :
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
 
-	except Exception, m :
+	except Exception as m :
 
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Arnold module - \"%s\".\n %s" % ( m, stacktrace ) )
@@ -220,7 +220,7 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 		nodeMenu.append( "/3Delight/Render", GafferDelight.DelightRender, searchText = "DelightRender"  )
 		nodeMenu.append( "/3Delight/Interactive Render", GafferDelight.InteractiveDelightRender, searchText = "InteractiveDelightRender"  )
 
-	except Exception, m :
+	except Exception as m :
 
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Delight module - \"%s\".\n %s" % ( m, stacktrace ) )
@@ -255,7 +255,7 @@ if "APPLESEED" in os.environ :
 				}
 			)
 
-	except Exception, m :
+	except Exception as m :
 
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Appleseed module - \"%s\".\n %s" % ( m, stacktrace ) )
