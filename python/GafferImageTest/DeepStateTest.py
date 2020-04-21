@@ -455,7 +455,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 		for v in values:
 			v["ZBack"] = max( v["Z"], v["ZBack"] )
 
-		return sorted( values, cmp = lambda a, b: cmp( a["Z"], b["Z"] ) or cmp( a["ZBack"], b["ZBack"] ) )
+		return sorted( values, key = lambda v : ( v["Z"], v["ZBack"] ) )
 
 
 	def __getTidySamples( self, values ) :
