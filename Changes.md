@@ -17,7 +17,9 @@ Fixes
 
 - TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
-- Script Settings : Fixed errors showing the popup menu for the `frameRange` plug.
+- Script Settings :
+  - Fixed errors showing the popup menu for the `frameRange` plug.
+  - Fixed Spreadsheet menu items.
 
 API
 ---
