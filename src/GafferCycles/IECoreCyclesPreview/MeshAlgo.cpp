@@ -335,6 +335,40 @@ const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVa
 	return n;
 }
 
+const BoolVectorData *getSmooth( const IECoreScene::MeshPrimitive *mesh )
+{
+	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "_smooth" );
+	if( it == mesh->variables.end() )
+	{
+		return nullptr;
+	}
+
+	if( it->second.interpolation != PrimitiveVariable::Uniform )
+	{
+		return nullptr;
+	}
+
+	const BoolVectorData *s = runTimeCast<const BoolVectorData>( it->second.data.get() );
+	return s;
+}
+
+const IntVectorData *getFaceset( const IECoreScene::MeshPrimitive *mesh )
+{
+	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "_faceset" );
+	if( it == mesh->variables.end() )
+	{
+		return nullptr;
+	}
+
+	if( it->second.interpolation != PrimitiveVariable::Uniform )
+	{
+		return nullptr;
+	}
+
+	const IntVectorData *f = runTimeCast<const IntVectorData>( it->second.data.get() );
+	return f;
+}
+
 void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *normalData, ccl::Attribute *attr, PrimitiveVariable::Interpolation interpolation )
 {
 	const size_t numFaces = mesh->numFaces();
@@ -499,6 +533,26 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	// If we need to convert
 	MeshPrimitivePtr trimesh;
 
+	// Smooth/hard normals
+	bool smooth = true;
+	PrimitiveVariable::Interpolation sInterpolation = PrimitiveVariable::Invalid;
+	PrimitiveVariableMap::const_iterator sIt = mesh->variables.find( "_smooth" );
+	if( sIt != mesh->variables.end() )
+	{
+		if( sIt->second.interpolation == PrimitiveVariable::Constant ||
+			sIt->second.interpolation == PrimitiveVariable::Uniform )
+		{
+			sInterpolation = sIt->second.interpolation;
+		}
+		if( sInterpolation == PrimitiveVariable::Constant )
+		{
+			if( const BoolData *data = runTimeCast<const BoolData>( sIt->second.data.get() ) )
+			{
+				smooth = data->readable();
+			}
+		}
+	}
+
 	if( ( mesh->interpolation() == "catmullClark" ) )//|| !triangles )
 	{
 		const size_t numFaces = mesh->numFaces();
@@ -508,6 +562,8 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		const size_t numVerts = points.size();
 		subdivision = true;
 		cmesh->subdivision_type = (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR;
+		const BoolVectorData *s = getSmooth( mesh );
+		const IntVectorData *f = getFaceset( mesh );
 
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ngons = 0;
@@ -523,11 +579,12 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		for( size_t i = 0; i < numVerts; i++ )
 			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
-		int index_offset = 0;
+		int indexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
-			cmesh->add_subd_face( const_cast<int*>(&vertexIds[index_offset]), vertsPerFace[i], 0, true ); // Last two args are shader sets and smooth
-			index_offset += vertsPerFace[i];
+			cmesh->add_subd_face( const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i], 
+				f ? f->readable()[i] : 0, s ? s->readable()[i] : smooth ); // Last two args are shader sets and smooth
+			indexOffset += vertsPerFace[i];
 		}
 
 		// Creases
@@ -581,6 +638,8 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			const vector<Imath::V3f> &points = p->readable();
 			const size_t numVerts = points.size();
 			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
+			const BoolVectorData *s = getSmooth( trimesh.get() );
+			const IntVectorData *f = getFaceset( trimesh.get() );
 
 			const size_t triNumFaces = trimesh->numFaces();
 			cmesh->reserve_mesh( numVerts, triNumFaces );
@@ -588,8 +647,10 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			for( size_t i = 0; i < numVerts; i++ )
 				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
-			for( size_t i = 0; i < triVertexIds.size(); i+= 3 )
-				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
+			int faceOffset = 0;
+			for( size_t i = 0; i < triVertexIds.size(); i+= 3, ++faceOffset )
+				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2], 
+					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
 		else
 		{
@@ -599,12 +660,16 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			const vector<int> &vertexIds = mesh->vertexIds()->readable();
 			const size_t numVerts = points.size();
 			cmesh->reserve_mesh(numVerts, numFaces);
+			const BoolVectorData *s = getSmooth( mesh );
+			const IntVectorData *f = getFaceset( mesh );
 
 			for( size_t i = 0; i < numVerts; i++ )
 				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
-			for( size_t i = 0; i < vertexIds.size(); i+= 3 )
-				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 0, true ); // Last two args are shader sets and smooth
+			int faceOffset = 0;
+			for( size_t i = 0; i < vertexIds.size(); i+= 3, ++faceOffset )
+				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 
+					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
 	}
 
@@ -682,6 +747,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		variablesToConvert = trimesh->variables;
 	variablesToConvert.erase( "P" ); // P is already done.
 	variablesToConvert.erase( "N" ); // As well as N.
+	variablesToConvert.erase( "_smooth" ); // Was already processed (if it existed)
 
 	// Find all UV sets and convert them explicitly.
 	for( auto it = variablesToConvert.begin(); it != variablesToConvert.end(); )
