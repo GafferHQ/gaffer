@@ -252,6 +252,95 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 			s["r"]["state"].setValue( s["r"].State.Stopped )
 
+	def testQuadLightTextureEdits( self ) :
+
+		# Quad light texture edits don't currently update correctly in Arnold.
+		# Check that our workaround is working
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferImage.Catalogue()
+
+
+		s["s"] = GafferScene.Sphere()
+
+		s["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+		s["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		s["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
+		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
+		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
+
+		s["lambert"], _ = self._createMatteShader()
+		s["ShaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+
+		s["Tex"] = GafferArnold.ArnoldShader( "image" )
+		s["Tex"].loadShader( "image" )
+		s["Tex"]["parameters"]["filename"].setValue( "python/GafferArnoldTest/images/sphereLightBake.exr" )
+		s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 1, 0, 0 ) )
+
+		s["Light"] = GafferArnold.ArnoldLight( "quad_light" )
+		s["Light"].loadShader( "quad_light" )
+		s["Light"]["transform"]["translate"]["z"].setValue( 2 )
+		s["Light"]["parameters"]["color"].setInput( s["Tex"]["out"] )
+		s["Light"]["parameters"]["exposure"].setValue( 4 )
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 2 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["ShaderAssignment"]["out"] )
+		s["group"]["in"][1].setInput( s["Light"]["out"] )
+		s["group"]["in"][2].setInput( s["c"]["out"] )
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["group"]["out"] )
+
+		s["so"] = GafferScene.StandardOptions()
+		s["so"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["so"]["in"].setInput( s["o"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["so"]["out"] )
+
+		# Start rendering and make sure the light is linked to the sphere
+
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+
+			s["r"]["state"].setValue( s["r"].State.Running )
+
+			handler.waitFor( 1.0 )
+
+			initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.01 )
+			self.assertAlmostEqual( initialColor.g, 0, delta = 0.01 )
+
+			# Edit texture network and make sure the changes take effect
+
+			s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 0, 1, 0 ) )
+
+			handler.waitFor( 1.0 )
+
+			updateColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+			self.assertAlmostEqual( updateColor.r, 0, delta = 0.01 )
+			self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.01 )
+
+			s["r"]["state"].setValue( s["r"].State.Stopped )
+
 	def _createInteractiveRender( self ) :
 
 		return GafferArnold.InteractiveArnoldRender()

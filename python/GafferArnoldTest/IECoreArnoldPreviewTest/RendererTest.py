@@ -2670,6 +2670,62 @@ class RendererTest( GafferTest.TestCase ) :
 			uvRemapNode =  arnold.AiNodeGetLink( cameraNode, "uv_remap" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( uvRemapNode ) ), "flat" )
 
+	def testCantEditQuadLightColor( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		lightParameters = { "color" : IECore.Color3fData( imath.Color3f(1,0,0) ), "exposure" : IECore.FloatData( 1 ) }
+		lightParametersChanged = { "color" : IECore.Color3fData( imath.Color3f(0,1,0) ), "exposure" : IECore.FloatData( 2 ) }
+		texParameters = { "multiply" : IECore.Color3fData( imath.Color3f(1,0,0) ) }
+		texParametersChanged = { "multiply" : IECore.Color3fData( imath.Color3f(0,1,0) ) }
+
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParameters ), }, output = "light" )
+		skydomeLight = r.light(
+			"skydomeLight",
+			None,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:light" : skydomeLightShader
+				} )
+			)
+		)
+
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParameters ), }, output = "light" )
+		quadLight = r.light(
+			"quadLight",
+			None,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:light" : quadLightShader
+				} )
+			)
+		)
+
+		# All edits of the skydome light should succeed ( The bug we're hacking around only affects quad_light )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), }, output = "light" )
+		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParameters), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
+		skydomeLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "skydome_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		self.assertTrue( skydomeLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : skydomeLightShader } ) ) ) )
+
+		# Most edits of the quad lights should succeed
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), }, output = "light" )
+		self.assertTrue( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParameters), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		self.assertTrue( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParameters) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		self.assertTrue( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
+
+		# The one exception is changing a parameter of a shader upstream of the color parameter
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", ""), ("light", "color"))], output = "light" )
+		self.assertFalse( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
+
 	@staticmethod
 	def __m44f( m ) :
 
