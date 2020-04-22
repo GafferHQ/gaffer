@@ -45,6 +45,6 @@ with warnings.catch_warnings():
 	warnings.simplefilter("ignore")
 	import pyopenvdb
 
-from _GafferVDB import *
+from ._GafferVDB import *
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDB" )

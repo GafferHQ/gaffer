@@ -34,11 +34,11 @@
 #
 ##########################################################################
 
-from FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
-from ImageViewTest import ImageViewTest
-from DocumentationTest import DocumentationTest
-from ImageGadgetTest import ImageGadgetTest
-from CatalogueUITest import CatalogueUITest
+from .FormatPlugValueWidgetTest import FormatPlugValueWidgetTest
+from .ImageViewTest import ImageViewTest
+from .DocumentationTest import DocumentationTest
+from .ImageGadgetTest import ImageGadgetTest
+from .CatalogueUITest import CatalogueUITest
 
 if __name__ == "__main__":
 	unittest.main()

@@ -36,27 +36,27 @@
 
 # Utility classes
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
-from ErroringTaskNode import ErroringTaskNode
+from .TextWriter import TextWriter
+from .LoggingTaskNode import LoggingTaskNode
+from .DebugDispatcher import DebugDispatcher
+from .ErroringTaskNode import ErroringTaskNode
 
 # Test cases
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
-from FrameMaskTest import FrameMaskTest
-from DispatchApplicationTest import DispatchApplicationTest
-from ModuleTest import ModuleTest
+from .DispatcherTest import DispatcherTest
+from .LocalDispatcherTest import LocalDispatcherTest
+from .TaskNodeTest import TaskNodeTest
+from .TaskSwitchTest import TaskSwitchTest
+from .PythonCommandTest import PythonCommandTest
+from .SystemCommandTest import SystemCommandTest
+from .TaskListTest import TaskListTest
+from .WedgeTest import WedgeTest
+from .TaskContextVariablesTest import TaskContextVariablesTest
+from .ExecuteApplicationTest import ExecuteApplicationTest
+from .TaskPlugTest import TaskPlugTest
+from .FrameMaskTest import FrameMaskTest
+from .DispatchApplicationTest import DispatchApplicationTest
+from .ModuleTest import ModuleTest
 
 if __name__ == "__main__":
 	import unittest

@@ -45,7 +45,7 @@ import GafferScene
 import GafferTest
 import GafferAppleseed
 
-from AppleseedTest import appleseedProjectSchemaPath
+from .AppleseedTest import appleseedProjectSchemaPath
 
 class AppleseedCameraTest( GafferTest.TestCase ) :
 

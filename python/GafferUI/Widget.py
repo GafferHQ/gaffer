@@ -44,7 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
-from _StyleSheet import _styleSheet
+from ._StyleSheet import _styleSheet
 
 from Qt import QtCore
 from Qt import QtGui
@@ -154,24 +154,24 @@ class Widget( Gaffer.Trackable ) :
 
 		self._keyPressSignal = None
 		self._keyReleaseSignal = None
- 		self._buttonPressSignal = None
- 		self._buttonReleaseSignal = None
-  		self._buttonDoubleClickSignal = None
+		self._buttonPressSignal = None
+		self._buttonReleaseSignal = None
+		self._buttonDoubleClickSignal = None
 		self._mouseMoveSignal = None
- 		self._enterSignal = None
- 		self._leaveSignal = None
- 		self._dragBeginSignal = None
- 		self._dragEnterSignal = None
- 		self._dragMoveSignal = None
- 		self._dragLeaveSignal = None
- 		self._dropSignal = None
- 		self._dragEndSignal = None
- 		self._wheelSignal = None
- 		self._visibilityChangedSignal = None
- 		self._contextMenuSignal = None
- 		self._parentChangedSignal = None
+		self._enterSignal = None
+		self._leaveSignal = None
+		self._dragBeginSignal = None
+		self._dragEnterSignal = None
+		self._dragMoveSignal = None
+		self._dragLeaveSignal = None
+		self._dropSignal = None
+		self._dragEndSignal = None
+		self._wheelSignal = None
+		self._visibilityChangedSignal = None
+		self._contextMenuSignal = None
+		self._parentChangedSignal = None
 
- 		self.__visible = not isinstance( self, GafferUI.Window )
+		self.__visible = not isinstance( self, GafferUI.Window )
 
 		# perform automatic parenting if necessary. we don't want to do this
 		# for menus, because they don't have the same parenting semantics. if other

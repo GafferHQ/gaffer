@@ -9,12 +9,24 @@ Features
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+- Viewer : Added overlay to Image views to control interactive renders where available (#3419).
+
+Improvements
+------------
+
+- Spreadsheet : Added a popup menu item for promoting spreadsheet plugs.
+- InteractiveRender : Improved presentation of render control buttons (#3419).
 
 Fixes
 -----
 
 - TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
+- Script Settings :
+  - Fixed errors showing the popup menu for the `frameRange` plug.
+  - Fixed Spreadsheet menu items.
+- UI : Fixed appearance of button icons when disabled.
+- FilterResults : Fixed the UI to show the connected filter instead of a meaningless numeric value. This also avoids triggering spurious errors on PathFilter nodes.
 
 API
 ---

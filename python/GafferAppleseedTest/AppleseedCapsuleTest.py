@@ -46,7 +46,7 @@ import GafferScene
 import GafferTest
 import GafferAppleseed
 
-from AppleseedTest import appleseedProjectSchemaPath
+from .AppleseedTest import appleseedProjectSchemaPath
 
 @unittest.skipIf( sys.platform == 'darwin', "Unknown segfault on Mac see #3234" )
 class AppleseedCapsuleTest( GafferTest.TestCase ) :

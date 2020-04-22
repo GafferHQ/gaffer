@@ -37,77 +37,77 @@
 
 __import__( "GafferUI" )
 
-from _GafferImageUI import *
+from ._GafferImageUI import *
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+from . import DisplayUI
+from .FormatPlugValueWidget import FormatPlugValueWidget
+from .ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
+from .ChannelPlugValueWidget import ChannelPlugValueWidget
 
-import ImageReaderPathPreview
+from . import ImageReaderPathPreview
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import CheckerboardUI
-import RampUI
-import ColorSpaceUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import FlatImageSourceUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import FlatImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import RankFilterUI
-import ErodeUI
-import DilateUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
-import CatalogueSelectUI
-import BleedFillUI
-import RectangleUI
-import FlatToDeepUI
-import DeepMergeUI
-import DeepStateUI
-import EmptyUI
-import DeepSampleCountsUI
-import DeepSamplerUI
-import DeepToFlatUI
-import DeepTidyUI
-import DeepHoldoutUI
-import DeepRecolorUI
+from . import OpenImageIOReaderUI
+from . import ImageReaderUI
+from . import ImageViewUI
+from . import ImageTransformUI
+from . import ConstantUI
+from . import CheckerboardUI
+from . import RampUI
+from . import ColorSpaceUI
+from . import ImageStatsUI
+from . import DeleteChannelsUI
+from . import ClampUI
+from . import ImageWriterUI
+from . import GradeUI
+from . import ImageSamplerUI
+from . import MergeUI
+from . import ImageNodeUI
+from . import FlatImageSourceUI
+from . import ChannelDataProcessorUI
+from . import ImageProcessorUI
+from . import FlatImageProcessorUI
+from . import ImageMetadataUI
+from . import DeleteImageMetadataUI
+from . import CopyImageMetadataUI
+from . import ShuffleUI
+from . import PremultiplyUI
+from . import UnpremultiplyUI
+from . import CropUI
+from . import ResizeUI
+from . import ResampleUI
+from . import LUTUI
+from . import CDLUI
+from . import DisplayTransformUI
+from . import OpenColorIOTransformUI
+from . import OffsetUI
+from . import BlurUI
+from . import ShapeUI
+from . import TextUI
+from . import WarpUI
+from . import VectorWarpUI
+from . import MirrorUI
+from . import CopyChannelsUI
+from . import MedianUI
+from . import RankFilterUI
+from . import ErodeUI
+from . import DilateUI
+from . import ColorProcessorUI
+from . import MixUI
+from . import CatalogueUI
+from . import CollectImagesUI
+from . import CatalogueSelectUI
+from . import BleedFillUI
+from . import RectangleUI
+from . import FlatToDeepUI
+from . import DeepMergeUI
+from . import DeepStateUI
+from . import EmptyUI
+from . import DeepSampleCountsUI
+from . import DeepSamplerUI
+from . import DeepToFlatUI
+from . import DeepTidyUI
+from . import DeepHoldoutUI
+from . import DeepRecolorUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

@@ -34,9 +34,9 @@
 #
 ##########################################################################
 
-import DelightAttributesUI
-import DelightOptionsUI
-import DelightRenderUI
-import InteractiveDelightRenderUI
+from . import DelightAttributesUI
+from . import DelightOptionsUI
+from . import DelightRenderUI
+from . import InteractiveDelightRenderUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDelightUI" )

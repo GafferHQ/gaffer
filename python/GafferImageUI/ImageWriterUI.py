@@ -40,7 +40,7 @@ import Gaffer
 import GafferUI
 import GafferImageUI
 import GafferImage
-import OpenColorIOTransformUI
+from . import OpenColorIOTransformUI
 
 Gaffer.Metadata.registerNode(
 

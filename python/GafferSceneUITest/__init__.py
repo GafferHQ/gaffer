@@ -34,22 +34,22 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from HierarchyViewTest import HierarchyViewTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
-from RotateToolTest import RotateToolTest
-from ContextAlgoTest import ContextAlgoTest
-from CameraToolTest import CameraToolTest
-from VisualiserTest import VisualiserTest
-from TransformToolTest import TransformToolTest
+from .SceneViewTest import SceneViewTest
+from .ShaderAssignmentUITest import ShaderAssignmentUITest
+from .StandardGraphLayoutTest import StandardGraphLayoutTest
+from .SceneGadgetTest import SceneGadgetTest
+from .SceneInspectorTest import SceneInspectorTest
+from .HierarchyViewTest import HierarchyViewTest
+from .DocumentationTest import DocumentationTest
+from .ShaderViewTest import ShaderViewTest
+from .ShaderUITest import ShaderUITest
+from .TranslateToolTest import TranslateToolTest
+from .ScaleToolTest import ScaleToolTest
+from .RotateToolTest import RotateToolTest
+from .ContextAlgoTest import ContextAlgoTest
+from .CameraToolTest import CameraToolTest
+from .VisualiserTest import VisualiserTest
+from .TransformToolTest import TransformToolTest
 
 if __name__ == "__main__":
 	unittest.main()

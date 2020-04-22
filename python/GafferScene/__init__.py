@@ -40,8 +40,8 @@ __import__( "Gaffer" )
 __import__( "GafferDispatch" )
 __import__( "GafferImage" )
 
-from _GafferScene import *
+from ._GafferScene import *
 
-from ShaderBall import ShaderBall
+from .ShaderBall import ShaderBall
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )

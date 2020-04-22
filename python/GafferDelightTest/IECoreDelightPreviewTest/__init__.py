@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-from RendererTest import RendererTest
+from .RendererTest import RendererTest
 
 if __name__ == "__main__":
 	import unittest

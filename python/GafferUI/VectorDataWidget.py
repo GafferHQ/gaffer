@@ -42,7 +42,7 @@ import IECore
 
 import Gaffer
 import GafferUI
-from _TableView import _TableView
+from ._TableView import _TableView
 
 from Qt import QtCore
 from Qt import QtGui
@@ -1185,26 +1185,26 @@ class _Delegate( QtWidgets.QStyledItemDelegate ) :
 		else :
 			QtWidgets.QStyledItemDelegate.setEditorData( self, editor, index )
 
- 	def setModelData( self, editor, model, index ) :
+	def setModelData( self, editor, model, index ) :
 
- 		if self.__editor is not None :
- 			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.EditRole )
+		if self.__editor is not None :
+			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.EditRole )
 		else :
 			QtWidgets.QStyledItemDelegate.setModelData( self, editor, model, index )
 
- 	def eventFilter( self, object, event ) :
+	def eventFilter( self, object, event ) :
 
- 		if QtWidgets.QStyledItemDelegate.eventFilter( self, object, event ) :
- 			return True
+		if QtWidgets.QStyledItemDelegate.eventFilter( self, object, event ) :
+			return True
 
- 		if event.type() == event.Hide and self.__editor is not None :
- 			# custom editors may hide themselves to indicate that editing
- 			# is complete. when this happens we are responsible for carrying
- 			# out this completion.
- 			self.commitData.emit( self.__editor._qtWidget() )
- 			self.closeEditor.emit( self.__editor._qtWidget(), self.NoHint )
+		if event.type() == event.Hide and self.__editor is not None :
+			# custom editors may hide themselves to indicate that editing
+			# is complete. when this happens we are responsible for carrying
+			# out this completion.
+			self.commitData.emit( self.__editor._qtWidget() )
+			self.closeEditor.emit( self.__editor._qtWidget(), self.NoHint )
 
- 		return False
+		return False
 
 	# Methods we define for our own purposes
 	########################################

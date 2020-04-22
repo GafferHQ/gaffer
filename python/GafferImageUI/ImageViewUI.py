@@ -147,6 +147,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
 			"toolbarLayout:index", 1,
+			"toolbarLayout:width", 175,
 			"label", "",
 
 		],
@@ -471,7 +472,7 @@ class _Spacer( GafferUI.Spacer ) :
 
 	def __init__( self, imageView, **kw ) :
 
-		GafferUI.Spacer.__init__( self, size = imath.V2i( 0 ) )
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 25 ) )
 
 ## \todo This widget is basically the same as the SceneView and UVView ones. Perhaps the
 # View base class should provide standard functionality for pausing and state, and we could

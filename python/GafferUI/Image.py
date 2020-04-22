@@ -67,48 +67,91 @@ class Image( GafferUI.Widget ) :
 		if pixmap is not None :
 			self._qtWidget().setPixmap( pixmap )
 
+		self.__pixmapHighlighted = None
+		self.__pixmapDisabled = None
+
 	def _qtPixmap( self ) :
 
 		return self._qtWidget().pixmap()
 
-	## \todo Does this need a caching mechanism? Does it even belong here?
-	# Should it be implemented on Button where it's used?
 	def _qtPixmapHighlighted( self ) :
 
-		pixmap = self._qtWidget().pixmap()
+		if self.__pixmapHighlighted is None :
 
-		graphicsScene = QtWidgets.QGraphicsScene()
-		pixmapItem = graphicsScene.addPixmap( pixmap )
-		pixmapItem.setVisible( True )
+			pixmap = self._qtWidget().pixmap()
 
-		effect = QtWidgets.QGraphicsColorizeEffect()
-		effect.setColor( QtGui.QColor( 119, 156, 189, 255 ) )
-		effect.setStrength( 0.85 )
-		pixmapItem.setGraphicsEffect( effect )
-		pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
+			graphicsScene = QtWidgets.QGraphicsScene()
+			pixmapItem = graphicsScene.addPixmap( pixmap )
+			pixmapItem.setVisible( True )
 
-		graphicsView = QtWidgets.QGraphicsView()
-		graphicsView.setScene( graphicsScene )
+			effect = QtWidgets.QGraphicsColorizeEffect()
+			effect.setColor( QtGui.QColor( 119, 156, 189, 255 ) )
+			effect.setStrength( 0.85 )
+			pixmapItem.setGraphicsEffect( effect )
+			pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
 
-		image = QtGui.QImage(
-			pixmap.width(),
-			pixmap.height(),
-			QtGui.QImage.Format_ARGB32_Premultiplied if pixmap.hasAlpha() else QtGui.QImage.Format_RGB888
-		)
-		image.fill( 0 )
+			graphicsView = QtWidgets.QGraphicsView()
+			graphicsView.setScene( graphicsScene )
 
-		painter = QtGui.QPainter( image )
-		graphicsView.render(
-			painter,
-			QtCore.QRectF(),
-			QtCore.QRect(
-				graphicsView.mapFromScene( pixmapItem.boundingRect().topLeft() ),
-				graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() )
+			image = QtGui.QImage(
+				pixmap.width(),
+				pixmap.height(),
+				QtGui.QImage.Format_ARGB32_Premultiplied if pixmap.hasAlpha() else QtGui.QImage.Format_RGB888
 			)
-		)
-		del painter # must delete painter before image
+			image.fill( 0 )
 
-		return QtGui.QPixmap( image )
+			painter = QtGui.QPainter( image )
+			graphicsView.render(
+				painter,
+				QtCore.QRectF(),
+				QtCore.QRect(
+					graphicsView.mapFromScene( pixmapItem.boundingRect().topLeft() ),
+					graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() )
+				)
+			)
+			del painter # must delete painter before image
+
+			self.__pixmapHighlighted = QtGui.QPixmap( image )
+
+		return self.__pixmapHighlighted
+
+	# Qt's native disabled state generation often looks 'more enabled' than
+	# standard icons do when the app is using a dark theme.
+	def _qtPixmapDisabled( self ) :
+
+		if self.__pixmapDisabled is None :
+
+			pixmap = self._qtWidget().pixmap()
+
+			graphicsScene = QtWidgets.QGraphicsScene()
+			pixmapItem = graphicsScene.addPixmap( pixmap )
+			pixmapItem.setVisible( True )
+
+			effect = QtWidgets.QGraphicsOpacityEffect()
+			effect.setOpacity( 0.4 )
+			pixmapItem.setGraphicsEffect( effect )
+			pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
+
+			graphicsView = QtWidgets.QGraphicsView()
+			graphicsView.setScene( graphicsScene )
+
+			image = QtGui.QImage( pixmap.width(), pixmap.height(), QtGui.QImage.Format_ARGB32_Premultiplied )
+			image.fill( 0 )
+
+			painter = QtGui.QPainter( image )
+			graphicsView.render(
+				painter,
+				QtCore.QRectF(),
+				QtCore.QRect(
+					graphicsView.mapFromScene( pixmapItem.boundingRect().topLeft() ),
+					graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() )
+				)
+			)
+			del painter # must delete painter before image
+
+			self.__pixmapDisabled = QtGui.QPixmap( image )
+
+		return self.__pixmapDisabled
 
 	@staticmethod
 	def _qtPixmapFromImagePrimitive( image ) :

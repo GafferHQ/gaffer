@@ -73,6 +73,8 @@ Gaffer.Metadata.registerNode(
 			matching locations.
 			""",
 
+			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget",
+
 		],
 
 		"out" : [
@@ -81,6 +83,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The results of the search.
 			""",
+
+			"plugValueWidget:type", "",
 
 		],
 

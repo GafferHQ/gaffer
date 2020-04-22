@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-from _Gaffer import _UndoScope
+from ._Gaffer import _UndoScope
 
 class UndoScope( object ) :
 

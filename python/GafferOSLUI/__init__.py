@@ -34,13 +34,13 @@
 #
 ##########################################################################
 
-from _GafferOSLUI import *
+from ._GafferOSLUI import *
 
-import OSLShaderUI
-import OSLImageUI
-import OSLObjectUI
-import OSLCodeUI
-import OSLExpressionEngineUI
-import OSLLightUI
+from . import OSLShaderUI
+from . import OSLImageUI
+from . import OSLObjectUI
+from . import OSLCodeUI
+from . import OSLExpressionEngineUI
+from . import OSLLightUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferOSLUI" )

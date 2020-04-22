@@ -166,14 +166,14 @@ class NumericSlider( GafferUI.Slider ) :
 		if valueChangedSignal is not None :
 			valueChangedSignal( self, reason )
 
-  	def _drawBackground( self, painter ) :
+	def _drawBackground( self, painter ) :
 
-  		size = self.size()
-   		valueRange = self.__max - self.__min
-   		if valueRange == 0 :
-   			return
+		size = self.size()
+		valueRange = self.__max - self.__min
+		if valueRange == 0 :
+			return
 
-   		idealSpacing = 10
+		idealSpacing = 10
 		idealNumTicks = float( size.x ) / idealSpacing
 		tickStep = valueRange / idealNumTicks
 

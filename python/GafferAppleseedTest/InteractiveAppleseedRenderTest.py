@@ -49,7 +49,7 @@ import GafferImage
 import GafferOSL
 import GafferAppleseed
 
-from AppleseedTest import compileOSLShader
+from .AppleseedTest import compileOSLShader
 
 class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 

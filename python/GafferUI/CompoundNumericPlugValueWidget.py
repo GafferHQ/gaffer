@@ -131,6 +131,10 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __keyPress( self, widget, event ) :
 
 		if event.key == "G" and event.modifiers & event.Modifiers.Control :
+
+			if not hasattr( self.getPlug(), "isGanged" ) :
+				return False
+
 			if self.getPlug().isGanged() :
 				self.__ungang()
 			elif self.getPlug().canGang() :
@@ -162,6 +166,9 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				compoundNumericPlugValueWidget = plugWidget.plugValueWidget()
 
 		if compoundNumericPlugValueWidget is None :
+			return
+
+		if not hasattr( compoundNumericPlugValueWidget.getPlug(), "isGanged" ) :
 			return
 
 		if compoundNumericPlugValueWidget.getPlug().isGanged() :

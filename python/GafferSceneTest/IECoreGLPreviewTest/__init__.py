@@ -34,8 +34,8 @@
 #
 ##########################################################################
 
-from RendererTest import RendererTest
-from VisualiserTest import VisualiserTest
+from .RendererTest import RendererTest
+from .VisualiserTest import VisualiserTest
 
 if __name__ == "__main__":
 	import unittest
