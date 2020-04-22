@@ -1045,5 +1045,79 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			{ "Location does not exist" }
 		)
 
+	def testInteractionWithAimConstraints( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Cube at ( 0, 10, 0 ), aimed at a sphere at the origin.
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"]["y"].setValue( 10 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["parent"].setValue( "/" )
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["aim"] = GafferScene.AimConstraint()
+		script["aim"]["in"].setInput( script["parent"]["out"] )
+		script["aim"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["aim"]["target"].setValue( "/sphere" )
+
+		# Translate in Z (parent space) and check that we moved to
+		# where we expected.
+
+		self.assertEqual(
+			script["aim"]["out"].transform( "/cube" ).translation(),
+			imath.V3f( 0, 10, 0 )
+		)
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["aim"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertEqual( tool.selection()[0].path(), "/cube" )
+		self.assertEqual( tool.selection()[0].upstreamPath(), "/cube" )
+		self.assertEqual( tool.selection()[0].editTarget(), script["cube"]["transform"] )
+
+		tool.translate( imath.V3f( 0, 0, 10 ) )
+		self.assertEqual(
+			script["aim"]["out"].transform( "/cube" ).translation(),
+			imath.V3f( 0, 10, 10 )
+		)
+
+		# Reset back to ( 0, 10, 0 ) and check the same thing works with
+		# an EditScope.
+
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 0, 10, 0 ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["parent"]["out"] )
+		script["editScope"]["in"].setInput( script["parent"]["out"] )
+		script["aim"]["in"].setInput( script["editScope"]["out"] )
+
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		self.assertEqual( len( tool.selection() ), 1 )
+		self.assertTrue( tool.selectionEditable() )
+		self.assertEqual( tool.selection()[0].path(), "/cube" )
+		self.assertEqual( tool.selection()[0].upstreamPath(), "/cube" )
+		self.assertEqual( tool.selection()[0].editTarget(), script["editScope"] )
+
+		tool.translate( imath.V3f( 0, 0, 10 ) )
+		self.assertEqual(
+			script["aim"]["out"].transform( "/cube" ).translation(),
+			imath.V3f( 0, 10, 10 )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

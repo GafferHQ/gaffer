@@ -1,6 +1,26 @@
 0.58.x.x
 ========
 
+0.57.x.x (relative to 0.57.0.0)
+========
+
+Features
+--------
+
+- ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
+- CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+
+Fixes
+-----
+
+- TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
+- Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
+
+API
+---
+
+- PrimitiveSampler : Added a new base class for nodes which sample primitive variables using an `IECoreScene::PrimitiveEvaluator`.
+
 0.57.0.0
 ========
 
@@ -88,6 +108,14 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.x (relative to 0.56.2.0)
+========
+
+Fixes
+-----
+
+- Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
 
 0.56.2.0 (relative to 0.56.1.0)
 ========

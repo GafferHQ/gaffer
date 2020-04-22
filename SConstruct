@@ -1174,42 +1174,142 @@ for libraryName, libraryDef in libraries.items() :
 # Graphics
 #########################################################################################################
 
-def buildGraphics( target, source, env ) :
+def buildImageCommand( source, target, env ) :
 
-	svgFileName = os.path.abspath( str( source[0] ) )
+	# Requires env to have buildImageOptions set, containing, at minimum:
+	#	- id : The svg object id to export.
 
-	dir = os.path.dirname( os.path.abspath( str( target[0] ) ) )
-	if not os.path.isdir( dir ) :
-		os.makedirs( dir )
+	svgFilename = str( source[0] )
+	filename = str( target[0] )
 
-	queryCommand = env["INKSCAPE"] + " --query-all \"" + svgFileName + "\""
-	objects = subprocess.check_output( queryCommand, shell=True ).decode()
+	substitutions = inkscapeArgs( env["buildImageOptions"], svgFilename )
 
-	for object in objects.split( "\n" ) :
-		tokens = object.split( "," )
-		if tokens[0].startswith( "forExport:" ) :
-			subprocess.check_call(
-				env["INKSCAPE"] + " --export-png=%s/%s.png --export-id=%s --export-width=%d --export-height=%d %s --export-background-opacity=0" % (
-					dir,
-					tokens[0].split( ":" )[-1],
-					tokens[0],
-					int( round( float( tokens[3] ) ) ), int( round( float( tokens[4] ) ) ),
-					svgFileName,
-				),
-				shell = True,
-			)
+	outputDirectory = os.path.dirname( filename )
+	if not os.path.isdir( outputDirectory ) :
+		os.makedirs( outputDirectory )
+
+	args = " ".join( [
+		"--export-png={filePath}",
+		"--export-id={id}",
+		"--export-width={width:d}",
+		"--export-height={height:d}",
+		"--export-background-opacity=0",
+		"{svgPath}"
+	] ).format(
+		filePath = os.path.abspath( filename ),
+		svgPath = os.path.abspath( svgFilename ),
+		**substitutions
+	)
+	subprocess.check_call( env["INKSCAPE"] + " " + args, shell = True )
+
+def inkscapeArgs( imageOptions, svg ) :
+
+	id_ = imageOptions["id"]
+
+	svgObjectInfo = svgQuery( svg, id_ )
+	if svgObjectInfo is None :
+		raise RuntimeError( "Object with id '%s' not found" % id_ )
+
+	width = int( round( svgObjectInfo["width"] ) )
+	height = int( round( svgObjectInfo["height"] ) )
+
+	return {
+		"id" : id_,
+		"width" : width,
+		"height" : height
+	}
+
+# svgQuery is relatively slow as it requires running inkscape, which can be ~1s on macOS.
+# As we know any given svg is constant during a build and we can retrieve all object info
+# in one go, we cache per file.
+__svgQueryCache = {}
+
+def svgQuery( svgFile, id_ ) :
+
+	filepath = os.path.abspath( svgFile )
+
+	objects = __svgQueryCache.get( svgFile, None )
+	if objects is None :
+
+		objects = {}
+
+		queryCommand = env["INKSCAPE"] + " --query-all \"" + filepath + "\""
+		output = subprocess.check_output( queryCommand, shell=True ).decode()
+		for line in output.split( "\n" ) :
+			tokens = line.split( "," )
+			# <id>,<x>,<y>,<width>,<height>
+			if len(tokens) != 5 :
+				continue
+			objects[ tokens[0] ] = {
+				"width" : float( tokens[3] ),
+				"height" : float( tokens[4] )
+			}
+
+		__svgQueryCache[ svgFile ] = objects
+
+	return objects.get( id_, None )
+
+def imagesToBuild( definitionFile ) :
+
+	with open( definitionFile ) as f :
+		exports = eval( f.read() )
+
+	toBuild = []
+
+	for i in exports["ids"] :
+		imageOptions = {
+			"id" : i,
+			"filename" : i + ".png"
+		}
+		toBuild.append( imageOptions )
+
+	return toBuild
+
+# Bitmaps can be generated from inkscape compatible svg files, using the
+# `graphicsCommands` helper.  In order to build images, you need two things:
+#
+#   - An svg file with one or more well-known object IDs
+#   - A sidecar python definitions file that lists the IDs to build. This must
+#     live next to the svg, with the same name.
+#
+# You can then add in a graphics builds as follows (output directories will be
+# made for you):
+#
+#	cmds = graphicsCommands( env, <svgPath>, <outputDirectory> )
+#	env.Alias( "build", cmds )
+#
+# The definition file must be `eval`able to define a single `exports`
+# dictionary, structured as follows:
+#
+#	{ "ids" : [ <id str>, ... ], }
+#
+def graphicsCommands( env, svg, outputDirectory ) :
+
+	commands = []
+
+	definitionFile = svg.replace( ".svg", ".py" )
+
+	try :
+
+		# Manually construct the Action so we can hash in the build options
+		buildAction = Action( buildImageCommand, "Exporting '$TARGET' from '$SOURCE'", varlist=[ "buildImageOptions" ] )
+
+		for options in imagesToBuild( definitionFile ) :
+			targetPath = os.path.join( outputDirectory, options["filename"] )
+			buildEnv = env.Clone( buildImageOptions = options )
+			commands.append( buildEnv.Command( targetPath, svg, buildAction ) )
+
+	except Exception as e :
+		raise RuntimeError( "%s: %s" % ( svg, e ) )
+
+	return commands
+
+# Gaffer UI Images
 
 if haveInkscape :
 
-	for source, target in (
-		( "resources/graphics.svg", "arrowDown10.png" ),
-		( "resources/GafferLogo.svg", "GafferLogo.png" ),
-		( "resources/GafferLogoMini.svg", "GafferLogoMini.png" ),
-	) :
-
-		graphicsBuild = env.Command( os.path.join( "$BUILD_DIR/graphics/", target ), source, buildGraphics )
-		env.NoCache( graphicsBuild )
-		env.Alias( "build", graphicsBuild )
+	for source in ( "resources/graphics.svg", "resources/GafferLogo.svg", "resources/GafferLogoMini.svg" ) :
+		env.Alias( "build", graphicsCommands( env, source, "$BUILD_DIR/graphics" ) )
 
 else :
 
@@ -1342,13 +1442,12 @@ if haveSphinx and haveInkscape :
 		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
 	#  Docs graphics generation
-	docGraphicsCommand = docEnv.Command( os.path.join( "$BUILD_DIR/doc/gaffer/graphics", "mouse.png" ), "resources/docGraphics.svg", buildGraphics )
-	docEnv.NoCache( docGraphicsCommand )
-	docEnv.Alias( "docs", docGraphicsCommand )
+	docGraphicsCommands = graphicsCommands( docEnv, "resources/docGraphics.svg", "$BUILD_DIR/doc/gaffer/graphics" )
+	docEnv.Alias( "docs", docGraphicsCommands )
 	docSource, docGenerationCommands = locateDocs( "doc/source", docEnv )
 	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
-	docEnv.Depends( docGenerationCommands, docGraphicsCommand )
-	docEnv.Depends( docs, docGenerationCommands )
+	docEnv.Depends( docGenerationCommands, docGraphicsCommands )
+	docEnv.Depends( docs, docGraphicsCommands )
 	docEnv.Depends( docs, "build" )
 	if resources is not None :
 		docEnv.Depends( docs, resources )

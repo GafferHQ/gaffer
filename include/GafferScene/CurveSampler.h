@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2020, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,58 +34,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_CURVESAMPLER_H
+#define GAFFERSCENE_CURVESAMPLER_H
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
+#include "GafferScene/PrimitiveSampler.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
-
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferScene
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
+class GAFFERSCENE_API CurveSampler : public PrimitiveSampler
+{
 
-}
+	public :
+
+		CurveSampler( const std::string &name = defaultName<CurveSampler>() );
+		~CurveSampler() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CurveSampler, CurveSamplerTypeId, PrimitiveSampler );
+
+		Gaffer::StringPlug *curveIndexPlug();
+		const Gaffer::StringPlug *curveIndexPlug() const;
+
+		Gaffer::StringPlug *vPlug();
+		const Gaffer::StringPlug *vPlug() const;
+
+	protected :
+
+		bool affectsSamplingFunction( const Gaffer::Plug *input ) const override;
+		void hashSamplingFunction( IECore::MurmurHash &h ) const override;
+		SamplingFunction computeSamplingFunction( const IECoreScene::Primitive *destinationPrimitive, IECoreScene::PrimitiveVariable::Interpolation &interpolation ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CurveSampler )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_CURVESAMPLER_H
