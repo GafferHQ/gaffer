@@ -23,6 +23,7 @@ Fixes
   - Fixed errors showing the popup menu for the `frameRange` plug.
   - Fixed Spreadsheet menu items.
 - UI : Fixed appearance of button icons when disabled.
+- FilterResults : Fixed the UI to show the connected filter instead of a meaningless numeric value. This also avoids triggering spurious errors on PathFilter nodes.
 
 API
 ---
