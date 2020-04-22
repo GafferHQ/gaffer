@@ -221,11 +221,18 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 
 	readOnly = readOnlyUI or Gaffer.MetadataAlgo.readOnly( plug )
 
-	parentLabel = {
+	ancestorLabel = {
 		Gaffer.ArrayPlug : "Array",
 		Gaffer.TransformPlug : "Transform",
 		Gaffer.Transform2DPlug : "Transform",
 	}.get( type( plug.parent() ) )
+
+	if ancestorLabel is not None :
+		ancestor = plug.parent()
+	else :
+		ancestor = plug.ancestor( Gaffer.Spreadsheet.RowsPlug )
+		if ancestor is not None :
+			ancestorLabel = "Spreadsheet"
 
 	if Gaffer.PlugAlgo.canPromote( plug ) :
 
@@ -237,9 +244,9 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 			"active" : not readOnly,
 		} )
 
-		if parentLabel and Gaffer.PlugAlgo.canPromote( plug.parent() ) :
-			menuDefinition.append( "/Promote %s to %s" % ( parentLabel, box.getName() ), {
-				"command" : functools.partial( __promote, plug.parent() ),
+		if ancestorLabel and Gaffer.PlugAlgo.canPromote( ancestor ) :
+			menuDefinition.append( "/Promote %s to %s" % ( ancestorLabel, box.getName() ), {
+				"command" : functools.partial( __promote, ancestor ),
 				"active" : not readOnly,
 			} )
 
@@ -250,9 +257,9 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
-		if parentLabel and Gaffer.PlugAlgo.isPromoted( plug.parent() ) :
-			menuDefinition.append( "/Unpromote %s from %s" % ( parentLabel, box.getName() ), {
-				"command" : functools.partial( __unpromote, plug.parent() ),
+		if ancestorLabel and Gaffer.PlugAlgo.isPromoted( ancestor ) :
+			menuDefinition.append( "/Unpromote %s from %s" % ( ancestorLabel, box.getName() ), {
+				"command" : functools.partial( __unpromote, ancestor ),
 				"active" : not readOnly,
 			} )
 		else :

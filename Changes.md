@@ -7,11 +7,19 @@ Features
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
 
+Improvements
+------------
+
+- Spreadsheet : Added a popup menu item for promoting spreadsheet plugs.
+
 Fixes
 -----
 
 - TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
+- Script Settings :
+  - Fixed errors showing the popup menu for the `frameRange` plug.
+  - Fixed Spreadsheet menu items.
 
 API
 ---

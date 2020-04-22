@@ -1877,8 +1877,14 @@ def __createSpreadsheet( plug ) :
 	__addColumn( spreadsheet, plug )
 	spreadsheet["rows"].addRow()
 
+	if isinstance( plug.node(), Gaffer.ScriptNode ) :
+		spreadsheetParent = plug.node()
+		Gaffer.Metadata.registerValue( spreadsheet, "nodeGadget:type", "GafferUI::StandardNodeGadget" )
+	else :
+		spreadsheetParent = plug.node().parent()
+
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.node().parent().addChild( spreadsheet )
+		spreadsheetParent.addChild( spreadsheet )
 		plug.setInput( spreadsheet["out"][0] )
 
 	GafferUI.NodeEditor.acquire( spreadsheet )
@@ -1898,9 +1904,14 @@ def __spreadsheetSubMenu( plug, command, showSections = True ) :
 
 	menuDefinition = IECore.MenuDefinition()
 
+	if isinstance( plug.node(), Gaffer.ScriptNode ) :
+		spreadsheetParent = plug.node()
+	else :
+		spreadsheetParent = plug.node().parent()
+
 	alreadyConnected = []
 	other = []
-	for spreadsheet in Gaffer.Spreadsheet.Range( plug.node().parent() ) :
+	for spreadsheet in Gaffer.Spreadsheet.Range( spreadsheetParent ) :
 
 		if spreadsheet == plug.ancestor( Gaffer.Spreadsheet ) :
 			continue
