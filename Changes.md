@@ -6,11 +6,13 @@ Features
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+- Viewer : Added overlay to Image views to control interactive renders where available (#3419).
 
 Improvements
 ------------
 
 - Spreadsheet : Added a popup menu item for promoting spreadsheet plugs.
+- InteractiveRender : Improved presentation of render control buttons (#3419).
 
 Fixes
 -----
@@ -20,6 +22,7 @@ Fixes
 - Script Settings :
   - Fixed errors showing the popup menu for the `frameRange` plug.
   - Fixed Spreadsheet menu items.
+- UI : Fixed appearance of button icons when disabled.
 
 API
 ---

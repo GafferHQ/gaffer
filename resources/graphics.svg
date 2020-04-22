@@ -23,7 +23,7 @@
     <linearGradient
        id="linearGradient1643"
        osb:paint="solid"
-       gradientTransform="translate(0.13258252,471.41431)">
+       gradientTransform="matrix(0,-0.58060489,0.58060489,0,667.41509,28.649796)">
       <stop
          style="stop-color:#9e9e9e;stop-opacity:1;"
          offset="0"
@@ -861,6 +861,38 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-52.362183)">
+    <rect
+       style="opacity:1;fill:none;fill-opacity:0.10588235;stroke:none;stroke-width:1.53206468;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke"
+       id="renderStart"
+       width="13"
+       height="13"
+       x="343"
+       y="18.362183"
+       inkscape:label="#rect2589-2" />
+    <rect
+       style="opacity:1;fill:none;fill-opacity:0.10588235;stroke:none;stroke-width:1.53206468;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke"
+       id="renderResume"
+       width="13"
+       height="13"
+       x="357"
+       y="18.362183"
+       inkscape:label="#rect2589-4" />
+    <rect
+       style="opacity:1;fill:none;fill-opacity:0.10588235;stroke:none;stroke-width:1.53206468;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke"
+       id="renderPause"
+       width="13"
+       height="13"
+       x="371"
+       y="18.362183"
+       inkscape:label="#rect2589-4-8" />
+    <rect
+       style="opacity:1;fill:none;fill-opacity:0.10588235;stroke:none;stroke-width:1.53206468;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke"
+       id="renderStop"
+       width="13"
+       height="13"
+       x="329"
+       y="18.362183"
+       inkscape:label="#rect2589" />
     <rect
        inkscape:label="interactiveCompleteBounds"
        y="112.36218"
@@ -5340,5 +5372,57 @@
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ssccscccsscscccsss"
        inkscape:label="#path3291" />
+    <rect
+       style="opacity:1;fill:#9e9e9e;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect2735"
+       width="8"
+       height="8"
+       x="331.5"
+       y="20.862183"
+       ry="0"
+       rx="0" />
+    <path
+       style="fill:#9e9e9e;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 345.5,19.862183 v 10 l 8,-5 z"
+       id="path2737"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
+    <g
+       id="g2771"
+       transform="translate(-20)">
+      <rect
+         rx="0"
+         ry="0"
+         y="20.862183"
+         x="394.5"
+         height="8"
+         width="2"
+         id="rect2735-7"
+         style="opacity:1;fill:#9e9e9e;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke" />
+      <rect
+         rx="0"
+         ry="0"
+         y="20.862183"
+         x="398.5"
+         height="8"
+         width="2"
+         id="rect2735-7-9"
+         style="opacity:1;fill:#9e9e9e;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke" />
+    </g>
+    <rect
+       style="opacity:1;fill:#9e9e9e;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers fill stroke"
+       id="rect2735-7-93"
+       width="2"
+       height="8"
+       x="358.5"
+       y="20.862183"
+       ry="0"
+       rx="0" />
+    <path
+       style="fill:#9e9e9e;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 361.5,20.362183 v 9 l 7.5,-4.5 z"
+       id="path2737-0"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc" />
   </g>
 </svg>
