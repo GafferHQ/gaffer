@@ -83,10 +83,82 @@ class RowsMap : public IECore::Data
 
 	public :
 
+		RowsMap( const Spreadsheet::RowsPlug *rows )
+			:	m_activeRowNames( new StringVectorData )
+		{
+			vector<string> &activeRowNames = m_activeRowNames->writable();
+
+			for( size_t i = 1, e = rows->children().size(); i < e; ++i )
+			{
+				const auto *row = rows->getChild<Spreadsheet::RowPlug>( i );
+				if( !row->enabledPlug()->getValue() )
+				{
+					continue;
+				}
+
+				const std::string name = row->namePlug()->getValue();
+				activeRowNames.push_back( name );
+
+				if(
+					StringAlgo::hasWildcards( name ) ||
+					name.find( ' ' ) != string::npos
+				)
+				{
+					m_wildcardRows.push_back( { name, i } );
+				}
+				else
+				{
+					m_plainRows.insert( { name, i } );
+				}
+			}
+		}
+
+		// Hashes everything accessed by the constructor.
+		static void hash( const Spreadsheet::RowsPlug *rows, IECore::MurmurHash &h )
+		{
+			for( int i = 1, e = rows->children().size(); i < e; ++i )
+			{
+				const auto *row = rows->getChild<Spreadsheet::RowPlug>( i );
+				row->namePlug()->hash( h );
+				row->enabledPlug()->hash( h );
+			}
+		}
+
+		size_t rowIndex( const std::string &selector ) const
+		{
+			size_t result = 0;
+			Map::const_iterator it = m_plainRows.find( selector );
+			if( it != m_plainRows.end() )
+			{
+				result = it->second;
+			}
+			for( auto &row : m_wildcardRows )
+			{
+				if( result && row.index > result )
+				{
+					break;
+				}
+
+				if( StringAlgo::matchMultiple( selector, row.name ) )
+				{
+					result = row.index;
+					break;
+				}
+			}
+			return result;
+		}
+
+		const StringVectorData *activeRowNames() const
+		{
+			return m_activeRowNames.get();
+		}
+
+	private :
+
 		// Rows without wildcards. We can look these up
 		// directly.
 		using Map = std::unordered_map<std::string, size_t>;
-		Map plainRows;
+		Map m_plainRows;
 
 		// Rows with wildcards. These require a linear search.
 		struct Row
@@ -95,10 +167,10 @@ class RowsMap : public IECore::Data
 			size_t index;
 		};
 		using Vector = std::vector<Row>;
-		Vector wildcardRows;
+		Vector m_wildcardRows;
 
 		// List of active row names for `activeRowNamesPlug()`.
-		ConstStringVectorDataPtr activeRowNames;
+		StringVectorDataPtr m_activeRowNames;
 
 };
 
@@ -791,12 +863,7 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 	if( output == rowsMapPlug() )
 	{
 		ComputeNode::hash( output, context, h );
-		for( int i = 1, e = rowsPlug()->children().size(); i < e; ++i )
-		{
-			const auto *row = rowsPlug()->getChild<RowPlug>( i );
-			row->namePlug()->hash( h );
-			row->enabledPlug()->hash( h );
-		}
+		RowsMap::hash( rowsPlug(), h );
 		return;
 	}
 	else if( output == rowIndexPlug() )
@@ -828,36 +895,9 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == rowsMapPlug() )
 	{
-		StringVectorDataPtr activeRowNamesData = new StringVectorData;
-		vector<string> &activeRowNames = activeRowNamesData->writable();
-		RowsMapPtr result = new RowsMap;
-		result->activeRowNames = activeRowNamesData;
-
-		for( size_t i = 1, e = rowsPlug()->children().size(); i < e; ++i )
-		{
-			const auto *row = rowsPlug()->getChild<RowPlug>( i );
-			if( !row->enabledPlug()->getValue() )
-			{
-				continue;
-			}
-
-			const std::string name = row->namePlug()->getValue();
-			activeRowNames.push_back( name );
-
-			if(
-				StringAlgo::hasWildcards( name ) ||
-				name.find( ' ' ) != string::npos
-			)
-			{
-				result->wildcardRows.push_back( { name, i } );
-			}
-			else
-			{
-				result->plainRows.insert( { name, i } );
-			}
-		}
-
-		static_cast<ObjectPlug *>( output )->setValue( result );
+		static_cast<ObjectPlug *>( output )->setValue(
+			new RowsMap( rowsPlug() )
+		);
 		return;
 	}
 	else if( output == rowIndexPlug() )
@@ -867,25 +907,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 		{
 			RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
 			ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
-
-			RowsMap::Map::const_iterator it = rowsMap->plainRows.find( rowsMapScope.selector() );
-			if( it != rowsMap->plainRows.end() )
-			{
-				result = it->second;
-			}
-			for( auto &row : rowsMap->wildcardRows )
-			{
-				if( result && row.index > result )
-				{
-					break;
-				}
-
-				if( StringAlgo::matchMultiple( rowsMapScope.selector(), row.name ) )
-				{
-					result = row.index;
-					break;
-				}
-			}
+			result = rowsMap->rowIndex( rowsMapScope.selector() );
 		}
 		static_cast<IntPlug *>( output )->setValue( result );
 		return;
@@ -899,7 +921,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 	{
 		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
 		ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
-		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->activeRowNames );
+		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->activeRowNames() );
 		return;
 	}
 
