@@ -145,10 +145,10 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def setReadOnly( self, readOnly ) :
 
- 		if readOnly == self.getReadOnly() :
- 			return
+		if readOnly == self.getReadOnly() :
+			return
 
- 		self.__readOnly = readOnly
+		self.__readOnly = readOnly
 		for widget in self.__widgets.values() :
 			self.__applyReadOnly( widget, self.__readOnly )
 
@@ -362,7 +362,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return result
 
- 	def __createPlugWidget( self, plug ) :
+	def __createPlugWidget( self, plug ) :
 
 		result = GafferUI.PlugValueWidget.create( plug )
 		if result is None :
@@ -375,7 +375,7 @@ class PlugLayout( GafferUI.Widget ) :
 				result._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and self.__itemMetadataValue( plug, "label" ) != "" :
- 			result = GafferUI.PlugWidget( result )
+			result = GafferUI.PlugWidget( result )
 			if self.__layout.orientation() == GafferUI.ListContainer.Orientation.Horizontal :
 				# undo the annoying fixed size the PlugWidget has applied
 				# to the label.
@@ -391,7 +391,7 @@ class PlugLayout( GafferUI.Widget ) :
 		# in the future to determine if we can reuse the widget.
 		result.__plugValueWidgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
 
- 		return result
+		return result
 
 	def __createCustomWidget( self, name ) :
 

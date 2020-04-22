@@ -1455,7 +1455,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		if Gaffer.isDebug():
 			timeLimit *= 2
 
- 		self.assertLess( time.clock() - t, timeLimit )
+		self.assertLess( time.clock() - t, timeLimit )
 
 	def testTaskListWaitForSequence( self ) :
 

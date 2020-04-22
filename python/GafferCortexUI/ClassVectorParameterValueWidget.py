@@ -150,13 +150,13 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 
 		return result
 
- 	def __classMenuDefinition( self ) :
+	def __classMenuDefinition( self ) :
 
- 		result = IECore.MenuDefinition()
+		result = IECore.MenuDefinition()
 
- 		classNameFilter = "*"
- 		with IECore.IgnoredExceptions( KeyError ) :
- 			classNameFilter = self._parameter().userData()["UI"]["classNameFilter"].value
+		classNameFilter = "*"
+		with IECore.IgnoredExceptions( KeyError ) :
+			classNameFilter = self._parameter().userData()["UI"]["classNameFilter"].value
 		menuPathStart = max( 0, classNameFilter.find( "*" ) )
 
 		loader = IECore.ClassLoader.defaultLoader( self._parameter().searchPathEnvVar() )

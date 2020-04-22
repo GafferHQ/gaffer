@@ -59,10 +59,10 @@ class MessageWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.MessageWidget()
 		assertCounts( 0, 0, 0, 0 )
 
- 		with w.messageHandler() :
+		with w.messageHandler() :
 
- 			msg( IECore.Msg.Level.Error )
- 			assertCounts( 0, 0, 0, 1 )
+			msg( IECore.Msg.Level.Error )
+			assertCounts( 0, 0, 0, 1 )
 
 			msg( IECore.Msg.Level.Warning )
 			assertCounts( 0, 0, 1, 1 )

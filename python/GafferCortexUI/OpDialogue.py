@@ -347,7 +347,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 			self.__initiateResultDisplay( result )
 
- 			self.opExecutedSignal()( result )
+			self.opExecutedSignal()( result )
 			self.postExecuteSignal()( self, result )
 
 		else :

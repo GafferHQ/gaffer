@@ -152,10 +152,10 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"][0].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 2 )
 
- 		g["in"][1].setInput( p["out"] )
+		g["in"][1].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 3 )
 
- 		g["in"][1].setInput( None )
+		g["in"][1].setInput( None )
 		self.assertEqual( len( g["in"] ), 2 )
 
 		g["in"][0].setInput( None )
@@ -164,7 +164,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g["in"][0].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 2 )
 
- 		g["in"][1].setInput( p["out"] )
+		g["in"][1].setInput( p["out"] )
 		self.assertEqual( len( g["in"] ), 3 )
 
 		g["in"].setInput( None )
@@ -451,13 +451,13 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g1["in"][0].setInput( p["out"] )
 
 		g2 = GafferScene.Group()
- 		g2["in"][0].setInput( p["out"] )
+		g2["in"][0].setInput( p["out"] )
 
- 		self.assertSceneHashesEqual( g1["out"], g2["out"] )
+		self.assertSceneHashesEqual( g1["out"], g2["out"] )
 
-	 	g2["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
+		g2["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
- 		self.assertSceneHashesEqual( g1["out"], g2["out"], pathsToIgnore = ( "/", "/group", ) )
+		self.assertSceneHashesEqual( g1["out"], g2["out"], pathsToIgnore = ( "/", "/group", ) )
 		self.assertSceneHashesEqual( g1["out"], g2["out"], checks = self.allSceneChecks - { "transform", "bound" } )
 		self.assertNotEqual( g1["out"].transformHash( "/group" ), g2["out"].transformHash( "/group" ) )
 		self.assertEqual( g1["out"].boundHash( "/group" ), g2["out"].boundHash( "/group" ) )
@@ -471,9 +471,9 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		g1["in"][0].setInput( p["out"] )
 
 		g2 = GafferScene.Group()
- 		g2["in"][0].setInput( p["out"] )
+		g2["in"][0].setInput( p["out"] )
 
- 		self.assertSceneHashesEqual( g1["out"], g2["out"] )
+		self.assertSceneHashesEqual( g1["out"], g2["out"] )
 
 		g2["name"].setValue( "stuff" )
 
