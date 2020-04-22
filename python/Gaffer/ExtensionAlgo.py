@@ -58,7 +58,7 @@ def exportExtension( name, boxes, directory ) :
 			with open( os.path.join( pythonDir, box.getName() + ".py" ), "w" ) as nodeFile :
 				nodeFile.write( __nodeDefinition( box, name ) )
 
-			initFile.write( "from {name} import {name}\n".format( name = box.getName() ) )
+			initFile.write( "from .{name} import {name}\n".format( name = box.getName() ) )
 
 	uiDir = os.path.join( directory, "python", name + "UI" )
 	os.makedirs( uiDir )
@@ -70,7 +70,7 @@ def exportExtension( name, boxes, directory ) :
 			with open( os.path.join( uiDir, box.getName() + "UI.py" ), "w" ) as uiFile :
 				uiFile.write( __uiDefinition( box, name ) )
 
-			initFile.write( "import {name}UI\n".format( name = box.getName() ) )
+			initFile.write( "from . import {name}UI\n".format( name = box.getName() ) )
 
 	startupDir = os.path.join( directory, "startup", "gui" )
 	os.makedirs( startupDir )

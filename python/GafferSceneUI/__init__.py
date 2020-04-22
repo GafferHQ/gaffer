@@ -38,134 +38,134 @@
 __import__( "GafferImageUI" )
 __import__( "GafferScene" )
 
-from _GafferSceneUI import *
+from ._GafferSceneUI import *
 
-from HierarchyView import HierarchyView
-from SceneInspector import SceneInspector
-from PrimitiveInspector import PrimitiveInspector
-from UVInspector import UVInspector
-from FilterPlugValueWidget import FilterPlugValueWidget
-from ScenePathPlugValueWidget import ScenePathPlugValueWidget
-from TweakPlugValueWidget import TweakPlugValueWidget
-import SceneHistoryUI
-import EditScopeUI
+from .HierarchyView import HierarchyView
+from .SceneInspector import SceneInspector
+from .PrimitiveInspector import PrimitiveInspector
+from .UVInspector import UVInspector
+from .FilterPlugValueWidget import FilterPlugValueWidget
+from .ScenePathPlugValueWidget import ScenePathPlugValueWidget
+from .TweakPlugValueWidget import TweakPlugValueWidget
+from . import SceneHistoryUI
+from . import EditScopeUI
 
-import SceneNodeUI
-import SceneReaderUI
-import SceneProcessorUI
-import FilteredSceneProcessorUI
-import PruneUI
-import SubTreeUI
-import OutputsUI
-import OptionsUI
-import OpenGLAttributesUI
-import SceneWriterUI
-import StandardOptionsUI
-import StandardAttributesUI
-import ShaderUI
-import OpenGLShaderUI
-import ObjectSourceUI
-import TransformUI
-import AttributesUI
-import LightUI
-import InteractiveRenderUI
-import SphereUI
-import MapProjectionUI
-import MapOffsetUI
-import CustomAttributesUI
-import CustomOptionsUI
-import SceneViewUI
-import ShaderViewUI
-import ShaderAssignmentUI
-import ParentConstraintUI
-import ParentUI
-import PrimitiveVariablesUI
-import DuplicateUI
-import GridUI
-import SetFilterUI
-import DeleteGlobalsUI
-import DeleteOptionsUI
-import CopyOptionsUI
-import DeleteSetsUI
-import ExternalProceduralUI
-import IsolateUI
-import SelectionToolUI
-import CropWindowToolUI
-import CameraUI
-import SetUI
-import ClippingPlaneUI
-import FilterUI
-import PointsTypeUI
-import ParametersUI
-import TextUI
-import AimConstraintUI
-import CoordinateSystemUI
-import DeleteAttributesUI
-import SeedsUI
-import UnionFilterUI
-import PathFilterUI
-import GroupUI
-import OpenGLRenderUI
-import PrimitiveVariableProcessorUI
-import DeletePrimitiveVariablesUI
-import MeshTypeUI
-import DeleteOutputsUI
-import InstancerUI
-import ObjectToSceneUI
-import FreezeTransformUI
-import SceneElementProcessorUI
-import PointConstraintUI
-import BranchCreatorUI
-import ConstraintUI
-import PlaneUI
-import CubeUI
-import AttributeVisualiserUI
-import FilterProcessorUI
-import MeshToPointsUI
-import RenderUI
-import ShaderBallUI
-import ShaderTweaksUI
-import CameraTweaksUI
-import LightToCameraUI
-import FilterResultsUI
-import TransformToolUI
-import TranslateToolUI
-import ScaleToolUI
-import RotateToolUI
-import MeshTangentsUI
-import ResamplePrimitiveVariablesUI
-import DeleteFacesUI
-import DeleteCurvesUI
-import DeletePointsUI
-import CollectScenesUI
-import EncapsulateUI
-import GlobalShaderUI
-import CameraToolUI
-import ReverseWindingUI
-import MeshDistortionUI
-import DeleteObjectUI
-import CopyAttributesUI
-import CollectPrimitiveVariablesUI
-import PrimitiveVariableExistsUI
-import CollectTransformsUI
-import UDIMQueryUI
-import WireframeUI
-import SetVisualiserUI
-import LightFilterUI
-import OrientationUI
-import DeformerUI
-import CopyPrimitiveVariablesUI
-import MergeScenesUI
-import ShuffleAttributesUI
-import ShufflePrimitiveVariablesUI
-import LocaliseAttributesUI
-import PrimitiveSamplerUI
-import ClosestPointSamplerUI
-import CurveSamplerUI
+from . import SceneNodeUI
+from . import SceneReaderUI
+from . import SceneProcessorUI
+from . import FilteredSceneProcessorUI
+from . import PruneUI
+from . import SubTreeUI
+from . import OutputsUI
+from . import OptionsUI
+from . import OpenGLAttributesUI
+from . import SceneWriterUI
+from . import StandardOptionsUI
+from . import StandardAttributesUI
+from . import ShaderUI
+from . import OpenGLShaderUI
+from . import ObjectSourceUI
+from . import TransformUI
+from . import AttributesUI
+from . import LightUI
+from . import InteractiveRenderUI
+from . import SphereUI
+from . import MapProjectionUI
+from . import MapOffsetUI
+from . import CustomAttributesUI
+from . import CustomOptionsUI
+from . import SceneViewUI
+from . import ShaderViewUI
+from . import ShaderAssignmentUI
+from . import ParentConstraintUI
+from . import ParentUI
+from . import PrimitiveVariablesUI
+from . import DuplicateUI
+from . import GridUI
+from . import SetFilterUI
+from . import DeleteGlobalsUI
+from . import DeleteOptionsUI
+from . import CopyOptionsUI
+from . import DeleteSetsUI
+from . import ExternalProceduralUI
+from . import IsolateUI
+from . import SelectionToolUI
+from . import CropWindowToolUI
+from . import CameraUI
+from . import SetUI
+from . import ClippingPlaneUI
+from . import FilterUI
+from . import PointsTypeUI
+from . import ParametersUI
+from . import TextUI
+from . import AimConstraintUI
+from . import CoordinateSystemUI
+from . import DeleteAttributesUI
+from . import SeedsUI
+from . import UnionFilterUI
+from . import PathFilterUI
+from . import GroupUI
+from . import OpenGLRenderUI
+from . import PrimitiveVariableProcessorUI
+from . import DeletePrimitiveVariablesUI
+from . import MeshTypeUI
+from . import DeleteOutputsUI
+from . import InstancerUI
+from . import ObjectToSceneUI
+from . import FreezeTransformUI
+from . import SceneElementProcessorUI
+from . import PointConstraintUI
+from . import BranchCreatorUI
+from . import ConstraintUI
+from . import PlaneUI
+from . import CubeUI
+from . import AttributeVisualiserUI
+from . import FilterProcessorUI
+from . import MeshToPointsUI
+from . import RenderUI
+from . import ShaderBallUI
+from . import ShaderTweaksUI
+from . import CameraTweaksUI
+from . import LightToCameraUI
+from . import FilterResultsUI
+from . import TransformToolUI
+from . import TranslateToolUI
+from . import ScaleToolUI
+from . import RotateToolUI
+from . import MeshTangentsUI
+from . import ResamplePrimitiveVariablesUI
+from . import DeleteFacesUI
+from . import DeleteCurvesUI
+from . import DeletePointsUI
+from . import CollectScenesUI
+from . import EncapsulateUI
+from . import GlobalShaderUI
+from . import CameraToolUI
+from . import ReverseWindingUI
+from . import MeshDistortionUI
+from . import DeleteObjectUI
+from . import CopyAttributesUI
+from . import CollectPrimitiveVariablesUI
+from . import PrimitiveVariableExistsUI
+from . import CollectTransformsUI
+from . import UDIMQueryUI
+from . import WireframeUI
+from . import SetVisualiserUI
+from . import LightFilterUI
+from . import OrientationUI
+from . import DeformerUI
+from . import CopyPrimitiveVariablesUI
+from . import MergeScenesUI
+from . import ShuffleAttributesUI
+from . import ShufflePrimitiveVariablesUI
+from . import LocaliseAttributesUI
+from . import PrimitiveSamplerUI
+from . import ClosestPointSamplerUI
+from . import CurveSamplerUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
 
-from SceneReaderPathPreview import SceneReaderPathPreview
+from .SceneReaderPathPreview import SceneReaderPathPreview
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferSceneUI" )

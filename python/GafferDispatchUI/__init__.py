@@ -36,18 +36,18 @@
 
 __import__( "GafferUI" )
 
-import DispatcherUI
-from DispatcherUI import DispatcherWindow
-from DispatchDialogue import DispatchDialogue
-import LocalDispatcherUI
-import TaskNodeUI
-import SystemCommandUI
-import TaskListUI
-import TaskContextProcessorUI
-import WedgeUI
-import TaskContextVariablesUI
-import TaskSwitchUI
-import PythonCommandUI
-import FrameMaskUI
+from . import DispatcherUI
+from .DispatcherUI import DispatcherWindow
+from .DispatchDialogue import DispatchDialogue
+from . import LocalDispatcherUI
+from . import TaskNodeUI
+from . import SystemCommandUI
+from . import TaskListUI
+from . import TaskContextProcessorUI
+from . import WedgeUI
+from . import TaskContextVariablesUI
+from . import TaskSwitchUI
+from . import PythonCommandUI
+from . import FrameMaskUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatchUI" )

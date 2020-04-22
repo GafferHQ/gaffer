@@ -40,7 +40,7 @@ import warnings
 import IECore
 
 import Gaffer
-import _GafferUI
+from . import _GafferUI
 import GafferUI
 
 import Qt

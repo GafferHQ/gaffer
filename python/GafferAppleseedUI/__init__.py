@@ -34,14 +34,14 @@
 #
 ##########################################################################
 
-import AppleseedAttributesUI
-import AppleseedLightUI
-import AppleseedOptionsUI
-import AppleseedRenderUI
-import InteractiveAppleseedRenderUI
-import LightMenu
-import ShaderMenu
-import AppleseedShaderAdaptorUI
-import AppleseedShaderBallUI
+from . import AppleseedAttributesUI
+from . import AppleseedLightUI
+from . import AppleseedOptionsUI
+from . import AppleseedRenderUI
+from . import InteractiveAppleseedRenderUI
+from . import LightMenu
+from . import ShaderMenu
+from . import AppleseedShaderAdaptorUI
+from . import AppleseedShaderBallUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferAppleseedUI" )

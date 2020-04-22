@@ -44,7 +44,7 @@ import Gaffer
 import GafferUI
 import GafferOSL
 
-import _CodeMenu
+from . import _CodeMenu
 
 Gaffer.Metadata.registerNode(
 

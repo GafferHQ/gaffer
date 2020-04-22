@@ -44,7 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
-from _StyleSheet import _styleSheet
+from ._StyleSheet import _styleSheet
 
 from Qt import QtCore
 from Qt import QtGui

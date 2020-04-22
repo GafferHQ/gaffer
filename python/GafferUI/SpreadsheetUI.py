@@ -51,7 +51,7 @@ from Qt import QtGui
 from Qt import QtWidgets
 from Qt import QtCompat
 
-from _TableView import _TableView
+from ._TableView import _TableView
 
 Gaffer.Metadata.registerNode(
 
