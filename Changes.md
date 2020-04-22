@@ -11,6 +11,7 @@ Fixes
 -----
 
 - TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
+- Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
 
 API
 ---
@@ -104,6 +105,14 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.x (relative to 0.56.2.0)
+========
+
+Fixes
+-----
+
+- Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
 
 0.56.2.0 (relative to 0.56.1.0)
 ========

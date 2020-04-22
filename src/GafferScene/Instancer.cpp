@@ -73,6 +73,7 @@ namespace
 {
 
 InternedString g_prototypeRootName( "root" );
+ConstInternedStringVectorDataPtr g_emptyNames = new InternedStringVectorData();
 
 }
 
@@ -102,7 +103,9 @@ class Instancer::EngineData : public Data
 			const std::string &attributes,
 			const std::string &attributePrefix
 		)
-			:	m_indices( nullptr ),
+			:	m_numPrototypes( 0 ),
+				m_numValidPrototypes( 0 ),
+				m_indices( nullptr ),
 				m_ids( nullptr ),
 				m_positions( nullptr ),
 				m_orientations( nullptr ),
@@ -218,7 +221,7 @@ class Instancer::EngineData : public Data
 
 		const InternedStringVectorData *prototypeNames() const
 		{
-			return m_names->outputChildNames();
+			return m_names ? m_names->outputChildNames() : g_emptyNames.get();
 		}
 
 		M44f instanceTransform( size_t pointIndex ) const
