@@ -135,8 +135,22 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlug( self ) :
 
 		editScope = self.__editScope()
-		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
+		self.__updateMenuButton( editScope )
 		self.__navigationMenuButton.setEnabled( editScope is not None )
+		if editScope is not None :
+			self.__editScopeNameChangedConnection = editScope.nameChangedSignal().connect(
+				Gaffer.WeakMethod( self.__editScopeNameChanged ), scoped = True
+			)
+		else :
+			self.__editScopeNameChangedConnection = None
+
+	def __updateMenuButton( self, editScope ) :
+
+		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
+
+	def __editScopeNameChanged( self, editScope ) :
+
+		self.__updateMenuButton( editScope )
 
 	def __editScope( self ) :
 
