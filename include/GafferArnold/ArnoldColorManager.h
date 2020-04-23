@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,33 +34,58 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDCOLORMANAGER_H
+#define GAFFERARNOLD_ARNOLDCOLORMANAGER_H
+
+#include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/ShaderPlug.h"
+
+#include "Gaffer/StringPlug.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
-{
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
-	ArnoldBackgroundTypeId = 110911,
-	ArnoldCameraShadersTypeId = 110912,
-	ArnoldLightFilterTypeId = 110913,
-	ArnoldColorManagerTypeId = 110914,
+class ArnoldShader;
 
-	LastTypeId = 110924
+class GAFFERSCENE_API ArnoldColorManager : public GafferScene::GlobalsProcessor
+{
+
+	public :
+
+		ArnoldColorManager( const std::string &name=defaultName<ArnoldColorManager>() );
+		~ArnoldColorManager() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldColorManager, ArnoldColorManagerTypeId, GafferScene::GlobalsProcessor );
+
+		Gaffer::Plug *parametersPlug();
+		const Gaffer::Plug *parametersPlug() const;
+
+		void loadColorManager( const std::string &name, bool keepExistingValues=false );
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
+
+	private :
+
+		GafferScene::ShaderPlug *shaderInPlug();
+		const GafferScene::ShaderPlug *shaderInPlug() const;
+
+		ArnoldShader *shaderNode();
+		const ArnoldShader *shaderNode() const;
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ArnoldColorManager )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDCOLORMANAGER_H

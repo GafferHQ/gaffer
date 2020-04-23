@@ -41,6 +41,7 @@
 #include "GafferArnold/ArnoldAttributes.h"
 #include "GafferArnold/ArnoldBackground.h"
 #include "GafferArnold/ArnoldCameraShaders.h"
+#include "GafferArnold/ArnoldColorManager.h"
 #include "GafferArnold/ArnoldDisplacement.h"
 #include "GafferArnold/ArnoldLight.h"
 #include "GafferArnold/ArnoldMeshLight.h"
@@ -62,6 +63,30 @@ using namespace IECoreArnoldPreview;
 
 namespace
 {
+
+void loadColorManagerWrapper( ArnoldColorManager &c, const std::string &name, bool keepExistingValues )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	c.loadColorManager( name, keepExistingValues );
+}
+
+class ArnoldColorManagerSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const GafferBindings::Serialisation &serialisation ) const override
+	{
+		std::string result = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		const std::string name = static_cast<const ArnoldColorManager *>( graphComponent )->getChild<ArnoldShader>( "__shader" )->namePlug()->getValue();
+		if( name.size() )
+		{
+			result += boost::str( boost::format( "\n%s.loadColorManager( \"%s\" )\n" ) % identifier % name );
+		}
+
+		return result;
+	}
+
+};
 
 void flushCaches( int flags )
 {
@@ -146,6 +171,12 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	GafferBindings::NodeClass<ArnoldLight>()
 		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
 	;
+
+	GafferBindings::DependencyNodeClass<ArnoldColorManager>()
+		.def( "loadColorManager", &loadColorManagerWrapper, ( arg( "name" ), arg( "keepExistingValues" ) = false ) )
+	;
+
+	GafferBindings::Serialisation::registerSerialiser( ArnoldColorManager::staticTypeId(), new ArnoldColorManagerSerialiser() );
 
 	GafferBindings::DependencyNodeClass<ArnoldLightFilter>();
 	GafferBindings::DependencyNodeClass<ArnoldOptions>();

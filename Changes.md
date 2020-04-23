@@ -6,6 +6,7 @@ Features
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+- ArnoldColorManager : Added a new node for specifying the colour manager for use in Arnold renders (#3523).
 - Viewer : Added overlay to Image views to control interactive renders where available (#3419).
 
 Improvements
