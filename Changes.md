@@ -17,6 +17,7 @@ Improvements
 Fixes
 -----
 
+- Spreadsheet : Fixed pattern matching bugs when using `${scene:path}` as the selector. In this case, `*` no longer matches `/`, and `...` is now supported.
 - TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
 - Script Settings :
