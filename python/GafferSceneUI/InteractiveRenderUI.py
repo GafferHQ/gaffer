@@ -101,7 +101,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		renderNode = self._interactiveRenderNode( self.__view )
 		if renderNode is not None:
 
-			statePlug = renderNode["state"]
+			statePlug = renderNode["state"].source()
 
 			if not statePlug.isSame( self.__stateWidget.getPlug() ) :
 				self.__stateWidget.setPlug( statePlug )
@@ -196,7 +196,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 
-		if self.getPlug() is None :
+		if self.getPlug() is None or not self._editable() :
 			self.__startPauseButton.setEnabled( False )
 			self.__stopButton.setEnabled( False )
 			return
