@@ -31,6 +31,7 @@ API
 ---
 
 - PrimitiveSampler : Added a new base class for nodes which sample primitive variables using an `IECoreScene::PrimitiveEvaluator`.
+- Arnold Renderer : Added support for an `ai:color_manager` option.
 
 0.57.0.0
 ========

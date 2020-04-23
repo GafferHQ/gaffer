@@ -252,6 +252,7 @@ const AtString g_backgroundArnoldString( "background" );
 const AtString g_boxArnoldString("box");
 const AtString g_cameraArnoldString( "camera" );
 const AtString g_catclarkArnoldString("catclark");
+const AtString g_colorManagerArnoldString( "color_manager" );
 const AtString g_customAttributesArnoldString( "custom_attributes" );
 const AtString g_curvesArnoldString("curves");
 const AtString g_dispMapArnoldString( "disp_map" );
@@ -2550,6 +2551,7 @@ IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
 IECore::InternedString g_backgroundOptionName( "ai:background" );
+IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
 IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
@@ -2784,6 +2786,19 @@ class ArnoldGlobals
 					}
 				}
 				AiNodeSetStr( options, g_pluginSearchPathArnoldString, AtString( s.c_str() ) );
+				return;
+			}
+			else if( name == g_colorManagerOptionName )
+			{
+				m_colorManager = nullptr;
+				if( value )
+				{
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
+					{
+						m_colorManager = m_shaderCache->get( d, nullptr );
+					}
+				}
+				AiNodeSetPtr( options, g_colorManagerArnoldString, m_colorManager ? m_colorManager->root() : nullptr );
 				return;
 			}
 			else if( name == g_atmosphereOptionName )
@@ -3163,8 +3178,8 @@ class ArnoldGlobals
 			std::sort( outputs->writable().begin(), outputs->writable().end() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
-		
-			// Set the beauty as the output to get frequent interactive updates	
+
+			// Set the beauty as the output to get frequent interactive updates
 			unsigned int primaryOutput = 0;
 			for( unsigned int i = 0; i < outputs->readable().size(); i++ )
 			{
@@ -3292,6 +3307,7 @@ class ArnoldGlobals
 		typedef std::map<IECore::InternedString, ArnoldShaderPtr> AOVShaderMap;
 		AOVShaderMap m_aovShaders;
 
+		ArnoldShaderPtr m_colorManager;
 		ArnoldShaderPtr m_atmosphere;
 		ArnoldShaderPtr m_background;
 
