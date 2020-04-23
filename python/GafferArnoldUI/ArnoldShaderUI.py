@@ -352,7 +352,7 @@ def __translateNodeMetadata( nodeEntry ) :
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 
-	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
+	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER )
 	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :
 
 		__translateNodeMetadata( arnold.AiNodeEntryIteratorGetNext( nodeIt ) )
@@ -406,7 +406,7 @@ def __plugMetadata( plug, name ) :
 
 	return __metadata[key].get( name )
 
-for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight ) :
+for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight, GafferArnold.ArnoldColorManager ) :
 
 	nodeKeys = set()
 	parametersPlugKeys = set()
