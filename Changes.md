@@ -5,7 +5,7 @@ Fixes
 -----
 
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
-- Viewer : Fixed crash displaying objects with zero scale transforms.
+- Viewer : Fixed crash displaying and/or manipulating objects with zero scale transform components.
 
 0.56.2.0 (relative to 0.56.1.0)
 ========
