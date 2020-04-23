@@ -361,6 +361,116 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegexp( RuntimeError, "Visitor must return a bool \(True to continue, False to prune\)" ) :
 			Gaffer.NodeAlgo.visitUpstream( g["L3_1"], lambda node : None )
 
+	def __boxedVisitationGraph( self ) :
+
+		s = self.__visitationGraph()
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["L1_1"] ] ) )
+		b.setName( "Box_L1_1" )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["L2_3"] ] ) )
+		b.setName( "Box_L2_3" )
+		return s
+
+	def testVisitBoxedNodesDepthFirst( self ) :
+
+		s = self.__boxedVisitationGraph()
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.downstreamNodes( s["Box_L1_1"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s[ "L2_1"], s["L3_1"], s["L3_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.downstreamNodes( s["Box_L1_1"]["L1_1"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s["Box_L1_1"], s[ "L2_1"], s["L3_1"], s["L3_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.downstreamNodes( s["L1_2"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s["L2_2"], s["L3_2"], s["Box_L2_3"], s["Box_L2_3"]["L2_3"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["Box_L2_3"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s[ "L1_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["Box_L2_3"]["L2_3"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s["Box_L2_3"], s[ "L1_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["L3_1"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s[ "L2_1"], s["Box_L1_1"], s["Box_L1_1"]["L1_1"] ]
+		)
+
+	def testVisitBoxedNodesBreadthFirst( self ) :
+
+		s = self.__boxedVisitationGraph()
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.downstreamNodes( s["Box_L1_1"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s[ "L2_1"], s["L3_1"], s["L3_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.downstreamNodes( s["Box_L1_1"]["L1_1"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s["Box_L1_1"], s[ "L2_1"], s["L3_1"], s["L3_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.downstreamNodes( s["L1_2"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s["L2_2"], s["Box_L2_3"], s["Box_L2_3"]["L2_3"], s["L3_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["Box_L2_3"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s[ "L1_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["Box_L2_3"]["L2_3"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s["Box_L2_3"], s[ "L1_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["L3_1"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s[ "L2_1"], s["Box_L1_1"], s["Box_L1_1"]["L1_1"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["L3_2"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s["L2_1"], s[ "L2_2"], s["Box_L2_3"], s["Box_L2_3"]["L2_3"], s["Box_L1_1"], s["Box_L1_1"]["L1_1"], s["L1_2"] ]
+		)
+
+	def testVisitBoxedBranches( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+
+		s["b"]["L1"] = GafferTest.AddNode()
+		s["b"]["L2_1"] = GafferTest.AddNode()
+		s["b"]["L2_2"] = GafferTest.AddNode()
+		s["b"]["L3_1"] = GafferTest.AddNode()
+
+		s["b"]["L1"]["op1"].setInput( s["b"]["L2_1"]["sum"] )
+		s["b"]["L1"]["op2"].setInput( s["b"]["L2_2"]["sum"] )
+
+		s["b"]["L2_1"]["op1"].setInput( s["b"]["L3_1"]["sum"] )
+
+		s["n"] = GafferTest.AddNode()
+		s["n"]["op1"].setInput( Gaffer.PlugAlgo.promote( s["b"]["L1"]["sum"] ) )
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["n"], order = Gaffer.NodeAlgo.VisitOrder.DepthFirst ),
+			[ s["b"], s["b"]["L1"], s["b"]["L2_1"], s["b"]["L3_1"], s["b"]["L2_2"] ]
+		)
+
+		self.assertEqual(
+			Gaffer.NodeAlgo.upstreamNodes( s["n"], order = Gaffer.NodeAlgo.VisitOrder.BreadthFirst ),
+			[ s["b"], s["b"]["L1"], s["b"]["L2_1"], s["b"]["L2_2"], s["b"]["L3_1"] ]
+		)
+
 	def tearDown( self ) :
 
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "userDefault" )
