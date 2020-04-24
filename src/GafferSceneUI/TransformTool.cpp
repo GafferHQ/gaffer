@@ -216,6 +216,7 @@ TransformTool::Selection::Selection(
 	V3f unusedScale;
 	if( !extractScaling( fullTransform, unusedScale, false ) )
 	{
+		m_warning = "Location has zero scale";
 		return;
 	}
 
