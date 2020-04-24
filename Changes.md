@@ -25,6 +25,7 @@ Fixes
   - Fixed Spreadsheet menu items.
 - UI : Fixed appearance of button icons when disabled.
 - FilterResults : Fixed the UI to show the connected filter instead of a meaningless numeric value. This also avoids triggering spurious errors on PathFilter nodes.
+- Viewer : Fixed crash displaying and/or manipulating objects with zero scale transform components.
 
 API
 ---
@@ -126,6 +127,7 @@ Fixes
 -----
 
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
+- Viewer : Fixed crash displaying and/or manipulating objects with zero scale transform components.
 
 0.56.2.0 (relative to 0.56.1.0)
 ========
