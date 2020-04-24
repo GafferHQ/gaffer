@@ -50,8 +50,6 @@ from Qt import QtCore
 
 ## \todo Custom right click menu with script load, save, execute file, undo, redo etc.
 ## \todo Standard way for users to customise all menus
-## \todo Tab completion and popup help. rlcompleter module should be useful for tab completion. Completer( dict ) constructs a completer
-# that works in a specific namespace.
 class PythonEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -65,10 +63,8 @@ class PythonEditor( GafferUI.Editor ) :
 			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
 			role = GafferUI.MultiLineTextWidget.Role.Code,
 		)
-		self.__inputWidget = GafferUI.MultiLineTextWidget(
-			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
-			role = GafferUI.MultiLineTextWidget.Role.Code,
-		)
+
+		self.__inputWidget = GafferUI.CodeWidget()
 
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
@@ -88,6 +84,9 @@ class PythonEditor( GafferUI.Editor ) :
 			"GafferUI" : GafferUI,
 			"root" : scriptNode,
 		}
+		self.__inputWidget.setCompleter( GafferUI.CodeWidget.PythonCompleter( self.__executionDict ) )
+		self.__inputWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
+		self.__inputWidget.setCommentPrefix( "#" )
 
 	def inputWidget( self ) :
 

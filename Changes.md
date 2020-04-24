@@ -4,6 +4,10 @@
 Improvements
 ------------
 
+- PythonEditor :
+  - Added syntax highlighting and tab completion.
+  - Added <kbd>Ctrl</kbd> + <kbd>]</kbd> hotkey for indenting and <kbd>Ctrl</kbd> + <kbd>[</kbd> for unindenting the selection.
+  - Added <kbd>Ctrl</kbd> + <kbd>/</kbd> hotkey for commenting and uncommenting the selection.
 - UIEditor : Added syntax highlighting and tab completion to the code editor for button widgets.
 - ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
 
