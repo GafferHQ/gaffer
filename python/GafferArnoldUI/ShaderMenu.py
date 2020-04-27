@@ -46,6 +46,8 @@ import IECoreArnold
 import GafferUI
 import GafferArnold
 
+## \todo Rename. This isn't about loading shaders, it's about loading all sorts
+# of Arnold node definitions.
 def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
 	MenuItem = collections.namedtuple( "MenuItem", [ "menuPath", "nodeCreator" ] )
@@ -56,7 +58,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 	uncategorisedMenuItems = []
 	with IECoreArnold.UniverseBlock( writable = False ) :
 
-		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
+		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER )
 
 		while not arnold.AiNodeEntryIteratorFinished( it ) :
 
@@ -75,12 +77,15 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLightFilter, nodeName )
 				else :
 					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader, nodeName )
-			else :
+			elif arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT :
 				menuPath = "Light"
 				if shaderName != "mesh_light" :
 					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLight, nodeName )
 				else :
 					nodeCreator = GafferArnold.ArnoldMeshLight
+			else :
+				menuPath = "Globals/Color Manager"
+				nodeCreator = functools.partial( __colorManagerCreator, shaderName, nodeName )
 
 			if category :
 				menuPath += "/" + category.strip( "/" )
@@ -121,6 +126,12 @@ def __shaderCreator( shaderName, nodeType, nodeName ) :
 	if isinstance( node, GafferArnold.ArnoldLight ) :
 		node["name"].setValue( nodeName[:1].lower() + nodeName[1:] )
 
+	return node
+
+def __colorManagerCreator( colorManagerName, nodeName ) :
+
+	node = GafferArnold.ArnoldColorManager( nodeName )
+	node.loadColorManager( colorManagerName )
 	return node
 
 def __aiMetadataGetStr( nodeEntry, paramName, name ) :

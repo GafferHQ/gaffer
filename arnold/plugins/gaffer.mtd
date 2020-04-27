@@ -962,7 +962,7 @@
 
 
 [node car_paint]
-	
+
 	gaffer.nodeMenu.category STRING "Surface"
 
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
@@ -1067,7 +1067,6 @@
 
 	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Utility"
-
 
 [node color_correct]
 
@@ -2088,3 +2087,14 @@
 	gaffer.nodeMenu.category STRING "Surface"
 
 
+# Standard Arnold Colour Managers
+##########################################################################
+
+[node color_manager_ocio]
+
+	[attr config]
+		widget STRING "filename"
+
+	[attr linear_chromaticities]
+		# Disable because we don't support array plugs yet
+		gaffer.plugType STRING ""

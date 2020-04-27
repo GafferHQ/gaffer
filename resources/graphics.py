@@ -150,7 +150,6 @@
 		'values',
 		'viewPause',
 		'viewPaused',
-		'viewerPause',
 		'warningNotification',
 		'warningSmall',
 	]

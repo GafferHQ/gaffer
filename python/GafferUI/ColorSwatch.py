@@ -59,8 +59,8 @@ class ColorSwatch( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
-		self.__opaqueChecker = _Checker()
-		self.__transparentChecker = _Checker()
+		self.__opaqueChecker = _Checker( borderBottom = False )
+		self.__transparentChecker = _Checker( borderTop = False )
 
 		layout = QtWidgets.QVBoxLayout()
 		layout.setSpacing( 0 )
@@ -139,9 +139,11 @@ class ColorSwatch( GafferUI.Widget ) :
 # no knowledge of colour spaces or anything.
 class _Checker( QtWidgets.QWidget ) :
 
-	def __init__( self ) :
+	def __init__( self, borderTop=True, borderBottom=True ) :
 
 		QtWidgets.QWidget.__init__( self )
+		self.__borderTop = borderTop
+		self.__borderBottom = borderBottom
 
 	def paintEvent( self, event ) :
 
@@ -169,7 +171,17 @@ class _Checker( QtWidgets.QWidget ) :
 			painter.fillRect( QtCore.QRectF( rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height() ), self.color0 )
 
 		if self.borderColor is not None :
+			w = self.width()
+			h = self.height()
 			pen = QtGui.QPen( self.borderColor )
+			lines = [
+				QtCore.QLine( 0, 0, 0, h ),
+				QtCore.QLine( w, 0, w, h ),
+			]
+			if self.__borderTop :
+				lines.append( QtCore.QLine( 0, 0, w, 0 ) )
+			if self.__borderBottom :
+				lines.append( QtCore.QLine( 0, h, w, h ) )
 			pen.setWidth( 4 )
 			painter.setPen( pen )
-			painter.drawRect( 0, 0, self.width(), self.height() )
+			painter.drawLines( lines )

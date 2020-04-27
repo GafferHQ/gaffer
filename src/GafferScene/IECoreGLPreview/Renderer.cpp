@@ -407,7 +407,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			m_editQueue.push( [this, transform]() {
 				m_transform = transform;
-				m_transformSansScale = sansScalingAndShear( transform );
+				m_transformSansScale = sansScalingAndShear( transform, false );
 			} );
 		}
 

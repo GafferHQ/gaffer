@@ -226,5 +226,25 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del o
 
+	def testTransforms( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"OpenGL",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		cube = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -1 ), imath.V3f( 9 ) ) )
+
+		o = renderer.object(
+			"/cube",
+			cube,
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		o.transform(
+			imath.M44f().scale( imath.V3f( 0 ) )
+		)
+
+		renderer.render()
+
 if __name__ == "__main__":
 	unittest.main()

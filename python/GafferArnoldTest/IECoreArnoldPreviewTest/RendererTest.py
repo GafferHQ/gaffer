@@ -2466,6 +2466,46 @@ class RendererTest( GafferTest.TestCase ) :
 		r.option( "ai:background", None )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
 
+	def testColorManager( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		options = arnold.AiUniverseGetOptions()
+		self.assertEqual( arnold.AiNodeGetPtr( options, "color_manager" ), None )
+
+		r.option(
+			"ai:color_manager",
+			IECoreScene.ShaderNetwork(
+				{
+					"output" : IECoreScene.Shader(
+						"color_manager_ocio", "ai:color_manager",
+						{
+							"config" : "something.ocio",
+							"color_space_narrow" : "narrow",
+							"color_space_linear" : "linear",
+						}
+					)
+				},
+				output = "output"
+			)
+		)
+
+		colorManager = arnold.AiNodeGetPtr( options, "color_manager" )
+		self.assertEqual(
+			arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( colorManager ) ),
+			"color_manager_ocio",
+		)
+
+		self.assertEqual( arnold.AiNodeGetStr( colorManager, "config" ), "something.ocio" )
+		self.assertEqual( arnold.AiNodeGetStr( colorManager, "color_space_narrow" ), "narrow" )
+		self.assertEqual( arnold.AiNodeGetStr( colorManager, "color_space_linear" ), "linear" )
+
+		r.option( "ai:color_manager", None )
+		self.assertEqual( arnold.AiNodeGetPtr( options, "color_manager" ), None )
+
 	def testBlockerMotionBlur( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

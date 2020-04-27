@@ -1,7 +1,7 @@
 0.58.x.x
 ========
 
-0.57.x.x (relative to 0.57.0.0)
+0.57.1.0 (relative to 0.57.0.0)
 ========
 
 Features
@@ -9,6 +9,7 @@ Features
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+- ArnoldColorManager : Added a new node for specifying the colour manager for use in Arnold renders (#3523).
 - Viewer : Added overlay to Image views to control interactive renders where available (#3419).
 
 Improvements
@@ -20,6 +21,7 @@ Improvements
 Fixes
 -----
 
+- Spreadsheet : Fixed pattern matching bugs when using `${scene:path}` as the selector. In this case, `*` no longer matches `/`, and `...` is now supported.
 - TranslateTool : Fixed problems translating an object with a downstream AimConstraint applied.
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
 - Script Settings :
@@ -27,11 +29,18 @@ Fixes
   - Fixed Spreadsheet menu items.
 - UI : Fixed appearance of button icons when disabled.
 - FilterResults : Fixed the UI to show the connected filter instead of a meaningless numeric value. This also avoids triggering spurious errors on PathFilter nodes.
+- Viewer :
+  - Fixed crash displaying and/or manipulating objects with zero scale transform components.
+  - Fixed EditScope menu to include scopes nested inside Boxes.
+  - Fixed EditScope menu button so it updates when the EditScope is renamed.
+- NodeAlgo : Fixed bugs that prevented visitation of nodes nested inside Boxes.
+- ColorSwatch : Fixed highlighted appearance (#3735).
 
 API
 ---
 
 - PrimitiveSampler : Added a new base class for nodes which sample primitive variables using an `IECoreScene::PrimitiveEvaluator`.
+- Arnold Renderer : Added support for an `ai:color_manager` option.
 
 0.57.0.0
 ========
@@ -121,13 +130,15 @@ Build
 
 - Cortex : Updated to version 10.0.0-a76.
 
-0.56.2.x (relative to 0.56.2.0)
+0.56.2.1 (relative to 0.56.2.0)
 ========
 
 Fixes
 -----
 
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
+- Viewer : Fixed crash displaying and/or manipulating objects with zero scale transform components.
+- ColorSwatch : Fixed highlighted appearance (#3735).
 
 0.56.2.0 (relative to 0.56.1.0)
 ========

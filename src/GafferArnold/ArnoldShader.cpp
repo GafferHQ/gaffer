@@ -129,40 +129,38 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 		}
 	}
 
-	const bool isLightShader = AiNodeEntryGetType( shader ) == AI_NODE_LIGHT;
-	namePlug()->setValue( AiNodeEntryGetName( shader ) );
+	namePlug()->source<StringPlug>()->setValue( AiNodeEntryGetName( shader ) );
 
-	int aiOutputType = AI_TYPE_POINTER;
-	string type = "ai:light";
-	if( !isLightShader )
+	string type;
+	switch( AiNodeEntryGetType( shader ) )
 	{
-		const CompoundData *metadata = ArnoldShader::metadata();
-		const StringData *shaderTypeData = static_cast<const StringData*>( metadata->member<IECore::CompoundData>( "shader" )->member<IECore::Data>( "shaderType" ) );
-		if( shaderTypeData )
-		{
-			type = "ai:" + shaderTypeData->readable();
-		}
-		else
-		{
+		case AI_NODE_LIGHT :
+			type = "ai:light";
+			break;
+		case AI_NODE_COLOR_MANAGER :
+			type = "ai:color_manager";
+			break;
+		default :
 			type = "ai:surface";
-		}
-
-		if( type == "ai:surface" )
-		{
-			aiOutputType = AiNodeEntryGetOutputType( shader );
-		}
+			break;
 	}
 
-	if( !keepExistingValues && type == "ai:lightFilter" )
+	if( auto d = metadata()->member<CompoundData>( "shader" )->member<StringData>( "shaderType" ) )
 	{
-		attributeSuffixPlug()->setValue( shaderName );
+		type = "ai:" + d->readable();
 	}
-
 	typePlug()->setValue( type );
 
-	ParameterHandler::setupPlugs( shader, parametersPlug );
-	ParameterHandler::setupPlug( "out", aiOutputType, this, Plug::Out );
+	if( !keepExistingValues )
+	{
+		attributeSuffixPlug()->setValue( type == "ai:lightFilter" ? shaderName : "" );
+	}
 
+	ParameterHandler::setupPlugs( shader, parametersPlug );
+
+	int aiOutputType = AiNodeEntryGetOutputType( shader );
+	aiOutputType = aiOutputType == AI_TYPE_NONE ? AI_TYPE_POINTER : aiOutputType;
+	ParameterHandler::setupPlug( "out", aiOutputType, this, Plug::Out );
 }
 
 //////////////////////////////////////////////////////////////////////////

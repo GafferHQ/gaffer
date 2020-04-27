@@ -208,6 +208,18 @@ TransformTool::Selection::Selection(
 		return;
 	}
 
+	// We disallow editing of any locations that have zero scale at any point in the
+	// hierarchy. This causes untold trouble in all sorts of places.
+	// We use this somewhat long winded detection approach to ensure we'll hit the same
+	// failure cases as we would do later on using imath with the same matrices.
+	const M44f fullTransform = scene->fullTransform( path );
+	V3f unusedScale;
+	if( !extractScaling( fullTransform, unusedScale, false ) )
+	{
+		m_warning = "Location has zero scale";
+		return;
+	}
+
 	bool editScopeFound = false;
 	while( m_path.size() )
 	{

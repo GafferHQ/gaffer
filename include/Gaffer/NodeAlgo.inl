@@ -59,11 +59,37 @@ namespace Private
 using NodeSet = boost::unordered_set<NodePtr>;
 
 template<typename Visitor>
+void visitInputs( Plug *plug, Visitor &&visitor )
+{
+	while( (plug = plug->getInput()) )
+	{
+		visitor( plug );
+	}
+}
+
+template<typename Visitor>
+void visitOutputs( Plug *plug, Visitor &&visitor )
+{
+	for( auto output : plug->outputs() )
+	{
+		visitor( output );
+		visitOutputs( output, visitor );
+	}
+}
+
+template<typename Visitor>
 void visitBreadthFirst( Node *node, Visitor &visitor, Plug::Direction plugDirection )
 {
 	Private::NodeSet visited;
 	std::deque<NodePtr> toVisit;
 	toVisit.push_back( node );
+
+	auto plugVisitor = [&toVisit] ( Plug *plug ) {
+		if( auto n = plug->node() )
+		{
+			toVisit.push_back( n );
+		}
+	};
 
 	while( !toVisit.empty() )
 	{
@@ -86,13 +112,7 @@ void visitBreadthFirst( Node *node, Visitor &visitor, Plug::Direction plugDirect
 		{
 			for( auto plug : Plug::RecursiveInputRange( *n ) )
 			{
-				if( auto input = plug->getInput() )
-				{
-					if( auto n = input->node() )
-					{
-						toVisit.push_back( n );
-					}
-				}
+				visitInputs( plug.get(), plugVisitor );
 			}
 		}
 
@@ -100,13 +120,7 @@ void visitBreadthFirst( Node *node, Visitor &visitor, Plug::Direction plugDirect
 		{
 			for( auto plug : Plug::RecursiveOutputRange( *n ) )
 			{
-				for( auto output : plug->outputs() )
-				{
-					if( auto n = output->node() )
-					{
-						toVisit.push_back( n );
-					}
-				}
+				visitOutputs( plug.get(), plugVisitor );
 			}
 		}
 	}
@@ -128,17 +142,18 @@ void visitDepthFirst( Node *node, Visitor &visitor, Plug::Direction plugDirectio
 		}
 	}
 
+	auto plugVisitor = [&] ( Plug *plug ) {
+		if( auto n = plug->node() )
+		{
+			visitDepthFirst( n, visitor, plugDirection, visited, depth + 1 );
+		}
+	};
+
 	if( plugDirection != Plug::Out )
 	{
 		for( auto plug : Plug::RecursiveInputRange( *node ) )
 		{
-			if( auto input = plug->getInput() )
-			{
-				if( auto n = input->node() )
-				{
-					visitDepthFirst( n, visitor, plugDirection, visited, depth + 1 );
-				}
-			}
+			visitInputs( plug.get(), plugVisitor );
 		}
 	}
 
@@ -146,13 +161,7 @@ void visitDepthFirst( Node *node, Visitor &visitor, Plug::Direction plugDirectio
 	{
 		for( auto plug : Plug::RecursiveOutputRange( *node ) )
 		{
-			for( auto output : plug->outputs() )
-			{
-				if( auto n = output->node() )
-				{
-					visitDepthFirst( n, visitor, plugDirection, visited, depth + 1 );
-				}
-			}
+			visitOutputs( plug.get(), plugVisitor );
 		}
 	}
 }
