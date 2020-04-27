@@ -25,7 +25,11 @@ Fixes
   - Fixed Spreadsheet menu items.
 - UI : Fixed appearance of button icons when disabled.
 - FilterResults : Fixed the UI to show the connected filter instead of a meaningless numeric value. This also avoids triggering spurious errors on PathFilter nodes.
-- Viewer : Fixed crash displaying and/or manipulating objects with zero scale transform components.
+- Viewer :
+  - Fixed crash displaying and/or manipulating objects with zero scale transform components.
+  - Fixed EditScope menu to include scopes nested inside Boxes.
+  - Fixed EditScope menu button so it updates when the EditScope is renamed.
+- NodeAlgo : Fixed bugs that prevented visitation of nodes nested inside Boxes.
 
 API
 ---
