@@ -70,13 +70,16 @@ class PythonEditor( GafferUI.Editor ) :
 			role = GafferUI.MultiLineTextWidget.Role.Code,
 		)
 
-		self.__outputWidget._qtWidget().setProperty( "gafferTextRole", "output" )
-		self.__inputWidget._qtWidget().setProperty( "gafferTextRole", "input" )
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
 
 		self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
 		self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
+
+		GafferUI.WidgetAlgo.joinEdges(
+			[ self.__outputWidget, self.__inputWidget ],
+			orientation = GafferUI.ListContainer.Orientation.Vertical
+		)
 
 		self.__executionDict = {
 			"imath" : imath,
