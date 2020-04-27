@@ -825,7 +825,16 @@ class RenderCallback : public IECore::RefCounted
 			}
 			if( m_interactive )
 			{
-				m_displayDriver->imageData( tile, &interleavedData[0], w * h * numOutputChannels );
+				try
+				{
+					m_displayDriver->imageData( tile, &interleavedData[0], w * h * numOutputChannels );
+				}
+				catch( const std::exception &e )
+				{
+					// we have to catch and report exceptions because letting them out into pure c land
+					// just causes aborts.
+					msg( Msg::Error, "IECoreCycles:writeRenderTile", e.what() );
+				}
 			}
 		}
 
@@ -3808,8 +3817,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
 				{
-					ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA );
-					for( ccl::DeviceInfo& device : devices ) 
+					for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
 					{
 						if( m_deviceMap[deviceName].id == device.id ) 
 						{
@@ -4180,6 +4188,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_session )
 			{
+				// A trick to retain the same pointer when re-creating a session.
 				m_session->~Session();
 				new ( m_session ) ccl::Session( m_sessionParams );
 			}
@@ -4691,15 +4700,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					++indexOpenCL;
 					continue;
 				}
-#ifdef WITH_OPTIX
-				if( device.type == ccl::DEVICE_OPTIX )
-				{
-					auto optionName = boost::format( "%s%02i" ) % deviceName % indexOptiX;
-					m_deviceMap[optionName.str()] = device;
-					++indexOptiX;
-					continue;
-				}
-#endif
 			}
 		}
 
