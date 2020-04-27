@@ -31,6 +31,7 @@ Fixes
   - Fixed EditScope menu to include scopes nested inside Boxes.
   - Fixed EditScope menu button so it updates when the EditScope is renamed.
 - NodeAlgo : Fixed bugs that prevented visitation of nodes nested inside Boxes.
+- ColorSwatch : Fixed highlighted appearance (#3735).
 
 API
 ---
@@ -126,7 +127,7 @@ Build
 
 - Cortex : Updated to version 10.0.0-a76.
 
-0.56.2.x (relative to 0.56.2.0)
+0.56.2.1 (relative to 0.56.2.0)
 ========
 
 Fixes
@@ -134,6 +135,7 @@ Fixes
 
 - Instancer : Fixed crashes caused by attempts to instance onto a location without a primitive (#3715).
 - Viewer : Fixed crash displaying and/or manipulating objects with zero scale transform components.
+- ColorSwatch : Fixed highlighted appearance (#3735).
 
 0.56.2.0 (relative to 0.56.1.0)
 ========
