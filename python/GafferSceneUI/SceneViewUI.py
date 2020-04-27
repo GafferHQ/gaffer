@@ -956,3 +956,4 @@ class _StateWidget( GafferUI.Widget ) :
 		paused = self.__sceneGadget.getPaused()
 		self.__button.setImage( "viewPause.png" if not paused else "viewPaused.png" )
 		self.__busyWidget.setBusy( self.__sceneGadget.state() == self.__sceneGadget.State.Running )
+		self.__button.setToolTip( "Viewer updates suspended, click to resume" if paused else "Click to suspend viewer updates [esc]" )
