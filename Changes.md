@@ -1,3 +1,13 @@
+0.57.x.x (relative to 0.57.1.0)
+========
+
+Build
+-----
+
+- Dependencies :
+  - Updated to GafferHQ/dependencies 1.3.0.
+  - Added dependency on the `six` Python module, to enable progress towards support for Python 3.
+
 0.57.1.0 (relative to 0.57.0.0)
 ========
 
