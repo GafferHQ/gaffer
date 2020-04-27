@@ -17,6 +17,7 @@ API
 - PlugLayout : Added a warning for plugs that reference activators that have not been registered.
 - ImageTestCase : Added `ignoreChannelNamesOrder` keyword argument to `assertImagesEqual()`. This defaults to `False`, maintaining the previous behaviour.
 - MultiLineTextWidget : Added `cursorBound()` method.
+- WidgetAlgo : `joinEdges()` now accepts an arbitrary list of widgets rather than requiring a `ListContainer`. In this case, the orientation must be passed as an additional argument.
 
 0.60.2.1 (relative to 0.60.2.0)
 ========
