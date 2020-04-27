@@ -6,6 +6,7 @@ Features
 
 - ClosestPointSampler : Added a new node for sampling primitive variables from the closest point on a source primitive.
 - CurveSampler : Added a new node for sampling primitive variables from parametric positions on some source curves.
+- ArnoldColorManager : Added a new node for specifying the colour manager for use in Arnold renders (#3523).
 - Viewer : Added overlay to Image views to control interactive renders where available (#3419).
 
 Improvements
@@ -35,6 +36,7 @@ API
 ---
 
 - PrimitiveSampler : Added a new base class for nodes which sample primitive variables using an `IECoreScene::PrimitiveEvaluator`.
+- Arnold Renderer : Added support for an `ai:color_manager` option.
 
 0.57.0.0
 ========
