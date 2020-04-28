@@ -1,6 +1,31 @@
 0.58.x.x
 ========
 
+Breaking Changes
+----------------
+
+- Startup :
+  - Removed several compatibility shims for loading files from Gaffer versions prior to 0.20.0.0. Either resave the file from version 0.57.0.0 or adopt the appropriate shim into your own configuration. The following are affected :
+     - RemoveChannels nodes.
+     - OpenColorIO nodes.
+     - Certain ImageWriter settings from version 0.17.0.0 and prior.
+     - Expression nodes from version 0.18.0.0 and prior.
+     - Invalid `Node.user` plug inputs from version 0.18.0.0 and prior.
+     - Reformat nodes from version 0.19.0.0 and prior.
+     - Crop nodes from version 0.20.0.0 and prior.
+     - TaskNodes from version 0.20.0.0 and prior.
+  - Removed several compatibility shims for running old Python code without modification. Either update your code or adopt the appropriate shim into your own configuration.
+    - `Gaffer.MetadataAlgo` and `Gaffer.MonitorAlgo` can no longer be accessed without namespace qualification.
+    - `GafferImage.ImageAlgo` and `GafferImage.BufferAlgo` can no longer be accessed without namespace qualification.
+    - `GafferScene.SceneAlgo` can no longer be accessed without namespace qualification.
+    - `GafferDispatch` attributes can no longer be accessed via the `Gaffer` namespace.
+    - `Gaffer.UndoContext` is no longer an alias for `Gaffer.UndoScope`.
+    - `GafferDispatchUI` attributes can no longer be accessed via the `GafferUI` namespace.
+    - `GafferDispatch.ExecutableNode` is no longer an alias for `GafferDispatch.TaskNode`.
+    - `GafferCortex.ParameterisedHolderExecutableNode` is no longer an alias for `GafferCortex.ParameterisedHolderTaskNode`.
+    - `GafferCortex` attributes can no longer be accessed via the `Gaffer` namespace.
+    - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
+
 0.57.1.0 (relative to 0.57.0.0)
 ========
 

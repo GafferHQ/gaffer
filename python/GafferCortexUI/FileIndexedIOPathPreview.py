@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
 
 class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 
@@ -84,14 +85,14 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 
 	def _deferredUpdate( self, indexedIO ) :
 
-		self.__indexedIOPath = Gaffer.IndexedIOPath( indexedIO, "/" )
+		self.__indexedIOPath = GafferCortex.IndexedIOPath( indexedIO, "/" )
 		self.__indexedIOPathChangedConnection = self.__indexedIOPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__indexedIOPathChanged ) )
 
 		self.__pathWidget.setPath( self.__indexedIOPath )
 		self.__pathPreview.setPath( self.__indexedIOPath )
 
 		# we use a separate path for the listing so it'll always be rooted at the start
-		listingPath = Gaffer.IndexedIOPath( indexedIO, "/" )
+		listingPath = GafferCortex.IndexedIOPath( indexedIO, "/" )
 		self.__pathListing.setPath( listingPath )
 		self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__pathListingSelectionChanged ) )
 

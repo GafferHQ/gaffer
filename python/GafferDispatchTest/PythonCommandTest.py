@@ -371,7 +371,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testComments( self ) :
 
-		c = Gaffer.PythonCommand()
+		c = GafferDispatch.PythonCommand()
 		c["command"].setValue( "self.test = 10 # this is a comment" )
 
 		c["task"].execute()
@@ -379,7 +379,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testImath( self ) :
 
-		c = Gaffer.PythonCommand()
+		c = GafferDispatch.PythonCommand()
 		c["command"].setValue( "self.test = imath.V2i( 1, 2 )" )
 
 		c["task"].execute()
@@ -387,13 +387,13 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testEmptyCommand( self ) :
 
-		c = Gaffer.PythonCommand()
+		c = GafferDispatch.PythonCommand()
 		self.assertEqual( c["command"].getValue(), "" )
 		self.assertEqual( c["task"].hash(), IECore.MurmurHash() )
 
 	def testContextGetNone( self ) :
 
-		command = Gaffer.PythonCommand()
+		command = GafferDispatch.PythonCommand()
 		command["command"].setValue( "print context.get( 'iAmNotHere' )" )
 
 		with Gaffer.Context() as c :
@@ -403,7 +403,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testAlternateMissingContextVariables( self ) :
 
-		command = Gaffer.PythonCommand()
+		command = GafferDispatch.PythonCommand()
 		command["command"].setValue( "print 'a : ', context.get( 'a' ), 'b : ', context.get( 'b' )" )
 
 		neitherHash = command["task"].hash()
@@ -422,7 +422,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 	def testContextModificationsDontLeak( self ) :
 
-		command = Gaffer.PythonCommand()
+		command = GafferDispatch.PythonCommand()
 		command["command"].setValue( "context.setFrame( 2 )" )
 		command["task"].execute()
 

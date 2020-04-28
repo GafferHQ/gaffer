@@ -142,7 +142,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["s"]["rows"].removeColumn( c2 )
 
 		def assertPostConditions() :
@@ -661,7 +661,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( s["s"]["rows"].row( "y" ), None )
 		self.assertEqual( s["s"]["rows"].row( "z" ), None )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			row1 = s["s"]["rows"].addRow()
 			row1["name"].setValue( "x" )
 			row2 = s["s"]["rows"].addRow()
@@ -672,7 +672,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( s["s"]["rows"].row( "y" ), row2 )
 		self.assertEqual( s["s"]["rows"].row( "z" ), None )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			row2["name"].setValue( "z" )
 
 		self.assertEqual( s["s"]["rows"].row( "" ), None )
@@ -680,7 +680,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( s["s"]["rows"].row( "y" ), None )
 		self.assertEqual( s["s"]["rows"].row( "z" ), row2 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			row3 = s["s"]["rows"].addRow()
 			row3["name"].setValue( "y" )
 

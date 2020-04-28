@@ -100,7 +100,7 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 		}
 
 		with GafferUI.ErrorDialogue.ErrorHandler( title = "Button Error", parentWindow = self.ancestor( GafferUI.Window ) ) :
-			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				with self.getContext() :
 					exec( code, executionDict, executionDict )
 

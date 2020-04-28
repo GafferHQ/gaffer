@@ -136,7 +136,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 	def testEmptyCommand( self ) :
 
-		c = Gaffer.SystemCommand()
+		c = GafferDispatch.SystemCommand()
 		self.assertEqual( c["command"].getValue(), "" )
 		self.assertEqual( c["task"].hash(), IECore.MurmurHash() )
 

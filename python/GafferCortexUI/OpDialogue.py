@@ -44,6 +44,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
 
 ## A dialogue which allows a user to edit the parameters of an
 # IECore.Op instance and then execute it.
@@ -100,7 +101,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		if isinstance( opInstanceOrOpHolderInstance, IECore.Op ) :
 			opInstance = opInstanceOrOpHolderInstance
-			self.__node = Gaffer.ParameterisedHolderNode()
+			self.__node = GafferCortex.ParameterisedHolderNode()
 			self.__node.setParameterised( opInstance )
 			# set the current plug values as userDefaults to provide
 			# a clean NodeUI based on the initial settings of the Op.

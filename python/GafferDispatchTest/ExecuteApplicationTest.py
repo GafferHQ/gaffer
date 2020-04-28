@@ -177,7 +177,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 	def testIgnoreScriptLoadErrors( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["node"] = Gaffer.SystemCommand()
+		s["node"] = GafferDispatch.SystemCommand()
 		s["node"]["command"].setValue( "sleep .1" )
 
 		# because this doesn't have the dynamic flag set,

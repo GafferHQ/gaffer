@@ -43,6 +43,7 @@ import IECoreScene
 
 import Gaffer
 import GafferUI
+import GafferCortex
 import GafferCortexUI
 
 class PresetDialogue( GafferUI.Dialogue ) :
@@ -179,7 +180,7 @@ class SavePresetDialogue( PresetDialogue ) :
 
 				# forcing CompoundVectorParameter to act as a leaf, because allowing the selection of some children but not others
 				# makes no sense (because they must all have the same length).
-				parameterPath = Gaffer.ParameterPath( parameterHandler.parameter(), "/", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
+				parameterPath = GafferCortex.ParameterPath( parameterHandler.parameter(), "/", forcedLeafTypes = ( IECore.CompoundVectorParameter, ) )
 				self.__parameterListing = GafferUI.PathListingWidget(
 					parameterPath,
 					columns = [ GafferUI.PathListingWidget.defaultNameColumn ],

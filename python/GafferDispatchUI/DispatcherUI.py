@@ -130,7 +130,7 @@ Gaffer.Metadata.registerNode(
 
 	GafferDispatch.TaskNode,
 
-	"layout:customWidget:dispatchButton:widgetType", "GafferUI.DispatcherUI._DispatchButton",
+	"layout:customWidget:dispatchButton:widgetType", "GafferDispatchUI.DispatcherUI._DispatchButton",
 
 	plugs = {
 

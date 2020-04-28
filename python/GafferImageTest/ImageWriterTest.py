@@ -94,23 +94,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.failUnless( "B" in channelNames )
 		self.failUnless( not "A" in channelNames )
 
-	def testWriteModePlugCompatibility( self ) :
-		w = GafferImage.ImageWriter()
-
-		w['writeMode'].setValue( GafferImage.ImageWriter.Mode.Scanline )
-
-		self.assertEqual( w['openexr']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
-		self.assertEqual( w['tiff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
-		self.assertEqual( w['field3d']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
-		self.assertEqual( w['iff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Scanline )
-
-		w['writeMode'].setValue( GafferImage.ImageWriter.Mode.Tile )
-
-		self.assertEqual( w['openexr']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
-		self.assertEqual( w['tiff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
-		self.assertEqual( w['field3d']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
-		self.assertEqual( w['iff']['mode'].getValue(), GafferImage.ImageWriter.Mode.Tile )
-
 	def testAcceptsInput( self ) :
 
 		w = GafferImage.ImageWriter()
@@ -426,7 +409,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				'plugs': {},
 				'metadata': options.get( "metadata", {} ),
 				'maxError': options.get( "maxError", 0.0 )
-			}, 
+			},
 			{
 				'name': "defaultNoAlpha",
 				'removeAlpha': True,

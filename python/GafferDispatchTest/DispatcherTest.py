@@ -887,12 +887,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 				else :
 
-					# We need to evaluate our external requirements as well,
-					# and they need to be requirements of our preExecute task
+					# We need to evaluate our external preTasks as well,
+					# and they need to be preTasks of our preExecute task
 					# only, since that is the topmost branch of our internal
-					# requirement graph. We also need to use a Context which
+					# task graph. We also need to use a Context which
 					# does not contain our internal preExecute entry, incase
-					# that has meaning for any of our external requirements.
+					# that has meaning for any of our external preTasks.
 					customContext = Gaffer.Context( context )
 					del customContext["selfExecutingNode:preExecute"]
 					preTasks = GafferDispatch.TaskNode.preTasks( self, customContext )

@@ -168,7 +168,7 @@ def __dropPaths( paths, pathsPlug ) :
 		rootPaths = IECore.PathMatcher()
 		for node in GafferScene.SceneAlgo.filteredNodes( pathFilter ) :
 			scene = node["in"][0] if isinstance( node["in"], Gaffer.ArrayPlug ) else node["in"]
-			GafferScene.matchingPaths( pathFilter["roots"], scene, rootPaths )
+			GafferScene.SceneAlgo.matchingPaths( pathFilter["roots"], scene, rootPaths )
 
 	paths = IECore.PathMatcher( paths )
 	relativePaths = IECore.PathMatcher()

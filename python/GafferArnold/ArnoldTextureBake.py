@@ -372,7 +372,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			"""
 		), "python" )
 
-		self["__outputIndexCommand"] = Gaffer.PythonCommand()
+		self["__outputIndexCommand"] = GafferDispatch.PythonCommand()
 		self["__outputIndexCommand"]["variables"].addChild( Gaffer.NameValuePlug( "bakeDirectory", Gaffer.StringPlug() ) )
 		self["__outputIndexCommand"]["variables"][0]["value"].setInput( self["bakeDirectory"] )
 		self["__outputIndexCommand"]["variables"].addChild( Gaffer.NameValuePlug( "indexFilePath", Gaffer.StringPlug() ) )
@@ -517,7 +517,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__ImageWedge"]["preTasks"][0].setInput( self["__ConvertCommand"]["task"] )
 		self["__ImageWedge"]["variable"].setValue( 'wedge:outFile' )
 		self["__ImageWedge"]["indexVariable"].setValue( 'wedge:outFileIndex' )
-		self["__ImageWedge"]["mode"].setValue( int( Gaffer.Wedge.Mode.StringList ) )
+		self["__ImageWedge"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
 
 		self["__CleanUpCommand"] = GafferDispatch.PythonCommand()
 		self["__CleanUpCommand"]["preTasks"][0].setInput( self["__ImageWedge"]["task"] )

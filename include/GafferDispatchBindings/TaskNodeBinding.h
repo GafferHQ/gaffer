@@ -102,12 +102,6 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				try
 				{
 					boost::python::object override = this->methodOverride( "preTasks" );
-					if( !override )
-					{
-						// backwards compatibility with old method name
-						override = this->methodOverride( "requirements" );
-					}
-
 					if( override )
 					{
 						boost::python::list pythonTasks = boost::python::extract<boost::python::list>(

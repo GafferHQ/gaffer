@@ -207,7 +207,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		jpgReader = GafferImage.OpenImageIOReader()
 		jpgReader["fileName"].setValue( self.circlesJpgFileName )
-		jpgOCIO = GafferImage.OpenColorIO()
+		jpgOCIO = GafferImage.ColorSpace()
 		jpgOCIO["in"].setInput( jpgReader["out"] )
 		jpgOCIO["inputSpace"].setValue( "sRGB" )
 		jpgOCIO["outputSpace"].setValue( "linear" )
