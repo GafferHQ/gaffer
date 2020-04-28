@@ -752,10 +752,17 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 				( data->getInterpretation() == GeometricData::Numeric ) )
 			{
 				uvsets[it->first] = it->second;
-				variablesToConvert.erase( it );
+				it = variablesToConvert.erase( it );
+			}
+			else
+			{
+				++it;
 			}
 		}
-		++it;
+		else
+		{
+			++it;
+		}
 	}
 	// Find the best candidate for the first UVset.
 	int rank = -1;
