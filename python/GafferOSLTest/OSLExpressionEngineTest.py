@@ -40,6 +40,7 @@ import math
 import os
 import imath
 import re
+import six
 
 import IECore
 
@@ -152,7 +153,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"]["user"]["o"] = Gaffer.ObjectPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.NullObject.defaultNullObject() )
 
 		s["e"] = Gaffer.Expression()
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			RuntimeError, "Unsupported plug type \"Gaffer::ObjectPlug\"",
 			s["e"].setExpression,
 			"parent.n.user.o = 1",
@@ -339,7 +340,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["e"] = Gaffer.Expression()
-		self.assertRaisesRegexp( RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent.notANode.notAPlug = 2;', "OSL" )
+		six.assertRaisesRegex( self, RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent.notANode.notAPlug = 2;', "OSL" )
 
 	def testNoSemiColon( self ) :
 

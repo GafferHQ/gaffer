@@ -58,16 +58,16 @@ class DeleteAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( a["out"], d["out"] )
 		self.assertSceneHashesEqual( a["out"], d["out"] )
-		self.failUnless( "scene:visible" in d["out"].attributes( "/plane" ) )
-		self.failUnless( "doubleSided" in d["out"].attributes( "/plane" ) )
+		self.assertIn( "scene:visible", d["out"].attributes( "/plane" ) )
+		self.assertIn( "doubleSided", d["out"].attributes( "/plane" ) )
 
 		d["names"].setValue( "doubleSided" )
 
 		self.assertSceneHashesNotEqual( a["out"], d["out"], checks = { "attributes" } )
 		self.assertSceneHashesEqual( a["out"], d["out"], checks = self.allSceneChecks - { "attributes" } )
 
-		self.failUnless( "scene:visible" in d["out"].attributes( "/plane" ) )
-		self.failIf( "doubleSided" in d["out"].attributes( "/plane" ) )
+		self.assertIn( "scene:visible", d["out"].attributes( "/plane" ) )
+		self.assertNotIn( "doubleSided", d["out"].attributes( "/plane" ) )
 
 	def testWildcards( self ) :
 

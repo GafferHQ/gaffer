@@ -187,10 +187,10 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( p.numPoints(), 4 )
 		for i in range( p.numPoints() ) :
-			self.assert_( p.pointXPlug( i ).isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
-			self.assert_( p.pointYPlug( i ).isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
-			self.assert_( p.pointXPlug( i ).parent().isSame( p.pointPlug( i ) ) )
-			self.assert_( p.pointYPlug( i ).parent().isSame( p.pointPlug( i ) ) )
+			self.assertTrue( p.pointXPlug( i ).isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
+			self.assertTrue( p.pointYPlug( i ).isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
+			self.assertTrue( p.pointXPlug( i ).parent().isSame( p.pointPlug( i ) ) )
+			self.assertTrue( p.pointYPlug( i ).parent().isSame( p.pointPlug( i ) ) )
 
 		# accessing nonexistent points should raise exceptions
 		self.assertRaises( Exception, p.pointPlug, 4 )
@@ -212,25 +212,25 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( p.numPoints(), 4 )
 		for i in range( p.numPoints() ) :
-			self.assert_( p.pointPlug( i ) )
-			self.assert_( p.pointXPlug( i ) )
-			self.assert_( p.pointYPlug( i ) )
+			self.assertIsNotNone( p.pointPlug( i ) )
+			self.assertIsNotNone( p.pointXPlug( i ) )
+			self.assertIsNotNone( p.pointYPlug( i ) )
 
 		p.removePoint( 0 )
 
 		self.assertEqual( p.numPoints(), 3 )
 		for i in range( p.numPoints() ) :
-			self.assert_( p.pointPlug( i ) )
-			self.assert_( p.pointXPlug( i ) )
-			self.assert_( p.pointYPlug( i ) )
+			self.assertIsNotNone( p.pointPlug( i ) )
+			self.assertIsNotNone( p.pointXPlug( i ) )
+			self.assertIsNotNone( p.pointYPlug( i ) )
 
 		p.removeChild( p.pointPlug( 0 ) )
 
 		self.assertEqual( p.numPoints(), 2 )
 		for i in range( p.numPoints() ) :
-			self.assert_( p.pointPlug( i ) )
-			self.assert_( p.pointXPlug( i ) )
-			self.assert_( p.pointYPlug( i ) )
+			self.assertIsNotNone( p.pointPlug( i ) )
+			self.assertIsNotNone( p.pointXPlug( i ) )
+			self.assertIsNotNone( p.pointYPlug( i ) )
 
 	def testPointTampering( self ) :
 

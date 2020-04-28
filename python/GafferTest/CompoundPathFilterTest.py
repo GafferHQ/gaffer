@@ -74,7 +74,7 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 
 		self.__numChanges = 0
 		def f( filter ) :
-			self.failUnless( filter.isSame( cf ) )
+			self.assertTrue( filter.isSame( cf ) )
 			self.__numChanges += 1
 
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
@@ -112,7 +112,7 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 
 		self.__numChanges = 0
 		def f( filter ) :
-			self.failUnless( filter.isSame( cf ) )
+			self.assertTrue( filter.isSame( cf ) )
 			self.__numChanges += 1
 
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )

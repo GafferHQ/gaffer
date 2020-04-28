@@ -37,6 +37,7 @@
 import os
 import unittest
 import inspect
+import six
 import imath
 
 import IECore
@@ -221,14 +222,14 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( collect["out"].channelNames(), IECore.StringVectorData( [ 'AB.R', 'AB.G', 'AB.B', 'AB.A', 'CD.R', 'CD.G', 'CD.B', 'CD.A' ] ) )
 
 		deepMergeAB["enabled"].setValue( False )
-		with self.assertRaisesRegexp( Gaffer.ProcessException, r'Input to CollectImages must be consistent, but it is sometimes deep.*' ) as raised:
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Input to CollectImages must be consistent, but it is sometimes deep.*' ) as raised:
 			collect["out"].deep()
 
 		deepMergeAB["enabled"].setValue( True )
 
 		deepMergeAB["in"][2].setInput( constantB["out"] )
 
-		with self.assertRaisesRegexp( Gaffer.ProcessException, r'SampleOffsets on input to CollectImages must match. Pixel 0,0 received both 3 and 2 samples' ) as raised:
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'SampleOffsets on input to CollectImages must match. Pixel 0,0 received both 3 and 2 samples' ) as raised:
 			collect["out"].sampleOffsets( o )
 
 		offset = GafferImage.Offset()
@@ -236,7 +237,7 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		offset["offset"].setValue( imath.V2i( -5, -13 ) )
 
 		deepMergeAB["in"][2].setInput( offset["out"] )
-		with self.assertRaisesRegexp( Gaffer.ProcessException, r'DataWindows on deep input to CollectImages must match. Received both -5,-13 -> 1920,1080 and 0,0 -> 1920,1080' ) as raised:
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'DataWindows on deep input to CollectImages must match. Received both -5,-13 -> 1920,1080 and 0,0 -> 1920,1080' ) as raised:
 			collect["out"].dataWindow()
 
 if __name__ == "__main__":

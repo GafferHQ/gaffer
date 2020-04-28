@@ -353,7 +353,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 		iState['deepState'].setValue( GafferImage.DeepState.TargetState.Flat )
 
 		testFile = self.temporaryDirectory() + "/test.Flat.exr"
-		self.failIf( os.path.exists( testFile ) )
+		self.assertFalse( os.path.exists( testFile ) )
 
 		w = GafferImage.ImageWriter()
 		w['in'].setInput( iState["out"] )
@@ -952,7 +952,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 
 		deleteChannels = GafferImage.DeleteChannels()
 		deleteChannels["in"].setInput( deepMerge["out"] )
-	
+
 		self.__assertDeepStateProcessing( deleteChannels["out"], referenceFlatten["out"], [ 0, 0, 0, 0 ], [ 0, 0, 0, 0 ], 100, 0.45 )
 
 		# Having no ZBack should be equivalent to having ZBack = Z

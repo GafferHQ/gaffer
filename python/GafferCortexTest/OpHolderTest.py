@@ -50,9 +50,9 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 		n = GafferCortex.OpHolder()
 		self.assertEqual( n.typeName(), "GafferCortex::OpHolder" )
-		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderComputeNode.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
-		self.failUnless( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
+		self.assertTrue( n.isInstanceOf( GafferCortex.ParameterisedHolderComputeNode.staticTypeId() ) )
+		self.assertTrue( n.isInstanceOf( Gaffer.ComputeNode.staticTypeId() ) )
+		self.assertTrue( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
 
 	def testCompute( self ) :
 
@@ -100,7 +100,7 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 		a = n.affects( n["parameters"]["offset"] )
 		self.assertEqual( len( a ), 1 )
-		self.failUnless( a[0].isSame( n["result"] ) )
+		self.assertTrue( a[0].isSame( n["result"] ) )
 
 	def testSerialise( self ) :
 

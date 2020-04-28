@@ -60,25 +60,25 @@ class DictPathTest( GafferTest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		self.failUnless( p.isValid() )
-		self.failIf( p.isLeaf() )
+		self.assertTrue( p.isValid() )
+		self.assertFalse( p.isLeaf() )
 
 		children = p.children()
 		self.assertEqual( len( children ), 5 )
 		for child in children :
-			self.failUnless( isinstance( child, Gaffer.DictPath ) )
+			self.assertIsInstance( child, Gaffer.DictPath )
 			if child[-1] in ( "d", "f" ) :
-				self.failIf( child.isLeaf() )
-				self.failIf( "value" in child.info() )
+				self.assertFalse( child.isLeaf() )
+				self.assertNotIn( "value", child.info() )
 			else :
-				self.failUnless( child.isLeaf() )
-				self.failUnless( "dict:value" in child.info() )
+				self.assertTrue( child.isLeaf() )
+				self.assertTrue( "dict:value" in child.info() )
 
 		p.setFromString( "/d/e/four" )
 		self.assertEqual( p.info()["dict:value"], 4 )
 
 		p.setFromString( "/d/e/fourfdsfsd" )
-		self.failIf( p.isValid() )
+		self.assertFalse( p.isValid() )
 
 	def testCopy( self ) :
 
@@ -92,12 +92,12 @@ class DictPathTest( GafferTest.TestCase ) :
 		pp = p.copy()
 		self.assertEqual( str( pp ), str( p ) )
 		self.assertEqual( pp, p )
-		self.failIf( p != p )
+		self.assertFalse( p != p )
 
 		del pp[-1]
 		self.assertNotEqual( str( pp ), str( p ) )
 		self.assertNotEqual( pp, p )
-		self.failUnless( pp != p )
+		self.assertTrue( pp != p )
 
 	def testRepr( self ) :
 

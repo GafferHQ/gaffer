@@ -53,13 +53,13 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 
 		g = GafferUI.StandardNodeGadget( n )
 
-		self.failUnless( isinstance( g.getContents(), GafferUI.NameGadget ) )
+		self.assertIsInstance( g.getContents(), GafferUI.NameGadget )
 		self.assertEqual( g.getContents().getText(), n.getName() )
 
 		t = GafferUI.TextGadget( "I'll choose my own label thanks" )
 		g.setContents( t )
 
-		self.failUnless( g.getContents().isSame( t ) )
+		self.assertTrue( g.getContents().isSame( t ) )
 
 	def testNestedNodules( self ) :
 

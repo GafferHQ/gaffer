@@ -38,6 +38,7 @@ import unittest
 import subprocess
 import os
 import imath
+import six
 
 import IECore
 
@@ -1090,7 +1091,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testCantPassNoneForGraphComponent( self ) :
 
-		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+		with six.assertRaisesRegex( self, Exception, "Python argument types" ) :
 			Gaffer.Metadata.registerValue( None, "test", "test" )
 
 	def testCallSignalDirectly( self ) :
@@ -1159,7 +1160,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testValueFromNoneRaises( self ) :
 
-		with self.assertRaisesRegexp( Exception, "did not match C\+\+ signature" ) :
+		with six.assertRaisesRegex( self, Exception, "did not match C\+\+ signature" ) :
 			Gaffer.Metadata.value( None, "test" )
 
 if __name__ == "__main__":

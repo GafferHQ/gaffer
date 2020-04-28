@@ -73,44 +73,44 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		ca = TestWidget( "a" )
 		cb = TestWidget( "b" )
 		cc = TestWidget( "c" )
-		self.assert_( ca.parent() is None )
-		self.assert_( cb.parent() is None )
-		self.assert_( cc.parent() is None )
+		self.assertIsNone( ca.parent() )
+		self.assertIsNone( cb.parent() )
+		self.assertIsNone( cc.parent() )
 
 		c.append( ca )
 		self.assertEqual( len( c ), 1 )
 		self.assertEqual( c[0], ca )
-		self.assert_( ca.parent() is c )
+		self.assertTrue( ca.parent() is c )
 
 		c.append( cb )
 		self.assertEqual( len( c ), 2 )
 		self.assertEqual( c[0], ca )
 		self.assertEqual( c[1], cb )
-		self.assert_( ca.parent() is c )
-		self.assert_( cb.parent() is c )
+		self.assertTrue( ca.parent() is c )
+		self.assertTrue( cb.parent() is c )
 
 		c.append( cc )
 		self.assertEqual( len( c ), 3 )
 		self.assertEqual( c[0], ca )
 		self.assertEqual( c[1], cb )
 		self.assertEqual( c[2], cc )
-		self.assert_( ca.parent() is c )
-		self.assert_( cb.parent() is c )
-		self.assert_( cc.parent() is c )
+		self.assertTrue( ca.parent() is c )
+		self.assertTrue( cb.parent() is c )
+		self.assertTrue( cc.parent() is c )
 
 		del c[0]
 		self.assertEqual( len( c ), 2 )
-		self.assert_( ca.parent() is None )
-		self.assert_( cb.parent() is c )
-		self.assert_( cc.parent() is c )
+		self.assertIsNone( ca.parent() )
+		self.assertTrue( cb.parent() is c )
+		self.assertTrue( cc.parent() is c )
 		self.assertEqual( c[0], cb )
 		self.assertEqual( c[1], cc )
 
 		c.remove( cc )
 		self.assertEqual( len( c ), 1 )
-		self.assert_( ca.parent() is None )
-		self.assert_( cb.parent() is c )
-		self.assert_( cc.parent() is None )
+		self.assertIsNone( ca.parent() )
+		self.assertTrue( cb.parent() is c )
+		self.assertIsNone( cc.parent() )
 		self.assertEqual( c[0], cb )
 
 	def testReparenting( self ) :
@@ -121,14 +121,14 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( c2 ), 0 )
 
 		ca = TestWidget( "a" )
-		self.assert_( ca.parent() is None )
+		self.assertIsNone( ca.parent() )
 
 		c1.append( ca )
-		self.assert_( ca.parent() is c1 )
+		self.assertTrue( ca.parent() is c1 )
 		self.assertEqual( len( c1 ), 1 )
 		self.assertEqual( len( c2 ), 0 )
 		c2.append( ca )
-		self.assert_( ca.parent() is c2 )
+		self.assertTrue( ca.parent() is c2 )
 		self.assertEqual( len( c1 ), 0 )
 		self.assertEqual( len( c2 ), 1 )
 
@@ -139,26 +139,26 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		ca = TestWidget( "a" )
 		cb = TestWidget( "b" )
 		cc = TestWidget( "c" )
-		self.assert_( ca.parent() is None )
-		self.assert_( cb.parent() is None )
-		self.assert_( cc.parent() is None )
+		self.assertIsNone( ca.parent() )
+		self.assertIsNone( cb.parent() )
+		self.assertIsNone( cc.parent() )
 
 		c.append( ca )
-		self.assert_( ca.parent() is c )
+		self.assertTrue( ca.parent() is c )
 
 		c.append( cb )
-		self.assert_( cb.parent() is c )
+		self.assertTrue( cb.parent() is c )
 
 		c.append( cc )
-		self.assert_( cc.parent() is c )
+		self.assertTrue( cc.parent() is c )
 
 		self.assertEqual( len( c ), 3 )
 
 		del c[0:2]
 		self.assertEqual( len( c ), 1 )
-		self.assert_( ca.parent() is None )
-		self.assert_( cb.parent() is None )
-		self.assert_( cc.parent() is c )
+		self.assertIsNone( ca.parent() )
+		self.assertIsNone( cb.parent() )
+		self.assertTrue( cc.parent() is c )
 
 	def testSliceDelWithOpenRange( self ) :
 
@@ -238,10 +238,10 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.index( cc ), 2 )
 		self.assertRaises( ValueError, c.index, ca )
 
-		self.failUnless( ca.parent() is None )
-		self.failUnless( cb.parent() is c )
-		self.failUnless( cc.parent() is c )
-		self.failUnless( cd.parent() is c )
+		self.assertIsNone( ca.parent() )
+		self.assertTrue( cb.parent() is c )
+		self.assertTrue( cc.parent() is c )
+		self.assertTrue( cd.parent() is c )
 
 	def testSliceSetItem( self ) :
 
@@ -260,11 +260,11 @@ class ListContainerTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( c[:], [ cd, ce, cc ] )
 
-		self.failUnless( ca.parent() is None )
-		self.failUnless( cb.parent() is None )
-		self.failUnless( cd.parent() is c )
-		self.failUnless( ce.parent() is c )
-		self.failUnless( cc.parent() is c )
+		self.assertIsNone( ca.parent() )
+		self.assertIsNone( cb.parent() )
+		self.assertTrue( cd.parent() is c )
+		self.assertTrue( ce.parent() is c )
+		self.assertTrue( cc.parent() is c )
 
 	def testSliceSetItemOnEmptyContainer( self ) :
 
@@ -333,7 +333,7 @@ class ListContainerTest( GafferUITest.TestCase ) :
 		del c1[:]
 		self.assertEqual( len( c1 ), 0 )
 		self.assertEqual( len( c2 ), 1 )
-		self.failUnless( b.parent() is c2 )
+		self.assertTrue( b.parent() is c2 )
 
 	def testDelDoesntAffectVisibility( self ) :
 

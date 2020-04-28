@@ -43,6 +43,7 @@ import threading
 
 import arnold
 import imath
+import six
 
 import IECore
 import IECoreImage
@@ -94,10 +95,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			stderr = subprocess.PIPE,
 		)
 		p.wait()
-		self.failIf( p.returncode )
+		self.assertFalse( p.returncode )
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%d.ass" % i ) )
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%d.ass" % i ) )
 
 	def testWaitForImage( self ) :
 
@@ -121,7 +122,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["task"].execute()
 
-		self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.tif" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.tif" ) )
 
 	def testExecuteWithStringSubstitutions( self ) :
 
@@ -142,10 +143,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			stderr = subprocess.PIPE,
 		)
 		p.wait()
-		self.failIf( p.returncode )
+		self.assertFalse( p.returncode )
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.ass" % i ) )
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.ass" % i ) )
 
 	def testImageOutput( self ) :
 
@@ -175,7 +176,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 				s["render"]["task"].execute()
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.tif" % i ) )
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.tif" % i ) )
 
 	def testTypeNamePrefixes( self ) :
 
@@ -629,14 +630,14 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# The requested camera doesn't exist - this should raise an exception.
 
-		self.assertRaisesRegexp( RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
+		six.assertRaisesRegex( self, RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
 
 		# And even the existence of a different camera shouldn't change that.
 
 		s["camera"] = GafferScene.Camera()
 		s["options"]["in"].setInput( s["camera"]["out"] )
 
-		self.assertRaisesRegexp( RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
+		six.assertRaisesRegex( self, RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
 
 	def testManyCameras( self ) :
 
@@ -1085,7 +1086,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		self.assertRaisesRegexp( RuntimeError, "Render aborted", s["render"]["task"].execute )
+		six.assertRaisesRegex( self, RuntimeError, "Render aborted", s["render"]["task"].execute )
 
 	def testOSLShaders( self ) :
 

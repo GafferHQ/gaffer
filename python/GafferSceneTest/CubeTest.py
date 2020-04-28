@@ -97,7 +97,7 @@ class CubeTest( GafferSceneTest.SceneTestCase ) :
 		for ss in s :
 			if ss[0].isSame( c["out"] ) :
 				found = True
-		self.failUnless( found )
+		self.assertTrue( found )
 
 	def testTransform( self ) :
 

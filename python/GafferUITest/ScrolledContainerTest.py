@@ -75,8 +75,8 @@ class ScrolledContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( l ), 1 )
 
 		s.setChild( b )
-		self.failUnless( b.parent() is s )
-		self.failUnless( s.getChild() is b )
+		self.assertTrue( b.parent() is s )
+		self.assertTrue( s.getChild() is b )
 		self.assertEqual( len( l ), 0 )
 
 if __name__ == "__main__":

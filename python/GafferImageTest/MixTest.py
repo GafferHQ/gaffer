@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import six
 import imath
 
 import IECore
@@ -592,10 +593,10 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		GafferImage.ImageAlgo.tiles( mix["out"] )
 
 		mix["in"][0].setInput( deep["out"] )
-		self.assertRaisesRegexp( RuntimeError, 'Mix.out.deep : Cannot mix between deep and flat image.', GafferImage.ImageAlgo.tiles, mix["out"] )
+		six.assertRaisesRegex( self, RuntimeError, 'Mix.out.deep : Cannot mix between deep and flat image.', GafferImage.ImageAlgo.tiles, mix["out"] )
 		mix["in"][0].setInput( flat["out"] )
 		mix["in"][1].setInput( deep["out"] )
-		self.assertRaisesRegexp( RuntimeError, 'Mix.out.deep : Cannot mix between deep and flat image.', GafferImage.ImageAlgo.tiles, mix["out"] )
+		six.assertRaisesRegex( self, RuntimeError, 'Mix.out.deep : Cannot mix between deep and flat image.', GafferImage.ImageAlgo.tiles, mix["out"] )
 
 		mix["in"][0].setInput( deep["out"] )
 		GafferImage.ImageAlgo.tiles( mix["out"] )

@@ -57,7 +57,7 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( se )
 
-		self.failUnless( s2["n"]["f"].isInstanceOf( GafferImage.AtomicFormatPlug.staticTypeId() ) )
+		self.assertTrue( s2["n"]["f"].isInstanceOf( GafferImage.AtomicFormatPlug ) )
 
 	def testOffsetSerialize( self ) :
 

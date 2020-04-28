@@ -60,16 +60,16 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( set ), 0 )
 		self.assertEqual( len( dirtied ), 2 )
-		self.failUnless( dirtied[0][0].isSame( n2["op1"] ) )
-		self.failUnless( dirtied[1][0].isSame( n2["sum"] ) )
+		self.assertTrue( dirtied[0][0].isSame( n2["op1"] ) )
+		self.assertTrue( dirtied[1][0].isSame( n2["sum"] ) )
 
 		n2["op1"].setInput( None )
 
 		self.assertEqual( len( set ), 1 )
-		self.failUnless( set[0][0].isSame( n2["op1"] ) )
+		self.assertTrue( set[0][0].isSame( n2["op1"] ) )
 		self.assertEqual( len( dirtied ), 4 )
-		self.failUnless( dirtied[2][0].isSame( n2["op1"] ) )
-		self.failUnless( dirtied[3][0].isSame( n2["sum"] ) )
+		self.assertTrue( dirtied[2][0].isSame( n2["op1"] ) )
+		self.assertTrue( dirtied[3][0].isSame( n2["sum"] ) )
 
 	def testDirtyPropagationForCompoundPlugs( self ) :
 

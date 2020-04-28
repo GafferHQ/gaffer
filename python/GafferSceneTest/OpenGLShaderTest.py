@@ -72,16 +72,16 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		a = s.attributes()
 		self.assertEqual( a.keys(), [ "gl:surface"] )
-		self.failUnless( isinstance( a["gl:surface"].outputShader(), IECoreScene.Shader ) )
+		self.assertIsInstance( a["gl:surface"].outputShader(), IECoreScene.Shader )
 
 		self.assertEqual( a["gl:surface"].outputShader().name, "Texture" )
 		self.assertEqual( a["gl:surface"].outputShader().type, "gl:surface" )
 		self.assertEqual( a["gl:surface"].outputShader().parameters["mult"], IECore.FloatData( 0.5 ) )
 		self.assertEqual( a["gl:surface"].outputShader().parameters["tint"].value, imath.Color4f( 1, 0.5, 0.25, 1 ) )
 		self.assertTrue( isinstance( a["gl:surface"].outputShader().parameters["texture"], IECore.CompoundData ) )
-		self.failUnless( "displayWindow" in a["gl:surface"].outputShader().parameters["texture"] )
-		self.failUnless( "dataWindow" in a["gl:surface"].outputShader().parameters["texture"] )
-		self.failUnless( "channels" in a["gl:surface"].outputShader().parameters["texture"] )
+		self.assertIn( "displayWindow", a["gl:surface"].outputShader().parameters["texture"] )
+		self.assertIn( "dataWindow", a["gl:surface"].outputShader().parameters["texture"] )
+		self.assertIn( "channels", a["gl:surface"].outputShader().parameters["texture"] )
 
 	def testDirtyPropagation( self ) :
 

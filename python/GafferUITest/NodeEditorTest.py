@@ -54,10 +54,10 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 		sw = GafferUI.ScriptWindow.acquire( s )
 
 		ne = GafferUI.NodeEditor.acquire( s["n"] )
-		self.failUnless( GafferUI.NodeEditor.acquire( s["n"] ) is ne )
+		self.assertTrue( GafferUI.NodeEditor.acquire( s["n"] ) is ne )
 
-		self.failUnless( isinstance( ne, GafferUI.NodeEditor ) )
-		self.failUnless( s["n"] in ne.getNodeSet() )
+		self.assertIsInstance( ne, GafferUI.NodeEditor )
+		self.assertIn( s["n"], ne.getNodeSet() )
 
 	def testAcquireDeletesClosedWindows( self ) :
 
@@ -68,7 +68,7 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 
 		ne = GafferUI.NodeEditor.acquire( s["n"] )
 		nw = ne.ancestor( GafferUI.Window )
-		self.failUnless( nw.parent() is sw )
+		self.assertTrue( nw.parent() is sw )
 
 		nww = weakref.ref( nw )
 		nw.close()
@@ -78,7 +78,7 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 		self.assertEqual( sw.childWindows(), [] )
 
 		ne2 = GafferUI.NodeEditor.acquire( s["n"] )
-		self.failUnless( isinstance( ne2, GafferUI.NodeEditor ) )
+		self.assertIsInstance( ne2, GafferUI.NodeEditor )
 
 	def testAcquiredEditorsClosedOnNodeDelete( self ) :
 
@@ -89,7 +89,7 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 		sw = GafferUI.ScriptWindow.acquire( s )
 
 		ww = weakref.ref( GafferUI.NodeEditor.acquire( s["n"] ).ancestor( GafferUI.Window ) )
-		self.failUnless( isinstance( ww(), GafferUI.Window ) )
+		self.assertIsInstance( ww(), GafferUI.Window )
 
 		del s["n"]
 

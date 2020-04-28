@@ -69,16 +69,16 @@ class SplitContainerTest( GafferUITest.TestCase ) :
 
 		b = GafferUI.Button()
 		p1.append( b )
-		self.failUnless( p1[0] is b )
+		self.assertTrue( p1[0] is b )
 		self.assertEqual( len( p1 ), 1 )
 		self.assertEqual( len( p2 ), 0 )
-		self.failUnless( b.parent() is p1 )
+		self.assertTrue( b.parent() is p1 )
 
 		p2.append( b )
-		self.failUnless( p2[0] is b )
+		self.assertTrue( p2[0] is b )
 		self.assertEqual( len( p1 ), 0 )
 		self.assertEqual( len( p2 ), 1 )
-		self.failUnless( b.parent() is p2 )
+		self.assertTrue( b.parent() is p2 )
 
 	def testHandle( self ) :
 
@@ -90,7 +90,7 @@ class SplitContainerTest( GafferUITest.TestCase ) :
 		self.assertRaises( IndexError, c.handle, -1 )
 		self.assertRaises( IndexError, c.handle, 1 )
 
-		self.failUnless( isinstance( c.handle( 0 ), GafferUI.Widget ) )
+		self.assertIsInstance( c.handle( 0 ), GafferUI.Widget )
 		self.assertEqual( c.handle( 0 ).parent(), c )
 
 	def testGetHandleTwice( self ) :
@@ -100,7 +100,7 @@ class SplitContainerTest( GafferUITest.TestCase ) :
 		c.append( GafferUI.Frame() )
 		c.append( GafferUI.Frame() )
 
-		self.failUnless( c.handle( 0 ) is c.handle( 0 ) )
+		self.assertTrue( c.handle( 0 ) is c.handle( 0 ) )
 
 	def testCanDieAfterGetHandle( self ) :
 

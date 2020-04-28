@@ -55,7 +55,7 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( se )
 
-		self.failUnless( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )
+		self.assertTrue( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )
 
 	def testSerialisationWithConnection( self ) :
 
@@ -73,7 +73,7 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( se )
 
-		self.failUnless( s2["n"]["t"].getInput().isSame( s2["n2"]["t2"] ) )
+		self.assertTrue( s2["n"]["t"].getInput().isSame( s2["n2"]["t2"] ) )
 
 	def testDefaultValue( self ) :
 
@@ -90,7 +90,7 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 	def testAcceptsNoneInput( self ) :
 
 		p = Gaffer.ObjectPlug( "hello", Gaffer.Plug.Direction.In, IECore.IntData( 10 ) )
-		self.failUnless( p.acceptsInput( None ) )
+		self.assertTrue( p.acceptsInput( None ) )
 
 	def testBoolVectorDataPlug( self ) :
 
@@ -125,9 +125,9 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( se )
 
-		self.failUnless( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )
-		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
-		self.failUnless( s2["n"]["t"].getValue() == IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
+		self.assertTrue( s2["n"]["t"].isInstanceOf( Gaffer.ObjectPlug.staticTypeId() ) )
+		self.assertEqual( s2["n"]["t"].defaultValue(), IECore.IntData( 10 ) )
+		self.assertEqual( s2["n"]["t"].getValue(), IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
 
 	def testConstructCantSpecifyBothInputAndValue( self ) :
 
@@ -174,17 +174,17 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 
 	def testValueType( self ) :
 
-		self.failUnless( Gaffer.ObjectPlug.ValueType is IECore.Object )
-		self.failUnless( Gaffer.BoolVectorDataPlug.ValueType is IECore.BoolVectorData )
-		self.failUnless( Gaffer.IntVectorDataPlug.ValueType is IECore.IntVectorData )
-		self.failUnless( Gaffer.FloatVectorDataPlug.ValueType is IECore.FloatVectorData )
-		self.failUnless( Gaffer.StringVectorDataPlug.ValueType is IECore.StringVectorData )
-		self.failUnless( Gaffer.V3fVectorDataPlug.ValueType is IECore.V3fVectorData )
-		self.failUnless( Gaffer.Color3fVectorDataPlug.ValueType is IECore.Color3fVectorData )
-		self.failUnless( Gaffer.M44fVectorDataPlug.ValueType is IECore.M44fVectorData )
-		self.failUnless( Gaffer.V2iVectorDataPlug.ValueType is IECore.V2iVectorData )
-		self.failUnless( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
-		self.failUnless( Gaffer.AtomicCompoundDataPlug.ValueType is IECore.CompoundData )
+		self.assertTrue( Gaffer.ObjectPlug.ValueType is IECore.Object )
+		self.assertTrue( Gaffer.BoolVectorDataPlug.ValueType is IECore.BoolVectorData )
+		self.assertTrue( Gaffer.IntVectorDataPlug.ValueType is IECore.IntVectorData )
+		self.assertTrue( Gaffer.FloatVectorDataPlug.ValueType is IECore.FloatVectorData )
+		self.assertTrue( Gaffer.StringVectorDataPlug.ValueType is IECore.StringVectorData )
+		self.assertTrue( Gaffer.V3fVectorDataPlug.ValueType is IECore.V3fVectorData )
+		self.assertTrue( Gaffer.Color3fVectorDataPlug.ValueType is IECore.Color3fVectorData )
+		self.assertTrue( Gaffer.M44fVectorDataPlug.ValueType is IECore.M44fVectorData )
+		self.assertTrue( Gaffer.V2iVectorDataPlug.ValueType is IECore.V2iVectorData )
+		self.assertTrue( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
+		self.assertTrue( Gaffer.AtomicCompoundDataPlug.ValueType is IECore.CompoundData )
 
 	def testSetValueCopying( self ) :
 
@@ -192,11 +192,11 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 
 		i = IECore.IntData( 10 )
 		p.setValue( i )
-		self.failIf( p.getValue( _copy=False ).isSame( i ) )
+		self.assertFalse( p.getValue( _copy=False ).isSame( i ) )
 
 		i = IECore.IntData( 20 )
 		p.setValue( i, _copy=False )
-		self.failUnless( p.getValue( _copy=False ).isSame( i ) )
+		self.assertTrue( p.getValue( _copy=False ).isSame( i ) )
 
 	def testCreateCounterpart( self ) :
 

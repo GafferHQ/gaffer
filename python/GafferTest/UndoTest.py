@@ -90,13 +90,13 @@ class UndoTest( GafferTest.TestCase ) :
 		with Gaffer.UndoScope( s ) :
 			n1["op1"].setInput( n2["sum"] )
 
-		self.assert_( n1["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n1["op1"].getInput().isSame( n2["sum"] ) )
 
 		s.undo()
 		self.assertEqual( n1["op1"].getInput(), None )
 
 		s.redo()
-		self.assert_( n1["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n1["op1"].getInput().isSame( n2["sum"] ) )
 
 	def testChildren( self ) :
 
@@ -107,11 +107,11 @@ class UndoTest( GafferTest.TestCase ) :
 
 		with Gaffer.UndoScope( s ) :
 			s["n"] = n
-		self.assert_( n.parent().isSame( s ) )
+		self.assertTrue( n.parent().isSame( s ) )
 		s.undo()
 		self.assertEqual( n.parent(), None )
 		s.redo()
-		self.assert_( n.parent().isSame( s ) )
+		self.assertTrue( n.parent().isSame( s ) )
 
 	def testDelete( self ) :
 
@@ -128,25 +128,25 @@ class UndoTest( GafferTest.TestCase ) :
 		n2["op2"].setInput( n1["sum"] )
 		n3["op1"].setInput( n2["sum"] )
 		n3["op2"].setInput( n2["sum"] )
-		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n2["sum"] ) )
 
 		with Gaffer.UndoScope( s ) :
 			s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
 
 		self.assertEqual( n2["op1"].getInput(), None )
 		self.assertEqual( n2["op2"].getInput(), None )
-		self.assert_( n3["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n1["sum"] ) )
 
 		s.undo()
 
-		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n2["sum"] ) )
 
 		with Gaffer.UndoScope( s ) :
 			s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ), reconnect = False )
@@ -158,10 +158,10 @@ class UndoTest( GafferTest.TestCase ) :
 
 		s.undo()
 
-		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n2["sum"] ) )
 
 	def testDisable( self ) :
 

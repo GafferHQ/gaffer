@@ -84,10 +84,10 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		f = Gaffer.FloatPlug()
 		i = Gaffer.IntPlug()
 
-		self.assert_( f.isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
-		self.assert_( not f.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )
-		self.assert_( not i.isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
-		self.assert_( i.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )
+		self.assertTrue( f.isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
+		self.assertFalse( f.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )
+		self.assertFalse( i.isInstanceOf( Gaffer.FloatPlug.staticTypeId() ) )
+		self.assertTrue( i.isInstanceOf( Gaffer.IntPlug.staticTypeId() ) )
 
 	def testAcceptsInput( self ) :
 
@@ -95,13 +95,13 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		o = Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out )
 		s = Gaffer.StringPlug( direction=Gaffer.Plug.Direction.Out )
 
-		self.failUnless( i.acceptsInput( o ) )
-		self.failIf( i.acceptsInput( s ) )
+		self.assertTrue( i.acceptsInput( o ) )
+		self.assertFalse( i.acceptsInput( s ) )
 
 	def testAcceptsNoneInput( self ) :
 
 		p = Gaffer.IntPlug( "hello" )
-		self.failUnless( p.acceptsInput( None ) )
+		self.assertTrue( p.acceptsInput( None ) )
 
 	def testAppliesMinMaxInSetValue( self ) :
 
@@ -160,7 +160,7 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( n2["op1"].getValue(), 1010 )
 
 		n2["op1"].setInput( n1["sum"] )
-		self.failUnless( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
 		self.assertEqual( n2["op1"].getValue(), 0 )
 
 		n2["op1"].setInput( None )
@@ -179,7 +179,7 @@ class NumericPlugTest( GafferTest.TestCase ) :
 		n2["op1"].setInput( None )
 
 		self.assertEqual( len( set ), 1 )
-		self.failUnless( set[0][0].isSame( n2["op1"] ) )
+		self.assertTrue( set[0][0].isSame( n2["op1"] ) )
 
 	def testDefaultValue( self ) :
 

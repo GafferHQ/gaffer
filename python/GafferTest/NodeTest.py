@@ -56,10 +56,10 @@ class NodeTest( GafferTest.TestCase ) :
 		n2.addChild( n )
 
 		p = Gaffer.Plug()
-		self.assert_( n.acceptsChild( p ) )
-		self.assert_( not n.acceptsParent( p ) )
+		self.assertTrue( n.acceptsChild( p ) )
+		self.assertFalse( n.acceptsParent( p ) )
 		n.addChild( p )
-		self.assert_( p.parent().isSame( n ) )
+		self.assertTrue( p.parent().isSame( n ) )
 
 	def testNaming( self ) :
 
@@ -165,7 +165,7 @@ class NodeTest( GafferTest.TestCase ) :
 		s.addChild( n2 )
 
 		n2["op1"].setInput( n1["sum"] )
-		self.failUnless( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
 
 		del s["n2"]
 
@@ -174,7 +174,7 @@ class NodeTest( GafferTest.TestCase ) :
 		s.addChild( n2 )
 
 		n2["op1"].setInput( n1["sum"] )
-		self.failUnless( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
 
 		del s["n1"]
 
@@ -258,7 +258,7 @@ class NodeTest( GafferTest.TestCase ) :
 
 		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
 		self.assertEqual( len( cs ), 1 )
-		self.failUnless( cs[0][0].isSame( n["p"] ) )
+		self.assertTrue( cs[0][0].isSame( n["p"] ) )
 
 		# second time should have no effect because they're the same
 		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
@@ -266,7 +266,7 @@ class NodeTest( GafferTest.TestCase ) :
 
 		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 		self.assertEqual( len( cs ), 2 )
-		self.failUnless( cs[1][0].isSame( n["p"] ) )
+		self.assertTrue( cs[1][0].isSame( n["p"] ) )
 
 	def testUserPlugs( self ) :
 

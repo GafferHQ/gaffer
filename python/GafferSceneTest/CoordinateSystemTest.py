@@ -66,12 +66,12 @@ class CoordinateSystemTest( GafferSceneTest.SceneTestCase ) :
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["transform"]["translate"]["x"].setValue( 10 )
-		self.failUnless( c["out"]["transform"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["transform"], [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["name"].setValue( "yupyup" )
-		self.failUnless( c["out"]["childNames"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["set"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["childNames"], [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["set"], [ p[0] for p in dirtied ] )
 
 if __name__ == "__main__":
 	unittest.main()

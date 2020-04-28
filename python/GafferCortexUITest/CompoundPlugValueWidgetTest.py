@@ -51,15 +51,15 @@ class CompoundPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		pw = CompoundPlugValueWidget( n["c"] )
 
-		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget ) )
-		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["s"] ), GafferUI.PlugValueWidget ) )
+		self.assertIsInstance( pw.childPlugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget )
+		self.assertIsInstance( pw.childPlugValueWidget( n["c"]["s"] ), GafferUI.PlugValueWidget )
 
 		pw = CompoundPlugValueWidget( n["c"], collapsed=None )
 		w = GafferUI.Window()
 		w.setChild( pw )
 		w.setVisible( True )
-		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget ) )
-		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["s"] ), GafferUI.PlugValueWidget ) )
+		self.assertIsInstance( pw.childPlugValueWidget( n["c"]["i"] ), GafferUI.PlugValueWidget )
+		self.assertIsInstance( pw.childPlugValueWidget( n["c"]["s"] ), GafferUI.PlugValueWidget )
 
 	def testChildReadOnlyStatus( self ) :
 

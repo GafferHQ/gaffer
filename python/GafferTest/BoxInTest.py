@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import six
 
 import IECore
 
@@ -438,13 +439,13 @@ class BoxInTest( GafferTest.TestCase ) :
 	def testSetupNone( self ) :
 
 		b = Gaffer.BoxIn()
-		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+		with six.assertRaisesRegex( self, Exception, "Python argument types" ) :
 			b.setup( None )
 
 	def testSetupNoArgument( self ) :
 
 		b = Gaffer.BoxIn()
-		with self.assertRaisesRegexp( Exception, "Python argument types" ) :
+		with six.assertRaisesRegex( self, Exception, "Python argument types" ) :
 			b.setup()
 
 	def testSerialisationUsesSetup( self ) :

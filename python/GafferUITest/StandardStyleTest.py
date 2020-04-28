@@ -77,7 +77,7 @@ class StandardStyleTest( GafferUITest.TestCase ) :
 
 			v = getattr( GafferUI.Style.TextType, n )
 			s.setFont( v, f )
-			self.failUnless( s.getFont( v ).isSame( f ) )
+			self.assertTrue( s.getFont( v ).isSame( f ) )
 
 	def testChangedSignal( self ) :
 

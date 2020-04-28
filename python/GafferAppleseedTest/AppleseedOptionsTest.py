@@ -48,7 +48,7 @@ class AppleseedOptionsTest( GafferSceneTest.SceneTestCase ) :
 		o = GafferAppleseed.AppleseedOptions()
 
 		o["out"].transform( "/" )
-		self.failUnless( isinstance( o["out"].childNames( "/" ), IECore.InternedStringVectorData ) )
+		self.assertIsInstance( o["out"].childNames( "/" ), IECore.InternedStringVectorData )
 
 	def testSerialisation( self ) :
 

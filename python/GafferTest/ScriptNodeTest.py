@@ -44,6 +44,7 @@ import shutil
 import stat
 import inspect
 import functools
+import six
 
 import IECore
 
@@ -71,12 +72,12 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s.execute( "script.addChild( Gaffer.Node( 'child' ) )" )
-		self.assert_( s["child"].typeName(), "Node" )
+		self.assertEqual( s["child"].typeName(), "Gaffer::Node" )
 
 	def testSelection( self ) :
 
 		s = Gaffer.ScriptNode()
-		self.assert_( isinstance( s.selection(), Gaffer.Set ) )
+		self.assertIsInstance( s.selection(), Gaffer.Set )
 
 		n = Gaffer.Node()
 
@@ -86,11 +87,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s.selection().add( n )
 
-		self.failUnless( n in s.selection() )
+		self.assertIn( n, s.selection() )
 
 		s.removeChild( n )
 
-		self.failIf( n in s.selection() )
+		self.assertNotIn( n, s.selection() )
 
 	def testSerialisation( self ) :
 
@@ -109,7 +110,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s2.execute( se )
 
-		self.assert_( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
+		self.assertTrue( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
 
 	def testDynamicPlugSerialisation( self ) :
 
@@ -129,11 +130,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s1.serialise() )
 
-		self.assert_( s2["n1"]["dynamicPlug"].getInput().isSame( s2["n2"]["sum"] ) )
+		self.assertTrue( s2["n1"]["dynamicPlug"].getInput().isSame( s2["n2"]["sum"] ) )
 		self.assertEqual( s2["n1"]["dynamicPlug2"].getValue(), 100 )
 		self.assertEqual( s2["n1"]["dynamicStringPlug"].getValue(), "hiThere" )
-		self.failUnless( isinstance( s2["n1"]["dynamicOutPlug"], Gaffer.IntPlug ) )
-		self.failUnless( isinstance( s2["n1"]["dynamicColorOutPlug"], Gaffer.Color3fPlug ) )
+		self.assertIsInstance( s2["n1"]["dynamicOutPlug"], Gaffer.IntPlug )
+		self.assertIsInstance( s2["n1"]["dynamicColorOutPlug"], Gaffer.Color3fPlug )
 
 	def testLifetime( self ) :
 
@@ -165,7 +166,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
-		self.assert_( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
+		self.assertTrue( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
 
 	def testLoadClearsFirst( self ) :
 
@@ -176,7 +177,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.save()
 
 		s.load()
-		self.failIf( "a2" in s )
+		self.assertNotIn( "a2", s )
 
 	def testSaveFailureHandling( self ) :
 
@@ -210,8 +211,8 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s2.paste()
 
-		self.assert_( s1["n1"].isInstanceOf( GafferTest.AddNode.staticTypeId() ) )
-		self.assert_( s2["n1"].isInstanceOf( GafferTest.AddNode.staticTypeId() ) )
+		self.assertTrue( s1["n1"].isInstanceOf( GafferTest.AddNode.staticTypeId() ) )
+		self.assertTrue( s2["n1"].isInstanceOf( GafferTest.AddNode.staticTypeId() ) )
 
 	def testSerialisationWithKeywords( self ) :
 
@@ -254,11 +255,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		c2 = Gaffer.Node()
 
 		n.addChild( c1 )
-		self.failUnless( c1.parent() is n )
-		self.failUnless( c1.scriptNode() is n )
+		self.assertTrue( c1.parent() is n )
+		self.assertTrue( c1.scriptNode() is n )
 
 		self.assertRaises( RuntimeError, n.addChild, c2 )
-		self.failUnless( c2.parent() is None )
+		self.assertIsNone( c2.parent() )
 
 	def testExecutionExceptions( self ) :
 
@@ -273,7 +274,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		n = Gaffer.ScriptNode()
 
 		n.execute( "a = 10" )
-		self.assertRaisesRegexp( Exception, "NameError: name 'a' is not defined", n.execute, "a * 10" )
+		six.assertRaisesRegex( self, Exception, "NameError: name 'a' is not defined", n.execute, "a * 10" )
 
 	def testClassScope( self ) :
 
@@ -306,11 +307,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["n2"] = n2
 
 		s.selection().add( n1 )
-		self.failUnless( n1 in s.selection() )
+		self.assertIn( n1, s.selection() )
 
 		del s["n1"]
 
-		self.failUnless( n1 not in s.selection() )
+		self.assertNotIn( n1, s.selection() )
 
 	def testContext( self ) :
 
@@ -320,14 +321,14 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		c.setFrame( 10.0 )
 
 		self.assertEqual( s.context().getFrame(), 10.0 )
-		self.failUnless( s.context().isSame( c ) )
+		self.assertTrue( s.context().isSame( c ) )
 
 	def testFrameRange( self ) :
 
 		s = Gaffer.ScriptNode()
 
-		self.failUnless( isinstance( s["frameRange"]["start"], Gaffer.IntPlug ) )
-		self.failUnless( isinstance( s["frameRange"]["end"], Gaffer.IntPlug ) )
+		self.assertIsInstance( s["frameRange"]["start"], Gaffer.IntPlug )
+		self.assertIsInstance( s["frameRange"]["end"], Gaffer.IntPlug )
 
 		self.assertEqual( s["frameRange"]["start"].getValue(), 1 )
 		self.assertEqual( s["frameRange"]["end"].getValue(), 100 )
@@ -366,12 +367,12 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testApplicationRoot( self ) :
 
 		s = Gaffer.ScriptNode()
-		self.failUnless( s.applicationRoot() is None )
+		self.assertIsNone( s.applicationRoot() )
 
 		a = Gaffer.ApplicationRoot()
 		a["scripts"]["one"] = s
 
-		self.failUnless( s.applicationRoot().isSame( a ) )
+		self.assertTrue( s.applicationRoot().isSame( a ) )
 
 	def testLifeTimeAfterExecution( self ) :
 
@@ -420,7 +421,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.deleteNodes()
 
-		self.failUnless( "fileName" in s )
+		self.assertIn( "fileName", s )
 
 	def testDeleteNodesWithFilter( self ) :
 
@@ -432,9 +433,9 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n1"] ] ) )
 		self.assertEqual( len( s.children( Gaffer.Node ) ), 2 )
-		self.failUnless( "n" in s )
-		self.failUnless( "n1" not in s )
-		self.failUnless( "n2" in s )
+		self.assertIn( "n", s )
+		self.assertNotIn( "n1", s )
+		self.assertIn( "n2", s )
 
 	def testDeleteNodesMaintainsConnections( self ) :
 
@@ -455,12 +456,12 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		n3["op2"].setInput( n1["sum"] )
 		n4["op1"].setInput( n2["product"] )
 		n4["op2"].setInput( n3["sum"] )
-		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n4["op1"].getInput().isSame( n2["product"] ) )
-		self.assert_( n4["op2"].getInput().isSame( n3["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n4["op1"].getInput().isSame( n2["product"] ) )
+		self.assertTrue( n4["op2"].getInput().isSame( n3["sum"] ) )
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ n2, n3 ] ) )
 
@@ -470,7 +471,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( n3["op2"].getInput(), None )
 		# None because MultiplyOp does not define enabledPlug()
 		self.assertEqual( n4["op1"].getInput(), None )
-		self.assert_( n4["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n4["op2"].getInput().isSame( n1["sum"] ) )
 
 		n2["op1"].setInput( n1["sum"] )
 		n2["op2"].setInput( n1["sum"] )
@@ -511,10 +512,10 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		n2["op2"].setInput( n1["sum"] )
 		n3["op1"].setInput( n2["sum"] )
 		n3["op2"].setInput( n2["sum"] )
-		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n2["sum"] ) )
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
 
@@ -539,11 +540,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		n3["op1"].setInput( n2["sum"] )
 		n3["op2"].setInput( n2["sum"] )
 
-		self.assert_( n2["op1"].getInput().isSame( n1["sum"] ) )
-		self.assert_( n2["op2"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op1"].getInput().isSame( n1["sum"] ) )
+		self.assertTrue( n2["op2"].getInput().isSame( n1["sum"] ) )
 
-		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
-		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n3["op1"].getInput().isSame( n2["sum"] ) )
+		self.assertTrue( n3["op2"].getInput().isSame( n2["sum"] ) )
 
 		s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
 
@@ -1117,7 +1118,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testExecuteExceptionsIncludeLineNumber( self ) :
 
 		s = Gaffer.ScriptNode()
-		self.assertRaisesRegexp( RuntimeError, "Line 2 .* name 'iDontExist' is not defined", s.execute, "a = 10\na=iDontExist" )
+		six.assertRaisesRegex( self, RuntimeError, "Line 2 .* name 'iDontExist' is not defined", s.execute, "a = 10\na=iDontExist" )
 
 	def testFileVersioning( self ) :
 
@@ -1239,7 +1240,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testLineNumberForExecutionSyntaxError( self ) :
 
 		s = Gaffer.ScriptNode()
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			IECore.Exception,
 			"^Line 2",
 			s.execute,
@@ -1264,7 +1265,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		for method in ( s.load, functools.partial( s.executeFile, fileName ) ) :
 
-			self.assertRaisesRegexp(
+			six.assertRaisesRegex( self,
 				RuntimeError,
 				"Line 2 of " + fileName + " : NameError: name 'iDontExist' is not defined",
 				method
@@ -1390,7 +1391,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 			)
 		) )
 
-		self.assertRaisesRegexp( RuntimeError, "iAmAnError", script.paste )
+		six.assertRaisesRegex( self, RuntimeError, "iAmAnError", script.paste )
 		self.assertEqual( len( script.children( Gaffer.Node ) ), 0 )
 
 		with IECore.CapturingMessageHandler() as mh :

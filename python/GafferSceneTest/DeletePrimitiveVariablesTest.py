@@ -72,7 +72,7 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		d["in"].setInput( c["out"] )
 
 		self.assertSceneValid( d["out"] )
-		self.failUnless( isinstance( d["out"].object( "/camera" ), IECoreScene.Camera ) )
+		self.assertIsInstance( d["out"].object( "/camera" ), IECoreScene.Camera )
 
 	def testAffects( self ) :
 

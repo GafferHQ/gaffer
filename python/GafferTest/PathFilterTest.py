@@ -107,7 +107,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 		def f( pf ) :
 
-			self.failUnless( pf.isSame( pathFilter ) )
+			self.assertTrue( pf.isSame( pathFilter ) )
 			enabledStates.append( pf.getEnabled() )
 
 		c = pathFilter.changedSignal().connect( f )
@@ -128,7 +128,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 		ud = IECore.CompoundData( { "a" : "a" } )
 		pathFilter = Gaffer.FileNamePathFilter( [ "*.gfr" ], userData = ud )
 		self.assertEqual( pathFilter.userData(), ud )
-		self.failIf( pathFilter.userData() is ud )
+		self.assertFalse( pathFilter.userData() is ud )
 
 if __name__ == "__main__":
 	unittest.main()

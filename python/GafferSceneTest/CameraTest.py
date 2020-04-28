@@ -69,7 +69,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["out"].childNames( "/camera" ), IECore.InternedStringVectorData() )
 
 		o = p["out"].object( "/camera" )
-		self.failUnless( isinstance( o, IECoreScene.Camera ) )
+		self.assertIsInstance( o, IECoreScene.Camera )
 		self.assertEqual( o.getProjection(), "perspective" )
 
 		self.assertEqual( o.getAperture(), imath.V2f( 1.0 ) )
@@ -144,8 +144,8 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		p["projection"].setValue( "perspective" )
 		p["fieldOfView"].setValue( 45 )
 
-		self.failIf( p["out"].bound( "/" ).isEmpty() )
-		self.failIf( p["out"].bound( "/camera" ).isEmpty() )
+		self.assertFalse( p["out"].bound( "/" ).isEmpty() )
+		self.assertFalse( p["out"].bound( "/camera" ).isEmpty() )
 
 	def testClippingPlanes( self ) :
 
@@ -194,27 +194,27 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["transform"]["translate"]["x"].setValue( 10 )
-		self.failUnless( c["out"]["transform"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["transform"], [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["name"].setValue( "renderCam" )
-		self.failUnless( c["out"]["childNames"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["set"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["childNames"], [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["set"], [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["projection"].setValue( "orthographic" )
-		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["object"], [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["bound"], [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["fieldOfView"].setValue( 100 )
-		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["object"], [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["bound"], [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["clippingPlanes"]["x"].setValue( 100 )
-		self.failUnless( c["out"]["object"] in [ p[0] for p in dirtied ] )
-		self.failUnless( c["out"]["bound"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["object"], [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"]["bound"], [ p[0] for p in dirtied ] )
 
 	def testFrustum( self ) :
 

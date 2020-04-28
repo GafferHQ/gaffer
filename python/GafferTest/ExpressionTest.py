@@ -40,6 +40,7 @@ import inspect
 import unittest
 import imath
 import re
+import six
 
 import IECore
 
@@ -140,8 +141,8 @@ class ExpressionTest( GafferTest.TestCase ) :
 	def testLanguages( self ) :
 
 		l = Gaffer.Expression.languages()
-		self.failUnless( isinstance( l, tuple ) )
-		self.failUnless( "python" in l )
+		self.assertIsInstance( l, tuple )
+		self.assertIn( "python", l )
 
 	def testCreateExpressionWithWatchers( self ) :
 
@@ -210,11 +211,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent[\"m2\"][\"op1\"] = parent[\"m1\"][\"product\"] * 2" )
 
-		self.failUnless( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
+		self.assertTrue( s["m2"]["op1"].getInput().node().isSame( s["e"] ) )
 		self.assertEqual( s["m2"]["product"].getValue(), 400 )
 
 		s["e"].setExpression( "" )
-		self.failUnless( s["m2"]["op1"].getInput() is None )
+		self.assertIsNone( s["m2"]["op1"].getInput() )
 		self.assertEqual( s["m2"]["product"].getValue(), 0 )
 
 	def testContextGetFrameMethod( self ) :
@@ -282,11 +283,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 			"parent['n']['op2'] = context.get( 'iDontExist', 101 )",
 			"python"
 		)
-		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
+		self.assertIn( s["n"]["sum"], [ p[0] for p in dirtied ] )
 
 		dirtied = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
 		s["e"].setExpression( "", "python" )
-		self.failUnless( s["n"]["sum"] in [ p[0] for p in dirtied ] )
+		self.assertIn( s["n"]["sum"], [ p[0] for p in dirtied ] )
 
 	def testSerialisationCreationOrder( self ) :
 
@@ -332,8 +333,8 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["n"]["user"]["f"].getValue(), 2 )
 
-		self.failUnless( s2["e"].getChild("out1") is None )
-		self.failUnless( s2["e"].getChild("in1") is None )
+		self.assertIsNone( s2["e"].getChild("out1") )
+		self.assertIsNone( s2["e"].getChild("in1") )
 
 	def testMultipleOutputs( self ) :
 
@@ -899,7 +900,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["e"] = Gaffer.Expression()
-		self.assertRaisesRegexp( RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent["notANode"]["notAPlug"] = 2' )
+		six.assertRaisesRegex( self, RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent["notANode"]["notAPlug"] = 2' )
 
 	def testRemoveOneOutputOfTwo( self ) :
 
@@ -1148,7 +1149,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		with Gaffer.UndoScope( s ) :
 
-			self.assertRaisesRegexp(
+			six.assertRaisesRegex( self,
 				Exception,
 				"SyntaxError",
 				s["e"].setExpression,
@@ -1172,7 +1173,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			RuntimeError,
 			"Cannot both read from and write to plug \"n.user.p\"",
 			s["e"].setExpression,
@@ -1187,7 +1188,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s["e"] = Gaffer.Expression()
 		for language in ( "", "latin" ) :
-			self.assertRaisesRegexp( RuntimeError, "Failed to create engine", s["e"].setExpression, "parent.n.user.p = 10", language )
+			six.assertRaisesRegex( self, RuntimeError, "Failed to create engine", s["e"].setExpression, "parent.n.user.p = 10", language )
 
 	def testContextIsReadOnly( self ) :
 
@@ -1206,7 +1207,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 			( "context.setTime( 10 )", "AttributeError" ),
 		] :
 			s["e"].setExpression( mutationAttempt + """\nparent["n"]["user"]["p"] = 100""" )
-			self.assertRaisesRegexp( RuntimeError, expectedError, s["n"]["user"]["p"].getValue )
+			six.assertRaisesRegex( self, RuntimeError, expectedError, s["n"]["user"]["p"].getValue )
 
 	def testDeleteCompoundDataPlug( self ) :
 

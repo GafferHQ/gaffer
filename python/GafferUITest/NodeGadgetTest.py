@@ -52,9 +52,9 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.NodeGadget.create( n )
 
 		self.assertEqual( n, g.node() )
-		self.assert_( g.nodule( n["op1"] ) )
-		self.assert_( g.nodule( n["op2"] ) )
-		self.assert_( g.nodule( n["sum"] ) )
+		self.assertIsNotNone( g.nodule( n["op1"] ) )
+		self.assertIsNotNone( g.nodule( n["op2"] ) )
+		self.assertIsNotNone( g.nodule( n["sum"] ) )
 
 	def testDynamicPlugs( self ) :
 
@@ -62,24 +62,24 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.NodeGadget.create( n )
 
 		self.assertEqual( n, g.node() )
-		self.assert_( g.nodule( n["op1"] ) )
-		self.assert_( g.nodule( n["op2"] ) )
-		self.assert_( g.nodule( n["sum"] ) )
+		self.assertIsNotNone( g.nodule( n["op1"] ) )
+		self.assertIsNotNone( g.nodule( n["op2"] ) )
+		self.assertIsNotNone( g.nodule( n["sum"] ) )
 
 		d = Gaffer.FloatPlug()
 		n["d"] = d
 
-		self.assert_( g.nodule( n["op1"] ) )
-		self.assert_( g.nodule( n["op2"] ) )
-		self.assert_( g.nodule( n["sum"] ) )
-		self.assert_( g.nodule( d ) )
+		self.assertIsNotNone( g.nodule( n["op1"] ) )
+		self.assertIsNotNone( g.nodule( n["op2"] ) )
+		self.assertIsNotNone( g.nodule( n["sum"] ) )
+		self.assertIsNotNone( g.nodule( d ) )
 
 		n.removeChild( d )
 
-		self.assert_( g.nodule( n["op1"] ) )
-		self.assert_( g.nodule( n["op2"] ) )
-		self.assert_( g.nodule( n["sum"] ) )
-		self.assert_( not g.nodule( d ) )
+		self.assertIsNotNone( g.nodule( n["op1"] ) )
+		self.assertIsNotNone( g.nodule( n["op2"] ) )
+		self.assertIsNotNone( g.nodule( n["sum"] ) )
+		self.assertIsNone( g.nodule( d ) )
 
 	def testFactoryRegistration( self ) :
 
@@ -102,7 +102,7 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 
 		n = MyNode()
 		g = GafferUI.NodeGadget.create( n )
-		self.failUnless( g.node() is n )
+		self.assertTrue( g.node() is n )
 		self.assertEqual( g.getContents().getText(), "lovinglyHandCraftedInCreator" )
 
 	def testFactoryMetadata( self ) :

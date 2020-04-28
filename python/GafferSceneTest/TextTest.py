@@ -69,7 +69,7 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		m2 = t["out"].object( "/text" )
 		self.assertTrue( isinstance( m2, IECoreScene.MeshPrimitive ) )
 
-		self.failUnless( m2.bound().size().x > m1.bound().size().x )
+		self.assertGreater( m2.bound().size().x, m1.bound().size().x )
 
 	def testAffects( self ) :
 

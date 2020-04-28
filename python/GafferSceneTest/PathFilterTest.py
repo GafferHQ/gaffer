@@ -89,9 +89,9 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		f = GafferScene.PathFilter()
 		p = Gaffer.StringVectorDataPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.StringVectorData() )
-		self.failUnless( f["paths"].acceptsInput( p ) )
+		self.assertTrue( f["paths"].acceptsInput( p ) )
 
-		self.failUnless( f["paths"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
+		self.assertTrue( f["paths"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
 
 	def testBox( self ) :
 

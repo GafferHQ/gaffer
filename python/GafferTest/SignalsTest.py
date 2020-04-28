@@ -78,9 +78,9 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		s = Gaffer.Signal1()
 		c = s.connect( f )
-		self.assert_( c.connected() )
+		self.assertTrue( c.connected() )
 		del s
-		self.assert_( not c.connected() )
+		self.assertFalse( c.connected() )
 
 	def test2( self ) :
 
@@ -122,7 +122,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		# connect a method of a2 to the signal on a1
 		a2.c = a1.signal.connect( Gaffer.WeakMethod( a2.f ) )
-		self.assert_( a2.c.connected() )
+		self.assertTrue( a2.c.connected() )
 
 		self.assertEqual( a1.signal( 2 ), 4 )
 
@@ -134,7 +134,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		# as a1 is now dead, a2's connection to a1.signal
 		# should have died.
-		self.assert_( not a2.c.connected() )
+		self.assertFalse( a2.c.connected() )
 
 	def testDeletionOfConnectionDisconnects( self ) :
 
@@ -232,8 +232,8 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		del t
 
-		self.assert_( w() is None )
-		self.assert_( "Exception" in sio.getvalue() )
+		self.assertIsNone( w(), None )
+		self.assertIn( "Exception", sio.getvalue() )
 
 	def test0Arity( self ) :
 

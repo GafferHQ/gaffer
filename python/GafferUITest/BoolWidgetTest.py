@@ -47,11 +47,11 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.BoolWidget()
 		r = weakref.ref( w )
 
-		self.failUnless( r() is w )
+		self.assertTrue( r() is w )
 
 		del w
 
-		self.failUnless( r() is None )
+		self.assertTrue( r() is None )
 
 	def testStateChangedSignal( self ) :
 
@@ -86,7 +86,7 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 		w.setText( "b" )
 		self.assertEqual( w.getText(), "b" )
 
-		self.failUnless( isinstance( w.getText(), basestring ) )
+		self.assertIsInstance( w.getText(), str )
 
 	def testDisplayMode( self ) :
 

@@ -127,9 +127,9 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 
 		d = GafferScene.DeleteSets()
 
-		self.failUnless( d["out"]["setNames"] in d.affects( d["in"]["setNames"] ) )
-		self.failUnless( d["out"]["setNames"] in d.affects( d["names"] ) )
-		self.failUnless( d["out"]["setNames"] in d.affects( d["invertNames"] ) )
+		self.assertIn( d["out"]["setNames"], d.affects( d["in"]["setNames"] ) )
+		self.assertIn( d["out"]["setNames"], d.affects( d["names"] ) )
+		self.assertIn( d["out"]["setNames"], d.affects( d["invertNames"] ) )
 
 	def testWithSetFilter( self ) :
 

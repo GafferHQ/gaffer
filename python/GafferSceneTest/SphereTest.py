@@ -162,7 +162,7 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		for sss in ss :
 			if sss[0].isSame( s["out"] ) :
 				found = True
-		self.failUnless( found )
+		self.assertTrue( found )
 
 	def testTransform( self ) :
 

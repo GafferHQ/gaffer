@@ -77,7 +77,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		)
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%d.appleseed" % i ) )
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%d.appleseed" % i ) )
 
 	def testWaitForImage( self ) :
 
@@ -112,7 +112,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		s["render"]["task"].execute()
 
-		self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
 	def testExecuteWithStringSubstitutions( self ) :
 
@@ -132,7 +132,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		)
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.appleseed" % i ) )
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.appleseed" % i ) )
 
 	def testImageOutput( self ) :
 
@@ -172,7 +172,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 				s["render"]["task"].execute()
 
 		for i in range( 1, 4 ) :
-			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.exr" % i ) )
+			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.exr" % i ) )
 
 	def testTypeNamePrefixes( self ) :
 

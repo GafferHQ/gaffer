@@ -54,8 +54,8 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 		)
 		p.wait()
 
-		self.failUnless( "RuntimeError" in "".join( p.stderr.readlines() ) )
-		self.failUnless( p.returncode )
+		self.assertIn( "RuntimeError", "".join( p.stderr.readlines() ) )
+		self.assertTrue( p.returncode )
 
 	def testFlagArguments( self ) :
 
