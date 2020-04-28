@@ -51,7 +51,7 @@ class FrameTest( GafferUITest.TestCase ) :
 
 		# because we're not putting gadgets and widgets in different namespaces,
 		# we have clashes where we want to name them the same. we need to resolve this.
-		self.failUnless( issubclass( GafferUI.Frame, GafferUI.Gadge ) )
+		self.assertTrue( issubclass( GafferUI.Frame, GafferUI.Gadget ) )
 
 	def testBorderStyle( self ) :
 
@@ -67,10 +67,10 @@ class FrameTest( GafferUITest.TestCase ) :
 		b = GafferUI.Button()
 
 		f.setChild( b )
-		self.failUnless( b.parent() is f )
+		self.assertTrue( b.parent() is f )
 
 		f.removeChild( b )
-		self.failUnless( b.parent() is None )
+		self.assertIsNone( b.parent() )
 
 	def testTransferChild( self ) :
 
@@ -82,8 +82,8 @@ class FrameTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( l ), 1 )
 
 		f.setChild( b )
-		self.failUnless( b.parent() is f )
-		self.failUnless( f.getChild() is b )
+		self.assertTrue( b.parent() is f )
+		self.assertTrue( f.getChild() is b )
 		self.assertEqual( len( l ), 0 )
 
 if __name__ == "__main__":

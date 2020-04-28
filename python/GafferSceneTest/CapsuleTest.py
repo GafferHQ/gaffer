@@ -36,6 +36,7 @@
 
 import inspect
 import unittest
+import six
 
 import IECore
 
@@ -74,15 +75,15 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 
 		sphere["radius"].setValue( 2 )
 
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsule.scene )
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsule.root )
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsule.hash )
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsule.bound )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.scene )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.root )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.hash )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.bound )
 
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsuleCopy.scene )
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsuleCopy.root )
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsuleCopy.hash )
-		self.assertRaisesRegexp( RuntimeError, "Capsule has expired", capsuleCopy.bound )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.scene )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.root )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.hash )
+		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.bound )
 
 if __name__ == "__main__":
 	unittest.main()

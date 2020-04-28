@@ -57,7 +57,7 @@ class BoxTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assert_( s2["b"]["n2"]["op1"].getInput().isSame( s2["b"]["n1"]["sum"] ) )
+		self.assertTrue( s2["b"]["n2"]["op1"].getInput().isSame( s2["b"]["n1"]["sum"] ) )
 
 	def testCreate( self ) :
 

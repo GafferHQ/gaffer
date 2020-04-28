@@ -273,7 +273,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s["a"] = GafferScene.CustomAttributes()
 
 		ss = s.serialise()
-		self.failIf( "out" in ss )
+		self.assertFalse( "out" in ss )
 
 	def testAffects( self ) :
 

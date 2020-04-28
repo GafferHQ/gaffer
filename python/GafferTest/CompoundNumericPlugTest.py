@@ -73,22 +73,22 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 	def testMinMaxValues( self ) :
 
 		p = Gaffer.V3fPlug()
-		self.failIf( p.hasMinValue() )
-		self.failIf( p.hasMaxValue() )
+		self.assertFalse( p.hasMinValue() )
+		self.assertFalse( p.hasMaxValue() )
 		for a in ( "x", "y", "z" ) :
-			self.failIf( p[a].hasMinValue() )
-			self.failIf( p[a].hasMaxValue() )
+			self.assertFalse( p[a].hasMinValue() )
+			self.assertFalse( p[a].hasMaxValue() )
 
 		p = Gaffer.V3fPlug(
 			minValue = imath.V3f( -1, -2, -3 ),
 			maxValue = imath.V3f( 1, 2, 3 )
 		)
 
-		self.failUnless( p.hasMinValue() )
-		self.failUnless( p.hasMaxValue() )
+		self.assertTrue( p.hasMinValue() )
+		self.assertTrue( p.hasMaxValue() )
 		for a in ( "x", "y", "z" ) :
-			self.failUnless( p[a].hasMinValue() )
-			self.failUnless( p[a].hasMaxValue() )
+			self.assertTrue( p[a].hasMinValue() )
+			self.assertTrue( p[a].hasMaxValue() )
 
 		minValue = p.minValue()
 		maxValue = p.maxValue()
@@ -136,10 +136,10 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
-		self.failUnless( s["n1"]["p"]["x"].getInput().isSame( s["n2"]["p"]["x"] ) )
-		self.failUnless( s["n1"]["p"]["y"].getInput().isSame( s["n2"]["p"]["y"] ) )
-		self.failUnless( s["n1"]["p"]["z"].getInput().isSame( s["n2"]["p"]["z"] ) )
+		self.assertTrue( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.assertTrue( s["n1"]["p"]["x"].getInput().isSame( s["n2"]["p"]["x"] ) )
+		self.assertTrue( s["n1"]["p"]["y"].getInput().isSame( s["n2"]["p"]["y"] ) )
+		self.assertTrue( s["n1"]["p"]["z"].getInput().isSame( s["n2"]["p"]["z"] ) )
 
 	def testSerialisationWithPartialConnections( self ) :
 
@@ -157,7 +157,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s.execute( ss )
 
 		self.assertEqual( s["n"]["p"]["x"].getValue(), 10 )
-		self.failUnless( s["n"]["p"]["y"].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["n"]["p"]["y"].getInput().isSame( s["a"]["sum"] ) )
 		self.assertEqual( s["n"]["p"]["z"].getValue(), 0 )
 
 	def testDynamicSerialisation( self ) :
@@ -191,16 +191,16 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
-		self.failUnless( s["n1"]["p"]["x"].getInput().isSame( s["n2"]["p"]["x"] ) )
-		self.failUnless( s["n1"]["p"]["y"].getInput().isSame( s["n2"]["p"]["y"] ) )
-		self.failUnless( s["n1"]["p"]["z"].getInput().isSame( s["n2"]["p"]["z"] ) )
+		self.assertTrue( s["n1"]["p"].getInput().isSame( s["n2"]["p"] ) )
+		self.assertTrue( s["n1"]["p"]["x"].getInput().isSame( s["n2"]["p"]["x"] ) )
+		self.assertTrue( s["n1"]["p"]["y"].getInput().isSame( s["n2"]["p"]["y"] ) )
+		self.assertTrue( s["n1"]["p"]["z"].getInput().isSame( s["n2"]["p"]["z"] ) )
 
 	def testRunTimeTyped( self ) :
 
 		p = Gaffer.Color3fPlug()
-		self.failUnless( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
-		self.failUnless( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
+		self.assertTrue( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
+		self.assertTrue( p.isInstanceOf( Gaffer.Plug.staticTypeId() ) )
 
 		t = p.typeId()
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( t ), Gaffer.ValuePlug.staticTypeId() )
@@ -221,14 +221,14 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		p4 = Gaffer.Color4fPlug( direction = Gaffer.Plug.Direction.Out )
 		p3 = Gaffer.Color3fPlug()
 
-		self.failUnless( p3.acceptsInput( p4 ) )
+		self.assertTrue( p3.acceptsInput( p4 ) )
 
 		p3.setInput( p4 )
 
-		self.failUnless( p3.getInput().isSame( p4 ) )
-		self.failUnless( p3[0].getInput().isSame( p4[0] ) )
-		self.failUnless( p3[1].getInput().isSame( p4[1] ) )
-		self.failUnless( p3[2].getInput().isSame( p4[2] ) )
+		self.assertTrue( p3.getInput().isSame( p4 ) )
+		self.assertTrue( p3[0].getInput().isSame( p4[0] ) )
+		self.assertTrue( p3[1].getInput().isSame( p4[1] ) )
+		self.assertTrue( p3[2].getInput().isSame( p4[2] ) )
 		self.assertEqual( p4[3].outputs(), () )
 
 	def testColor4fDoesntAcceptColor3fInput( self ) :
@@ -236,7 +236,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		p4 = Gaffer.Color4fPlug()
 		p3 = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out )
 
-		self.failIf( p4.acceptsInput( p3 ) )
+		self.assertFalse( p4.acceptsInput( p3 ) )
 
 		self.assertRaises( RuntimeError, p4.setInput, p3 )
 

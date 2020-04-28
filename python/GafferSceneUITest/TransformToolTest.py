@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import six
 
 import imath
 
@@ -87,9 +88,9 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection.upstreamPath(), "/plane" )
 		self.assertEqual( selection.upstreamContext()["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
 		self.assertFalse( selection.editable() )
-		with self.assertRaisesRegexp( RuntimeError, "Selection is not editable" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
 			selection.editTarget()
-		with self.assertRaisesRegexp( RuntimeError, "Selection is not editable" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
 			selection.transformSpace()
 
 	def testSelectionEditScopes( self ) :

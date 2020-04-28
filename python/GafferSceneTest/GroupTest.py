@@ -322,8 +322,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( s["g"]["in"][0].getInput().isSame( s["c"]["out"] ) )
-		self.failUnless( s["g"]["in"][1].getInput().isSame( s["c"]["out"] ) )
+		self.assertTrue( s["g"]["in"][0].getInput().isSame( s["c"]["out"] ) )
+		self.assertTrue( s["g"]["in"][1].getInput().isSame( s["c"]["out"] ) )
 		self.assertEqual( len( s["g"]["in"] ), 3 )
 		self.assertEqual( s["g"]["in"][2].getInput(), None )
 

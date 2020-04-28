@@ -69,7 +69,7 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 		for cc in c :
 			if cc[0].isSame( n["out"] ) :
 				found = True
-		self.failUnless( found )
+		self.assertTrue( found )
 
 		del c[:]
 		n["offset"].setValue( 2 )
@@ -77,7 +77,7 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 		for cc in c :
 			if cc[0].isSame( n["out"] ) :
 				found = True
-		self.failUnless( found )
+		self.assertTrue( found )
 
 	def testNoExtraInputs( self ) :
 

@@ -38,6 +38,7 @@ import os
 import threading
 import stat
 import shutil
+import six
 import imath
 
 import IECore
@@ -608,7 +609,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertIn( "Permission denied", mh.messages[0].message )
 
-		with self.assertRaisesRegexp( RuntimeError, "Could not open file" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Could not open file" ) :
 			GafferImage.ImageAlgo.image( s["c"]["out"] )
 
 	def testDeleteKeepsOrder( self ) :

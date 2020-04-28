@@ -48,18 +48,18 @@ class LazyModuleTest( GafferTest.TestCase ) :
 		# lazy loading something already loaded should just return the module
 		# directly.
 		ut = Gaffer.lazyImport( "unittest" )
-		self.failUnless( ut is unittest )
-		self.failUnless( type( ut ) is types.ModuleType )
+		self.assertTrue( ut is unittest )
+		self.assertTrue( type( ut ) is types.ModuleType )
 
 		# lazy loading something not yet loaded should give us a nice
 		# lazy module. hopefully nobody is loading the dummy_threading
 		# module for any other purpose.
 
-		self.failIf( "dummy_threading" in sys.modules )
+		self.assertNotIn( "dummy_threading", sys.modules )
 
 		lazyDT = Gaffer.lazyImport( "dummy_threading" )
-		self.failUnless( "dummy_threading" in sys.modules )
-		self.failUnless( isinstance( lazyDT, Gaffer.LazyModule ) )
+		self.assertIn( "dummy_threading", sys.modules )
+		self.assertIsInstance( lazyDT, Gaffer.LazyModule )
 
 		# check we can still get stuff out
 

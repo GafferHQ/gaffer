@@ -45,17 +45,17 @@ class NodeBindingTest( GafferTest.TestCase ) :
 	def testConstruction( self ) :
 
 		m = GafferTest.MultiplyNode()
-		self.failUnless( isinstance( m, GafferTest.MultiplyNode ) )
+		self.assertIsInstance( m, GafferTest.MultiplyNode )
 
 		m = GafferTest.MultiplyNode( "a" )
-		self.failUnless( isinstance( m, GafferTest.MultiplyNode ) )
+		self.assertIsInstance( m, GafferTest.MultiplyNode )
 		self.assertEqual( m.getName(), "a" )
 
 		m = GafferTest.MultiplyNode( "a" )
 		m["op1"].setValue( 1 )
 		m["op2"].setValue( 2 )
 
-		self.failUnless( isinstance( m, GafferTest.MultiplyNode ) )
+		self.assertIsInstance( m, GafferTest.MultiplyNode )
 		self.assertEqual( m.getName(), "a" )
 		self.assertEqual( m["op1"].getValue(), 1 )
 		self.assertEqual( m["op2"].getValue(), 2 )
@@ -64,7 +64,7 @@ class NodeBindingTest( GafferTest.TestCase ) :
 		m["a"] = Gaffer.IntPlug()
 
 		self.assertEqual( m.getName(), "a" )
-		self.failUnless( isinstance( m["a"], Gaffer.IntPlug ) )
+		self.assertIsInstance( m["a"], Gaffer.IntPlug )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -74,16 +74,16 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		for k in writer.parameters().keys() :
 			if k != "fileName" and k != "object" :
-				self.failUnless( k in node["parameters"] )
+				self.assertIn( k, node["parameters"] )
 
-		self.failIf( "fileName" in node["parameters"] )
+		self.assertNotIn( "fileName", node["parameters"] )
 
 		# check that saving it works
 
-		self.failIf( os.path.exists( self.__exrFileName ) )
+		self.assertFalse( os.path.exists( self.__exrFileName ) )
 		with Gaffer.Context() :
 			node["task"].execute()
-		self.failUnless( os.path.exists( self.__exrFileName ) )
+		self.assertTrue( os.path.exists( self.__exrFileName ) )
 
 	def testChangingFileType( self ) :
 
@@ -98,10 +98,10 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		with Gaffer.Context() :
 			node["task"].execute()
-		self.failUnless( os.path.exists( self.__tifFileName ) )
+		self.assertTrue( os.path.exists( self.__tifFileName ) )
 
 		image = IECoreImage.ImageReader( self.__tifFileName ).read()
-		self.failUnless( "tiff:Compression" in image.blindData() )
+		self.assertIn( "tiff:Compression", image.blindData() )
 
 	def testExtraneousPlugsAfterSerialisation( self ) :
 
@@ -109,16 +109,16 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		s["n"] = GafferCortex.ObjectWriter()
 		s["n"]["fileName"].setValue( self.__exrFileName )
 
-		self.failUnless( "parameters" in s["n"] )
-		self.failIf( "parameters1" in s["n"] )
+		self.assertIn( "parameters", s["n"] )
+		self.assertNotIn( "parameters1", s["n"] )
 
 		ss = s.serialise()
 
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.failUnless( "parameters" in s["n"] )
-		self.failIf( "parameters1" in s["n"] )
+		self.assertIn( "parameters", s["n"] )
+		self.assertNotIn( "parameters1", s["n"] )
 
 	def testStringSubstitutions( self ) :
 
@@ -137,7 +137,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 				node["task"].execute()
 
 		for f in self.__exrSequence.fileNames() :
-			self.failUnless( os.path.exists( f ) )
+			self.assertTrue( os.path.exists( f ) )
 
 	def testHash( self ) :
 

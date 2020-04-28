@@ -72,18 +72,18 @@ class WindowTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getChild(), None )
 
 		w.setChild( TestWidget() )
-		self.assert_( not w.getChild() is None )
-		self.assert_( isinstance( w.getChild(), TestWidget ) )
+		self.assertIsNotNone( w.getChild() )
+		self.assertIsInstance( w.getChild(), TestWidget )
 
 		t = TestWidget()
 		w.setChild( t )
-		self.assert_( w.getChild() is t )
-		self.assert_( w.getChild()._qtWidget() is t._qtWidget() )
-		self.assert_( t.parent() is w )
+		self.assertTrue( w.getChild() is t )
+		self.assertTrue( w.getChild()._qtWidget() is t._qtWidget() )
+		self.assertTrue( t.parent() is w )
 
 		w.setChild( None )
-		self.assert_( w.getChild() is None )
-		self.assert_( t.parent() is None )
+		self.assertIsNone( w.getChild() )
+		self.assertIsNone( t.parent() )
 
 	def testReparent( self ) :
 
@@ -93,16 +93,16 @@ class WindowTest( GafferUITest.TestCase ) :
 		t = TestWidget()
 
 		w1.setChild( t )
-		self.assert_( t.parent() is w1 )
-		self.assert_( w1.getChild() is t )
-		self.assert_( w2.getChild() is None )
-		self.assert_( GafferUI.Widget._owner( t._qtWidget() ) is t )
+		self.assertTrue( t.parent() is w1 )
+		self.assertTrue( w1.getChild() is t )
+		self.assertIsNone( w2.getChild() )
+		self.assertTrue( GafferUI.Widget._owner( t._qtWidget() ) is t )
 
 		w2.setChild( t )
-		self.assert_( t.parent() is w2 )
-		self.assert_( w1.getChild() is None )
-		self.assert_( w2.getChild() is t )
-		self.assert_( GafferUI.Widget._owner( t._qtWidget() ) is t )
+		self.assertTrue( t.parent() is w2 )
+		self.assertIsNone( w1.getChild() )
+		self.assertTrue( w2.getChild() is t )
+		self.assertTrue( GafferUI.Widget._owner( t._qtWidget() ) is t )
 
 	def testWindowParent( self ) :
 
@@ -111,36 +111,36 @@ class WindowTest( GafferUITest.TestCase ) :
 		childWindow = GafferUI.Window()
 		childWindowWeakRef = weakref.ref( childWindow )
 
-		self.failUnless( parentWindow1.parent() is None )
-		self.failUnless( parentWindow2.parent() is None )
-		self.failUnless( childWindow.parent() is None )
+		self.assertIsNone( parentWindow1.parent() )
+		self.assertIsNone( parentWindow2.parent() )
+		self.assertIsNone( childWindow.parent() )
 
 		parentWindow1.addChildWindow( childWindow )
-		self.failUnless( parentWindow1.parent() is None )
-		self.failUnless( parentWindow2.parent() is None )
-		self.failUnless( childWindow.parent() is parentWindow1 )
+		self.assertIsNone( parentWindow1.parent() )
+		self.assertIsNone( parentWindow2.parent() )
+		self.assertTrue( childWindow.parent() is parentWindow1 )
 
 		parentWindow1.setVisible( True )
 		childWindow.setVisible( True )
 		self.waitForIdle( 1000 )
 
 		parentWindow2.addChildWindow( childWindow )
-		self.failUnless( parentWindow1.parent() is None )
-		self.failUnless( parentWindow2.parent() is None )
-		self.failUnless( childWindow.parent() is parentWindow2 )
+		self.assertIsNone( parentWindow1.parent() )
+		self.assertIsNone( parentWindow2.parent() )
+		self.assertTrue( childWindow.parent() is parentWindow2 )
 
 		parentWindow2.setVisible( True )
 		self.waitForIdle( 1000 )
 
 		parentWindow2.removeChild( childWindow )
-		self.failUnless( parentWindow1.parent() is None )
-		self.failUnless( parentWindow2.parent() is None )
-		self.failUnless( childWindow.parent() is None )
+		self.assertIsNone( parentWindow1.parent() )
+		self.assertIsNone( parentWindow2.parent() )
+		self.assertIsNone( childWindow.parent() )
 
 		self.waitForIdle( 1000 )
 
 		parentWindow1.addChildWindow( childWindow )
-		self.failUnless( childWindow.parent() is parentWindow1 )
+		self.assertTrue( childWindow.parent() is parentWindow1 )
 
 		self.waitForIdle( 1000 )
 
@@ -148,7 +148,7 @@ class WindowTest( GafferUITest.TestCase ) :
 
 		del childWindow
 
-		self.failUnless( childWindowWeakRef() is None )
+		self.assertIsNone( childWindowWeakRef() )
 
 	def testWindowHoldsReferenceToChildWindows( self ) :
 
@@ -160,11 +160,11 @@ class WindowTest( GafferUITest.TestCase ) :
 
 		del childWindow
 
-		self.failUnless( childWindowWeakRef() is not None )
+		self.assertIsNotNone( childWindowWeakRef() )
 
 		del parentWindow
 
-		self.failUnless( childWindowWeakRef() is None )
+		self.assertIsNone( childWindowWeakRef() )
 
 	def testCloseMethod( self ) :
 
@@ -247,9 +247,9 @@ class WindowTest( GafferUITest.TestCase ) :
 			# should accept any number of child windows though
 			d2 = GafferUI.Window()
 
-		self.failUnless( d.parent() is w )
-		self.failUnless( f.parent() is w )
-		self.failUnless( d2.parent() is w )
+		self.assertTrue( d.parent() is w )
+		self.assertTrue( f.parent() is w )
+		self.assertTrue( d2.parent() is w )
 
 	def testSizeMode( self ) :
 
@@ -265,13 +265,13 @@ class WindowTest( GafferUITest.TestCase ) :
 	def testResizeable( self ) :
 
 		w = GafferUI.Window()
-		self.failUnless( w.getResizeable() )
+		self.assertTrue( w.getResizeable() )
 
 		w.setResizeable( False )
-		self.failIf( w.getResizeable() )
+		self.assertFalse( w.getResizeable() )
 
 		w.setResizeable( True )
-		self.failUnless( w.getResizeable() )
+		self.assertTrue( w.getResizeable() )
 
 	def testPosition( self ) :
 
@@ -291,15 +291,15 @@ class WindowTest( GafferUITest.TestCase ) :
 		wc2 = GafferUI.Window()
 		w.addChildWindow( wc2 )
 		self.assertEqual( len( w.childWindows() ), 2 )
-		self.failUnless( wc1 in w.childWindows() )
-		self.failUnless( wc2 in w.childWindows() )
+		self.assertIn( wc1, w.childWindows() )
+		self.assertIn( wc2, w.childWindows() )
 
 		c = w.childWindows()
 		c.remove( wc1 )
 		# editing the list itself should have no effect
 		self.assertEqual( len( w.childWindows() ), 2 )
-		self.failUnless( wc1 in w.childWindows() )
-		self.failUnless( wc2 in w.childWindows() )
+		self.assertIn( wc1, w.childWindows() )
+		self.assertIn( wc2, w.childWindows() )
 
 		w.removeChild( wc1 )
 		self.assertEqual( w.childWindows(), [ wc2 ] )

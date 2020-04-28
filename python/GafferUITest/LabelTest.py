@@ -61,9 +61,9 @@ class LabelTest( GafferUITest.TestCase ) :
 
 		w.linkActivatedSignal()
 
-		self.failUnless( r() is w )
+		self.assertTrue( r() is w )
 		del w
-		self.failUnless( r() is None )
+		self.assertIsNone( r() )
 
 	def testHtmlInText( self ) :
 

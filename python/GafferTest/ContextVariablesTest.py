@@ -70,17 +70,17 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		# adding a variable should dirty the output:
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "A" ), "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"], [ p[0] for p in dirtied ] )
 
 		# modifying the variable should dirty the output:
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["variables"]["member1"]["value"].setValue("b")
-		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"], [ p[0] for p in dirtied ] )
 
 		# removing the variable should also dirty the output:
 		dirtied = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 		c["variables"].removeChild(c["variables"]["member1"])
-		self.failUnless( c["out"] in [ p[0] for p in dirtied ] )
+		self.assertIn( c["out"], [ p[0] for p in dirtied ] )
 
 	def testSerialisation( self ) :
 
@@ -117,7 +117,7 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 		dirtied = GafferTest.CapturingSlot( s["c"].plugDirtiedSignal() )
 		s["c"]["extraVariables"].setValue( IECore.CompoundData( { "a" : "A" } ) )
-		self.failUnless( s["c"]["out"] in { p[0] for p in dirtied } )
+		self.assertIn( s["c"]["out"], { p[0] for p in dirtied } )
 		self.assertEqual( s["c"]["out"].getValue(), "A" )
 
 		# Extra variables trump regular variables of the same name

@@ -53,8 +53,8 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
-		self.failUnless( isinstance( h, GafferCortex.ParameterHandler ) )
-		self.failUnless( isinstance( n["i"], Gaffer.IntPlug ) )
+		self.assertIsInstance( h, GafferCortex.ParameterHandler )
+		self.assertIsInstance( n["i"], Gaffer.IntPlug )
 
 	def testCustomHandler( self ) :
 
@@ -149,7 +149,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		h.setupPlug( n )
 
 		self.assertEqual( h.plug().getName(), "i" )
-		self.failUnless( h.plug().parent().isSame( n ) )
+		self.assertTrue( h.plug().parent().isSame( n ) )
 
 	def testCompoundParameterHandler( self ) :
 
@@ -170,8 +170,8 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		h = GafferCortex.CompoundParameterHandler( c )
 		h.setupPlug( n )
 
-		self.failUnless( h.childParameterHandler( c["i"] ).parameter().isSame( c["i"] ) )
-		self.failUnless( h.childParameterHandler( c["f"] ).parameter().isSame( c["f"] ) )
+		self.assertTrue( h.childParameterHandler( c["i"] ).parameter().isSame( c["i"] ) )
+		self.assertTrue( h.childParameterHandler( c["f"] ).parameter().isSame( c["f"] ) )
 
 	def testReadOnly( self ) :
 

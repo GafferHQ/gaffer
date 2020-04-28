@@ -38,6 +38,7 @@
 import os
 import unittest
 import imath
+import six
 
 import IECore
 import IECoreScene
@@ -123,7 +124,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.Outputs.registeredOutputs(), preExistingOutputs + ( "test2", ) )
 
 		o = GafferScene.Outputs()
-		with self.assertRaisesRegexp( RuntimeError, "Output not registered" ) :
+		with six.assertRaisesRegex( self, RuntimeError, "Output not registered" ) :
 			o.addOutput( "test" )
 
 		GafferScene.Outputs.deregisterOutput( "test2" )

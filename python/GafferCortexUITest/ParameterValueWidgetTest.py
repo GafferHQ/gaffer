@@ -57,7 +57,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		h.setupPlug( n )
 
 		w = GafferCortexUI.ParameterValueWidget.create( h )
-		self.failUnless( isinstance( w, GafferCortexUI.StringParameterValueWidget ) )
+		self.assertIsInstance( w, GafferCortexUI.StringParameterValueWidget )
 
 	def testCreateWithUIHint( self ) :
 
@@ -76,11 +76,11 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		h.setupPlug( n )
 
 		w = GafferCortexUI.ParameterValueWidget.create( h )
-		self.failUnless( isinstance( w, GafferCortexUI.StringParameterValueWidget ) )
+		self.assertIsInstance( w, GafferCortexUI.StringParameterValueWidget )
 
 		p.userData()["UI"] = IECore.CompoundObject( { "typeHint" : IECore.StringData( "CustomUI" ) } )
 		w = GafferCortexUI.ParameterValueWidget.create( h )
-		self.failUnless( isinstance( w, CustomParameterValueWidget ) )
+		self.assertIsInstance( w, CustomParameterValueWidget )
 
 	def testCreateAlwaysReturnsParameterValueWidgetInstance( self ) :
 
@@ -91,7 +91,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 		h.setupPlug( n )
 
 		w = GafferCortexUI.ParameterValueWidget.create( h )
-		self.failUnless( isinstance( w, GafferCortexUI.ParameterValueWidget ) )
+		self.assertIsInstance( w, GafferCortexUI.ParameterValueWidget )
 
 if __name__ == "__main__":
 	unittest.main()

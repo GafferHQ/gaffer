@@ -38,6 +38,7 @@
 import math
 
 import imath
+import six
 
 import IECore
 import IECoreScene
@@ -932,7 +933,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertRootsToRoot( script )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -943,7 +944,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsVariable )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [] ) )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must specify at least one root location.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -978,20 +979,20 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertRootsToRoot( script )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must be Constant StringVectorData when using IndexedRootsVariable mode.*does not exist.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		# the vertex primvar should fail
 		script["instancer"]["prototypeRoots"].setValue( "root" )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must be Constant StringVectorData when using IndexedRootsVariable mode.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -1009,7 +1010,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			script["objectToScene"]["object"].setValue( points )
 
 		updateRoots( IECore.StringVectorData( [] ), IECore.IntVectorData( [] ) )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must specify at least one root location.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -1044,20 +1045,20 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertRootsToRoot( script )
 
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*does not exist.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		# the constant primvar should fail
 		script["instancer"]["prototypeRoots"].setValue( "prototypeRoots" )
-		self.assertRaisesRegexp(
+		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)

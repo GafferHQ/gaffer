@@ -59,7 +59,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		applicationRoot = application.root()
 
 		p = applicationRoot["preferences"]
-		self.failUnless( isinstance( p, Gaffer.Preferences ) )
+		self.assertIsInstance( p, Gaffer.Preferences )
 
 		p["category1"] = Gaffer.Plug()
 		p["category1"]["i"] = Gaffer.IntPlug( defaultValue = 2 )
@@ -72,13 +72,13 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		p["category2"]["s"].setValue( "oranges" )
 		p["category2"]["v"].setValue( imath.V3f( 2, 3, 4 ) )
 
-		self.failIf( os.path.exists( self.__defaultPreferencesFile ) )
+		self.assertFalse( os.path.exists( self.__defaultPreferencesFile ) )
 		applicationRoot.savePreferences()
-		self.failUnless( os.path.exists( self.__defaultPreferencesFile ) )
+		self.assertTrue( os.path.exists( self.__defaultPreferencesFile ) )
 
-		self.failIf( os.path.exists( self.__preferencesFile ) )
+		self.assertFalse( os.path.exists( self.__preferencesFile ) )
 		applicationRoot.savePreferences( self.__preferencesFile )
-		self.failUnless( os.path.exists( self.__preferencesFile ) )
+		self.assertTrue( os.path.exists( self.__preferencesFile ) )
 
 		p["category1"]["i"].setValue( 1 )
 		p["category2"]["s"].setValue( "beef" )
@@ -107,7 +107,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		a = Gaffer.ApplicationRoot( "testApp" )
 
 		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
-		self.failUnless( os.path.isdir( a.preferencesLocation() ) )
+		self.assertTrue( os.path.isdir( a.preferencesLocation() ) )
 
 	def testClipboard( self ) :
 

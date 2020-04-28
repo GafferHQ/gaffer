@@ -76,11 +76,11 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["out"].objectHash( "/plane" ), p["out"].objectHash( "/plane" ) )
 		self.assertEqual( s["out"].object( "/plane" ), p["out"].object( "/plane" ) )
 
-		self.failUnless( isinstance( s["out"].object( "/plane/seeds" ), IECoreScene.PointsPrimitive ) )
+		self.assertIsInstance( s["out"].object( "/plane/seeds" ), IECoreScene.PointsPrimitive )
 		numPoints = s["out"].object( "/plane/seeds" ).numPoints
 
 		s["density"].setValue( 10 )
-		self.failUnless( s["out"].object( "/plane/seeds" ).numPoints > numPoints )
+		self.assertGreater( s["out"].object( "/plane/seeds" ).numPoints, numPoints )
 
 		h = s["out"].objectHash( "/plane/seeds" )
 		m = s["out"].object( "/plane/seeds" )

@@ -58,33 +58,33 @@ class SequencePathTest( GafferTest.TestCase ) :
 
 		path = Gaffer.SequencePath( self.__dictPath() )
 
-		self.failUnless( path.isValid() )
-		self.failUnless( not path.isLeaf() )
+		self.assertTrue( path.isValid() )
+		self.assertFalse( path.isLeaf() )
 
 		path.append( "dir" )
-		self.failUnless( path.isValid() )
-		self.failUnless( not path.isLeaf() )
+		self.assertTrue( path.isValid() )
+		self.assertFalse( path.isLeaf() )
 
 		path[0] = "oops!"
-		self.failIf( path.isValid() )
-		self.failIf( path.isLeaf() )
+		self.assertFalse( path.isValid() )
+		self.assertFalse( path.isLeaf() )
 
 		path[:] = [ "dir" ]
 		children = path.children()
 		for child in children :
-			self.failUnless( isinstance( child, Gaffer.SequencePath ) )
+			self.assertIsInstance( child, Gaffer.SequencePath )
 
 		self.assertEqual( len( children ), 2 )
 		childrenStrings = [ str( c ) for c in children ]
-		self.failUnless( "/dir/a.#.exr 1-10" in childrenStrings )
-		self.failUnless( "/dir/b.####.tiff 20-200x2" in childrenStrings )
+		self.assertIn( "/dir/a.#.exr 1-10", childrenStrings )
+		self.assertIn( "/dir/b.####.tiff 20-200x2", childrenStrings )
 
 	def testNonLeafChildren( self ) :
 
 		path = Gaffer.SequencePath( self.__dictPath() )
 		children = path.children()
 		for child in children :
-			self.failUnless( isinstance( child, Gaffer.SequencePath ) )
+			self.assertIsInstance( child, Gaffer.SequencePath )
 		self.assertEqual( len( children ), 1 )
 		self.assertEqual( str( children[0] ), "/dir" )
 
@@ -94,10 +94,10 @@ class SequencePathTest( GafferTest.TestCase ) :
 		path.append( "dir" )
 
 		path2 = path.copy()
-		self.failUnless( isinstance( path2, Gaffer.SequencePath ) )
+		self.assertIsInstance( path2, Gaffer.SequencePath )
 
 		self.assertEqual( path[:], path2[:] )
-		self.failUnless( path.getFilter() is path2.getFilter() )
+		self.assertTrue( path.getFilter() is path2.getFilter() )
 
 		c = [ str( p ) for p in path.children() ]
 		c2 = [ str( p ) for p in path2.children() ]

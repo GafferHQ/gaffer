@@ -106,8 +106,8 @@ class MenuTest( GafferUITest.TestCase ) :
 			b = GafferUI.MenuButton( menu=m )
 
 		self.assertEqual( len( l ), 1 )
-		self.failUnless( l[0] is b )
-		self.failUnless( b.getMenu() is m )
+		self.assertTrue( l[0] is b )
+		self.assertTrue( b.getMenu() is m )
 
 	def testBuildFully( self ) :
 

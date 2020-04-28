@@ -90,7 +90,7 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.getSpacing(), 0 )
 		self.assertEqual( c.getDirection(), GafferUI.LinearContainer.Direction.Decreasing )
 
-		self.assert_( c.bound().isEmpty() )
+		self.assertTrue( c.bound().isEmpty() )
 
 	def testHorizontalCentred( self ) :
 

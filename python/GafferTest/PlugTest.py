@@ -48,44 +48,44 @@ class PlugTest( GafferTest.TestCase ) :
 
 		n = Gaffer.Node()
 		p = Gaffer.Plug()
-		self.assert_( p.parent() is None )
-		self.assert_( p.node() is None )
-		self.assert_( p.acceptsParent( n ) )
+		self.assertIsNone( p.parent() )
+		self.assertIsNone( p.node() )
+		self.assertTrue( p.acceptsParent( n ) )
 		n.addChild( p )
-		self.assert_( p.parent().isSame( n ) )
-		self.assert_( p.node().isSame( n ) )
+		self.assertTrue( p.parent().isSame( n ) )
+		self.assertTrue( p.node().isSame( n ) )
 
 	def testConnectionAcceptance( self ) :
 
 		p1 = Gaffer.Plug( direction=Gaffer.Plug.Direction.In )
 		p2 = Gaffer.Plug( direction=Gaffer.Plug.Direction.Out )
-		self.assert_( p1.acceptsInput( p2 ) )
+		self.assertTrue( p1.acceptsInput( p2 ) )
 
 		p1 = Gaffer.Plug( direction=Gaffer.Plug.Direction.In )
 		p2 = Gaffer.Plug( direction=Gaffer.Plug.Direction.In )
-		self.assert_( p1.acceptsInput( p2 ) )
+		self.assertTrue( p1.acceptsInput( p2 ) )
 
 	def testConnection( self ) :
 
 		n1 = Gaffer.Node()
 		p1 = Gaffer.Plug()
 		n1.addChild( p1 )
-		self.assert_( p1.getInput() is None )
+		self.assertIsNone( p1.getInput() )
 		self.assertEqual( p1.outputs(), () )
 
 		n2 = Gaffer.Node()
 		p2 = Gaffer.Plug()
 		n2.addChild( p2 )
-		self.assert_( p2.getInput() is None )
+		self.assertIsNone( p2.getInput() )
 		self.assertEqual( p2.outputs(), () )
 
 		p2.setInput( p1 )
-		self.assert_( p2.getInput().isSame( p1 ) )
-		self.assert_( len( p1.outputs() ), 1 )
-		self.assert_( p1.outputs()[0].isSame( p2 ) )
+		self.assertTrue( p2.getInput().isSame( p1 ) )
+		self.assertEqual( len( p1.outputs() ), 1 )
+		self.assertTrue( p1.outputs()[0].isSame( p2 ) )
 
 		p2.setInput( None )
-		self.assert_( p2.getInput() is None )
+		self.assertIsNone( p2.getInput() )
 		self.assertEqual( p1.outputs(), () )
 
 	def testConnectionSignals( self ) :
@@ -104,12 +104,12 @@ class PlugTest( GafferTest.TestCase ) :
 
 		c = n2.plugInputChangedSignal().connect( f )
 		p2.setInput( p1 )
-		self.assert_( PlugTest.__connection[0].isSame( p2 ) )
-		self.assert_( PlugTest.__connection[1].isSame( p1 ) )
+		self.assertTrue( PlugTest.__connection[0].isSame( p2 ) )
+		self.assertTrue( PlugTest.__connection[1].isSame( p1 ) )
 		PlugTest.__connection = None
 		p2.setInput( None )
-		self.assert_( PlugTest.__connection[0].isSame( p2 ) )
-		self.assert_( PlugTest.__connection[1] is None )
+		self.assertTrue( PlugTest.__connection[0].isSame( p2 ) )
+		self.assertIsNone( PlugTest.__connection[1] )
 
 	def testDirectionality( self ) :
 
@@ -186,8 +186,8 @@ class PlugTest( GafferTest.TestCase ) :
 
 		# check that accepts input and setInput can be overridden
 
-		self.failUnless( n1["testIn"].acceptsInput( n2["testOut"] ) )
-		self.failIf( n1["testIn"].acceptsInput( n2["intOut"] ) )
+		self.assertTrue( n1["testIn"].acceptsInput( n2["testOut"] ) )
+		self.assertFalse( n1["testIn"].acceptsInput( n2["intOut"] ) )
 
 		self.assertRaises( RuntimeError, n1["testIn"].setInput, n2["intOut"] )
 		self.assertEqual( n1["testIn"].inputHasBeenSet, False )
@@ -223,8 +223,8 @@ class PlugTest( GafferTest.TestCase ) :
 		s["n2"]["i"].setInput( s["n1"]["o"] )
 		s["n2"]["c"]["i"].setInput( s["n1"]["o"] )
 
-		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
-		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 2 )
 
 		with Gaffer.UndoScope( s ) :
@@ -236,8 +236,8 @@ class PlugTest( GafferTest.TestCase ) :
 
 		s.undo()
 
-		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
-		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 2 )
 
 	def testRemovePlugRemovesOutputs( self ) :
@@ -253,7 +253,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		s["n2"]["i"].setInput( s["n1"]["o"] )
 
-		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
 
 		with Gaffer.UndoScope( s ) :
@@ -265,14 +265,14 @@ class PlugTest( GafferTest.TestCase ) :
 
 		s.undo()
 
-		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
-		self.failUnless( s["n1"]["o"].isSame( removedPlug ) )
+		self.assertTrue( s["n1"]["o"].isSame( removedPlug ) )
 
 	def testDefaultFlags( self ) :
 
 		p = Gaffer.Plug()
-		self.failUnless( p.getFlags( Gaffer.Plug.Flags.Serialisable ) )
+		self.assertTrue( p.getFlags( Gaffer.Plug.Flags.Serialisable ) )
 
 	def testSerialisableFlag( self ) :
 
@@ -280,7 +280,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		s["n"] = GafferTest.AddNode()
 
-		self.failUnless( s["n"]["op1"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
+		self.assertTrue( s["n"]["op1"].getFlags( Gaffer.Plug.Flags.Serialisable ) )
 
 		s["n"]["op1"].setValue( 20 )
 		ss = s.serialise()
@@ -293,7 +293,7 @@ class PlugTest( GafferTest.TestCase ) :
 		s["n"]["op1"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
 		ss = s.serialise()
 
-		self.failIf( "op1" in ss )
+		self.assertNotIn( "op1", ss )
 
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
@@ -326,7 +326,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		ss = s.serialise()
 
-		self.failIf( "All" in ss )
+		self.assertNotIn( "All", ss )
 
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
@@ -484,21 +484,21 @@ class PlugTest( GafferTest.TestCase ) :
 
 		n2["p"]["c1"].setInput( n1["p"]["c1"] )
 		n2["p"]["c2"].setInput( n1["p"]["c2"] )
-		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+		self.assertTrue( n2["p"].getInput().isSame( n1["p"] ) )
 
 		n2["p"]["c2"].setInput( None )
-		self.failUnless( n2["p"].getInput() is None )
+		self.assertIsNone( n2["p"].getInput() )
 
 		n2["p"]["c2"].setInput( n1["p"]["c2"] )
-		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+		self.assertTrue( n2["p"].getInput().isSame( n1["p"] ) )
 
 		n2["p"]["c3"] = Gaffer.Plug()
 
-		self.failUnless( n2["p"].getInput() is None )
+		self.assertIsNone( n2["p"].getInput() )
 
 		n1["p"]["c3"] = Gaffer.Plug()
 		n2["p"]["c3"].setInput( n1["p"]["c3"] )
-		self.failUnless( n2["p"].getInput().isSame( n1["p"] ) )
+		self.assertTrue( n2["p"].getInput().isSame( n1["p"] ) )
 
 	def testAncestorConnectionTracksDescendantConnections( self ) :
 
@@ -818,8 +818,8 @@ class PlugTest( GafferTest.TestCase ) :
 		s["n2"]["c"]["i"] = Gaffer.IntPlug()
 
 		s["n2"]["c"]["i"].setInput( s["n1"]["o"] )
-		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
-		self.failUnless( s["n2"]["c"].getInput() is None )
+		self.assertTrue( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertIsNone( s["n2"]["c"].getInput() )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
 
 		with Gaffer.UndoScope( s ) :
@@ -829,7 +829,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		s.undo()
 
-		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertTrue( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
 
 	def testSerialiseOmittingParentPlugMetadata( self ) :

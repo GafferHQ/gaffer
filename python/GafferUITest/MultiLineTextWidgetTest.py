@@ -49,11 +49,11 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.MultiLineTextWidget()
 		r = weakref.ref( w )
 
-		self.failUnless( r() is w )
+		self.assertTrue( r() is w )
 
 		del w
 
-		self.failUnless( r() is None )
+		self.assertTrue( r() is None )
 
 	def testEditable( self ) :
 

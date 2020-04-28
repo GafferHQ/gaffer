@@ -63,24 +63,24 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 	def testConstructFromFileName( self ) :
 
 		p = GafferCortex.IndexedIOPath( self.__fileName, "/" )
-		self.failUnless( p.isValid() )
+		self.assertTrue( p.isValid() )
 
 		p.append( "d1" )
-		self.failUnless( p.isValid() )
+		self.assertTrue( p.isValid() )
 
 		p.append( "notHere" )
-		self.failIf( p.isValid() )
+		self.assertFalse( p.isValid() )
 
 	def testConstructFromIndexedIO( self ) :
 
 		p = GafferCortex.IndexedIOPath( IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Read ), "/" )
-		self.failUnless( p.isValid() )
+		self.assertTrue( p.isValid() )
 
 		p.append( "d1" )
-		self.failUnless( p.isValid() )
+		self.assertTrue( p.isValid() )
 
 		p.append( "notHere" )
-		self.failIf( p.isValid() )
+		self.assertFalse( p.isValid() )
 
 	def testChildren( self ) :
 
@@ -90,8 +90,8 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( c ), 2 )
 
 		cs = [ str( x ) for x in c ]
-		self.failUnless( "/d1" in cs )
-		self.failUnless( "/d3" in cs )
+		self.assertIn( "/d1", cs )
+		self.assertIn( "/d3", cs )
 
 	def testInfo( self ) :
 

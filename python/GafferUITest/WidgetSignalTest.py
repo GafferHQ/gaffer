@@ -61,7 +61,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 
 		c = s.connect( f )
 		self.assertEqual( s( w ), True )
-		self.assert_( self.__widget is w )
+		self.assertTrue( self.__widget is w )
 
 	def testDeletionOfConnectionDisconnects( self ) :
 
@@ -108,7 +108,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 		self.assertEqual( a.signal( a ), True )
 
 		w = weakref.ref( a )
-		self.assert_( w() is a )
+		self.assertTrue( w() is a )
 		del a
 		self.assertEqual( w(), None )
 
@@ -121,7 +121,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 		self.assertEqual( a2.signal( a2 ), True )
 
 		w = weakref.ref( a2 )
-		self.assert_( w() is a2 )
+		self.assertTrue( w() is a2 )
 		del a2
 		self.assertEqual( w(), None )
 

@@ -250,8 +250,8 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			nearProjected = v.worldToRasterSpace( line.p0 )
 			farProjected = v.worldToRasterSpace( line.p1 )
 
-			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
-			self.failUnless(
+			self.assertTrue( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
+			self.assertTrue(
 				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
 					nearProjected, 0.0001
 				)
@@ -278,8 +278,8 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			nearProjected = v.worldToRasterSpace( line.p0 )
 			farProjected = v.worldToRasterSpace( line.p1 )
 
-			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
-			self.failUnless(
+			self.assertTrue( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
+			self.assertTrue(
 				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
 					nearProjected, 0.0001
 				)
@@ -306,8 +306,8 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			line = v.rasterToWorldSpace( rasterPosition )
 			nearProjected = v.worldToRasterSpace( line.p0 )
 			farProjected = v.worldToRasterSpace( line.p1 )
-			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
-			self.failUnless(
+			self.assertTrue( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
+			self.assertTrue(
 				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
 					nearProjected, 0.0001
 				)

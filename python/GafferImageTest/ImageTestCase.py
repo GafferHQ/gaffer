@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import six
 import imath
 
 import IECore
@@ -150,5 +151,5 @@ class ImageTestCase( GafferTest.TestCase ) :
 
 		deep = GafferImage.Empty()
 		node["in"].setInput( deep["out"] )
-		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )
+		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )
 

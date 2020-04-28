@@ -49,7 +49,7 @@ class ArnoldOptionsTest( GafferSceneTest.SceneTestCase ) :
 		o = GafferArnold.ArnoldOptions()
 
 		o["out"].transform( "/" )
-		self.failUnless( isinstance( o["out"].childNames( "/" ), IECore.InternedStringVectorData ) )
+		self.assertIsInstance( o["out"].childNames( "/" ), IECore.InternedStringVectorData )
 
 	def testSerialisation( self ) :
 

@@ -69,8 +69,8 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( r["out"].object( "/cow" ), m["out"].object( "/cow" ) )
 		self.assertScenesEqual( r["out"], m["out"] )
 
-		self.failUnless( "P" in m["out"].object( "/cow" ) )
-		self.failUnless( "N" in m["out"].object( "/cow" ) )
+		self.assertIn( "P", m["out"].object( "/cow" ) )
+		self.assertIn( "N", m["out"].object( "/cow" ) )
 
 		# Test converting poly to subdiv
 
@@ -82,7 +82,7 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( r["out"], m["out"], pathsToIgnore = ( "/cow", ) )
 
 		self.assertEqual( m["out"].object( "/cow" ).interpolation, "catmullClark" )
-		self.failUnless( "N" not in m["out"].object( "/cow" ) )
+		self.assertNotIn( "N", m["out"].object( "/cow" ) )
 
 		# Test converting back to poly
 
@@ -94,7 +94,7 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "N" not in m2["out"].object( "/cow" ) )
 
 		m2["calculatePolygonNormals"].setValue( True )
-		self.failUnless( "N" in m2["out"].object( "/cow" ) )
+		self.assertIn( "N", m2["out"].object( "/cow" ) )
 
 	def testNonPrimitiveObject( self ) :
 
@@ -104,7 +104,7 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		d["in"].setInput( c["out"] )
 
 		self.assertSceneValid( d["out"] )
-		self.failUnless( isinstance( d["out"].object( "/camera" ), IECoreScene.Camera ) )
+		self.assertIsInstance( d["out"].object( "/camera" ), IECoreScene.Camera )
 		self.assertEqual( d["out"].object( "/camera" ), c["out"].object( "/camera" ) )
 
 	def testEnabledPlugAffects( self ) :

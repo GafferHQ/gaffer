@@ -141,7 +141,7 @@ class EventLoopTest( GafferUITest.TestCase ) :
 		self.assertEqual( self.__uiThreadResult, None )
 		# we shouldn't be waiting for the result of ui thread, so the return should be quicker
 		# than the actual function called
-		self.failUnless( self.__executeOnUIThreadDuration < 2 )
+		self.assertLess( self.__executeOnUIThreadDuration, 2 )
 
 	def testExceptionsInIdleCallbacks( self ) :
 
@@ -175,10 +175,10 @@ class EventLoopTest( GafferUITest.TestCase ) :
 			GafferUI.EventLoop.mainEventLoop().start()
 
 		self.assertEqual( self.__idle1Calls, 1 )
-		self.failUnless( self.__idle2Calls >= 4 )
+		self.assertGreaterEqual( self.__idle2Calls, 4 )
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
-		self.failUnless( "I am a very naughty boy" in mh.messages[0].message )
+		self.assertIn( "I am a very naughty boy", mh.messages[0].message )
 
 	def testExecuteOnUITheadFromUIThread( self ) :
 
