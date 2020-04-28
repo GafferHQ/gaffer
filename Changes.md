@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- UIEditor : Added syntax highlighting and tab completion to the code editor for button widgets.
 - ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
 
 Fixes
