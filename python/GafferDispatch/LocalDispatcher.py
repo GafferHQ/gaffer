@@ -205,7 +205,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__reportKilled( batch )
 				return False
 
-			if not batch.plug() :
+			if batch.plug() is None :
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
 				return True
 
@@ -242,7 +242,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__reportKilled( batch )
 				return False
 
-			if not batch.plug() :
+			if batch.plug() is None :
 				self.__reportCompleted( batch )
 				return True
 
