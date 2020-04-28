@@ -272,7 +272,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertRegexpMatches( mh.messages[0].message, "bad slot!" )
+		six.assertRegex( self, mh.messages[0].message, "bad slot!" )
 		self.assertEqual( len( badConnection ), 1 )
 		self.assertEqual( len( s["n1"].log ), 1 )
 		self.assertEqual( len( cs ), 1 )
@@ -285,7 +285,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertRegexpMatches( mh.messages[0].message, "bad slot!" )
+		six.assertRegex( self, mh.messages[0].message, "bad slot!" )
 		self.assertEqual( len( badConnection ), 1 )
 		self.assertEqual( len( s["n1"].log ), 2 )
 		self.assertEqual( len( cs ), 2 )
@@ -417,7 +417,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s["n1"]["preTasks"][0].setInput( s["n4"]["task"] )
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertRegexpMatches( mh.messages[0].message, "Cycle detected between ScriptNode.n1.preTasks.preTask0 and ScriptNode.n1.task" )
+		six.assertRegex( self, mh.messages[0].message, "Cycle detected between ScriptNode.n1.preTasks.preTask0 and ScriptNode.n1.task" )
 
 		self.assertNotEqual( s["n1"]["task"].hash(), s["n2"]["task"].hash() )
 		self.assertNotEqual( s["n2"]["task"].hash(), s["n3"]["task"].hash() )
@@ -1084,7 +1084,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s["t"]["preTasks"][0].setInput( s["t"]["task"] )
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertRegexpMatches( mh.messages[0].message, "Cycle detected between ScriptNode.t.preTasks.preTask0 and ScriptNode.t.task" )
+		six.assertRegex( self, mh.messages[0].message, "Cycle detected between ScriptNode.t.preTasks.preTask0 and ScriptNode.t.task" )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
