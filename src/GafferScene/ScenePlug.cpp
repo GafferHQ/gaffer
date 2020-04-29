@@ -157,6 +157,15 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 		)
 	);
 
+	addChild(
+		new AtomicBox3fPlug(
+			"__childBounds",
+			direction,
+			Imath::Box3f(),
+			childFlags
+		)
+	);
+
 }
 
 ScenePlug::~ScenePlug()
@@ -169,7 +178,7 @@ bool ScenePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return children().size() != 10;
+	return children().size() != 11;
 }
 
 Gaffer::PlugPtr ScenePlug::createCounterpart( const std::string &name, Direction direction ) const
@@ -288,6 +297,16 @@ Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug()
 const Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug() const
 {
 	return getChild<InternedStringVectorDataPlug>( 9 );
+}
+
+Gaffer::AtomicBox3fPlug *ScenePlug::childBoundsPlug()
+{
+	return getChild<AtomicBox3fPlug>( 10 );
+}
+
+const Gaffer::AtomicBox3fPlug *ScenePlug::childBoundsPlug() const
+{
+	return getChild<AtomicBox3fPlug>( 10 );
 }
 
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context )

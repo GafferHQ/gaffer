@@ -255,6 +255,9 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug() const;
 
+		Gaffer::AtomicBox3fPlug *childBoundsPlug();
+		const Gaffer::AtomicBox3fPlug *childBoundsPlug() const;
+
 };
 
 IE_CORE_DECLAREPTR( ScenePlug );

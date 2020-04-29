@@ -128,6 +128,9 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 		/// A hash for the result of the computation in unionOfTransformedChildBounds().
 		IECore::MurmurHash hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNames = nullptr ) const;
 
+		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
 	private :
 
 		void plugInputChanged( Gaffer::Plug *plug );
@@ -137,6 +140,9 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 
 		void hashSortedChildNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 		IECore::ConstInternedStringVectorDataPtr computeSortedChildNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
+
+		void hashChildBounds( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		Imath::Box3f computeChildBounds( const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		static size_t g_firstPlugIndex;
 
