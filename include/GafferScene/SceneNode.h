@@ -119,13 +119,9 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 		/// it, and that makes computation quicker, as we don't need to access setNamesPlug() at all in many common cases.
 		virtual IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
-		/// Convenience function to compute the correct bounding box for a path from the bounding box and transforms of its
-		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine
-		/// information about the parent - the last thing we want to be doing when defining large scenes procedurally. If
-		/// `out->childNames()` has been computed already for some reason, then it may be passed to avoid recomputing it
-		/// internally.
+		/// \deprecated Use `ScenePlug::childBounds()` instead.
 		Imath::Box3f unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNames = nullptr ) const;
-		/// A hash for the result of the computation in unionOfTransformedChildBounds().
+		/// \deprecated Use `ScenePlug::childBoundsHash()` instead.
 		IECore::MurmurHash hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNames = nullptr ) const;
 
 		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;

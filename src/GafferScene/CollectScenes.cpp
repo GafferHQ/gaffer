@@ -181,7 +181,7 @@ void CollectScenes::hashBound( const ScenePath &path, const Gaffer::Context *con
 {
 	if( path.size() == 0 )
 	{
-		h = hashOfTransformedChildBounds( path, outPlug() );
+		h = outPlug()->childBoundsHash();
 	}
 	else
 	{
@@ -194,7 +194,7 @@ Imath::Box3f CollectScenes::computeBound( const ScenePath &path, const Gaffer::C
 {
 	if( path.size() == 0 )
 	{
-		return unionOfTransformedChildBounds( path, outPlug() );
+		return outPlug()->childBounds();
 	}
 	else
 	{

@@ -11,6 +11,9 @@ API
 ---
 
 - ScenePlug : Added `childBounds()` and `childBoundsHash()` methods.
+- SceneNode :
+  - Deprecated `hashOfTransformedChildBounds()`. Use `ScenePlug::childBoundsHash()` instead.
+  - Deprecated `unionOfTransformedChildBounds()`. Use `ScenePlug::childBounds()` instead.
 
 Breaking Changes
 ----------------
