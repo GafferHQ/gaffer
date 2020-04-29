@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 
 from . import _CodeMenu
+from . import _CodeWidget
 
 def __oslPopupMenu( menuDefinition, widget ) :
 
@@ -62,3 +63,6 @@ def __oslPopupMenu( menuDefinition, widget ) :
 	)
 
 GafferUI.ExpressionUI.ExpressionWidget.expressionContextMenuSignal().connect( __oslPopupMenu, scoped = False )
+
+GafferUI.ExpressionUI.ExpressionWidget.registerHighlighter( "OSL", lambda node : _CodeWidget._Highlighter() )
+GafferUI.ExpressionUI.ExpressionWidget.registerCommentPrefix( "OSL", "//" )
