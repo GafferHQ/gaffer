@@ -6,6 +6,7 @@ Improvements
 
 - SceneNode : Improved performance for all nodes that must propagate bounds from children to parents.
 - PointsType : Removed unnecessary bounds computation overhead.
+- Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
 
 API
 ---
