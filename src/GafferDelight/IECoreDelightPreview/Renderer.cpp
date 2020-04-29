@@ -985,7 +985,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		DelightRenderer( RenderType renderType, const std::string &fileName )
+		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_renderType( renderType ), m_frame( 1 ), m_oversampling( 9 )
 		{
 			vector<NSIParam_t> params;

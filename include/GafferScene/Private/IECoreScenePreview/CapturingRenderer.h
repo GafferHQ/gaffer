@@ -61,7 +61,11 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 
 		IE_CORE_DECLAREMEMBERPTR( CapturingRenderer )
 
-		CapturingRenderer( RenderType type = RenderType::Interactive, const std::string &fileName = "" );
+		CapturingRenderer(
+			RenderType type = RenderType::Interactive,
+			const std::string &fileName = "",
+			const IECore::MessageHandlerPtr &messageHandler = IECore::MessageHandlerPtr()
+		);
 
 		/// Introspection
 		/// =============

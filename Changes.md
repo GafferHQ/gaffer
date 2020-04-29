@@ -34,6 +34,12 @@ Breaking Changes
     - `GafferCortex` attributes can no longer be accessed via the `Gaffer` namespace.
     - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
 - RecursiveChildIterator : Changed private member data. Source compatibility is maintained.
+- IECorePreview::Renderer : Changed signature for `create` and `registerType` to include optional message handler.
+
+API
+---
+
+- IECorePreview::Renderer : Added optional message handler to renderer construction to allow output message streams to be re-directed if required (#3419).
 
 Build
 -----

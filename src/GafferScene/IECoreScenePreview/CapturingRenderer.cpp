@@ -49,7 +49,7 @@ using namespace IECoreScenePreview;
 
 IECoreScenePreview::Renderer::TypeDescription<CapturingRenderer> CapturingRenderer::g_typeDescription( "Capturing" );
 
-CapturingRenderer::CapturingRenderer( RenderType type, const std::string &fileName )
+CapturingRenderer::CapturingRenderer( RenderType type, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 	:	m_rendering( false )
 {
 }

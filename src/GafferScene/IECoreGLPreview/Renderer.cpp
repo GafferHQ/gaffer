@@ -699,7 +699,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		OpenGLRenderer( RenderType renderType, const std::string &fileName )
+		OpenGLRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_renderType( renderType ), m_baseStateOptions( new CompoundObject )
 		{
 			if( renderType == SceneDescription )

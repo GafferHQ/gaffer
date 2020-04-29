@@ -41,6 +41,7 @@
 #include "IECoreScene/Output.h"
 
 #include "IECore/CompoundObject.h"
+#include "IECore/MessageHandler.h"
 
 #include "boost/unordered_set.hpp"
 
@@ -89,8 +90,12 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( Renderer )
 
 		static const std::vector<IECore::InternedString> &types();
-		/// Filename is only used if the renderType is SceneDescription.
-		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "" );
+		/// fileName is only used if the renderType is SceneDescription.
+		/// messageHandler may be provided by the owner of the renderer. If so, all in-render messages should be
+		/// passed to this handler. Message contexts can be left blank if no applicable information is available.
+		/// The renderer must scope the supplied handler before calling out to other code that makes use of static
+		/// IECore::msg logging.
+		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "", const IECore::MessageHandlerPtr &messageHandler = IECore::MessageHandlerPtr() );
 
 		/// Returns the name of this renderer, for instance "OpenGL" or "Arnold".
 		virtual IECore::InternedString name() const = 0;
@@ -310,16 +315,16 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 
 			private :
 
-				static Ptr creator( RenderType renderType, const std::string &fileName )
+				static Ptr creator( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 				{
-					return new T( renderType, fileName );
+					return new T( renderType, fileName, messageHandler );
 				}
 
 		};
 
 	private :
 
-		static void registerType( const IECore::InternedString &typeName, Ptr (*creator)( RenderType, const std::string & ) );
+		static void registerType( const IECore::InternedString &typeName, Ptr (*creator)( RenderType, const std::string &, const IECore::MessageHandlerPtr & ) );
 
 
 };

@@ -48,7 +48,7 @@ using namespace IECoreScenePreview;
 namespace
 {
 
-typedef Renderer::Ptr (*Creator)( Renderer::RenderType, const std::string & );
+typedef Renderer::Ptr (*Creator)( Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr & );
 
 vector<IECore::InternedString> &types()
 {
@@ -99,7 +99,7 @@ const std::vector<IECore::InternedString> &Renderer::types()
 	return ::types();
 }
 
-Renderer::Ptr Renderer::create( const IECore::InternedString &type, RenderType renderType, const std::string &fileName )
+Renderer::Ptr Renderer::create( const IECore::InternedString &type, RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 {
 	const CreatorMap &c = creators();
 	CreatorMap::const_iterator it = c.find( type );
@@ -107,11 +107,11 @@ Renderer::Ptr Renderer::create( const IECore::InternedString &type, RenderType r
 	{
 		return nullptr;
 	}
-	return it->second( renderType, fileName );
+	return it->second( renderType, fileName, messageHandler );
 }
 
 
-void Renderer::registerType( const IECore::InternedString &typeName, Ptr (*creator)( RenderType, const std::string & ) )
+void Renderer::registerType( const IECore::InternedString &typeName, Ptr (*creator)( RenderType, const std::string &, const IECore::MessageHandlerPtr & ) )
 {
 	CreatorMap &c = creators();
 	CreatorMap::iterator it = c.find( typeName );

@@ -2414,7 +2414,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 	public :
 
-		AppleseedRenderer( RenderType renderType, const string &fileName )
+		AppleseedRenderer( RenderType renderType, const string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	AppleseedRendererBase( renderType , fileName, 0.0f, 0.0f )
 			,	m_environmentEDFVisible( false )
 			,	m_maxInteractiveRenderSamples( 0 )

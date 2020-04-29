@@ -3463,7 +3463,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 
 	public :
 
-		ArnoldRenderer( RenderType renderType, const std::string &fileName )
+		ArnoldRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	ArnoldRendererBase( nodeDeleter( renderType ) ),
 				m_globals( new ArnoldGlobals( renderType, fileName, m_shaderCache.get() ) )
 		{

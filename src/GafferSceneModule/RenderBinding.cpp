@@ -340,7 +340,7 @@ void GafferSceneModule::bindRender()
 
 			.def( "types", &rendererTypes )
 			.staticmethod( "types" )
-			.def( "create", &Renderer::create, ( arg( "type" ), arg( "renderType" ) = Renderer::Batch, arg( "fileName" ) = "" ) )
+			.def( "create", &Renderer::create, ( arg( "type" ), arg( "renderType" ) = Renderer::Batch, arg( "fileName" ) = "", arg( "messageHandler" ) = IECore::MessageHandlerPtr() ) )
 			.staticmethod( "create" )
 
 			.def( "name", &rendererName )
@@ -389,7 +389,7 @@ void GafferSceneModule::bindRender()
 		;
 
 		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )
-			.def( init<Renderer::RenderType, const std::string &>( ( arg( "renderType" ) = Renderer::RenderType::Interactive, arg( "fileName" ) = "" ) ) )
+			.def( init<Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr &>( ( arg( "renderType" ) = Renderer::RenderType::Interactive, arg( "fileName" ) = "", arg( "messageHandler") = IECore::MessageHandlerPtr() ) ) )
 			.def( "capturedObject", &capturingRendererCapturedObject )
 		;
 
