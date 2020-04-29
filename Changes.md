@@ -1,3 +1,11 @@
+0.56.2.x (relative to 0.56.2.1)
+========
+
+Fixes
+-----
+
+- OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
+
 0.56.2.1 (relative to 0.56.2.0)
 ========
 

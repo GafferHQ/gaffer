@@ -286,7 +286,7 @@ class RenderState
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
 			{
 				UserData userData;
-				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get() );
+				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get(), /* createUStrings = */ true );
 				if( userData.dataView.data )
 				{
 					if( userData.dataView.type.arraylen )
