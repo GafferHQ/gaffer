@@ -7,6 +7,11 @@ Improvements
 - SceneNode : Improved performance for all nodes that must propagate bounds from children to parents.
 - PointsType : Removed unnecessary bounds computation overhead.
 
+API
+---
+
+- ScenePlug : Added `childBounds()` and `childBoundsHash()` methods.
+
 Breaking Changes
 ----------------
 

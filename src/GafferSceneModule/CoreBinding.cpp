@@ -268,6 +268,30 @@ bool existsWrapper2( const ScenePlug &plug )
 	return plug.exists();
 }
 
+Imath::Box3f childBoundsWrapper1( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.childBounds( scenePath );
+}
+
+Imath::Box3f childBoundsWrapper2( const ScenePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.childBounds();
+}
+
+IECore::MurmurHash childBoundsHashWrapper1( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.childBoundsHash( scenePath );
+}
+
+IECore::MurmurHash childBoundsHashWrapper2( const ScenePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.childBoundsHash();
+}
+
 IECore::InternedStringVectorDataPtr stringToPathWrapper( const char *s )
 {
 	IECore::InternedStringVectorDataPtr p = new IECore::InternedStringVectorData;
@@ -365,6 +389,11 @@ void GafferSceneModule::bindCore()
 		// existence queries
 		.def( "exists", &existsWrapper1 )
 		.def( "exists", &existsWrapper2 )
+		// child bounds queries
+		.def( "childBounds", &childBoundsWrapper1 )
+		.def( "childBounds", &childBoundsWrapper2 )
+		.def( "childBoundsHash", &childBoundsHashWrapper1 )
+		.def( "childBoundsHash", &childBoundsHashWrapper2 )
 		// string utilities
 		.def( "stringToPath", &stringToPathWrapper )
 		.staticmethod( "stringToPath" )

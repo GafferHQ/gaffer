@@ -336,6 +336,43 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			{ cube["out"]["childNames"], cube["out"]["__sortedChildNames"], cube["out"]["__exists"] }
 		)
 
+	def testChildBounds( self ) :
+
+		cube = GafferScene.Cube()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( cube["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "group" ] )
+			h = group["out"].childBoundsHash()
+			b = group["out"].childBounds()
+
+		self.assertEqual( h, group["out"].childBoundsHash( "/group" ) )
+		self.assertEqual( b, group["out"].childBounds( "/group" ) )
+
+		b2 = cube["out"].bound( "/" )
+		b2.extendBy( sphere["out"].bound( "/" ) )
+		self.assertEqual( b, b2 )
+
+		cube["transform"]["translate"]["x"].setValue( 10 )
+
+		self.assertNotEqual( group["out"].childBoundsHash( "/group"), h )
+		b = group["out"].childBounds( "/group" )
+
+		b2 = cube["out"].bound( "/" )
+		b2.extendBy( sphere["out"].bound( "/" ) )
+		self.assertEqual( b, b2 )
+
+	def testChildBoundsWhenNoChildren( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		self.assertEqual( plane["out"].childBounds( "/plane" ), imath.Box3f() )
+		self.assertEqual( sphere["out"].childBounds( "/sphere" ), imath.Box3f() )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

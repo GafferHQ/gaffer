@@ -568,6 +568,28 @@ IECore::MurmurHash ScenePlug::setHash( const IECore::InternedString &setName ) c
 	return setPlug()->hash();
 }
 
+Imath::Box3f ScenePlug::childBounds( const ScenePath &scenePath ) const
+{
+	PathScope scope( Context::current(), scenePath );
+	return childBoundsPlug()->getValue();
+}
+
+Imath::Box3f ScenePlug::childBounds() const
+{
+	return childBoundsPlug()->getValue();
+}
+
+IECore::MurmurHash ScenePlug::childBoundsHash( const ScenePath &scenePath ) const
+{
+	PathScope scope( Context::current(), scenePath );
+	return childBoundsPlug()->hash();
+}
+
+IECore::MurmurHash ScenePlug::childBoundsHash() const
+{
+	return childBoundsPlug()->hash();
+}
+
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
 	path.clear();
