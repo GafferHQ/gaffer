@@ -1,3 +1,11 @@
+0.57.x.x (relative to 0.57.2.0)
+========
+
+Fixes
+-----
+
+- OSLCode : Don't apply substitutions to code, so that symbols such as `#` can be used correctly 
+
 0.57.2.0 (relative to 0.57.1.0)
 ========
 
