@@ -820,7 +820,7 @@ class Plug::DirtyPlugs
 		typedef Graph::vertex_descriptor VertexDescriptor;
 		typedef Graph::edge_descriptor EdgeDescriptor;
 
-		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
+		typedef std::unordered_map<const Plug *, VertexDescriptor> PlugMap;
 
 		// Equivalent to the return type for map::insert - the first
 		// field is the vertex descriptor, and the second field is
