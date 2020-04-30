@@ -60,6 +60,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			self["defaultFileName"] = Gaffer.StringPlug( "defaultFileName", Gaffer.Plug.Direction.In, "${bakeDirectory}/<AOV>/<AOV>.<UDIM>.exr" )
 			self["defaultResolution"] = Gaffer.IntPlug( "defaultResolution", Gaffer.Plug.Direction.In, 512 )
 			self["uvSet"] = Gaffer.StringPlug( "uvSet", Gaffer.Plug.Direction.In, "uv" )
+			self["udims"] = Gaffer.StringPlug( "udims", Gaffer.Plug.Direction.In, "" )
 			self["normalOffset"] = Gaffer.FloatPlug( "normalOffset", Gaffer.Plug.Direction.In, 0.1 )
 			self["aovs"] = Gaffer.StringPlug( "aovs", Gaffer.Plug.Direction.In, "beauty:rgba" )
 			self["tasks"] = Gaffer.IntPlug( "tasks", Gaffer.Plug.Direction.In, 1 )
@@ -84,13 +85,27 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			self["__chunkExpression"].setExpression( inspect.cleandoc(
 				"""
 				import collections
+				import re
+
 				rawInfo = parent["__udimQuery"]["out"]
 
 				defaultFileName = parent["defaultFileName"]
 				defaultResolution = parent["defaultResolution"]
 
+				selectUdimsStr = parent["udims"]
+
+				# FrameList really ought to take care of this check, instead of just doing
+				# something obviously wrong
+				if re.match( ".*[0-9] +[0-9].*", selectUdimsStr ):
+					raise RuntimeError( "ArnoldTextureBake : Udim list must be comma separated." )
+
+				selectUdims = set( IECore.FrameList.parse( selectUdimsStr ).asList() )
+
 				allMeshes = collections.defaultdict( lambda : [] )
 				for udim, meshes in rawInfo.items():
+					if selectUdims and not int( udim ) in selectUdims:
+						continue
+
 					for mesh, extraAttributes in meshes.items():
 						resolution = defaultResolution
 						if "bake:resolution" in extraAttributes:
@@ -252,10 +267,12 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["defaultFileName"] = Gaffer.StringPlug( "defaultFileName", defaultValue = "${bakeDirectory}/<AOV>/<AOV>.<UDIM>.exr" )
 		self["defaultResolution"] = Gaffer.IntPlug( "defaultResolution", defaultValue = 512 )
 		self["uvSet"] = Gaffer.StringPlug( "uvSet", defaultValue = 'uv' )
+		self["udims"] = Gaffer.StringPlug( "udims", defaultValue = "" )
 		self["normalOffset"] = Gaffer.FloatPlug( "offset", defaultValue = 0.1 )
 		self["aovs"] = Gaffer.StringPlug( "aovs", defaultValue = 'beauty:RGBA' )
 		self["tasks"] = Gaffer.IntPlug( "tasks", defaultValue = 1 )
 		self["cleanupIntermediateFiles"] = Gaffer.BoolPlug( "cleanupIntermediateFiles", defaultValue = True )
+
 
 		self["applyMedianFilter"] = Gaffer.BoolPlug( "applyMedianFilter", Gaffer.Plug.Direction.In, False )
 		self["medianRadius"] = Gaffer.IntPlug( "medianRadius", Gaffer.Plug.Direction.In, 1 )
@@ -357,6 +374,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__CameraSetup"]["aovs"].setInput( self["aovs"] )
 		self["__CameraSetup"]["normalOffset"].setInput( self["normalOffset"] )
 		self["__CameraSetup"]["tasks"].setInput( self["tasks"] )
+		self["__CameraSetup"]["udims"].setInput( self["udims"] )
 
 		self["__Expression"] = Gaffer.Expression()
 		self["__Expression"].setExpression( 'parent["__CameraSetup"]["taskIndex"] = context.get( "BAKE_WEDGE:index", 0 )', "python" )
