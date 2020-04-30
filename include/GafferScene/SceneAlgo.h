@@ -177,6 +177,26 @@ struct History : public IECore::RefCounted
 
 GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path );
 
+/// Extends History to provide information on the history of a specific attribute.
+/// Attributes may be renamed by ShuffleAttributes nodes and this is reflected
+/// in the `attributeName` field.
+struct AttributeHistory : public History
+{
+	IE_CORE_DECLAREMEMBERPTR( AttributeHistory )
+	AttributeHistory(
+		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const IECore::InternedString &attributeName, const IECore::ConstObjectPtr &attributeValue
+	) :	History( scene, context ), attributeName( attributeName ), attributeValue( attributeValue ) {}
+	IECore::InternedString attributeName;
+	IECore::ConstObjectPtr attributeValue;
+};
+
+/// Filters `attributesHistory` and returns a history for the specific `attribute`.
+/// `attributesHistory` should have been obtained from a previous call to
+/// `history( scene->attributesPlug(), path )`. If the attribute doesn't exist then
+/// null is returned.
+GAFFERSCENE_API AttributeHistory::Ptr attributeHistory( const History *attributesHistory, const IECore::InternedString &attribute );
+
 /// Returns the upstream scene originally responsible for generating the specified location.
 GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
