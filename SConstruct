@@ -415,6 +415,11 @@ elif env["PLATFORM"] == "posix" :
 		if gccVersion >= [ 4, 2 ] :
 			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
 
+		# Old GCC emits spurious "maybe uninitialized" warnings when using
+		# boost::optional
+		if gccVersion < [ 5, 1 ] :
+			env.Append( CXXFLAGS = [ "-Wno-error=maybe-uninitialized" ] )
+
 		if gccVersion >= [ 5, 1 ] :
 			env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
 
