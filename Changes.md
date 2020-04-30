@@ -1,6 +1,11 @@
 0.57.x.x (relative to 0.57.1.0)
 ========
 
+Improvements
+------------
+
+- ArnoldTextureBake : Added `udims` parameter
+
 Build
 -----
 
