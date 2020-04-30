@@ -25,6 +25,7 @@ Breaking Changes
     - `GafferCortex.ParameterisedHolderExecutableNode` is no longer an alias for `GafferCortex.ParameterisedHolderTaskNode`.
     - `GafferCortex` attributes can no longer be accessed via the `Gaffer` namespace.
     - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
+- RecursiveChildIterator : Changed private member data. Source compatibility is maintained.
 
 0.57.3.0 (relative to 0.57.2.0)
 ========

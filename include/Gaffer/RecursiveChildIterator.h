@@ -39,6 +39,7 @@
 
 #include "Gaffer/GraphComponent.h"
 
+#include "boost/container/small_vector.hpp"
 #include "boost/iterator/iterator_facade.hpp"
 
 namespace Gaffer
@@ -119,7 +120,7 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 			GraphComponent::ChildIterator it;
 		};
 
-		typedef std::vector<Level> Levels;
+		using Levels = boost::container::small_vector<Level, 4>;
 		Levels m_stack;
 		bool m_pruned;
 
