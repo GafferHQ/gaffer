@@ -6,6 +6,11 @@ Improvements
 
 - ArnoldTextureBake : Added `udims` plug.
 
+Fixes
+-----
+
+- Viewer : Fixed a bug in the render control widget which caused the entire Viewer to fail if there was an error computing the metadata for an image.
+
 Build
 -----
 

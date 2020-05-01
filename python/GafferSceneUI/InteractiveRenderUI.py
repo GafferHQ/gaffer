@@ -129,7 +129,10 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 			return None
 
 		with view.getContext() :
-			renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
+			try :
+				renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
+			except :
+				return None
 
 		if not renderScene :
 			return None
@@ -142,7 +145,10 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		# Make-shift detection of an in-progress render.
 		# Finished images have the `fileFormat` key courtesy of OIIO.
 		## \TODO add more formal metadata to determine this
-		return "fileFormat" not in imagePlug.metadata()
+		try :
+			return "fileFormat" not in imagePlug.metadata()
+		except :
+			return False
 
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :
