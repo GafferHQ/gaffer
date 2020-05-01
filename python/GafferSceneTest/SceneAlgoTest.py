@@ -474,6 +474,68 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/", "surface" ), None )
 		self.assertEqual( GafferScene.SceneAlgo.shaderTweaks( parent["out"], "/sphere", "surface" ), None )
 
+	def testShaderTweaksWithCopyAttributes( self ) :
+
+		#     plane
+		#       |
+		#  shaderAssignment
+		#       /\
+		#      /  \
+		# tweaks1 tweaks2
+		#      \  /
+		#  copyAttributes
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		shader = GafferSceneTest.TestShader()
+		shader["type"].setValue( "test:surface" )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["shader"].setInput( shader["out"] )
+		shaderAssignment["filter"].setInput( planeFilter["out"] )
+
+		tweaks1 = GafferScene.ShaderTweaks()
+		tweaks1["in"].setInput( shaderAssignment["out"] )
+		tweaks1["filter"].setInput( planeFilter["out"] )
+		tweaks1["shader"].setValue( "test:surface" )
+
+		tweaks2 = GafferScene.ShaderTweaks()
+		tweaks2["in"].setInput( shaderAssignment["out"] )
+		tweaks2["filter"].setInput( planeFilter["out"] )
+		tweaks2["shader"].setValue( "test:surface" )
+
+		copyAttributes = GafferScene.CopyAttributes()
+		copyAttributes["in"][0].setInput( tweaks1["out"] )
+		copyAttributes["in"][1].setInput( tweaks2["out"] )
+
+		# No filter
+
+		self.assertEqual(
+			GafferScene.shaderTweaks( copyAttributes["out"], "/plane", "test:surface" ),
+			tweaks1
+		)
+
+		# Filter, but nothing being copied
+
+		copyAttributes["filter"].setInput( planeFilter["out"] )
+		copyAttributes["attributes"].setValue( "" )
+		self.assertEqual(
+			GafferScene.shaderTweaks( copyAttributes["out"], "/plane", "test:surface" ),
+			tweaks1
+		)
+
+		# Attribute actually being copied
+
+		copyAttributes["attributes"].setValue( "test:surface" )
+		self.assertEqual(
+			GafferScene.shaderTweaks( copyAttributes["out"], "/plane", "test:surface" ),
+			tweaks2
+		)
+
 	def testObjectTweaks( self ) :
 
 		camera1 = GafferScene.Camera( "Camera1" )

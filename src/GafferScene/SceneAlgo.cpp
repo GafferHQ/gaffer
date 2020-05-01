@@ -571,7 +571,7 @@ SceneProcessor *objectTweaksWalk( const SceneAlgo::History *h )
 	return nullptr;
 }
 
-ShaderTweaks *shaderTweaksWalk( const SceneAlgo::History *h, const IECore::InternedString &attributeName )
+ShaderTweaks *shaderTweaksWalk( const SceneAlgo::AttributeHistory *h )
 {
 	if( auto tweaks = h->scene->parent<ShaderTweaks>() )
 	{
@@ -579,7 +579,7 @@ ShaderTweaks *shaderTweaksWalk( const SceneAlgo::History *h, const IECore::Inter
 		{
 			Context::Scope contextScope( h->context.get() );
 			if(
-				StringAlgo::matchMultiple( attributeName, tweaks->shaderPlug()->getValue() ) &&
+				StringAlgo::matchMultiple( h->attributeName, tweaks->shaderPlug()->getValue() ) &&
 				( filterResult( tweaks->filterPlug(), tweaks->inPlug() ) & PathMatcher::ExactMatch )
 			)
 			{
@@ -590,7 +590,7 @@ ShaderTweaks *shaderTweaksWalk( const SceneAlgo::History *h, const IECore::Inter
 
 	for( const auto &p : h->predecessors )
 	{
-		if( auto tweaks = shaderTweaksWalk( p.get(), attributeName ) )
+		if( auto tweaks = shaderTweaksWalk( static_cast<SceneAlgo::AttributeHistory *>( p.get() ) ) )
 		{
 			return tweaks;
 		}
@@ -722,14 +722,10 @@ ShaderTweaks *SceneAlgo::shaderTweaks( const ScenePlug *scene, const ScenePlug::
 	ScenePlug::ScenePath inheritancePath = path;
 	while( inheritancePath.size() )
 	{
-		ConstCompoundObjectPtr attributes = scene->attributes( inheritancePath );
-		if( attributes->member<Object>( attributeName ) )
+		History::ConstPtr h = history( scene->attributesPlug(), inheritancePath );
+		if( auto ah = attributeHistory( h.get(), attributeName ) )
 		{
-			History::ConstPtr h = history( scene->attributesPlug(), inheritancePath );
-			if( h )
-			{
-				return shaderTweaksWalk( h.get(), attributeName );
-			}
+			return shaderTweaksWalk( ah.get() );
 		}
 		inheritancePath.pop_back();
 	}

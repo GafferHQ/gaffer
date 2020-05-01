@@ -5,7 +5,9 @@ Fixes
 -----
 
 - CopyAttributes : Fixed bugs triggered by non-existent source locations. CopyAttributes now matches the behavior of CopyPrimitiveVariables : if the source location does not exist, nothing is copied and no error is caused.
+- Viewer : Fixed bugs in the "Edit Tweaks..." menu item. The wrong ShaderTweaks node could be displayed for certain upstream configurations of nodes like CopyAttributes, ShuffleAttributes and MergeScenes.
 - OSLCode : Removed string substitutions on code, so that symbols such as `#` can be used directly. Substitutions were of no use anyway, because they were not being applied in a suitable context.
+- SceneAlgo : Fixed `shaderTweaks()` bugs that could cause the wrong node to be returned.
 
 API
 ---
