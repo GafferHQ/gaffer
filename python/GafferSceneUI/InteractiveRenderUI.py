@@ -45,7 +45,7 @@ import GafferUI
 import GafferImageUI
 
 ##########################################################################
-# ImageView UI for the viewed images render node (if available)
+# ImageView UI for the viewed image's render node (if available)
 ##########################################################################
 
 for key, value in {
@@ -224,9 +224,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( GafferScene.InteractiveRender.State.Stopped )
 
 ##########################################################################
-# Metadata for GafferScene.Preview.InteractiveRender node. We intend
-# for this to entirely replace the GafferScene.InteractiveRender node
-# which is registered under this section.
+# Metadata for InteractiveRender node.
 ##########################################################################
 
 Gaffer.Metadata.registerNode(
