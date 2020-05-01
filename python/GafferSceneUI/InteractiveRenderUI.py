@@ -45,7 +45,7 @@ import GafferUI
 import GafferImageUI
 
 ##########################################################################
-# ImageView UI for the viewed images render node (if available)
+# ImageView UI for the viewed image's render node (if available)
 ##########################################################################
 
 for key, value in {
@@ -129,7 +129,10 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 			return None
 
 		with view.getContext() :
-			renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
+			try :
+				renderScene = GafferScene.SceneAlgo.sourceScene( view["in"] )
+			except :
+				return None
 
 		if not renderScene :
 			return None
@@ -142,7 +145,10 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 		# Make-shift detection of an in-progress render.
 		# Finished images have the `fileFormat` key courtesy of OIIO.
 		## \TODO add more formal metadata to determine this
-		return "fileFormat" not in imagePlug.metadata()
+		try :
+			return "fileFormat" not in imagePlug.metadata()
+		except :
+			return False
 
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :
@@ -224,9 +230,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( GafferScene.InteractiveRender.State.Stopped )
 
 ##########################################################################
-# Metadata for GafferScene.Preview.InteractiveRender node. We intend
-# for this to entirely replace the GafferScene.InteractiveRender node
-# which is registered under this section.
+# Metadata for InteractiveRender node.
 ##########################################################################
 
 Gaffer.Metadata.registerNode(
