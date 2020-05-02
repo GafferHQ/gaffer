@@ -24,6 +24,18 @@ When you dispatch your script to the renderer, performance data will output to t
 As an alternative, the [stats app](../../Reference/CommandLineReference/stats.md) allows the same monitoring to be performed from the command line, without the need to dispatch the script.
 
 
+## Annotating scripts with performance data ##
+
+The stats app can generate annotations that display per-node performance and Context data by using the built-in `-annotatedScript` option. This feature will make a copy of the monitored script and add each node's performance statistics as graph metadata.
+To annotate a script with performance data, use the following command:
+```
+gaffer stats <script> -performanceMonitor -annotatedScript <annotatedScript>
+```
+If you'd like the annotations to contain information about the number of [Contexts](../Contexts/index.md) used, replace `-performanceMonitor` with `-contextMonitor`.
+For more details on the stats app's command-line options, see the [stats app reference](../../Reference/CommandLineReference/stats.md).
+
+
+
 ## See also ##
 
 - [Performance Best Practices](../PerformanceBestPractices/index.md)
