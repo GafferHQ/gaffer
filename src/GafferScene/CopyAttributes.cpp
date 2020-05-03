@@ -143,14 +143,20 @@ void CopyAttributes::hashAttributes( const ScenePath &path, const Gaffer::Contex
 	const std::string sourceLocation = sourceLocationPlug()->getValue();
 	if( sourceLocation.empty() )
 	{
-		sourcePlug()->attributesPlug()->hash( h );
+		if( sourcePlug()->exists() )
+		{
+			sourcePlug()->attributesPlug()->hash( h );
+		}
 	}
 	else
 	{
 		ScenePlug::ScenePath sourceLocationPath;
 		ScenePlug::stringToPath( sourceLocation, sourceLocationPath );
 		ScenePlug::PathScope pathScope( context, sourceLocationPath );
-		sourcePlug()->attributesPlug()->hash( h );
+		if( sourcePlug()->exists() )
+		{
+			sourcePlug()->attributesPlug()->hash( h );
+		}
 	}
 
 	attributesPlug()->hash( h );
@@ -174,14 +180,25 @@ IECore::ConstCompoundObjectPtr CopyAttributes::computeAttributes( const ScenePat
 	const std::string sourceLocation = sourceLocationPlug()->getValue();
 	if( sourceLocation.empty() )
 	{
-		sourceAttributes = sourcePlug()->attributesPlug()->getValue();
+		if( sourcePlug()->exists() )
+		{
+			sourceAttributes = sourcePlug()->attributesPlug()->getValue();
+		}
 	}
 	else
 	{
 		ScenePlug::ScenePath sourceLocationPath;
 		ScenePlug::stringToPath( sourceLocation, sourceLocationPath );
 		ScenePlug::PathScope pathScope( context, sourceLocationPath );
-		sourceAttributes = sourcePlug()->attributesPlug()->getValue();
+		if( sourcePlug()->exists() )
+		{
+			sourceAttributes = sourcePlug()->attributesPlug()->getValue();
+		}
+	}
+
+	if( !sourceAttributes )
+	{
+		return result;
 	}
 
 	const std::string matchPattern = attributesPlug()->getValue();
