@@ -242,6 +242,20 @@ void substituteShaderIfNecessary( IECoreScene::ConstShaderNetworkPtr &shaderNetw
 	}
 }
 
+void hashShaderOutputParameter( const IECoreScene::ShaderNetwork *network, const IECoreScene::ShaderNetwork::Parameter &parameter, IECore::MurmurHash &h )
+{
+
+	h.append( parameter.name );
+
+	network->getShader( parameter.shader )->hash( h );
+
+	for( const auto &i : network->inputConnections( parameter.shader ) )
+	{
+		h.append( i.destination.name );
+		hashShaderOutputParameter( network, i.source, h );
+	}
+}
+
 
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
@@ -2148,6 +2162,34 @@ class ArnoldLight : public ArnoldObjectBase
 				}
 				else
 				{
+					const IECoreScene::Shader* lightOutput = m_attributes->lightShader()->outputShader();
+					if( lightOutput && lightOutput->getName() == "quad_light" )
+					{
+						IECoreScene::ShaderNetwork::Parameter newColorParameter = m_attributes->lightShader()->getOutput();
+						newColorParameter.name = "color";
+						IECoreScene::ShaderNetwork::Parameter newColorInput = m_attributes->lightShader()->input( newColorParameter );
+
+						IECoreScene::ShaderNetwork::Parameter oldColorParameter = oldAttributes->lightShader()->getOutput();
+						oldColorParameter.name = "color";
+						IECoreScene::ShaderNetwork::Parameter oldColorInput = oldAttributes->lightShader()->input( oldColorParameter );
+
+						if( newColorInput && oldColorInput )
+						{
+							IECore::MurmurHash newColorHash, oldColorHash;
+							hashShaderOutputParameter( m_attributes->lightShader(), newColorInput, newColorHash );
+							hashShaderOutputParameter( oldAttributes->lightShader(), oldColorInput, oldColorHash );
+							if( newColorHash != oldColorHash )
+							{
+								// Arnold currently fails to update quad light shaders during interactive renders
+								// correctly.  ( At least when there is an edit to the color parameter, and it's
+								// driven by a network which contains a texture. )
+								// Until they fix this, we can just throw out and rebuild quad lights whenever
+								// there's a change to a network driving color
+								return false;
+							}
+						}
+					}
+
 					bool keptRootShader = m_lightShader->update( m_attributes->lightShader() );
 					if( !keptRootShader )
 					{
