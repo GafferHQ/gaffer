@@ -26,6 +26,23 @@ Breaking Changes
     - `GafferCortex` attributes can no longer be accessed via the `Gaffer` namespace.
     - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
 
+0.57.3.0 (relative to 0.57.2.0)
+========
+
+Fixes
+-----
+
+- Arnold : Added workaround for Arnold bug which prevented interactive edits to quad light colour textures.
+- CopyAttributes : Fixed bugs triggered by non-existent source locations. CopyAttributes now matches the behavior of CopyPrimitiveVariables : if the source location does not exist, nothing is copied and no error is caused.
+- Viewer : Fixed bugs in the "Edit Tweaks..." menu item. The wrong ShaderTweaks node could be displayed for certain upstream configurations of nodes like CopyAttributes, ShuffleAttributes and MergeScenes.
+- OSLCode : Removed string substitutions on code, so that symbols such as `#` can be used directly. Substitutions were of no use anyway, because they were not being applied in a suitable context.
+- SceneAlgo : Fixed `shaderTweaks()` bugs that could cause the wrong node to be returned.
+
+API
+---
+
+- SceneAlgo : Added an `attributeHistory()` method which returns a computation history for one specific attribute.
+
 0.57.2.0 (relative to 0.57.1.0)
 ========
 
@@ -33,6 +50,11 @@ Improvements
 ------------
 
 - ArnoldTextureBake : Added `udims` plug.
+
+Fixes
+-----
+
+- Viewer : Fixed a bug in the render control widget which caused the entire Viewer to fail if there was an error computing the metadata for an image.
 
 Build
 -----
