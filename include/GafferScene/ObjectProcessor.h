@@ -92,11 +92,11 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 		/// by default. This was a mistake, and we want to ensure that we don't repeat the mistake
 		/// for new nodes.
 		ObjectProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault );
-		friend class Deformer;
 		friend class MeshType;
 		friend class MapOffset;
 		friend class MapProjection;
 		friend class MeshTangents;
+		friend class PointsType;
 		friend class PrimitiveVariables;
 
 };

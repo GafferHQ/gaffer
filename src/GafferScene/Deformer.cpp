@@ -59,12 +59,6 @@ Deformer::Deformer( const std::string &name, size_t minInputs, size_t maxInputs 
 	init();
 }
 
-Deformer::Deformer( const std::string &name, IECore::PathMatcher::Result filterDefault )
-	:	ObjectProcessor( name, filterDefault )
-{
-	init();
-}
-
 void Deformer::init()
 {
 	storeIndexOfNextChild( g_firstPlugIndex );

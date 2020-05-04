@@ -1,9 +1,15 @@
 0.58.x.x
 ========
 
+Improvements
+------------
+
+- PointsType : Removed unnecessary bounds computation overhead.
+
 Breaking Changes
 ----------------
 
+- PointsType : Changed base class from Deformer to ObjectProcessor.
 - Startup :
   - Removed several compatibility shims for loading files from Gaffer versions prior to 0.20.0.0. Either resave the file from version 0.57.0.0 or adopt the appropriate shim into your own configuration. The following are affected :
      - RemoveChannels nodes.
