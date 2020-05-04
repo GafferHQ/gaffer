@@ -116,6 +116,19 @@ class GAFFER_API ValuePlug : public Plug
 			/// Suitable for regular processes that don't spawn
 			/// TBB tasks. It is essential that any task-spawning
 			/// processes use one of the dedicated policies below.
+			/// \todo It isn't actually clear that the locking of the
+			/// Standard policy is an improvement over the non-locked
+			/// Legacy policy. Locking on a downstream Standard
+			/// compute might prevent multiple threads from participating
+			/// in an upstream TaskCollaboration. And for small computes
+			/// that are unlikely to be needed by multiple threads,
+			/// we may well prefer to avoid the contention. Note that
+			/// many scene computes may fit this category, as every
+			/// non-filtered location is implemented as a very cheap
+			/// pass-through compute. There's also a decent argument
+			/// that any non-trivial amount of work should be using TBB,
+			/// so it would be a mistake to do anything expensive with
+			/// a Standard policy anyway.
 			Standard,
 			/// Suitable for processes that spawn TBB tasks.
 			/// Threads waiting for the same result will collaborate
