@@ -500,6 +500,84 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugValueWidget )
 
+# _CellPlugValueWidget
+# ====================
+
+class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+
+		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+		if "enabled" in plug and rowPlug != rowPlug.parent().defaultRow() :
+			enabledPlugValueWidget = GafferUI.BoolPlugValueWidget(
+				plug["enabled"],
+				displayMode=GafferUI.BoolWidget.DisplayMode.Switch
+			)
+			self.__row.append( enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
+
+		plugValueWidget = GafferUI.PlugValueWidget.create( plug["value"] )
+		if isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
+			plugValueWidget.setNameVisible( False )
+
+		# Apply some fixed widths for some widgets, otherwise they're
+		# a bit too eager to grow. \todo Should we change the underlying
+		# behaviour of the widgets themselves?
+		fixedWidth = self.__fixedWidth( plugValueWidget )
+		if fixedWidth is not None :
+			plugValueWidget._qtWidget().setFixedWidth( fixedWidth )
+			plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+
+		self.__row.append( plugValueWidget )
+
+		self._updateFromPlug()
+
+	def childPlugValueWidget( self, childPlug ) :
+
+		for widget in self.__row :
+			if widget.getPlug() == childPlug :
+				return widget
+
+		return None
+
+	def _updateFromPlug( self ) :
+
+		if "enabled" in self.getPlug() :
+			enabled = False
+			with self.getContext() :
+				with IECore.IgnoredExceptions( Exception ) :
+					enabled = self.getPlug()["enabled"].getValue()
+			self.__row[-1].setEnabled( enabled )
+
+	__numericFieldWidth = 60
+
+	@classmethod
+	def __fixedWidth( cls, plugValueWidget ) :
+
+		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
+			return cls.__numericFieldWidth
+		elif isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
+			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() ) + 20
+		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
+			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() )
+		elif isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
+			return 250
+		elif isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
+			w = cls.__fixedWidth( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
+			if w is not None :
+				return w + 30
+		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
+			w = 0
+			for p in plugValueWidget.getPlug() :
+				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p ) ) )
+			return GafferUI.PlugWidget.labelWidth() + w
+
+		return None
+
+GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.CellPlug, _CellPlugValueWidget )
+
 # _PlugTableView
 # ==============
 
@@ -597,18 +675,12 @@ class _PlugTableView( GafferUI.Widget ) :
 		if not index.flags() & QtCore.Qt.ItemIsEnabled or not index.flags() & QtCore.Qt.ItemIsEditable :
 			return
 
-		if not index.data( _PlugTableModel.CellPlugEnabledRole ) :
-			return
-
 		if scrollTo :
 			self._qtWidget().scrollTo( index )
 
 		rect = self._qtWidget().visualRect( index )
 		rect.setTopLeft( self._qtWidget().viewport().mapToGlobal( rect.topLeft() ) )
 		rect.setBottomRight( self._qtWidget().viewport().mapToGlobal( rect.bottomRight() ) )
-
-		if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
-			plug = plug["value"]
 
 		_EditWindow.popupEditor(
 			plug,
@@ -1277,8 +1349,6 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
 class _EditWindow( GafferUI.Window ) :
 
-	__numericFieldWidth = 60
-
 	# Considered private - use `_EditWindow.popupEditor()` instead.
 	def __init__( self, plugValueWidget, **kw ) :
 
@@ -1289,17 +1359,6 @@ class _EditWindow( GafferUI.Window ) :
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
-		if isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
-			plugValueWidget.setNameVisible( False )
-
-		# Apply some fixed widths for some widgets, otherwise they're
-		# a bit too eager to grow. \todo Should we change the underlying
-		# behaviour of the widgets themselves?
-		fixedWidth = self.__fixedWidth( plugValueWidget )
-		if fixedWidth is not None :
-			plugValueWidget._qtWidget().setFixedWidth( fixedWidth )
-			plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
-
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 	@classmethod
@@ -1308,10 +1367,12 @@ class _EditWindow( GafferUI.Window ) :
 		plugValueWidget = GafferUI.PlugValueWidget.create( plug )
 		cls.__currentWindow = _EditWindow( plugValueWidget )
 
-		if isinstance( plugValueWidget, GafferUI.PresetsPlugValueWidget ) :
-			if not Gaffer.Metadata.value( plugValueWidget.getPlug(), "presetsPlugValueWidget:isCustom" ) :
-				plugValueWidget.menu().popup()
-				return
+		if isinstance( plugValueWidget, _CellPlugValueWidget ) :
+			valuePlugValueWidget = plugValueWidget.childPlugValueWidget( plug["value"] )
+			if isinstance( valuePlugValueWidget, GafferUI.PresetsPlugValueWidget ) :
+				if not Gaffer.Metadata.value( valuePlugValueWidget.getPlug(), "presetsPlugValueWidget:isCustom" ) :
+					valuePlugValueWidget.menu().popup()
+					return
 
 		windowSize = cls.__currentWindow._qtWidget().sizeHint()
 		cls.__currentWindow.setPosition( plugBound.center() - imath.V2i( windowSize.width() / 2, windowSize.height() / 2 ) )
@@ -1358,29 +1419,8 @@ class _EditWindow( GafferUI.Window ) :
 			return plugValueWidget.textWidget()
 		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
 			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0] ) )
-
-	@classmethod
-	def __fixedWidth( cls, plugValueWidget ) :
-
-		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-			return cls.__numericFieldWidth
-		elif isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
-			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() ) + 20
-		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
-			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() )
-		elif isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
-			return 250
-		elif isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
-			w = cls.__fixedWidth( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
-			if w is not None :
-				return w + 30
-		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
-			w = 0
-			for p in plugValueWidget.getPlug() :
-				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p ) ) )
-			return GafferUI.PlugWidget.labelWidth() + w
-
-		return None
+		elif isinstance( plugValueWidget, _CellPlugValueWidget ) :
+			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
 
 # _SectionChooser
 # ===============

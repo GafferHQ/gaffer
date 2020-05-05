@@ -11,7 +11,9 @@ Fixes
 Improvements
 ------------
 
-- Spreadsheet : When promoting plugs - such as those from Attributes node - which have their own "enabled" switch, this switch is now adopted by the spreadsheet, instead of having an additional "enabled" switch on the cell.
+- Spreadsheet :
+  - The enabled/disabled state of a cell may now be edited directly via a new switch in the popup editing window.
+  - When promoting plugs - such as those from Attributes node - which have their own "enabled" switch, this switch is now adopted by the spreadsheet, instead of having an additional "enabled" switch on the cell.
 
 API
 ---
