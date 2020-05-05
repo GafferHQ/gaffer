@@ -8,6 +8,11 @@ Fixes
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
 - Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
 
+API
+---
+
+- Spreadsheet : Added an `addColumn()` overload with an `adoptEnabledPlug` boolean argument. This allows cells to reuse the `enabled` plug from their `value` plug if it has one.
+
 0.57.3.0 (relative to 0.57.2.0)
 ========
 

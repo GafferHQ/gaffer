@@ -43,13 +43,13 @@ namespace Gaffer
 template<typename T>
 T *Spreadsheet::CellPlug::valuePlug()
 {
-	return getChild<T>( 1 );
+	return getChild<T>( children().size() - 1 );
 }
 
 template<typename T>
 const T *Spreadsheet::CellPlug::valuePlug() const
 {
-	return getChild<T>( 1 );
+	return getChild<T>( children().size() - 1 );
 }
 
 } // namespace Gaffer

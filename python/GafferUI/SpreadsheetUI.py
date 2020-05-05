@@ -1072,7 +1072,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
 				with self.__context :
 					try :
-						enabled = plug["enabled"].getValue()
+						enabled = plug.enabledPlug().getValue()
 					except :
 						return None
 			return enabled
@@ -1187,7 +1187,10 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				if currentPreset is not None :
 					return currentPreset
 				if isinstance( plug, Gaffer.NameValuePlug ) :
-					return plug["enabled"].getValue(), plug["value"].getValue()
+					if "enabled" in plug.parent() :
+						return plug["enabled"].getValue(), plug["value"].getValue()
+					else :
+						return plug["value"].getValue()
 				elif isinstance( plug, Gaffer.TransformPlug ) :
 					return collections.OrderedDict( [
 						( "T", plug["translate"].getValue() ),
@@ -1841,7 +1844,7 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	if cellPlug is not None :
 
 		enabled = None
-		enabledPlug = cellPlug["enabled"]
+		enabledPlug = cellPlug.enabledPlug()
 		with plugValueWidget.getContext() :
 			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
 				enabled = enabledPlug.getValue()
