@@ -10,6 +10,7 @@ Breaking Changes
 ----------------
 
 - PointsType : Changed base class from Deformer to ObjectProcessor.
+- GafferUI : Removed deprecated `_qtImport()` method. Use `from Qt import` instead.
 - Startup :
   - Removed several compatibility shims for loading files from Gaffer versions prior to 0.20.0.0. Either resave the file from version 0.57.0.0 or adopt the appropriate shim into your own configuration. The following are affected :
      - RemoveChannels nodes.
