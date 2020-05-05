@@ -43,8 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-# import lazily to improve startup of apps which don't use GL functionality
-IECoreGL = Gaffer.lazyImport( "IECoreGL" )
+import IECoreGL
 
 ##########################################################################
 # Viewer implementation
