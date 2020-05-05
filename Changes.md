@@ -32,6 +32,7 @@ Breaking Changes
 Fixes
 -----
 
+- Viewer : Fixed a bug in the render control widget which caused the entire Viewer to fail if there was an error computing the metadata for an image.
 - Arnold : Added workaround for Arnold bug which prevented interactive edits to quad light colour textures.
 - CopyAttributes : Fixed bugs triggered by non-existent source locations. CopyAttributes now matches the behavior of CopyPrimitiveVariables : if the source location does not exist, nothing is copied and no error is caused.
 - Viewer : Fixed bugs in the "Edit Tweaks..." menu item. The wrong ShaderTweaks node could be displayed for certain upstream configurations of nodes like CopyAttributes, ShuffleAttributes and MergeScenes.
@@ -50,11 +51,6 @@ Improvements
 ------------
 
 - ArnoldTextureBake : Added `udims` plug.
-
-Fixes
------
-
-- Viewer : Fixed a bug in the render control widget which caused the entire Viewer to fail if there was an error computing the metadata for an image.
 
 Build
 -----
