@@ -1803,14 +1803,17 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	if rowPlug is None :
 		return
 
-	if rowPlug == rowPlug.parent().defaultRow() :
-		return
+	isDefaultRow = rowPlug == rowPlug.parent().defaultRow()
 
-	menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
+	def ensureDivider() :
+		if menuDefinition.item( "/__SpreadsheetRowAndCellDivider__" ) is None :
+			menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
 
 	# Row menu items
 
-	if plug.parent() == rowPlug :
+	if plug.parent() == rowPlug and not isDefaultRow :
+
+		ensureDivider()
 
 		menuDefinition.prepend(
 			"/Delete Row",
@@ -1843,19 +1846,23 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	cellPlug = plug if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug.ancestor( Gaffer.Spreadsheet.CellPlug )
 	if cellPlug is not None :
 
-		enabled = None
-		enabledPlug = cellPlug.enabledPlug()
-		with plugValueWidget.getContext() :
-			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-				enabled = enabledPlug.getValue()
+		if not isDefaultRow or "enabled" not in cellPlug :
 
-		menuDefinition.prepend(
-			"/Disable Cell" if enabled else "/Enable Cell",
-			{
-				"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
-			}
-		)
+			ensureDivider()
+
+			enabled = None
+			enabledPlug = cellPlug.enabledPlug()
+			with plugValueWidget.getContext() :
+				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+					enabled = enabledPlug.getValue()
+
+			menuDefinition.prepend(
+				"/Disable Cell" if enabled else "/Enable Cell",
+				{
+					"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
+					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
+				}
+			)
 
 def __addColumn( spreadsheet, plug ) :
 
@@ -1864,11 +1871,17 @@ def __addColumn( spreadsheet, plug ) :
 	# plugs are added to spreadsheets.
 	columnName = Gaffer.Metadata.value( plug, "spreadsheet:columnName" ) or plug.getName()
 
+	# If the plug already has a child `enabled` plug, then we always adopt
+	# it to enable the cell. This makes for a much simpler user experience
+	# for NameValuePlugs and TweakPlugs. In an ideal world we would have
+	# made this the standard behaviour from the start.
+	adoptEnabledPlug = isinstance( plug.getChild( "enabled" ), Gaffer.BoolPlug )
+
 	# Rows plug may have been promoted, in which case we need to edit
 	# the source, which will automatically propagate the new column to
 	# the spreadsheet.
 	rowsPlug = spreadsheet["rows"].source()
-	columnIndex = rowsPlug.addColumn( plug, columnName )
+	columnIndex = rowsPlug.addColumn( plug, columnName, adoptEnabledPlug )
 	valuePlug = rowsPlug.defaultRow()["cells"][columnIndex]["value"]
 	Gaffer.MetadataAlgo.copy( plug, valuePlug, exclude = "spreadsheet:columnName layout:* deletable" )
 
