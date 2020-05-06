@@ -51,6 +51,7 @@
 
 #include "IECore/MessageHandler.h"
 
+#include "boost/algorithm/string.hpp"
 #include "boost/format.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 #include "boost/tokenizer.hpp"
@@ -234,14 +235,21 @@ std::string Serialisation::classPath( boost::python::object &object )
 
 	if( PyObject_HasAttrString( cls.ptr(), "__qualname__" ) )
 	{
-		// In Python 3, __qualname__ will give us a qualified name
-		// for a nested class, which is exactly what we want.
-		// See https://www.python.org/dev/peps/pep-3155.
-		//
-		// In the meantime we still support __qualname__ in Python
-		// 2, so that nested classes can provide it manually where
-		// necessary.
-		result += extract<std::string>( cls.attr( "__qualname__" ) );
+		// In Python 3, __qualname__ is automatically generated to give us
+		// a qualified name for a nested class - see https://www.python.org/dev/peps/pep-3155.
+		// In Python 2, it may be provided manually by bindings as necessary.
+		std::string qualName = extract<std::string>( cls.attr( "__qualname__" ) );
+		// The automatically generated name may contain a prefix made redundant
+		// by our `from .Foo import Foo` convention for building modules. Strip it.
+		const size_t dotPos = qualName.find( '.' );
+		if( dotPos != std::string::npos )
+		{
+			if( boost::ends_with( result, "." + qualName.substr( 0, dotPos ) + "." ) )
+			{
+				qualName.erase( 0, dotPos + 1 );
+			}
+		}
+		result += qualName;
 	}
 	else
 	{
