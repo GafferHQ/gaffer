@@ -1449,14 +1449,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
-		t = time.clock()
+		clock = time.process_time if six.PY3 else time.clock
+
+		t = clock()
 		d.dispatch( [ lastTask ] )
 
 		timeLimit = 4
 		if Gaffer.isDebug():
 			timeLimit *= 2
 
-		self.assertLess( time.clock() - t, timeLimit )
+		self.assertLess( clock() - t, timeLimit )
 
 	def testTaskListWaitForSequence( self ) :
 
