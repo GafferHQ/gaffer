@@ -1,3 +1,11 @@
+0.57.x.x (relative to 0.57.3.0)
+========
+
+Fixes
+-----
+
+- NodeEditor : Fixed "Connect to Spreadsheet" tool menu item to work with Spreadsheets that have sections. Previously, the submenu showed the sections unnecessarily, and selecting a section triggered an error.
+
 0.57.3.0 (relative to 0.57.2.0)
 ========
 
