@@ -165,7 +165,7 @@ class MessageWidget( GafferUI.Widget ) :
 	def messageCount( self, level = None ) :
 
 		if level is not None :
-			return reduce( lambda x, y : x + ( 1 if y[0] == level else 0 ), self.__messages, 0 )
+			return sum( y[0] == level for y in self.__messages )
 		else :
 			return sum(
 				[
