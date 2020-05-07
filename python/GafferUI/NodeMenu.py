@@ -37,6 +37,7 @@
 
 import inspect
 import imath
+import six
 
 import IECore
 
@@ -104,7 +105,10 @@ class NodeMenu( object ) :
 
 			commandArgs = []
 			with IECore.IgnoredExceptions( TypeError ) :
-				commandArgs = inspect.getargspec( nodeCreator )[0]
+				if six.PY3 :
+					commandArgs = inspect.getfullargspec( nodeCreator ).args
+				else :
+					commandArgs = inspect.getargspec( nodeCreator )[0]
 
 			with Gaffer.UndoScope( script ) :
 
