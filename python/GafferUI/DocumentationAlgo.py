@@ -201,7 +201,8 @@ def markdownToHTML( markdown ) :
 	if cmark is None :
 		return markdown
 
-	return cmark.cmark_markdown_to_html( markdown, len( markdown ), 0 )
+	markdown = markdown.encode( "UTF-8" )
+	return cmark.cmark_markdown_to_html( markdown, len( markdown ), 0 ).decode( "UTF-8" )
 
 def __nodeDocumentation( node ) :
 
