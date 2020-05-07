@@ -80,6 +80,7 @@
 		'nodeSetDriverNodeSelection',
 		'nodeSetDriverNodeSet',
 		'nodeSetDriverSceneSelectionSource',
+		'nodeSetDrivertestMode',
 		'nodeSetNumericBookmarkSet',
 		'nodeSetSourceSet',
 		'nodeSetStandardSet',
