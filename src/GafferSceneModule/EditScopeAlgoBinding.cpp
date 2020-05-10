@@ -114,6 +114,23 @@ Imath::M44f matrixWrapper( EditScopeAlgo::TransformEdit &e )
 	return e.matrix();
 }
 
+bool hasParameterEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
+{
+	return EditScopeAlgo::hasParameterEdit( &scope, path, attribute, parameter );
+}
+
+TweakPlugPtr acquireParameterEditWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::acquireParameterEdit( &scope, path, attribute, parameter, createIfNecessary );
+}
+
+void removeParameterEditWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::removeParameterEdit( &scope, path, attribute, parameter );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -143,6 +160,11 @@ void bindEditScopeAlgo()
 	def( "acquireTransformEdit", &acquireTransformEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "createIfNecessary" ) = true ) );
 	def( "hasTransformEdit", &hasTransformEditWrapper );
 	def( "removeTransformEdit", &removeTransformEditWrapper );
+
+	def( "acquireParameterEdit", &acquireParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ), arg( "createIfNecessary" ) = true ) );
+	def( "hasParameterEdit", &hasParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
+	def( "removeParameterEdit", &removeParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
+
 }
 
 } // namespace GafferSceneModule

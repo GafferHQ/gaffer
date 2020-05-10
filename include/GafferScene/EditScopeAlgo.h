@@ -37,10 +37,13 @@
 #ifndef GAFFERSCENE_EDITSCOPEALGO_H
 #define GAFFERSCENE_EDITSCOPEALGO_H
 
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/TweakPlug.h"
+
 #include "Gaffer/EditScope.h"
 #include "Gaffer/TransformPlug.h"
 
-#include "GafferScene/ScenePlug.h"
+#include "IECoreScene/ShaderNetwork.h"
 
 namespace GafferScene
 {
@@ -86,6 +89,15 @@ struct GAFFERSCENE_API TransformEdit
 GAFFERSCENE_API bool hasTransformEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 GAFFERSCENE_API boost::optional<TransformEdit> acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary = true );
 GAFFERSCENE_API void removeTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+
+// Shaders
+// =======
+//
+// These methods edit shader parameters for a particular location.
+
+GAFFERSCENE_API bool hasParameterEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
+GAFFERSCENE_API TweakPlug *acquireParameterEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter, bool createIfNecessary = true );
+GAFFERSCENE_API void removeParameterEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
 
 } // namespace EditScopeAlgo
 
