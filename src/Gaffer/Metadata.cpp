@@ -78,8 +78,8 @@ typedef std::map<IECore::InternedString, Values> MetadataMap;
 
 MetadataMap &metadataMap()
 {
-	static MetadataMap m;
-	return m;
+	static auto g_m = new MetadataMap;
+	return *g_m;
 }
 
 struct GraphComponentMetadata
@@ -119,8 +119,8 @@ typedef std::map<IECore::TypeId, GraphComponentMetadata> GraphComponentMetadataM
 
 GraphComponentMetadataMap &graphComponentMetadataMap()
 {
-	static GraphComponentMetadataMap m;
-	return m;
+	static auto g_m = new GraphComponentMetadataMap;
+	return *g_m;
 }
 
 struct NamedInstanceValue

@@ -399,8 +399,8 @@ class SceneView::ShadingMode : public boost::signals::trackable
 
 		static ShadingModeCreatorMap &shadingModeCreators()
 		{
-			static ShadingModeCreatorMap g_creators;
-			return g_creators;
+			static auto g_creators = new ShadingModeCreatorMap;
+			return *g_creators;
 		}
 
 		SceneView *m_view;

@@ -5,6 +5,7 @@ Fixes
 -----
 
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
+- Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
 
 0.56.2.1 (relative to 0.56.2.0)
 ========
