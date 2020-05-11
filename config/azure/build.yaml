@@ -32,7 +32,7 @@ jobs:
        brew update &&
        brew install doxygen &&
        brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/bb50e09187595c6a0ef68761e1c6457d8f7b2461/Formula/scons.rb &&
-       brew cask install xquartz inkscape &&
+       brew cask install xquartz https://raw.githubusercontent.com/Homebrew/homebrew-cask/5eafe6e9877c5524100b9ac1c5375fe8a2d039be/Casks/inkscape.rb &&
        pip install sphinx==1.8.0 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12
      displayName: 'Install Toolchain (Darwin)'
      condition: eq( variables['Agent.OS'], 'Darwin' )
