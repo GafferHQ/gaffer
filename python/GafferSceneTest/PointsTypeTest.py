@@ -107,10 +107,10 @@ class PointsTypeTest( GafferSceneTest.SceneTestCase ) :
 		pointsType["type"].setValue( "sphere" )
 		assertExpectedOutput( type = "sphere", unchanged = False )
 
-		# Test converting particles to patches. The bound should change at this point.
+		# Test converting particles to patches
 
 		pointsType["type"].setValue( "patch" )
-		assertExpectedOutput( type = "patch", unchanged = False )
+		self.assertEqual( pointsType["out"].object( "/group/object" )["type"].data.value, "patch" )
 
 	def testNonPrimitiveObject( self ) :
 

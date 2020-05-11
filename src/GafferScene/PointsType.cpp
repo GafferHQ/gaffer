@@ -50,7 +50,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PointsType );
 size_t PointsType::g_firstPlugIndex = 0;
 
 PointsType::PointsType( const std::string &name )
-	:	Deformer( name, PathMatcher::EveryMatch )
+	:	ObjectProcessor( name, PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "type", Plug::In, "" ) );
@@ -73,14 +73,14 @@ const Gaffer::StringPlug *PointsType::typePlug() const
 bool PointsType::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
-		Deformer::affectsProcessedObject( input ) ||
+		ObjectProcessor::affectsProcessedObject( input ) ||
 		input == typePlug()
 	;
 }
 
 void PointsType::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Deformer::hashProcessedObject( path, context, h );
+	ObjectProcessor::hashProcessedObject( path, context, h );
 	typePlug()->hash( h );
 }
 

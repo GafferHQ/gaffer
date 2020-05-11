@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_POINTSTYPE_H
 #define GAFFERSCENE_POINTSTYPE_H
 
-#include "GafferScene/Deformer.h"
+#include "GafferScene/ObjectProcessor.h"
 
 namespace Gaffer
 {
@@ -49,7 +49,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API PointsType : public Deformer
+class GAFFERSCENE_API PointsType : public ObjectProcessor
 {
 
 	public :
@@ -57,7 +57,7 @@ class GAFFERSCENE_API PointsType : public Deformer
 		PointsType( const std::string &name=defaultName<PointsType>() );
 		~PointsType() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PointsType, PointsTypeTypeId, Deformer );
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PointsType, PointsTypeTypeId, ObjectProcessor );
 
 		Gaffer::StringPlug *typePlug();
 		const Gaffer::StringPlug *typePlug() const;

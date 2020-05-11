@@ -82,12 +82,6 @@ class GAFFERSCENE_API Deformer : public ObjectProcessor
 
 	private :
 
-		/// Private constructor and friendship for old nodes which are filtered to everything
-		/// by default. This was a mistake, and we want to ensure that we don't repeat the mistake
-		/// for new nodes.
-		Deformer( const std::string &name, IECore::PathMatcher::Result filterDefault );
-		friend class PointsType;
-
 		void init();
 
 		void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
