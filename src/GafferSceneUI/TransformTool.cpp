@@ -788,7 +788,14 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 		plug == activePlug() ||
 		plug == scenePlug()->childNamesPlug() ||
 		plug == scenePlug()->transformPlug() ||
-		plug == view()->editScopePlug()
+		// The `ancestor()` check protects us from accessing an
+		// already-destructed View in the case that the View is
+		// destroyed before the Tool.
+		/// \todo It'd be good to have a more robust solution to
+		/// this, perhaps with Tools being owned by Views so that
+		/// the validity of `Tool::m_view` can be managed. Also
+		/// see comments in `__toolPlugSet()` in Viewer.py.
+		( plug->ancestor<View>() && plug == view()->editScopePlug() )
 	)
 	{
 		m_selectionDirty = true;

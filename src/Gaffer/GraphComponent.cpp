@@ -130,6 +130,7 @@ GraphComponent::~GraphComponent()
 		(*it)->parentChanged( nullptr );
 		Signals::emitLazily( (*it)->m_signals.get(), &Signals::parentChangedSignal, (*it).get(), nullptr );
 	}
+	m_children.clear();
 }
 
 const IECore::InternedString &GraphComponent::setName( const IECore::InternedString &name )
