@@ -673,6 +673,6 @@ GafferImage::ImageProcessorPtr ImageView::createDisplayTransform( const std::str
 
 ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()
 {
-	static DisplayTransformCreatorMap g_creators;
-	return g_creators;
+	static auto g_creators = new DisplayTransformCreatorMap;
+	return *g_creators;
 }
