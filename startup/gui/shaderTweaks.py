@@ -83,3 +83,5 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "OSL Light", "osl:light" ),
 
 	] )
+
+__registerShaderPresets( [ ( "OpenGL Surface", "gl:surface" ) ] )
