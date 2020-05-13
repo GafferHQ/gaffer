@@ -102,7 +102,6 @@ from .ContextTest import ContextTest
 from .CompoundPathFilterTest import CompoundPathFilterTest
 from .BadNode import BadNode
 from .CapturingSlot import CapturingSlot
-from .LazyModuleTest import LazyModuleTest
 from .NodeBindingTest import NodeBindingTest
 from .DictPathTest import DictPathTest
 from .ExpressionTest import ExpressionTest

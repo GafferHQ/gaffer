@@ -47,7 +47,6 @@ from .FileNamePathFilter import FileNamePathFilter
 from .UndoScope import UndoScope
 from .Context import Context
 from .InfoPathFilter import InfoPathFilter
-from .LazyModule import lazyImport, LazyModule
 from .DictPath import DictPath
 from .PythonExpressionEngine import PythonExpressionEngine
 from .SequencePath import SequencePath

@@ -45,44 +45,6 @@
 # namespace.
 __import__( "uuid" )
 
-## Deprecated. This legacy function only supports use with Qt4. For
-# combined Qt4/Qt5 support use `from Qt import name` instead.
-# Also note that the lazy argument is no longer effective, because Qt.py
-# imports all modules at startup.
-__qtModuleName = None
-def _qtImport( name, lazy=False ) :
-
-	# decide which qt bindings to use, and apply any fix-ups we need
-	# to shield us from PyQt/PySide differences.
-	global __qtModuleName
-	if __qtModuleName is None :
-		import os
-		if "GAFFERUI_QT_BINDINGS" in os.environ :
-			__qtModuleName = os.environ["GAFFERUI_QT_BINDINGS"]
-		else :
-			# no preference stated via environment - see what we shipped with
-			if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PySide" ) :
-				__qtModuleName = "PySide"
-			else :
-				__qtModuleName = "PyQt4"
-
-		# PyQt unfortunately uses an implementation-specific
-		# naming scheme for its new-style signal and slot classes.
-		# We use this to make it compatible with PySide, according to :
-		#
-		#     http://qt-project.org/wiki/Differences_Between_PySide_and_PyQt
-		if "PyQt" in __qtModuleName :
-			QtCore = __import__( __qtModuleName + ".QtCore" ).QtCore
-			QtCore.Signal = QtCore.pyqtSignal
-
-	# import the submodule from those bindings and return it
-	if lazy :
-		import Gaffer
-		return Gaffer.lazyImport( __qtModuleName + "." + name )
-	else :
-		qtModule = __import__( __qtModuleName + "." + name )
-		return getattr( qtModule, name )
-
 ##########################################################################
 # Function to return the C++ address of a wrapped Qt object. This can
 # be useful if needing to implement part of the UI in C++ and the rest
