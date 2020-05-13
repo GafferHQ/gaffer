@@ -58,6 +58,7 @@
 #include "IECore/ObjectInterpolator.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "foundation/core/version.h"
 #include "foundation/platform/timers.h"
 #include "foundation/utility/log.h"
 #include "foundation/utility/searchpaths.h"
@@ -2400,6 +2401,12 @@ InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mo
 InternedString g_searchPath( "as:searchpath" );
 InternedString g_maxInteractiveRenderSamples( "as:cfg:progressive_frame_renderer:max_samples" );
 InternedString g_textureCacheSize( "as:cfg:texture_store:max_size" );
+// Appleseed 2.1 wants to be given a set of resource search paths, that
+// are distinct from the project searchpaths. At the time of writing it
+// only uses them to find `stdosl.h` for compiling shaders from source
+// on the fly. This isn't a feature we use, so we just use an empty
+// searchpath.
+foundation::SearchPaths g_resourceSearchPaths;
 
 /// The full renderer implementation as presented to the outside world.
 class AppleseedRenderer final : public AppleseedRendererBase
@@ -3056,7 +3063,11 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			// Create the master renderer.
 			asr::Configuration *cfg = m_project->configurations().get_by_name( "final" );
 			const asr::ParamArray &params = cfg->get_parameters();
+#if APPLESEED_VERSION >= 20100
+			m_renderer.reset( new asr::MasterRenderer( *m_project, params, g_resourceSearchPaths, tileCallbackFactoryPtr ) );
+#else
 			m_renderer.reset( new asr::MasterRenderer( *m_project, params, m_rendererController, tileCallbackFactoryPtr ) );
+#endif
 
 			// Render!.
 			RENDERER_LOG_INFO( "rendering frame..." );
@@ -3065,7 +3076,11 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 			try
 			{
+#if APPLESEED_VERSION >= 20100
+				m_renderer->render( *m_rendererController );
+#else
 				m_renderer->render();
+#endif
 			}
 			catch( const exception &e )
 			{
@@ -3105,7 +3120,11 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 			if( !m_renderer.get() )
 			{
+#if APPLESEED_VERSION >= 20100
+				m_renderer.reset( new asr::MasterRenderer( *m_project, params, g_resourceSearchPaths ) );
+#else
 				m_renderer.reset( new asr::MasterRenderer( *m_project, params, m_rendererController ) );
+#endif
 			}
 			else
 			{
@@ -3121,7 +3140,11 @@ class AppleseedRenderer final : public AppleseedRendererBase
 		{
 			try
 			{
+#if APPLESEED_VERSION >= 20100
+				m_renderer->render( *m_rendererController );
+#else
 				m_renderer->render();
+#endif
 			}
 			catch( const exception &e )
 			{

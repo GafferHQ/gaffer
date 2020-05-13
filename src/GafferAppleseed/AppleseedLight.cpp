@@ -43,10 +43,10 @@
 
 #include "IECore/Exception.h"
 
+#include "foundation/core/version.h"
 #include "renderer/api/edf.h"
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/light.h"
-#include "renderer/api/version.h"
 
 #include "boost/format.hpp"
 
