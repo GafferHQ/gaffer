@@ -35,6 +35,16 @@ Breaking Changes
     - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
 - RecursiveChildIterator : Changed private member data. Source compatibility is maintained.
 
+0.57.x.x (relative to 0.57.3.0)
+========
+
+Fixes
+-----
+
+- NodeEditor : Fixed "Connect to Spreadsheet" tool menu item to work with Spreadsheets that have sections. Previously, the submenu showed the sections unnecessarily, and selecting a section triggered an error.
+- OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
+- Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
+
 0.57.3.0 (relative to 0.57.2.0)
 ========
 
@@ -197,6 +207,12 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.x (relative to 0.56.2.1)
+========
+
+- OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
+- Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
 
 0.56.2.1 (relative to 0.56.2.0)
 ========

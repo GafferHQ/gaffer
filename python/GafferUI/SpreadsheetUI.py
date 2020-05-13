@@ -2157,7 +2157,7 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 	menuDefinition.append(
 		"/Connect to Spreadsheet",
 		{
-			"subMenu" :  functools.partial( __spreadsheetSubMenu, activeRowNamesConnection, connectCommand ),
+			"subMenu" :  functools.partial( __spreadsheetSubMenu, activeRowNamesConnection, connectCommand, showSections = False ),
 			"active" : itemsActive
 		}
 	)
