@@ -42,6 +42,8 @@ import Gaffer
 import GafferUI
 import GafferScene
 
+from Qt import QtWidgets
+
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
@@ -70,7 +72,11 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
 
-		self.__row.append( GafferUI.PlugValueWidget.create( plug["mode"] ) )
+		modeWidget = GafferUI.PlugValueWidget.create( plug["mode"] )
+		modeWidget._qtWidget().setFixedWidth( 80 )
+		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		self.__row.append( modeWidget )
+
 		self.__row.append( GafferUI.PlugValueWidget.create( plug["value"] ), expand = True )
 
 		self._updateFromPlug()
