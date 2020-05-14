@@ -180,3 +180,11 @@ def __spreadsheetFormatter( plug, forToolTip ) :
 
 GafferUI.SpreadsheetUI.registerValueFormatter( Gaffer.NameValuePlug, __spreadsheetFormatter )
 
+def __spreadsheetValueWidget( plug ) :
+
+	w = GafferUI.NameValuePlugValueWidget( plug )
+	w.setNameVisible( False )
+	return w
+
+GafferUI.SpreadsheetUI.registerValueWidget( Gaffer.NameValuePlug, __spreadsheetValueWidget )
+

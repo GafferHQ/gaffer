@@ -110,6 +110,19 @@ def __transformPlugFormatter( plug, forToolTip ) :
 
 registerValueFormatter( Gaffer.TransformPlug, __transformPlugFormatter )
 
+# Editing
+# =======
+#
+# By default, `PlugValueWidget.create( cell["value"] )` is used to create
+# a widget for editing cells in the spreadsheet, but custom editors may be
+# provided for specific plug types.
+
+# Registers a function to return a PlugValueWidget for editing cell
+# value plugs of the specified type.
+def registerValueWidget( plugType, plugValueWidgetCreator ) :
+
+	_CellPlugValueWidget.registerValueWidget( plugType, plugValueWidgetCreator )
+
 # Metadata
 # ========
 
@@ -578,17 +591,12 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 			self.__row.append( enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
 
-		plugValueWidget = GafferUI.PlugValueWidget.create( plug["value"] )
-		if isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
-			plugValueWidget.setNameVisible( False )
+		plugValueWidget = self.__createValueWidget( plug["value"] )
 
 		# Apply some fixed widths for some widgets, otherwise they're
 		# a bit too eager to grow. \todo Should we change the underlying
 		# behaviour of the widgets themselves?
-		fixedWidth = self.__fixedWidth( plugValueWidget )
-		if fixedWidth is not None :
-			plugValueWidget._qtWidget().setFixedWidth( fixedWidth )
-			plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+		self.__applyFixedWidths( plugValueWidget )
 
 		self.__row.append( plugValueWidget )
 
@@ -602,6 +610,24 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
+	@classmethod
+	def registerValueWidget( cls, plugType, plugValueWidgetCreator ) :
+
+		cls.__plugValueWidgetCreators[plugType] = plugValueWidgetCreator
+
+	def __createValueWidget( self, plug ) :
+
+		creator = self.__plugValueWidgetCreators.get(
+			plug.__class__,
+			GafferUI.PlugValueWidget.create
+		)
+
+		w = creator( plug )
+		assert( isinstance( w, GafferUI.PlugValueWidget ) )
+		return w
+
+	__plugValueWidgetCreators = {}
+
 	def _updateFromPlug( self ) :
 
 		if "enabled" in self.getPlug() :
@@ -614,27 +640,23 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 	__numericFieldWidth = 60
 
 	@classmethod
-	def __fixedWidth( cls, plugValueWidget ) :
+	def __applyFixedWidths( cls, plugValueWidget ) :
 
-		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-			return cls.__numericFieldWidth
-		elif isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
-			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() ) + 20
-		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
-			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() )
-		elif isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
-			return 250
-		elif isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
-			w = cls.__fixedWidth( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
-			if w is not None :
-				return w + 30
-		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
-			w = 0
-			for p in plugValueWidget.getPlug() :
-				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p ) ) )
-			return GafferUI.PlugWidget.labelWidth() + w
+		def walk( widget ) :
 
-		return None
+			if isinstance( widget, GafferUI.NumericPlugValueWidget ) :
+				widget._qtWidget().setFixedWidth( cls.__numericFieldWidth )
+				widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+
+			for childPlug in Gaffer.Plug.Range( widget.getPlug() ) :
+				childWidget = widget.childPlugValueWidget( childPlug )
+				if childWidget is not None :
+					walk( childWidget )
+
+		if isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
+			plugValueWidget._qtWidget().setFixedWidth( 250 )
+		else :
+			walk( plugValueWidget )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.CellPlug, _CellPlugValueWidget )
 
@@ -1421,16 +1443,19 @@ class _EditWindow( GafferUI.Window ) :
 			return plugValueWidget.textWidget()
 		elif isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
 			return plugValueWidget.numericWidget()
-		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
-			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0] ) )
 		elif isinstance( plugValueWidget, GafferUI.PathPlugValueWidget ) :
 			return plugValueWidget.pathWidget()
 		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
 			return plugValueWidget.textWidget()
-		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
-			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0] ) )
-		elif isinstance( plugValueWidget, _CellPlugValueWidget ) :
-			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
+
+		for childPlug in Gaffer.Plug.Range( plugValueWidget.getPlug() ) :
+			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
+			if childWidget is not None :
+				childTextWidget = cls.__textWidget( childWidget )
+				if childTextWidget is not None and childTextWidget.visible() :
+					return childTextWidget
+
+		return None
 
 # _SectionChooser
 # ===============

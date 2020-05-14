@@ -19,7 +19,9 @@ API
 ---
 
 - Spreadsheet : Added an `addColumn()` overload with an `adoptEnabledPlug` boolean argument. This allows cells to reuse the `enabled` plug from their `value` plug if it has one.
-- SpreadsheetUI : Added `formatValue()` and `registerValueFormatter()` methods to support custom formatting for extension plug types.
+- SpreadsheetUI :
+  - Added `formatValue()` and `registerValueFormatter()` methods to support custom formatting for extension plug types.
+  - Added `registerValueWidget()` method to support customisation of widgets used for editing.
 
 0.57.3.0 (relative to 0.57.2.0)
 ========
