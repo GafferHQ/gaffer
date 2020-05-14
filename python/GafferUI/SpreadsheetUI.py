@@ -53,6 +53,66 @@ from Qt import QtCompat
 
 from ._TableView import _TableView
 
+# Value Formatting
+# ================
+
+## Returns the value of the plug as it will be formatted in a Spreadsheet.
+def formatValue( plug, forToolTip = False ) :
+
+	currentPreset = Gaffer.NodeAlgo.currentPreset( plug )
+	if currentPreset is not None :
+		return currentPreset
+
+	global __valueFormatters
+	formatter = __valueFormatters.get( plug.__class__, __defaultValueFormatter )
+	return formatter( plug, forToolTip )
+
+## Registers a custom formatter for the specified `plugType`.
+# `formatter` must have the same signature as `formatValue()`.
+def registerValueFormatter( plugType, formatter ) :
+
+	global __valueFormatters
+	__valueFormatters[plugType] = formatter
+
+__valueFormatters = {}
+
+def __defaultValueFormatter( plug, forToolTip ) :
+
+	if not hasattr( plug, "getValue" ) :
+		return ""
+
+	value = plug.getValue()
+	if isinstance( value, str ) :
+		return value
+	elif isinstance( value, ( int, float ) ) :
+		return GafferUI.NumericWidget.valueToString( value )
+	elif isinstance( value, ( imath.V2i, imath.V2f, imath.V3i, imath.V3f ) ) :
+		return ", ".join( GafferUI.NumericWidget.valueToString( v ) for v in value )
+
+	try :
+		# Unknown type. If iteration is supported then use that.
+		separator = "\n" if forToolTip else ", "
+		return separator.join( str( x ) for x in value )
+	except :
+		# Otherwise just cast to string
+		return str( value )
+
+def __transformPlugFormatter( plug, forToolTip ) :
+
+	separator = "\n" if forToolTip else "  "
+	return separator.join(
+		"{label} : {value}".format(
+			label = c.getName().title() if forToolTip else c.getName()[0].title(),
+			value = formatValue( c, forToolTip )
+		)
+		for c in plug.children()
+	)
+
+registerValueFormatter( Gaffer.TransformPlug, __transformPlugFormatter )
+
+# Metadata
+# ========
+
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Spreadsheet,
@@ -1101,7 +1161,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole :
 
-			return self.__formatValue( self.__displayRoleValue( index ) )
+			return self.__formatValue( index )
 
 		elif role == QtCore.Qt.BackgroundColorRole :
 
@@ -1135,7 +1195,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		elif role == QtCore.Qt.ToolTipRole :
 
-			return self.__formatValue( self.__displayRoleValue( index ), forToolTip = True )
+			return self.__formatValue( index, forToolTip = True )
 
 		elif role == self.CellPlugEnabledRole :
 
@@ -1246,69 +1306,19 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.beginResetModel()
 		self.endResetModel()
 
-	def __displayRoleValue( self, index ) :
+	def __formatValue( self, index, forToolTip = False ) :
 
 		plug = self.valuePlugForIndex( index )
+
 		if isinstance( plug, Gaffer.BoolPlug ) :
 			# Dealt with via CheckStateRole
 			return None
 
 		try :
 			with self.__context :
-				currentPreset = Gaffer.NodeAlgo.currentPreset( plug )
-				if currentPreset is not None :
-					return currentPreset
-				if isinstance( plug, Gaffer.NameValuePlug ) :
-					if "enabled" in plug.parent() :
-						return plug["enabled"].getValue(), plug["value"].getValue()
-					else :
-						return plug["value"].getValue()
-				elif isinstance( plug, Gaffer.TransformPlug ) :
-					return collections.OrderedDict( [
-						( "T", plug["translate"].getValue() ),
-						( "R", plug["rotate"].getValue() ),
-						( "S", plug["scale"].getValue() ),
-						( "P", plug["pivot"].getValue() ),
-					] )
-				else :
-					return plug.getValue()
+				return formatValue( plug, forToolTip )
 		except :
 			return None
-
-	def __formatValue( self, value, forToolTip = False ) :
-
-		if isinstance( value, str ) :
-			return value
-		elif isinstance( value, ( int, float ) ) :
-			return GafferUI.NumericWidget.valueToString( value )
-		elif isinstance( value, ( imath.V2i, imath.V2f, imath.V3i, imath.V3f ) ) :
-			return ", ".join( GafferUI.NumericWidget.valueToString( v ) for v in value )
-		elif isinstance( value, bool ) :
-			return value
-		elif isinstance( value, tuple ) :
-			# NameValuePlug ( enabled, value )
-			s = self.__formatValue( value[1], forToolTip )
-			return "{}{}{}".format(
-				"On" if value[0] else "Off",
-				" : \n" if forToolTip and "\n" in s else " : ",
-				s
-			)
-		elif isinstance( value, dict ) :
-			separator = "\n" if forToolTip else "  "
-			return separator.join(
-				"{} : {}".format( item[0], self.__formatValue( item[1] ) )
-				for item in value.items()
-			)
-		elif value is None :
-			return ""
-
-		try :
-			# Unknown type. If iteration is supported then use that.
-			separator = "\n" if forToolTip else ", "
-			return separator.join( str( x ) for x in value )
-		except :
-			# Otherwise just cast to string
-			return str( value )
 
 class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
