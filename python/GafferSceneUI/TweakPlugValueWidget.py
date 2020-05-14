@@ -112,6 +112,14 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for w in self.__row :
 			w.setReadOnly( readOnly )
 
+	def setNameVisible( self, visible ) :
+
+		self.__row[0].setVisible( visible )
+
+	def getNameVisible( self ) :
+
+		return self.__row[0].getVisible()
+
 	def _updateFromPlug( self ) :
 
 		with self.getContext() :
@@ -195,6 +203,18 @@ def __noduleLabel( plug ) :
 
 	return name or plug.getName()
 
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "nodule:type", "GafferUI::CompoundNodule" )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "*", "nodule:type", "" )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "nodule:type", "GafferUI::StandardNodule" )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "noduleLayout:label", __noduleLabel )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "noduleLayout:label", __noduleLabel )
+
+# Spreadsheet Interoperability
+# ============================
+
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:plugMenu:includeAsAncestor", True )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:plugMenu:ancestorLabel", "Tweak" )
+
 def __spreadsheetColumnName( plug ) :
 
 	tweakPlug = plug.parent()
@@ -213,10 +233,28 @@ def __spreadsheetColumnName( plug ) :
 	else :
 		return plug.getName()
 
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "nodule:type", "GafferUI::CompoundNodule" )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "*", "nodule:type", "" )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "nodule:type", "GafferUI::StandardNodule" )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "noduleLayout:label", __noduleLabel )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "noduleLayout:label", __noduleLabel )
 Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "*", "spreadsheet:columnName", __spreadsheetColumnName )
 
+def __spreadsheetFormatter( plug, forToolTip ) :
+
+	result = ""
+	if "enabled" in plug.parent() :
+		result = "On, " if plug["enabled"].getValue() else "Off, "
+
+	result += str( GafferScene.TweakPlug.Mode.values[plug["mode"].getValue()] )
+
+	value = GafferUI.SpreadsheetUI.formatValue( plug["value"], forToolTip )
+	separator = " : \n" if forToolTip and "\n" in value else " : "
+	result += separator + value
+
+	return result
+
+GafferUI.SpreadsheetUI.registerValueFormatter( GafferScene.TweakPlug, __spreadsheetFormatter )
+
+def __spreadsheetValueWidget( plug ) :
+
+	w = TweakPlugValueWidget( plug )
+	w.setNameVisible( False )
+	return w
+
+GafferUI.SpreadsheetUI.registerValueWidget( GafferScene.TweakPlug, __spreadsheetValueWidget )
