@@ -34,10 +34,11 @@
 #
 ##########################################################################
 
-import os
 import ctypes
-import unittest
 import json
+import os
+import time
+import unittest
 
 import arnold
 import imath
@@ -2309,6 +2310,49 @@ class RendererTest( GafferTest.TestCase ) :
 			stats = json.load( profileHandle )["traceEvents"]
 			driverEvents = [ x for x in stats if x["name"] == "ieCoreArnold:display:testBeauty" ]
 			self.assertEqual( driverEvents[0]["cat"], "driver_exr" )
+
+	def testMessageHandler( self ) :
+
+		RenderType = GafferScene.Private.IECoreScenePreview.Renderer.RenderType
+
+		for renderType, fileName, output in (
+			( RenderType.Batch, "", IECoreScene.Output( self.temporaryDirectory() + "/beauty.exr", "exr", "rgba" ) ),
+			( RenderType.Interactive, "", None ),
+			( RenderType.SceneDescription, self.temporaryDirectory() + "/test.ass" , None )
+		) :
+
+			with IECore.CapturingMessageHandler() as fallbackHandler :
+
+				handler = IECore.CapturingMessageHandler()
+
+				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Arnold",
+					renderType,
+					fileName = fileName,
+					messageHandler = handler
+				)
+
+				r.option( "ai:console:info", IECore.BoolData( True ) )
+				r.option( "ai:console:progress", IECore.BoolData( True ) )
+				r.option( "ai:invalid", IECore.BoolData( True ) )
+
+				if output :
+					r.output( "testOutput", output )
+
+				r.render()
+
+				if renderType == RenderType.Interactive :
+					time.sleep( 1 )
+
+				# We need to delete this instance, before we construct the next one in
+				# the next loop iteration, or the constructor will throw.
+				del r
+
+				# We should have at least 1 message from our invalid option plus
+				# _something_ from the renderers own output stream.
+				self.assertGreater( len(handler.messages), 1, msg=str(renderType) )
+
+				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
 	def testProcedural( self ) :
 

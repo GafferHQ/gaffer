@@ -383,11 +383,13 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 
 	protected :
 
-		ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode = nullptr );
+		ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode = nullptr, const IECore::MessageHandlerPtr &messageHandler = IECore::MessageHandlerPtr() );
 
 		NodeDeleter m_nodeDeleter;
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
+
+		IECore::MessageHandlerPtr m_messageHandler;
 
 	private :
 
@@ -2419,6 +2421,8 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		/// \todo The base class currently makes a new shader cache
 		/// and a new instance cache. Can we share with the parent
 		/// renderer instead?
+		/// \todo Pass through the parent message hander so we can redirect
+		/// IECore::msg message handlers here.
 		ProceduralRenderer( AtNode *procedural )
 			:	ArnoldRendererBase( nullNodeDeleter, procedural )
 		{
@@ -2607,15 +2611,27 @@ class ArnoldGlobals
 
 	public :
 
-		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, ShaderCache *shaderCache )
+		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, ShaderCache *shaderCache, IECore::MessageHandler *messageHandler )
 			:	m_renderType( renderType ),
-				m_universeBlock( /* writable = */ true ),
+				m_universeBlock( new IECoreArnold::UniverseBlock( /* writable = */ true ) ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_shaderCache( shaderCache ),
 				m_renderBegun( false ),
 				m_assFileName( fileName )
 		{
+			// This only takes effect if called after the UniverseBlock has been created
+			if( messageHandler )
+			{
+				g_currentMessageHandler = messageHandler;
+				AiMsgSetCallback( &aiMsgCallback );
+			}
+			else
+			{
+				AiMsgResetCallback();
+				g_currentMessageHandler = nullptr;
+			}
+
 			AiMsgSetLogFileFlags( m_logFileFlags );
 			AiMsgSetConsoleFlags( m_consoleFlags );
 			// Get OSL shaders onto the shader searchpath.
@@ -2629,6 +2645,12 @@ class ArnoldGlobals
 				AiRenderInterrupt( AI_BLOCKING );
 				AiRenderEnd();
 			}
+
+			// Ensures shutdown messages are still handled by our message handler
+			m_universeBlock.reset( nullptr );
+
+			AiMsgResetCallback();
+			g_currentMessageHandler = nullptr;
 		}
 
 		void option( const IECore::InternedString &name, const IECore::Object *value )
@@ -3341,7 +3363,17 @@ class ArnoldGlobals
 
 		IECoreScenePreview::Renderer::RenderType m_renderType;
 
-		IECoreArnold::UniverseBlock m_universeBlock;
+		// Arnold's singleton-centric design means there is no way to pass any
+		// instance-specific references as part of the log callback. As such
+		// we have to make do with a global handler.
+		static void aiMsgCallback( int logmask, int severity, const char *msg_string, int tabs )
+		{
+			g_currentMessageHandler->handle( g_ieMsgLevels[ min( severity, 3 ) ], "Arnold", std::string( tabs, ' ' ) + msg_string );
+		}
+		static IECore::MessageHandlerPtr g_currentMessageHandler;
+		static const std::vector<IECore::MessageHandler::Level> g_ieMsgLevels;
+
+		std::unique_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
@@ -3375,6 +3407,15 @@ class ArnoldGlobals
 
 };
 
+IECore::MessageHandlerPtr ArnoldGlobals::g_currentMessageHandler = nullptr;
+
+const std::vector<IECore::MessageHandler::Level> ArnoldGlobals::g_ieMsgLevels = {
+	IECore::MessageHandler::Level::Info,
+	IECore::MessageHandler::Level::Warning,
+	IECore::MessageHandler::Level::Error,
+	IECore::MessageHandler::Level::Error
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -3384,10 +3425,11 @@ class ArnoldGlobals
 namespace
 {
 
-ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode )
+ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode, const IECore::MessageHandlerPtr &messageHandler )
 	:	m_nodeDeleter( nodeDeleter ),
 		m_shaderCache( new ShaderCache( nodeDeleter, parentNode ) ),
 		m_instanceCache( new InstanceCache( nodeDeleter, parentNode ) ),
+		m_messageHandler( messageHandler ),
 		m_parentNode( parentNode )
 {
 }
@@ -3403,11 +3445,15 @@ IECore::InternedString ArnoldRendererBase::name() const
 
 ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const IECore::CompoundObject *attributes )
 {
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	return new ArnoldAttributes( attributes, m_shaderCache.get() );
 }
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
 {
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	Instance instance = m_instanceCache->get( camera, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
@@ -3417,6 +3463,8 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	Instance instance = m_instanceCache->get( object, attributes, name );
 	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_parentNode );
 	result->attributes( attributes );
@@ -3425,6 +3473,8 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::str
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	Instance instance = m_instanceCache->get( object, attributes, name );
 	ObjectInterfacePtr result = new ArnoldLightFilter( name, instance, m_nodeDeleter, m_parentNode );
 	result->attributes( attributes );
@@ -3434,6 +3484,8 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::lightFilter( const st
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	Instance instance = m_instanceCache->get( object, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
@@ -3442,6 +3494,8 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::st
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 {
+	const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	Instance instance = m_instanceCache->get( samples, times, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
@@ -3464,8 +3518,8 @@ class ArnoldRenderer final : public ArnoldRendererBase
 	public :
 
 		ArnoldRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	ArnoldRendererBase( nodeDeleter( renderType ) ),
-				m_globals( new ArnoldGlobals( renderType, fileName, m_shaderCache.get() ) )
+			:	ArnoldRendererBase( nodeDeleter( renderType ), nullptr, messageHandler ),
+				m_globals( new ArnoldGlobals( renderType, fileName, m_shaderCache.get(), messageHandler.get() ) )
 		{
 		}
 
@@ -3476,22 +3530,28 @@ class ArnoldRenderer final : public ArnoldRendererBase
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			m_globals->option( name, value );
 		}
 
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			m_globals->output( name, output );
 		}
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			m_globals->camera( name, camera );
 			return ArnoldRendererBase::camera( name, camera, attributes );
 		}
 
 		void render() override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
 			m_globals->render();
@@ -3499,6 +3559,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 
 		void pause() override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			m_globals->pause();
 		}
 
