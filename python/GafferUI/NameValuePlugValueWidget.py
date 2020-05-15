@@ -148,6 +148,9 @@ GafferUI.PlugValueWidget.registerType( Gaffer.NameValuePlug, NameValuePlugValueW
 # Spreadsheet integration
 # =======================
 
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "spreadsheet:plugMenu:includeAsAncestor", True )
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "spreadsheet:plugMenu:ancestorLabel", "Value and Switch" )
+
 def __spreadsheetColumnName( plug ) :
 
 	nameValuePlug = plug.parent()
@@ -187,4 +190,3 @@ def __spreadsheetValueWidget( plug ) :
 	return w
 
 GafferUI.SpreadsheetUI.registerValueWidget( Gaffer.NameValuePlug, __spreadsheetValueWidget )
-

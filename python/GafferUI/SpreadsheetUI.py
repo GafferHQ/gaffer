@@ -2083,52 +2083,37 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 	if plug.getInput() is not None or not plugValueWidget._editable() or Gaffer.MetadataAlgo.readOnly( plug ) :
 		return
 
-	ancestorPlug, ancestorLabel = None, ""
-	for ancestorType, ancestorLabel in [
-		( Gaffer.TransformPlug, "Transform" ),
-		( Gaffer.Transform2DPlug, "Transform" ),
-		( Gaffer.NameValuePlug, "Value and Switch" ),
-	] :
-		ancestorPlug = plug.ancestor( ancestorType )
-		if ancestorPlug :
-			if all( p.getInput() is None for p in Gaffer.Plug.RecursiveRange( ancestorPlug ) ) :
-				break
-			else :
-				ancestorPlug = None
+	plugsAndSuffixes = [ ( plug, "" ) ]
 
-	menuDefinition.prepend( "/__SpreadsheetCreationDivider__", { "divider" : True } )
+	ancestorPlug = plug.parent()
+	while isinstance( ancestorPlug, Gaffer.Plug ) :
 
-	if ancestorPlug :
+		if any( p.getInput() is not None for p in Gaffer.Plug.RecursiveRange( ancestorPlug ) ) :
+			break
+
+		if Gaffer.Metadata.value( ancestorPlug, "spreadsheet:plugMenu:includeAsAncestor" ) :
+			label = Gaffer.Metadata.value( ancestorPlug, "spreadsheet:plugMenu:ancestorLabel" )
+			label = label or ancestorPlug.typeName().rpartition( ":" )[2]
+			plugsAndSuffixes.append( ( ancestorPlug, " ({})".format( label ) ) )
+
+		ancestorPlug = ancestorPlug.parent()
+
+	for plug, suffix in reversed( plugsAndSuffixes ) :
+
+		menuDefinition.prepend( "/__SpreadsheetCreationDivider__" + suffix, { "divider" : True } )
+
 		menuDefinition.prepend(
-			"/Add to Spreadsheet ({})".format( ancestorLabel ),
+			"/Add to Spreadsheet{}".format( suffix ),
 			{
-				"subMenu" :  functools.partial( __spreadsheetSubMenu, ancestorPlug, functools.partial( __addToSpreadsheet, ancestorPlug ) )
+				"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( __addToSpreadsheet, plug ) )
 			}
 		)
 		menuDefinition.prepend(
-			"/Create Spreadsheet ({})...".format( ancestorLabel ),
+			"/Create Spreadsheet{}...".format( suffix ),
 			{
-				"command" : functools.partial( __createSpreadsheet, ancestorPlug )
+				"command" : functools.partial( __createSpreadsheet, plug )
 			}
 		)
-
-		menuDefinition.prepend(
-			"/__AncestorDivider__", { "divider" : True }
-		)
-
-	menuDefinition.prepend(
-		"/Add to Spreadsheet",
-		{
-			"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( __addToSpreadsheet, plug ) )
-		}
-	)
-
-	menuDefinition.prepend(
-		"/Create Spreadsheet...",
-		{
-			"command" : functools.partial( __createSpreadsheet, plug )
-		}
-	)
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
@@ -2139,6 +2124,10 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	__prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+
+for plugType in ( Gaffer.TransformPlug, Gaffer.Transform2DPlug ) :
+	Gaffer.Metadata.registerValue( plugType, "spreadsheet:plugMenu:includeAsAncestor", True )
+	Gaffer.Metadata.registerValue( plugType, "spreadsheet:plugMenu:ancestorLabel", "Transform" )
 
 # NodeEditor tool menu
 # ====================

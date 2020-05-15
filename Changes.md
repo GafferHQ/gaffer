@@ -22,6 +22,7 @@ API
 - SpreadsheetUI :
   - Added `formatValue()` and `registerValueFormatter()` methods to support custom formatting for extension plug types.
   - Added `registerValueWidget()` method to support customisation of widgets used for editing.
+  - Added `spreadsheet:plugMenu:includeAsAncestor` and `spreadsheet:plugMenu:ancestorLabel` metadata, to allow ancestor plugs to be promoted from the popup menu for their descendants.
 
 0.57.3.0 (relative to 0.57.2.0)
 ========
