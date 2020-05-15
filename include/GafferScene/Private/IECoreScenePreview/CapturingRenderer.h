@@ -159,6 +159,8 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 
 		void checkPaused() const;
 
+		IECore::MessageHandlerPtr m_messageHandler;
+
 		std::atomic_bool m_rendering;
 		using ObjectMap = tbb::concurrent_hash_map<std::string, const CapturedObject *>;
 		ObjectMap m_capturedObjects;
