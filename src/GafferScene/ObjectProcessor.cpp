@@ -36,11 +36,15 @@
 
 #include "GafferScene/ObjectProcessor.h"
 
+#include "IECore/NullObject.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ObjectProcessor );
+
+size_t ObjectProcessor::g_firstPlugIndex;
 
 ObjectProcessor::ObjectProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault )
 	:	FilteredSceneProcessor( name, filterDefault )
@@ -61,6 +65,9 @@ ObjectProcessor::ObjectProcessor( const std::string &name, size_t minInputs, siz
 
 void ObjectProcessor::init()
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ObjectPlug( "__processedObject", Plug::Out, NullObject::defaultNullObject() ) );
+
 	// Pass through things we don't want to change.
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
@@ -75,6 +82,16 @@ ObjectProcessor::~ObjectProcessor()
 {
 }
 
+Gaffer::ObjectPlug *ObjectProcessor::processedObjectPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::ObjectPlug *ObjectProcessor::processedObjectPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex );
+}
+
 void ObjectProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilteredSceneProcessor::affects( input, outputs );
@@ -87,7 +104,50 @@ void ObjectProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 
 	if( affectsProcessedObject( input ) )
 	{
+		outputs.push_back( processedObjectPlug() );
+	}
+	else if( input == processedObjectPlug() )
+	{
 		outputs.push_back( outPlug()->objectPlug() );
+	}
+}
+
+void ObjectProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( output == processedObjectPlug() )
+	{
+		const auto &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		hashProcessedObject( path, context, h );
+	}
+	else
+	{
+		FilteredSceneProcessor::hash( output, context, h );
+	}
+}
+
+void ObjectProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == processedObjectPlug() )
+	{
+		const auto &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+		ConstObjectPtr inputObject = inPlug()->objectPlug()->getValue();
+		static_cast<ObjectPlug *>( output )->setValue( computeProcessedObject( path, context, inputObject.get() ) );
+	}
+	else
+	{
+		FilteredSceneProcessor::compute( output, context );
+	}
+}
+
+Gaffer::ValuePlug::CachePolicy ObjectProcessor::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == processedObjectPlug() )
+	{
+		return processedObjectComputeCachePolicy();
+	}
+	else
+	{
+		return FilteredSceneProcessor::computeCachePolicy( output );
 	}
 }
 
@@ -98,15 +158,20 @@ bool ObjectProcessor::affectsProcessedObject( const Gaffer::Plug *input ) const
 
 void ObjectProcessor::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	FilteredSceneProcessor::hashObject( path, context, outPlug(), h );
+	FilteredSceneProcessor::hash( processedObjectPlug(), context, h );
 	inPlug()->objectPlug()->hash( h );
+}
+
+Gaffer::ValuePlug::CachePolicy ObjectProcessor::processedObjectComputeCachePolicy() const
+{
+	return ValuePlug::CachePolicy::Legacy;
 }
 
 void ObjectProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
-		hashProcessedObject( path, context, h );
+		h = processedObjectPlug()->hash();
 	}
 	else
 	{
@@ -119,8 +184,7 @@ IECore::ConstObjectPtr ObjectProcessor::computeObject( const ScenePath &path, co
 {
 	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
-		ConstObjectPtr inputObject = inPlug()->objectPlug()->getValue();
-		return computeProcessedObject( path, context, inputObject.get() );
+		return processedObjectPlug()->getValue();
 	}
 	else
 	{
