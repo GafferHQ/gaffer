@@ -35,9 +35,11 @@
 ##########################################################################
 
 import os
-import unittest
-import imath
 import re
+import time
+import unittest
+
+import imath
 
 import IECore
 import IECoreScene
@@ -514,6 +516,41 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", {} ), " TEST " )
 		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", { "test:bar" : IECore.StringData( "AAA" ) } ), " TEST AAA" )
 		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", { "test:foo" : IECore.StringData( "AAA" ), "test:bar" : IECore.StringData( "BBB" ) } ), "AAA TEST BBB" )
+
+	def testMessageHandler( self ) :
+
+		RenderType = GafferScene.Private.IECoreScenePreview.Renderer.RenderType
+
+		for renderType, fileName, expected in (
+			( RenderType.Batch, "", 2 ),
+			( RenderType.Interactive, "", 2 ),
+			( RenderType.SceneDescription, self.temporaryDirectory() + "/test.nsi" , 1 )
+		) :
+
+			with IECore.CapturingMessageHandler() as fallbackHandler :
+
+				handler = IECore.CapturingMessageHandler()
+
+				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"3Delight",
+					renderType,
+					fileName = fileName,
+					messageHandler = handler
+				)
+
+				r.option( "invalid", IECore.BoolData( True ) )
+
+				r.render()
+
+				if renderType == RenderType.Interactive :
+					time.sleep( 1 )
+
+				# We should have at least 1 message from our invalid option,
+				# and additional output from actual renders.
+				# Stats/progress seem hard coded to stdout.
+				self.assertGreaterEqual( len(handler.messages), expected, msg=str(renderType) )
+
+				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. This is a very poor substitute to being able to directly query

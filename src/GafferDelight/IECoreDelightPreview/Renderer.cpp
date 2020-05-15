@@ -986,8 +986,10 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ), m_frame( 1 ), m_oversampling( 9 )
+			:	m_renderType( renderType ), m_frame( 1 ), m_oversampling( 9 ), m_messageHandler( messageHandler )
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			vector<NSIParam_t> params;
 
 			const char *apistream = "apistream";
@@ -1000,6 +1002,14 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				};
 			}
 
+			if( messageHandler )
+			{
+				void *handler = reinterpret_cast<void *>( &DelightRenderer::nsiErrorHandler );
+				void *data = this;
+				params.push_back( { "errorhandler",	&handler, NSITypePointer, 0, 1 } );
+				params.push_back( { "errorhandlerdata",	&data, NSITypePointer, 0, 1 } );
+			}
+
 			m_context = NSIBegin( params.size(), params.data() );
 			m_instanceCache = new InstanceCache( m_context, ownership() );
 			m_attributesCache = new AttributesCache( m_context, ownership() );
@@ -1009,6 +1019,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		~DelightRenderer() override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			// Delete nodes we own before we destroy context
 			stop();
 			m_attributesCache.reset();
@@ -1025,6 +1037,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			if( name == g_frameOptionName )
 			{
 				m_frame = 1;
@@ -1116,6 +1130,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		void output( const IECore::InternedString &name, const Output *output ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			// 3Delight crashes if we don't stop the render before
 			// modifying the output chain.
 			stop();
@@ -1138,11 +1154,14 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			return m_attributesCache->get( attributes );
 		}
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			const string objectHandle = "camera:" + name;
 			if( !NodeAlgo::convert( camera, m_context, objectHandle.c_str() ) )
 			{
@@ -1191,6 +1210,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			DelightHandleSharedPtr instance = m_instanceCache->get( object );
 			if( !instance )
 			{
@@ -1204,6 +1225,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			DelightHandleSharedPtr instance = m_instanceCache->get( samples, times );
 			if( !instance )
 			{
@@ -1217,6 +1240,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		void render() override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			m_instanceCache->clearUnused();
 			m_attributesCache->clearUnused();
 
@@ -1459,10 +1484,29 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		DelightHandle m_screen;
 		DelightHandle m_defaultCamera;
 
+		IECore::MessageHandlerPtr m_messageHandler;
+		static const std::vector<IECore::MessageHandler::Level> g_ieMsgLevels;
+
+		static void nsiErrorHandler( void *userdata, int level, int code, const char *message )
+		{
+			static_cast<DelightRenderer *>(userdata)->m_messageHandler->handle(
+				g_ieMsgLevels[ min( level, 3 ) ],
+				"3Delight",
+				message
+			);
+		}
+
 		// Registration with factory
 
 		static Renderer::TypeDescription<DelightRenderer> g_typeDescription;
 
+};
+
+const std::vector<IECore::MessageHandler::Level> DelightRenderer::g_ieMsgLevels = {
+	IECore::MessageHandler::Level::Debug,
+	IECore::MessageHandler::Level::Info,
+	IECore::MessageHandler::Level::Warning,
+	IECore::MessageHandler::Level::Error
 };
 
 IECoreScenePreview::Renderer::TypeDescription<DelightRenderer> DelightRenderer::g_typeDescription( "3Delight" );
