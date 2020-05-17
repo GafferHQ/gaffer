@@ -61,7 +61,8 @@ def inCI( platforms = set() ) :
 		# There isn't a specific 'We're on Azure' var (other than some azure specific
 		# vars that are set that would be 'magic words'), so we set our own in our
 		# azure-pipelines.yaml
-		'azure' : 'AZURE'
+		"azure" : "AZURE",
+		"github" : "CI",
 	}
 
 	targets = platforms or platformVars.keys()

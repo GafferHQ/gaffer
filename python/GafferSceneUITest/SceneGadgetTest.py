@@ -132,7 +132,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.waitForCompletion()
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
-	@unittest.skipIf( "TF_BUILD" in os.environ, "Unknown problem running on Azure Pipelines" )
+	@unittest.skipIf( GafferTest.inCI(), "Unknown problem running in cloud" )
 	def testExpansion( self ) :
 
 		s = Gaffer.ScriptNode()
