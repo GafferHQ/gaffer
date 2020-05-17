@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - '*_maintenance'
+  pull_request:
+    branches:
+      - master
+      - '*_maintenance'
+
+jobs:
+
+  build:
+
+    strategy:
+
+      # Don't cancel other jobs in the build matrix if one job fails.
+      fail-fast: false
+
+      matrix:
+
+        # Rather than generate all permutations of various settings,
+        # we want to explicitly list each of the variants we want to
+        # test. We can use `name` to declare the names of our variants,
+        # and then use `include` to define their settings.
+
+        name: [
+          linux,
+          linux-debug,
+          macos,
+        ]
+
+        include:
+
+          - name: linux
+            os: ubuntu-16.04
+            buildType: RELEASE
+            containerImage: gafferhq/build:1.1.0
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.3.0/gafferDependencies-1.3.0-linux.tar.gz
+            # GitHub container builds run as root. This causes failures for tests that
+            # assert that filesystem permissions are respected, because root doesn't
+            # respect permissions. So we run the final test suite as a dedicated
+            # test user rather than as root.
+            testRunner: su testUser -c
+
+          - name: linux-debug
+            os: ubuntu-16.04
+            buildType: DEBUG
+            containerImage: gafferhq/build:1.1.0
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.3.0/gafferDependencies-1.3.0-linux.tar.gz
+            testRunner: su testUser -c
+
+          - name: macos
+            os: macos-10.15
+            buildType: RELEASE
+            containerImage:
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.3.0/gafferDependencies-1.3.0-osx.tar.gz
+            testRunner: bash -c
+
+    runs-on: ${{ matrix.os }}
+
+    container: ${{ matrix.containerImage }}
+
+    env:
+      DISPLAY: ":99.0"
+      ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
+
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Install toolchain (MacOS)
+      # Prefer `pip install` where possible because it is faster
+      # than `brew install`.
+      run: |
+        sudo pip install scons
+        sudo pip install sphinx==1.8.0 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12
+        brew cask install xquartz https://raw.githubusercontent.com/Homebrew/homebrew-cask/5eafe6e9877c5524100b9ac1c5375fe8a2d039be/Casks/inkscape.rb
+      if: runner.os == 'macOS'
+
+    - name: Install toolchain (Linux)
+      run: |
+        echo "::add-path::/opt/rh/devtoolset-6/root/bin"
+        Xvfb :99 -screen 0 1280x1024x24 &
+        metacity&
+        useradd -m testUser
+      if: runner.os == 'Linux'
+
+    - name: Install dependencies
+      # The `::set-env` shenanigans creates an environment variable
+      # containing the hash of the archive, for use in the cache key
+      # below.
+      run: |
+        python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ./build --outputFormat "::set-env name=GAFFER_DEPENDENCIES_HASH::{archiveDigest}"
+        ./config/installDelight.sh
+        echo ::set-env name=DELIGHT::$GITHUB_WORKSPACE/3delight
+
+    - name: Cache
+      uses: actions/cache@v1
+      with:
+        path: sconsCache
+        key: ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-
+
+    - name: Build
+      run: |
+       scons -j 2 build ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ matrix.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT= BUILD_DIR=./build BUILD_CACHEDIR=sconsCache
+
+    - name: Test
+      run: |
+        ${{ matrix.testRunner }} "./build/bin/gaffer test"
+
+    - name: Limit cache size
+      run: python ./.github/workflows/main/limitCacheSize.py
