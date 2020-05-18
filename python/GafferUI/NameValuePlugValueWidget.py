@@ -183,6 +183,12 @@ def __spreadsheetFormatter( plug, forToolTip ) :
 
 GafferUI.SpreadsheetUI.registerValueFormatter( Gaffer.NameValuePlug, __spreadsheetFormatter )
 
+def __spreadsheetDecorator( plug ) :
+
+	return GafferUI.SpreadsheetUI.decoration( plug["value"] )
+
+GafferUI.SpreadsheetUI.registerDecoration( Gaffer.NameValuePlug, __spreadsheetDecorator )
+
 def __spreadsheetValueWidget( plug ) :
 
 	w = GafferUI.NameValuePlugValueWidget( plug )

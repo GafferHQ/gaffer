@@ -251,6 +251,12 @@ def __spreadsheetFormatter( plug, forToolTip ) :
 
 GafferUI.SpreadsheetUI.registerValueFormatter( GafferScene.TweakPlug, __spreadsheetFormatter )
 
+def __spreadsheetDecorator( plug ) :
+
+	return GafferUI.SpreadsheetUI.decoration( plug["value"] )
+
+GafferUI.SpreadsheetUI.registerDecoration( GafferScene.TweakPlug, __spreadsheetDecorator )
+
 def __spreadsheetValueWidget( plug ) :
 
 	w = TweakPlugValueWidget( plug )
