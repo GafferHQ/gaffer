@@ -287,5 +287,18 @@ class TweakPlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( tweaks.applyTweaks( tweakedNetwork ) )
 		self.assertEqual( tweakedNetwork.inputConnections( "surface" ), [ ( ( "texture", "" ), ( "surface", "c" ) ) ] )
 
+	def testCreateOutputCounterpart( self ) :
+
+		p = GafferScene.TweakPlug( "test", 10.0, GafferScene.TweakPlug.Mode.Multiply )
+		p2 = p.createCounterpart( "p2", Gaffer.Plug.Direction.Out )
+
+		self.assertIsInstance( p2, GafferScene.TweakPlug )
+		self.assertEqual( p2.getName(), "p2" )
+		self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( p2.keys(), p.keys() )
+		for n in p2.keys() :
+			self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
+			self.assertIsInstance( p2[n], p[n].__class__ )
+
 if __name__ == "__main__":
 	unittest.main()

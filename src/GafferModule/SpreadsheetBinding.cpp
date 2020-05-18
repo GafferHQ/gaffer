@@ -61,10 +61,10 @@ Spreadsheet::RowPlugPtr row( Spreadsheet::RowsPlug &rowsPlug, const std::string 
 	return rowsPlug.row( name );
 }
 
-size_t addColumn( Spreadsheet::RowsPlug &rowsPlug, ValuePlug &value, IECore::InternedString name )
+size_t addColumn( Spreadsheet::RowsPlug &rowsPlug, ValuePlug &value, IECore::InternedString name, bool adoptEnabledPlug )
 {
 	ScopedGILRelease gilRelease;
-	return rowsPlug.addColumn( &value, name );
+	return rowsPlug.addColumn( &value, name, adoptEnabledPlug );
 }
 
 void removeColumn( Spreadsheet::RowsPlug &rowsPlug, size_t columnIndex )
@@ -91,6 +91,11 @@ void removeRow( Spreadsheet::RowsPlug &rowsPlug, Spreadsheet::RowPlug &row )
 	rowsPlug.removeRow( &row );
 }
 
+BoolPlugPtr cellPlugEnabledPlug( Spreadsheet::CellPlug &cellPlug )
+{
+	return cellPlug.enabledPlug();
+}
+
 ValuePlugPtr activeInPlug( Spreadsheet &s, const ValuePlug &outPlug )
 {
 	ScopedGILRelease gilRelease;
@@ -111,7 +116,12 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 			{
 				PlugPtr p = cell->valuePlug()->createCounterpart( cell->getName(), Plug::In );
 				const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( p.get() );
-				result += identifier + ".addColumn( " + plugSerialiser->constructor( p.get(), serialisation ) + " )\n";
+				result += identifier + ".addColumn( " + plugSerialiser->constructor( p.get(), serialisation );
+				if( !cell->getChild<BoolPlug>( "enabled" ) )
+				{
+					result += ", adoptEnabledPlug = True";
+				}
+				result += " )\n";
 			}
 
 			const size_t numRows = plug->children().size();
@@ -150,7 +160,7 @@ void GafferModule::bindSpreadsheet()
 		)
 		.def( "defaultRow", &defaultRow )
 		.def( "row", &row )
-		.def( "addColumn", &addColumn, ( arg( "value" ), arg( "name" ) = "" ) )
+		.def( "addColumn", &addColumn, ( arg( "value" ), arg( "name" ) = "", arg( "adoptEnabledPlug" ) = false ) )
 		.def( "removeColumn", &removeColumn )
 		.def( "addRow", &addRow )
 		.def( "addRows", &addRows )
@@ -163,6 +173,7 @@ void GafferModule::bindSpreadsheet()
 	;
 
 	PlugClass<Spreadsheet::CellPlug>()
+		.def( "enabledPlug", &cellPlugEnabledPlug )
 		.attr( "__qualname__" ) = "Spreadsheet.CellPlug"
 	;
 

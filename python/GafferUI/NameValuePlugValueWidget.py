@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferUI.SpreadsheetUI
 
 ## Supported plug metadata :
 #
@@ -144,6 +145,12 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 GafferUI.PlugValueWidget.registerType( Gaffer.NameValuePlug, NameValuePlugValueWidget )
 
+# Spreadsheet integration
+# =======================
+
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "spreadsheet:plugMenu:includeAsAncestor", True )
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "spreadsheet:plugMenu:ancestorLabel", "Value and Switch" )
+
 def __spreadsheetColumnName( plug ) :
 
 	nameValuePlug = plug.parent()
@@ -163,3 +170,23 @@ def __spreadsheetColumnName( plug ) :
 		return plug.getName()
 
 Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "*", "spreadsheet:columnName", __spreadsheetColumnName )
+
+def __spreadsheetFormatter( plug, forToolTip ) :
+
+	value = GafferUI.SpreadsheetUI.formatValue( plug["value"], forToolTip )
+	if "enabled" not in plug.parent() :
+		return value
+
+	enabled = "On" if plug["enabled"].getValue() else "Off"
+	separator = " : \n" if forToolTip and "\n" in value else " : "
+	return enabled + separator + value
+
+GafferUI.SpreadsheetUI.registerValueFormatter( Gaffer.NameValuePlug, __spreadsheetFormatter )
+
+def __spreadsheetValueWidget( plug ) :
+
+	w = GafferUI.NameValuePlugValueWidget( plug )
+	w.setNameVisible( False )
+	return w
+
+GafferUI.SpreadsheetUI.registerValueWidget( Gaffer.NameValuePlug, __spreadsheetValueWidget )
