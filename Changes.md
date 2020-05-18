@@ -7,6 +7,12 @@ Fixes
 - NodeEditor : Fixed "Connect to Spreadsheet" tool menu item to work with Spreadsheets that have sections. Previously, the submenu showed the sections unnecessarily, and selecting a section triggered an error.
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
 - Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
+- Backdrop : Fixed bug which caused unnecessary plugs to be added during copy/paste.
+
+API
+---
+
+- BackdropNodeGadget : Added `setBound()` and `getBound()` methods.
 
 0.57.3.0 (relative to 0.57.2.0)
 ========
