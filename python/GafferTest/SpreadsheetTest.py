@@ -789,6 +789,65 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		r["name"].setValue( "abc*[0-9]" )
 		self.assertEqual( s["rows"].row( "abc*[0-9]" ), r )
 
+	def testAdoptedEnabledPlug( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.NameValuePlug( "name", "defaultValue", defaultEnabled = True ), name = "c1", adoptEnabledPlug = True )
+		row1 = s["rows"].addRow()
+		row1["name"].setValue( "row1" )
+		row2 = s["rows"].addRow()
+		row2["name"].setValue( "row2" )
+
+		for row in Gaffer.Spreadsheet.RowPlug.Range( s["rows"] ) :
+			self.assertNotIn( "enabled", row["cells"]["c1"] )
+			self.assertEqual( row["cells"]["c1"].enabledPlug(), row["cells"]["c1"]["value"]["enabled"] )
+			self.assertEqual( row["cells"]["c1"].enabledPlug().getValue(), True )
+
+		row1["cells"]["c1"]["value"]["value"].setValue( "row1Value" )
+		row2["cells"]["c1"]["value"]["value"].setValue( "row2Value" )
+
+		s["selector"].setValue( "row1" )
+		self.assertEqual( s["out"]["c1"]["value"].getValue(), "row1Value" )
+		self.assertEqual( s["out"]["c1"]["enabled"].getValue(), True )
+
+		s["selector"].setValue( "row2" )
+		self.assertEqual( s["out"]["c1"]["value"].getValue(), "row2Value" )
+		self.assertEqual( s["out"]["c1"]["enabled"].getValue(), True )
+
+		s["selector"].setValue( "notARow" )
+		self.assertEqual( s["out"]["c1"]["value"].getValue(), "defaultValue" )
+		self.assertEqual( s["out"]["c1"]["enabled"].getValue(), True )
+
+		s["selector"].setValue( "row1" )
+		row1["cells"]["c1"].enabledPlug().setValue( False )
+		self.assertEqual( s["out"]["c1"]["value"].getValue(), "defaultValue" )
+		self.assertEqual( s["out"]["c1"]["enabled"].getValue(), True )
+
+		s["rows"]["default"]["cells"]["c1"].enabledPlug().setValue( False )
+		self.assertEqual( s["out"]["c1"]["value"].getValue(), "defaultValue" )
+		self.assertEqual( s["out"]["c1"]["enabled"].getValue(), False )
+
+	def testAdoptedEnabledPlugChecks( self ) :
+
+		s = Gaffer.Spreadsheet()
+		with six.assertRaisesRegex( self, RuntimeError, 'Value plug has no "enabled" plug to adopt' ) :
+			s["rows"].addColumn( Gaffer.IntPlug(), adoptEnabledPlug = True )
+
+	def testAdoptedEnabledPlugSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.NameValuePlug( "n", "v", defaultEnabled = True ), name = "c1", adoptEnabledPlug = True )
+		s["s"]["rows"].addRow()
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		for row in Gaffer.Spreadsheet.RowPlug.Range( s2["s"]["rows"] ) :
+			self.assertNotIn( "enabled", row["cells"]["c1"] )
+			self.assertEqual( row["cells"]["c1"].enabledPlug(), row["cells"]["c1"]["value"]["enabled"] )
+			self.assertEqual( row["cells"]["c1"].enabledPlug().getValue(), True )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testAddRowPerformance( self ) :
 

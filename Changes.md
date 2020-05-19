@@ -8,6 +8,28 @@ Fixes
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
 - Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
 
+Improvements
+------------
+
+- Spreadsheet :
+  - The enabled/disabled state of a cell may now be edited directly via a new switch in the popup editing window.
+  - When promoting plugs - such as those from Attributes node - which have their own "enabled" switch, this switch is now adopted by the spreadsheet, instead of having an additional "enabled" switch on the cell.
+  - Added support for creating columns from tweaks in ShaderTweaks nodes. This allows the mode and value to be grouped in a single column.
+
+Fixes
+-----
+
+- TweakPlug : Fixed bugs which prevented the creation of output TweakPlugs.
+
+API
+---
+
+- Spreadsheet : Added an `addColumn()` overload with an `adoptEnabledPlug` boolean argument. This allows cells to reuse the `enabled` plug from their `value` plug if it has one.
+- SpreadsheetUI :
+  - Added `formatValue()` and `registerValueFormatter()` methods to support custom formatting for extension plug types.
+  - Added `registerValueWidget()` method to support customisation of widgets used for editing.
+  - Added `spreadsheet:plugMenu:includeAsAncestor` and `spreadsheet:plugMenu:ancestorLabel` metadata, to allow ancestor plugs to be promoted from the popup menu for their descendants.
+
 0.57.3.0 (relative to 0.57.2.0)
 ========
 

@@ -104,6 +104,15 @@ class GAFFER_API Spreadsheet : public ComputeNode
 				/// Spreadsheet so that they can be used for the editing and
 				/// serialisation of promoted plugs.
 
+				/// Adds a column to the spreadsheet, using `value` as a prototype for
+				/// the `CellPlug::valuePlug()` for each cell. If `adoptEnabledPlug`
+				/// is true, then `value` must have a BoolPlug child called "enabled",
+				/// and this will be used instead of adding another "enabled" plug to
+				/// the cell itself. This is useful when adding columns for NameValuePlugs
+				/// and TweakPlugs.
+				size_t addColumn( const ValuePlug *value, IECore::InternedString name, bool adoptEnabledPlug );
+				/// \todo Remove this overload, and add default values for `name` and `adoptEnabledPlug`
+				/// in the version above.
 				size_t addColumn( const ValuePlug *value, IECore::InternedString name = IECore::InternedString() );
 				void removeColumn( size_t columnIndex );
 
@@ -169,6 +178,10 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Spreadsheet::CellPlug, Gaffer::SpreadsheetCellPlugTypeId, Gaffer::ValuePlug );
 
+				/// Returns the plug used to enable or disable this cell.
+				/// Note : If `addColumn( adoptEnabledPlug = true )` was
+				/// used, this will return a child of `valuePlug()`, not
+				/// a direct child of the CellPlug itself.
 				BoolPlug *enabledPlug();
 				const BoolPlug *enabledPlug() const;
 
@@ -182,7 +195,7 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 			private :
 
-				CellPlug( const std::string &name, const Gaffer::Plug *value, Plug::Direction direction = Plug::In );
+				CellPlug( const std::string &name, const Gaffer::Plug *value, bool adoptEnabledPlug = false, Plug::Direction direction = Plug::In );
 				friend class Spreadsheet;
 
 		};

@@ -53,6 +53,79 @@ from Qt import QtCompat
 
 from ._TableView import _TableView
 
+# Value Formatting
+# ================
+
+## Returns the value of the plug as it will be formatted in a Spreadsheet.
+def formatValue( plug, forToolTip = False ) :
+
+	currentPreset = Gaffer.NodeAlgo.currentPreset( plug )
+	if currentPreset is not None :
+		return currentPreset
+
+	global __valueFormatters
+	formatter = __valueFormatters.get( plug.__class__, __defaultValueFormatter )
+	return formatter( plug, forToolTip )
+
+## Registers a custom formatter for the specified `plugType`.
+# `formatter` must have the same signature as `formatValue()`.
+def registerValueFormatter( plugType, formatter ) :
+
+	global __valueFormatters
+	__valueFormatters[plugType] = formatter
+
+__valueFormatters = {}
+
+def __defaultValueFormatter( plug, forToolTip ) :
+
+	if not hasattr( plug, "getValue" ) :
+		return ""
+
+	value = plug.getValue()
+	if isinstance( value, str ) :
+		return value
+	elif isinstance( value, ( int, float ) ) :
+		return GafferUI.NumericWidget.valueToString( value )
+	elif isinstance( value, ( imath.V2i, imath.V2f, imath.V3i, imath.V3f ) ) :
+		return ", ".join( GafferUI.NumericWidget.valueToString( v ) for v in value )
+
+	try :
+		# Unknown type. If iteration is supported then use that.
+		separator = "\n" if forToolTip else ", "
+		return separator.join( str( x ) for x in value )
+	except :
+		# Otherwise just cast to string
+		return str( value )
+
+def __transformPlugFormatter( plug, forToolTip ) :
+
+	separator = "\n" if forToolTip else "  "
+	return separator.join(
+		"{label} : {value}".format(
+			label = c.getName().title() if forToolTip else c.getName()[0].title(),
+			value = formatValue( c, forToolTip )
+		)
+		for c in plug.children()
+	)
+
+registerValueFormatter( Gaffer.TransformPlug, __transformPlugFormatter )
+
+# Editing
+# =======
+#
+# By default, `PlugValueWidget.create( cell["value"] )` is used to create
+# a widget for editing cells in the spreadsheet, but custom editors may be
+# provided for specific plug types.
+
+# Registers a function to return a PlugValueWidget for editing cell
+# value plugs of the specified type.
+def registerValueWidget( plugType, plugValueWidgetCreator ) :
+
+	_CellPlugValueWidget.registerValueWidget( plugType, plugValueWidgetCreator )
+
+# Metadata
+# ========
+
 Gaffer.Metadata.registerNode(
 
 	Gaffer.Spreadsheet,
@@ -500,6 +573,93 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugValueWidget )
 
+# _CellPlugValueWidget
+# ====================
+
+class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+
+		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+		if "enabled" in plug and rowPlug != rowPlug.parent().defaultRow() :
+			enabledPlugValueWidget = GafferUI.BoolPlugValueWidget(
+				plug["enabled"],
+				displayMode=GafferUI.BoolWidget.DisplayMode.Switch
+			)
+			self.__row.append( enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
+
+		plugValueWidget = self.__createValueWidget( plug["value"] )
+
+		# Apply some fixed widths for some widgets, otherwise they're
+		# a bit too eager to grow. \todo Should we change the underlying
+		# behaviour of the widgets themselves?
+		self.__applyFixedWidths( plugValueWidget )
+
+		self.__row.append( plugValueWidget )
+
+		self._updateFromPlug()
+
+	def childPlugValueWidget( self, childPlug ) :
+
+		for widget in self.__row :
+			if widget.getPlug() == childPlug :
+				return widget
+
+		return None
+
+	@classmethod
+	def registerValueWidget( cls, plugType, plugValueWidgetCreator ) :
+
+		cls.__plugValueWidgetCreators[plugType] = plugValueWidgetCreator
+
+	def __createValueWidget( self, plug ) :
+
+		creator = self.__plugValueWidgetCreators.get(
+			plug.__class__,
+			GafferUI.PlugValueWidget.create
+		)
+
+		w = creator( plug )
+		assert( isinstance( w, GafferUI.PlugValueWidget ) )
+		return w
+
+	__plugValueWidgetCreators = {}
+
+	def _updateFromPlug( self ) :
+
+		if "enabled" in self.getPlug() :
+			enabled = False
+			with self.getContext() :
+				with IECore.IgnoredExceptions( Exception ) :
+					enabled = self.getPlug()["enabled"].getValue()
+			self.__row[-1].setEnabled( enabled )
+
+	__numericFieldWidth = 60
+
+	@classmethod
+	def __applyFixedWidths( cls, plugValueWidget ) :
+
+		def walk( widget ) :
+
+			if isinstance( widget, GafferUI.NumericPlugValueWidget ) :
+				widget._qtWidget().setFixedWidth( cls.__numericFieldWidth )
+				widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+
+			for childPlug in Gaffer.Plug.Range( widget.getPlug() ) :
+				childWidget = widget.childPlugValueWidget( childPlug )
+				if childWidget is not None :
+					walk( childWidget )
+
+		if isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
+			plugValueWidget._qtWidget().setFixedWidth( 250 )
+		else :
+			walk( plugValueWidget )
+
+GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.CellPlug, _CellPlugValueWidget )
+
 # _PlugTableView
 # ==============
 
@@ -597,18 +757,12 @@ class _PlugTableView( GafferUI.Widget ) :
 		if not index.flags() & QtCore.Qt.ItemIsEnabled or not index.flags() & QtCore.Qt.ItemIsEditable :
 			return
 
-		if not index.data( _PlugTableModel.CellPlugEnabledRole ) :
-			return
-
 		if scrollTo :
 			self._qtWidget().scrollTo( index )
 
 		rect = self._qtWidget().visualRect( index )
 		rect.setTopLeft( self._qtWidget().viewport().mapToGlobal( rect.topLeft() ) )
 		rect.setBottomRight( self._qtWidget().viewport().mapToGlobal( rect.bottomRight() ) )
-
-		if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
-			plug = plug["value"]
 
 		_EditWindow.popupEditor(
 			plug,
@@ -1029,7 +1183,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole :
 
-			return self.__formatValue( self.__displayRoleValue( index ) )
+			return self.__formatValue( index )
 
 		elif role == QtCore.Qt.BackgroundColorRole :
 
@@ -1063,7 +1217,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		elif role == QtCore.Qt.ToolTipRole :
 
-			return self.__formatValue( self.__displayRoleValue( index ), forToolTip = True )
+			return self.__formatValue( index, forToolTip = True )
 
 		elif role == self.CellPlugEnabledRole :
 
@@ -1072,7 +1226,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
 				with self.__context :
 					try :
-						enabled = plug["enabled"].getValue()
+						enabled = plug.enabledPlug().getValue()
 					except :
 						return None
 			return enabled
@@ -1174,66 +1328,19 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.beginResetModel()
 		self.endResetModel()
 
-	def __displayRoleValue( self, index ) :
+	def __formatValue( self, index, forToolTip = False ) :
 
 		plug = self.valuePlugForIndex( index )
+
 		if isinstance( plug, Gaffer.BoolPlug ) :
 			# Dealt with via CheckStateRole
 			return None
 
 		try :
 			with self.__context :
-				currentPreset = Gaffer.NodeAlgo.currentPreset( plug )
-				if currentPreset is not None :
-					return currentPreset
-				if isinstance( plug, Gaffer.NameValuePlug ) :
-					return plug["enabled"].getValue(), plug["value"].getValue()
-				elif isinstance( plug, Gaffer.TransformPlug ) :
-					return collections.OrderedDict( [
-						( "T", plug["translate"].getValue() ),
-						( "R", plug["rotate"].getValue() ),
-						( "S", plug["scale"].getValue() ),
-						( "P", plug["pivot"].getValue() ),
-					] )
-				else :
-					return plug.getValue()
+				return formatValue( plug, forToolTip )
 		except :
 			return None
-
-	def __formatValue( self, value, forToolTip = False ) :
-
-		if isinstance( value, str ) :
-			return value
-		elif isinstance( value, ( int, float ) ) :
-			return GafferUI.NumericWidget.valueToString( value )
-		elif isinstance( value, ( imath.V2i, imath.V2f, imath.V3i, imath.V3f ) ) :
-			return ", ".join( GafferUI.NumericWidget.valueToString( v ) for v in value )
-		elif isinstance( value, bool ) :
-			return value
-		elif isinstance( value, tuple ) :
-			# NameValuePlug ( enabled, value )
-			s = self.__formatValue( value[1], forToolTip )
-			return "{}{}{}".format(
-				"On" if value[0] else "Off",
-				" : \n" if forToolTip and "\n" in s else " : ",
-				s
-			)
-		elif isinstance( value, dict ) :
-			separator = "\n" if forToolTip else "  "
-			return separator.join(
-				"{} : {}".format( item[0], self.__formatValue( item[1] ) )
-				for item in value.items()
-			)
-		elif value is None :
-			return ""
-
-		try :
-			# Unknown type. If iteration is supported then use that.
-			separator = "\n" if forToolTip else ", "
-			return separator.join( str( x ) for x in value )
-		except :
-			# Otherwise just cast to string
-			return str( value )
 
 class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
@@ -1274,8 +1381,6 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
 class _EditWindow( GafferUI.Window ) :
 
-	__numericFieldWidth = 60
-
 	# Considered private - use `_EditWindow.popupEditor()` instead.
 	def __init__( self, plugValueWidget, **kw ) :
 
@@ -1286,17 +1391,6 @@ class _EditWindow( GafferUI.Window ) :
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
-		if isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
-			plugValueWidget.setNameVisible( False )
-
-		# Apply some fixed widths for some widgets, otherwise they're
-		# a bit too eager to grow. \todo Should we change the underlying
-		# behaviour of the widgets themselves?
-		fixedWidth = self.__fixedWidth( plugValueWidget )
-		if fixedWidth is not None :
-			plugValueWidget._qtWidget().setFixedWidth( fixedWidth )
-			plugValueWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
-
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 	@classmethod
@@ -1305,10 +1399,12 @@ class _EditWindow( GafferUI.Window ) :
 		plugValueWidget = GafferUI.PlugValueWidget.create( plug )
 		cls.__currentWindow = _EditWindow( plugValueWidget )
 
-		if isinstance( plugValueWidget, GafferUI.PresetsPlugValueWidget ) :
-			if not Gaffer.Metadata.value( plugValueWidget.getPlug(), "presetsPlugValueWidget:isCustom" ) :
-				plugValueWidget.menu().popup()
-				return
+		if isinstance( plugValueWidget, _CellPlugValueWidget ) :
+			valuePlugValueWidget = plugValueWidget.childPlugValueWidget( plug["value"] )
+			if isinstance( valuePlugValueWidget, GafferUI.PresetsPlugValueWidget ) :
+				if not Gaffer.Metadata.value( valuePlugValueWidget.getPlug(), "presetsPlugValueWidget:isCustom" ) :
+					valuePlugValueWidget.menu().popup()
+					return
 
 		windowSize = cls.__currentWindow._qtWidget().sizeHint()
 		cls.__currentWindow.setPosition( plugBound.center() - imath.V2i( windowSize.width() / 2, windowSize.height() / 2 ) )
@@ -1347,35 +1443,17 @@ class _EditWindow( GafferUI.Window ) :
 			return plugValueWidget.textWidget()
 		elif isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
 			return plugValueWidget.numericWidget()
-		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
-			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0] ) )
 		elif isinstance( plugValueWidget, GafferUI.PathPlugValueWidget ) :
 			return plugValueWidget.pathWidget()
 		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
 			return plugValueWidget.textWidget()
-		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
-			return cls.__textWidget( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()[0] ) )
 
-	@classmethod
-	def __fixedWidth( cls, plugValueWidget ) :
-
-		if isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-			return cls.__numericFieldWidth
-		elif isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
-			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() ) + 20
-		elif isinstance( plugValueWidget, GafferUI.CompoundNumericPlugValueWidget ) :
-			return cls.__numericFieldWidth * len( plugValueWidget.getPlug() )
-		elif isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
-			return 250
-		elif isinstance( plugValueWidget, GafferUI.NameValuePlugValueWidget ) :
-			w = cls.__fixedWidth( plugValueWidget.childPlugValueWidget( plugValueWidget.getPlug()["value"] ) )
-			if w is not None :
-				return w + 30
-		elif isinstance( plugValueWidget, GafferUI.LayoutPlugValueWidget ) :
-			w = 0
-			for p in plugValueWidget.getPlug() :
-				w = max( w, cls.__fixedWidth( plugValueWidget.childPlugValueWidget( p ) ) )
-			return GafferUI.PlugWidget.labelWidth() + w
+		for childPlug in Gaffer.Plug.Range( plugValueWidget.getPlug() ) :
+			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
+			if childWidget is not None :
+				childTextWidget = cls.__textWidget( childWidget )
+				if childTextWidget is not None and childTextWidget.visible() :
+					return childTextWidget
 
 		return None
 
@@ -1800,14 +1878,17 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	if rowPlug is None :
 		return
 
-	if rowPlug == rowPlug.parent().defaultRow() :
-		return
+	isDefaultRow = rowPlug == rowPlug.parent().defaultRow()
 
-	menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
+	def ensureDivider() :
+		if menuDefinition.item( "/__SpreadsheetRowAndCellDivider__" ) is None :
+			menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
 
 	# Row menu items
 
-	if plug.parent() == rowPlug :
+	if plug.parent() == rowPlug and not isDefaultRow :
+
+		ensureDivider()
 
 		menuDefinition.prepend(
 			"/Delete Row",
@@ -1840,19 +1921,23 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 	cellPlug = plug if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug.ancestor( Gaffer.Spreadsheet.CellPlug )
 	if cellPlug is not None :
 
-		enabled = None
-		enabledPlug = cellPlug["enabled"]
-		with plugValueWidget.getContext() :
-			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-				enabled = enabledPlug.getValue()
+		if not isDefaultRow or "enabled" not in cellPlug :
 
-		menuDefinition.prepend(
-			"/Disable Cell" if enabled else "/Enable Cell",
-			{
-				"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
-			}
-		)
+			ensureDivider()
+
+			enabled = None
+			enabledPlug = cellPlug.enabledPlug()
+			with plugValueWidget.getContext() :
+				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+					enabled = enabledPlug.getValue()
+
+			menuDefinition.prepend(
+				"/Disable Cell" if enabled else "/Enable Cell",
+				{
+					"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
+					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
+				}
+			)
 
 def __addColumn( spreadsheet, plug ) :
 
@@ -1861,11 +1946,17 @@ def __addColumn( spreadsheet, plug ) :
 	# plugs are added to spreadsheets.
 	columnName = Gaffer.Metadata.value( plug, "spreadsheet:columnName" ) or plug.getName()
 
+	# If the plug already has a child `enabled` plug, then we always adopt
+	# it to enable the cell. This makes for a much simpler user experience
+	# for NameValuePlugs and TweakPlugs. In an ideal world we would have
+	# made this the standard behaviour from the start.
+	adoptEnabledPlug = isinstance( plug.getChild( "enabled" ), Gaffer.BoolPlug )
+
 	# Rows plug may have been promoted, in which case we need to edit
 	# the source, which will automatically propagate the new column to
 	# the spreadsheet.
 	rowsPlug = spreadsheet["rows"].source()
-	columnIndex = rowsPlug.addColumn( plug, columnName )
+	columnIndex = rowsPlug.addColumn( plug, columnName, adoptEnabledPlug )
 	valuePlug = rowsPlug.defaultRow()["cells"][columnIndex]["value"]
 	Gaffer.MetadataAlgo.copy( plug, valuePlug, exclude = "spreadsheet:columnName layout:* deletable" )
 
@@ -1992,52 +2083,37 @@ def __prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget ) :
 	if plug.getInput() is not None or not plugValueWidget._editable() or Gaffer.MetadataAlgo.readOnly( plug ) :
 		return
 
-	ancestorPlug, ancestorLabel = None, ""
-	for ancestorType, ancestorLabel in [
-		( Gaffer.TransformPlug, "Transform" ),
-		( Gaffer.Transform2DPlug, "Transform" ),
-		( Gaffer.NameValuePlug, "Value and Switch" ),
-	] :
-		ancestorPlug = plug.ancestor( ancestorType )
-		if ancestorPlug :
-			if all( p.getInput() is None for p in Gaffer.Plug.RecursiveRange( ancestorPlug ) ) :
-				break
-			else :
-				ancestorPlug = None
+	plugsAndSuffixes = [ ( plug, "" ) ]
 
-	menuDefinition.prepend( "/__SpreadsheetCreationDivider__", { "divider" : True } )
+	ancestorPlug = plug.parent()
+	while isinstance( ancestorPlug, Gaffer.Plug ) :
 
-	if ancestorPlug :
+		if any( p.getInput() is not None for p in Gaffer.Plug.RecursiveRange( ancestorPlug ) ) :
+			break
+
+		if Gaffer.Metadata.value( ancestorPlug, "spreadsheet:plugMenu:includeAsAncestor" ) :
+			label = Gaffer.Metadata.value( ancestorPlug, "spreadsheet:plugMenu:ancestorLabel" )
+			label = label or ancestorPlug.typeName().rpartition( ":" )[2]
+			plugsAndSuffixes.append( ( ancestorPlug, " ({})".format( label ) ) )
+
+		ancestorPlug = ancestorPlug.parent()
+
+	for plug, suffix in reversed( plugsAndSuffixes ) :
+
+		menuDefinition.prepend( "/__SpreadsheetCreationDivider__" + suffix, { "divider" : True } )
+
 		menuDefinition.prepend(
-			"/Add to Spreadsheet ({})".format( ancestorLabel ),
+			"/Add to Spreadsheet{}".format( suffix ),
 			{
-				"subMenu" :  functools.partial( __spreadsheetSubMenu, ancestorPlug, functools.partial( __addToSpreadsheet, ancestorPlug ) )
+				"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( __addToSpreadsheet, plug ) )
 			}
 		)
 		menuDefinition.prepend(
-			"/Create Spreadsheet ({})...".format( ancestorLabel ),
+			"/Create Spreadsheet{}...".format( suffix ),
 			{
-				"command" : functools.partial( __createSpreadsheet, ancestorPlug )
+				"command" : functools.partial( __createSpreadsheet, plug )
 			}
 		)
-
-		menuDefinition.prepend(
-			"/__AncestorDivider__", { "divider" : True }
-		)
-
-	menuDefinition.prepend(
-		"/Add to Spreadsheet",
-		{
-			"subMenu" :  functools.partial( __spreadsheetSubMenu, plug, functools.partial( __addToSpreadsheet, plug ) )
-		}
-	)
-
-	menuDefinition.prepend(
-		"/Create Spreadsheet...",
-		{
-			"command" : functools.partial( __createSpreadsheet, plug )
-		}
-	)
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
@@ -2048,6 +2124,10 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	__prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
+
+for plugType in ( Gaffer.TransformPlug, Gaffer.Transform2DPlug ) :
+	Gaffer.Metadata.registerValue( plugType, "spreadsheet:plugMenu:includeAsAncestor", True )
+	Gaffer.Metadata.registerValue( plugType, "spreadsheet:plugMenu:ancestorLabel", "Transform" )
 
 # NodeEditor tool menu
 # ====================

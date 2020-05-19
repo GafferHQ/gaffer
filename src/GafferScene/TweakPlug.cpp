@@ -81,9 +81,9 @@ TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, M
 TweakPlug::TweakPlug( Gaffer::ValuePlugPtr valuePlug, const std::string &name, Direction direction, unsigned flags )
 	:	ValuePlug( name, direction, flags )
 {
-	addChild( new StringPlug( "name" ) );
-	addChild( new BoolPlug( "enabled", Plug::In, true ) );
-	addChild( new IntPlug( "mode", Plug::In, Replace, Replace, Remove ) );
+	addChild( new StringPlug( "name", direction ) );
+	addChild( new BoolPlug( "enabled", direction, true ) );
+	addChild( new IntPlug( "mode", direction, Replace, Replace, Remove ) );
 
 	if( valuePlug )
 	{

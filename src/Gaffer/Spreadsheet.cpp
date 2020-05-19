@@ -62,6 +62,8 @@ using namespace Gaffer;
 namespace
 {
 
+InternedString g_enabledPlugName( "enabled" );
+
 void appendLeafPlugs( const Gaffer::Plug *p, DependencyNode::AffectedPlugsContainer &container )
 {
 	if( !p->children().size() )
@@ -558,7 +560,7 @@ const Spreadsheet::RowPlug *Spreadsheet::RowsPlug::row( const std::string &rowNa
 	return m_rowNameMap->row( rowName );
 }
 
-size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::InternedString name )
+size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::InternedString name, bool adoptEnabledPlug )
 {
 	if( name.string().empty() )
 	{
@@ -567,7 +569,7 @@ size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::Interne
 
 	for( auto &row : RowPlug::Range( *this ) )
 	{
-		CellPlugPtr cellPlug = new CellPlug( name, value );
+		CellPlugPtr cellPlug = new CellPlug( name, value, adoptEnabledPlug );
 		cellPlug->valuePlug()->setFrom( value );
 		row->cellsPlug()->addChild( cellPlug );
 	}
@@ -578,7 +580,11 @@ size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::Interne
 		o->addChild( outColumn );
 	}
 	return defaultRow()->cellsPlug()->children().size() - 1;
+}
 
+size_t Spreadsheet::RowsPlug::addColumn( const ValuePlug *value, IECore::InternedString name )
+{
+	return addColumn( value, name, /* adoptEnabledPlug = */ false );
 }
 
 void Spreadsheet::RowsPlug::removeColumn( size_t columnIndex )
@@ -757,27 +763,52 @@ Gaffer::PlugPtr Spreadsheet::RowPlug::createCounterpart( const std::string &name
 
 GAFFER_PLUG_DEFINE_TYPE( Spreadsheet::CellPlug );
 
-Spreadsheet::CellPlug::CellPlug( const std::string &name, const Gaffer::Plug *value, Plug::Direction direction )
+Spreadsheet::CellPlug::CellPlug( const std::string &name, const Gaffer::Plug *value, bool adoptEnabledPlug, Plug::Direction direction )
 	:	ValuePlug( name, direction )
 {
-	addChild( new BoolPlug( "enabled", direction, true ) );
+	if( adoptEnabledPlug )
+	{
+		if( !value->getChild<BoolPlug>( g_enabledPlugName ) )
+		{
+			throw IECore::Exception( "Value plug has no \"enabled\" plug to adopt" );
+		}
+	}
+	else
+	{
+		addChild( new BoolPlug( g_enabledPlugName, direction, true ) );
+	}
+
 	addChild( value->createCounterpart( "value", direction ) );
 	valuePlug()->setFlags( Plug::Dynamic, false );
 }
 
 BoolPlug *Spreadsheet::CellPlug::enabledPlug()
 {
-	return getChild<BoolPlug>( 0 );
+	if( children().size() > 1 )
+	{
+		return getChild<BoolPlug>( 0 );
+	}
+	else
+	{
+		return valuePlug()->getChild<BoolPlug>( g_enabledPlugName );
+	}
 }
 
 const BoolPlug *Spreadsheet::CellPlug::enabledPlug() const
 {
-	return getChild<BoolPlug>( 0 );
+	if( children().size() > 1 )
+	{
+		return getChild<BoolPlug>( 0 );
+	}
+	else
+	{
+		return valuePlug()->getChild<BoolPlug>( g_enabledPlugName );
+	}
 }
 
 Gaffer::PlugPtr Spreadsheet::CellPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new CellPlug( name, valuePlug(), direction );
+	return new CellPlug( name, valuePlug(), /* adoptEnabledPlug = */ children().size() == 1, direction );
 }
 
 //////////////////////////////////////////////////////////////////////////
