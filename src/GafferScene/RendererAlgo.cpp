@@ -924,7 +924,7 @@ struct LocationOutput
 
 		void applyTransform( IECoreScenePreview::Renderer::ObjectInterface *objectInterface )
 		{
-			if( !m_transformSamples.size() || !objectInterface )
+			if( !m_transformSamples.size() )
 			{
 				return;
 			}
@@ -1096,7 +1096,10 @@ struct CameraOutput : public LocationOutput
 					attributesInterface().get()
 				);
 
-				applyTransform( objectInterface.get() );
+				if( objectInterface )
+				{
+					applyTransform( objectInterface.get() );
+				}
 			}
 		}
 
@@ -1137,11 +1140,15 @@ struct LightOutput : public LocationOutput
 				attributesInterface().get()
 			);
 
-			applyTransform( objectInterface.get() );
-			if( m_lightLinks )
+			if( objectInterface )
 			{
-				m_lightLinks->addLight( name, objectInterface );
+				applyTransform( objectInterface.get() );
+				if( m_lightLinks )
+				{
+					m_lightLinks->addLight( name, objectInterface );
+				}
 			}
+
 		}
 
 		return lightMatch & IECore::PathMatcher::DescendantMatch;
@@ -1178,10 +1185,13 @@ struct LightFiltersOutput : public LocationOutput
 				attributesInterface().get()
 			);
 
-			applyTransform( objectInterface.get() );
-			if( m_lightLinks )
+			if( objectInterface )
 			{
-				m_lightLinks->addLightFilter( objectInterface, attributes() );
+				applyTransform( objectInterface.get() );
+				if( m_lightLinks )
+				{
+					m_lightLinks->addLightFilter( objectInterface, attributes() );
+				}
 			}
 		}
 
@@ -1240,10 +1250,13 @@ struct ObjectOutput : public LocationOutput
 			objectInterface = renderer()->object( name( path ), objectsVector, timesVector, attributesInterface.get() );
 		}
 
-		applyTransform( objectInterface.get() );
-		if( m_lightLinks )
+		if( objectInterface )
 		{
-			m_lightLinks->outputLightLinks( scene, attributes(), objectInterface.get() );
+			applyTransform( objectInterface.get() );
+			if( m_lightLinks )
+			{
+				m_lightLinks->outputLightLinks( scene, attributes(), objectInterface.get() );
+			}
 		}
 
 		return true;

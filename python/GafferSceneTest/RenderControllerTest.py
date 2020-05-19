@@ -497,5 +497,35 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		del capturedSphere
 
+	def testNullObjects( self ) :
+
+		camera = GafferScene.Camera()
+		sphere = GafferScene.Sphere()
+		light = GafferSceneTest.TestLight()
+
+		lightAttr = GafferScene.StandardAttributes()
+		lightAttr["in"].setInput( sphere["out"] )
+		lightAttr["attributes"]["linkedLights"]["enabled"].setValue( True )
+		lightAttr["attributes"]["linkedLights"]["value"].setValue( "defaultLights" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( camera["out"] )
+		group["in"][1].setInput( sphere["out"] )
+		group["in"][2].setInput( light["out"] )
+
+		allFilter = GafferScene.PathFilter()
+		allFilter["paths"].setValue( IECore.StringVectorData( [ "..." ] ) )
+
+		attr = GafferScene.CustomAttributes()
+		unrenderableAttrPlug = Gaffer.NameValuePlug( "cr:unrenderable", IECore.BoolData( True ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		attr["attributes"].addChild( unrenderableAttrPlug )
+		attr["filter"].setInput( allFilter["out"] )
+		attr["in"].setInput( group["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( attr["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
 if __name__ == "__main__":
 	unittest.main()
