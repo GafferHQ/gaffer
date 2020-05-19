@@ -178,6 +178,12 @@ void objectInterfaceLink( Renderer::ObjectInterface &objectInterface, const IECo
 	objectInterface.link( type, objectSet );
 }
 
+void render( Renderer &renderer )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	renderer.render();
+}
+
 class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>
 {
 
@@ -351,7 +357,7 @@ void GafferSceneModule::bindRender()
 			.def( "object", &rendererObject1 )
 			.def( "object", &rendererObject2 )
 
-			.def( "render", &Renderer::render )
+			.def( "render", render )
 			.def( "pause", &Renderer::pause )
 			.def( "command", &rendererCommand )
 
