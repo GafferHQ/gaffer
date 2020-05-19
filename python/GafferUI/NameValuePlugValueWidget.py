@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import re
+
 import IECore
 
 import Gaffer
@@ -153,9 +155,10 @@ Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "spreadsheet:plugMenu:ances
 
 def __spreadsheetColumnName( plug ) :
 
-	nameValuePlug = plug.parent()
-	if plug == nameValuePlug["name"] :
-		return plug.getName()
+	if isinstance( plug, Gaffer.NameValuePlug ) :
+		nameValuePlug = plug
+	else :
+		nameValuePlug = plug.parent()
 
 	# Use some heuristics to come up with a more helpful
 	# column name.
@@ -163,13 +166,19 @@ def __spreadsheetColumnName( plug ) :
 	name = nameValuePlug.getName()
 	if name.startswith( "member" ) and nameValuePlug["name"].source().direction() != Gaffer.Plug.Direction.Out :
 		name = nameValuePlug["name"].getValue()
+		name = re.sub( "[^0-9a-zA-Z_]+", "_", name )
 
-	if name :
-		return name + plug.getName().title()
-	else :
+	if not name :
 		return plug.getName()
 
-Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "*", "spreadsheet:columnName", __spreadsheetColumnName )
+	if plug == nameValuePlug :
+		return name
+	else :
+		return name + plug.getName().title()
+
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "enabled", "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( Gaffer.NameValuePlug, "value", "spreadsheet:columnName", __spreadsheetColumnName )
 
 def __spreadsheetFormatter( plug, forToolTip ) :
 

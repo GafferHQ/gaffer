@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import re
 
 import IECore
 
@@ -217,9 +218,10 @@ Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:plugMenu:ance
 
 def __spreadsheetColumnName( plug ) :
 
-	tweakPlug = plug.parent()
-	if plug == tweakPlug["name"] :
-		return plug.getName()
+	if isinstance( plug, GafferScene.TweakPlug ) :
+		tweakPlug = plug
+	else :
+		tweakPlug = plug.parent()
 
 	# Use some heuristics to come up with a more helpful
 	# column name.
@@ -227,13 +229,20 @@ def __spreadsheetColumnName( plug ) :
 	name = tweakPlug.getName()
 	if name.startswith( "tweak" ) and tweakPlug["name"].source().direction() != Gaffer.Plug.Direction.Out :
 		name = tweakPlug["name"].getValue()
+		name = re.sub( "[^0-9a-zA-Z_]+", "_", name )
 
-	if name :
-		return name + plug.getName().title()
-	else :
+	if not name :
 		return plug.getName()
 
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "*", "spreadsheet:columnName", __spreadsheetColumnName )
+	if plug == tweakPlug :
+		return name
+	else :
+		return name + plug.getName().title()
+
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "enabled", "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "mode", "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "spreadsheet:columnName", __spreadsheetColumnName )
 
 def __spreadsheetFormatter( plug, forToolTip ) :
 
