@@ -119,6 +119,7 @@ class GAFFERSCENE_API PrimitiveSampler : public Deformer
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const final;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const final;
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const final;
+		Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const final;
 
 		bool adjustBounds() const final;
 

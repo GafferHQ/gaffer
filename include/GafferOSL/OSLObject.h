@@ -81,6 +81,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+		Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const override;
 		bool adjustBounds() const override;
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
