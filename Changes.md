@@ -16,6 +16,7 @@ Improvements
   - When promoting plugs - such as those from Attributes node - which have their own "enabled" switch, this switch is now adopted by the spreadsheet, instead of having an additional "enabled" switch on the cell.
   - Added support for creating columns from tweaks in ShaderTweaks nodes. This allows the mode and value to be grouped in a single column.
   - Added colour swatches for columns containing a switch as well as a colour value.
+- ShaderTweaks : Added a preset for tweaking OpenGL surface shaders.
 
 Fixes
 -----
