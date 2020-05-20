@@ -1,0 +1,73 @@
+import Gaffer
+import GafferImage
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 57, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+parent["variables"].addChild( Gaffer.NameValuePlug( "image:catalogue:port", Gaffer.IntPlug( "value", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "imageCataloguePort", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:name", Gaffer.StringPlug( "value", defaultValue = 'default', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectName", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:rootDirectory", Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectRootDirectory", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["SceneReader_Gaffy"] = GafferScene.SceneReader( "SceneReader_Gaffy" )
+parent.addChild( __children["SceneReader_Gaffy"] )
+__children["SceneReader_Gaffy"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Transform"] = GafferScene.Transform( "Transform" )
+parent.addChild( __children["Transform"] )
+__children["Transform"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["CollectScenes"] = GafferScene.CollectScenes( "CollectScenes" )
+parent.addChild( __children["CollectScenes"] )
+__children["CollectScenes"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+parent.addChild( __children["PathFilter"] )
+__children["PathFilter"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"] = Gaffer.Expression( "Expression" )
+parent.addChild( __children["Expression"] )
+__children["Expression"]["__out"].addChild( Gaffer.FloatPlug( "p0", direction = Gaffer.Plug.Direction.Out, defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"]["__out"].addChild( Gaffer.FloatPlug( "p1", direction = Gaffer.Plug.Direction.Out, defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["SceneReader_Cow"] = GafferScene.SceneReader( "SceneReader_Cow" )
+parent.addChild( __children["SceneReader_Cow"] )
+__children["SceneReader_Cow"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"] = GafferScene.Group( "Group" )
+parent.addChild( __children["Group"] )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"]["in"].addChild( GafferScene.ScenePlug( "in2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Group"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 59301 )
+Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
+__children["SceneReader_Gaffy"]["fileName"].setValue( '${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc' )
+__children["SceneReader_Gaffy"]["transform"]["translate"].setValue( imath.V3f( 0, 6, 0 ) )
+__children["SceneReader_Gaffy"]["__uiPosition"].setValue( imath.V2f( -21.8012695, 21.0915947 ) )
+__children["Transform"]["in"].setInput( __children["Group"]["out"] )
+__children["Transform"]["filter"].setInput( __children["PathFilter"]["out"] )
+__children["Transform"]["transform"]["translate"]["x"].setInput( __children["Expression"]["__out"]["p1"] )
+__children["Transform"]["transform"]["rotate"]["x"].setInput( __children["Expression"]["__out"]["p0"] )
+__children["Transform"]["__uiPosition"].setValue( imath.V2f( -3.00125742, -13.0414715 ) )
+__children["CollectScenes"]["in"].setInput( __children["Transform"]["out"] )
+__children["CollectScenes"]["rootNames"].setValue( IECore.StringVectorData( [ '0', '1', '2', '3', '4', '5', '6', '7', '8' ] ) )
+__children["CollectScenes"]["sourceRoot"].setValue( 'group' )
+__children["CollectScenes"]["__uiPosition"].setValue( imath.V2f( -3.00125742, -23.0055332 ) )
+__children["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/group' ] ) )
+__children["PathFilter"]["__uiPosition"].setValue( imath.V2f( 14, -4.42832899 ) )
+__children["Expression"]["__uiPosition"].setValue( imath.V2f( -26.1014862, -12.8406372 ) )
+__children["SceneReader_Cow"]["fileName"].setValue( '${GAFFER_ROOT}/resources/cow/cow.scc' )
+__children["SceneReader_Cow"]["__uiPosition"].setValue( imath.V2f( 9.89874268, 21.0915947 ) )
+__children["Group"]["in"][0].setInput( __children["SceneReader_Gaffy"]["out"] )
+__children["Group"]["in"][1].setInput( __children["SceneReader_Cow"]["out"] )
+__children["Group"]["__uiPosition"].setValue( imath.V2f( -3.00125742, 12.9275255 ) )
+__children["Expression"]["__engine"].setValue( 'python' )
+__children["Expression"]["__expression"].setValue( 'parent["__out"]["p1"] = 15 * int( context.get( "collect:rootName", "0" ) )\nparent["__out"]["p0"] = 45 * int( context.get( "collect:rootName", "0" ) )' )
+
+
+del __children
+

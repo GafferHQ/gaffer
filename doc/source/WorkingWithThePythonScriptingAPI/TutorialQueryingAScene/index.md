@@ -227,7 +227,7 @@ with Gaffer.Context( root.context() ) as context :
 	print camera
 ```
 
-The `Context` class is central to the way Gaffer works - a single plug can output entirely different values depending on the Context in which `getValue()` is called. Here we provided a Context as a path within the scene, but for an image node we'd provide a Context with a tile location and channel name. Contexts allow Gaffer to multithread efficiently - each thread uses it's own Context so each thread can be querying a different part of the scene or a different location in an image. That was a bit wordy though wasn't it? For now let's pretend we didn't even take this detour and let's use a utility method that does the same thing instead :
+The `Context` class is central to the way Gaffer works - a single plug can output entirely different values depending on the [Context](../../WorkingWithTheNodeGraph/Contexts/index.md) in which `getValue()` is called. Here we provided a Context as a path within the scene, but for an image node we'd provide a Context with a tile location and channel name. Contexts allow Gaffer to multithread efficiently - each thread uses it's own Context so each thread can be querying a different part of the scene or a different location in an image. That was a bit wordy though wasn't it? For now let's pretend we didn't even take this detour and let's use a utility method that does the same thing instead :
 
 ```
 camera = root["StandardOptions"]["out"].object( "/world/camera" )
@@ -306,3 +306,4 @@ That's pretty much all there is to it. There's a little more to learn in terms o
 ## See also ##
 
 - [The Python Editor](../ThePythonEditor/index.md)
+- [Context](../../WorkingWithTheNodeGraph/Contexts/index.md)
