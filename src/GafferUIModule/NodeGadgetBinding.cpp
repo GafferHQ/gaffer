@@ -132,6 +132,18 @@ GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
 	return g.getEdgeGadget( edge );
 }
 
+void setBound( BackdropNodeGadget &g, const Imath::Box2f &b )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.setBound( b );
+}
+
+Imath::Box2f getBound( BackdropNodeGadget &g )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return g.getBound();
+}
+
 void frame( BackdropNodeGadget &b, object nodes )
 {
 	std::vector<Node *> n;
@@ -198,6 +210,8 @@ void GafferUIModule::bindNodeGadget()
 
 	NodeGadgetClass<BackdropNodeGadget>()
 		.def( init<Gaffer::NodePtr>() )
+		.def( "setBound", &setBound )
+		.def( "getBound", &getBound )
 		.def( "frame", &frame )
 		.def( "framed", &framed )
 	;
