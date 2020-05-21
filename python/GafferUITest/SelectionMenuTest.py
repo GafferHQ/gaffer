@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import warnings
 
 import GafferUI
 import GafferUITest
@@ -43,59 +44,79 @@ class SelectionMenuTest( GafferUITest.TestCase ) :
 
 	def testAccessors( self ) :
 
-		s = GafferUI.SelectionMenu()
+		# The SelectionMenu class is deprecated, but we still want to
+		# run the tests for it for as long as it is still in Gaffer.
+		# So we temporarily suppress the warnings that it will emit
+		# when used.
+		with warnings.catch_warnings() :
 
-		# adding new items
-		s.addItem( "Test1" )
-		s.addItem( "Test2" )
-		s.addItem( "Test3" )
-		self.assertEqual( s.getTotal(), 3 )
+			warnings.simplefilter( "ignore", DeprecationWarning )
 
-		# changing and checking the current item
-		s.setCurrentIndex( 1 )
-		self.assertEqual( s.getCurrentItem(), "Test2" )
-		self.assertEqual( s.getItem(s.getCurrentIndex()), "Test2" )
+			s = GafferUI.SelectionMenu()
 
-		# removing item
-		s.removeIndex( 0 )
-		self.assertEqual ( s.getTotal(), 2 )
+			# adding new items
+			s.addItem( "Test1" )
+			s.addItem( "Test2" )
+			s.addItem( "Test3" )
+			self.assertEqual( s.getTotal(), 3 )
+
+			# changing and checking the current item
+			s.setCurrentIndex( 1 )
+			self.assertEqual( s.getCurrentItem(), "Test2" )
+			self.assertEqual( s.getItem(s.getCurrentIndex()), "Test2" )
+
+			# removing item
+			s.removeIndex( 0 )
+			self.assertEqual ( s.getTotal(), 2 )
 
 	def testInsert( self ) :
 
-		s = GafferUI.SelectionMenu()
+		with warnings.catch_warnings() :
 
-		# adding new items
-		s.addItem( "Test1" )
-		s.addItem( "Test2" )
-		s.addItem( "Test3" )
-		self.assertEqual( s.getTotal(), 3 )
+			warnings.simplefilter( "ignore", DeprecationWarning )
 
-		# insert an item and check it
-		s.insertItem( 1, "Test4")
-		self.assertEqual( s.getItem(1), "Test4" )
+			s = GafferUI.SelectionMenu()
+
+			# adding new items
+			s.addItem( "Test1" )
+			s.addItem( "Test2" )
+			s.addItem( "Test3" )
+			self.assertEqual( s.getTotal(), 3 )
+
+			# insert an item and check it
+			s.insertItem( 1, "Test4")
+			self.assertEqual( s.getItem(1), "Test4" )
 
 	def testCurrentIndexChangedSignal( self ):
 
-		s = GafferUI.SelectionMenu()
+		with warnings.catch_warnings() :
 
-		self.emissions = 0
-		def f( w ) :
-			self.emissions += 1
+			warnings.simplefilter( "ignore", DeprecationWarning )
 
-		c = s.currentIndexChangedSignal().connect(f)
+			s = GafferUI.SelectionMenu()
 
-		s.addItem("Test1")
-		s.addItem("Test2")
+			self.emissions = 0
+			def f( w ) :
+				self.emissions += 1
 
-		self.assertEqual(self.emissions, 1)
+			c = s.currentIndexChangedSignal().connect(f)
+
+			s.addItem("Test1")
+			s.addItem("Test2")
+
+			self.assertEqual(self.emissions, 1)
 
 	def testNoQString( self ) :
 
-		s = GafferUI.SelectionMenu()
-		s.addItem( "Test" )
+		with warnings.catch_warnings() :
 
-		self.assertIsInstance( s.getCurrentItem(), str )
-		self.assertIsInstance( s.getItem( 0 ), str )
+			warnings.simplefilter( "ignore", DeprecationWarning )
+
+			s = GafferUI.SelectionMenu()
+			s.addItem( "Test" )
+
+			self.assertIsInstance( s.getCurrentItem(), str )
+			self.assertIsInstance( s.getItem( 0 ), str )
 
 if __name__ == "__main__":
 	unittest.main()
