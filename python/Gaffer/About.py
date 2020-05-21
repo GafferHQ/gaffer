@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import json
 
 class About :
 
@@ -99,145 +100,16 @@ class About :
 	@staticmethod
 	def dependencies() :
 
-		result = [
+		licenseDir = os.path.expandvars( "$GAFFER_ROOT/doc/licenses" )
+		if not os.path.exists( licenseDir ) :
+			# Internal build, not based on GafferHQ/dependencies.
+			return []
 
-			{
-				"name" : "boost",
-				"url" : "http://www.boost.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/Boost",
-			},
+		with open( os.path.join( licenseDir, "manifest.json" ) ) as f :
+			result = json.load( f )
 
-			{
-				"name" : "cortex",
-				"url" : "https://github.com/ImageEngine/cortex/",
-				"license" : "$GAFFER_ROOT/doc/licenses/Cortex",
-			},
-
-			{
-				"name" : "freetype",
-				"url" : "http://www.freetype.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/FreeType",
-				"credit" : "Portions of this software are copyright (c) 2009 The FreeType Project (www.freetype.org). All rights reserved."
-			},
-
-			{
-				"name" : "glew",
-				"url" : "http://glew.sourceforge.net/",
-				"license" : "$GAFFER_ROOT/doc/licenses/GLEW",
-			},
-
-			{
-				"name" : "ilmbase",
-				"url" : "http://www.openexr.com/",
-				"license" : "$GAFFER_ROOT/doc/licenses/IlmBase",
-			},
-
-			{
-				"name" : "libjpeg-turbo",
-				"url" : "https://libjpeg-turbo.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/LibJPEG-Turbo",
-				"credit" : "This software is based in part on the work of the Independent JPEG Group.",
-			},
-
-			{
-				"name" : "libpng",
-				"url" : "http://www.libpng.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/LibPNG",
-			},
-
-			{
-				"name" : "openexr",
-				"url" : "http://www.openexr.com/",
-				"license" : "$GAFFER_ROOT/doc/licenses/OpenEXR",
-			},
-
-			{
-				"name" : "python",
-				"url" : "http://python.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/Python",
-			},
-
-			{
-				"name" : "pyopengl",
-				"url" : "http://pyopengl.sourceforge.net/",
-			},
-
-			{
-				"name" : "libtiff",
-				"url" : "http://www.libtiff.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/LibTIFF",
-			},
-
-			{
-				"name" : "tbb",
-				"url" : "http://threadingbuildingblocks.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/TBB",
-			},
-
-			{
-				"name" : "OpenColorIO",
-				"url" : "http://opencolorio.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/OpenColorIO",
-			},
-
-			{
-				"name" : "OpenImageIO",
-				"url" : "http://www.openimageio.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/OpenImageIO",
-			},
-
-			{
-				"name" : "HDF5",
-				"url" : "http://www.hdfgroup.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/HDF5",
-			},
-
-			{
-				"name" : "Alembic",
-				"url" : "http://www.alembic.io/",
-				"license" : "$GAFFER_ROOT/doc/licenses/Alembic",
-			},
-
-			{
-				"name" : "OpenShadingLanguage",
-				"url" : "https://github.com/imageworks/OpenShadingLanguage/",
-				"license" : "$GAFFER_ROOT/doc/licenses/OpenShadingLanguage",
-			},
-
-			{
-				"name" : "OpenVDB",
-				"url" : "http://www.openvdb.org//",
-				"license" : "$GAFFER_ROOT/doc/licenses/OpenVDB",
-			},
-
-			{
-				"name" : "USD",
-				"url" : "http://http://graphics.pixar.com/usd",
-				"license" : "$GAFFER_ROOT/doc/licenses/USD",
-			},
-
-			{
-				"name" : "Qt",
-				"url" : "http://qt.nokia.com/",
-				"license" : "$GAFFER_ROOT/doc/licenses/Qt",
-			},
-
-		]
-
-		if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PyQt4" ) :
-
-			result.append( {
-				"name" : "PyQt",
-				"url" : "http://www.riverbankcomputing.co.uk/",
-				"license" : "$GAFFER_ROOT/doc/licenses/pyQt",
-			} )
-
-		if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PySide" ) :
-
-			result.append( {
-				"name" : "PySide",
-				"url" : "http://www.pyside.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/pySide",
-			} )
+		for project in result :
+			if "license" in project :
+				project["license"] = os.path.normpath( os.path.join( licenseDir, project["license"] ) )
 
 		return result

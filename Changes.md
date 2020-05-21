@@ -35,6 +35,11 @@ Breaking Changes
     - `GafferCortexUI` attributes can no longer be accessed via the `GafferUI` namespace.
 - RecursiveChildIterator : Changed private member data. Source compatibility is maintained.
 
+Build
+-----
+
+- Updated to GafferHQ/dependencies 1.4.0.
+
 0.57.x.x (relative to 0.57.3.0)
 ========
 

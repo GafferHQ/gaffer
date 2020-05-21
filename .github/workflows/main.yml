@@ -38,7 +38,7 @@ jobs:
             os: ubuntu-16.04
             buildType: RELEASE
             containerImage: gafferhq/build:1.1.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.3.0/gafferDependencies-1.3.0-linux.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.4.0/gafferDependencies-1.4.0-linux.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -50,7 +50,7 @@ jobs:
             os: ubuntu-16.04
             buildType: DEBUG
             containerImage: gafferhq/build:1.1.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.3.0/gafferDependencies-1.3.0-linux.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.4.0/gafferDependencies-1.4.0-linux.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -60,7 +60,7 @@ jobs:
             os: macos-10.15
             buildType: RELEASE
             containerImage:
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.3.0/gafferDependencies-1.3.0-osx.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.4.0/gafferDependencies-1.4.0-osx.tar.gz
             testRunner: bash -c
             sconsCacheMegabytes: 400
 
