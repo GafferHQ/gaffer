@@ -23,6 +23,7 @@ Fixes
 API
 ---
 
+- EditScopeAlgo : Added functions for creating edits on shader parameters.
 - Spreadsheet : Added an `addColumn()` overload with an `adoptEnabledPlug` boolean argument. This allows cells to reuse the `enabled` plug from their `value` plug if it has one.
 - SpreadsheetUI :
   - Added `formatValue()` and `registerValueFormatter()` methods to support custom formatting for extension plug types.
