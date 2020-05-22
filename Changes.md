@@ -15,10 +15,12 @@ Fixes
 -----
 
 - NodeEditor : Fixed "Connect to Spreadsheet" tool menu item to work with Spreadsheets that have sections. Previously, the submenu showed the sections unnecessarily, and selecting a section triggered an error.
+- Fixed hangs caused by bad GIL management in Path bindings.
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
 - Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
 - Backdrop : Fixed bug which caused unnecessary plugs to be added during copy/paste.
 - TweakPlug : Fixed bugs which prevented the creation of output TweakPlugs.
+- Fixed crash when rendering unknown lights in 3Delight.
 
 API
 ---
