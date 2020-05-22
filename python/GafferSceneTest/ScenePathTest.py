@@ -37,6 +37,9 @@
 import os
 import unittest
 import six
+import imath
+
+import IECore
 
 import Gaffer
 import GafferTest
@@ -219,6 +222,50 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 
 		with six.assertRaisesRegex( self, Exception, "Python argument types" ) :
 			GafferScene.ScenePath( plane["out"], None )
+
+	def testGILManagement( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Build a contrived scene that will cause `childNames` queries to spawn
+		# a threaded compute that will execute a Python expression.
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( imath.V2i( 50 ) )
+
+		script["planeFilter"] = GafferScene.PathFilter()
+		script["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["sphere"]["out"] )
+		script["instancer"]["filter"].setInput( script["planeFilter"]["out"] )
+
+		script["instanceFilter"] = GafferScene.PathFilter()
+		script["instanceFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*/*" ] ) )
+
+		script["cube"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["instancer"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["filter"].setInput( script["instanceFilter"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'parent["sphere"]["name"] = context["sphereName"]' )
+
+		# Test that `ScenePath` bindings release the GIL so that the compute
+		# doesn't hang. If we're lucky, the expression executes on the main
+		# thread anyway, so loop to give it plenty of chances to fail.
+
+		for i in range( 0, 100 ) :
+
+			context = Gaffer.Context()
+			context["sphereName"] = "sphere{}".format( i )
+			path = GafferScene.ScenePath( script["parent"]["out"], context, "/plane/instances/{}/2410/cube".format( context["sphereName"] ) )
+			self.assertTrue( path.isValid() )
 
 if __name__ == "__main__":
 	unittest.main()

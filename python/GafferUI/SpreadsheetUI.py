@@ -110,6 +110,32 @@ def __transformPlugFormatter( plug, forToolTip ) :
 
 registerValueFormatter( Gaffer.TransformPlug, __transformPlugFormatter )
 
+# Decorations
+# ===========
+
+## Registers a function to return a decoration to be shown
+# alongside the formatted value. Currently the only supported
+# return type is `Color3f`.
+def registerDecoration( plugType, decorator ) :
+
+	global __valueDecorators
+	__valueDecorators[plugType] = decorator
+
+## Returns the decoration for the specified plug.
+def decoration( plug ) :
+
+	global __valueDecorators
+	decorator = __valueDecorators.get( plug.__class__ )
+	return decorator( plug ) if decorator is not None else None
+
+__valueDecorators = {}
+
+def __colorPlugDecorator( plug ) :
+
+	return plug.getValue()
+
+registerDecoration( Gaffer.Color3fPlug, __colorPlugDecorator )
+
 # Editing
 # =======
 #
@@ -1195,14 +1221,20 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		elif role == QtCore.Qt.DecorationRole :
 
 			plug = self.valuePlugForIndex( index )
-			if isinstance( plug, Gaffer.Color3fPlug ) :
-				with self.__context :
-					try :
-						value = plug.getValue()
-					except :
-						return None
+			with self.__context :
+				try :
+					value = decoration( plug )
+				except :
+					return None
+
+			if value is None :
+				return None
+			elif isinstance( value, imath.Color3f ) :
 				displayTransform = GafferUI.DisplayTransform.get()
 				return GafferUI.Widget._qtColor( displayTransform( value ) )
+			else :
+				IECore.msg( IECore.Msg.Level.Error, "Spreadsheet Decoration", "Unsupported type {}".format( type( value ) ) )
+				return None
 
 		elif role == QtCore.Qt.CheckStateRole :
 

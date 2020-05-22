@@ -57,6 +57,9 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
+		void setBound( const Imath::Box2f &bound );
+		Imath::Box2f getBound() const;
+
 		/// Resizes the backdrop to frame the specified nodes.
 		/// \undoable
 		void frame( const std::vector<Gaffer::Node *> &nodes );
@@ -92,8 +95,7 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 
 		bool updateUserColor();
 
-		Gaffer::Box2fPlug *boundPlug();
-		const Gaffer::Box2fPlug *boundPlug() const;
+		Gaffer::Box2fPlug *acquireBoundPlug( bool createIfMissing = true );
 
 		bool m_hovered;
 		int m_horizontalDragEdge;

@@ -8,7 +8,7 @@ In this three-part tutorial, we will walk through the following example startup 
 2. [customBookmarks.py](../TutorialStartupConfig2/index.md): Adds file path bookmarks to the various file browsers in Gaffer's interface.
 3. [customNodes.py](../TutorialStartupConfig3/index.md): Adds a custom entry to the node menu.
 
-In this first config, we will add a global Context Variable called `${project:resources}` that points to the `/resources` directory in the Gaffer installation directory. This Context Variable will make it slightly easier to reach the directory from any string plug that load files. Since we'll add the Context Variable using a startup config, it will be automatically added to every node graph Gaffer opens or creates.
+In this first config, we will add a global [Context Variable](../../WorkingWithTheNodeGraph/Contexts/index.html#context-variables)) called `${project:resources}` that points to the `/resources` directory in the Gaffer installation directory. This Context Variable will make it slightly easier to reach the directory from any string plug that load files. Since we'll add the Context Variable using a startup config, it will be automatically added to every node graph Gaffer opens or creates.
 
 ![](images/tutorialVariableSubstitutionInStringPlug.png "A global Context Variable in a string plug")
 

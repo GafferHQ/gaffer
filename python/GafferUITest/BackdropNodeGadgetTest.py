@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,54 +34,41 @@
 #
 ##########################################################################
 
-import os
+import unittest
 
-import IECore
+import imath
+
 import Gaffer
-import GafferScene
+import GafferUI
+import GafferUITest
 
-def __registerShaderPresets( presets ) :
+class BackdropNodeGadgetTest( GafferUITest.TestCase ) :
 
-	for name, value in presets :
-		Gaffer.Metadata.registerValue( GafferScene.ShaderTweaks, "shader", "preset:" + name, value )
+	def testNoExtraPlugsAfterCopyPaste( self ) :
 
-with IECore.IgnoredExceptions( ImportError ) :
+		script = Gaffer.ScriptNode()
+		script["b"] = Gaffer.Backdrop()
+		script["n"] = Gaffer.Node()
 
-	import GafferArnold
+		graphGadget = GafferUI.GraphGadget( script )
+		backdropGadget = graphGadget.nodeGadget( script["b"] )
+		self.assertIsInstance( backdropGadget, GafferUI.BackdropNodeGadget )
+		backdropGadget.frame( [ script["n"] ] )
 
-	__registerShaderPresets( [
+		script.execute( script.serialise( filter = Gaffer.StandardSet( [ script["b"] ] ) ) )
+		self.assertEqual( script["b1"].keys(), script["b"].keys() )
 
-		( "Arnold Surface", "ai:surface" ),
-		( "Arnold Displacement", "ai:disp_map" ),
-		( "Arnold Light", "ai:light" ),
-		( "Arnold Gobo", "ai:lightFilter:gobo" ),
-		( "Arnold Decay", "ai:lightFilter:light_decay" ),
-		( "Arnold Barndoor", "ai:lightFilter:barndoor" ),
-		( "Arnold Blocker", "ai:lightFilter:filter" )
+	def testBoundAccessors( self ) :
 
-	] )
+		b = Gaffer.Backdrop()
+		g = GafferUI.BackdropNodeGadget( b )
+		self.assertEqual( g.getBound(), imath.Box2f( imath.V2f( -10 ), imath.V2f( 10 ) ) )
 
-if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
+		g.setBound( imath.Box2f( imath.V2f( -1, -2 ), imath.V2f( 3, 4 ) ) )
+		self.assertEqual(
+			g.getBound(),
+			imath.Box2f( imath.V2f( -1, -2 ), imath.V2f( 3, 4 ) )
+		)
 
-	with IECore.IgnoredExceptions( ImportError ) :
-
-		import GafferAppleseed
-
-		__registerShaderPresets( [
-
-			( "Appleseed Light", "as:light" ),
-
-		] )
-
-with IECore.IgnoredExceptions( ImportError ) :
-
-	import GafferOSL
-
-	__registerShaderPresets( [
-
-		( "OSL Surface", "osl:surface" ),
-		( "OSL Light", "osl:light" ),
-
-	] )
-
-__registerShaderPresets( [ ( "OpenGL Surface", "gl:surface" ) ] )
+if __name__ == "__main__":
+	unittest.main()

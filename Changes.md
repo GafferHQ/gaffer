@@ -40,15 +40,8 @@ Build
 
 - Updated to GafferHQ/dependencies 1.4.0.
 
-0.57.x.x (relative to 0.57.3.0)
+0.57.4.0 (relative to 0.57.3.0)
 ========
-
-Fixes
------
-
-- NodeEditor : Fixed "Connect to Spreadsheet" tool menu item to work with Spreadsheets that have sections. Previously, the submenu showed the sections unnecessarily, and selecting a section triggered an error.
-- OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
-- Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
 
 Improvements
 ------------
@@ -57,20 +50,31 @@ Improvements
   - The enabled/disabled state of a cell may now be edited directly via a new switch in the popup editing window.
   - When promoting plugs - such as those from Attributes node - which have their own "enabled" switch, this switch is now adopted by the spreadsheet, instead of having an additional "enabled" switch on the cell.
   - Added support for creating columns from tweaks in ShaderTweaks nodes. This allows the mode and value to be grouped in a single column.
+  - Added colour swatches for columns containing a switch as well as a colour value.
+- ShaderTweaks : Added a preset for tweaking OpenGL surface shaders.
 
 Fixes
 -----
 
+- NodeEditor : Fixed "Connect to Spreadsheet" tool menu item to work with Spreadsheets that have sections. Previously, the submenu showed the sections unnecessarily, and selecting a section triggered an error.
+- Fixed hangs caused by bad GIL management in Path bindings.
+- OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
+- Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
+- Backdrop : Fixed bug which caused unnecessary plugs to be added during copy/paste.
 - TweakPlug : Fixed bugs which prevented the creation of output TweakPlugs.
+- Fixed crash when rendering unknown lights in 3Delight.
 
 API
 ---
 
+- EditScopeAlgo : Added functions for creating edits on shader parameters.
 - Spreadsheet : Added an `addColumn()` overload with an `adoptEnabledPlug` boolean argument. This allows cells to reuse the `enabled` plug from their `value` plug if it has one.
 - SpreadsheetUI :
   - Added `formatValue()` and `registerValueFormatter()` methods to support custom formatting for extension plug types.
+  - Added `decoration()` and `registerDecoration()` methods to support decorations for extension plug types.
   - Added `registerValueWidget()` method to support customisation of widgets used for editing.
   - Added `spreadsheet:plugMenu:includeAsAncestor` and `spreadsheet:plugMenu:ancestorLabel` metadata, to allow ancestor plugs to be promoted from the popup menu for their descendants.
+- BackdropNodeGadget : Added `setBound()` and `getBound()` methods.
 
 0.57.3.0 (relative to 0.57.2.0)
 ========
@@ -235,11 +239,16 @@ Build
 
 - Cortex : Updated to version 10.0.0-a76.
 
-0.56.2.x (relative to 0.56.2.1)
+0.56.2.2 (relative to 0.56.2.1)
 ========
 
+Fixes
+-----
+
+- Fixed hangs caused by bad GIL management in Path bindings.
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
 - Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
+- Fixed crash when rendering unknown lights in 3Delight.
 
 0.56.2.1 (relative to 0.56.2.0)
 ========

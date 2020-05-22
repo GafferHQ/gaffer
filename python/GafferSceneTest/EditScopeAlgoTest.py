@@ -36,6 +36,7 @@
 
 import math
 import unittest
+import six
 
 import imath
 
@@ -200,6 +201,303 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( sphereEdit != sphereEdit )
 		self.assertNotEqual( sphereEdit, planeEdit )
 		self.assertTrue( sphereEdit != planeEdit )
+
+	def testParameterEdits( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+		self.assertEqual(
+			editScope["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 0 )
+		)
+
+		self.assertFalse( GafferScene.EditScopeAlgo.hasParameterEdit( editScope, "/light", "light", ( "", "intensity" ) ) )
+		self.assertIsNone( GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ), createIfNecessary = False ) )
+
+		edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ) )
+		self.assertIsInstance( edit, GafferScene.TweakPlug )
+		self.assertIsInstance( edit["value"], Gaffer.Color3fPlug )
+		self.assertEqual( edit["mode"].getValue(), GafferScene.TweakPlug.Mode.Replace )
+		self.assertEqual( edit["value"].getValue(), imath.Color3f( 0 ) )
+		self.assertEqual( edit["enabled"].getValue(), False )
+
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( imath.Color3f( 1 ) )
+		self.assertEqual(
+			editScope["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 1 )
+		)
+
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ) ),
+			edit
+		)
+
+		light["parameters"]["intensity"].setValue( imath.Color3f( 0.5 ) )
+		edit["enabled"].setValue( False )
+		self.assertEqual(
+			editScope["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 0.5 )
+		)
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "__areaLight" ), createIfNecessary = False ) )
+
+	def testParameterEditsDontAffectOtherObjects( self ) :
+
+		# Make two lights and an EditScope
+
+		light1 = GafferSceneTest.TestLight()
+		light1["name"].setValue( "light1" )
+		light1["parameters"]["intensity"].setValue( imath.Color3f( 1, 0, 0 ) )
+
+		light2 = GafferSceneTest.TestLight()
+		light2["name"].setValue( "light2" )
+		light2["parameters"]["intensity"].setValue( imath.Color3f( 0, 1, 0 ) )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light1["out"] )
+		group["in"][1].setInput( light2["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( group["out"] )
+		editScope["in"].setInput( group["out"] )
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light1" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 1, 0, 0 )
+		)
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light2" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 0, 1, 0 )
+		)
+
+		# Edit light1
+
+		intensityEdit1 = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/group/light1", "light", ( "", "intensity" ) )
+		intensityEdit1["enabled"].setValue( True )
+		intensityEdit1["value"].setValue( imath.Color3f( 2 ) )
+
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light1" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 2 )
+		)
+
+		# This shouldn't create an edit for light2
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				editScope, "/group/light2", "light", ( "", "intensity" ),
+				createIfNecessary = False
+			)
+		)
+		self.assertEqual(
+			editScope["in"].attributes( "/group/light2" ),
+			editScope["out"].attributes( "/group/light2" ),
+		)
+
+		# But if we edit a _different_ parameter on light2, then both lights are in the
+		# spreadsheet, and we must therefore expect them both to have edits for both
+		# parameters. We just need to make sure that the extra edits are disabled.
+
+		areaEdit2 = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/group/light2", "light", ( "", "__areaLight" ) )
+		areaEdit2["enabled"].setValue( True )
+		areaEdit2["value"].setValue( True )
+
+		areaEdit1 = GafferScene.EditScopeAlgo.acquireParameterEdit(
+			editScope, "/group/light1", "light", ( "", "__areaLight" ), createIfNecessary = False
+		)
+		self.assertEqual( areaEdit1["enabled"].getValue(), False )
+
+		intensityEdit2 = GafferScene.EditScopeAlgo.acquireParameterEdit(
+			editScope, "/group/light2", "light", ( "", "intensity" ), createIfNecessary = False
+		)
+		self.assertEqual( intensityEdit2["enabled"].getValue(), False )
+
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light1" )["light"].outputShader().parameters["__areaLight"].value,
+			False
+		)
+
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light2" )["light"].outputShader().parameters["__areaLight"].value,
+			True
+		)
+
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light1" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 2 )
+		)
+
+		self.assertEqual(
+			editScope["out"].attributes( "/group/light2" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 0, 1, 0 )
+		)
+
+	def testParameterEditExceptions( self ) :
+
+		light = GafferSceneTest.TestLight()
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+		emptyKeys = editScope.keys()
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Location "/bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/bogus", "light", ( "", "intensity" ) )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "bogus", ( "", "intensity" ) )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Shader "bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "bogus", "intensity" ) )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Parameter "bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "bogus" ) )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+	def testParameterEditLocalisation( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		shader = GafferSceneTest.TestShader()
+		shader["type"].setValue( "test:surface" )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( group["out"] )
+		shaderAssignment["filter"].setInput( groupFilter["out"] )
+		shaderAssignment["shader"].setInput( shader["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( shaderAssignment["out"] )
+		editScope["in"].setInput( shaderAssignment["out"] )
+
+		self.assertIn( "test:surface", editScope["out"].attributes( "/group" ) )
+		self.assertNotIn( "test:surface", editScope["out"].attributes( "/group/sphere" ) )
+
+		edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/group/sphere", "test:surface", ( "", "i" ) )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 10 )
+
+		self.assertEqual( editScope["out"].attributes( "/group" ), editScope["in"].attributes( "/group" ) )
+		self.assertIn( "test:surface", editScope["out"].attributes( "/group/sphere" ) )
+		self.assertEqual(
+			editScope["out"].attributes( "/group/sphere" )["test:surface"].outputShader().parameters["i"].value,
+			10
+		)
+
+	def testParameterEditSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light1"] = GafferSceneTest.TestLight()
+		script["light1"]["name"].setValue( "light1" )
+		script["light2"] = GafferSceneTest.TestLight()
+		script["light2"]["name"].setValue( "light2" )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["light1"]["out"] )
+		script["group"]["in"][1].setInput( script["light2"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["group"]["out"] )
+		script["editScope"]["in"].setInput( script["group"]["out"] )
+
+		edit1 = GafferScene.EditScopeAlgo.acquireParameterEdit( script["editScope"], "/group/light1", "light", ( "", "intensity" ) )
+		edit1["enabled"].setValue( True )
+		edit1["value"].setValue( imath.Color3f( 1, 2, 3 ) )
+
+		edit2 = GafferScene.EditScopeAlgo.acquireParameterEdit( script["editScope"], "/group/light2", "light", ( "", "__areaLight" ) )
+		edit2["enabled"].setValue( True )
+		edit2["value"].setValue( True )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertScenesEqual( script2["editScope"]["out"], script["editScope"]["out"] )
+
+		for path, parameter, enabled, value in [
+			( "/group/light1", "intensity", True, imath.Color3f( 1, 2, 3 ) ),
+			( "/group/light1", "__areaLight", False, False ),
+			( "/group/light2", "intensity", False, imath.Color3f( 0 ) ),
+			( "/group/light2", "__areaLight", True, True ),
+		] :
+
+			edit = GafferScene.EditScopeAlgo.acquireParameterEdit( script2["editScope"], path, "light", ( "", parameter ), createIfNecessary = False )
+			self.assertIsNotNone( edit )
+			self.assertEqual( edit["enabled"].getValue(), enabled )
+			self.assertEqual( edit["value"].getValue(), value )
+
+	def testParameterEditsDontAffectOtherAttributes( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		lightFilter = GafferScene.PathFilter()
+		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		shuffleAttributes = GafferScene.ShuffleAttributes()
+		shuffleAttributes["in"].setInput( light["out"] )
+		shuffleAttributes["filter"].setInput( lightFilter["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( shuffleAttributes["out"] )
+		editScope["in"].setInput( shuffleAttributes["out"] )
+
+		# Make an edit for the "light" attribute.
+
+		edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ) )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual(
+			editScope["out"].attributes( "/light" )["light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 1, 2, 3 )
+		)
+
+		# Shuffle the light shader to another attribute. It should not be affected
+		# by the edit.
+
+		shuffleAttributes["shuffles"].addChild( Gaffer.ShufflePlug( "light", "test:light" ) )
+		self.assertEqual(
+			editScope["out"].attributes( "/light" )["test:light"].outputShader().parameters["intensity"].value,
+			imath.Color3f( 0 )
+		)
+
+	def testProcessorNames( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ]) )
+
+		shader = GafferSceneTest.TestShader()
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput( plane["out"] )
+		shaderAssignment["filter"].setInput( planeFilter["out"] )
+		shaderAssignment["shader"].setInput( shader["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( shaderAssignment["out"] )
+		editScope["in"].setInput( shaderAssignment["out"] )
+
+		for attributeName, processorName in [
+			( "gl:surface", "OpenGLSurfaceEdits" ),
+			( "gl:light", "OpenGLLightEdits" ),
+			( "surface", "SurfaceEdits" ),
+			( "displacement", "DisplacementEdits" ),
+			( "test:lightFilter:one", "TestLightFilterOneEdits" ),
+			( "test:lightFilter:bigGobo", "TestLightFilterBigGoboEdits" ),
+		] :
+			shader["type"].setValue( attributeName )
+			edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/plane", attributeName, ( "", "i" ) )
+			self.assertEqual( edit.node().getName(), processorName )
 
 if __name__ == "__main__":
 	unittest.main()

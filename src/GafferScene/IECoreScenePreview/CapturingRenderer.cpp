@@ -37,6 +37,7 @@
 #include "GafferScene/Private/IECoreScenePreview/CapturingRenderer.h"
 
 #include "IECore/MessageHandler.h"
+#include "IECore/SimpleTypedData.h"
 
 using namespace std;
 using namespace IECore;
@@ -107,6 +108,17 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 {
 	checkPaused();
+
+	// To facilitate the testing of code that handles the return from the various object methods of
+	// a renderer, we return null if the `cr:unrenderable` attribute is set to true.
+	if( const auto attr = dynamic_cast<const CapturingRenderer::CapturedAttributes *>( attributes ) )
+	{
+		const BoolData *attrData = attr->attributes()->member<BoolData>( "cr:unrenderable" );
+		if( attrData && attrData->readable() )
+		{
+			return nullptr;
+		}
+	}
 
 	ObjectMap::accessor a;
 	if( !m_capturedObjects.insert( a, name ) )
