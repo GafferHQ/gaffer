@@ -50,12 +50,14 @@ namespace Detail
 template<typename T>
 bool isValid( const T &p )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.T::isValid();
 }
 
 template<typename T>
 bool isLeaf( const T &p )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.T::isLeaf();
 }
 
@@ -63,7 +65,11 @@ template<typename T>
 boost::python::list propertyNames( const T &p )
 {
 	std::vector<IECore::InternedString> n;
-	p.T::propertyNames( n );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		p.T::propertyNames( n );
+	}
+
 	boost::python::list result;
 	for( std::vector<IECore::InternedString>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
 	{
@@ -77,7 +83,12 @@ GAFFERBINDINGS_API boost::python::object propertyToPython( IECore::ConstRunTimeT
 template<typename T>
 boost::python::object property( const T &p, const IECore::InternedString &name )
 {
-	return propertyToPython( p.T::property( name ) );
+	IECore::ConstRunTimeTypedPtr property;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		property = p.T::property( name );
+	}
+	return propertyToPython( property );
 }
 
 template<typename T>

@@ -449,7 +449,10 @@ class RenderController::SceneGraph
 					}
 
 					m_boundInterface = controller->m_renderer->object( boundName, boundCurves.get(), controller->m_boundAttributes.get() );
-					m_boundInterface->transform( m_fullTransform );
+					if( m_boundInterface )
+					{
+						m_boundInterface->transform( m_fullTransform );
+					}
 				}
 				else
 				{
@@ -681,7 +684,7 @@ class RenderController::SceneGraph
 			else if( type == LightType )
 			{
 				auto light = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
-				if( lightLinks )
+				if( light && lightLinks )
 				{
 					lightLinks->addLight( name, light );
 					m_objectInterface.assign(
@@ -699,7 +702,7 @@ class RenderController::SceneGraph
 			else if( type == LightFilterType )
 			{
 				auto lightFilter = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
-				if( lightLinks )
+				if( lightFilter && lightLinks )
 				{
 					lightLinks->addLightFilter( lightFilter, m_fullAttributes.get() );
 					m_objectInterface.assign(

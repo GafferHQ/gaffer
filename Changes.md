@@ -195,11 +195,16 @@ Build
 
 - Cortex : Updated to version 10.0.0-a76.
 
-0.56.2.x (relative to 0.56.2.1)
+0.56.2.2 (relative to 0.56.2.1)
 ========
 
+Fixes
+-----
+
+- Fixed hangs caused by bad GIL management in Path bindings.
 - OSLObject : Fixed bug that could cause string comparisons to fail for strings fetched using the InString shader or `inString()` function.
 - Fixed potential shutdown crashes when custom Metadata or View registrations have been made via Python.
+- Fixed crash when rendering unknown lights in 3Delight.
 
 0.56.2.1 (relative to 0.56.2.0)
 ========

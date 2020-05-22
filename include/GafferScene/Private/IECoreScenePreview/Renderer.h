@@ -248,22 +248,27 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// "shutter", V2fData
 		/// The time interval for which the shutter is open - this is used in conjunction with the
 		/// times passed to motionBegin() to specify motion blur. Defaults to 0,0 if unspecified.
+		///
+		/// May return a nullptr if the camera definition is not supported by the renderer.
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) = 0;
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
 		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry
 		/// for a geometric area light, or null to indicate that the light shader specifies its own
 		/// geometry internally (or is non-geometric in nature).
+		/// May return a nullptr if the light definition is not supported by the renderer.
 		/// \todo Should object be typed as Primitive?
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
 
 		/// Adds a named light filter with the initially supplied set of attributes, which are expected
 		/// to provide at least a light filter shader.
+		/// May return a nullptr if the light filter definition is not supported by the renderer.
 		virtual ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
 
 		/// Adds a named object to the render with the initally supplied set of attributes.
 		/// The attributes may subsequently be edited in interactive mode using
 		/// ObjectInterface::attributes().
+		/// May return a nullptr if the object definition is not supported by the renderer.
 		/// \todo Rejig class hierarchy so we can have something less generic than
 		/// Object here, but still pass CoordinateSystems. Or should
 		/// coordinate systems have their own dedicated calls?

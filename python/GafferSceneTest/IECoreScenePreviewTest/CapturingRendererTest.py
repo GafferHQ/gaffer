@@ -118,5 +118,34 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].message, "Object named \"o\" already exists" )
 		del o
 
+	def testObjects( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+
+		renderableAttr = renderer.attributes( IECore.CompoundObject( {} ) )
+		unrenderableAttr = renderer.attributes( IECore.CompoundObject( { "cr:unrenderable" : IECore.BoolData( True ) } ) )
+
+		self.assertIsNone( renderer.object( "o", IECoreScene.SpherePrimitive(), unrenderableAttr ) )
+		self.assertIsNone( renderer.camera( "c", IECoreScene.Camera(), unrenderableAttr ) )
+		self.assertIsNone( renderer.light( "l", IECore.NullObject(), unrenderableAttr ) )
+		self.assertIsNone( renderer.lightFilter( "lf", IECore.NullObject(), unrenderableAttr ) )
+
+		self.assertIsInstance(
+			renderer.object( "ro", IECoreScene.SpherePrimitive(), renderableAttr ),
+			GafferScene.Private.IECoreScenePreview.Renderer.ObjectInterface
+		)
+		self.assertIsInstance(
+			renderer.camera( "rc", IECoreScene.Camera(), renderableAttr ),
+			GafferScene.Private.IECoreScenePreview.Renderer.ObjectInterface
+		)
+		self.assertIsInstance(
+			renderer.light( "rl", IECore.NullObject(), renderableAttr ),
+			GafferScene.Private.IECoreScenePreview.Renderer.ObjectInterface
+		)
+		self.assertIsInstance(
+			renderer.lightFilter( "rl", IECore.NullObject(), renderableAttr ),
+			GafferScene.Private.IECoreScenePreview.Renderer.ObjectInterface
+		)
+
 if __name__ == "__main__":
 	unittest.main()
