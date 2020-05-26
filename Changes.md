@@ -5,6 +5,7 @@ Features
 --------
 
 - InteractiveRender : Added message log to the node's UI, displaying output from the last render (#3419).
+- Viewer : Added a floating inspector to allow quick inspection and editing of lights and other shaders (#3661).
 
 Improvements
 ------------
