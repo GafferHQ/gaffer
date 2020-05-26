@@ -48,17 +48,20 @@ __optionsMetadata = appleseed.Configuration.get_metadata()
 
 def __getDescriptionString( key, extraInfo = None ):
 
-	keys = key.split( ":" )
+	try :
 
-	try:
-		desc =  reduce( lambda d, k: d[k], keys, __optionsMetadata )["help"]
+		d = __optionsMetadata
+		for k in key.split( ":" ) :
+			d = d[k]
+		result = d["help"]
 
 		if extraInfo :
+			result += '.' + extraInfo
 
-			desc += '.' + extraInfo
+		return result
 
-		return desc
-	except:
+	except KeyError :
+
 		return ""
 
 def __getShadingOverridesPresets():
