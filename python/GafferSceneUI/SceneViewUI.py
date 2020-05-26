@@ -47,6 +47,8 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+from ._SceneViewInspector import *
+
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SceneView,
@@ -62,6 +64,17 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:CenterRightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
 	"toolbarLayout:customWidget:CenterRightSpacer:section", "Top",
 	"toolbarLayout:customWidget:CenterRightSpacer:index", -3,
+
+	"nodeToolbar:right:type", "GafferUI.StandardNodeToolbar.right",
+
+	"toolbarLayout:customWidget:InspectorTopSpacer:widgetType", "GafferSceneUI.SceneViewUI._InspectorTopSpacer",
+	"toolbarLayout:customWidget:InspectorTopSpacer:section", "Right",
+
+	"toolbarLayout:customWidget:Inspector:widgetType", "GafferSceneUI.SceneViewUI._SceneViewInspector",
+	"toolbarLayout:customWidget:Inspector:section", "Right",
+
+	"toolbarLayout:customWidget:InspectorBottomSpacer:widgetType", "GafferSceneUI.SceneViewUI._InspectorBottomSpacer",
+	"toolbarLayout:customWidget:InspectorBottomSpacer:section", "Right",
 
 	plugs = {
 
@@ -905,6 +918,22 @@ class _Spacer( GafferUI.Spacer ) :
 	def __init__( self, sceneView, **kw ) :
 
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
+
+class _InspectorTopSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, imath.V2i( 1, 26 ) )
+
+class _InspectorBottomSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( 1, 30 )
+		)
 
 ##########################################################################
 # _StateWidget
