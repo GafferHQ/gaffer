@@ -163,6 +163,9 @@
 		'warningSmall',
 		'searchFocusOff',
 		'searchFocusOn',
-		'scrollToBottom'
+		'scrollToBottom',
+		"editOn",
+		"editOff",
+		"editDisabled",
 	]
 }
