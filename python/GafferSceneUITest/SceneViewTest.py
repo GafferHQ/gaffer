@@ -46,6 +46,7 @@ import GafferTest
 import GafferUI
 import GafferUITest
 import GafferScene
+import GafferSceneTest
 import GafferSceneUI
 
 class SceneViewTest( GafferUITest.TestCase ) :
@@ -402,6 +403,70 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view["camera"]["lookThroughEnabled"].setValue( False )
 
 		assertDefaultCamera()
+
+	def testInspectorEditability( self ) :
+
+		light = GafferSceneTest.TestLight()
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		editScope1 = Gaffer.EditScope()
+		editScope1.setup( group["out"] )
+		editScope1["in"].setInput( group["out"] )
+
+		editScope2 = Gaffer.EditScope()
+		editScope2.setup( editScope1["out"] )
+		editScope2["in"].setInput( editScope1["out"] )
+
+		def inspector( scene, path, parameter, editScope ) :
+
+			history = GafferScene.SceneAlgo.history( scene["attributes"], path )
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "light" )
+			return GafferSceneUI.SceneViewUI._ParameterInspector( attributeHistory, parameter, editScope )
+
+		# Should be able to edit light directly.
+
+		i = inspector( group["out"], "/group/light", "intensity", None )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), light["parameters"]["intensity"] )
+
+		# Unless there's an EditScope in the way, and we haven't been told
+		# to use it.
+
+		i = inspector( editScope1["out"], "/group/light", "intensity", None )
+		self.assertFalse( i.editable() )
+		self.assertIsNone( i.acquireEdit() )
+
+		# Or if we've been told to use an EditScope and it isn't in the history.
+
+		i = inspector( group["out"], "/group/light", "intensity", editScope1 )
+		self.assertFalse( i.editable() )
+		self.assertIsNone( i.acquireEdit() )
+
+		# If it is in the history though, and we're told to use it, then we will.
+
+		i = inspector( editScope2["out"], "/group/light", "intensity", editScope2 )
+		self.assertTrue( i.editable() )
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				editScope2, "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
+			)
+		)
+		edit = i.acquireEdit()
+		self.assertIsNotNone( edit )
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				editScope2, "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
+			)
+		)
+
+		# If there's an edit downstream of the EditScope we're asked to use,
+		# then we're not editable.
+
+		i = inspector( editScope2["out"], "/group/light", "intensity", editScope1 )
+		self.assertFalse( i.editable() )
+		self.assertIsNone( i.acquireEdit() )
 
 if __name__ == "__main__":
 	unittest.main()
