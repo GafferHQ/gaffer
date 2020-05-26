@@ -816,12 +816,7 @@ class TaskParallel
 						const bool acquired = m_itemLock.acquireOr(
 							it->mutex, lockType,
 							// Work accepter
-							[&binLock, &spawnsTasks] ( bool workAvailable ) {
-								if( workAvailable )
-								{
-									assert( spawnsTasks );
-									(void)spawnsTasks;
-								}
+							[&binLock] ( bool workAvailable ) {
 								// Release the bin lock prior to accepting work, because
 								// the work might involve recursion back into the cache,
 								// thus requiring the bin lock.
