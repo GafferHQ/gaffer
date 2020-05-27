@@ -302,7 +302,7 @@ class stats( Gaffer.Application ) :
 		else :
 			self.__vtuneMonitor = None
 
-		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
+		self.__output = open( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
 
 		self.__writeVersion( script )
 
