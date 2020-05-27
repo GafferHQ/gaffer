@@ -722,24 +722,6 @@ class Widget( Gaffer.Trackable ) :
 
 	__parentStack = []
 
-	## We detect the use of deprecated keyword arguments in Widget.__init__,
-	# but the actual call site using those arguments can be at an arbitrary
-	# distance away on the stack - this function finds the location so we
-	# can provide an accurate error.
-	def __keywordArgumentDeprecationNesting( self ) :
-
-		frame = inspect.currentframe( 1 )
-		result = 1
-		frameIndex = 1
-		while frame :
-			if frame.f_code.co_name=="__init__" :
-				if frame.f_locals[frame.f_code.co_varnames[0]] is self :
-					result = frameIndex
-			frame = frame.f_back
-			frameIndex += 1
-
-		return result + 1
-
 	## Converts a Qt key code into a string
 	@classmethod
 	def _key( cls, qtKey ) :
