@@ -160,6 +160,33 @@ class ScopedLogTarget
 		asf::auto_release_ptr<asf::ILogTarget> m_logTarget;
 };
 
+const std::vector<IECore::MessageHandler::Level> g_ieMsgLevels = {
+	IECore::MessageHandler::Level::Debug,
+	IECore::MessageHandler::Level::Info,
+	IECore::MessageHandler::Level::Warning,
+	IECore::MessageHandler::Level::Error,
+	IECore::MessageHandler::Level::Error
+};
+
+class CortexLogTarget : public asf::ILogTarget
+{
+
+	public :
+
+		CortexLogTarget( IECore::MessageHandler *messageHandler ) : m_messageHandler( messageHandler ) {};
+
+		void write( const asf::LogMessage::Category category, const char* file, const size_t line, const char* header, const char* message ) override
+		{
+			m_messageHandler->handle( g_ieMsgLevels[ min( int(category), 4 ) ], "Appleseed", message );
+		}
+
+		void release() override {};
+
+	private :
+
+		IECore::MessageHandlerPtr m_messageHandler;
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -2414,10 +2441,11 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 	public :
 
-		AppleseedRenderer( RenderType renderType, const string &fileName )
+		AppleseedRenderer( RenderType renderType, const string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	AppleseedRendererBase( renderType , fileName, 0.0f, 0.0f )
 			,	m_environmentEDFVisible( false )
 			,	m_maxInteractiveRenderSamples( 0 )
+			,	m_messageHandler( messageHandler )
 		{
 			// Create the renderer controller.
 			m_rendererController = new RendererController();
@@ -2431,6 +2459,8 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void option( const InternedString &name, const Object *value ) override
 		{
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			if( name == g_cameraOptionName )
 			{
 				if( value == nullptr )
@@ -2806,6 +2836,8 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void output( const InternedString &name, const Output *output ) override
 		{
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			if( output == nullptr )
 			{
 				// Reset display / image output related params and recreate the frame.
@@ -2899,6 +2931,8 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		ObjectInterfacePtr camera( const string &name, const Camera *camera, const AttributesInterface *attributes ) override
 		{
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			// Check if this is the active camera.
 			if( name == m_cameraName )
 			{
@@ -2915,6 +2949,8 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes ) override
 		{
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			// For now we only do area lights using OSL emission().
 			if( object == nullptr )
 			{
@@ -2948,6 +2984,8 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void render() override
 		{
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			// Clear unused shaders.
 			m_shaderCache->clearUnused();
 
@@ -3016,6 +3054,8 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void pause() override
 		{
+			IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			m_rendererController->set_status( asr::IRendererController::AbortRendering );
 
 			if( m_renderThread.joinable() )
@@ -3032,7 +3072,13 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			m_rendererController->set_status( asr::IRendererController::ContinueRendering );
 
 			// Logging.
-			ScopedLogTarget logTarget;
+			ScopedLogTarget cortexLogTarget;
+			if( m_messageHandler )
+			{
+				asf::auto_release_ptr<asf::ILogTarget> l( new CortexLogTarget( m_messageHandler.get() ) );
+				cortexLogTarget.setLogTarget( asf::auto_release_ptr<asf::ILogTarget>( l.release() ) );
+			}
+			ScopedLogTarget fileLogTarget;
 			if( !m_logFileName.empty() )
 			{
 				// Create the file log target and make sure it's open.
@@ -3045,7 +3091,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 					return;
 				}
 
-				logTarget.setLogTarget( asf::auto_release_ptr<asf::ILogTarget>( l.release() ) );
+				fileLogTarget.setLogTarget( asf::auto_release_ptr<asf::ILogTarget>( l.release() ) );
 			}
 
 			// Render progress logging.
@@ -3107,7 +3153,9 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			// Enable console logging.
 			ScopedLogTarget logTarget;
 			{
-				asf::auto_release_ptr<asf::ILogTarget> l( asf::create_console_log_target( stderr ) );
+				asf::auto_release_ptr<asf::ILogTarget> l(
+					m_messageHandler ? new CortexLogTarget( m_messageHandler.get() ) : asf::create_console_log_target( stderr )
+				);
 				logTarget.setLogTarget( l );
 			}
 
@@ -3229,6 +3277,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		int m_maxInteractiveRenderSamples;
 		boost::thread m_renderThread;
+		IECore::MessageHandlerPtr m_messageHandler;
 
 		// Registration with factory
 

@@ -35,9 +35,10 @@
 ##########################################################################
 
 import os
-import unittest
-import subprocess32 as subprocess
 import re
+import subprocess32 as subprocess
+import time
+import unittest
 
 import IECore
 import IECoreScene
@@ -315,6 +316,46 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		f = open( render["fileName"].getValue(), "r" )
 		texturePaths = set( re.findall( '<parameter name="in_filename" value="string (.*)"', f.read()) )
 		self.assertEqual( texturePaths, set( ['bar/path/foo.tx', 'bar/path/override.tx' ] ) )
+
+	def testMessageHandler( self ) :
+
+		RenderType = GafferScene.Private.IECoreScenePreview.Renderer.RenderType
+
+		for renderType, fileName, output, expected in (
+			( RenderType.Batch, "", IECoreScene.Output( self.temporaryDirectory() + "/beauty.exr", "exr", "rgba" ), 2 ),
+			( RenderType.Interactive, "", IECoreScene.Output( self.temporaryDirectory() + "/beauty.exr", "exr", "rgba" ), 2 ),
+			( RenderType.SceneDescription, self.temporaryDirectory() + "/test.appleseed" , None, 1 )
+		) :
+
+			with IECore.CapturingMessageHandler() as fallbackHandler :
+
+				handler = IECore.CapturingMessageHandler()
+
+				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Appleseed",
+					renderType,
+					fileName = fileName,
+					messageHandler = handler
+				)
+
+				r.option( "as:log:level", IECore.StringData( "debug" ) )
+				r.option( "as:invalid", IECore.BoolData( True ) )
+
+				if output :
+					r.output( "testOutput", output )
+
+				r.object( "/sphere", IECoreScene.SpherePrimitive(), r.attributes( IECore.CompoundObject() ) )
+
+				r.render()
+
+				if renderType == RenderType.Interactive :
+					time.sleep( 1 )
+
+				# We should have at least 1 message from our invalid option plus
+				# _something_ from the renderers own output stream for a render.
+				self.assertGreaterEqual( len(handler.messages), expected, msg=str(renderType) )
+
+				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
 if __name__ == "__main__":
 	unittest.main()

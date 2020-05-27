@@ -49,8 +49,8 @@ using namespace IECoreScenePreview;
 
 IECoreScenePreview::Renderer::TypeDescription<CapturingRenderer> CapturingRenderer::g_typeDescription( "Capturing" );
 
-CapturingRenderer::CapturingRenderer( RenderType type, const std::string &fileName )
-	:	m_rendering( false )
+CapturingRenderer::CapturingRenderer( RenderType type, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
+	:	m_messageHandler( messageHandler ), m_rendering( false )
 {
 }
 
@@ -107,6 +107,8 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 
 Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 {
+	IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	checkPaused();
 
 	// To facilitate the testing of code that handles the return from the various object methods of
@@ -138,6 +140,8 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 
 void CapturingRenderer::render()
 {
+	IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	if( m_rendering )
 	{
 		IECore::msg( IECore::Msg::Warning, "CapturingRenderer::render", "Already rendering" );
@@ -147,6 +151,8 @@ void CapturingRenderer::render()
 
 void CapturingRenderer::pause()
 {
+	IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 	if( m_rendering )
 	{
 		IECore::msg( IECore::Msg::Warning, "CapturingRenderer::pause", "Not rendering" );
