@@ -41,6 +41,7 @@ import difflib
 import itertools
 import collections
 import functools
+import six
 import imath
 
 import IECore
@@ -342,7 +343,7 @@ class SideBySideDiff( Diff ) :
 			for i in range( 0, 2 ) :
 				frame = GafferUI.Frame(
 					borderWidth = 4,
-					borderStyle = GafferUI.Frame.BorderStyle.None,
+					borderStyle = GafferUI.Frame.BorderStyle.None_,
 					parenting = { "index" : ( 0, i ) }
 				)
 
@@ -477,7 +478,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], ( float, int ) ) :
 			return self.__formatNumbers( values )
-		elif isinstance( values[0], basestring ) :
+		elif isinstance( values[0], six.string_types ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
 		else :
 			return [ cgi.escape( str( v ) ) for v in values ]
@@ -530,7 +531,7 @@ class TextDiff( SideBySideDiff ) :
 		# transform back into a list of 2d arrays of
 		# formatted strings.
 		formattedRows = zip( *formattedColumns )
-		values = zip( *( [ iter( formattedRows ) ] * len( values[0] ) ) )
+		values = list( zip( *( [ iter( formattedRows ) ] * len( values[0] ) ) ) )
 
 		# build the tables. it'd be nice to control cellspacing
 		# in the stylesheet, but qt doesn't seem to support that.
@@ -667,7 +668,7 @@ class Row( GafferUI.Widget ) :
 
 	def __init__( self, borderWidth = 4, alternate = False, **kw ) :
 
-		self.__frame = GafferUI.Frame( borderWidth = borderWidth, borderStyle = GafferUI.Frame.BorderStyle.None )
+		self.__frame = GafferUI.Frame( borderWidth = borderWidth, borderStyle = GafferUI.Frame.BorderStyle.None_ )
 
 		GafferUI.Widget.__init__( self, self.__frame, **kw )
 
@@ -1026,7 +1027,7 @@ class DiffColumn( GafferUI.Widget ) :
 		self.__diffCreator = diffCreator
 
 		with outerColumn :
-			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) as self.__header :
+			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None_ ) as self.__header :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					if label is not None :
 						l = GafferUI.Label(
@@ -2433,7 +2434,7 @@ class _SetDiff( Diff ) :
 
 		with self.__row :
 			for i, diffName in enumerate( [ "A", "AB", "B" ] ) :
-				with GafferUI.Frame( borderWidth = 5, borderStyle = GafferUI.Frame.BorderStyle.None ) as frame :
+				with GafferUI.Frame( borderWidth = 5, borderStyle = GafferUI.Frame.BorderStyle.None_ ) as frame :
 
 					frame._qtWidget().setProperty( "gafferDiff", diffName )
 
@@ -2494,7 +2495,7 @@ class _SetDiff( Diff ) :
 
 	def __buttonRelease( self, widget, event ) :
 
-		if event.buttons != event.Buttons.None or event.button != event.Buttons.Left :
+		if event.buttons != event.Buttons.None_ or event.button != event.Buttons.Left :
 			return False
 
 		editor = self.ancestor( SceneInspector )

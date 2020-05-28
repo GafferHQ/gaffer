@@ -75,7 +75,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		if "-dispatcher.jobsDirectory" not in command :
 			command += " -dispatcher.jobsDirectory '\"{tmpDir}/dispatcher/local\"'".format( tmpDir = self.temporaryDirectory() )
 
-		p = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE )
+		p = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE, universal_newlines = True )
 		p.wait()
 
 		return p

@@ -563,7 +563,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		class TestValuePlug( Gaffer.ValuePlug ) :
 
-			def __init__( self, name = "TestValuePlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
+			def __init__( self, name = "TestValuePlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None_ ) :
 
 				Gaffer.ValuePlug.__init__( self, name, direction, flags )
 
@@ -581,7 +581,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		p = TestValuePlug()
 		self.assertEqual( p.getName(), "TestValuePlug" )
 		self.assertEqual( p.direction(), Gaffer.Plug.Direction.In )
-		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.None )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.None_ )
 
 		p = TestValuePlug( name = "p", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.assertEqual( p.getName(), "p" )

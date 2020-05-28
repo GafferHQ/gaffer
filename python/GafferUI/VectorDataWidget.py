@@ -644,7 +644,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 			return False
 
 		self.__borrowedButtonPress = None
-		if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.None :
+		if event.buttons == event.Buttons.Left and event.modifiers == event.Modifiers.None_ :
 
 			# We want to implement drag and drop of the selected items, which means borrowing
 			# mouse press events that the QTableView needs to perform selection.

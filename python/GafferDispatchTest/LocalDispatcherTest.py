@@ -703,7 +703,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		testFile = os.path.join( self.temporaryDirectory(), "test" )
 
 		s["c"] = GafferDispatch.SystemCommand()
-		s["c"]["command"].setValue( "echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
+		s["c"]["command"].setValue( r"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
 
 		dispatcher = self.__createLocalDispatcher()
 		dispatcher["executeInBackground"].setValue( True )
@@ -728,7 +728,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		testFile = os.path.join( self.temporaryDirectory(), "test" )
 
 		s["c"] = GafferDispatch.SystemCommand()
-		s["c"]["command"].setValue( "echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
+		s["c"]["command"].setValue( r"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
 
 		dispatcher = self.__createLocalDispatcher()
 		dispatcher["executeInBackground"].setValue( True )
@@ -773,20 +773,22 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
-		t = time.clock()
+		clock = time.process_time if six.PY3 else time.clock
+
+		t = clock()
 		d.dispatch( [ lastTask ] )
 		timeLimit = 6
 		if Gaffer.isDebug():
 			timeLimit *= 2
-		self.assertLess( time.clock() - t, timeLimit )
+		self.assertLess( clock() - t, timeLimit )
 
 		d["executeInBackground"].setValue( True )
 
 		d.dispatch( [ lastTask ] )
 
-		t = time.clock()
+		t = clock()
 		d.jobPool().jobs()[0].kill()
-		self.assertLess( time.clock() - t, 1 )
+		self.assertLess( clock() - t, 1 )
 
 		d.jobPool().waitForAll()
 

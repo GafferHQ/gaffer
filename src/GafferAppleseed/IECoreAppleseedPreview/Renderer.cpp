@@ -3150,15 +3150,6 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void interactiveRender()
 		{
-			// Enable console logging.
-			ScopedLogTarget logTarget;
-			{
-				asf::auto_release_ptr<asf::ILogTarget> l(
-					m_messageHandler ? new CortexLogTarget( m_messageHandler.get() ) : asf::create_console_log_target( stderr )
-				);
-				logTarget.setLogTarget( l );
-			}
-
 			// Reset the renderer controller.
 			m_rendererController->set_status( asr::IRendererController::ContinueRendering );
 
@@ -3186,6 +3177,14 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 		void interactiveRenderThreadFun()
 		{
+			ScopedLogTarget logTarget;
+			{
+				asf::auto_release_ptr<asf::ILogTarget> l(
+					m_messageHandler ? new CortexLogTarget( m_messageHandler.get() ) : asf::create_console_log_target( stderr )
+				);
+				logTarget.setLogTarget( l );
+			}
+
 			try
 			{
 #if APPLESEED_VERSION >= 20100

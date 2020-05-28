@@ -58,8 +58,8 @@ class FrameTest( GafferUITest.TestCase ) :
 		f = GafferUI.Frame()
 		self.assertEqual( f.getBorderStyle(), GafferUI.Frame.BorderStyle.Flat )
 
-		f.setBorderStyle( GafferUI.Frame.BorderStyle.None )
-		self.assertEqual( f.getBorderStyle(), GafferUI.Frame.BorderStyle.None )
+		f.setBorderStyle( GafferUI.Frame.BorderStyle.None_ )
+		self.assertEqual( f.getBorderStyle(), GafferUI.Frame.BorderStyle.None_ )
 
 	def testRemoveChild( self ) :
 

@@ -126,9 +126,9 @@ class EventLoopTest( GafferUITest.TestCase ) :
 
 		def t() :
 
-			st = time.clock()
+			st = time.time()
 			self.__uiThreadResult = GafferUI.EventLoop.executeOnUIThread( f, waitForResult=False )
-			self.__executeOnUIThreadDuration = time.clock() - st
+			self.__executeOnUIThreadDuration = time.time() - st
 
 		thread = threading.Thread( target = t )
 

@@ -51,11 +51,11 @@ class VisualiserTest( GafferTest.TestCase ) :
 		self.assertEqual( v.affectsFramingBound, True )
 
 		v = GafferScene.IECoreScenePreview.Visualisation( g,
-			GafferScene.IECoreScenePreview.Visualisation.Scale.None,
+			GafferScene.IECoreScenePreview.Visualisation.Scale.None_,
 			GafferScene.IECoreScenePreview.Visualisation.Category.Frustum,
 			False
 		)
-		self.assertEqual( v.scale, GafferScene.IECoreScenePreview.Visualisation.Scale.None )
+		self.assertEqual( v.scale, GafferScene.IECoreScenePreview.Visualisation.Scale.None_ )
 		self.assertEqual( v.category, GafferScene.IECoreScenePreview.Visualisation.Category.Frustum )
 		self.assertEqual( v.affectsFramingBound, False )
 

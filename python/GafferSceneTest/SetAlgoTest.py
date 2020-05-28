@@ -205,7 +205,7 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		sphereC2["sets"].setValue( 'sphere?' )
 
-		self.assertCorrectEvaluation( group["out"], "sphere\?", ["/group/sphereC2"] )
+		self.assertCorrectEvaluation( group["out"], r"sphere\?", ["/group/sphereC2"] )
 		self.assertNotEqual( oldHash, GafferScene.SetAlgo.setExpressionHash( "sphere*", group["out"] ) )
 
 	def testInterestingSetNames( self ) :

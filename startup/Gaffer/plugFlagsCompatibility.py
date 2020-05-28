@@ -41,5 +41,5 @@ import Gaffer
 # continued using the flag until version 0.42, so at the time of writing
 # most scripts still use the flag. Here we allow them to be loaded without
 # emitting warnings.
-Gaffer.Plug.Flags.ReadOnly = Gaffer.Plug.Flags.None
-Gaffer.Plug.Flags.PerformsSubstitutions = Gaffer.Plug.Flags.None
+Gaffer.Plug.Flags.ReadOnly = Gaffer.Plug.Flags.None_
+Gaffer.Plug.Flags.PerformsSubstitutions = Gaffer.Plug.Flags.None_

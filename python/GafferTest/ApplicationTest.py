@@ -55,7 +55,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 	def testWrapperDoesntDuplicatePaths( self ) :
 
-		output = subprocess.check_output( [ "gaffer", "env", "env" ] )
+		output = subprocess.check_output( [ "gaffer", "env", "env" ], universal_newlines = True )
 		externalEnv = {}
 		for line in output.split( '\n' ) :
 			partition = line.partition( "=" )
@@ -68,8 +68,8 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 		process = subprocess.Popen( [ "gaffer", "env", "sleep", "100" ] )
 		time.sleep( 1 )
-		command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ] ).strip()
-		name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ] ).strip()
+		command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
+		name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
 		process.kill()
 
 		self.assertEqual( command, "gaffer env sleep 100" )

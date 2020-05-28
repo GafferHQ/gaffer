@@ -103,7 +103,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"nodule:type", "",
 
-			"preset:None", Gaffer.Dot.LabelType.None,
+			"preset:None", Gaffer.Dot.LabelType.None_,
 			"preset:Node Name", Gaffer.Dot.LabelType.NodeName,
 			"preset:Upstream Node Name", Gaffer.Dot.LabelType.UpstreamNodeName,
 			"preset:Custom", Gaffer.Dot.LabelType.Custom,

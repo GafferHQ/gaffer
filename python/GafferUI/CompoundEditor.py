@@ -39,6 +39,7 @@ import collections
 import functools
 import sys
 import weakref
+import six
 
 import imath
 
@@ -592,7 +593,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	# such as add/remove/insert directly or state tracking will fail.
 	def addEditor( self, nameOrEditor ) :
 
-		if isinstance( nameOrEditor, basestring ) :
+		if isinstance( nameOrEditor, six.string_types ) :
 			editor = GafferUI.Editor.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
 		else :
 			editor = nameOrEditor
@@ -1488,7 +1489,7 @@ class _PinningWidget( _Frame ) :
 
 	def __init__( self ) :
 
-		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
+		_Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_ )
 
 		self._qtWidget().setFixedHeight( 15 )
 

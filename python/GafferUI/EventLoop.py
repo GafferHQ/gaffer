@@ -280,7 +280,7 @@ class EventLoop( object ) :
 				# we don't want to keep invoking the same error over and over.
 				EventLoop.__idleCallbacks.remove( c )
 				# report the error
-				IECore.msg( IECore.Msg.Level.Error, "EventLoop.__qtIdleCallback", "".join( traceback.format_exc( e ) ) )
+				IECore.msg( IECore.Msg.Level.Error, "EventLoop.__qtIdleCallback", "".join( traceback.format_exc() ) )
 
 		if len( EventLoop.__idleCallbacks )==0 and GafferUI.Gadget.idleSignal().empty() :
 			EventLoop.__idleTimer.stop()

@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import six
+
 import IECore
 
 import Gaffer
@@ -46,7 +48,7 @@ from Qt import QtCore
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
-	WrapMode = IECore.Enum.create( "None", "Word", "Character", "WordOrCharacter" )
+	WrapMode = IECore.Enum.create( "None_", "Word", "Character", "WordOrCharacter" )
 	Role = IECore.Enum.create( "Text", "Code" )
 
 	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, **kw ) :
@@ -82,7 +84,14 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	def getText( self ) :
 
-		return self._qtWidget().toPlainText().encode( "utf-8" )
+		if six.PY3 :
+			return self._qtWidget().toPlainText()
+		else :
+			# \todo We didn't return `unicode` here because
+			# we didn't want to break any client code. But perhaps
+			# now is the time, since everyone is transitioning to
+			# Python 3?
+			return self._qtWidget().toPlainText().encode( "utf-8" )
 
 	def setText( self, text ) :
 
@@ -120,7 +129,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setWordWrapMode(
 			{
-				self.WrapMode.None : QtGui.QTextOption.NoWrap,
+				self.WrapMode.None_ : QtGui.QTextOption.NoWrap,
 				self.WrapMode.Word : QtGui.QTextOption.WordWrap,
 				self.WrapMode.Character : QtGui.QTextOption.WrapAnywhere,
 				self.WrapMode.WordOrCharacter : QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere,
@@ -130,7 +139,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def getWrapMode( self ) :
 
 		return {
-			QtGui.QTextOption.NoWrap : self.WrapMode.None,
+			QtGui.QTextOption.NoWrap : self.WrapMode.None_,
 			QtGui.QTextOption.WordWrap : self.WrapMode.Word,
 			QtGui.QTextOption.WrapAnywhere : self.WrapMode.Character,
 			QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere : self.WrapMode.WordOrCharacter,

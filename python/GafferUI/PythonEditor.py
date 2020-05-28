@@ -62,11 +62,11 @@ class PythonEditor( GafferUI.Editor ) :
 
 		self.__outputWidget = GafferUI.MultiLineTextWidget(
 			editable = False,
-			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None,
+			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
 			role = GafferUI.MultiLineTextWidget.Role.Code,
 		)
 		self.__inputWidget = GafferUI.MultiLineTextWidget(
-			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None,
+			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
 			role = GafferUI.MultiLineTextWidget.Role.Code,
 		)
 

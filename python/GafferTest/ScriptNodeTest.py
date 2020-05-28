@@ -287,7 +287,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 				def __init__( self ) :
 
-					print A
+					print( A )
 
 			a = A()
 			"""
@@ -1307,8 +1307,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["r"]["op1"].setInput( s["n"]["sum"] )
 
 		s["x"] = GafferTest.AddNode()
-		# verifies that wasExecuting was False throughout this setup stage
-		self.assertEqual( self.__wasExecuting, map( lambda x: False, self.__wasExecuting ) )
+		self.assertFalse( any( self.__wasExecuting ) )
 
 		self.__wasExecuting = []
 
@@ -1317,8 +1316,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"], s["r"], s["x"] ] ) )
 		s.execute( ss )
-		# verifies that wasExecuting was True throughout this setup stage
-		self.assertEqual( self.__wasExecuting, map( lambda x: True, self.__wasExecuting ) )
+		self.assertTrue( all( self.__wasExecuting ) )
 
 		self.__wasExecuting = []
 		self.assertRaises( RuntimeError, s.execute, ss + "\nsyntaxError" )

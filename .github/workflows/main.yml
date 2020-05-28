@@ -29,6 +29,7 @@ jobs:
         name: [
           linux,
           linux-debug,
+          linux-python3,
           macos,
         ]
 
@@ -55,6 +56,14 @@ jobs:
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
+
+          - name: linux-python3
+            os: ubuntu-16.04
+            buildType: RELEASE
+            containerImage: gafferhq/build:1.1.0
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.0.0a3/gafferDependencies-2.0.0-Python3-linux.tar.gz
+            testRunner: su testUser -c
+            sconsCacheMegabytes: 400
 
           - name: macos
             os: macos-10.15

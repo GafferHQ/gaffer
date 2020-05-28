@@ -253,25 +253,27 @@ class MultiSelectionMenu( GafferUI.MenuButton ) :
 		return len( self.__menuLabels )
 
 	def __delitem__( self, index ) :
-		label = self.__menuLabels[index]
-		self.remove(label)
-		self.__validateState()
 
-	def __setslice__( self, i, j, sequence ) :
-		s = list( sequence[i:j] )
-		self.__menuLabels[i:j] = s
-		self.__enabledLabels = self.__enabledLabels + s
-		self.__validateState()
-
-	def __delslice__( self, i, j ) :
-		del self.__menuLabels[i:j]
-		self.__validateState()
-
-	def __setitem__( self, index, label ) :
-		if label not in self.__menuLabels :
-			self.__menuLabels[index] = label
-			self.__enabledLabels.append( label )
+		if isinstance( index, slice ) :
+			del self.__menuLabels[index]
 			self.__validateState()
+		else :
+			label = self.__menuLabels[index]
+			self.remove(label)
+			self.__validateState()
+
+	def __setitem__( self, index, value ) :
+
+		if isinstance( index, slice ) :
+			s = list( value[index.start:index.stop] )
+			self.__menuLabels[index.start:index.stop] = s
+			self.__enabledLabels = self.__enabledLabels + s
+			self.__validateState()
+		else :
+			if value not in self.__menuLabels :
+				self.__menuLabels[index] = value
+				self.__enabledLabels.append( value )
+				self.__validateState()
 
 	def __repr__( self ) :
 		return self.__menuLabels.__repr__()

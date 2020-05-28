@@ -213,7 +213,7 @@ int length( GraphComponent &g )
 	return g.children().size();
 }
 
-bool nonZero( GraphComponent &g )
+bool toBool( GraphComponent &g )
 {
 	return true;
 }
@@ -303,7 +303,15 @@ void GafferModule::bindGraphComponent()
 		.def( "__delitem__", (void (*)( GraphComponent &, long ))&delItem )
 		.def( "__contains__", contains )
 		.def( "__len__", &length )
-		.def( "__nonzero__", &nonZero )
+// The default conversion to bool uses `__len__`, which trips a lot of
+// people up as they expect `if graphComponent` to be equivalent to
+// `if graphComponent is not None`. So we provide a more specific conversion
+// which is always true.
+#if PY_MAJOR_VERSION > 2
+		.def( "__bool__", &toBool )
+#else
+		.def( "__nonzero__", &toBool )
+#endif
 		.def( "__repr__", &repr )
 		.def( "items", &items )
 		.def( "keys", &keys )

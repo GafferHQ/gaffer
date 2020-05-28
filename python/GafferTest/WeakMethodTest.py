@@ -36,6 +36,7 @@
 
 import unittest
 import weakref
+import six
 
 import Gaffer
 import GafferTest
@@ -58,7 +59,10 @@ class WeakMethodTest( GafferTest.TestCase ) :
 		self.assertEqual( wm(), 10 )
 
 		self.assertTrue( wm.instance() is a )
-		self.assertTrue( wm.method() is A.f.__func__ )
+		if six.PY3 :
+			self.assertTrue( wm.method() is A.f )
+		else :
+			self.assertTrue( wm.method() is A.f.__func__ )
 
 		del a
 

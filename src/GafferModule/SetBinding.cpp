@@ -78,10 +78,16 @@ IECore::RunTimeTypedPtr getItem( Set &s, long index )
 	return s.member( index );
 }
 
+#if PY_MAJOR_VERSION > 2
+	using SliceType = PyObject;
+#else
+	using SliceType = PySliceObject;
+#endif
+
 boost::python::list getSlice( Set &s, boost::python::slice sl )
 {
 	Py_ssize_t start, stop, step, length;
-	if( PySlice_GetIndicesEx( (PySliceObject *)sl.ptr(), s.size(), &start, &stop, &step, &length ) )
+	if( PySlice_GetIndicesEx( (SliceType *)sl.ptr(), s.size(), &start, &stop, &step, &length ) )
 	{
 		boost::python::throw_error_already_set();
 	}

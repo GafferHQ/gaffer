@@ -328,8 +328,8 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		reader["end"]["frame"].setValue( 7 )
 
 		# frame 0 errors, match from 1-10
-		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None )
-		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None )
+		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None_ )
+		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.None_ )
 		with context :
 
 			for i in range( 0, 11 ) :

@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 
 			"preset:Depth Range", GafferImage.DeepToFlat.DepthMode.Range,
 			"preset:Filtered Depth", GafferImage.DeepToFlat.DepthMode.Filtered,
-			"preset:None", GafferImage.DeepToFlat.DepthMode.None,
+			"preset:None", GafferImage.DeepToFlat.DepthMode.None_,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

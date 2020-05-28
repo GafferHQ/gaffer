@@ -37,6 +37,7 @@
 
 import fnmatch
 import re
+import six
 
 import IECore
 
@@ -61,7 +62,7 @@ class FileNamePathFilter( Gaffer.PathFilter ) :
 		self.__matchers = []
 		for m in matchers :
 
-			if isinstance( m, basestring ) :
+			if isinstance( m, six.string_types ) :
 				self.__matchers.append( re.compile( fnmatch.translate( m ) ) )
 			else :
 				assert( type( m ) is type( re.compile( "" ) ) )

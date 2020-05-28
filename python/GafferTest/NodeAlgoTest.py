@@ -360,7 +360,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		g = self.__visitationGraph()
 
-		with six.assertRaisesRegex( self, RuntimeError, "Visitor must return a bool \(True to continue, False to prune\)" ) :
+		with six.assertRaisesRegex( self, RuntimeError, r"Visitor must return a bool \(True to continue, False to prune\)" ) :
 			Gaffer.NodeAlgo.visitUpstream( g["L3_1"], lambda node : None )
 
 	def __boxedVisitationGraph( self ) :

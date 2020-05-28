@@ -106,7 +106,7 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 			def setPlugValue( self ) :
 
-				self.__plug.setValue( self.__parameter.getNumericValue() / 10 )
+				self.__plug.setValue( self.__parameter.getNumericValue() // 10 )
 
 		GafferCortex.ParameterHandler.registerParameterHandler( CustomParameter, CustomHandler )
 

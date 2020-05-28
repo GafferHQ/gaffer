@@ -57,7 +57,7 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 
 		with column :
 
-			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None ) :
+			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None_ ) :
 				toolbar = GafferUI.NodeToolbar.create( self.__uvView )
 
 			self.__gadgetWidget = GafferUI.GadgetWidget(

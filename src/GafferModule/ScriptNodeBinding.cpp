@@ -71,9 +71,22 @@ using namespace GafferBindings;
 
 extern "C"
 {
-// essential to include this last, since it defines macros which
+
+// Essential to include this last, since it defines macros which
 // clash with other headers.
 #include "Python-ast.h"
+
+#if PY_MAJOR_VERSION >= 3
+/// \todo The already esoteric AST API appears to be even more obscure
+/// in Python 3, and it has never been available on Windows. We would do
+/// well to avoid it entirely. One simple alternative is implemented in
+/// https://github.com/johnhaddon/gaffer/tree/simpleTolerantExec, but
+/// initial benchmarking suggested that performance was worse.
+#include "asdl.h"
+#undef arg
+#define asdl_seq_new _Py_asdl_seq_new
+#endif
+
 };
 
 namespace boost {
@@ -155,7 +168,11 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		// And execute it.
 		boost::python::handle<> v( boost::python::allow_null(
 			PyEval_EvalCode(
+#if PY_MAJOR_VERSION >= 3
+				(PyObject *)code.get(),
+#else
 				code.get(),
+#endif
 				globals.ptr(),
 				locals.ptr()
 			)
@@ -183,7 +200,11 @@ boost::python::object executionDict( ScriptNodePtr script, NodePtr parent )
 {
 	boost::python::dict result;
 
+#if PY_MAJOR_VERSION >= 3
+	boost::python::object builtIn = boost::python::import( "builtins" );
+#else
 	boost::python::object builtIn = boost::python::import( "__builtin__" );
+#endif
 	result["__builtins__"] = builtIn;
 
 	boost::python::object gafferModule = boost::python::import( "Gaffer" );

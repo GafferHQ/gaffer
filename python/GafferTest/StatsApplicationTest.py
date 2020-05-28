@@ -58,7 +58,7 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 		script["fileName"].setValue( self.temporaryDirectory() + "/script.gfr" )
 		script.save()
 
-		o = subprocess.check_output( [ "gaffer", "stats", script["fileName"].getValue() ] )
+		o = subprocess.check_output( [ "gaffer", "stats", script["fileName"].getValue() ], universal_newlines = True )
 
 		self.assertTrue( Gaffer.About.versionString() in o )
 		self.assertTrue( re.search( r"frameRange\.start\s*10", o ) )

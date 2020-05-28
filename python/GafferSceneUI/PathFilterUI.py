@@ -122,7 +122,7 @@ GafferUI.Pointer.registerPointer( "addObjects", GafferUI.Pointer( "addObjects.pn
 GafferUI.Pointer.registerPointer( "removeObjects", GafferUI.Pointer( "removeObjects.png", imath.V2i( 36, 18 ) ) )
 GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceObjects.png", imath.V2i( 36, 18 ) ) )
 
-__DropMode = IECore.Enum.create( "None", "Add", "Remove", "Replace" )
+__DropMode = IECore.Enum.create( "None_", "Add", "Remove", "Replace" )
 
 __originalDragPointer = None
 
@@ -143,7 +143,7 @@ def __dropMode( nodeGadget, event ) :
 		if filter is None :
 			return __DropMode.Replace
 		elif not isinstance( filter, GafferScene.PathFilter ) :
-			return __DropMode.None
+			return __DropMode.None_
 
 	if event.modifiers & event.Modifiers.Shift :
 		return __DropMode.Add
@@ -190,7 +190,7 @@ def __dragEnter( nodeGadget, event ) :
 	if not event.data[0].startswith( "/" ) :
 		return False
 
-	if __dropMode( nodeGadget, event ) == __DropMode.None :
+	if __dropMode( nodeGadget, event ) == __DropMode.None_ :
 		return False
 
 	global __originalDragPointer

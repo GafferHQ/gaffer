@@ -36,6 +36,7 @@
 
 import os
 import sys
+import six
 
 import GafferUI
 
@@ -91,7 +92,11 @@ def grab( widget, imagePath ) :
 		if windowHandle :
 			screen = windowHandle.screen()
 
-		pixmap = screen.grabWindow( long( widget._qtWidget().winId() ) )
+		qtVersion = [ int( x ) for x in Qt.__qt_version__.split( "." ) ]
+		if qtVersion >= [ 5, 12 ] or six.PY3 :
+			pixmap = screen.grabWindow( widget._qtWidget().winId() )
+		else :
+			pixmap = screen.grabWindow( long( widget._qtWidget().winId() ) )
 
 		if sys.platform == "darwin" and pixmap.size() == screen.size() * screen.devicePixelRatio() :
 			# A bug means that the entire screen will have been captured,

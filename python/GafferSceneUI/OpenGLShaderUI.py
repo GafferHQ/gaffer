@@ -37,6 +37,7 @@
 import os
 import string
 import functools
+import six
 
 import IECore
 
@@ -82,7 +83,10 @@ Gaffer.Metadata.registerNode(
 def __shaderCreator( shaderName ) :
 
 	nodeName = os.path.split( shaderName )[-1]
-	nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
+	if six.PY3 :
+		nodeName = nodeName.translate( str.maketrans( ".-", "__" ) )
+	else :
+		nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
 
 	node = GafferScene.OpenGLShader( nodeName )
 	node.loadShader( shaderName )

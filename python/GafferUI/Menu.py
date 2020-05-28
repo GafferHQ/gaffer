@@ -40,6 +40,7 @@ import functools
 import weakref
 import types
 import re
+import six
 
 import IECore
 
@@ -159,7 +160,10 @@ class Menu( GafferUI.Widget ) :
 	def __argNames( self, function ) :
 
 		if isinstance( function, types.FunctionType ) :
-			return inspect.getargspec( function )[0]
+			if six.PY3 :
+				return inspect.getfullargspec( function ).args
+			else :
+				return inspect.getargspec( function )[0]
 		elif isinstance( function, types.MethodType ) :
 			return self.__argNames( function.__func__ )[1:]
 		elif isinstance( function, Gaffer.WeakMethod ) :
@@ -398,7 +402,7 @@ class Menu( GafferUI.Widget ) :
 		# when an icon file path is defined in the menu definition
 		icon = getattr( item, "icon", None )
 		if icon is not None :
-			if isinstance( icon, basestring ) :
+			if isinstance( icon, six.string_types ) :
 				image = GafferUI.Image( icon )
 			else :
 				assert( isinstance( icon, GafferUI.Image ) )

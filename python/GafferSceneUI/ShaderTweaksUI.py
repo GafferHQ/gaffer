@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import six
 import imath
 
 import IECore
@@ -266,7 +267,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			Gaffer.Color4fPlug
 		] :
 
-			if isinstance( item, basestring ) :
+			if isinstance( item, six.string_types ) :
 				result.append( "/" + item, { "divider" : True } )
 			else :
 				result.append(

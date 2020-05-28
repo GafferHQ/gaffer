@@ -44,7 +44,7 @@ from Qt import QtWidgets
 class Frame( GafferUI.ContainerWidget ) :
 
 	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None", "Flat" )
+	BorderStyle = IECore.Enum.create( "None_", "Flat" )
 
 	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
 

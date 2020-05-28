@@ -41,6 +41,7 @@ import time
 import tempfile
 import resource
 import collections
+import six
 
 import IECore
 
@@ -301,7 +302,7 @@ class stats( Gaffer.Application ) :
 		else :
 			self.__vtuneMonitor = None
 
-		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
+		self.__output = open( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
 
 		self.__writeVersion( script )
 
@@ -588,7 +589,7 @@ class stats( Gaffer.Application ) :
 
 		objectPool = IECore.ObjectPool.defaultObjectPool()
 
-		items = self.__memory.items()
+		items = list( self.__memory.items() )
 
 		items.extend( [
 			( "", "" ),
@@ -653,21 +654,26 @@ class stats( Gaffer.Application ) :
 
 class _Timer( object ) :
 
+	if six.PY3 :
+		__cpuClock = time.process_time
+	else :
+		__cpuClock = time.clock
+
 	def __enter__( self ) :
 
 		self.__time = time.time()
-		self.__clock = time.clock()
+		self.__cpuTime = self.__cpuClock()
 
 		return self
 
 	def __exit__( self, type, value, traceBack ) :
 
 		self.__time = time.time() - self.__time
-		self.__clock = time.clock() - self.__clock
+		self.__cpuTime = self.__cpuClock() - self.__cpuTime
 
 	def __str__( self ) :
 
-		return "%.3fs (wall), %.3fs (CPU)" % ( self.__time, self.__clock )
+		return "%.3fs (wall), %.3fs (CPU)" % ( self.__time, self.__cpuTime )
 
 class _Memory( object ) :
 

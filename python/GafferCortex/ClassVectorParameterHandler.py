@@ -56,7 +56,7 @@ class ClassVectorParameterHandler( GafferCortex.CompoundParameterHandler ) :
 			classNames = compoundPlug["__classNames"].getValue()
 			classVersions = compoundPlug["__classVersions"].getValue()
 			parameterNames = [ k for k in compoundPlug.keys() if not k.startswith( "__" ) ]
-			self.parameter().setClasses( zip( parameterNames, classNames, classVersions ) )
+			self.parameter().setClasses( list( zip( parameterNames, classNames, classVersions ) ) )
 
 		GafferCortex.CompoundParameterHandler.restore( self, plugParent )
 

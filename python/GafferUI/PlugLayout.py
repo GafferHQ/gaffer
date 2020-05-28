@@ -196,7 +196,7 @@ class PlugLayout( GafferUI.Widget ) :
 			sectionName = ".".join( sectionPath )
 			d[sectionName] = 1
 
-		return d.keys()
+		return list( d.keys() )
 
 	## Returns the child plugs of the parent in the order in which they
 	# will be laid out, based on "<layoutName>:index" Metadata entries. If
@@ -628,7 +628,7 @@ class _TabLayout( _Layout ) :
 			if tab is None :
 				# Use scroll bars only when the TabLayout is not embedded
 				if self.__embedded :
-					tab = GafferUI.Frame( borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None )
+					tab = GafferUI.Frame( borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_ )
 				else :
 					tab = GafferUI.ScrolledContainer( borderWidth = 8 )
 					if self.orientation() == GafferUI.ListContainer.Orientation.Vertical :

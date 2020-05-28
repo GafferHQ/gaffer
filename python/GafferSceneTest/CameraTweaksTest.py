@@ -79,7 +79,7 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 			c["focalLengthWorldScale"].setValue( random.uniform( 0.01, 10 ) )
 			c["focusDistance"].setValue( random.uniform( 0.01, 100 ) )
 			c["renderSettingOverrides"]["filmFit"]["enabled"].setValue( True )
-			c["renderSettingOverrides"]["filmFit"]["value"].setValue( random.choice( IECoreScene.Camera.FilmFit.names.values() ) )
+			c["renderSettingOverrides"]["filmFit"]["value"].setValue( random.choice( list( IECoreScene.Camera.FilmFit.names.values() ) ) )
 			c["renderSettingOverrides"]["shutter"]["enabled"].setValue( True )
 			c["renderSettingOverrides"]["shutter"]["value"].setValue( imath.V2f( random.uniform( -0.5, 0 ), random.uniform( 0, 0.5 ) ) )
 			c["renderSettingOverrides"]["pixelAspectRatio"]["enabled"].setValue( True )

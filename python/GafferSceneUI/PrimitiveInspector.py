@@ -152,7 +152,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 		self.__nodeFrame = GafferUI.Frame(
 			borderWidth = 4,
-			borderStyle = GafferUI.Frame.BorderStyle.None,
+			borderStyle = GafferUI.Frame.BorderStyle.None_,
 			child = self.__nodeLabel
 		)
 
@@ -166,7 +166,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 		self.__locationFrame = GafferUI.Frame(
 			borderWidth = 4,
-			borderStyle = GafferUI.Frame.BorderStyle.None,
+			borderStyle = GafferUI.Frame.BorderStyle.None_,
 			child = self.__locationLabel
 		)
 

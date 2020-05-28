@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import six
+
 import Gaffer
 import GafferScene
 
@@ -41,7 +43,7 @@ originalInit = GafferScene.TweakPlug.__init__
 
 def initSupportingOldSerialisation( self, *args, **kwargs ) :
 
-	if len( args ) == 1 and isinstance( args[0], basestring ) :
+	if len( args ) == 1 and isinstance( args[0], six.string_types ) :
 
 		# Constructor calls that provide only a name but no value plug or
 		# data need to be rerouted. These calls occur when

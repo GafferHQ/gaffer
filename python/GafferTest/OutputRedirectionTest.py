@@ -51,16 +51,16 @@ class OutputRedirectionTest( GafferTest.TestCase ) :
 		with Gaffer.OutputRedirection( stdOut = out.append, stdErr = err.append ) :
 
 			sys.stdout.write( "OUT" )
-			print "PRINT",
+			print( "PRINT" )
 			sys.stderr.write( "ERR" )
 
-		self.assertEqual( out, [ "OUT", "PRINT" ] )
+		self.assertEqual( out, [ "OUT", "PRINT", "\n" ] )
 		self.assertEqual( err, [ "ERR" ] )
 
 		sys.stdout.write( "" )
 		sys.stderr.write( "" )
 
-		self.assertEqual( out, [ "OUT", "PRINT" ] )
+		self.assertEqual( out, [ "OUT", "PRINT", "\n" ] )
 		self.assertEqual( err, [ "ERR" ] )
 
 	def testThreading( self ) :

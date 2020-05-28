@@ -38,6 +38,7 @@
 import collections
 import os
 import re
+import six
 import traceback
 import weakref
 
@@ -91,7 +92,7 @@ class Layouts( object ) :
 	# preferences and restored when the application next runs.
 	def add( self, name, editor, persistent = False ) :
 
-		if not isinstance( editor, basestring ) :
+		if not isinstance( editor, six.string_types ) :
 			editor = repr( editor )
 
 		if name.startswith( "user:" ) :
@@ -129,7 +130,7 @@ class Layouts( object ) :
 		# first try to import the modules the layout needs
 		contextDict = { "scriptNode" : scriptNode, "imath" : imath }
 		imported = set()
-		classNameRegex = re.compile( "[a-zA-Z]*Gaffer[^(,]*\(" )
+		classNameRegex = re.compile( r"[a-zA-Z]*Gaffer[^(,]*\(" )
 		for className in classNameRegex.findall( layout.repr ) :
 			moduleName = className.partition( "." )[0]
 			if moduleName not in imported :

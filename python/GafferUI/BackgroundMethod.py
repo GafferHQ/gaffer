@@ -114,6 +114,9 @@ class BackgroundMethod( object ) :
 				result = method( widget, *args, **kw )
 			except :
 				result = sys.exc_info()[1]
+				# Avoid circular references that would prevent this
+				# stack frame (and therefore `widget`) from dying.
+				result.__traceback__ = None
 
 			if not superceded.get() :
 				Gaffer.ParallelAlgo.callOnUIThread( functools.partial( foregroundFunction, widget, result, superceded ) )

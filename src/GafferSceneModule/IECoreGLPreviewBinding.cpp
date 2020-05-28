@@ -75,6 +75,7 @@ void GafferSceneModule::bindIECoreGLPreview()
 
 		enum_<Visualisation::Scale>("Scale")
 			.value( "None", Visualisation::Scale::None )
+			.value( "None_", Visualisation::Scale::None )
 			.value( "Local", Visualisation::Scale::Local )
 			.value( "Visualiser", Visualisation::Scale::Visualiser )
 			.value( "LocalAndVisualiser", Visualisation::Scale::LocalAndVisualiser )

@@ -111,6 +111,7 @@ void GafferModule::bindPlug()
 		;
 		enum_<Plug::Flags>( "Flags" )
 			.value( "None", Plug::None )
+			.value( "None_", Plug::None )
 			.value( "Dynamic", Plug::Dynamic )
 			.value( "Serialisable", Plug::Serialisable )
 			.value( "AcceptsInputs", Plug::AcceptsInputs )

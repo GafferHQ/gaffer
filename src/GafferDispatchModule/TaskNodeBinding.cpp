@@ -163,7 +163,7 @@ void GafferDispatchModule::bindTaskNode()
 		.def( "postTasks", &taskPlugPostTasks )
 		// Adjusting the name so that it correctly reflects
 		// the nesting, and can be used by the PlugSerialiser.
-		.attr( "__name__" ) = "TaskNode.TaskPlug"
+		.attr( "__qualname__" ) = "TaskNode.TaskPlug"
 	;
 
 }

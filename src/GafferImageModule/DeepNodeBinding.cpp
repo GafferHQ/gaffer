@@ -62,6 +62,7 @@ void GafferImageModule::bindDeepNodes()
 		;
 		enum_<FlatToDeep::ZBackMode>( "ZBackMode" )
 			.value( "None", FlatToDeep::ZBackMode::None )
+			.value( "None_", FlatToDeep::ZBackMode::None )
 			.value( "Thickness", FlatToDeep::ZBackMode::Thickness )
 			.value( "Channel", FlatToDeep::ZBackMode::Channel )
 		;
@@ -83,6 +84,7 @@ void GafferImageModule::bindDeepNodes()
 			.value( "Range", DeepToFlat::DepthMode::Range )
 			.value( "Filtered", DeepToFlat::DepthMode::Filtered )
 			.value( "None", DeepToFlat::DepthMode::None )
+			.value( "None_", DeepToFlat::DepthMode::None )
 		;
 	}
 	DependencyNodeClass<Empty>();

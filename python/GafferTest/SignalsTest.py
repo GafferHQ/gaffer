@@ -35,10 +35,10 @@
 #
 ##########################################################################
 
-import StringIO
 import unittest
 import weakref
 import sys
+import six
 import gc
 import functools
 import imath
@@ -223,7 +223,7 @@ class SignalsTest( GafferTest.TestCase ) :
 		w = weakref.ref( t )
 
 		realStdErr = sys.stderr
-		sio = StringIO.StringIO()
+		sio = six.moves.cStringIO()
 		try :
 			sys.stderr = sio
 			s.add( Gaffer.Node() )

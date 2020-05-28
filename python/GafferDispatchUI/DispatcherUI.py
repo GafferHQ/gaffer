@@ -218,11 +218,11 @@ class DispatcherWindow( GafferUI.Window ) :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Label( "Dispatcher" )
 					self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-					self.__dispatchersMenu.append( self.__dispatchers.keys() )
+					self.__dispatchersMenu.append( list( self.__dispatchers.keys() ) )
 					self.__dispatchersMenu.setSelection( [ defaultType ] )
 					self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ), scoped = False )
 
-				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None, borderWidth=0 )
+				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
 				self.__dispatchButton = GafferUI.Button( "Dispatch" )
 				self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ), scoped = False )
 

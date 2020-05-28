@@ -36,7 +36,6 @@
 ##########################################################################
 
 import weakref
-import new
 
 ## Implements an object similar to weakref.proxy, except that
 # it can work with bound methods.
@@ -63,8 +62,7 @@ class WeakMethod( object ) :
 			else :
 				raise ReferenceError( "Instance referenced by WeakMethod %s.%s() no longer exists" % ( self.__method.__module__, self.__method.__name__ ) )
 
-		m = new.instancemethod( self.__method, s, s.__class__ )
-		return m( *args, **kwArgs )
+		return self.__method( s, *args, **kwArgs )
 
 	## Returns the function that implements the method.
 	def method( self ) :

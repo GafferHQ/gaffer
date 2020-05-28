@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import six
+
 import IECore
 
 import Gaffer
@@ -186,7 +188,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 		driven = { w(): m for w,m in self.__drivenNodeSets.items() if w() is not None }
 
 		if recurse :
-			for editor in driven.keys() :
+			for editor in list( driven.keys() ) :
 				driven.update( editor.drivenNodeSets( recurse = True ) )
 
 		return driven
@@ -280,7 +282,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		result = ""
 		for t in self.__titleFormat :
-			if isinstance( t, basestring ) :
+			if isinstance( t, six.string_types ) :
 				result += t
 			else :
 				result += t.getName()

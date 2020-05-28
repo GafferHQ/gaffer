@@ -1160,7 +1160,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testValueFromNoneRaises( self ) :
 
-		with six.assertRaisesRegex( self, Exception, "did not match C\+\+ signature" ) :
+		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.Metadata.value( None, "test" )
 
 if __name__ == "__main__":
