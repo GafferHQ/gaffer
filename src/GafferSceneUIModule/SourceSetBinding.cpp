@@ -48,7 +48,15 @@ using namespace GafferSceneUI;
 using namespace IECorePython;
 using namespace boost::python;
 
-namespace {
+namespace
+{
+
+SourceSetPtr sourceSetConstructor( Context &c, Set &s )
+{
+	// Must release GIL because SourceSet constructor triggers computes.
+	ScopedGILRelease gilRelease;
+	return new SourceSet( &c, &s );
+}
 
 void setContext( SourceSet &s, Context &c )
 {
@@ -62,12 +70,12 @@ void setNodeSet( SourceSet &s, Set &t )
 	s.setNodeSet( &t );
 }
 
-}
+} // namespace
 
 void GafferSceneUIModule::bindSourceSet()
 {
 	RunTimeTypedClass<SourceSet>()
-		.def( init<ContextPtr, SetPtr>() )
+		.def( "__init__", make_constructor( &sourceSetConstructor, default_call_policies() ) )
 		.def( "setContext", &setContext )
 		.def( "getContext", &SourceSet::getContext, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setNodeSet", &setNodeSet )
