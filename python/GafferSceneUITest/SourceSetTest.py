@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -263,6 +265,70 @@ class SourceSetTest( GafferUITest.TestCase ) :
 
 		n.add( s["p1"] )
 		self.assertEqual( callbackFailures["added"], 0 )
+
+	def testGILManagement( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Build a contrived scene that will cause `childNames` queries to spawn
+		# a threaded compute that will execute a Python expression.
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( imath.V2i( 50 ) )
+
+		script["planeFilter"] = GafferScene.PathFilter()
+		script["planeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["sphere"]["out"] )
+		script["instancer"]["filter"].setInput( script["planeFilter"]["out"] )
+
+		script["instanceFilter"] = GafferScene.PathFilter()
+		script["instanceFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*/*" ] ) )
+
+		script["cube"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["instancer"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["filter"].setInput( script["instanceFilter"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'parent["sphere"]["name"] = context["sphereName"]' )
+
+		# Test that the `SourceSet` constructor releases the GIL so that the compute
+		# doesn't hang. If we're lucky, the expression executes on the main
+		# thread anyway, so loop to give it plenty of chances to fail.
+
+		for i in range( 0, 100 ) :
+
+			context = Gaffer.Context()
+			context["sphereName"] = "sphere{}".format( i )
+			GafferSceneUI.ContextAlgo.setSelectedPaths(
+				context,
+				IECore.PathMatcher( [
+					"/plane/instances/{}/2410/cube".format( context["sphereName"] )
+				] )
+			)
+
+			sourceSet = GafferSceneUI.SourceSet( context, Gaffer.StandardSet( [ script["parent"] ] ) )
+
+	def testNullConstructorArguments( self ) :
+
+		sphere =  GafferScene.Sphere()
+		context = Gaffer.Context()
+
+		with self.assertRaises( Exception ) :
+			GafferSceneUI.SourceSet( None, Gaffer.StandardSet( [ sphere ] ) )
+
+		with self.assertRaises( Exception ) :
+			GafferSceneUI.SourceSet( context, None )
+
+		with self.assertRaises( Exception ) :
+			GafferSceneUI.SourceSet( None, None )
 
 if __name__ == "__main__":
 	unittest.main()
