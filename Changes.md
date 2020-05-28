@@ -46,6 +46,15 @@ Build
 
 - Updated to GafferHQ/dependencies 1.4.0.
 
+0.57.4.1 (relative to 0.57.4.0)
+========
+
+Fixes
+-----
+
+- NodeEditor : Fixed hangs when switching to "Follow Scene Selection" mode.
+- SourceSet : Fixed GIL management bug in constructor binding.
+
 0.57.4.0 (relative to 0.57.3.0)
 ========
 
@@ -244,6 +253,15 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.3 (relative to 0.56.2.2)
+========
+
+Fixes
+-----
+
+- NodeEditor : Fixed hangs when switching to "Follow Scene Selection" mode.
+- SourceSet : Fixed GIL management bug in constructor binding.
 
 0.56.2.2 (relative to 0.56.2.1)
 ========
