@@ -1,3 +1,12 @@
+0.56.2.x (relative to 0.56.2.2)
+========
+
+Fixes
+-----
+
+- NodeEditor : Fixed hangs when switching to "Follow Scene Selection" mode.
+- SourceSet : Fixed GIL management bug in constructor binding.
+
 0.56.2.2 (relative to 0.56.2.1)
 ========
 
