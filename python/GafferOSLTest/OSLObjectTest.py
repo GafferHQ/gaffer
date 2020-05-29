@@ -1010,7 +1010,10 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s["transform"]["translate"]["x"].setValue( 1 )
 		def checkAffected( expected ):
-			self.assertEqual( [ i[0].getName() for i in cs if i[0].parent() == o["out"] ], expected )
+			self.assertEqual(
+				[ i[0].getName() for i in cs if i[0].parent() == o["out"] and not i[0].getName().startswith( "__" ) ],
+				expected
+			)
 			del cs[:]
 		checkAffected( ["transform", "bound" ] )
 

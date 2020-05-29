@@ -134,6 +134,14 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.StringParameter(
+					name = "location",
+					description = "The path to a location in the scene. If this is specified "
+						"then that single location will be generated profiled, otherwise "
+						"the entire scene will generated.",
+					defaultValue = "",
+				),
+
 				IECore.StringVectorParameter(
 					name = "sets",
 					description = "The names of scene sets to be examined.",
@@ -489,13 +497,21 @@ class stats( Gaffer.Application ) :
 					context.setFrame( frame )
 
 					if isinstance( scene, GafferDispatch.TaskNode.TaskPlug ) :
+						if args["location"].value :
+							IECore.msg( IECore.Msg.Level.Warning, "stats", "`-location` argument is not compatible with TaskPlugs" )
 						context["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
 						scene.execute()
 					else :
 						if args["sets"] :
 							GafferScene.SceneAlgo.sets( scene, args["sets"] )
 						else :
-							GafferSceneTest.traverseScene( scene )
+							if args["location"].value :
+								scene.transform( args["location"].value )
+								scene.bound( args["location"].value )
+								scene.attributes( args["location"].value )
+								scene.object( args["location"].value )
+							else :
+								GafferSceneTest.traverseScene( scene )
 
 		if args["preCache"].value :
 			computeScene()

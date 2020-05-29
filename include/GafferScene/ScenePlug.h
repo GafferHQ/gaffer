@@ -235,6 +235,15 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// As above, but for the location specified by the current context.
 		bool exists() const;
 
+		/// Returns the union of the bounding boxes of all the children
+		/// of `scenePath`, transformed using their respective transforms.
+		Imath::Box3f childBounds( const ScenePath &scenePath ) const;
+		/// As above, but for the location specified by the current context.
+		Imath::Box3f childBounds() const;
+		/// Returns a hash representing the results of `childBounds()`.
+		IECore::MurmurHash childBoundsHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash childBoundsHash() const;
+
 		/// Utility function to convert a string into a path by splitting on '/'.
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
@@ -254,6 +263,9 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 
 		Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug() const;
+
+		Gaffer::AtomicBox3fPlug *childBoundsPlug();
+		const Gaffer::AtomicBox3fPlug *childBoundsPlug() const;
 
 };
 

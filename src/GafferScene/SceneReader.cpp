@@ -203,7 +203,7 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 	}
 	else
 	{
-		result = unionOfTransformedChildBounds( path, parent );
+		result = parent->childBounds();
 	}
 
 	if( path.size() == 0 && !result.isEmpty() )

@@ -689,7 +689,11 @@ class ValuePlug::ComputeProcess : public Process
 						// the compute will lead to deadlock. We'll do the work outside.
 						break;
 				}
-				cost = result ? result->memoryUsage() : 0;
+				// Using max size for legacy policy so that our null result will never be
+				// cached. This avoids `assert( processKey.cachePolicy == CachePolicy::Legacy )`
+				// being triggered in `ComputeProcess::value()` when a plug with a legacy
+				// policy implements a pass-through from a plug with non-legacy policy.
+				cost = result ? result->memoryUsage() : std::numeric_limits<size_t>::max();
 				return result;
 			}
 			catch( const ProcessException &processException )

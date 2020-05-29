@@ -512,7 +512,7 @@ void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *conte
 
 	SceneProcessor::hashBound( path, context, parent, h );
 	outPlug()->objectPlug()->hash( h );
-	h.append( hashOfTransformedChildBounds( path, outPlug() ) );
+	h.append( outPlug()->childBoundsHash() );
 }
 
 Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -542,7 +542,7 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 	// compute everything by brute force.
 
 	Box3f result = SceneAlgo::bound( outPlug()->objectPlug()->getValue().get() );
-	result.extendBy( unionOfTransformedChildBounds( path, outPlug() ) );
+	result.extendBy( outPlug()->childBounds() );
 	return result;
 }
 

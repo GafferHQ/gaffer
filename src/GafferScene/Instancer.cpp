@@ -826,7 +826,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		{
 			path.push_back( namePlug()->getValue() );
 		}
-		h = hashOfTransformedChildBounds( path, outPlug() );
+		h = outPlug()->childBoundsHash( path );
 	}
 	else if( branchPath.size() == 2 )
 	{
@@ -862,7 +862,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 		{
 			path.push_back( namePlug()->getValue() );
 		}
-		return unionOfTransformedChildBounds( path, outPlug() );
+		return outPlug()->childBounds( path );
 	}
 	else if( branchPath.size() == 2 )
 	{
@@ -870,7 +870,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 		//
 		// We need to return the union of all the transformed children, but
 		// because we have direct access to the engine, we can implement this
-		// more efficiently than `unionOfTransformedChildBounds()`.
+		// more efficiently than `ScenePlug::childBounds()`.
 
 		ConstEngineDataPtr e = engine( parentPath, context );
 		ConstCompoundDataPtr ic = prototypeChildNames( parentPath, context );

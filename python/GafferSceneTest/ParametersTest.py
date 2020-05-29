@@ -93,9 +93,9 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		p = Gaffer.NameValuePlug( "test", 10, True )
 		parameters["parameters"].addChild( p )
 
-		self.assertEqual( parameters.affects( p["name"] ), [ parameters["out"]["object"] ] )
-		self.assertEqual( parameters.affects( p["enabled"] ), [ parameters["out"]["object"] ] )
-		self.assertEqual( parameters.affects( p["value"] ), [ parameters["out"]["object"] ] )
+		self.assertEqual( parameters.affects( p["name"] ), [ parameters["__processedObject"] ] )
+		self.assertEqual( parameters.affects( p["enabled"] ), [ parameters["__processedObject"] ] )
+		self.assertEqual( parameters.affects( p["value"] ), [ parameters["__processedObject"] ] )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -118,7 +118,7 @@ void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 			h = inPlug()->boundHash( source );
 			break;
 		case CreateRoot :
-			h = hashOfTransformedChildBounds( path, parent );
+			h = parent->childBoundsHash();
 			break;
 		case EmptyRoot :
 			SceneProcessor::hashBound( path, context, parent, h );
@@ -135,7 +135,7 @@ Imath::Box3f SubTree::computeBound( const ScenePath &path, const Gaffer::Context
 		case Default :
 			return inPlug()->bound( source );
 		case CreateRoot :
-			return unionOfTransformedChildBounds( path, parent );
+			return parent->childBounds();
 		default : // EmptyRoot
 			return Imath::Box3f();
 	}

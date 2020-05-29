@@ -370,24 +370,16 @@ IECore::ConstObjectPtr PrimitiveSampler::computeProcessedObject( const ScenePath
 		}
 	};
 
-	/// \todo We should be implementing `ComputeNode::computeCachePolicy()` instead
-	/// of doing our own isolation here, and we might even prefer the `TaskCollaboration`
-	/// that would provide. But we might also be filtered to only affect a single
-	/// object in an entire scene, and it seems that changing cache policy for
-	/// `outPlug()->objectPlug()` might give unwanted overhead for the pass-through
-	/// computations (particulary if we used `TaskCollaboration`). We might be able to
-	/// deal with this in ObjectProcessor by performing the non-pass-through computations
-	/// on an internal plug with a custom policy. But we leave that for another time.
-	IECorePreview::ParallelAlgo::isolate(
-		[&] () {
-			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-			parallel_for( blocked_range<size_t>( 0, size ), rangeSampler, taskGroupContext );
-		}
-	);
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	parallel_for( blocked_range<size_t>( 0, size ), rangeSampler, taskGroupContext );
 
 	return outputPrimitive;
 }
 
+Gaffer::ValuePlug::CachePolicy PrimitiveSampler::processedObjectComputeCachePolicy() const
+{
+	return ValuePlug::CachePolicy::TaskCollaboration;
+}
 
 bool PrimitiveSampler::adjustBounds() const
 {

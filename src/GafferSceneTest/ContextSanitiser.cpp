@@ -67,6 +67,7 @@ namespace
 const InternedString g_internalOut( "__internalOut" );
 const InternedString g_exists( "__exists" );
 const InternedString g_sortedChildNames( "__sortedChildNames" );
+const InternedString g_childBounds( "__childBounds" );
 
 } // namespace
 
@@ -100,7 +101,8 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 			// Private plugs, so we have no choice but to test
 			// for them by name.
 			process->plug()->getName() != g_exists &&
-			process->plug()->getName() != g_sortedChildNames
+			process->plug()->getName() != g_sortedChildNames &&
+			process->plug()->getName() != g_childBounds
 		)
 		{
 			if( process->context()->get<IECore::Data>( ScenePlug::scenePathContextName, nullptr ) )

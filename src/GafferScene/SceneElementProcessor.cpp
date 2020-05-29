@@ -113,7 +113,7 @@ void SceneElementProcessor::hashBound( const ScenePath &path, const Gaffer::Cont
 			if( childNames->readable().size() )
 			{
 				FilteredSceneProcessor::hashBound( path, context, parent, h );
-				h.append( hashOfTransformedChildBounds( path, outPlug(), childNames.get() ) );
+				h.append( outPlug()->childBoundsHash() );
 				inPlug()->objectPlug()->hash( h );
 			}
 			else
@@ -144,7 +144,7 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 			ConstInternedStringVectorDataPtr childNames = inPlug()->childNamesPlug()->getValue();
 			if( childNames->readable().size() )
 			{
-				result = unionOfTransformedChildBounds( path, outPlug(), childNames.get() );
+				result = outPlug()->childBounds();
 				// We do have to resort to computing the object here, but its exceedingly
 				// rare to have an object at a location which also has children, so typically
 				// we should be receiving a NullObject cheaply.

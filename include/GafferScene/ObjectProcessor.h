@@ -80,10 +80,24 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented by derived classes to return the processed object.
 		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const = 0;
+		/// Must be implemented to return an appropriate policy if `computeProcessedObject()` spawns
+		/// TBB tasks. The default implementation returns `ValuePlug::CachePolicy::Legacy`.
+		virtual Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const;
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
 	private :
 
 		void init();
+
+		/// We compute the processed object on this internal plug rather than on
+		/// `out.object` directly. This allows us to use the TaskCollaboration
+		/// task policy for processing objects without paying the overhead when
+		/// we're just passing them through (when the filter doesn't match).
+		Gaffer::ObjectPlug *processedObjectPlug();
+		const Gaffer::ObjectPlug *processedObjectPlug() const;
 
 		void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const final;
 		IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const final;
@@ -98,6 +112,8 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 		friend class MeshTangents;
 		friend class PointsType;
 		friend class PrimitiveVariables;
+
+		static size_t g_firstPlugIndex;
 
 };
 

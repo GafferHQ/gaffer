@@ -121,11 +121,11 @@ void Deformer::hashBound( const ScenePath &path, const Gaffer::Context *context,
 
 			if( m & PathMatcher::DescendantMatch )
 			{
-				h.append( hashOfTransformedChildBounds( path, outPlug() ) );
+				h.append( outPlug()->childBoundsHash() );
 			}
 			else
 			{
-				h.append( hashOfTransformedChildBounds( path, inPlug() ) );
+				h.append( inPlug()->childBoundsHash() );
 			}
 			return;
 		}
@@ -171,11 +171,11 @@ Imath::Box3f Deformer::computeBound( const ScenePath &path, const Gaffer::Contex
 
 			if( m & PathMatcher::DescendantMatch )
 			{
-				result.extendBy( unionOfTransformedChildBounds( path, outPlug() ) );
+				result.extendBy( outPlug()->childBounds() );
 			}
 			else
 			{
-				result.extendBy( unionOfTransformedChildBounds( path, inPlug() ) );
+				result.extendBy( inPlug()->childBounds() );
 			}
 			return result;
 		}

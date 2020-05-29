@@ -125,11 +125,17 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		constraint["relativeTransform"]["translate"]["x"].setValue( 10 )
 
-		self.assertEqual( len( cs ), 6 )
-		plugs = [ x[0].relativeName( x[0].node() ) for x in cs ]
+		plugs = { x[0] for x in cs if not x[0].getName().startswith( "__" ) }
 		self.assertEqual(
-			set( [ "relativeTransform.translate.x", "relativeTransform.translate", "relativeTransform", "out.bound", "out.transform", "out" ] ),
-			set( plugs )
+			plugs,
+			{
+				constraint["relativeTransform"]["translate"]["x"],
+				constraint["relativeTransform"]["translate"],
+				constraint["relativeTransform"],
+				constraint["out"]["bound"],
+				constraint["out"]["transform"],
+				constraint["out"]
+			}
 		)
 
 	def testParentNodeEquivalence( self ) :

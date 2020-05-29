@@ -369,6 +369,11 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	return outputPrimitive;
 }
 
+Gaffer::ValuePlug::CachePolicy OSLObject::processedObjectComputeCachePolicy() const
+{
+	return ValuePlug::CachePolicy::TaskCollaboration;
+}
+
 bool OSLObject::adjustBounds() const
 {
 	if( !Deformer::adjustBounds() )

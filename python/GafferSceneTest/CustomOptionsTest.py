@@ -132,15 +132,18 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 
 		p["dimensions"]["x"].setValue( 100.1 )
 
-		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
-
-		self.assertEqual( len( dirtiedPlugs ), 6 )
-		self.assertTrue( "in.bound" in dirtiedPlugs )
-		self.assertTrue( "in.object" in dirtiedPlugs )
-		self.assertTrue( "in" in dirtiedPlugs )
-		self.assertTrue( "out.bound" in dirtiedPlugs )
-		self.assertTrue( "out.object" in dirtiedPlugs )
-		self.assertTrue( "out" in dirtiedPlugs )
+		dirtiedPlugs = { x[0] for x in cs if not x[0].getName().startswith( "__" ) }
+		self.assertEqual(
+			dirtiedPlugs,
+			{
+				o["in"]["bound"],
+				o["in"]["object"],
+				o["in"],
+				o["out"]["bound"],
+				o["out"]["object"],
+				o["out"],
+			}
+		)
 
 	def testSubstitution( self ) :
 
