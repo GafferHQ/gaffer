@@ -1,3 +1,11 @@
+0.57.x.x (relative to 0.57.4.1)
+========
+
+Fixes
+-----
+
+- TransformTool : Fixed blank status message for certain non-editable selections.
+
 0.57.4.1 (relative to 0.57.4.0)
 ========
 
