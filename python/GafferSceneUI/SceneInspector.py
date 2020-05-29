@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import cgi
 import math
 import difflib
 import itertools
@@ -43,6 +42,13 @@ import collections
 import functools
 import six
 import imath
+
+# These modules are not interchangeable in general, but we only
+# use the `escape()` function which is present in both.
+if six.PY3 :
+	import html
+else :
+	import cgi as html
 
 import IECore
 import IECoreScene
@@ -481,7 +487,7 @@ class TextDiff( SideBySideDiff ) :
 		elif isinstance( values[0], six.string_types ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
 		else :
-			return [ cgi.escape( str( v ) ) for v in values ]
+			return [ html.escape( str( v ) ) for v in values ]
 
 	def __formatVectors( self, vectors ) :
 
@@ -567,10 +573,10 @@ class TextDiff( SideBySideDiff ) :
 					nodeColor = GafferUI.Widget._qtColor( nodeColor.value ).name()
 				else :
 					nodeColor = "#000000"
-				formattedValue += "<td bgcolor=%s>%s</td>" % ( nodeColor, cgi.escape( nodeName.value ) )
-				formattedValue += "<td>(" + cgi.escape( shaderName ) + ")</td>"
+				formattedValue += "<td bgcolor=%s>%s</td>" % ( nodeColor, html.escape( nodeName.value ) )
+				formattedValue += "<td>(" + html.escape( shaderName ) + ")</td>"
 			else :
-				formattedValue += "<td>" + cgi.escape( shaderName ) + "</td>"
+				formattedValue += "<td>" + html.escape( shaderName ) + "</td>"
 
 			formattedValue += "</tr></table>"
 
@@ -581,7 +587,7 @@ class TextDiff( SideBySideDiff ) :
 	def __formatStrings( self, strings ) :
 
 		if len( strings ) == 1 or strings[0] == strings[1] or not self.__highlightDiffs :
-			return [ cgi.escape( s ) for s in strings ]
+			return [ html.escape( s ) for s in strings ]
 
 		a = strings[0]
 		b = strings[1]
@@ -591,15 +597,15 @@ class TextDiff( SideBySideDiff ) :
 		for op, a1, a2, b1, b2 in difflib.SequenceMatcher( None, a, b ).get_opcodes() :
 
 			if op == "equal" :
-				aFormatted += cgi.escape( a[a1:a2] )
-				bFormatted += cgi.escape( b[b1:b2] )
+				aFormatted += html.escape( a[a1:a2] )
+				bFormatted += html.escape( b[b1:b2] )
 			elif op == "replace" :
-				aFormatted += '<span class="diffA">' + cgi.escape( a[a1:a2] ) + "</span>"
-				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
+				aFormatted += '<span class="diffA">' + html.escape( a[a1:a2] ) + "</span>"
+				bFormatted += '<span class="diffB">' + html.escape( b[b1:b2] ) + "</span>"
 			elif op == "delete" :
-				aFormatted += '<span class="diffA">' + cgi.escape( a[a1:a2] ) + "</span>"
+				aFormatted += '<span class="diffA">' + html.escape( a[a1:a2] ) + "</span>"
 			elif op == "insert" :
-				bFormatted += '<span class="diffB">' + cgi.escape( b[b1:b2] ) + "</span>"
+				bFormatted += '<span class="diffB">' + html.escape( b[b1:b2] ) + "</span>"
 
 		return [ aFormatted, bFormatted ]
 
@@ -623,7 +629,7 @@ class TextDiff( SideBySideDiff ) :
 			return values
 
 		# d is the index of the first differing digit, or -1 if there is no difference
-		d = next( ( i for i in xrange( 0, len( values[0] ) ) if values[0][i] != values[1][i] ), -1 )
+		d = next( ( i for i in range( 0, len( values[0] ) ) if values[0][i] != values[1][i] ), -1 )
 		if d < 0 :
 			return values
 
