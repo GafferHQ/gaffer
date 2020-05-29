@@ -37,7 +37,7 @@
 import os
 import sys
 
-pythonVariant = None
+pythonVariant = os.environ.get( "PYTHON_VARIANT", None )
 for a in sys.argv :
 	if a.startswith( "PYTHON_VARIANT=" ) :
 		pythonVariant = a[15:]
