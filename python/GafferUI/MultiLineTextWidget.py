@@ -185,7 +185,10 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		cursor = self._qtWidget().textCursor()
 		text = cursor.selection().toPlainText()
-		return text.encode( "utf-8" )
+		if six.PY3 :
+			return text
+		else :
+			return text.encode( "utf-8" )
 
 	def linkAt( self, position ) :
 
