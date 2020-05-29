@@ -1065,17 +1065,10 @@ bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	if( m_dragMode == Moving )
 	{
 		calculateDragSnapOffsets( m_scriptNode->selection() );
-
-		V2f pos = V2f( i.x, i.y );
-		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
-		m_lastDragPosition = pos;
- 		requestRender();
 		return true;
 	}
 	else if( m_dragMode == Selecting )
 	{
-		m_lastDragPosition = V2f( i.x, i.y );
- 		requestRender();
 		return true;
 	}
 
