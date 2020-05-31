@@ -606,7 +606,11 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shad
 			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
 		}
 	}
-
+	string shaderName(
+		namePrefix +
+		shaderNetwork->getOutput().shader.string()
+	);
+	result->name = ccl::ustring( shaderName.c_str() );
 	result->set_graph( graph );
 
 	return result;

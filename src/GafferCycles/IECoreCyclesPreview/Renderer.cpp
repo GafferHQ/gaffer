@@ -4403,6 +4403,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			m_scene->film->cryptomatte_passes = cryptoPasses;
 
+			bool cryptoAsset, cryptoObject, cryptoMaterial = false;
+
 			for( auto &coutput : m_outputs )
 			{
 				if( coutput.second->m_passType == ccl::PASS_COMBINED )
@@ -4413,25 +4415,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( coutput.second->m_data == "cryptomatte_asset" )
 					{
+						cryptoAsset = true;
 						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_ASSET );
 					}
 					else if( coutput.second->m_data == "cryptomatte_object" )
 					{
+						cryptoObject = true;
 						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_OBJECT );
 					}
 					else if( coutput.second->m_data == "cryptomatte_material" )
 					{
+						cryptoMaterial = true;
 						m_scene->film->cryptomatte_passes = (ccl::CryptomatteType)( m_scene->film->cryptomatte_passes | ccl::CRYPT_MATERIAL );
-					}
-					else
-					{
-						continue;
-					}
-
-					for( int i = 0; i < m_scene->film->cryptomatte_depth; ++i )
-					{
-						string cryptoFullName = ( boost::format( "%s%02i" ) % coutput.second->m_data % i ).str();
-						ccl::Pass::add( ccl::PASS_CRYPTOMATTE, m_bufferParamsModified.passes, cryptoFullName.c_str() );
 					}
 					continue;
 				}
@@ -4464,6 +4459,29 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
 					continue;
+				}
+			}
+
+			// Order of adding these matters, hence why it was deferred to here
+			if( cryptoObject )
+			{
+				for( int i = 0; i < m_scene->film->cryptomatte_depth; ++i )
+				{
+					ccl::Pass::add( ccl::PASS_CRYPTOMATTE, m_bufferParamsModified.passes, ccl::string_printf("cryptomatte_object%02d", i).c_str() );
+				}
+			}
+			if( cryptoMaterial )
+			{
+				for( int i = 0; i < m_scene->film->cryptomatte_depth; ++i )
+				{
+					ccl::Pass::add( ccl::PASS_CRYPTOMATTE, m_bufferParamsModified.passes, ccl::string_printf("cryptomatte_material%02d", i).c_str() );
+				}
+			}
+			if( cryptoAsset )
+			{
+				for( int i = 0; i < m_scene->film->cryptomatte_depth; ++i )
+				{
+					ccl::Pass::add( ccl::PASS_CRYPTOMATTE, m_bufferParamsModified.passes, ccl::string_printf("cryptomatte_asset%02d", i).c_str() );
 				}
 			}
 
