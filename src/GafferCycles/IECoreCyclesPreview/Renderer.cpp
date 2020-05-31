@@ -650,13 +650,13 @@ class RenderCallback : public IECore::RefCounted
 #endif
 				{
 					int num = 0;
-					for( int i = 0; i < output.second->m_images.size(); ++i )
-					{
 #ifdef WITH_CYCLES_LIGHTGROUPS
-						if( passType == ccl::PASS_LIGHTGROUP )
-							num = i + 1;
+					if( passType == ccl::PASS_LIGHTGROUP )
+						num = 1;
 #endif
-						name = ( boost::format( "%s%02i" ) % output.second->m_data % num ).str();
+					for( int i = 0; i < output.second->m_instances; ++i )
+					{
+						name = ( boost::format( "%s%02i" ) % output.second->m_data % (i + num) ).str();
 						if( m_interactive )
 							getChannelNames( name, components, channelNames );
 					}
@@ -790,23 +790,22 @@ class RenderCallback : public IECore::RefCounted
 					if( output.second->m_passType == ccl::PASS_LIGHTGROUP )
 						num += 1;
 #endif
-					for( auto image : output.second->m_images )
+					for( int i = 0; i < output.second->m_instances; ++i )
 					{
-						read = buffers->get_pass_rect( ( boost::format( "%s%02i" ) % output.second->m_data % num ).str().c_str(), exposure, sample, numChannels, &tileData[0] );
+						read = buffers->get_pass_rect( ( boost::format( "%s%02i" ) % output.second->m_data % (i + num) ).str().c_str(), exposure, sample, numChannels, &tileData[0] );
 						if( !read )
 							memset( &tileData[0], 0, tileData.size()*sizeof(float) );
 
 						if( m_interactive )
 							outChannelOffset = interleave( &tileData[0], w, h, numChannels, numOutputChannels, outChannelOffset, &interleavedData[0] );
 						else
-							image->imageData( tile, &tileData[0], w * h * numChannels );
-
-						++num;
+							output.second->m_images[i]->imageData( tile, &tileData[0], w * h * numChannels );
 					}
 				}
 				else
 				{
-					read = buffers->get_pass_rect( output.second->m_data.c_str(), exposure, sample, numChannels, &tileData[0] );
+					read = buffers->get_pass_rect( output.second->m_passType == ccl::PASS_COMBINED ? "Combined" : output.second->m_data.c_str(), 
+												   exposure, sample, numChannels, &tileData[0] );
 
 					if( !read )
 					{
@@ -3634,14 +3633,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					if( value == nullptr )
 					{
-						film->cryptomatte_depth = std::min( 16, 2 ) / 2;
+						film->cryptomatte_depth = ccl::divide_up( std::min( 16, 6 ), 2);
 						return;
 					}
 					if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
 					{
 						if( data->readable() )
 						{
-							film->cryptomatte_depth = std::min( 16, data->readable() ) / 2;
+							film->cryptomatte_depth = ccl::divide_up( std::min( 16, data->readable() ), 2);
 							return;
 						}
 					}
@@ -4391,7 +4390,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( coutput.second->m_passType == ccl::PASS_COMBINED )
 				{
-					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, coutput.second->m_data.c_str() );
+					ccl::Pass::add( coutput.second->m_passType, m_bufferParamsModified.passes, "Combined" );
 					break;
 				}
 			}
@@ -4475,9 +4474,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				ccl::Pass::add( ccl::PASS_SAMPLE_COUNT, m_bufferParamsModified.passes );
 			}
 
-			m_bufferParamsModified.denoising_data_pass = m_sessionParams.run_denoising;
+			m_bufferParamsModified.denoising_data_pass = m_useDenoising || m_writeDenoisingPasses;
 			m_bufferParamsModified.denoising_clean_pass = ( m_scene->film->denoising_flags & ccl::DENOISING_CLEAN_ALL_PASSES );
-			m_bufferParamsModified.denoising_prefiltered_pass = m_sessionParams.write_denoising_passes;
+			m_bufferParamsModified.denoising_prefiltered_pass = m_writeDenoisingPasses && !m_useOptixDenoising;
 
 			ccl::Film *film = m_scene->film;
 			film->denoising_data_pass = m_bufferParamsModified.denoising_data_pass;
