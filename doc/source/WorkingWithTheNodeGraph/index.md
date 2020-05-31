@@ -17,4 +17,5 @@ Here you can learn the fundamentals of constructing and editing node graphs in G
     PerformanceBestPractices/index.md
     UsingThePerformanceMonitor/index.md
     TutorialUsingTheOSLCodeNode/index.md
+    TutorialSettingUpASpreadsheet/index.md
 ```
