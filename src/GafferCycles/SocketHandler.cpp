@@ -583,6 +583,10 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "coneAngle", plugsParent, Gaffer::Plug::In, 30.0f ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "penumbraAngle", plugsParent, Gaffer::Plug::In, 0.0f ) );
 	}
+	else if( shaderName == "point_light" )
+	{
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
+	}
 	else if( shaderName == "quad_light" )
 	{
 		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
