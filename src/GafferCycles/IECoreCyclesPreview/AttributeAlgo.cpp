@@ -189,7 +189,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			exists = true;
 	}
 
-	if( ctype == ccl::TypeDesc::TypeFloat )
+	if( primitiveVariable.interpolation != PrimitiveVariable::Constant && ctype == ccl::TypeDesc::TypeFloat )
 	{
 		if( const FloatVectorData *data = runTimeCast<const FloatVectorData>( primitiveVariable.data.get() ) )
 		{
@@ -203,18 +203,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 				for( size_t i = 0; i < num; ++i )
 					*(cdata++) = floatData[i];
 				cdata = attr->data_float();
-				return;
-			}
-		}
-
-		if( const IntData *data = runTimeCast<const IntData>( primitiveVariable.data.get() ) )
-		{
-			const int &intData = data->readable();
-			float *cdata = attr->data_float();
-
-			if( cdata )
-			{
-				*(cdata) = (float)intData;
 				return;
 			}
 		}
@@ -239,7 +227,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		attributes.remove( attr );
 		return;
 	}
-	else if( ctype == ccl::TypeDesc::TypeVector )
+	else if( primitiveVariable.interpolation != PrimitiveVariable::Constant )
 	{
 		if( const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() ) )
 		{
@@ -256,6 +244,21 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
+		if( const V3iVectorData *data = runTimeCast<const V3iVectorData>( primitiveVariable.data.get() ) )
+		{
+			const std::vector<V3i> &v3iData = data->readable();
+			size_t num = v3iData.size();
+			ccl::float3 *cdata = attr->data_float3();
+
+			if( cdata )
+			{
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = ccl::make_float3( (float)v3iData[i].x, (float)v3iData[i].y, (float)v3iData[i].z );
+				cdata = attr->data_float3();
+				return;
+			}
+		}
+
 		if( const V2fVectorData *data = runTimeCast<const V2fVectorData>( primitiveVariable.data.get() ) )
 		{
 			const std::vector<V2f> &v2fData = data->readable();
@@ -266,6 +269,21 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			{
 				for( size_t i = 0; i < num; ++i )
 					*(cdata++) = ccl::make_float2( v2fData[i].x, v2fData[i].y );
+				cdata = attr->data_float2();
+				return;
+			}
+		}
+
+		if( const V2iVectorData *data = runTimeCast<const V2iVectorData>( primitiveVariable.data.get() ) )
+		{
+			const std::vector<V2i> &v2iData = data->readable();
+			size_t num = v2iData.size();
+			ccl::float2 *cdata = attr->data_float2();
+
+			if( cdata )
+			{
+				for( size_t i = 0; i < num; ++i )
+					*(cdata++) = ccl::make_float2( (float)v2iData[i].x, (float)v2iData[i].y );
 				cdata = attr->data_float2();
 				return;
 			}
@@ -290,7 +308,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		attributes.remove( attr );
 		return;
 	}
-	else if( PrimitiveVariable::Constant )
+	else if( primitiveVariable.interpolation == PrimitiveVariable::Constant )
 	{
 		if( const FloatData *data = runTimeCast<const FloatData>( primitiveVariable.data.get() ) )
 		{
@@ -316,6 +334,30 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
+		if( const V2fData *data = runTimeCast<const V2fData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::V2f &v2fData = data->readable();
+			ccl::float2 *cdata = attr->data_float2();
+
+			if( cdata )
+			{
+				*(cdata) = ccl::make_float2( v2fData.x, v2fData.y );
+				return;
+			}
+		}
+
+		if( const V2iData *data = runTimeCast<const V2iData>( primitiveVariable.data.get() ) )
+		{
+			const Imath::V2i &v2iData = data->readable();
+			ccl::float2 *cdata = attr->data_float2();
+
+			if( cdata )
+			{
+				*(cdata) = ccl::make_float2( (float)v2iData.x, (float)v2iData.y );
+				return;
+			}
+		}
+
 		if( const V3fData *data = runTimeCast<const V3fData>( primitiveVariable.data.get() ) )
 		{
 			const Imath::V3f &v3fData = data->readable();
@@ -328,26 +370,14 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
-		if( const V3dData *data = runTimeCast<const V3dData>( primitiveVariable.data.get() ) )
+		if( const V3iData *data = runTimeCast<const V3iData>( primitiveVariable.data.get() ) )
 		{
-			const Imath::V3d &v3dData = data->readable();
+			const Imath::V3i &v3iData = data->readable();
 			ccl::float3 *cdata = attr->data_float3();
 
 			if( cdata )
 			{
-				*(cdata) = SocketAlgo::setVector( v3dData );
-				return;
-			}
-		}
-
-		if( const Color3fVectorData *data = runTimeCast<const Color3fVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<Color3f> &colorData = data->readable();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				*(cdata) = SocketAlgo::setColor( colorData.front() );
+				*(cdata) = ccl::make_float3( (float)v3iData.x, (float)v3iData.y, (float)v3iData.z );
 				return;
 			}
 		}
@@ -372,18 +402,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			if( cdata )
 			{
 				*(cdata) = SocketAlgo::setTransform( m44fData );
-				return;
-			}
-		}
-
-		if( const M44dData *data = runTimeCast<const M44dData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::M44d &m44dData = data->readable();
-			ccl::Transform *cdata = attr->data_transform();
-
-			if( cdata )
-			{
-				*(cdata) = SocketAlgo::setTransform( m44dData );
 				return;
 			}
 		}

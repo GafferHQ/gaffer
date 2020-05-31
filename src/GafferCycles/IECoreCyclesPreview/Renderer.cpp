@@ -3070,7 +3070,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				// Sane defaults, not INT_MAX. Will be squared by default.
 				m_sessionParams.samples = 8;
 				m_sessionParams.start_resolution = 64;
-				m_sessionParams.progressive = false;
+				m_sessionParams.progressive = true;
 				m_sessionParams.progressive_refine = false;
 				m_sceneParams.bvh_type = ccl::SceneParams::BVH_STATIC;
 			}
@@ -3117,6 +3117,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_curveSystemManager = *(m_scene->curve_system_manager);
 
 			m_samples = m_sessionParams.samples;
+			// A more sane default from 0 AA samples
+			m_integrator.aa_samples = 1;
 			m_aaSamples = m_integrator.aa_samples;
 			m_diffuseSamples = m_integrator.diffuse_samples;
 			m_glossySamples = m_integrator.glossy_samples;
