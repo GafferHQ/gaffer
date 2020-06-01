@@ -55,8 +55,17 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 		Gaffer.PathFilter.__init__( self, userData )
 
 		self.__selection = selection
-		self.__plugInputChangedConnections = [ node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) ) for node in selection ]
 
+		self.__selectionAncestors = set()
+		for node in self.__selection :
+			while True :
+				node = node.parent()
+				if node is not None :
+					self.__selectionAncestors.add( node )
+				else :
+					break
+
+		self.__plugInputChangedConnections = [ node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) ) for node in selection ]
 		self.__nameChangedConnections = []
 
 	def _filter( self, paths ) :
@@ -66,13 +75,10 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 			graphComponent = path.property( "graphComponent:graphComponent" )
 			if isinstance( graphComponent, Gaffer.Node ) :
 
-				for selected in self.__selection :
-					if graphComponent.isAncestorOf( selected ) :
-						return True
-					elif graphComponent == selected :
-						if self.__hasAnimation( graphComponent ) :
-							return True
-				return False
+				return (
+					graphComponent in self.__selectionAncestors or
+					( graphComponent in self.__selection and self.__hasAnimation( graphComponent ) )
+				)
 
 			else :
 
