@@ -74,11 +74,11 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		self.__titleFormat = None
 
-		# Allow derived classes to call `_updateFromSet()`` themselves after construction,
+		# Allow derived classes to call `_updateFromSet()` themselves after construction,
 		# to avoid being called when they're only half constructed.
 		## \todo Should we call `__lazyUpdate()` instead, so `_updateFromSet()` is called
 		# when the editor becomes visible? Then derived classes shouldn't need to call
-		# `updateFromSet()` in their constructors at all.
+		# `_updateFromSet()` in their constructors at all.
 		self.__setNodeSetInternal( self.scriptNode().selection(), callUpdateFromSet=False )
 
 	## Sets the nodes that will be displayed by this editor. As members are
