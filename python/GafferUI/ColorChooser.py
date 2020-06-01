@@ -94,7 +94,7 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 			c1[a] = 0
 			c2[a] = 1
 
-		numStops = max( 2, size.x / 2 )
+		numStops = max( 2, size.x // 2 )
 		for i in range( 0, numStops ) :
 
 			t = float( i ) / (numStops-1)
