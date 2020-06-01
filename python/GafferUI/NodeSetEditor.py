@@ -74,9 +74,11 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		self.__titleFormat = None
 
-		self.__updateScheduled = False
-		# allow derived classes to call _updateFromSet() themselves after construction,
+		# Allow derived classes to call `_updateFromSet()`` themselves after construction,
 		# to avoid being called when they're only half constructed.
+		## \todo Should we call `__lazyUpdate()` instead, so `_updateFromSet()` is called
+		# when the editor becomes visible? Then derived classes shouldn't need to call
+		# `updateFromSet()` in their constructors at all.
 		self.__setNodeSetInternal( self.scriptNode().selection(), callUpdateFromSet=False )
 
 	## Sets the nodes that will be displayed by this editor. As members are
@@ -367,7 +369,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 	# yet performed.
 	def _doPendingUpdate( self ) :
 
-		self.__updateTimeout()
+		self.__lazyUpdate.flush( self )
 
 	## May be reimplemented by derived classes to specify a combination of
 	# strings and node names to use in building the title. The NodeSetEditor
@@ -453,17 +455,12 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 	def __membersChanged( self, set, member ) :
 
-		if self.__updateScheduled :
-			return
+		self.__lazyUpdate()
 
-		QtCore.QTimer.singleShot( 0, self.__updateTimeout )
-		self.__updateScheduled = True
+	@GafferUI.LazyMethod()
+	def __lazyUpdate( self ) :
 
-	def __updateTimeout( self ) :
-
-		if self.__updateScheduled :
-			self.__updateScheduled = False
-			self._updateFromSet()
+		self._updateFromSet()
 
 class _EditorWindow( GafferUI.Window ) :
 
