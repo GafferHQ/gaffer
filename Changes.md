@@ -8,6 +8,7 @@ Improvements
 - PointsType : Removed unnecessary bounds computation overhead.
 - OSLObject/ClosestPointSampler/CurveSampler : Improved performance for cases where multiple downstream computes require the same upstream object.
 - Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
+- AnimationEditor : Improved performance.
 
 API
 ---
