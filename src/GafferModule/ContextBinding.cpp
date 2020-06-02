@@ -169,6 +169,7 @@ void GafferModule::bindContext()
 				with_custodian_and_ward<1,3>()
 			]
 		)
+		.def( init<const Context &, bool>( ( arg( "other" ), arg( "omitCanceller" ) ) ) )
 		.def( "setFrame", &setFrame )
 		.def( "getFrame", &Context::getFrame )
 		.def( "setFramesPerSecond", &setFramesPerSecond )
