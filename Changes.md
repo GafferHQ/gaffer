@@ -1,3 +1,11 @@
+0.57.x.x (relative to 0.57.5.0)
+========
+
+Fixes
+-----
+
+- Context : Fixed Python `Canceller` lifetime management bug.
+
 0.57.5.0 (relative to 0.57.4.1)
 ========
 
