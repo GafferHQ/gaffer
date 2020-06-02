@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- SceneAlgo : Removed cancellers from contexts referenced by history objects.
 - Context : Fixed Python `Canceller` lifetime management bug.
 
 API

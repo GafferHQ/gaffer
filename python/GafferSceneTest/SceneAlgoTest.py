@@ -1205,5 +1205,30 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		attributesHistory = GafferScene.SceneAlgo.history( plane["out"]["attributes"], "/plane" )
 		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( attributesHistory, "test" ) )
 
+	def testHistoryWithCanceller( self ) :
+
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		context = Gaffer.Context()
+		canceller = IECore.Canceller()
+		with Gaffer.Context( context, canceller ) :
+			history = GafferScene.SceneAlgo.history( group["out"]["object"], "/group/plane" )
+
+		def assertNoCanceller( history ) :
+
+			self.assertIsNone( history.context.canceller() )
+			for p in history.predecessors :
+				assertNoCanceller( p )
+
+		assertNoCanceller( history )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		with Gaffer.Context( context, canceller ) :
+			history = GafferScene.SceneAlgo.history( shaderAssignment["in"]["attributes"], "/" )
+
+		assertNoCanceller( history )
+
 if __name__ == "__main__":
 	unittest.main()
