@@ -33,6 +33,7 @@
 		'collapsibleArrowRight',
 		'collapsibleArrowRightHover',
 		'debugNotification',
+		'debugSmall',
 		'delete',
 		'deleteSmall',
 		'drawingStyles',
@@ -120,6 +121,7 @@
 		'sceneInspectorHistory',
 		'sceneInspectorInheritance',
 		'search',
+		'clearSearch',
 		'selectionMaskOff',
 		'selectionMaskOn',
 		'setMembershipDot',
@@ -153,5 +155,8 @@
 		'viewPaused',
 		'warningNotification',
 		'warningSmall',
+		'searchFocusOff',
+		'searchFocusOn',
+		'scrollToBottom'
 	]
 }

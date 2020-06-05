@@ -9,6 +9,7 @@ Improvements
 - OSLObject/ClosestPointSampler/CurveSampler : Improved performance for cases where multiple downstream computes require the same upstream object.
 - Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
 - AnimationEditor : Improved performance.
+- MessageWidget : Added alternate presentation options allowing log-style message display, search, etc.
 
 Fixes
 -----
@@ -61,6 +62,7 @@ Breaking Changes
 - ObjectProcessor : Added a virtual method.
 - PlugValueWidget : Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
+- MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 
 Fixes
 -----

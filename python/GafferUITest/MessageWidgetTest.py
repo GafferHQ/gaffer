@@ -36,20 +36,60 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 import GafferUITest
 
+from Gaffer.Private.IECorePreview import Message
+from Gaffer.Private.IECorePreview import Messages
+
 class MessageWidgetTest( GafferUITest.TestCase ) :
 
+	def assertCounts( self, widget, debug, info, warning, error ) :
+
+		self.assertEqual( widget.messageCount( IECore.Msg.Level.Debug ), debug )
+		self.assertEqual( widget.messageCount( IECore.Msg.Level.Info ), info )
+		self.assertEqual( widget.messageCount( IECore.Msg.Level.Warning ), warning )
+		self.assertEqual( widget.messageCount( IECore.Msg.Level.Error ), error )
+		self.assertEqual( widget.messageCount(), debug + info + warning + error )
+
+	def testMessages( self ) :
+
+		w = GafferUI.MessageWidget()
+		self.assertCounts( w, 0, 0, 0, 0 )
+
+		m = Messages()
+		for i in range( 24 ) :
+			m.add( Message( IECore.MessageHandler.Level( i % 4 ), "testMessages", "message %d" % i ) )
+
+		w.setMessages( m )
+
+		self.assertEqual( w.getMessages(), m )
+		self.assertCounts( w, 6, 6, 6, 6 )
+
+		w.clear()
+		self.assertNotEqual( w.getMessages(), m )
+		self.assertCounts( w, 0, 0, 0, 0 )
+
+	def testMessageLevel( self ) :
+
+		levels = (
+			IECore.MessageHandler.Level.Debug, IECore.MessageHandler.Level.Info,
+			IECore.MessageHandler.Level.Warning, IECore.MessageHandler.Level.Info
+		)
+
+		w = GafferUI.MessageWidget()
+		self.assertEqual( w.getMessageLevel(), IECore.MessageHandler.Level.Info )
+
+		for l in levels :
+			w.setMessageLevel( l )
+			self.assertEqual( w.getMessageLevel(), l )
+
+		for l in levels :
+			w = GafferUI.MessageWidget( messageLevel = l )
+			self.assertEqual( w.getMessageLevel(), l )
+
 	def testCounts( self ) :
-
-		def assertCounts( debug, info, warning, error ) :
-
-			self.assertEqual( w.messageCount( IECore.Msg.Level.Debug ), debug )
-			self.assertEqual( w.messageCount( IECore.Msg.Level.Info ), info )
-			self.assertEqual( w.messageCount( IECore.Msg.Level.Warning ), warning )
-			self.assertEqual( w.messageCount( IECore.Msg.Level.Error ), error )
-			self.assertEqual( w.messageCount(), debug + info + warning + error )
 
 		def msg( level ) :
 
@@ -57,28 +97,28 @@ class MessageWidgetTest( GafferUITest.TestCase ) :
 			self.waitForIdle( 10 )
 
 		w = GafferUI.MessageWidget()
-		assertCounts( 0, 0, 0, 0 )
+		self.assertCounts( w, 0, 0, 0, 0 )
 
 		with w.messageHandler() :
 
 			msg( IECore.Msg.Level.Error )
-			assertCounts( 0, 0, 0, 1 )
+			self.assertCounts( w, 0, 0, 0, 1 )
 
 			msg( IECore.Msg.Level.Warning )
-			assertCounts( 0, 0, 1, 1 )
+			self.assertCounts( w, 0, 0, 1, 1 )
 
 			msg( IECore.Msg.Level.Info )
-			assertCounts( 0, 1, 1, 1 )
+			self.assertCounts( w, 0, 1, 1, 1 )
 
 			msg( IECore.Msg.Level.Debug )
-			assertCounts( 1, 1, 1, 1 )
+			self.assertCounts( w, 1, 1, 1, 1 )
 
 			msg( IECore.Msg.Level.Error )
 			msg( IECore.Msg.Level.Error )
-			assertCounts( 1, 1, 1, 3 )
+			self.assertCounts( w, 1, 1, 1, 3 )
 
 			w.clear()
-			assertCounts( 0, 0, 0, 0 )
+			self.assertCounts( w, 0, 0, 0, 0 )
 
 	def testForwarding( self ) :
 
