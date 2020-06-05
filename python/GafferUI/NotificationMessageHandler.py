@@ -89,4 +89,4 @@ class _Window( GafferUI.Window ) :
 
 	def appendMessage( self, level, context, message ) :
 
-		self.getChild().appendMessage( level, context, message )
+		self.getChild().messageHandler().handle( level, context, message )
