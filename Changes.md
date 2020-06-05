@@ -29,6 +29,7 @@ API
   - Changed base to `Gaffer::ComputeNode` (#3419).
   - Added messages plug containing the output of the node's renderer output (#3419).
 - Graphics : Renamed `errorNotificationSmall` icon to `errorSmall`.
+- NotificationMessageHandler : Constructor now accepts `GafferUI.MessageWidget` constructor kwargs to configure the widget.
 
 Breaking Changes
 ----------------
