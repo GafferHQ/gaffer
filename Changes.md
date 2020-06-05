@@ -1,6 +1,11 @@
 0.58.x.x
 ========
 
+Features
+--------
+
+- InteractiveRender : Added message log to the node's UI, displaying output from the last render (#3419).
+
 Improvements
 ------------
 

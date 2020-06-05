@@ -230,6 +230,41 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.getPlug().setValue( GafferScene.InteractiveRender.State.Stopped )
 
 ##########################################################################
+# UI for the messages plug that presents the render log
+##########################################################################
+
+class _MessagesPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kwargs ) :
+
+		self.__messages = GafferUI.MessageWidget(
+			toolbars = True,
+			follow = True,
+			role = GafferUI.MessageWidget.Role.Log
+		)
+
+		GafferUI.PlugValueWidget.__init__( self, self.__messages, plug, **kwargs )
+
+		self._updateFromPlug()
+
+	def hasLabel( self ) :
+
+		return True
+
+	def getToolTip( self ) :
+
+		# Suppress the default messages tool-tip that otherwise appears all over the log window.
+		return None
+
+	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
+	def _updateFromPlug( self, *unused ) :
+
+		with self.getContext() :
+			messages = self.getPlug().getValue().value
+
+		self.__messages.setMessages( messages )
+
+##########################################################################
 # Metadata for InteractiveRender node.
 ##########################################################################
 
@@ -242,6 +277,8 @@ Gaffer.Metadata.registerNode(
 	Performs interactive renders, updating the render on the fly
 	whenever the input scene changes.
 	""",
+
+	"layout:section:Settings.Log:collapsed", False,
 
 	plugs = {
 
@@ -290,7 +327,9 @@ Gaffer.Metadata.registerNode(
 			Messages from the render process.
 			""",
 
-			"plugValueWidget:type", "",
+			"label", "Messages",
+			"plugValueWidget:type", "GafferSceneUI.InteractiveRenderUI._MessagesPlugValueWidget",
+			"layout:section", "Settings.Log"
 
 		],
 
