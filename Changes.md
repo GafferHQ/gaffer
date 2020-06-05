@@ -62,6 +62,11 @@ Breaking Changes
 - PlugValueWidget : Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 
+Fixes
+-----
+
+- GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
+
 Build
 -----
 
