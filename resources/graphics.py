@@ -40,7 +40,7 @@
 		'editScopeNode',
 		'editScopeProcessorNode',
 		'errorNotification',
-		'errorNotificationSmall',
+		'errorSmall',
 		'expansion',
 		'export',
 		'exposureOff',

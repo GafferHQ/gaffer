@@ -5068,7 +5068,7 @@
     <path
        sodipodi:nodetypes="cccccccc"
        inkscape:connector-curvature="0"
-       id="errorNotificationSmall"
+       id="errorSmall"
        d="m -5.0077704,145.53928 c -0.275586,0.0214 -0.536587,0.183 -0.678299,0.42003 l -5.6434386,9.32208 c -0.315516,0.52386 0.134045,1.31576 0.746128,1.31431 H 0.70349865 c 0.61208295,0.002 1.06164395,-0.79045 0.74612795,-1.31431 l -5.643439,-9.32208 c -0.164893,-0.27589 -0.493259,-0.44533 -0.813958,-0.42003 z"
        style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:Sans;-inkscape-font-specification:Sans;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;baseline-shift:baseline;text-anchor:start;display:inline;overflow:visible;visibility:visible;fill:#bb2b2b;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker:none;enable-background:accumulate"
        inkscape:label="#path3902" />
