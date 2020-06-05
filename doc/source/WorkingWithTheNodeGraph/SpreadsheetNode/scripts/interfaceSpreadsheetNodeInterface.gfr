@@ -1,0 +1,46 @@
+import Gaffer
+import GafferAppleseed
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 56, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["directional_light"] = GafferAppleseed.AppleseedLight( "directional_light" )
+parent.addChild( __children["directional_light"] )
+__children["directional_light"].loadShader( "directional_light" )
+__children["Spreadsheet"] = Gaffer.Spreadsheet( "Spreadsheet" )
+parent.addChild( __children["Spreadsheet"] )
+__children["Spreadsheet"]["rows"].addColumn( Gaffer.Color3fPlug( "irradiance", defaultValue = imath.Color3f( 1, 1, 1 ), ) )
+__children["Spreadsheet"]["rows"].addColumn( Gaffer.V3fPlug( "rotate", defaultValue = imath.V3f( 0, 0, 0 ), ) )
+__children["Spreadsheet"]["rows"].addRows( 3 )
+__children["directional_light"]["transform"]["rotate"].setInput( __children["Spreadsheet"]["out"]["rotate"] )
+__children["directional_light"]["transform"]["rotate"]["x"].setInput( __children["Spreadsheet"]["out"]["rotate"]["x"] )
+__children["directional_light"]["transform"]["rotate"]["y"].setInput( __children["Spreadsheet"]["out"]["rotate"]["y"] )
+__children["directional_light"]["transform"]["rotate"]["z"].setInput( __children["Spreadsheet"]["out"]["rotate"]["z"] )
+__children["directional_light"]["parameters"]["irradiance"].setInput( __children["Spreadsheet"]["out"]["irradiance"] )
+__children["directional_light"]["parameters"]["irradiance"]["r"].setInput( __children["Spreadsheet"]["out"]["irradiance"]["r"] )
+__children["directional_light"]["parameters"]["irradiance"]["g"].setInput( __children["Spreadsheet"]["out"]["irradiance"]["g"] )
+__children["directional_light"]["parameters"]["irradiance"]["b"].setInput( __children["Spreadsheet"]["out"]["irradiance"]["b"] )
+__children["Spreadsheet"]["selector"].setValue( '${sequence}' )
+__children["Spreadsheet"]["rows"]["default"]["cells"]["rotate"]["value"].setValue( imath.V3f( -90, 0, 0 ) )
+__children["Spreadsheet"]["rows"]["row1"]["name"].setValue( 'SEQ-1' )
+__children["Spreadsheet"]["rows"]["row1"]["cells"]["irradiance"]["value"].setValue( imath.Color3f( 0.920000017, 0.930000007, 1 ) )
+__children["Spreadsheet"]["rows"]["row1"]["cells"]["rotate"]["value"].setValue( imath.V3f( -67, 47.5, 0 ) )
+__children["Spreadsheet"]["rows"]["row2"]["name"].setValue( 'SEQ-2' )
+__children["Spreadsheet"]["rows"]["row2"]["cells"]["irradiance"]["value"].setValue( imath.Color3f( 1, 0.930000007, 0.879999995 ) )
+__children["Spreadsheet"]["rows"]["row2"]["cells"]["rotate"]["value"].setValue( imath.V3f( -67, 47.5, -35.2999992 ) )
+__children["Spreadsheet"]["rows"]["row3"]["name"].setValue( 'SEQ-3' )
+__children["Spreadsheet"]["rows"]["row3"]["cells"]["irradiance"]["value"].setValue( imath.Color3f( 1, 0.709999979, 0.419999987 ) )
+__children["Spreadsheet"]["rows"]["row3"]["cells"]["rotate"]["value"].setValue( imath.V3f( -67, 47.5, -55.5 ) )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"]["default"]["cells"]["irradiance"], 'spreadsheet:columnLabel', 'Sun color' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"]["default"]["cells"]["rotate"], 'spreadsheet:columnLabel', 'Sun angle' )
+
+
+del __children
+

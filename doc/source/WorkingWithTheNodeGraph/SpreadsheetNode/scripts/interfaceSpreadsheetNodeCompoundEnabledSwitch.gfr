@@ -1,0 +1,49 @@
+import Gaffer
+import GafferScene
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 57, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 4, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["StandardOptions"] = GafferScene.StandardOptions( "StandardOptions" )
+parent.addChild( __children["StandardOptions"] )
+__children["Spreadsheet"] = Gaffer.Spreadsheet( "Spreadsheet" )
+parent.addChild( __children["Spreadsheet"] )
+__children["Spreadsheet"]["rows"].addColumn( Gaffer.NameValuePlug( "render:camera", Gaffer.StringPlug( "value", defaultValue = '', ), False, "renderCamera", Gaffer.Plug.Flags.Default ), adoptEnabledPlug = True )
+__children["Spreadsheet"]["rows"].addColumn( Gaffer.NameValuePlug( "render:filmFit", Gaffer.IntPlug( "value", defaultValue = 0, ), False, "filmFit", Gaffer.Plug.Flags.Default ), adoptEnabledPlug = True )
+__children["Spreadsheet"]["rows"].addRows( 1 )
+__children["StandardOptions"]["options"]["renderCamera"].setInput( __children["Spreadsheet"]["out"]["renderCamera"] )
+__children["StandardOptions"]["options"]["filmFit"].setInput( __children["Spreadsheet"]["out"]["filmFit"] )
+__children["Spreadsheet"]["selector"].setValue( '${sequence}' )
+__children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"]["value"].setValue( '/camera' )
+__children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"].setValue( 2 )
+__children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["enabled"].setValue( True )
+__children["Spreadsheet"]["rows"][1]["name"].setValue( 'SEQ-1' )
+__children["Spreadsheet"]["rows"][1]["cells"]["renderCamera"]["value"]["value"].setValue( '/persp' )
+__children["Spreadsheet"]["rows"][1]["cells"]["renderCamera"]["value"]["enabled"].setValue( True )
+__children["Spreadsheet"]["rows"][1]["cells"]["filmFit"]["value"]["value"].setValue( 2 )
+__children["Spreadsheet"]["rows"][1]["cells"]["filmFit"]["value"]["enabled"].setValue( True )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"], 'spreadsheet:plugMenu:includeAsAncestor', True )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"], 'spreadsheet:plugMenu:ancestorLabel', 'Value and Switch' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"], 'label', 'Camera' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"]["value"], 'plugValueWidget:type', 'GafferSceneUI.ScenePathPlugValueWidget' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"]["value"], 'path:valid', True )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"]["value"], 'scenePathPlugValueWidget:setNames', IECore.StringVectorData( [ '__cameras' ] ) )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["renderCamera"]["value"]["value"], 'scenePathPlugValueWidget:setsLabel', 'Show only cameras' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"], 'spreadsheet:plugMenu:includeAsAncestor', True )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"], 'spreadsheet:plugMenu:ancestorLabel', 'Value and Switch' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"], 'label', 'Film Fit' )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"], 'preset:Horizontal', 0 )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"], 'preset:Vertical', 1 )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"], 'preset:Fit', 2 )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"], 'preset:Fill', 3 )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"], 'preset:Distort', 4 )
+Gaffer.Metadata.registerValue( __children["Spreadsheet"]["rows"][0]["cells"]["filmFit"]["value"]["value"], 'plugValueWidget:type', 'GafferUI.PresetsPlugValueWidget' )
+
+del __children
+
