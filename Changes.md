@@ -1,3 +1,11 @@
+0.56.2.x (relative to 0.56.2.3)
+========
+
+Fixes
+-----
+
+- Dispatcher : Fixed dispatch of two or more Switches or ContextProcessors connected together directly.
+
 0.56.2.3 (relative to 0.56.2.2)
 ========
 
