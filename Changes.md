@@ -74,6 +74,7 @@ Fixes
 
 - NodeEditor : Fixed hangs when switching to "Follow Scene Selection" mode.
 - SourceSet : Fixed GIL management bug in constructor binding.
+- StyleSheet : Fixed monospace font stack.
 
 0.57.4.0 (relative to 0.57.3.0)
 ========
