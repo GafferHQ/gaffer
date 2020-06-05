@@ -315,7 +315,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 			return
 
 		for m in jobs[0].messageHandler().messages :
-			self.__messageWidget.appendMessage( m.level, m.context, m.message )
+			self.__messageWidget.messageHandler().handle( m.level, m.context, m.message )
 
 	def __killClicked( self, button ) :
 
