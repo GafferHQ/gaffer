@@ -24,6 +24,9 @@ API
   - Deprecated `hashOfTransformedChildBounds()`. Use `ScenePlug::childBoundsHash()` instead.
   - Deprecated `unionOfTransformedChildBounds()`. Use `ScenePlug::childBounds()` instead.
 - IECorePreview::Renderer : Added optional message handler to renderer construction to allow output message streams to be re-directed if required (#3419).
+- InteractiveRender :
+  - Changed base to `Gaffer::ComputeNode` (#3419).
+  - Added messages plug containing the output of the node's renderer output (#3419).
 
 Breaking Changes
 ----------------
@@ -56,6 +59,7 @@ Breaking Changes
 - IECorePreview::Renderer : Changed signature for `create` and `registerType` to include optional message handler.
 - ObjectProcessor : Added a virtual method.
 - PlugValueWidget : Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
+- InteractiveRender : Changed base class from Node to ComputeNode, added members.
 
 Build
 -----

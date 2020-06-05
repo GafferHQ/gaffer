@@ -283,6 +283,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"messages" : [
+
+			"description",
+			"""
+			Messages from the render process.
+			""",
+
+			"plugValueWidget:type", "",
+
+		],
+
 		"out" : [
 
 			"description",
