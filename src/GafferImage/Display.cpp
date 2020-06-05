@@ -639,12 +639,11 @@ void Display::dataReceived()
 // Called on the UI thread after being scheduled by `dataReceived()`.
 void Display::dataReceivedUI()
 {
-	// Get the batch of plugs to trigger updates for. We want to hold
-	// g_plugsPendingUpdateMutex for the shortest duration possible,
-	// because it causes contention between the background rendering
-	// thread and the UI thread, and can significantly affect performance.
-	// We do this by "stealing" the current batch, so the background
-	// thread will create a new batch and we are safe to iterate our
+	// Get the batch of plugs to trigger updates for. We want to hold the mutex
+	// for the shortest duration possible, because it causes contention between
+	// the background rendering thread and the UI thread, and can significantly
+	// affect performance.  We do this by "stealing" the current batch, so the
+	// background thread will create a new batch and we are safe to iterate our
 	// batch without holding the lock.
 	PlugSetPtr batch;
 	{
