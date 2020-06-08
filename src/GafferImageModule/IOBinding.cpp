@@ -69,9 +69,14 @@ struct DefaultColorSpaceFunction
 	{
 
 		IECorePython::ScopedGILLock gilock;
-		string result = extract<string>( m_fn( fileName, fileFormat, dataType, IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( metadata ) ) ) );
-		return result;
-
+		try
+		{
+			return extract<string>( m_fn( fileName, fileFormat, dataType, IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( metadata ) ) ) );
+		}
+		catch( const error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 
 	private:
