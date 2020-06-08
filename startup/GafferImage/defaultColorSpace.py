@@ -39,6 +39,7 @@ def defaultColorSpace( fileName, fileFormat, dataType, metadata ) :
 		"png" : display,
 		"pnm" : display,
 		"psd" : display,
+		"raw" : linear,
 		"rla" : display,
 		"sgi" : display,
 		"softimage" : display,

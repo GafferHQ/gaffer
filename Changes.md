@@ -10,6 +10,11 @@ Improvements
 - Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
 - AnimationEditor : Improved performance.
 
+Fixes
+-----
+
+- ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
+
 API
 ---
 
