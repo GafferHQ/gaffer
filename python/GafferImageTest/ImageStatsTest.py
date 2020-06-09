@@ -40,6 +40,7 @@ import imath
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
@@ -47,6 +48,7 @@ import GafferImageTest
 class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
+	__file300PxPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/dotGrid.warped.exr" )
 
 	# Test that the outputs change when different channels are selected.
 	def testChannels( self ) :
@@ -159,6 +161,58 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
 		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0, 0.75 ) )
+
+	# Test only tiles which intersect a changed boundary have modified hashes
+	def testROIHash( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__file300PxPath )
+
+		s = GafferImage.ImageStats()
+		s["in"].setInput( r["out"] )
+		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+
+		allHashes = []
+		stats = []
+		for a in [
+			imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 300, 300 ) ),
+			imath.Box2i( imath.V2i( 3, 5 ), imath.V2i( 300, 300 ) )
+		]:
+			s["area"].setValue( a )
+		
+			hashes = {}	
+			for x in range( 0, 300, 64 ):
+				for y in range( 0, 300, 64 ):
+					c = Gaffer.Context()
+					c["image:channelName"] = "R"
+					c["image:tileOrigin"] = imath.V2i( x, y )
+					with c:
+						hashes[ (x,y) ] = s["__tileStats"].hash()
+			allHashes.append( hashes )
+
+			stats.append( [ s["min"].getValue(), s["max"].getValue(), s["average"].getValue() ] )
+
+		self.__assertColour( stats[0][0], imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( stats[0][1], imath.Color4f( 0.8027, 1, 1, 0 ) )
+		self.__assertColour( stats[0][2], imath.Color4f( 0.0031, 0.0499, 0.1956, 0 ) )
+
+		self.__assertColour( stats[1][0], imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( stats[1][1], imath.Color4f( 0.8027, 1, 1, 0 ) )
+		self.__assertColour( stats[1][2], imath.Color4f( 0.0031, 0.0503, 0.1973, 0 ) )
+
+		numDiff = 0
+		numSame = 0
+		for k, v in allHashes[0].items():
+			if v == allHashes[1][k]:
+				numSame += 1
+			else:
+				numDiff += 1
+		
+		# Check that interior hashes stay the same
+		self.assertEqual( numSame, 16 )
+
+		# Check that border hashes change
+		self.assertEqual( numDiff, 9 )
 
 	def testMin( self ) :
 
