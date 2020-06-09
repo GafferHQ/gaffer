@@ -1,6 +1,13 @@
 0.57.x.x (relative to 0.57.4.1)
 ========
 
+Improvements
+------------
+
+- ArnoldShader :
+  - Added support for `gaffer.icon STRING "name.png"` metadata in `.mtd` files.
+  - Added support for `gaffer.iconScale FLOAT scale` metadata in `.mtd` files.
+
 Fixes
 -----
 
