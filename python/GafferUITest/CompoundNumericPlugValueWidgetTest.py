@@ -108,5 +108,53 @@ class CompoundNumericPlugValueWidgetTest( unittest.TestCase ) :
 				childPlug,
 			)
 
+	def testChangePlugDimensions( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"]["p1"] )
+		self.assertEqual( len( w._row() ), 2 )
+		for childPlug in Gaffer.Plug.Range( w.getPlug() ) :
+			self.assertEqual( w.childPlugValueWidget( childPlug ).getPlug(), childPlug )
+
+		w.setPlug( n["user"]["p2"] )
+		self.assertEqual( len( w._row() ), 3 )
+		for childPlug in Gaffer.Plug.Range( w.getPlug() ) :
+			self.assertEqual( w.childPlugValueWidget( childPlug ).getPlug(), childPlug )
+
+		w.setPlug( n["user"]["p1"] )
+		self.assertEqual( len( w._row() ), 2 )
+		for childPlug in Gaffer.Plug.Range( w.getPlug() ) :
+			self.assertEqual( w.childPlugValueWidget( childPlug ).getPlug(), childPlug )
+
+	def testChildPlugValueWidgetForMultiplePlugs( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"].children() )
+
+		for plug in n["user"].children() :
+			for childPlug in plug :
+				self.assertIn( childPlug, w.childPlugValueWidget( childPlug ).getPlugs() )
+
+	def testHighlighting( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"]["p1"] )
+
+		w.setHighlighted( True )
+		for childPlug in w.getPlug() :
+			self.assertTrue( w.childPlugValueWidget( childPlug ).getHighlighted() )
+
+		w.setHighlighted( False )
+		for childPlug in w.getPlug() :
+			self.assertFalse( w.childPlugValueWidget( childPlug ).getHighlighted() )
+
 if __name__ == "__main__":
 	unittest.main()

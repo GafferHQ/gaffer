@@ -45,6 +45,7 @@ API
   - `create()` now optionally accepts a list of plugs in place of a single plug.
   - Updated the following subclasses to fully support multiple plugs :
     - NumericPlugValueWidget
+    - CompoundNumericPlugValueWidget
 
 Breaking Changes
 ----------------
@@ -80,6 +81,7 @@ Breaking Changes
   - Renamed `create()` argument from `plug` to `plugs`. A single plug may still be passed.
   - Renamed constructor argument from `plug` to `plugs`. A single plug may still be passed. The same applies to the constructors for the following subclasses :
     - NumericPlugValueWidget
+    - CompoundNumericPlugValueWidget
   - Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
