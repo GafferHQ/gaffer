@@ -183,7 +183,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return [
 			self.__plugDirtiedConnection,
 			self.__plugInputChangedConnection,
-			self.__plugFlagsChangedConnection,
 			self.__plugMetadataChangedConnection,
 		]
 
@@ -417,11 +416,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 			self.__updateContextConnection()
 			self._updateFromPlug()
 
-	def __plugFlagsChanged( self, plug ) :
-
-		if plug.isSame( self.__plug ) :
-			self._updateFromPlug()
-
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
 		if self.__plug is None :
@@ -454,7 +448,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if self.__plug is not None :
 			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
-			self.__plugFlagsChangedConnection = plug.node().plugFlagsChangedSignal().connect( Gaffer.WeakMethod( self.__plugFlagsChanged ) )
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode )
 			if scriptNode is not None :
@@ -462,7 +455,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		else :
 			self.__plugDirtiedConnection = None
 			self.__plugInputChangedConnection = None
-			self.__plugFlagsChangedConnection = None
 			self.__plugMetadataChangedConnection = None
 
 		self.__context = context
