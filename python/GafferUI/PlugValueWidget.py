@@ -149,6 +149,71 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return None
 
+	__popupMenuSignal = Gaffer.Signal2()
+	## This signal is emitted whenever a popup menu for a plug is about
+	# to be shown. This provides an opportunity to customise the menu from
+	# external code. The signature for slots is ( menuDefinition, plugValueWidget ),
+	# and slots should just modify the menu definition in place.
+	@classmethod
+	def popupMenuSignal( cls ) :
+
+		return cls.__popupMenuSignal
+
+	## Returns a PlugValueWidget suitable for representing the specified plug.
+	# The type of plug returned may be customised on a per-widget basis by a
+	# "plugValueWidget:type" metadata value, specifying the fully qualified
+	# python type name for a widget class. To suppress the creation of a widget,
+	# a value of "" may be registered - in this case None will be returned from
+	# create(). If useTypeOnly is True, then the metadata will be ignored and
+	# only the plug type will be taken into account in creating a PlugValueWidget.
+	@classmethod
+	def create( cls, plug, useTypeOnly=False ) :
+
+		# first try to create one using a creator registered for the specific plug
+		if not useTypeOnly :
+
+			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
+			if widgetType is None :
+				widgetType = Gaffer.Metadata.value( plug, "layout:widgetType" )
+				if widgetType is not None :
+					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
+					if widgetType == "None" :
+						return None
+
+			if widgetType is not None :
+				if widgetType == "" :
+					return None
+				path = widgetType.split( "." )
+				widgetClass = __import__( path[0] )
+				for n in path[1:] :
+					widgetClass = getattr( widgetClass, n )
+				return widgetClass( plug )
+
+		# if that failed, then just create something based on the type of the plug
+		typeId = plug.typeId()
+		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
+			if plugTypeId in cls.__plugTypesToCreators :
+				creator = cls.__plugTypesToCreators[plugTypeId]
+				if creator is not None :
+					return creator( plug )
+				else :
+					return None
+
+		return None
+
+	## Registers a PlugValueWidget type for a specific Plug type.
+	@classmethod
+	def registerType( cls, plugClassOrTypeId, creator ) :
+
+		if isinstance( plugClassOrTypeId, IECore.TypeId ) :
+			plugTypeId = plugClassOrTypeId
+		else :
+			plugTypeId = plugClassOrTypeId.staticTypeId()
+
+		cls.__plugTypesToCreators[plugTypeId] = creator
+
+	__plugTypesToCreators = {}
+
 	## Ensures that the specified plug has a visible PlugValueWidget,
 	# creating one if necessary.
 	@classmethod
@@ -331,71 +396,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.popupMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
-
-	__popupMenuSignal = Gaffer.Signal2()
-	## This signal is emitted whenever a popup menu for a plug is about
-	# to be shown. This provides an opportunity to customise the menu from
-	# external code. The signature for slots is ( menuDefinition, plugValueWidget ),
-	# and slots should just modify the menu definition in place.
-	@classmethod
-	def popupMenuSignal( cls ) :
-
-		return cls.__popupMenuSignal
-
-	## Returns a PlugValueWidget suitable for representing the specified plug.
-	# The type of plug returned may be customised on a per-widget basis by a
-	# "plugValueWidget:type" metadata value, specifying the fully qualified
-	# python type name for a widget class. To suppress the creation of a widget,
-	# a value of "" may be registered - in this case None will be returned from
-	# create(). If useTypeOnly is True, then the metadata will be ignored and
-	# only the plug type will be taken into account in creating a PlugValueWidget.
-	@classmethod
-	def create( cls, plug, useTypeOnly=False ) :
-
-		# first try to create one using a creator registered for the specific plug
-		if not useTypeOnly :
-
-			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
-			if widgetType is None :
-				widgetType = Gaffer.Metadata.value( plug, "layout:widgetType" )
-				if widgetType is not None :
-					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
-					if widgetType == "None" :
-						return None
-
-			if widgetType is not None :
-				if widgetType == "" :
-					return None
-				path = widgetType.split( "." )
-				widgetClass = __import__( path[0] )
-				for n in path[1:] :
-					widgetClass = getattr( widgetClass, n )
-				return widgetClass( plug )
-
-		# if that failed, then just create something based on the type of the plug
-		typeId = plug.typeId()
-		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
-			if plugTypeId in cls.__plugTypesToCreators :
-				creator = cls.__plugTypesToCreators[plugTypeId]
-				if creator is not None :
-					return creator( plug )
-				else :
-					return None
-
-		return None
-
-	## Registers a PlugValueWidget type for a specific Plug type.
-	@classmethod
-	def registerType( cls, plugClassOrTypeId, creator ) :
-
-		if isinstance( plugClassOrTypeId, IECore.TypeId ) :
-			plugTypeId = plugClassOrTypeId
-		else :
-			plugTypeId = plugClassOrTypeId.staticTypeId()
-
-		cls.__plugTypesToCreators[plugTypeId] = creator
-
-	__plugTypesToCreators = {}
 
 	def __plugDirtied( self, plug ) :
 
