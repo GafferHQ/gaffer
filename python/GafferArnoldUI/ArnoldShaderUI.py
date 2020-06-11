@@ -216,6 +216,17 @@ def __translateNodeMetadata( nodeEntry ) :
 	if url is not None :
 		__metadata[nodeName]["documentation:url"] = url
 
+	# Icon. There doesn't appear to be a standard for this, so
+	# we support "gaffer.icon" and "gaffer.iconScale".
+
+	icon = __aiMetadataGetStr( nodeEntry, None, "gaffer.icon" )
+	if icon is not None :
+		__metadata[nodeName]["icon"] = icon
+
+	iconScale = __aiMetadataGetFlt( nodeEntry, None, "gaffer.iconScale" )
+	if iconScale is not None :
+		__metadata[nodeName]["iconScale"] = iconScale
+
 	paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
 	while not arnold.AiParamIteratorFinished( paramIt ) :
 
