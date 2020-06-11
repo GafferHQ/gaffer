@@ -48,6 +48,7 @@ API
     - CompoundNumericPlugValueWidget
     - ColorSwatchPlugValueWidget
     - ColorPlugValueWidget
+    - StringPlugValueWidget
 
 Breaking Changes
 ----------------
@@ -86,6 +87,7 @@ Breaking Changes
     - CompoundNumericPlugValueWidget
     - ColorSwatchPlugValueWidget
     - ColorPlugValueWidget
+    - StringPlugValueWidget
   - Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
