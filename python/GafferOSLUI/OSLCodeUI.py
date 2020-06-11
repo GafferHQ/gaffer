@@ -107,6 +107,7 @@ Gaffer.Metadata.registerNode(
 		"parameters.*" : [
 
 			"renameable", True,
+			"deletable", True,
 			# Since the names are used directly as variable names in the code,
 			# it's best to avoid any fancy label formatting for them.
 			"label", lambda plug : plug.getName(),
@@ -134,6 +135,7 @@ Gaffer.Metadata.registerNode(
 		"out.*" : [
 
 			"renameable", True,
+			"deletable", True,
 			"label", lambda plug : plug.getName(),
 
 		],
@@ -309,19 +311,6 @@ class _ErrorWidget( GafferUI.Widget ) :
 # Plug menu
 ##########################################################################
 
-## \todo This functionality is duplicated in several places (NodeUI,
-#  BoxUI, CompoundDataPlugValueWidget). It would be better if we could
-#  just control it in one place with a "plugValueWidget:removeable"
-#  metadata value. This main reason we can't do that right now is that
-#  we'd want to register the metadata with "parameters.*", but that would
-#  match "parameters.vector.x" as well as "parameters.vector". This is
-#  a general problem we have with the metadata matching - we should make
-#  '.' unmatchable by '*'.
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
@@ -329,18 +318,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	if not isinstance( node, GafferOSL.OSLCode ) :
 		return
 
-	if plug.parent() in ( node["parameters"], node["out"] ) :
-
-		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-		menuDefinition.append(
-			"/Delete",
-			{
-				"command" : functools.partial( __deletePlug, plug ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug )
-			}
-		)
-
-	elif plug.isSame( node["code"] ) :
+	if plug.isSame( node["code"] ) :
 
 		if len( menuDefinition.items() ) :
 			menuDefinition.prepend( "/InsertDivider", { "divider" : True } )
