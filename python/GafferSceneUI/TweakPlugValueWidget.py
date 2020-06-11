@@ -52,13 +52,13 @@ from Qt import QtWidgets
 # or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plugs ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
 
-		nameWidget = GafferUI.StringPlugValueWidget( plug["name"] )
+		nameWidget = GafferUI.StringPlugValueWidget( self.__childPlugs( plugs, "name" ) )
 		nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
 		self.__row.append( nameWidget,
@@ -67,29 +67,29 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__row.append(
 			GafferUI.BoolPlugValueWidget(
-				plug["enabled"],
+				self.__childPlugs( plugs, "enabled" ),
 				displayMode = GafferUI.BoolWidget.DisplayMode.Switch
 			),
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
 
-		modeWidget = GafferUI.PlugValueWidget.create( plug["mode"] )
+		modeWidget = GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "mode" ) )
 		modeWidget._qtWidget().setFixedWidth( 80 )
 		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 		self.__row.append( modeWidget )
 
-		self.__row.append( GafferUI.PlugValueWidget.create( plug["value"] ), expand = True )
+		self.__row.append( GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "value" ) ), expand = True )
 
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
-	def setPlug( self, plug ) :
+	def setPlugs( self, plugs ) :
 
-		GafferUI.PlugValueWidget.setPlug( self, plug )
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
 
-		self.__row[0].setPlug( plug["name"] )
-		self.__row[1].setPlug( plug["enabled"] )
-		self.__row[2].setPlug( plug["mode"] )
-		self.__row[3].setPlug( plug["value"] )
+		self.__row[0].setPlugs( { p["name"] for p in plugs } )
+		self.__row[1].setPlugs( { p["enabled"] for p in plugs } )
+		self.__row[2].setPlugs( { p["mode"] for p in plugs } )
+		self.__row[3].setPlugs( { p["value"] for p in plugs } )
 
 	def hasLabel( self ) :
 
@@ -98,7 +98,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__row :
-			if w.getPlug().isSame( childPlug ) :
+			if childPlug in w.getPlugs() :
 				return w
 
 		return None
@@ -121,13 +121,31 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__row[0].getVisible()
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
 		with self.getContext() :
-			enabled = self.getPlug()["enabled"].getValue()
+			enabled = all( p["enabled"].getValue() for p in self.getPlugs() )
 
 		for i in ( 0, 2, 3 ) :
 			self.__row[i].setEnabled( enabled )
+
+	@staticmethod
+	def __childPlugs( plugs, childName ) :
+
+		# Special cases to provide plugs in a form compatible
+		# with old PlugValueWidgets constructors which don't
+		# yet support multiple plugs.
+		if isinstance( plugs, Gaffer.Plug ) :
+			return plugs[childName]
+		elif plugs is None or not len( plugs ) :
+			return None
+		elif len( plugs ) == 1 :
+			return next( iter( plugs ) )[childName]
+		else :
+			# Standard case. Once all PlugValueWidgets have
+			# been updated to support multiple plugs, we can
+			# use this all the time.
+			return { p[childName] for p in plugs }
 
 GafferUI.PlugValueWidget.registerType( GafferScene.TweakPlug, TweakPlugValueWidget )
 
