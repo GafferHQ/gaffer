@@ -214,6 +214,7 @@ Gaffer.Metadata.registerNode(
 		],
 		"primitiveVariables.*" : [
 
+			"deletable", True,
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
@@ -284,37 +285,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-#########################################################################
-# primitiveVariable plug menu
-##########################################################################
-
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
-
-	plug = plugValueWidget.getPlug()
-	if not isinstance( plug.node(), GafferOSL.OSLObject ):
-		return
-
-	relativeName = plug.relativeName( plug.node() ).split( "." )
-	if relativeName[0] != "primitiveVariables" or len( relativeName ) < 2:
-		return
-
-	primVarPlug = plug.node()["primitiveVariables"][relativeName[1]]
-
-	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append(
-		"/Delete",
-		{
-			"command" : functools.partial( __deletePlug, primVarPlug ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( primVarPlug ),
-		}
-	)
-
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
-
-

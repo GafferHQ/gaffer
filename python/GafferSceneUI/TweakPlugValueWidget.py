@@ -129,34 +129,11 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for i in ( 0, 2, 3 ) :
 			self.__row[i].setEnabled( enabled )
 
-def __deletePlug( plug ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.parent().removeChild( plug )
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ):
-
-	plug = plugValueWidget.getPlug()
-	if not isinstance( plug, GafferScene.TweakPlug ) :
-		plug = plug.ancestor( GafferScene.TweakPlug )
-
-	if not isinstance( plug, GafferScene.TweakPlug ):
-		return
-
-	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append(
-		"/Delete",
-		{
-			"command" : functools.partial( __deletePlug, plug ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug.parent() )
-		}
-	)
-
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
-
 GafferUI.PlugValueWidget.registerType( GafferScene.TweakPlug, TweakPlugValueWidget )
 
-# Metadata for child plugs
+# Metadata
+
+Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
 Gaffer.Metadata.registerValue(
 	GafferScene.TweakPlug, "name",

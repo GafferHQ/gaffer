@@ -55,6 +55,7 @@ Breaking Changes
 - RecursiveChildIterator : Changed private member data. Source compatibility is maintained.
 - IECorePreview::Renderer : Changed signature for `create` and `registerType` to include optional message handler.
 - ObjectProcessor : Added a virtual method.
+- PlugValueWidget : Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 
 Build
 -----
