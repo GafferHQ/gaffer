@@ -23,6 +23,7 @@ Fixes
 - StyleSheet : Fixed monospace font stack.
 - GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
 - Signal : Fixed hang which could occur if a result combiner implemented in Python tried to handle exceptions.
+- NumericWidget : Fixed errors when trying to use a virtual slider with an empty value.
 
 API
 ---
