@@ -311,7 +311,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			// because derived classes may have called insertConverter(),
 			// so we take it from the input to the display transform chain.
 
-			ImagePlug *image = view->getPreprocessor()->getChild<Clamp>( "__clamp" )->inPlug();
+			ImagePlug *image = view->getPreprocessor()->getChild<ImagePlug>( "out" );
 			m_deleteContextVariables->inPlug()->setInput( image );
 			m_sampler->imagePlug()->setInput( m_deleteContextVariables->outPlug() );
 			m_sampler->pixelPlug()->setInput( m_pixel->outPlug() );
@@ -368,43 +368,25 @@ ImageView::ImageView( const std::string &name )
 	ImagePlugPtr preprocessorInput = new ImagePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
 
-	DeepStatePtr deepStateNode = new DeepState();
-	preprocessor->setChild( "__deepState", deepStateNode );
-	deepStateNode->inPlug()->setInput( preprocessorInput );
-	deepStateNode->deepStatePlug()->setValue( int( DeepState::TargetState::Flat ) );
-
-	ClampPtr clampNode = new Clamp();
-	preprocessor->setChild(  "__clamp", clampNode );
-	clampNode->inPlug()->setInput( deepStateNode->outPlug() );
-	clampNode->enabledPlug()->setValue( false );
-	clampNode->channelsPlug()->setValue( "*" );
-	clampNode->minClampToEnabledPlug()->setValue( true );
-	clampNode->maxClampToEnabledPlug()->setValue( true );
-	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
-	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-
-	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
-	clippingPlug->setFlags( Plug::AcceptsInputs, false );
+	BoolPlugPtr clippingPlug = new BoolPlug( "clipping", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs );
 	addChild( clippingPlug );
 
-	GradePtr gradeNode = new Grade;
-	preprocessor->setChild( "__grade", gradeNode );
-	gradeNode->inPlug()->setInput( clampNode->outPlug() );
-	gradeNode->channelsPlug()->setValue( "*" );
-
-	FloatPlugPtr exposurePlug = new FloatPlug( "exposure" );
-	exposurePlug->setFlags( Plug::AcceptsInputs, false );
+	FloatPlugPtr exposurePlug = new FloatPlug( "exposure", Plug::In, 0.0f,
+		Imath::limits<float>::min(), Imath::limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
+	);
 	addChild( exposurePlug ); // dealt with in plugSet()
 
-	PlugPtr gammaPlug = gradeNode->gammaPlug()->getChild( 0 )->createCounterpart( "gamma", Plug::In );
-	gammaPlug->setFlags( Plug::AcceptsInputs, false );
+	PlugPtr gammaPlug = new FloatPlug( "gamma", Plug::In, 1.0f,
+		Imath::limits<float>::min(), Imath::limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
+	);
 	addChild( gammaPlug );
 
 	addChild( new StringPlug( "displayTransform", Plug::In, "Default", Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( new BoolPlug( "lutGPU", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
 
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
-	preprocessorOutput->setInput( gradeNode->outPlug() );
+	preprocessorOutput->setInput( preprocessorInput );
 
 	// tell the base class about all the preprocessing we want to do
 
@@ -507,34 +489,14 @@ const Gaffer::StringPlug *ImageView::displayTransformPlug() const
 	return getChild<StringPlug>( "displayTransform" );
 }
 
-GafferImage::DeepState *ImageView::deepStateNode()
+Gaffer::BoolPlug *ImageView::lutGPUPlug()
 {
-	return getPreprocessor<Node>()->getChild<DeepState>( "__deepState" );
+	return getChild<BoolPlug>( "lutGPU" );
 }
 
-const GafferImage::DeepState *ImageView::deepStateNode() const
+const Gaffer::BoolPlug *ImageView::lutGPUPlug() const
 {
-	return getPreprocessor<Node>()->getChild<DeepState>( "__deepState" );
-}
-
-GafferImage::Clamp *ImageView::clampNode()
-{
-	return getPreprocessor()->getChild<Clamp>( "__clamp" );
-}
-
-const GafferImage::Clamp *ImageView::clampNode() const
-{
-	return getPreprocessor()->getChild<Clamp>( "__clamp" );
-}
-
-GafferImage::Grade *ImageView::gradeNode()
-{
-	return getPreprocessor()->getChild<Grade>( "__grade" );
-}
-
-const GafferImage::Grade *ImageView::gradeNode() const
-{
-	return getPreprocessor()->getChild<Grade>( "__grade" );
+	return getChild<BoolPlug>( "lutGPU" );
 }
 
 void ImageView::setContext( Gaffer::ContextPtr context )
@@ -547,21 +509,23 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 {
 	if( plug == clippingPlug() )
 	{
-		clampNode()->enabledPlug()->setValue( clippingPlug()->getValue() );
+		m_imageGadget->setClipping( clippingPlug()->getValue() );
 	}
 	else if( plug == exposurePlug() )
 	{
-		const float m = pow( 2.0f, exposurePlug()->getValue() );
-		gradeNode()->multiplyPlug()->setValue( Color4f( m, m, m, 1.0f ) );
+		m_imageGadget->setExposure( exposurePlug()->getValue() );
 	}
 	else if( plug == gammaPlug() )
 	{
-		const float g = gammaPlug()->getValue();
-		gradeNode()->gammaPlug()->setValue( Color4f( g, g, g, 1.0f ) );
+		m_imageGadget->setGamma( gammaPlug()->getValue() );
 	}
 	else if( plug == displayTransformPlug() )
 	{
 		insertDisplayTransform();
+	}
+	else if( plug == lutGPUPlug() )
+	{
+		m_imageGadget->setUseGPU( lutGPUPlug()->getValue() );
 	}
 }
 
@@ -592,6 +556,10 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 	else if( event.key == "Escape" )
 	{
 		m_imageGadget->setPaused( true );
+	}
+	else if( event.key == "G" && event.modifiers == ModifiableEvent::Modifiers::Alt )
+	{
+		lutGPUPlug()->setValue( !lutGPUPlug()->getValue() );
 	}
 
 	return false;
@@ -634,15 +602,7 @@ void ImageView::insertDisplayTransform()
 		}
 	}
 
-	if( displayTransform )
-	{
-		displayTransform->inPlug()->setInput( gradeNode()->outPlug() );
-		getPreprocessor()->getChild<Plug>( "out" )->setInput( displayTransform->outPlug() );
-	}
-	else
-	{
-		getPreprocessor()->getChild<Plug>( "out" )->setInput( gradeNode()->outPlug() );
-	}
+	m_imageGadget->setDisplayTransform( displayTransform );
 }
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
