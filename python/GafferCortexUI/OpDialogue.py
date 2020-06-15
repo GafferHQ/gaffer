@@ -66,7 +66,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 	#
 	# NoneByDefault : deprecated - the same as DisplayResult
 	# CloseByDefault : deprecated - the same as DisplayResult
-	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None", "Close", "DisplayResult", "DisplayResultAndClose", "NoneByDefault", "CloseByDefault" )
+	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None_", "Close", "DisplayResult", "DisplayResultAndClose", "NoneByDefault", "CloseByDefault" )
 
 	## Defines which button has the focus when the op is displayed for editing.
 	#
@@ -79,7 +79,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 	# OK : The OK button has the focus.
 	#
 	# Cancel : The cancel button has the focus.
-	DefaultButton = IECore.Enum.create( "FromUserData", "None", "OK", "Cancel" )
+	DefaultButton = IECore.Enum.create( "FromUserData", "None_", "OK", "Cancel" )
 
 	# If executeInBackground is True, then the Op will be executed on another
 	# thread, allowing the UI to remain responsive during execution. This is
