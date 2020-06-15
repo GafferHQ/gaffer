@@ -81,9 +81,9 @@ struct SlotCallRange
 		}
 		else
 		{
-			object result = *current;
+			auto toCall = current;
 			++current;
-			return result;
+			return *toCall;
 		}
 		return object(); // shouldn't get here
 	}
