@@ -7,6 +7,7 @@ Improvements
 - ArnoldShader :
   - Added support for `gaffer.icon STRING "name.png"` metadata in `.mtd` files.
   - Added support for `gaffer.iconScale FLOAT scale` metadata in `.mtd` files.
+- ImageStats : Parallelised compute for improved performance
 
 Fixes
 -----
