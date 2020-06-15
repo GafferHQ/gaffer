@@ -178,13 +178,36 @@ class PythonEditor( GafferUI.Editor ) :
 	def __exceptionToHTML( self ) :
 
 		t = traceback.extract_tb( sys.exc_info()[2] )
-		lineNumber = str( t[1][1] )
-		headingText = traceback.format_exception_only( *(sys.exc_info()[:2]) )[0].replace( ":", " : line " + lineNumber + " : ", 1 )
+		e = traceback.format_exception_only( *(sys.exc_info()[:2]) )[0]
+
+		lineNumber = self.__editorLineNumber( t )
+
+		if lineNumber is not None :
+			headingText = e.replace( ":", " : line %d : " % lineNumber, 1 )
+		else:
+			headingText = e.replace( ":", " : ", 1 )
+
 		result = "<h1 class='ERROR'>%s</h1>" % headingText
+
 		if len( t ) > 2 :
 			result += "<br>" + self.__codeToHTML( "".join( traceback.format_list( t[2:] ) ) )
 
 		return result
+
+	def __editorLineNumber( self, traceback ) :
+
+		line = None
+
+		# We can only work out something useful here if we're in multi-line mode (ie, exec vs eval)
+		if len(traceback) > 1 :
+			# We look for the last frame that was our editor stack, the first one
+			# will be `execute`, others we are interested in will be from <string>
+			for t in traceback[1:] :
+				if t[0] != '<string>' :
+					break
+				line = t[1]
+
+		return line
 
 	def __redirectOutput( self, output ) :
 
