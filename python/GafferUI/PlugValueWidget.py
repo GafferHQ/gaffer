@@ -182,18 +182,26 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if result :
 			return result
 
-		plug = self.getPlug()
-		if plug is None :
+		if not self.getPlugs() :
 			return ""
 
-		input = plug.getInput()
+		# Name
 
-		inputText = ""
-		if input is not None :
-			inputText = " <- " + input.relativeName( input.commonAncestor( plug, Gaffer.GraphComponent ) )
+		if len( self.getPlugs() ) == 1 :
+			result = "# " + self.getPlug().relativeName( self.getPlug().node() )
+		else :
+			result = "# {} plugs".format( len( self.getPlugs() ) )
 
-		result = "# " + plug.relativeName( plug.node() ) + inputText
-		description = Gaffer.Metadata.value( plug, "description" )
+		# Input
+
+		if len( self.getPlugs() ) == 1 :
+			input = self.getPlug().getInput()
+			if input is not None :
+				result += "\n\nInput : {}".format( input.relativeName( input.commonAncestor( self.getPlug() ) ) )
+
+		# Description
+
+		description = sole( Gaffer.Metadata.value( p, "description" ) for p in self.getPlugs() )
 		if description :
 			result += "\n\n" + description
 
@@ -207,13 +215,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return None
 
-	__popupMenuSignal = Gaffer.Signal2()
+	__popupMenuSignal = None
 	## This signal is emitted whenever a popup menu for a plug is about
 	# to be shown. This provides an opportunity to customise the menu from
 	# external code. The signature for slots is ( menuDefinition, plugValueWidget ),
 	# and slots should just modify the menu definition in place.
 	@classmethod
 	def popupMenuSignal( cls ) :
+
+		if cls.__popupMenuSignal is None :
+			cls.__popupMenuSignal = _PopupMenuSignal()
 
 		return cls.__popupMenuSignal
 
@@ -314,10 +325,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# and copy/paste data.
 	def _convertValue( self, value ) :
 
-		if not hasattr( self.getPlug(), "defaultValue" ) :
+		plugValueType = sole(
+			type( p.defaultValue() ) if hasattr( p, "defaultValue" ) else None
+			for p in self.getPlugs()
+		)
+		if plugValueType is None :
 			return None
 
-		plugValueType = type( self.getPlug().defaultValue() )
 		if isinstance( value, plugValueType ) :
 			return value
 		elif isinstance( value, IECore.Data ) :
@@ -363,13 +377,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		menuDefinition = IECore.MenuDefinition()
 
-		if hasattr( self.getPlug(), "getValue" ) :
+		if all( hasattr( p, "getValue" ) for p in self.getPlugs() ) :
 
-			applicationRoot = self.getPlug().ancestor( Gaffer.ApplicationRoot )
+			applicationRoot = sole( p.ancestor( Gaffer.ApplicationRoot ) for p in self.getPlugs() )
 			menuDefinition.append(
 				"/Copy Value", {
 					"command" : Gaffer.WeakMethod( self.__copyValue ),
-					"active" : applicationRoot is not None
+					"active" : len( self.getPlugs() ) == 1 and applicationRoot is not None
 				}
 			)
 
@@ -379,39 +393,39 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 			menuDefinition.append(
 				"/Paste Value", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), pasteValue ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValues ), pasteValue ),
 					"active" : self._editable() and pasteValue is not None
 				}
 			)
 
 			menuDefinition.append( "/CopyPasteDivider", { "divider" : True } )
 
-		if self.getPlug().getInput() is not None :
-			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInput ) } )
+		if any( p.getInput() is not None for p in self.getPlugs() ) :
+			menuDefinition.append( "/Edit input...", { "command" : Gaffer.WeakMethod( self.__editInputs ) } )
 			menuDefinition.append( "/EditInputDivider", { "divider" : True } )
 			menuDefinition.append(
 				"/Remove input", {
-					"command" : Gaffer.WeakMethod( self.__removeInput ),
-					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ),
+					"command" : Gaffer.WeakMethod( self.__removeInputs ),
+					"active" : not self.getReadOnly() and all( p.acceptsInput( None ) and not Gaffer.MetadataAlgo.readOnly( p ) for p in self.getPlugs() ),
 				}
 			)
-		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
+		if all( hasattr( p, "defaultValue" ) and p.direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
 			menuDefinition.append(
 				"/Default", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), self.getPlug().defaultValue() ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValues ), [ p.defaultValue() for p in self.getPlugs() ] ),
 					"active" : self._editable()
 				}
 			)
 
-		if Gaffer.NodeAlgo.hasUserDefault( self.getPlug() ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
+		if all( Gaffer.NodeAlgo.hasUserDefault( p ) and p.direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
 			menuDefinition.append(
 				"/User Default", {
-					"command" : Gaffer.WeakMethod( self.__applyUserDefault ),
+					"command" : Gaffer.WeakMethod( self.__applyUserDefaults ),
 					"active" : self._editable()
 				}
 			)
 
-		if Gaffer.NodeAlgo.presets( self.getPlug() ) :
+		if any( Gaffer.NodeAlgo.presets( p ) for p in self.getPlugs() ) :
 			menuDefinition.append(
 				"/Preset", {
 					"subMenu" : Gaffer.WeakMethod( self.__presetsSubMenu ),
@@ -422,12 +436,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
 
-		readOnly = Gaffer.MetadataAlgo.getReadOnly( self.getPlug() )
+		readOnly = any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in self.getPlugs() )
 		menuDefinition.append(
 			"/Unlock" if readOnly else "/Lock",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
-				"active" : not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug().parent() ),
+				"active" : not self.getReadOnly() and not any( Gaffer.MetadataAlgo.readOnly( p.parent() ) for p in self.getPlugs() ),
 			}
 		)
 
@@ -531,15 +545,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __contextMenu( self, *unused ) :
 
-		if self.getPlug() is None :
+		if not self.getPlugs() :
 			return False
 
 		menuDefinition = self._popupMenuDefinition()
 		if not len( menuDefinition.items() ) :
 			return False
 
-		title = self.getPlug().relativeName( self.getPlug().node() )
-		title = ".".join( [ IECore.CamelCase.join( IECore.CamelCase.split( x ) ) for x in title.split( "." ) ] )
+		if len( self.getPlugs() ) == 1 :
+			title = self.getPlug().relativeName( self.getPlug().node() )
+			title = ".".join( [ IECore.CamelCase.join( IECore.CamelCase.split( x ) ) for x in title.split( "." ) ] )
+		else :
+			title = "{} plugs".format( len( self.getPlugs() ) )
 
 		self.__popupMenu = GafferUI.Menu( menuDefinition, title = title )
 		self.__popupMenu.popup( parent = self )
@@ -559,45 +576,75 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.getPlug().ancestor( Gaffer.ApplicationRoot ).setClipboardContents( value )
 
-	def __setValue( self, value ) :
+	def __setValues( self, values ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( value )
+		if not isinstance( values, list ) :
+			values = itertools.repeat( values, len( self.getPlugs() ) )
 
-	def __editInput( self ) :
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug, value in zip( self.getPlugs(), values ) :
+				plug.setValue( value )
 
-		nodeEditor = GafferUI.NodeEditor.acquire( self.getPlug().getInput().node() )
-		if nodeEditor is None :
-			return
+	def __editInputs( self ) :
 
-		plugValueWidget = nodeEditor.nodeUI().plugValueWidget( self.getPlug().getInput() )
-		if plugValueWidget is None :
-			return
+		# We may have multiple inputs from the same node.
+		# Choose one input plug per node to reveal.
+		nodesToPlugs = {}
+		for p in self.getPlugs() :
+			i = p.getInput()
+			if i is not None :
+				nodesToPlugs[i.node()] = i
 
-		plugValueWidget.reveal()
+		# Acquire a NodeEditor for each node, and reveal the
+		# chosen plug.
+		for node, plug in nodesToPlugs.items() :
 
-	def __removeInput( self ) :
+			nodeEditor = GafferUI.NodeEditor.acquire( node )
+			if nodeEditor is None :
+				continue
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setInput( None )
+			plugValueWidget = nodeEditor.nodeUI().plugValueWidget( plug )
+			if plugValueWidget is not None :
+				plugValueWidget.reveal()
 
-	def __applyUserDefault( self ) :
+	def __removeInputs( self ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for p in self.getPlugs() :
+				p.setInput( None )
+
+	def __applyUserDefaults( self ) :
+
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for p in self.getPlugs() :
+				Gaffer.NodeAlgo.applyUserDefault( p )
 
 	def __presetsSubMenu( self ) :
 
 		with self.getContext() :
-			currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
 
+			currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
+
+			# Find the union of the presets across all plugs,
+			# and count how many times they occur.
+			presets = []
+			presetCounts = collections.Counter()
+			for plug in self.getPlugs() :
+				for preset in Gaffer.NodeAlgo.presets( plug ) :
+					if not presetCounts[preset] :
+						presets.append( preset )
+					presetCounts[preset] += 1
+
+		# Build menu. We'll list every preset we found, but disable
+		# any which aren't available for all plugs.
 		result = IECore.MenuDefinition()
-		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+		for presetName in presets :
+
 			menuPath = presetName if presetName.startswith( "/" ) else "/" + presetName
 			result.append(
 				menuPath, {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), presetName ),
-					"active" : self._editable(),
+					"active" : self._editable() and presetCounts[preset] == len( self.getPlugs() ),
 					"checkBox" : presetName == currentPreset,
 				}
 			)
@@ -606,19 +653,21 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyPreset( self, presetName, *unused ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for p in self.getPlugs() :
+				Gaffer.NodeAlgo.applyPreset( p, presetName )
 
 	def __applyReadOnly( self, readOnly ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.MetadataAlgo.setReadOnly( self.getPlug(), readOnly )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for p in self.getPlugs() :
+				Gaffer.MetadataAlgo.setReadOnly( p, readOnly )
 
 	# drag and drop stuff
 
 	def __dragEnter( self, widget, event ) :
 
-		if self.getReadOnly() or Gaffer.MetadataAlgo.readOnly( self.getPlug() ):
+		if self.getReadOnly() or any( Gaffer.MetadataAlgo.readOnly( p ) for p in self.getPlugs() ) :
 			return False
 
 		if isinstance( event.sourceWidget, GafferUI.PlugValueWidget ) :
@@ -626,15 +675,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 		else :
 			sourcePlugValueWidget = event.sourceWidget.ancestor( GafferUI.PlugValueWidget )
 
-		if sourcePlugValueWidget is not None and sourcePlugValueWidget.getPlug().isSame( self.getPlug() ) :
+		if sourcePlugValueWidget is not None and sourcePlugValueWidget.getPlugs() & self.getPlugs() :
 			return False
 
 		if isinstance( event.data, Gaffer.Plug ) :
-			if self.getPlug().direction() == Gaffer.Plug.Direction.In and self.getPlug().acceptsInput( event.data ) :
+			if all( p.direction() == Gaffer.Plug.Direction.In and p.acceptsInput( event.data ) for p in self.getPlugs() ) :
 				self.setHighlighted( True )
 				return True
-		elif hasattr( self.getPlug(), "setValue" ) and self._convertValue( event.data ) is not None :
-			if self.getPlug().settable() :
+		elif all( hasattr( p, "setValue" ) for p in self.getPlugs() ) and self._convertValue( event.data ) is not None :
+			if all( p.settable() for p in self.getPlugs() ) :
 				self.setHighlighted( True )
 				return True
 
@@ -648,11 +697,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.setHighlighted( False )
 
-		with Gaffer.UndoScope( self.getPlug().node().scriptNode() ) :
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).node().scriptNode() ) :
 			if isinstance( event.data, Gaffer.Plug ) :
-				self.getPlug().setInput( event.data )
+				for p in self.getPlugs() :
+					p.setInput( event.data )
 			else :
-				self.getPlug().setValue( self._convertValue( event.data ) )
+				v = self._convertValue( event.data )
+				for p in self.getPlugs() :
+					p.setValue( v )
 
 		return True
 
@@ -708,3 +760,32 @@ def sole( sequence ) :
 			return None
 
 	return result
+
+# Signal with custom result combiner to prevent bad slots blocking the
+# execution of others, and to ease the transition from single plug to multiple
+# plug support.
+class _PopupMenuSignal( Gaffer.Signal2 ) :
+
+	def __init__( self ) :
+
+		Gaffer.Signal2.__init__( self, self.__combiner )
+
+	@staticmethod
+	def __combiner( results ) :
+
+		while True :
+			try :
+				next( results )
+			except StopIteration :
+				return
+			except Exception as e :
+				# Print message but continue to execute other slots
+				IECore.msg(
+					# Demote MultiplePlugsError to a debug message, to give the multitude of custom plug menus
+					# a grace period to adjust to PlugValueWidget's new multi-plug capabilities.
+					IECore.Msg.Level.Error if "MultiplePlugsError" not in str( e ) else IECore.Msg.Level.Debug,
+					"Plug menu", traceback.format_exc()
+				)
+				if six.PY3 :
+					# Remove circular references that would keep the widget in limbo.
+					e.__traceback__ = None
