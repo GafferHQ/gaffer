@@ -35,26 +35,49 @@
 #
 ##########################################################################
 
+import collections
 import functools
+import itertools
+import traceback
 import warnings
+import six
 
 import IECore
 
 import Gaffer
 import GafferUI
 
-## Base class for widgets which can display and optionally edit a ValuePlug.
+## Base class for widgets which can display and optionally edit one or
+# more ValuePlugs. Subclasses must override `_updateFromPlugs()` to
+# update the UI to reflect the current state of the plugs, and may also
+# override `setPlugs()` to perform any book-keeping needed when the plugs
+# being displayed are changed.
+#
+# > Note : PlugValueWidgets could originally only display a single plug
+# > at a time, using overrides for `_updateFromPlug()` and `setPlug()`
+# > (note the singular). For backwards compatibility we still support
+# > subclasses which override these old methods, but over time will phase
+# > this out and require the plural form.
 class PlugValueWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, plug, **kw ) :
+	class MultiplePlugsError( ValueError ) : pass
+
+	def __init__( self, topLevelWidget, plugs, **kw ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 		self._qtWidget().setProperty( "gafferPlugValueWidget", True )
 
-		# we don't want to call _updateFromPlug yet because the derived
-		# classes haven't constructed yet. they can call it themselves
+		if isinstance( plugs, Gaffer.Plug ) :
+			plugs = { plugs }
+		elif plugs is None :
+			plugs = set()
+		elif not isinstance( plugs, set ) :
+			plugs = set( plugs )
+
+		# We don't want to call `_updateFromPlugs()` yet because the derived
+		# classes haven't constructed. They can call it themselves
 		# upon completing construction.
-		self.__setPlugInternal( plug, callUpdateFromPlug=False )
+		self.__setPlugsInternal( plugs, callUpdateFromPlugs=False )
 
 		self.__readOnly = False
 
@@ -67,15 +90,50 @@ class PlugValueWidget( GafferUI.Widget ) :
 			scoped = False
 		)
 
-	## Note that it is acceptable to pass None to setPlug() (and to the constructor)
-	# and that derived classes should be implemented to cope with this eventuality.
+	## Changes the plugs displayed by this widget. May be overridden by derived classes,
+	# but all implementations must call the base class version first. Note that it is
+	# acceptable for `plugs` to be empty, so derived classes should be implemented with
+	# this in mind.
+	def setPlugs( self, plugs ) :
+
+		if not isinstance( plugs, set ) :
+			plugs = set( plugs )
+
+		if self.setPlug.__code__ is not PlugValueWidget.setPlug.__code__ :
+			# Legacy subclass has overridden `setPlug()`. Implement via
+			# that so that it can do whatever it needs to do.
+			if len( plugs ) <= 1 :
+				self.setPlug( next( iter( plugs ), None ) )
+			else :
+				raise Exception( "{} does not support multiple plugs".format( self.__class__.__name__ ) )
+		else :
+			self.__setPlugsInternal( plugs, callUpdateFromPlugs=True )
+
+	def getPlugs( self ) :
+
+		return self.__plugs
+
+	## Convenience function that calls `setPlugs()`. Note that
+	# `plug` may be `None`.
 	def setPlug( self, plug ) :
 
-		self.__setPlugInternal( plug, callUpdateFromPlug=True )
+		if self.setPlug.__code__ is not PlugValueWidget.setPlug.__code__ :
+			# Legacy subclass has overridden `setPlug()`. Do work internally
+			# to avoid recursion.
+			self.__setPlugsInternal( { plug } if plug is not None else set(), callUpdateFromPlugs=True )
+		else :
+			# Implement via `setPlugs()` so that new classes may
+			# override it.
+			self.setPlugs( { plug } if plug is not None else set() )
 
+	## Convenience function. Raises MultiplePlugsError if more than one plug is
+	# being displayed.
 	def getPlug( self ) :
 
-		return self.__plug
+		if len( self.__plugs ) > 1 :
+			raise self.MultiplePlugsError()
+
+		return next( iter( self.__plugs ), None )
 
 	## By default, PlugValueWidgets operate in the main context held by the script node
 	# for the script the plug belongs to. This function allows an alternative context
@@ -89,7 +147,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.__context = context
 		self.__updateContextConnection()
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
 	def getContext( self ) :
 
@@ -103,7 +161,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return
 
 		self.__readOnly = readOnly
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
 	## \deprecated
 	def getReadOnly( self ) :
@@ -230,41 +288,41 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return plugValueWidget
 
 	## Must be implemented by subclasses so that the widget reflects the current
-	# status of the plug. To temporarily suspend calls to this function, use
-	# Gaffer.BlockedConnection( self._plugConnections() ).
-	def _updateFromPlug( self ) :
+	# status of the plugs. To temporarily suspend calls to this function, use
+	# `Gaffer.BlockedConnection( self._plugConnections() )`.
+	def _updateFromPlugs( self ) :
 
-		raise NotImplementedError
+		# Default implementation falls back to legacy update for a single plug.
+		updateFromPlug = getattr( self, "_updateFromPlug", None )
+		if updateFromPlug is not None :
+			updateFromPlug()
 
 	def _plugConnections( self ) :
 
-		return [
-			self.__plugDirtiedConnection,
-			self.__plugInputChangedConnection,
-			self.__plugMetadataChangedConnection,
-		]
+		return (
+			self.__plugDirtiedConnections +
+			self.__plugInputChangedConnections +
+			[ self.__plugMetadataChangedConnection ]
+		)
 
-	## Returns True if the plug value is editable as far as this ui is concerned
-	# - that plug.settable() is True and self.getReadOnly() is False. By default,
-	# an animated plug is considered to be non-editable because it has an input
-	# connection. Subclasses which support animation editing may pass
+	## Returns True if the plug's values are editable as far as this UI is concerned
+	# - that `plug.settable()` is True for all plugs and `self.getReadOnly()` is
+	# False. By default, an animated plug is considered to be non-editable because
+	# it has an input connection. Subclasses which support animation editing may pass
 	# `canEditAnimation = True` to have animated plugs considered as editable.
 	def _editable( self, canEditAnimation = False ) :
 
-		plug = self.getPlug()
-
-		if plug is None :
+		if self.__readOnly or not self.getPlugs() :
 			return False
 
-		if self.__readOnly :
-			return False
+		for plug in self.getPlugs() :
 
-		if hasattr( plug, "settable" ) and not plug.settable() :
-			if not canEditAnimation or not Gaffer.Animation.isAnimated( plug ) :
+			if hasattr( plug, "settable" ) and not plug.settable() :
+				if not canEditAnimation or not Gaffer.Animation.isAnimated( plug ) :
+					return False
+
+			if Gaffer.MetadataAlgo.readOnly( plug ) :
 				return False
-
-		if Gaffer.MetadataAlgo.readOnly( plug ) :
-			return False
 
 		return True
 
@@ -399,72 +457,80 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __plugDirtied( self, plug ) :
 
-		if plug.isSame( self.__plug ) :
-
-			self._updateFromPlug()
+		if plug in self.__plugs :
+			self._updateFromPlugs()
 
 	def __plugInputChanged( self, plug ) :
 
-		if plug.isSame( self.__plug ) :
+		if plug in self.__plugs :
 			self.__updateContextConnection()
-			self._updateFromPlug()
+			self._updateFromPlugs()
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if self.__plug is None :
-			return
-
-		if (
-			Gaffer.MetadataAlgo.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) or
-			Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plug, nodeTypeId, plugPath, key, plug )
-		) :
-			self._updateFromPlug()
+		for p in self.__plugs :
+			if (
+				Gaffer.MetadataAlgo.affectedByChange( p, nodeTypeId, plugPath, plug ) or
+				Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, nodeTypeId, plugPath, key, plug )
+			) :
+				self._updateFromPlugs()
+				return
 
 	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
-		if self.__plug is None :
-			return
-
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plug, nodeTypeId, key, node ) :
-			self._updateFromPlug()
+		for p in self.__plugs :
+			if Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, nodeTypeId, key, node ) :
+				self._updateFromPlugs()
+				return
 
 	def __contextChanged( self, context, key ) :
 
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
-	def __setPlugInternal( self, plug, callUpdateFromPlug ) :
+	def __setPlugsInternal( self, plugs, callUpdateFromPlugs ) :
 
-		self.__plug = plug
+		assert( isinstance( plugs, set ) )
+		if len( plugs ) and sole( p.__class__ for p in plugs ) is None :
+			raise ValueError( "Plugs have different types" )
 
-		context = self.__fallbackContext
+		nodes = set()
+		scriptNodes = set()
+		for plug in plugs :
+			nodes.add( plug.node() )
+			scriptNodes.add( plug.ancestor( Gaffer.ScriptNode ) )
 
-		if self.__plug is not None :
-			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+		assert( len( scriptNodes ) <= 1 )
+
+		self.__plugs = plugs
+
+		self.__plugDirtiedConnections = [
+			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			for node in nodes
+		]
+		self.__plugInputChangedConnections = [
+			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+			for node in nodes
+		]
+
+		if self.__plugs :
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode )
-			if scriptNode is not None :
-				context = scriptNode.context()
 		else :
-			self.__plugDirtiedConnection = None
-			self.__plugInputChangedConnection = None
 			self.__plugMetadataChangedConnection = None
 
-		self.__context = context
+		scriptNode = next( iter( scriptNodes ), None )
+		self.__context = scriptNode.context() if scriptNode is not None else self.__fallbackContext
 		self.__updateContextConnection()
 
-		if callUpdateFromPlug :
-			self._updateFromPlug()
+		if callUpdateFromPlugs :
+			self._updateFromPlugs()
 
 	def __updateContextConnection( self ) :
 
-		# we only want to be notified of context changes if we have a plug and that
-		# plug has an incoming connection. otherwise context changes are irrelevant
-		# and we'd just be slowing things down by asking for notifications.
+		# We only want to be notified of context changes for plugs whose values are
+		# computed.
 
 		context = self.__context
-		plug = self.getPlug()
-		if plug is None or ( plug.getInput() is None and plug.direction() == Gaffer.Plug.Direction.In ):
+		if all( p.source().direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
 			context = None
 
 		if context is not None :
@@ -472,7 +538,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		else :
 			self.__contextChangedConnection = None
 
-	# we use this when the plug being viewed doesn't have a ScriptNode ancestor
+	# we use this when the plugs being viewed doesn't have a ScriptNode ancestor
 	# to provide a context.
 	__fallbackContext = Gaffer.Context()
 
@@ -609,3 +675,17 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self.getPlug().setValue( self._convertValue( event.data ) )
 
 		return True
+
+# Utility in the spirit of `all()` and `any()`. If all values in `sequence`
+# are equal, returns that value, otherwise returns `None`.
+## \todo Is there somewhere more sensible we can put this? Cortex perhaps?
+def sole( sequence ) :
+
+	result = None
+	for i, v in enumerate( sequence ) :
+		if i == 0 :
+			result = v
+		elif v != result :
+			return None
+
+	return result
