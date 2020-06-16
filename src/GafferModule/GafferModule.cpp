@@ -80,6 +80,7 @@
 #include "ValuePlugBinding.h"
 #include "NameValuePlugBinding.h"
 #include "ShufflesBinding.h"
+#include "MessagesBinding.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -238,6 +239,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSpreadsheet();
 	bindNodeAlgo();
 	bindShuffles();
+	bindMessages();
 
 	NodeClass<Backdrop>();
 

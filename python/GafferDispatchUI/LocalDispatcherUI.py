@@ -240,7 +240,8 @@ class _LocalJobsWindow( GafferUI.Window ) :
 								self.__detailsDirectory.setTextSelectable( True )
 
 					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Messages" } ) as self.__messagesTab :
-						self.__messageWidget = GafferUI.MessageWidget()
+						self.__messageWidget = GafferUI.MessageWidget( toolbars = True, follow = True )
+						self.__messageWidget._qtWidget().setMinimumHeight( 150 )
 
 				self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ), scoped = False )
 
@@ -315,7 +316,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 			return
 
 		for m in jobs[0].messageHandler().messages :
-			self.__messageWidget.appendMessage( m.level, m.context, m.message )
+			self.__messageWidget.messageHandler().handle( m.level, m.context, m.message )
 
 	def __killClicked( self, button ) :
 

@@ -730,6 +730,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				"GafferDispatch::TaskSwitch",
 				"GafferDispatch::Wedge",
 				"GafferDispatch::FrameMask",
+				"IECorePreview::MessagesData"
 			] )
 		)
 		self.assertTypeNamesArePrefixed( GafferTest )

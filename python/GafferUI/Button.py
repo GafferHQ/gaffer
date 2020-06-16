@@ -52,6 +52,8 @@ class Button( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QPushButton(), **kw )
 
+		self.__highlightForHover = False
+
 		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
 		# allow return and enter keys to click button
 		self._qtWidget().setAutoDefault( True )
@@ -123,6 +125,16 @@ class Button( GafferUI.Widget ) :
 
 		return self._qtWidget().property( "gafferWithFrame" )
 
+	def setEnabled( self, enabled ) :
+
+		# Once we're disabled, mouse leave events will be skipped, and we'll
+		# remain in a highlighted state once re-enabled.
+		if not enabled and self.__highlightForHover :
+			self.__highlightForHover = False
+			self.__updateIcon()
+
+		GafferUI.Widget.setEnabled( self, enabled )
+
 	def clickedSignal( self ) :
 
 		return self.__clickedSignal
@@ -146,22 +158,19 @@ class Button( GafferUI.Widget ) :
 			self._qtWidget().setIcon( QtGui.QIcon() )
 			return
 
-		if not self.getHighlighted() :
-			pixmap = self.__image._qtPixmap()
-		else :
-			pixmap = self.__image._qtPixmapHighlighted()
-
 		# Qt's built-in disabled state generation doesn't work well with dark schemes
-		icon = QtGui.QIcon( pixmap )
-		icon.addPixmap( self.__image._qtPixmapDisabled(), QtGui.QIcon.Disabled )
-
+		# There is no built-in support for QtGui.QIcon.Active in the default
+		# painter, which is why we have to juggle it here.
+		icon = self.__image._qtIcon( highlighted = self.getHighlighted() or self.__highlightForHover )
 		self._qtWidget().setIcon( icon )
-		self._qtWidget().setIconSize( pixmap.size() )
+		self._qtWidget().setIconSize( self.__image._qtPixmap().size() )
 
 	def __enter( self, widget ) :
 
-		self.setHighlighted( True )
+		self.__highlightForHover = True
+		self.__updateIcon()
 
 	def __leave( self, widget ) :
 
-		self.setHighlighted( False )
+		self.__highlightForHover = False
+		self.__updateIcon()

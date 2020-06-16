@@ -1,6 +1,11 @@
 0.58.x.x
 ========
 
+Features
+--------
+
+- InteractiveRender : Added message log to the node's UI, displaying output from the last render (#3419).
+
 Improvements
 ------------
 
@@ -9,6 +14,7 @@ Improvements
 - OSLObject/ClosestPointSampler/CurveSampler : Improved performance for cases where multiple downstream computes require the same upstream object.
 - Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
 - AnimationEditor : Improved performance.
+- MessageWidget : Added alternate presentation options allowing log-style message display, search, etc.
 
 Fixes
 -----
@@ -24,6 +30,11 @@ API
   - Deprecated `hashOfTransformedChildBounds()`. Use `ScenePlug::childBoundsHash()` instead.
   - Deprecated `unionOfTransformedChildBounds()`. Use `ScenePlug::childBounds()` instead.
 - IECorePreview::Renderer : Added optional message handler to renderer construction to allow output message streams to be re-directed if required (#3419).
+- InteractiveRender :
+  - Changed base to `Gaffer::ComputeNode` (#3419).
+  - Added messages plug containing the output of the node's renderer output (#3419).
+- Graphics : Renamed `errorNotificationSmall` icon to `errorSmall`.
+- NotificationMessageHandler : Constructor now accepts `GafferUI.MessageWidget` constructor kwargs to configure the widget.
 
 Breaking Changes
 ----------------
@@ -56,6 +67,13 @@ Breaking Changes
 - IECorePreview::Renderer : Changed signature for `create` and `registerType` to include optional message handler.
 - ObjectProcessor : Added a virtual method.
 - PlugValueWidget : Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
+- InteractiveRender : Changed base class from Node to ComputeNode, added members.
+- MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
+
+Fixes
+-----
+
+- GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
 
 Build
 -----
@@ -70,6 +88,7 @@ Fixes
 
 - NodeEditor : Fixed hangs when switching to "Follow Scene Selection" mode.
 - SourceSet : Fixed GIL management bug in constructor binding.
+- StyleSheet : Fixed monospace font stack.
 
 0.57.4.0 (relative to 0.57.3.0)
 ========

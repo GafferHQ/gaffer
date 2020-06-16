@@ -100,6 +100,11 @@ _styleColors = {
 	"errorColor" : (255, 85, 85),
 	"animatedColor" : (128, 152, 94),
 
+	"foregroundError" : ( 196, 80, 80 ),
+	"foregroundWarning" : ( 239, 129, 24 ),
+	"foregroundInfo" : ( 128, 179, 254 ),
+	"foregroundDebug" : ( 163, 163, 163 ),
+
 	# Controls and other UI elements may have to sit on a variety of background
 	# colors and as such should make use of the $tint* colors for tonal
 	# variation. This should be in preference to using $background* colors
@@ -120,7 +125,8 @@ _themeVariables = {
 	"roundedCornerRadius" : "6px",
 	"widgetCornerRadius" : "4px",
 	"controlCornerRadius" : "2px",
-	"toolOverlayInset" : "44px"
+	"toolOverlayInset" : "44px",
+	"monospaceFontFamily" : '"SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace'
 }
 
 substitutions = {
@@ -341,7 +347,7 @@ _styleSheet = string.Template(
 	}
 
 	QPlainTextEdit[gafferRole="Code"] {
-		font-family: monospace;
+		font-family: $monospaceFontFamily;
 	}
 
 	QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted="true"] {
@@ -1138,6 +1144,20 @@ _styleSheet = string.Template(
 
 	_TableView QHeaderView::section:vertical {
 		padding: 2px;
+	}
+
+	*[gafferClass="GafferUI.MessageWidget._MessageTableView"] {
+		font-family: $monospaceFontFamily;
+		background-color: $background;
+		border: 1px solid $backgroundHighlight;
+		border-top-color: $backgroundLowlight;
+		border-left-color: $backgroundLowlight;
+		padding: 0;
+	}
+
+	*[gafferClass="GafferUI.MessageWidget._MessageSummaryWidget"] QPushButton {
+		padding-left: 4px;
+		padding-right: 4px;
 	}
 
 	/* checkboxes within table views */

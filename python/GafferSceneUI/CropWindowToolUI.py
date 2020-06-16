@@ -88,7 +88,7 @@ class _StatusWidget( GafferUI.Frame ) :
 		with self :
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__row :
 				self.__infoIcon = GafferUI.Image( "infoSmall.png" )
-				self.__errorIcon = GafferUI.Image( "errorNotificationSmall.png" )
+				self.__errorIcon = GafferUI.Image( "errorSmall.png" )
 				self.__warningIcon = GafferUI.Image( "warningSmall.png" )
 				GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 				self.__label = GafferUI.Label( "" )

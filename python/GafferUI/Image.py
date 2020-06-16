@@ -154,6 +154,14 @@ class Image( GafferUI.Widget ) :
 
 		return self.__pixmapDisabled
 
+	# Qt's built-in disabled state generation doesn't work well with dark schemes.
+	# This convenience method provides a QIcon, preconfigured with our own disabled pixmap rendering.
+	def _qtIcon( self, highlighted = False ) :
+
+		icon = QtGui.QIcon( self._qtPixmapHighlighted() if highlighted else self._qtPixmap() )
+		icon.addPixmap( self._qtPixmapDisabled(), QtGui.QIcon.Disabled )
+		return icon
+
 	@staticmethod
 	def _qtPixmapFromImagePrimitive( image ) :
 
