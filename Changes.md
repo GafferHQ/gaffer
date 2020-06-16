@@ -42,6 +42,7 @@ API
   - Added `setPlugs()` and `getPlugs()` methods. The previous `setPlug()` and `getPlug()` methods remain as a convenience.
   - Derived classes should now override `setPlugs()` rather than `setPlug()`, but backwards compatibility is preserved for classes which have not been converted yet.
   - Derived classes should now implement `_updateFromPlugs()` rather than `_updateFromPlug()`, but backwards compatibility is preserved for classes which have not been converted yet.
+  - `create()` now optionally accepts a list of plugs in place of a single plug.
 
 Breaking Changes
 ----------------
@@ -74,6 +75,7 @@ Breaking Changes
 - IECorePreview::Renderer : Changed signature for `create` and `registerType` to include optional message handler.
 - ObjectProcessor : Added a virtual method.
 - PlugValueWidget :
+  - Renamed `create()` argument from `plug` to `plugs`. A single plug may still be passed.
   - Renamed constructor argument from `plug` to `plugs`. A single plug may still be passed.
   - Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.

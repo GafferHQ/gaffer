@@ -123,6 +123,17 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		w = GafferUI.NumericPlugValueWidget( n["user"].children() )
 		self.assertRaises( GafferUI.PlugValueWidget.MultiplePlugsError, w.getPlug )
 
+	def testCreateThrowsIfMultipleWidgetCreators( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerValue( n["user"]["p1"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
+
+		with six.assertRaisesRegex( self, Exception, "Multiple widget creators" ) :
+			GafferUI.PlugValueWidget.create( n["user"].children() )
+
 	def testAcquire( self ) :
 
 		s = Gaffer.ScriptNode()

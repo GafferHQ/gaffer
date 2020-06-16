@@ -217,45 +217,27 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return cls.__popupMenuSignal
 
-	## Returns a PlugValueWidget suitable for representing the specified plug.
-	# The type of plug returned may be customised on a per-widget basis by a
+	## Returns a PlugValueWidget suitable for representing the specified plugs.
+	# The type of widget returned may be customised on a per-plug basis by a
 	# "plugValueWidget:type" metadata value, specifying the fully qualified
 	# python type name for a widget class. To suppress the creation of a widget,
 	# a value of "" may be registered - in this case None will be returned from
 	# create(). If useTypeOnly is True, then the metadata will be ignored and
 	# only the plug type will be taken into account in creating a PlugValueWidget.
 	@classmethod
-	def create( cls, plug, useTypeOnly=False ) :
+	def create( cls, plugs, useTypeOnly=False ) :
 
-		# first try to create one using a creator registered for the specific plug
-		if not useTypeOnly :
+		if isinstance( plugs, Gaffer.Plug ) :
+			creators = { cls.__creator( plugs, useTypeOnly ) }
+		else :
+			creators = { cls.__creator( p, useTypeOnly ) for p in plugs }
 
-			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
-			if widgetType is None :
-				widgetType = Gaffer.Metadata.value( plug, "layout:widgetType" )
-				if widgetType is not None :
-					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
-					if widgetType == "None" :
-						return None
+		if len( creators ) > 1 :
+			raise Exception( "Multiple widget creators" )
 
-			if widgetType is not None :
-				if widgetType == "" :
-					return None
-				path = widgetType.split( "." )
-				widgetClass = __import__( path[0] )
-				for n in path[1:] :
-					widgetClass = getattr( widgetClass, n )
-				return widgetClass( plug )
-
-		# if that failed, then just create something based on the type of the plug
-		typeId = plug.typeId()
-		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
-			if plugTypeId in cls.__plugTypesToCreators :
-				creator = cls.__plugTypesToCreators[plugTypeId]
-				if creator is not None :
-					return creator( plug )
-				else :
-					return None
+		creator = next( iter( creators ) )
+		if creator is not None :
+			return creator( plugs )
 
 		return None
 
@@ -269,8 +251,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 			plugTypeId = plugClassOrTypeId.staticTypeId()
 
 		cls.__plugTypesToCreators[plugTypeId] = creator
-
-	__plugTypesToCreators = {}
 
 	## Ensures that the specified plug has a visible PlugValueWidget,
 	# creating one if necessary.
@@ -675,6 +655,45 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self.getPlug().setValue( self._convertValue( event.data ) )
 
 		return True
+
+	# Type registry internals
+
+	@classmethod
+	def __creator( cls, plug, useTypeOnly ) :
+
+		# First try to create one using a creator registered for the specific plug.
+		if not useTypeOnly :
+
+			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
+			if widgetType is None :
+				widgetType = Gaffer.Metadata.value( plug, "layout:widgetType" )
+				if widgetType is not None :
+					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
+					if widgetType == "None" :
+						return None
+
+			if widgetType is not None :
+				if widgetType == "" :
+					return None
+				path = widgetType.split( "." )
+				widgetClass = __import__( path[0] )
+				for n in path[1:] :
+					widgetClass = getattr( widgetClass, n )
+				return widgetClass
+
+		# If that failed, then just create something based on the type of the plug.
+		typeId = plug.typeId()
+		for plugTypeId in [ plug.typeId() ] + IECore.RunTimeTyped.baseTypeIds( plug.typeId() ) :
+			if plugTypeId in cls.__plugTypesToCreators :
+				creator = cls.__plugTypesToCreators[plugTypeId]
+				if creator is not None :
+					return creator
+				else :
+					return None
+
+		return None
+
+	__plugTypesToCreators = {}
 
 # Utility in the spirit of `all()` and `any()`. If all values in `sequence`
 # are equal, returns that value, otherwise returns `None`.
