@@ -426,13 +426,24 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__SizeLoop"] = Gaffer.LoopComputeNode()
 		self["__SizeLoop"].setup( Gaffer.IntPlug() )
 
-		self["__SizeMaxExpression"] = Gaffer.Expression()
-		self["__SizeMaxExpression"].setExpression( inspect.cleandoc(
+		# Calling .width() on the ImageReader, and combining it with the previous max size from
+		# the loop is broken across two expressions, since dealing with the format can only be
+		# done from Python, but having Python inside the loop iteration leads to blowing out
+		# the recursion stack
+		self["__imageSize"] = Gaffer.IntPlug()
+		self["__SizeExpression"] = Gaffer.Expression()
+		self["__SizeExpression"].setExpression( inspect.cleandoc(
 			"""
 			f = parent["__ImageReader"]["out"]["format"]
-			parent["__SizeLoop"]["next"] = max( f.width(), parent["__SizeLoop"]["previous"] )
+			parent["__imageSize"] = f.width()
 			"""
 		), "python" )
+
+		self["__SizeMaxExpression"] = Gaffer.Expression()
+		self["__SizeMaxExpression"].setExpression( 
+			"parent.__SizeLoop.next = max( int( parent.__imageSize ), parent.__SizeLoop.previous )",
+			"OSL"
+		)
 
 		# Loop over all input files for this output file, and merge them all together
 		self["__ImageLoop"] = Gaffer.LoopComputeNode()
