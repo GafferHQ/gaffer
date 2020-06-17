@@ -546,13 +546,13 @@ IECore::MurmurHash setExpressionHash( const std::string &setExpression, const Sc
 
 bool affectsSetExpression( const Plug *scenePlugChild )
 {
-	const ScenePlug *parent = scenePlugChild->parent<ScenePlug>();
-
-	if( parent->setPlug() == scenePlugChild )
+	if( auto parent = scenePlugChild->parent<ScenePlug>() )
 	{
-		return true;
+		return
+			scenePlugChild == parent->setPlug() ||
+			scenePlugChild == parent->setNamesPlug()
+		;
 	}
-
 	return false;
 }
 

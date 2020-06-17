@@ -36,6 +36,7 @@ Fixes
   - OpenImageIOReader
   - LevelSetOffset
   - MeshToLevelSet
+- SetAlgo : Fixed `affectsSetExpression()` to return `True` for `ScenePlug::setNamesPlug()`.
 
 API
 ---
@@ -65,6 +66,7 @@ API
     - TweakPlugValueWidget
     - BoolPlugValueWidget
     - PresetsPlugValueWidget
+- SetAlgo : Added Python binding for `affectsSetExpression()`.
 
 Breaking Changes
 ----------------
