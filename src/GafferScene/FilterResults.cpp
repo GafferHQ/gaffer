@@ -106,19 +106,24 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	ComputeNode::affects( input, outputs );
 
-	const ScenePlug *scenePlug = input->parent<ScenePlug>();
-	if( scenePlug && scenePlug == this->scenePlug() )
+	const ScenePlug *scenePlug = input->parent() == this->scenePlug() ? this->scenePlug() : nullptr;
+	if( scenePlug )
 	{
 		if( filterPlug()->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
 		{
 			outputs.push_back( filterPlug() );
 		}
 	}
-	else if( input == filterPlug() )
+
+	if(
+		input == filterPlug() ||
+		( scenePlug && input == scenePlug->childNamesPlug() )
+	)
 	{
 		outputs.push_back( internalOutPlug() );
 	}
-	else if( input == internalOutPlug() )
+
+	if( input == internalOutPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}

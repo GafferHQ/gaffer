@@ -28,6 +28,7 @@ Fixes
 - Fixed dependency tracking bugs in the following nodes :
   - UDIMQuery
   - Shader
+  - FilterResults
 
 API
 ---
