@@ -135,15 +135,15 @@ class test( Gaffer.Application ) :
 
 		import unittest
 
-		testSuite = unittest.TestSuite()
-		for name in args["testCases"] :
-			testCase = unittest.defaultTestLoader.loadTestsFromName( name )
-			testSuite.addTest( testCase )
-
-		if args["performanceOnly"].value :
-			GafferTest.TestRunner.filterPerformanceTests( testSuite )
-
 		for i in range( 0, args["repeat"].value ) :
+
+			testSuite = unittest.TestSuite()
+			for name in args["testCases"] :
+				testCase = unittest.defaultTestLoader.loadTestsFromName( name )
+				testSuite.addTest( testCase )
+
+			if args["performanceOnly"].value :
+				GafferTest.TestRunner.filterPerformanceTests( testSuite )
 
 			testRunner = GafferTest.TestRunner( previousResultsFile = args["previousOutputFile"].value )
 			if args["stopOnFailure"].value :
