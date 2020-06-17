@@ -34,6 +34,7 @@ Fixes
   - FlatImageProcessor
   - FlatToDeep
   - OpenImageIOReader
+  - LevelSetOffset
 
 API
 ---
