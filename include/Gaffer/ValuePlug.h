@@ -238,6 +238,10 @@ class GAFFER_API ValuePlug : public Plug
 		IECore::ConstObjectPtr m_defaultValue;
 		// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
+		// Number of calls made to `dirty()`. We use this as part of the key
+		// into the hash cache, so that previous entries are invalidated when
+		// the plug is dirtied.
+		uint64_t m_dirtyCount;
 
 };
 

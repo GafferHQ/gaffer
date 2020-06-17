@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- Caching : Improved interactive performance using an improved hash cache invalidation strategy.
 - SceneNode : Improved performance for all nodes that must propagate bounds from children to parents.
 - PointsType : Removed unnecessary bounds computation overhead.
 - OSLObject/ClosestPointSampler/CurveSampler : Improved performance for cases where multiple downstream computes require the same upstream object.
@@ -41,6 +42,9 @@ Fixes
 API
 ---
 
+- ValuePlug
+  - Improved interactive performance by not clearing the entire hash cache every time a plug is dirtied. Beware : this can reveal subtle bugs in `DependencyNode::affects()` implementations, causing hashes to be reused if a plug has not been dirtied appropriately. These bugs may previously have gone unnoticed but will now need fixing as a matter of urgency. The GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment variable may be used to enable legacy behaviour in the interim.
+  - Added `clearHashCache()` static method.
 - ScenePlug : Added `childBounds()` and `childBoundsHash()` methods.
 - ObjectProcessor : Added `processedObjectComputeCachePolicy()` virtual method. This should be overridden to choose an appropriate cache policy when `computeProcessedObject()` spawns TBB tasks.
 - SceneNode :
@@ -68,7 +72,6 @@ API
     - PresetsPlugValueWidget
 - SetAlgo : Added Python binding for `affectsSetExpression()`.
 - Shader : Added `affectsAttributes()` protected method.
-- ValuePlug : Added `clearHashCache()` static method.
 
 Breaking Changes
 ----------------
