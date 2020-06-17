@@ -35,6 +35,7 @@ Fixes
   - FlatToDeep
   - OpenImageIOReader
   - LevelSetOffset
+  - MeshToLevelSet
 
 API
 ---

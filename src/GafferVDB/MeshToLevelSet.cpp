@@ -186,7 +186,12 @@ void MeshToLevelSet::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == voxelSizePlug() || input == gridPlug() )
+	if(
+		input == gridPlug() ||
+		input == voxelSizePlug() ||
+		input == exteriorBandwidthPlug() ||
+		input == interiorBandwidthPlug()
+	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
