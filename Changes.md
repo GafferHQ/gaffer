@@ -29,6 +29,7 @@ Fixes
   - UDIMQuery
   - Shader
   - FilterResults
+  - FreezeTransform
 
 API
 ---
