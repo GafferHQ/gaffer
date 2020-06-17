@@ -25,7 +25,9 @@ Fixes
 - Signal : Fixed hang which could occur if a result combiner implemented in Python tried to handle exceptions.
 - NumericWidget : Fixed errors when trying to use a virtual slider with an empty value.
 - GraphComponent : Fixed return value for `items()` method. The returned keys are now regular `str()` objects rather than `InternedString`.
-- UDIMQuery : Fixed dependency tracking bug.
+- Fixed dependency tracking bugs in the following nodes :
+  - UDIMQuery
+  - Shader
 
 API
 ---

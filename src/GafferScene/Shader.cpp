@@ -704,7 +704,8 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		input == nodeNamePlug() ||
 		input == namePlug() ||
 		input == typePlug() ||
-		input->parent<Plug>() == nodeColorPlug()
+		input->parent<Plug>() == nodeColorPlug() ||
+		input == attributeSuffixPlug()
 	)
 	{
 		if( const Plug *out = outPlug() )
