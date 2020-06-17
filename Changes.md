@@ -33,6 +33,7 @@ Fixes
   - ImageMetadata
   - FlatImageProcessor
   - FlatToDeep
+  - OpenImageIOReader
 
 API
 ---
