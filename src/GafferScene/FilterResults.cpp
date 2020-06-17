@@ -109,10 +109,7 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	const ScenePlug *scenePlug = input->parent() == this->scenePlug() ? this->scenePlug() : nullptr;
 	if( scenePlug )
 	{
-		if( filterPlug()->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
-		{
-			outputs.push_back( filterPlug() );
-		}
+		filterPlug()->sceneAffects( input, outputs );
 	}
 
 	if(

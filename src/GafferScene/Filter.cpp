@@ -90,11 +90,6 @@ void Filter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 	}
 }
 
-bool Filter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
-{
-	return false;
-}
-
 void Filter::setInputScene( Gaffer::Context *context, const ScenePlug *scenePlug )
 {
 	context->set( inputSceneContextName, (uint64_t)scenePlug );

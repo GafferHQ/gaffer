@@ -55,7 +55,7 @@ UnionFilter::~UnionFilter()
 
 void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	Filter::affects( input, outputs );
+	FilterProcessor::affects( input, outputs );
 
 	if( input->parent<ArrayPlug>() == inPlugs() )
 	{

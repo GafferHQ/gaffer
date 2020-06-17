@@ -71,6 +71,8 @@ API
 Breaking Changes
 ----------------
 
+- Filter : Removed virtual `sceneAffectsMatch()` method. Derived classes should implement `affects()` instead.
+- FilterPlug : Replaced `sceneAffectsMatch()` method with a more general `sceneAffects()` method. This should be used to replace any calls to the old method.
 - PointsType : Changed base class from Deformer to ObjectProcessor.
 - Gaffer : Removed `lazyImport()` method.
 - GafferUI : Removed deprecated `_qtImport()` method. Use `from Qt import` instead.

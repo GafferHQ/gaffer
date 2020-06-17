@@ -159,6 +159,11 @@ void PathFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	{
 		outputs.push_back( outPlug() );
 	}
+
+	if( input->parent<ScenePlug>() )
+	{
+		rootsPlug()->sceneAffects( input, outputs );
+	}
 }
 
 void PathFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -273,16 +278,6 @@ unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context
 	}
 
 	return result;
-}
-
-bool PathFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
-{
-	if( Filter::sceneAffectsMatch( scene, child ) )
-	{
-		return true;
-	}
-
-	return rootsPlug()->sceneAffectsMatch( scene, child );
 }
 
 void PathFilter::hashRootSizes( const Gaffer::Context *context, IECore::MurmurHash &h ) const

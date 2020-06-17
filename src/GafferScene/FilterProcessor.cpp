@@ -36,6 +36,8 @@
 
 #include "GafferScene/FilterProcessor.h"
 
+#include "GafferScene/ScenePlug.h"
+
 #include "Gaffer/ArrayPlug.h"
 
 using namespace IECore;
@@ -102,22 +104,23 @@ const Gaffer::ArrayPlug *FilterProcessor::inPlugs() const
 	return getChild<Gaffer::ArrayPlug>( g_firstPlugIndex );
 }
 
-bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
+void FilterProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	if( const ArrayPlug *arrayIn = this->inPlugs() )
+	Filter::affects( input, outputs );
+
+	if( input->parent<ScenePlug>() )
 	{
-		for( InputFilterPlugIterator it( arrayIn ); !it.done(); ++it )
+		if( const ArrayPlug *arrayIn = this->inPlugs() )
 		{
-			if( (*it)->sceneAffectsMatch( scene, child ) )
+			for( InputFilterPlugIterator it( arrayIn ); !it.done(); ++it )
 			{
-				return true;
+				(*it)->sceneAffects( input, outputs );
 			}
 		}
-		return false;
-	}
-	else
-	{
-		return inPlug()->sceneAffectsMatch( scene, child );
+		else
+		{
+			inPlug()->sceneAffects( input, outputs );
+		}
 	}
 }
 

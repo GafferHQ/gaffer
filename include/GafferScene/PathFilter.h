@@ -71,8 +71,6 @@ class GAFFERSCENE_API PathFilter : public Filter
 		void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const override;
 
-		bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const override;
-
 	private :
 
 		// Used to compute a PathMatcher from `pathsPlug()`.
