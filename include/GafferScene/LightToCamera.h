@@ -56,7 +56,6 @@ class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
 		const Gaffer::IntPlug *filmFitPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 	protected :
 
