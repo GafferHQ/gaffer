@@ -116,7 +116,6 @@ const IntPlug *FlatToDeep::zBackModePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }
 
-
 FloatPlug *FlatToDeep::thicknessPlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
@@ -141,14 +140,20 @@ void FlatToDeep::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == inPlug()->channelNamesPlug() || input == zBackModePlug() )
+	if(
+		input == inPlug()->channelNamesPlug() ||
+		input == zBackModePlug()
+	)
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
-	else if( input == inPlug()->channelDataPlug() ||
+
+	if(
+		input == inPlug()->channelDataPlug() ||
 		input == zModePlug() ||
 		input == zChannelPlug() ||
 		input == depthPlug() ||
+		input == inPlug()->channelNamesPlug() ||
 		input == zBackModePlug() ||
 		input == zBackChannelPlug() ||
 		input == thicknessPlug()

@@ -32,6 +32,7 @@ Fixes
   - FreezeTransform
   - ImageMetadata
   - FlatImageProcessor
+  - FlatToDeep
 
 API
 ---
