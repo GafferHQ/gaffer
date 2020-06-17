@@ -31,6 +31,7 @@ Fixes
   - FilterResults
   - FreezeTransform
   - ImageMetadata
+  - FlatImageProcessor
 
 API
 ---

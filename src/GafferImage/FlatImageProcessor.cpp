@@ -69,6 +69,21 @@ Gaffer::ValuePlug::CachePolicy FlatImageProcessor::computeCachePolicy( const Gaf
 	return ImageProcessor::computeCachePolicy( output );
 }
 
+void FlatImageProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	ImageProcessor::affects( input, outputs );
+
+	auto imagePlug = input->parent<ImagePlug>();
+	if(
+		imagePlug &&
+		( imagePlug == inPlug() || imagePlug->parent() == inPlugs() ) &&
+		input == imagePlug->deepPlug()
+	)
+	{
+		outputs.push_back( outPlug()->deepPlug() );
+	}
+}
+
 void FlatImageProcessor::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashDeep( parent, context, h );
