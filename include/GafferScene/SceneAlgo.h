@@ -209,6 +209,12 @@ GAFFERSCENE_API SceneProcessor *objectTweaks( const ScenePlug *scene, const Scen
 /// Returns the last ShaderTweaks node to edit the specified attribute.
 GAFFERSCENE_API ShaderTweaks *shaderTweaks( const ScenePlug *scene, const ScenePlug::ScenePath &path, const IECore::InternedString &attributeName );
 
+/// Returns the name of a context variable in which the history methods store a unique value
+/// to disable the effects of the hash cache, so that the full upstream process can be examined.
+/// May be removed from a context to reenable the cache for expensive hash operations that are
+/// known to be irrelevant to the history.
+GAFFERSCENE_API IECore::InternedString historyIDContextName();
+
 /// Render Metadata
 /// ===============
 ///

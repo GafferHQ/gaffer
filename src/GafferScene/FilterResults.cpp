@@ -142,6 +142,7 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 	else if( output == outPlug() )
 	{
 		ScenePlug::GlobalScope globalScope( context );
+		globalScope.remove( SceneAlgo::historyIDContextName() );
 		internalOutPlug()->hash( h );
 	}
 }
@@ -158,6 +159,7 @@ void FilterResults::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 	else if( output == outPlug() )
 	{
 		ScenePlug::GlobalScope globalScope( context );
+		globalScope.remove( SceneAlgo::historyIDContextName() );
 		output->setFrom( internalOutPlug() );
 		return;
 	}
