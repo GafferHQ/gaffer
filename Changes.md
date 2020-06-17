@@ -30,6 +30,7 @@ Fixes
   - Shader
   - FilterResults
   - FreezeTransform
+  - ImageMetadata
 
 API
 ---
