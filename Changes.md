@@ -5,7 +5,7 @@ Fixes
 -----
 
 - Dispatcher : Fixed dispatch of two or more Switches or ContextProcessors connected together directly.
-- ArnoldTextureBake : Avoid "recursion depth" exception when more than 300 meshes in UDIM
+- ArnoldTextureBake : Fixed recursion depth exception caused by more than ~300 meshes in a UDIM.
 
 0.56.2.3 (relative to 0.56.2.2)
 ========
