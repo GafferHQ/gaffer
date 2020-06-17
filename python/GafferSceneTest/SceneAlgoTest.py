@@ -655,7 +655,12 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		o.execute()
 
 		pathWithMeta = os.path.join( self.temporaryDirectory(), "sceneAlgoSourceSceneWithMeta.exr" )
-		m["metadata"].addChild( Gaffer.NameValuePlug( "gaffer:sourceScene", IECore.StringData( expectedPath ), True, "sourceScene" ) )
+		m["metadata"].addChild(
+			Gaffer.NameValuePlug(
+				"gaffer:sourceScene", IECore.StringData( expectedPath ), True, "sourceScene",
+				flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+			)
+		)
 		o["fileName"].setValue( pathWithMeta )
 		o.execute()
 
