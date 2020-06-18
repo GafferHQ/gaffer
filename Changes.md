@@ -20,6 +20,8 @@ Fixes
 -----
 
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
+- StyleSheet : Fixed monospace font stack.
+- GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
 
 API
 ---
@@ -70,15 +72,29 @@ Breaking Changes
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 
-Fixes
------
-
-- GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
-
 Build
 -----
 
 - Updated to GafferHQ/dependencies 1.4.0.
+
+0.57.5.0 (relative to 0.57.4.1)
+========
+
+Improvements
+------------
+
+- ArnoldShader :
+  - Added support for `gaffer.icon STRING "name.png"` metadata in `.mtd` files.
+  - Added support for `gaffer.iconScale FLOAT scale` metadata in `.mtd` files.
+- ImageStats : Parallelised compute for improved performance.
+
+Fixes
+-----
+
+- TransformTool : Fixed blank status message for certain non-editable selections.
+- Dispatcher : Fixed dispatch of two or more Switches or ContextProcessors connected together directly.
+- ArnoldTextureBake : Fixed recursion depth exception caused by more than ~300 meshes in a UDIM.
+- MergeScenes : Fixed bug in set computations which could trigger crashes with an overloaded cache.
 
 0.57.4.1 (relative to 0.57.4.0)
 ========
@@ -88,7 +104,6 @@ Fixes
 
 - NodeEditor : Fixed hangs when switching to "Follow Scene Selection" mode.
 - SourceSet : Fixed GIL management bug in constructor binding.
-- StyleSheet : Fixed monospace font stack.
 
 0.57.4.0 (relative to 0.57.3.0)
 ========
@@ -288,6 +303,16 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.4 (relative to 0.56.2.3)
+========
+
+Fixes
+-----
+
+- Dispatcher : Fixed dispatch of two or more Switches or ContextProcessors connected together directly.
+- ArnoldTextureBake : Fixed recursion depth exception caused by more than ~300 meshes in a UDIM.
+- MergeScenes : Fixed bug in set computations which could trigger crashes with an overloaded cache.
 
 0.56.2.3 (relative to 0.56.2.2)
 ========

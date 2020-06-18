@@ -1723,6 +1723,40 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( s["n2"].log ), 1 )
 		self.assertEqual( len( s["n3"].log ), 2 )
 
+	def testTwoNameSwitches( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
+		s["n3"] = GafferDispatchTest.LoggingTaskNode()
+
+		s["switch1"] = Gaffer.NameSwitch()
+		s["switch1"].setup( s["n1"]["task"] )
+		s["switch1"]["in"][0]["value"].setInput( s["n1"]["task"] )
+		s["switch1"]["in"][1]["value"].setInput( s["n2"]["task"] )
+		s["switch1"]["in"][1]["name"].setValue( "n2" )
+
+		s["switch2"] = Gaffer.NameSwitch()
+		s["switch2"].setup( s["n1"]["task"] )
+		s["switch2"]["in"][0]["value"].setInput( s["switch1"]["out"]["value"] )
+		s["switch2"]["in"][1]["value"].setInput( s["n3"]["task"] )
+		s["switch2"]["in"][1]["name"].setValue( "n3" )
+
+		s["n4"] = GafferDispatchTest.LoggingTaskNode()
+		s["n4"]["preTasks"][0].setInput( s["switch2"]["out"]["value"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+
+		s["switch1"]["selector"].setValue( "n2" )
+
+		dispatcher.dispatch( [ s["n4"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 0 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+		self.assertEqual( len( s["n3"].log ), 0 )
+		self.assertEqual( len( s["n4"].log ), 1 )
+
 	def testContextProcessor( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1746,6 +1780,38 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertNotIn( "test", s["n2"].log[0].context )
 		self.assertIn( "test", s["n1"].log[0].context )
 		self.assertEqual( s["n1"].log[0].context["test"], 10 )
+
+	def testTwoContextProcessors( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+
+		s["cv1"] = Gaffer.ContextVariables()
+		s["cv1"].setup( s["n1"]["task"] )
+		s["cv1"]["in"].setInput( s["n1"]["task"] )
+		s["cv1"]["variables"].addChild( Gaffer.NameValuePlug( "test1", 10 ) )
+
+		s["cv2"] = Gaffer.ContextVariables()
+		s["cv2"].setup( s["n1"]["task"] )
+		s["cv2"]["in"].setInput( s["cv1"]["out"] )
+		s["cv2"]["variables"].addChild( Gaffer.NameValuePlug( "test2", 20 ) )
+
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
+		s["n2"]["preTasks"][0].setInput( s["cv2"]["out"] )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( [ s["n2"] ] )
+
+		self.assertEqual( len( s["n1"].log ), 1 )
+		self.assertEqual( len( s["n2"].log ), 1 )
+
+		self.assertNotIn( "test1", s["n2"].log[0].context )
+		self.assertNotIn( "test2", s["n2"].log[0].context )
+		self.assertIn( "test1", s["n1"].log[0].context )
+		self.assertIn( "test2", s["n1"].log[0].context )
+		self.assertEqual( s["n1"].log[0].context["test1"], 10 )
+		self.assertEqual( s["n1"].log[0].context["test2"], 20 )
 
 	def testTaskPlugsWithoutTaskNodes( self ) :
 

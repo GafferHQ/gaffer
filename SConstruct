@@ -1475,6 +1475,11 @@ if haveSphinx and haveInkscape :
 		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed" )
 		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
+	# Since we don't copy the docs reference scripts, the screengrab
+	# scripts must read them from the source, so we use the reference
+	# env var.
+	docEnv["ENV"]["GAFFER_REFERENCE_PATHS"] = os.path.abspath( "doc/references" )
+
 	#  Docs graphics generation
 	docGraphicsCommands = graphicsCommands( docEnv, "resources/docGraphics.svg", "$BUILD_DIR/doc/gaffer/graphics" )
 	docEnv.Alias( "docs", docGraphicsCommands )

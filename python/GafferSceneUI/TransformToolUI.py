@@ -168,6 +168,8 @@ class _SelectionWidget( GafferUI.Frame ) :
 
 			editTargets = { s.editTarget() for s in toolSelection if s.editable() }
 			warnings = { s.warning() for s in toolSelection if s.warning() }
+			if not warnings and not self.__tool.selectionEditable() :
+				warnings = { "Selection not editable" }
 
 			# Update info row to show what we're editing
 

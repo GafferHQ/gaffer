@@ -4,6 +4,7 @@ import GafferDispatch
 import GafferImage
 import GafferScene
 import GafferOSL
+import GafferAppleseed
 
 GafferUI.Examples.registerExample(
 	"Rendering/Wedge Tests",
@@ -51,3 +52,28 @@ GafferUI.Examples.registerExample(
 	]
 )
 
+GafferUI.Examples.registerExample(
+	"Rendering/Multi-shot Render Spreadsheet",
+	"$GAFFER_ROOT/resources/examples/rendering/multiShotRenderSpreadsheet.gfr",
+	description = """
+	Demonstrates how to use the Spreadsheet node to vary renderer
+	settings per shot.
+	""",
+	notableNodes = [
+		Gaffer.Spreadsheet,
+		GafferAppleseed.AppleseedOptions
+	]
+)
+
+GafferUI.Examples.registerExample(
+	"Rendering/Per-location Light Tweak Spreadsheet",
+	"$GAFFER_ROOT/resources/examples/rendering/perLocationLightTweakSpreadsheet.gfr",
+	description = """
+	Demonstrates how to use the Spreadsheet node to vary light tweaks
+	per location.
+	""",
+	notableNodes = [
+		Gaffer.Spreadsheet,
+		GafferScene.ShaderTweaks
+	]
+)

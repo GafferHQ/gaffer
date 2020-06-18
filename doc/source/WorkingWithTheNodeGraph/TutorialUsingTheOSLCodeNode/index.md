@@ -1,5 +1,5 @@
-Using The OSLCode Node
-======================
+Tutorial: Using The OSLCode Node
+================================
 
 Gaffer allows the creation of networks of predefined [OSL][1] shaders to be used in renderering and image and geometry processing, without any coding required. But sometimes the shader you want doesn't exist, or it's easier to express your ideas through a few lines of code. In these situations, the OSLCode node allows OSL source code to be entered directly, to create new shaders on the fly.
 
