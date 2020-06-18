@@ -114,6 +114,9 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// The canceller is referenced, not copied, and must remain
 		/// alive for as long as the context is in use.
 		Context( const Context &other, const IECore::Canceller &canceller );
+		/// Copy constructor which can optionally omit an existing canceller
+		/// if `omitCanceller = true` is passed.
+		Context( const Context &other, bool omitCanceller );
 		~Context() override;
 
 		IE_CORE_DECLAREMEMBERPTR( Context )
@@ -261,8 +264,6 @@ class GAFFER_API Context : public IECore::RefCounted
 		static const Context *current();
 
 	private :
-
-		Context( const Context &other, Ownership ownership, const IECore::Canceller *canceller );
 
 		// Storage for each entry.
 		struct Storage

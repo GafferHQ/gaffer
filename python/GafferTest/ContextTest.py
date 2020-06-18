@@ -656,5 +656,33 @@ class ContextTest( GafferTest.TestCase ) :
 		with self.assertRaises( IECore.Cancelled ) :
 			IECore.Canceller.check( cc.canceller() )
 
+		contextCopy = Gaffer.Context( cc )
+		self.assertTrue( contextCopy.canceller() is not None )
+		with self.assertRaises( IECore.Cancelled ) :
+			IECore.Canceller.check( cc.canceller() )
+
+	def testCancellerLifetime( self ) :
+
+		canceller = IECore.Canceller()
+		context = Gaffer.Context( Gaffer.Context(), canceller )
+		cancellerWeakRef = weakref.ref( canceller )
+
+		del canceller
+		self.assertIsNotNone( cancellerWeakRef() )
+
+		del context
+		self.assertIsNone( cancellerWeakRef() )
+
+	def testOmitCanceller( self ) :
+
+		context1 = Gaffer.Context( Gaffer.Context(), IECore.Canceller() )
+		self.assertIsNotNone( context1.canceller() )
+
+		context2 = Gaffer.Context( context1, omitCanceller = True )
+		self.assertIsNone( context2.canceller() )
+
+		context3 = Gaffer.Context( context1, omitCanceller = False )
+		self.assertIsNotNone( context3.canceller() )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -166,9 +166,10 @@ void GafferModule::bindContext()
 		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
 		.def(
 			init<const Context &, const IECore::Canceller &>( ( arg( "other" ), arg( "canceller" ) ) ) [
-				with_custodian_and_ward<1,2>()
+				with_custodian_and_ward<1,3>()
 			]
 		)
+		.def( init<const Context &, bool>( ( arg( "other" ), arg( "omitCanceller" ) ) ) )
 		.def( "setFrame", &setFrame )
 		.def( "getFrame", &Context::getFrame )
 		.def( "setFramesPerSecond", &setFramesPerSecond )
