@@ -685,6 +685,20 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		with Gaffer.Context( s.context(), canceller ) :
 			self.assertEqual( s["n"]["sum"].getValue(), 40 )
 
+	def testClearHashCache( self ) :
+
+		node = GafferTest.AddNode()
+		node["sum"].getValue()
+
+		with Gaffer.PerformanceMonitor() as m :
+			node["sum"].getValue()
+		self.assertEqual( m.plugStatistics( node["sum"] ).hashCount, 0 )
+
+		Gaffer.ValuePlug.clearHashCache()
+		with Gaffer.PerformanceMonitor() as m :
+			node["sum"].getValue()
+		self.assertEqual( m.plugStatistics( node["sum"] ).hashCount, 1 )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

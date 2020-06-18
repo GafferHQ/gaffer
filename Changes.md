@@ -68,6 +68,7 @@ API
     - PresetsPlugValueWidget
 - SetAlgo : Added Python binding for `affectsSetExpression()`.
 - Shader : Added `affectsAttributes()` protected method.
+- ValuePlug : Added `clearHashCache()` static method.
 
 Breaking Changes
 ----------------

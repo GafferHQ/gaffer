@@ -1125,3 +1125,8 @@ void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
 {
 	HashProcess::setCacheSizeLimit( maxEntriesPerThread );
 }
+
+void ValuePlug::clearHashCache()
+{
+	HashProcess::clearCache();
+}
