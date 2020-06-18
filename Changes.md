@@ -8,6 +8,7 @@ Improvements
   - Added support for `gaffer.icon STRING "name.png"` metadata in `.mtd` files.
   - Added support for `gaffer.iconScale FLOAT scale` metadata in `.mtd` files.
 - ImageStats : Parallelised compute for improved performance.
+- Documentation : Added Spreadsheet article.
 
 Fixes
 -----
@@ -38,6 +39,7 @@ Improvements
   - Added support for creating columns from tweaks in ShaderTweaks nodes. This allows the mode and value to be grouped in a single column.
   - Added colour swatches for columns containing a switch as well as a colour value.
 - ShaderTweaks : Added a preset for tweaking OpenGL surface shaders.
+- Documentation : Added Contexts article.
 
 Fixes
 -----
