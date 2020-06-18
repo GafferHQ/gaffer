@@ -185,6 +185,18 @@ class MessageWidget( GafferUI.Widget ) :
 		else :
 			return messages.count( level )
 
+	## Navigates the view to the next message of the specified level,
+	# considering the current selection.
+	def scrollToNextMessage( self, messageLevel, select = True, wrap = True ) :
+
+		self.__table.scrollToNextMessage( messageLevel, select, wrap )
+
+	## Navigates the view to the previous message of the specified level,
+	# considering the current selection.
+	def scrollToPreviousMessage( self, messageLevel, select = True, wrap = True ) :
+
+		self.__table.scrollToPreviousMessage( messageLevel, select, wrap )
+
 	# Friendship for our internal message handler
 	def _addMessage( self, level, context, message ) :
 
