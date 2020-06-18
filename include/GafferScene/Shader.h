@@ -135,15 +135,29 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
-		/// Called when computing the hash for this node. May be reimplemented in derived classes
-		/// to deal with special cases, in which case parameterValue() should be reimplemented too.
-		virtual void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const;
-		/// Called for each parameter plug when constructing an IECore::Shader from this node.
-		/// May be reimplemented in derived classes to deal with special cases.
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const;
+		/// Attributes computation
+		/// ----------------------
+		///
+		/// These methods are used to perform the compute that turns the shader network
+		/// into one or more attributes that are made available by `ShaderPlug::attributes()`.
+		/// May be overridden by derived classes to customise the output. Customisation may
+		/// also be achieved at the level of individual shader parameters by implementing
+		/// the parameter conversion methods below.
 
-		virtual void attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h) const;
+		virtual bool affectsAttributes( const Gaffer::Plug *input ) const;
+		virtual void attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const;
+
+		/// Parameter conversion
+		/// --------------------
+
+		/// Called when computing `attributesHash()`. May be reimplemented in derived classes
+		/// to deal with special cases, in which case `parameterValue()` should be reimplemented too.
+		virtual void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const;
+		/// Called for each parameter plug when constructing an IECore::Shader from this node
+		/// in the `attributes()` method. May be reimplemented in derived classes to deal with special
+		/// cases.
+		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const;
 
 	private :
 

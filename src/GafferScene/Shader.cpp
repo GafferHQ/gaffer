@@ -669,6 +669,19 @@ IECore::ConstCompoundObjectPtr Shader::attributes() const
 	return outAttributesPlug()->getValue();
 }
 
+bool Shader::affectsAttributes( const Gaffer::Plug *input ) const
+{
+	return
+		parametersPlug()->isAncestorOf( input ) ||
+		input == enabledPlug() ||
+		input == nodeNamePlug() ||
+		input == namePlug() ||
+		input == typePlug() ||
+		input->parent<Plug>() == nodeColorPlug() ||
+		input == attributeSuffixPlug()
+	;
+}
+
 void Shader::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
 {
 	attributeSuffixPlug()->hash( h );
@@ -698,16 +711,18 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 {
 	ComputeNode::affects( input, outputs );
 
-	if(
-		parametersPlug()->isAncestorOf( input ) ||
-		input == enabledPlug() ||
-		input == nodeNamePlug() ||
-		input == namePlug() ||
-		input == typePlug() ||
-		input->parent<Plug>() == nodeColorPlug() ||
-		input == attributeSuffixPlug()
-	)
+	if( affectsAttributes( input ) )
 	{
+		outputs.push_back( outAttributesPlug() );
+	}
+
+	if( input == outAttributesPlug() )
+	{
+		// Our `outPlug()` is the one that actually gets connected into
+		// the ShaderPlug on ShaderAssignment etc. But `ShaderPlug::attributes()`
+		// pulls on `outAttributesPlug()`, so when that is dirtied, we should
+		// also dirty `outPlug()` to propagate dirtiness to ShaderAssignments.
+
 		if( const Plug *out = outPlug() )
 		{
 			if( !out->children().empty() )
@@ -725,7 +740,6 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 				outputs.push_back( out );
 			}
 		}
-		outputs.push_back( outAttributesPlug() );
 	}
 }
 
