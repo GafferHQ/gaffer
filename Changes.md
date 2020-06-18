@@ -13,6 +13,9 @@ Fixes
 -----
 
 - TransformTool : Fixed blank status message for certain non-editable selections.
+- Dispatcher : Fixed dispatch of two or more Switches or ContextProcessors connected together directly.
+- ArnoldTextureBake : Fixed recursion depth exception caused by more than ~300 meshes in a UDIM.
+- MergeScenes : Fixed bug in set computations which could trigger crashes with an overloaded cache.
 
 0.57.4.1 (relative to 0.57.4.0)
 ========
@@ -221,6 +224,16 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.4 (relative to 0.56.2.3)
+========
+
+Fixes
+-----
+
+- Dispatcher : Fixed dispatch of two or more Switches or ContextProcessors connected together directly.
+- ArnoldTextureBake : Fixed recursion depth exception caused by more than ~300 meshes in a UDIM.
+- MergeScenes : Fixed bug in set computations which could trigger crashes with an overloaded cache.
 
 0.56.2.3 (relative to 0.56.2.2)
 ========
