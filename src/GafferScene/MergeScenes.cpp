@@ -845,7 +845,8 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaf
 					// This naive approach to merging set names preserves the order of the incoming names,
 					// but at the expense of using linear search. We assume that the number of sets is small
 					// enough and the InternedString comparison fast enough that this is OK.
-					for( const auto &setName : scene->setNamesPlug()->getValue()->readable() )
+					ConstInternedStringVectorDataPtr setNames = scene->setNamesPlug()->getValue();
+					for( const auto &setName : setNames->readable() )
 					{
 						if( std::find( merged->readable().begin(), merged->readable().end(), setName ) == merged->readable().end() )
 						{
@@ -902,9 +903,8 @@ IECore::ConstPathMatcherDataPtr MergeScenes::computeSet( const IECore::InternedS
 					merged = new PathMatcherData();
 					result = merged;
 				case InputType::Other :
-					merged->writable().addPaths(
-						scene->setPlug()->getValue()->readable()
-					);
+					ConstPathMatcherDataPtr paths = scene->setPlug()->getValue();
+					merged->writable().addPaths( paths->readable() );
 			}
 			return true;
 		}
