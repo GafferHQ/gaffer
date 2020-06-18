@@ -16,6 +16,7 @@ Improvements
 - Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
 - AnimationEditor : Improved performance.
 - MessageWidget : Added alternate presentation options allowing log-style message display, search, etc.
+- Viewer : Added warning/error message count to Render Control overlay.
 
 Fixes
 -----
