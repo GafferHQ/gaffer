@@ -49,6 +49,9 @@ from Qt import QtWidgets
 class BoolWidget( GafferUI.Widget ) :
 
 	DisplayMode = IECore.Enum.create( "CheckBox", "Switch", "Tool" )
+	# True/False states are deliberately omitted from this enum;
+	# For backwards compatibility we use `bool` values instead.
+	State = IECore.Enum.create( "Indeterminate" )
 
 	def __init__( self, text="", checked=False, displayMode=DisplayMode.CheckBox, image = None, **kw ) :
 
@@ -90,13 +93,25 @@ class BoolWidget( GafferUI.Widget ) :
 
 		return self.__image
 
-	def setState( self, checked ) :
+	## State may be passed as either a `bool` or `State.Indeterminate`.
+	def setState( self, state ) :
 
-		self._qtWidget().setCheckState( QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked )
+		if state == self.State.Indeterminate :
+			self._qtWidget().setTristate( True )
+			self._qtWidget().setCheckState( QtCore.Qt.PartiallyChecked )
+		else :
+			self._qtWidget().setTristate( False )
+			self._qtWidget().setCheckState( QtCore.Qt.Checked if state else QtCore.Qt.Unchecked )
 
 	def getState( self ) :
 
-		return self._qtWidget().checkState() == QtCore.Qt.Checked
+		s = self._qtWidget().checkState()
+		if s == QtCore.Qt.Checked :
+			return True
+		elif s == QtCore.Qt.Unchecked :
+			return False
+		else :
+			return self.State.Indeterminate
 
 	def setDisplayMode( self, displayMode ) :
 

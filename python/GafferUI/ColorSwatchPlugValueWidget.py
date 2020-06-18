@@ -36,17 +36,18 @@
 ##########################################################################
 
 import weakref
+import imath
 
 import Gaffer
 import GafferUI
 
 class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		self.__swatch = GafferUI.ColorSwatch()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plugs, **kw )
 
 		## \todo How do set maximum height with a public API?
 		self.__swatch._qtWidget().setMaximumHeight( 20 )
@@ -58,11 +59,7 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
-		self._updateFromPlug()
-
-	def setPlug( self, plug ) :
-
-		GafferUI.PlugValueWidget.setPlug( self, plug )
+		self._updateFromPlugs()
 
 	def setHighlighted( self, highlighted ) :
 
@@ -70,12 +67,12 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__swatch.setHighlighted( highlighted )
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
-		plug = self.getPlug()
-		if plug is not None :
-			with self.getContext() :
-				self.__swatch.setColor( plug.getValue() )
+		with self.getContext() :
+			value = _colorFromPlugs( self.getPlugs() )
+
+		self.__swatch.setColor( value )
 
 	def __buttonPress( self, widget, event ) :
 
@@ -102,9 +99,19 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not self._editable() :
 			return False
 
-		_ColorPlugValueDialogue.acquire( self.getPlug() )
+		_ColorPlugValueDialogue.acquire( self.getPlugs() )
 
 		return True
+
+def _colorFromPlugs( plugs ) :
+
+	if not len( plugs ) :
+		return imath.Color4f( 0 )
+
+	# ColorSwatch only supports one colour, and doesn't have
+	# an "indeterminate" state, so when we have multiple plugs
+	# the best we can do is take an average.
+	return sum( p.getValue() for p in plugs ) / len( plugs )
 
 ## \todo Perhaps we could make this a part of the public API? Perhaps we could also make a
 # PlugValueDialogue base class to share some of the work with the dialogue made by the
@@ -112,11 +119,11 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 # actually be functionality of CompoundEditor?
 class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 
-	def __init__( self, plug, parentWindow ) :
+	def __init__( self, plugs, parentWindow ) :
 
 		GafferUI.ColorChooserDialogue.__init__(
 			self,
-			color = plug.getValue()
+			color = _colorFromPlugs( plugs )
 		)
 
 		# we use these to decide which actions to merge into a single undo
@@ -127,38 +134,46 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 		self.cancelButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
-		self.__plug = plug
+		self.__plugs = plugs
+		self.__initialValues = { p : p.getValue() for p in self.__plugs }
 
-		node = plug.node()
-		node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
-		self.__plugSetConnection = plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+		nodes = { p.node() for p in self.__plugs }
+		self.__plugSetConnections = [ n.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False ) for n in nodes ]
+		for node in nodes :
+			node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__destroy ), scoped = False )
 
-		self.setTitle( plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) ) )
+		plug = next( iter( self.__plugs ) )
+		if len( self.__plugs ) == 1 :
+			self.setTitle( plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) ) )
+		else :
+			self.setTitle( "{} plugs".format( len( self.__plugs ) ) )
 
 		self.__plugSet( plug )
 
 		parentWindow.addChildWindow( self, removeOnClose = True )
 
 	@classmethod
-	def acquire( cls, plug ) :
+	def acquire( cls, plugs ) :
+
+		plug = next( iter( plugs ) )
 
 		script = plug.node().scriptNode()
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 
 		for window in scriptWindow.childWindows() :
-			if isinstance( window, cls ) and window.__plug == plug :
+			if isinstance( window, cls ) and window.__plugs == plugs :
 				window.setVisible( True )
 				return window
 
-		window = _ColorPlugValueDialogue( plug, scriptWindow )
+		window = _ColorPlugValueDialogue( plugs, scriptWindow )
 		window.setVisible( True )
 		return False
 
 	def __plugSet( self, plug ) :
 
-		if plug.isSame( self.__plug ) :
+		if plug in self.__plugs :
 			with Gaffer.BlockedConnection( self.__colorChangedConnection ) :
-				self.colorChooser().setColor( self.__plug.getValue() )
+				self.colorChooser().setColor( _colorFromPlugs( self.__plugs ) )
 
 	def __colorChanged( self, colorChooser, reason ) :
 
@@ -167,18 +182,20 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		self.__lastChangedReason = reason
 
 		with Gaffer.UndoScope(
-			self.__plug.ancestor( Gaffer.ScriptNode ),
+			next( iter( self.__plugs ) ).ancestor( Gaffer.ScriptNode ),
 			mergeGroup = "ColorPlugValueDialogue%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
 
-			with Gaffer.BlockedConnection( self.__plugSetConnection ) :
-				self.__plug.setValue( self.colorChooser().getColor() )
+			with Gaffer.BlockedConnection( self.__plugSetConnections ) :
+				for plug in self.__plugs :
+					plug.setValue( self.colorChooser().getColor() )
 
 	def __buttonClicked( self, button ) :
 
 		if button is self.cancelButton :
-			with Gaffer.UndoScope( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
-				self.__plug.setValue( self.colorChooser().getInitialColor() )
+			with Gaffer.UndoScope( next( iter( self.__plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+				for p, v in self.__initialValues.items() :
+					p.setValue( v )
 
 		# ideally we'd just remove ourselves from our parent immediately, but that would
 		# trigger this bug :

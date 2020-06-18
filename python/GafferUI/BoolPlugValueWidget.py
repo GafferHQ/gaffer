@@ -40,26 +40,33 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 ## Supported plug metadata :
 #
 # - "boolPlugValueWidget:displayMode", with a value of "checkBox", "switch" or "tool"
 # - "boolPlugValueWidget:image", with the name of an image to display when displayMode is "tool"
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
+	def __init__( self, plugs, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
+
+		if plugs is None :
+			plugs = set()
+		elif isinstance( plugs, Gaffer.Plug ) :
+			plugs = { plugs }
 
 		self.__boolWidget = GafferUI.BoolWidget(
 			displayMode = displayMode,
-			image = Gaffer.Metadata.value( plug, "boolPlugValueWidget:image" )
+			image = sole( Gaffer.Metadata.value( p, "boolPlugValueWidget:image" ) for p in plugs )
 		)
 
-		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plugs, **kw )
 
 		self._addPopupMenu( self.__boolWidget )
 
 		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
 	def boolWidget( self ) :
 
@@ -70,60 +77,69 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.__boolWidget.setHighlighted( highlighted )
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
-		if self.getPlug() is not None :
+		# Value and error status
 
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					value = None
+		errored = False
+		value = None
+		with self.getContext() :
+			try :
+				value = sole( p.getValue() for p in self.getPlugs() )
+			except :
+				errored = True
 
-			if value is not None :
-				with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
-					self.__boolWidget.setState( value )
+		with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
+			self.__boolWidget.setState( value if value is not None else self.__boolWidget.State.Indeterminate )
 
-			self.__boolWidget.setErrored( value is None )
+		self.__boolWidget.setErrored( errored )
 
-			displayMode = Gaffer.Metadata.value( self.getPlug(), "boolPlugValueWidget:displayMode" )
-			if displayMode is not None :
-				displayMode = {
-					"switch" : self.__boolWidget.DisplayMode.Switch,
-					"checkBox" : self.__boolWidget.DisplayMode.CheckBox,
-					"tool" : self.__boolWidget.DisplayMode.Tool,
-				}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
-				self.__boolWidget.setDisplayMode( displayMode )
+		# Animation state
 
-			## \todo Perhaps this styling should be provided by the BoolWidget itself?
-			animated = Gaffer.Animation.isAnimated( self.getPlug() )
-			widgetAnimated = GafferUI._Variant.fromVariant( self.__boolWidget._qtWidget().property( "gafferAnimated" ) ) or False
-			if widgetAnimated != animated :
-				self.__boolWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
-				self.__boolWidget._repolish()
+		animated = any( Gaffer.Animation.isAnimated( p ) for p in self.getPlugs() )
+		## \todo Perhaps this styling should be provided by the BoolWidget itself?
+		widgetAnimated = GafferUI._Variant.fromVariant( self.__boolWidget._qtWidget().property( "gafferAnimated" ) ) or False
+		if widgetAnimated != animated :
+			self.__boolWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
+			self.__boolWidget._repolish()
+
+		# Display mode and enabled status
+
+		displayMode = sole( Gaffer.Metadata.value( p, "boolPlugValueWidget:displayMode" ) for p in self.getPlugs() )
+		if displayMode is not None :
+			displayMode = {
+				"switch" : self.__boolWidget.DisplayMode.Switch,
+				"checkBox" : self.__boolWidget.DisplayMode.CheckBox,
+				"tool" : self.__boolWidget.DisplayMode.Tool,
+			}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
+			self.__boolWidget.setDisplayMode( displayMode )
 
 		self.__boolWidget.setEnabled( self._editable( canEditAnimation = True ) )
 
 	def __stateChanged( self, widget ) :
 
-		self.__setPlugValue()
+		self.__setPlugValues()
 
 		return False
 
-	def __setPlugValue( self ) :
+	def __setPlugValues( self ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		value = self.__boolWidget.getState()
+		assert( value != self.__boolWidget.State.Indeterminate ) # Should be set by us, not by user action
 
-			if Gaffer.Animation.isAnimated( self.getPlug() ) :
-				curve = Gaffer.Animation.acquire( self.getPlug() )
-				curve.addKey(
-					Gaffer.Animation.Key(
-						time = self.getContext().getTime(),
-						value = self.__boolWidget.getState(),
-						type = Gaffer.Animation.Type.Step
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+
+				if Gaffer.Animation.isAnimated( plug ) :
+					curve = Gaffer.Animation.acquire( plug )
+					curve.addKey(
+						Gaffer.Animation.Key(
+							time = self.getContext().getTime(),
+							value = value,
+							type = Gaffer.Animation.Type.Step
+						)
 					)
-				)
-			else :
-				self.getPlug().setValue( self.__boolWidget.getState() )
+				else :
+					plug.setValue( value )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolPlug, BoolPlugValueWidget )

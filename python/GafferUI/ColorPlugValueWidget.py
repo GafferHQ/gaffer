@@ -44,11 +44,11 @@ from Qt import QtCore
 
 class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
-		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plug, **kw )
+		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plugs, **kw )
 
-		self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plug )
+		self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plugs )
 
 		self._row().append( self.__swatch, expand=True )
 
@@ -56,11 +56,11 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 
 		self.__blinkBehaviour = None
 
-	def setPlug( self, plug ) :
+	def setPlugs( self, plugs ) :
 
-		GafferUI.CompoundNumericPlugValueWidget.setPlug( self, plug )
+		GafferUI.CompoundNumericPlugValueWidget.setPlugs( self, plugs )
 
-		self.__swatch.setPlug( plug )
+		self.__swatch.setPlugs( plugs )
 
 	def __buttonRelease( self, widget, event ) :
 
@@ -70,7 +70,7 @@ class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 			# draw the user's attention to the components which are preventing that.
 			if self.__blinkBehaviour is not None :
 				self.__blinkBehaviour.stop()
-			widgets = [ w for w in self._row()[:len( self.getPlug() )] if not w._editable() ]
+			widgets = [ w for w in self._row() if isinstance( w, GafferUI.NumericPlugValueWidget ) and not w._editable() ]
 			self.__blinkBehaviour = _BlinkBehaviour( widgets )
 			self.__blinkBehaviour.start()
 

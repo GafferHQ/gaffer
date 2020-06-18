@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import six
 
 import IECore
 
@@ -99,6 +100,39 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		w = GafferUI.PlugValueWidget.create( n["p"] )
 		self.assertTrue( isinstance( w, GafferUI.ConnectionPlugValueWidget ) )
 		self.assertTrue( w.getPlug().isSame( n["p"] ) )
+
+	def testPlugTypesMustMatch( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		with six.assertRaisesRegex( self, ValueError, "Plugs have different types" ) :
+			GafferUI.NumericPlugValueWidget( n["user"].children() )
+
+		w = GafferUI.NumericPlugValueWidget( n["user"]["p1"] )
+		with six.assertRaisesRegex( self, ValueError, "Plugs have different types" ) :
+			w.setPlugs( n["user"].children() )
+
+	def testGetPlugWithMultiplePlugs( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.NumericPlugValueWidget( n["user"].children() )
+		self.assertRaises( GafferUI.PlugValueWidget.MultiplePlugsError, w.getPlug )
+
+	def testCreateThrowsIfMultipleWidgetCreators( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerValue( n["user"]["p1"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
+
+		with six.assertRaisesRegex( self, Exception, "Multiple widget creators" ) :
+			GafferUI.PlugValueWidget.create( n["user"].children() )
 
 	def testAcquire( self ) :
 

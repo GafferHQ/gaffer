@@ -22,6 +22,8 @@ Fixes
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.
 - GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
+- Signal : Fixed hang which could occur if a result combiner implemented in Python tried to handle exceptions.
+- NumericWidget : Fixed errors when trying to use a virtual slider with an empty value.
 
 API
 ---
@@ -37,6 +39,20 @@ API
   - Added messages plug containing the output of the node's renderer output (#3419).
 - Graphics : Renamed `errorNotificationSmall` icon to `errorSmall`.
 - NotificationMessageHandler : Constructor now accepts `GafferUI.MessageWidget` constructor kwargs to configure the widget.
+- PlugValueWidget : Added the capability to edit more than one plug at a time.
+  - Added `setPlugs()` and `getPlugs()` methods. The previous `setPlug()` and `getPlug()` methods remain as a convenience.
+  - Derived classes should now override `setPlugs()` rather than `setPlug()`, but backwards compatibility is preserved for classes which have not been converted yet.
+  - Derived classes should now implement `_updateFromPlugs()` rather than `_updateFromPlug()`, but backwards compatibility is preserved for classes which have not been converted yet.
+  - `create()` now optionally accepts a list of plugs in place of a single plug.
+  - Updated the following subclasses to fully support multiple plugs :
+    - NumericPlugValueWidget
+    - CompoundNumericPlugValueWidget
+    - ColorSwatchPlugValueWidget
+    - ColorPlugValueWidget
+    - StringPlugValueWidget
+    - TweakPlugValueWidget
+    - BoolPlugValueWidget
+    - PresetsPlugValueWidget
 
 Breaking Changes
 ----------------
@@ -68,7 +84,18 @@ Breaking Changes
 - RecursiveChildIterator : Changed private member data. Source compatibility is maintained.
 - IECorePreview::Renderer : Changed signature for `create` and `registerType` to include optional message handler.
 - ObjectProcessor : Added a virtual method.
-- PlugValueWidget : Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
+- PlugValueWidget :
+  - Renamed `create()` argument from `plug` to `plugs`. A single plug may still be passed.
+  - Renamed constructor argument from `plug` to `plugs`. A single plug may still be passed. The same applies to the constructors for the following subclasses :
+    - NumericPlugValueWidget
+    - CompoundNumericPlugValueWidget
+    - ColorSwatchPlugValueWidget
+    - ColorPlugValueWidget
+    - StringPlugValueWidget
+    - TweakPlugValueWidget
+    - BoolPlugValueWidget
+    - PresetsPlugValueWidget
+  - Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 

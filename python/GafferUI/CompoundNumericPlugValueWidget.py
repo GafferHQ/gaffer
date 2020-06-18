@@ -40,6 +40,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 # Supported metadata :
 #
 #	- "ui:visibleDimensions" controls how many dimensions are actually shown.
@@ -47,38 +49,29 @@ import GafferUI
 #     V2fPlug.
 class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs, **kw )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
-
-		componentPlugs = plug.children()
-		for p in componentPlugs :
-			w = GafferUI.NumericPlugValueWidget( p )
-			self.__row.append( w )
-
-		self.__applyVisibleDimensions()
-
+		self.__ensureChildPlugValueWidgets()
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
-	def setPlug( self, plug ) :
+	def setPlugs( self, plugs ) :
 
-		assert( len( plug ) == len( self.getPlug() ) )
-
-		GafferUI.PlugValueWidget.setPlug( self, plug )
-
-		for index, plug in enumerate( plug.children() ) :
-			self.__row[index].setPlug( plug )
-
-		self.__applyVisibleDimensions()
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
+		self.__ensureChildPlugValueWidgets()
 
 	def setHighlighted( self, highlighted ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 
-		for i in range( 0, len( self.getPlug() ) ) :
-			self.__row[i].setHighlighted( highlighted )
+		for w in self.__row :
+			if isinstance( w, GafferUI.NumericPlugValueWidget ) :
+				w.setHighlighted( highlighted )
+			else :
+				# End widgets managed by a subclass.
+				break
 
 	def setReadOnly( self, readOnly ) :
 
@@ -93,13 +86,14 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def childPlugValueWidget( self, childPlug ) :
 
-		for i, p in enumerate( self.getPlug().children() ) :
-			if p.isSame( childPlug ) :
-				return self.__row[i]
+		for widget in self.__row :
+			if isinstance( widget, GafferUI.PlugValueWidget ) :
+				if childPlug in widget.getPlugs() :
+					return widget
 
 		return None
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
 		pass
 
@@ -109,7 +103,10 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__row
 
-	# Reimplemented to perform casting between vector and color types.
+	# Reimplemented to perform casting between vector and color types,
+	# including types with different dimensions. In this case we preserve
+	# the current values for any additional dimensions not provided by the
+	# incoming `value`.
 	def _convertValue( self, value ) :
 
 		result = GafferUI.PlugValueWidget._convertValue( self, value )
@@ -120,7 +117,9 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			value = value.value
 			if hasattr( value, "dimensions" ) and isinstance( value.dimensions(), int ) :
 				with self.getContext() :
-					result = self.getPlug().getValue()
+					result = sole( p.getValue() for p in self.getPlugs() )
+				if result is None :
+					return None
 				componentType = type( result[0] )
 				for i in range( 0, min( result.dimensions(), value.dimensions() ) ) :
 					result[i] = componentType( value[i] )
@@ -132,12 +131,12 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if event.key == "G" and event.modifiers & event.Modifiers.Control :
 
-			if not hasattr( self.getPlug(), "isGanged" ) :
+			if not all( hasattr( p, "isGanged" ) for p in self.getPlugs() ) :
 				return False
 
-			if self.getPlug().isGanged() :
+			if all( p.isGanged() for p in self.getPlugs() ) :
 				self.__ungang()
-			elif self.getPlug().canGang() :
+			else :
 				self.__gang()
 
 			return True
@@ -146,13 +145,15 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __gang( self ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().gang()
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				plug.gang()
 
 	def __ungang( self ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().ungang()
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				plug.ungang()
 
 	@staticmethod
 	def _popupMenu( menuDefinition, plugValueWidget ) :
@@ -168,32 +169,63 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if compoundNumericPlugValueWidget is None :
 			return
 
-		if not hasattr( compoundNumericPlugValueWidget.getPlug(), "isGanged" ) :
+		plugs = compoundNumericPlugValueWidget.getPlugs()
+		if not all( hasattr( p, "isGanged" ) for p in plugs ) :
 			return
 
-		if compoundNumericPlugValueWidget.getPlug().isGanged() :
+		readOnly = plugValueWidget.getReadOnly() or any( Gaffer.MetadataAlgo.readOnly( p ) for p in plugs )
+
+		if all( p.isGanged() for p in plugs ) :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
 			menuDefinition.append( "/Ungang", {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ),
 				"shortCut" : "Ctrl+G",
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( compoundNumericPlugValueWidget.getPlug() ),
+				"active" : not readOnly,
 			} )
-		elif compoundNumericPlugValueWidget.getPlug().canGang() :
+		else :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
 			menuDefinition.append( "/Gang", {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ),
 				"shortCut" : "Ctrl+G",
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( compoundNumericPlugValueWidget.getPlug() ),
+				"active" : not readOnly and all( p.canGang() for p in plugs ),
 			} )
 
-	def __applyVisibleDimensions( self ) :
+	def __ensureChildPlugValueWidgets( self ) :
 
-		actualDimensions = len( self.getPlug() )
-		visibleDimensions = Gaffer.Metadata.value( self.getPlug(), "ui:visibleDimensions" )
-		visibleDimensions = visibleDimensions if visibleDimensions is not None else actualDimensions
+		# Adjust our layout to include the right number of widgets.
+		# Because we expose `row_()`, derived classes may have added
+		# additional widgets on the end, which we must leave alone.
 
-		for i in range( 0, actualDimensions ) :
-			self.__row[i].setVisible( i < visibleDimensions )
+		numericWidgets = []
+		additionalWidgets = []
+		for i, w in enumerate( self.__row ) :
+			if isinstance( w, GafferUI.NumericPlugValueWidget ) :
+				numericWidgets.append( w )
+			else :
+				additionalWidgets = self.__row[i:]
+				break
+
+		dimensions = min( len( p ) for p in self.getPlugs() )
+		if dimensions > len( numericWidgets ) :
+			for i in range( 0, dimensions - len( numericWidgets ) ) :
+				numericWidgets.append( GafferUI.NumericPlugValueWidget( plugs = [] ) )
+		else :
+			del numericWidgets[dimensions:]
+
+		self.__row[:] = numericWidgets + additionalWidgets
+
+		# Call `setPlugs()` for each numeric widget and apply widget
+		# visibility according to metadata.
+
+		visibleDimensions = dimensions
+		for plug in self.getPlugs() :
+			d = Gaffer.Metadata.value( plug, "ui:visibleDimensions" )
+			if d is not None :
+				visibleDimensions = min( visibleDimensions, d )
+
+		for i, w in enumerate( numericWidgets ) :
+			w.setPlugs( { p[i] for p in self.getPlugs() } )
+			w.setVisible( i < visibleDimensions )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( CompoundNumericPlugValueWidget._popupMenu, scoped = False )
 

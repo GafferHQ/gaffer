@@ -313,6 +313,36 @@ class SignalsTest( GafferTest.TestCase ) :
 		self.assertEqual( s(), True )
 		self.assertEqual( self.numCalls, 1 )
 
+	def testPythonResultCombinerCanHandleExceptions( self ) :
+
+		def myCombiner( slotResults ) :
+
+			results = []
+			exceptions = []
+
+			while True :
+
+				try :
+					results.append( next( slotResults ) )
+				except StopIteration :
+					return results, exceptions
+				except Exception as e :
+					exceptions.append( e )
+
+		def badSlot() :
+
+			raise RuntimeError()
+
+		s = Gaffer.Signal0( myCombiner )
+		s.connect( lambda : 10, scoped = False )
+		s.connect( badSlot, scoped = False )
+		s.connect( lambda : 20, scoped = False )
+
+		results, exceptions = s()
+		self.assertEqual( results, [ 10, 20 ] )
+		self.assertEqual( len( exceptions ), 1 )
+		self.assertIsInstance( exceptions[0], RuntimeError )
+
 	def testGroupingAndOrdering( self ) :
 
 		values = []

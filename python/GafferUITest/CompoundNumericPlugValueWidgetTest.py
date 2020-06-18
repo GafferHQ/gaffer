@@ -84,5 +84,77 @@ class CompoundNumericPlugValueWidgetTest( unittest.TestCase ) :
 		self.assertTrue( w.childPlugValueWidget( n["v"][1] ).getVisible() )
 		self.assertFalse( w.childPlugValueWidget( n["v"][2] ).getVisible() )
 
+	def testSetGetPlugs( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["v1"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["v2"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"]["v1"] )
+		self.assertEqual( w.getPlug(), n["user"]["v1"] )
+		self.assertEqual( w.getPlugs(), { n["user"]["v1"] } )
+
+		w.setPlug( n["user"]["v2"] )
+		self.assertEqual( w.getPlug(), n["user"]["v2"] )
+		self.assertEqual( w.getPlugs(), { n["user"]["v2"] } )
+
+		w.setPlugs( { n["user"]["v1"] } )
+		self.assertEqual( w.getPlug(), n["user"]["v1"] )
+		self.assertEqual( w.getPlugs(), { n["user"]["v1"] } )
+
+		for childPlug in n["user"]["v1"] :
+			self.assertEqual(
+				w.childPlugValueWidget( childPlug ).getPlug(),
+				childPlug,
+			)
+
+	def testChangePlugDimensions( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"]["p1"] )
+		self.assertEqual( len( w._row() ), 2 )
+		for childPlug in Gaffer.Plug.Range( w.getPlug() ) :
+			self.assertEqual( w.childPlugValueWidget( childPlug ).getPlug(), childPlug )
+
+		w.setPlug( n["user"]["p2"] )
+		self.assertEqual( len( w._row() ), 3 )
+		for childPlug in Gaffer.Plug.Range( w.getPlug() ) :
+			self.assertEqual( w.childPlugValueWidget( childPlug ).getPlug(), childPlug )
+
+		w.setPlug( n["user"]["p1"] )
+		self.assertEqual( len( w._row() ), 2 )
+		for childPlug in Gaffer.Plug.Range( w.getPlug() ) :
+			self.assertEqual( w.childPlugValueWidget( childPlug ).getPlug(), childPlug )
+
+	def testChildPlugValueWidgetForMultiplePlugs( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["p2"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"].children() )
+
+		for plug in n["user"].children() :
+			for childPlug in plug :
+				self.assertIn( childPlug, w.childPlugValueWidget( childPlug ).getPlugs() )
+
+	def testHighlighting( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.CompoundNumericPlugValueWidget( n["user"]["p1"] )
+
+		w.setHighlighted( True )
+		for childPlug in w.getPlug() :
+			self.assertTrue( w.childPlugValueWidget( childPlug ).getHighlighted() )
+
+		w.setHighlighted( False )
+		for childPlug in w.getPlug() :
+			self.assertFalse( w.childPlugValueWidget( childPlug ).getHighlighted() )
+
 if __name__ == "__main__":
 	unittest.main()

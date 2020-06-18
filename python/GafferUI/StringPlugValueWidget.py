@@ -38,17 +38,19 @@
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 ## Supported Metadata :
 #
 # - "stringPlugValueWidget:continuousUpdate"
 # - "stringPlugValueWidget:placeholderText" : The text displayed when the string value is left empty
 class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		self.__textWidget = GafferUI.TextWidget()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plugs, **kw )
 
 		self._addPopupMenu( self.__textWidget )
 
@@ -56,7 +58,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
 	def textWidget( self ) :
 
@@ -67,32 +69,37 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.textWidget().setHighlighted( highlighted )
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
-		if self.getPlug() is not None :
+		value = None
+		errored = False
+		with self.getContext() :
+			try :
+				value = sole( p.getValue() for p in self.getPlugs() )
+			except :
+				errored = True
 
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					value = None
+		text = value or ""
+		if text != self.__textWidget.getText() :
+			# Setting the text moves the cursor to the end,
+			# even if the new text is the same. We must avoid
+			# calling setText() in this situation, otherwise the
+			# cursor is always moving to the end whenever a key is
+			# pressed in continuousUpdate mode.
+			self.__textWidget.setText( text )
 
-			if value is not None :
-				if value != self.__textWidget.getText() :
-					# Setting the text moves the cursor to the end,
-					# even if the new text is the same. We must avoid
-					# calling setText() in this situation, otherwise the
-					# cursor is always moving to the end whenever a key is
-					# pressed in continuousUpdate mode.
-					self.__textWidget.setText( value )
+		self.__textWidget.setErrored( errored )
 
-			self.__textWidget.setErrored( value is None )
+		self.__textChangedConnection.block(
+			any( not Gaffer.Metadata.value( p, "stringPlugValueWidget:continuousUpdate" ) for p in self.getPlugs() )
+		)
 
-			self.__textChangedConnection.block(
-				not Gaffer.Metadata.value( self.getPlug(), "stringPlugValueWidget:continuousUpdate" )
-			)
-
-			self.__textWidget._qtWidget().setPlaceholderText( Gaffer.Metadata.value( self.getPlug(), "stringPlugValueWidget:placeholderText" ) )
+		placeHolder = ""
+		if value is None and len( self.getPlugs() ) :
+			placeHolder = "---"
+		else :
+			placeHolder = sole( Gaffer.Metadata.value( p, "stringPlugValueWidget:placeholderText" ) for p in self.getPlugs() ) or ""
+		self.textWidget()._qtWidget().setPlaceholderText( placeHolder )
 
 		self.__textWidget.setEditable( self._editable() )
 
@@ -105,7 +112,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# escape abandons everything
 		if event.key=="Escape" :
-			self._updateFromPlug()
+			self._updateFromPlugs()
 			return True
 
 		return False
@@ -116,8 +123,9 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self._editable() :
 			text = self.__textWidget.getText()
-			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-				self.getPlug().setValue( text )
+			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+				for plug in self.getPlugs() :
+					plug.setValue( text )
 
 			# now we've transferred the text changes to the global undo queue, we remove them
 			# from the widget's private text editing undo queue. it will then ignore undo shortcuts,
