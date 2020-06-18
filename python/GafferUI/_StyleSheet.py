@@ -1209,7 +1209,7 @@ _styleSheet = string.Template(
 		padding: 0;
 	}
 
-	*[gafferClass="GafferUI.MessageWidget._MessageSummaryWidget"] QPushButton {
+	*[gafferClass="GafferUI.MessageWidget.MessageSummaryWidget"] QPushButton {
 		padding-left: 4px;
 		padding-right: 4px;
 	}

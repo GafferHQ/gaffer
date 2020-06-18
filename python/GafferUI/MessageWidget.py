@@ -37,6 +37,7 @@
 import bisect
 import functools
 import imath
+import six
 import weakref
 
 import IECore
@@ -91,7 +92,10 @@ class MessageWidget( GafferUI.Widget ) :
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) :
 
-					self.__summaryWidget = _MessageSummaryWidget()
+					shortcuts = self.__table.eventNavigationShortcuts()
+					toolTips = { l : "Click to jump to next {} message [{}]".format( l, shortcuts[l] ) for l in _messageLevels }
+
+					self.__summaryWidget = MessageSummaryWidget( displayLevel = IECore.MessageHandler.Level.Debug, hideUnusedLevels = False, buttonToolTip = toolTips )
 					self.__summaryWidget.levelButtonClickedSignal().connect( Gaffer.WeakMethod( self.__levelButtonClicked ), scoped = False )
 
 					GafferUI.Spacer( imath.V2i( 0 ) )
@@ -197,13 +201,13 @@ class MessageWidget( GafferUI.Widget ) :
 	def __levelButtonClicked( self, level ) :
 
 		if GafferUI.Widget.currentModifiers() == GafferUI.ModifiableEvent.Modifiers.Shift :
-			self.__table.previousMessage( level )
+			self.__table.scrollToPreviousMessage( level )
 		else :
-			self.__table.nextMessage( level )
+			self.__table.scrollToNextMessage( level )
 
 	def __messagesChanged( self, widget ) :
 
-		self.__summaryWidget.updateFromMessages( widget.getMessages() )
+		self.__summaryWidget.setMessages( widget.getMessages() )
 
 	def __isFollowingMessagesChanged( self, widget ) :
 
@@ -278,23 +282,25 @@ class _MessageHandler( IECore.MessageHandler ) :
 # Component Widgets
 # =================
 
-# Provides a canonical list of IECore MessageHandler message levels
-def _messageLevels() :
-
-	Level = IECore.MessageHandler.Level
-	return [ l for l in Level.values.values() if l is not Level.Invalid ]
+_messageLevels = (
+	IECore.MessageHandler.Level.Error, IECore.MessageHandler.Level.Warning,
+	IECore.MessageHandler.Level.Info, IECore.MessageHandler.Level.Debug
+)
 
 # Provides badge + count for each message level. The badges are clickable,
 # \see levelButtonClickedSignal.
-class _MessageSummaryWidget( GafferUI.Widget ) :
+class MessageSummaryWidget( GafferUI.Widget ) :
 
-	# \todo If this is promoted for use in the Viewer render control UI, make sure to update
-	# the stylesheet class names, and factor in how to configure the tooltips.
-
-	def __init__( self, **kw ) :
+	# displayLevel :     Only display counts or messages of this level or lower
+	# hideUnusedLevels : When true, counts will be hidden for unused message levels
+	# buttonToolTip :    The tooltip to display on the count buttons. This can be a string, applied to all buttons
+	#                    or a dict, keyed by message level.
+	def __init__( self, displayLevel = IECore.MessageHandler.Level.Warning, hideUnusedLevels = True, buttonToolTip = None, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		GafferUI.Widget.__init__( self, row, **kw )
+
+		self.__hideUnusedLevels = hideUnusedLevels
 
 		# Keep in a local too to allow us to capture the signal in a lambda without dragging in self
 		buttonSignal = Gaffer.Signal1()
@@ -302,22 +308,24 @@ class _MessageSummaryWidget( GafferUI.Widget ) :
 
 		self.__buttons = {}
 
-		tooltipTempate = "Click to jump to next {} message [{}]"
-		buttonShortcuts = {
-			IECore.MessageHandler.Level.Error : "E", IECore.MessageHandler.Level.Warning : "W",
-			IECore.MessageHandler.Level.Info : "I", IECore.MessageHandler.Level.Debug : "D"
-		}
-
 		with row :
 
-			for level in _messageLevels() :
+			for level in _messageLevels :
+
+				if int( level ) > int( displayLevel ) :
+					break
 
 				button = GafferUI.Button( image = str(level).lower() + "Small.png", hasFrame = False )
 				button.clickedSignal().connect( functools.partial( lambda l, _ : buttonSignal( l ), level ), scoped = False )
-				button.setToolTip( tooltipTempate.format( level, buttonShortcuts[ level ] ) )
+
+				if isinstance( buttonToolTip, dict ) :
+					button.setToolTip( buttonToolTip[ level ] )
+				elif isinstance( buttonToolTip, six.string_types ) :
+					button.setToolTip( buttonToolTip )
+
 				self.__buttons[ level ] = button
 
-		self.updateFromMessages( Gaffer.Private.IECorePreview.Messages() )
+		self.setMessages( Gaffer.Private.IECorePreview.Messages() )
 
 	# Emitted with the level of the button that was pressed
 	def levelButtonClickedSignal( self ) :
@@ -325,13 +333,21 @@ class _MessageSummaryWidget( GafferUI.Widget ) :
 		return self.__levelButtonClickedSignal
 
 	# Updates the button status and message count to that of the supplied messages
-	def updateFromMessages( self, messages ) :
+	def setMessages( self, messages ) :
+
+		self.__messages = messages
 
 		for level, button in self.__buttons.items() :
 
 			count = messages.count( level )
 			button.setEnabled( count > 0 )
 			button.setText( "%d" % count )
+			if self.__hideUnusedLevels :
+				button.setVisible( count > 0 )
+
+	def getMessages( self ) :
+
+		return Gaffer.Private.IECorePreview.Messages( self.__messages )
 
 ## Provides a drop down menu to select an IECore.MessageHandler.Level
 class _MessageLevelWidget( GafferUI.Widget ) :
@@ -374,7 +390,7 @@ class _MessageLevelWidget( GafferUI.Widget ) :
 	def __menuDefinition( self ) :
 
 		menuDefinition = IECore.MenuDefinition()
-		for level in _messageLevels() :
+		for level in _messageLevels :
 			menuDefinition.append(
 				"/%s" % level,
 				{
@@ -446,9 +462,9 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 	def __buttonClicked( self, button ) :
 
 		if button is self.__prevButton :
-			self.__table().previousSearchResult( self )
+			self.__table().scrollToPreviousSearchResult( self )
 		elif button is self.__nextButton :
-			self.__table().nextSearchResult( self )
+			self.__table().scrollToNextSearchResult( self )
 		elif button is self.__focusButton :
 			self.__table().setFocusSearchResults( not self.__table().getFocusSearchResults() )
 
@@ -461,7 +477,7 @@ class _MessageTableSearchWidget( GafferUI.Widget ) :
 		self.__table().setSearchText( self.__searchField.getText() )
 
 		if not self.__table().getFocusSearchResults() and self.__table().searchResultCount() > 0 :
-			self.__table().nextSearchResult()
+			self.__table().scrollToNextSearchResult()
 
 	def __clear( self ) :
 
@@ -625,11 +641,11 @@ class _MessageTableView( GafferUI.Widget ) :
 
 		return self.__searchModel.rowCount()
 
-	def nextSearchResult( self, *unused ) :
+	def scrollToNextSearchResult( self, *unused ) :
 
 		self.__navigateSearchResult( previous = False )
 
-	def previousSearchResult( self, *unused ) :
+	def scrollToPreviousSearchResult( self, *unused ) :
 
 		self.__navigateSearchResult( previous = True )
 
@@ -660,7 +676,7 @@ class _MessageTableView( GafferUI.Widget ) :
 
 	# Message navigation
 
-	def nextMessage( self, messageLevel, select = True, wrap = True ) :
+	def scrollToNextMessage( self, messageLevel, select = True, wrap = True ) :
 
 		assert( isinstance( messageLevel, IECore.MessageHandler.Level ) )
 
@@ -672,7 +688,7 @@ class _MessageTableView( GafferUI.Widget ) :
 		nextMessageIndex = self.__findNextMessage( messageLevel, reverse = False, wrap = wrap )
 		self.__scrollToMessage( nextMessageIndex, select )
 
-	def previousMessage( self, messageLevel, select = True, wrap = True ) :
+	def scrollToPreviousMessage( self, messageLevel, select = True, wrap = True ) :
 
 		assert( isinstance( messageLevel, IECore.MessageHandler.Level ) )
 
@@ -684,7 +700,6 @@ class _MessageTableView( GafferUI.Widget ) :
 		prevMessageIndex = self.__findNextMessage( messageLevel, reverse = True, wrap = wrap )
 		self.__scrollToMessage( prevMessageIndex, select )
 
-	# Scrolling
 
 	def isFollowingMessages( self ) :
 
@@ -698,6 +713,17 @@ class _MessageTableView( GafferUI.Widget ) :
 
 		self.__userSetScrollPosition( False )
 		self.__scrollToBottom()
+
+	__eventLevelShortcuts = {
+		"E" : IECore.MessageHandler.Level.Error,
+		"W" : IECore.MessageHandler.Level.Warning,
+		"I" : IECore.MessageHandler.Level.Info,
+		"D" : IECore.MessageHandler.Level.Debug,
+	}
+
+	def eventNavigationShortcuts( self ) :
+
+		return { v : k for k, v in self.__eventLevelShortcuts.items() }
 
 	# Internal
 
@@ -1010,13 +1036,6 @@ class _MessageTableView( GafferUI.Widget ) :
 
 	# Keyboard shortcuts
 
-	__eventLevelShortcuts = {
-		"E" : IECore.MessageHandler.Level.Error,
-		"W" : IECore.MessageHandler.Level.Warning,
-		"I" : IECore.MessageHandler.Level.Info,
-		"D" : IECore.MessageHandler.Level.Debug,
-	}
-
 	def __keyPress( self, unused, event ) :
 
 		if event.key == "C" and event.modifiers == event.Modifiers.Control :
@@ -1036,10 +1055,10 @@ class _MessageTableView( GafferUI.Widget ) :
 		elif event.key in self.__eventLevelShortcuts :
 
 			if event.modifiers == event.Modifiers.None_ :
-				self.nextMessage( self.__eventLevelShortcuts[ event.key ] )
+				self.scrollToNextMessage( self.__eventLevelShortcuts[ event.key ] )
 				return True
 			elif event.modifiers == event.Modifiers.Shift :
-				self.previousMessage( self.__eventLevelShortcuts[ event.key ] )
+				self.scrollToPreviousMessage( self.__eventLevelShortcuts[ event.key ] )
 				return True
 
 		elif event.key == "S" and event.modifiers == event.Modifiers.None_ :
@@ -1049,12 +1068,12 @@ class _MessageTableView( GafferUI.Widget ) :
 
 		elif event.key == "P" and event.modifiers == event.Modifiers.None_ :
 
-			self.previousSearchResult()
+			self.scrollToPreviousSearchResult()
 			return True
 
 		elif event.key == "N" and event.modifiers == event.Modifiers.None_ :
 
-			self.nextSearchResult()
+			self.scrollToNextSearchResult()
 			return True
 
 		elif event.key in ( "End", "B" ) and event.modifiers == event.Modifiers.None_ :
@@ -1284,7 +1303,7 @@ class _MessageTableExpandedViewProxy( QtCore.QAbstractProxyModel ) :
 		# as python will complain we haven't called the base constructor. Uses _ to avoid mangling fun.
 		if not hasattr( self, "_colorMap" ) :
 			self._colorMap = {}
-			for l in _messageLevels() :
+			for l in _messageLevels :
 				self._colorMap[ int(l) ] = GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "foreground%s" % l ) )
 
 		return self._colorMap[ levelData ]
