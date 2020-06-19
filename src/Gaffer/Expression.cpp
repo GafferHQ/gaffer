@@ -178,7 +178,16 @@ void Expression::setExpression( const std::string &expression, const std::string
 	// node/plug names in getExpression(), where we convert back
 	// to the external form.
 
-	expressionPlug()->setValue( transcribe( expression, /* toInternalForm = */ true ) );
+	const std::string internalExpression = transcribe( expression, /* toInternalForm = */ true );
+	if( internalExpression == expressionPlug()->getValue() )
+	{
+		// It is possible for two different expressions to map to the same
+		// internal form. If neither expression has any input plugs, then
+		// there would be no graph change to trigger dirty propagation for
+		// `executePlug()`, so we must force one.
+		expressionPlug()->setValue( "" );
+	}
+	expressionPlug()->setValue( internalExpression );
 
 	Action::enact(
 		this,
