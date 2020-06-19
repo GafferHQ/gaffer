@@ -53,6 +53,8 @@ from .AppleseedTest import compileOSLShader
 
 class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
+	interactiveRenderNodeClass = GafferAppleseed.InteractiveAppleseedRender
+
 	# Disabled since appleseed does not support multiple beauty outputs.
 	@unittest.expectedFailure
 	def testAddAndRemoveOutput( self ):
@@ -103,10 +105,6 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		i["state"].setValue( GafferScene.InteractiveRender.State.Stopped )
 
 		self.assertGreater( i["messages"].getValue().value.size(), 0 )
-
-	def _createInteractiveRender( self ) :
-
-		return GafferAppleseed.InteractiveAppleseedRender()
 
 	def _createConstantShader( self ) :
 

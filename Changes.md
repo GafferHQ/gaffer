@@ -87,7 +87,9 @@ API
 - InteractiveRender :
   - Changed base to `Gaffer::ComputeNode` (#3419).
   - Added messages plug containing the output of the node's renderer output (#3419).
-- InteractiveRenderTest : Scoped a `UIThreadCallHandler` for all test methods, available via `self.uiThreadCallHandler`.
+- InteractiveRenderTest :
+  - Scoped a `UIThreadCallHandler` for all test methods, available via `self.uiThreadCallHandler`.
+  - Refactored `_createInteractiveRender` method to provide a default implementation that creates a render node with suitable error propagation.
 - Graphics : Renamed `errorNotificationSmall` icon to `errorSmall`.
 - NotificationMessageHandler : Constructor now accepts `GafferUI.MessageWidget` constructor kwargs to configure the widget.
 - PlugValueWidget : Added the capability to edit more than one plug at a time.
@@ -162,6 +164,7 @@ Breaking Changes
 - InteractiveRender :
   - Changed base class from Node to ComputeNode, added members.
   - `state` and `renderer` plugs can no longer be connected to compute node outputs due to dirty propagation constraints.
+- InteractiveRenderTest : Added `interactiveRenderNodeClass` member that must be populated with render node class by derived test cases (#3803).
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 - Shader : Added virtual method.
 - MetadataAlgo : `readOnly( None )` will now raise an Exception instead of returning `False`.

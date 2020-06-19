@@ -55,6 +55,10 @@ import GafferSceneTest
 # rather than GafferScene.InteractiveRender, which we hope to phase out.
 class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
+	# Derived classes should set cls.interactiveRenderNodeClass to
+	# the class of their interactive render node
+	interactiveRenderNodeClass = None
+
 	@classmethod
 	def setUpClass( cls ) :
 
@@ -2093,11 +2097,27 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferScene.deregisterAdaptor( "Test" )
 
-	## Should be implemented by derived classes to return an
-	# appropriate InteractiveRender node.
-	def _createInteractiveRender( self ) :
+	## Should be used in test cases to create an InteractiveRender node
+	# suitably configured for error reporting. If failOnError is
+	# True, then the node's error signal will cause the test to fail.
+	def _createInteractiveRender( self, failOnError = True ) :
 
-		raise NotImplementedError
+		assert( issubclass( self.interactiveRenderNodeClass, GafferScene.InteractiveRender ) )
+		node = self.interactiveRenderNodeClass()
+
+		if failOnError :
+
+			def fail( plug, source, message ) :
+				script = plug.ancestor( Gaffer.ScriptNode )
+				self.fail( "errorSignal caught : {} [{}] : {}".format(
+					plug.relativeName( script ),
+					source.relativeName( script ),
+					message
+				) )
+
+			node.errorSignal().connect( fail, scoped = False )
+
+		return node
 
 	## Should be implemented by derived classes to return an
 	# appropriate Shader node with a constant shader loaded,
