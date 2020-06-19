@@ -54,7 +54,8 @@ from Qt import QtWidgets
 
 __all__ = [ "_SceneViewInspector", "_ParameterInspector" ]
 
-## \todo Add registration mechanism to determine which parameters are shown.
+## \todo Add registration mechanism to determine which parameters are shown,
+# and make sure we support Appleseed/3Delight lights out of the box.
 _parameters = [ "exposure", "color", "radius", "cone_angle", "penumbra_angle" ]
 
 # Conceptually this is an embedded context-sensitive SceneInspector for
@@ -173,6 +174,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		for widget in self.__parameterWidgets.values() :
 			# Remove old values so we don't show stale values
 			# during update.
+			## \todo Don't flicker like buggery!
 			widget.update( [] )
 
 		self.__busyWidget.setBusy( True )
@@ -243,6 +245,9 @@ class _ParameterInspector( object ) :
 		if attributeHistory.scene != node["out"] :
 			return None
 
+		## \todo Find source plug for the plugs we find here. Even if its a spreadsheet cell.
+		# TransformTool has a private `spreadsheetAwareSource()` that seems to do this - should
+		# it just go in PlugAlgo?
 		if isinstance( node, GafferScene.Light ) :
 			return lambda : node["parameters"][self.__parameter]
 		elif isinstance( node, GafferScene.ShaderTweaks ) :
@@ -312,6 +317,7 @@ class _ParameterWidget( GafferUI.Widget ) :
 		with grid :
 
 			GafferUI.Label(
+				## \todo Prettify label text (remove snake case)
 				text = "<h5>" + IECore.CamelCase.toSpaced( parameter ) + "</h5>",
 				parenting = { "index" : ( 0, 0 ) }
 			)
