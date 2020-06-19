@@ -51,6 +51,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include <atomic>
+
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
@@ -816,6 +818,8 @@ bool clearHashCacheOnDirty()
 
 const bool g_clearHashCacheOnDirty = clearHashCacheOnDirty();
 
+std::atomic<uint64_t> g_dirtyCountEpoch( 0 );
+
 } // namespace
 
 GAFFER_PLUG_DEFINE_TYPE( ValuePlug );
@@ -826,26 +830,40 @@ GAFFER_PLUG_DEFINE_TYPE( ValuePlug );
 /// even creating the values before figuring out if we've already got them somewhere).
 ValuePlug::ValuePlug( const std::string &name, Direction direction,
 	IECore::ConstObjectPtr defaultValue, unsigned flags )
-	:	Plug( name, direction, flags ), m_defaultValue( defaultValue ), m_staticValue( defaultValue ), m_dirtyCount( 0 )
+	:	Plug( name, direction, flags ), m_defaultValue( defaultValue ), m_staticValue( defaultValue ), m_dirtyCount( g_dirtyCountEpoch )
 {
 	assert( m_defaultValue );
 	assert( m_staticValue );
 }
 
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags ), m_defaultValue( nullptr ), m_staticValue( nullptr ), m_dirtyCount( 0 )
+	:	Plug( name, direction, flags ), m_defaultValue( nullptr ), m_staticValue( nullptr ), m_dirtyCount( g_dirtyCountEpoch )
 {
 }
 
 ValuePlug::~ValuePlug()
 {
-	// Clear hash cache, so that a newly created plug that just
-	// happens to reuse our address won't end up inadvertently also
-	// reusing our cache entries.
-	/// \todo We could avoid this as long as we can arrange for the
-	/// new plug to be initialised with a dirty count greater than
-	/// our own.
-	HashProcess::clearCache();
+	// We're dying, but there may still be hash cache entries for
+	// our address. We need to ensure that a new plug that reuses
+	// our address will not pick up these stale entries. So we
+	// update `g_dirtyCountEpoch` so that new plugs will be initialised
+	// with a count greater than ours. We do this atomically because
+	// although each graph should only be edited on one thread, it is
+	// permitted to edit multiple graphs in parallel.
+	if( m_dirtyCount != std::numeric_limits<uint64_t>::max() )
+	{
+		uint64_t epoch = g_dirtyCountEpoch;
+		while( !g_dirtyCountEpoch.compare_exchange_weak( epoch, std::max( epoch, m_dirtyCount + 1 ) ) )
+		{
+			// Nothing to do here.
+		}
+	}
+	else
+	{
+		// Ran out of epochs. Start over.
+		HashProcess::clearCache();
+		g_dirtyCountEpoch = 0;
+	}
 }
 
 bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
