@@ -64,8 +64,8 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 		# check that we can make metadata
 
-		m["metadata"].addChild( Gaffer.NameValuePlug( "comment", IECore.StringData( "my favorite image!" ), "member1" ) )
-		m["metadata"].addChild( Gaffer.NameValuePlug( "range", IECore.V2iData( imath.V2i( 5, 10 ) ), True, "member1" ) )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "comment", IECore.StringData( "my favorite image!" ), "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "range", IECore.V2iData( imath.V2i( 5, 10 ) ), True, "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( len(metadata), len(inMetadata) + 2 )
