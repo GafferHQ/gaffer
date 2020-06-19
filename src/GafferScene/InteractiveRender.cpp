@@ -99,6 +99,9 @@ class InteractiveRender::RenderMessageHandler : public MessageHandler
 
 		void handle( MessageHandler::Level level, const std::string &context, const std::string &message  ) override
 		{
+			// Always forward to the default handler for visibility outside of the UI
+			MessageHandler::getDefaultHandler()->handle( level, context, message );
+
 			{
 				tbb::mutex::scoped_lock lock( m_mutex );
 				m_messages->writable().add( IECorePreview::Message( level, context, message ) );

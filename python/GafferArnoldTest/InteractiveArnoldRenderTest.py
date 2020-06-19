@@ -55,6 +55,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	interactiveRenderNodeClass = GafferArnold.InteractiveArnoldRender
 
+	# Arnold outputs licensing warnings that would cause failures
+	failureMessageLevel = IECore.MessageHandler.Level.Error
+
 	def testTwoRenders( self ) :
 
 		s = Gaffer.ScriptNode()
