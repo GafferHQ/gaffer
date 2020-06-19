@@ -94,7 +94,7 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testMessages( self ) :
 
 		p = GafferScene.Plane()
-		i = GafferAppleseed.InteractiveAppleseedRender()
+		i = self._createInteractiveRender()
 
 		i["in"].setInput( p["out"] )
 
