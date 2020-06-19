@@ -206,7 +206,8 @@ class GAFFER_API ValuePlug : public Plug
 		/// If a precomputed hash is available it may be passed to avoid computing
 		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
 		/// use with care.
-		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		template<typename T = IECore::Object>
+		boost::intrusive_ptr<const T> getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.
@@ -223,6 +224,7 @@ class GAFFER_API ValuePlug : public Plug
 		class ComputeProcess;
 		class SetValueAction;
 
+		IECore::ConstObjectPtr getValueInternal( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
 		void childAddedOrRemoved();
 		// Emits the appropriate Node::plugSetSignal() for this plug and all its
@@ -246,5 +248,7 @@ typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ValuePlug>, PlugP
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ValuePlug>, PlugPredicate<> > RecursiveOutputValuePlugIterator;
 
 } // namespace Gaffer
+
+#include "Gaffer/ValuePlug.inl"
 
 #endif // GAFFER_VALUEPLUG_H

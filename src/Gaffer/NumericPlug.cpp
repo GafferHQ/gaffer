@@ -138,13 +138,7 @@ void NumericPlug<T>::setValue( T value )
 template<class T>
 T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	ConstObjectPtr o = getObjectValue( precomputedHash );
-	const DataType *d = IECore::runTimeCast<const DataType>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "NumericPlug::getObjectValue() didn't return expected type - is the hash being computed correctly?" );
-	}
-	return d->readable();
+	return getObjectValue<DataType>( precomputedHash )->readable();
 }
 
 template<class T>
