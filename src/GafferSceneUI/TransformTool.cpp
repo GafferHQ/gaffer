@@ -545,10 +545,9 @@ Imath::M44f TransformTool::Selection::transform( Imath::V3f &translate, Imath::V
 		V3f shear;
 		extractSHRT( m, scale, shear, rotate, translate );
 		M44f result;
-		result.translate( pivot + translate );
+		result.translate( translate );
 		result.rotate( rotate );
 		result.scale( scale );
-		result.translate( -pivot );
 		pivot = V3f( 0 );
 		rotate = IECore::radiansToDegrees( rotate );
 		return result;
