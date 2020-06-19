@@ -146,23 +146,21 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Render the cube with one level of subdivision. Check we get roughly the
 		# alpha coverage we expect.
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+		script["render"]["state"].setValue( script["render"].State.Running )
 
-			script["render"]["state"].setValue( script["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
 
-			handler.waitFor( 1 )
+		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
 
-			self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
+		# Now up the number of subdivision levels. The alpha coverage should
+		# increase as the shape tends towards the limit surface.
 
-			# Now up the number of subdivision levels. The alpha coverage should
-			# increase as the shape tends towards the limit surface.
+		script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
+		self.uiThreadCallHandler.waitFor( 1 )
 
-			script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
-			handler.waitFor( 1 )
+		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
 
-			self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
-
-			script["render"]["state"].setValue( script["render"].State.Stopped )
+		script["render"]["state"].setValue( script["render"].State.Stopped )
 
 	def testLightLinkingAfterParameterUpdates( self ) :
 
@@ -226,31 +224,29 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start rendering and make sure the light is linked to the sphere
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+		s["r"]["state"].setValue( s["r"].State.Running )
 
-			s["r"]["state"].setValue( s["r"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
-			handler.waitFor( 1.0 )
+		self.assertAlmostEqual(
+			self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
+			1,
+			delta = 0.01
+		)
 
-			self.assertAlmostEqual(
-				self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
-				1,
-				delta = 0.01
-			)
+		# Change a value on the light. The light should still be linked to the sphere
+		# and we should get the same result as before.
+		s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
 
-			# Change a value on the light. The light should still be linked to the sphere
-			# and we should get the same result as before.
-			s["Light"]['parameters']['shadow_density'].setValue( 0.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
-			handler.waitFor( 1.0 )
+		self.assertAlmostEqual(
+			self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
+			1,
+			delta = 0.01
+		)
 
-			self.assertAlmostEqual(
-				self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
-				1,
-				delta = 0.01
-			)
-
-			s["r"]["state"].setValue( s["r"].State.Stopped )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def testQuadLightTextureEdits( self ) :
 
@@ -319,27 +315,25 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start rendering and make sure the light is linked to the sphere
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+		s["r"]["state"].setValue( s["r"].State.Running )
 
-			s["r"]["state"].setValue( s["r"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
-			handler.waitFor( 1.0 )
+		initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.01 )
+		self.assertAlmostEqual( initialColor.g, 0, delta = 0.01 )
 
-			initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-			self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.01 )
-			self.assertAlmostEqual( initialColor.g, 0, delta = 0.01 )
+		# Edit texture network and make sure the changes take effect
 
-			# Edit texture network and make sure the changes take effect
+		s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 0, 1, 0 ) )
 
-			s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 0, 1, 0 ) )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
-			handler.waitFor( 1.0 )
+		updateColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		self.assertAlmostEqual( updateColor.r, 0, delta = 0.01 )
+		self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.01 )
 
-			updateColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-			self.assertAlmostEqual( updateColor.r, 0, delta = 0.01 )
-			self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.01 )
-
-			s["r"]["state"].setValue( s["r"].State.Stopped )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 	def _createInteractiveRender( self ) :
 

@@ -87,6 +87,7 @@ API
 - InteractiveRender :
   - Changed base to `Gaffer::ComputeNode` (#3419).
   - Added messages plug containing the output of the node's renderer output (#3419).
+- InteractiveRenderTest : Scoped a `UIThreadCallHandler` for all test methods, available via `self.uiThreadCallHandler`.
 - Graphics : Renamed `errorNotificationSmall` icon to `errorSmall`.
 - NotificationMessageHandler : Constructor now accepts `GafferUI.MessageWidget` constructor kwargs to configure the widget.
 - PlugValueWidget : Added the capability to edit more than one plug at a time.

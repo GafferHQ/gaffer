@@ -98,10 +98,9 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		self.assertEqual( i["messages"].getValue().value.size(), 0 )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
-			i["state"].setValue( GafferScene.InteractiveRender.State.Running )
-			handler.waitFor( 1 )
-			i["state"].setValue( GafferScene.InteractiveRender.State.Stopped )
+		i["state"].setValue( GafferScene.InteractiveRender.State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+		i["state"].setValue( GafferScene.InteractiveRender.State.Stopped )
 
 		self.assertGreater( i["messages"].getValue().value.size(), 0 )
 
