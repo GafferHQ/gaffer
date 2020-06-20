@@ -36,6 +36,7 @@
 ##########################################################################
 
 import six
+import imath
 
 import IECore
 
@@ -180,6 +181,21 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		return self._qtWidget().cursorForPosition(
 			QtCore.QPoint( position[0], position[1] )
 		).position()
+
+	def cursorBound( self, relativeTo = None ) :
+
+		b = self._qtWidget().cursorRect()
+		b = imath.Box2i(
+			imath.V2i( b.left(), b.top() ),
+			imath.V2i( b.right(), b.bottom() )
+		)
+
+		if relativeTo is not self :
+			p = self.bound( relativeTo ).min()
+			b.setMin( b.min() + p )
+			b.setMax( b.max() + p )
+
+		return b
 
 	def selectedText( self ) :
 

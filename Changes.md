@@ -16,6 +16,7 @@ API
 
 - PlugLayout : Added a warning for plugs that reference activators that have not been registered.
 - ImageTestCase : Added `ignoreChannelNamesOrder` keyword argument to `assertImagesEqual()`. This defaults to `False`, maintaining the previous behaviour.
+- MultiLineTextWidget : Added `cursorBound()` method.
 
 0.60.2.1 (relative to 0.60.2.0)
 ========
