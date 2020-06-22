@@ -73,7 +73,7 @@ boost::python::list items( GraphComponent &c )
 	boost::python::list l;
 	for( GraphComponent::ChildContainer::const_iterator it=ch.begin(); it!=ch.end(); it++ )
 	{
-		l.append( boost::python::make_tuple( (*it)->getName(), *it ) );
+		l.append( boost::python::make_tuple( (*it)->getName().c_str(), *it ) );
 	}
 	return l;
 }
