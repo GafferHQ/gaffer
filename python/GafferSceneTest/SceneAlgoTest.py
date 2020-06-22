@@ -264,6 +264,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( history.scene, plug )
 			self.assertEqual( history.context.getFrame(), 10 )
 			self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
+			self.assertFalse( any( n.startswith( "__" ) for n in history.context.names() ) )
 			history = history.predecessors[0] if history.predecessors else None
 
 		self.assertIsNone( history )
@@ -286,6 +287,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( history.scene, plug )
 			self.assertEqual( history.context.getFrame(), 20 )
 			self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
+			self.assertFalse( any( n.startswith( "__" ) for n in history.context.names() ) )
 			history = history.predecessors[0] if history.predecessors else None
 
 		self.assertIsNone( history )

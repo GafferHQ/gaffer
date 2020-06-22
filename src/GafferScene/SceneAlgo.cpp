@@ -383,7 +383,9 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 		ScenePlug *scene = plug->parent<ScenePlug>();
 		if( scene && plug == scene->getChild( scenePlugChildName ) )
 		{
-			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, process->context );
+			ContextPtr cleanContext = new Context( *process->context, Context::Copied );
+			cleanContext->remove( SceneAlgo::historyIDContextName() );
+			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, cleanContext );
 			if( !result )
 			{
 				result = history;
