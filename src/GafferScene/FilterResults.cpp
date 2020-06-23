@@ -106,15 +106,14 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	ComputeNode::affects( input, outputs );
 
-	const ScenePlug *scenePlug = input->parent() == this->scenePlug() ? this->scenePlug() : nullptr;
-	if( scenePlug )
+	if( input->parent() == scenePlug() )
 	{
 		filterPlug()->sceneAffects( input, outputs );
 	}
 
 	if(
 		input == filterPlug() ||
-		( scenePlug && input == scenePlug->childNamesPlug() )
+		input == scenePlug()->childNamesPlug()
 	)
 	{
 		outputs.push_back( internalOutPlug() );
