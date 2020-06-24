@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,58 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SETFILTER_H
-#define GAFFERSCENE_SETFILTER_H
-
-#include "GafferScene/Filter.h"
-
-#include "Gaffer/TypedObjectPlug.h"
+#include "boost/format.hpp"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( StringPlug )
+template<typename T>
+boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
+{
+	boost::intrusive_ptr<const T> result = IECore::runTimeCast<const T>( getValueInternal( precomputedHash ) );
+	if( !result )
+	{
+		throw IECore::Exception( boost::str(
+			boost::format( "%1% : getValueInternal() didn't return expected type - is the hash being computed correctly?" ) % fullName()
+		) );
+	}
+	return result;
+}
 
 } // namespace Gaffer
-
-namespace GafferScene
-{
-
-/// \todo Investigate whether or not caching is actually beneficial for this node
-class GAFFERSCENE_API SetFilter : public Filter
-{
-
-	public :
-
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SetFilter, SetFilterTypeId, Filter );
-
-		SetFilter( const std::string &name=defaultName<SetFilter>() );
-		~SetFilter() override;
-
-		Gaffer::StringPlug *setExpressionPlug();
-		const Gaffer::StringPlug *setExpressionPlug() const;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-	protected :
-
-		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
-
-		void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const override;
-
-	private :
-
-		Gaffer::PathMatcherDataPlug *expressionResultPlug();
-		const Gaffer::PathMatcherDataPlug *expressionResultPlug() const;
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( SetFilter )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_SETFILTER_H

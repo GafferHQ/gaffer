@@ -82,10 +82,11 @@ void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCo
 	const ScenePlug *scenePlug = input->parent<ScenePlug>();
 	if( scenePlug && scenePlug == inPlug() )
 	{
-		if( filterPlug()->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
-		{
-			outputs.push_back( filterPlug() );
-		}
+		// We'll be passing this scene to the filter when we
+		// call `filterValue()`, so we must give the filter
+		// a chance to dirty any of its plugs that depend on
+		// the scene.
+		filterPlug()->sceneAffects( input, outputs );
 	}
 }
 

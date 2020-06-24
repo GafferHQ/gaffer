@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- Caching : Improved interactive performance using an improved hash cache invalidation strategy.
 - SceneNode : Improved performance for all nodes that must propagate bounds from children to parents.
 - PointsType : Removed unnecessary bounds computation overhead.
 - OSLObject/ClosestPointSampler/CurveSampler : Improved performance for cases where multiple downstream computes require the same upstream object.
@@ -25,10 +26,25 @@ Fixes
 - Signal : Fixed hang which could occur if a result combiner implemented in Python tried to handle exceptions.
 - NumericWidget : Fixed errors when trying to use a virtual slider with an empty value.
 - GraphComponent : Fixed return value for `items()` method. The returned keys are now regular `str()` objects rather than `InternedString`.
+- Fixed dependency tracking bugs in the following nodes :
+  - UDIMQuery
+  - Shader
+  - FilterResults
+  - FreezeTransform
+  - ImageMetadata
+  - FlatImageProcessor
+  - FlatToDeep
+  - OpenImageIOReader
+  - LevelSetOffset
+  - MeshToLevelSet
+- SetAlgo : Fixed `affectsSetExpression()` to return `True` for `ScenePlug::setNamesPlug()`.
 
 API
 ---
 
+- ValuePlug
+  - Improved interactive performance by not clearing the entire hash cache every time a plug is dirtied. Beware : this can reveal subtle bugs in `DependencyNode::affects()` implementations, causing hashes to be reused if a plug has not been dirtied appropriately. These bugs may previously have gone unnoticed but will now need fixing as a matter of urgency. The GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment variable may be used to enable legacy behaviour in the interim.
+  - Added `clearHashCache()` static method.
 - ScenePlug : Added `childBounds()` and `childBoundsHash()` methods.
 - ObjectProcessor : Added `processedObjectComputeCachePolicy()` virtual method. This should be overridden to choose an appropriate cache policy when `computeProcessedObject()` spawns TBB tasks.
 - SceneNode :
@@ -54,10 +70,14 @@ API
     - TweakPlugValueWidget
     - BoolPlugValueWidget
     - PresetsPlugValueWidget
+- SetAlgo : Added Python binding for `affectsSetExpression()`.
+- Shader : Added `affectsAttributes()` protected method.
 
 Breaking Changes
 ----------------
 
+- Filter : Removed virtual `sceneAffectsMatch()` method. Derived classes should implement `affects()` instead.
+- FilterPlug : Replaced `sceneAffectsMatch()` method with a more general `sceneAffects()` method. This should be used to replace any calls to the old method.
 - PointsType : Changed base class from Deformer to ObjectProcessor.
 - Gaffer : Removed `lazyImport()` method.
 - GafferUI : Removed deprecated `_qtImport()` method. Use `from Qt import` instead.
@@ -99,6 +119,7 @@ Breaking Changes
   - Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
+- Shader : Added virtual method.
 
 Build
 -----

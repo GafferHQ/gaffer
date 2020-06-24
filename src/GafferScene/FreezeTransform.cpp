@@ -87,21 +87,37 @@ void FreezeTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( input == inPlug()->transformPlug() )
+	if(
+		input == inPlug()->transformPlug() ||
+		input == outPlug()->transformPlug()
+	)
 	{
 		outputs.push_back( transformPlug() );
 	}
-	else if( input == inPlug()->objectPlug() )
+
+	if(
+		input == filterPlug() ||
+		input == inPlug()->boundPlug() ||
+		input == transformPlug()
+	)
 	{
-		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
 	}
-	else if(
-		input == transformPlug() ||
-		input == filterPlug()
+
+	if(
+		input == filterPlug() ||
+		input == inPlug()->transformPlug()
 	)
 	{
 		outputs.push_back( outPlug()->transformPlug() );
-		outputs.push_back( outPlug()->boundPlug() );
+	}
+
+	if(
+		input == filterPlug() ||
+		input == inPlug()->objectPlug() ||
+		input == transformPlug()
+	)
+	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
 }

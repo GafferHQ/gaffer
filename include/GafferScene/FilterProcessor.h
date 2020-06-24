@@ -81,11 +81,11 @@ class GAFFERSCENE_API FilterProcessor : public Filter
 		Gaffer::ArrayPlug *inPlugs();
 		const Gaffer::ArrayPlug *inPlugs() const;
 
-		bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const override;
-
 		/// Returns inPlug() as the correspondingInput of outPlug();
 		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
 		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 

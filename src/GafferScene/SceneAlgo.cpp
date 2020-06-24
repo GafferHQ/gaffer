@@ -368,8 +368,7 @@ class CapturingMonitor : public Monitor
 
 IE_CORE_DECLAREPTR( CapturingMonitor )
 
-InternedString g_contextUniquefierName = "__sceneAlgoHistory:uniquefier";
-uint64_t g_contextUniquefierValue = 0;
+uint64_t g_historyID = 0;
 
 SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedString scenePlugChildName, SceneAlgo::History *parent )
 {
@@ -384,7 +383,9 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 		ScenePlug *scene = plug->parent<ScenePlug>();
 		if( scene && plug == scene->getChild( scenePlugChildName ) )
 		{
-			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, process->context );
+			ContextPtr cleanContext = new Context( *process->context, Context::Copied );
+			cleanContext->remove( SceneAlgo::historyIDContextName() );
+			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, cleanContext );
 			if( !result )
 			{
 				result = history;
@@ -601,6 +602,12 @@ ShaderTweaks *shaderTweaksWalk( const SceneAlgo::AttributeHistory *h )
 
 } // namespace
 
+InternedString SceneAlgo::historyIDContextName()
+{
+	static InternedString s( "__sceneAlgoHistory:id" );
+	return s;
+}
+
 SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path )
 {
 	if( !scenePlugChild->parent<ScenePlug>() )
@@ -614,7 +621,7 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 	{
 		ScenePlug::PathScope pathScope( Context::current(), path );
 		// Trick to bypass the hash cache and get a full upstream evaluation.
-		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
+		pathScope.set( historyIDContextName(), g_historyID++ );
 		Monitor::Scope monitorScope( monitor );
 		scenePlugChild->hash();
 	}

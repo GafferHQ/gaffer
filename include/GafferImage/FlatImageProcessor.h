@@ -63,6 +63,8 @@ class GAFFERIMAGE_API FlatImageProcessor : public ImageProcessor
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::FlatImageProcessor, FlatImageProcessorTypeId, ImageProcessor );
 
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
 	protected :
 
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;

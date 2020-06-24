@@ -44,10 +44,14 @@
 #include "Gaffer/Private/IECorePreview/ParallelAlgo.h"
 #include "Gaffer/Process.h"
 
+#include "IECore/MessageHandler.h"
+
 #include "boost/bind.hpp"
 #include "boost/format.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
+
+#include <atomic>
 
 using namespace Gaffer;
 
@@ -149,19 +153,21 @@ namespace
 struct HashCacheKey
 {
 	HashCacheKey() {};
-	HashCacheKey( const ValuePlug *plug, const Context *context )
-		:	plug( plug ), contextHash( context->hash() )
+	HashCacheKey( const ValuePlug *plug, const Context *context, uint64_t dirtyCount )
+		:	plug( plug ), contextHash( context->hash() ), dirtyCount( dirtyCount )
 	{
 	}
 
 	bool operator == ( const HashCacheKey &other ) const
 	{
-		return other.plug == plug && other.contextHash == contextHash;
+		return other.plug == plug && other.contextHash == contextHash && dirtyCount == other.dirtyCount;
 	}
 
+	/// \todo Could we merge all three fields into a single
+	/// MurmurHash, or would hash collisions be too likely?
 	const ValuePlug *plug;
 	IECore::MurmurHash contextHash;
-
+	uint64_t dirtyCount;
 };
 
 // `hash_value( HashCacheKey )` is a requirement of the LRUCache,
@@ -174,6 +180,7 @@ size_t hash_value( const HashCacheKey &key )
 	size_t result = 0;
 	boost::hash_combine( result, key.plug );
 	boost::hash_combine( result, key.contextHash );
+	boost::hash_combine( result, key.dirtyCount );
 	return result;
 }
 
@@ -195,8 +202,8 @@ size_t hash_value( const HashCacheKey &key )
 //   in any way. It is merely used for error reporting.
 struct HashProcessKey : public HashCacheKey
 {
-	HashProcessKey( const ValuePlug *plug, const ValuePlug *destinationPlug, const Context *context, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy )
-		:	HashCacheKey( plug, context ),
+	HashProcessKey( const ValuePlug *plug, const ValuePlug *destinationPlug, const Context *context, uint64_t dirtyCount, const ComputeNode *computeNode, ValuePlug::CachePolicy cachePolicy )
+		:	HashCacheKey( plug, context, dirtyCount ),
 			destinationPlug( destinationPlug ),
 			computeNode( computeNode ),
 			cachePolicy( cachePolicy ),
@@ -253,7 +260,7 @@ class ValuePlug::HashProcess : public Process
 			// using a HashProcess instance.
 
 			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
-			const HashProcessKey processKey( p, plug, Context::current(), computeNode, computeNode ? computeNode->hashCachePolicy( p ) : CachePolicy::Uncached );
+			const HashProcessKey processKey( p, plug, Context::current(), p->m_dirtyCount, computeNode, computeNode ? computeNode->hashCachePolicy( p ) : CachePolicy::Uncached );
 
 			if( processKey.cachePolicy == CachePolicy::Uncached )
 			{
@@ -792,6 +799,29 @@ IE_CORE_DEFINERUNTIMETYPED( ValuePlug::SetValueAction );
 // ValuePlug implementation
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+bool clearHashCacheOnDirty()
+{
+	/// \todo Remove
+	if( const char *e = getenv( "GAFFER_CLEAR_HASHCACHE_ON_DIRTY" ) )
+	{
+		if( strcmp( e, "" ) && strcmp( e, "0" ) )
+		{
+			IECore::msg( IECore::Msg::Warning, "Gaffer", "GAFFER_CLEAR_HASHCACHE_ON_DIRTY is set. Interactive performance will be affected." );
+			return true;
+		}
+	}
+	return false;
+}
+
+const bool g_clearHashCacheOnDirty = clearHashCacheOnDirty();
+
+std::atomic<uint64_t> g_dirtyCountEpoch( 0 );
+
+} // namespace
+
 GAFFER_PLUG_DEFINE_TYPE( ValuePlug );
 
 /// \todo We may want to avoid repeatedly storing copies of the same default value
@@ -800,23 +830,40 @@ GAFFER_PLUG_DEFINE_TYPE( ValuePlug );
 /// even creating the values before figuring out if we've already got them somewhere).
 ValuePlug::ValuePlug( const std::string &name, Direction direction,
 	IECore::ConstObjectPtr defaultValue, unsigned flags )
-	:	Plug( name, direction, flags ), m_defaultValue( defaultValue ), m_staticValue( defaultValue )
+	:	Plug( name, direction, flags ), m_defaultValue( defaultValue ), m_staticValue( defaultValue ), m_dirtyCount( g_dirtyCountEpoch )
 {
 	assert( m_defaultValue );
 	assert( m_staticValue );
 }
 
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags ), m_defaultValue( nullptr ), m_staticValue( nullptr )
+	:	Plug( name, direction, flags ), m_defaultValue( nullptr ), m_staticValue( nullptr ), m_dirtyCount( g_dirtyCountEpoch )
 {
 }
 
 ValuePlug::~ValuePlug()
 {
-	// Clear hash cache, so that a newly created plug that just
-	// happens to reuse our address won't end up inadvertently also
-	// reusing our cache entries.
-	HashProcess::clearCache();
+	// We're dying, but there may still be hash cache entries for
+	// our address. We need to ensure that a new plug that reuses
+	// our address will not pick up these stale entries. So we
+	// update `g_dirtyCountEpoch` so that new plugs will be initialised
+	// with a count greater than ours. We do this atomically because
+	// although each graph should only be edited on one thread, it is
+	// permitted to edit multiple graphs in parallel.
+	if( m_dirtyCount != std::numeric_limits<uint64_t>::max() )
+	{
+		uint64_t epoch = g_dirtyCountEpoch;
+		while( !g_dirtyCountEpoch.compare_exchange_weak( epoch, std::max( epoch, m_dirtyCount + 1 ) ) )
+		{
+			// Nothing to do here.
+		}
+	}
+	else
+	{
+		// Ran out of epochs. Start over.
+		HashProcess::clearCache();
+		g_dirtyCountEpoch = 0;
+	}
 }
 
 bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
@@ -1000,7 +1047,7 @@ const IECore::Object *ValuePlug::defaultObjectValue() const
 	return m_defaultValue.get();
 }
 
-IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
+IECore::ConstObjectPtr ValuePlug::getValueInternal( const IECore::MurmurHash *precomputedHash ) const
 {
 	return ComputeProcess::value( this, precomputedHash );
 }
@@ -1090,10 +1137,26 @@ void ValuePlug::parentChanged( Gaffer::GraphComponent *oldParent )
 
 void ValuePlug::dirty()
 {
-	/// \todo We might want to investigate methods of doing a
-	/// more fine grained clearing of only the dirtied plugs,
-	/// rather than clearing the whole cache.
-	HashProcess::clearCache();
+	// All entries in the hash cache for this plug are now invalid.
+	// Increment `m_dirtyCount` so that we won't try to reuse them.
+	// The invalid entries will be evicted by the LRU rules in due
+	// course.
+	m_dirtyCount++;
+	if(
+		// If our count has wrapped back to 0, it's possible (but
+		// incredibly unlikely) that we could match a stale value
+		// in the cache, so we must do a brute force clear.
+		m_dirtyCount == 0 ||
+		// If a node has bugs in its `DependencyNode::affects()`
+		// implementation, it could also end up using stale cache entries.
+		// We provide the GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment
+		// variable to allow a temporary fallback to the old behaviour
+		// while the bugs are fixed.
+		g_clearHashCacheOnDirty
+	)
+	{
+		HashProcess::clearCache();
+	}
 }
 
 size_t ValuePlug::getCacheMemoryLimit()
@@ -1124,4 +1187,9 @@ size_t ValuePlug::getHashCacheSizeLimit()
 void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
 {
 	HashProcess::setCacheSizeLimit( maxEntriesPerThread );
+}
+
+void ValuePlug::clearHashCache()
+{
+	HashProcess::clearCache();
 }

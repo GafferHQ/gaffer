@@ -106,19 +106,20 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	ComputeNode::affects( input, outputs );
 
-	const ScenePlug *scenePlug = input->parent<ScenePlug>();
-	if( scenePlug && scenePlug == this->scenePlug() )
+	if( input->parent() == scenePlug() )
 	{
-		if( filterPlug()->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
-		{
-			outputs.push_back( filterPlug() );
-		}
+		filterPlug()->sceneAffects( input, outputs );
 	}
-	else if( input == filterPlug() )
+
+	if(
+		input == filterPlug() ||
+		input == scenePlug()->childNamesPlug()
+	)
 	{
 		outputs.push_back( internalOutPlug() );
 	}
-	else if( input == internalOutPlug() )
+
+	if( input == internalOutPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
@@ -137,6 +138,7 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 	else if( output == outPlug() )
 	{
 		ScenePlug::GlobalScope globalScope( context );
+		globalScope.remove( SceneAlgo::historyIDContextName() );
 		internalOutPlug()->hash( h );
 	}
 }
@@ -153,6 +155,7 @@ void FilterResults::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 	else if( output == outPlug() )
 	{
 		ScenePlug::GlobalScope globalScope( context );
+		globalScope.remove( SceneAlgo::historyIDContextName() );
 		output->setFrom( internalOutPlug() );
 		return;
 	}

@@ -131,6 +131,8 @@ void GafferModule::bindValuePlug()
 		.staticmethod( "getHashCacheSizeLimit" )
 		.def( "setHashCacheSizeLimit", &ValuePlug::setHashCacheSizeLimit )
 		.staticmethod( "setHashCacheSizeLimit" )
+		.def( "clearHashCache", &ValuePlug::clearHashCache )
+		.staticmethod( "clearHashCache" )
 		.def( "__repr__", &repr )
 	;
 

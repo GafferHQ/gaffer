@@ -93,6 +93,9 @@ void bindSetAlgo()
 		&setExpressionHashWrapper2,
 		( arg( "expression" ), arg( "scene" ), arg( "h" ) )
 	);
+
+	def( "affectsSetExpression", &SetAlgo::affectsSetExpression );
+
 }
 
 } // namespace GafferSceneModule

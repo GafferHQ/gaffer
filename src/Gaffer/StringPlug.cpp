@@ -95,12 +95,7 @@ void StringPlug::setValue( const std::string &value )
 
 std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
-	if( !s )
-	{
-		throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
-	}
+	ConstStringDataPtr s = getObjectValue<StringData>( precomputedHash );
 
 	const bool performSubstitutions =
 		m_substitutions &&
@@ -134,13 +129,7 @@ IECore::MurmurHash StringPlug::hash() const
 
 	if( performSubstitutions )
 	{
-		IECore::ConstObjectPtr o = getObjectValue();
-		const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
-		if( !s )
-		{
-			throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
-		}
-
+		ConstStringDataPtr s = getObjectValue<StringData>();
 		if( IECore::StringAlgo::hasSubstitutions( s->readable() ) )
 		{
 			IECore::MurmurHash result;

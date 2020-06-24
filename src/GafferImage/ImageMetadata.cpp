@@ -71,7 +71,7 @@ void ImageMetadata::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	MetadataProcessor::affects( input, outputs );
 
-	if ( input == inPlug()->metadataPlug() )
+	if( metadataPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->metadataPlug() );
 	}

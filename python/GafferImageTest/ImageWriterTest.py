@@ -378,6 +378,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 						imath.V2i( 106, 28 )
 					]:
 
+					o["offset"].setValue( offset )
+
 					with Gaffer.Context() :
 						w["task"].execute()
 

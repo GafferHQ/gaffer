@@ -170,6 +170,10 @@ class GAFFER_API ValuePlug : public Plug
 		/// > Note : Limits are applied on a per-thread basis as and
 		/// > when each thread is used to compute a hash.
 		static void setHashCacheSizeLimit( size_t maxEntriesPerThread );
+		/// Clears the hash cache.
+		/// > Note : Clearing occurs on a per-thread basis as and when
+		/// > each thread next accesses the cache.
+		static void clearHashCache();
 		//@}
 
 	protected :
@@ -206,7 +210,8 @@ class GAFFER_API ValuePlug : public Plug
 		/// If a precomputed hash is available it may be passed to avoid computing
 		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
 		/// use with care.
-		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		template<typename T = IECore::Object>
+		boost::intrusive_ptr<const T> getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.
@@ -223,6 +228,7 @@ class GAFFER_API ValuePlug : public Plug
 		class ComputeProcess;
 		class SetValueAction;
 
+		IECore::ConstObjectPtr getValueInternal( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
 		void childAddedOrRemoved();
 		// Emits the appropriate Node::plugSetSignal() for this plug and all its
@@ -232,6 +238,10 @@ class GAFFER_API ValuePlug : public Plug
 		IECore::ConstObjectPtr m_defaultValue;
 		// For holding the value of input plugs with no input connections.
 		IECore::ConstObjectPtr m_staticValue;
+		// Number of calls made to `dirty()`. We use this as part of the key
+		// into the hash cache, so that previous entries are invalidated when
+		// the plug is dirtied.
+		uint64_t m_dirtyCount;
 
 };
 
@@ -246,5 +256,7 @@ typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ValuePlug>, PlugP
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ValuePlug>, PlugPredicate<> > RecursiveOutputValuePlugIterator;
 
 } // namespace Gaffer
+
+#include "Gaffer/ValuePlug.inl"
 
 #endif // GAFFER_VALUEPLUG_H

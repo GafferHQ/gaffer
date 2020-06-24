@@ -232,6 +232,11 @@ void LevelSetToMesh::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
+
+	if( input == isoValuePlug() )
+	{
+		outputs.push_back( outPlug()->boundPlug() );
+	}
 }
 
 bool LevelSetToMesh::processesObject() const
@@ -274,18 +279,11 @@ bool LevelSetToMesh::processesBound() const
 void LevelSetToMesh::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	SceneElementProcessor::hashProcessedBound( path, context, h );
-
-	gridPlug()->hash( h );
 	isoValuePlug()->hash( h );
 }
 
 Imath::Box3f LevelSetToMesh::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
 {
-	Imath::Box3f newBound = inputBound;
-	float offset = isoValuePlug()->getValue();
-
-	newBound.min -= Imath::V3f(offset, offset, offset);
-	newBound.max += Imath::V3f(offset, offset, offset);
-
-	return newBound;
+	const V3f offset( isoValuePlug()->getValue() );
+	return Box3f( inputBound.min - offset, inputBound.max + offset );
 }

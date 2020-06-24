@@ -41,6 +41,7 @@
 #include "GafferScene/TypeIds.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/NumericPlug.h"
 
 namespace GafferScene
@@ -81,7 +82,11 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 		bool acceptsInput( const Gaffer::Plug *input ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
-		bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
+		/// Must be called when a child of a ScenePlug is dirtied, and that ScenePlug will later
+		/// be passed to the filter via SceneScope. This allows the filter to participate fully in
+		/// dirty propagation, despite not having ScenePlug inputs of its own. For an example of
+		/// usage, see `FilteredSceneProcessor::affects()`.
+		void sceneAffects( const Gaffer::Plug *scenePlugChild, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const;
 
 		/// Name of a context variable used to provide the input
 		/// scene to the filter

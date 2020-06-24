@@ -55,13 +55,7 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( GafferImage::AtomicFormatPlug, AtomicFormatPlu
 template<>
 Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-	}
-
+	ConstFormatDataPtr d = getObjectValue<FormatData>( precomputedHash );
 	Format result = d->readable();
 	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && Process::current() ) || direction() == Plug::Out ) )
 	{

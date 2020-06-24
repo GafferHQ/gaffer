@@ -102,14 +102,13 @@ const Gaffer::Plug *ArnoldCameraShaders::outPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 2 );
 }
 
-void ArnoldCameraShaders::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool ArnoldCameraShaders::affectsAttributes( const Gaffer::Plug *input ) const
 {
-	Shader::affects( input, outputs );
-
-	if( input == filterMapPlug() || input == uvRemapPlug() )
-	{
-		outputs.push_back( outPlug() );
-	}
+	return
+		Shader::affectsAttributes( input ) ||
+		input == filterMapPlug() ||
+		input == uvRemapPlug()
+	;
 }
 
 void ArnoldCameraShaders::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const

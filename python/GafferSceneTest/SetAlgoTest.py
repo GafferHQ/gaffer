@@ -40,6 +40,7 @@ import six
 
 import IECore
 
+import Gaffer
 import GafferScene
 import GafferSceneTest
 
@@ -299,6 +300,17 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		] :
 			with six.assertRaisesRegex( self, RuntimeError, 'Object name "{0}" contains wildcards'.format( re.escape( expression ) ) ) :
 				GafferScene.SetAlgo.evaluateSetExpression( expression, sphere["out"] )
+
+	def testAffectsSetExpression( self ) :
+
+		scenePlug = GafferScene.ScenePlug()
+		for childPlug in scenePlug :
+			self.assertEqual(
+				GafferScene.SetAlgo.affectsSetExpression( childPlug ),
+				childPlug in ( scenePlug["set"], scenePlug["setNames"] )
+			)
+
+		self.assertFalse( GafferScene.SetAlgo.affectsSetExpression( Gaffer.IntPlug() ) )
 
 	def assertCorrectEvaluation( self, scenePlug, expression, expectedContents ) :
 

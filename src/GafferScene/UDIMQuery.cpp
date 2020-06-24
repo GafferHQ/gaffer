@@ -130,7 +130,8 @@ void UDIMQuery::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == attributesPlug() ||
 		input == filterPlug() ||
 		input == inPlug()->objectPlug() ||
-		input == inPlug()->attributesPlug()
+		input == inPlug()->attributesPlug() ||
+		input == inPlug()->childNamesPlug()
 	)
 	{
 		outputs.push_back( outPlug() );
@@ -249,7 +250,7 @@ struct InfoDataAccumulator
 		// and without checking adjacency information, it would be impossible to tell which UDIM the edge
 		// belongs to.  Checking face centers is fairly simple, and is completely accurate except in extreme
 		// cases of polygons spanning multiple UDIMs, which is not done according to UDIM conventions.
-		int faceVertId = 0;	
+		int faceVertId = 0;
 		for( int numVerts : vertsPerFace )
 		{
 			Imath::V2f accum = Imath::V2f(0);
@@ -306,7 +307,7 @@ void UDIMQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		GafferScene::SceneAlgo::filteredParallelTraverse( inPlug(), filterPlug(), f );
 
 		IECore::CompoundObjectPtr result = new IECore::CompoundObject();
-	
+
 		for( const auto &i : f.m_data )
 		{
 			for( int udim : i.udims )
