@@ -217,7 +217,18 @@ class __StatusIconColumn( IconColumn ) :
 
 	def value( self, image, catalogue ) :
 
-		return "catalogueStatusDisk" if image["fileName"].getValue() else "catalogueStatusDisplay"
+
+		fileName = image["fileName"].getValue()
+		if fileName :
+			# Attempt to read the metadata to check the image is loadable. Given other columns
+			# are going to do this anyway, we're not adding too much overhead here.
+			try :
+				catalogue["out"].metadata()
+			except Gaffer.ProcessException :
+				return "errorNotificationSmall"
+			return "catalogueStatusDisk"
+
+		return "catalogueStatusDisplay"
 
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )

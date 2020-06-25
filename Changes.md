@@ -1,3 +1,11 @@
+0.56.2.x (relative to 0.56.2.4)
+========
+
+Fixes
+-----
+
+ - Catalogue : Improved handling of missing images (#3808).
+
 0.56.2.4 (relative to 0.56.2.3)
 ========
 
