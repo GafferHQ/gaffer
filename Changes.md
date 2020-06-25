@@ -7,6 +7,7 @@ Fixes
 - Catalogue :
   - Fixed incorrect column values when an image is renamed in a promoted Catalogue (#3815).
   - Fixed dependency tracking and hashing bugs.
+  - Improved handling of missing images (#3808).
 - SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
 
 0.56.2.4 (relative to 0.56.2.3)
