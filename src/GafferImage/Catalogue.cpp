@@ -1045,7 +1045,7 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 		const IECore::IntData *indexData = mappingData->member<IntData>( imageName );
 		if( !indexData )
 		{
-			throw IECore::Exception( "Unknown image name." );
+			throw IECore::Exception( "Unknown image name '" + imageName + "'." );
 		}
 		else
 		{
