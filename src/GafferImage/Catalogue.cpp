@@ -686,6 +686,7 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "directory" ) );
 	addChild( new IntPlug( "__imageIndex", Plug::Out ) );
+	/// TODO: Remove when merging forward
 	addChild( new AtomicCompoundDataPlug( "__mapping", Plug::In, new CompoundData() ) );
 
 	// Switch used to choose which image to output
@@ -769,11 +770,13 @@ const Gaffer::IntPlug *Catalogue::internalImageIndexPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
+/// TODO: Remove when merging forward
 Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug()
 {
 	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
 }
 
+/// TODO: Remove when merging forward
 const Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug() const
 {
 	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
@@ -892,10 +895,6 @@ void Catalogue::imageAdded( GraphComponent *graphComponent )
 
 	ImagePlug *nextSwitchInput = static_cast<ImagePlug *>( imageSwitch()->inPlugs()->children().back().get() );
 	nextSwitchInput->setInput( internalImage->outPlug() );
-
-	image->nameChangedSignal().connect( boost::bind( &Catalogue::computeNameToIndexMapping, this ) );
-
-	computeNameToIndexMapping();
 }
 
 void Catalogue::imageRemoved( GraphComponent *graphComponent )
@@ -933,8 +932,6 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 			}
 		}
 	}
-
-	computeNameToIndexMapping();
 }
 
 IECoreImage::DisplayDriverServer *Catalogue::displayDriverServer()
@@ -1034,22 +1031,29 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	int index;
-	std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
-	if( imageName.empty() )
+	const IECore::InternedString imageName( context->get<std::string>( "catalogue:imageName", "" ) );
+	if( imageName.string().empty() )
 	{
 		index = imageIndexPlug()->getValue();
 	}
 	else
 	{
-		ConstCompoundDataPtr mappingData = mappingPlug()->getValue();
-		const IECore::IntData *indexData = mappingData->member<IntData>( imageName );
-		if( !indexData )
+		bool found = false;
+
+		const auto children = imagesPlug()->source()->children();
+		for( size_t i = 0, e = children.size(); i < e; ++i )
 		{
-			throw IECore::Exception( "Unknown image name '" + imageName + "'." );
+			if( children[ i ]->getName() == imageName )
+			{
+				found = true;
+				index = i;
+				break;
+			}
 		}
-		else
+
+		if( !found )
 		{
-			index = indexData->readable();
+			throw IECore::Exception( "Unknown image name '" + imageName.string() + "'." );
 		}
 	}
 
@@ -1059,15 +1063,5 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 
 void Catalogue::computeNameToIndexMapping()
 {
-	CompoundDataPtr mapData = new CompoundData();
-	std::map<InternedString, DataPtr> &map = mapData->writable();
-
-	int count = 0;
-	for( const auto &image : imagesPlug()->children() )
-	{
-		map[image->getName()] = new IntData( count );
-		++count;
-	}
-
-	mappingPlug()->setValue( mapData );
+	// TODO: Remove, along with `mappingPlug` when merging forwards beyond a patch release
 }

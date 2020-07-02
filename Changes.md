@@ -4,7 +4,9 @@
 Fixes
 -----
 
- - Catalogue : Improved handling of missing images (#3808).
+ - Catalogue :
+  -	Improved handling of missing images (#3808).
+  -	Fixed bug when renaming images via promoted `images` plug (#3815).
 
 0.56.2.4 (relative to 0.56.2.3)
 ========
