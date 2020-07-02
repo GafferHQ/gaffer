@@ -154,7 +154,9 @@ void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 
 	if(
 		input == inPlug()->dataWindowPlug() ||
-		input == resampledInPlug()->dataWindowPlug()
+		input == resampledInPlug()->dataWindowPlug() ||
+		input == inPlug()->formatPlug() ||
+		formatPlug()->isAncestorOf( input )
 	)
 	{
 		outputs.push_back( outPlug()->dataWindowPlug() );
@@ -162,7 +164,9 @@ void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 
 	if(
 		input == inPlug()->channelDataPlug() ||
-		input == resampledInPlug()->channelDataPlug()
+		input == resampledInPlug()->channelDataPlug() ||
+		input == inPlug()->formatPlug() ||
+		formatPlug()->isAncestorOf( input )
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
