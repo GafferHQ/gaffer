@@ -67,7 +67,7 @@ API
 ---
 
 - ValuePlug
-  - Improved interactive performance by not clearing the entire hash cache every time a plug is dirtied. Beware : this can reveal subtle bugs in `DependencyNode::affects()` implementations, causing hashes to be reused if a plug has not been dirtied appropriately. These bugs may previously have gone unnoticed but will now need fixing as a matter of urgency. The GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment variable may be used to enable legacy behaviour in the interim.
+  - Improved interactive performance by not clearing the entire hash cache every time a plug is dirtied. Beware : this can reveal subtle bugs in `DependencyNode::affects()` implementations, causing hashes to be reused if a plug has not been dirtied appropriately. These bugs may previously have gone unnoticed but will now need fixing as a matter of urgency. The GAFFER_HASHCACHE_MODE environment variable may be set to "Legacy" to enable legacy behaviour in the interim, or to "Checked" to enable a slow mode which throws exceptions at the source of hash cache cache errors caused by bad `affects()` implementations.
   - Added `clearHashCache()` static method.
   - Added `resetDefault()` method.
 - ScenePlug :

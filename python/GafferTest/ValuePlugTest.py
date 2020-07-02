@@ -754,6 +754,44 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 		assertPostconditions( script2 )
 
+	def testCacheValidation( self ) :
+
+		defaultHashCacheMode = Gaffer.ValuePlug.getHashCacheMode()
+		Gaffer.ValuePlug.setHashCacheMode( Gaffer.ValuePlug.HashCacheMode.Checked )
+		try:
+
+			m = GafferTest.MultiplyNode( "test", True )
+			m["op1"].setValue( 2 )
+			m["op2"].setValue( 3 )
+			self.assertEqual( m["product"].getValue(), 6 )
+
+			m["op2"].setValue( 4 )
+			exception = None
+			try:
+				m["product"].getValue()
+			except Exception as e:
+				exception = e
+
+			self.assertEqual( type( exception ), Gaffer.ProcessException )
+			self.assertEqual( str( exception ), "test.product : Detected undeclared dependency. Fix DependencyNode::affects() implementation." )
+
+			# Make sure the plug with the actual issue is reported, when queried from a downstream network
+			m2 = GafferTest.MultiplyNode( "second" )
+			m2["op1"].setInput( m["product"] )
+			m2["op2"].setValue( 5 )
+
+			exception = None
+			try:
+				m2["product"].getValue()
+			except Exception as e:
+				exception = e
+
+			self.assertEqual( type( exception ), Gaffer.ProcessException )
+			self.assertEqual( str( exception ), "test.product : Detected undeclared dependency. Fix DependencyNode::affects() implementation." )
+
+		finally:
+			Gaffer.ValuePlug.setHashCacheMode( defaultHashCacheMode )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

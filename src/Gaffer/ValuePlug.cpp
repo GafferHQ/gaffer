@@ -138,6 +138,12 @@ struct ThreadStateFixer
 
 #endif
 
+// We only use the lower half of possible dirty count values.
+// The upper half is reserved for a debug "checked" mode where we compute
+// alternate values that are invalidated whenever any plug changes, in
+// order to catch inaccuracies in the cache
+const uint64_t DIRTY_COUNT_RANGE_HALF = ((uint64_t)1) << 63;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -223,6 +229,33 @@ bool spawnsTasks( const HashProcessKey &key )
 	return key.cachePolicy == ValuePlug::CachePolicy::TaskCollaboration;
 }
 
+ValuePlug::HashCacheMode defaultHashCacheMode()
+{
+	/// \todo Remove
+	if( const char *e = getenv( "GAFFER_HASHCACHE_MODE" ) )
+	{
+		if( !strcmp( e, "Legacy" ) )
+		{
+			IECore::msg( IECore::Msg::Warning, "Gaffer", "GAFFER_HASHCACHE_MODE is Legacy. Interactive performance will be affected." );
+			return ValuePlug::HashCacheMode::Legacy;
+		}
+		else if( !strcmp( e, "Checked" ) )
+		{
+			IECore::msg( IECore::Msg::Warning, "Gaffer", "GAFFER_HASHCACHE_MODE is Checked. Performance will be slow.  Use this setting only for debugging, not in production." );
+			return ValuePlug::HashCacheMode::Checked;
+		}
+		else if( !strcmp( e, "Standard" ) )
+		{
+			return ValuePlug::HashCacheMode::Standard;
+		}
+		else
+		{
+			IECore::msg( IECore::Msg::Warning, "ValuePlug", "Invalid value for GAFFER_HASHCACHE_MODE. Must be Standard, Checked or Legacy." );
+		}
+	}
+	return ValuePlug::HashCacheMode::Standard;
+}
+
 } // namespace
 
 class ValuePlug::HashProcess : public Process
@@ -284,8 +317,42 @@ class ValuePlug::HashProcess : public Process
 				}
 
 				// And then look up the result in our cache.
+				if( g_hashCacheMode == HashCacheMode::Standard )
+				{
+					return threadData.cache.get( processKey );
+				}
+				else if( g_hashCacheMode == HashCacheMode::Checked )
+				{
+					HashProcessKey legacyProcessKey( processKey );
+					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_HALF;
 
-				return threadData.cache.get( processKey );
+					const IECore::MurmurHash check = threadData.cache.get( legacyProcessKey );
+					const IECore::MurmurHash result = threadData.cache.get( processKey );
+
+					if( result != check )
+					{
+						// This isn't exactly a  process exception, but we want to treat it the same, in
+						// terms of associating it with a plug.  Creating a ProcessException is the simplest
+						// approach, which can be done by throwing and then immediately wrapping
+						try
+						{
+							throw IECore::Exception(  "Detected undeclared dependency. Fix DependencyNode::affects() implementation." );
+						}
+						catch( ... )
+						{
+							ProcessException::wrapCurrentException( processKey.plug, Context::current(), staticType );
+						}
+					}
+					return result;
+				}
+				else
+				{
+					// HashCacheMode::Legacy
+					HashProcessKey legacyProcessKey( processKey );
+					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_HALF;
+
+					return threadData.cache.get( legacyProcessKey );
+				}
 			}
 		}
 
@@ -320,6 +387,35 @@ class ValuePlug::HashProcess : public Process
 				// from the cache before the next computation starts.
 				it->clearCache = 1;
 			}
+		}
+
+		static void dirtyLegacyCache()
+		{
+			if( g_hashCacheMode != HashCacheMode::Standard )
+			{
+				uint64_t count = g_legacyGlobalDirtyCount;
+				uint64_t newCount;
+				do
+				{
+					newCount = count + 1;
+					if( newCount >= DIRTY_COUNT_RANGE_HALF )
+					{
+						newCount = 0;
+						clearCache();
+					}
+				} while( !g_legacyGlobalDirtyCount.compare_exchange_weak( count, newCount ) );
+			}
+		}
+
+		static void setHashCacheMode( ValuePlug::HashCacheMode hashCacheMode )
+		{
+			g_hashCacheMode = hashCacheMode;
+			clearCache();
+		}
+
+		static ValuePlug::HashCacheMode getHashCacheMode()
+		{
+			return g_hashCacheMode;
 		}
 
 		static const IECore::InternedString staticType;
@@ -402,6 +498,10 @@ class ValuePlug::HashProcess : public Process
 		// so that the work and the result is shared among all threads.
 		typedef IECorePreview::LRUCache<HashCacheKey, IECore::MurmurHash, IECorePreview::LRUCachePolicy::TaskParallel, HashProcessKey> GlobalCache;
 		static GlobalCache g_globalCache;
+		static std::atomic<uint64_t> g_legacyGlobalDirtyCount;
+
+
+		static HashCacheMode g_hashCacheMode;
 
 		// Per-thread cache. This is our default cache, used for hash computations that are
 		// presumed to be lightweight. Using a per-thread cache limits the contention among
@@ -428,6 +528,8 @@ tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_a
 // Default limit corresponds to a cost of roughly 25Mb per thread.
 tbb::atomic<size_t> ValuePlug::HashProcess::g_cacheSizeLimit = 128000;
 ValuePlug::HashProcess::GlobalCache ValuePlug::HashProcess::g_globalCache( globalCacheGetter, g_cacheSizeLimit, Cache::RemovalCallback(), /* cacheErrors = */ false );
+std::atomic<uint64_t> ValuePlug::HashProcess::g_legacyGlobalDirtyCount( 0 );
+ValuePlug::HashCacheMode ValuePlug::HashProcess::g_hashCacheMode( defaultHashCacheMode() );
 
 //////////////////////////////////////////////////////////////////////////
 // The ComputeProcess manages the task of calling ComputeNode::compute()
@@ -750,22 +852,6 @@ IE_CORE_DEFINERUNTIMETYPED( ValuePlug::SetValueAction );
 namespace
 {
 
-bool clearHashCacheOnDirty()
-{
-	/// \todo Remove
-	if( const char *e = getenv( "GAFFER_CLEAR_HASHCACHE_ON_DIRTY" ) )
-	{
-		if( strcmp( e, "" ) && strcmp( e, "0" ) )
-		{
-			IECore::msg( IECore::Msg::Warning, "Gaffer", "GAFFER_CLEAR_HASHCACHE_ON_DIRTY is set. Interactive performance will be affected." );
-			return true;
-		}
-	}
-	return false;
-}
-
-const bool g_clearHashCacheOnDirty = clearHashCacheOnDirty();
-
 std::atomic<uint64_t> g_dirtyCountEpoch( 0 );
 
 } // namespace
@@ -798,7 +884,11 @@ ValuePlug::~ValuePlug()
 	// with a count greater than ours. We do this atomically because
 	// although each graph should only be edited on one thread, it is
 	// permitted to edit multiple graphs in parallel.
-	if( m_dirtyCount != std::numeric_limits<uint64_t>::max() )
+
+	// Note that it is unlikely that this would ever trigger correctly - m_dirtyCount could
+	// easily wrap around without happening to land exactly on this one value.
+	// We are in the middle of figuring out a better approach.
+	if( m_dirtyCount != DIRTY_COUNT_RANGE_HALF - 1 )
 	{
 		uint64_t epoch = g_dirtyCountEpoch;
 		while( !g_dirtyCountEpoch.compare_exchange_weak( epoch, std::max( epoch, m_dirtyCount + 1 ) ) )
@@ -812,6 +902,10 @@ ValuePlug::~ValuePlug()
 		HashProcess::clearCache();
 		g_dirtyCountEpoch = 0;
 	}
+
+	// Legacy mode doesn't use `m_dirtyCount` or `g_dirtyCountEpoch`, so needs
+	// dirtying separately.
+	HashProcess::dirtyLegacyCache();
 }
 
 bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
@@ -1117,21 +1211,18 @@ void ValuePlug::dirty()
 	// The invalid entries will be evicted by the LRU rules in due
 	// course.
 	m_dirtyCount++;
-	if(
-		// If our count has wrapped back to 0, it's possible (but
-		// incredibly unlikely) that we could match a stale value
-		// in the cache, so we must do a brute force clear.
-		m_dirtyCount == 0 ||
-		// If a node has bugs in its `DependencyNode::affects()`
-		// implementation, it could also end up using stale cache entries.
-		// We provide the GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment
-		// variable to allow a temporary fallback to the old behaviour
-		// while the bugs are fixed.
-		g_clearHashCacheOnDirty
-	)
+
+	// If our count has exceeded the max permitted value, we need to
+	// wrap it back to 0, so it's possible (but incredibly unlikely)
+	// that we could match a stale value in the cache, so we must
+	// do a brute force clear.
+	if( m_dirtyCount >= DIRTY_COUNT_RANGE_HALF )
 	{
+		m_dirtyCount = 0;
 		HashProcess::clearCache();
 	}
+
+	HashProcess::dirtyLegacyCache();
 }
 
 size_t ValuePlug::getCacheMemoryLimit()
@@ -1167,4 +1258,14 @@ void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
 void ValuePlug::clearHashCache()
 {
 	HashProcess::clearCache();
+}
+
+void ValuePlug::setHashCacheMode( ValuePlug::HashCacheMode hashCacheMode )
+{
+	HashProcess::setHashCacheMode( hashCacheMode );
+}
+
+ValuePlug::HashCacheMode ValuePlug::getHashCacheMode()
+{
+	return HashProcess::getHashCacheMode();
 }
