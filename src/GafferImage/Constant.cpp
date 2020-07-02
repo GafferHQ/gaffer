@@ -107,15 +107,10 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 
-	if( formatPlug()->displayWindowPlug()->isAncestorOf( input ) )
+	if( formatPlug()->isAncestorOf( input ) )
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( outPlug()->dataWindowPlug() );
-	}
-
-	if( input == formatPlug()->pixelAspectPlug() )
-	{
-		outputs.push_back( outPlug()->formatPlug() );
 	}
 
 	if( input == layerPlug() )

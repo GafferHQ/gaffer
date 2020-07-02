@@ -161,9 +161,12 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 			c.affects( c["format"]["displayWindow"]["min"]["x"] ),
 			[ c["out"]["format"], c["out"]["dataWindow"] ],
 		)
+
+		# For the sake of simplicity when dealing with falling back to a default format from the context,
+		# we make all child plugs of the format affect everything that depends at all on the format
 		self.assertEqual(
 			c.affects( c["format"]["pixelAspect"] ),
-			[ c["out"]["format"] ],
+			[ c["out"]["format"], c["out"]["dataWindow"] ],
 		)
 
 	def testLayer( self ) :
