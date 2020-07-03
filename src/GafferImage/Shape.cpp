@@ -199,6 +199,11 @@ void Shape::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		return;
 	}
 
+	if( input == inPlug()->deepPlug() )
+	{
+		outputs.push_back( shapePlug()->deepPlug() );
+	}
+
 	if( affectsShapeDataWindow( input ) )
 	{
 		outputs.push_back( shapePlug()->dataWindowPlug() );
