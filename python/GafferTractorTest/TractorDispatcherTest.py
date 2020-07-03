@@ -129,22 +129,38 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s["n"] = GafferDispatchTest.LoggingTaskNode()
 		s["n"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["dispatcher"]["batchSize"].setValue( 10 )
-		s["n"]["dispatcher"]["tractor"]["service"].setValue( "myService" )
-		s["n"]["dispatcher"]["tractor"]["tags"].setValue( "myTag1 myTag2" )
+		s["n"]["dispatcher"]["tractor"]["tags"].setValue( "myTag1 ${myTagContext2}" )
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( """parent["n"]["dispatcher"]["tractor"]["service"] = context.get("service", "")""" )
+
+		# add context variables: myTagContext2 and service
+		s["context"] = Gaffer.ContextVariables()
+		s["context"].setup( GafferDispatch.TaskNode.TaskPlug() )
+		s["context"]["in"].setInput( s["n"]["task"] )
+		variable = s["context"]["variables"].addMember( "tag", Gaffer.StringPlug() )
+		variable["name"].setValue("myTagContext2")
+		variable["value"].setValue("myTag2")
+		variable = s["context"]["variables"].addMember( "service", Gaffer.StringPlug() )
+		variable["name"].setValue("service")
+		variable["value"].setValue("myService")
+
+		s["job"] = Gaffer.TaskList()
+		s["job"]["preTasks"][0].setInput( s["context"]["out"] )
 
 		dispatcher = self.__dispatcher()
 		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "1-10" )
 
-		job = self.__job( [ s["n"] ], dispatcher )
-		self.assertEqual( len( job.subtasks ), 1 )
+		job = self.__job( [ s["job"] ], dispatcher )
 
-		task = job.subtasks[0]
+		self.assertEqual( len( job.subtasks ), 10 )
+
+		task = job.subtasks[0].subtasks[0]
 		self.assertEqual( task.title, "n 1-10" )
 
 		self.assertEqual( len( task.cmds ), 1 )
 		command = task.cmds[0]
-		self.assertEqual( command.service, "myService" )
+		self.assertEqual( command.service, "myService", "context variables were not expanded correctly" )
 		self.assertEqual( command.tags, [ "myTag1", "myTag2" ] )
 
 	def testPreTasks( self ) :
