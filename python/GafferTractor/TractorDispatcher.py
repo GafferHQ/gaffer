@@ -179,11 +179,15 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 			tractorPlug = batch.node()["dispatcher"].getChild( "tractor" )
 			if tractorPlug is not None :
-				## \todo Remove these manual substitutions once #887 is resolved.
-				# Note though that we will need to use `with batch.context()` to
-				# ensure the substitutions occur in the right context.
-				command.service = batch.context().substitute( tractorPlug["service"].getValue() )
-				command.tags = batch.context().substitute( tractorPlug["tags"].getValue() ).split()
+				with Gaffer.Context( batch.context() ) as batchContextWithFrame:
+					# tags and services can not be varied per-frame within a batch, but we provide the context variable
+					# as a concession to existing production setups that would error without it
+					batchContextWithFrame["frame"] = min( batch.frames() )
+					## \todo Remove these manual substitutions once #887 is resolved.
+					# Note though that we will need to use `with batch.context()` to
+					# ensure the substitutions occur in the right context.
+					command.service = batchContextWithFrame.substitute( tractorPlug["service"].getValue() )
+					command.tags = batchContextWithFrame.substitute( tractorPlug["tags"].getValue() ).split()
 
 		# Remember the task for next time, and return it.
 
