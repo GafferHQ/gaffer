@@ -165,7 +165,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 			return parameters
 
 		except :
-			import traceback
 			import sys
 			traceback.print_tb( sys.exc_info()[2] )
 			raise
@@ -378,8 +377,6 @@ class _ParameterWidget( GafferUI.Widget ) :
 
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, parenting = { "index" : ( 0, 1 ), "alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) } ) :
 
-				self.__errorBadge = GafferUI.Image( "errorSmall.png" )
-
 				self.__editButton = GafferUI.Button( image = "editOff.png", hasFrame = False )
 				self.__editButton.clickedSignal().connect( Gaffer.WeakMethod( self.__editButtonClicked ), scoped = False )
 
@@ -402,26 +399,35 @@ class _ParameterWidget( GafferUI.Widget ) :
 		editable = bool( inspectors ) and all( i.editable() for i in inspectors )
 		hasEdit = bool( inspectors ) and all( i.hasEdit() for i in inspectors )
 
-		image = "editDisabled.png"
-		if editable :
-			image = "editOn.png" if hasEdit else "editOff.png"
-
 		errors = [ i.errorMessage() for i in inspectors if i.errorMessage() ]
 		errorStr = "\n".join( errors )
-		self.__errorBadge.setVisible( errors )
-		self.__errorBadge.setToolTip( errorStr )
 
 		warnings = [ i.warningMessage() for i in inspectors if i.warningMessage() ]
 		warningStr = "\n".join( warnings )
+
 		self.__warningBadge.setToolTip( warningStr )
 		self.__warningBadge.setVisible( warnings and not errors )
 
-		self.__editButton.setToolTip( "Click to edit" if hasEdit else "Click to add an edit" )
+		if editable:
+			self.__editButton.setToolTip( "Click to edit" if hasEdit else "Click to add an edit" )
+		else :
+			self.__editButton.setToolTip( errorStr )
+
+		image = "editDisabled.png"
+		if editable :
+			image = "editOn.png" if hasEdit else "editOff.png"
 		self.__editButton.setImage( image )
+
 		self.__editButton.setEnabled( editable )
-		self.__editButton.setVisible( not errors )
 
 		self.__valueWidget.setToolTip( errorStr if errors else ( "Click to Edit" if hasEdit else "" ) )
+
+		scope = "local" if hasEdit else "upstream"
+		if warnings :
+			scope = "overridden"
+
+		self.__valueWidget._qtWidget().setProperty( "inspectorValueScope", scope )
+		self.__valueWidget._repolish()
 
 		self.__inspectors = inspectors
 

@@ -1451,6 +1451,19 @@ _styleSheet = string.Template(
 
 	/* SceneInspector */
 
+	QLabel[inspectorValueScope="overridden"] {
+		background-color: rgba( 253, 224, 18, 0.1 );
+		border-radius: $widgetCornerRadius;
+		padding: 2px;
+	}
+
+	QLabel[inspectorValueScope="local"] {
+		background-color: $background;
+		border: 1px solid $tintLighter;
+		border-radius: $widgetCornerRadius;
+		padding: 2px;
+	}
+
 	*[gafferClass="GafferSceneUI.SceneInspector"] *[gafferAlternate="true"] {
 		background: $tintLighterSubtle;
 	}
