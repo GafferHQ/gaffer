@@ -124,7 +124,7 @@ Breaking Changes
 Build
 -----
 
-- Updated to GafferHQ/dependencies 1.4.0.
+- Updated to GafferHQ/dependencies 1.5.0.
 
 0.57.5.0 (relative to 0.57.4.1)
 ========
