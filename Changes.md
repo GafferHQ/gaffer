@@ -40,6 +40,7 @@ Fixes
 - SetAlgo : Fixed `affectsSetExpression()` to return `True` for `ScenePlug::setNamesPlug()`.
 - GafferTractor: Fixed evaluation of 'tag' and 'service' plugs on Task nodes. Previously, these plugs were evaluated in the default context, which prevented one from using custom context variables (e.g. from Wedge node) to compute tags or service keys dynamically.
 
+
 API
 ---
 
@@ -126,6 +127,21 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.4.0.
+
+========
+0.57.x.x (relative to 0.57.5.0)
+========
+
+Fixes
+-----
+
+- SceneAlgo : Removed cancellers from contexts referenced by history objects.
+- Context : Fixed Python `Canceller` lifetime management bug.
+
+API
+---
+
+- Context : Added copy constructor that allows an existing canceller to be omitted.
 
 0.57.5.0 (relative to 0.57.4.1)
 ========

@@ -122,7 +122,7 @@ Context::Context()
 	set( g_framesPerSecond, 24.0f );
 }
 
-Context::Context( const Context &other, Ownership ownership, const IECore::Canceller *canceller )
+Context::Context( const Context &other, Ownership ownership )
 	:	m_map( other.m_map ),
 		m_changedSignal( nullptr ),
 		m_hash( other.m_hash ),
@@ -153,25 +153,25 @@ Context::Context( const Context &other, Ownership ownership, const IECore::Cance
 				break;
 		}
 	}
-
-	if( canceller )
-	{
-		if( m_canceller )
-		{
-			throw IECore::Exception( "Can't replace an existing Canceller" );
-		}
-		m_canceller = canceller;
-	}
-}
-
-Context::Context( const Context &other, Ownership ownership )
-	:	Context( other, ownership, nullptr )
-{
 }
 
 Context::Context( const Context &other, const IECore::Canceller &canceller )
-	:	Context( other, Copied, &canceller )
+	:	Context( other, Copied )
 {
+	if( m_canceller )
+	{
+		throw IECore::Exception( "Can't replace an existing Canceller" );
+	}
+	m_canceller = &canceller;
+}
+
+Context::Context( const Context &other, bool omitCanceller )
+	:	Context( other, Copied )
+{
+	if( omitCanceller )
+	{
+		m_canceller = nullptr;
+	}
 }
 
 Context::~Context()

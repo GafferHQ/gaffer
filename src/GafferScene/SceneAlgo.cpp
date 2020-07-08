@@ -330,7 +330,7 @@ class CapturingMonitor : public Monitor
 			capturedProcess->type = process->type();
 			capturedProcess->plug = process->plug();
 			capturedProcess->destinationPlug = process->destinationPlug();
-			capturedProcess->context = new Context( *process->context() );
+			capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
 
 			Mutex::scoped_lock lock( m_mutex );
 
@@ -630,7 +630,7 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 	{
 		return new History(
 			const_cast<ScenePlug *>( scenePlugChild->parent<ScenePlug>() ),
-			new Context( *Context::current() )
+			new Context( *Context::current(), /* omitCanceller = */ true )
 		);
 	}
 
