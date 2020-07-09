@@ -216,16 +216,19 @@ class _ParameterInspector( object ) :
 		self.__parameter = parameter
 		self.__errorMessage = None
 		self.__warningMessage = None
+		self.__editScope = editScope
 
-		shader = attributeHistory.attributeValue.outputShader()
-		self.__value = shader.parameters.get( parameter )
+		self.__value = self.__extractValue( attributeHistory )
+
 		if self.__value is not None :
 			if hasattr( self.__value, "value" ) :
 				self.__value = self.__value.value
-			self.__editFunction, self.__hasEditFunction = self.__makeEditFunction( attributeHistory, editScope )
+			self.__editFunction, self.__hasEditFunction, self.__upstream, self.__downstream = self.__makeEditFunction( attributeHistory, editScope )
 		else :
 			self.__editFunction = None
 			self.__hasEditFunction = None
+			self.__upstream = []
+			self.__downstream = []
 
 	def value( self ) :
 
@@ -243,6 +246,16 @@ class _ParameterInspector( object ) :
 
 		return self.__hasEditFunction() if self.__hasEditFunction is not None else False
 
+	def otherEdits( self ) :
+
+		upstream = [ ( self.__extractValue(history), edit() ) for history, edit, hasEdit in self.__upstream if hasEdit() ]
+		downstream = [ ( self.__extractValue(history), edit() ) for history, edit, hasEdit in self.__downstream if hasEdit() ]
+		return upstream, downstream
+
+	def editScope( self ) :
+
+		return self.__editScope
+
 	def warningMessage( self ) :
 
 		return self.__warningMessage
@@ -250,6 +263,15 @@ class _ParameterInspector( object ) :
 	def errorMessage( self ) :
 
 		return self.__errorMessage
+
+	def __extractValue( self, attributeHistory ) :
+
+		shader = attributeHistory.attributeValue.outputShader()
+		value = shader.parameters.get( self.__parameter )
+		if value is not None :
+			if hasattr( value, "value" ) :
+				value = value.value
+		return value
 
 	def __editFunctionFromSceneNode( self, attributeHistory ) :
 
@@ -276,84 +298,144 @@ class _ParameterInspector( object ) :
 
 		return None, None
 
+	def __editFunctionFromEditScope( self, attributeHistory ) :
+
+		def editScopeEdit( attributeHistory, parameter ) :
+
+			with attributeHistory.context :
+				return GafferScene.EditScopeAlgo.acquireParameterEdit(
+					attributeHistory.scene.node(),
+					attributeHistory.context["scene:path"],
+					attributeHistory.attributeName,
+					IECoreScene.ShaderNetwork.Parameter( "", parameter ),
+				)
+
+		def editScopeHasEdit( attributeHistory, parameter ) :
+
+			with attributeHistory.context :
+				hasEdit = GafferScene.EditScopeAlgo.hasParameterEdit(
+					attributeHistory.scene.node(),
+					attributeHistory.context["scene:path"],
+					attributeHistory.attributeName,
+					IECoreScene.ShaderNetwork.Parameter( "", parameter ),
+				)
+				if not hasEdit :
+					return False
+
+				tweak = GafferScene.EditScopeAlgo.acquireParameterEdit(
+					attributeHistory.scene.node(),
+					attributeHistory.context["scene:path"],
+					attributeHistory.attributeName,
+					IECoreScene.ShaderNetwork.Parameter( "", parameter ),
+				)
+				return  tweak["enabled"].getValue()
+
+		editFn = functools.partial( editScopeEdit, attributeHistory, self.__parameter )
+		hasEditFn = functools.partial( editScopeHasEdit, attributeHistory, self.__parameter )
+
+		return editFn, hasEditFn
+
 	def __makeEditFunction( self, attributeHistory, editScope ) :
+
+		data = {
+			"editFn" : None,
+			"hasEditFn" : None,
+			"upstreamEdits" : [],
+			"downstreamEdits" : []
+		}
+
+		def walk( attributeHistory, isUpstream = False ) :
+
+			node = attributeHistory.scene.node()
+
+			# We found an EditScope in the history
+			if isinstance( node, Gaffer.EditScope ) and attributeHistory.scene == node["out"] :
+
+				e, h = self.__editFunctionFromEditScope( attributeHistory )
+
+				if editScope is not None :
+
+					# If we've been asked to use an edit scope, and this is it, were the primary edit target
+					if node.isSame( editScope ) :
+
+						self.__errorMessage = None
+						data["editFn"] = e
+						data["hasEditFn"] = h
+						isUpstream = True
+
+					# Otherwise we're some other edit scope, keep track of it but carry on
+					else :
+
+						data["upstreamEdits" if isUpstream else "downstreamEdits" ].append( ( attributeHistory, e, h ) )
+
+				# If we have no scope specific, use this scope, if it has an edit
+				else :
+
+					if data["editFn"] is None :
+						if h() :
+							data["editFn"] = e
+							data["hasEditFn"] = h
+					else :
+						data["upstreamEdits"].append( ( attributeHistory, e, h ) )
+
+			# Some other node in the history that isn't an edit scope
+			else :
+
+				e, h = self.__editFunctionFromSceneNode( attributeHistory )
+
+				if e is not None :
+
+					if editScope is not None :
+
+						# If we're inside the edit scope, then we should be used
+						# TODO: We need to check if this is a custom node, and
+						# if its before or after the node that _would_ be used
+						# in the edit scope, to choose which should win here
+						if editScope.isAncestorOf( attributeHistory.scene ) :
+
+							if data["editFn"] is None :
+								data["editFn"] = e
+								data["hasEditFn"] = h
+								isUpstream = True
+
+						# Otherwise, were some other edit that we're not targeting, keep track of it as long
+						# as we're not inside the edit-scope managed scene processor.
+						elif node.ancestor( GafferScene.SceneProcessor) is None:
+
+							data[ "upstreamEdits" if isUpstream else "downstreamEdits" ].append( ( attributeHistory, e, h ) )
+
+					else :
+
+						if data["editFn"] is None :
+							if h() :
+								data["editFn"] = e
+								data["hasEditFn"] = h
+						else :
+							# Ignore anything inside a processor managed by and edit scope as we'll have
+							# picked that up via. the EditScope route.
+							sceneProcessor = node.ancestor( GafferScene.SceneProcessor )
+							if sceneProcessor is None or Gaffer.Metadata.value( sceneProcessor, "editScope:processorType" ) is None :
+								data[ "upstreamEdits" ].append( ( attributeHistory, e, h ) )
+
+			for p in attributeHistory.predecessors :
+				walk( p, isUpstream )
+
+		walk( attributeHistory, False )
 
 		if editScope is not None :
 			scriptNode = editScope.ancestor( Gaffer.ScriptNode )
 			with scriptNode.context() if scriptNode is not None else Gaffer.Context() :
 				if not editScope["enabled"].getValue() :
 					self.__errorMessage = "Target EditScope is disabled"
-					return None, None
+					return None, None, upstreamEdits, downstreamEdits
 
-		node = attributeHistory.scene.node()
-		if isinstance( node, Gaffer.EditScope ) and attributeHistory.scene == node["out"] :
-
-			if node == editScope :
-
-				def editScopeEdit( attributeHistory, parameter ) :
-
-					with attributeHistory.context :
-						return GafferScene.EditScopeAlgo.acquireParameterEdit(
-							attributeHistory.scene.node(),
-							attributeHistory.context["scene:path"],
-							attributeHistory.attributeName,
-							IECoreScene.ShaderNetwork.Parameter( "", parameter ),
-						)
-
-				def editScopeHasEdit( attributeHistory, parameter ) :
-
-					with attributeHistory.context :
-						hasEdit = GafferScene.EditScopeAlgo.hasParameterEdit(
-							attributeHistory.scene.node(),
-							attributeHistory.context["scene:path"],
-							attributeHistory.attributeName,
-							IECoreScene.ShaderNetwork.Parameter( "", parameter ),
-						)
-						if not hasEdit :
-							return False
-
-						tweak = GafferScene.EditScopeAlgo.acquireParameterEdit(
-							attributeHistory.scene.node(),
-							attributeHistory.context["scene:path"],
-							attributeHistory.attributeName,
-							IECoreScene.ShaderNetwork.Parameter( "", parameter ),
-						)
-						return  tweak["enabled"].getValue()
-
-				editFn = functools.partial( editScopeEdit, attributeHistory, self.__parameter )
-				hasEditFn = functools.partial( editScopeHasEdit, attributeHistory, self.__parameter )
-
-				self.__errorMessage = None
-				return editFn, hasEditFn
-
-			elif editScope is None :
-
-				# We have encountered an EditScope node, but have not been told to use
-				# one. We could continue our search upstream, but we take the position that
-				# if EditScopes are present, we shouldn't make any edits outside of one.
-				self.__errorMessage = "EditScopes in graph but none targeted for edit"
-				return None, None
-
-		else :
-
-			e, h = self.__editFunctionFromSceneNode( attributeHistory )
-			if e is not None :
-				if editScope is None or editScope.isAncestorOf( attributeHistory.scene ) :
-					return e, h
-				elif editScope is not None :
-					# We could edit this node, but it's downstream of the EditScope we've been
-					# asked to use
-					self.__warningMessage = "Edits in this scope may be overriden downstream"
-
-		for p in attributeHistory.predecessors :
-			e, h = self.__makeEditFunction( p, editScope )
-			if e is not None :
-				return e, h
-
-		if editScope is not None and not self.__errorMessage:
+		if data["editFn"] is None and editScope is not None and not self.__errorMessage:
 			self.__errorMessage = "Target EditScope is not in the scene history"
 
-		return None, None
+		data["upstreamEdits"].reverse()
+		data["downstreamEdits"].reverse()
+
+		return data["editFn"], data["hasEditFn"], data["upstreamEdits"], data["downstreamEdits"]
 
 ## \todo Figure out how this relates to the DiffRow in the SceneInspector.
 class _ParameterWidget( GafferUI.Widget ) :
@@ -384,7 +466,6 @@ class _ParameterWidget( GafferUI.Widget ) :
 			self.__valueWidget.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__valueWidgetClicked ), scoped = False )
 
 			self.__warningBadge = GafferUI.Image( "warningSmall.png", parenting = { "index" : ( 3, 1 ) } )
-
 
 		self.update( [] )
 
@@ -443,21 +524,26 @@ class _ParameterWidget( GafferUI.Widget ) :
 	def __edit( self ) :
 
 		plugs = [ v.acquireEdit() for v in self.__inspectors ]
-		self.__editWindow = _EditWindow( plugs )
+
+		# For now, only support history for single locations
+		if len( self.__inspectors ) == 1 :
+			upstream, downstream = self.__inspectors[0].otherEdits()
+		else :
+			upstream = []
+			downstream = []
+
+		editScope = self.__inspectors[0].editScope() if self.__inspectors else None
+
+		self.__editWindow = _EditWindow( editScope, plugs, upstream, downstream )
 		self.__editWindow.popup( self.bound().center() + imath.V2i( 0, 45 ) )
 
 ## \todo How does this relate to PopupWindow and SpreadsheetUI._EditWindow?
 class _EditWindow( GafferUI.Window ) :
 
-	def __init__( self, plugs, **kw ) :
+	def __init__( self, editScope, plugs, upstream, downstream, **kw ) :
 
 		container = GafferUI.ListContainer( spacing = 4 )
 		GafferUI.Window.__init__( self, "", child = container, borderWidth = 8, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
-
-		for p in plugs :
-			## \todo Figure out when/if this is about to happen, and disable
-			# editing beforehand.
-			assert( isinstance( p, plugs[0].__class__ ) )
 
 		self._qtWidget().setWindowFlags( QtCore.Qt.Popup )
 		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
@@ -465,25 +551,37 @@ class _EditWindow( GafferUI.Window ) :
 
 		with container :
 
-			# Label to tell folks what they're editing.
+			if upstream :
+				if editScope is not None :
+					with GafferUI.Collapsible( "Upstream ({:d})".format( len(upstream) ), collapsed = True ) :
+						with GafferUI.ListContainer( spacing = 0, borderWidth = 0 ) :
+							GafferUI.Divider()
+							with GafferUI.ListContainer( spacing = 8, borderWidth = 6 ) :
+								for e in upstream :
+									_EditWidget( ( e[1], ), secondary = True )
+					GafferUI.Divider()
+					GafferUI.Spacer( imath.V2i( 10, 8 ), imath.V2i( 10, 8 ) )
+				else :
+					for e in upstream :
+						_EditWidget( ( e[1], ) )
+						GafferUI.Spacer( imath.V2i( 10, 8 ), imath.V2i( 10, 8 ) )
 
-			labels = { self.__plugLabel( p ) for p in plugs }
-			label = GafferUI.Label()
-			if len( labels ) == 1 :
-				label.setText( "<h4>{}</h4>".format( next( iter( labels ) ) ) )
-			else :
-				label.setText( "<h4>{} plugs</h4>".format( len( labels ) ) )
-				label.setToolTip(
-					"\n".join( "- " + l for l in labels )
-				)
+			primary = _EditWidget( plugs )
 
-			# Widget for editing plugs
-
-			plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
-			if isinstance( plugValueWidget, GafferSceneUI.TweakPlugValueWidget ) :
-				## \todo We have this same hack in SpreadsheetUI. Should we instead
-				# do something with metadata when we add the column to the spreadsheet?
-				plugValueWidget.setNameVisible( False )
+			if downstream :
+				if editScope is not None :
+					GafferUI.Spacer( imath.V2i( 10, 8 ), imath.V2i( 10, 8 ) )
+					GafferUI.Divider()
+					with GafferUI.Collapsible( "Downstream ({:d})".format( len(downstream) ), collapsed = True ) :
+						with GafferUI.ListContainer( spacing = 0, borderWidth = 0 ) :
+							GafferUI.Divider()
+							with GafferUI.ListContainer( spacing = 8, borderWidth = 6 ) :
+								for e in downstream :
+									_EditWidget( ( e[1], ), secondary = True )
+				else :
+					for e in downstream :
+						GafferUI.Spacer( imath.V2i( 10, 8 ), imath.V2i( 10, 8 ) )
+						_EditWidget( ( e[1], ) )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
@@ -510,6 +608,43 @@ class _EditWindow( GafferUI.Window ) :
 		if event.key == "Return" :
 			self.close()
 
+
+class _EditWidget( GafferUI.Widget ) :
+
+	def __init__( self, plugs, secondary = False, **kw ) :
+
+		container = GafferUI.ListContainer( spacing = 4 )
+		GafferUI.Widget.__init__( self, container, **kw )
+
+		for p in plugs :
+			## \todo Figure out when/if this is about to happen, and disable
+			# editing beforehand.
+			assert( isinstance( p, plugs[0].__class__ ) )
+
+		with container :
+
+			# Label to tell folks what they're editing.
+
+			tag = "p" if secondary else "h4"
+
+			labels = { self.__plugLabel( p ) for p in plugs }
+			label = GafferUI.Label()
+			if len( labels ) == 1 :
+				label.setText( "<{tag}>{label}</{tag}>".format( tag = tag, label = next( iter( labels ) ) ) )
+			else :
+				label.setText( "<{tag}>{count} plugs</{tag}>".format( tag = tag, count = len( labels ) ) )
+				label.setToolTip(
+					"\n".join( "- " + l for l in labels )
+				)
+
+			# Widget for editing plugs
+
+			plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
+			if isinstance( plugValueWidget, GafferSceneUI.TweakPlugValueWidget ) :
+				## \todo We have this same hack in SpreadsheetUI. Should we instead
+				# do something with metadata when we add the column to the spreadsheet?
+				plugValueWidget.setNameVisible( False )
+
 	def __plugLabel( self, plug ) :
 
 		editScope = plug.ancestor( Gaffer.EditScope )
@@ -517,6 +652,7 @@ class _EditWindow( GafferUI.Window ) :
 			return editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) )
 		else :
 			return plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) )
+
 
 # Widget for displaying any value type.
 ## \todo Figure out relationship with SceneInspector's Diff widgets.

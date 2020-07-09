@@ -1338,6 +1338,12 @@ _styleSheet = string.Template(
 		margin-right: 1px;
 	}
 
+	*[gafferClass="GafferSceneUI._SceneViewInspector._EditWindow"] QFrame[gafferClass="GafferUI.Divider"] {
+		color: $tintLighter;
+		margin-left: 0;
+		margin-right: 0;
+	}
+
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
 		padding: 1px;
 	}

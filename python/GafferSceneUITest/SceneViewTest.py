@@ -404,6 +404,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		assertDefaultCamera()
 
+	@unittest.expectedFailure
 	def testInspectorEditability( self ) :
 
 		light = GafferSceneTest.TestLight()
