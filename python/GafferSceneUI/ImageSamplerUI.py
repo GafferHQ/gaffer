@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Hypothetical Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,80 @@
 #
 ##########################################################################
 
-import GafferUITest
-
 import Gaffer
 import GafferScene
-import GafferSceneUI
-import GafferImage
 
-class DocumentationTest( GafferUITest.TestCase ) :
+Gaffer.Metadata.registerNode(
 
-	def test( self ) :
+	GafferScene.ImageSampler,
 
-		self.maxDiff = None
-		self.assertNodesAreDocumented(
-			GafferScene,
-			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, Gaffer.CompoundDataPlug.MemberPlug, GafferImage.ImagePlug )
-		)
+	"description",
+	"""
+	Samples image data and transfers the values onto a primitive
+    variable on the sampling objects. Values of \"Cs\", \"N\", 
+	\"P\", \"Pref\", \"scale\", \"uv\", \"velocity\" and \"width\" 
+	will define their interpretation appropriately when the correct 
+	number of channels are sampled. Other variables will create a 
+	float primitive variable per channel sampled.
+	""",
 
-if __name__ == "__main__":
-	unittest.main()
+	plugs = {
+
+		"image" : [
+
+			"description",
+			"""
+			The image to sample primitive variable data from.
+			""",
+			"plugValueWidget:type", "",
+			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:spacing", 2.0,
+
+		],
+
+		"primitiveVariable" : [
+
+			"description",
+			"""
+			The primitive variable to sample image data onto.
+			""",
+
+		],
+
+        "uvPrimitiveVariable" : [
+
+			"description",
+			"""
+			The primitive variable holding uv data used to sample the image.
+			""",
+			
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			The image channels to sample. Multiple channels are separated by spaces. 
+            For vector primitive variables the order of the channels corresponds to 
+			the indices of the vector. Wildcard expressions are not supported.
+			""",
+
+		],
+
+		"uvBoundsMode" : [
+
+				"description",
+				"""
+				The method to use to handle uv data outside the range of 0.0 - 1.0.
+				- Clamp : Values below 0.0 will be reset to 0.0, values above 1.0 
+				will be reset to 1.0 and values in between are unchanged.
+				- Tile : Values wrap on integer boundaries.
+				""",
+				"preset:Clamp", 0,
+				"preset:Tile", 1,
+				"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		],
+
+	}
+
+)
