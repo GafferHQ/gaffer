@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2020, Hypothetical Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,60 +34,65 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_IMAGESAMPLER_H
+#define GAFFERSCENE_IMAGESAMPLER_H
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "ImageSamplerBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
+#include "GafferImage/ImagePlug.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+#include "GafferScene/Deformer.h"
 
-BOOST_PYTHON_MODULE( _GafferScene )
+#include "Gaffer/StringPlug.h"
+
+#include "IECoreScene/PrimitiveEvaluator.h"
+
+namespace GafferScene
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
-	bindImageSampler();
+class GAFFERSCENE_API ImageSampler : public Deformer
+{
 
-}
+	public :
+
+		ImageSampler( const std::string &name = defaultName<ImageSampler>() );
+		~ImageSampler() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ImageSampler, ImageSamplerTypeId, Deformer );
+
+        enum UVBoundsMode
+		{
+			Clamp = 0,
+            Tile = 1
+		};
+
+        GafferImage::ImagePlug *imagePlug();
+		const GafferImage::ImagePlug *imagePlug() const;
+
+        Gaffer::StringPlug *primVarNamePlug();
+		const Gaffer::StringPlug *primVarNamePlug() const;
+
+        Gaffer::StringPlug *uvVarNamePlug();
+		const Gaffer::StringPlug *uvVarNamePlug() const;
+
+        Gaffer::IntPlug *uvBoundsModePlug();
+        const Gaffer::IntPlug *uvBoundsModePlug() const;
+
+		Gaffer::StringPlug *channelsPlug();
+		const Gaffer::StringPlug *channelsPlug() const;
+
+	private :
+
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const final;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const final;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const final;
+
+		bool adjustBounds() const final;
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( ImageSampler )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_IMAGESAMPLER_H

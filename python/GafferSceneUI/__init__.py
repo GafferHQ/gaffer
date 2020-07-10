@@ -163,6 +163,7 @@ from . import LocaliseAttributesUI
 from . import PrimitiveSamplerUI
 from . import ClosestPointSamplerUI
 from . import CurveSamplerUI
+from . import ImageSamplerUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
