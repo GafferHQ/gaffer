@@ -90,7 +90,7 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 		}
 	}
 	else
-	{  
+	{
 		int metadataDefault;
 		if( AiMetaDataGetInt( node, name, g_gafferDefaultArnoldString, &metadataDefault ) )
 		{
@@ -202,17 +202,17 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 		AtRGBA metadataDefault;
 		if( AiMetaDataGetRGBA( node, name, g_gafferDefaultArnoldString, &metadataDefault ) )
 		{
-			memcpy( &defaultValue, &metadataDefault.r, sizeof( ValueType ) );
+			memcpy( (void *)&defaultValue, &metadataDefault.r, sizeof( ValueType ) );
 			defaultOverridden = true;
 		}
 		#endif
 	}
 	else
-	{  
+	{
 		AtRGB metadataDefault;
 		if( AiMetaDataGetRGB( node, name, g_gafferDefaultArnoldString, &metadataDefault ) )
 		{
-			memcpy( &defaultValue, &metadataDefault.r, sizeof( ValueType ) );
+			memcpy( (void *)&defaultValue, &metadataDefault.r, sizeof( ValueType ) );
 			defaultOverridden = true;
 		}
 	}
