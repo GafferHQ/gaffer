@@ -384,7 +384,7 @@ Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegme
 	// length of the connection, with some sensible minimum and
 	// maximum limits.
 	const float length = ( m_srcPos - m_dstPos ).length();
-	const float threshold = clamp( length / 4.0f, 2.5f, 25.0f );
+	const float threshold = Imath::clamp( length / 4.0f, 2.5f, 25.0f );
 
 	float dSrc = line.distanceTo( m_srcPos );
 	float dDst = line.distanceTo( m_dstPos );
