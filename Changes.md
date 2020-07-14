@@ -16,6 +16,7 @@ Improvements
 - Stats app : Added `-location` argument, to allow profiling of a single location in a scene.
 - AnimationEditor : Improved performance.
 - MessageWidget : Added alternate presentation options allowing log-style message display, search, etc.
+- Viewer : Added warning/error message count to Render Control overlay.
 
 Fixes
 -----
@@ -74,6 +75,10 @@ API
     - PresetsPlugValueWidget
 - SetAlgo : Added Python binding for `affectsSetExpression()`.
 - Shader : Added `affectsAttributes()` protected method.
+- MessageWidget : Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
+- MessageWidget :
+  - Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
+  - Added `scrollToNextMessage()` and `scrollToPreviousMessage()` methods.
 
 Breaking Changes
 ----------------

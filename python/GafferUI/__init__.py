@@ -173,7 +173,7 @@ from .BusyWidget import BusyWidget
 from .NumericSlider import NumericSlider
 from .ColorChooser import ColorChooser
 from .ColorChooserDialogue import ColorChooserDialogue
-from .MessageWidget import MessageWidget
+from .MessageWidget import MessageWidget, MessageSummaryWidget
 from .NotificationMessageHandler import NotificationMessageHandler
 from .MenuButton import MenuButton
 from .MultiSelectionMenu import MultiSelectionMenu
