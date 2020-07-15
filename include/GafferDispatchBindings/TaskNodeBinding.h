@@ -73,7 +73,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 
 		bool affectsTask( const Gaffer::Plug *input ) const override
 		{
-			if( this->isSubclassed() )
+			if( this->isSubclassed() && this->initialised() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try

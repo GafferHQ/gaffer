@@ -592,23 +592,18 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
-	if( getFlags( Dynamic ) )
+	// When a plug is removed from a node, we need to propagate
+	// dirtiness based on that. We must call `DependencyNode::affects()`
+	// now, while the plug is still a child of the node, but we push
+	// scope so that the emission of `plugDirtiedSignal()` is deferred
+	// until `parentChanged()` when the operation is complete. It is
+	// essential that exceptions don't prevent us getting to `parentChanged()`
+	// where we pop scope, so propateDirtiness() takes care of handling
+	// exceptions thrown by `DependencyNode::affects()`.
+	pushDirtyPropagationScope();
+	if( node() )
 	{
-		// When a dynamic plug is removed from a node, we
-		// need to propagate dirtiness based on that. We
-		// must call DependencyNode::affects() now, while the
-		// plug is still a child of the node, but we push
-		// scope so that the emission of plugDirtiedSignal()
-		// is deferred until parentChanged() when the operation
-		// is complete. It is essential that exceptions don't
-		// prevent us getting to parentChanged() where we pop
-		// scope, so propateDirtiness() takes care of handling
-		// exceptions thrown by DependencyNode::affects().
-		pushDirtyPropagationScope();
-		if( node() )
-		{
-			propagateDirtinessForParentChange( this );
-		}
+		propagateDirtinessForParentChange( this );
 	}
 
 	// This method manages the connections between plugs when
@@ -691,17 +686,14 @@ void Plug::parentChanged( Gaffer::GraphComponent *oldParent )
 {
 	GraphComponent::parentChanged( oldParent );
 
-	if( getFlags( Dynamic ) )
+	if( node() )
 	{
-		if( node() )
-		{
-			// If a dynamic plug has been added to a
-			// node, we need to propagate dirtiness.
-			propagateDirtinessForParentChange( this );
-		}
-		// Pop the scope pushed in parentChanging().
-		popDirtyPropagationScope();
+		// If a plug has been added to a node, we need to
+		// propagate dirtiness.
+		propagateDirtinessForParentChange( this );
 	}
+	// Pop the scope pushed in `parentChanging()`.
+	popDirtyPropagationScope();
 }
 
 void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )

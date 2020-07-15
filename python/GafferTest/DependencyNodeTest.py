@@ -554,6 +554,22 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		del n["in"]
 		self.assertEqual( valuesWhenDirtied, [ 0 ] )
 
+		# Check that dirty propagation still operates even if
+		# the plugs don't have the Dynamic flag set. Although
+		# DynamicAddNode would require the flag for serialisation
+		# to work, other nodes may not, and we don't want to mix
+		# up dirty propagation with serialisation.
+
+		del valuesWhenDirtied[:]
+		n["in"] = Gaffer.IntPlug( defaultValue = 1 )
+		n["in1"] = Gaffer.IntPlug( defaultValue = 2 )
+		self.assertEqual( valuesWhenDirtied, [ 1, 3 ] )
+
+		del valuesWhenDirtied[:]
+		del n["in"]
+		del n["in1"]
+		self.assertEqual( valuesWhenDirtied, [ 2, 0 ] )
+
 	def testThrowInAffects( self ) :
 		# Dirty propagation is a secondary process that
 		# is triggered by primary operations like adding

@@ -79,12 +79,6 @@ void AttributeProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContai
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( !refCount() )
-	{
-		// Avoid calling pure virtual methods while we're still constructing.
-		return;
-	}
-
 	if( affectsProcessedAttributes( input ) )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );

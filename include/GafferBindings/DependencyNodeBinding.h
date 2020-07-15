@@ -106,7 +106,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 
 		void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const override
 		{
-			if( this->isSubclassed() )
+			if( this->isSubclassed() && this->initialised() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
