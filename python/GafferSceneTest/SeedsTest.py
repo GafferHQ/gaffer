@@ -220,7 +220,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		# Add the primitive variable, it should take effect.
 
-		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ) ) )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertLess( seeds["out"].object( "/plane/seeds" ).numPoints, p.numPoints )
 
 	def testInternalConnectionsNotSerialised( self ) :
