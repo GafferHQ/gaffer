@@ -88,7 +88,7 @@ class FrameMaskScope : public Context::EditableScope
 
 				if( m_mode == ImageReader::ClampToFrame )
 				{
-					setFrame( clamp( frame, startFrame, endFrame ) );
+					setFrame( Imath::clamp( frame, startFrame, endFrame ) );
 				}
 		}
 

@@ -1162,7 +1162,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// been provided.
 
 	ShaderGlobals shaderGlobals;
-	memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+	memset( (void *)&shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
 	const Gaffer::Context *context = Gaffer::Context::current();
 	shaderGlobals.time = context->getTime();

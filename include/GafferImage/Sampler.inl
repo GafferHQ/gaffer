@@ -103,7 +103,7 @@ void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &til
 	tilePixelIndex = relP - cacheIndex * ImagePlug::tileSize();
 
 	int cacheI = cacheIndex.x + cacheIndex.y * m_cacheWidth;
-	const float *(&cacheTileRawPtr) = m_dataCacheRaw[ cacheI ];
+	const float *&cacheTileRawPtr = m_dataCacheRaw[cacheI];
 
 	if ( cacheTileRawPtr == nullptr )
 	{

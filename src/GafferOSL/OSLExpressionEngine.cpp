@@ -334,7 +334,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			OSL::ShadingContext *shadingContext = s->get_context();
 
 		    OSL::ShaderGlobals shaderGlobals;
-			memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+			memset( (void *)&shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
 			if( m_needsTime )
 			{
