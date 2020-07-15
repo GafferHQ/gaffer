@@ -944,7 +944,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferScene", "Half", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferScene", "GafferVDB", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX"],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferVDB", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX"],
 		}
 	},
 

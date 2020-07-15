@@ -64,8 +64,26 @@ class DependencyNodeClass : public NodeClass<T, TWrapper>
 
 };
 
+class GAFFER_API DependencyNodeWrapperBase
+{
+
+	protected :
+
+		DependencyNodeWrapperBase() : m_initialised( false ) {};
+		// Returns `true` once the Python `__init__()` method has
+		// completed.
+		bool initialised() const { return m_initialised; };
+
+	private :
+
+		// Friendship with the metaclass so it can set `m_initialised` for us.
+		friend PyObject *dependencyNodeMetaclassCall( PyObject *self, PyObject *args, PyObject *kw );
+		bool m_initialised;
+
+};
+
 template<typename WrappedType>
-class DependencyNodeWrapper : public NodeWrapper<WrappedType>
+class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public DependencyNodeWrapperBase
 {
 	public :
 

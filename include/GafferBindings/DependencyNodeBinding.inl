@@ -70,6 +70,8 @@ static Gaffer::PlugPtr correspondingInput( T &n, const Gaffer::Plug *output )
 	return n.T::correspondingInput( output );
 }
 
+GAFFERBINDINGS_API PyTypeObject *dependencyNodeMetaclass();
+
 } // namespace Detail
 
 template<typename T, typename Ptr>
@@ -79,6 +81,8 @@ DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString )
 	this->def( "affects", &Detail::affects<T> );
 	this->def( "enabledPlug", &Detail::enabledPlug<T> );
 	this->def( "correspondingInput", &Detail::correspondingInput<T> );
+	// Install our custom metaclass.
+	Py_TYPE( this->ptr() ) = Detail::dependencyNodeMetaclass();
 }
 
 template<typename T, typename Ptr>
@@ -88,6 +92,8 @@ DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString, boost::
 	this->def( "affects", &Detail::affects<T> );
 	this->def( "enabledPlug", &Detail::enabledPlug<T> );
 	this->def( "correspondingInput", &Detail::correspondingInput<T> );
+	// Install our custom metaclass.
+	Py_TYPE( this->ptr() ) = Detail::dependencyNodeMetaclass();
 }
 
 } // namespace GafferBindings
