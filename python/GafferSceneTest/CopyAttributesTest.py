@@ -211,5 +211,30 @@ class CopyAttributesTest( GafferSceneTest.SceneTestCase ) :
 		copyAttributes["sourceLocation"].setValue( "/sphere" )
 		self.assertEqual( copyAttributes["out"].attributes( "/plane" ), sphereAttributes["out"].attributes( "/sphere" ) )
 
+	def testDeleteSourceLocation( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( sphereFilter["out"] )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "test", 1 ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( sphereAttributes["out"] )
+
+		copy = GafferScene.CopyAttributes()
+		copy["in"].setInput( sphere["out"] )
+		copy["source"].setInput( prune["out"] )
+		copy["filter"].setInput( sphereFilter["out"] )
+		copy["attributes"].setValue( "*" )
+
+		self.assertScenesEqual( copy["out"], sphereAttributes["out"] )
+		prune["filter"].setInput( sphereFilter["out"] )
+		self.assertScenesEqual( copy["out"], sphere["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
