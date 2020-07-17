@@ -38,6 +38,7 @@ Fixes
   - OpenImageIOReader
   - LevelSetOffset
   - MeshToLevelSet
+  - CopyPrimitiveVariables
 - SetAlgo : Fixed `affectsSetExpression()` to return `True` for `ScenePlug::setNamesPlug()`.
 - GafferTractor: Fixed evaluation of 'tag' and 'service' plugs on Task nodes. Previously, these plugs were evaluated in the default context, which prevented one from using custom context variables (e.g. from Wedge node) to compute tags or service keys dynamically.
 

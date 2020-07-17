@@ -100,7 +100,8 @@ bool CopyPrimitiveVariables::affectsProcessedObject( const Gaffer::Plug *input )
 	return Deformer::affectsProcessedObject( input ) ||
 		input == sourcePlug()->objectPlug() ||
 		input == primitiveVariablesPlug() ||
-		input == sourceLocationPlug()
+		input == sourceLocationPlug() ||
+		input == sourcePlug()->existsPlug()
 	;
 }
 

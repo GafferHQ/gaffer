@@ -230,5 +230,27 @@ class CopyPrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( copy["out"], group["out"], checks = { "bound" } )
 		self.assertSceneHashesEqual( copy["out"], group["out"], checks = { "bound" } )
 
+	def testDeleteSourceLocation( self ) :
+
+		sphere1 = GafferScene.Sphere()
+		sphere2 = GafferScene.Sphere()
+		sphere2["radius"].setValue( 2 )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( sphere2["out"] )
+
+		copy = GafferScene.CopyPrimitiveVariables()
+		copy["in"].setInput( sphere1["out"] )
+		copy["source"].setInput( prune["out"] )
+		copy["filter"].setInput( sphereFilter["out"] )
+		copy["primitiveVariables"].setValue( "*" )
+
+		self.assertScenesEqual( copy["out"], sphere2["out"] )
+		prune["filter"].setInput( sphereFilter["out"] )
+		self.assertScenesEqual( copy["out"], sphere1["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
