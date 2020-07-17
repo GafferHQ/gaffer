@@ -141,8 +141,10 @@ class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, con
 					}
 
 					const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( plug->node() );
-					if( !node )
+					if( !node || !node->refCount() )
 					{
+						// No node, or node constructing or destructing.
+						// We can't call `DependencyNode::affects()`.
 						return;
 					}
 

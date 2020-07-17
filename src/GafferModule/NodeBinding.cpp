@@ -136,7 +136,7 @@ void GafferModule::bindNode()
 	typedef DependencyNodeWrapper<DependencyNode> DependencyNodeWrapper;
 	DependencyNodeClass<DependencyNode, DependencyNodeWrapper>();
 
-	typedef ComputeNodeWrapper<ComputeNode> ComputNodeWrapper;
-	DependencyNodeClass<ComputeNode, ComputNodeWrapper>();
+	typedef ComputeNodeWrapper<ComputeNode> ComputeNodeWrapper;
+	DependencyNodeClass<ComputeNode, ComputeNodeWrapper>();
 
 }

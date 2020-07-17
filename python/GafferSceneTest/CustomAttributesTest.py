@@ -36,12 +36,12 @@
 ##########################################################################
 
 import unittest
-import threading
 
 import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -341,6 +341,34 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			GafferSceneTest.traverseScene( script["customAttributes"]["out"] )
 
 		self.assertEqual( monitor.combinedStatistics().numUniqueValues( "scene:path" ), 1 )
+
+	def testDirtyPropagation( self ) :
+
+		attributes = GafferScene.CustomAttributes()
+		cs = GafferTest.CapturingSlot( attributes.plugDirtiedSignal() )
+
+		# Adding or removing an attribute should dirty `out.attributes`
+
+		attributes["attributes"].addChild(
+			Gaffer.NameValuePlug( "test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+
+		del cs[:]
+		del attributes["attributes"][0]
+		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+
+		# And although the Dynamic flag is currently required for proper serialisation
+		# of CustomAttributes nodes, its absence shouldn't prevent dirty propagation.
+		# We hope to be able to remove the Dynamic flag completely in the future.
+
+		del cs[:]
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test2", 10 ) )
+		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
+
+		del cs[:]
+		del attributes["attributes"][0]
+		self.assertIn( attributes["out"]["attributes"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()

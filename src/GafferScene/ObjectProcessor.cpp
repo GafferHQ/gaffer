@@ -96,12 +96,6 @@ void ObjectProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( !refCount() )
-	{
-		// Avoid calling pure virtual methods while we're still constructing.
-		return;
-	}
-
 	if( affectsProcessedObject( input ) )
 	{
 		outputs.push_back( processedObjectPlug() );
