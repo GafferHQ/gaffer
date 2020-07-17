@@ -133,7 +133,7 @@ void DeleteObject::hashBound( const ScenePath &path, const Gaffer::Context *cont
 		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) )
 		{
 			FilteredSceneProcessor::hashBound( path, context, parent, h );
-			h.append( outPlug()->childBoundsHash() );
+			outPlug()->childBoundsPlug()->hash( h );
 			if( !(m & IECore::PathMatcher::ExactMatch) )
 			{
 				inPlug()->objectPlug()->hash( h );
@@ -151,7 +151,7 @@ Imath::Box3f DeleteObject::computeBound( const ScenePath &path, const Gaffer::Co
 		const IECore::PathMatcher::Result m = filterValue( context );
 		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) )
 		{
-			Box3f result = outPlug()->childBounds();
+			Box3f result = outPlug()->childBoundsPlug()->getValue();
 			if( !(m & IECore::PathMatcher::ExactMatch) )
 			{
 				ConstObjectPtr o = inPlug()->objectPlug()->getValue();

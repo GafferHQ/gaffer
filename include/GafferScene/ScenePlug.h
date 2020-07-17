@@ -249,10 +249,6 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
 
-		/// \deprecated Use `childBoundsPlug()->getValue()` instead.
-		Imath::Box3f childBounds() const;
-		/// \deprecated Use `childBoundsPlug()->hash()` instead.
-		IECore::MurmurHash childBoundsHash() const;
 		/// \deprecated Use `existsPlug()->getValue()` instead.
 		bool exists() const;
 

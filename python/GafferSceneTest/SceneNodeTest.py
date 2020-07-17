@@ -346,8 +346,8 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group" ] )
-			h = group["out"].childBoundsHash()
-			b = group["out"].childBounds()
+			h = group["out"]["childBounds"].hash()
+			b = group["out"]["childBounds"].getValue()
 
 		self.assertEqual( h, group["out"].childBoundsHash( "/group" ) )
 		self.assertEqual( b, group["out"].childBounds( "/group" ) )

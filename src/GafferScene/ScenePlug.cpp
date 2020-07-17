@@ -575,19 +575,9 @@ Imath::Box3f ScenePlug::childBounds( const ScenePath &scenePath ) const
 	return childBoundsPlug()->getValue();
 }
 
-Imath::Box3f ScenePlug::childBounds() const
-{
-	return childBoundsPlug()->getValue();
-}
-
 IECore::MurmurHash ScenePlug::childBoundsHash( const ScenePath &scenePath ) const
 {
 	PathScope scope( Context::current(), scenePath );
-	return childBoundsPlug()->hash();
-}
-
-IECore::MurmurHash ScenePlug::childBoundsHash() const
-{
 	return childBoundsPlug()->hash();
 }
 
