@@ -94,7 +94,7 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		p["name"].setValue( "ground" )
 		self.assertEqual(
 			{ x[0] for x in s if not x[0].getName().startswith( "__" ) },
-			{ p["name"], p["out"]["childNames"], p["out"]["set"], p["out"] }
+			{ p["name"], p["out"]["childNames"], p["out"]["exists"], p["out"]["childBounds"], p["out"]["set"], p["out"] }
 		)
 
 		del s[:]

@@ -89,6 +89,17 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// location in the scene graph.
 		Gaffer::InternedStringVectorDataPlug *childNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *childNamesPlug() const;
+		/// Represents the existence of the current location. Value is
+		/// `true` if the location exists and `false` otherwise. This is computed
+		/// automatically by querying `childNamesPlug()` at all ancestor locations,
+		/// but with significantly better performance than is achievable directly.
+		Gaffer::BoolPlug *existsPlug();
+		const Gaffer::BoolPlug *existsPlug() const;
+		/// Provides the union of the bounding boxes of all the children
+		/// of the current location, transformed using their respective
+		/// transforms.
+		Gaffer::AtomicBox3fPlug *childBoundsPlug();
+		const Gaffer::AtomicBox3fPlug *childBoundsPlug() const;
 		/// The plug used to pass renderer options including output etc,
 		/// represented as a CompoundObject. Note that this is not sensitive
 		/// to the "scene:path" context entry.
@@ -185,10 +196,9 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// getValue() directly.
 		///
 		/// > Note : It is a programming error to trigger a compute for a
-		/// > location which does not exist. Use the `exists()` method to
-		/// > verify existence where necessary.
-		////////////////////////////////////////////////////////////////////
-		//@{
+		/// > location which does not exist. Use the `existsPlug()` and/or
+		/// > the `exists()` method to verify existence where necessary.
+
 		/// Returns the bound for the specified location.
 		Imath::Box3f bound( const ScenePath &scenePath ) const;
 		/// Returns the local transform at the specified scene path.
@@ -201,6 +211,11 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath ) const;
 		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
+		/// Returns true if the specified location exists.
+		bool exists( const ScenePath &scenePath ) const;
+		/// Returns the union of the bounding boxes of all the children
+		/// of `scenePath`, transformed using their respective transforms.
+		Imath::Box3f childBounds( const ScenePath &scenePath ) const;
 		/// Prefer this to bare `globalsPlug()->getValue()` calls when
 		/// accessing globals from within a per-location computation. It
 		/// uses GlobalScope to remove unnecessary context variables which
@@ -220,6 +235,7 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;
+		IECore::MurmurHash childBoundsHash( const ScenePath &scenePath ) const;
 		/// See comments for `globals()` method.
 		IECore::MurmurHash globalsHash() const;
 		/// See comments for `setNames()` method.
@@ -227,45 +243,25 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash setHash( const IECore::InternedString &setName ) const;
 		//@}
 
-		/// Returns true if the specified location exists. This is achieved
-		/// by querying `childNames()` at all ancestor locations, but with
-		/// significantly better performance than is achievable via the public
-		/// API alone.
-		bool exists( const ScenePath &scenePath ) const;
-		/// As above, but for the location specified by the current context.
-		bool exists() const;
-
-		/// Returns the union of the bounding boxes of all the children
-		/// of `scenePath`, transformed using their respective transforms.
-		Imath::Box3f childBounds( const ScenePath &scenePath ) const;
-		/// As above, but for the location specified by the current context.
-		Imath::Box3f childBounds() const;
-		/// Returns a hash representing the results of `childBounds()`.
-		IECore::MurmurHash childBoundsHash( const ScenePath &scenePath ) const;
-		IECore::MurmurHash childBoundsHash() const;
-
 		/// Utility function to convert a string into a path by splitting on '/'.
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
 
+		/// \deprecated Use `childBoundsPlug()->getValue()` instead.
+		Imath::Box3f childBounds() const;
+		/// \deprecated Use `childBoundsPlug()->hash()` instead.
+		IECore::MurmurHash childBoundsHash() const;
+		/// \deprecated Use `existsPlug()->getValue()` instead.
+		bool exists() const;
+
 	private :
 
-		// Private plugs that are used to implement the `exists()` method.
-		// Values for these are computed automatically by SceneNode, hence
-		// the friendship.
-
-		friend class SceneNode;
-
-		Gaffer::BoolPlug *existsPlug();
-		const Gaffer::BoolPlug *existsPlug() const;
-
+		// Private plug used for the computation of `existsPlug()` by SceneNode.
 		Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug();
 		const Gaffer::InternedStringVectorDataPlug *sortedChildNamesPlug() const;
-
-		Gaffer::AtomicBox3fPlug *childBoundsPlug();
-		const Gaffer::AtomicBox3fPlug *childBoundsPlug() const;
+		friend class SceneNode;
 
 };
 

@@ -133,6 +133,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 				constraint["relativeTransform"]["translate"],
 				constraint["relativeTransform"],
 				constraint["out"]["bound"],
+				constraint["out"]["childBounds"],
 				constraint["out"]["transform"],
 				constraint["out"]
 			}

@@ -152,7 +152,7 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		s["name"].setValue( "ball" )
 		self.assertEqual(
 			{ x[0] for x in ss if not x[0].getName().startswith( "__" ) },
-			{ s["name"], s["out"]["childNames"], s["out"]["set"], s["out"] }
+			{ s["name"], s["out"]["childNames"], s["out"]["exists"], s["out"]["childBounds"], s["out"]["set"], s["out"] }
 		)
 
 		del ss[:]

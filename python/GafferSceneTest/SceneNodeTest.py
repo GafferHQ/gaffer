@@ -333,7 +333,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		cube["name"].setValue( "box" )
 		self.assertGreaterEqual(
 			{ x[0] for x in cs },
-			{ cube["out"]["childNames"], cube["out"]["__sortedChildNames"], cube["out"]["__exists"] }
+			{ cube["out"]["childNames"], cube["out"]["__sortedChildNames"], cube["out"]["exists"] }
 		)
 
 	def testChildBounds( self ) :

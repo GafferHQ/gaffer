@@ -87,7 +87,7 @@ class CubeTest( GafferSceneTest.SceneTestCase ) :
 		c["name"].setValue( "box" )
 		self.assertEqual(
 			{ x[0] for x in s if not x[0].getName().startswith( "__" ) },
-			{ c["name"], c["out"]["childNames"], c["out"]["set"], c["out"] }
+			{ c["name"], c["out"]["childNames"], c["out"]["childBounds"], c["out"]["exists"], c["out"]["set"], c["out"] }
 		)
 
 		del s[:]

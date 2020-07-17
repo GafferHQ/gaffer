@@ -1015,26 +1015,26 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 				expected
 			)
 			del cs[:]
-		checkAffected( ["transform", "bound" ] )
+		checkAffected( [ "transform", "bound", "childBounds" ] )
 
 		o["useTransform"].setValue( True )
 
-		checkAffected( ["object", "bound" ] )
+		checkAffected( [ "object", "bound", "childBounds" ] )
 
 		s["transform"]["translate"]["x"].setValue( 2 )
 
-		checkAffected( ["transform", "object", "bound" ] )
+		checkAffected( [ "transform", "object", "bound", "childBounds" ] )
 
 		a["attributes"][0]["value"].setValue( 1 )
 		checkAffected( ["attributes" ] )
 
 		o["useAttributes"].setValue( True )
 
-		checkAffected( ["object", "bound" ] )
+		checkAffected( [ "object", "bound", "childBounds" ] )
 
 		a["attributes"][0]["value"].setValue( 2 )
 
-		checkAffected( ["attributes", "object", "bound" ] )
+		checkAffected( ["attributes", "object", "bound", "childBounds" ] )
 
 	def testBoundsUpdate( self ) :
 

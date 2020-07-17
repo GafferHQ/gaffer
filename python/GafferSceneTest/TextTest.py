@@ -80,7 +80,7 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		t["name"].setValue( "ground" )
 		self.assertEqual(
 			{ x[0] for x in s if not x[0].getName().startswith( "__" ) },
-			{ t["name"], t["out"]["childNames"], t["out"]["set"], t["out"] }
+			{ t["name"], t["out"]["childNames"], t["out"]["exists"], t["out"]["childBounds"], t["out"]["set"], t["out"] }
 		)
 
 		del s[:]
