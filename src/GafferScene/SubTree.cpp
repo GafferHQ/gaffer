@@ -96,7 +96,7 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
-	else if( input == rootPlug() || input == includeRootPlug() )
+	else if( input == rootPlug() || input == includeRootPlug() || input == inPlug()->existsPlug() )
 	{
 		outputs.push_back( outPlug()->boundPlug() );
 		outputs.push_back( outPlug()->transformPlug() );
