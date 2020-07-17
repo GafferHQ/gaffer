@@ -66,13 +66,20 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// Only accepts ScenePlug inputs.
 		bool acceptsInput( const Gaffer::Plug *input ) const override;
 
-		/// @name Child plugs
-		/// Different aspects of the scene are passed through different
-		/// child plugs.
-		////////////////////////////////////////////////////////////////////
-		//@{
+		/// Child plugs
+		/// ===========
+		///
+		/// Different properties of the scene are represented by different child
+		/// plugs of the ScenePlug.
+
+		/// Location properties
+		/// -------------------
+		///
+		/// These plugs require the `scenePathContextName` variable to
+		/// be provided by the current context.
+		///
 		/// The plug used to pass the bounding box of the current location in
-		/// the scene graph. The bounding box is supplied /without/ the
+		/// the scene graph. The bounding box is supplied _without_ the
 		/// transform applied.
 		Gaffer::AtomicBox3fPlug *boundPlug();
 		const Gaffer::AtomicBox3fPlug *boundPlug() const;
@@ -100,6 +107,10 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// transforms.
 		Gaffer::AtomicBox3fPlug *childBoundsPlug();
 		const Gaffer::AtomicBox3fPlug *childBoundsPlug() const;
+
+		/// Global properties
+		/// -----------------
+		///
 		/// The plug used to pass renderer options including output etc,
 		/// represented as a CompoundObject. Note that this is not sensitive
 		/// to the "scene:path" context entry.
@@ -117,16 +128,16 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// which set to compute.
 		Gaffer::PathMatcherDataPlug *setPlug();
 		const Gaffer::PathMatcherDataPlug *setPlug() const;
-		//@}
 
-		/// @name Context management
+		/// Context management
+		/// ==================
+		///
 		/// The child Plugs are expected to be evaluated in the context
 		/// of a particular location in the scenegraph, so that the
 		/// scenegraph can be evaluated piecemeal, rather than all needing
 		/// to exist at once. These members provide utilities for
 		/// constructing relevant contexts.
-		////////////////////////////////////////////////////////////////////
-		//@{
+
 		/// The type used to specify the current scene path in
 		/// a Context object.
 		typedef std::vector<IECore::InternedString> ScenePath;
@@ -185,9 +196,10 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 			/// ThreadState documentation for more details.
 			GlobalScope( const Gaffer::ThreadState &threadState );
 		};
-		//@}
 
-		/// @name Convenience accessors
+		/// Convenience accessors
+		/// =====================
+		///
 		/// These functions create temporary Contexts specifying the necessary
 		/// variables and then return the result of calling getValue() or hash()
 		/// on the appropriate child plug. Note that if you wish to evaluate
@@ -241,13 +253,18 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// See comments for `setNames()` method.
 		IECore::MurmurHash setNamesHash() const;
 		IECore::MurmurHash setHash( const IECore::InternedString &setName ) const;
-		//@}
+
+		/// Utility methods
+		/// ===============
 
 		/// Utility function to convert a string into a path by splitting on '/'.
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
+
+		/// Deprecated methods
+		/// ==================
 
 		/// \deprecated Use `existsPlug()->getValue()` instead.
 		bool exists() const;
