@@ -53,6 +53,7 @@ GlobalsProcessor::GlobalsProcessor( const std::string &name )
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
 	outPlug()->setNamesPlug()->setInput( inPlug()->setNamesPlug() );
 	outPlug()->setPlug()->setInput( inPlug()->setPlug() );
+	outPlug()->childBoundsPlug()->setInput( inPlug()->childBoundsPlug() );
 }
 
 GlobalsProcessor::~GlobalsProcessor()
