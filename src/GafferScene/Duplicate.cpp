@@ -154,6 +154,7 @@ void Duplicate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	}
 
 	if(
+		input == inPlug()->existsPlug() ||
 		input == targetPlug() ||
 		input == copiesPlug() ||
 		input == namePlug()

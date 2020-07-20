@@ -218,5 +218,23 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( m.plugStatistics( d["out"]["setNames"] ).hashCount, 0 )
 		self.assertEqual( m.plugStatistics( d["out"]["setNames"] ).computeCount, 0 )
 
+	def testPruneTarget( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( sphere["out"] )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( prune["out"] )
+		duplicate["target"].setValue( "/sphere" )
+		self.assertEqual( duplicate["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere", "sphere1" ] ) )
+
+		prune["filter"].setInput( sphereFilter["out"] )
+		self.assertEqual( duplicate["out"].childNames( "/" ), IECore.InternedStringVectorData( [] ) )
+
 if __name__ == "__main__":
 	unittest.main()
