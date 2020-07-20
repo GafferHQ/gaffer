@@ -160,7 +160,7 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( input == parentPlug() || input == filteredPathsPlug() )
+	if( input == parentPlug() || input == filteredPathsPlug() || input == inPlug()->existsPlug() )
 	{
 		outputs.push_back( parentPathsPlug() );
 	}
