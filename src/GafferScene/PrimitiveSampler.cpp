@@ -231,11 +231,11 @@ bool PrimitiveSampler::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
 		Deformer::affectsProcessedObject( input ) ||
-		input == sourcePlug() ||
 		input == sourceLocationPlug() ||
 		input == primitiveVariablesPlug() ||
 		input == prefixPlug() ||
 		input == statusPlug() ||
+		input == sourcePlug()->existsPlug() ||
 		input == sourcePlug()->objectPlug() ||
 		input == inPlug()->transformPlug() ||
 		input == sourcePlug()->transformPlug() ||

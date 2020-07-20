@@ -263,5 +263,31 @@ class ClosestPointSamplerTest( GafferSceneTest.SceneTestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			sampler["out"].object( "/plane" )
 
+	def testPruneSourceLocation( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( sphere["out"] )
+
+		sampler = GafferScene.ClosestPointSampler()
+		sampler["in"].setInput( plane["out"] )
+		sampler["source"].setInput( prune["out"] )
+		sampler["filter"].setInput( planeFilter["out"] )
+		sampler["sourceLocation"].setValue( "/sphere" )
+		sampler["primitiveVariables"].setValue( "P" )
+		sampler["prefix"].setValue( "sampled:" )
+
+		self.assertIn( "sampled:P", sampler["out"].object( "/plane" ) )
+		prune["filter"].setInput( sphereFilter["out"] )
+		self.assertNotIn( "sampled:P", sampler["out"].object( "/plane" ) )
+
 if __name__ == "__main__":
 	unittest.main()
