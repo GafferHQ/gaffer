@@ -257,7 +257,7 @@ void PrimitiveSampler::hashProcessedObject( const ScenePath &path, const Gaffer:
 
 	ScenePlug::ScenePath sourcePath;
 	ScenePlug::stringToPath( sourceLocation, sourcePath );
-	if( !SceneAlgo::exists( sourcePlug(), sourcePath ) )
+	if( !sourcePlug()->exists( sourcePath ) )
 	{
 		return;
 	}
@@ -296,7 +296,7 @@ IECore::ConstObjectPtr PrimitiveSampler::computeProcessedObject( const ScenePath
 
 	ScenePlug::ScenePath sourcePath;
 	ScenePlug::stringToPath( sourceLocation, sourcePath );
-	if( !SceneAlgo::exists( sourcePlug(), sourcePath ) )
+	if( !sourcePlug()->exists( sourcePath ) )
 	{
 		return inputObject;
 	}

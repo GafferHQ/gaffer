@@ -323,7 +323,7 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 			visit(
 				parentActiveInputs,
 				[&scenePath, &activeInputs] ( InputType type, size_t index, const ScenePlug *scene ) {
-					if( SceneAlgo::exists( scene, scenePath ) )
+					if( scene->exists( scenePath ) )
 					{
 						activeInputs[index] = true;
 					}
@@ -373,7 +373,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			visit(
 				parentActiveInputs,
 				[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
-					if( SceneAlgo::exists( scene, scenePath ) )
+					if( scene->exists( scenePath ) )
 					{
 						result[index] = true;
 					}
