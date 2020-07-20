@@ -151,7 +151,7 @@ void CollectScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	SceneProcessor::affects( input, outputs );
 
-	if( input == rootNamesPlug() )
+	if( input == rootNamesPlug() || input == inPlug()->existsPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}

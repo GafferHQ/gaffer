@@ -183,7 +183,7 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	const ScenePlug *scene = inPlugs()->isAncestorOf( input ) ? input->parent<ScenePlug>() : nullptr;
 
-	if( scene && input == scene->childNamesPlug() )
+	if( scene && input == scene->existsPlug() )
 	{
 		outputs.push_back( activeInputsPlug() );
 	}
