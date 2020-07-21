@@ -299,6 +299,7 @@ Fit clipping planes to selection                       |M2| > *Clipping Planes*
 Frame view, and fit clipping planes to scene/selection :kbd:`Ctrl` + :kbd:`F`
 Reset clipping planes                                  |M2| > *Clipping Planes* > 
                                                        *Default*
+Toggle Inspector                                       :kbd:`I`
 ====================================================== =====================================
 ```
 
