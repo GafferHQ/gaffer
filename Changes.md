@@ -1,3 +1,11 @@
+0.56.2.x (relative to 0.56.2.4)
+========
+
+Fixes
+-----
+
+- SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
+
 0.56.2.4 (relative to 0.56.2.3)
 ========
 
