@@ -21,6 +21,7 @@ Improvements
 Fixes
 -----
 
+- GraphEditor : Implemented undo for node drags (#423).
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.
 - GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
