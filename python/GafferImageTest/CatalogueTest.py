@@ -730,5 +730,63 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			shutil.copyfile( sourceFile, fileName )
 			GafferImage.Catalogue.Image.load( fileName )
 
+	def testRenamePromotedImages( self ) :
+
+		# Create boxed Catalogue with promoted `images` plug.
+
+		box = Gaffer.Box()
+
+		box["catalogue"] = GafferImage.Catalogue()
+		box["catalogue"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+
+		images = Gaffer.PlugAlgo.promote( box["catalogue"]["images"] )
+
+		# Send 2 images and name them using the promoted plugs.
+
+		red = GafferImage.Constant()
+		red["format"].setValue( GafferImage.Format( 64, 64 ) )
+		red["color"]["r"].setValue( 1 )
+		self.sendImage( red["out"], box["catalogue"] )
+		images[-1].setName( "Red" )
+
+		green = GafferImage.Constant()
+		green["format"].setValue( GafferImage.Format( 64, 64 ) )
+		green["color"]["g"].setValue( 1 )
+		self.sendImage( green["out"], box["catalogue"] )
+		images[-1].setName( "Green" )
+
+		# Assert that images are accessible under those names.
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "Red"
+			self.assertImagesEqual( box["catalogue"]["out"], red["out"], ignoreMetadata = True )
+			c["catalogue:imageName"] = "Green"
+			self.assertImagesEqual( box["catalogue"]["out"], green["out"], ignoreMetadata = True )
+
+		# And that invalid names generate errors.
+
+		with self.assertRaisesRegexp( RuntimeError, 'Unknown image name "Blue"' ) :
+			with Gaffer.Context() as c :
+				c["catalogue:imageName"] = "Blue"
+				box["catalogue"]["out"].metadata()
+
+		# Assert that we can rename the images and get them under the new name.
+
+		images[0].setName( "Crimson" )
+		images[1].setName( "Emerald" )
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "Crimson"
+			self.assertImagesEqual( box["catalogue"]["out"], red["out"], ignoreMetadata = True )
+			c["catalogue:imageName"] = "Emerald"
+			self.assertImagesEqual( box["catalogue"]["out"], green["out"], ignoreMetadata = True )
+
+		# And that the old names are now invalid.
+
+		with self.assertRaisesRegexp( RuntimeError, 'Unknown image name "Red"' ) :
+			with Gaffer.Context() as c :
+				c["catalogue:imageName"] = "Red"
+				box["catalogue"]["out"].metadata()
+
 if __name__ == "__main__":
 	unittest.main()
