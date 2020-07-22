@@ -586,6 +586,9 @@ Catalogue::Image::Image( const std::string &name, Direction direction, unsigned 
 {
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new StringPlug( "description" ) );
+	addChild( new StringPlug( "__name", Plug::In, name, Plug::Default & ~Plug::Serialisable ) );
+
+	nameChangedSignal().connect( boost::bind( &Image::nameChanged, this ) );
 }
 
 Gaffer::StringPlug *Catalogue::Image::fileNamePlug()
@@ -606,6 +609,16 @@ Gaffer::StringPlug *Catalogue::Image::descriptionPlug()
 const Gaffer::StringPlug *Catalogue::Image::descriptionPlug() const
 {
 	return getChild<StringPlug>( 1 );
+}
+
+Gaffer::StringPlug *Catalogue::Image::namePlug()
+{
+	return getChild<StringPlug>( 2 );
+}
+
+const Gaffer::StringPlug *Catalogue::Image::namePlug() const
+{
+	return getChild<StringPlug>( 2 );
 }
 
 void Catalogue::Image::copyFrom( const Image *other )
@@ -649,6 +662,33 @@ Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Di
 	return new Image( name, direction, getFlags() );
 }
 
+void Catalogue::Image::nameChanged()
+{
+	if( !getInput() )
+	{
+		namePlug()->setValue( getName() );
+	}
+	else
+	{
+		// We have an input, so can't call `namePlug()->setValue()`.
+		// This typically occurs when `Catalogue.images` has been promoted
+		// to a Box or custom node. Ideally we would override `setInput()`
+		// and update the name when we lose our input, but the virtual
+		// `setInput()` is only called for the top level `setInput()` call
+		// and our input will most likely be managed as a child of the
+		// entire `images` plug. Doing nothing is OK in practice because
+		// we don't expect a promoted `images` plug to be disconnected, and
+		// if it was, we'd be losing all the promoted values for `fileNamePlug()`
+		// etc anyway.
+		//
+		// > Note : ValuePlug.cpp has a todo for replacing the flawed `virtual setInput()`
+		// > with a non-virtual public method and a protected `virtual inputChanging()`
+		// > method. If we added a protected `virtual inputChanged()` method to that
+		// > then we could be 100% reliable here, and the new API would closely
+		// > match `parentChanging()/parentChanged()` from GraphComponent.
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Catalogue
 //////////////////////////////////////////////////////////////////////////
@@ -686,7 +726,6 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "directory" ) );
 	addChild( new IntPlug( "__imageIndex", Plug::Out ) );
-	addChild( new AtomicCompoundDataPlug( "__mapping", Plug::In, new CompoundData() ) );
 
 	// Switch used to choose which image to output
 	addChild( new Switch( "__switch" ) );
@@ -769,24 +808,14 @@ const Gaffer::IntPlug *Catalogue::internalImageIndexPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
-Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug()
-{
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
-}
-
-const Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug() const
-{
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
-}
-
 Switch *Catalogue::imageSwitch()
 {
-	return getChild<Switch>( g_firstPlugIndex + 6 );
+	return getChild<Switch>( g_firstPlugIndex + 5 );
 }
 
 const Switch *Catalogue::imageSwitch() const
 {
-	return getChild<Switch>( g_firstPlugIndex + 6 );
+	return getChild<Switch>( g_firstPlugIndex + 5 );
 }
 
 Catalogue::InternalImage *Catalogue::imageNode( Image *image )
@@ -892,10 +921,6 @@ void Catalogue::imageAdded( GraphComponent *graphComponent )
 
 	ImagePlug *nextSwitchInput = static_cast<ImagePlug *>( imageSwitch()->inPlugs()->children().back().get() );
 	nextSwitchInput->setInput( internalImage->outPlug() );
-
-	image->nameChangedSignal().connect( boost::bind( &Catalogue::computeNameToIndexMapping, this ) );
-
-	computeNameToIndexMapping();
 }
 
 void Catalogue::imageRemoved( GraphComponent *graphComponent )
@@ -933,8 +958,6 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 			}
 		}
 	}
-
-	computeNameToIndexMapping();
 }
 
 IECoreImage::DisplayDriverServer *Catalogue::displayDriverServer()
@@ -1009,7 +1032,11 @@ void Catalogue::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 {
 	ImageNode::affects( input, outputs );
 
-	if( input == imageIndexPlug() )
+	auto image = input->parent<Image>();
+	if(
+		input == imageIndexPlug() ||
+		( image && image->parent() == imagesPlug() && input == image->namePlug() )
+	)
 	{
 		outputs.push_back( internalImageIndexPlug() );
 	}
@@ -1020,8 +1047,19 @@ void Catalogue::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	ImageNode::hash( output, context, h );
 	if( output == internalImageIndexPlug() )
 	{
-		imageIndexPlug()->hash( h );
-		h.append( context->get<std::string>( "catalogue:imageName", "" ) );
+		const std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
+		if( imageName.empty() )
+		{
+			imageIndexPlug()->hash( h );
+		}
+		else
+		{
+			h.append( imageName );
+			for( const auto &image : Image::Range( *imagesPlug() ) )
+			{
+				image->namePlug()->hash( h );
+			}
+		}
 	}
 }
 
@@ -1033,23 +1071,27 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
-	int index;
-	std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
+	int index = -1;
+	const std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
 	if( imageName.empty() )
 	{
 		index = imageIndexPlug()->getValue();
 	}
 	else
 	{
-		ConstCompoundDataPtr mappingData = mappingPlug()->getValue();
-		const IECore::IntData *indexData = mappingData->member<IntData>( imageName );
-		if( !indexData )
+		size_t childIndex = 0;
+		for( const auto &image : Image::Range( *imagesPlug() ) )
 		{
-			throw IECore::Exception( "Unknown image name." );
+			if( image->namePlug()->getValue() == imageName )
+			{
+				index = childIndex;
+				break;
+			}
+			childIndex++;
 		}
-		else
+		if( index < 0 )
 		{
-			index = indexData->readable();
+			throw IECore::Exception( "Unknown image name \"" + imageName + "\"." );
 		}
 	}
 
@@ -1057,17 +1099,3 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 
 }
 
-void Catalogue::computeNameToIndexMapping()
-{
-	CompoundDataPtr mapData = new CompoundData();
-	std::map<InternedString, DataPtr> &map = mapData->writable();
-
-	int count = 0;
-	for( const auto &image : imagesPlug()->children() )
-	{
-		map[image->getName()] = new IntData( count );
-		++count;
-	}
-
-	mappingPlug()->setValue( mapData );
-}

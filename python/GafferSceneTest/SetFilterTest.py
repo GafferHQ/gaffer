@@ -262,5 +262,33 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )
 		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane1" ) )
 
+	def testWildcardsAndContextSanitisation( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "flatThings" )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "roundThings" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		setFilter = GafferScene.SetFilter()
+		setFilter["setExpression"].setValue( "flat*" )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( group["out"] )
+		attributes["filter"].setInput( setFilter["out"] )
+		attributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+
+		with Gaffer.PerformanceMonitor() as monitor :
+
+			self.assertTrue( "doubleSided" not in attributes["out"].attributes( "/group" ) )
+			self.assertTrue( "doubleSided" in attributes["out"].attributes( "/group/plane" ) )
+			self.assertTrue( "doubleSided" not in attributes["out"].attributes( "/group/sphere" ) )
+
+		self.assertEqual( monitor.plugStatistics( setFilter["__expressionResult"] ).hashCount, 1 )
+
 if __name__ == "__main__":
 	unittest.main()

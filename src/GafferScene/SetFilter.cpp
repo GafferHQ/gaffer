@@ -109,6 +109,7 @@ void SetFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 	if( output == expressionResultPlug() )
 	{
+		ScenePlug::GlobalScope globalScope( context ); // Removes `scene:filter:inputScene`
 		SetAlgo::setExpressionHash( setExpressionPlug()->getValue(), getInputScene( context ), h );
 	}
 
@@ -120,6 +121,7 @@ void SetFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 	if( output == expressionResultPlug() )
 	{
+		ScenePlug::GlobalScope globalScope( context ); // Removes `scene:filter:inputScene`
 		PathMatcherDataPtr data = new PathMatcherData( SetAlgo::evaluateSetExpression( setExpressionPlug()->getValue(), getInputScene( context ) ) );
 		static_cast<PathMatcherDataPlug *>( output )->setValue( data );
 	}

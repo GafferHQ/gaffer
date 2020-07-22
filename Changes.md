@@ -133,12 +133,17 @@ Build
 
 - Updated to GafferHQ/dependencies 1.6.0.
 
-0.57.x.x (relative to 0.57.5.0)
+0.57.6.0 (relative to 0.57.5.0)
 ========
 
 Fixes
 -----
 
+- Catalogue :
+  - Fixed incorrect column values when an image is renamed in a promoted Catalogue (#3815).
+  - Fixed dependency tracking and hashing bugs.
+  - Improved handling of missing images (#3808).
+- SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
 - SceneAlgo : Removed cancellers from contexts referenced by history objects.
 - Context : Fixed Python `Canceller` lifetime management bug.
 
@@ -375,6 +380,15 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.5 (relative to 0.56.2.4)
+========
+
+- Catalogue :
+  - Fixed incorrect column values when an image is renamed in a promoted Catalogue (#3815).
+  - Fixed dependency tracking and hashing bugs.
+  - Improved handling of missing images (#3808).
+- SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
 
 0.56.2.4 (relative to 0.56.2.3)
 ========
