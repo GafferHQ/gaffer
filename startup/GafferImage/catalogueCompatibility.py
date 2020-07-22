@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,47 +34,22 @@
 #
 ##########################################################################
 
-import os
-
+import IECore
 import Gaffer
-import GafferScene
-import GafferImageUI
+import GafferImage
 
-from GafferImageUI import CatalogueUI
+def __catalogueGetItem( originalGetItem ) :
 
-# We provide extended info in the Catalogue's status column
-# to reflect interactive/batch renders triggered from the UI.
+	def getItem( self, key ) :
 
-imageNameMap = {
-	GafferScene.InteractiveRender : "catalogueStatusInteractiveRender",
-	GafferScene.Render : "catalogueStatusBatchRender",
-}
+		if key == "__mapping" :
+			# `__mapping` was a private plug that should never have been serialisable.
+			# It no longer exists, so we must make a throwaway one to keep old serialisations
+			# happy.
+			return Gaffer.AtomicCompoundDataPlug( key, Gaffer.Plug.Direction.In, IECore.CompoundData() )
 
-statusIconColumn = CatalogueUI.column( "Status" )
-if statusIconColumn :
+		return originalGetItem( self, key )
 
-	class __ExtendedStatusIconColumn( CatalogueUI.IconColumn ) :
+	return getItem
 
-		def __init__( self ) :
-
-			CatalogueUI.IconColumn.__init__( self, "" )
-
-		def value( self, image, catalogue ) :
-
-			iconName = statusIconColumn.value( image, catalogue )
-
-			try :
-				scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
-				if not scenePlug :
-					return iconName
-			except Gaffer.ProcessException :
-				return "errorNotificationSmall"
-
-			for type_ in imageNameMap.keys() :
-				if isinstance( scenePlug.node(), type_ ) :
-					suffix = "Complete" if image["fileName"].getValue() else "Running"
-					return imageNameMap[type_] + suffix
-
-			return iconName
-
-	CatalogueUI.registerColumn( "Status", __ExtendedStatusIconColumn() )
+GafferImage.Catalogue.__getitem__ = __catalogueGetItem( GafferImage.Catalogue.__getitem__ )

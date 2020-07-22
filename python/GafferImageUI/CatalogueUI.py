@@ -217,7 +217,18 @@ class __StatusIconColumn( IconColumn ) :
 
 	def value( self, image, catalogue ) :
 
-		return "catalogueStatusDisk" if image["fileName"].getValue() else "catalogueStatusDisplay"
+
+		fileName = image["fileName"].getValue()
+		if fileName :
+			# Attempt to read the metadata to check the image is loadable. Given other columns
+			# are going to do this anyway, we're not adding too much overhead here.
+			try :
+				catalogue["out"].metadata()
+			except Gaffer.ProcessException :
+				return "errorNotificationSmall"
+			return "catalogueStatusDisk"
+
+		return "catalogueStatusDisplay"
 
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
@@ -495,7 +506,13 @@ class _ImagesPath( Gaffer.Path ) :
 		# without needing to understand the internal workings.
 		with Gaffer.Context(  self.__catalogue.scriptNode().context() ) as context :
 			context[ "catalogue:imageName" ] = imageName
-			return definition.value( image, self.__catalogue )
+			try :
+				return definition.value( image, self.__catalogue )
+			except Gaffer.ProcessException :
+				# Suppress error. The GraphEditor will be displaying the
+				# error anyway, as will the standard type column, and we're
+				# not in a position to do anything more helpful.
+				return None
 
 	def _orderedImages( self ) :
 

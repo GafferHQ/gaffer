@@ -86,6 +86,18 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
+			private :
+
+				// The Catalogue needs to know the name of each image
+				// so it can support the `catalogue:imageName` context
+				// variable. But computes can only depend on plugs,
+				// so we transfer the name into this private plug
+				// each time it changes.
+				void nameChanged();
+				Gaffer::StringPlug *namePlug();
+				const Gaffer::StringPlug *namePlug() const;
+				friend class Catalogue;
+
 		};
 
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, Image> > ImageIterator;
@@ -121,9 +133,6 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::IntPlug *internalImageIndexPlug();
 		const Gaffer::IntPlug *internalImageIndexPlug() const;
 
-		Gaffer::AtomicCompoundDataPlug *mappingPlug();
-		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
-
 		Gaffer::Switch *imageSwitch();
 		const Gaffer::Switch *imageSwitch() const;
 
@@ -139,8 +148,6 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
-
-		void computeNameToIndexMapping();
 
 		static size_t g_firstPlugIndex;
 
