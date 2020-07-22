@@ -765,7 +765,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		# And that invalid names generate errors.
 
-		with self.assertRaisesRegexp( RuntimeError, 'Unknown image name "Blue"' ) :
+		with six.assertRaisesRegex( self, RuntimeError, 'Unknown image name "Blue"' ) :
 			with Gaffer.Context() as c :
 				c["catalogue:imageName"] = "Blue"
 				box["catalogue"]["out"].metadata()
@@ -783,7 +783,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		# And that the old names are now invalid.
 
-		with self.assertRaisesRegexp( RuntimeError, 'Unknown image name "Red"' ) :
+		with six.assertRaisesRegex( self, RuntimeError, 'Unknown image name "Red"' ) :
 			with Gaffer.Context() as c :
 				c["catalogue:imageName"] = "Red"
 				box["catalogue"]["out"].metadata()
