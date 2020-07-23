@@ -68,7 +68,6 @@ DeleteSets::~DeleteSets()
 {
 }
 
-
 Gaffer::StringPlug *DeleteSets::namesPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
@@ -96,6 +95,11 @@ void DeleteSets::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 	if( input == inPlug()->setNamesPlug() || input == namesPlug() || input == invertNamesPlug() )
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
+	}
+
+	if( input == inPlug()->setPlug() || input == namesPlug() || input == invertNamesPlug() )
+	{
+		outputs.push_back( outPlug()->setPlug() );
 	}
 }
 
