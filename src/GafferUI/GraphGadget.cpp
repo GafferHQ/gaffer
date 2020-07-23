@@ -111,6 +111,118 @@ struct CompareV2fX{
 	}
 };
 
+// Action used to set node positions during drags. This implements
+// a custom `merge()` operation to avoid excessive memory use when dragging
+// large numbers of nodes around for a significant number of substeps. The
+// standard merging implemented by `ScriptNode::CompoundAction` works great
+// until a drag increment is 0 in one of the XY axes. When that occurs,
+// the `setValue()` calls for that axis are optimised out and then
+// `CompoundAction::merge()` falls back to a brute-force version
+// that keeps all the actions for every single drag increment (because there
+// are different numbers of actions from one substep to the next).
+//
+// Alternative approaches might be :
+//
+// - Improve `CompoundAction::merge()`. When the simple merge fails we could
+//   perhaps construct a secondary map from subject to action, and then attempt
+//   to merge all the actions pertaining to the same subject. In the general
+//   case there is no guarantee of one action per subject though, so it seems
+//   the benefits might be limited to this one use case anyway.
+// - Allow `CompoundPlug::setValue()` to force all child plugs to be set, even
+//   when one or more aren't changing. This seems counter to expectations from
+//   the point of view of an observer of `plugSetSignal()` though.
+//
+// For now at least, I prefer the isolated scope of `SetPositionsAction` to the
+// more core alternatives.
+class SetPositionsAction : public Gaffer::Action
+{
+
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( SetPositionsAction, GraphGadgetSetPositionsActionTypeId, Gaffer::Action );
+
+		SetPositionsAction( Gaffer::Node *root )
+			:	m_scriptNode( root->scriptNode() )
+		{
+		}
+
+		void addOffset( Gaffer::V2fPlugPtr plug, const V2f &offset )
+		{
+			const V2f v = plug->getValue();
+			m_positions[plug] = { v, v + offset };
+		}
+
+	protected :
+
+		Gaffer::GraphComponent *subject() const override
+		{
+			return m_scriptNode;
+		}
+
+		void doAction() override
+		{
+			// The `setValue()` calls we make are themselves undoable, so we must disable
+			// undo to stop them being recorded redundantly.
+			Gaffer::UndoScope scope( m_scriptNode, Gaffer::UndoScope::Disabled );
+			for( auto &p : m_positions )
+			{
+				p.first->setValue( p.second.newPosition );
+			}
+		}
+
+		void undoAction() override
+		{
+			// The `setValue()` calls we make are themselves undoable, so we must disable
+			// undo to stop them being recorded redundantly.
+			Gaffer::UndoScope scope( m_scriptNode, Gaffer::UndoScope::Disabled );
+			for( auto &p : m_positions )
+			{
+				p.first->setValue( p.second.oldPosition );
+			}
+		}
+
+		bool canMerge( const Action *other ) const override
+		{
+			if( !Action::canMerge( other ) )
+			{
+				return false;
+			}
+
+			const auto a = runTimeCast<const SetPositionsAction>( other );
+			return a && a->m_scriptNode == m_scriptNode;
+		}
+
+		void merge( const Action *other ) override
+		{
+			auto a = static_cast<const SetPositionsAction *>( other );
+			for( auto &p : a->m_positions )
+			{
+				auto inserted = m_positions.insert( p );
+				if( !inserted.second )
+				{
+					inserted.first->second.newPosition = p.second.newPosition;
+				}
+			}
+		}
+
+	private :
+
+		Gaffer::ScriptNode *m_scriptNode;
+
+		struct Positions
+		{
+			V2f oldPosition;
+			V2f newPosition;
+		};
+
+		using PositionsMap = std::map<Gaffer::V2fPlugPtr, Positions>;
+		PositionsMap m_positions;
+
+};
+
+IE_CORE_DEFINERUNTIMETYPED( SetPositionsAction );
+IE_CORE_DECLAREPTR( SetPositionsAction )
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -120,7 +232,7 @@ struct CompareV2fX{
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GraphGadget );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr ), m_dragMergeGroupId( 0 )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -1065,17 +1177,10 @@ bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	if( m_dragMode == Moving )
 	{
 		calculateDragSnapOffsets( m_scriptNode->selection() );
-
-		V2f pos = V2f( i.x, i.y );
-		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
-		m_lastDragPosition = pos;
- 		requestRender();
 		return true;
 	}
 	else if( m_dragMode == Selecting )
 	{
-		m_lastDragPosition = V2f( i.x, i.y );
- 		requestRender();
 		return true;
 	}
 
@@ -1148,6 +1253,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		}
 
 		// move all the nodes using the snapped offset
+		Gaffer::UndoScope undoScope( m_scriptNode, Gaffer::UndoScope::Enabled, dragMergeGroup() );
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
 		updateDragReconnectCandidate( event );
@@ -1283,14 +1389,16 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	if( dragMode == Moving && m_dragReconnectCandidate )
+	if( dragMode == Moving )
 	{
-		Gaffer::UndoScope undoScope( m_scriptNode );
-
-		m_dragReconnectDstNodule->plug()->setInput( m_dragReconnectCandidate->srcNodule()->plug() );
-		m_dragReconnectCandidate->dstNodule()->plug()->setInput( m_dragReconnectSrcNodule->plug() );
-
+		if( m_dragReconnectCandidate )
+		{
+			Gaffer::UndoScope undoScope( m_scriptNode, Gaffer::UndoScope::Enabled, dragMergeGroup() );
+			m_dragReconnectDstNodule->plug()->setInput( m_dragReconnectCandidate->srcNodule()->plug() );
+			m_dragReconnectCandidate->dstNodule()->plug()->setInput( m_dragReconnectSrcNodule->plug() );
+		}
 		m_dragReconnectCandidate = nullptr;
+		m_dragMergeGroupId++;
  		requestRender();
 	}
 	else if( dragMode == Selecting )
@@ -1432,6 +1540,7 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 
 void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 {
+	SetPositionsActionPtr action = new SetPositionsAction( m_root.get() );
 	for( size_t i = 0, e = nodes->size(); i < e; i++ )
 	{
 		Gaffer::Node *node = runTimeCast<Gaffer::Node>( nodes->member( i ) );
@@ -1444,9 +1553,15 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 		if( gadget )
 		{
 			Gaffer::V2fPlug *p = nodePositionPlug( node, /* createIfMissing = */ true );
-			p->setValue( p->getValue() + offset );
+			action->addOffset( p, offset );
 		}
 	}
+	Gaffer::Action::enact( action );
+}
+
+std::string GraphGadget::dragMergeGroup() const
+{
+	return boost::str( boost::format( "GraphGadget%1%%2%" ) % this % m_dragMergeGroupId );
 }
 
 void GraphGadget::updateDragSelection( bool dragEnd, ModifiableEvent::Modifiers modifiers )
