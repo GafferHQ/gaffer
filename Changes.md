@@ -38,9 +38,17 @@ Fixes
   - OpenImageIOReader
   - LevelSetOffset
   - MeshToLevelSet
+  - CopyPrimitiveVariables
+  - CopyAttributes
+  - SubTree
+  - MergeScenes
+  - CollectScenes
+  - Instancer
+  - Duplicate
+  - ClosestPointSampler
+  - CurveSampler
 - SetAlgo : Fixed `affectsSetExpression()` to return `True` for `ScenePlug::setNamesPlug()`.
 - GafferTractor: Fixed evaluation of 'tag' and 'service' plugs on Task nodes. Previously, these plugs were evaluated in the default context, which prevented one from using custom context variables (e.g. from Wedge node) to compute tags or service keys dynamically.
-
 
 API
 ---
@@ -48,7 +56,9 @@ API
 - ValuePlug
   - Improved interactive performance by not clearing the entire hash cache every time a plug is dirtied. Beware : this can reveal subtle bugs in `DependencyNode::affects()` implementations, causing hashes to be reused if a plug has not been dirtied appropriately. These bugs may previously have gone unnoticed but will now need fixing as a matter of urgency. The GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment variable may be used to enable legacy behaviour in the interim.
   - Added `clearHashCache()` static method.
-- ScenePlug : Added `childBounds()` and `childBoundsHash()` methods.
+- ScenePlug :
+  - Added `existsPlug()` accessor, and deprecated the argumentless overload of the `exists()` method.
+  - Added `childBoundsPlug()`, `childBounds()` and `childBoundsHash()` methods.
 - ObjectProcessor : Added `processedObjectComputeCachePolicy()` virtual method. This should be overridden to choose an appropriate cache policy when `computeProcessedObject()` spawns TBB tasks.
 - SceneNode :
   - Deprecated `hashOfTransformedChildBounds()`. Use `ScenePlug::childBoundsHash()` instead.

@@ -141,9 +141,18 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 
 	addChild(
 		new BoolPlug(
-			"__exists",
+			"exists",
 			direction,
 			true,
+			childFlags
+		)
+	);
+
+	addChild(
+		new AtomicBox3fPlug(
+			"childBounds",
+			direction,
+			Imath::Box3f(),
 			childFlags
 		)
 	);
@@ -153,15 +162,6 @@ ScenePlug::ScenePlug( const std::string &name, Direction direction, unsigned fla
 			"__sortedChildNames",
 			direction,
 			new IECore::InternedStringVectorData(),
-			childFlags
-		)
-	);
-
-	addChild(
-		new AtomicBox3fPlug(
-			"__childBounds",
-			direction,
-			Imath::Box3f(),
 			childFlags
 		)
 	);
@@ -289,24 +289,25 @@ const Gaffer::BoolPlug *ScenePlug::existsPlug() const
 	return getChild<BoolPlug>( 8 );
 }
 
-Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug()
-{
-	return getChild<InternedStringVectorDataPlug>( 9 );
-}
-
-const Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug() const
-{
-	return getChild<InternedStringVectorDataPlug>( 9 );
-}
-
 Gaffer::AtomicBox3fPlug *ScenePlug::childBoundsPlug()
 {
-	return getChild<AtomicBox3fPlug>( 10 );
+	return getChild<AtomicBox3fPlug>( 9 );
 }
 
 const Gaffer::AtomicBox3fPlug *ScenePlug::childBoundsPlug() const
 {
-	return getChild<AtomicBox3fPlug>( 10 );
+	return getChild<AtomicBox3fPlug>( 9 );
+}
+
+
+Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug()
+{
+	return getChild<InternedStringVectorDataPlug>( 10 );
+}
+
+const Gaffer::InternedStringVectorDataPlug *ScenePlug::sortedChildNamesPlug() const
+{
+	return getChild<InternedStringVectorDataPlug>( 10 );
 }
 
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context )
@@ -574,19 +575,9 @@ Imath::Box3f ScenePlug::childBounds( const ScenePath &scenePath ) const
 	return childBoundsPlug()->getValue();
 }
 
-Imath::Box3f ScenePlug::childBounds() const
-{
-	return childBoundsPlug()->getValue();
-}
-
 IECore::MurmurHash ScenePlug::childBoundsHash( const ScenePath &scenePath ) const
 {
 	PathScope scope( Context::current(), scenePath );
-	return childBoundsPlug()->hash();
-}
-
-IECore::MurmurHash ScenePlug::childBoundsHash() const
-{
 	return childBoundsPlug()->hash();
 }
 

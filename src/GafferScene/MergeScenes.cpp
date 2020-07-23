@@ -183,7 +183,7 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 	const ScenePlug *scene = inPlugs()->isAncestorOf( input ) ? input->parent<ScenePlug>() : nullptr;
 
-	if( scene && input == scene->childNamesPlug() )
+	if( scene && input == scene->existsPlug() )
 	{
 		outputs.push_back( activeInputsPlug() );
 	}
@@ -323,7 +323,7 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 			visit(
 				parentActiveInputs,
 				[&scenePath, &activeInputs] ( InputType type, size_t index, const ScenePlug *scene ) {
-					if( SceneAlgo::exists( scene, scenePath ) )
+					if( scene->exists( scenePath ) )
 					{
 						activeInputs[index] = true;
 					}
@@ -373,7 +373,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 			visit(
 				parentActiveInputs,
 				[&result, &scenePath] ( InputType type, size_t index, const ScenePlug *scene ) {
-					if( SceneAlgo::exists( scene, scenePath ) )
+					if( scene->exists( scenePath ) )
 					{
 						result[index] = true;
 					}
@@ -512,7 +512,7 @@ void MergeScenes::hashBound( const ScenePath &path, const Gaffer::Context *conte
 
 	SceneProcessor::hashBound( path, context, parent, h );
 	outPlug()->objectPlug()->hash( h );
-	h.append( outPlug()->childBoundsHash() );
+	outPlug()->childBoundsPlug()->hash( h );
 }
 
 Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -542,7 +542,7 @@ Imath::Box3f MergeScenes::computeBound( const ScenePath &path, const Gaffer::Con
 	// compute everything by brute force.
 
 	Box3f result = SceneAlgo::bound( outPlug()->objectPlug()->getValue().get() );
-	result.extendBy( outPlug()->childBounds() );
+	result.extendBy( outPlug()->childBoundsPlug()->getValue() );
 	return result;
 }
 

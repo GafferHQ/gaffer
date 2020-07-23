@@ -203,7 +203,7 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 	}
 	else
 	{
-		result = parent->childBounds();
+		result = parent->childBoundsPlug()->getValue();
 	}
 
 	if( path.size() == 0 && !result.isEmpty() )

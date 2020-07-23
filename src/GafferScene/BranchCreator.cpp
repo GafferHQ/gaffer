@@ -160,7 +160,7 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( input == parentPlug() || input == filteredPathsPlug() )
+	if( input == parentPlug() || input == filteredPathsPlug() || input == inPlug()->existsPlug() )
 	{
 		outputs.push_back( parentPathsPlug() );
 	}
@@ -324,7 +324,7 @@ void BranchCreator::hashBound( const ScenePath &path, const Gaffer::Context *con
 	{
 		FilteredSceneProcessor::hashBound( path, context, parent, h );
 		inPlug()->boundPlug()->hash( h );
-		h.append( outPlug()->childBoundsHash() );
+		outPlug()->childBoundsPlug()->hash( h );
 	}
 	else
 	{
@@ -344,7 +344,7 @@ Imath::Box3f BranchCreator::computeBound( const ScenePath &path, const Gaffer::C
 	else if( parentMatch == IECore::PathMatcher::ExactMatch || parentMatch == IECore::PathMatcher::DescendantMatch )
 	{
 		Box3f result = inPlug()->boundPlug()->getValue();
-		result.extendBy( outPlug()->childBounds() );
+		result.extendBy( outPlug()->childBoundsPlug()->getValue() );
 		return result;
 	}
 	else

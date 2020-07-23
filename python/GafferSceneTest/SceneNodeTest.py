@@ -333,7 +333,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		cube["name"].setValue( "box" )
 		self.assertGreaterEqual(
 			{ x[0] for x in cs },
-			{ cube["out"]["childNames"], cube["out"]["__sortedChildNames"], cube["out"]["__exists"] }
+			{ cube["out"]["childNames"], cube["out"]["__sortedChildNames"], cube["out"]["exists"] }
 		)
 
 	def testChildBounds( self ) :
@@ -346,8 +346,8 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "group" ] )
-			h = group["out"].childBoundsHash()
-			b = group["out"].childBounds()
+			h = group["out"]["childBounds"].hash()
+			b = group["out"]["childBounds"].getValue()
 
 		self.assertEqual( h, group["out"].childBoundsHash( "/group" ) )
 		self.assertEqual( b, group["out"].childBounds( "/group" ) )

@@ -220,7 +220,7 @@ void Grid::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *c
 {
 	if( path.size() == 0 )
 	{
-		h = parent->childBoundsHash();
+		h = parent->childBoundsPlug()->hash();
 	}
 	else
 	{
@@ -233,7 +233,7 @@ Imath::Box3f Grid::computeBound( const SceneNode::ScenePath &path, const Gaffer:
 {
 	if( path.size() == 0 )
 	{
-		return parent->childBounds();
+		return parent->childBoundsPlug()->getValue();
 	}
 	else
 	{

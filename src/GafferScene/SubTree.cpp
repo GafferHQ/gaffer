@@ -96,7 +96,7 @@ void SubTree::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
-	else if( input == rootPlug() || input == includeRootPlug() )
+	else if( input == rootPlug() || input == includeRootPlug() || input == inPlug()->existsPlug() )
 	{
 		outputs.push_back( outPlug()->boundPlug() );
 		outputs.push_back( outPlug()->transformPlug() );
@@ -118,7 +118,7 @@ void SubTree::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 			h = inPlug()->boundHash( source );
 			break;
 		case CreateRoot :
-			h = parent->childBoundsHash();
+			h = parent->childBoundsPlug()->hash();
 			break;
 		case EmptyRoot :
 			SceneProcessor::hashBound( path, context, parent, h );
@@ -135,7 +135,7 @@ Imath::Box3f SubTree::computeBound( const ScenePath &path, const Gaffer::Context
 		case Default :
 			return inPlug()->bound( source );
 		case CreateRoot :
-			return parent->childBounds();
+			return parent->childBoundsPlug()->getValue();
 		default : // EmptyRoot
 			return Imath::Box3f();
 	}

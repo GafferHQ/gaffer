@@ -161,7 +161,7 @@ void FreezeTransform::hashBound( const ScenePath &path, const Gaffer::Context *c
 		// thus changing the bounds - so we must compute them properly from
 		// children.
 		SceneProcessor::hashBound( path, context, parent, h );
-		h.append( outPlug()->childBoundsHash() );
+		outPlug()->childBoundsPlug()->hash( h );
 		// we may also be changing the bounds at this specific location.
 		inPlug()->boundPlug()->hash( h );
 		transformPlug()->hash( h );
@@ -182,7 +182,7 @@ Imath::Box3f FreezeTransform::computeBound( const ScenePath &path, const Gaffer:
 	const unsigned m = filterValue( context );
 	if( m & ( IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::ExactMatch ) )
 	{
-		Box3f result = outPlug()->childBounds();
+		Box3f result = outPlug()->childBoundsPlug()->getValue();
 		Box3f b = inPlug()->boundPlug()->getValue();
 		b = transform( b, transformPlug()->getValue() );
 		result.extendBy( b );

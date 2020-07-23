@@ -672,6 +672,7 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == prototypeRootsPlug() ||
 		input == prototypeRootsListPlug() ||
 		input == prototypesPlug()->childNamesPlug() ||
+		input == prototypesPlug()->existsPlug() ||
 		input == idPlug() ||
 		input == positionPlug() ||
 		input == orientationPlug() ||

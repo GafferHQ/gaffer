@@ -151,7 +151,7 @@ void CollectScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	SceneProcessor::affects( input, outputs );
 
-	if( input == rootNamesPlug() )
+	if( input == rootNamesPlug() || input == inPlug()->existsPlug() )
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}
@@ -181,7 +181,7 @@ void CollectScenes::hashBound( const ScenePath &path, const Gaffer::Context *con
 {
 	if( path.size() == 0 )
 	{
-		h = outPlug()->childBoundsHash();
+		h = outPlug()->childBoundsPlug()->hash();
 	}
 	else
 	{
@@ -194,7 +194,7 @@ Imath::Box3f CollectScenes::computeBound( const ScenePath &path, const Gaffer::C
 {
 	if( path.size() == 0 )
 	{
-		return outPlug()->childBounds();
+		return outPlug()->childBoundsPlug()->getValue();
 	}
 	else
 	{

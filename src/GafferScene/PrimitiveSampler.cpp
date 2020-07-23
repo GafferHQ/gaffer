@@ -231,11 +231,11 @@ bool PrimitiveSampler::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
 		Deformer::affectsProcessedObject( input ) ||
-		input == sourcePlug() ||
 		input == sourceLocationPlug() ||
 		input == primitiveVariablesPlug() ||
 		input == prefixPlug() ||
 		input == statusPlug() ||
+		input == sourcePlug()->existsPlug() ||
 		input == sourcePlug()->objectPlug() ||
 		input == inPlug()->transformPlug() ||
 		input == sourcePlug()->transformPlug() ||
@@ -257,7 +257,7 @@ void PrimitiveSampler::hashProcessedObject( const ScenePath &path, const Gaffer:
 
 	ScenePlug::ScenePath sourcePath;
 	ScenePlug::stringToPath( sourceLocation, sourcePath );
-	if( !SceneAlgo::exists( sourcePlug(), sourcePath ) )
+	if( !sourcePlug()->exists( sourcePath ) )
 	{
 		return;
 	}
@@ -296,7 +296,7 @@ IECore::ConstObjectPtr PrimitiveSampler::computeProcessedObject( const ScenePath
 
 	ScenePlug::ScenePath sourcePath;
 	ScenePlug::stringToPath( sourceLocation, sourcePath );
-	if( !SceneAlgo::exists( sourcePlug(), sourcePath ) )
+	if( !sourcePlug()->exists( sourcePath ) )
 	{
 		return inputObject;
 	}

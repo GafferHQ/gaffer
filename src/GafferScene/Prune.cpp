@@ -101,7 +101,7 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	{
 		if( filterValue( context ) & IECore::PathMatcher::DescendantMatch )
 		{
-			h = outPlug()->childBoundsHash();
+			h = outPlug()->childBoundsPlug()->hash();
 			return;
 		}
 	}
@@ -116,7 +116,7 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 	{
 		if( filterValue( context ) & IECore::PathMatcher::DescendantMatch )
 		{
-			return outPlug()->childBounds();
+			return outPlug()->childBoundsPlug()->getValue();
 		}
 	}
 

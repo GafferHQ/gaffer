@@ -137,9 +137,11 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 			dirtiedPlugs,
 			{
 				o["in"]["bound"],
+				o["in"]["childBounds"],
 				o["in"]["object"],
 				o["in"],
 				o["out"]["bound"],
+				o["out"]["childBounds"],
 				o["out"]["object"],
 				o["out"],
 			}

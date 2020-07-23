@@ -195,7 +195,7 @@ void Isolate::hashBound( const ScenePath &path, const Gaffer::Context *context, 
 	const SetsToKeep setsToKeep( this );
 	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, context, setsToKeep ) )
 	{
-		h = outPlug()->childBoundsHash();
+		h = outPlug()->childBoundsPlug()->hash();
 		return;
 	}
 
@@ -208,7 +208,7 @@ Imath::Box3f Isolate::computeBound( const ScenePath &path, const Gaffer::Context
 	const SetsToKeep setsToKeep( this );
 	if( adjustBoundsPlug()->getValue() && mayPruneChildren( path, context, setsToKeep ) )
 	{
-		return outPlug()->childBounds();
+		return outPlug()->childBoundsPlug()->getValue();
 	}
 
 	return inPlug()->boundPlug()->getValue();

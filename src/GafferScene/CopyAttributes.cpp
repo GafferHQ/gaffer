@@ -119,7 +119,8 @@ void CopyAttributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 		input == filterPlug() ||
 		input == attributesPlug() ||
 		input == sourceLocationPlug() ||
-		input == deleteExistingPlug()
+		input == deleteExistingPlug() ||
+		input == sourcePlug()->existsPlug()
 	)
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
