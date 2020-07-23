@@ -172,5 +172,15 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( deleteSets["out"].set( "__lights").value.paths(), [ "/group/light" ] )
 		self.assertEqual( deleteSets["out"].set( "__cameras").value.paths(), [ "/group/camera" ] )
 
+	def testHashPassThrough( self ) :
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "test" )
+
+		deleteSets = GafferScene.DeleteSets()
+		deleteSets["in"].setInput( cube["out"] )
+
+		self.assertEqual( deleteSets["out"].setHash( "test" ), cube["out"].setHash( "test" ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -167,7 +167,7 @@ void DeleteSets::hashSet( const IECore::InternedString &setName, const Gaffer::C
 	const bool invert = invertNamesPlug()->getValue();
 	if( keep( setName, names, invert ) )
 	{
-		h = inPlug()->setPlug()->getValue()->Object::hash();
+		h = inPlug()->setPlug()->hash();
 	}
 	else
 	{
