@@ -1,6 +1,8 @@
 0.58.x.x
 ========
 
+> Caution : References containing promoted Spreadsheets, when saved from Gaffer 0.58, can not be loaded in previous versions of Gaffer.
+
 Features
 --------
 
@@ -22,6 +24,7 @@ Fixes
 -----
 
 - GraphEditor : Implemented undo for node drags (#423).
+- Reference : Fixed bug which caused promoted Spreadsheet values to be lost when exporting a Box for referencing.
 - DeleteSets : Fixed bug which allowed the deletion of Gaffer's internal `__lights`, `__cameras` and `__lightFilters` sets. These are now always preserved, because they are needed to output the scene for rendering.
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.

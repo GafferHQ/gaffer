@@ -1373,6 +1373,58 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( s["b2"]["p"], "isColor" ), True )
 
+	def testPromotedSpreadsheetDefaultValues( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+
+		script["box"]["spreadsheet"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "string" ) )
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.IntPlug( "int" ) )
+		script["box"]["spreadsheet"]["rows"].addRows( 2 )
+
+		script["box"]["spreadsheet"]["rows"][0]["cells"]["string"]["value"].setValue( "default" )
+		script["box"]["spreadsheet"]["rows"][0]["cells"]["int"]["value"].setValue( -1 )
+		script["box"]["spreadsheet"]["rows"][1]["cells"]["string"]["value"].setValue( "one" )
+		script["box"]["spreadsheet"]["rows"][1]["cells"]["int"]["value"].setValue( 1 )
+		script["box"]["spreadsheet"]["rows"][2]["cells"]["string"]["value"].setValue( "two" )
+		script["box"]["spreadsheet"]["rows"][2]["cells"]["int"]["value"].setValue( 2 )
+
+		script["box"]["spreadsheet"]["rows"][1]["name"].setValue( "row1" )
+		script["box"]["spreadsheet"]["rows"][1]["enabled"].setValue( False )
+
+		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
+
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertEqual( len( script["reference"]["rows"] ), len( script["box"]["rows"] ) )
+		self.assertEqual( script["reference"]["rows"][0].keys(), script["box"]["rows"][0].keys() )
+
+		for row in range( 0, len( script["box"]["rows"] ) ) :
+
+			self.assertEqual(
+				script["reference"]["rows"][row]["name"].getValue(),
+				script["box"]["rows"][row]["name"].getValue()
+			)
+			self.assertEqual(
+				script["reference"]["rows"][row]["enabled"].getValue(),
+				script["box"]["rows"][row]["enabled"].getValue()
+			)
+
+			for column in range( 0, len( script["box"]["rows"][0]["cells"].keys() ) ) :
+				self.assertEqual(
+					script["reference"]["rows"][row]["cells"][column]["value"].getValue(),
+					script["box"]["rows"][row]["cells"][column]["value"].getValue(),
+				)
+				self.assertEqual(
+					script["reference"]["rows"][row]["cells"][column]["enabled"].getValue(),
+					script["box"]["rows"][row]["cells"][column]["enabled"].getValue(),
+				)
+
+		self.assertTrue( script["reference"]["rows"].isSetToDefault() )
 
 	def tearDown( self ) :
 
