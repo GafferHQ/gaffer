@@ -1444,7 +1444,7 @@ class _EditWindow( GafferUI.Window ) :
 		cls.__currentWindow.setVisible( True )
 
 		textWidget = cls.__textWidget( plugValueWidget )
-		if textWidget is not None :
+		if textWidget is not None and textWidget.enabled() :
 			if isinstance( textWidget, GafferUI.TextWidget ) :
 				textWidget.grabFocus()
 				textWidget.setSelection( 0, len( textWidget.getText() ) )
