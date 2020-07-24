@@ -37,7 +37,7 @@
 
 #include "Gaffer/SplinePlug.h"
 
-#include "boost/bind.hpp"
+#include "Gaffer/Action.h"
 
 using namespace Gaffer;
 
@@ -358,6 +358,36 @@ template<typename T>
 void SplinePlug<T>::setToDefault()
 {
 	setValue( m_defaultValue );
+}
+
+template<typename T>
+void SplinePlug<T>::resetDefault()
+{
+	const T newDefault = getValue();
+	const T oldDefault = m_defaultValue;
+	Action::enact(
+		this,
+		[this, newDefault] () {
+			this->m_defaultValue = newDefault;
+			for( auto &p : Plug::RecursiveRange( *this ) )
+			{
+				if( p->children().empty() )
+				{
+					propagateDirtiness( p.get() );
+				}
+			}
+		},
+		[this, oldDefault] () {
+			this->m_defaultValue = oldDefault;
+			for( auto &p : Plug::RecursiveRange( *this ) )
+			{
+				if( p->children().empty() )
+				{
+					propagateDirtiness( p.get() );
+				}
+			}
+		}
+	);
 }
 
 template<typename T>

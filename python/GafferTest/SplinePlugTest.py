@@ -322,6 +322,12 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.getValue(), s1 )
 		self.assertTrue( p.isSetToDefault() )
 
+		p.setValue( s2 )
+		p.resetDefault()
+		self.assertEqual( p.defaultValue(), s2 )
+		self.assertEqual( p.getValue(), s2 )
+		self.assertTrue( p.isSetToDefault() )
+
 	def testPlugFlags( self ) :
 
 		s = Gaffer.SplineDefinitionff(
