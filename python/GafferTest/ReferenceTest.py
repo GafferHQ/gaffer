@@ -1426,6 +1426,28 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertTrue( script["reference"]["rows"].isSetToDefault() )
 
+	def testPromotedSpreadsheetCopyPaste( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+
+		script["box"]["spreadsheet"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "string" ) )
+		script["box"]["spreadsheet"]["rows"].addRow()
+		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
+
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"]["rows"][1]["cells"]["string"]["value"].setValue( "test" )
+
+		script.execute( script.serialise( filter = Gaffer.StandardSet( [ script["reference"] ] ) ) )
+
+		self.assertEqual( script["reference1"]["rows"].keys(), script["box"]["rows"].keys() )
+		self.assertEqual( script["reference1"]["rows"][1]["cells"].keys(), script["box"]["rows"][1]["cells"].keys() )
+		self.assertEqual( script["reference1"]["rows"][1]["cells"]["string"]["value"].getValue(), "test" )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
