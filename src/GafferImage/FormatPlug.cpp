@@ -54,7 +54,7 @@ static const IECore::InternedString g_defaultFormatPlugName( "defaultFormat" );
 static const Format g_defaultFormatFallback( 1920, 1080 );
 
 FormatPlug::FormatPlug( const std::string &name, Direction direction, Format defaultValue, unsigned flags )
-	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
+	:	ValuePlug( name, direction, flags )
 {
 	const unsigned childFlags = flags & ~Dynamic;
 	addChild( new Box2iPlug( "displayWindow", direction, defaultValue.getDisplayWindow(), childFlags ) );
@@ -95,9 +95,9 @@ const Gaffer::FloatPlug *FormatPlug::pixelAspectPlug() const
 	return getChild<FloatPlug>( 1 );
 }
 
-const Format &FormatPlug::defaultValue() const
+Format FormatPlug::defaultValue() const
 {
-	return m_defaultValue;
+	return Format( displayWindowPlug()->defaultValue(), pixelAspectPlug()->defaultValue() );
 }
 
 void FormatPlug::setValue( const Format &value )

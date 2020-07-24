@@ -84,7 +84,7 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 		Gaffer::FloatPlug *pixelAspectPlug();
 		const Gaffer::FloatPlug *pixelAspectPlug() const;
 
-		const Format &defaultValue() const;
+		Format defaultValue() const;
 
 		/// \undoable
 		void setValue( const Format &value );
@@ -129,7 +129,6 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void plugDirtied( Gaffer::Plug *plug );
 
-		Format m_defaultValue;
 		boost::signals::scoped_connection m_plugDirtiedConnection;
 
 };
