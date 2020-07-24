@@ -155,5 +155,32 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		d["names"].setValue( "test" )
 		self.assertFalse( "user:a" in a["out"].attributes( "/plane" ) )
 
+	def testCantDeleteInternalSets( self ) :
+
+		light = GafferSceneTest.TestLight()
+		camera = GafferScene.Camera()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+		group["in"][1].setInput( camera["out"] )
+
+		deleteSets = GafferScene.DeleteSets()
+		deleteSets["in"].setInput( group["out"] )
+		deleteSets["names"].setValue( "*" )
+
+		self.assertEqual( deleteSets["out"].setNames(), IECore.InternedStringVectorData( [ "__lights", "__cameras" ] ) )
+		self.assertEqual( deleteSets["out"].set( "__lights").value.paths(), [ "/group/light" ] )
+		self.assertEqual( deleteSets["out"].set( "__cameras").value.paths(), [ "/group/camera" ] )
+
+	def testHashPassThrough( self ) :
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "test" )
+
+		deleteSets = GafferScene.DeleteSets()
+		deleteSets["in"].setInput( cube["out"] )
+
+		self.assertEqual( deleteSets["out"].setHash( "test" ), cube["out"].setHash( "test" ) )
+
 if __name__ == "__main__":
 	unittest.main()

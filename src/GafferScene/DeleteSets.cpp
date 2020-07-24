@@ -44,6 +44,30 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+namespace
+{
+
+const InternedString g_cameras( "__cameras" );
+const InternedString g_lights( "__lights" );
+const InternedString g_lightFilters( "__lightFilters" );
+
+bool keep( InternedString set, const std::string &names, bool invert )
+{
+	if( StringAlgo::matchMultiple( set, names ) == invert )
+	{
+		return true;
+	}
+	else if( set == g_cameras || set == g_lights || set == g_lightFilters )
+	{
+		// These internal sets are fundamental to the renderer output code,
+		// so we don't ever want to delete them.
+		return true;
+	}
+	return false;
+}
+
+} // namespace
+
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteSets );
 
 size_t DeleteSets::g_firstPlugIndex(0);
@@ -67,7 +91,6 @@ DeleteSets::DeleteSets( const std::string &name )
 DeleteSets::~DeleteSets()
 {
 }
-
 
 Gaffer::StringPlug *DeleteSets::namesPlug()
 {
@@ -97,6 +120,11 @@ void DeleteSets::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
 	}
+
+	if( input == inPlug()->setPlug() || input == namesPlug() || input == invertNamesPlug() )
+	{
+		outputs.push_back( outPlug()->setPlug() );
+	}
 }
 
 void DeleteSets::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -122,11 +150,11 @@ IECore::ConstInternedStringVectorDataPtr DeleteSets::computeSetNames( const Gaff
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();
 
-	for( std::vector<InternedString>::const_iterator it = inputSetNames.begin(); it != inputSetNames.end(); ++it )
+	for( const auto &setName : inputSetNames )
 	{
-		if( StringAlgo::matchMultiple( *it, names ) != (!invert) )
+		if( keep( setName, names, invert ) )
 		{
-			outputSetNames.push_back( *it );
+			outputSetNames.push_back( setName );
 		}
 	}
 
@@ -137,9 +165,9 @@ void DeleteSets::hashSet( const IECore::InternedString &setName, const Gaffer::C
 {
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();
-	if( StringAlgo::matchMultiple( setName, names ) != (!invert) )
+	if( keep( setName, names, invert ) )
 	{
-		h = inPlug()->setPlug()->getValue()->Object::hash();
+		h = inPlug()->setPlug()->hash();
 	}
 	else
 	{
@@ -151,7 +179,7 @@ IECore::ConstPathMatcherDataPtr DeleteSets::computeSet( const IECore::InternedSt
 {
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();
-	if( StringAlgo::matchMultiple( setName, names ) != (!invert) )
+	if( keep( setName, names, invert ) )
 	{
 		return inPlug()->setPlug()->getValue();
 	}
