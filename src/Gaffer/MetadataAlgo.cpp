@@ -83,6 +83,38 @@ IECore::InternedString numericBookmarkMetadataName( int bookmark )
 	return g_numericBookmarkBaseName.string() + std::to_string( bookmark );
 }
 
+const Gaffer::GraphComponent *readOnlyReason( const Gaffer::GraphComponent *graphComponent, bool first )
+{
+	const Gaffer::GraphComponent *reason = nullptr;
+
+	bool haveNodeDescendants = false;
+
+	while( graphComponent )
+	{
+		const Gaffer::Node *node = runTimeCast<const Gaffer::Node>( graphComponent );
+
+		if(
+			Gaffer::MetadataAlgo::getReadOnly( graphComponent ) ||
+			( node && haveNodeDescendants && Gaffer::MetadataAlgo::getChildNodesAreReadOnly( node ) ) )
+		{
+			reason = graphComponent;
+			if( first )
+			{
+				return reason;
+			}
+		}
+
+		if( !haveNodeDescendants && node )
+		{
+			haveNodeDescendants = true;
+		}
+
+		graphComponent = graphComponent->parent();
+	}
+
+	return reason;
+}
+
 } // namespace
 
 namespace Gaffer
@@ -115,25 +147,12 @@ bool getChildNodesAreReadOnly( const Node *node )
 
 bool readOnly( const GraphComponent *graphComponent )
 {
-	bool haveNodeDescendants = false;
+	return ::readOnlyReason( graphComponent, /* first = */ true ) != nullptr;
+}
 
-	while( graphComponent )
-	{
-		const Node *node = runTimeCast<const Node>( graphComponent );
-
-		if( getReadOnly( graphComponent ) || ( node && haveNodeDescendants && getChildNodesAreReadOnly( node ) ) )
-		{
-			return true;
-		}
-
-		if( !haveNodeDescendants && node )
-		{
-			haveNodeDescendants = true;
-		}
-
-		graphComponent = graphComponent->parent();
-	}
-	return false;
+const GraphComponent *readOnlyReason( const GraphComponent *graphComponent )
+{
+	return ::readOnlyReason( graphComponent, /* first = */ false );
 }
 
 bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug )

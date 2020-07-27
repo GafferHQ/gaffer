@@ -92,6 +92,7 @@ API
 - MessageWidget :
   - Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
   - Added `scrollToNextMessage()` and `scrollToPreviousMessage()` methods.
+- MetadataAlgo : Added `readOnlyReason`, returning the outer-most `GraphComponent` that causes the specified component to be read-only.
 
 Breaking Changes
 ----------------

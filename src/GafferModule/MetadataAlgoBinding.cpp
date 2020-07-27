@@ -70,6 +70,11 @@ bool readOnlyWrapper( GraphComponent &g )
 	return readOnly( &g );
 }
 
+GraphComponentPtr readOnlyReasonWrapper( GraphComponent &g )
+{
+	return const_cast<GraphComponent *>( readOnlyReason( &g ) );
+}
+
 void setBookmarkedWrapper( Node &node, bool bookmarked, bool persistent )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -126,6 +131,7 @@ void GafferModule::bindMetadataAlgo()
 	def( "setChildNodesAreReadOnly", &setChildNodesAreReadOnlyWrapper, ( arg( "node" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getChildNodesAreReadOnly", &getChildNodesAreReadOnly );
 	def( "readOnly", &readOnlyWrapper );
+	def( "readOnlyReason", &readOnlyReasonWrapper );
 	def(
 		"readOnlyAffectedByChange",
 		(bool (*)( const GraphComponent *, IECore::TypeId, const IECore::StringAlgo::MatchPattern &, const IECore::InternedString &, const Gaffer::Plug * ))&readOnlyAffectedByChange,
