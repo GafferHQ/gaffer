@@ -1012,8 +1012,8 @@ typename LRUCache<Key, Value, Policy, GetterKey>::Status LRUCache<Key, Value, Po
 // =======================================================================
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
-LRUCache<Key, Value, Policy, GetterKey>::LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback )
-	:	m_getter( getter ), m_removalCallback( removalCallback ), m_maxCost( maxCost )
+LRUCache<Key, Value, Policy, GetterKey>::LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback, bool cacheErrors )
+	:	m_getter( getter ), m_removalCallback( removalCallback ), m_maxCost( maxCost ), m_cacheErrors( cacheErrors )
 {
 }
 
@@ -1082,7 +1082,7 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 		}
 		catch( ... )
 		{
-			if( handle.isWritable() )
+			if( handle.isWritable() && m_cacheErrors )
 			{
 				handle.writable().state = std::current_exception();
 			}

@@ -105,7 +105,7 @@ class LRUCache : private boost::noncopyable
 		/// The optional RemovalCallback is called whenever an item is discarded from the cache.
 		typedef boost::function<void ( const Key &key, const Value &data )> RemovalCallback;
 
-		LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback = RemovalCallback() );
+		LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback = RemovalCallback(), bool cacheErrors = true );
 		virtual ~LRUCache();
 
 		/// Retrieves an item from the cache, computing it if necessary.
@@ -191,6 +191,7 @@ class LRUCache : private boost::noncopyable
 		Policy<LRUCache> m_policy;
 
 		Cost m_maxCost;
+		bool m_cacheErrors;
 
 		// Methods
 		// =======
