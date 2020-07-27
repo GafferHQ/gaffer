@@ -89,7 +89,6 @@ API
     - PresetsPlugValueWidget
 - SetAlgo : Added Python binding for `affectsSetExpression()`.
 - Shader : Added `affectsAttributes()` protected method.
-- MessageWidget : Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
 - MessageWidget :
   - Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
   - Added `scrollToNextMessage()` and `scrollToPreviousMessage()` methods.
