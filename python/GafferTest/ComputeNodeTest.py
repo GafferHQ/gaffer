@@ -565,6 +565,8 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		def __init__( self, name="ThrowingNode" ) :
 
+			self.hashFail = False
+
 			Gaffer.ComputeNode.__init__( self, name )
 
 			self["in"] = Gaffer.IntPlug()
@@ -581,7 +583,10 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		def hash( self, plug, context, h ) :
 
 			if plug == self["out"] :
-				self["in"].hash( h )
+				if self.hashFail :
+					raise RuntimeError( "HashEeek!" )
+				else:
+					self["in"].hash( h )
 
 		def compute( self, plug, context ) :
 
@@ -622,6 +627,18 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( raised.exception.plug(), thrower["out"] )
 		self.assertEqual( raised.exception.context(), context )
 		self.assertEqual( raised.exception.processType(), "computeNode:compute" )
+
+		# Make sure hash failures are reported correctly as well
+
+		thrower.hashFail = True
+		with Gaffer.Context() as context :
+			context["test"] = 2
+			with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower.out : [\s\S]*HashEeek!' ) as raised :
+				add["sum"].getValue()
+
+		self.assertEqual( raised.exception.plug(), thrower["out"] )
+		self.assertEqual( raised.exception.context(), context )
+		self.assertEqual( raised.exception.processType(), "computeNode:hash" )
 
 	def testProcessExceptionNotShared( self ) :
 
