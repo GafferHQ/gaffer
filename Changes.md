@@ -24,9 +24,10 @@ Fixes
 -----
 
 - GraphEditor : Implemented undo for node drags (#423).
-- Reference :
+- Reference (#3810) :
   - Fixed bug which caused promoted Spreadsheet values to be lost when exporting a Box for referencing.
   - Fixed bug which caused promoted Spreadsheet cells to be duplicated by copy/paste.
+  - Prevented addition and removal of rows and columns for promoted Spreadsheets, as changes will be lost when reloading the reference.
 - DeleteSets : Fixed bug which allowed the deletion of Gaffer's internal `__lights`, `__cameras` and `__lightFilters` sets. These are now always preserved, because they are needed to output the scene for rendering.
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.
