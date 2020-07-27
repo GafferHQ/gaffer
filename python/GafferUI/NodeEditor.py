@@ -54,8 +54,36 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, **kw )
 
+		with self.__column :
+
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) as self.__header :
+
+				GafferUI.Label( "<h4>Node Name</h4>" )
+				self.__nameWidget = GafferUI.NameWidget( None )
+
+				with GafferUI.ListContainer(
+					GafferUI.ListContainer.Orientation.Horizontal,
+					spacing=4,
+					parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Right },
+				) as self.__infoSection :
+
+					self.__typeLabel = GafferUI.Label()
+
+					infoButton = GafferUI.Button( image = "info.png", hasFrame = False )
+					infoButton.clickedSignal().connect( Gaffer.WeakMethod( self.__infoButtonClicked ), scoped = False )
+
+				GafferUI.MenuButton(
+					image = "gear.png",
+					hasFrame = False,
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+				)
+
+			self.__nodeUIFrame = GafferUI.Frame(
+				borderStyle = GafferUI.Frame.BorderStyle.None_, borderWidth = 0,
+				parenting = { "expand" : True }
+			)
+
 		self.__nodeUI = None
-		self.__nameWidget = None
 		self.__readOnly = False
 
 		self._updateFromSet()
@@ -111,59 +139,42 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			# itself?
 			self.__column._qtWidget().setFocus()
 
-		del self.__column[:]
-		self.__nodeUI = None
-		self.__nameWidget = None
-
 		node = self._lastAddedNode()
-		if not node :
-			with self.__column :
-				GafferUI.Spacer( imath.V2i( 0 ) )
+		if node is None :
+			self.__nameWidget.setGraphComponent( None )
+			self.__nodeUI = None
+			# Spacer is necessary to allow bookmark shortcuts to work in an
+			# empty NodeEditor.
+			self.__nodeUIFrame.setChild( GafferUI.Spacer( imath.V2i( 0 ) ) )
+			self.__header.setVisible( False )
 			return
 
-		with self.__column :
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) :
+		self.__nameWidget.setGraphComponent( node )
+		self.__typeLabel.setText( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 
-				GafferUI.Label( "<h4>Node Name</h4>" )
-				self.__nameWidget = GafferUI.NameWidget( node )
+		toolTip = "# " + node.typeName().rpartition( ":" )[2]
+		description = Gaffer.Metadata.value( node, "description" )
+		if description :
+			toolTip += "\n\n" + description
+		self.__infoSection.setToolTip( toolTip )
 
-				with GafferUI.ListContainer(
-					GafferUI.ListContainer.Orientation.Horizontal,
-					spacing=4,
-					parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Right },
-				) as infoSection :
+		self.__header.setVisible( True )
 
-					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
-
-					button = GafferUI.Button( image = "info.png", hasFrame = False )
-					url = Gaffer.Metadata.value( node, "documentation:url" )
-					if url :
-						button.clickedSignal().connect(
-							lambda button : GafferUI.showURL( url ),
-							scoped = False
-						)
-
-				toolTip = "# " + node.typeName().rpartition( ":" )[2]
-				description = Gaffer.Metadata.value( node, "description" )
-				if description :
-					toolTip += "\n\n" + description
-				infoSection.setToolTip( toolTip )
-
-				GafferUI.MenuButton(
-					image = "gear.png",
-					hasFrame = False,
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-				)
-
-		frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
-		self.__column.append( frame, expand=True )
 		self.__nodeUI = GafferUI.NodeUI.create( node )
 		self.__nodeUI.setReadOnly( self.getReadOnly() )
-		frame.setChild( self.__nodeUI )
+		self.__nodeUIFrame.setChild( self.__nodeUI )
 
 	def _titleFormat( self ) :
 
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
+
+	def __infoButtonClicked( self, *unused ) :
+
+		url = Gaffer.Metadata.value( self.nodeUI().node(), "documentation:url" )
+		if url :
+			GafferUI.showURL( url )
+
+		return True
 
 	def __menuDefinition( self ) :
 
