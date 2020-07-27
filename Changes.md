@@ -140,6 +140,7 @@ Breaking Changes
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 - Shader : Added virtual method.
+- MetadataAlgo : `readOnly( None )` will now raise an Exception instead of returning `False`.
 
 Build
 -----
