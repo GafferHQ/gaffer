@@ -120,7 +120,7 @@ typedef IECorePreview::LRUCache<string, FacePtr> FaceCache;
 typedef std::unique_ptr<FaceCache> FaceCachePtr;
 FaceCachePtr createFaceCache()
 {
-	return FaceCachePtr( new FaceCache( faceLoader ) );
+	return FaceCachePtr( new FaceCache( faceLoader, 500 ) );
 }
 
 FacePtr face( const string &font, const V2i &size )

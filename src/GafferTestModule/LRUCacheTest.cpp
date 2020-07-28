@@ -150,13 +150,13 @@ struct TestLRUCacheRemovalCallback
 			[]( int key, size_t &cost ) {
 				cost = 1; return key * 2;
 			},
+			/* maxCost = */ 5,
 			// Removal callback
 			[&removed]( int key, int value ) {
 				removed.push_back(
 					std::make_pair( key, value )
 				);
-			},
-			/* maxCost = */ 5
+			}
 		);
 
 		GAFFERTEST_ASSERTEQUAL( cache.get( 1 ), 2 );
