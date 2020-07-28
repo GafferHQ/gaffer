@@ -1,3 +1,13 @@
+0.57.x.x (relative to 0.57.6.0)
+========
+
+API
+---
+
+- CompoundEditor :
+  - Added `visibleOnly` argument to `editor()` method.
+  - Improved `editor()` logic, so that visible editors are always preferred to hidden ones.
+
 0.57.6.0 (relative to 0.57.5.0)
 ========
 
