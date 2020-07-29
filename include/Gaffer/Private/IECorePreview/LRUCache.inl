@@ -1012,20 +1012,8 @@ typename LRUCache<Key, Value, Policy, GetterKey>::Status LRUCache<Key, Value, Po
 // =======================================================================
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
-LRUCache<Key, Value, Policy, GetterKey>::LRUCache( GetterFunction getter )
-	:	m_getter( getter ), m_removalCallback( nullRemovalCallback ), m_maxCost( 500 )
-{
-}
-
-template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
-LRUCache<Key, Value, Policy, GetterKey>::LRUCache( GetterFunction getter, Cost maxCost )
-	:	m_getter( getter ), m_removalCallback( nullRemovalCallback ), m_maxCost( maxCost )
-{
-}
-
-template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
-LRUCache<Key, Value, Policy, GetterKey>::LRUCache( GetterFunction getter, RemovalCallback removalCallback, Cost maxCost )
-	:	m_getter( getter ), m_removalCallback( removalCallback ), m_maxCost( maxCost )
+LRUCache<Key, Value, Policy, GetterKey>::LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback, bool cacheErrors )
+	:	m_getter( getter ), m_removalCallback( removalCallback ), m_maxCost( maxCost ), m_cacheErrors( cacheErrors )
 {
 }
 
@@ -1094,7 +1082,7 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 		}
 		catch( ... )
 		{
-			if( handle.isWritable() )
+			if( handle.isWritable() && m_cacheErrors )
 			{
 				handle.writable().state = std::current_exception();
 			}
@@ -1190,7 +1178,10 @@ bool LRUCache<Key, Value, Policy, GetterKey>::eraseInternal( const Key &key, Cac
 	const Status status = cacheEntry.status();
 	if( status == Cached )
 	{
-		m_removalCallback( key, boost::get<Value>( cacheEntry.state ) );
+		if( m_removalCallback )
+		{
+			m_removalCallback( key, boost::get<Value>( cacheEntry.state ) );
+		}
 		m_policy.currentCost -= cacheEntry.cost;
 	}
 
@@ -1225,11 +1216,6 @@ void LRUCache<Key, Value, Policy, GetterKey>::limitCost( Cost cost )
 
 		eraseInternal( key, cacheEntry );
 	}
-}
-
-template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
-void LRUCache<Key, Value, Policy, GetterKey>::nullRemovalCallback( const Key &key, const Value &value )
-{
 }
 
 } // namespace IECorePreview

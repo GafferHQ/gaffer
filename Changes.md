@@ -60,6 +60,7 @@ Fixes
 - GafferTractor: Fixed evaluation of 'tag' and 'service' plugs on Task nodes. Previously, these plugs were evaluated in the default context, which prevented one from using custom context variables (e.g. from Wedge node) to compute tags or service keys dynamically.
 - NodeEditor : Reduced layout flicker when switching between nodes.
 - Spreadsheet : Fixed bug that could result in editor windows being placed partially off screen.
+- ValuePlug : Fixed bug that could cause the wrong plug to be reported in `ProcessExceptions`.
 
 API
 ---

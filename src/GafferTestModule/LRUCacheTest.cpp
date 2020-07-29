@@ -150,13 +150,13 @@ struct TestLRUCacheRemovalCallback
 			[]( int key, size_t &cost ) {
 				cost = 1; return key * 2;
 			},
+			/* maxCost = */ 5,
 			// Removal callback
 			[&removed]( int key, int value ) {
 				removed.push_back(
 					std::make_pair( key, value )
 				);
-			},
-			/* maxCost = */ 5
+			}
 		);
 
 		GAFFERTEST_ASSERTEQUAL( cache.get( 1 ), 2 );
@@ -478,6 +478,54 @@ struct TestLRUCacheExceptions
 		GAFFERTEST_ASSERTEQUAL( calls.size(), 3 );
 		GAFFERTEST_ASSERTEQUAL( calls.back(), 10 );
 
+		// Check that if we don't cache errors, then it gets called twice
+		calls.clear();
+		Cache noErrorsCache(
+			[&calls]( int key, size_t &cost ) {
+				calls.push_back( key );
+				throw IECore::Exception( boost::str(
+					boost::format( "Get failed for %1%" ) % key
+				) );
+				return 0;
+			},
+			1000,
+			typename Cache::RemovalCallback(),
+			/* cacheErrors = */ false
+		);
+
+		caughtException = false;
+		try
+		{
+			noErrorsCache.get( 10 );
+		}
+		catch( const IECore::Exception &e )
+		{
+			caughtException = true;
+			GAFFERTEST_ASSERTEQUAL(
+				e.what(),
+				std::string( "Get failed for 10" )
+			);
+		}
+
+		GAFFERTEST_ASSERT( caughtException );
+		GAFFERTEST_ASSERTEQUAL( calls.size(), 1 );
+
+		caughtException = false;
+		try
+		{
+			noErrorsCache.get( 10 );
+		}
+		catch( const IECore::Exception &e )
+		{
+			caughtException = true;
+			GAFFERTEST_ASSERTEQUAL(
+				e.what(),
+				std::string( "Get failed for 10" )
+			);
+		}
+
+		GAFFERTEST_ASSERT( caughtException );
+		GAFFERTEST_ASSERTEQUAL( calls.size(), 2 );
 	}
 
 };

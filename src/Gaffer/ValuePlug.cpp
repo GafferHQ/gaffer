@@ -285,14 +285,7 @@ class ValuePlug::HashProcess : public Process
 
 				// And then look up the result in our cache.
 
-				try
-				{
-					return threadData.cache.get( processKey );
-				}
-				catch( ... )
-				{
-					ProcessException::wrapCurrentException( processKey.plug, Context::current(), staticType );
-				}
+				return threadData.cache.get( processKey );
 			}
 		}
 
@@ -358,66 +351,50 @@ class ValuePlug::HashProcess : public Process
 
 		static IECore::MurmurHash globalCacheGetter( const HashProcessKey &key, size_t &cost )
 		{
-			try
+			cost = 1;
+			IECore::MurmurHash result;
+			switch( key.cachePolicy )
 			{
-				cost = 1;
-				IECore::MurmurHash result;
-				switch( key.cachePolicy )
+				case CachePolicy::TaskCollaboration :
 				{
-					case CachePolicy::TaskCollaboration :
-					{
-						ThreadStateFixer::Scope scope( key.threadStateFixer );
-						HashProcess process( key );
-						result = process.m_result;
-						break;
-					}
-					case CachePolicy::TaskIsolation :
-					{
-						IECorePreview::ParallelAlgo::isolate(
-							[&result, &key] {
-								HashProcess process( key );
-								result = process.m_result;
-							}
-						);
-						break;
-					}
-					default :
-						// Cache policy not valid for global cache.
-						assert( false );
-						break;
+					ThreadStateFixer::Scope scope( key.threadStateFixer );
+					HashProcess process( key );
+					result = process.m_result;
+					break;
 				}
+				case CachePolicy::TaskIsolation :
+				{
+					IECorePreview::ParallelAlgo::isolate(
+						[&result, &key] {
+							HashProcess process( key );
+							result = process.m_result;
+						}
+					);
+					break;
+				}
+				default :
+					// Cache policy not valid for global cache.
+					assert( false );
+					break;
+			}
 
-				return result;
-			}
-			catch( const ProcessException &e )
-			{
-				// See comments in `ComputeProcess::cacheGetter()`
-				e.rethrowUnwrapped();
-			}
+			return result;
 		}
 
 		static IECore::MurmurHash localCacheGetter( const HashProcessKey &key, size_t &cost )
 		{
-			try
+			cost = 1;
+			switch( key.cachePolicy )
 			{
-				cost = 1;
-				switch( key.cachePolicy )
+				case CachePolicy::TaskCollaboration :
+				case CachePolicy::TaskIsolation :
+					return g_globalCache.get( key );
+				default :
 				{
-					case CachePolicy::TaskCollaboration :
-					case CachePolicy::TaskIsolation :
-						return g_globalCache.get( key );
-					default :
-					{
-						assert( key.cachePolicy != CachePolicy::Uncached );
-						HashProcess process( key );
-						return process.m_result;
-					}
+					assert( key.cachePolicy != CachePolicy::Uncached );
+					HashProcess process( key );
+					return process.m_result;
 				}
-			}
-			catch( const ProcessException &e )
-			{
-				// See comments in `ComputeProcess::cacheGetter()`
-				e.rethrowUnwrapped();
 			}
 		}
 
@@ -433,7 +410,7 @@ class ValuePlug::HashProcess : public Process
 
 		struct ThreadData
 		{
-			ThreadData() : cache( localCacheGetter, g_cacheSizeLimit ), clearCache( 0 ) {}
+			ThreadData() : cache( localCacheGetter, g_cacheSizeLimit, Cache::RemovalCallback(), /* cacheErrors = */ false ), clearCache( 0 ) {}
 			Cache cache;
 			// Flag to request that hashCache be cleared.
 			tbb::atomic<int> clearCache;
@@ -450,7 +427,7 @@ const IECore::InternedString ValuePlug::HashProcess::staticType( "computeNode:ha
 tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_aligned_allocator<ValuePlug::HashProcess::ThreadData>, tbb::ets_key_per_instance > ValuePlug::HashProcess::g_threadData;
 // Default limit corresponds to a cost of roughly 25Mb per thread.
 tbb::atomic<size_t> ValuePlug::HashProcess::g_cacheSizeLimit = 128000;
-ValuePlug::HashProcess::GlobalCache ValuePlug::HashProcess::g_globalCache( globalCacheGetter, g_cacheSizeLimit );
+ValuePlug::HashProcess::GlobalCache ValuePlug::HashProcess::g_globalCache( globalCacheGetter, g_cacheSizeLimit, Cache::RemovalCallback(), /* cacheErrors = */ false );
 
 //////////////////////////////////////////////////////////////////////////
 // The ComputeProcess manages the task of calling ComputeNode::compute()
@@ -557,16 +534,7 @@ class ValuePlug::ComputeProcess : public Process
 			}
 			else
 			{
-				IECore::ConstObjectPtr result;
-				try
-				{
-					result = g_cache.get( processKey );
-				}
-				catch( ... )
-				{
-					// See comments in `cacheGetter()`
-					ProcessException::wrapCurrentException( processKey.plug, Context::current(), staticType );
-				}
+				IECore::ConstObjectPtr result = g_cache.get( processKey );
 
 				if( result )
 				{
@@ -659,67 +627,47 @@ class ValuePlug::ComputeProcess : public Process
 
 		static IECore::ConstObjectPtr cacheGetter( const ComputeProcessKey &key, size_t &cost )
 		{
-			try
+			IECore::ConstObjectPtr result;
+			switch( key.cachePolicy )
 			{
-				IECore::ConstObjectPtr result;
-				switch( key.cachePolicy )
+				case CachePolicy::Standard :
 				{
-					case CachePolicy::Standard :
-					{
-						ComputeProcess process( key );
-						result = process.m_result;
-						break;
-					}
-					case CachePolicy::TaskCollaboration :
-					{
-						ThreadStateFixer::Scope scope( key.threadStateFixer );
-						ComputeProcess process( key );
-						result = process.m_result;
-						break;
-					}
-					case CachePolicy::TaskIsolation :
-					{
-						IECorePreview::ParallelAlgo::isolate(
-							[&result, &key] {
-								ComputeProcess process( key );
-								result = process.m_result;
-							}
-						);
-						break;
-					}
-					case CachePolicy::Uncached :
-						// Should not have got here.
-						assert( false );
-						break;
-					default :
-						// Can't do the work inside the cache, because we don't know if
-						// the compute will lead to deadlock. We'll do the work outside.
-						break;
+					ComputeProcess process( key );
+					result = process.m_result;
+					break;
 				}
-				// Using max size for legacy policy so that our null result will never be
-				// cached. This avoids `assert( processKey.cachePolicy == CachePolicy::Legacy )`
-				// being triggered in `ComputeProcess::value()` when a plug with a legacy
-				// policy implements a pass-through from a plug with non-legacy policy.
-				cost = result ? result->memoryUsage() : std::numeric_limits<size_t>::max();
-				return result;
+				case CachePolicy::TaskCollaboration :
+				{
+					ThreadStateFixer::Scope scope( key.threadStateFixer );
+					ComputeProcess process( key );
+					result = process.m_result;
+					break;
+				}
+				case CachePolicy::TaskIsolation :
+				{
+					IECorePreview::ParallelAlgo::isolate(
+						[&result, &key] {
+							ComputeProcess process( key );
+							result = process.m_result;
+						}
+					);
+					break;
+				}
+				case CachePolicy::Uncached :
+					// Should not have got here.
+					assert( false );
+					break;
+				default :
+					// Can't do the work inside the cache, because we don't know if
+					// the compute will lead to deadlock. We'll do the work outside.
+					break;
 			}
-			catch( const ProcessException &processException )
-			{
-				// The LRUCache caches any exceptions thrown by its getter.
-				// But the ProcessException thrown by `Process::handleException()`
-				// is unsuitable for caching because :
-				//
-				// - There isn't a one-to-one mapping between processes and cache
-				//   entries (different plugs can share the same entry).
-				// - ProcessException stores the plug name for return from `what()`,
-				//   but the plug may be renamed.
-				// - ProcessException holds a reference to the plug, and we don't
-				//   want the cache to extend the plug's lifetime.
-				//
-				// So we unwrap the exception here and rewrap it at the call site of
-				// `LRUCache::get()`.
-				processException.rethrowUnwrapped();
-			}
+			// Using max size for legacy policy so that our null result will never be
+			// cached. This avoids `assert( processKey.cachePolicy == CachePolicy::Legacy )`
+			// being triggered in `ComputeProcess::value()` when a plug with a legacy
+			// policy implements a pass-through from a plug with non-legacy policy.
+			cost = result ? result->memoryUsage() : std::numeric_limits<size_t>::max();
+			return result;
 		}
 
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
@@ -732,7 +680,7 @@ class ValuePlug::ComputeProcess : public Process
 };
 
 const IECore::InternedString ValuePlug::ComputeProcess::staticType( "computeNode:compute" );
-ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( cacheGetter, 1024 * 1024 * 1024 * 1 ); // 1 gig
+ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( cacheGetter, 1024 * 1024 * 1024 * 1, ValuePlug::ComputeProcess::Cache::RemovalCallback(), /* cacheErrors = */ false ); // 1 gig
 
 //////////////////////////////////////////////////////////////////////////
 // SetValueAction implementation
