@@ -96,6 +96,9 @@ GAFFER_API bool getChildNodesAreReadOnly( const Node *node );
 /// This is the method that should be used to determine if a graphComponent should be editable
 /// by the user or not.
 GAFFER_API bool readOnly( const GraphComponent *graphComponent );
+/// Returns the outer-most `GraphComponent` responsible for making `graphComponent` read-only. This may be
+/// `graphComponent` itself. Returns `nullptr` if `graphComponent` is not considered read-only.
+GAFFER_API const GraphComponent *readOnlyReason( const GraphComponent *graphComponent );
 
 /// Determines if a metadata value change affects the result of `readOnly( graphComponent )`.
 GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug );

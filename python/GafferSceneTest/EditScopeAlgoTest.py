@@ -93,6 +93,41 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( GafferScene.SceneAlgo.exists( scope["out"], "/group/plane" ) )
 		self.assertTrue( GafferScene.SceneAlgo.exists( scope["out"], "/group/cube" ) )
 
+	def testPruneReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["cube"]["out"] )
+		s["scope"]["in"].setInput( s["cube"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["cube"], s["scope"] ] ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.prunedReadOnlyReason( s["box"]["scope"] ) )
+
+		for component in ( s["box"], s["box"]["scope"] ):
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.prunedReadOnlyReason( s["box"]["scope"] ), s["box"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual( GafferScene.EditScopeAlgo.prunedReadOnlyReason( s["box"]["scope"] ), s["box"]["scope"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.setPruned( s["box"]["scope"], "/cube", True )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.prunedReadOnlyReason( s["box"]["scope"] ) )
+
+		for component in (
+			s["box"]["scope"]["PruningEdits"]["paths"],
+			s["box"]["scope"]["PruningEdits"],
+			s["box"]["scope"],
+			s["box"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.prunedReadOnlyReason( s["box"]["scope"] ), component )
+
 	def testPruningSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -136,6 +171,63 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( GafferScene.EditScopeAlgo.hasTransformEdit( editScope, "/plane" ) )
 		self.assertIsNone( GafferScene.EditScopeAlgo.acquireTransformEdit( editScope, "/plane", createIfNecessary = False ) )
 		self.assertEqual( editScope["out"].transform( "/plane" ), plane["transform"].matrix() )
+
+	def testTransformEditReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["cube"]["out"] )
+		s["scope"]["in"].setInput( s["cube"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["cube"], s["scope"] ] ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.transformEditReadOnlyReason( s["box"]["scope"], "/cube" ) )
+
+		for component in ( s["box"], s["box"]["scope"] ):
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.transformEditReadOnlyReason( s["box"]["scope"], "/cube" ), s["box"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual( GafferScene.EditScopeAlgo.transformEditReadOnlyReason( s["box"]["scope"], "/cube" ), s["box"]["scope"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.acquireTransformEdit( s["box"]["scope"], "/cube" )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.transformEditReadOnlyReason( s["box"]["scope"], "/cube" ) )
+
+		candidateComponents = (
+			s["box"]["scope"]["TransformEdits"]["edits"][1]["cells"]["pivot"][1],
+			s["box"]["scope"]["TransformEdits"]["edits"][1]["cells"]["pivot"],
+			s["box"]["scope"]["TransformEdits"]["edits"][1]["cells"]["scale"],
+			s["box"]["scope"]["TransformEdits"]["edits"][1]["cells"]["rotate"],
+			s["box"]["scope"]["TransformEdits"]["edits"][1]["cells"]["translate"],
+			s["box"]["scope"]["TransformEdits"]["edits"][1]["cells"],
+			s["box"]["scope"]["TransformEdits"]["edits"][1],
+			s["box"]["scope"]["TransformEdits"]["edits"],
+			s["box"]["scope"]["TransformEdits"],
+			s["box"]["scope"],
+			s["box"]
+		)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.transformEditReadOnlyReason( s["box"]["scope"], "/cube" ), component )
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, False )
+
+		GafferScene.EditScopeAlgo.removeTransformEdit( s["box"]["scope"], "/cube" )
+		self.assertIsNone( GafferScene.EditScopeAlgo.acquireTransformEdit( s["box"]["scope"], "/cube", createIfNecessary = False ) )
+
+		for component in (
+			s["box"]["scope"]["TransformEdits"]["edits"],
+			s["box"]["scope"]["TransformEdits"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.transformEditReadOnlyReason( s["box"]["scope"], "/cube" ), component )
 
 	def testTransformProcessorNotCreatedPrematurely( self ) :
 
@@ -244,6 +336,67 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		)
 
 		self.assertIsNone( GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "__areaLight" ), createIfNecessary = False ) )
+
+	def testParameterEditReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["light"]["out"] )
+		s["scope"]["in"].setInput( s["light"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["light"], s["scope"] ] ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.parameterEditReadOnlyReason( s["box"]["scope"], "/light", "light", ( "", "intensity" ) ) )
+
+		for component in ( s["box"], s["box"]["scope"] ):
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.parameterEditReadOnlyReason( s["box"]["scope"], "/light", "light", ( "", "intensity" ) ), s["box"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual( GafferScene.EditScopeAlgo.parameterEditReadOnlyReason( s["box"]["scope"], "/light", "light", ( "", "intensity" ) ), s["box"]["scope"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.acquireParameterEdit( s["box"]["scope"], "/light", "light", ( "", "intensity" ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.parameterEditReadOnlyReason( s["box"]["scope"], "/light", "light", ( "", "intensity" ) ) )
+
+		candidateComponents = (
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"]["intensity"]["value"]["value"][1],
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"]["intensity"]["value"]["mode"],
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"]["intensity"]["value"]["enabled"],
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"]["intensity"]["value"]["name"],
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"]["intensity"]["value"],
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"]["intensity"],
+			s["box"]["scope"]["LightEdits"]["edits"][1]["cells"],
+			s["box"]["scope"]["LightEdits"]["edits"][1],
+			s["box"]["scope"]["LightEdits"]["edits"],
+			s["box"]["scope"]["LightEdits"],
+			s["box"]["scope"],
+			s["box"]
+		)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.parameterEditReadOnlyReason( s["box"]["scope"], "/light", "light", ( "", "intensity" ) ), component )
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, False )
+
+		# We can't remove parameter edits, they're just disabled (as the row is shared with other parameters),
+		# so we try to create one for another light instead
+		s["box"]["light"]["name"].setValue( "light2" )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.acquireParameterEdit( s["box"]["scope"], "/light2", "light", ( "", "intensity" ), createIfNecessary = False ) )
+
+		for component in (
+			s["box"]["scope"]["LightEdits"]["edits"],
+			s["box"]["scope"]["LightEdits"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.parameterEditReadOnlyReason( s["box"]["scope"], "/light2", "light", ( "", "intensity" ) ), component )
 
 	def testParameterEditsDontAffectOtherObjects( self ) :
 

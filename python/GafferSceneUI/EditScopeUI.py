@@ -79,20 +79,18 @@ def __pruningKeyPress( viewer, event ) :
 		# should emit a warning here.
 		return True
 
-	## \todo Accessing the processor directly like this rather defeats the object of
-	# the EditScopeAlgo API. Consider additional API to say whether or not a user
-	# should be able to edit something, based on all the `readOnly` and `enabled` checks
-	# we're performing manually here.
-	pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
-	if pruningProcessor is not None and Gaffer.MetadataAlgo.readOnly( pruningProcessor["paths"] ) :
+	if GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScope ) is not None :
 		return True
 
+	# \todo This needs encapsulating in EditScopeAlgo some how so we don't need
+	# to interact with processors directly.
 	with viewer.getContext() :
 		if not editScope["enabled"].getValue() :
 			# Spare folks from deleting something when it won't be
 			# apparent what they've done until they reenable the
 			# EditScope.
 			return True
+		pruningProcessor = editScope.acquireProcessor( "PruningEdits", createIfNecessary = False )
 		if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
 			return True
 

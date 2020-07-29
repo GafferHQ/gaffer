@@ -38,6 +38,7 @@ import unittest
 import os
 
 import imath
+import six
 
 import IECore
 
@@ -75,6 +76,48 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
+
+		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+			Gaffer.MetadataAlgo.readOnly( None )
+
+	def testReadOnlyReason( self ) :
+
+		b = Gaffer.Box()
+		b["b"] = Gaffer.Box()
+
+		n = GafferTest.AddNode()
+		b["b"]["n"] = n
+
+		self.assertIsNone( Gaffer.MetadataAlgo.readOnlyReason( n ) )
+		self.assertIsNone( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ) )
+
+		Gaffer.MetadataAlgo.setReadOnly( b, True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n ), b )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), b )
+
+		Gaffer.MetadataAlgo.setReadOnly( b["b"], True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), b )
+
+		Gaffer.MetadataAlgo.setReadOnly( b["b"]["n"], True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), b )
+
+		Gaffer.MetadataAlgo.setReadOnly( b["b"]["n"]["op1"], True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), b )
+
+		Gaffer.MetadataAlgo.setReadOnly( b, False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), b["b"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( b["b"], False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), n )
+
+		Gaffer.MetadataAlgo.setReadOnly( b["b"]["n"], False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ), n["op1"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( b["b"]["n"]["op1"], False )
+		self.assertIsNone( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ) )
+
+		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+			Gaffer.MetadataAlgo.readOnlyReason( None )
 
 	def testChildNodesAreReadOnly( self ) :
 

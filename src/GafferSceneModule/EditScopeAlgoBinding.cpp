@@ -69,6 +69,11 @@ bool getPrunedWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &pat
 	return EditScopeAlgo::getPruned( &scope, path );
 }
 
+GraphComponentPtr prunedReadOnlyReasonWrapper( Gaffer::EditScope &scope )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::prunedReadOnlyReason( &scope ) );
+}
+
 bool hasTransformEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::ScenePath &path )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -86,6 +91,11 @@ void removeTransformEditWrapper( Gaffer::EditScope &scope, const ScenePlug::Scen
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	EditScopeAlgo::removeTransformEdit( &scope, path );
+}
+
+GraphComponentPtr transformEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::transformEditReadOnlyReason( &scope, path ) );
 }
 
 V3fPlugPtr translateAccessor( EditScopeAlgo::TransformEdit &e )
@@ -131,6 +141,11 @@ void removeParameterEditWrapper( Gaffer::EditScope &scope, const ScenePlug::Scen
 	return EditScopeAlgo::removeParameterEdit( &scope, path, attribute, parameter );
 }
 
+GraphComponentPtr parameterEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::parameterEditReadOnlyReason( &scope, path, attribute, parameter ) );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -145,6 +160,7 @@ void bindEditScopeAlgo()
 	def( "setPruned", &setPrunedWrapper1 );
 	def( "setPruned", &setPrunedWrapper2 );
 	def( "getPruned", &getPrunedWrapper );
+	def( "prunedReadOnlyReason", &prunedReadOnlyReasonWrapper );
 
 	class_<EditScopeAlgo::TransformEdit>( "TransformEdit", no_init )
 		.def( init<const V3fPlugPtr &, const V3fPlugPtr &, const V3fPlugPtr &, const V3fPlugPtr &>() )
@@ -160,10 +176,12 @@ void bindEditScopeAlgo()
 	def( "acquireTransformEdit", &acquireTransformEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "createIfNecessary" ) = true ) );
 	def( "hasTransformEdit", &hasTransformEditWrapper );
 	def( "removeTransformEdit", &removeTransformEditWrapper );
+	def( "transformEditReadOnlyReason", &transformEditReadOnlyReasonWrapper );
 
 	def( "acquireParameterEdit", &acquireParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ), arg( "createIfNecessary" ) = true ) );
 	def( "hasParameterEdit", &hasParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
 	def( "removeParameterEdit", &removeParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
+	def( "parameterEditReadOnlyReason", &parameterEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
 
 }
 

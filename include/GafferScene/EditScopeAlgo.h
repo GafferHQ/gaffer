@@ -51,12 +51,22 @@ namespace GafferScene
 namespace EditScopeAlgo
 {
 
+// 'readOnlyReason' methods
+// ========================
+// If is often necessary to determine the cause of the read-only state of an
+// edit, or whether an edit can be added to any given scope. These methods
+// return the outward-most GraphComponent that is causing any given edit (or
+// potential edit creation) to be read-only. Tools that create edits within a
+// scope should first check this returns null before calling any 'acquire'
+// method to avoid incorrectly modifying locked nodes/plugs.
+
 // Pruning
 // =======
 
 GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool pruned );
 GAFFERSCENE_API void setPruned( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, bool pruned );
 GAFFERSCENE_API bool getPruned( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+GAFFERSCENE_API const Gaffer::GraphComponent *prunedReadOnlyReason( const Gaffer::EditScope *scope );
 
 // Transforms
 // ==========
@@ -89,6 +99,7 @@ struct GAFFERSCENE_API TransformEdit
 GAFFERSCENE_API bool hasTransformEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 GAFFERSCENE_API boost::optional<TransformEdit> acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary = true );
 GAFFERSCENE_API void removeTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
+GAFFERSCENE_API const Gaffer::GraphComponent *transformEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 
 // Shaders
 // =======
@@ -98,6 +109,7 @@ GAFFERSCENE_API void removeTransformEdit( Gaffer::EditScope *scope, const SceneP
 GAFFERSCENE_API bool hasParameterEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
 GAFFERSCENE_API TweakPlug *acquireParameterEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter, bool createIfNecessary = true );
 GAFFERSCENE_API void removeParameterEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
+GAFFERSCENE_API const Gaffer::GraphComponent *parameterEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
 
 } // namespace EditScopeAlgo
 

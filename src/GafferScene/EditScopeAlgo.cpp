@@ -44,6 +44,7 @@
 
 #include "Gaffer/EditScope.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/StringPlug.h"
@@ -135,6 +136,16 @@ bool GafferScene::EditScopeAlgo::getPruned( Gaffer::EditScope *scope, const Scen
 	ConstStringVectorDataPtr paths = pathsPlug->getValue();
 	string pathString; ScenePlug::pathToString( path, pathString );
 	return find( paths->readable().begin(), paths->readable().end(), pathString ) != paths->readable().end();
+}
+
+const GraphComponent *GafferScene::EditScopeAlgo::prunedReadOnlyReason( const EditScope *scope )
+{
+	if( const Node *processor = const_cast<EditScope *>( scope )->acquireProcessor( "PruningEdits", /* createIfNecessary = */ false ) )
+	{
+		return MetadataAlgo::readOnlyReason( processor->getChild<StringVectorDataPlug>( "paths" ) );
+	}
+
+	return MetadataAlgo::readOnlyReason( scope );
 }
 
 // Transforms
@@ -272,6 +283,40 @@ boost::optional<GafferScene::EditScopeAlgo::TransformEdit> GafferScene::EditScop
 		row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_scale )->valuePlug<V3fPlug>(),
 		row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_pivot )->valuePlug<V3fPlug>()
 	};
+}
+
+const GraphComponent *GafferScene::EditScopeAlgo::transformEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path )
+{
+	auto *processor = const_cast<EditScope *>( scope )->acquireProcessor<SceneProcessor>( "TransformEdits", /* createIfNecessary = */ false );
+	if( !processor )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	string pathString;
+	ScenePlug::pathToString( path, pathString );
+
+	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+	const Spreadsheet::RowPlug *row = rows->row( pathString );
+	if( !row )
+	{
+		return MetadataAlgo::readOnlyReason( rows );
+	}
+
+	if( const auto reason = MetadataAlgo::readOnlyReason( row->cellsPlug() ) )
+	{
+		return reason;
+	}
+
+	for( const auto &plug : Plug::RecursiveRange( *row->cellsPlug() ) )
+	{
+		if( MetadataAlgo::getReadOnly( plug.get() ) )
+		{
+			return plug.get();
+		}
+	}
+
+	return nullptr;
 }
 
 // Shaders
@@ -512,4 +557,52 @@ void GafferScene::EditScopeAlgo::removeParameterEdit( Gaffer::EditScope *scope, 
 	// because that would affect other edits, so we simply disable
 	// the edit instead.
 	edit->enabledPlug()->setValue( false );
+}
+
+const GraphComponent *GafferScene::EditScopeAlgo::parameterEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
+{
+	auto *processor = acquireParameterProcessor( const_cast<EditScope *>( scope ), attribute, /* createIfNecessary = */ false );
+	if( !processor )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	string pathString;
+	ScenePlug::pathToString( path, pathString );
+
+	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+	Spreadsheet::RowPlug *row = rows->row( pathString );
+	if( !row )
+	{
+		return MetadataAlgo::readOnlyReason( rows );
+	}
+
+	if( const auto reason = MetadataAlgo::readOnlyReason( row->cellsPlug() ) )
+	{
+		return reason;
+	}
+
+	string tweakName = parameter.name.string();
+	if( parameter.shader.string().size() )
+	{
+		tweakName = parameter.shader.string() + "." + tweakName;
+	}
+	string columnName = boost::replace_all_copy( tweakName, ".", "_" );
+	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
+	{
+		if( MetadataAlgo::getReadOnly( cell ) )
+		{
+			return cell;
+		}
+
+		for( const auto &plug : Plug::RecursiveRange( *cell ) )
+		{
+			if( MetadataAlgo::getReadOnly( plug.get() ) )
+			{
+				return plug.get();
+			}
+		}
+	}
+
+	return nullptr;
 }

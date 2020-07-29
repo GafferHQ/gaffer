@@ -89,10 +89,11 @@ API
     - PresetsPlugValueWidget
 - SetAlgo : Added Python binding for `affectsSetExpression()`.
 - Shader : Added `affectsAttributes()` protected method.
-- MessageWidget : Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
 - MessageWidget :
   - Added MessageSummaryWidget class to simplify the display of message counts in other UIs.
   - Added `scrollToNextMessage()` and `scrollToPreviousMessage()` methods.
+- MetadataAlgo : Added `readOnlyReason`, returning the outer-most `GraphComponent` that causes the specified component to be read-only.
+- EditScopeAlgo : Added `prunedReadOnlyReason`, `transformEditReadOnlyReason` and `parameterEditReadOnlyReason` to determine the outer-most `GraphComponent` causing and edit (or potential edit) to be read-only.
 
 Breaking Changes
 ----------------
@@ -141,6 +142,7 @@ Breaking Changes
 - InteractiveRender : Changed base class from Node to ComputeNode, added members.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 - Shader : Added virtual method.
+- MetadataAlgo : `readOnly( None )` will now raise an Exception instead of returning `False`.
 
 Build
 -----
