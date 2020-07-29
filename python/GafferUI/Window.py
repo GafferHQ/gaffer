@@ -261,13 +261,61 @@ class Window( GafferUI.ContainerWidget ) :
 
 		self._qtWidget().resize( s )
 
-	def setPosition( self, position ) :
+	## Repositions the window, attempting to keep the whole frame on screen.
+	# If the window is larger than the available screen area, its position will
+	# be clamped to the top left. If forcePosition is True, the window will be
+	# moved to the specified position even if clipping will occur.
+	def setPosition( self, position, forcePosition = False ) :
 
-		self._qtWidget().move( position.x, position.y )
+		p = QtCore.QPoint( position.x, position.y )
+		if not forcePosition :
+			p = self.__constrainToScreen( p )
+
+		self._qtWidget().move( p )
 
 	def getPosition( self ) :
 
 		return imath.V2i( self._qtWidget().x(), self._qtWidget().y() )
+
+	def __constrainToScreen( self, position ) :
+
+		# Constrain position such that the whole window remains on screen where
+		# possible. Sadly Qt keeps their implementation of this private.
+		# Qt documents that for a window, move() is really pos and includes frame geometry
+
+		desktop = QtWidgets.QApplication.desktop()
+		screenNumber = desktop.screenNumber( position )
+		screenRect = desktop.availableGeometry( screenNumber )
+
+		# Find what our window's rect would be on that screen
+		windowRect = self._qtWidget().frameGeometry()
+		windowRect.moveTo( position )
+
+		# Determine the offset and which direction to move to stay on screen,
+		# based on this size difference and which co-ordinate changed in the
+		# intersected frame
+
+		intersection = windowRect.intersected( screenRect )
+		difference = windowRect.size() - intersection.size()
+
+		signX = -1 if intersection.left() == windowRect.left() else 1
+		signY = -1 if intersection.top() == windowRect.top() else 1
+
+		offset = QtCore.QPoint(
+			signX * difference.width(),
+			signY * difference.height()
+		)
+
+		newPosition = position + offset
+
+		# Bottom-right corrections may have moved us off to the top-left,
+		# constrain to the screen origin.
+		finalPos = QtCore.QPoint(
+			max( newPosition.x(), screenRect.topLeft().x() ),
+			max( newPosition.y(), screenRect.topLeft().y() )
+		)
+
+		return finalPos
 
 	def setFullScreen( self, fullScreen ) :
 

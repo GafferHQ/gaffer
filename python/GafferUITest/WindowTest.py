@@ -284,8 +284,56 @@ class WindowTest( GafferUITest.TestCase ) :
 	def testPosition( self ) :
 
 		w = GafferUI.Window()
-		w.setPosition( imath.V2i( 10, 20 ) )
-		self.assertEqual( w.getPosition(), imath.V2i( 10, 20 ) )
+		w._qtWidget().resize( 200, 100 )
+		self.assertEqual( ( w._qtWidget().width(), w._qtWidget().height() ), ( 200, 100 ) )
+
+		w.setPosition( imath.V2i( 20, 30 ) )
+		self.assertEqual( w.getPosition(), imath.V2i( 20, 30 ) )
+
+		desktop = QtWidgets.QApplication.desktop()
+
+		screenRect = desktop.availableGeometry( w._qtWidget() )
+		windowRect = w._qtWidget().frameGeometry()
+
+		# Smaller, off-screen bottom right
+
+		w.setPosition( imath.V2i( screenRect.right() - 50, screenRect.bottom() - 75 ) )
+		self.assertEqual(
+			w.getPosition(),
+			imath.V2i(
+				screenRect.right() - windowRect.width() + 1,
+				screenRect.bottom() - windowRect.height() + 1
+			)
+		)
+
+		# Smaller, off-screen top left
+
+		w.setPosition( imath.V2i( screenRect.left() - 25 , screenRect.top() - 15 ) )
+		self.assertEqual( w.getPosition(), imath.V2i( screenRect.left(), screenRect.top() ) )
+
+		# Bigger width only
+
+		w._qtWidget().resize( screenRect.width() + 300, 200 )
+		windowRect = w._qtWidget().frameGeometry()
+
+		w.setPosition( imath.V2i( 100, 100 ) )
+		self.assertEqual( w.getPosition(), imath.V2i( screenRect.left(), 100 ) )
+		self.assertEqual( w._qtWidget().frameGeometry().size(), windowRect.size() )
+
+		# Bigger
+
+		w._qtWidget().resize( screenRect.width() + 300, screenRect.height() + 200 )
+		windowRect = w._qtWidget().frameGeometry()
+
+		w.setPosition( imath.V2i( 100, 100 ) )
+		self.assertEqual( w.getPosition(), imath.V2i( screenRect.left(), screenRect.top() ) )
+		self.assertEqual( w._qtWidget().frameGeometry().size(), windowRect.size() )
+
+		# Force position
+
+		w.setPosition( imath.V2i( 100, 100 ), forcePosition = True )
+		self.assertEqual( w.getPosition(), imath.V2i( 100, 100 ) )
+		self.assertEqual( w._qtWidget().frameGeometry().size(), windowRect.size() )
 
 	def testChildWindowsMethod( self ) :
 

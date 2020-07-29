@@ -1438,8 +1438,9 @@ class _EditWindow( GafferUI.Window ) :
 					valuePlugValueWidget.menu().popup()
 					return
 
-		windowSize = cls.__currentWindow._qtWidget().sizeHint()
-		cls.__currentWindow.setPosition( plugBound.center() - imath.V2i( windowSize.width() / 2, windowSize.height() / 2 ) )
+		cls.__currentWindow.resizeToFitChild()
+		windowSize = cls.__currentWindow.bound().size()
+		cls.__currentWindow.setPosition( plugBound.center() - windowSize / 2 )
 		cls.__currentWindow.setVisible( True )
 
 		textWidget = cls.__textWidget( plugValueWidget )

@@ -53,6 +53,7 @@ Fixes
 - SetAlgo : Fixed `affectsSetExpression()` to return `True` for `ScenePlug::setNamesPlug()`.
 - GafferTractor: Fixed evaluation of 'tag' and 'service' plugs on Task nodes. Previously, these plugs were evaluated in the default context, which prevented one from using custom context variables (e.g. from Wedge node) to compute tags or service keys dynamically.
 - NodeEditor : Reduced layout flicker when switching between nodes.
+- Spreadsheet : Fixed bug that could result in editor windows being placed partially off screen.
 
 API
 ---
@@ -94,6 +95,7 @@ API
   - Added `scrollToNextMessage()` and `scrollToPreviousMessage()` methods.
 - MetadataAlgo : Added `readOnlyReason`, returning the outer-most `GraphComponent` that causes the specified component to be read-only.
 - EditScopeAlgo : Added `prunedReadOnlyReason`, `transformEditReadOnlyReason` and `parameterEditReadOnlyReason` to determine the outer-most `GraphComponent` causing and edit (or potential edit) to be read-only.
+- Window : Changed `setPosition` such that the whole window will remain on screen. Set `forcePosition` to `False` to disable this behaviour.
 
 Breaking Changes
 ----------------
