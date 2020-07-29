@@ -96,6 +96,12 @@ class GAFFER_API ValuePlug : public Plug
 		/// > we always consider it to be non-default, because it may vary
 		/// > by context. `isSetToDefault()` does not trigger computes.
 		virtual bool isSetToDefault() const;
+		/// Modifies the default value of this plug to match the current
+		/// value. The default implementation is sufficient for all
+		/// subclasses except those where the number of child plugs varies
+		/// based on the value.
+		/// \undoable
+		virtual void resetDefault();
 
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.
@@ -188,8 +194,8 @@ class GAFFER_API ValuePlug : public Plug
 		ValuePlug( const std::string &name, Direction direction,
 			IECore::ConstObjectPtr defaultValue, unsigned flags );
 
-		/// Returns the default value that was passed to the constructor.
-		/// It is imperative that this value is not changed.
+		/// Returns the default value. It is imperative that this object is not
+		/// modified.
 		const IECore::Object *defaultObjectValue() const;
 
 		/// Internally all values are stored as instances of classes derived

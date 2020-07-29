@@ -38,6 +38,8 @@
 
 #include "SpreadsheetBinding.h"
 
+#include "Gaffer/Reference.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ValuePlugBinding.h"
 
@@ -110,8 +112,19 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
-
 			const auto *plug = static_cast<const Spreadsheet::RowsPlug *>( graphComponent );
+			if( IECore::runTimeCast<const Reference>( plug->node() ) )
+			{
+				// References add all their plugs in `loadReference()`, so we don't need to serialise
+				// the rows and columns ourselves.
+				/// \todo For other plug types, the Reference prevents constructor serialisation
+				/// by removing the `Dynamic` flag from the plugs. We are aiming to remove this
+				/// flag though, so haven't exposed it via the `addColumn()/addRow()` API. In future
+				/// we need to improve the serialisation API so that Reference nodes can directly
+				/// request what they want without using flags.
+				return result;
+			}
+
 			for( const auto &cell : Spreadsheet::CellPlug::Range( *plug->getChild<Spreadsheet::RowPlug>( 0 )->cellsPlug() ) )
 			{
 				PlugPtr p = cell->valuePlug()->createCounterpart( cell->getName(), Plug::In );

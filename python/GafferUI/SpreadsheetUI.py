@@ -149,6 +149,13 @@ def registerValueWidget( plugType, plugValueWidgetCreator ) :
 
 	_CellPlugValueWidget.registerValueWidget( plugType, plugValueWidgetCreator )
 
+def _dimensionsEditable( rowsPlug ) :
+
+	# We don't currently allow addition/removal of rows/columns
+	# when a RowsPlug is hosted on a Reference node, to avoid
+	# merge hell when reloading or updating the reference.
+	return not isinstance( rowsPlug.node(), Gaffer.Reference )
+
 # Metadata
 # ========
 
@@ -459,6 +466,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ), scoped = False )
 			addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ), scoped = False )
 			addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ), scoped = False )
+
+			addRowButton.setVisible( _dimensionsEditable( plug ) )
 
 			self.__statusLabel = GafferUI.Label(
 				"",
@@ -1010,7 +1019,10 @@ class _PlugTableView( GafferUI.Widget ) :
 			"/Delete Column",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteColumn), cellPlug ),
-				"active" : not Gaffer.MetadataAlgo.readOnly( cellPlug ),
+				"active" : (
+					not Gaffer.MetadataAlgo.readOnly( cellPlug ) and
+					_dimensionsEditable( self._qtWidget().model().rowsPlug() )
+				)
 			}
 		)
 
@@ -1927,8 +1939,11 @@ def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
 			"/Delete Row",
 			{
 				"command" : functools.partial( __deleteRow, rowPlug ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( rowPlug )
-
+				"active" : (
+					not plugValueWidget.getReadOnly() and
+					not Gaffer.MetadataAlgo.readOnly( rowPlug ) and
+					_dimensionsEditable( rowPlug.parent() )
+				)
 			}
 		)
 

@@ -1019,6 +1019,33 @@ bool ValuePlug::isSetToDefault() const
 	}
 }
 
+void ValuePlug::resetDefault()
+{
+	if( m_defaultValue != nullptr )
+	{
+		IECore::ConstObjectPtr newDefault = getObjectValue();
+		IECore::ConstObjectPtr oldDefault = m_defaultValue;
+		Action::enact(
+			this,
+			[this, newDefault] () {
+				this->m_defaultValue = newDefault;
+				propagateDirtiness( this );
+			},
+			[this, oldDefault] () {
+				this->m_defaultValue = oldDefault;
+				propagateDirtiness( this );
+			}
+		);
+	}
+	else
+	{
+		for( auto c : ValuePlug::Range( *this ) )
+		{
+			c->resetDefault();
+		}
+	}
+}
+
 IECore::MurmurHash ValuePlug::hash() const
 {
 	if( !m_staticValue )

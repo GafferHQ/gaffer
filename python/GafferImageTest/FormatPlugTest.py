@@ -244,6 +244,25 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 		s2.execute( s.serialise() )
 		self.assertEqual( s2["n"]["user"]["f"]["displayWindow"].getValue(), s["n"]["user"]["f"]["displayWindow"].getValue() )
 
+	def testDefaultValue( self ) :
+
+		f1 = GafferImage.Format( 2000, 1000, 2.0 )
+		f2 = GafferImage.Format( 64, 128, 1.0 )
+
+		p = GafferImage.FormatPlug( defaultValue = f1 )
+		self.assertEqual( p.getValue(), f1 )
+		self.assertEqual( p.defaultValue(), f1 )
+		self.assertTrue( p.isSetToDefault() )
+
+		p.setValue( f2 )
+		self.assertEqual( p.getValue(), f2 )
+		self.assertEqual( p.defaultValue(), f1 )
+		self.assertFalse( p.isSetToDefault() )
+
+		p.resetDefault()
+		self.assertEqual( p.getValue(), f2 )
+		self.assertEqual( p.defaultValue(), f2 )
+		self.assertTrue( p.isSetToDefault() )
 
 if __name__ == "__main__":
 	unittest.main()

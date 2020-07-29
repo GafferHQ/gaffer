@@ -1,6 +1,8 @@
 0.58.x.x
 ========
 
+> Caution : References containing promoted Spreadsheets, when saved from Gaffer 0.58, can not be loaded in previous versions of Gaffer.
+
 Features
 --------
 
@@ -22,6 +24,10 @@ Fixes
 -----
 
 - GraphEditor : Implemented undo for node drags (#423).
+- Reference (#3810) :
+  - Fixed bug which caused promoted Spreadsheet values to be lost when exporting a Box for referencing.
+  - Fixed bug which caused promoted Spreadsheet cells to be duplicated by copy/paste.
+  - Prevented addition and removal of rows and columns for promoted Spreadsheets, as changes will be lost when reloading the reference.
 - DeleteSets : Fixed bug which allowed the deletion of Gaffer's internal `__lights`, `__cameras` and `__lightFilters` sets. These are now always preserved, because they are needed to output the scene for rendering.
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.
@@ -61,6 +67,7 @@ API
 - ValuePlug
   - Improved interactive performance by not clearing the entire hash cache every time a plug is dirtied. Beware : this can reveal subtle bugs in `DependencyNode::affects()` implementations, causing hashes to be reused if a plug has not been dirtied appropriately. These bugs may previously have gone unnoticed but will now need fixing as a matter of urgency. The GAFFER_CLEAR_HASHCACHE_ON_DIRTY environment variable may be used to enable legacy behaviour in the interim.
   - Added `clearHashCache()` static method.
+  - Added `resetDefault()` method.
 - ScenePlug :
   - Added `existsPlug()` accessor, and deprecated the argumentless overload of the `exists()` method.
   - Added `childBoundsPlug()`, `childBounds()` and `childBoundsHash()` methods.
@@ -145,6 +152,10 @@ Breaking Changes
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 - Shader : Added virtual method.
 - MetadataAlgo : `readOnly( None )` will now raise an Exception instead of returning `False`.
+- FormatPlug :
+  - Removed private member.
+  - Changed signature of `defaultValue()` method.
+- ValuePlug : Added virtual method.
 
 Build
 -----
