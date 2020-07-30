@@ -3,7 +3,8 @@
 
 Improvements
 ------------
-- Dispatch app : Added support for setting CompoundDataPlug
+
+- Dispatch app : Added support for setting CompoundDataPlugs via the `-settings` argument.
 
 API
 ---
