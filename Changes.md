@@ -1,3 +1,8 @@
+0.56.2.x (relative to 0.56.2.5)
+========
+
+- Viewer : Fixed crashes that could be caused by invalid pixel values.
+
 0.56.2.5 (relative to 0.56.2.4)
 ========
 
