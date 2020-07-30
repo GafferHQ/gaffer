@@ -42,6 +42,9 @@ import GafferSceneUI
 for p in [ "exposure", "color", "radius", "roundness", "spread", "cone_angle", "penumbra_angle", "samples", "aov" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:light", p )
 
+for p in ["geometry_type", "density", "filtered_lights", "shader" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:filter", p )
+
 for p in ["base", "base_color", "diffuse_roughness", "metallness", "specular", "specular_color", "specular_roughness" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:surface", p )
 

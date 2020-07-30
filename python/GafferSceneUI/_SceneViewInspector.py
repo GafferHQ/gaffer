@@ -450,7 +450,7 @@ class _ParameterInspector( object ) :
 	def __editFromSceneNode( self, attributeHistory ) :
 
 		node = attributeHistory.scene.node()
-		if not isinstance( node, ( GafferScene.ShaderTweaks, GafferScene.Light, GafferScene.ShaderAssignment ) ) :
+		if not isinstance( node, ( GafferScene.ShaderTweaks, GafferScene.Light, GafferScene.LightFilter, GafferScene.ShaderAssignment ) ) :
 			return None
 
 		if attributeHistory.scene != node["out"] :
@@ -464,7 +464,7 @@ class _ParameterInspector( object ) :
 			if "filter" in node and not ( node["filter"].getValue() & IECore.PathMatcher.Result.ExactMatch ) :
 				return None
 
-			if isinstance( node, GafferScene.Light ) :
+			if isinstance( node, ( GafferScene.Light, GafferScene.LightFilter ) ) :
 
 				plug = self.__spreadsheetAwareSource( node["parameters"][ self.__parameter ] )
 				if plug is not None :
