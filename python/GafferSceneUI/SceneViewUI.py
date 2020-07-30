@@ -47,19 +47,19 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+from ._SceneViewInspector import *
+
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SceneView,
 
-	# We want our EditScopePlugValueWidget and _StateWidget to be grouped on the
-	# right, and we want our other settings to be grouped in the centre. To achieve
-	# this we use _LeftSpacer to occupy the same amount of space on the left as the
-	# right hand group does on the right. Then we use CenterLeftSpacer and
-	# CenterRightSpacer to sandwich the centre group, pushing it into the middle.
+	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferSceneUI.SceneViewUI._StateWidget",
+	"toolbarLayout:customWidget:StateWidget:section", "Top",
+	"toolbarLayout:customWidget:StateWidget:index", 0,
 
-	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.SceneViewUI._LeftSpacer",
-	"toolbarLayout:customWidget:LeftSpacer:section", "Top",
-	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+	"toolbarLayout:customWidget:EditScopeBalancingSpacer:widgetType", "GafferSceneUI.SceneViewUI._EditScopeBalancingSpacer",
+	"toolbarLayout:customWidget:EditScopeBalancingSpacer:section", "Top",
+	"toolbarLayout:customWidget:EditScopeBalancingSpacer:index", 1,
 
 	"toolbarLayout:customWidget:CenterLeftSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
 	"toolbarLayout:customWidget:CenterLeftSpacer:section", "Top",
@@ -67,17 +67,24 @@ Gaffer.Metadata.registerNode(
 
 	"toolbarLayout:customWidget:CenterRightSpacer:widgetType", "GafferSceneUI.SceneViewUI._Spacer",
 	"toolbarLayout:customWidget:CenterRightSpacer:section", "Top",
-	"toolbarLayout:customWidget:CenterRightSpacer:index", -3,
+	"toolbarLayout:customWidget:CenterRightSpacer:index", -2,
 
-	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferSceneUI.SceneViewUI._StateWidget",
-	"toolbarLayout:customWidget:StateWidget:section", "Top",
-	"toolbarLayout:customWidget:StateWidget:index", -1,
+	"nodeToolbar:right:type", "GafferUI.StandardNodeToolbar.right",
+
+	"toolbarLayout:customWidget:InspectorTopSpacer:widgetType", "GafferSceneUI.SceneViewUI._InspectorTopSpacer",
+	"toolbarLayout:customWidget:InspectorTopSpacer:section", "Right",
+
+	"toolbarLayout:customWidget:Inspector:widgetType", "GafferSceneUI.SceneViewUI._SceneViewInspector",
+	"toolbarLayout:customWidget:Inspector:section", "Right",
+
+	"toolbarLayout:customWidget:InspectorBottomSpacer:widgetType", "GafferSceneUI.SceneViewUI._InspectorBottomSpacer",
+	"toolbarLayout:customWidget:InspectorBottomSpacer:section", "Right",
 
 	plugs = {
 
 		"editScope" : [
 
-			"toolbarLayout:index", -2,
+			"toolbarLayout:index", -1,
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
 
 		],
@@ -190,6 +197,12 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "",
 
 		],
+
+		"inspector" : [
+
+			"plugValueWidget:type", "",
+
+		]
 
 	}
 
@@ -818,6 +831,15 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 			}
 		)
 
+		m.append(
+			"/Show Inspector",
+			{
+				"checkBox" : self.getPlug().node()["inspector"]["visible"].getValue(),
+				"command" : self.getPlug().node()["inspector"]["visible"].setValue,
+				"shortCut" : "I"
+			}
+		)
+
 		return m
 
 ##########################################################################
@@ -899,15 +921,18 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugValueWidgetContextMenu
 # _Spacers
 ##########################################################################
 
-class _LeftSpacer( GafferUI.Spacer ) :
+class _EditScopeBalancingSpacer( GafferUI.Spacer ) :
 
 	def __init__( self, sceneView, **kw ) :
+
+		# EditScope width - pause button - spacer - spinner
+		width = 200 - 25 - 4 - 20
 
 		GafferUI.Spacer.__init__(
 			self,
 			imath.V2i( 0 ), # Minimum
-			maximumSize = imath.V2i( 250, 1 ),
-			preferredSize = imath.V2i( 250, 1 )
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
 		)
 
 class _Spacer( GafferUI.Spacer ) :
@@ -915,6 +940,22 @@ class _Spacer( GafferUI.Spacer ) :
 	def __init__( self, sceneView, **kw ) :
 
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
+
+class _InspectorTopSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, imath.V2i( 1, 26 ) )
+
+class _InspectorBottomSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, sceneView, **kw ) :
+
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( 1, 30 )
+		)
 
 ##########################################################################
 # _StateWidget
@@ -932,8 +973,8 @@ class _StateWidget( GafferUI.Widget ) :
 
 		with row :
 
-			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 			self.__button = GafferUI.Button( hasFrame = False )
+			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 
 		self.__sceneGadget = sceneView.viewportGadget().getPrimaryChild()
 

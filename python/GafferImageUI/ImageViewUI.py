@@ -55,17 +55,21 @@ Gaffer.Metadata.registerNode(
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
-	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
-	"toolbarLayout:customWidget:LeftSpacer:section", "Top",
-	"toolbarLayout:customWidget:LeftSpacer:index", 0,
-
 	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferImageUI.ImageViewUI._StateWidget",
 	"toolbarLayout:customWidget:StateWidget:section", "Top",
-	"toolbarLayout:customWidget:StateWidget:index", -1,
+	"toolbarLayout:customWidget:StateWidget:index", 0,
 
-	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
-	"toolbarLayout:customWidget:RightSpacer:section", "Top",
-	"toolbarLayout:customWidget:RightSpacer:index", -2,
+	"toolbarLayout:customWidget:LeftCenterSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:LeftCenterSpacer:section", "Top",
+	"toolbarLayout:customWidget:LeftCenterSpacer:index", 1,
+
+	"toolbarLayout:customWidget:RightCenterSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
+	"toolbarLayout:customWidget:RightCenterSpacer:section", "Top",
+	"toolbarLayout:customWidget:RightCenterSpacer:index", -2,
+
+	"toolbarLayout:customWidget:StateWidgetBalancingSpacer:widgetType", "GafferImageUI.ImageViewUI._StateWidgetBalancingSpacer",
+	"toolbarLayout:customWidget:StateWidgetBalancingSpacer:section", "Top",
+	"toolbarLayout:customWidget:StateWidgetBalancingSpacer:index", -1,
 
 	"toolbarLayout:customWidget:BottomRightSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
 	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
@@ -84,6 +88,7 @@ Gaffer.Metadata.registerNode(
 			"togglePlugValueWidget:imagePrefix", "clipping",
 			"togglePlugValueWidget:defaultToggleValue", True,
 			"toolbarLayout:divider", True,
+			"toolbarLayout:index", 4,
 
 		],
 
@@ -97,6 +102,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "exposure",
 			"togglePlugValueWidget:defaultToggleValue", 1,
+			"toolbarLayout:index", 5,
 
 		],
 
@@ -110,6 +116,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "gamma",
 			"togglePlugValueWidget:defaultToggleValue", 2,
+			"toolbarLayout:index", 6,
 
 		],
 
@@ -123,6 +130,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"label", "",
 			"toolbarLayout:width", 100,
+			"toolbarLayout:index", 7,
 
 			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
 			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
@@ -146,7 +154,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
-			"toolbarLayout:index", 1,
+			"toolbarLayout:index", 2,
 			"toolbarLayout:width", 175,
 			"label", "",
 
@@ -160,7 +168,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
-			"toolbarLayout:index", 1,
+			"toolbarLayout:index", 3,
 			"toolbarLayout:divider", True,
 			"label", "",
 
@@ -474,6 +482,19 @@ class _Spacer( GafferUI.Spacer ) :
 
 		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 25 ) )
 
+class _StateWidgetBalancingSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		width = 25 + 4 + 20
+		GafferUI.Spacer.__init__(
+			self,
+			imath.V2i( 0 ), # Minimum
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
+		)
+
+
 ## \todo This widget is basically the same as the SceneView and UVView ones. Perhaps the
 # View base class should provide standard functionality for pausing and state, and we could
 # use one standard widget for everything.
@@ -486,8 +507,8 @@ class _StateWidget( GafferUI.Widget ) :
 
 		with row :
 
-			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 			self.__button = GafferUI.Button( hasFrame = False )
+			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 
 		self.__imageGadget = imageView.viewportGadget().getPrimaryChild()
 

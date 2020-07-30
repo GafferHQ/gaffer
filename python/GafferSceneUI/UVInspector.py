@@ -110,7 +110,7 @@ Gaffer.Metadata.registerNode(
 
 	"toolbarLayout:customWidget:StateWidget:widgetType", "GafferSceneUI.UVInspector._StateWidget",
 	"toolbarLayout:customWidget:StateWidget:section", "Top",
-	"toolbarLayout:customWidget:StateWidget:index", -1,
+	"toolbarLayout:customWidget:StateWidget:index", 0,
 
 	plugs = {
 
@@ -157,8 +157,8 @@ class _StateWidget( GafferUI.Widget ) :
 
 		with row :
 
-			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 			self.__button = GafferUI.Button( hasFrame = False )
+			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 
 		self.__uvView = uvView
 

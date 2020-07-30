@@ -55,12 +55,15 @@ for key, value in {
 	"toolbarLayout:customWidget:RenderControlBalancingSpacer:widgetType" : "GafferSceneUI.InteractiveRenderUI._ViewRenderControlBalancingSpacer",
 	"toolbarLayout:customWidget:RenderControlBalancingSpacer:section" :  "Top",
 	"toolbarLayout:customWidget:RenderControlBalancingSpacer:visibilityActivator" : "viewSupportsRenderControl" ,
-	"toolbarLayout:customWidget:RenderControlBalancingSpacer:index" :  0,
+	"toolbarLayout:customWidget:RenderControlBalancingSpacer:index" :  1,
 
 	"toolbarLayout:customWidget:RenderControl:widgetType" : "GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI",
 	"toolbarLayout:customWidget:RenderControl:section" :  "Top",
 	"toolbarLayout:customWidget:RenderControl:visibilityActivator" : "viewSupportsRenderControl" ,
-	"toolbarLayout:customWidget:RenderControl:index" :  -2,
+	"toolbarLayout:customWidget:RenderControl:index" :  -1,
+
+	"toolbarLayout:customWidget:RightCenterSpacer:index" :  -3,
+	"toolbarLayout:customWidget:StateWidgetBalancingSpacer:index" :  -2,
 
 	"toolbarLayout:activator:viewSupportsRenderControl" : lambda view : _ViewRenderControlUI._interactiveRenderNode( view ) is not None,
 
@@ -69,13 +72,14 @@ for key, value in {
 
 class _ViewRenderControlBalancingSpacer( GafferUI.Spacer ) :
 
-	def __init__( self, sceneView, **kw ) :
+	def __init__( self, imageView, **kw ) :
 
+		width = 104
 		GafferUI.Spacer.__init__(
 			self,
 			imath.V2i( 0 ), # Minimum
-			maximumSize = imath.V2i( 100, 1 ),
-			preferredSize = imath.V2i( 100, 1 )
+			preferredSize = imath.V2i( width, 1 ),
+			maximumSize = imath.V2i( width, 1 )
 		)
 
 class _ViewRenderControlUI( GafferUI.Widget ) :

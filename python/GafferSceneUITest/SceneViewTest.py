@@ -46,6 +46,7 @@ import GafferTest
 import GafferUI
 import GafferUITest
 import GafferScene
+import GafferSceneTest
 import GafferSceneUI
 
 class SceneViewTest( GafferUITest.TestCase ) :
@@ -402,6 +403,203 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view["camera"]["lookThroughEnabled"].setValue( False )
 
 		assertDefaultCamera()
+
+	def testInspectorEditability( self ) :
+
+		light = GafferSceneTest.TestLight()
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		editScope1 = Gaffer.EditScope()
+		editScope1.setName( "EditScope1" )
+		editScope1.setup( group["out"] )
+		editScope1["in"].setInput( group["out"] )
+
+		editScope2 = Gaffer.EditScope()
+		editScope2.setName( "EditScope2" )
+		editScope2.setup( editScope1["out"] )
+		editScope2["in"].setInput( editScope1["out"] )
+
+		def inspector( scene, path, parameter, editScope, attribute="light" ) :
+
+			history = GafferScene.SceneAlgo.history( scene["attributes"], path )
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attribute )
+			return GafferSceneUI.SceneViewUI._ParameterInspector( attributeHistory, parameter, editScope )
+
+		# Should be able to edit light directly.
+
+		i = inspector( group["out"], "/group/light", "intensity", None )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), light["parameters"]["intensity"] )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# Even if there is an edit scope in the way
+
+		i = inspector( editScope1["out"], "/group/light", "intensity", None )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), light["parameters"]["intensity"] )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# We shouldn't be able to edit if we've been told to use an EditScope and it isn't in the history.
+
+		i = inspector( group["out"], "/group/light", "intensity", editScope1 )
+		self.assertFalse( i.editable() )
+		self.assertIsNone( i.acquireEdit() )
+		self.assertEqual( i.errorMessage(), "The target Edit Scope 'EditScope1' is not in the scene history." )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# If it is in the history though, and we're told to use it, then we will.
+
+		i = inspector( editScope2["out"], "/group/light", "intensity", editScope2 )
+		self.assertTrue( i.editable() )
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				editScope2, "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
+			)
+		)
+		edit = i.acquireEdit()
+		self.assertIsNotNone( edit )
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				editScope2, "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
+			)
+		)
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# If there's an edit downstream of the EditScope we're asked to use,
+		# then we're allowed to be editable still
+
+		i = inspector( editScope2["out"], "/group/light", "intensity", editScope1 )
+		edit = i.acquireEdit()
+		self.assertTrue( i.editable() )
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireParameterEdit(
+				editScope1, "/group/light", "light", ( "", "intensity" ), createIfNecessary = False
+			)
+		)
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# If there is a source node inside an edit scope, make sure we use that
+
+		editScope1["light2"] = GafferSceneTest.TestLight()
+		editScope1["light2"]["name"].setValue( "light2" )
+		editScope1["parentLight2"] = GafferScene.Parent()
+		editScope1["parentLight2"]["parent"].setValue( "/" )
+		editScope1["parentLight2"]["children"][0].setInput( editScope1["light2"]["out"] )
+		editScope1["parentLight2"]["in"].setInput( editScope1["BoxIn"]["out"] )
+		editScope1["LightEdits"]["in"].setInput( editScope1["parentLight2"]["out"] )
+
+		i = inspector( editScope2["out"], "/light2", "intensity", editScope1 )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), editScope1["light2"]["parameters"]["intensity"] )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# If there is a tweak in the scope's processor make sure we use that
+
+		light2Edit = GafferScene.EditScopeAlgo.acquireParameterEdit(
+			editScope1, "/light2", "light", ( "", "intensity" ), createIfNecessary = True
+		)
+		light2Edit["enabled"].setValue( True )
+
+		i = inspector( editScope2["out"], "/light2", "intensity", editScope1 )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), light2Edit )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# If there is a manual tweak downstream of the scope's scene processor, make sure we use that
+
+		editScope1["tweakLight2"] = GafferScene.ShaderTweaks()
+		editScope1["tweakLight2"]["in"].setInput( editScope1["LightEdits"]["out"] )
+		editScope1["tweakLight2Filter"] = GafferScene.PathFilter()
+		editScope1["tweakLight2Filter"]["paths"].setValue( IECore.StringVectorData( [ "/light2" ] ) )
+		editScope1["tweakLight2"]["filter"].setInput( editScope1["tweakLight2Filter"]["out"] )
+		editScope1["BoxOut"]["in"].setInput( editScope1["tweakLight2"]["out"] )
+
+		editScope1["tweakLight2"]["shader"].setValue( "light" )
+		light2Tweak = GafferScene.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
+		editScope1["tweakLight2"]["tweaks"].addChild( light2Tweak )
+
+		i = inspector( editScope2["out"], "/light2", "intensity", editScope1 )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), light2Tweak )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# If there is a manual tweak outside of an edit scope make sure we use that with no scope
+
+		independentLightTweak = GafferScene.ShaderTweaks()
+		independentLightTweak["in"].setInput( editScope2["out"] )
+		independentLightTweakFilter = GafferScene.PathFilter()
+		independentLightTweakFilter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+		independentLightTweak["filter"].setInput( independentLightTweakFilter["out"] )
+
+		independentLightTweak["shader"].setValue( "light" )
+		lightTweak2 = GafferScene.TweakPlug( "intensity", imath.Color3f( 1, 1, 0 ) )
+		independentLightTweak["tweaks"].addChild( lightTweak2 )
+
+		i = inspector( independentLightTweak["out"], "/group/light", "intensity", None )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), lightTweak2 )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "" )
+
+		# Check warning/error messages
+
+		i = inspector( independentLightTweak["out"], "/group/light", "intensity", editScope2 )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "Parameter has edits downstream in 'ShaderTweaks'." )
+
+		editScope2["enabled"].setValue( False )
+
+		i = inspector( independentLightTweak["out"], "/group/light", "intensity", editScope2 )
+		self.assertFalse( i.editable() )
+		self.assertEqual( i.errorMessage(), "The target Edit Scope 'EditScope2' is disabled." )
+		self.assertEqual( i.warningMessage(), "" )
+
+		editScope2["enabled"].setValue( True )
+		Gaffer.MetadataAlgo.setReadOnly( editScope2, True )
+
+		i = inspector( independentLightTweak["out"], "/light2", "intensity", editScope2 )
+		self.assertFalse( i.editable() )
+		self.assertEqual( i.errorMessage(), "'EditScope2' is locked." )
+		self.assertEqual( i.warningMessage(), "" )
+
+		Gaffer.MetadataAlgo.setReadOnly( editScope2, False )
+		Gaffer.MetadataAlgo.setReadOnly( editScope2["LightEdits"]["edits"], True )
+
+		i = inspector( independentLightTweak["out"], "/light2", "intensity", editScope2 )
+		self.assertFalse( i.editable() )
+		self.assertEqual( i.errorMessage(), "'EditScope2.LightEdits.edits' is locked." )
+		self.assertEqual( i.warningMessage(), "" )
+
+		Gaffer.MetadataAlgo.setReadOnly( editScope2["LightEdits"], True )
+
+		i = inspector( independentLightTweak["out"], "/light2", "intensity", editScope2 )
+		self.assertFalse( i.editable() )
+		self.assertEqual( i.errorMessage(), "'EditScope2.LightEdits' is locked." )
+		self.assertEqual( i.warningMessage(), "" )
+
+		shaderAssignment = GafferScene.ShaderAssignment()
+		s = GafferSceneTest.TestShader()
+		s["type"].setValue( "test:surface" )
+		shaderAssignment["shader"].setInput( s["out"] )
+		shaderAssignment["in"].setInput( independentLightTweak["out"] )
+		shaderAssignmentFilter = GafferScene.PathFilter()
+		shaderAssignmentFilter["paths"].setValue( IECore.StringVectorData( [ "..." ] ) )
+
+		i = inspector( shaderAssignment["out"], "/light2", "c", None, attribute="test:surface" )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.errorMessage(), "" )
+		self.assertEqual( i.warningMessage(), "Edits to 'TestShader' may affect other locations in the scene." )
 
 if __name__ == "__main__":
 	unittest.main()
