@@ -828,7 +828,7 @@ class _EditWindow( GafferUI.Window ) :
 		self.setPosition( position - imath.V2i( size.width() / 2, size.height() / 2 ) )
 
 		textWidget = self.__textWidget( self.__plugValueWidget )
-		if textWidget is not None and textWidget.enabled() :
+		if textWidget is not None :
 			if isinstance( textWidget, GafferUI.TextWidget ) :
 				textWidget.grabFocus()
 				textWidget.setSelection( 0, len( textWidget.getText() ) )
@@ -865,20 +865,28 @@ class _EditWindow( GafferUI.Window ) :
 	@classmethod
 	def __textWidget( cls, plugValueWidget ) :
 
+		def widgetUsable( w ) :
+			return w.visible() and w.enabled() and w.getEditable()
+
+		widget = None
+
 		if isinstance( plugValueWidget, GafferUI.StringPlugValueWidget ) :
-			return plugValueWidget.textWidget()
+			widget = plugValueWidget.textWidget()
 		elif isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-			return plugValueWidget.numericWidget()
+			widget = plugValueWidget.numericWidget()
 		elif isinstance( plugValueWidget, GafferUI.PathPlugValueWidget ) :
-			return plugValueWidget.pathWidget()
+			widget = plugValueWidget.pathWidget()
 		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
-			return plugValueWidget.textWidget()
+			widget = plugValueWidget.textWidget()
+
+		if widget is not None and widgetUsable( widget ) :
+			return widget
 
 		for childPlug in Gaffer.Plug.Range( plugValueWidget.getPlug() ) :
 			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
 			if childWidget is not None :
 				childTextWidget = cls.__textWidget( childWidget )
-				if childTextWidget is not None and childTextWidget.visible() :
+				if childTextWidget is not None :
 					return childTextWidget
 
 		return None
