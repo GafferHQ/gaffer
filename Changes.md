@@ -1,6 +1,10 @@
 0.57.x.x (relative to 0.57.6.0)
 ========
 
+Improvements
+------------
+- Dispatch app : Added support for setting CompoundDataPlug
+
 API
 ---
 
