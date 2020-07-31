@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Dispatch app : Added support for setting CompoundDataPlugs via the `-settings` argument.
+- Viewer : Made light gobos selectable.
 
 API
 ---

@@ -281,7 +281,6 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 		shaderParameters->members()["texture"] = imageData;
 
 		result->addChild( new IECoreGL::QuadPrimitive( 1.0f, 1.0f ) );
-		result->getState()->add( new IECoreGL::Primitive::Selectable( false ) );
 	}
 
 	result->getState()->add(
