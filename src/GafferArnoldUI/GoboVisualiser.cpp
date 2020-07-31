@@ -45,6 +45,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
+#include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/QuadPrimitive.h"
@@ -70,6 +71,29 @@ using namespace GafferArnoldUI::Private;
 
 namespace
 {
+
+// \todo Borrowed from StandardLightVisualiser, we need to extract these static
+// methods into some general visualiser helpers utility.
+IECoreGL::RenderablePtr quadWireframe( const V2f &size )
+{
+	IntVectorDataPtr vertsPerCurveData = new IntVectorData;
+	V3fVectorDataPtr pData = new V3fVectorData;
+
+	vector<int> &vertsPerCurve = vertsPerCurveData->writable();
+	vector<V3f> &p = pData->writable();
+
+	vertsPerCurve.push_back( 4 );
+	p.push_back( V3f( -size.x/2, -size.y/2, 0  ) );
+	p.push_back( V3f( size.x/2, -size.y/2, 0  ) );
+	p.push_back( V3f( size.x/2, size.y/2, 0  ) );
+	p.push_back( V3f( -size.x/2, size.y/2, 0  ) );
+
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+
+	return curves;
+}
 
 /// \todo We have similar methods in several places. Can we consolidate them all somewhere? Perhaps a new
 /// method of CompoundData?
@@ -131,7 +155,7 @@ CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
 OSLTextureCache g_oslTextureCache( getter, 1024 * 1024 * 64 );
 
-const char *goboFragSource()
+const char *texturedFragSource()
 {
 	return
 		"#if __VERSION__ <= 120\n"
@@ -151,6 +175,17 @@ const char *goboFragSource()
 		"}"
 	;
 }
+
+const char *constantFragSource()
+{
+	return
+		"void main()"
+		"{"
+			"gl_FragColor = vec4( 1.0, 0.835, 0.07, 1 );"
+		"}"
+	;
+}
+
 
 class GoboVisualiser final : public LightFilterVisualiser
 {
@@ -187,51 +222,66 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 {
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
-	const ShaderNetwork::Parameter slideMapInput = shaderNetwork->input( ShaderNetwork::Parameter( shaderNetwork->getOutput().shader, "slidemap" ) );
-
-	CompoundDataPtr imageData = new CompoundData;
-	if( slideMapInput )
-	{
-		const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
-		const int resolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : 512;
-
-		try
-		{
-			const OSLTextureCacheGetterKey key( slideMapInput, shaderNetwork, resolution );
-			if( CompoundDataPtr shadedImageData = g_oslTextureCache.get( key ) )
-			{
-				imageData = shadedImageData;
-			}
-		}
-		catch( const Exception &e )
-		{
-			// The osl evaluation system didn't work, but we just want to paint a
-			// white gobo in these cases instead of failing completely.
-			msg( Msg::Warning, "GoboVisualiser", e.what() );
-		}
-	}
+	const StringData *visualiserDrawingModeData = attributes->member<StringData>( "gl:light:drawingMode" );
+	const std::string visualiserDrawingMode = visualiserDrawingModeData ? visualiserDrawingModeData->readable() : "texture";
 
 	const CompoundData *filterParameters = shaderNetwork->outputShader()->parametersData();
 
-	if( imageData->readable().empty() )
-	{
-		const Color3f goboColor = parameterOrDefault( filterParameters, "slidemap", Color3f( 1 ) );
-
-		Box2iDataPtr singlePixelWindow = new Box2iData( { V2i( 0.0f ), V2i( 0.0f ) } );
-		imageData->writable()["dataWindow"] = singlePixelWindow;
-		imageData->writable()["displayWindow"] = singlePixelWindow;
-
-		CompoundDataPtr channels = new CompoundData;
-		channels->writable()["R"] = new FloatVectorData( { goboColor[0] } );
-		channels->writable()["G"] = new FloatVectorData( { goboColor[1] } );
-		channels->writable()["B"] = new FloatVectorData( { goboColor[2] } );
-		imageData->writable()["channels"] = channels;
-	}
-
-	result->getState()->add( new IECoreGL::Primitive::Selectable( false ) );
-
 	IECore::CompoundObjectPtr shaderParameters = new CompoundObject;
-	shaderParameters->members()["texture"] = imageData;
+
+	if( visualiserDrawingMode == "wireframe" )
+	{
+		result->addChild( quadWireframe( V2f( 1.0f ) ) );
+	}
+	else
+	{
+		CompoundDataPtr imageData = new CompoundData;
+
+		if( visualiserDrawingMode == "texture" )
+		{
+			const ShaderNetwork::Parameter slideMapInput = shaderNetwork->input( ShaderNetwork::Parameter( shaderNetwork->getOutput().shader, "slidemap" ) );
+
+			if( slideMapInput )
+			{
+				const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
+				const int resolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : 512;
+
+				try
+				{
+					const OSLTextureCacheGetterKey key( slideMapInput, shaderNetwork, resolution );
+					if( CompoundDataPtr shadedImageData = g_oslTextureCache.get( key ) )
+					{
+						imageData = shadedImageData;
+					}
+				}
+				catch( const Exception &e )
+				{
+					// The osl evaluation system didn't work, but we just want to paint a
+					// white gobo in these cases instead of failing completely.
+					msg( Msg::Warning, "GoboVisualiser", e.what() );
+				}
+			}
+		}
+
+		if( imageData->readable().empty() )
+		{
+			const Color3f goboColor = parameterOrDefault( filterParameters, "slidemap", Color3f( 1 ) );
+
+			Box2iDataPtr singlePixelWindow = new Box2iData( { V2i( 0.0f ), V2i( 0.0f ) } );
+			imageData->writable()["dataWindow"] = singlePixelWindow;
+			imageData->writable()["displayWindow"] = singlePixelWindow;
+
+			CompoundDataPtr channels = new CompoundData;
+			channels->writable()["R"] = new FloatVectorData( { goboColor[0] } );
+			channels->writable()["G"] = new FloatVectorData( { goboColor[1] } );
+			channels->writable()["B"] = new FloatVectorData( { goboColor[2] } );
+			imageData->writable()["channels"] = channels;
+		}
+
+		shaderParameters->members()["texture"] = imageData;
+
+		result->addChild( new IECoreGL::QuadPrimitive( 1.0f, 1.0f ) );
+	}
 
 	result->getState()->add(
 		new IECoreGL::ShaderStateComponent(
@@ -239,7 +289,7 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 			TextureLoader::defaultTextureLoader(),
 			"",
 			"",
-			goboFragSource(),
+			visualiserDrawingMode == "wireframe" ? constantFragSource() : texturedFragSource(),
 			shaderParameters
 		)
 	);
@@ -270,8 +320,6 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 	goboTrans.translate( V3f( offset.x, offset.y, 0.0f ) );
 
 	result->setTransform( goboTrans );
-
-	result->addChild( new IECoreGL::QuadPrimitive( 1.0f, 1.0f ) );
 
 	return { Visualisation::createOrnament( result, true ) };
 }
