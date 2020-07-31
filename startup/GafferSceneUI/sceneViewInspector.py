@@ -55,7 +55,7 @@ for p in [ "exposure", "intensity", "radiance", "irradiance", "inner_angle", "ou
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "as:light", p )
 
 
-# OSL
+# OSL
 
 for p in [ "exposure", "i_color", "radius", "roundness", "spread", "coneAngle", "penumbraAngle", "image" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "osl:light", p )
