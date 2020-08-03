@@ -426,26 +426,28 @@ class _ParameterInspector( object ) :
 
 		return self.__errorMessage if self.__errorMessage is not None else ""
 
-	## \todo This is a copy of TransformTool::spreadsheetAwareSource, and is
-	# eerily similar to Dispatcher::computedSource and others. This needs
+	## \todo This is a modified copy of TransformTool::spreadsheetAwareSource,
+	# and is eerily similar to Dispatcher::computedSource and others. This needs
 	# factoring out into some general contextAwareSource method that can be
 	# shared by all these.
+	# In this case, we also need to make sure we never return an output plug,
+	# such as when it is connected to an anim curve.
 	def __spreadsheetAwareSource( self, plug ) :
 
-		plug = plug.source()
+		source = plug.source()
+		spreadsheet = source.node()
 
-		spreadsheet = plug.node()
 		if not isinstance( spreadsheet, Gaffer.Spreadsheet ) :
-			return plug
+			return sourceInput( plug )
 
-		if not spreadsheet["out"].isAncestorOf( plug ) :
-			return pluge
+		if not spreadsheet["out"].isAncestorOf( source ) :
+			return sourceInput( plug )
 
-		plug = spreadsheet.activeInPlug( plug )
-		if plug.ancestor( Gaffer.Spreadsheet.RowPlug ).isSame( spreadsheet["rows"].defaultRow() ) :
+		valuePlug = spreadsheet.activeInPlug( source )
+		if valuePlug.ancestor( Gaffer.Spreadsheet.RowPlug ).isSame( spreadsheet["rows"].defaultRow() ) :
 			return None
 
-		return plug.source()
+		return sourceInput( valuePlug )
 
 	def __editFromSceneNode( self, attributeHistory ) :
 
@@ -1002,6 +1004,18 @@ class _ValueWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
+
+# Determines the source _input_ to an input plug. Plug.source() may give us an
+# output in the case of an animation node, etc.
+## \todo Factor in when implementing contextAwareSource.
+def sourceInput( plug ) :
+
+	result = plug
+	while plug is not None :
+		if plug.direction() is Gaffer.Plug.Direction.In :
+			result = plug
+		plug = plug.getInput()
+	return result
 
 # Utility in the spirit of `all()` and `any()`. If all values in `sequence`
 # are equal, returns that value, otherwise returns `None`.
