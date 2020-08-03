@@ -45,8 +45,8 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MultiplyNode )
 
 size_t MultiplyNode::g_firstPlugIndex = 0;
 
-MultiplyNode::MultiplyNode( const std::string &name )
-	:	ComputeNode( name )
+MultiplyNode::MultiplyNode( const std::string &name, bool brokenAffects )
+	:	ComputeNode( name ), m_brokenAffects( brokenAffects )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new IntPlug( "op1" ) );
@@ -91,6 +91,11 @@ const Gaffer::IntPlug *MultiplyNode::productPlug() const
 void MultiplyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
+
+	if( m_brokenAffects && input == op2Plug() )
+	{
+		return;
+	}
 
 	if( input == op1Plug() || input == op2Plug() )
 	{

@@ -180,6 +180,22 @@ class GAFFER_API ValuePlug : public Plug
 		/// > Note : Clearing occurs on a per-thread basis as and when
 		/// > each thread next accesses the cache.
 		static void clearHashCache();
+
+		/// The standard hash cache mode relies on correctly implemented
+		/// affects() methods to selectively clear the cache for dirtied
+		/// plugs.  If you have incorrect affects() methods, you can use
+		/// "Legacy", which pessimisticly dirties all hash cache entries
+		/// when something changes, or "Checked" which helps identify
+		/// bad affects() methods by throwing exceptions.
+		enum class HashCacheMode
+		{
+			Standard,
+			Checked,
+			Legacy
+		};
+		static void setHashCacheMode( HashCacheMode hashCacheMode );
+		static HashCacheMode getHashCacheMode();
+
 		//@}
 
 	protected :

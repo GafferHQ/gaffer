@@ -140,7 +140,17 @@ void GafferModule::bindValuePlug()
 		.staticmethod( "setHashCacheSizeLimit" )
 		.def( "clearHashCache", &ValuePlug::clearHashCache )
 		.staticmethod( "clearHashCache" )
+		.def( "getHashCacheMode", &ValuePlug::getHashCacheMode )
+		.staticmethod( "getHashCacheMode" )
+		.def( "setHashCacheMode", &ValuePlug::setHashCacheMode )
+		.staticmethod( "setHashCacheMode" )
 		.def( "__repr__", &repr )
+	;
+
+	enum_<ValuePlug::HashCacheMode>( "HashCacheMode" )
+		.value( "Standard", ValuePlug::HashCacheMode::Standard )
+		.value( "Checked", ValuePlug::HashCacheMode::Checked )
+		.value( "Legacy", ValuePlug::HashCacheMode::Legacy )
 	;
 
 	enum_<ValuePlug::CachePolicy>( "CachePolicy" )

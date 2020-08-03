@@ -65,7 +65,15 @@ static void testMetadataThreadingWrapper()
 BOOST_PYTHON_MODULE( _GafferTest )
 {
 
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
+	GafferBindings::DependencyNodeClass<MultiplyNode>()
+		.def( init<const char *, bool>(
+				(
+					boost::python::arg_( "name" ),
+					boost::python::arg_( "brokenAffects" )=false
+				)
+			)
+		);
+
 
 	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
 	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
