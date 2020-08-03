@@ -45,6 +45,8 @@ import GafferUI
 import GafferImage
 import GafferImageUI
 
+
+
 ##########################################################################
 # Metadata registration.
 ##########################################################################
@@ -74,6 +76,8 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:BottomRightSpacer:widgetType", "GafferImageUI.ImageViewUI._Spacer",
 	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:BottomRightSpacer:index", 2,
+
+	"layout:activator:gpuAvailable", lambda node : ImageViewUI.createDisplayTransform( node["displayTransform"].getValue() ).isinstance( GafferImage.OpenColorIOTransform ),
 
 	plugs = {
 
@@ -136,6 +140,20 @@ Gaffer.Metadata.registerNode(
 			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
 
 		],
+
+		"lutGPU" : [
+			"description",
+			"""
+			Controls whether to use the fast GPU path for applying exposure, gamma, and displayTransform.
+			Much faster, but may suffer loss of accuracy in some corner cases.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
+			"toolbarLayout:index", 8,
+			"label", "",
+			"layout:activator", "gpuAvailable",
+		],
+
 
 		"colorInspector" : [
 
@@ -463,6 +481,85 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
 					"checkBox" : soloChannel == value
+				}
+			)
+
+		return m
+
+	def __setValue( self, value, *unused ) :
+
+		self.getPlug().setValue( value )
+
+##########################################################################
+# _LutGPUPlugValueWidget
+##########################################################################
+
+class _LutGPUPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__button = GafferUI.MenuButton(
+			image = "lutGPU.png",
+			hasFrame = False,
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__menuDefinition ),
+				title = "LUT Mode",
+			)
+		)
+
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+
+		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
+
+		self._updateFromPlug()
+
+	def getToolTip( self ) :
+		text = "# LUT Mode\n\n"
+		if self.__button.getEnabled():
+			if self.getPlug().getValue():
+				text += "Running LUT on GPU ( fast mode )."
+			else:
+				text += "Running LUT on CPU ( slow but accurate mode )."
+			text += "\n\nAlt+G to toggle"
+		else:
+			text += "GPU not supported by current DisplayTransform"
+		return text
+
+	def __plugSet( self, plug ) :
+		n = plug.node()
+		if plug == n["displayTransform"] :
+			self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		with self.getContext() :
+			gpuSupported = isinstance(
+				GafferImageUI.ImageView.createDisplayTransform( self.getPlug().node()["displayTransform"].getValue() ),
+				GafferImage.OpenColorIOTransform
+			)
+
+			gpuOn = gpuSupported and self.getPlug().getValue()
+			self.__button.setImage( "lutGPU.png" if gpuOn else "lutCPU.png" )
+			self.__button.setEnabled( gpuSupported )
+
+	def __menuDefinition( self ) :
+
+		with self.getContext() :
+			lutGPU = self.getPlug().getValue()
+
+		n = self.getPlug().node()["displayTransform"].getValue()
+		gpuSupported = isinstance( GafferImageUI.ImageView.createDisplayTransform( n ), GafferImage.OpenColorIOTransform )
+		m = IECore.MenuDefinition()
+		for name, value in [
+			( "GPU (fast)", True ),
+			( "CPU (accurate)", False )
+		] :
+			m.append(
+				"/" + name,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
+					"checkBox" : lutGPU == value,
+					"active" : gpuSupported
 				}
 			)
 

@@ -56,7 +56,10 @@ Gaffer.Metadata.registerNode(
 			Defines the scene used for the shader preview.
 			""",
 			"plugValueWidget:type", "GafferSceneUI.ShaderViewUI._ScenePlugValueWidget",
+		],
 
+		"lutGPU" : [
+			"divider", True
 		],
 
 	}

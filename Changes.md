@@ -8,6 +8,7 @@ Features
 
 - InteractiveRender : Added message log to the node's UI, displaying output from the last render (#3419).
 - Viewer : Added a floating inspector to allow quick inspection and editing of lights and other shaders (#3661).
+- Viewer : Added GPU support for gamma/exposure and OCIO display transforms.
 
 Improvements
 ------------
@@ -105,6 +106,7 @@ API
 - MetadataAlgo : Added `readOnlyReason`, returning the outer-most `GraphComponent` that causes the specified component to be read-only.
 - EditScopeAlgo : Added `prunedReadOnlyReason`, `transformEditReadOnlyReason` and `parameterEditReadOnlyReason` to determine the outer-most `GraphComponent` causing and edit (or potential edit) to be read-only.
 - Window : Changed `setPosition` such that the whole window will remain on screen. Set `forcePosition` to `False` to disable this behaviour.
+- ImageGadget : Added support for GPU-based clipping, exposure, gamma and display transform.
 
 Breaking Changes
 ----------------

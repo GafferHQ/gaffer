@@ -166,6 +166,8 @@
 		'scrollToBottom',
 		"editOn",
 		"editOff",
-		"editDisabled"
+		"editDisabled",
+		"lutGPU",
+		"lutCPU",
 	]
 }

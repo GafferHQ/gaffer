@@ -100,6 +100,9 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		Gaffer::StringPlug *displayTransformPlug();
 		const Gaffer::StringPlug *displayTransformPlug() const;
 
+		Gaffer::BoolPlug *lutGPUPlug();
+		const Gaffer::BoolPlug *lutGPUPlug() const;
+
 		void setContext( Gaffer::ContextPtr context ) override;
 
 		typedef std::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
@@ -121,18 +124,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		void insertConverter( Gaffer::NodePtr converter );
 
 	private :
-
-		GafferImage::DeepState *deepStateNode();
-		const GafferImage::DeepState *deepStateNode() const;
-
-		GafferImage::Clamp *clampNode();
-		const GafferImage::Clamp *clampNode() const;
-
-		GafferImage::Grade *gradeNode();
-		const GafferImage::Grade *gradeNode() const;
-
-		GafferImage::ImageProcessor *displayTransformNode();
-		const GafferImage::ImageProcessor *displayTransformNode() const;
 
 		void plugSet( Gaffer::Plug *plug );
 		bool keyPress( const GafferUI::KeyEvent &event );

@@ -551,7 +551,7 @@ class TextureGadget : public GafferUI::Gadget
 				processor = it->second;
 			}
 
-			imageGadget()->setImage( processor ? processor->outPlug() : m_resize->outPlug() );
+			imageGadget()->setDisplayTransform( processor );
 			m_displayTransform = name;
 		}
 
@@ -633,6 +633,8 @@ UVView::UVView( const std::string &name )
 	plugDirtiedSignal().connect( boost::bind( &UVView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &UVView::preRender, this ) );
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &UVView::visibilityChanged, this ) );
+
+	updateDisplayTransform();
 }
 
 UVView::~UVView()

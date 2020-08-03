@@ -68,6 +68,11 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
 
+		/// Derived classes must implement this to return a valid OpenColorIO
+		/// Transform which can be used by an OpenColorIO Processor or a null
+		/// pointer if no processing should take place.
+		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
+
 	protected :
 
 		OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>(), bool withContextPlug=false );
@@ -96,10 +101,6 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		virtual bool affectsTransform( const Gaffer::Plug *input ) const = 0;
 		/// Derived classes must implement this to compute the hash for the transform.
 		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
-		/// Derived classes must implement this to return a valid OpenColorIO
-		/// Transform which can be used by an OpenColorIO Processor or a null
-		/// pointer if no processing should take place.
-		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
 
 	private :
 

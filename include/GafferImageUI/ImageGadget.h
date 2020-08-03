@@ -40,7 +40,11 @@
 #include "GafferImageUI/Export.h"
 #include "GafferImageUI/TypeIds.h"
 
+#include "GafferImage/Clamp.h"
+#include "GafferImage/DeepState.h"
 #include "GafferImage/Format.h"
+#include "GafferImage/Grade.h"
+#include "GafferImage/ImageProcessor.h"
 
 #include "GafferUI/Gadget.h"
 
@@ -49,6 +53,9 @@
 #include "IECore/Canceller.h"
 #include "IECore/MurmurHash.h"
 #include "IECore/VectorTypedData.h"
+#include "IECoreGL/Shader.h"
+
+#include "OpenColorIO/OpenColorIO.h"
 
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/spin_mutex.h"
@@ -94,7 +101,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		Imath::Box3f bound() const override;
 
-		void setImage( GafferImage::ConstImagePlugPtr image );
+		void setImage( GafferImage::ImagePlugPtr image );
 		const GafferImage::ImagePlug *getImage() const;
 
 		void setContext( Gaffer::ContextPtr context );
@@ -117,6 +124,21 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		/// -1 to show a colour image as usual.
 		void setSoloChannel( int index );
 		int getSoloChannel() const;
+
+		void setClipping( bool clipping );
+		bool getClipping() const;
+
+		void setExposure( float exposure );
+		float getExposure() const;
+
+		void setGamma( float gamma );
+		float getGamma() const;
+
+		void setDisplayTransform( GafferImage::ImageProcessorPtr displayTransform );
+		GafferImage::ConstImageProcessorPtr getDisplayTransform() const;
+
+		void setUseGPU( bool useGPU );
+		bool getUseGPU() const;
 
 		void setLabelsVisible( bool visible );
 		bool getLabelsVisible() const;
@@ -149,7 +171,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( const IECore::InternedString &name );
 
-		GafferImage::ConstImagePlugPtr m_image;
+		GafferImage::ImagePlugPtr m_image;
 		Gaffer::ContextPtr m_context;
 
 		boost::signals::scoped_connection m_plugDirtiedConnection;
@@ -160,6 +182,25 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Channels m_rgbaChannels;
 		int m_soloChannel;
 		ImageGadgetSignal m_channelsChangedSignal;
+
+		bool m_clipping;
+		float m_exposure;
+		float m_gamma;
+
+		GafferImage::DeepStatePtr m_deepStateNode;
+		GafferImage::ClampPtr m_clampNode;
+		GafferImage::GradePtr m_gradeNode;
+		GafferImage::ImageProcessorPtr m_displayTransform;
+		OpenColorIO::ConstTransformRcPtr m_gpuOcioTransform;
+
+		IECoreGL::Shader *shader( bool dirty, const OpenColorIO::ConstTransformRcPtr& transform, GLuint &lut3d_textureID ) const;
+		mutable GLuint m_lut3dTextureID;
+		mutable IECoreGL::ShaderPtr m_shader;
+
+		mutable bool m_shaderDirty;
+
+
+		bool m_useGPU;
 		bool m_labelsVisible;
 		bool m_paused;
 		ImageGadgetSignal m_stateChangedSignal;
