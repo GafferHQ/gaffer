@@ -107,6 +107,7 @@ API
 - EditScopeAlgo : Added `prunedReadOnlyReason`, `transformEditReadOnlyReason` and `parameterEditReadOnlyReason` to determine the outer-most `GraphComponent` causing and edit (or potential edit) to be read-only.
 - Window : Changed `setPosition` such that the whole window will remain on screen. Set `forcePosition` to `False` to disable this behaviour.
 - ImageGadget : Added support for GPU-based clipping, exposure, gamma and display transform.
+- GafferSceneTest : Added `exposure` `FloatPlug` to `TestLight`.
 
 Breaking Changes
 ----------------
