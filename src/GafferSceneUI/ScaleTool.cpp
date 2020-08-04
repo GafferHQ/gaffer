@@ -57,34 +57,6 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 
 //////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-M44f signOnlyScaling( const M44f &m )
-{
-	V3f scale;
-	V3f shear;
-	V3f rotate;
-	V3f translate;
-
-	extractSHRT( m, scale, shear, rotate, translate );
-
-	M44f result;
-
-	result.translate( translate );
-	result.rotate( rotate );
-	result.shear( shear );
-	result.scale( V3f( sign( scale.x ), sign( scale.y ), sign( scale.z ) ) );
-
-	return result;
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // ScaleTool
 //////////////////////////////////////////////////////////////////////////
 
@@ -126,20 +98,8 @@ bool ScaleTool::affectsHandles( const Gaffer::Plug *input ) const
 
 void ScaleTool::updateHandles( float rasterScale )
 {
-	const Selection &primarySelection = this->selection().back();
-
-	V3f translate, rotate, scale, pivot;
-	const M44f transform = primarySelection.transform( translate, rotate, scale, pivot );
-
-	M44f handlesMatrix = M44f().translate( pivot ) * transform * primarySelection.sceneToTransformSpace().inverse();
-	// We want to take the sign of the scaling into account so that
-	// our handles point in the right direction. But we don't want
-	// the magnitude because a non-uniform handle scale breaks the
-	// operation of the xy/xz/yz handles.
-	handlesMatrix = signOnlyScaling( handlesMatrix );
-
 	handles()->setTransform(
-		handlesMatrix
+		this->selection().back().orientedTransform( Local )
 	);
 
 	for( ScaleHandleIterator it( handles() ); !it.done(); ++it )

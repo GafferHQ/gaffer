@@ -78,6 +78,25 @@ using namespace GafferSceneUI;
 namespace
 {
 
+M44f signOnlyScaling( const M44f &m )
+{
+	V3f scale;
+	V3f shear;
+	V3f rotate;
+	V3f translate;
+
+	extractSHRT( m, scale, shear, rotate, translate );
+
+	M44f result;
+
+	result.translate( translate );
+	result.rotate( rotate );
+	result.shear( shear );
+	result.scale( V3f( Imath::sign( scale.x ), Imath::sign( scale.y ), Imath::sign( scale.z ) ) );
+
+	return result;
+}
+
 int filterResult( const FilterPlug *filter, const ScenePlug *scene )
 {
 	FilterPlug::SceneScope scope( Context::current(), scene );
@@ -618,7 +637,7 @@ Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation
 		}
 	}
 
-	result = sansScaling( result );
+	result = signOnlyScaling( result );
 
 	// And reset the translation to put it where the pivot is
 

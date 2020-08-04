@@ -320,6 +320,43 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	def testNegativeScale( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["scale"]["x"].setValue( -10 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		# We want the direction of the handles to reflect the
+		# flipped scale, but not its magnitude.
+
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				imath.M44f().scale( imath.V3f( -1, 1, 1 ) ),
+				0.000001
+			)
+		)
+
+		# And the handles need to move the object in the right
+		# direction still.
+
+		tool.translate( imath.V3f( 1, 2, 3 ) )
+
+		self.assertTrue(
+			script["plane"]["transform"]["translate"].getValue().equalWithAbsError(
+				imath.V3f(-1, 2, 3),
+				0.000001
+			)
+		)
+
 	def testGroup( self ) :
 
 		script = Gaffer.ScriptNode()
