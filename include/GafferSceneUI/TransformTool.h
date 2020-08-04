@@ -187,6 +187,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 				Gaffer::EditScopePtr m_editScope;
 				mutable boost::optional<TransformEdit> m_transformEdit;
 				Imath::M44f m_transformSpace;
+				bool m_aimConstraint;
 
 		};
 

@@ -1209,5 +1209,14 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+		# Check translation operation
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		tool.translate( imath.V3f( 1, 2, 3 ) )
+		self.assertEqual(
+			script["cube"]["transform"]["translate"].getValue(),
+			imath.V3f( 1, 2, 3 )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

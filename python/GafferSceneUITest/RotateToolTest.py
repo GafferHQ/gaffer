@@ -403,5 +403,8 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Local )
 		self.assertEqual( tool.handlesTransform(), script["constraint"]["out"].transform( "/sphere" ) )
 
+		tool.rotate( imath.Eulerf( 0, 90, 0 ) )
+		self.assertEqual( script["sphere"]["transform"]["rotate"].getValue(), imath.V3f( 0, 90, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()

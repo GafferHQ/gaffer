@@ -39,6 +39,7 @@
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/ContextAlgo.h"
 
+#include "GafferScene/AimConstraint.h"
 #include "GafferScene/EditScopeAlgo.h"
 #include "GafferScene/Group.h"
 #include "GafferScene/ObjectSource.h"
@@ -213,7 +214,7 @@ TransformTool::Selection::Selection(
 	const Gaffer::ConstContextPtr &context,
 	const Gaffer::EditScopePtr &editScope
 )
-	:	m_scene( scene ), m_path( path ), m_context( context ), m_editable( false ), m_editScope( editScope )
+	:	m_scene( scene ), m_path( path ), m_context( context ), m_editable( false ), m_editScope( editScope ), m_aimConstraint( false )
 {
 	Context::Scope scopedContext( context.get() );
 	if( path.empty() )
@@ -273,6 +274,8 @@ TransformTool::Selection::Selection(
 
 void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::History *history )
 {
+	// Check for SceneNode and return if there isn't one or it is disabled.
+
 	const SceneNode *node = runTimeCast<const SceneNode>( history->scene->node() );
 	if( !node )
 	{
@@ -284,6 +287,22 @@ void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::
 	{
 		return;
 	}
+
+	// Check for AimConstraints. These must be accounted for in `sceneToTransformSpace()`.
+
+	if( auto constraint = runTimeCast<const AimConstraint>( node ) )
+	{
+		if(
+			history->scene == constraint->outPlug() &&
+			( filterResult( constraint->filterPlug(), constraint->inPlug() ) & PathMatcher::ExactMatch )
+		)
+		{
+			m_aimConstraint = true;
+			return;
+		}
+	}
+
+	// Determine if node edits the transform at this location.
 
 	TransformPlug *transformPlug = nullptr;
 	if( const ObjectSource *objectSource = runTimeCast<const ObjectSource>( node ) )
@@ -587,23 +606,50 @@ Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 	//   to the parent location.
 	//
 	// To account for this we align the two scenes by finding the
-	// difference between the parent transforms of `path()` and
+	// difference between the full transforms of `path()` and
 	// `upstreamPath()`.
+	//
+	// This is made trickier by the presence of AimConstraints
+	// between `upstreamScene()` and `scene()`. These overwrite
+	// the local rotation from upstream, meaning we no longer have
+	// a direct correspondence between the upstream and downstream
+	// spaces. In this event we omit the local matrix entirely by
+	// aligning the parent transforms instead.
+	//
+	// \todo I suspect the truth of the situation is more nuanced
+	// than this and the correct approach depends on the type of
+	// constraint and its order of composition with the edits we make
+	// to the upstream transform. We are fortunate to be able to ignore
+	// PointConstraints for now because we only transform direction vectors
+	// with `sceneToTransformSpace()`. I'm sure there is a more principled
+	// approach than the blunt instrument used here.
 
 	M44f downstreamMatrix;
-	if( path().size() )
 	{
-		ScenePlug::ScenePath parentPath = path(); parentPath.pop_back();
 		Context::Scope scopedContext( context() );
-		downstreamMatrix = scene()->fullTransform( parentPath );
+		if( !m_aimConstraint )
+		{
+			downstreamMatrix = scene()->fullTransform( path() );
+		}
+		else if( path().size() )
+		{
+			ScenePlug::ScenePath parentPath = path(); parentPath.pop_back();
+			downstreamMatrix = scene()->fullTransform( parentPath );
+		}
 	}
 
 	M44f upstreamMatrix;
-	if( upstreamPath().size() )
 	{
-		ScenePlug::ScenePath upstreamParentPath = upstreamPath(); upstreamParentPath.pop_back();
 		Context::Scope scopedContext( upstreamContext() );
-		upstreamMatrix = upstreamScene()->fullTransform( upstreamParentPath );
+		if( !m_aimConstraint )
+		{
+			upstreamMatrix = upstreamScene()->fullTransform( upstreamPath() );
+		}
+		else if( upstreamPath().size() )
+		{
+			ScenePlug::ScenePath upstreamParentPath = upstreamPath(); upstreamParentPath.pop_back();
+			upstreamMatrix = upstreamScene()->fullTransform( upstreamParentPath );
+		}
 	}
 
 	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace().inverse();
