@@ -1156,5 +1156,58 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			imath.V3f( 0, 10, 10 )
 		)
 
+	def testInteractionWithParentConstraints( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Cube with identity transform, parent constrained to sphere
+		# rotated 90 around X and translated to ( 5, 5, 0 ).
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["rotate"]["x"].setValue( 90 )
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 5, 5, 0 ) )
+
+		script["cube"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["parent"].setValue( "/" )
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/sphere" )
+
+		self.assertEqual(
+			script["constraint"]["out"].fullTransform( "/cube" ),
+			script["constraint"]["out"].fullTransform( "/sphere" )
+		)
+
+		# View and Tool
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		# Check handle orientation
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		self.assertEqual( tool.handlesTransform(), script["constraint"]["out"].fullTransform( "/cube" ) )
+
+		tool["orientation"].setValue( tool.Orientation.Parent )
+		self.assertEqual(
+			tool.handlesTransform(),
+			imath.M44f().translate(
+				script["constraint"]["out"].fullTransform( "/cube" ).translation()
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()

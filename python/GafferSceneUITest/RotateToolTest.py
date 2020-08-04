@@ -332,5 +332,76 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			imath.M44f().translate( imath.V3f( 1, 0, 0 ) ).rotate( imath.V3f( 0, math.pi / 2, 0 ) ),
 		)
 
+	def testInteractionWithPointConstraint( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 5, 5, 0 ) )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["sphereFilter"] = GafferScene.PathFilter()
+		script["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["constraint"] = GafferScene.PointConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/cube" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		for orientation in ( tool.Orientation.Local, tool.Orientation.Parent, tool.Orientation.World ) :
+			tool["orientation"].setValue( orientation )
+			self.assertEqual( tool.handlesTransform(), imath.M44f().translate( script["cube"]["transform"]["translate"].getValue() ) )
+
+	def testInteractionWithParentConstraint( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 5, 5, 0 ) )
+		script["cube"]["transform"]["rotate"]["x"].setValue( 90 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["sphereFilter"] = GafferScene.PathFilter()
+		script["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/cube" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		tool["orientation"].setValue( tool.Orientation.Parent )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( script["cube"]["transform"]["translate"].getValue() ) )
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		self.assertEqual( tool.handlesTransform(), script["constraint"]["out"].transform( "/sphere" ) )
+
 if __name__ == "__main__":
 	unittest.main()

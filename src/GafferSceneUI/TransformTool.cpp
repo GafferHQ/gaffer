@@ -609,6 +609,25 @@ Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace().inverse();
 }
 
+Imath::M44f TransformTool::Selection::transformToLocalSpace() const
+{
+	throwIfNotEditable();
+
+	M44f downstreamMatrix;
+	{
+		Context::Scope scopedContext( context() );
+		downstreamMatrix = scene()->fullTransform( path() );
+	}
+
+	M44f upstreamMatrix;
+	{
+		Context::Scope scopedContext( upstreamContext() );
+		upstreamMatrix = upstreamScene()->fullTransform( upstreamPath() );
+	}
+
+	return transformSpace() * upstreamMatrix.inverse() * downstreamMatrix;
+}
+
 Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation ) const
 {
 	throwIfNotEditable();
@@ -645,7 +664,7 @@ Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation
 	transform( translate, rotate, scale, pivot );
 
 	const V3f transformSpacePivot = pivot + translate;
-	const V3f downstreamWorldPivot = transformSpacePivot * sceneToTransformSpace().inverse();
+	const V3f downstreamWorldPivot = transformSpacePivot * transformToLocalSpace();
 
 	result[3][0] = downstreamWorldPivot[0];
 	result[3][1] = downstreamWorldPivot[1];

@@ -172,6 +172,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 				void initFromSceneNode( const GafferScene::SceneAlgo::History *history );
 				void initWalk( const GafferScene::SceneAlgo::History *history, bool &editScopeFound );
 				void throwIfNotEditable() const;
+				Imath::M44f transformToLocalSpace() const;
 
 				GafferScene::ConstScenePlugPtr m_scene;
 				GafferScene::ScenePlug::ScenePath m_path;
