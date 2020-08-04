@@ -406,5 +406,124 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool.rotate( imath.Eulerf( 0, 90, 0 ) )
 		self.assertEqual( script["sphere"]["transform"]["rotate"].getValue(), imath.V3f( 0, 90, 0 ) )
 
+	def testNegativeLocalScale( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["scale"]["z"].setValue( -10 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		# We want the direction of the handles to reflect the
+		# flipped scale, but not its magnitude.
+
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				imath.M44f().scale( imath.V3f( 1, 1, -1 ) ),
+				0.000001
+			)
+		)
+
+		# And the handles need to move the object in the right
+		# direction still.
+
+		with Gaffer.UndoScope( script ) :
+			tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+		self.assertTrue(
+			script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+				imath.V3f( 0, -45, 0 ),
+				0.0001
+			)
+		)
+
+		script.undo()
+
+		# When orientation is Parent or World, the scale should
+		# not be reflected in the handles.
+
+		for orientation in ( tool.Orientation.World, tool.Orientation.Parent ) :
+
+			tool["orientation"].setValue( orientation )
+			self.assertEqual( tool.handlesTransform(), imath.M44f() )
+
+			with Gaffer.UndoScope( script ) :
+				tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+			self.assertTrue(
+				script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+					imath.V3f( 0, 45, 0 ),
+					0.0001
+				)
+			)
+
+			script.undo()
+
+	def testNegativeParentScale( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+
+		script["group"]["transform"]["scale"]["z"].setValue( -10 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		# When using Parent or Local orientation, we want the direction of
+		# the handles to reflect the flipped scale, but not its magnitude.
+
+		for orientation in ( tool.Orientation.Parent, tool.Orientation.Local ) :
+
+			tool["orientation"].setValue( orientation )
+
+			self.assertTrue(
+				tool.handlesTransform().equalWithAbsError(
+					imath.M44f().scale( imath.V3f( 1, 1, -1 ) ),
+					0.000001
+				)
+			)
+
+			with Gaffer.UndoScope( script ) :
+				tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+			self.assertTrue(
+				script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+					imath.V3f( 0, 45, 0 ),
+					0.0001
+				)
+			)
+
+			script.undo()
+
+		# When orientation is World, the scale should
+		# not be reflected in the handles.
+
+		tool["orientation"].setValue( tool.Orientation.World )
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+		tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+		self.assertTrue(
+			script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+				imath.V3f( 0, -45, 0 ),
+				0.0001
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -34,6 +34,7 @@ Fixes
   - Fixed handle orientation for transforms with negative scaling.
   - Fixed handle positions for locations with PointConstraints or ParentConstraints applied.
   - Fixed translation and rotation of locations with a ParentConstraint applied.
+  - Fixed rotation of locations with negative scaling.
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.
 - GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
