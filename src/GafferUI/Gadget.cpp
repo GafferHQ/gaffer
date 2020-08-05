@@ -56,6 +56,54 @@ using namespace std;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Gadget );
 
+//////////////////////////////////////////////////////////////////////////
+// Gadget::Signals
+//
+// We allocate these lazily because they have a significant overhead
+// in both memory and construction time, and for many Gadget
+// instances they are never actually used.
+//////////////////////////////////////////////////////////////////////////
+
+struct Gadget::Signals : boost::noncopyable
+{
+
+	VisibilityChangedSignal visibilityChangedSignal;
+	RenderRequestSignal renderRequestSignal;
+
+	ButtonSignal buttonPressSignal;
+	ButtonSignal buttonReleaseSignal;
+	ButtonSignal buttonDoubleClickSignal;
+	ButtonSignal wheelSignal;
+
+	EnterLeaveSignal enterSignal;
+	EnterLeaveSignal leaveSignal;
+	ButtonSignal mouseMoveSignal;
+
+	DragBeginSignal dragBeginSignal;
+	DragDropSignal dragEnterSignal;
+	DragDropSignal dragMoveSignal;
+	DragDropSignal dragLeaveSignal;
+	DragDropSignal dragEndSignal;
+	DragDropSignal dropSignal;
+
+	KeySignal keyPressSignal;
+	KeySignal keyReleaseSignal;
+
+	// Utility to emit a signal if it has been created, but do nothing
+	// if it hasn't.
+	template<typename SignalMemberPointer, typename... Args>
+	static void emitLazily( Signals *signals, SignalMemberPointer signalMemberPointer, Args&&... args )
+	{
+		if( !signals )
+		{
+			return;
+		}
+		auto &signal = signals->*signalMemberPointer;
+		signal( std::forward<Args>( args )... );
+	}
+
+};
+
 Gadget::Gadget( const std::string &name )
 	:	GraphComponent( name ), m_style( nullptr ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_layoutDirty( false ), m_toolTip( "" )
 {
@@ -139,9 +187,9 @@ void Gadget::setVisible( bool visible )
 	if( !p || p->visible() )
 	{
 		emitDescendantVisibilityChanged();
-		visibilityChangedSignal()( this );
+		Signals::emitLazily( m_signals.get(), &Signals::visibilityChangedSignal, this );
 	}
-	renderRequestSignal()( this );
+	Signals::emitLazily( m_signals.get(), &Signals::renderRequestSignal, this );
 	if( p )
 	{
 		p->dirty( DirtyType::Layout );
@@ -159,7 +207,7 @@ void Gadget::emitDescendantVisibilityChanged()
 			continue;
 		}
 		(*it)->emitDescendantVisibilityChanged();
-		(*it)->visibilityChangedSignal()( it->get() );
+		Signals::emitLazily( (*it)->m_signals.get(), &Signals::visibilityChangedSignal, it->get() );
 	}
 }
 
@@ -184,7 +232,7 @@ bool Gadget::visible( Gadget *relativeTo ) const
 
 Gadget::VisibilityChangedSignal &Gadget::visibilityChangedSignal()
 {
-	return m_visibilityChangedSignal;
+	return signals()->visibilityChangedSignal;
 }
 
 void Gadget::setEnabled( bool enabled )
@@ -330,7 +378,7 @@ void Gadget::dirty( DirtyType dirtyType )
 		{
 			g->m_layoutDirty = true;
 		}
-		g->renderRequestSignal()( g );
+		Signals::emitLazily( g->m_signals.get(), &Signals::renderRequestSignal, g );
 		if( dirtyType == DirtyType::Bound )
 		{
 			// Bounds changes in children require layout updates in parents.
@@ -401,7 +449,7 @@ Imath::Box3f Gadget::transformedBound( const Gadget *ancestor ) const
 
 Gadget::RenderRequestSignal &Gadget::renderRequestSignal()
 {
-	return m_renderRequestSignal;
+	return signals()->renderRequestSignal;
 }
 
 std::string Gadget::getToolTip( const IECore::LineSegment3f &position ) const
@@ -416,77 +464,86 @@ void Gadget::setToolTip( const std::string &toolTip )
 
 Gadget::ButtonSignal &Gadget::buttonPressSignal()
 {
-	return m_buttonPressSignal;
+	return signals()->buttonPressSignal;
 }
 
 Gadget::ButtonSignal &Gadget::buttonReleaseSignal()
 {
-	return m_buttonReleaseSignal;
+	return signals()->buttonReleaseSignal;
 }
 
 Gadget::ButtonSignal &Gadget::buttonDoubleClickSignal()
 {
-	return m_buttonDoubleClickSignal;
+	return signals()->buttonDoubleClickSignal;
 }
 
 Gadget::ButtonSignal &Gadget::wheelSignal()
 {
-	return m_wheelSignal;
+	return signals()->wheelSignal;
 }
 
 Gadget::EnterLeaveSignal &Gadget::enterSignal()
 {
-	return m_enterSignal;
+	return signals()->enterSignal;
 }
 
 Gadget::EnterLeaveSignal &Gadget::leaveSignal()
 {
-	return m_leaveSignal;
+	return signals()->leaveSignal;
 }
 
 Gadget::ButtonSignal &Gadget::mouseMoveSignal()
 {
-	return m_mouseMoveSignal;
+	return signals()->mouseMoveSignal;
 }
 
 Gadget::DragBeginSignal &Gadget::dragBeginSignal()
 {
-	return m_dragBeginSignal;
+	return signals()->dragBeginSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dragMoveSignal()
 {
-	return m_dragMoveSignal;
+	return signals()->dragMoveSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dragEnterSignal()
 {
-	return m_dragEnterSignal;
+	return signals()->dragEnterSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dragLeaveSignal()
 {
-	return m_dragLeaveSignal;
+	return signals()->dragLeaveSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dropSignal()
 {
-	return m_dropSignal;
+	return signals()->dropSignal;
 }
 
 Gadget::DragDropSignal &Gadget::dragEndSignal()
 {
-	return m_dragEndSignal;
+	return signals()->dragEndSignal;
 }
 
 Gadget::KeySignal &Gadget::keyPressSignal()
 {
-	return m_keyPressSignal;
+	return signals()->keyPressSignal;
 }
 
 Gadget::KeySignal &Gadget::keyReleaseSignal()
 {
-	return m_keyReleaseSignal;
+	return signals()->keyReleaseSignal;
+}
+
+Gadget::Signals *Gadget::signals()
+{
+	if( !m_signals )
+	{
+		m_signals.reset( new Signals );
+	}
+	return m_signals.get();
 }
 
 Gadget::IdleSignal &Gadget::idleSignal()

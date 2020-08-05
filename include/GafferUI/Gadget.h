@@ -322,6 +322,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		ConstStylePtr m_style;
 
+		GLuint m_glName;
 		bool m_visible;
 		bool m_enabled;
 		bool m_highlighted;
@@ -331,31 +332,11 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		mutable Imath::Box3f m_bound;
 		mutable bool m_layoutDirty;
 
-		VisibilityChangedSignal m_visibilityChangedSignal;
-		RenderRequestSignal m_renderRequestSignal;
-
 		IECore::InternedString m_toolTip;
 
-		ButtonSignal m_buttonPressSignal;
-		ButtonSignal m_buttonReleaseSignal;
-		ButtonSignal m_buttonDoubleClickSignal;
-		ButtonSignal m_wheelSignal;
-
-		EnterLeaveSignal m_enterSignal;
-		EnterLeaveSignal m_leaveSignal;
-		ButtonSignal m_mouseMoveSignal;
-
-		DragBeginSignal m_dragBeginSignal;
-		DragDropSignal m_dragEnterSignal;
-		DragDropSignal m_dragMoveSignal;
-		DragDropSignal m_dragLeaveSignal;
-		DragDropSignal m_dragEndSignal;
-		DragDropSignal m_dropSignal;
-
-		KeySignal m_keyPressSignal;
-		KeySignal m_keyReleaseSignal;
-
-		GLuint m_glName;
+		struct Signals;
+		Signals *signals();
+		std::unique_ptr<Signals> m_signals;
 
 		// used by the bindings to know when the idleSignal()
 		// has been accessed, and only use an idle timer

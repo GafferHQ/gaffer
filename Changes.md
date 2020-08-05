@@ -1,6 +1,11 @@
 0.59.x.x
 ========
 
+Improvements
+------------
+
+- GraphEditor : Improved performance slightly for large graphs.
+
 API
 ---
 
