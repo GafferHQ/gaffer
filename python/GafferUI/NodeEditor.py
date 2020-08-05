@@ -84,6 +84,13 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			)
 
 		self.__nodeUI = None
+		# Building NodeUIs is slower than we would like, so we keep
+		# a small cache of recently displayed UIs so we can switch
+		# between them quickly.
+		self.__nodeUICache = IECore.LRUCache(
+			lambda node : ( GafferUI.NodeUI.create( node ), 1 ),
+			5
+		)
 		self.__readOnly = False
 
 		self._updateFromSet()
@@ -160,7 +167,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		self.__header.setVisible( True )
 
-		self.__nodeUI = GafferUI.NodeUI.create( node )
+		self.__nodeUI = self.__nodeUICache.get( node )
 		self.__nodeUI.setReadOnly( self.getReadOnly() )
 		self.__nodeUIFrame.setChild( self.__nodeUI )
 

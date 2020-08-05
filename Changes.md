@@ -21,6 +21,7 @@ Improvements
 - AnimationEditor : Improved performance.
 - MessageWidget : Added alternate presentation options allowing log-style message display, search, etc.
 - Viewer : Added warning/error message count to Render Control overlay.
+- NodeEditor : Improved performance when switching back to a recently viewed node.
 
 Fixes
 -----
