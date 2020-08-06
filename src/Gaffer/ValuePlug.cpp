@@ -142,7 +142,7 @@ struct ThreadStateFixer
 // The upper half is reserved for a debug "checked" mode where we compute
 // alternate values that are invalidated whenever any plug changes, in
 // order to catch inaccuracies in the cache
-const uint64_t DIRTY_COUNT_RANGE_HALF = ((uint64_t)1) << 63;
+const uint64_t DIRTY_COUNT_RANGE_MAX = std::numeric_limits<uint64_t>::max() / 2;
 
 } // namespace
 
@@ -324,7 +324,7 @@ class ValuePlug::HashProcess : public Process
 				else if( g_hashCacheMode == HashCacheMode::Checked )
 				{
 					HashProcessKey legacyProcessKey( processKey );
-					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_HALF;
+					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_MAX + 1;
 
 					const IECore::MurmurHash check = threadData.cache.get( legacyProcessKey );
 					const IECore::MurmurHash result = threadData.cache.get( processKey );
@@ -349,7 +349,7 @@ class ValuePlug::HashProcess : public Process
 				{
 					// HashCacheMode::Legacy
 					HashProcessKey legacyProcessKey( processKey );
-					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_HALF;
+					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_MAX + 1;
 
 					return threadData.cache.get( legacyProcessKey );
 				}
@@ -397,12 +397,7 @@ class ValuePlug::HashProcess : public Process
 				uint64_t newCount;
 				do
 				{
-					newCount = count + 1;
-					if( newCount >= DIRTY_COUNT_RANGE_HALF )
-					{
-						newCount = 0;
-						clearCache();
-					}
+					newCount = std::min( DIRTY_COUNT_RANGE_MAX, count + 1 );
 				} while( !g_legacyGlobalDirtyCount.compare_exchange_weak( count, newCount ) );
 			}
 		}
@@ -430,6 +425,14 @@ class ValuePlug::HashProcess : public Process
 				if( !key.computeNode )
 				{
 					throw IECore::Exception( "Plug has no ComputeNode." );
+				}
+
+				// Before we use this key, check that the dirty count hasn't maxed out
+				if(
+					key.dirtyCount == DIRTY_COUNT_RANGE_MAX ||
+					key.dirtyCount == DIRTY_COUNT_RANGE_MAX + 1 + DIRTY_COUNT_RANGE_MAX )
+				{
+					throw IECore::Exception(  "Dirty count exceeded max.  Either you've left Gaffer running for 100 million years, or a strange bug is incrementing dirty counts way too fast." );
 				}
 
 				key.computeNode->hash( key.plug, context(), m_result );
@@ -885,22 +888,11 @@ ValuePlug::~ValuePlug()
 	// although each graph should only be edited on one thread, it is
 	// permitted to edit multiple graphs in parallel.
 
-	// Note that it is unlikely that this would ever trigger correctly - m_dirtyCount could
-	// easily wrap around without happening to land exactly on this one value.
-	// We are in the middle of figuring out a better approach.
-	if( m_dirtyCount != DIRTY_COUNT_RANGE_HALF - 1 )
+	uint64_t epoch = g_dirtyCountEpoch;
+	uint64_t newDirtyCount = std::min( DIRTY_COUNT_RANGE_MAX, m_dirtyCount + 1 );
+	while( !g_dirtyCountEpoch.compare_exchange_weak( epoch, std::max( epoch, newDirtyCount ) ) )
 	{
-		uint64_t epoch = g_dirtyCountEpoch;
-		while( !g_dirtyCountEpoch.compare_exchange_weak( epoch, std::max( epoch, m_dirtyCount + 1 ) ) )
-		{
-			// Nothing to do here.
-		}
-	}
-	else
-	{
-		// Ran out of epochs. Start over.
-		HashProcess::clearCache();
-		g_dirtyCountEpoch = 0;
+		// Nothing to do here.
 	}
 
 	// Legacy mode doesn't use `m_dirtyCount` or `g_dirtyCountEpoch`, so needs
@@ -1210,17 +1202,7 @@ void ValuePlug::dirty()
 	// Increment `m_dirtyCount` so that we won't try to reuse them.
 	// The invalid entries will be evicted by the LRU rules in due
 	// course.
-	m_dirtyCount++;
-
-	// If our count has exceeded the max permitted value, we need to
-	// wrap it back to 0, so it's possible (but incredibly unlikely)
-	// that we could match a stale value in the cache, so we must
-	// do a brute force clear.
-	if( m_dirtyCount >= DIRTY_COUNT_RANGE_HALF )
-	{
-		m_dirtyCount = 0;
-		HashProcess::clearCache();
-	}
+	m_dirtyCount = std::min( DIRTY_COUNT_RANGE_MAX, m_dirtyCount + 1 );
 
 	HashProcess::dirtyLegacyCache();
 }
