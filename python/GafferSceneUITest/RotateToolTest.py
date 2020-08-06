@@ -332,5 +332,198 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			imath.M44f().translate( imath.V3f( 1, 0, 0 ) ).rotate( imath.V3f( 0, math.pi / 2, 0 ) ),
 		)
 
+	def testInteractionWithPointConstraint( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 5, 5, 0 ) )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["sphereFilter"] = GafferScene.PathFilter()
+		script["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["constraint"] = GafferScene.PointConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/cube" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		for orientation in ( tool.Orientation.Local, tool.Orientation.Parent, tool.Orientation.World ) :
+			tool["orientation"].setValue( orientation )
+			self.assertEqual( tool.handlesTransform(), imath.M44f().translate( script["cube"]["transform"]["translate"].getValue() ) )
+
+	def testInteractionWithParentConstraint( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"].setValue( imath.V3f( 5, 5, 0 ) )
+		script["cube"]["transform"]["rotate"]["x"].setValue( 90 )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["sphereFilter"] = GafferScene.PathFilter()
+		script["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/cube" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+
+		tool["orientation"].setValue( tool.Orientation.Parent )
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( script["cube"]["transform"]["translate"].getValue() ) )
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		self.assertEqual( tool.handlesTransform(), script["constraint"]["out"].transform( "/sphere" ) )
+
+		tool.rotate( imath.Eulerf( 0, 90, 0 ) )
+		self.assertEqual( script["sphere"]["transform"]["rotate"].getValue(), imath.V3f( 0, 90, 0 ) )
+
+	def testNegativeLocalScale( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["scale"]["z"].setValue( -10 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		# We want the direction of the handles to reflect the
+		# flipped scale, but not its magnitude.
+
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				imath.M44f().scale( imath.V3f( 1, 1, -1 ) ),
+				0.000001
+			)
+		)
+
+		# And the handles need to move the object in the right
+		# direction still.
+
+		with Gaffer.UndoScope( script ) :
+			tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+		self.assertTrue(
+			script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+				imath.V3f( 0, -45, 0 ),
+				0.0001
+			)
+		)
+
+		script.undo()
+
+		# When orientation is Parent or World, the scale should
+		# not be reflected in the handles.
+
+		for orientation in ( tool.Orientation.World, tool.Orientation.Parent ) :
+
+			tool["orientation"].setValue( orientation )
+			self.assertEqual( tool.handlesTransform(), imath.M44f() )
+
+			with Gaffer.UndoScope( script ) :
+				tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+			self.assertTrue(
+				script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+					imath.V3f( 0, 45, 0 ),
+					0.0001
+				)
+			)
+
+			script.undo()
+
+	def testNegativeParentScale( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+
+		script["group"]["transform"]["scale"]["z"].setValue( -10 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/group/plane" ] ) )
+
+		tool = GafferSceneUI.RotateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		# When using Parent or Local orientation, we want the direction of
+		# the handles to reflect the flipped scale, but not its magnitude.
+
+		for orientation in ( tool.Orientation.Parent, tool.Orientation.Local ) :
+
+			tool["orientation"].setValue( orientation )
+
+			self.assertTrue(
+				tool.handlesTransform().equalWithAbsError(
+					imath.M44f().scale( imath.V3f( 1, 1, -1 ) ),
+					0.000001
+				)
+			)
+
+			with Gaffer.UndoScope( script ) :
+				tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+			self.assertTrue(
+				script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+					imath.V3f( 0, 45, 0 ),
+					0.0001
+				)
+			)
+
+			script.undo()
+
+		# When orientation is World, the scale should
+		# not be reflected in the handles.
+
+		tool["orientation"].setValue( tool.Orientation.World )
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+		tool.rotate( imath.Eulerf( 0, 45, 0 ) )
+
+		self.assertTrue(
+			script["plane"]["transform"]["rotate"].getValue().equalWithAbsError(
+				imath.V3f( 0, -45, 0 ),
+				0.0001
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -320,6 +320,43 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	def testNegativeScale( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["transform"]["scale"]["x"].setValue( -10 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["plane"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		# We want the direction of the handles to reflect the
+		# flipped scale, but not its magnitude.
+
+		self.assertTrue(
+			tool.handlesTransform().equalWithAbsError(
+				imath.M44f().scale( imath.V3f( -1, 1, 1 ) ),
+				0.000001
+			)
+		)
+
+		# And the handles need to move the object in the right
+		# direction still.
+
+		tool.translate( imath.V3f( 1, 2, 3 ) )
+
+		self.assertTrue(
+			script["plane"]["transform"]["translate"].getValue().equalWithAbsError(
+				imath.V3f(-1, 2, 3),
+				0.000001
+			)
+		)
+
 	def testGroup( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -1117,6 +1154,68 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual(
 			script["aim"]["out"].transform( "/cube" ).translation(),
 			imath.V3f( 0, 10, 10 )
+		)
+
+	def testInteractionWithParentConstraints( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Cube with identity transform, parent constrained to sphere
+		# rotated 90 around X and translated to ( 5, 5, 0 ).
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["rotate"]["x"].setValue( 90 )
+		script["sphere"]["transform"]["translate"].setValue( imath.V3f( 5, 5, 0 ) )
+
+		script["cube"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["parent"].setValue( "/" )
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/sphere" )
+
+		self.assertEqual(
+			script["constraint"]["out"].fullTransform( "/cube" ),
+			script["constraint"]["out"].fullTransform( "/sphere" )
+		)
+
+		# View and Tool
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		# Check handle orientation
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		self.assertEqual( tool.handlesTransform(), script["constraint"]["out"].fullTransform( "/cube" ) )
+
+		tool["orientation"].setValue( tool.Orientation.Parent )
+		self.assertEqual(
+			tool.handlesTransform(),
+			imath.M44f().translate(
+				script["constraint"]["out"].fullTransform( "/cube" ).translation()
+			)
+		)
+
+		# Check translation operation
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+		tool.translate( imath.V3f( 1, 2, 3 ) )
+		self.assertEqual(
+			script["cube"]["transform"]["translate"].getValue(),
+			imath.V3f( 1, 2, 3 )
 		)
 
 if __name__ == "__main__":

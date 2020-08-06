@@ -142,5 +142,38 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/sphere" ) )
 		self.assertEqual( script["editScope"]["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ).scale( imath.V3f( 2, 2, 2 ) ) )
 
+	def testHandleOriginsRespectPointConstraint( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		cubeTranslate = imath.V3f( 5, 5, 0 )
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["transform"]["translate"].setValue( cubeTranslate )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["sphereFilter"] = GafferScene.PathFilter()
+		script["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["constraint"] = GafferScene.PointConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["sphereFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/cube" )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["constraint"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.ScaleTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( cubeTranslate ) )
+
 if __name__ == "__main__":
 	unittest.main()

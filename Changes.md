@@ -31,6 +31,11 @@ Fixes
   - Fixed bug which caused promoted Spreadsheet cells to be duplicated by copy/paste.
   - Prevented addition and removal of rows and columns for promoted Spreadsheets, as changes will be lost when reloading the reference.
 - DeleteSets : Fixed bug which allowed the deletion of Gaffer's internal `__lights`, `__cameras` and `__lightFilters` sets. These are now always preserved, because they are needed to output the scene for rendering.
+- TransformTool :
+  - Fixed handle orientation for transforms with negative scaling.
+  - Fixed handle positions for locations with PointConstraints or ParentConstraints applied.
+  - Fixed translation and rotation of locations with a ParentConstraint applied.
+  - Fixed rotation of locations with negative scaling.
 - ImageReader/ImageWriter : Fixed handling of errors in Python functions registered using `setDefaultColorSpaceFunction()`.
 - StyleSheet : Fixed monospace font stack.
 - GafferUI : Fixed lingering highlight state if a Button was disabled whilst the cursor was over it.
