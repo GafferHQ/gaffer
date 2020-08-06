@@ -1,7 +1,6 @@
-#! /bin/bash
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,34 +34,16 @@
 #
 ##########################################################################
 
-set -e
+import unittest
 
-# Figure out where we'll be making the build
+import Gaffer
+import GafferUI
+import GafferUITest
 
-gafferMilestoneVersion=`grep "gafferMilestoneVersion = " SConstruct | cut -d" " -f 3`
-gafferMajorVersion=`grep "gafferMajorVersion = " SConstruct | cut -d" " -f 3`
-gafferMinorVersion=`grep "gafferMinorVersion = " SConstruct | cut -d" " -f 3`
-gafferPatchVersion=`grep "gafferPatchVersion = " SConstruct | cut -d" " -f 3`
+class QtTest( GafferUITest.TestCase ) :
+    def testQApplication( self ):
+        import Qt
+        self.assertIsInstance( Qt.QtWidgets.QApplication.instance(), Qt.QtWidgets.QApplication )
 
-if [[ `uname` = "Linux" ]] ; then
-	platform=linux
-else
-	platform=osx
-fi
-
-# The first argument can be used to specify a directory to install to
-buildDir=${1:-"build/gaffer-$gafferMilestoneVersion.$gafferMajorVersion.$gafferMinorVersion.$gafferPatchVersion-$platform"}
-
-# Get the prebuilt dependencies package and unpack it into the build directory
-
-dependenciesVersion="2.0.0"
-dependenciesVersionSuffix="a5"
-dependenciesPythonVersion="Python2"
-dependenciesFileName="gafferDependencies-$dependenciesVersion-$dependenciesPythonVersion-$platform.tar.gz"
-downloadURL="https://github.com/GafferHQ/dependencies/releases/download/$dependenciesVersion$dependenciesVersionSuffix/$dependenciesFileName"
-
-echo "Downloading dependencies \"$downloadURL\""
-curl -L $downloadURL > $dependenciesFileName
-
-mkdir -p $buildDir
-tar xf $dependenciesFileName -C $buildDir --strip-components=1
+if __name__ == "__main__":
+	unittest.main()

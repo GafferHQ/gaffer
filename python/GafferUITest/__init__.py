@@ -36,6 +36,7 @@
 ##########################################################################
 
 from .TestCase import TestCase
+from .QtTest import QtTest
 from .WidgetTest import WidgetTest
 from .MenuTest import MenuTest
 from .SplitContainerTest import SplitContainerTest
