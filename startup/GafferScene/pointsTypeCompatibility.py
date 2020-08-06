@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -35,39 +35,21 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+def __pointsTypeGetItemWrapper( originalGetItem ) :
 
-	GafferScene.PointsType,
+	def getItem( self, key ) :
 
-	"description",
-	"""
-	Changes the render type for PointsPrimitive objects.
-	Depending on the renderer, points may be rendered as
-	particles, spheres, disks, patches or blobbies.
-	""",
+		if key == "adjustBounds" :
+			# This plug no longer exists, but we provide a
+			# surrogate just to keep old scripts loading without
+			# error.
+			return Gaffer.BoolPlug( "adjustBoundsSurrogate" )
 
-	plugs = {
+		return originalGetItem( self, key )
 
-		"type" : [
+	return getItem
 
-			"description",
-			"""
-			The render type to assign.
-			""",
+GafferScene.PointsType.__getitem__ = __pointsTypeGetItemWrapper( GafferScene.PointsType.__getitem__ )
 
-			"preset:Unchanged", "",
-			"preset:Particle", "particle",
-			"preset:Sphere", "sphere",
-			"preset:Disk", "disk",
-			"preset:Patch", "patch",
-			"preset:Blobby", "blobby",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-	}
-)
