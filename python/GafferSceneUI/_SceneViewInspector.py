@@ -224,7 +224,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		# As we don't fully understand which nodes/plugs affect our ability to edit (as the network
 		# inside the edit scope is effectively opaque to us), we only need to know if the plugs
 		# node was affected.
-		self.__nodeMetadataChanged( typeId, key, plug.node() )
+		self.__nodeMetadataChanged( typeId, key, plug.node() if plug is not None else None )
 
 	def __nodeMetadataChanged( self, typeId, key, node ) :
 
