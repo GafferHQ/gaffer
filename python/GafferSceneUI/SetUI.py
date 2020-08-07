@@ -237,7 +237,12 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
 
-		menuDefinition.prepend( "/Sets/%s" % setName, parameters )
+		# Group sets based on any underscores or colons in their names
+		# eg: RND:prop_table -> RND > prop > table
+		nameParts = setName.replace( ":", "_" ).split( "_" )
+		path = "/".join( nameParts )
+
+		menuDefinition.prepend( "/Sets/%s" % path, parameters )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu, scoped = False )
 

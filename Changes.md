@@ -1,6 +1,14 @@
 0.56.2.x (relative to 0.56.2.5)
 ========
 
+Improvements
+------------
+
+- Sets : Improved organisation of the set expression menu, sub menus are created for each `_` or `:` in the set name.
+
+Fixes
+-----
+
 - Viewer : Fixed crashes that could be caused by invalid pixel values.
 
 0.56.2.5 (relative to 0.56.2.4)
