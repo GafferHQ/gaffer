@@ -576,7 +576,7 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 	using Range = blocked_range<size_t>;
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
-	h = parallel_deterministic_reduce(
+	const IECore::MurmurHash reduction = parallel_deterministic_reduce(
 		Range( 0, childNames.size() ),
 		h,
 		[&] ( const Range &range, const MurmurHash &hash ) {
@@ -605,6 +605,8 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 		simple_partitioner(),
 		taskGroupContext
 	);
+
+	h.append( reduction );
 }
 
 Imath::Box3f SceneNode::computeChildBounds( const Gaffer::Context *context, const ScenePlug *parent ) const
