@@ -214,7 +214,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.SubTree()
 
-		for n in s["in"].keys() :
+		for n in [ "bound", "transform", "attributes", "object", "childNames", "set" ] :
 			a = s.affects( s["in"][n] )
 			self.assertEqual( len( a ), 1 )
 			self.assertTrue( a[0].isSame( s["out"][n] ) )

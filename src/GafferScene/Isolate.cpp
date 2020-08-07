@@ -118,6 +118,8 @@ Isolate::Isolate( const std::string &name )
 	addChild( new BoolPlug( "keepCameras" ) );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, false ) );
 
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
+
 	// Direct pass-throughs
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -174,19 +176,44 @@ void Isolate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	const ScenePlug *in = inPlug();
-	if( input->parent<ScenePlug>() == in )
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-	}
-	else if( input == filterPlug() || input == fromPlug() || input == keepLightsPlug() || input == keepCamerasPlug() )
-	{
-		outputs.push_back( outPlug()->childNamesPlug() );
-		outputs.push_back( outPlug()->setPlug() );
-	}
-	else if( input == adjustBoundsPlug() )
+	const bool affectsSetsToKeep =
+		input == keepLightsPlug() ||
+		input == keepCamerasPlug() ||
+		input == inPlug()->setPlug()
+	;
+
+	const bool affectsMayPruneChildren =
+		input == fromPlug() ||
+		input == filterPlug() ||
+		affectsSetsToKeep
+	;
+
+	if(
+		input == adjustBoundsPlug() ||
+		affectsMayPruneChildren ||
+		input == outPlug()->childBoundsPlug() ||
+		input == inPlug()->boundPlug()
+	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );
+	}
+
+	if(
+		affectsMayPruneChildren ||
+		input == inPlug()->childNamesPlug() ||
+		input == filterPlug()
+	)
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+	}
+
+	if(
+		affectsSetsToKeep ||
+		input == fromPlug() ||
+		input == filterPlug()
+	)
+	{
+		outputs.push_back( outPlug()->setPlug() );
 	}
 }
 

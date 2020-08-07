@@ -101,6 +101,8 @@ MergeScenes::MergeScenes( const std::string &name )
 	addChild( new BoolPlug( "adjustBounds", Plug::In, true ) );
 	addChild( new IntPlug( "__activeInputs", Plug::Out, 0 ) );
 	addChild( new AtomicBox3fPlug( "__mergedDescendantsBound", Plug::Out ) );
+
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
 }
 
 MergeScenes::~MergeScenes()
@@ -214,7 +216,9 @@ void MergeScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		input == objectModePlug() ||
 		input == adjustBoundsPlug() ||
 		input == activeInputsPlug() ||
-		input == mergedDescendantsBoundPlug()
+		input == mergedDescendantsBoundPlug() ||
+		input == outPlug()->objectPlug() ||
+		input == outPlug()->childBoundsPlug()
 	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );

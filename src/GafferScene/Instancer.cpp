@@ -812,7 +812,8 @@ bool Instancer::affectsBranchBound( const Gaffer::Plug *input ) const
 		input == namePlug() ||
 		input == prototypesPlug()->boundPlug() ||
 		input == prototypesPlug()->transformPlug() ||
-		input == prototypeChildNamesPlug()
+		input == prototypeChildNamesPlug() ||
+		input == outPlug()->childBoundsPlug()
 	;
 }
 

@@ -111,6 +111,8 @@ CollectScenes::CollectScenes( const std::string &name )
 	addChild( new StringVectorDataPlug( "rootNames", Plug::In, new StringVectorData() ) );
 	addChild( new StringPlug( "rootNameVariable", Plug::In, "collect:rootName" ) );
 	addChild( new StringPlug( "sourceRoot", Plug::In, "/" ) );
+
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
 }
 
 CollectScenes::~CollectScenes()
@@ -151,28 +153,70 @@ void CollectScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	SceneProcessor::affects( input, outputs );
 
-	if( input == rootNamesPlug() || input == inPlug()->existsPlug() )
+	const bool affectsSceneScope =
+		input == rootNameVariablePlug() ||
+		input == sourceRootPlug()
+	;
+
+	if(
+		input == outPlug()->childBoundsPlug() ||
+		affectsSceneScope ||
+		input == inPlug()->boundPlug()
+	)
+	{
+		outputs.push_back( outPlug()->boundPlug() );
+	}
+
+	if( affectsSceneScope || input == inPlug()->transformPlug() )
+	{
+		outputs.push_back( outPlug()->transformPlug() );
+	}
+
+	if( affectsSceneScope || input == inPlug()->attributesPlug() )
+	{
+		outputs.push_back( outPlug()->attributesPlug() );
+	}
+
+	if( affectsSceneScope || input == inPlug()->objectPlug() )
+	{
+		outputs.push_back( outPlug()->objectPlug() );
+	}
+
+	if(
+		input == rootNamesPlug() ||
+		affectsSceneScope ||
+		input == inPlug()->existsPlug() ||
+		input == inPlug()->childNamesPlug()
+	)
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}
-	else if(
+
+	if(
+		input == outPlug()->childNamesPlug() ||
 		input == rootNameVariablePlug() ||
-		input == sourceRootPlug()
+		input == inPlug()->globalsPlug()
 	)
 	{
-		for( PlugIterator it( outPlug() ); !it.done(); ++it )
-		{
-			outputs.push_back( it->get() );
-		}
-	}
-	else if( input->parent<ScenePlug>() == inPlug() )
-	{
-		outputs.push_back( outPlug()->getChild<Plug>( input->getName() ) );
-	}
-	else if( input == outPlug()->childNamesPlug() )
-	{
 		outputs.push_back( outPlug()->globalsPlug() );
+	}
+
+	if(
+		input == outPlug()->childNamesPlug() ||
+		input == inPlug()->setNamesPlug() ||
+		input == rootNameVariablePlug()
+	)
+	{
 		outputs.push_back( outPlug()->setNamesPlug() );
+	}
+
+	if(
+		input == outPlug()->childNamesPlug() ||
+		input == inPlug()->setPlug() ||
+		input == sourceRootPlug() ||
+		input == rootNameVariablePlug()
+	)
+	{
 		outputs.push_back( outPlug()->setPlug() );
 	}
 }

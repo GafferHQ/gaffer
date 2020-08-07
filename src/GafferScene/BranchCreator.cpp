@@ -110,6 +110,7 @@ BranchCreator::BranchCreator( const std::string &name )
 	filteredPathsPlug()->setInput( filterResults->outPlug() );
 
 	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
 }
 
 BranchCreator::~BranchCreator()
@@ -174,6 +175,7 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 		input == parentPathsPlug() ||
 		input == mappingPlug() ||
 		input == inPlug()->boundPlug() ||
+		input == outPlug()->childBoundsPlug() ||
 		affectsBranchBound( input )
 	)
 	{

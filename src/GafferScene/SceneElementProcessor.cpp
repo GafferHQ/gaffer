@@ -55,6 +55,8 @@ SceneElementProcessor::SceneElementProcessor( const std::string &name, IECore::P
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
+
 	// We don't ever want to change the scene hierarchy, globals, or sets,
 	// so we make pass-through connections for them. This is quicker than
 	// implementing a pass through of the input in the hash and compute
@@ -73,28 +75,39 @@ void SceneElementProcessor::affects( const Plug *input, AffectedPlugsContainer &
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	const ScenePlug *in = inPlug();
-	if( input->parent<ScenePlug>() == in )
+	if(
+		input == filterPlug() ||
+		input == inPlug()->boundPlug() ||
+		input == inPlug()->childNamesPlug() ||
+		input == outPlug()->childBoundsPlug() ||
+		input == inPlug()->objectPlug()
+	)
 	{
-		const ValuePlug *output = outPlug()->getChild<ValuePlug>( input->getName() );
-		if( !output->getInput() )
-		{
-			outputs.push_back( output );
-		}
+		outputs.push_back( outPlug()->boundPlug() );
 	}
-	else if( input == filterPlug() )
+
+	if(
+		input == filterPlug() ||
+		input == inPlug()->transformPlug()
+	)
 	{
-		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
-		{
-			if( (*it)->getInput() )
-			{
-				// If the output has been connected as a pass-through,
-				// then it clearly can't be affected by the filter plug,
-				// because there won't even be a compute() call for it.
-				continue;
-			}
-			outputs.push_back( it->get() );
-		}
+		outputs.push_back( outPlug()->transformPlug() );
+	}
+
+	if(
+		input == filterPlug() ||
+		input == inPlug()->attributesPlug()
+	)
+	{
+		outputs.push_back( outPlug()->attributesPlug() );
+	}
+
+	if(
+		input == filterPlug() ||
+		input == inPlug()->objectPlug()
+	)
+	{
+		outputs.push_back( outPlug()->objectPlug() );
 	}
 }
 

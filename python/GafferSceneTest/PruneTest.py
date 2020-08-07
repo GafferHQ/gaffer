@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -336,6 +337,25 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 						self.assertTrue( inputSetPath not in outputSet )
 					else :
 						self.assertTrue( inputSetPath in outputSet )
+
+	def testNameChangeUpdatesBounds( self ) :
+
+		plane = GafferScene.Plane()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( plane["out"] )
+		prune["filter"].setInput( planeFilter["out"] )
+		prune["adjustBounds"].setValue( True )
+
+		self.assertEqual( prune["out"].bound( "/" ), imath.Box3f() )
+
+		plane["name"].setValue( "youCantPruneMe" )
+		self.assertEqual( prune["out"].bound( "/" ), plane["out"].bound( "/" ) )
 
 if __name__ == "__main__":
 	unittest.main()

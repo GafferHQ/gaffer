@@ -61,6 +61,8 @@ FreezeTransform::FreezeTransform( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new M44fPlug( "__transform", Plug::Out ) );
 
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
+
 	// pass through the things we don't want to change
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
@@ -97,6 +99,7 @@ void FreezeTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 
 	if(
 		input == filterPlug() ||
+		input == outPlug()->childBoundsPlug() ||
 		input == inPlug()->boundPlug() ||
 		input == transformPlug()
 	)
