@@ -290,5 +290,25 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( monitor.plugStatistics( setFilter["__expressionResult"] ).hashCount, 1 )
 
+	def testTwoAffectedScenes( self ) :
+
+		setNode = GafferScene.Set()
+		setFilter = GafferScene.SetFilter()
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( setNode["out"] )
+		prune["filter"].setInput( setFilter["out"] )
+
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( prune["out"] )
+		isolate["filter"].setInput( setFilter["out"] )
+
+		cs = GafferTest.CapturingSlot( prune.plugDirtiedSignal(), isolate.plugDirtiedSignal() )
+		setNode["name"].setValue( "test" )
+
+		self.assertTrue(
+			{ x[0] for x in cs }.issuperset( { prune["filter"], isolate["filter"] } )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

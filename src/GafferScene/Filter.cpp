@@ -53,7 +53,19 @@ Filter::Filter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
-	addChild( new FilterPlug( "out", Gaffer::Plug::Out ) );
+	// FilteredSceneProcessor calls `Filter::affects()` via `FilterPlug::sceneAffects()`
+	// when the processor's input scene is dirtied. This allows a Filter to declare any
+	// scene dependencies of its own (see SetFilter for an example). But when the same
+	// filter is connected to multiple FilteredSceneProcessors in a row, this can lead
+	// to the declaration of circular dependencies as follows :
+	//
+	//    Processor1.in -> Filter.>out -> Processor1.out -> Processor2.in -> Filter.out
+	//
+	// This isn't actually a true dependency cycle, because the filter uses `Processor1.in`
+	// and `Processor2.in` in completely different contexts. Dirty propagation takes place
+	// independent of context though, so we use the `AcceptsDependencyCycles` flag to
+	// show that any cycle is expected and harmless.
+	addChild( new FilterPlug( "out", Gaffer::Plug::Out, Plug::Default | Plug::AcceptsDependencyCycles ) );
 }
 
 Filter::~Filter()
