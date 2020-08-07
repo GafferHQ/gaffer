@@ -868,11 +868,14 @@ class Plug::DirtyPlugs
 
 			void back_edge( const EdgeDescriptor &e, const Graph &graph )
 			{
-				throw IECore::Exception( boost::str(
-					boost::format( "Cycle detected between %1% and %2%" ) %
-					graph[boost::target( e, graph )]->fullName() %
-					graph[boost::source( e, graph )]->fullName()
-				) );
+				IECore::msg(
+					IECore::Msg::Error, "Plug dirty propagation",
+					boost::str(
+						boost::format( "Cycle detected between %1% and %2%" ) %
+							graph[boost::target( e, graph )]->fullName() %
+							graph[boost::source( e, graph )]->fullName()
+					)
+				);
 			}
 
 			void finish_vertex( const VertexDescriptor &u, const Graph &graph )
