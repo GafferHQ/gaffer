@@ -57,25 +57,6 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneNode );
 
 size_t SceneNode::g_firstPlugIndex = 0;
 
-ValuePlug::CachePolicy childBoundsCachePolicy()
-{
-	ValuePlug::CachePolicy result = ValuePlug::CachePolicy::TaskIsolation;
-	if( const char *policy = getenv( "GAFFERSCENE_CHILDBOUNDS_CACHEPOLICY"  ))
-	{
-		if( !strcmp( policy, "TaskCollaboration" ) )
-		{
-			result = ValuePlug::CachePolicy::TaskCollaboration;
-		}
-		else if( strcmp( policy, "TaskIsolation" ) )
-		{
-			IECore::msg( IECore::Msg::Warning, "SceneNode", "Invalid value for GAFFERSCENE_CHILDBOUNDS_CACHEPOLICY. Must be TaskIsolation or TaskCollaboration." );
-		}
-	}
-	return result;
-}
-
-const ValuePlug::CachePolicy g_childBoundsCachePolicy = childBoundsCachePolicy();
-
 SceneNode::SceneNode( const std::string &name )
 	:	ComputeNode( name )
 {
@@ -433,7 +414,7 @@ Gaffer::ValuePlug::CachePolicy SceneNode::hashCachePolicy( const Gaffer::ValuePl
 	{
 		if( output == parent->childBoundsPlug() )
 		{
-			return g_childBoundsCachePolicy;
+			return ValuePlug::CachePolicy::TaskCollaboration;
 		}
 	}
 
@@ -446,7 +427,7 @@ Gaffer::ValuePlug::CachePolicy SceneNode::computeCachePolicy( const Gaffer::Valu
 	{
 		if( output == parent->childBoundsPlug() )
 		{
-			return g_childBoundsCachePolicy;
+			return ValuePlug::CachePolicy::TaskCollaboration;
 		}
 	}
 
@@ -576,7 +557,7 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 	using Range = blocked_range<size_t>;
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
-	h = parallel_deterministic_reduce(
+	const IECore::MurmurHash reduction = parallel_deterministic_reduce(
 		Range( 0, childNames.size() ),
 		h,
 		[&] ( const Range &range, const MurmurHash &hash ) {
@@ -605,6 +586,8 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 		simple_partitioner(),
 		taskGroupContext
 	);
+
+	h.append( reduction );
 }
 
 Imath::Box3f SceneNode::computeChildBounds( const Gaffer::Context *context, const ScenePlug *parent ) const
