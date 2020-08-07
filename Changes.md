@@ -158,7 +158,9 @@ Breaking Changes
     - BoolPlugValueWidget
     - PresetsPlugValueWidget
   - Removed connections to `plugFlagsChangedSignal()`. In the unlikely event that a derived class depends on plug flags, it must now manage the updates itself.
-- InteractiveRender : Changed base class from Node to ComputeNode, added members.
+- InteractiveRender :
+  - Changed base class from Node to ComputeNode, added members.
+  - `state` and `renderer` plugs can no longer be connected to compute node outputs due to dirty propagation constraints.
 - MessageWidget : Removed deprecated `appendMessage` method, use `messageHandler().handle()` instead.
 - Shader : Added virtual method.
 - MetadataAlgo : `readOnly( None )` will now raise an Exception instead of returning `False`.
