@@ -107,6 +107,29 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneHashesEqual( input["out"], prune["out"] )
 		self.assertTrue( input["out"].object( "/groupA/sphereAA", _copy = False ).isSame( prune["out"].object( "/groupA/sphereAA", _copy = False ) ) )
 
+		# The pass through should also apply to the `childBounds` plug, which is automatically
+		# computed by SceneNode/SceneProcessor.
+
+		for path in [
+			"/",
+			"/groupA",
+			"/groupB",
+			"/groupA/sphereAA",
+			"/groupA/sphereAB",
+			"/groupB/sphereBA",
+			"/groupB/sphereBB",
+		] :
+
+			self.assertEqual(
+				prune["out"].childBoundsHash( path ),
+				prune["in"].childBoundsHash( path ),
+			)
+
+			self.assertEqual(
+				prune["out"].childBounds( path ),
+				prune["in"].childBounds( path ),
+			)
+
 	def testPruning( self ) :
 
 		sphere = IECoreScene.SpherePrimitive()

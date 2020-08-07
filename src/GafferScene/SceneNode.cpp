@@ -57,25 +57,6 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneNode );
 
 size_t SceneNode::g_firstPlugIndex = 0;
 
-ValuePlug::CachePolicy childBoundsCachePolicy()
-{
-	ValuePlug::CachePolicy result = ValuePlug::CachePolicy::TaskIsolation;
-	if( const char *policy = getenv( "GAFFERSCENE_CHILDBOUNDS_CACHEPOLICY"  ))
-	{
-		if( !strcmp( policy, "TaskCollaboration" ) )
-		{
-			result = ValuePlug::CachePolicy::TaskCollaboration;
-		}
-		else if( strcmp( policy, "TaskIsolation" ) )
-		{
-			IECore::msg( IECore::Msg::Warning, "SceneNode", "Invalid value for GAFFERSCENE_CHILDBOUNDS_CACHEPOLICY. Must be TaskIsolation or TaskCollaboration." );
-		}
-	}
-	return result;
-}
-
-const ValuePlug::CachePolicy g_childBoundsCachePolicy = childBoundsCachePolicy();
-
 SceneNode::SceneNode( const std::string &name )
 	:	ComputeNode( name )
 {
@@ -433,7 +414,7 @@ Gaffer::ValuePlug::CachePolicy SceneNode::hashCachePolicy( const Gaffer::ValuePl
 	{
 		if( output == parent->childBoundsPlug() )
 		{
-			return g_childBoundsCachePolicy;
+			return ValuePlug::CachePolicy::TaskCollaboration;
 		}
 	}
 
@@ -446,7 +427,7 @@ Gaffer::ValuePlug::CachePolicy SceneNode::computeCachePolicy( const Gaffer::Valu
 	{
 		if( output == parent->childBoundsPlug() )
 		{
-			return g_childBoundsCachePolicy;
+			return ValuePlug::CachePolicy::TaskCollaboration;
 		}
 	}
 
