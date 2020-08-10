@@ -427,3 +427,20 @@ Adjust frame(s) of selected key(s)              :kbd:`Shift` + |M1| and drag lef
 Adjust value(s) of selected key(s)              :kbd:`Shift` + |M1| and drag up/down
 =============================================== =============================================
 ```
+
+
+## Interactive Render Log ##
+
+```eval_rst
+==================================== ================================================
+Action                               Control or shorcut
+==================================== ================================================
+Next message of level                :kbd:`e`, :kbd:`w`, :kbd:`i`, :kbd:`d`
+Previous message of level            :kbd:`Shift` + :kbd:`e`, :kbd:`w`, :kbd:`i`, :kbd:`d`
+Search                               :kbd:`Ctrl` + :kbd:`F`
+  Next match (search field focus)    :kbd:`Enter`
+  Next match (log focus)             :kbd:`N`
+  Previous match (log focus)         :kbd:`P`
+Scroll to bottom                     :kbd:`B`
+==================================== ================================================
+```
