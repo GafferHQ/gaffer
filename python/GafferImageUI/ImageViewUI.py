@@ -238,6 +238,19 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 # _ColorInspectorPlugValueWidget
 ##########################################################################
 
+def _hsvString( color ) :
+
+	if any( math.isinf( x ) or math.isnan( x ) for x in color ) :
+		# The conventional thing to do would be to call `color.rgb2hsv()`
+		# and catch the exception that PyImath throws. But PyImath's
+		# exception handling involves a signal handler for SIGFPE. And
+		# Arnold likes to install its own handler for that, somehow
+		# breaking everything so that the entire application terminates.
+		return "- - -"
+	else :
+		hsv = color.rgb2hsv()
+		return "%.3f %.3f %.3f" % ( hsv.r, hsv.g, hsv.b )
+
 class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -354,8 +367,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.__rgbLabel.setText( "<b>RGB : %.3f %.3f %.3f</b>" % ( color.r, color.g, color.b ) )
 
-		hsv = color.rgb2hsv()
-		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
+		self.__hsvLabel.setText( "<b>HSV : %s</b>" % _hsvString( color ) )
 
 	def __mouseMove( self, viewportGadget, event ) :
 

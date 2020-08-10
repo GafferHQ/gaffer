@@ -7,6 +7,11 @@ Improvements
 - Dispatch app : Added support for setting CompoundDataPlugs via the `-settings` argument.
 - Viewer : Made light gobos selectable.
 
+Fixes
+-----
+
+- Viewer : Fixed crashes that could be caused by invalid pixel values.
+
 API
 ---
 
@@ -262,6 +267,11 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.6 (relative to 0.56.2.5)
+========
+
+- Viewer : Fixed crashes that could be caused by invalid pixel values.
 
 0.56.2.5 (relative to 0.56.2.4)
 ========
