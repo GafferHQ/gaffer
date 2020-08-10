@@ -1,4 +1,4 @@
-0.58.x.x
+0.58.0.0
 ========
 
 > Caution : References containing promoted Spreadsheets, when saved from Gaffer 0.58, can not be loaded in previous versions of Gaffer.
