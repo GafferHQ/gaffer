@@ -109,6 +109,8 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+
 	private :
 
 		ScenePlug *adaptedInPlug();
@@ -120,7 +122,7 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		void messagesChanged();
 		static void messagesChangedUI();
 
-		void plugDirtied( const Gaffer::Plug *plug );
+		void plugSet( const Gaffer::Plug *plug );
 
 		void update();
 		Gaffer::ConstContextPtr effectiveContext();

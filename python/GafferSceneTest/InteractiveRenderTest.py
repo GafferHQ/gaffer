@@ -39,6 +39,8 @@ import inspect
 import unittest
 import imath
 
+import six
+
 import IECore
 import IECoreScene
 import IECoreImage
@@ -2067,6 +2069,28 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( c, imath.Color3f( 0, 0, 0 ) )
 
 			s["renderer"]["state"].setValue( s["renderer"].State.Stopped )
+
+	def testAcceptsInput( self ) :
+
+		r = GafferScene.InteractiveRender()
+
+		p = Gaffer.StringPlug()
+		r["renderer"].setInput( p )
+		r["renderer"].setInput( None )
+
+		s = GafferTest.StringInOutNode()
+		with six.assertRaisesRegex( self, Exception, 'Plug "%s.renderer" rejects input "StringInOutNode.out".' % r.getName() ) :
+			r["renderer"].setInput( s["out"] )
+
+		r = self._createInteractiveRender()
+
+		p = Gaffer.IntPlug()
+		r["state"].setInput( p )
+		r["state"].setInput( None )
+
+		a = GafferTest.AddNode()
+		with six.assertRaisesRegex( self, Exception, 'Plug "%s.state" rejects input "AddNode.sum".' % r.getName() ) :
+			r["state"].setInput( a["sum"] )
 
 	def tearDown( self ) :
 

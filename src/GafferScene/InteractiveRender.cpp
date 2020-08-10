@@ -172,7 +172,10 @@ InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType
 
 	outPlug()->setInput( inPlug() );
 
-	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
+	// We can't use plugDirtiedSignal as we need to update messagesUpdateCountPlug
+	// due to message output during render startup. We implement acceptsInput
+	// to reject any computed connections to renderer/state.
+	plugSetSignal().connect( boost::bind( &InteractiveRender::plugSet, this, ::_1 ) );
 
 	m_messageHandler->messagesChangedSignal.connect( boost::bind( &InteractiveRender::messagesChanged, this ) );
 }
@@ -275,7 +278,7 @@ void InteractiveRender::setContext( Gaffer::ContextPtr context )
 	}
 }
 
-void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
+void InteractiveRender::plugSet( const Gaffer::Plug *plug )
 {
 	if( plug == rendererPlug() || plug == statePlug() )
 	{
@@ -387,7 +390,7 @@ void InteractiveRender::messagesChanged()
 			scheduleUpdate = true;
 			pending.plugs.reset( new PlugSet );
 		}
-		pending.plugs->insert( messagesPlug() );
+		pending.plugs->insert( messageUpdateCountPlug() );
 	}
 	if( scheduleUpdate )
 	{
@@ -468,4 +471,19 @@ Gaffer::ValuePlug::CachePolicy InteractiveRender::computeCachePolicy( const Gaff
 	}
 
 	return ComputeNode::computeCachePolicy( output );
+}
+
+bool InteractiveRender::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( plug == rendererPlug() || plug == statePlug() )
+	{
+		// We can't accept computed plugs as we may need to dirty our messages plug as
+		// result. It is forbidden to modify the node graph during dirty propagation.
+		if( inputPlug && inputPlug->source()->direction() != Gaffer::Plug::In )
+		{
+			return false;
+		}
+	}
+
+	return Gaffer::ComputeNode::acceptsInput( plug, inputPlug );
 }
