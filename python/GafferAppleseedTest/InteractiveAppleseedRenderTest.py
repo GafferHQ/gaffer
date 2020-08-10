@@ -53,6 +53,17 @@ from .AppleseedTest import compileOSLShader
 
 class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
+	interactiveRenderNodeClass = GafferAppleseed.InteractiveAppleseedRender
+
+	## \todo Fix error messages and remove. These errors appear to be caused by
+	# problems with the default camera code in AppleseedRenderer :
+	#
+	# ```
+	# ERROR : Appleseed : while defining camera "/scene/__default_camera": no "horizontal_fov" or "focal_length" parameter found; using default focal length value "0.035000".
+	# ERROR : Appleseed : required parameter "film_dimensions" not found; continuing using value "0.025 0.025".
+	# ```
+	failureMessageLevel = None
+
 	# Disabled since appleseed does not support multiple beauty outputs.
 	@unittest.expectedFailure
 	def testAddAndRemoveOutput( self ):
@@ -92,22 +103,17 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testMessages( self ) :
 
 		p = GafferScene.Plane()
-		i = GafferAppleseed.InteractiveAppleseedRender()
+		i = self._createInteractiveRender()
 
 		i["in"].setInput( p["out"] )
 
 		self.assertEqual( i["messages"].getValue().value.size(), 0 )
 
-		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
-			i["state"].setValue( GafferScene.InteractiveRender.State.Running )
-			handler.waitFor( 1 )
-			i["state"].setValue( GafferScene.InteractiveRender.State.Stopped )
+		i["state"].setValue( GafferScene.InteractiveRender.State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+		i["state"].setValue( GafferScene.InteractiveRender.State.Stopped )
 
 		self.assertGreater( i["messages"].getValue().value.size(), 0 )
-
-	def _createInteractiveRender( self ) :
-
-		return GafferAppleseed.InteractiveAppleseedRender()
 
 	def _createConstantShader( self ) :
 

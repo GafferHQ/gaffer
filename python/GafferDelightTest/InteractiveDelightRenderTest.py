@@ -47,6 +47,8 @@ import GafferDelight
 @unittest.skipIf( GafferTest.inCI(), "No license available in cloud" )
 class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
+	interactiveRenderNodeClass =  GafferDelight.InteractiveDelightRender
+
 	# Temporarily disable this test (which is implemented in the
 	# base class) because it fails. The issue is that we're automatically
 	# instancing the geometry for the two lights, and that appears to
@@ -83,10 +85,6 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def testLightFiltersAndSetEdits( self ) :
 
 		pass
-
-	def _createInteractiveRender( self ) :
-
-		return GafferDelight.InteractiveDelightRender()
 
 	def _createConstantShader( self ) :
 

@@ -53,17 +53,33 @@ import Gaffer
 ## A useful base class for creating test cases for nodes.
 class TestCase( unittest.TestCase ) :
 
+	# If any messages of this level (or lower) are emitted during a test, it
+	# will automatically be failed. Set to None to disable message checking.
+	failureMessageLevel = IECore.MessageHandler.Level.Warning
+
 	def setUp( self ) :
 
 		self.__temporaryDirectory = None
 
 		# Set up a capturing message handler and a cleanup function so
-		# we can assert that no warning or error messages are triggered by
+		# we can assert that no undesired messages are triggered by
 		# the tests. If any such messages are actually expected during testing,
 		# the relevant tests should use their own CapturingMessageHandler
 		# to grab them and then assert that they are as expected.
-		self.addCleanup( functools.partial( self.__messageHandlerCleanup, IECore.MessageHandler.getDefaultHandler() ) )
-		IECore.MessageHandler.setDefaultHandler( IECore.CapturingMessageHandler() )
+		# We also setup a tee to the default message handler, which is useful
+		# as it allows errors to be seen at the time they occur, rather than
+		# after the test has completed.
+		if self.failureMessageLevel is not None :
+
+			defaultHandler = IECore.MessageHandler.getDefaultHandler()
+			testMessageHandler = IECore.CompoundMessageHandler()
+			testMessageHandler.addHandler( defaultHandler )
+
+			failureMessageHandler = IECore.CapturingMessageHandler()
+			testMessageHandler.addHandler( IECore.LevelFilteredMessageHandler( failureMessageHandler, self.failureMessageLevel ) )
+
+			IECore.MessageHandler.setDefaultHandler( testMessageHandler )
+			self.addCleanup( functools.partial( self.__messageHandlerCleanup, defaultHandler, failureMessageHandler ) )
 
 		# Clear the cache so that each test starts afresh. This is
 		# important for tests which use monitors to assert that specific
@@ -101,14 +117,12 @@ class TestCase( unittest.TestCase ) :
 			shutil.rmtree( self.__temporaryDirectory )
 
 	@staticmethod
-	def __messageHandlerCleanup( originalHandler ) :
+	def __messageHandlerCleanup( originalHandler, failureHandler ) :
 
-		mh = IECore.MessageHandler.getDefaultHandler()
 		IECore.MessageHandler.setDefaultHandler( originalHandler )
 
-		for message in mh.messages :
-			if message.level in  ( mh.Level.Warning, mh.Level.Error ) :
-				raise RuntimeError( "Unexpected message : " + mh.levelAsString( message.level ) + " : " + message.context + " : " + message.message )
+		for message in failureHandler.messages :
+			raise RuntimeError( "Unexpected message : " + failureHandler.levelAsString( message.level ) + " : " + message.context + " : " + message.message )
 
 	## Returns a path to a directory the test may use for temporary
 	# storage. This will be cleaned up automatically after the test
