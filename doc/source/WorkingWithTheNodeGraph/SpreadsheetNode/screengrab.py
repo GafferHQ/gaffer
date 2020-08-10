@@ -2,10 +2,12 @@
 
 import sys
 import os
+import six
 import subprocess32 as subprocess
 import tempfile
 import time
 
+import Qt
 from Qt import QtCore, QtWidgets
 
 import imath
@@ -77,7 +79,11 @@ def __grabPlugContextSubmenu( plugWidget, contextMenuWidget, submenuWidget, menu
 	if windowHandle :
 		screen = windowHandle.screen()
 
-	pixmapMain = screen.grabWindow( long( mainWindow._qtWidget().winId() ) )
+	qtVersion = [ int( x ) for x in Qt.__qt_version__.split( "." ) ]
+	if qtVersion >= [ 5, 12 ] or six.PY3 :
+		pixmapMain = screen.grabWindow( mainWindow._qtWidget().winId() )
+	else :
+		pixmapMain = screen.grabWindow( long( mainWindow._qtWidget().winId() ) )
 
 	## Screengrab the context menu. The frame dimensions are too big by
 	# one pixel on each axis.
