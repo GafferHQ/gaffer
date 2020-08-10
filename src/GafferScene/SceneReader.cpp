@@ -75,6 +75,8 @@ SceneReader::SceneReader( const std::string &name )
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new StringPlug( "tags" ) );
 	addChild( new TransformPlug( "transform" ) );
+
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
 	plugSetSignal().connect( boost::bind( &SceneReader::plugSet, this, ::_1 ) );
 }
 
@@ -126,26 +128,33 @@ void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 {
 	SceneNode::affects( input, outputs );
 
-	if( input == fileNamePlug() || input == refreshCountPlug() )
+	const bool affectsScene = input == fileNamePlug() || input == refreshCountPlug();
+
+	if(
+		affectsScene ||
+		input == outPlug()->childBoundsPlug() ||
+		transformPlug()->isAncestorOf( input )
+	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );
+	}
+
+	if( affectsScene || transformPlug()->isAncestorOf( input ) )
+	{
 		outputs.push_back( outPlug()->transformPlug() );
+	}
+
+	if( affectsScene || input == tagsPlug() )
+	{
+		outputs.push_back( outPlug()->childNamesPlug() );
+	}
+
+	if( affectsScene )
+	{
 		outputs.push_back( outPlug()->attributesPlug() );
 		outputs.push_back( outPlug()->objectPlug() );
-		outputs.push_back( outPlug()->childNamesPlug() );
-		// deliberately not adding globalsPlug(), since we don't
-		// load those from file.
 		outputs.push_back( outPlug()->setNamesPlug() );
 		outputs.push_back( outPlug()->setPlug() );
-	}
-	else if( input == tagsPlug() )
-	{
-		outputs.push_back( outPlug()->childNamesPlug() );
-	}
-	else if( transformPlug()->isAncestorOf( input ) )
-	{
-		outputs.push_back( outPlug()->transformPlug() );
-		outputs.push_back( outPlug()->boundPlug() );
 	}
 }
 
@@ -173,6 +182,9 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 	}
 	else
 	{
+		// Deliberately not using `childBoundsPlug()->hash()`
+		// here because `fileName/path` uniquely identifies the
+		// result, and is quicker to compute.
 		fileNamePlug()->hash( h );
 		h.append( &path.front(), path.size() );
 	}

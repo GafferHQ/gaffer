@@ -65,6 +65,7 @@ void Deformer::init()
 	addChild( new BoolPlug( "adjustBounds", Plug::In, true ) );
 	// Remove pass-through created by base class
 	outPlug()->boundPlug()->setInput( nullptr );
+	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
 }
 
 Deformer::~Deformer()
@@ -85,7 +86,15 @@ void Deformer::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 {
 	ObjectProcessor::affects( input, outputs );
 
-	if( input == outPlug()->objectPlug() || input == inPlug()->boundPlug() || input == adjustBoundsPlug() )
+	if(
+		input == adjustBoundsPlug() ||
+		input == filterPlug() ||
+		input == outPlug()->objectPlug() ||
+		input == inPlug()->objectPlug() ||
+		input == outPlug()->childBoundsPlug() ||
+		input == inPlug()->childBoundsPlug() ||
+		input == inPlug()->boundPlug()
+	)
 	{
 		outputs.push_back( outPlug()->boundPlug() );
 	}
