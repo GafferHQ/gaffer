@@ -10,7 +10,9 @@ Improvements
 Fixes
 -----
 
-- Viewer : Fixed crashes that could be caused by invalid pixel values.
+- Viewer :
+ - Fixed crashes that could be caused by invalid pixel values.
+ - Fixed bug that caused gobos to ignore the light visualisation mode of their parent light.
 
 API
 ---
@@ -32,7 +34,6 @@ Fixes
 - SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
 - SceneAlgo : Removed cancellers from contexts referenced by history objects.
 - Context : Fixed Python `Canceller` lifetime management bug.
-- Viewer : Fixed bug that caused gobos to ignore the light visualisation mode of their parent light.
 
 API
 ---
