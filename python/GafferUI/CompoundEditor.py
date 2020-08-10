@@ -82,52 +82,43 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ), scoped=False )
 
-	# Returns the editor of the specified type that the user is currently
-	# interested in. This takes into account detached panels and window
-	# ordering such that when the keyboard focus is with an editor of the
-	# requested type, in the active window, that editor will be returned.
-	# Otherwise the first editor in the active window belonging to the
-	# CompoundEditor will be returned. If none can be found, then the first
-	# matching editor from any of the CompoundEditor's windows will be returned.
-	# If focussedOnly is true, None will be returned in cases where the
-	# keyboard focus is not with a matching editor in the active window.
-	def editor( self, type = GafferUI.Editor, focussedOnly = False ) :
+	# Returns the editor of the specified type that the user is most likely to
+	# be interested in. If `focussedOnly` is true, only editors with the keyboard
+	# focus are considered. If `visibleOnly` is true, only visible editors are
+	# considered. Returns None if no suitable editor can be found.
+	def editor( self, type = GafferUI.Editor, focussedOnly = False, visibleOnly = False ) :
 
-		candidates = [ self ]
-		candidates.extend( self._detachedPanels() )
+		candidates = []
 
-		editor = None
+		for editor in self.editors( type ) :
 
-		for candidate in candidates :
-
-			# Skip a window if its inactive
-			window = candidate._qtWidget().windowHandle()
-			if not window or not window.isActive() :
+			visible = editor.visible()
+			if visibleOnly and not visible :
 				continue
 
-			# We the focus widget is (or is a child of) an editor of the right
-			# type, use that
-			focusWidget = GafferUI.Widget._owner( candidate._qtWidget().focusWidget() )
-			if focusWidget is not None :
-				editor = focusWidget.ancestor( type )
-				if editor :
-					break
+			window = editor.ancestor( GafferUI.Window )
+			qtWindow = window._qtWidget().windowHandle()
+			windowIsActive = qtWindow and qtWindow.isActive()
+			windowFocusWidget = GafferUI.Widget._owner( window._qtWidget().focusWidget() )
+			hasWindowFocus = editor == windowFocusWidget or editor.isAncestorOf( windowFocusWidget )
 
-			# If the window was active, but the focussed editor was something
-			# else, if requested, pick the first matching editor in this window.
-			if editor is None and not focussedOnly :
-				editors = candidate.editors( type )
-				if editors :
-					editor = editors[0]
-					break
+			if focussedOnly and not ( windowIsActive and hasWindowFocus ) :
+				continue
 
-		# Worst case, go find the first editor of the right type anywhere
-		if editor is None and not focussedOnly :
-			editors = self.editors( type )
-			if editors :
-				editor = editors[0]
+			candidates.append( {
+				"editor" : editor,
+				"visible" : visible,
+				"hasWindowFocus" : hasWindowFocus,
+				"windowIsActive" : windowIsActive,
+			} )
 
-		return editor
+		if not candidates :
+			return None
+
+		# Sort on visibility first, so that an invisible editor never takes precedence over a visible one.
+		# Then prefer editors in the active window, and of those, the one with the focus.
+		candidates.sort( key = lambda x : ( x["visible"], x["windowIsActive"], x["hasWindowFocus"] ), reverse = True )
+		return candidates[0]["editor"]
 
 	## Returns all the editors that comprise this CompoundEditor, optionally
 	# filtered by type.

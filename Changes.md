@@ -174,6 +174,27 @@ Build
 
 - Updated to GafferHQ/dependencies 1.6.0.
 
+0.57.7.0 (relative to 0.57.6.0)
+========
+
+Improvements
+------------
+
+- Dispatch app : Added support for setting CompoundDataPlugs via the `-settings` argument.
+- Viewer : Made light gobos selectable.
+
+Fixes
+-----
+
+- Viewer : Fixed crashes that could be caused by invalid pixel values.
+
+API
+---
+
+- CompoundEditor :
+  - Added `visibleOnly` argument to `editor()` method.
+  - Improved `editor()` logic, so that visible editors are always preferred to hidden ones.
+
 0.57.6.0 (relative to 0.57.5.0)
 ========
 
@@ -187,6 +208,7 @@ Fixes
 - SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
 - SceneAlgo : Removed cancellers from contexts referenced by history objects.
 - Context : Fixed Python `Canceller` lifetime management bug.
+- Viewer : Fixed bug that caused gobos to ignore the light visualisation mode of their parent light.
 
 API
 ---
@@ -421,6 +443,11 @@ Build
 -----
 
 - Cortex : Updated to version 10.0.0-a76.
+
+0.56.2.6 (relative to 0.56.2.5)
+========
+
+- Viewer : Fixed crashes that could be caused by invalid pixel values.
 
 0.56.2.5 (relative to 0.56.2.4)
 ========
