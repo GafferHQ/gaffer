@@ -226,7 +226,7 @@ class __StatusIconColumn( IconColumn ) :
 			try :
 				catalogue["out"].metadata()
 			except Gaffer.ProcessException :
-				return "errorNotificationSmall"
+				return "errorSmall"
 			return "catalogueStatusDisk"
 
 		return "catalogueStatusDisplay"
