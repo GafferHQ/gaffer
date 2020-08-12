@@ -51,18 +51,16 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LinearContainer );
 
 LinearContainer::LinearContainer( const std::string &name, Orientation orientation,
 	Alignment alignment, float spacing, Direction direction )
-	:	ContainerGadget( name ), m_orientation( orientation ), m_alignment( alignment ), m_spacing( spacing ), m_direction( direction ), m_clean( true )
+	:	ContainerGadget( name ), m_orientation( orientation ), m_alignment( alignment ), m_spacing( spacing ), m_direction( direction )
 {
-	// we already initialised these values above, but that didn't perform any range checking,
-	// so we set them here as well. the reason we initialize them at all is so that the set
-	// methods will determine that the values are not changing, and therefore not trigger
-	// renderRequestSignal() unecessarily.
+	// We already initialised these values above, but that didn't perform any range checking,
+	// so we set them here as well. The reason we initialize them at all is so that the set
+	// methods will determine that the values are not changing, and therefore not call
+	// `dirty()` unecessarily.
 	setOrientation( orientation );
 	setAlignment( alignment );
 	setSpacing( spacing );
 	setDirection( direction );
-
-	renderRequestSignal().connect( boost::bind( &LinearContainer::renderRequested, this, ::_1 ) );
 }
 
 LinearContainer::~LinearContainer()
@@ -78,8 +76,7 @@ void LinearContainer::setOrientation( Orientation orientation )
 	if( orientation != m_orientation )
 	{
 		m_orientation = orientation;
-		requestRender();
-		m_clean = false;
+		dirty( DirtyType::Layout );
 	}
 }
 
@@ -97,8 +94,7 @@ void LinearContainer::setAlignment( Alignment alignment )
 	if( alignment != m_alignment )
 	{
 		m_alignment = alignment;
-		m_clean = false;
-		requestRender();
+		dirty( DirtyType::Layout );
 	}
 }
 
@@ -116,8 +112,7 @@ void LinearContainer::setSpacing( float spacing )
 	if( spacing!=m_spacing )
 	{
 		m_spacing = spacing;
-		m_clean = false;
- 		requestRender();
+		dirty( DirtyType::Layout );
 	}
 }
 
@@ -135,8 +130,7 @@ void LinearContainer::setDirection( Direction direction )
 	if( direction != m_direction )
 	{
 		m_direction = direction;
-		m_clean = false;
- 		requestRender();
+		dirty( DirtyType::Layout );
 	}
 }
 
@@ -145,34 +139,8 @@ LinearContainer::Direction LinearContainer::getDirection() const
 	return m_direction;
 }
 
-void LinearContainer::renderRequested( GadgetPtr gadget )
+void LinearContainer::updateLayout() const
 {
-	/// \todo We don't need to recalculate the offsets every time a rerender is needed.
-	/// the render request can be made for many reasons - a child changing its colour for
-	/// instance. if there were a boundChanged() signal then we could attach to that instead,
-	/// and potentially get some optimisation. it's not clear that that is necessary yet though.
-	m_clean = false;
-}
-
-Imath::Box3f LinearContainer::bound() const
-{
-	calculateChildTransforms();
-	return ContainerGadget::bound();
-}
-
-void LinearContainer::doRenderLayer( Layer layer, const Style *style ) const
-{
-	calculateChildTransforms();
-	ContainerGadget::doRenderLayer( layer, style );
-}
-
-void LinearContainer::calculateChildTransforms() const
-{
-	if( m_clean )
-	{
-		return;
-	}
-
 	int axis = m_orientation - 1;
 	V3f size( 0 );
 	vector<Box3f> bounds;
@@ -248,6 +216,4 @@ void LinearContainer::calculateChildTransforms() const
 		M44f m; m.translate( childOffset );
 		child->setTransform( m );
 	}
-
-	m_clean = true;
 }

@@ -132,6 +132,28 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			return WrappedType::getToolTip( line );
 		}
 
+		void updateLayout() const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "updateLayout" );
+					if( f )
+					{
+						f();
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			WrappedType::updateLayout();
+		}
+
 		void doRenderLayer( GafferUI::Gadget::Layer layer, const GafferUI::Style *style ) const override
 		{
 			if( this->isSubclassed() )

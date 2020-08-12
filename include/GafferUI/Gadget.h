@@ -277,11 +277,25 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 	protected :
 
-		/// Emits renderRequestSignal() as necessary for this and all ancestors.
-		/// Use this rather than emit the signal manually.
-		void requestRender();
-		/// Implemented to request a render for both the old and the new parent.
-		void parentChanged( GraphComponent *oldParent ) override;
+		enum class DirtyType
+		{
+			/// A re-render is needed, but the bounding box
+			/// and layout remain the same.
+			Render,
+			/// The bounding box has changed. Implies Render.
+			Bound,
+			/// Parameters used by `updateLayout()` have changed.
+			/// Implies Bound and Render.
+			Layout,
+		};
+
+		/// Must be called by derived classes to reflect changes
+		/// affecting `doRenderLayer()`, `bound()` or `updateLayout().
+		void dirty( DirtyType dirtyType );
+
+		/// May be implemented by derived classes to position child widgets.
+		/// This is called automatically prior to rendering or bound computation.
+		virtual void updateLayout() const;
 
 		/// Should be implemented by subclasses to draw themselves as appropriate
 		/// for the specified layer. Child gadgets will be drawn automatically
@@ -291,6 +305,11 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// of its children will render anything for the specified layer.
 		/// The default implementation returns true.
 		virtual bool hasLayer( Layer layer ) const;
+
+		/// \deprecated
+		void requestRender();
+		/// Implemented to dirty the layout for both the old and the new parent.
+		void parentChanged( GraphComponent *oldParent ) override;
 
 	private :
 
@@ -308,6 +327,9 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		bool m_highlighted;
 
 		Imath::M44f m_transform;
+
+		mutable Imath::Box3f m_bound;
+		mutable bool m_layoutDirty;
 
 		VisibilityChangedSignal m_visibilityChangedSignal;
 		RenderRequestSignal m_renderRequestSignal;

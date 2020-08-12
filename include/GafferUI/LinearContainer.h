@@ -90,23 +90,14 @@ class GAFFERUI_API LinearContainer : public ContainerGadget
 		void setDirection( Direction direction );
 		Direction getDirection() const;
 
-		Imath::Box3f bound() const override;
-
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override;
-
-	private :
-
-		void renderRequested( GadgetPtr gadget );
+		void updateLayout() const override;
 
 		Orientation m_orientation;
 		Alignment m_alignment;
 		float m_spacing;
 		Direction m_direction;
-
-		mutable bool m_clean;
-		void calculateChildTransforms() const;
 
 };
 

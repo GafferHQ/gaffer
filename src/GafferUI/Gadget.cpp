@@ -57,7 +57,7 @@ using namespace std;
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( nullptr ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_toolTip( "" )
+	:	GraphComponent( name ), m_style( nullptr ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_layoutDirty( false ), m_toolTip( "" )
 {
 	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
 	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
@@ -102,7 +102,9 @@ void Gadget::setStyle( ConstStylePtr style )
 		{
 			const_cast<Style *>( m_style.get() )->changedSignal().connect( boost::bind( &Gadget::styleChanged, this ) );
 		}
- 		requestRender();
+		// Style affects the bounding box of text,
+		// so we need Layout rather than just Render.
+		dirty( DirtyType::Layout );
 	}
 }
 
@@ -139,7 +141,11 @@ void Gadget::setVisible( bool visible )
 		emitDescendantVisibilityChanged();
 		visibilityChangedSignal()( this );
 	}
- 	requestRender();
+	renderRequestSignal()( this );
+	if( p )
+	{
+		p->dirty( DirtyType::Layout );
+	}
 }
 
 void Gadget::emitDescendantVisibilityChanged()
@@ -188,7 +194,7 @@ void Gadget::setEnabled( bool enabled )
 		return;
 	}
 	m_enabled = enabled;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool Gadget::getEnabled() const
@@ -218,7 +224,7 @@ void Gadget::setHighlighted( bool highlighted )
 	}
 
 	m_highlighted = highlighted;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool Gadget::getHighlighted() const
@@ -231,7 +237,10 @@ void Gadget::setTransform( const Imath::M44f &matrix )
 	if( matrix!=m_transform )
 	{
 		m_transform = matrix;
- 		requestRender();
+		if( auto p = parent<Gadget>() )
+		{
+			p->dirty( DirtyType::Layout );
+		}
 	}
 }
 
@@ -255,6 +264,7 @@ Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 
 void Gadget::render() const
 {
+	bound(); // Updates layout if necessary
 	for( int layer = (int)Layer::Back; layer <= (int)Layer::Front; ++layer )
 	{
 		renderLayer( (Layer)layer, /* currentStyle = */ nullptr );
@@ -311,14 +321,35 @@ void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
 	}
 }
 
-void Gadget::requestRender()
+void Gadget::dirty( DirtyType dirtyType )
 {
 	Gadget *g = this;
 	while( g )
 	{
+		if( dirtyType == DirtyType::Layout )
+		{
+			g->m_layoutDirty = true;
+		}
 		g->renderRequestSignal()( g );
+		if( dirtyType == DirtyType::Bound )
+		{
+			// Bounds changes in children require layout updates in parents.
+			dirtyType = DirtyType::Layout;
+		}
 		g = g->parent<Gadget>();
 	}
+}
+
+void Gadget::updateLayout() const
+{
+}
+
+void Gadget::requestRender()
+{
+	// `requestRender()` has been deprecated and replaced by `dirty()` because
+	// it didn't provide the fine-grained control we need. Where extension code
+	// is still using it, we must assume the worst and dirty the layout.
+	dirty( DirtyType::Layout );
 }
 
 void Gadget::doRenderLayer( Layer layer, const Style *style ) const
@@ -332,7 +363,13 @@ bool Gadget::hasLayer( Layer layer ) const
 
 Imath::Box3f Gadget::bound() const
 {
-	Box3f result;
+	if( !m_layoutDirty )
+	{
+		return m_bound;
+	}
+
+	updateLayout();
+	m_bound = Box3f();
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
 		// cast is safe because of the guarantees acceptsChild() gives us
@@ -343,9 +380,11 @@ Imath::Box3f Gadget::bound() const
 		}
 		Imath::Box3f b = c->bound();
 		b = Imath::transform( b, c->getTransform() );
-		result.extendBy( b );
+		m_bound.extendBy( b );
 	}
-	return result;
+
+	m_layoutDirty = false;
+	return m_bound;
 }
 
 Imath::Box3f Gadget::transformedBound() const
@@ -470,7 +509,7 @@ Gadget::IdleSignal &Gadget::idleSignalAccessedSignal()
 
 void Gadget::styleChanged()
 {
-	requestRender();
+	dirty( DirtyType::Layout );
 }
 
 void Gadget::parentChanged( GraphComponent *oldParent )
@@ -479,10 +518,10 @@ void Gadget::parentChanged( GraphComponent *oldParent )
 
 	if( Gadget *oldParentGadget = IECore::runTimeCast<Gadget>( oldParent ) )
 	{
-		oldParentGadget->requestRender();
+		oldParentGadget->dirty( DirtyType::Layout );
 	}
 	if( Gadget *parentGadget = parent<Gadget>() )
 	{
-		parentGadget->requestRender();
+		parentGadget->dirty( DirtyType::Layout );
 	}
 }
