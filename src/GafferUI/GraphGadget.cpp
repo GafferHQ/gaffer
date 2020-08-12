@@ -1645,6 +1645,21 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 		return nullptr;
 	}
 
+	// The call to `addChild( nodeGadget )` will uniquefy the name
+	// with respect to all our other NodeGadgets. This can have
+	// significant overhead when graphs get large, which we can
+	// avoid by making sure the name is unique already. The node
+	// name fits the bill, and is already conveniently available
+	// in `InternedString` form. Note that we are deliberately not
+	// synchronising the names in the case of them changing in the
+	// future, and provide no guarantees about NodeGadget names in
+	// general.
+	// \todo It may be better to modify GraphComponent to allow nameless
+	// children and then use them here. This would let us avoid _all_
+	// uniquefication overhead and would also be useful for ArrayPlug
+	// and Spreadsheet::RowsPlug children.
+	nodeGadget->setName( node->getName() );
+
 	addChild( nodeGadget );
 
 	NodeGadgetEntry &nodeGadgetEntry = m_nodeGadgets[node];
