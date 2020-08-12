@@ -203,7 +203,7 @@ void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f 
 	m_dragPosition = position;
 	m_dragTangent = tangent;
 	m_dragging = true;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
@@ -311,7 +311,7 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 bool PlugAdder::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragPosition = V3f( event.line.p0.x, event.line.p0.y, 0 );
-	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -338,6 +338,6 @@ bool PlugAdder::drop( const DragDropEvent &event )
 bool PlugAdder::dragEnd( const DragDropEvent &event )
 {
 	m_dragging = false;
-	requestRender();
+	dirty( DirtyType::Render );
 	return false;
 }

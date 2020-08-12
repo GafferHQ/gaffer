@@ -210,7 +210,7 @@ void DotNodeGadget::updateLabel()
 		);
 	}
 
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool DotNodeGadget::dragEnter( const DragDropEvent &event )

@@ -159,7 +159,7 @@ void SceneGadget::setPaused( bool paused )
 	}
 	else if( m_controller.updateRequired() )
 	{
-		requestRender();
+		dirty( DirtyType::Bound );
 	}
 }
 
@@ -176,7 +176,7 @@ void SceneGadget::setBlockingPaths( const IECore::PathMatcher &blockingPaths )
 		m_updateTask.reset();
 	}
 	m_blockingPaths = blockingPaths;
-	requestRender();
+	dirty( DirtyType::Bound );
 }
 
 const IECore::PathMatcher &SceneGadget::getBlockingPaths() const
@@ -192,7 +192,7 @@ void SceneGadget::setPriorityPaths( const IECore::PathMatcher &priorityPaths )
 		m_updateTask.reset();
 	}
 	m_priorityPaths = priorityPaths;
-	requestRender();
+	dirty( DirtyType::Bound );
 }
 
 const IECore::PathMatcher &SceneGadget::getPriorityPaths() const
@@ -263,7 +263,7 @@ void SceneGadget::setOpenGLOptions( const IECore::CompoundObject *options )
 	}
 
 	m_openGLOptions = options->copy();
-	requestRender();
+	dirty( DirtyType::Bound );
 }
 
 const IECore::CompoundObject *SceneGadget::getOpenGLOptions() const
@@ -424,7 +424,7 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 	m_selection = selection;
 	ConstDataPtr d = new IECore::PathMatcherData( selection );
 	m_renderer->option( "gl:selection", d.get() );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 Imath::Box3f SceneGadget::selectionBound() const
@@ -526,7 +526,7 @@ void SceneGadget::updateRenderer()
 					if( shouldRequestRender )
 					{
 						thisRef->m_renderRequestPending = false;
-						thisRef->requestRender();
+						thisRef->dirty( DirtyType::Bound );
 					}
 				}
 			);

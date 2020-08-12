@@ -65,7 +65,7 @@ void ScaleHandle::setAxes( Style::Axes axes )
 	}
 
 	m_axes = axes;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 Style::Axes ScaleHandle::getAxes() const

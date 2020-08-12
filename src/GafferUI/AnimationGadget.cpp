@@ -461,7 +461,7 @@ const Gaffer::StandardSet *AnimationGadget::editablePlugs() const
 
 void AnimationGadget::plugDirtied( Gaffer::Plug *plug )
 {
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) const
@@ -767,7 +767,7 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 		m_selectedKeys.clear();
 	}
 
-	requestRender();
+	dirty( DirtyType::Render );
 
 	return true;
 }
@@ -876,7 +876,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	m_dragStartPosition = m_lastDragPosition = V2f( i.x, i.y );
 
-	requestRender();
+	dirty( DirtyType::Render );
 	return IECore::NullObject::defaultNullObject();
 }
 
@@ -933,7 +933,7 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	}
 
 	updateKeyPreviewLocation( m_highlightedCurve.get(), i.x );
-	requestRender();
+	dirty( DirtyType::Render );
 
 	return true;
 }
@@ -952,7 +952,7 @@ bool AnimationGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	}
 
 	m_lastDragPosition = V2f( i.x, i.y );
-	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -1016,7 +1016,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 	m_lastDragPosition = V2f( i.x, i.y );
 
-	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -1073,7 +1073,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	m_moveAxis = MoveAxis::Both;
 	Pointer::setCurrent( "" );
 
-	requestRender();
+	dirty( DirtyType::Render );
 
 	return true;
 }
@@ -1083,7 +1083,7 @@ bool AnimationGadget::leave()
 	if( m_frameIndicatorPreviewFrame )
 	{
 		m_frameIndicatorPreviewFrame = boost::none;
-		requestRender();
+		dirty( DirtyType::Render );
 	}
 	return true;
 }
@@ -1094,7 +1094,7 @@ bool AnimationGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 	{
 		insertKeyframes();
 		m_mergeGroupId++;
-		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 
@@ -1109,7 +1109,7 @@ bool AnimationGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 		if( m_highlightedCurve )
 		{
 			m_keyPreview = true;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 		return true;
 	}
@@ -1118,7 +1118,7 @@ bool AnimationGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 	{
 		removeKeyframes();
 		m_mergeGroupId++;
-		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 
@@ -1130,7 +1130,7 @@ bool AnimationGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
 	if( event.key == "Control" )
 	{
 		m_keyPreview = false;
-		requestRender();
+		dirty( DirtyType::Render );
 	}
 
 	return false;
@@ -1254,7 +1254,7 @@ bool AnimationGadget::frameIndicatorUnderMouse( const IECore::LineSegment3f &pos
 void AnimationGadget::setContext( Context *context )
 {
 	m_context = context;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 Context *AnimationGadget::getContext() const
@@ -1272,22 +1272,22 @@ void AnimationGadget::visiblePlugAdded( Gaffer::Set *set, IECore::RunTimeTyped *
 		node->plugDirtiedSignal().connect( boost::bind( &AnimationGadget::plugDirtied, this, ::_1 ) );
 	}
 
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void AnimationGadget::visiblePlugRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void AnimationGadget::editablePlugAdded( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void AnimationGadget::editablePlugRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const Style *style ) const

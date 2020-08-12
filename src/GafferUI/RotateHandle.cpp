@@ -93,7 +93,7 @@ void RotateHandle::setAxes( Style::Axes axes )
 	}
 
 	m_axes = axes;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 Style::Axes RotateHandle::getAxes() const
@@ -227,7 +227,7 @@ bool RotateHandle::dragMove( const DragDropEvent &event )
 	{
 		updatePreciseMotionState( event );
 		m_highlightVector = pointOnSphere( updatedLineFromEvent( event ) );
-		requestRender();
+		dirty( DirtyType::Render );
 	}
 	else
 	{
@@ -239,7 +239,7 @@ bool RotateHandle::dragMove( const DragDropEvent &event )
 bool RotateHandle::mouseMove( const ButtonEvent &event )
 {
 	m_highlightVector = pointOnSphere( event.line );
-	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 

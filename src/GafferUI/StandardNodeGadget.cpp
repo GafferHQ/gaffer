@@ -775,7 +775,7 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		if( updateUserColor() )
 		{
- 			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 	else if( key == g_paddingKey )
@@ -790,7 +790,7 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		if( updateShape() )
 		{
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 }
@@ -860,7 +860,7 @@ void StandardNodeGadget::updateNodeEnabled( const Gaffer::Plug *dirtiedPlug )
 	}
 
 	m_nodeEnabled = enabled;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void StandardNodeGadget::updateIcon()

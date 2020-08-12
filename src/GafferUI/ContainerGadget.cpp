@@ -66,7 +66,7 @@ void ContainerGadget::setPadding( const Imath::Box3f &padding )
 		return;
 	}
 	m_padding = padding;
-	requestRender();
+	dirty( DirtyType::Bound );
 }
 
 const Imath::Box3f &ContainerGadget::getPadding() const

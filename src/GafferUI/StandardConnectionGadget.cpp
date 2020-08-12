@@ -263,7 +263,7 @@ void StandardConnectionGadget::updateDragEndPoint( const Imath::V3f position, co
 	{
 		throw IECore::Exception( "Not dragging" );
 	}
- 	requestRender();
+	dirty( DirtyType::Bound );
 }
 
 void StandardConnectionGadget::createConnection( Gaffer::Plug *endpoint )
@@ -522,7 +522,7 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 
 	m_dragEnd = Gaffer::Plug::Invalid;
 	m_addingConnection = false;
-	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -604,7 +604,7 @@ bool StandardConnectionGadget::keyPressed( const KeyEvent &event )
 	if( event.modifiers & ButtonEvent::Control && srcNodule() )
 	{
 		m_dotPreview = true;
-		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 	return false;
@@ -615,7 +615,7 @@ bool StandardConnectionGadget::keyReleased( const KeyEvent &event )
 	if( !(event.modifiers & ButtonEvent::Control) )
 	{
 		m_dotPreview = false;
-		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 	return false;
@@ -645,7 +645,7 @@ void StandardConnectionGadget::enter( const ButtonEvent &event )
 	updateDotPreviewLocation( event );
 
 	m_hovering = endAt( event.line ) != Plug::Invalid;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool StandardConnectionGadget::mouseMove( const ButtonEvent &event )
@@ -653,7 +653,7 @@ bool StandardConnectionGadget::mouseMove( const ButtonEvent &event )
 	updateDotPreviewLocation( event );
 
 	m_hovering = endAt( event.line ) != Plug::Invalid;
- 	requestRender();
+	dirty( DirtyType::Render );
 	return false;
 }
 
@@ -664,7 +664,7 @@ void StandardConnectionGadget::leave( const ButtonEvent &event )
 	m_dotPreview = false;
 
 	m_hovering = false;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
@@ -676,7 +676,7 @@ void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, c
 
 	if( updateUserColor() )
 	{
-		requestRender();
+		dirty( DirtyType::Render );
 	}
 }
 

@@ -90,7 +90,7 @@ void Handle::setRasterScale( float rasterScale )
 	}
 
 	m_rasterScale = rasterScale;
-	renderRequestSignal()( this );
+	dirty( DirtyType::Render );
 }
 
 float Handle::getRasterScale() const
@@ -106,7 +106,7 @@ void Handle::setVisibleOnHover( bool visibleOnHover )
 	}
 
 	m_visibleOnHover = visibleOnHover;
-	renderRequestSignal()( this );
+	dirty( DirtyType::Render );
 }
 
 bool Handle::getVisibleOnHover() const
@@ -188,13 +188,13 @@ Imath::V3f Handle::rasterScaleFactor() const
 void Handle::enter()
 {
 	m_hovering = true;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void Handle::leave()
 {
 	m_hovering = false;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool Handle::buttonPress( const ButtonEvent &event )

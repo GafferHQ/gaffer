@@ -123,7 +123,7 @@ void ConnectionGadget::setMinimised( bool minimised )
 		return;
 	}
 	m_minimised = minimised;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool ConnectionGadget::getMinimised() const

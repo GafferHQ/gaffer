@@ -1257,7 +1257,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		offsetNodes( m_scriptNode->selection(), pos - m_lastDragPosition );
 		m_lastDragPosition = pos;
 		updateDragReconnectCandidate( event );
- 		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 	else
@@ -1265,7 +1265,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		// we're drag selecting
 		m_lastDragPosition = V2f( i.x, i.y );
 		updateDragSelection( false, event.modifiers );
- 		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 
@@ -1399,12 +1399,12 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		}
 		m_dragReconnectCandidate = nullptr;
 		m_dragMergeGroupId++;
- 		requestRender();
+		dirty( DirtyType::Render );
 	}
 	else if( dragMode == Selecting )
 	{
 		updateDragSelection( true, event.modifiers );
- 		requestRender();
+		dirty( DirtyType::Render );
 	}
 
 	return true;

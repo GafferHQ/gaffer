@@ -774,7 +774,7 @@ void ViewportGadget::setCamera( IECoreScene::CameraPtr camera )
 	}
 	m_cameraController->setCamera( camera->copy() );
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 const Imath::M44f &ViewportGadget::getCameraTransform() const
@@ -790,7 +790,7 @@ void ViewportGadget::setCameraTransform( const Imath::M44f &transform )
 	}
 	m_cameraController->setTransform( transform );
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
@@ -822,7 +822,7 @@ void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController->frame( box, m_variableAspectZoom );
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
@@ -830,7 +830,7 @@ void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirec
 {
 	m_cameraController->frame( box, viewDirection, upVector );
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
@@ -866,7 +866,7 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 
 	m_cameraController->setClippingPlanes( V2f( near, far ) );
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void ViewportGadget::setDragTracking( unsigned dragTracking )
@@ -1233,7 +1233,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 			updateMotionState( event );
 			m_cameraController->motionUpdate( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
 			m_cameraChangedSignal( this );
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 		return true;
 	}
@@ -1369,7 +1369,7 @@ void ViewportGadget::trackDragIdle()
 	dragMove( this, m_dragTrackingEvent );
 
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void ViewportGadget::updateMotionState( const DragDropEvent &event, bool initialEvent )
@@ -1510,7 +1510,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 			m_cameraController->motionEnd( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
 			m_cameraChangedSignal( this );
 			m_preciseMotionEnabled = false;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 		return true;
 	}
@@ -1549,7 +1549,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController->motionEnd( position );
 
 	m_cameraChangedSignal( this );
-	requestRender();
+	dirty( DirtyType::Render );
 
 	return true;
 }

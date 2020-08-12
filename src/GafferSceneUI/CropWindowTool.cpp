@@ -189,7 +189,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 				return;
 			}
 			m_masked = masked;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		bool getMasked() const
@@ -284,8 +284,8 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 				return;
 			}
 			m_rectangle = rectangle;
+			dirty( DirtyType::Bound );
 			rectangleChangedSignal()( this, reason );
-			requestRender();
 		}
 
 		bool mouseMove( const ButtonEvent &event )
