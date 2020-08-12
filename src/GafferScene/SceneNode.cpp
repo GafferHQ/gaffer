@@ -583,7 +583,9 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 			result.append( y );
 			return result;
 		},
+		#if TBB_INTERFACE_VERSION >= 10001
 		simple_partitioner(),
+		#endif
 		taskGroupContext
 	);
 

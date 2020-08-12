@@ -6,6 +6,11 @@ Fixes
 
 - Catalogue : Fixed missing error icon.
 
+Build
+-----
+
+- Fixed compilation with TBB versions prior to 2018 Update 1.
+
 0.58.0.0
 ========
 
