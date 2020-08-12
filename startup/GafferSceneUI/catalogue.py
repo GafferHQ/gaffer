@@ -68,7 +68,7 @@ if statusIconColumn :
 				if not scenePlug :
 					return iconName
 			except Gaffer.ProcessException :
-				return "errorNotificationSmall"
+				return "errorSmall"
 
 			for type_ in imageNameMap.keys() :
 				if isinstance( scenePlug.node(), type_ ) :

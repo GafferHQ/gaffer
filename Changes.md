@@ -1,3 +1,11 @@
+0.58.0.x (relative to 0.58.0.0)
+========
+
+Fixes
+-----
+
+- Catalogue : Fixed missing error icon.
+
 0.58.0.0
 ========
 
