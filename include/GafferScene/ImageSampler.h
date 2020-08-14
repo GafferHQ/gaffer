@@ -58,23 +58,23 @@ class GAFFERSCENE_API ImageSampler : public Deformer
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ImageSampler, ImageSamplerTypeId, Deformer );
 
-        enum UVBoundsMode
+		enum UVBoundsMode
 		{
 			Clamp = 0,
-            Tile = 1
+			Tile = 1
 		};
 
-        GafferImage::ImagePlug *imagePlug();
+		GafferImage::ImagePlug *imagePlug();
 		const GafferImage::ImagePlug *imagePlug() const;
 
-        Gaffer::StringPlug *primVarNamePlug();
+		Gaffer::StringPlug *primVarNamePlug();
 		const Gaffer::StringPlug *primVarNamePlug() const;
 
-        Gaffer::StringPlug *uvVarNamePlug();
+		Gaffer::StringPlug *uvVarNamePlug();
 		const Gaffer::StringPlug *uvVarNamePlug() const;
 
-        Gaffer::IntPlug *uvBoundsModePlug();
-        const Gaffer::IntPlug *uvBoundsModePlug() const;
+		Gaffer::IntPlug *uvBoundsModePlug();
+		const Gaffer::IntPlug *uvBoundsModePlug() const;
 
 		Gaffer::StringPlug *channelsPlug();
 		const Gaffer::StringPlug *channelsPlug() const;

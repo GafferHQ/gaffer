@@ -44,7 +44,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Samples image data and transfers the values onto a primitive
-    variable on the sampling objects. Values of \"Cs\", \"N\", 
+	variable on the sampling objects. Values of \"Cs\", \"N\", 
 	\"P\", \"Pref\", \"scale\", \"uv\", \"velocity\" and \"width\" 
 	will define their interpretation appropriately when the correct 
 	number of channels are sampled. Other variables will create a 
@@ -74,7 +74,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-        "uvPrimitiveVariable" : [
+		"uvPrimitiveVariable" : [
 
 			"description",
 			"""
@@ -88,7 +88,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The image channels to sample. Multiple channels are separated by spaces. 
-            For vector primitive variables the order of the channels corresponds to 
+			For vector primitive variables the order of the channels corresponds to 
 			the indices of the vector. Wildcard expressions are not supported.
 			""",
 
