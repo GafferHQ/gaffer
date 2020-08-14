@@ -95,7 +95,7 @@ bool isParameterType( const Plug *plug )
 		default :
 			// Use typeName query to avoid hard dependency on
 			// GafferOSL. It may be that we should move ClosurePlug
-			// to GafferScene anyway.s
+			// to GafferScene anyway.
 			return plug->isInstanceOf( "GafferOSL::ClosurePlug" );
 	}
 	return false;
