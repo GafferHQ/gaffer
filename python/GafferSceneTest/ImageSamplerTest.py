@@ -109,7 +109,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["in"].setInput( plane["out"] )
 		imageSampler["filter"].setInput( planeFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
-		imageSampler["uvPrimitiveVariable"].setValue( "uv" )
+		imageSampler["uvSet"].setValue( "uv" )
 
 		# Test pass through
 		self.assertScenesEqual( imageSampler["out"], plane["out"] )
@@ -251,7 +251,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["in"].setInput( points["out"] )
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
-		imageSampler["uvPrimitiveVariable"].setValue( "uv" )
+		imageSampler["uvSet"].setValue( "uv" )
 		imageSampler["primitiveVariable"].setValue( "Cs" )
 		imageSampler["channels"].setValue( "R G B" )
 
@@ -308,7 +308,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["in"].setInput( points["out"] )
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
-		imageSampler["uvPrimitiveVariable"].setValue( "uv" )
+		imageSampler["uvSet"].setValue( "uv" )
 		imageSampler["primitiveVariable"].setValue( "Cs" )
 		imageSampler["channels"].setValue( "R G B" )
 		imageSampler["uvBoundsMode"].setValue( 1 )	# Tiled
@@ -403,7 +403,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["in"].setInput( points["out"] )
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
-		imageSampler["uvPrimitiveVariable"].setValue( "uv" )
+		imageSampler["uvSet"].setValue( "uv" )
 		imageSampler["primitiveVariable"].setValue( "Cs" )
 		imageSampler["channels"].setValue( "R G" )
 
@@ -462,7 +462,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["in"].setInput( points["out"] )
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( imgReader["out"] )
-		imageSampler["uvPrimitiveVariable"].setValue( "uv" )
+		imageSampler["uvSet"].setValue( "uv" )
 		imageSampler["primitiveVariable"].setValue( "Cs" )
 		imageSampler["channels"].setValue( "R G B" )
 

@@ -50,6 +50,13 @@ using namespace GafferScene;
 void GafferSceneModule::bindImageSampler()
 {
 
-	GafferBindings::DependencyNodeClass<GafferScene::ImageSampler>();
+	{
+		scope s = GafferBindings::DependencyNodeClass<GafferScene::ImageSampler>();
+
+			enum_<GafferScene::ImageSampler::UVBoundsMode>( "UVBoundsMode" )
+				.value( "Clamp", GafferScene::ImageSampler::UVBoundsMode::Clamp )
+				.value( "Tile", GafferScene::ImageSampler::UVBoundsMode::Tile )
+			;
+	}
 
 }

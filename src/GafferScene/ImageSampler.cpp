@@ -154,8 +154,15 @@ ImageSampler::ImageSampler( const std::string &name )
 
 	addChild( new ImagePlug( "image" ) );
 	addChild( new StringPlug( "primitiveVariable" ) );
-	addChild( new StringPlug( "uvPrimitiveVariable", Gaffer::Plug::Direction::In, "uv" ) );
-	addChild( new IntPlug( "uvBoundsMode") );
+	addChild( new StringPlug( "uvSet", Gaffer::Plug::Direction::In, "uv" ) );
+	addChild( 
+		new IntPlug( "uvBoundsMode", 
+			Gaffer::Plug::Direction::In, 
+			GafferScene::ImageSampler::UVBoundsMode::Clamp,
+			GafferScene::ImageSampler::UVBoundsMode::First,
+			GafferScene::ImageSampler::UVBoundsMode::Last
+		)
+	);
 	addChild( new StringPlug( "channels" ) );
 	
 }
@@ -279,8 +286,6 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 		return inputObject;
 	}
 	
-	PrimitivePtr outputPrimitive = primitive->copy();
-
 	const std::string channelNames = channelsPlug()->getValue();
 	const std::string primVarName = primVarNamePlug()->getValue();
 	const std::string uvVarName = uvVarNamePlug()->getValue();
@@ -290,11 +295,12 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 		return inputObject;
 	}
 
+	PrimitivePtr outputPrimitive = primitive->copy();
+
 	const auto uvVarNameIt = outputPrimitive->variables.find( uvVarName );
 	if( uvVarNameIt == outputPrimitive->variables.end() )
 	{
-		IECore::msg(IECore::Msg::Warning, "ImageSampler::computeProcessedObject", boost::format( "UV primitive variable \"%s\" does not exist." ) % uvVarName.c_str());
-		return inputObject;
+		throw IECore::Exception( "UV primitive variable \"" + uvVarName + "\" does not exist." );
 	}
 
 	PrimitiveVariable::IndexedView<V2f> uvView( uvVarNameIt->second );
@@ -303,8 +309,9 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 	ConstStringVectorDataPtr inChannelNamesData = imagePlug()->channelNamesPlug()->getValue();
 	const std::vector<std::string> inChannelNames = inChannelNamesData->readable();
 
-	const Imath::V2i imageSize = imagePlug()->dataWindow().size();
-	const Imath::V2i imageMin = imagePlug()->dataWindow().min;
+	const Imath::Box2i displayWindow = imagePlug()->format().getDisplayWindow();
+	const Imath::V2i imageSize = displayWindow.size();
+	const Imath::V2i imageMin = displayWindow.min;
 
 	std::vector<std::string> channels;
 	IECore::StringAlgo::tokenize( channelNames, ' ', channels );
@@ -368,7 +375,7 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 
 	for( size_t channelIndex = 0; channelIndex < outputs.size(); ++channelIndex )
 	{
-		Sampler sampler( imagePlug(), channels[channelIndex], imagePlug()->dataWindow() );
+		Sampler sampler( imagePlug(), channels[channelIndex], displayWindow );
 		const OutputVariableFunction &o = outputs[channelIndex];
 
 		for( size_t i = 0; i < uvView.size(); ++i )

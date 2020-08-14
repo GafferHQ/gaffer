@@ -59,7 +59,9 @@ class GAFFERSCENE_API ImageSampler : public Deformer
 		enum UVBoundsMode
 		{
 			Clamp = 0,
-			Tile = 1
+			Tile = 1,
+			First = Clamp,
+			Last = Tile
 		};
 
 		GafferImage::ImagePlug *imagePlug();

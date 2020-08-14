@@ -74,7 +74,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"uvPrimitiveVariable" : [
+		"uvSet" : [
 
 			"description",
 			"""
@@ -103,8 +103,8 @@ Gaffer.Metadata.registerNode(
 				will be reset to 1.0 and values in between are unchanged.
 				- Tile : Values wrap on integer boundaries.
 				""",
-				"preset:Clamp", 0,
-				"preset:Tile", 1,
+				"preset:Clamp", GafferScene.ImageSampler.UVBoundsMode.Clamp,
+				"preset:Tile", GafferScene.ImageSampler.UVBoundsMode.Tile,
 				"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],
 
