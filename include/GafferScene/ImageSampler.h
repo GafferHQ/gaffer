@@ -43,8 +43,6 @@
 
 #include "Gaffer/StringPlug.h"
 
-#include "IECoreScene/PrimitiveEvaluator.h"
-
 namespace GafferScene
 {
 

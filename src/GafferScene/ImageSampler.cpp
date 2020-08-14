@@ -34,14 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferScene/ImageSampler.h"
+
 #include "GafferImage/Sampler.h"
 
-#include "GafferScene/ImageSampler.h"
-#include "GafferScene/SceneAlgo.h"
-
-#include "Gaffer/Private/IECorePreview/ParallelAlgo.h"
-
-#include "tbb/parallel_for.h"
+#include "IECoreScene/Primitive.h"
 
 using namespace Imath;
 using namespace IECore;
