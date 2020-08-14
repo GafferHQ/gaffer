@@ -8,6 +8,7 @@ Fixes
 - SetFilter : Added missing set expression operators to node reference/tooltip.
 - UIEditor : Fixed bug which allowed the creation of non-selectable presets.
 - EditScopes : Fixed crash in `EditScope::processors()` if intermediate nodes had no corresponding input.
+- ShaderAssignment : Fixed bug in `shader` plug connection acceptance that could cause crashes at shutdown.
 
 0.57.7.0 (relative to 0.57.6.0)
 ========
