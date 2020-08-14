@@ -605,5 +605,44 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		i = inspector( shaderAssignment["out"], "/light2", "c", None, attribute="test:surface" )
 		assertOutcome( i, True, warning = "Edits to 'TestShader' may affect other locations in the scene.", acquire = False )
 
+	def testInspectorShaderDiscovery( self ) :
+
+		def inspector( scene, path, parameter, attribute="light" ) :
+
+			history = GafferScene.SceneAlgo.history( scene["attributes"], path )
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attribute )
+			return GafferSceneUI.SceneViewUI._ParameterInspector( attributeHistory, parameter, None )
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["shader"] = GafferSceneTest.TestShader()
+		s["shader"]["type"].setValue( "test:surface" )
+
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+		s["shaderAssignment"]["in"].setInput( s["sphere"]["out"] )
+
+		i = inspector( s["shaderAssignment"]["out"], "/sphere", "c", attribute="test:surface" )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
+
+		s["switch"]= Gaffer.Switch()
+		s["switch"].setup( s["shaderAssignment"]["shader"] )
+		s["switch"]["in"][0].setInput( s["shader"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["switch"]["out"] )
+
+		i = inspector( s["shaderAssignment"]["out"], "/sphere", "c", attribute="test:surface" )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
+
+		s["expr"] = Gaffer.Expression()
+		s["expr"].setExpression( 'parent["switch"]["index"] = 0', "python" )
+
+		i = inspector( s["shaderAssignment"]["out"], "/sphere", "c", attribute="test:surface" )
+		self.assertTrue( i.editable() )
+		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
+
 if __name__ == "__main__":
 	unittest.main()

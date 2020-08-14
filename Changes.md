@@ -1,6 +1,11 @@
 0.58.x.x
 ========
 
+Fixes
+-----
+
+- Viewer : Fixed bug preventing the Inspector from finding shaders when assigned via a Switch.
+
 0.58.0.1 (relative to 0.58.0.0)
 ========
 

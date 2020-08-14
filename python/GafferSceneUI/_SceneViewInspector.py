@@ -449,6 +449,13 @@ class _ParameterInspector( object ) :
 
 		return sourceInput( valuePlug )
 
+	def __sourceShader( self, plug ) :
+
+		node = plug.source().node()
+		if isinstance( node, Gaffer.Switch ) :
+			node = node.activeInPlug().source().node()
+		return node if isinstance( node, GafferScene.Shader ) else None
+
 	def __editFromSceneNode( self, attributeHistory ) :
 
 		node = attributeHistory.scene.node()
@@ -481,9 +488,9 @@ class _ParameterInspector( object ) :
 			elif isinstance( node, GafferScene.ShaderAssignment ) :
 
 				# \todo use `computedSource` or similar when we have it to consider switches, etc...
-				shaderInput = node["shader"].source()
-				if shaderInput is not None :
-					plug = shaderInput.node()["parameters"].getChild( self.__parameter )
+				shader = self.__sourceShader( node["shader"] )
+				if shader is not None :
+					plug = shader["parameters"].getChild( self.__parameter )
 					if plug is not None :
 						return _EditInfo(
 							acquireEdit = lambda : plug,
