@@ -120,6 +120,7 @@ from .NodeSetEditorTest import NodeSetEditorTest
 from .BackdropNodeGadgetTest import BackdropNodeGadgetTest
 from .StringPlugValueWidgetTest import StringPlugValueWidgetTest
 from .BoolPlugValueWidgetTest import BoolPlugValueWidgetTest
+from .NumericWidgetTest import NumericWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

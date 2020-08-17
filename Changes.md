@@ -9,6 +9,7 @@ Improvements
   - Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
   - Added enabled/reset controls to the Crop Window Tool.
   - Improved display of the edited plug in the Inspector's pop-up edit windows.
+- UI : Added support for basic math operators (`+`, `-`, `/`, `*`, `%`) in numeric fields.
 
 Fixes
 -----
