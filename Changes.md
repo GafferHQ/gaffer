@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Box : Fixed GIL management bug that could cause hangs when promoting a plug.
+- SetFilter : Added missing set expression operators to node reference/tooltip.
 
 0.57.7.0 (relative to 0.57.6.0)
 ========
