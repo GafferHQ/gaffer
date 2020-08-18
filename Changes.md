@@ -5,7 +5,9 @@ Improvements
 ------------
 
 - Catalogue : Added <kbd>Ctrl-D</kbd> shortcut to duplicate selected images (#3545).
-- Viewer : Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
+- Viewer :
+ - Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
+ - Added enabled/reset controls to the Crop Window Tool.
 
 Fixes
 -----
@@ -16,6 +18,7 @@ API
 ---
 
 - EditScopeUI : Added support for listing user nodes in the Edit Scope navigation menu when their `editScope:includeInNavigationMenu` metadata entry is set to `True`.
+- CropWindowTool : Added `plug()` and `enabledPlug()` methods to return the currently edited plugs or `nullptr`.
 
 0.58.0.1 (relative to 0.58.0.0)
 ========

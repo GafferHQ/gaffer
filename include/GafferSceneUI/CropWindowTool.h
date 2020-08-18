@@ -65,6 +65,8 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 		~CropWindowTool() override;
 
 		std::string status() const;
+		Gaffer::Box2fPlug *plug();
+		Gaffer::BoolPlug *enabledPlug();
 
 		using StatusChangedSignal = boost::signal<void (CropWindowTool &)>;
 		StatusChangedSignal &statusChangedSignal();
