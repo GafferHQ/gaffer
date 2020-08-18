@@ -54,9 +54,16 @@ jobs:
    # Provides $(Gaffer.*) variables
    - script: |
        ./config/azure/setBuildVars.py
+       echo "##vso[task.setvariable variable=Gaffer.Sphinx]"`which sphinx-build`
      displayName: 'Set Custom Variables'
      env:
        GITHUB_ACCESS_TOKEN: $(githubAccessToken)
+
+   # Docs builds regularly hang on mac, temporarily disable them for non-release build
+   - script: |
+       echo "##vso[task.setvariable variable=Gaffer.Sphinx]thisDoesNotExist"
+     displayName: 'Disable Docs build (Darwin, non-release)'
+     condition: and( succeeded(), and( eq( variables['Gaffer.GitHub.ReleaseID'], '' ), eq( variables['Agent.OS'], 'Darwin' ) ) )
 
    - script: |
        ./config/installDelight.sh &&
@@ -79,14 +86,14 @@ jobs:
    - script: |
        echo BUILD_TYPE=${{ parameters.buildType }}
        g++ --version
-       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache
+       scons -j ${{ parameters.threads }} build ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache SPHINX=$(Gaffer.Sphinx)
      displayName: 'Build'
      env:
        DISPLAY: :99.0
        AZURE: 1
 
    - script: |
-       ./install/$(Gaffer.Build.Name)/bin/gaffer test -stopOnFailure
+       ./build/bin/gaffer test -stopOnFailure
      displayName: 'Test'
      env:
        DISPLAY: :99.0
@@ -95,8 +102,16 @@ jobs:
        ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
 
    - script: |
+       scons -j ${{ parameters.threads }} package ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ parameters.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT=$ARNOLD_ROOT BUILD_DIR=./build INSTALL_DIR=./install/$(Gaffer.Build.Name) BUILD_CACHEDIR=sconsCache SPHINX=$(Gaffer.Sphinx)
+     displayName: 'Build (Docs + Package)'
+     env:
+       DISPLAY: :99.0
+       AZURE: 1
+
+   - script: |
        ./config/validateRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz
      displayName: 'Validate'
+     condition: and( succeeded(), not( and( eq( variables['Gaffer.GitHub.ReleaseID'], '' ), eq( variables['Agent.OS'], 'Darwin' ) ) ) )
 
    - ${{ if eq(parameters.publish, true) }}:
 
