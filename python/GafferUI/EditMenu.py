@@ -54,6 +54,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
 	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
+	menuDefinition.append( prefix + "/Unplug", { "command" : unplug, "shortCut" : "Ctrl+U", "active" : __mutableSelectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
@@ -198,6 +199,20 @@ def delete( menu ) :
 	s = scope( menu )
 	with Gaffer.UndoScope( s.script ) :
 		s.script.deleteNodes( s.parent, s.script.selection() )
+
+# A function suitable as the command for an Edit/Unplug menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def unplug( menu ) :
+
+	s = scope( menu )
+	with Gaffer.UndoScope( s.script ) :
+
+		s.script.cut( s.parent, s.script.selection() )
+		s.script.paste( s.parent )
+
+		for node in s.script.selection() :
+			position = s.nodeGraph.graphGadget().getNodePosition( node )
+			s.nodeGraph.graphGadget().setNodePosition( node, imath.V2f( position.x+2, position.y+2 ) )
 
 ## A function suitable as the command for an Edit/Find menu item.  It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.

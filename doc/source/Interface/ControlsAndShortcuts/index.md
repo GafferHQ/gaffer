@@ -156,6 +156,7 @@ Delete node(s)                        :kbd:`Backspace`
                                       
                                       :kbd:`Delete`
 Enable/disable node(s)                :kbd:`D`
+Unplug node(s)                        :kbd:`Ctrl` + :kbd:`U`
 ===================================== =============================================
 ```
 

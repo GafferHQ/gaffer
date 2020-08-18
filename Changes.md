@@ -1,6 +1,11 @@
 0.58.x.x
 ========
 
+Improvements
+------------
+
+- Edit Menu : Added "Unplug" (Ctrl+U) to detach selected nodes from their inputs/outputs, and re-wire the graph with new direct connections in their place.
+
 Fixes
 -----
 
