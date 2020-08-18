@@ -63,7 +63,7 @@ void TranslateHandle::setAxes( Style::Axes axes )
 	}
 
 	m_axes = axes;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 Style::Axes TranslateHandle::getAxes() const

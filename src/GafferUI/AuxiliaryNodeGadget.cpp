@@ -97,7 +97,7 @@ void AuxiliaryNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore
 	{
 		if( updateLabel() )
 		{
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 
@@ -105,7 +105,7 @@ void AuxiliaryNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore
 	{
 		if( updateUserColor() )
 		{
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 }

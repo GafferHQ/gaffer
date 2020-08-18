@@ -438,7 +438,7 @@ void AuxiliaryConnectionsGadget::dirtyInputConnections( const NodeGadget *nodeGa
 		return;
 	}
 	m_dirty = true;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void AuxiliaryConnectionsGadget::dirtyOutputConnections( const NodeGadget *nodeGadget )
@@ -459,7 +459,7 @@ void AuxiliaryConnectionsGadget::dirtyOutputConnections( const NodeGadget *nodeG
 		return;
 	}
 	m_dirty = true;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void AuxiliaryConnectionsGadget::updateConnections() const

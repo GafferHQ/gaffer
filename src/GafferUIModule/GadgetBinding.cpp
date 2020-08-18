@@ -223,6 +223,7 @@ void GafferUIModule::bindGadget()
 		.staticmethod( "idleSignal" )
 		.def( "_idleSignalAccessedSignal", &Gadget::idleSignalAccessedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "_idleSignalAccessedSignal" )
+		.def( "_dirty", &Gadget::dirty )
 		.def( "_requestRender", &Gadget::requestRender )
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
@@ -233,6 +234,12 @@ void GafferUIModule::bindGadget()
 		.value( "Main", Gadget::Layer::Main )
 		.value( "MidFront", Gadget::Layer::MidFront )
 		.value( "Front", Gadget::Layer::Front )
+	;
+
+	enum_<Gadget::DirtyType>( "DirtyType" )
+		.value( "Render", Gadget::DirtyType::Render )
+		.value( "Bound", Gadget::DirtyType::Bound )
+		.value( "Layout", Gadget::DirtyType::Layout )
 	;
 
 	SignalClass<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>( "RenderRequestSignal" );

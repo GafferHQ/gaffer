@@ -80,7 +80,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_startPosition = p;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const V3f &getStartPosition() const
@@ -95,7 +95,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_endPosition = p;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const V3f &getEndPosition() const

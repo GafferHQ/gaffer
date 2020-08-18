@@ -339,7 +339,7 @@ void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 void BackdropNodeGadget::contextChanged()
 {
 	// Title and description may depend on the context
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
@@ -348,11 +348,16 @@ void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	if(
 		plug == backdrop->titlePlug() ||
 		plug == backdrop->scalePlug() ||
-		plug == backdrop->descriptionPlug() ||
+		plug == backdrop->descriptionPlug()
+	)
+	{
+		dirty( DirtyType::Render );
+	}
+	else if(
 		plug == acquireBoundPlug( /* createIfMissing = */ false )
 	)
 	{
-		requestRender();
+		dirty( DirtyType::Bound );
 	}
 }
 
@@ -386,7 +391,7 @@ bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 	if( newHovered != m_hovered )
 	{
 		m_hovered = newHovered;
-		requestRender();
+		dirty( DirtyType::Render );
 	}
 
 	return true;
@@ -464,7 +469,7 @@ void BackdropNodeGadget::leave( Gadget *gadget, const ButtonEvent &event )
 {
 	Pointer::setCurrent( "" );
 	m_hovered = false;
-	requestRender();
+	dirty( DirtyType::Render );
 }
 
 float BackdropNodeGadget::hoverWidth() const
@@ -537,7 +542,7 @@ void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		if( updateUserColor() )
 		{
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 }

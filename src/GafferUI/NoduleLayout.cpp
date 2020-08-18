@@ -581,11 +581,11 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 
 	vector<InternedString> metadata;
 	Metadata::registeredValues( m_parent.get(), metadata );
-	boost::regex customGadgetRegex( "noduleLayout:customGadget:(.+):gadgetType" );
+	static boost::regex g_customGadgetRegex( "noduleLayout:customGadget:(.+):gadgetType" );
 	for( vector<InternedString>::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
 	{
 		boost::cmatch match;
-		if( !boost::regex_match( it->c_str(), match, customGadgetRegex ) )
+		if( !boost::regex_match( it->c_str(), match, g_customGadgetRegex ) )
 		{
 			continue;
 		}

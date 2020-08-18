@@ -316,6 +316,6 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 		auto it = m_annotations.find( gadget );
 		assert( it != m_annotations.end() );
 		it->second.dirty = true;
-		requestRender();
+		dirty( DirtyType::Render );
 	}
 }

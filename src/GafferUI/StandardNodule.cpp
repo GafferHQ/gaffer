@@ -99,7 +99,7 @@ void StandardNodule::setLabelVisible( bool labelVisible )
 		return;
 	}
 	m_labelVisible = labelVisible;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 bool StandardNodule::getLabelVisible() const
@@ -136,7 +136,7 @@ void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath:
 	m_dragPosition = position;
 	m_dragTangent = tangent;
 	m_draggingConnection = true;
- 	requestRender();
+	dirty( DirtyType::Render );
 }
 
 void StandardNodule::createConnection( Gaffer::Plug *endpoint )
@@ -311,7 +311,7 @@ bool StandardNodule::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
- 	requestRender();
+	dirty( DirtyType::Render );
 	if( event.buttons == ButtonEvent::Middle )
 	{
 		GafferUI::Pointer::setCurrent( "plug" );
@@ -374,7 +374,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 			setCompatibleLabelsVisible( event, true );
 		}
 
- 		requestRender();
+		dirty( DirtyType::Render );
 		return true;
 	}
 
@@ -384,7 +384,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 bool StandardNodule::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragPosition = V3f( event.line.p0.x, event.line.p0.y, 0 );
- 	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -419,7 +419,7 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 		m_draggingConnection = false;
 	}
 
- 	requestRender();
+	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -485,14 +485,14 @@ void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECor
 	{
 		if( updateUserColor() )
 		{
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 	else if( key == g_labelKey )
 	{
 		if( m_labelVisible )
 		{
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 	}
 }

@@ -624,13 +624,13 @@ class GnomonPlane : public GnomonGadget
 		void enter()
 		{
 			m_hovering = true;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		void leave()
 		{
 			m_hovering = false;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		bool m_hovering;
@@ -779,7 +779,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_resolutionGate = resolutionGate;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const Box2f &getResolutionGate() const
@@ -795,7 +795,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_apertureGate = apertureGate;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const Box2f &getApertureGate() const
@@ -811,7 +811,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_cropWindow = cropWindow;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const Box2f &getCropWindow() const
@@ -827,7 +827,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_overscan = overscan;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const V4f &getOverscan() const
@@ -842,7 +842,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_caption = caption;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const std::string &getCaption() const
@@ -857,7 +857,7 @@ class CameraOverlay : public GafferUI::Gadget
 				return;
 			}
 			m_icon = icon;
-			requestRender();
+			dirty( DirtyType::Render );
 		}
 
 		const std::string &getIcon() const

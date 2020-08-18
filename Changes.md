@@ -1,5 +1,23 @@
-0.59.0.0
+0.59.x.x
 ========
+
+Improvements
+------------
+
+- GraphEditor : Improved performance slightly for large graphs.
+
+API
+---
+
+- Gadget :
+  - Added `updateLayout()` virtual method to simplify implementation of container types.
+  - Added `dirty()` method for finer grained tracking of changes than `requestRender()` provided.
+  - Deprecated `requestRender()` method. Use `dirty()` instead.
+
+Breaking Changes
+----------------
+
+- Gadget : Added new virtual method and private member variables.
 
 0.58.0.1 (relative to 0.58.0.0)
 ========
