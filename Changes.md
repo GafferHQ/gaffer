@@ -6,6 +6,11 @@ Fixes
 
 - Viewer : Fixed bug preventing the Inspector from finding shaders when assigned via a Switch.
 
+API
+---
+
+- EditScopeUI : Added support for listing user nodes in the Edit Scope navigation menu when their `editScope:includeInNavigationMenu` metadata entry is set to `True`.
+
 0.58.0.1 (relative to 0.58.0.0)
 ========
 
