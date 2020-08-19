@@ -784,6 +784,8 @@ class _EditWindow( GafferUI.Window ) :
 
 	def __init__( self, plugs, warning=None, **kw ) :
 
+		assert( len(plugs) > 0 )
+
 		container = GafferUI.ListContainer( spacing = 4 )
 		GafferUI.Window.__init__( self, "", child = container, borderWidth = 8, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
 
@@ -799,16 +801,26 @@ class _EditWindow( GafferUI.Window ) :
 		with container :
 
 			# Label to tell folks what they're editing.
+			# TODO: This could do with some of the niceties TransformToolUI applies finding
+			# common ancestors, as well as more general beautifying.
 
-			labels = { self.__plugLabel( p ) for p in plugs }
+			script = plugs[0].ancestor( Gaffer.ScriptNode )
+			labels = { p.relativeName( script ) for p in plugs }
 			label = GafferUI.Label()
+
 			if len( labels ) == 1 :
-				label.setText( "<h4>{}</h4>".format( next( iter( labels ) ) ) )
+				message = next( iter( labels ) )
+				toolTip = ""
 			else :
-				label.setText( "<h4>{} plugs</h4>".format( len( labels ) ) )
-				label.setToolTip(
-					"\n".join( "- " + l for l in labels )
-				)
+				editScope = self.__commonEditScope( plugs )
+				if editScope is not None :
+					message ="{} ({} plugs)".format( editScope.relativeName( script ), len( plugs ) )
+				else :
+					message ="{} plugs".format( len( plugs ) )
+				toolTip = "\n".join( "- " + l for l in labels )
+
+			label.setText( "<h4>{}</h4>".format( message ) )
+			label.setToolTip( toolTip )
 
 			with GafferUI.ListContainer( spacing = 4, orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 
@@ -827,6 +839,13 @@ class _EditWindow( GafferUI.Window ) :
 					self.__plugValueWidget.setNameVisible( False )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+
+	def __commonEditScope( self, plugs ) :
+
+		scopes = { p.ancestor( Gaffer.EditScope ) for p in plugs }
+		if len(scopes) == 1 :
+			return next( iter( scopes ) )
+		return None
 
 	def popup( self, position ) :
 
@@ -864,14 +883,6 @@ class _EditWindow( GafferUI.Window ) :
 
 		if event.key == "Return" :
 			self.close()
-
-	def __plugLabel( self, plug ) :
-
-		editScope = plug.ancestor( Gaffer.EditScope )
-		if editScope is not None :
-			return editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) )
-		else :
-			return plug.relativeName( plug.ancestor( Gaffer.ScriptNode ) )
 
 	# \todo This is duplicated from SpreadsheetUI, is this something we can generalise?
 	@classmethod
