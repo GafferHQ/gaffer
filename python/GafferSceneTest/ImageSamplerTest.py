@@ -114,9 +114,8 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		# Test pass through
 		self.assertScenesEqual( imageSampler["out"], plane["out"] )
 
-		# Test Cs
-		imageSampler["primitiveVariable"].setValue( "Cs" )
-		imageSampler["channels"].setValue( "R G B" )
+		# Test Color
+		imageSampler.addPrimitiveVariableSampler( "Cs", IECore.GeometricData.Interpretation.Color, "R G B")
 
 		self.assertSceneValid( imageSampler["out"] )
 
@@ -130,46 +129,30 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 1.0, 0.0).equalWithAbsError(
+			imath.Color3f( 0.0, 1.0, 0.0 ).equalWithAbsError(
 				outMesh["Cs"].data[1],
 				.000001
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 0.0, 1.0).equalWithAbsError(
+			imath.Color3f( 0.0, 0.0, 1.0 ).equalWithAbsError(
 				outMesh["Cs"].data[5],
 				.000001
 			)
 		)
 
-		# Test N
-		imageSampler["primitiveVariable"].setValue( "N" )
+		# Test Normal
+		imageSampler.addPrimitiveVariableSampler( "N", IECore.GeometricData.Interpretation.Normal, "R G B")
 		outMesh = imageSampler["out"].object( "/plane" )
 		self.checkVector( outMesh, "N" )
 
-		# Test P
-		imageSampler["primitiveVariable"].setValue( "P" )
+		# Test Point
+		imageSampler.addPrimitiveVariableSampler( "P", IECore.GeometricData.Interpretation.Point, "R G B")
 		outMesh = imageSampler["out"].object( "/plane" )
 		self.checkVector( outMesh, "P" )
 
-		# Test Pref
-		imageSampler["primitiveVariable"].setValue( "Pref" )
-		outMesh = imageSampler["out"].object( "/plane" )
-		self.checkVector( outMesh, "Pref" )
-
-		# Test scale
-		imageSampler["primitiveVariable"].setValue( "scale" )
-		outMesh = imageSampler["out"].object( "/plane" )
-		self.checkVector( outMesh, "scale" )
-
-		# Test velocity
-		imageSampler["primitiveVariable"].setValue( "velocity" )
-		outMesh = imageSampler["out"].object( "/plane" )
-		self.checkVector( outMesh, "velocity" )
-
-		# Test uv
-		imageSampler["primitiveVariable"].setValue( "uv" )
-		imageSampler["channels"].setValue( "R G" )
+		# Test UV
+		imageSampler.addPrimitiveVariableSampler( "uv", IECore.GeometricData.Interpretation.UV, "R G")
 		outMesh = imageSampler["out"].object( "/plane" )
 		self.assertTrue( 
 			imath.V2f( 1.0, 0.0 ).equalWithAbsError( 
@@ -190,37 +173,17 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 
-		# Test width
-		imageSampler["primitiveVariable"].setValue( "width" )
-		imageSampler["channels"].setValue( "R" )
+		# Test Vector
+		imageSampler.addPrimitiveVariableSampler( "velocity", IECore.GeometricData.Interpretation.Vector, "R G B")
 		outMesh = imageSampler["out"].object( "/plane" )
-		self.assertAlmostEqual( 1.0, outMesh["width"].data[0], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["width"].data[1], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["width"].data[5], places = 5 )
+		self.checkVector( outMesh, "velocity" )
 
-		# Test single float
-		imageSampler["primitiveVariable"].setValue( "test" )
-		imageSampler["channels"].setValue( "R" )
+		# Test None
+		imageSampler.addPrimitiveVariableSampler( "test", IECore.GeometricData.Interpretation.None, "R")
 		outMesh = imageSampler["out"].object( "/plane" )
-		self.assertAlmostEqual( 1.0, outMesh["test.R"].data[0], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["test.R"].data[1], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["test.R"].data[5], places = 5 )
-
-		# Test multiple floats
-		imageSampler["primitiveVariable"].setValue( "test2" )
-		imageSampler["channels"].setValue( "R G B" )
-		outMesh = imageSampler["out"].object( "/plane" )
-		self.assertAlmostEqual( 1.0, outMesh["test2.R"].data[0], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["test2.G"].data[0], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["test2.B"].data[0], places = 5 )
-
-		self.assertAlmostEqual( 0.0, outMesh["test2.R"].data[1], places = 5 )
-		self.assertAlmostEqual( 1.0, outMesh["test2.G"].data[1], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["test2.B"].data[1], places = 5 )
-
-		self.assertAlmostEqual( 0.0, outMesh["test2.R"].data[5], places = 5 )
-		self.assertAlmostEqual( 0.0, outMesh["test2.G"].data[5], places = 5 )
-		self.assertAlmostEqual( 1.0, outMesh["test2.B"].data[5], places = 5 )
+		self.assertAlmostEqual( 1.0, outMesh["test"].data[0], places = 5 )
+		self.assertAlmostEqual( 0.0, outMesh["test"].data[1], places = 5 )
+		self.assertAlmostEqual( 0.0, outMesh["test"].data[5], places = 5 )
 
 	def testUVClamp( self ) :
 		pointsPrimitive = IECoreScene.PointsPrimitive(
@@ -252,8 +215,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
 		imageSampler["uvSet"].setValue( "uv" )
-		imageSampler["primitiveVariable"].setValue( "Cs" )
-		imageSampler["channels"].setValue( "R G B" )
+		imageSampler.addPrimitiveVariableSampler( "Cs", IECore.GeometricData.Interpretation.Color, "R G B")
 
 		self.assertSceneValid( imageSampler["out"] )
 
@@ -267,13 +229,13 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 1.0, 0.0).equalWithAbsError(
+			imath.Color3f( 0.0, 1.0, 0.0 ).equalWithAbsError(
 				outMesh["Cs"].data[1],
 				.000001
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 0.0, 1.0).equalWithAbsError(
+			imath.Color3f( 0.0, 0.0, 1.0 ).equalWithAbsError(
 				outMesh["Cs"].data[2],
 				.000001
 			)
@@ -309,9 +271,8 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
 		imageSampler["uvSet"].setValue( "uv" )
-		imageSampler["primitiveVariable"].setValue( "Cs" )
-		imageSampler["channels"].setValue( "R G B" )
-		imageSampler["uvBoundsMode"].setValue( 1 )	# Tiled
+		imageSampler.addPrimitiveVariableSampler( "Cs", IECore.GeometricData.Interpretation.Color, "R G B")
+		imageSampler["uvBoundsMode"].setValue( GafferScene.ImageSampler.UVBoundsMode.Tile )
 
 		self.assertSceneValid( imageSampler["out"] )
 
@@ -325,13 +286,13 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 1.0, 0.0).equalWithAbsError(
+			imath.Color3f( 0.0, 1.0, 0.0 ).equalWithAbsError(
 				outMesh["Cs"].data[1],
 				.000001
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.75, 0.25, 0.0).equalWithAbsError(
+			imath.Color3f( 0.75, 0.25, 0.0 ).equalWithAbsError(
 				outMesh["Cs"].data[2],
 				.000001
 			)
@@ -361,13 +322,13 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 1.0, 0.0).equalWithAbsError(
+			imath.Color3f( 0.0, 1.0, 0.0 ).equalWithAbsError(
 				outMesh["Cs"].data[1],
 				.000001
 			)
 		)
 		self.assertTrue( 
-			imath.Color3f( 0.0, 0.0, 1.0).equalWithAbsError(
+			imath.Color3f( 0.0, 0.0, 1.0 ).equalWithAbsError(
 				outMesh["Cs"].data[2],
 				.000001
 			)
@@ -404,34 +365,28 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( ramp["out"] )
 		imageSampler["uvSet"].setValue( "uv" )
-		imageSampler["primitiveVariable"].setValue( "Cs" )
-		imageSampler["channels"].setValue( "R G" )
+		imageSampler.addPrimitiveVariableSampler( "Cs", IECore.GeometricData.Interpretation.Color, "R G")
 
 		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
 
-		imageSampler["primitiveVariable"].setValue( "Cs" )
+		imageSampler.addPrimitiveVariableSampler( "test", IECore.GeometricData.Interpretation.None, "R G")
+		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
+
+		imageSampler.addPrimitiveVariableSampler( "N", IECore.GeometricData.Interpretation.Normal, "R G")
 		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
 		
-		imageSampler["primitiveVariable"].setValue( "P" )
+		imageSampler.addPrimitiveVariableSampler( "P", IECore.GeometricData.Interpretation.Point, "R G")
 		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
 
-		imageSampler["primitiveVariable"].setValue( "Pref" )
+		imageSampler.addPrimitiveVariableSampler( "uv", IECore.GeometricData.Interpretation.UV, "R G B")
 		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
 
-		imageSampler["primitiveVariable"].setValue( "scale" )
+		imageSampler.addPrimitiveVariableSampler( "velocity", IECore.GeometricData.Interpretation.Vector, "R G")
 		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
 
-		imageSampler["primitiveVariable"].setValue( "velocity" )
-		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
 
-		imageSampler["channels"].setValue( "R G B" )
-
-		imageSampler["primitiveVariable"].setValue( "uv" )
-		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
-
-		imageSampler["primitiveVariable"].setValue( "width" )
-		self.assertRaises( Gaffer.ProcessException, imageSampler["out"].object, "/object" )
-
+	# Make sure the Sampler is not corrupting upstream context
+	
 	def testContext( self ) :
 		pointsPrimitive = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData( [imath.V3f( 0 ) ] * 3 )
@@ -463,8 +418,7 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 		imageSampler["filter"].setInput( pointsFilter["out"] )
 		imageSampler["image"].setInput( imgReader["out"] )
 		imageSampler["uvSet"].setValue( "uv" )
-		imageSampler["primitiveVariable"].setValue( "Cs" )
-		imageSampler["channels"].setValue( "R G B" )
+		imageSampler.addPrimitiveVariableSampler( "Cs", IECore.GeometricData.Interpretation.Color, "R G B")
 
 		c = Gaffer.ContextVariables()
 		c.setup( GafferScene.ScenePlug() )
@@ -479,9 +433,14 @@ class ImageSamplerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( c["out"] )
 
+		# make sure the image is valid
+		self.assertTrue( "R" in imgReader["out"]["channelNames"].getValue() )
+		self.assertTrue( "G" in imgReader["out"]["channelNames"].getValue() )
+		self.assertTrue( "B" in imgReader["out"]["channelNames"].getValue() )
+
 		inMesh = c["in"].object( "/object" )
 		outMesh = c["out"].object( "/object" )
-		self.assertTrue( set( outMesh.keys() ), set( inMesh.keys() + ["Cs" ] ) )
+		self.assertTrue( set( outMesh.keys() ), set( inMesh.keys() + ["Cs"] ) )
 		self.assertTrue( 
 			imath.Color3f( 0.1, 0.1, 0.1 ).equalWithAbsError( 
 				outMesh["Cs"].data[0],

@@ -40,6 +40,8 @@
 
 #include "IECoreScene/Primitive.h"
 
+#include <unordered_map>
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
@@ -79,11 +81,11 @@ typename T::Ptr getVariableData( Primitive *outputPrimitive, const std::string &
 	return data;
 }
 
-OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const std::string &name, const PrimitiveVariable::Interpolation outputInterpolation )
+OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const std::string &name, const PrimitiveVariable::Interpolation outputInterpolation, int interpretation )
 {
 	const size_t size = outputPrimitive->variableSize( outputInterpolation );
 
-	if( name == "Cs" )
+	if( interpretation == GeometricData::Interpretation::Color )
 	{
 		Color3fVectorDataPtr data = getVariableData<Color3fVectorData>( outputPrimitive, name, outputInterpolation, size );
 		Color3f *d = data->writable().data();
@@ -91,7 +93,7 @@ OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const s
 			d[index][subIndex] = s.sample( x, y );
 		};
 	}
-	else if( name == "N" )
+	else if( interpretation == GeometricData::Interpretation::Normal )
 	{
 		V3fVectorDataPtr data = getVariableData<V3fVectorData>( outputPrimitive, name, outputInterpolation, size );
 		data->setInterpretation( GeometricData::Interpretation::Normal );
@@ -100,7 +102,7 @@ OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const s
 			d[index][subIndex] = s.sample( x, y );
 		};
 	}
-	else if( name == "P" )
+	else if( interpretation == GeometricData::Interpretation::Point )
 	{
 		V3fVectorDataPtr data = getVariableData<V3fVectorData>( outputPrimitive, name, outputInterpolation, size );
 		data->setInterpretation( GeometricData::Interpretation::Point );
@@ -109,17 +111,7 @@ OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const s
 			d[index][subIndex] = s.sample( x, y );
 		};
 	}
-	else if( name == "Pref" || name == "scale" || name == "velocity" )
-	{
-		V3fVectorDataPtr data = getVariableData<V3fVectorData>( outputPrimitive, name, outputInterpolation, size );
-		data->setInterpretation( GeometricData::Interpretation::Vector );
-		V3f *d = data->writable().data();
-		return [ d ] ( size_t index, size_t subIndex, Sampler &s, float x, float y ) {
-			d[index][subIndex] = s.sample( x, y );
-		};
-	}
-	
-	else if( name == "uv" )
+	else if( interpretation == GeometricData::Interpretation::UV )
 	{
 		V2fVectorDataPtr data = getVariableData<V2fVectorData>( outputPrimitive, name, outputInterpolation, size );
 		data->setInterpretation( GeometricData::Interpretation::UV );
@@ -128,6 +120,17 @@ OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const s
 			d[index][subIndex] = s.sample( x, y );
 		};
 	}
+	
+	else if( interpretation == GeometricData::Interpretation::Vector )
+	{
+		V3fVectorDataPtr data = getVariableData<V3fVectorData>( outputPrimitive, name, outputInterpolation, size );
+		data->setInterpretation( GeometricData::Interpretation::Vector );
+		V3f *d = data->writable().data();
+		return [ d ] ( size_t index, size_t subIndex, Sampler &s, float x, float y ) {
+			d[index][subIndex] = s.sample( x, y );
+		};
+	}
+
 	else {
 		FloatVectorDataPtr data = getVariableData<FloatVectorData>( outputPrimitive, name, outputInterpolation, size );
 		float *d = data->writable().data();
@@ -153,7 +156,7 @@ ImageSampler::ImageSampler( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new ImagePlug( "image" ) );
-	addChild( new StringPlug( "primitiveVariable" ) );
+	addChild( new ValuePlug( "primitiveVariables" ) );
 	addChild( new StringPlug( "uvSet", Gaffer::Plug::Direction::In, "uv" ) );
 	addChild( 
 		new IntPlug( "uvBoundsMode", 
@@ -163,8 +166,6 @@ ImageSampler::ImageSampler( const std::string &name )
 			GafferScene::ImageSampler::UVBoundsMode::Last
 		)
 	);
-	addChild( new StringPlug( "channels" ) );
-	
 }
 
 ImageSampler::~ImageSampler()
@@ -181,14 +182,14 @@ const GafferImage::ImagePlug *ImageSampler::imagePlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *ImageSampler::primVarNamePlug()
+Gaffer::ValuePlug *ImageSampler::primitiveVariablesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *ImageSampler::primVarNamePlug() const
+const Gaffer::ValuePlug *ImageSampler::primitiveVariablesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::StringPlug *ImageSampler::uvVarNamePlug()
@@ -211,14 +212,30 @@ const Gaffer::IntPlug *ImageSampler::uvBoundsModePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::StringPlug *ImageSampler::channelsPlug()
+Gaffer::ValuePlug *ImageSampler::addPrimitiveVariableSampler( const std::string &name, const int &interpretation, const std::string &channels )
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
-}
+	ValuePlugPtr primitiveVariablePlug = new ValuePlug( "pprimitiveVariable1" );
+	primitiveVariablePlug->setFlags( Plug::Dynamic, true );
 
-const Gaffer::StringPlug *ImageSampler::channelsPlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	StringPlugPtr namePlug = new StringPlug( "name", Plug::In, name );
+	namePlug->setFlags( Plug::Dynamic, true );
+	primitiveVariablePlug->addChild( namePlug );
+
+	BoolPlugPtr activePlug = new BoolPlug( "active", Plug::In, true );
+	activePlug->setFlags( Plug::Dynamic, true );
+	primitiveVariablePlug->addChild( activePlug );
+
+	IntPlugPtr interpretationPlug = new IntPlug( "interpretation", Plug::In, interpretation );
+	interpretationPlug->setFlags( Plug::Dynamic, true );
+	primitiveVariablePlug->addChild( interpretationPlug );
+
+	StringPlugPtr channelsPlug = new StringPlug( "channels", Plug::In, channels );
+	channelsPlug->setFlags( Plug::Dynamic, true );
+	primitiveVariablePlug->addChild( channelsPlug );
+
+	primitiveVariablesPlug()->addChild( primitiveVariablePlug );
+
+	return primitiveVariablePlug.get();
 }
 
 bool ImageSampler::affectsProcessedObject( const Gaffer::Plug *input ) const
@@ -227,11 +244,11 @@ bool ImageSampler::affectsProcessedObject( const Gaffer::Plug *input ) const
 		Deformer::affectsProcessedObject( input ) ||
 		input == imagePlug()->channelNamesPlug() ||
 		input == imagePlug()->channelDataPlug() ||
+		input == imagePlug()->formatPlug() ||
 		input == imagePlug()->dataWindowPlug() ||
-		input == primVarNamePlug() ||
+		primitiveVariablesPlug()->isAncestorOf( input ) ||
 		input == uvVarNamePlug() ||
 		input == uvBoundsModePlug() ||
-		input == channelsPlug() ||
 		input == inPlug()->objectPlug()
 	;
 	return val;
@@ -239,41 +256,57 @@ bool ImageSampler::affectsProcessedObject( const Gaffer::Plug *input ) const
 
 void ImageSampler::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Deformer::hashProcessedObject( path, context, h );
-
-	const std::string channelNames = channelsPlug()->getValue();
-	const std::string primVarName = primVarNamePlug()->getValue();
 	const std::string uvVarName = uvVarNamePlug()->getValue();
-	const int boundsMode = uvBoundsModePlug()->getValue();
+	const ValuePlug *p = primitiveVariablesPlug();
 
-	if( channelNames.empty() || primVarName.empty() || uvVarName.empty() )
+	if( !p->children().size() || uvVarName.empty() )
 	{
-		return;
+		h = inPlug()->objectPlug()->hash();
 	}
-
-	h.append( channelNames );
-	h.append( primVarName );
-	h.append( uvVarName );
-	h.append( boundsMode );
-
-	inPlug()->objectPlug()->hash( h );
-
-	imagePlug()->channelNamesPlug()->hash( h );
-	imagePlug()->dataWindowPlug()->hash( h );
-
-	ConstStringVectorDataPtr inChannelNamesData = imagePlug()->channelNamesPlug()->getValue();
-	const std::vector<std::string> inChannelNames = inChannelNamesData->readable();
-
-	std::vector<std::string> channels;
-	IECore::StringAlgo::tokenize(channelNames, ' ', channels);
-
-	for( std::vector<std::string>::const_iterator it = channels.begin(), eIt = channels.end(); it != eIt; ++it )
+	else
 	{
-		std::vector<std::string>::const_iterator match = find(inChannelNames.begin(), inChannelNames.end(), *it);
-		if( match != inChannelNames.end() )
+		Deformer::hashProcessedObject( path, context, h );
+
+		p->hash( h );
+
+		h.append( uvVarName );
+
+		h.append( uvBoundsModePlug()->getValue() );
+
+		inPlug()->objectPlug()->hash( h );
+
+		imagePlug()->channelNamesPlug()->hash( h );
+		imagePlug()->dataWindowPlug()->hash( h );
+		imagePlug()->formatPlug()->hash( h );
+
+		ConstStringVectorDataPtr inChannelNamesData = imagePlug()->channelNamesPlug()->getValue();
+		const std::vector<std::string> inChannelNames = inChannelNamesData->readable();
+
+		for( InputValuePlugIterator samplerIt( p ); !samplerIt.done(); ++samplerIt )
 		{
-			Sampler s( imagePlug(), *it, imagePlug()->dataWindow() );
-			s.hash( h );
+			const ValuePlug *samplerPlug = samplerIt->get();
+
+			if( samplerPlug->getChild<BoolPlug>( "active" )->getValue() )
+			{
+				const std::string channelNames = samplerPlug->getChild<StringPlug>( "channels" )->getValue();
+
+				std::vector<std::string> channels;
+				IECore::StringAlgo::tokenize( channelNames, ' ', channels );
+
+				for( std::vector<std::string>::const_iterator it = channels.begin(), eIt = channels.end(); it != eIt; ++it )
+				{
+					std::vector<std::string>::const_iterator match = find( inChannelNames.begin(), inChannelNames.end(), *it );
+					if( match != inChannelNames.end() )
+					{
+						Sampler s( imagePlug(), *it, imagePlug()->dataWindow() );
+						s.hash( h );
+					}
+					else
+					{
+						throw IECore::Exception( "Channel \"" + *it + "\" does not exist in input image." );
+					}
+				}
+			}
 		}
 	}
 }
@@ -286,11 +319,10 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 		return inputObject;
 	}
 	
-	const std::string channelNames = channelsPlug()->getValue();
-	const std::string primVarName = primVarNamePlug()->getValue();
+	const ValuePlug *p = primitiveVariablesPlug();
 	const std::string uvVarName = uvVarNamePlug()->getValue();
 
-	if( channelNames.empty() || primVarName.empty() || uvVarName.empty() )
+	if( !p->children().size() || uvVarName.empty() )
 	{
 		return inputObject;
 	}
@@ -311,109 +343,140 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 
 	const Imath::Box2i displayWindow = imagePlug()->format().getDisplayWindow();
 	const Imath::V2i imageSize = displayWindow.size();
-	const Imath::V2i imageMin = displayWindow.min;
 
-	std::vector<std::string> channels;
-	IECore::StringAlgo::tokenize( channelNames, ' ', channels );
+	// For cache coherency of the Sampler we put the Sampler call in the inner loop
+	// of the UV sampling loop. We create the OutputVariableFunction and Sampler once
+	// and store them for later use. Samplers are addressed using the channel name,
+	// OutputVariableFuncitons are referenced using "<primitive variable name>.<channel name>"
+	std::unordered_map<std::string, Sampler> samplers;
+	std::unordered_map<std::string, OutputVariableFunction> outputs;
 
-	// TODO: Check for missing channels?
-
-	if( ( primVarName == "Cs" && channels.size() != 3 ) ||
-		( primVarName == "N" && channels.size() != 3 ) ||
-		( primVarName == "P" && channels.size() != 3 ) ||
-		( primVarName == "Pref" && channels.size() != 3 ) ||
-		( primVarName == "scale" && channels.size() != 3 ) ||
-		( primVarName == "velocity" && channels.size() != 3 )
-		
-	)
+	for( InputValuePlugIterator samplerIt( p ); !samplerIt.done(); ++samplerIt )
 	{
-		throw IECore::Exception( "Primitive variable \"" + primVarName + "\" must sample three channels." );
-	}
+		const ValuePlug *samplerPlug = samplerIt->get();
 
-	if( primVarName == "uv" && channels.size() != 2 )
-	{
-		throw IECore::Exception( "Primitive variable \"uv\" must sample two channels." );
-	}
-
-	if( primVarName == "width" && channels.size() != 1)
-	{
-		throw IECore::Exception( "Primitive variable \"width\" must sample one channels." );
-	}
-
-	std::vector<OutputVariableFunction> outputs;
-
-	if( primVarName == "Cs" ||
-		primVarName == "N" ||
-		primVarName == "P" ||
-		primVarName == "Pref" ||
-		primVarName == "scale" ||
-		primVarName == "uv" ||
-		primVarName == "velocity" ||
-		primVarName == "width"
-	)
-	{
-		for( size_t i = 0; i < channels.size(); ++i )
+		if( samplerPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
-			if( auto o = addPrimitiveVariable( outputPrimitive.get(), primVarName, interpolation ) )
+			const int interpretation = samplerPlug->getChild<IntPlug>( "interpretation" )->getValue();
+			const std::string name = samplerPlug->getChild<StringPlug>( "name" )->getValue();
+
+			const std::string channelNames = samplerPlug->getChild<StringPlug>( "channels" )->getValue();
+			std::vector<std::string> channels;
+			IECore::StringAlgo::tokenize( channelNames, ' ', channels );
+
+			if( ( interpretation == GeometricData::Interpretation::Color && channels.size() != 3 ) ||
+				( interpretation == GeometricData::Interpretation::Normal && channels.size() != 3 ) ||
+				( interpretation == GeometricData::Interpretation::Point && channels.size() != 3 ) ||
+				( interpretation == GeometricData::Interpretation::Vector && channels.size() != 3 )
+				
+			)
 			{
-				outputs.push_back( o );
+				throw IECore::Exception( "Primitive variable \"" + name + "\" must sample three channels." );
 			}
-		}
-	}
-	else
-	{
-		for( size_t i = 0; i < channels.size(); ++i )
-		{
-			if( auto o = addPrimitiveVariable( outputPrimitive.get(), primVarName + "." + channels[i], interpolation ) )
+
+			else if( interpretation == GeometricData::Interpretation::UV && channels.size() != 2 )
 			{
-				outputs.push_back( o );
+				throw IECore::Exception( "Primitive variable \"" + name + "\" must sample two channels." );
+			}
+
+			else if( interpretation == GeometricData::Interpretation::None && channels.size() != 1 )
+			{
+				throw IECore::Exception( "Primitive variable \"" + name + "\" must sample one channel." );
+			}
+
+			for( std::vector<std::string>::const_iterator it = channels.begin(), eIt = channels.end(); it != eIt; ++it )
+			{
+				std::vector<std::string>::const_iterator match = find( inChannelNames.begin(), inChannelNames.end(), *it );
+				if( match != inChannelNames.end() )
+				{
+					if( auto o = addPrimitiveVariable( outputPrimitive.get(), name, interpolation, interpretation ) )
+					{
+						outputs.insert( { name + "." + *it, o } );
+						if( samplers.find( *it ) == samplers.end() )
+						{
+							Sampler sampler = Sampler( imagePlug(), *it, displayWindow );
+							samplers.insert( { *it, sampler } );
+						}
+					}
+				}
+				else
+				{
+					throw IECore::Exception( "Channel \"" + *it + "\" does not exist in input image." );
+				}
 			}
 		}
 	}
 
 	const int uvBoundsMode = uvBoundsModePlug()->getValue();
 
-	for( size_t channelIndex = 0; channelIndex < outputs.size(); ++channelIndex )
+	for( size_t i = 0; i < uvView.size(); ++i )
 	{
-		Sampler sampler( imagePlug(), channels[channelIndex], displayWindow );
-		const OutputVariableFunction &o = outputs[channelIndex];
+		V2f uv = uvView[i];
 
-		for( size_t i = 0; i < uvView.size(); ++i )
+		if( uv.x < 0 || uv.x > 1 )
 		{
-			V2f uv = uvView[i];
-
-			if( uv.x < 0 || uv.x > 1 )
+			switch( uvBoundsMode )
 			{
-				switch( uvBoundsMode )
+				case UVBoundsMode::Clamp : 
+					uv.x = std::max( std::min( uv.x, 1.f ), 0.f );
+					break;
+				case UVBoundsMode::Tile : 
+					uv.x = abs( uv.x - floor( uv.x ) );
+					break;
+			}
+		}
+
+		if( uv.y < 0 || uv.y > 1 )
+		{
+			switch( uvBoundsMode )
+			{
+				case UVBoundsMode::Clamp : 
+					uv.y = std::max( std::min( uv.y, 1.f ), 0.f );
+					break;
+				case UVBoundsMode::Tile : 
+					uv.y = abs( uv.y - floor( uv.y ) );
+					break;
+			}
+		}
+		const V2f pixelPosition = uv * ( ( V2f )imageSize - V2f( 1.0f ) ) + V2f( 0.5f );
+		OutputVariableFunction o;
+
+		for( InputValuePlugIterator samplerIt( p ); !samplerIt.done(); ++samplerIt )
+		{
+			const ValuePlug *samplerPlug = samplerIt->get();
+
+			if( samplerPlug->getChild<BoolPlug>( "active" )->getValue() )
+			{
+				const int interpretation = samplerPlug->getChild<IntPlug>( "interpretation" )->getValue();
+				const std::string name = samplerPlug->getChild<StringPlug>( "name" )->getValue();
+
+				const std::string channelNames = samplerPlug->getChild<StringPlug>( "channels" )->getValue();
+
+				std::vector<std::string> channels;
+				IECore::StringAlgo::tokenize( channelNames, ' ', channels );
+
+				if( interpretation == GeometricData::Interpretation::Color ||
+					interpretation == GeometricData::Interpretation::Normal ||
+					interpretation == GeometricData::Interpretation::Point ||
+					interpretation == GeometricData::Interpretation::Vector
+				)
 				{
-					case UVBoundsMode::Clamp : 
-						uv.x = std::max( std::min( uv.x, 1.f ), 0.f );
-						break;
-					case UVBoundsMode::Tile : 
-						uv.x = abs( uv.x - floor( uv.x ) );
-						break;
+					outputs.at( name + "." + channels[0] )( i, 0, samplers.at( channels[0] ), pixelPosition.x, pixelPosition.y );
+					outputs.at( name + "." + channels[1] )( i, 1, samplers.at( channels[1] ), pixelPosition.x, pixelPosition.y );
+					outputs.at( name + "." + channels[2] )( i, 2, samplers.at( channels[2] ), pixelPosition.x, pixelPosition.y );
+				}
+
+				else if( interpretation == GeometricData::Interpretation::UV )
+				{
+					outputs.at( name + "." + channels[0] )( i, 0, samplers.at( channels[0] ), pixelPosition.x, pixelPosition.y );
+					outputs.at( name + "." + channels[1] )( i, 1, samplers.at( channels[1] ), pixelPosition.x, pixelPosition.y );
+				}
+
+				else if( interpretation == GeometricData::Interpretation::None )
+				{
+					outputs.at( name + "." + channels[0] )( i, 0, samplers.at( channels[0] ), pixelPosition.x, pixelPosition.y );
 				}
 			}
-
-			if( uv.y < 0 || uv.y > 1 )
-			{
-				switch( uvBoundsMode )
-				{
-					case UVBoundsMode::Clamp : 
-						uv.y = std::max( std::min( uv.y, 1.f ), 0.f );
-						break;
-					case UVBoundsMode::Tile : 
-						uv.y = abs( uv.y - floor( uv.y ) );
-						break;
-				}
-			}
-			
-			o(  i, 
-				channelIndex, 
-				sampler,
-				( uv.x * ( ( float )imageSize.x - 1.0f ) + imageMin.x ) + 0.5f, 
-				( uv.y * ( ( float )imageSize.y - 1.0f ) + imageMin.y ) + 0.5f
-			);
 		}
 	}
 
@@ -422,9 +485,22 @@ IECore::ConstObjectPtr ImageSampler::computeProcessedObject( const ScenePath &pa
 
 bool ImageSampler::adjustBounds() const
 {
-	return
-		Deformer::adjustBounds() &&
+	const ValuePlug *p = primitiveVariablesPlug();
+	for( InputValuePlugIterator samplerIt( p ); !samplerIt.done(); ++samplerIt )
+	{
+		const ValuePlug *samplerPlug = samplerIt->get();
 
-		StringAlgo::matchMultiple( "P", primVarNamePlug()->getValue() )
-	;
+		if( samplerPlug->getChild<BoolPlug>( "active" )->getValue() )
+		{
+			const std::string name = samplerPlug->getChild<StringPlug>( "name" )->getValue();
+
+			if( Deformer::adjustBounds() &&
+				name == "P"
+			)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }

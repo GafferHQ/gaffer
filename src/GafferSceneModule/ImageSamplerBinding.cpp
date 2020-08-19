@@ -43,15 +43,28 @@
 #include "boost/python.hpp"
 
 using namespace boost::python;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
+
+namespace
+{
+
+ValuePlugPtr addPrimitiveVariableSampler( ImageSampler &o, const std::string &name, const int &interpretation, const std::string &channels )
+{
+	ScopedGILRelease gilRelease;
+	return o.addPrimitiveVariableSampler( name, interpretation, channels );
+}
+
+}	// namespace
 
 void GafferSceneModule::bindImageSampler()
 {
 
 	{
-		scope s = GafferBindings::DependencyNodeClass<GafferScene::ImageSampler>();
+		scope s = GafferBindings::DependencyNodeClass<GafferScene::ImageSampler>()
+			.def( "addPrimitiveVariableSampler", &addPrimitiveVariableSampler );
 
 			enum_<GafferScene::ImageSampler::UVBoundsMode>( "UVBoundsMode" )
 				.value( "Clamp", GafferScene::ImageSampler::UVBoundsMode::Clamp )

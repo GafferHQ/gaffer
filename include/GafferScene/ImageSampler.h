@@ -42,6 +42,7 @@
 #include "GafferScene/Deformer.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/ValuePlug.h"
 
 namespace GafferScene
 {
@@ -67,8 +68,8 @@ class GAFFERSCENE_API ImageSampler : public Deformer
 		GafferImage::ImagePlug *imagePlug();
 		const GafferImage::ImagePlug *imagePlug() const;
 
-		Gaffer::StringPlug *primVarNamePlug();
-		const Gaffer::StringPlug *primVarNamePlug() const;
+		Gaffer::ValuePlug *primitiveVariablesPlug();
+		const Gaffer::ValuePlug *primitiveVariablesPlug() const;
 
 		Gaffer::StringPlug *uvVarNamePlug();
 		const Gaffer::StringPlug *uvVarNamePlug() const;
@@ -76,8 +77,7 @@ class GAFFERSCENE_API ImageSampler : public Deformer
 		Gaffer::IntPlug *uvBoundsModePlug();
 		const Gaffer::IntPlug *uvBoundsModePlug() const;
 
-		Gaffer::StringPlug *channelsPlug();
-		const Gaffer::StringPlug *channelsPlug() const;
+		Gaffer::ValuePlug *addPrimitiveVariableSampler( const std::string &name, const int &interpretation, const std::string &channels );
 
 	private :
 
