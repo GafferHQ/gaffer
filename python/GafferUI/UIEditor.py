@@ -41,6 +41,7 @@ import re
 import collections
 import imath
 import inspect
+import string
 
 import IECore
 
@@ -1282,8 +1283,10 @@ class _PresetsEditor( GafferUI.Widget ) :
 			nameWidget.setText( oldName )
 			return True
 
-		# Sanitize name
-		newName = newName.replace( "/", "_")
+		# Sanitize name. Strictly speaking we should only need to replace '/',
+		# but PathListingWidget has a bug handling wildcards in selections, so
+		# we replace those too.
+		newName = newName.translate( string.maketrans( "/*?\\[", "_____" ) )
 
 		items = self.__pathListing.getPath().dict().items()
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :

@@ -796,6 +796,10 @@ class PathModel : public QAbstractItemModel
 
 		void indicesForPathsWalk( Item *item, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
 		{
+			/// \todo Using `match()` here isn't right, because we want to
+			/// treat wildcards in the selection verbatim rather than perform
+			/// matching with them. We should use `find()`, but that doesn't
+			/// provide a convenient way of checking for descendant matches.
 			const unsigned match = paths.match( item->path()->names() );
 			if( match & IECore::PathMatcher::ExactMatch )
 			{
