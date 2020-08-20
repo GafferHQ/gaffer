@@ -397,7 +397,7 @@ NoduleLayout::NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedSt
 	Metadata::plugValueChangedSignal().connect( boost::bind( &NoduleLayout::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &NoduleLayout::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
 
-	updateLayout();
+	updateNoduleLayout();
 }
 
 NoduleLayout::~NoduleLayout()
@@ -479,7 +479,7 @@ void NoduleLayout::childAdded( Gaffer::GraphComponent *child )
 {
 	if( IECore::runTimeCast<Gaffer::Plug>( child ) )
 	{
-		updateLayout();
+		updateNoduleLayout();
 	}
 }
 
@@ -487,7 +487,7 @@ void NoduleLayout::childRemoved( Gaffer::GraphComponent *child )
 {
 	if( IECore::runTimeCast<Gaffer::Plug>( child ) )
 	{
-		updateLayout();
+		updateNoduleLayout();
 	}
 }
 
@@ -501,7 +501,7 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore:
 			key == g_nodulePositionKey || key == g_noduleIndexKey
 		)
 		{
-			updateLayout();
+			updateNoduleLayout();
 		}
 	}
 
@@ -523,7 +523,7 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore:
 			}
 			if( boost::starts_with( key.string(), "noduleLayout:customGadget" ) )
 			{
-				updateLayout();
+				updateNoduleLayout();
 			}
 		}
 	}
@@ -551,7 +551,7 @@ void NoduleLayout::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::Inter
 	}
 	if( boost::starts_with( key.string(), "noduleLayout:customGadget" ) )
 	{
-		updateLayout();
+		updateNoduleLayout();
 	}
 }
 
@@ -612,7 +612,7 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 	return result;
 }
 
-void NoduleLayout::updateLayout()
+void NoduleLayout::updateNoduleLayout()
 {
 	// Figure out the order we want to display things in
 	// and clear our main container ready for filling in
