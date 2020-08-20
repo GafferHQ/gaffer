@@ -233,12 +233,16 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 			return result
 
-		if editScope.processors() :
-			for processor in editScope.processors() :
+		nodes = editScope.processors()
+		nodes.extend( self.__userNodes( editScope ) )
+
+		if nodes :
+			for node in nodes :
+				path = node.relativeName( editScope ).replace( ".", "/" )
 				result.append(
-					"/" + processor.getName(),
+					"/" + path,
 					{
-						"command" : functools.partial( GafferUI.NodeEditor.acquire, processor )
+						"command" : functools.partial( GafferUI.NodeEditor.acquire, node )
 					}
 				)
 		else :
@@ -248,3 +252,9 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		return result
+
+	@staticmethod
+	def __userNodes( editScope ) :
+
+		nodes = Gaffer.Metadata.nodesWithMetadata( editScope, "editScope:includeInNavigationMenu" )
+		return [ n for n in nodes if n.ancestor( Gaffer.EditScope ).isSame( editScope ) ]
