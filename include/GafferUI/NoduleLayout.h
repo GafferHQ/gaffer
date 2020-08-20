@@ -131,7 +131,7 @@ class GAFFERUI_API NoduleLayout : public Gadget
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
 		std::vector<GadgetKey> layoutOrder();
-		void updateLayout();
+		void updateNoduleLayout();
 		void updateSpacing();
 		void updateDirection();
 		void updateOrientation();
