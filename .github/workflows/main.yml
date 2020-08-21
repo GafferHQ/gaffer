@@ -38,6 +38,8 @@ jobs:
           - name: linux
             os: ubuntu-16.04
             buildType: RELEASE
+            variant: linux-python2
+            publish: true
             containerImage: gafferhq/build:1.1.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.6.0/gafferDependencies-1.6.0-linux.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
@@ -50,6 +52,8 @@ jobs:
           - name: linux-debug
             os: ubuntu-16.04
             buildType: DEBUG
+            variant: linux-python2
+            publish: false
             containerImage: gafferhq/build:1.1.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.6.0/gafferDependencies-1.6.0-linux.tar.gz
             testRunner: su testUser -c
@@ -60,6 +64,8 @@ jobs:
           - name: linux-python3
             os: ubuntu-16.04
             buildType: RELEASE
+            variant: linux-python3
+            publish: true
             containerImage: gafferhq/build:1.1.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.0.0a5/gafferDependencies-2.0.0-Python3-linux.tar.gz
             testRunner: su testUser -c
@@ -68,6 +74,8 @@ jobs:
           - name: macos
             os: macos-10.15
             buildType: RELEASE
+            variant: macos-python2
+            publish: true
             containerImage:
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.6.0/gafferDependencies-1.6.0-osx.tar.gz
             testRunner: bash -c
@@ -117,6 +125,7 @@ jobs:
         .github/workflows/main/setBuildVars.py
       env:
        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       GAFFER_BUILD_VARIANT: ${{ matrix.variant }}
 
     - name: Install dependencies
       # The `::set-env` shenanigans creates an environment variable
@@ -151,6 +160,12 @@ jobs:
       timeout-minutes: 20
       run: |
        scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.GAFFER_BUILD_NAME }}
+        path: ${{ env.GAFFER_BUILD_NAME }}.tar.gz
+      if: matrix.publish && env.GAFFER_GITHUB_RELEASEID == ''
 
     - name: Limit cache size
       # GitHub has a limit of 5G for all caches in a repository. Because we write new

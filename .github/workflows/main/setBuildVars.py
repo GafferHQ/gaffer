@@ -117,7 +117,7 @@ if tag :
 
 formatVars = {
 	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
-	"platform" : "macos" if sys.platform == "darwin" else "linux",
+	"variant" : os.environ["GAFFER_BUILD_VARIANT"],
 	"timestamp" : datetime.datetime.now().strftime( "%Y_%m_%d_%H%M" ),
 	"pullRequest" : pullRequest,
 	"shortCommit" : commit[:8],
@@ -126,9 +126,9 @@ formatVars = {
 }
 
 nameFormats = {
-	"default" : "gaffer-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
-	"pull_request" : "gaffer-pr{pullRequest}-{branch}-{timestamp}-{shortCommit}-{platform}{buildTypeSuffix}",
-	"release" : "gaffer-{tag}-{platform}{buildTypeSuffix}"
+	"default" : "gaffer-{timestamp}-{shortCommit}-{variant}{buildTypeSuffix}",
+	"pull_request" : "gaffer-pr{pullRequest}-{branch}-{timestamp}-{shortCommit}-{variant}{buildTypeSuffix}",
+	"release" : "gaffer-{tag}-{variant}{buildTypeSuffix}"
 }
 
 trigger = os.environ.get( 'GITHUB_EVENT_NAME', '' )
