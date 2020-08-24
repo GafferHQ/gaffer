@@ -152,7 +152,9 @@ jobs:
 
     - name: Test
       run: |
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test"
+        echo "::remove-matcher owner=unittest::"
 
     - name: Build Docs and Package
       # We currently experience sporadic hangs in the docs builds (mac), this
@@ -163,7 +165,9 @@ jobs:
 
     - name: Validate
       run: |
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
         ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.tar.gz
+        echo "::remove-matcher owner=validateRelease::"
 
     - uses: actions/upload-artifact@v2
       with:

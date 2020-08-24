@@ -96,8 +96,8 @@ with tarfile.open( args.archive, "r:gz" ) as a:
 	missing = [ p for p in requiredPaths if p not in archivePaths ]
 	if missing :
 		sys.stderr.write(
-			"ERROR: The following are missing from the archive:\n%s\n"
-				% "\n".join( [ " - %s" % m for m in missing ] ),
+			"Validation failed:\n%s\n"
+				% "\n".join( [ " - ERROR %s is missing from the archive" % m for m in missing ] )
 		)
 		sys.exit( 1 )
 
