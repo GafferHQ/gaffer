@@ -894,7 +894,7 @@ class _EditWindow( GafferUI.Window ) :
 		if widget is not None and widgetUsable( widget ) :
 			return widget
 
-		for childPlug in Gaffer.Plug.Range( plugValueWidget.getPlug() ) :
+		for childPlug in Gaffer.Plug.Range( next( iter( plugValueWidget.getPlugs() ) ) ) :
 			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
 			if childWidget is not None :
 				childTextWidget = cls.__textWidget( childWidget )

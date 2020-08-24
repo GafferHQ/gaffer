@@ -16,6 +16,7 @@ Fixes
  - Fixed bug preventing the Inspector from finding shaders when assigned via a Switch.
  - Fixed bug that caused the wrong plug to be edited by the Inspector with nested EditScopes.
  - Fixed bug that prevented selecting an Edit Scope that contained other Edit Scopes.
+ - Fixed bug that caused an exception when simultaneously editing multiple plugs the Inspector.
 
 API
 ---
