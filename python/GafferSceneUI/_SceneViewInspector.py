@@ -598,7 +598,10 @@ class _ParameterInspector( object ) :
 
 				# We can potentially make use of this node
 
-				if ( editScope is None or editScope.isAncestorOf( attributeHistory.scene ) ) and edit.hasEdit :
+				# Check the first parent scope of the edit, as they may be nested
+				parentEditScope = attributeHistory.scene.ancestor( Gaffer.EditScope )
+
+				if edit.hasEdit and ( editScope is None or editScope.isSame( parentEditScope ) ) :
 					# If no editScope has been specified, or we're inside the target edit scope,
 					# then we can safely use this edit if we have one.
 					# The hasEdit check is deliberate to ensure that we don't include 'potential' targets, such

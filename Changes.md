@@ -10,7 +10,10 @@ Improvements
 Fixes
 -----
 
-- Viewer : Fixed bug preventing the Inspector from finding shaders when assigned via a Switch.
+- Viewer :
+ - Fixed bug preventing the Inspector from finding shaders when assigned via a Switch.
+ - Fixed bug that caused the wrong plug to be edited by the Inspector with nested EditScopes.
+ - Fixed bug that prevented selecting an Edit Scope that contained other Edit Scopes.
 
 API
 ---

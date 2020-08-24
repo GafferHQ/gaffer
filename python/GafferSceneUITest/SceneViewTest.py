@@ -644,5 +644,40 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( i.editable() )
 		self.assertEqual( i.acquireEdit(), s["shader"]["parameters"]["c"] )
 
+	def testEditScopeNesting( self ) :
+
+		light = GafferSceneTest.TestLight()
+		editScope1 = Gaffer.EditScope( "EditScope1" )
+
+		editScope1.setup( light["out"] )
+		editScope1["in"].setInput( light["out"] )
+
+		def inspector( scene, path, parameter, editScope, attribute="light" ) :
+
+			history = GafferScene.SceneAlgo.history( scene["attributes"], path )
+			attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attribute )
+			return GafferSceneUI.SceneViewUI._ParameterInspector( attributeHistory, parameter, editScope )
+
+		i = inspector( editScope1["out"], "/light", "intensity", editScope1 )
+		scope1Edit = i.acquireEdit()
+		scope1Edit["enabled"].setValue( True )
+		self.assertEqual( scope1Edit.ancestor( Gaffer.EditScope ), editScope1 )
+
+		editScope2 = Gaffer.EditScope( "EditScope2" )
+		editScope2.setup( light["out"] )
+		editScope1.addChild( editScope2 )
+		editScope2["in"].setInput( scope1Edit.ancestor( GafferScene.SceneProcessor )["out"] )
+		editScope1["BoxOut"]["in"].setInput( editScope2["out"] )
+
+		i = inspector( editScope1["out"], "/light", "intensity", editScope2 )
+		scope2Edit = i.acquireEdit()
+		scope2Edit["enabled"].setValue( True )
+		self.assertEqual( scope2Edit.ancestor( Gaffer.EditScope ), editScope2 )
+
+		# Check we still find the edit in scope 1
+
+		i = inspector( editScope1["out"], "/light", "intensity", editScope1 )
+		self.assertEqual( i.acquireEdit().ancestor( Gaffer.EditScope ), editScope1 )
+
 if __name__ == "__main__":
 	unittest.main()

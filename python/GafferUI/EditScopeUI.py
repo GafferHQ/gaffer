@@ -189,10 +189,13 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		def addItem( editScope, enabled = True ) :
 
 			result.append(
-				"/" + editScope.relativeName( editScope.scriptNode() ).replace( ".", "/" ),
+				# The underscore suffix prevents collisions with a node and
+				# it's submenu if it has nested edit scopes.
+				"/%s_" % editScope.relativeName( editScope.scriptNode() ).replace( ".", "/" ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__connectEditScope ), editScope ),
 					"active" : enabled,
+					"label" : editScope.getName(),
 					"checkBox" : editScope == currentEditScope,
 				}
 			)
