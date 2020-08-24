@@ -385,7 +385,7 @@ def __viewerKeyPress( viewer, event ) :
 	# Up/Down arrows need to walk upstream of the viewer input and look for
 	# a Catalogue node and increment/decrement its active index
 
-	if event.key not in ( "Down", "Up" ) :
+	if event.key not in ( "Down", "Up", "D" ) :
 		return False
 
 	if not isinstance( viewer.view(), GafferImageUI.ImageView ) :
@@ -400,9 +400,14 @@ def __viewerKeyPress( viewer, event ) :
 	if catalogue is None :
 		return False
 
-	__incrementImageIndex( catalogue, event.key )
+	if event.key in ( "Down", "Up" ) :
+		__incrementImageIndex( catalogue, event.key )
+		return True
+	elif event.key == "D" and event.modifiers == event.Modifiers.Control :
+		__duplicateCurrentImage( catalogue )
+		return True
 
-	return True
+	return False
 
 def __incrementImageIndex( catalogue, direction ) :
 
@@ -436,6 +441,48 @@ def __incrementImageIndex( catalogue, direction ) :
 
 	if nextPlugIndex != currentPlugIndex :
 		indexPlug.setValue( nextPlugIndex )
+
+def __duplicateCurrentImage( catalogue ) :
+
+	currentIndex = catalogue["imageIndex"].getValue()
+	with Gaffer.UndoScope( catalogue.ancestor( Gaffer.ScriptNode ) ) :
+		_duplicateImages( catalogue, currentIndex )
+
+##########################################################################
+# Shared utility functions, these would ideally form a more public API for
+# manipulating a catalogue
+##########################################################################
+
+# Duplicates images at the specified plug-based indices, returning a list of
+# plug indices that were inserted.
+def _duplicateImages( catalogue, plugIndices ) :
+
+	if not isinstance( plugIndices, ( list, tuple ) ) :
+		plugIndices = ( plugIndices, )
+
+	images = catalogue["images"].source()
+	# As we may be inserting more than one image, keep a copy of the original
+	# list so the selection indices remain valid
+	sourceImages = [ i for i in images.children() ]
+	# We need to insert the duplicate before the source, as it's usually
+	# used to snapshot in-progress renders.
+	orderedImages = _ImagesPath( images, [] )._orderedImages()
+
+	insertions = []
+
+	for index in plugIndices :
+		image = sourceImages[ index ]
+		suffix = "Copy" if image["fileName"].getValue() else "Snapshot1"
+		uiInsertionIndex = orderedImages.index( image )
+		imageCopy = GafferImage.Catalogue.Image( image.getName() + suffix, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		images.addChild( imageCopy )
+		imageCopy.copyFrom( image )
+		orderedImages.insert( uiInsertionIndex, imageCopy )
+		insertions.append( len(images) - 1 )
+
+	_ImagesPath._updateUIIndices( orderedImages )
+
+	return insertions
 
 ##########################################################################
 # _CataloguePath
@@ -615,7 +662,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
 				addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ), scoped = False )
 
-				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy." )
+				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image, hold <kbd>alt</kbd> to view copy. [<kbd>Ctrl-D</kbd>]" )
 				self.__duplicateButton.setEnabled( False )
 				self.__duplicateButton.clickedSignal().connect( Gaffer.WeakMethod( self.__duplicateClicked ), scoped = False )
 
@@ -629,7 +676,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
-				self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image" )
+				self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image [<kbd>Delete</kbd>]" )
 				self.__removeButton.setEnabled( False )
 				self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
 
@@ -895,32 +942,15 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		# These are plug indices, rather than ui indices, so need to be
 		# used directly with self.__images() without remapping.
 		indices = self.__indicesFromSelection()
-
-		# As we may be inserting more than one image, keep a copy of the original
-		# list so the selection indices remain valid
-		sourceImages = [ i for i in self.__images().children() ]
-		# We need to insert the duplicate before the source, as it's usually
-		# used to snapshot in-progress renders.
-		orderedImages = self.__orderedImages()
+		if not indices :
+			return
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-
-			insertionIndex = None
-
-			for index in indices :
-				image = sourceImages[ index ]
-				uiInsertionIndex = orderedImages.index( image )
-				imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-				self.__images().addChild( imageCopy )
-				imageCopy.copyFrom( image )
-				orderedImages.insert( uiInsertionIndex, imageCopy )
-
-			_ImagesPath._updateUIIndices( orderedImages )
-
+			insertions = _duplicateImages( self.__catalogue(), indices )
 			# Only switch to the last duplicate if alt is held
 			altHeld = GafferUI.Widget.currentModifiers() & GafferUI.ModifiableEvent.Modifiers.Alt
-			if altHeld and uiInsertionIndex is not None :
-				self.getPlug().setValue( self.__uiIndexToIndex( uiInsertionIndex ) )
+			if altHeld :
+				self.getPlug().setValue( insertions[-1] )
 
 	def __dropImage( self, eventData ) :
 
@@ -1043,6 +1073,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		if keyEvent.key in ['Delete', 'Backspace'] :
 			self.__removeClicked()
+			return True
+		elif keyEvent.key == "D" and keyEvent.modifiers == keyEvent.Modifiers.Control :
+			self.__duplicateClicked()
 			return True
 
 		return False

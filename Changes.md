@@ -1,6 +1,12 @@
 0.58.x.x
 ========
 
+Improvements
+------------
+
+- Catalogue : Added <kbd>Ctrl-D</kbd> shortcut to duplicate selected images (#3545).
+- Viewer : Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
+
 Fixes
 -----
 

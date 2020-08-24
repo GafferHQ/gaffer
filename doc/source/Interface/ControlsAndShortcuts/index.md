@@ -335,6 +335,7 @@ Isolate alpha channel                 :kbd:`A`
 Center image at 1:1 scale             :kbd:`Home`
 Next Catalogue image                  :kbd:`↓`
 Previous Catalogue image              :kbd:`↑`
+Duplicate current Catalogue image     :kbd:`Ctrl` + `:kbd:`D`
 ===================================== =============================================
 ```
 
