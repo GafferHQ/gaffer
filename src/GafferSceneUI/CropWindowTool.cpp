@@ -531,6 +531,18 @@ CropWindowTool::StatusChangedSignal &CropWindowTool::statusChangedSignal()
 	return m_statusChangedSignal;
 }
 
+Gaffer::Box2fPlug *CropWindowTool::plug()
+{
+	findCropWindowPlug();
+	return m_cropWindowPlug.get();
+}
+
+Gaffer::BoolPlug *CropWindowTool::enabledPlug()
+{
+	findCropWindowPlug();
+	return m_cropWindowEnabledPlug.get();
+}
+
 GafferScene::ScenePlug *CropWindowTool::scenePlug()
 {
 	return getChild<ScenePlug>( g_firstPlugIndex );

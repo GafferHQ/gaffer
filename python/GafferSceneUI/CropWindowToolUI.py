@@ -87,11 +87,25 @@ class _StatusWidget( GafferUI.Frame ) :
 
 		with self :
 			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__row :
+
 				self.__infoIcon = GafferUI.Image( "infoSmall.png" )
 				self.__errorIcon = GafferUI.Image( "errorSmall.png" )
 				self.__warningIcon = GafferUI.Image( "warningSmall.png" )
 				GafferUI.Spacer( size = imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 				self.__label = GafferUI.Label( "" )
+
+				GafferUI.Spacer( size = imath.V2i( 8 ), maximumSize = imath.V2i( 8 ) )
+				GafferUI.Divider( orientation = GafferUI.Divider.Orientation.Vertical )
+				GafferUI.Spacer( size = imath.V2i( 8 ), maximumSize = imath.V2i( 8 ) )
+
+				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as self.__controls :
+
+					self.__enabledLabel = GafferUI.Label( "Enabled" )
+					self.__enabled = GafferUI.BoolPlugValueWidget( None )
+					self.__enabled.boolWidget().setDisplayMode( GafferUI.BoolWidget.DisplayMode.Switch )
+
+					button = GafferUI.Button( "Reset" )
+					button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ), scoped = False )
 
@@ -137,3 +151,23 @@ class _StatusWidget( GafferUI.Frame ) :
 		self.__infoIcon.setVisible( info )
 		self.__warningIcon.setVisible( warn )
 		self.__errorIcon.setVisible( error )
+
+		plug = self.__tool.plug()
+		enabledPlug = self.__tool.enabledPlug()
+
+		self.__controls.setVisible( plug is not None )
+
+		self.__enabled.setPlug( enabledPlug )
+		self.__enabled.setVisible( enabledPlug is not None )
+		self.__enabledLabel.setVisible( enabledPlug is not None )
+
+	def __buttonClicked( self, *unused ) :
+
+		plug = self.__tool.plug()
+
+		if plug is None :
+			return
+
+		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+			plug["min"].setValue( imath.V2f( 0 ) )
+			plug["max"].setValue( imath.V2f( 1 ) )
