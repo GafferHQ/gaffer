@@ -146,6 +146,9 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setPaused( bool paused );
 		bool getPaused() const;
 
+		static uint64_t tileUpdateCount();
+		static void resetTileUpdateCount();
+
 		enum State
 		{
 			Paused,
