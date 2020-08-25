@@ -37,6 +37,7 @@
 from .DocumentationTest import DocumentationTest
 from .ArnoldShaderUITest import ArnoldShaderUITest
 from .VisualiserAlgoTest import VisualiserAlgoTest
+from .InteractiveArnoldRenderPerformanceTest import InteractiveArnoldRenderPerformanceTest
 
 if __name__ == "__main__":
 	unittest.main()
