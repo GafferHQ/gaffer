@@ -34,6 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+// Workaround for this bug in GCC 4.8 :
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59483
+#include "boost/config.hpp"
+#if defined(BOOST_GCC) && BOOST_GCC < 40900
+	#define protected public
+#endif
+
 #include "GafferImageUI/ImageGadget.h"
 
 #include "GafferImage/ImageAlgo.h"
