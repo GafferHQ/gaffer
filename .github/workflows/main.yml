@@ -124,7 +124,9 @@ jobs:
       # below.
       run: |
         python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "::set-env name=GAFFER_DEPENDENCIES_HASH::{archiveDigest}"
+        ./config/installArnold.sh
         ./config/installDelight.sh
+        echo ::set-env name=ARNOLD_ROOT::$GITHUB_WORKSPACE/arnoldRoot
         echo ::set-env name=DELIGHT::$GITHUB_WORKSPACE/3delight
 
     - name: Cache

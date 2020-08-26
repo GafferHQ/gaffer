@@ -1,4 +1,39 @@
 #! /bin/bash
+##########################################################################
+#
+#  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+##########################################################################
 
 set -e
 
@@ -10,26 +45,18 @@ else
 	arnoldPlatform=darwin
 fi
 
-# Check required vars are set, and if they are, aren't inadvertently unexpanded
-# vars from anywhere (which we've seen with Azure, and not been able to find a
-# syntax that just sets them empty if they're not set in the pipeline, despite
-# what the docs say).
+url=forgithubci.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
 
-if [ -z "${ARNOLD_LOGIN}" ] || [ "${ARNOLD_LOGIN:0:1}" == "$" ] ; then
-	echo "Error: ARNOLD_LOGIN not set, unable to install Arnold"
-	exit 1
-fi
-
-if [ -z "${ARNOLD_PASSWORD}" ] || [ "${ARNOLD_PASSWORD:0:1}" == "$" ] ; then
-	echo "Error: ARNOLD_PASSWORD not set, unable to install Arnold"
-	exit 1
+# Configure the login information, if this has been supplied.
+login=""
+# TODO: Remove the extra var checks (!= $) once we no longer need Azure support.
+if [ ! -z "${ARNOLD_LOGIN}" ] && [ "${ARNOLD_LOGIN:0:1}" != "$" ] && [ -z "${ARNOLD_PASSWORD}" ] && [ "${ARNOLD_PASSWORD:0:1}" != "$" ]; then
+	login="${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@"
 fi
 
 mkdir -p arnoldRoot && cd arnoldRoot
 
-url=downloads.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
-
 echo Downloading Arnold "https://${url}"
+curl -L https://${login}${url} -o Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
 
-curl https://${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@${url} > Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
 tar -xzf Arnold-${arnoldVersion}-${arnoldPlatform}.tgz

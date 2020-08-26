@@ -40,6 +40,7 @@ ENV_VARS_TO_IMPORT = "PATH"
 
 BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
 
+ARNOLD_ROOT = os.environ["ARNOLD_ROOT"]
 DELIGHT_ROOT = os.environ["DELIGHT"]
 
 BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
