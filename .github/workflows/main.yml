@@ -169,12 +169,14 @@ jobs:
       timeout-minutes: 20
       run: |
        scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+      if: matrix.publish
 
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
         ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.tar.gz ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }}
         echo "::remove-matcher owner=validateRelease::"
+      if: matrix.publish
 
     - uses: actions/upload-artifact@v2
       with:
