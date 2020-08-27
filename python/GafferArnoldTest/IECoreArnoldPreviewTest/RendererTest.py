@@ -2442,7 +2442,7 @@ class RendererTest( GafferTest.TestCase ) :
 			output = "output"
 		) )
 
-		self.assertEqual( self.__aovShaders().keys(), [ "aov_write_rgb" ] )
+		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_rgb" ] ) )
 		source = arnold.AiNodeGetLink( self.__aovShaders()["aov_write_rgb"], "aov_input" )
 		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "float_to_rgb" )
 
@@ -2455,10 +2455,10 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_int", "aov_write_float" ] ) )
 
 		r.option( "ai:aov_shader:test", None )
-		self.assertEqual( self.__aovShaders().keys(), [ "aov_write_float" ] )
+		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_float" ] ) )
 
 		r.option( "ai:aov_shader:test2", None )
-		self.assertEqual( self.__aovShaders().keys(), [] )
+		self.assertEqual( set( self.__aovShaders().keys() ), set() )
 
 		del r
 
