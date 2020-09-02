@@ -4465,23 +4465,6 @@
        sodipodi:type="arc"
        inkscape:label="#path3352" />
     <path
-       sodipodi:type="star"
-       style="fill:#69ffa5;fill-opacity:0.99215686;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:0.5598439;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="valueChanged"
-       sodipodi:sides="6"
-       sodipodi:cx="298.875"
-       sodipodi:cy="13.687498"
-       sodipodi:r1="5.8454323"
-       sodipodi:r2="1.2886781"
-       sodipodi:arg1="0.94448073"
-       sodipodi:arg2="1.4443827"
-       inkscape:flatsided="false"
-       inkscape:rounded="0"
-       inkscape:randomized="0"
-       d="m 302.30138,18.423424 -3.26391,-3.457531 -2.55071,4.0569 1.36235,-4.555392 -4.78873,-0.180534 4.62626,-1.097861 -2.23802,-4.2374343 3.26391,3.4575313 2.55071,-4.0569002 -1.36235,4.5553922 4.78873,0.180534 -4.62626,1.097861 z"
-       transform="matrix(1.1039167,-0.49853331,0.49895085,1.1048412,55.474744,203.81434)"
-       inkscape:label="#path3064" />
-    <path
        inkscape:connector-curvature="0"
        style="fill:url(#backgroundLighter);fill-opacity:0.99215686;fill-rule:evenodd;stroke:#3c3c3c;stroke-opacity:0.99215686"
        d="m 448,72.862183 h -8.5 v 3 l -7,-6 7,-6 v 3 h 8.5"
@@ -7665,5 +7648,20 @@
        x="69.074638"
        y="115.57742"
        inkscape:label="rect2708" />
+    <circle
+       id="path6430"
+       cx="397"
+       cy="70.362183"
+       style="fill:#63ba86;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-opacity:1"
+       inkscape:label="#path6430"
+       r="3" />
+    <rect
+       style="fill:none;fill-opacity:0.99215686;stroke:none;stroke-opacity:1"
+       id="valueChanged"
+       width="10"
+       height="8"
+       x="391"
+       y="66.362183"
+       inkscape:label="#rect9457" />
   </g>
 </svg>
