@@ -189,7 +189,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 			i = context.get( "loop:index", 0 )
 			layer = context.get( "collect:layerName", "beauty" )
 			x = i % 2
-			y = i / 2
+			y = i // 2
 			parent["ImageReader"]["fileName"] = '""" + self.temporaryDirectory() + """/bakeSpheres/%s/%s.%i.tx' % ( layer, layer, 1001 + x + y * 10 )
 
 			parent["ImageTransform"]["transform"]["translate"] = imath.V2f( 32 * x, 32 * y )
