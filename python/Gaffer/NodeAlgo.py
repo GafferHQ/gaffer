@@ -126,6 +126,13 @@ def isSetToUserDefault( plug ) :
 	if userDefault is None :
 		return False
 
+	source = plug.source()
+	if source.direction() == Gaffer.Plug.Direction.Out and isinstance( source.node(), Gaffer.ComputeNode ) :
+		# Computed values may vary by context, as such there is no
+		# single "current value", so no true concept of whether or not
+		# it's at the user default.
+		return False
+
 	return userDefault == plug.getValue()
 
 def applyUserDefault( plug ) :

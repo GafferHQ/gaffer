@@ -75,6 +75,25 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node3["op1"].getValue(), 0 )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 
+	def testUserDefaultConnectedToCompute( self ) :
+
+		srcNode = GafferTest.AddNode()
+		node = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
+		node["op1"].setValue( 7 )
+		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
+
+		node["op1"].setInput( srcNode["sum"] )
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
+
+		# Even if it happens to have the same value
+
+		srcNode["op1"].setValue( 7 )
+		srcNode["op2"].setValue( 0 )
+		self.assertEqual( srcNode["sum"].getValue(), 7 )
+		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
+
 	def testCompoundPlugUserDefaults( self ) :
 
 		node = GafferTest.CompoundPlugNode()
