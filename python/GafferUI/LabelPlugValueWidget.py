@@ -116,6 +116,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		plug = self.getPlug()
 
+		## \todo: This is mirrored in PlugLayout and needs centralising in NodeAlgo (along
+		# with proper support for child plug connections/defaults) at the next API break.
+
 		valueChanged = plug.getInput() is not None
 		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
 			if Gaffer.NodeAlgo.hasUserDefault( plug ) :

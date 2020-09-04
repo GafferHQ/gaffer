@@ -1,3 +1,4 @@
+
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
@@ -753,6 +754,18 @@ _styleSheet = string.Template(
 	QCheckBox#gafferCollapsibleToggle::indicator:checked:hover,
 	QCheckBox#gafferCollapsibleToggle::indicator:checked:focus {
 		image: url($GAFFER_ROOT/graphics/collapsibleArrowRightHover.png);
+	}
+
+	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:unchecked,
+	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover,
+	*[gafferValueChanged="true"] > CheckBox#gafferCollapsibleToggle::indicator:unchecked:focus {
+		image: url($GAFFER_ROOT/graphics/collapsibleArrowDownValueChanged.png);
+	}
+
+	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:checked,
+	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:checked:hover,
+	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:checked:focus {
+		image: url($GAFFER_ROOT/graphics/collapsibleArrowRightValueChanged.png);
 	}
 
 	QHeaderView {
