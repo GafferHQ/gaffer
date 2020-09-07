@@ -1,0 +1,50 @@
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 57, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 7, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["shader"] = GafferSceneTest.TestShader( "shader" )
+parent.addChild( __children["shader"] )
+__children["shader"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["shaderAssignment"] = GafferScene.ShaderAssignment( "shaderAssignment" )
+parent.addChild( __children["shaderAssignment"] )
+__children["shaderAssignment"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["switch"] = Gaffer.Switch( "switch" )
+parent.addChild( __children["switch"] )
+__children["switch"].setup( GafferScene.ShaderPlug( "in", ) )
+__children["switch"]["in"].addChild( GafferScene.ShaderPlug( "in1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["switch"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["expr"] = Gaffer.Expression( "expr" )
+parent.addChild( __children["expr"] )
+__children["expr"]["__out"].addChild( Gaffer.IntPlug( "p0", direction = Gaffer.Plug.Direction.Out, defaultValue = 0, minValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["expr"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["dot"] = Gaffer.Dot( "dot" )
+parent.addChild( __children["dot"] )
+__children["dot"].setup( Gaffer.Color3fPlug( "in", defaultValue = imath.Color3f( 0, 0, 0 ), ) )
+__children["dot"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["shader"]["type"].setValue( 'test:surface' )
+__children["shader"]["__uiPosition"].setValue( imath.V2f( -15.1341801, 4.44920874 ) )
+__children["shaderAssignment"]["shader"].setInput( __children["switch"]["out"] )
+__children["shaderAssignment"]["__uiPosition"].setValue( imath.V2f( 14.4972792, -7.71484327 ) )
+__children["switch"]["index"].setInput( __children["expr"]["__out"]["p0"] )
+__children["switch"]["in"][0].setInput( __children["dot"]["out"] )
+__children["switch"]["__uiPosition"].setValue( imath.V2f( 0.277552426, -1.63281226 ) )
+__children["expr"]["__uiPosition"].setValue( imath.V2f( -10.2215948, -1.63226855 ) )
+__children["dot"]["in"].setInput( __children["shader"]["out"] )
+Gaffer.Metadata.registerValue( __children["dot"]["in"], 'noduleLayout:section', 'left' )
+Gaffer.Metadata.registerValue( __children["dot"]["out"], 'noduleLayout:section', 'right' )
+__children["dot"]["__uiPosition"].setValue( imath.V2f( -6.47503853, 4.44921875 ) )
+__children["expr"]["__engine"].setValue( 'python' )
+__children["expr"]["__expression"].setValue( 'parent["__out"]["p0"] = 0' )
+
+
+del __children
+

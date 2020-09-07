@@ -200,6 +200,18 @@ PlugPtr promotedPlug( BoxIO &b )
 	return b.promotedPlug();
 }
 
+PlugPtr promote( Plug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return BoxIO::promote( &plug );
+}
+
+void insert( Box &box )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	BoxIO::insert( &box );
+}
+
 DependencyNodePtr acquireProcessor( EditScope &e, const std::string &type, bool createIfNecessary )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -312,9 +324,9 @@ void GafferModule::bindSubGraph()
 		.def( "setupPromotedPlug", &setupPromotedPlug )
 		.def( "plug", &plug )
 		.def( "promotedPlug", &promotedPlug )
-		.def( "promote", &BoxIO::promote, return_value_policy<CastToIntrusivePtr>() )
+		.def( "promote", &promote )
 		.staticmethod( "promote" )
-		.def( "insert", &BoxIO::insert )
+		.def( "insert", &insert )
 		.staticmethod( "insert" )
 		.def( "canInsert", &BoxIO::canInsert )
 		.staticmethod( "canInsert" )

@@ -60,15 +60,24 @@ Gaffer.Metadata.registerNode(
 			A set expression that computes a set that defines
 			the locations to be matched.
 
-			For example, the expression "mySpheresSet | myCubesSet"
+			For example, the expression `mySpheresSet | myCubesSet`
 			will create a set that contains all objects in
-			mySpheresSet and myCubesSet.
+			`mySpheresSet` and `myCubesSet`.
 
-			Gaffer supports the union operator (|) as shown in the
-			example and also provides intersection (&) and difference (-)
+			Gaffer supports the union operator (`|`) as shown in the
+			example and also provides intersection (`&`) and difference (`-`)
 			operations for set expressions. Names of locations
 			can be used to represent a set that contains only
 			that one location.
+
+			In addition, the `in` and `containing` operators can be
+			used to query descendant and ancestor matches. For example,
+			`materialA in assetB` will select all locations in the `materialA`
+			set that are at or below locations in the `assetB` set. This
+			allows leaf matches to be made against sets that only contain
+			root or parent locations. `allAssets containing glass` will
+			selection locations in `allAssets` that have children in the
+			`glass` set.
 
 			For more examples please consult the Scripting Reference
 			section in Gaffer's documentation.
