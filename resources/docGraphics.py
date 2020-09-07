@@ -1,4 +1,8 @@
 {
+	"options" : {
+		"validatePixelAlignment" : False
+	},
+
 	"ids" : [
 		"mousePointerLeftClick",
 		"mousePointerRightClick",

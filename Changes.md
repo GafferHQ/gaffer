@@ -19,6 +19,35 @@ Breaking Changes
 
 - Gadget : Added new virtual method and private member variables.
 
+0.58.1.0 (relative to 0.58.0.1)
+========
+
+- Catalogue : Added <kbd>Ctrl-D</kbd> shortcut to duplicate selected images (#3545).
+- Viewer :
+  - Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
+  - Added enabled/reset controls to the Crop Window Tool.
+  - Improved display of the edited plug in the Inspector's pop-up edit windows.
+
+Fixes
+-----
+
+- Viewer :
+  - Fixed bug preventing the Inspector from finding shaders when assigned via a Switch.
+  - Fixed bug that caused the wrong plug to be edited by the Inspector with nested EditScopes.
+  - Fixed bug that prevented selecting an Edit Scope that contained other Edit Scopes.
+  - Fixed bug that caused an exception when simultaneously editing multiple plugs the Inspector.
+- Box : Fixed GIL management bug that could cause hangs when promoting a plug.
+- SetFilter : Added missing set expression operators to node reference/tooltip.
+- UIEditor : Fixed bug which allowed the creation of non-selectable presets.
+- EditScopes : Fixed crash in `EditScope::processors()` if intermediate nodes had no corresponding input.
+- ShaderAssignment : Fixed bug in `shader` plug connection acceptance that could cause crashes at shutdown.
+
+API
+---
+
+- EditScopeUI : Added support for listing user nodes in the Edit Scope navigation menu when their `editScope:includeInNavigationMenu` metadata entry is set to `True`.
+- CropWindowTool : Added `plug()` and `enabledPlug()` methods to return the currently edited plugs or `nullptr`.
+
 0.58.0.1 (relative to 0.58.0.0)
 ========
 
@@ -213,6 +242,18 @@ Build
 
 - Updated to GafferHQ/dependencies 1.6.0.
 
+0.57.7.1 (relative to 0.57.7.0)
+========
+
+Fixes
+-----
+
+- Box : Fixed GIL management bug that could cause hangs when promoting a plug.
+- SetFilter : Added missing set expression operators to node reference/tooltip.
+- UIEditor : Fixed bug which allowed the creation of non-selectable presets.
+- EditScopes : Fixed crash in `EditScope::processors()` if intermediate nodes had no corresponding input.
+- ShaderAssignment : Fixed bug in `shader` plug connection acceptance that could cause crashes at shutdown.
+
 0.57.7.0 (relative to 0.57.6.0)
 ========
 
@@ -225,7 +266,9 @@ Improvements
 Fixes
 -----
 
-- Viewer : Fixed crashes that could be caused by invalid pixel values.
+- Viewer :
+ - Fixed crashes that could be caused by invalid pixel values.
+ - Fixed bug that caused gobos to ignore the light visualisation mode of their parent light.
 
 API
 ---
@@ -247,7 +290,6 @@ Fixes
 - SetFilter : Sanitised context used to evaluate set expressions, by removing `scene:filter:inputScene` variable.
 - SceneAlgo : Removed cancellers from contexts referenced by history objects.
 - Context : Fixed Python `Canceller` lifetime management bug.
-- Viewer : Fixed bug that caused gobos to ignore the light visualisation mode of their parent light.
 
 API
 ---

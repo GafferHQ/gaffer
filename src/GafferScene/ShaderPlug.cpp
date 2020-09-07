@@ -95,7 +95,7 @@ bool isParameterType( const Plug *plug )
 		default :
 			// Use typeName query to avoid hard dependency on
 			// GafferOSL. It may be that we should move ClosurePlug
-			// to GafferScene anyway.s
+			// to GafferScene anyway.
 			return plug->isInstanceOf( "GafferOSL::ClosurePlug" );
 	}
 	return false;
@@ -158,7 +158,9 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 	// And we support switches by traversing across them
 	// ourselves when necessary, in `shaderOutPlug()`.
-	if( auto switchNode = runTimeCast<const Switch>( sourcePlug->node() ) )
+
+	const Node *sourceNode = sourcePlug->node();
+	if( auto switchNode = runTimeCast<const Switch>( sourceNode ) )
 	{
 		if(
 			sourcePlug == switchNode->outPlug() ||
@@ -187,25 +189,24 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 		}
 	}
 
-	// Really, we want to return false now, but during
-	// deserialisation we're not in control of the order
-	// of connection of plugs. We must accept intermediate
-	// connections from plugs on utility nodes on the
-	// assumption that they will later be connected to
-	// a shader.
+	// We must accept intermediate connections from plugs on utility nodes on the
+	// assumption that they will later be connected to a shader. Once we're connected
+	// to `sourcePlug`, we'll be consulted about any inputs it will receive, so we
+	// can reject non-shaders then.
 
-	const ScriptNode *script = ancestor<ScriptNode>();
-	if( !script || !script->isExecuting() )
-	{
-		return false;
-	}
-
-	const Node *sourceNode = sourcePlug->node();
-	return
+	if(
 		runTimeCast<const SubGraph>( sourceNode ) ||
 		runTimeCast<const Dot>( sourceNode ) ||
 		runTimeCast<const BoxIO>( sourceNode )
-	;
+	)
+	{
+		if( isParameterType( sourcePlug ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 IECore::MurmurHash ShaderPlug::attributesHash() const
