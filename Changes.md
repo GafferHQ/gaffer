@@ -1,4 +1,4 @@
-0.58.x.x
+0.58.1.0 (relative to 0.58.0.1)
 ========
 
 Improvements
