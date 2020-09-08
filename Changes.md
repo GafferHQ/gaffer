@@ -1,3 +1,11 @@
+0.57.7.x (relative to 0.57.7.1)
+========
+
+Fixes
+-----
+
+- CollectScenes : Fixed childNames hashing bug.
+
 0.57.7.1 (relative to 0.57.7.0)
 ========
 
