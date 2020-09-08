@@ -75,8 +75,7 @@ command = "gaffer stats {inputScript} -scene {node} -contextMonitor -annotatedSc
 	node = "CollectScenes",
 	outputScript = outputScript
 	)
-process = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE )
-process.wait()
+subprocess.check_call( command, shell=True )
 script["fileName"].setValue( outputScript )
 script.load()
 with GafferUI.Window() as window :
@@ -104,8 +103,7 @@ command = "gaffer stats {inputScript} -scene {node} -contextMonitor -annotatedSc
 	node = "CollectScenes",
 	outputScript = outputScript
 	)
-process = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE )
-process.wait()
+subprocess.check_call( command, shell=True )
 script["fileName"].setValue( outputScript )
 script.load()
 with GafferUI.Window() as window :

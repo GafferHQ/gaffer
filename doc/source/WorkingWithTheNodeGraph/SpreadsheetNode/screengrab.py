@@ -39,10 +39,7 @@ def __dispatchScript( script, tasks, settings ) :
 		" ".join( settings ),
 		temporaryDirectory
 		)
-	process = subprocess.Popen( command, shell = True, stderr = subprocess.PIPE )
-	process.wait()
-
-	return process
+	subprocess.check_call( command, shell = True )
 
 # Create a plug context menu from a Node Editor
 def __spawnPlugContextMenu( nodeEditor, plugWidget ) :
