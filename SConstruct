@@ -1458,12 +1458,12 @@ def locateDocs( docRoot, env ) :
 					if line.startswith( "# BuildTarget:" ) :
 						targets = [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ]
 						command = env.Command( targets, sourceFile, generateDocs )
-						docEnv.Depends( command, "build" )
+						env.Depends( command, "build" )
 						# Force the commands to run serially, in case the doc generation
 						# has been run in parallel. Otherwise we can get overlapping
 						# screengrabs from the commands that launch Gaffer UIs.
 						if commands :
-							docEnv.Depends( command, commands[-1] )
+							env.Depends( command, commands[-1] )
 						commands.append( command )
 						sources.extend( targets )
 
@@ -1472,10 +1472,11 @@ def locateDocs( docRoot, env ) :
 def buildDocs( target, source, env ) :
 
 	# Run sphinx to generate the final documentation.
+	# Run via `python` as sphinx hard-codes `/usr/bin/python`.
 
 	subprocess.check_call(
 		[
-			"gaffer", "env", "python",
+			"python",
 			findOnPath( env.subst( "$SPHINX" ), env["ENV"]["PATH"] ),
 			"-b", "html",
 			str( source[0] ), os.path.dirname( str( target[0] ) )
@@ -1485,54 +1486,45 @@ def buildDocs( target, source, env ) :
 
 if haveSphinx and haveInkscape :
 
-	docEnv = commandEnv.Clone()
+	# We build docs in the standard environment rather than commandEnv, so we can
+	# use host python to avoid needing a matrix of sphinx versions to match Gaffer's
+	# bundled python version.
+	docEnv = env.Clone()
+	docEnv["ENV"]["PYTHONPATH"] = ":".join( sys.path )
 
-	# This is a little bit tricky. We need Gaffer itself to build the
-	# docs, because we autogenerate the node reference from the node metadata.
-	# And we also need sphinx, but `sphinx_build` starts with `#!/usr/bin/python`,
-	# which may not be compatible with Gaffer's built-in python. So, we locate
-	# the modules sphinx needs upfront, and make sure they're on the PYTHONPATH,
-	# then we use `gaffer env python` to launch Gaffer's python, and generate
-	# all the docs in that environment.
-
-	for module in ( "sphinx", "markupsafe", "CommonMark", "pytz" ) :
-		if not findOnPath( module, docEnv["ENV"]["PYTHONPATH"] ) :
-			try :
-				m = __import__( module )
-				docEnv["ENV"]["PYTHONPATH"] = docEnv["ENV"]["PYTHONPATH"] + ":" + os.path.dirname( m.__path__[0] )
-			except ImportError :
-				pass
+	# Since we don't copy the docs reference scripts, the screengrab
+	# scripts must read them from the source, so we use the reference
+	# env var.
+	docCommandEnv = commandEnv.Clone()
+	docCommandEnv["ENV"]["GAFFER_REFERENCE_PATHS"] = os.path.abspath( "doc/references" )
 
 	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
 	# environment.
 
 	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if docEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
 
-	if docEnv.subst( "$ARNOLD_ROOT" ) :
-		docEnv["ENV"]["PATH"] += ":" + docEnv.subst( "$ARNOLD_ROOT/bin" )
-		docEnv["ENV"]["PYTHONPATH"] += ":" + docEnv.subst( "$ARNOLD_ROOT/python" )
-		docEnv["ENV"][libraryPathEnvVar] += ":" + docEnv.subst( "$ARNOLD_ROOT/bin" )
+	if docCommandEnv.subst( "$ARNOLD_ROOT" ) :
+		docCommandEnv["ENV"]["PATH"] += ":" + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
+		docCommandEnv["ENV"]["PYTHONPATH"] += ":" + docCommandEnv.subst( "$ARNOLD_ROOT/python" )
+		docCommandEnv["ENV"][libraryPathEnvVar] = docCommandEnv["ENV"].get( libraryPathEnvVar, "" ) + ":" + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
 
-	if docEnv.subst( "$APPLESEED_ROOT" ) and docEnv["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
-		docEnv["ENV"]["PATH"] += ":" + docEnv.subst( "$APPLESEED_ROOT/bin" )
-		docEnv["ENV"][libraryPathEnvVar] += ":" + docEnv.subst( "$APPLESEED_ROOT/lib" )
-		docEnv["ENV"]["OSLHOME"] = docEnv.subst( "$OSLHOME" )
-		docEnv["ENV"]["OSL_SHADER_PATHS"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed" )
-		docEnv["ENV"]["APPLESEED_SEARCHPATH"] = docEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
-
-	# Since we don't copy the docs reference scripts, the screengrab
-	# scripts must read them from the source, so we use the reference
-	# env var.
-	docEnv["ENV"]["GAFFER_REFERENCE_PATHS"] = os.path.abspath( "doc/references" )
+	if docCommandEnv.subst( "$APPLESEED_ROOT" ) and docCommandEnv["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
+		docCommandEnv["ENV"]["PATH"] += ":" + docCommandEnv.subst( "$APPLESEED_ROOT/bin" )
+		docCommandEnv["ENV"][libraryPathEnvVar] = docCommandEnv["ENV"].get( libraryPathEnvVar, "" ) + ":" + docCommandEnv.subst( "$APPLESEED_ROOT/lib" )
+		docCommandEnv["ENV"]["OSLHOME"] = docCommandEnv.subst( "$OSLHOME" )
+		docCommandEnv["ENV"]["OSL_SHADER_PATHS"] = docCommandEnv.subst( "$APPLESEED_ROOT/shaders/appleseed" )
+		docCommandEnv["ENV"]["APPLESEED_SEARCHPATH"] = docCommandEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
 	#  Docs graphics generation
 	docGraphicsCommands = graphicsCommands( docEnv, "resources/docGraphics.svg", "$BUILD_DIR/doc/gaffer/graphics" )
 	docEnv.Alias( "docs", docGraphicsCommands )
-	docSource, docGenerationCommands = locateDocs( "doc/source", docEnv )
+	docSource, docGenerationCommands = locateDocs( "doc/source", docCommandEnv )
 	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
 	docEnv.Depends( docGenerationCommands, docGraphicsCommands )
 	docEnv.Depends( docs, docGraphicsCommands )
 	docEnv.Depends( docs, "build" )
+	docVars = docCommandEnv.Command( "doc/source/gafferVars.json", "doc/source/gafferVars.py", generateDocs )
+	docEnv.Depends( docs, docVars )
 	if resources is not None :
 		docEnv.Depends( docs, resources )
 	docEnv.Alias( "docs", docs )
