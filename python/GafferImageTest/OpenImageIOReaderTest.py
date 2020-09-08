@@ -616,6 +616,14 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotEqual( h2, h3 )
 		self.assertEqual( h1, h4 )
 
+	def testOpenFilesLimit( self ) :
+
+		l = GafferImage.OpenImageIOReader.getOpenFilesLimit()
+		try :
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( l + 1 )
+			self.assertEqual( GafferImage.OpenImageIOReader.getOpenFilesLimit(), l + 1 )
+		finally :
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( l )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -126,6 +126,10 @@ void GafferImageModule::bindIO()
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<OpenImageIOReader>()
+			.def( "setOpenFilesLimit", &OpenImageIOReader::setOpenFilesLimit )
+			.staticmethod( "setOpenFilesLimit" )
+			.def( "getOpenFilesLimit", &OpenImageIOReader::getOpenFilesLimit )
+			.staticmethod( "getOpenFilesLimit" )
 			.def( "supportedExtensions", &supportedExtensions<OpenImageIOReader> )
 			.staticmethod( "supportedExtensions" )
 		;
