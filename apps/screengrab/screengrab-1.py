@@ -38,6 +38,8 @@ import os
 import time
 import imath
 
+import six
+
 import IECore
 
 import Gaffer
@@ -245,7 +247,9 @@ class screengrab( Gaffer.Application ) :
 		if args["command"].value :
 			exec( args["command"].value, d, d )
 		if args["commandFile"].value :
-			execfile( args["commandFile"].value, d, d )
+			commandFile = args["commandFile"].value
+			with open( commandFile ) as f :
+				six.exec_( compile( f.read(), commandFile, "exec" ), d, d )
 
 		# Select any nodes we've been asked to.
 		for name in args["selection"] :
