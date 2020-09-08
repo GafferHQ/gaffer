@@ -1,3 +1,11 @@
+0.58.x.x (relative to 0.58.1.0)
+========
+
+API
+---
+
+- OpenImageIOReader : Added methods for controlling the maximum number of images files to keep open at one time.
+
 0.58.1.0 (relative to 0.58.0.1)
 ========
 
