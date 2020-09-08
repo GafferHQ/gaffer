@@ -65,9 +65,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of the locations to create at the root of
-			the output scene. The input scene is copied underneath
-			each of these root locations.
+			The paths to the root locations to create in the output scene.
+			The input scene is copied underneath each of these root locations.
 
 			Often the rootNames will be driven by an expression that generates
 			a dynamic number of root locations, perhaps by querying an asset
@@ -81,7 +80,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of a Context Variable that is set to the current
-			root name when evaluating the input scene. This can be used
+			root location when evaluating the input scene. This can be used
 			in upstream expressions and string substitutions to generate
 			a different hierarchy under each root location.
 			""",
@@ -97,7 +96,7 @@ Gaffer.Metadata.registerNode(
 
 			The rootName variable may be used in expressions and string
 			substitutions for this plug, allowing different subtrees to be
-			collected for each root name in the output.
+			collected for each root location in the output.
 
 			> Tip :
 			> By specifying a leaf location as the root, it is possible to

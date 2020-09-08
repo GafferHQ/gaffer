@@ -72,6 +72,9 @@ class GAFFERSCENE_API CollectScenes : public SceneProcessor
 
 	protected :
 
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
 		void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		Imath::Box3f computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
@@ -100,6 +103,9 @@ class GAFFERSCENE_API CollectScenes : public SceneProcessor
 
 		class SourceScope;
 		class SourcePathScope;
+
+		Gaffer::ObjectPlug *rootTreePlug();
+		const Gaffer::ObjectPlug *rootTreePlug() const;
 
 		static size_t g_firstPlugIndex;
 
