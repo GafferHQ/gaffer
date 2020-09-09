@@ -80,6 +80,8 @@ jobs:
     env:
       DISPLAY: ":99.0"
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
+      GAFFER_BUILD_DIR: "./build"
+      GAFFER_CACHE_DIR: "./sconsCache"
 
     steps:
 
@@ -91,6 +93,7 @@ jobs:
       run: |
         sudo pip install scons==3.1.2
         sudo pip install sphinx==1.8.1 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12
+        # Force inkscape < 1.0 until SConstruct is updated
         brew cask install xquartz https://raw.githubusercontent.com/Homebrew/homebrew-cask/5eafe6e9877c5524100b9ac1c5375fe8a2d039be/Casks/inkscape.rb
       if: runner.os == 'macOS'
 
@@ -104,30 +107,48 @@ jobs:
         pip install --user sphinx==1.8.1
       if: runner.os == 'Linux'
 
+    - name: 'Install Python Modules'
+      run: |
+        python --version
+        pip install PyGitHub==1.45
+
+    - name: Set Custom Variables
+      run: |
+        .github/workflows/main/setBuildVars.py
+      env:
+       GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Install dependencies
       # The `::set-env` shenanigans creates an environment variable
       # containing the hash of the archive, for use in the cache key
       # below.
       run: |
-        python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ./build --outputFormat "::set-env name=GAFFER_DEPENDENCIES_HASH::{archiveDigest}"
+        python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "::set-env name=GAFFER_DEPENDENCIES_HASH::{archiveDigest}"
         ./config/installDelight.sh
         echo ::set-env name=DELIGHT::$GITHUB_WORKSPACE/3delight
 
     - name: Cache
       uses: actions/cache@v1
       with:
-        path: sconsCache
+        path: ${{ env.GAFFER_CACHE_DIR }}
         key: ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-
 
-    - name: Build
+    - name: Build Gaffer
       run: |
-       scons -j 2 build ENV_VARS_TO_IMPORT=PATH BUILD_TYPE=${{ matrix.buildType }} DELIGHT_ROOT=$DELIGHT ARNOLD_ROOT= BUILD_DIR=./build BUILD_CACHEDIR=sconsCache
+       scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
 
     - name: Test
       run: |
-        ${{ matrix.testRunner }} "./build/bin/gaffer test"
+        ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test"
+
+    - name: Build Docs and Package
+      # We currently experience sporadic hangs in the docs builds (mac), this
+      # aborts them in a more timely fashion than the default 6hr timeout.
+      timeout-minutes: 20
+      run: |
+       scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
 
     - name: Limit cache size
       # GitHub has a limit of 5G for all caches in a repository. Because we write new
