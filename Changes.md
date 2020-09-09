@@ -7,6 +7,7 @@ Improvements
 - CollectScenes : Added support for collecting at roots of arbitrary depth.
 - AttributeVisualiser : Added support for V2f, V3f, V2i, V3i, V2d and V3d data types.
 - Node Editor : Added decoration to collapsed sections when any of their children have non-default values.
+- HierarchyView : Added <kbd>Ctrl + C</kbd> shortcut/context menu action to copy the selected paths to the clipboard.
 
 Fixes
 -----
