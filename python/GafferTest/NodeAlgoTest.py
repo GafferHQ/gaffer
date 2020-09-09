@@ -49,7 +49,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( node["op1"].getValue(), 0 )
 		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
-		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "userDefault", IECore.IntData( 7 ) )
 		self.assertTrue( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
@@ -69,7 +69,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		# the userDefault can be unregistered by overriding with None
 		node3 = GafferTest.AddNode()
-		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", None )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "userDefault", None )
 		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node3["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node3 )
 		self.assertEqual( node3["op1"].getValue(), 0 )
@@ -80,7 +80,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		srcNode = GafferTest.AddNode()
 		node = GafferTest.AddNode()
 
-		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "userDefault", IECore.IntData( 7 ) )
 		node["op1"].setValue( 7 )
 		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 
@@ -99,7 +99,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		node = GafferTest.CompoundPlugNode()
 
 		self.assertEqual( node["p"]["s"].getValue(), "" )
-		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode.staticTypeId(), "p.s", "userDefault", IECore.StringData( "from the metadata" ) )
+		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "p.s", "userDefault", IECore.StringData( "from the metadata" ) )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["p"]["s"].getValue(), "from the metadata" )
@@ -127,7 +127,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 0 )
 		self.assertEqual( node2["op1"].getValue(), 0 )
 
-		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 1 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "userDefault", IECore.IntData( 1 ) )
 		Gaffer.Metadata.registerValue( node2["op1"], "userDefault", IECore.IntData( 2 ) )
 		Gaffer.NodeAlgo.applyUserDefaults( [ node, node2 ] )
 
