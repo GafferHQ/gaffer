@@ -91,6 +91,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				result += "\n"
 			result += "## Actions\n"
 			result += " - Cursor up/down to increment/decrement\n"
+			result += " - Use `+`, `-`, `*`, `/` and `%` to perform simple maths\n"
 
 		return result
 

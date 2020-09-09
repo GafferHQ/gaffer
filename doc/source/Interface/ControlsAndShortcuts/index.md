@@ -219,6 +219,9 @@ Gang plugs together                            :kbd:`Ctrl` + :kbd:`G`
 ============================================== ===============================================
 ```
 
+> Tip :
+> Numeric fields support basic mathematical operators to adjust their values. For example, appending `+1` to a plug with an existing value of `2`, will set it to `3`. You can use `+`, `-`, `/`, `*` and `%` to modify the existing value.
+
 
 ### Path plugs ###
 

@@ -365,6 +365,9 @@ Now that you have more space, it's time to add some shading nodes:
     - Set the Specular Weight plug to `0.6`.
     - Set the Surface Roughness plug to `0.35`.
 
+> Tip :
+> Numeric fields support basic mathematical operations to adjust their values. For example, appending `+1` to a plug with an existing value of `2`, will set it to `3`. You can use `+`, `-`, `/`, `*` and `%` to modify the existing value.
+
 4. Connect the out_outColor plug of the as_disney_material node to the input plug of the as_closure2surface node.
 
 5. Select the as_closure2surface node and create a ShaderAssignment node (_Scene_ > _Attributes_ > _ShaderAssignment_).
