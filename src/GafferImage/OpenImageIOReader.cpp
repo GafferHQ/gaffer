@@ -829,6 +829,16 @@ const Gaffer::ObjectVectorPlug *OpenImageIOReader::tileBatchPlug() const
 	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 4 );
 }
 
+void OpenImageIOReader::setOpenFilesLimit( size_t maxOpenFiles )
+{
+	fileCache()->setMaxCost( maxOpenFiles );
+}
+
+size_t OpenImageIOReader::getOpenFilesLimit()
+{
+	return fileCache()->getMaxCost();
+}
+
 size_t OpenImageIOReader::supportedExtensions( std::vector<std::string> &extensions )
 {
 	std::string attr;

@@ -84,6 +84,9 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
+		static void setOpenFilesLimit( size_t maxOpenFiles );
+		static size_t getOpenFilesLimit();
+
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 
 	protected :
