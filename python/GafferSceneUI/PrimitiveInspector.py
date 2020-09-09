@@ -268,14 +268,6 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		with self.getContext() :
 			targetPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
 
-			for interpolation in [IECoreScene.PrimitiveVariable.Interpolation.Constant, IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-				IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECoreScene.PrimitiveVariable.Interpolation.Varying,
-				IECoreScene.PrimitiveVariable.Interpolation.FaceVarying] :
-
-				self.__dataWidgets[interpolation].setData( None )
-				self.__dataWidgets[interpolation].setToolTips( [] )
-				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], str( interpolation ) )
-
 			self.__locationLabel.setText( "Select a location to inspect" )
 
 			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
@@ -286,6 +278,8 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 			headers = collections.OrderedDict()
 			primVars = collections.OrderedDict()
 			toolTips = collections.OrderedDict()
+
+			haveData = False
 
 			if self.__scenePlug :
 
@@ -302,6 +296,9 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 					obj = self.__scenePlug.object( targetPaths[-1] )
 					if isinstance( obj, IECoreScene.Primitive ) :
+
+						haveData = True
+
 						for primvarName in _orderPrimitiveVariables( obj.keys() ) :
 							primvar = obj[primvarName]
 							if not primvar.interpolation in primVars :
@@ -328,5 +325,15 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 			else:
 
 				self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
+
+			if not haveData :
+
+				for interpolation in [IECoreScene.PrimitiveVariable.Interpolation.Constant, IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+					IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECoreScene.PrimitiveVariable.Interpolation.Varying,
+					IECoreScene.PrimitiveVariable.Interpolation.FaceVarying] :
+
+					self.__dataWidgets[interpolation].setData( None )
+					self.__dataWidgets[interpolation].setToolTips( [] )
+					self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], str( interpolation ) )
 
 GafferUI.Editor.registerType( "PrimitiveInspector", PrimitiveInspector )
