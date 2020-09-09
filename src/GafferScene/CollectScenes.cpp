@@ -285,7 +285,7 @@ void CollectScenes::hashChildNames( const ScenePath &path, const Gaffer::Context
 {
 	if( path.size() == 0 )
 	{
-		SceneProcessor::hashObject( path, context, parent, h );
+		SceneProcessor::hashChildNames( path, context, parent, h );
 		rootNamesPlug()->hash( h );
 	}
 	else
