@@ -123,9 +123,16 @@ jobs:
     - name: Set Custom Variables
       run: |
         .github/workflows/main/setBuildVars.py
+        echo "::set-env name=GAFFER_SPHINX::`which sphinx-build`"
       env:
        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        GAFFER_BUILD_VARIANT: ${{ matrix.variant }}
+
+    - name: Disable macOS PR Docs
+      run: |
+        echo "::set-env name=GAFFER_SPHINX::doesNotExist"
+        echo "::set-env name=GAFFER_VALIDATE_EXTRA_FLAGS::--skipDocs"
+      if: runner.os == 'macOS' && env.GAFFER_GITHUB_RELEASEID == ''
 
     - name: Install dependencies
       # The `::set-env` shenanigans creates an environment variable
@@ -166,7 +173,7 @@ jobs:
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
-        ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.tar.gz
+        ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.tar.gz ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }}
         echo "::remove-matcher owner=validateRelease::"
 
     - uses: actions/upload-artifact@v2

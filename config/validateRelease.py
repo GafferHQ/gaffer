@@ -51,6 +51,12 @@ parser.add_argument(
 	help = "The path to the build archive to publish."
 )
 
+parser.add_argument(
+	"--skipDocs",
+	action = 'store_true',
+	help = "If set, validation will not check for documentation in the archive"
+)
+
 args = parser.parse_args()
 
 if not os.path.exists( args.archive ) :
@@ -65,9 +71,13 @@ sys.stdout.flush()
 # Validate the release contains our mandatory components
 
 requiredPaths = [
-	os.path.join( "doc", "gaffer", "html", "index.html" ),
 	os.path.join( "resources", "examples" )
 ]
+
+if args.skipDocs :
+	sys.stderr.write( "WARNING: --skipDocs is set, not checking documentation\n" )
+else :
+	requiredPaths.append( os.path.join( "doc", "gaffer", "html", "index.html" ) )
 
 for module in (
 	"Gaffer", "GafferAppleseed", "GafferArnold", "GafferDelight",
@@ -96,8 +106,8 @@ with tarfile.open( args.archive, "r:gz" ) as a:
 	missing = [ p for p in requiredPaths if p not in archivePaths ]
 	if missing :
 		sys.stderr.write(
-			"Validation failed:\n%s\n"
-				% "\n".join( [ " - ERROR %s is missing from the archive" % m for m in missing ] )
+			"Validation failed\n%s\n"
+				% "\n".join( [ "ERROR: %s is missing from the archive" % m for m in missing ] )
 		)
 		sys.exit( 1 )
 

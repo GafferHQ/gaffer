@@ -2,17 +2,11 @@
 	"problemMatcher": [
 		{
 			"owner": "validateRelease",
-			"severity": "error",
 			"pattern": [
 				{
-					// Matches the main error message
-					"regexp": "^Validation failed:$"
-				},
-				{
-					// Matches individual missing files
-					"regexp": "^\\s+-\\s+ERROR\\s+(.*)$",
+					"regexp": "^((ERROR|WARNING).+)$",
 					"message": 1,
-					"loop": true
+					"severity": 2
 				}
 			]
 		}

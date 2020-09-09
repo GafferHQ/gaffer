@@ -47,3 +47,5 @@ BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
 INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
 
 PACKAGE_FILE = "%s.tar.gz" % os.environ["GAFFER_BUILD_NAME"]
+
+SPHINX = os.environ["GAFFER_SPHINX"]
