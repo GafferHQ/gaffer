@@ -98,6 +98,9 @@ class GAFFERSCENE_API CollectScenes : public SceneProcessor
 
 	private :
 
+		class SourceScope;
+		class SourcePathScope;
+
 		static size_t g_firstPlugIndex;
 
 };
