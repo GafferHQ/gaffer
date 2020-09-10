@@ -255,6 +255,13 @@ IECore::ConstStringVectorDataPtr CopyChannels::computeChannelNames( const Gaffer
 
 void CopyChannels::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	// Fast shortcut when there is a single input
+	if( inPlugs()->children().size() == 2 && inPlugs()->getChild<ImagePlug>( 0 )->getInput() && !inPlugs()->getChild<ImagePlug>( 1 )->getInput() )
+	{
+		h = inPlugs()->getChild<ImagePlug>( 0 )->channelDataPlug()->hash();
+		return;
+	}
+
 	ConstCompoundObjectPtr mapping;
 	{
 		ImagePlug::GlobalScope c( context );
@@ -295,6 +302,12 @@ void CopyChannels::hashChannelData( const GafferImage::ImagePlug *parent, const 
 
 IECore::ConstFloatVectorDataPtr CopyChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	// Fast shortcut when there is a single input
+	if( inPlugs()->children().size() == 2 && inPlugs()->getChild<ImagePlug>( 0 )->getInput() && !inPlugs()->getChild<ImagePlug>( 1 )->getInput() )
+	{
+		return inPlugs()->getChild<ImagePlug>( 0 )->channelDataPlug()->getValue();
+	}
+
 	ConstCompoundObjectPtr mapping;
 	{
 		ImagePlug::GlobalScope c( context );
