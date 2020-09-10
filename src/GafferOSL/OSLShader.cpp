@@ -58,6 +58,8 @@
 #include "OSL/oslquery.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_set.hpp"
+
 
 #include "tbb/mutex.h"
 
@@ -131,6 +133,13 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &co
 typedef IECorePreview::LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, IECorePreview::LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey> ShadingEngineCache;
 ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
+typedef boost::container::flat_set<IECore::InternedString> ShaderTypeSet;
+ShaderTypeSet &compatibleShaders()
+{
+    static ShaderTypeSet g_compatibleShaders;
+    return g_compatibleShaders;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -199,19 +208,19 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 
 		if( sourceShaderOutPlug && ( sourceShaderOutPlug == inputPlug || sourceShaderOutPlug->isAncestorOf( inputPlug ) ) )
 		{
-			// Source is the output of a shader node, so it needs to
-			// be coming from another OSL shader. Although because Arnold allows
-			// mixing and matching Arnold native shaders and OSL shaders,
-			// we must also accept connections from ArnoldShaders.
-			if( !sourceShader->isInstanceOf( staticTypeId() ) && !sourceShader->isInstanceOf( "GafferArnold::ArnoldShader" ) )
+			if( sourceShader->isInstanceOf( staticTypeId() ) )
 			{
-				return false;
+				return true;
 			}
-			const std::string sourceShaderType = sourceShader->typePlug()->getValue();
-			if( sourceShaderType != "osl:shader" && sourceShaderType != "ai:surface" )
+
+			const IECore::InternedString sourceShaderType = sourceShader->typePlug()->getValue();
+			const ShaderTypeSet &cs = compatibleShaders();
+			if( cs.find( sourceShaderType ) != cs.end() )
 			{
-				return false;
+				return true;
 			}
+
+			return false;
 		}
 	}
 
@@ -1265,5 +1274,11 @@ void OSLShader::reloadShader()
 	// it to be reloaded fresh if it has changed
 	g_metadataCache.erase( namePlug()->getValue() );
 	Shader::reloadShader();
+}
+
+bool OSLShader::registerCompatibleShader( const IECore::InternedString shaderType )
+{
+	ShaderTypeSet &cs = compatibleShaders();
+	return cs.insert( shaderType ).second;
 }
 

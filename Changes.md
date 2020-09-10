@@ -13,6 +13,8 @@ API
   - Added `updateLayout()` virtual method to simplify implementation of container types.
   - Added `dirty()` method for finer grained tracking of changes than `requestRender()` provided.
   - Deprecated `requestRender()` method. Use `dirty()` instead.
+- OSLShader : Added `registerCompatibleShader()` method to allow connections from non-OSL shaders
+ to be made.
 
 Breaking Changes
 ----------------
