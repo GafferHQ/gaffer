@@ -1,6 +1,11 @@
 0.58.x.x (relative to 0.58.1.0)
 ========
 
+Improvements
+------------
+
+- AttributeVisualiser : Added support for V2f, V3f, V2i, V3i, V2d and V3d data types.
+
 Fixes
 -----
 
