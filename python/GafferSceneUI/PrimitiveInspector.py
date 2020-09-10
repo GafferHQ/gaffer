@@ -265,9 +265,8 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		self.__update()
 
 	def __update( self ) :
-		with self.getContext() :
 
-			self.__locationLabel.setText( "Select a location to inspect" )
+		with self.getContext() :
 
 			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
 			self.__locationFrame._repolish()
@@ -291,38 +290,48 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 				if targetPath :
 
-					self.__locationLabel.setText( targetPath )
-					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
-					self.__locationFrame._repolish()
+					if self.__scenePlug.exists( targetPath ) :
 
-					obj = self.__scenePlug.object( targetPath )
-					if isinstance( obj, IECoreScene.Primitive ) :
+						self.__locationLabel.setText( targetPath )
+						self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
+						self.__locationFrame._repolish()
 
-						haveData = True
+						obj = self.__scenePlug.object( targetPath )
+						if isinstance( obj, IECoreScene.Primitive ) :
 
-						for primvarName in _orderPrimitiveVariables( obj.keys() ) :
-							primvar = obj[primvarName]
-							if not primvar.interpolation in primVars :
-								headers[primvar.interpolation] = []
-								primVars[primvar.interpolation] = []
-								toolTips[primvar.interpolation] = []
+							haveData = True
 
-							headers[primvar.interpolation].append( primvarName )
-							primVars[primvar.interpolation].append( conditionPrimvar( primvar ) )
-							toolTips[primvar.interpolation].append( _getPrimvarToolTip( primvarName, primvar ) )
+							for primvarName in _orderPrimitiveVariables( obj.keys() ) :
+								primvar = obj[primvarName]
+								if not primvar.interpolation in primVars :
+									headers[primvar.interpolation] = []
+									primVars[primvar.interpolation] = []
+									toolTips[primvar.interpolation] = []
 
-						for interpolation in primVars.keys() :
+								headers[primvar.interpolation].append( primvarName )
+								primVars[primvar.interpolation].append( conditionPrimvar( primvar ) )
+								toolTips[primvar.interpolation].append( _getPrimvarToolTip( primvarName, primvar ) )
 
-							pv = primVars.get( interpolation, None )
-							h = headers.get( interpolation, None )
-							t = toolTips.get( interpolation, None )
+							for interpolation in primVars.keys() :
 
-							self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation],
-								"{0} ({1})".format( str( interpolation ), len( pv ) ) )
+								pv = primVars.get( interpolation, None )
+								h = headers.get( interpolation, None )
+								t = toolTips.get( interpolation, None )
 
-							self.__dataWidgets[interpolation].setToolTips( t )
-							self.__dataWidgets[interpolation].setHeader( h )
-							self.__dataWidgets[interpolation].setData( pv )
+								self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation],
+									"{0} ({1})".format( str( interpolation ), len( pv ) ) )
+
+								self.__dataWidgets[interpolation].setToolTips( t )
+								self.__dataWidgets[interpolation].setHeader( h )
+								self.__dataWidgets[interpolation].setData( pv )
+					else :
+
+						self.__locationLabel.setText( 'Location %s does not exist' % targetPath )
+
+				else :
+
+					self.__locationLabel.setText( "Select a location to inspect" )
+
 			else:
 
 				self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
