@@ -102,6 +102,8 @@ class GAFFEROSL_API OSLShader : public GafferScene::Shader
 			}
 		}
 
+		/// Allows other renderer shaders to connect to OSL shaders by registering them
+		static void registerCompatibleShader( IECore::TypeId typeId );
 
 
 	protected :

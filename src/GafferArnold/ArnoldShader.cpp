@@ -44,6 +44,8 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
+#include "GafferOSL/OSLShader.h"
+
 #include "IECoreArnold/UniverseBlock.h"
 
 #include "IECore/MessageHandler.h"
@@ -59,12 +61,15 @@ using namespace IECore;
 using namespace GafferScene;
 using namespace GafferArnold;
 using namespace Gaffer;
+using namespace GafferOSL;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldShader );
 
 ArnoldShader::ArnoldShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
+	// This is to allow Arnold Shaders to be connected to OSL Shaders
+	OSLShader::registerCompatibleShader( staticTypeId() );
 }
 
 ArnoldShader::~ArnoldShader()

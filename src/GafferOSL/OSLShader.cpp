@@ -59,6 +59,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
+
+#include "tbb/concurrent_unordered_set.h"
 #include "tbb/mutex.h"
 
 using namespace std;
@@ -131,6 +133,9 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &co
 typedef IECorePreview::LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, IECorePreview::LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey> ShadingEngineCache;
 ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
+typedef tbb::concurrent_unordered_set<IECore::TypeId> ShaderTypeSet;
+ShaderTypeSet g_compatibleShaders;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -199,23 +204,22 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 
 		if( sourceShaderOutPlug && ( sourceShaderOutPlug == inputPlug || sourceShaderOutPlug->isAncestorOf( inputPlug ) ) )
 		{
-			// Source is the output of a shader node, so it needs to
-			// be coming from another OSL shader. Although because Arnold allows
-			// mixing and matching Arnold native shaders and OSL shaders,
-			// we must also accept connections from ArnoldShaders.
-			if( !sourceShader->isInstanceOf( staticTypeId() ) && !sourceShader->isInstanceOf( "GafferArnold::ArnoldShader" ) )
+			if( sourceShader->isInstanceOf( staticTypeId() ) )
 			{
-				return false;
+				return true;
 			}
-			const std::string sourceShaderType = sourceShader->typePlug()->getValue();
-			if( sourceShaderType != "osl:shader" && sourceShaderType != "ai:surface" )
+
+			for( const IECore::TypeId typeId : g_compatibleShaders )
 			{
-				return false;
+				if( sourceShader->isInstanceOf( typeId ) )
+				{
+					return true;
+				}
 			}
 		}
 	}
 
-	return true;
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1265,5 +1269,10 @@ void OSLShader::reloadShader()
 	// it to be reloaded fresh if it has changed
 	g_metadataCache.erase( namePlug()->getValue() );
 	Shader::reloadShader();
+}
+
+void OSLShader::registerCompatibleShader( IECore::TypeId typeId )
+{
+	g_compatibleShaders.insert( typeId );
 }
 
