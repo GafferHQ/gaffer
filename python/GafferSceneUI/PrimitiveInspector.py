@@ -266,7 +266,6 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 	def __update( self ) :
 		with self.getContext() :
-			targetPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
 
 			self.__locationLabel.setText( "Select a location to inspect" )
 
@@ -288,13 +287,15 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 				self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "AB" )
 				self.__nodeFrame._repolish()
 
-				if len( targetPaths ) :
+				targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
 
-					self.__locationLabel.setText( targetPaths[-1] )
+				if targetPath :
+
+					self.__locationLabel.setText( targetPath )
 					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
 					self.__locationFrame._repolish()
 
-					obj = self.__scenePlug.object( targetPaths[-1] )
+					obj = self.__scenePlug.object( targetPath )
 					if isinstance( obj, IECoreScene.Primitive ) :
 
 						haveData = True

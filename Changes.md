@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- PrimitiveInspector : Fixed bug that caused data lists to lose their scroll position during updates.
+- PrimitiveInspector :
+  - Fixed bug that caused data lists to lose their scroll position during updates.
+  - Fixed bug that could cause the inspector to show a different location to other Editors.
 - CollectScenes : Fixed childNames hashing bug.
 
 0.57.7.1 (relative to 0.57.7.0)
