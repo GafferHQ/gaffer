@@ -37,7 +37,7 @@ The bottom-half of the Python Editor is the code input field. The top-half is th
 In the Gaffer API, each node is an instance (in the programming sense) of a class, with each class belonging to a particular Python module. In order to create a node sourced from a module, you will first need to import that module.
 
 > Tip :
-> A list of each of Gaffer's default modules can be found in the [Node Reference](../../Reference/NodeReference/index.html).
+> A list of each of Gaffer's default modules can be found in the [Node Reference](../../Reference/NodeReference/index.md).
 
 Since the scene will require a sphere primitive, import the [GafferScene](../../Reference/NodeReference/GafferScene/index.md) module, and then create a Sphere node:
 

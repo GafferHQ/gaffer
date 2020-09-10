@@ -41,10 +41,7 @@ def __dispatchScript( script, tasks, settings ) :
 		" ".join( settings ),
 		__temporaryDirectory
 		)
-	process = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE )
-	process.wait()
-
-	return process
+	subprocess.check_call( command, shell=True )
 
 # Illustration: a `tree` command run on a custom startup config
 # TODO: Automate `images/illustrationStartupConfigDirectoryTree.png` when these tools become available:
