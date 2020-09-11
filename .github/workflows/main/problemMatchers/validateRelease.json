@@ -1,0 +1,14 @@
+{
+	"problemMatcher": [
+		{
+			"owner": "validateRelease",
+			"pattern": [
+				{
+					"regexp": "^((ERROR|WARNING).+)$",
+					"message": 1,
+					"severity": 2
+				}
+			]
+		}
+	]
+}

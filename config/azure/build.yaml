@@ -126,7 +126,7 @@ jobs:
          AZURE_ACCESS_TOKEN: $(azureBlobAccessToken)
 
      - script: |
-         ./config/azure/publishRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --releaseId $(Gaffer.GitHub.ReleaseID)
+         ./config/publishRelease.py --archive ./install/$(Gaffer.Build.Name).tar.gz --repo $(Build.Repository.Name) --releaseId $(Gaffer.GitHub.ReleaseID)
        displayName: "Publish Release"
        condition: and( succeeded(), ne( variables['Gaffer.GitHub.ReleaseID'], '' ) )
        env:
