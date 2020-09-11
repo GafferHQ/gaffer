@@ -6,6 +6,9 @@ import subprocess32 as subprocess
 import tempfile
 import time
 
+import six
+
+import Qt
 from Qt import QtCore, QtWidgets
 
 import imath
@@ -36,10 +39,7 @@ def __dispatchScript( script, tasks, settings ) :
 		" ".join( settings ),
 		temporaryDirectory
 		)
-	process = subprocess.Popen( command, shell = True, stderr = subprocess.PIPE )
-	process.wait()
-
-	return process
+	subprocess.check_call( command, shell = True )
 
 # Create a plug context menu from a Node Editor
 def __spawnPlugContextMenu( nodeEditor, plugWidget ) :
@@ -77,7 +77,11 @@ def __grabPlugContextSubmenu( plugWidget, contextMenuWidget, submenuWidget, menu
 	if windowHandle :
 		screen = windowHandle.screen()
 
-	pixmapMain = screen.grabWindow( long( mainWindow._qtWidget().winId() ) )
+	qtVersion = [ int( x ) for x in Qt.__qt_version__.split( "." ) ]
+	if qtVersion >= [ 5, 12 ] or six.PY3 :
+		pixmapMain = screen.grabWindow( mainWindow._qtWidget().winId() )
+	else :
+		pixmapMain = screen.grabWindow( long( mainWindow._qtWidget().winId() ) )
 
 	## Screengrab the context menu. The frame dimensions are too big by
 	# one pixel on each axis.

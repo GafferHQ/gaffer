@@ -38,10 +38,7 @@ def __dispatchScript( script, tasks, settings ) :
 		" ".join( settings ),
 		__temporaryDirectory
 		)
-	process = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE )
-	process.wait()
-
-	return process
+	subprocess.check_call( command, shell=True )
 
 # Interface: a Camera node in the Graph Editor
 script["Camera"] = GafferScene.Camera()
