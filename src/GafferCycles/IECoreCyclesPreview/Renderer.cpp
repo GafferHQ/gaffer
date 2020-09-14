@@ -113,6 +113,7 @@
 #include "util/util_logging.h"
 #include "util/util_murmurhash.h"
 #include "util/util_path.h"
+#include "util/util_time.h"
 #include "util/util_vector.h"
 
 using namespace std;
@@ -134,7 +135,6 @@ namespace
 typedef std::unique_ptr<ccl::Integrator> CIntegratorPtr;
 typedef std::unique_ptr<ccl::Background> CBackgroundPtr;
 typedef std::unique_ptr<ccl::Film> CFilmPtr;
-typedef std::unique_ptr<ccl::CurveSystemManager> CCurveSystemManagerPtr;
 typedef std::unique_ptr<ccl::Light> CLightPtr;
 typedef std::shared_ptr<ccl::Camera> SharedCCameraPtr;
 typedef std::shared_ptr<ccl::Object> SharedCObjectPtr;
@@ -1088,6 +1088,16 @@ class ShaderCache : public IECore::RefCounted
 			m_shaderAssignPairs.push_back( shaderAssign );
 		}
 
+		bool hasOSLShader()
+		{
+			for( ccl::Shader *shader : m_scene->shaders )
+			{
+				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( shader ) )
+					return true;
+			}
+			return false;
+		}
+
 	private :
 
 		void updateShaders()
@@ -1157,6 +1167,7 @@ IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurS
 IECore::InternedString g_cclVisibilityAttributeName( "ccl:visibility" );
 IECore::InternedString g_useHoldoutAttributeName( "ccl:use_holdout" );
 IECore::InternedString g_isShadowCatcherAttributeName( "ccl:is_shadow_catcher" );
+IECore::InternedString g_shadowTerminatorOffsetAttributeName( "ccl:shadow_terminator_offset" );
 IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
 // Per-object color
@@ -1224,6 +1235,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_visibility( ~0 ), 
 				m_useHoldout( false ), 
 				m_isShadowCatcher( false ), 
+				m_shadowTerminatorOffset( 0.0f ),
 				m_maxLevel( 1 ), 
 				m_dicingRate( 1.0f ), 
 				m_color( Color3f( 0.0f ) ), 
@@ -1243,6 +1255,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_useHoldout = attributeValue<bool>( g_useHoldoutAttributeName, attributes, m_useHoldout );
 			m_isShadowCatcher = attributeValue<bool>( g_isShadowCatcherAttributeName, attributes, m_isShadowCatcher );
+			m_shadowTerminatorOffset = attributeValue<float>( g_shadowTerminatorOffsetAttributeName, attributes, m_shadowTerminatorOffset );
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
 			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
@@ -1347,6 +1360,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->visibility = m_visibility;
 			object->use_holdout = m_useHoldout;
 			object->is_shadow_catcher = m_isShadowCatcher;
+			object->shadow_terminator_offset = m_shadowTerminatorOffset;
 			object->color = SocketAlgo::setColor( m_color );
 			object->dupli_generated = SocketAlgo::setVector( m_dupliGenerated );
 			object->dupli_uv = SocketAlgo::setVector( m_dupliUV );
@@ -1727,6 +1741,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		int m_visibility;
 		bool m_useHoldout;
 		bool m_isShadowCatcher;
+		float m_shadowTerminatorOffset;
 		int m_maxLevel;
 		float m_dicingRate;
 		IECore::ConstInternedStringVectorDataPtr m_sets;
@@ -2800,6 +2815,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 			Imath::M44f ctransform = transform;
 			ctransform.scale( Imath::V3f( 1.0f, -1.0f, -1.0f ) );
 			camera->matrix = SocketAlgo::setTransform( ctransform );
+			camera->tag_update();
 		}
 
 		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
@@ -2872,6 +2888,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 					camera->motion[2] = SocketAlgo::setTransform( matrix );
 				}
 			}
+			camera->tag_update();
 		}
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
@@ -2918,9 +2935,6 @@ IECore::InternedString g_startResolutionOptionName( "ccl:session:start_resolutio
 IECore::InternedString g_pixelSizeOptionName( "ccl:session:pixel_size" );
 IECore::InternedString g_threadsOptionName( "ccl:session:threads" );
 IECore::InternedString g_displayBufferLinearOptionName( "ccl:session:display_buffer_linear" );
-IECore::InternedString g_useDenoisingOptionName( "ccl:session:use_denoising" );
-IECore::InternedString g_writeDenoisingPassesOptionName( "ccl:session:write_denoising_passes" );
-IECore::InternedString g_optixDenoisingOptionName( "ccl:session:optix_denoising" );
 IECore::InternedString g_cancelTimeoutOptionName( "ccl:session:cancel_timeout" );
 IECore::InternedString g_resetTimeoutOptionName( "ccl:session:reset_timeout" );
 IECore::InternedString g_textTimeoutOptionName( "ccl:session:text_timeout" );
@@ -2932,27 +2946,22 @@ IECore::InternedString g_bvhLayoutOptionName( "ccl:scene:bvh_layout" );
 IECore::InternedString g_useBvhSpatialSplitOptionName( "ccl:scene:use_bvh_spatial_split" );
 IECore::InternedString g_useBvhUnalignedNodesOptionName( "ccl:scene:use_bvh_unaligned_nodes" );
 IECore::InternedString g_numBvhTimeStepsOptionName( "ccl:scene:num_bvh_time_steps" );
+IECore::InternedString g_hairSubdivisionsOptionName( "ccl:scene:hair_subdivisions" );
+IECore::InternedString g_hairShapeOptionName( "ccl:scene:hair_shape" );
 IECore::InternedString g_persistentDataOptionName( "ccl:scene:persistent_data" );
 IECore::InternedString g_textureLimitOptionName( "ccl:scene:texture_limit" );
 // Denoise
+IECore::InternedString g_denoiseUseOptionName( "ccl:denoise:use" );
+IECore::InternedString g_denoiseStorePassesOptionName( "ccl:denoise:store_passes" );
+IECore::InternedString g_denoiseTypeOptionName( "ccl:denoise:type" );
+IECore::InternedString g_denoiseStartSampleOptionName( "ccl:denoise:start_sample" );
 IECore::InternedString g_denoiseRadiusOptionName( "ccl:denoise:radius" );
 IECore::InternedString g_denoiseStrengthOptionName( "ccl:denoise:strength" );
 IECore::InternedString g_denoiseFeatureStrengthOptionName( "ccl:denoise:feature_strength" );
 IECore::InternedString g_denoiseRelativePcaOptionName( "ccl:denoise:relative_pca" );
 IECore::InternedString g_denoiseNeighborFramesOptionName( "ccl:denoise:neighbor_frames" );
-IECore::InternedString g_denoiseClampInputOptionName( "ccl:denoise:clampInput" );
-IECore::InternedString g_optixInputPassesOptionName( "ccl:denoise:optix_input_passes" );
-// Curves
-IECore::InternedString g_curvePrimitiveOptionType( "ccl:curve:primitive" );
-IECore::InternedString g_curveShapeOptionType( "ccl:curve:shape" );
-IECore::InternedString g_curveLineMethod( "ccl:curve:line_method" );
-IECore::InternedString g_curveTriangleMethod( "ccl:curve:triangle_method" );
-IECore::InternedString g_curveResolutionOptionType( "ccl:curve:resolution" );
-IECore::InternedString g_curveSubdivisionsOptionType( "ccl:curve:subdivisions" );
-IECore::InternedString g_useCurvesOptionType( "ccl:curve:use_curves" );
-IECore::InternedString g_useEncasingOptionType( "ccl:curve:use_encasing" );
-IECore::InternedString g_curveUseBackfacing( "ccl:curve:use_backfacing" );
-IECore::InternedString g_useTangentNormalGeoOptionType( "ccl:curve:use_tangent_normal_geometry" );
+IECore::InternedString g_denoiseClampInputOptionName( "ccl:denoise:clamp_input" );
+IECore::InternedString g_denoiseInputPassesOptionName( "ccl:denoise:input_passes" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "ccl:background:shader" );
 // Denoise
@@ -3030,12 +3039,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		CyclesRenderer( RenderType renderType, const std::string &fileName )
+		enum RenderState
+		{
+			RENDERSTATE_READY = 0,
+			RENDERSTATE_RENDERING = 1,
+			RENDERSTATE_STOPPED = 3,
+			RENDERSTATE_NUM_STATES
+		};
+
+		CyclesRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_renderType( renderType ),
+				m_frame( 1 ),
+				m_messageHandler( messageHandler ),
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
-				m_denoiseParams( ccl::DenoiseParams() ),
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 				m_textureCacheParams( ccl::TextureCacheParams() ),
 #endif
@@ -3044,16 +3062,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session( nullptr ),
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
-				m_rendering( false ),
+				m_renderState( RENDERSTATE_READY ),
 				m_sceneChanged( true ),
 				m_sessionReset( false ),
 				m_pause( false ),
-				m_progressLevel( IECore::Msg::Info ),
 				m_sceneLockInterval( 1 ),
-				m_squareSamples( true ),
-				m_useDenoising( false ),
-				m_useOptixDenoising( false ),
-				m_writeDenoisingPasses( false )
+				m_squareSamples( true )
 		{
 			// Define internal device names
 			getCyclesDevices();
@@ -3075,7 +3089,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				m_sessionParams.samples = INT_MAX;
+				m_sessionParams.samples = ccl::Integrator::MAX_SAMPLES;
 				m_sessionParams.progressive = true;
 				m_sessionParams.progressive_refine = true;
 				m_sessionParams.progressive_update_timeout = 0.1;
@@ -3095,7 +3109,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
-			m_denoiseParamsDefault = m_denoiseParams;
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 			m_textureCacheParamsDefault = m_textureCacheParams;
 #endif
@@ -3113,7 +3126,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_background = *(m_scene->background);
 			m_scene->background->transparent = true;
 			m_film = *(m_scene->film);
-			m_curveSystemManager = *(m_scene->curve_system_manager);
 
 			m_samples = m_sessionParams.samples;
 			// A more sane default from 0 AA samples
@@ -3139,8 +3151,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		~CyclesRenderer() override
 		{
-			m_session->set_pause( true );
-
 			m_scene->mutex.lock();
 			// Reduce the refcount so that it gets cleared.
 			m_backgroundShader = nullptr;
@@ -3169,6 +3179,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			#define OPTION_BOOL(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
 				if( value == nullptr ) { \
 					CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
@@ -3218,8 +3230,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
 			auto *film = m_scene->film;
-			auto &curveSystemManager = *(m_scene->curve_system_manager);
-			auto &curveSystemManagerDefault = m_curveSystemManagerDefault;
 
 			if( name == g_frameOptionName )
 			{
@@ -3379,22 +3389,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					return;
 				}
 			}
-			else if( name == g_progressLevelOptionName )
-			{
-				if( value == nullptr )
-				{
-					m_progressLevel = IECore::Msg::Info;
-					return;
-				}
-				else
-				{
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-					{
-						m_progressLevel = (IECore::Msg::Level)data->readable();
-					}
-					return;
-				}
-			}
 			else if( boost::starts_with( name.string(), "ccl:session:" ) )
 			{
 				if( name == g_samplesOptionName )
@@ -3426,48 +3420,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_FLOAT(m_sessionParams, g_textTimeoutOptionName,              text_timeout);
 				OPTION_FLOAT(m_sessionParams, g_progressiveUpdateTimeoutOptionName, progressive_update_timeout);
 
-				if( name == g_useDenoisingOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_useDenoising = false;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_useDenoising = data->readable();
-						return;
-					}
-				}
-
-				if( name == g_optixDenoisingOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_useOptixDenoising = false;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_useOptixDenoising = data->readable();
-						return;
-					}
-				}
-
-				if( name == g_writeDenoisingPassesOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_writeDenoisingPasses = false;
-						return;
-					}
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_writeDenoisingPasses = data->readable();
-						return;
-					}
-				}
-
 				if( name == g_adaptiveSamplingOptionName )
 				{
 					if( value == nullptr )
@@ -3494,6 +3446,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_BOOL (m_sceneParams, g_useBvhSpatialSplitOptionName,   use_bvh_spatial_split);
 				OPTION_BOOL (m_sceneParams, g_useBvhUnalignedNodesOptionName, use_bvh_unaligned_nodes);
 				OPTION_INT  (m_sceneParams, g_numBvhTimeStepsOptionName,      num_bvh_time_steps);
+				OPTION_INT  (m_sceneParams, g_hairSubdivisionsOptionName,     hair_subdivisions);
+				OPTION_INT_C(m_sceneParams, g_hairShapeOptionName,            hair_shape, ccl::CurveShapeType);
 				OPTION_BOOL (m_sceneParams, g_persistentDataOptionName,       persistent_data);
 				OPTION_INT  (m_sceneParams, g_textureLimitOptionName,         texture_limit);
 
@@ -3502,30 +3456,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:denoise:" ) )
 			{
-				OPTION_INT  (m_denoiseParams, g_denoiseRadiusOptionName,          radius);
-				OPTION_FLOAT(m_denoiseParams, g_denoiseStrengthOptionName,        strength);
-				OPTION_FLOAT(m_denoiseParams, g_denoiseFeatureStrengthOptionName, feature_strength);
-				OPTION_BOOL (m_denoiseParams, g_denoiseRelativePcaOptionName,     relative_pca);
-				OPTION_INT  (m_denoiseParams, g_denoiseNeighborFramesOptionName,  neighbor_frames);
-				OPTION_BOOL (m_denoiseParams, g_denoiseClampInputOptionName,      clamp_input);
-				OPTION_INT  (m_denoiseParams, g_optixInputPassesOptionName,       optix_input_passes);
-
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
-				return;
-			}
-			else if( boost::starts_with( name.string(), "ccl:curve:" ) )
-			{
-				OPTION_INT_C(curveSystemManager, g_curvePrimitiveOptionType,    primitive, ccl::CurvePrimitiveType);
-				OPTION_INT_C(curveSystemManager, g_curveShapeOptionType,        curve_shape, ccl::CurveShapeType);
-				OPTION_INT_C(curveSystemManager, g_curveLineMethod,             line_method, ccl::CurveLineMethod);
-				OPTION_INT_C(curveSystemManager, g_curveTriangleMethod,         triangle_method, ccl::CurveTriangleMethod);
-				OPTION_INT  (curveSystemManager, g_curveResolutionOptionType,   resolution);
-				OPTION_INT  (curveSystemManager, g_curveSubdivisionsOptionType, subdivisions);
-
-				OPTION_BOOL (curveSystemManager, g_useCurvesOptionType,           use_curves);
-				OPTION_BOOL (curveSystemManager, g_useEncasingOptionType,         use_encasing);
-				OPTION_BOOL (curveSystemManager, g_curveUseBackfacing,            use_backfacing);
-				OPTION_BOOL (curveSystemManager, g_useTangentNormalGeoOptionType, use_tangent_normal_geometry);
+				OPTION_BOOL (m_sessionParams, g_denoiseUseOptionName,             denoising.use);
+				OPTION_BOOL (m_sessionParams, g_denoiseStorePassesOptionName,     denoising.store_passes);
+				OPTION_INT_C(m_sessionParams, g_denoiseTypeOptionName,            denoising.type, ccl::DenoiserType);
+				OPTION_INT  (m_sessionParams, g_denoiseStartSampleOptionName,     denoising.start_sample);
+				OPTION_INT  (m_sessionParams, g_denoiseRadiusOptionName,          denoising.radius);
+				OPTION_FLOAT(m_sessionParams, g_denoiseStrengthOptionName,        denoising.strength);
+				OPTION_FLOAT(m_sessionParams, g_denoiseFeatureStrengthOptionName, denoising.feature_strength);
+				OPTION_BOOL (m_sessionParams, g_denoiseRelativePcaOptionName,     denoising.relative_pca);
+				OPTION_INT  (m_sessionParams, g_denoiseNeighborFramesOptionName,  denoising.neighbor_frames);
+				OPTION_BOOL (m_sessionParams, g_denoiseClampInputOptionName,      denoising.clamp_input);
+				OPTION_INT_C(m_sessionParams, g_denoiseInputPassesOptionName,     denoising.input_passes, ccl::DenoiserInput);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
@@ -3878,6 +3819,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void output( const IECore::InternedString &name, const Output *output ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			m_sceneChanged = true;
 
 			ccl::Film *film = m_scene->film;
@@ -3935,11 +3878,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			return m_attributesCache->get( attributes );
 		}
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			SharedCCameraPtr ccamera = m_cameraCache->get( camera, name );
 			if( !ccamera )
 			{
@@ -3956,6 +3903,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			SharedCLightPtr clight = m_lightCache->get( name );
 			if( !clight )
 			{
@@ -3969,12 +3918,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "lightFilter() unimplemented" );
 			return nullptr;
 		}
 
 		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			if( ( object->typeId() == IECoreScene::Camera::staticTypeId() ) || ( object->typeId() == IECoreScene::PointsPrimitive::staticTypeId() ) ) // temporary for PointsPrimitive
 			{
 				return nullptr;
@@ -3989,6 +3942,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
 			if( ( samples.front()->typeId() == IECoreScene::Camera::staticTypeId() ) || ( samples.front()->typeId() == IECoreScene::PointsPrimitive::staticTypeId() ) ) // temporary for PointsPrimitive
 			{
 				return nullptr;
@@ -4012,8 +3967,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void render() override
 		{
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
+			if( m_renderState == RENDERSTATE_STOPPED )
+			{
+				return;
+			}
+
 			// Early-out for camera only changes
-			if( m_rendering )
+			if( m_renderState == RENDERSTATE_RENDERING )
 			{
 				while( !m_sceneChanged )
 				{
@@ -4044,21 +4006,26 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					break;
 				}
 
+				updateCamera();
+
+				if( m_scene->camera->need_update && !m_sceneChanged )
+				{
+					m_session->reset( m_bufferParams, m_sessionParams.samples );
+				}
+
 				if( !m_sceneChanged )
 				{
-					updateCamera();
-					m_session->reset( m_bufferParams, m_sessionParams.samples );
+					m_pause = false;
+					m_session->set_pause( m_pause );
 					return;
 				}
 			}
-
-			m_session->set_pause( true );
 
 			while( true )
 			{
 				if( m_scene->mutex.try_lock() )
 				{
-					if( m_rendering && m_renderType == Interactive )
+					if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
 					{
 						m_cameraCache->clearUnused();
 						m_instanceCache->clearUnused();
@@ -4072,16 +4039,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					updateCamera();
 					updateOutputs();
 
-					if( m_rendering )
+					if( m_renderState == RENDERSTATE_RENDERING )
 					{
-						//m_scene->reset();
-						//m_session->update_scene();
-						
 						if( m_scene->need_reset() )
 						{
 							m_session->reset( m_bufferParams, m_sessionParams.samples );
 						}
-						m_session->set_pause( false );
 					}
 
 					// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
@@ -4094,7 +4057,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_sessionReset = false;
 					}
 
-					if( m_rendering )
+					if( m_renderState == RENDERSTATE_RENDERING )
 					{
 						m_session->start();
 					}
@@ -4109,12 +4072,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			if( m_rendering )
+			if( m_renderState == RENDERSTATE_RENDERING )
+			{
+				m_pause = false;
+				m_session->set_pause( m_pause );
 				return;
+			}
 
 			m_session->start();
 
-			m_rendering = true;
+			m_renderState = RENDERSTATE_RENDERING;
 
 			if( m_renderType == Interactive )
 			{
@@ -4125,13 +4092,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			writeImages();
 
-			m_rendering = false;
+			m_renderState = RENDERSTATE_STOPPED;
 		}
 
 		void pause() override
 		{
-			m_pause = !m_pause;
-			m_session->set_pause( true );
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
+			if( m_renderState == RENDERSTATE_RENDERING )
+			{
+				m_pause = true;
+				m_session->set_pause( m_pause );
+			}
 		}
 
 		void writeRenderTile( ccl::RenderTile& rtile )
@@ -4187,6 +4159,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = device_fallback;
 			}
 
+			if( m_sessionParams.device.type != ccl::DEVICE_CPU && m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_OSL )
+			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Shading system set to OSL, reverting to CPU." );
+				m_sessionParams.device = device_fallback;
+			}
+
 			if( m_session )
 			{
 				// A trick to retain the same pointer when re-creating a session.
@@ -4201,8 +4179,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_session->write_render_tile_cb = function_bind( &CyclesRenderer::writeRenderTile, this, ccl::_1 );
 			m_session->update_render_tile_cb = function_bind( &CyclesRenderer::updateRenderTile, this, ccl::_1, ccl::_2 );
 			m_session->progress.set_update_callback( function_bind( &CyclesRenderer::progress, this ) );
-
-			m_session->set_pause( true );
 
 			m_scene = new ccl::Scene( m_sceneParams, m_session->device );
 			m_session->scene = m_scene;
@@ -4230,9 +4206,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
-			// No checking on denoise settings either
-			m_session->params.denoising = m_denoiseParams;
-			m_sessionParams.denoising = m_denoiseParams;
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 			m_sceneParams.texture = m_textureCacheParams;
 #endif
@@ -4256,7 +4229,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_squareSamples )
 			{
-				if( m_samples != INT_MAX )
+				if( m_samples != ccl::Integrator::MAX_SAMPLES )
 				{
 					m_sessionParams.samples = m_samples * m_samples;
 				}
@@ -4295,23 +4268,27 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.samples = integrator->aa_samples;
 			}
 
-			m_sessionParams.run_denoising = m_useDenoising || m_writeDenoisingPasses;
-			m_sessionParams.full_denoising = m_useDenoising && !m_useOptixDenoising;
-			m_sessionParams.optix_denoising = m_useDenoising && m_useOptixDenoising;
-			m_sessionParams.write_denoising_passes = m_writeDenoisingPasses && !m_useOptixDenoising;
-
 			if( m_sessionParams.adaptive_sampling )
 			{
 				integrator->sampling_pattern = ccl::SAMPLING_PATTERN_PMJ;
 			}
 
 			m_session->set_samples( m_sessionParams.samples );
-
-			if( m_useDenoising )
+			// Normally Cycles will check if this is a "background" render and disable
+			// the denoising start sample, however Gaffer always renders with background
+			// enabled so we need a way to enable it for interactive renders and disabled
+			// in batch renders.
+			if( m_renderType == Interactive )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Denoising is not compatible with progressive refine, disabling progressive refine." );
-				m_sessionParams.progressive_refine = false;
+				m_session->params.denoising_start_sample = m_sessionParams.denoising.start_sample;
 			}
+			else
+			{
+				m_sessionParams.denoising.start_sample = 0;
+				m_session->params.denoising_start_sample = 0;
+			}
+			//m_session->set_denoising_start_sample( m_sessionParams.denoising.start_sample );
+			m_session->set_denoising( m_sessionParams.denoising );
 
 			if( m_deviceName == "MULTI" )
 			{
@@ -4352,11 +4329,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_film = *film;
 			}
 
-			ccl::CurveSystemManager *curveSystemManager = m_scene->curve_system_manager;
-			if( curveSystemManager->modified( m_curveSystemManager ) )
+			// Check if an OSL shader exists & set the shadingsystem
+			if( m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_SVM && m_shaderCache->hasOSLShader() )
 			{
-				curveSystemManager->tag_update( m_scene );
-				m_curveSystemManager = *curveSystemManager;
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "OSL Shader detected, forcing OSL shading-system (CPU-only)" );
+				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+				m_sceneParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 			}
 
 			// If anything changes in scene or session, we reset.
@@ -4486,22 +4464,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			// Adaptive
-			if( m_sessionParams.adaptive_sampling )
+			if( m_session->params.adaptive_sampling )
 			{
 				ccl::Pass::add( ccl::PASS_ADAPTIVE_AUX_BUFFER, m_bufferParamsModified.passes );
 				ccl::Pass::add( ccl::PASS_SAMPLE_COUNT, m_bufferParamsModified.passes );
 			}
 
-			m_bufferParamsModified.denoising_data_pass = m_useDenoising || m_writeDenoisingPasses;
-			m_bufferParamsModified.denoising_clean_pass = ( m_scene->film->denoising_flags & ccl::DENOISING_CLEAN_ALL_PASSES );
-			m_bufferParamsModified.denoising_prefiltered_pass = m_writeDenoisingPasses && !m_useOptixDenoising;
-
 			ccl::Film *film = m_scene->film;
-			film->denoising_data_pass = m_bufferParamsModified.denoising_data_pass;
-			film->denoising_clean_pass = m_bufferParamsModified.denoising_clean_pass;
-			film->denoising_prefiltered_pass = m_bufferParamsModified.denoising_prefiltered_pass;
+			film->denoising_data_pass = m_session->params.denoising.use || m_session->params.denoising.store_passes;
+			film->denoising_clean_pass = ( m_scene->film->denoising_flags & ccl::DENOISING_CLEAN_ALL_PASSES );
+			film->denoising_prefiltered_pass = m_session->params.denoising.store_passes && m_session->params.denoising.type == ccl::DENOISER_NLM;
 
-			m_session->tile_manager.schedule_denoising = m_sessionParams.run_denoising;
+			m_bufferParamsModified.denoising_data_pass = film->denoising_data_pass;
+			m_bufferParamsModified.denoising_clean_pass = film->denoising_clean_pass;
+			m_bufferParamsModified.denoising_prefiltered_pass = film->denoising_prefiltered_pass;
+
+			m_session->tile_manager.schedule_denoising = m_session->params.denoising.use;
 			if( film->modified( m_film ) )
 			{
 				film->tag_update( m_scene );
@@ -4533,8 +4511,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void reset()
 		{
-			m_session->set_pause( true );
-			m_rendering = false;
+			m_renderState = RENDERSTATE_READY;
 			// This is so cycles doesn't delete the objects that Gaffer manages.
 			m_scene->objects.clear();
 			m_scene->geometry.clear();
@@ -4582,22 +4559,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->film->cryptomatte_passes = m_film.cryptomatte_passes;
 			m_scene->film->cryptomatte_depth = m_film.cryptomatte_depth;
 
-			#define CURVES_SET(OPTION) m_scene->curve_system_manager->OPTION = m_curveSystemManager.OPTION;
-			CURVES_SET(primitive);
-			CURVES_SET(curve_shape);
-			CURVES_SET(line_method);
-			CURVES_SET(triangle_method);
-			CURVES_SET(resolution);
-			CURVES_SET(subdivisions);
-			CURVES_SET(use_curves);
-			CURVES_SET(use_encasing);
-			CURVES_SET(use_backfacing);
-			CURVES_SET(use_tangent_normal_geometry);
-			#undef CURVES_SET
 			m_scene->integrator->tag_update( m_scene );
 			m_scene->background->tag_update( m_scene );
 			m_scene->film->tag_update( m_scene );
-			m_scene->curve_system_manager->tag_update( m_scene );
 			m_session->reset( m_bufferParams, m_sessionParams.samples );
 
 			//m_session->progress.reset();
@@ -4618,6 +4582,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			// Check that the camera we want to use exists,
 			// and if not, create a default one.
+			ccl::Camera prevcam = *m_scene->camera;
 			{
 				const auto cameraIt = m_cameras.find( m_camera );
 				if( cameraIt == m_cameras.end() )
@@ -4636,11 +4601,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
 					*m_scene->camera = *(ccamera.get());
 				}
-				m_scene->camera->need_update = true;
-				m_scene->camera->need_device_update = true;
+
+				m_scene->camera->shutter_table_offset = prevcam.shutter_table_offset;
+				m_scene->camera->need_update = prevcam.need_update;
+
+				if( m_scene->camera->modified( prevcam ) )
+					m_scene->camera->tag_update();
 			}
 
 			// Dicing camera update
+			prevcam = *m_scene->dicing_camera;
 			{
 				const auto cameraIt = m_cameras.find( m_dicingCamera );
 				if( cameraIt == m_cameras.end() )
@@ -4659,8 +4629,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					auto ccamera = m_cameraCache->get( cameraIt->second.get(), cameraIt->first );
 					*m_scene->dicing_camera = *(ccamera.get());
 				}
-				m_scene->dicing_camera->need_update = true;
-				m_scene->dicing_camera->need_device_update = true;
+
+				m_scene->dicing_camera->shutter_table_offset = prevcam.shutter_table_offset;
+				m_scene->dicing_camera->need_update = prevcam.need_update;
+
+				if( m_scene->dicing_camera->modified( prevcam ) )
+					m_scene->dicing_camera->tag_update();
 			}
 		}
 
@@ -4678,17 +4652,51 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void progress()
 		{
-			string status, substatus;
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			/* get status */
-			float progress = m_session->progress.get_progress();
-			m_session->progress.get_status( status, substatus );
+			string status, subStatus, kernelStatus, memStatus;
+			float progress;
+			double totalTime, remainingTime = 0, renderTime;
+			float memUsed = (float)m_session->stats.mem_used / 1024.0f / 1024.0f / 1024.0f;
+			float memPeak = (float)m_session->stats.mem_peak / 1024.0f / 1024.0f / 1024.0f;
 
-			if( substatus != "" )
-				status += ": " + substatus;
+			m_session->progress.get_status( status, subStatus );
+			m_session->progress.get_kernel_status( kernelStatus );
+			m_session->progress.get_time( totalTime, renderTime );
+			progress = m_session->progress.get_progress();
 
-			/* print status */
-			IECore::msg( m_progressLevel, "CyclesRenderer", boost::format( "Progress %05.2f   %s" ) % (double)(progress * 100.0f ) % status );
+			if( progress > 0 )
+				remainingTime = (1.0 - (double)progress) * (renderTime / (double)progress);
+
+			if( subStatus != "" )
+				status += ": " + subStatus;
+
+			memStatus = ccl::string_printf( "Mem:%.3fG, Peak:%.3fG", (double)memUsed, (double)memPeak );
+
+			double currentTime = ccl::time_dt();
+			if( status != m_lastStatus )// || ( m_renderType == Interactive && ( currentTime - m_lastStatusTime ) > 1.0 ) )
+			{
+				IECore::msg( IECore::MessageHandler::Level::Info, "Cycles", memStatus + " | " + status );
+				m_lastStatus = status;
+				m_lastStatusTime = currentTime;
+			}
+
+			if( m_session->progress.get_error() )
+			{
+				string error = m_session->progress.get_error_message();
+				if (error != m_lastError)
+				{
+					IECore::msg( IECore::MessageHandler::Level::Error, "Cycles", error );
+					m_lastError = error;
+				}
+			}
+
+			// Not sure what the best way is to inform that an interactive render has stopped other than this. 
+			// No way that I know of to inform Gaffer that the render has stopped either.
+			if( m_lastStatus == "Finished" )
+			{
+				m_renderState = RENDERSTATE_STOPPED;
+			}
 		}
 
 		void getCyclesDevices()
@@ -4729,14 +4737,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SceneParams m_sceneParams;
 		ccl::BufferParams m_bufferParams;
 		ccl::BufferParams m_bufferParamsModified;
-		ccl::DenoiseParams m_denoiseParams;
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 		ccl::TextureCacheParams m_textureCacheParams;
 #endif
 		ccl::Integrator m_integrator;
 		ccl::Background m_background;
 		ccl::Film m_film;
-		ccl::CurveSystemManager m_curveSystemManager;
 		// Hold onto ImageManager so it doesn't get deleted.
 		ccl::ImageManager *m_imageManager;
 		// Dummy ImageManager for Cycles
@@ -4749,8 +4755,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::Camera m_cameraDefault;
 		ccl::SessionParams m_sessionParamsDefault;
 		ccl::SceneParams m_sceneParamsDefault;
-		ccl::DenoiseParams m_denoiseParamsDefault;
-		ccl::CurveSystemManager m_curveSystemManagerDefault;
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 		ccl::TextureCacheParams m_textureCacheParamsDefault;
 #endif
@@ -4768,24 +4772,25 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_volumeSamples;
 		int m_adaptiveMinSamples;
 
-		// Denoise
-		bool m_useDenoising;
-		bool m_useOptixDenoising;
-		bool m_writeDenoisingPasses;
-
 		// IECoreScene::Renderer
 		string m_deviceName;
 		string m_shadingsystemName;
 		RenderType m_renderType;
 		int m_frame;
 		string m_camera;
-		bool m_rendering;
+		RenderState m_renderState;
 		bool m_sceneChanged;
 		bool m_sessionReset;
 		bool m_pause;
-		IECore::Msg::Level m_progressLevel;
 
-		// Caches.
+		// Logging
+		IECore::MessageHandlerPtr m_messageHandler;
+		string m_lastError;
+		string m_lastStatus;
+		float m_lastProgress;
+		double m_lastStatusTime;
+
+		// Caches
 		CameraCachePtr m_cameraCache;
 		ShaderCachePtr m_shaderCache;
 		LightCachePtr m_lightCache;

@@ -43,6 +43,9 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Version.h"
+
+#include "GafferOSL/OSLShader.h"
 
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
@@ -62,6 +65,16 @@ using namespace IECore;
 using namespace GafferScene;
 using namespace GafferCycles;
 using namespace Gaffer;
+using namespace GafferOSL;
+
+namespace {
+
+#if GAFFER_MAJOR_VERSION > 58
+// This is to allow Cycles Shaders to be connected to OSL Shaders
+static bool g_oslRegistration = OSLShader::registerCompatibleShader( "ccl:surface" );
+#endif
+
+} // namespace
 
 IE_CORE_DEFINERUNTIMETYPED( CyclesShader );
 

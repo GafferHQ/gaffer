@@ -114,6 +114,7 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "clamp", ccl::ClampNode() );
 	MAP_NODE( "math", ccl::MathNode() );
 	MAP_NODE( "vector_math", ccl::VectorMathNode() );
+	MAP_NODE( "vector_rotate", ccl::VectorRotateNode() );
 	MAP_NODE( "vector_transform", ccl::VectorTransformNode() );
 	MAP_NODE( "normal", ccl::NormalNode() );
 	MAP_NODE( "mapping", ccl::MappingNode() );
@@ -728,6 +729,16 @@ ccl::Shader *createDefaultShader()
 	cshader->set_graph( cgraph );
 
 	return cshader;
+}
+
+bool hasOSL( const ccl::Shader *cshader )
+{
+	for( ccl::ShaderNode *snode : cshader->graph->nodes )
+	{
+		if( snode->special_type == ccl::SHADER_SPECIAL_TYPE_OSL )
+			return true;
+	}
+	return false;
 }
 
 } // namespace ShaderNetworkAlgo

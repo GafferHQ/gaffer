@@ -56,6 +56,7 @@
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
+#include "util/util_openimagedenoise.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -67,6 +68,8 @@ namespace
 
 static py::list getDevices()
 {
+	py::scope().attr( "hasOptixDenoise" ) = false;
+
 	py::list result;
 
 	std::vector<ccl::DeviceInfo> devices = IECoreCycles::devices();
@@ -86,6 +89,9 @@ static py::list getDevices()
 		d["use_split_kernel"] = device.use_split_kernel;
 		d["has_profiling"] = device.has_profiling;
 		d["cpu_threads"] = device.cpu_threads;
+
+		if( device.type == ccl::DEVICE_OPTIX )
+			py::scope().attr( "hasOptixDenoise" ) = true;
 
 		result.append(d);
 	}
@@ -461,6 +467,10 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 #else
 	py::scope().attr( "withLightGroups" ) = false;
 #endif
+	if( ccl::openimagedenoise_supported() )
+		py::scope().attr( "hasOpenImageDenoise" ) = true;
+	else
+		py::scope().attr( "hasOpenImageDenoise" ) = false;
 
 	DependencyNodeClass<CyclesAttributes>();
 	DependencyNodeClass<CyclesBackground>();

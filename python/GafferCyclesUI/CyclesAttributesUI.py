@@ -207,6 +207,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.shadowTerminatorOffset" : [
+
+			"description",
+			"""
+			Push the shadow terminator towards the light to hide artifacts on low poly geometry.
+			""",
+
+			"layout:section", "Shading",
+
+		],
+
 		"attributes.color" : [
 
 			"description",

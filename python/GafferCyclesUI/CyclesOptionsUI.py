@@ -106,10 +106,19 @@ def __sessionSummary( plug ) :
 
 def __sceneSummary( plug ) :
 
+	def __getBvhLayout( layout ) :
+
+		if( layout == 0 | ( 1 << 0 ) ):
+			return "BVH2"
+		elif( layout == 0 | ( 1 << 3 ) ):
+			return "Embree"
+		else :
+			return "BVH2"
+
 	info = []
 
 	if plug["bvhLayout"]["enabled"].getValue() :
-		info.append( "BVH Layout {}".format( plug["bvhLayout"]["value"].getValue() ) )
+		info.append( "BVH Layout {}".format( __getBvhLayout( plug["bvhLayout"]["value"].getValue() ) ) )
 
 	if plug["useBvhSpatialSplit"]["enabled"].getValue() :
 		info.append( "Use BVH Spatial Splits {}".format( plug["useBvhSpatialSplit"]["value"].getValue() ) )
@@ -119,6 +128,12 @@ def __sceneSummary( plug ) :
 
 	if plug["numBvhTimeSteps"]["enabled"].getValue() :
 		info.append( "Num BVH Time Steps {}".format( plug["numBvhTimeSteps"]["value"].getValue() ) )
+
+	if plug["hairSubdivisions"]["enabled"].getValue() :
+		info.append( "Num hair subdivisions {}".format( plug["hairSubdivisions"]["value"].getValue() ) )
+
+	if plug["hairShape"]["enabled"].getValue() :
+		info.append( "Hair shape {}".format( plug["hairShape"]["value"].getValue() ) )
 
 	if plug["textureLimit"]["enabled"].getValue() :
 			info.append( "Texture Limit - {}".format( plug["textureLimit"]["value"].getValue() ) )
@@ -202,6 +217,9 @@ def __rayDepthSummary( plug ) :
 
 	info = []
 
+	if plug["minBounce"]["enabled"].getValue() :
+		info.append( "Min Bounces {}".format( plug["minBounce"]["value"].getValue() ) )
+
 	if plug["maxBounce"]["enabled"].getValue() :
 		info.append( "Max Bounces {}".format( plug["maxBounce"]["value"].getValue() ) )
 
@@ -212,8 +230,11 @@ def __rayDepthSummary( plug ) :
 				"{} {}".format( rayType, plug[childName]["value"].getValue() )
 			)
 
+	if plug["transparentMinBounce"]["enabled"].getValue() :
+		info.append( "Transparency Min Bounces {}".format( plug["transparentMinBounce"]["value"].getValue() ) )
+
 	if plug["transparentMaxBounce"]["enabled"].getValue() :
-		info.append( "Transparency {}".format( plug["transparentMaxBounce"]["value"].getValue() ) )
+		info.append( "Transparency Max Bounces {}".format( plug["transparentMaxBounce"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -297,16 +318,35 @@ def __filmSummary( plug ) :
 
 def __denoisingSummary( plug ) :
 
+	def __getDenoiseType( dType ) :
+
+		if dType == 0 :
+			return "None"
+		elif dType == 1 :
+			return "NLM"
+		elif dType == 2 :
+			return "OptiX Denoiser"
+		elif dType == 4 :
+			return "Open Image Denoise"
+
+	def __getDenoiseInputPasses( passes ) :
+		if passes == 0 :
+			return "Beauty"
+		elif passes == 1 :
+			return "Beauty Albedo"
+		elif passes == 2 :
+			return "Beauty Albedo Normal"
+
 	info = []
 
-	if plug["useDenoising"]["enabled"].getValue() :
-		info.append( "Use Denoising {}".format( plug["useDenoising"]["value"].getValue() ) )
+	if plug["denoiseUse"]["enabled"].getValue() :
+		info.append( "Use Denoising {}".format( plug["denoiseUse"]["value"].getValue() ) )
 
-	if plug["writeDenoisingPasses"]["enabled"].getValue() :
-		info.append( "Write Denoising Passes {}".format( plug["writeDenoisingPasses"]["value"].getValue() ) )
+	if plug["denoiseStorePasses"]["enabled"].getValue() :
+		info.append( "Write Denoising Passes {}".format( plug["denoiseStorePasses"]["value"].getValue() ) )
 
-	if plug["optixDenoising"]["enabled"].getValue() :
-		info.append( "Optix Denoising {}".format( plug["optixDenoising"]["value"].getValue() ) )
+	if plug["denoiseType"]["enabled"].getValue() :
+		info.append( "Denoise Type {}".format( __getDenoiseType( plug["denoiseType"]["value"].getValue() ) ) )
 
 	for rayType in ( "Diffuse", "Glossy", "Transmission" ) :
 		for dirType in ( "Direct", "Indirect") :
@@ -334,44 +374,11 @@ def __denoisingSummary( plug ) :
 	if plug["denoiseClampInput"]["enabled"].getValue() :
 		info.append( "Clamp Input {}".format( plug["denoiseClampInput"]["value"].getValue() ) )
 
-	if plug["optixInputPasses"]["enabled"].getValue() :
-		info.append( "Optix Input Passes {}".format( plug["optixInputPasses"]["value"].getValue() ) )
+	if plug["denoiseInputPasses"]["enabled"].getValue() :
+		info.append( "Denoise Input Passes {}".format( __getDenoiseInputPasses( plug["denoiseInputPasses"]["value"].getValue() ) ) )
 
-	return ", ".join( info )
-
-def __curvesSummary( plug ) :
-
-	info = []
-
-	if plug["useCurves"]["enabled"].getValue() :
-		info.append( "Use Curves {}".format( plug["useCurves"]["value"].getValue() ) )
-
-	if plug["curvePrimitive"]["enabled"].getValue() :
-		info.append( "Primitive {}".format( plug["curvePrimitive"]["value"].getValue() ) )
-
-	if plug["curveShape"]["enabled"].getValue() :
-		info.append( "Shape {}".format( plug["curveShape"]["value"].getValue() ) )
-
-	if plug["curveLineMethod"]["enabled"].getValue() :
-		info.append( "Line method {}".format( plug["curveLineMethod"]["value"].getValue() ) )
-
-	if plug["curveTriangleMethod"]["enabled"].getValue() :
-		info.append( "Triangle method {}".format( plug["curveTriangleMethod"]["value"].getValue() ) )
-
-	if plug["curveResolution"]["enabled"].getValue() :
-		info.append( "Resolution {}".format( plug["curveResolution"]["value"].getValue() ) )
-
-	if plug["curveSubdivisions"]["enabled"].getValue() :
-		info.append( "Subdivisions {}".format( plug["curveSubdivisions"]["value"].getValue() ) )
-
-	if plug["curveUseEncasing"]["enabled"].getValue() :
-		info.append( "Encasing {}".format( plug["curveUseEncasing"]["value"].getValue() ) )
-
-	if plug["curveUseBackfacing"]["enabled"].getValue() :
-		info.append( "Use Backfacing {}".format( plug["curveUseBackfacing"]["value"].getValue() ) )
-
-	if plug["curveUseTangentNormalGeo"]["enabled"].getValue() :
-		info.append( "Tangent Normal Geo {}".format( plug["curveUseTangentNormalGeo"]["value"].getValue() ) )
+	if plug["denoiseStartSample"]["enabled"].getValue() :
+		info.append( "Denoise Start Sample {}".format( plug["denoiseStartSample"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -454,9 +461,6 @@ def __logSummary( plug ) :
 
 	if plug["logLevel"]["enabled"].getValue() :
 		info.append( "Log level {}".format( plug["logLevel"]["value"].getValue() ) )
-
-	if plug["progressLevel"]["enabled"].getValue() :
-		info.append( "Progress level {}".format( plug["progressLevel"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -549,7 +553,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
-			"layout:section:Curves:summary", __curvesSummary,
 			"layout:section:Background:summary", __backgroundSummary,
 			"layout:section:Texture Cache:summary", __textureCacheSummary,
 			"layout:section:Log:summary", __logSummary,
@@ -783,8 +786,6 @@ Gaffer.Metadata.registerNode(
 		"options.bvhLayout.value" : [
 
 			"preset:BVH2", 0 | ( 1 << 0 ),
-			"preset:BVH4", 0 | ( 1 << 1 ),
-			"preset:BVH8", 0 | ( 1 << 2 ),
 			"preset:EMBREE", 0 | ( 1 << 3 ),
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
@@ -824,6 +825,40 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Scene",
 			"label", "BVH Time Steps",
+
+		],
+
+		"options.hairSubdivisions" : [
+
+			"description",
+			"""
+			Split BVH primitives by this number of time steps to speed up render time in cost of memory.
+			""",
+
+			"layout:section", "Scene",
+			"label", "Hair Subdivisions",
+
+		],
+
+		"options.hairShape" : [
+
+			"description",
+			"""
+			Rounded Ribbons -Render hair as flat ribbon with rounded normals, for fast rendering.
+			3D Curves - Render hair as 3D curve, for accurate results when viewing hair close up.
+			""",
+
+			"layout:section", "Scene",
+			"label", "Hair Shape",
+
+		],
+
+		"options.hairShape.value" : [
+
+			"preset:Round Ribbons", 0,
+			"preset:3D Curves", 1,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -1070,8 +1105,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			Probabilistically terminate light samples when the light
 			contribution is below this threshold (more noise but faster
-			rendering). "
-            "Zero disables the test and never ignores lights.
+			rendering).
+            Zero disables the test and never ignores lights.
 			""",
 
 			"layout:section", "Sampling",
@@ -1161,6 +1196,19 @@ Gaffer.Metadata.registerNode(
 
 		# Ray Depth
 
+		"options.minBounce" : [
+
+			"description",
+			"""
+			Minimum number of light bounces. Setting this higher reduces noise in the first bounces,
+            but can also be less efficient for more complex geometry like hair and volumes.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Min Bounces",
+
+		],
+
 		"options.maxBounce" : [
 
 			"description",
@@ -1224,6 +1272,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.transparentMinBounce" : [
+
+			"description",
+			"""
+			Minimum number of transparent bounces. Setting this higher reduces noise in the first bounces,
+            but can also be less efficient for more complex geometry like hair and volumes."
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Min Transparency",
+
+		],
+
 		"options.transparentMaxBounce" : [
 
 			"description",
@@ -1232,7 +1293,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Ray Depth",
-			"label", "Transparency",
+			"label", "Max Transparency",
 
 		],
 
@@ -1657,7 +1718,7 @@ Gaffer.Metadata.registerNode(
 
 		# Denoising
 
-		"options.useDenoising" : [
+		"options.denoiseUse" : [
 
 			"description",
 			"""
@@ -1669,50 +1730,75 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.writeDenoisingPasses" : [
+		"options.denoiseStorePasses" : [
 
 			"description",
 			"""
-			Write the denoising passes.
+			Store the denoising passes.
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Write Denoising Passes",
+			"label", "Store Denoising Passes",
 
 		],
 
-		"options.optixDenoising" : [
+		"options.denoiseType" : [
 
 			"description",
 			"""
-			Use OptiX AI Denoising.
+			Denoise the image with the selected denoiser.
+			For denoising the image after rendering, denoising data render passes
+			also adapt to the selected denoiser.
+			NLM   - Cycles native non-local means denoiser, running on any compute device
+			OptiX - Use the OptiX AI denoiser with GPU acceleration, only available on NVIDIA GPUs
+			OpenImageDenoise - Use Intel OpenImageDenoise AI denoiser running on the CPU
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Optix Denoising",
+			"label", "Denoising Type",
 
 		],
 
-		"options.optixInputPasses" : [
+		"options.denoiseType.value" : [
+
+			"preset:NLM", 1,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.denoiseInputPasses" : [
 
 			"description",
 			"""
-			Controls which passes the OptiX AI denoiser should use as input, which can have different effects 
+			Controls which passes the Denoise AI denoiser should use as input, which can have different effects 
 			on the denoised image.
 			""",
 
 			"layout:section", "Denoising",
-			"label", "OptiX Input Passes",
+			"label", "Denoise Input Passes",
 
 		],
 
-		"options.optixInputPasses.value" : [
+		"options.denoiseInputPasses.value" : [
 
 			"preset:Beauty", 1,
 			"preset:Beauty Albedo", 2,
 			"preset:Beauty Albedo Normal", 3,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.denoiseStartSample" : [
+
+			"description",
+			"""
+			Sample to start denoising the preview at.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Denoising Start Sample",
 
 		],
 
@@ -1877,167 +1963,6 @@ Gaffer.Metadata.registerNode(
 		
 		],
 
-		# Curves
-
-		"options.useCurves" : [
-
-			"description",
-			"""
-			Activate Cycles curves/hair particle system.
-			""",
-
-			"layout:section", "Curves",
-			"label", "Enable Curve Particles",
-
-		],
-
-		"options.curvePrimitive" : [
-
-			"description",
-			"""
-			Curve primitve type.
-			""",
-
-			"layout:section", "Curves",
-			"label", "Primitive",
-
-		],
-
-		"options.curvePrimitive.value" : [
-
-			"preset:Triangles", 0,
-			"preset:LineSegments", 1,
-			"preset:Segments", 2,
-			"preset:Ribbons", 3,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.curveShape" : [
-
-			"description",
-			"""
-			Curve shape type.
-			""",
-
-			"layout:section", "Curves",
-			"label", "Shape",
-
-		],
-
-		"options.curveShape.value" : [
-
-			"preset:Ribbon", 0,
-			"preset:Thick", 1,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.curveLineMethod" : [
-
-			"description",
-			"""
-			Curve line method.
-			""",
-
-			"layout:section", "Curves",
-			"label", "LineMethod",
-
-		],
-
-		"options.curveLineMethod.value" : [
-
-			"preset:Accurate", 0,
-			"preset:Corrected", 1,
-			"preset:Uncorrected", 2,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.curveTriangleMethod" : [
-
-			"description",
-			"""
-			Curve triangle method.
-			""",
-
-			"layout:section", "Curves",
-			"label", "TriangleMethod",
-
-		],
-
-		"options.curveTriangleMethod.value" : [
-
-			"preset:CameraTriangles", 0,
-			"preset:TessellatedTriangles", 1,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.curveResolution" : [
-
-			"description",
-			"""
-			Curve resolution.
-			""",
-
-			"layout:section", "Curves",
-			"label", "Resolution",
-
-		],
-
-		"options.curveSubdivisions" : [
-
-			"description",
-			"""
-			Curve subdivisions.
-			""",
-
-			"layout:section", "Curves",
-			"label", "Subdivisions",
-
-		],
-
-		"options.curveUseEncasing" : [
-
-			"description",
-			"""
-			Curve use encasing.
-			""",
-
-			"layout:section", "Curves",
-			"label", "UseEncasing",
-
-		],
-
-		"options.curveUseBackfacing" : [
-
-			"description",
-			"""
-			Curve use back-faces.
-			""",
-
-			"layout:section", "Curves",
-			"label", "UseBackfacing",
-
-		],
-
-		"options.curveUseTangentNormalGeo" : [
-
-			"description",
-			"""
-			Curve use tangent normal geometry.
-			""",
-
-			"layout:section", "Curves",
-			"label", "UseTangentNormalGeometry",
-
-		],
-
 		# Texture Cache
 
 		"options.useTextureCache" : [
@@ -2189,28 +2114,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.progressLevel" : [
-
-			"description",
-			"""
-			Progress level based on Cortex Message Handler values.
-			""",
-
-			"layout:section", "Log",
-		],
-
-		"options.progressLevel.value" : [
-
-			"preset:Error", 0,
-			"preset:Warning", 1,
-			"preset:Info", 2,
-			"preset:Debug", 3,
-			"preset:Invalid", 4,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
 	}
 )
 
@@ -2232,3 +2135,11 @@ if not GafferCycles.withTextureCache :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurGlossy", "plugValueWidget:type", "" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useCustomCachePath", "plugValueWidget:type", "" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.customCachePath", "plugValueWidget:type", "" )
+
+if GafferCycles.hasOptixDenoise :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiseType.value", "preset:OptiX Denoiser", 2 )
+
+if GafferCycles.hasOpenImageDenoise :
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiseType.value", "preset:Open Image Denoise", 4 )
