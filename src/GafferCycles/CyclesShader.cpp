@@ -162,6 +162,10 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 	{
 		typePlug()->setValue( "ccl:aov:" );
 	}
+	else if( shaderName == "emission" )
+	{
+		typePlug()->setValue( "ccl:light" );
+	}
 	else
 	{
 		typePlug()->setValue( "ccl:surface" );

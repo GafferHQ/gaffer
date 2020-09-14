@@ -79,3 +79,8 @@ Gaffer.Metadata.registerValue( "ccl:light:background_light", "intensityParameter
 Gaffer.Metadata.registerValue( "ccl:light:background_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ccl:light:background_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "ccl:light:background_light", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0, -0.5 * math.pi, 0 ) ) )
+
+Gaffer.Metadata.registerValue( "ccl:light:emission", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ccl:light:emission", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ccl:light:emission", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ccl:light:emission", "type", "mesh" )
