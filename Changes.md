@@ -9,6 +9,7 @@ Fixes
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
 - CollectScenes : Fixed childNames hashing bug.
+- GafferArnold : Added missing GafferOSL Python bindings import.
 
 0.57.7.1 (relative to 0.57.7.0)
 ========

@@ -36,6 +36,10 @@
 
 __import__( "GafferScene" )
 
+# GafferArnold makes use of OSL closure plugs, this ensures that the bindings
+# are always loaded for these, even if people only import GafferArnold
+__import__( "GafferOSL" )
+
 try :
 
 	# Make sure we import IECoreArnold and _GafferArnold
