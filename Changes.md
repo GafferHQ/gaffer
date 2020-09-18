@@ -7,6 +7,8 @@ Improvements
 - CollectScenes : Added support for collecting at roots of arbitrary depth.
 - AttributeVisualiser : Added support for V2f, V3f, V2i, V3i, V2d and V3d data types.
 - Node Editor : Added decoration to collapsed sections when any of their children have non-default values.
+- HierarchyView : Added <kbd>Ctrl + C</kbd> shortcut/context menu action to copy the selected paths to the clipboard.
+- UI : Added support for basic math operators (`+`, `-`, `/`, `*`, `%`) in numeric fields.
 
 Fixes
 -----
@@ -36,7 +38,6 @@ Improvements
   - Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
   - Added enabled/reset controls to the Crop Window Tool.
   - Improved display of the edited plug in the Inspector's pop-up edit windows.
-- UI : Added support for basic math operators (`+`, `-`, `/`, `*`, `%`) in numeric fields.
 
 Fixes
 -----
