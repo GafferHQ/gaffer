@@ -715,7 +715,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		QtCompat.setSectionResizeMode( tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
 		tableView.verticalHeader().setDefaultSectionSize( 25 )
-		tableView.verticalHeader().setVisible( False )
+		tableView.verticalHeader().setVisible( mode is self.Mode.RowNames )
 
 		self.__horizontalHeader = GafferUI.Widget( QtWidgets.QHeaderView( QtCore.Qt.Horizontal, tableView ) )
 		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft )
@@ -747,6 +747,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			# because we need to do it on a per-cell basis, so will need to use `_CellPlugItemDelegate.paint()`
 			# instead.
 			tableView.setProperty( "gafferToggleIndicator", True )
+			tableView.verticalHeader().setSectionsMovable( True )
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
@@ -761,8 +762,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		# our own editing via PlugValueWidgets in _EditWindow.
 
 		tableView.setEditTriggers( tableView.NoEditTriggers )
-		tableView.setSelectionMode( QtWidgets.QAbstractItemView.NoSelection )
-		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		tableView.setSelectionMode( QtWidgets.QAbstractItemView.ExtendedSelection )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 
 		# Drawing
 
@@ -1186,6 +1187,8 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				if not label :
 					label = IECore.CamelCase.toSpaced( cellPlug.getName() )
 				return label
+			elif orientation == QtCore.Qt.Vertical and self.__mode == _PlugTableView.Mode.RowNames :
+				return ""
 			return section
 
 	def flags( self, index ) :

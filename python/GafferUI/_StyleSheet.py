@@ -648,6 +648,10 @@ _styleSheet = string.Template(
 	SpreadsheetUI.
 	*/
 
+	QTableView[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"] QHeaderView::section:vertical {
+		padding: 5px;
+	}
+
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tab {
 
 		border-color: $tintDarkerStronger;
