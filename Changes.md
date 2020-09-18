@@ -6,6 +6,7 @@ Improvements
 
 - CollectScenes : Added support for collecting at roots of arbitrary depth.
 - AttributeVisualiser : Added support for V2f, V3f, V2i, V3i, V2d and V3d data types.
+- Node Editor : Added decoration to collapsed sections when any of their children have non-default values.
 
 Fixes
 -----
@@ -15,6 +16,9 @@ Fixes
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
 - CollectScenes : Fixed childNames hashing bug.
+- NodeAlgo : Fixed bug that caused `isSetToUserDefault()` to return `True` when the plug's input was from a ComputeNode.
+  Like `ValuePlug::isSetToDefault()`, `isSetToUserDefault()` will now never trigger a compute, and all computed inputs
+  are treated as non-default.
 
 API
 ---

@@ -350,8 +350,52 @@ class PlugLayout( GafferUI.Widget ) :
 			# a compute.
 			section.summary = self.__metadataValue( self.__parent, self.__layoutName + ":section:" + section.fullName + ":summary" ) or ""
 
+		section.valuesChanged = False
+
 		for subsection in section.subsections.values() :
 			self.__updateSummariesWalk( subsection )
+			# If one of our subsections has changed, we don't need to
+			# check any of our own plugs, we just propagate the flag.
+			if subsection.valuesChanged :
+				section.valuesChanged = True
+
+		if not section.valuesChanged :
+			# Check our own widgets, this is a little icky, the alternative
+			# would be to iterate our items, reverse engineer the section
+			# then update that, but this allows us to early-out much sooner.
+			for widget in section.widgets :
+				if self.__widgetPlugValuesChanged( widget ) :
+					section.valuesChanged = True
+					break
+
+	@staticmethod
+	def __widgetPlugValuesChanged( widget ) :
+
+		plugs = []
+		if isinstance( widget, GafferUI.PlugWidget ) :
+			widget = widget.plugValueWidget()
+		if hasattr( widget, 'getPlugs' ) :
+			plugs = widget.getPlugs()
+
+		for plug in plugs :
+			if PlugLayout.__plugValueChanged( plug ) :
+				return True
+
+		return False
+
+	@staticmethod
+	def __plugValueChanged( plug ) :
+
+		## \todo This mirrors LabelPlugValueWidget. This doesn't handle child plug defaults/connections
+		# properly. We need to improve NodeAlgo when we have the next API break.
+
+		valueChanged = plug.getInput() is not None
+		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
+			if Gaffer.NodeAlgo.hasUserDefault( plug ) :
+				valueChanged = Gaffer.NodeAlgo.isSetToUserDefault( plug )
+			else :
+				valueChanged = not plug.isSetToDefault()
+		return valueChanged
 
 	def __import( self, path ) :
 
@@ -555,6 +599,7 @@ class _Section( object ) :
 		self.widgets = []
 		self.subsections = collections.OrderedDict()
 		self.summary = ""
+		self.valuesChanged = False
 
 	def saveState( self, name, value ) :
 
@@ -706,9 +751,15 @@ class _CollapsibleLayout( _Layout ) :
 				self.__collapsibles[name] = collapsible
 
 			collapsible.getChild().update( subsection )
+
 			collapsible.getCornerWidget().setText(
 				"<small>" + "&nbsp;( " + subsection.summary + " )</small>" if subsection.summary else ""
 			)
+
+			currentValueChanged = collapsible._qtWidget().property( "gafferValueChanged" )
+			if subsection.valuesChanged != currentValueChanged :
+				collapsible._qtWidget().setProperty( "gafferValueChanged", GafferUI._Variant.toVariant( subsection.valuesChanged ) )
+				collapsible._repolish()
 
 			widgets.append( collapsible )
 

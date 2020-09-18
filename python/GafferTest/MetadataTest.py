@@ -153,8 +153,8 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testInstanceMetadata( self ) :
 
-		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "imt", "globalNodeValue" )
-		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "imt", "globalPlugValue" )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "imt", "globalNodeValue" )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "imt", "globalPlugValue" )
 
 		n = GafferTest.AddNode()
 

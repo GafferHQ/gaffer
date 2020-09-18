@@ -116,22 +116,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		plug = self.getPlug()
 
+		## \todo: This is mirrored in PlugLayout and needs centralising in NodeAlgo (along
+		# with proper support for child plug connections/defaults) at the next API break.
+
 		valueChanged = plug.getInput() is not None
 		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
-			with self.getContext() :
-				if Gaffer.NodeAlgo.hasUserDefault( plug ) :
-					try:
-						valueChanged = not Gaffer.NodeAlgo.isSetToUserDefault( plug )
-					except:
-						# an error here should not cause the ui to break, specially since the value widget corresponding could be indicating the error itself
-						valueChanged = True
-				else :
-					try:
-						valueChanged = not plug.isSetToDefault()
-					except:
-						# an error here should not cause the ui to break, specially since the value widget corresponding could be indicating the error itself
-						valueChanged = True
-
+			if Gaffer.NodeAlgo.hasUserDefault( plug ) :
+				valueChanged = not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+			else :
+				valueChanged = not plug.isSetToDefault()
 		self.__setValueChanged( valueChanged )
 
 	# Sets whether or not the label be rendered in a ValueChanged state.
