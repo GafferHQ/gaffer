@@ -22,6 +22,7 @@ Fixes
   Like `ValuePlug::isSetToDefault()`, `isSetToUserDefault()` will now never trigger a compute, and all computed inputs
   are treated as non-default.
 - GafferArnold : Added missing GafferOSL Python bindings import.
+- Plug : Fixed bug that could break IPR updates following a node graph edit (#3911).
 
 API
 ---

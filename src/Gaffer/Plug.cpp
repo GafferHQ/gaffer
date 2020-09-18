@@ -842,6 +842,7 @@ class Plug::DirtyPlugs
 			VertexDescriptor result = add_vertex( m_graph );
 			m_graph[result] = plug;
 			m_plugs[plug] = result;
+			plug->dirty();
 
 			// Insert parent plug.
 			if( auto parent = plug->parent<Plug>() )
@@ -884,7 +885,6 @@ class Plug::DirtyPlugs
 			void finish_vertex( const VertexDescriptor &u, const Graph &graph )
 			{
 				Plug *plug = graph[u].get();
-				plug->dirty();
 				if( Node *node = plug->node() )
 				{
 					node->plugDirtiedSignal()( plug );
