@@ -64,8 +64,10 @@
 				'arrowRight10',
 				'collapsibleArrowDown',
 				'collapsibleArrowDownHover',
+				'collapsibleArrowDownValueChanged',
 				'collapsibleArrowRight',
-				'collapsibleArrowRightHover'
+				'collapsibleArrowRightHover',
+				'collapsibleArrowRightValueChanged'
 			]
 
 		},

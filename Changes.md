@@ -29,6 +29,15 @@ Breaking Changes
 0.58.x.x (relative to 0.58.1.0)
 ========
 
+Improvements
+------------
+
+- CollectScenes : Added support for collecting at roots of arbitrary depth.
+- AttributeVisualiser : Added support for V2f, V3f, V2i, V3i, V2d and V3d data types.
+- Node Editor : Added decoration to collapsed sections when any of their children have non-default values.
+- HierarchyView : Added <kbd>Ctrl + C</kbd> shortcut/context menu action to copy the selected paths to the clipboard.
+- UI : Added support for basic math operators (`+`, `-`, `/`, `*`, `%`) in numeric fields.
+
 Fixes
 -----
 
@@ -37,6 +46,10 @@ Fixes
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
 - CollectScenes : Fixed childNames hashing bug.
+- NodeAlgo : Fixed bug that caused `isSetToUserDefault()` to return `True` when the plug's input was from a ComputeNode.
+  Like `ValuePlug::isSetToDefault()`, `isSetToUserDefault()` will now never trigger a compute, and all computed inputs
+  are treated as non-default.
+- GafferArnold : Added missing GafferOSL Python bindings import.
 
 API
 ---
@@ -51,7 +64,6 @@ API
   - Added <kbd>Ctrl-D</kbd> shortcut to duplicate currently viewed image when viewing the output of Catalogue node (#3545).
   - Added enabled/reset controls to the Crop Window Tool.
   - Improved display of the edited plug in the Inspector's pop-up edit windows.
-- UI : Added support for basic math operators (`+`, `-`, `/`, `*`, `%`) in numeric fields.
 
 Fixes
 -----
@@ -275,6 +287,7 @@ Build
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
 - CollectScenes : Fixed childNames hashing bug.
+- GafferArnold : Added missing GafferOSL Python bindings import.
 
 0.57.7.1 (relative to 0.57.7.0)
 ========

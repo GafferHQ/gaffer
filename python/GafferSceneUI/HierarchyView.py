@@ -104,6 +104,9 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
+			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
+			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
+
 		self.__plug = None
 		self._updateFromSet()
 
@@ -197,6 +200,43 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
 			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
+
+	def __keyPressSignal( self, widget, event ) :
+
+		if event.key == "C" and event.modifiers == event.Modifiers.Control :
+			self.__copySelectedPaths()
+			return True
+
+		return False
+
+	def __contextMenuSignal( self, widget ) :
+
+		menuDefinition = IECore.MenuDefinition()
+
+		selection = self.__pathListing.getSelection()
+		menuDefinition.append(
+			"Copy Path%s" % ( "" if selection.size() == 1 else "s" ),
+			{
+				"command" : Gaffer.WeakMethod( self.__copySelectedPaths ),
+				"active" : not selection.isEmpty(),
+				"shortCut" : "Ctrl+C"
+			}
+		)
+
+		self.__contextMenu = GafferUI.Menu( menuDefinition )
+		self.__contextMenu.popup( widget )
+
+		return True
+
+	def __copySelectedPaths( self, *unused ) :
+
+		if self.__plug is None :
+			return
+
+		selection = self.__pathListing.getSelection()
+		if not selection.isEmpty() :
+			data = IECore.StringVectorData( selection.paths() )
+			self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
