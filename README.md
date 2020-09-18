@@ -24,7 +24,7 @@ Gaffer is officially supported and tested on **Linux** (CentOS 7) and **macOS** 
 
 ## Building ##
 
-[![Build Status](https://dev.azure.com/GafferHQ/Gaffer/_apis/build/status/GafferHQ.gaffer?branchName=master)](https://dev.azure.com/GafferHQ/Gaffer/_build/latest?definitionId=1&branchName=master)
+[![CI](https://github.com/GafferHQ/gaffer/workflows/CI/badge.svg)](https://github.com/GafferHQ/gaffer/actions?query=workflow%3ACI)
 
 Gaffer targets the [VFX Reference Platform](https://vfxplatform.com). We are currently on **CY2018**. Aside from general platform development packages, we specifically require the following tools that may not be installed by default on your system. Without these, you will not be able to build Gaffer.
 
