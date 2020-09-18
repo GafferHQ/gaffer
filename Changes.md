@@ -6,6 +6,11 @@ Improvements
 
 - GraphEditor : Improved performance slightly for large graphs.
 
+Fixes
+-----
+
+- Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
+
 API
 ---
 

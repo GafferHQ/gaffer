@@ -431,18 +431,42 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		item.widget().setGeometry( QtCore.QRect( 0, 0, sceneRect.width(), sceneRect.height() ) )
 
-## A QGraphicsProxyWidget whose shape is composed from the
-# bounds of its child widgets. This allows our overlays to
-# pass through events in the regions where there isn't a
-# child widget.
+## A QGraphicsProxyWidget whose shape is derived from the opaque parts of its
+# child widgets. This allows our overlays to pass through events in the regions
+# where there isn't a visible child widget.
+#
+# shape() is called frequently but our mask is relatively expensive to calculate.
+# As transparency is stylesheet dependent, we need to render our child widgets
+# and work out a mask from the resultant alpha.
+#
+# To minimise impact, We only re-calculate our mask whenever our layout
+# changes. This covers 99% of common use cases, with the only exception that
+# mouse-driven opacity changes won't be considered.
 class _OverlayProxyWidget( QtWidgets.QGraphicsProxyWidget ) :
 
 	def __init__( self ) :
 
 		QtWidgets.QGraphicsProxyWidget.__init__( self )
+		self.__shape = None
+
+	def setWidget( self, widget ) :
+
+		QtWidgets.QGraphicsProxyWidget.setWidget( self, widget )
+		self.__shape = None
 
 	def shape( self ) :
 
-		path = QtGui.QPainterPath()
-		path.addRegion( self.widget().childrenRegion() )
-		return path
+		if self.__shape is None :
+
+			self.__shape = QtGui.QPainterPath()
+			if self.widget() :
+				pixmap = self.widget().grab()
+				self.__shape.addRegion( QtGui.QRegion( pixmap.mask() ) )
+
+		return self.__shape
+
+	# This covers re-layouts due to child changes, and parent changes (such as window resizing)
+	def setGeometry( self, *args, **kwargs ) :
+
+		QtWidgets.QGraphicsProxyWidget.setGeometry( self, *args, **kwargs )
+		self.__shape = None
