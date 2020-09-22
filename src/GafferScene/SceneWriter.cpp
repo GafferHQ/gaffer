@@ -201,7 +201,6 @@ const ScenePlug *SceneWriter::outPlug() const
 
 IECore::MurmurHash SceneWriter::hash( const Gaffer::Context *context ) const
 {
-	Context::Scope scope( context );
 	const ScenePlug *scenePlug = inPlug()->source<ScenePlug>();
 	if ( ( fileNamePlug()->getValue() == "" ) || ( scenePlug == inPlug() ) )
 	{
