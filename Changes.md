@@ -26,7 +26,7 @@ Breaking Changes
 
 - Gadget : Added new virtual method and private member variables.
 
-0.58.x.x (relative to 0.58.1.0)
+0.58.2.0 (relative to 0.58.1.0)
 ========
 
 Improvements
@@ -45,11 +45,14 @@ Fixes
   - Fixed bug that caused data lists to lose their scroll position during updates.
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
+- Attributes : Fixed bug that could prevent interactive updates when the `global` plug was on.
 - CollectScenes : Fixed childNames hashing bug.
 - NodeAlgo : Fixed bug that caused `isSetToUserDefault()` to return `True` when the plug's input was from a ComputeNode.
   Like `ValuePlug::isSetToDefault()`, `isSetToUserDefault()` will now never trigger a compute, and all computed inputs
   are treated as non-default.
 - GafferArnold : Added missing GafferOSL Python bindings import.
+- Plug : Fixed bug that could break IPR updates following a node graph edit (#3911).
+- Viewer : Fixed CropWindow tool reset button size.
 
 API
 ---
@@ -279,13 +282,14 @@ Build
 
 - Updated to GafferHQ/dependencies 1.6.0.
 
-0.57.7.x (relative to 0.57.7.1)
+0.57.7.2 (relative to 0.57.7.1)
 ========
 
 - PrimitiveInspector :
   - Fixed bug that caused data lists to lose their scroll position during updates.
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
+- Attributes : Fixed bug that could prevent interactive updates when the `global` plug was on.
 - CollectScenes : Fixed childNames hashing bug.
 - GafferArnold : Added missing GafferOSL Python bindings import.
 

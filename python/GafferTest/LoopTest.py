@@ -221,5 +221,66 @@ class LoopTest( GafferTest.TestCase ) :
 		self.assertIsInstance( s2["c"]["previous"], Gaffer.IntPlug )
 		self.assertIsInstance( s2["c"]["next"], Gaffer.IntPlug )
 
+	def testComputeDuringDirtyPropagation( self ) :
+
+		# Make a loop
+
+		loop = self.intLoop()
+		add = GafferTest.AddNode()
+
+		loop["in"].setValue( 0 )
+		loop["next"].setInput( add["sum"] )
+		loop["iterations"].setValue( 5 )
+
+		add["op1"].setInput( loop["previous"] )
+		add["op2"].setValue( 1 )
+
+		self.assertEqual( loop["out"].getValue(), 5 )
+
+		# Edit `loop["in"]` to trigger dirty propagation, and capture the
+		# value of each plug at the point `plugDirtiedSignal()` is emitted
+		# for it.
+
+		def plugValue( plug ) :
+
+			with Gaffer.Context() as c :
+
+				if plug in {
+					loop["next"], loop["previous"], add["op1"], add["sum"]
+				} :
+					# These plugs are sensitive to "loop:index", so we provide it
+					# manually. We are spying on the values in the last-but-one
+					# iteration of the loop.
+					c["loop:index"] = 3
+
+				return plug.getValue()
+
+		valuesWhenDirtied = {}
+		def plugDirtied( plug ) :
+
+			valuesWhenDirtied[plug] = plugValue( plug )
+
+		loop.plugDirtiedSignal().connect( plugDirtied, scoped = False )
+		add.plugDirtiedSignal().connect( plugDirtied, scoped = False )
+		loop["in"].setValue( 1 )
+
+		# Check that we saw the values we expected.
+
+		self.assertEqual( valuesWhenDirtied[loop["in"]], 1 )
+		self.assertEqual( valuesWhenDirtied[loop["out"]], 6 )
+		self.assertEqual( valuesWhenDirtied[loop["next"]], 5 )
+		self.assertEqual( valuesWhenDirtied[loop["previous"]], 4 )
+		self.assertEqual( valuesWhenDirtied[add["sum"]], 5 )
+		self.assertEqual( valuesWhenDirtied[add["op1"]], 4 )
+
+		# Double check that we see the same values after
+		# clearing the cache and doing a fresh compute.
+
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache()
+
+		for plug, value in valuesWhenDirtied.items() :
+			self.assertEqual( plugValue( plug ), value )
+
 if __name__ == "__main__":
 	unittest.main()
