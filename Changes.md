@@ -23,6 +23,7 @@ Fixes
   are treated as non-default.
 - GafferArnold : Added missing GafferOSL Python bindings import.
 - Plug : Fixed bug that could break IPR updates following a node graph edit (#3911).
+- Viewer : Fixed CropWindow tool reset button size.
 
 API
 ---

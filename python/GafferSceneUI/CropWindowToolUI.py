@@ -105,6 +105,7 @@ class _StatusWidget( GafferUI.Frame ) :
 					self.__enabled.boolWidget().setDisplayMode( GafferUI.BoolWidget.DisplayMode.Switch )
 
 					button = GafferUI.Button( "Reset" )
+					button._qtWidget().setFixedWidth( 50 )
 					button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 		self.__tool.statusChangedSignal().connect( Gaffer.WeakMethod( self.__update, fallbackResult = None ), scoped = False )
