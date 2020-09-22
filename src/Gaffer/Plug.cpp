@@ -757,12 +757,15 @@ class Plug::DirtyPlugs
 
 			for( DownstreamIterator it( plugToDirty ); !it.done(); ++it )
 			{
-				InsertedVertex v = insertVertex( &*it );
+				// The `const_casts()` are harmless because we're starting iteration from
+				// a non-const plug. But they are necessary because DownstreamIterator
+				// doesn't currently have a non-const form, and always yields const plugs.
+				InsertedVertex v = insertVertex( const_cast<Plug *>( &*it ) );
 				if( !it->getFlags( Plug::AcceptsDependencyCycles ) )
 				{
 					add_edge(
 						v.first,
-						insertVertex( it.upstream() ).first,
+						insertVertex( const_cast<Plug *>( it.upstream() ) ).first,
 						m_graph
 					);
 				}
@@ -820,7 +823,7 @@ class Plug::DirtyPlugs
 		// inserted.
 		typedef std::pair<VertexDescriptor, bool> InsertedVertex;
 
-		InsertedVertex insertVertex( const Plug *plug )
+		InsertedVertex insertVertex( Plug *plug )
 		{
 			// We need to hold a reference to the plug, because otherwise
 			// it might be deleted between now and emit(). But if there is
@@ -837,11 +840,12 @@ class Plug::DirtyPlugs
 			}
 
 			VertexDescriptor result = add_vertex( m_graph );
-			m_graph[result] = const_cast<Plug *>( plug );
+			m_graph[result] = plug;
 			m_plugs[plug] = result;
+			plug->dirty();
 
 			// Insert parent plug.
-			if( const Plug *parent = plug->parent<Plug>() )
+			if( auto parent = plug->parent<Plug>() )
 			{
 				if( parent->refCount() )
 				{
@@ -881,7 +885,6 @@ class Plug::DirtyPlugs
 			void finish_vertex( const VertexDescriptor &u, const Graph &graph )
 			{
 				Plug *plug = graph[u].get();
-				plug->dirty();
 				if( Node *node = plug->node() )
 				{
 					node->plugDirtiedSignal()( plug );
