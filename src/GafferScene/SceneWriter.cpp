@@ -230,9 +230,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 		throw IECore::Exception( "No input scene" );
 	}
 
-	const std::string fileName = fileNamePlug()->getValue();
-	createDirectories( fileName );
-	SceneInterfacePtr output = SceneInterface::create( fileName, IndexedIO::Write );
+	SceneInterfacePtr output;
 	tbb::mutex mutex;
 	ContextPtr context = new Context( *Context::current() );
 	Context::Scope scopedContext( context.get() );
@@ -240,6 +238,13 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 	for( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
 	{
 		context->setFrame( *it );
+
+		const std::string fileName = fileNamePlug()->getValue();
+		if( !output || output->fileName() != fileName )
+		{
+			createDirectories( fileName );
+			output = SceneInterface::create( fileName, IndexedIO::Write );
+		}
 
 		ConstCompoundDataPtr sets = SceneAlgo::sets( scene );
 		LocationWriter locationWriter( output, sets, context->getTime(), mutex );

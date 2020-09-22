@@ -37,6 +37,7 @@
 import os
 import unittest
 import threading
+import inspect
 import imath
 
 import IECore
@@ -44,6 +45,7 @@ import IECoreScene
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferScene
 import GafferSceneTest
 
@@ -290,6 +292,60 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		r["fileName"].setInput( w["fileName"] )
 
 		self.assertScenesEqual( p["out"], r["out"] )
+
+	def testFileNameWithArtificalFrameDependency( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		script["writer"] = GafferScene.SceneWriter()
+		script["writer"]["in"].setInput( script["plane"]["out"] )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.scc" )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			# Add artificial dependency on frame
+			context.getFrame()
+			parent["writer"]["fileName"] = "{}"
+			""".format( fileName )
+		) )
+
+		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-10" )
+		dispatcher.dispatch( [ script["writer"] ] )
+
+		scene = IECoreScene.SceneInterface.create( fileName, IECore.IndexedIO.OpenMode.Read )
+		self.assertEqual( scene.child( "plane" ).numObjectSamples(), 10 )
+
+	def testFileNameWithFrameDependency( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		script["writer"] = GafferScene.SceneWriter()
+		script["writer"]["in"].setInput( script["plane"]["out"] )
+		script["writer"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.####.scc" ) )
+
+		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-10" )
+		dispatcher.dispatch( [ script["writer"] ] )
+
+		with Gaffer.Context( script.context() ) as context :
+			for frame in range( 1, 10 ) :
+				context.setFrame( frame )
+				scene = IECoreScene.SceneInterface.create(
+					context.substitute( script["writer"]["fileName"].getValue() ),
+					IECore.IndexedIO.OpenMode.Read
+				)
+				plane = scene.child( "plane" )
+				self.assertEqual( plane.numObjectSamples(), 1 )
+				self.assertEqual( plane.objectSampleTime( 0 ), context.getTime() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -9,6 +9,8 @@ Fixes
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
 - CollectScenes : Fixed childNames hashing bug.
+- SceneWriter : Fixed error caused by computed filenames with a dependency on time. This
+  makes it possible to write to a sequence of cache files rather than one monolithic file.
 - GafferArnold : Added missing GafferOSL Python bindings import.
 
 0.57.7.1 (relative to 0.57.7.0)
