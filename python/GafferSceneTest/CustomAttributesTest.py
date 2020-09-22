@@ -42,6 +42,7 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -341,6 +342,22 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			GafferSceneTest.traverseScene( script["customAttributes"]["out"] )
 
 		self.assertEqual( monitor.combinedStatistics().numUniqueValues( "scene:path" ), 1 )
+
+	def testGlobalsDirtyPropagation( self ) :
+
+		options = GafferScene.StandardOptions()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( options["out"] )
+		attributes["global"].setValue( True )
+
+		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject() )
+
+		cs = GafferTest.CapturingSlot( attributes.plugDirtiedSignal() )
+		options["options"]["renderCamera"]["enabled"].setValue( True )
+
+		self.assertIn( attributes["out"]["globals"], { x[0] for x in cs } )
+		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject( { "option:render:camera" : IECore.StringData( "" ) } ) )
 
 if __name__ == "__main__":
 	unittest.main()
