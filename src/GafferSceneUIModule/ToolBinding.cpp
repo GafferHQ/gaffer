@@ -173,6 +173,7 @@ void GafferSceneUIModule::bindTools()
 
 	{
 		GafferBindings::NodeClass<CropWindowTool>( nullptr, no_init )
+			.def( init<GafferUI::View *>() )
 			.def( "status", &CropWindowTool::status )
 			.def( "statusChangedSignal", &CropWindowTool::statusChangedSignal, return_internal_reference<1>() )
 		;
