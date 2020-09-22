@@ -8,6 +8,7 @@ Fixes
   - Fixed bug that caused data lists to lose their scroll position during updates.
   - Fixed bug that could cause the inspector to show a different location to other Editors.
   - Fixed bug when the selected location doesn't exist in the input scene.
+- Attributes : Fixed bug that could prevent interactive updates when the `global` plug was on.
 - CollectScenes : Fixed childNames hashing bug.
 - GafferArnold : Added missing GafferOSL Python bindings import.
 

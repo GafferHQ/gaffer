@@ -100,7 +100,12 @@ void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 {
 	AttributeProcessor::affects( input, outputs );
 
-	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() || input == extraAttributesPlug() )
+	if(
+		input == globalPlug() ||
+		input == inPlug()->globalsPlug() ||
+		attributesPlug()->isAncestorOf( input ) ||
+		input == extraAttributesPlug()
+	)
 	{
 		// We can only affect a particular output if we haven't
 		// connected it as a pass-through in updateInternalConnections().
