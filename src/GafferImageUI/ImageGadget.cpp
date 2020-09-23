@@ -116,6 +116,7 @@ ImageGadget::ImageGadget()
 		m_clipping( false ),
 		m_exposure( 0.0f ),
 		m_gamma( 1.0f ),
+		m_shaderDirty( true ),
 		m_useGPU( true ),
 		m_labelsVisible( true ),
 		m_paused( false ),
@@ -929,66 +930,68 @@ void ImageGadget::visibilityChanged()
 	}
 }
 
-IECoreGL::Shader *ImageGadget::shader( bool dirty, const OpenColorIO::ConstTransformRcPtr& transform, GLuint &lut3dTextureID ) const
+IECoreGL::Shader *ImageGadget::shader() const
 {
+	if( !m_shaderDirty )
+	{
+		return m_shader.get();
+	}
+
 	const int LUT3D_EDGE_SIZE = 128;
-	if( m_lut3dTextureID == 0)
+	if( m_lut3dTextureID == 0 )
 	{
 		glGenTextures( 1, &m_lut3dTextureID );
 	}
 
-	if( !m_shader || dirty )
+	std::string colorTransformCode;
+	std::vector<float> lut3d;
+	if( m_gpuOcioTransform )
 	{
-		std::string colorTransformCode;
-		std::vector<float> lut3d;
-		if( transform )
-		{
-			OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+		OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
 
-			OpenColorIO::ConstProcessorRcPtr processor = config->getProcessor( transform );
+		OpenColorIO::ConstProcessorRcPtr processor = config->getProcessor( m_gpuOcioTransform );
 
-			OpenColorIO::GpuShaderDesc shaderDesc;
-			shaderDesc.setLanguage( OpenColorIO::GPU_LANGUAGE_GLSL_1_3 );
-			shaderDesc.setFunctionName( "OCIODisplay" );
-			shaderDesc.setLut3DEdgeLen( LUT3D_EDGE_SIZE );
+		OpenColorIO::GpuShaderDesc shaderDesc;
+		shaderDesc.setLanguage( OpenColorIO::GPU_LANGUAGE_GLSL_1_3 );
+		shaderDesc.setFunctionName( "OCIODisplay" );
+		shaderDesc.setLut3DEdgeLen( LUT3D_EDGE_SIZE );
 
-			int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-			lut3d.resize( num3Dentries );
-			processor->getGpuLut3D( &lut3d[0], shaderDesc );
-			colorTransformCode =  processor->getGpuShaderText( shaderDesc );
-		}
-		else
-		{
-			colorTransformCode = "vec4 OCIODisplay(vec4 inPixel, sampler3D lut3d) { return inPixel; }\n";
-		}
-
-		std::string combinedFragmentCode;
-		if( glslVersion() >= 330 )
-		{
-			// the __VERSION__ define is a workaround for the fact that cortex's source preprocessing doesn't
-			// define it correctly in the same way as the OpenGL shader preprocessing would.
-			combinedFragmentCode = "#version 330 compatibility\n #define __VERSION__ 330\n\n";
-		}
-		combinedFragmentCode += colorTransformCode + fragmentSource();
-
-		m_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", combinedFragmentCode );
-
-		if( transform && m_shader->uniformParameter( "lutTexture" ) )
-		{
-			GLenum monochromeTextureFormat, colorTextureFormat;
-			findUsableTextureFormats( monochromeTextureFormat, colorTextureFormat );
-
-			// Load the data into an OpenGL 3D Texture
-			glActiveTexture( GL_TEXTURE0 + m_shader->uniformParameter( "lutTexture" )->textureUnit );
-			glBindTexture( GL_TEXTURE_3D, m_lut3dTextureID );
-			glTexImage3D(
-				GL_TEXTURE_3D, 0, colorTextureFormat, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-				0, GL_RGB, GL_FLOAT, &lut3d[0]
-			);
-		}
+		int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
+		lut3d.resize( num3Dentries );
+		processor->getGpuLut3D( &lut3d[0], shaderDesc );
+		colorTransformCode =  processor->getGpuShaderText( shaderDesc );
+	}
+	else
+	{
+		colorTransformCode = "vec4 OCIODisplay(vec4 inPixel, sampler3D lut3d) { return inPixel; }\n";
 	}
 
-	lut3dTextureID = m_lut3dTextureID;
+	std::string combinedFragmentCode;
+	if( glslVersion() >= 330 )
+	{
+		// the __VERSION__ define is a workaround for the fact that cortex's source preprocessing doesn't
+		// define it correctly in the same way as the OpenGL shader preprocessing would.
+		combinedFragmentCode = "#version 330 compatibility\n #define __VERSION__ 330\n\n";
+	}
+	combinedFragmentCode += colorTransformCode + fragmentSource();
+
+	m_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", combinedFragmentCode );
+
+	if( m_gpuOcioTransform && m_shader->uniformParameter( "lutTexture" ) )
+	{
+		GLenum monochromeTextureFormat, colorTextureFormat;
+		findUsableTextureFormats( monochromeTextureFormat, colorTextureFormat );
+
+		// Load the data into an OpenGL 3D Texture
+		glActiveTexture( GL_TEXTURE0 + m_shader->uniformParameter( "lutTexture" )->textureUnit );
+		glBindTexture( GL_TEXTURE_3D, m_lut3dTextureID );
+		glTexImage3D(
+			GL_TEXTURE_3D, 0, colorTextureFormat, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+			0, GL_RGB, GL_FLOAT, &lut3d[0]
+		);
+	}
+
+	m_shaderDirty = false;
 	return m_shader.get();
 }
 
@@ -997,14 +1000,9 @@ void ImageGadget::renderTiles() const
 	GLint previousProgram;
 	glGetIntegerv( GL_CURRENT_PROGRAM, &previousProgram );
 
-
-
 	PushAttrib pushAttrib( GL_COLOR_BUFFER_BIT );
 
-	GLuint lutTextureID;
-	Shader *shader = this->shader( m_shaderDirty, m_gpuOcioTransform, lutTextureID );
-	m_shaderDirty = false;
-
+	Shader *shader = this->shader( );
 	glUseProgram( shader->program() );
 
 	glEnable( GL_TEXTURE_2D );
@@ -1031,7 +1029,7 @@ void ImageGadget::renderTiles() const
 		GLuint lutTextureUnit = shader->uniformParameter( "lutTexture" )->textureUnit;
 		glUniform1i( shader->uniformParameter( "lutTexture" )->location, lutTextureUnit );
 		glActiveTexture( GL_TEXTURE0 + lutTextureUnit );
-		glBindTexture( GL_TEXTURE_3D, lutTextureID );
+		glBindTexture( GL_TEXTURE_3D, m_lut3dTextureID );
 
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

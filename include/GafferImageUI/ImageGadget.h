@@ -193,12 +193,10 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		GafferImage::ImageProcessorPtr m_displayTransform;
 		OpenColorIO::ConstTransformRcPtr m_gpuOcioTransform;
 
-		IECoreGL::Shader *shader( bool dirty, const OpenColorIO::ConstTransformRcPtr& transform, GLuint &lut3d_textureID ) const;
+		IECoreGL::Shader *shader() const;
 		mutable GLuint m_lut3dTextureID;
 		mutable IECoreGL::ShaderPtr m_shader;
-
 		mutable bool m_shaderDirty;
-
 
 		bool m_useGPU;
 		bool m_labelsVisible;
