@@ -173,7 +173,9 @@ void ImageGadget::setImage( GafferImage::ImagePlugPtr image )
 
 	// IMPORTANT : This DeepState node must be the first node in the processing chain.  Otherwise, we
 	// would not be able to share hashes with the DeepState node at the beginning of the ImageSampler
-	// also used by ImageView
+	// also used by ImageView.
+	/// \todo This is fragile. If we removed all the nodes from ImageGadget we would no longer need to
+	/// worry about this sort of thing.
 	m_deepStateNode->inPlug()->setInput( m_image );
 
 	if( Gaffer::Node *node = const_cast<Gaffer::Node *>( image->node() ) )
@@ -715,6 +717,12 @@ void ImageGadget::updateTiles()
 		// The background task is only passed m_image as the subject, which means edits to the internal
 		// network won't cancel it.  This means it is only safe to edit the internal network here,
 		// where we have already checked above that m_tilesTask->status() is not running.
+		/// \todo This is too error prone. Perhaps it was a mistake to have a Gadget own nodes in the first place.
+		/// Generally Gadgets and Widgets observe and/or edit the node graph, but are not part of it.
+		/// An alternative approach would be to move all these nodes back to ImageView, and then just have
+		/// ImageGadget introspect the last node(s) in the chain to see if they can be implemented via the
+		/// GPU path. ImageGadget could perhaps provide a utility that provides a bundle of grade/clamp/displayTransform
+		/// that it guarantees can be introspected.
 		m_clampNode->enabledPlug()->setValue( m_clipping );
 		const float m = pow( 2.0f, m_exposure );
 		m_gradeNode->multiplyPlug()->setValue( Color4f( m, m, m, 1.0f ) );
