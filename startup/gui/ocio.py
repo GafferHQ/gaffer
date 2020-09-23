@@ -95,7 +95,6 @@ def __plugSet( plug ) :
 		return
 
 	__setDisplayTransform()
-	__updateDefaultDisplayTransforms()
 
 preferences.plugSetSignal().connect( __plugSet, scoped = False )
 
@@ -117,24 +116,10 @@ for name in config.getViews( defaultDisplay ) :
 # and register a special "Default" display transform which tracks the
 # global settings from the preferences
 
-__defaultDisplayTransforms = []
-
-def __updateDefaultDisplayTransforms() :
-
-	view = preferences["displayColorSpace"]["view"].getValue()
-	for node in __defaultDisplayTransforms :
-		node["view"].setValue( view )
-
 def __defaultDisplayTransformCreator() :
 
-	result = GafferImage.DisplayTransform()
-	result["channels"].setValue( "[RGB] *.[RGB]" )
-	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
-	result["display"].setValue( defaultDisplay )
-	result["view"].setValue( config.getDefaultView( defaultDisplay ) )
-
-	__defaultDisplayTransforms.append( result )
-	__updateDefaultDisplayTransforms()
+	result = __displayTransformCreator( "" )
+	result["view"].setInput( preferences["displayColorSpace"]["view"] )
 
 	return result
 
