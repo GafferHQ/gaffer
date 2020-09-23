@@ -393,23 +393,13 @@ if targetAppVersion and "install" in sys.argv :
 # figure out the lib suffixes
 ##########################################################################
 
-compilerVersionSplit = compilerVersion.split( "." )
-# figure out the suffix for boost libraries
-boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
-boostVersionSuffix = "-mt-" + boostVersion.replace( ".", "_" )
-while boostVersionSuffix.endswith( "_0" ) :
-	boostVersionSuffix = boostVersionSuffix[:-2]
-
-OIIO_LIB_SUFFIX = "-%s" % oiioVersion
-OCIO_LIB_SUFFIX = "-%s" % ocioVersion
-OSL_LIB_SUFFIX = "-%s" % oslVersion
-
-BOOST_LIB_SUFFIX = "-" + compiler + compilerVersionSplit[0] + compilerVersionSplit[1] + boostVersionSuffix
-
-OPENEXR_LIB_SUFFIX = "-" + exrVersion
-
-CORTEX_LIB_SUFFIX = "-" + cortexCompatibilityVersion
-CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexCompatibilityVersion + "-python" + pythonVersion
+OPENEXR_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenEXR", exrVersion )
+OIIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenImageIO", oiioVersion )
+OCIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenColorIO", ocioVersion )
+OSL_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenShadingLanguage", oslVersion )
+BOOST_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "boost", boostVersion, { "compiler" : compiler, "compilerVersion" : compilerVersion } )
+CORTEX_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "cortex", cortexCompatibilityVersion )
+CORTEX_PYTHON_LIB_SUFFIX = CORTEX_LIB_SUFFIX + "-python" + pythonVersion
 
 os.environ["PATH"] = os.path.join( pythonReg["location"], compiler, compilerVersion, "bin" ) + ":" + os.environ["PATH"]
 os.environ["PYTHONHOME"] = os.path.join( pythonReg["location"], compiler, compilerVersion )
