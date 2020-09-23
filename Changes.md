@@ -1,6 +1,11 @@
 0.58.x.x (relative to 0.58.2.0)
 ========
 
+Improvements
+------------
+
+- Preferences : Added support for OpenColorIO context variables.
+
 Fixes
 -----
 

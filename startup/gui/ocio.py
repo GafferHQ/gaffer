@@ -57,6 +57,7 @@ defaultDisplay = config.getDefaultDisplay()
 preferences = application.root()["preferences"]
 preferences["displayColorSpace"] = Gaffer.Plug()
 preferences["displayColorSpace"]["view"] = Gaffer.StringPlug( defaultValue = config.getDefaultView( defaultDisplay ) )
+preferences["displayColorSpace"]["context"] = Gaffer.CompoundDataPlug()
 
 # configure ui for preferences plugs
 
@@ -64,9 +65,14 @@ Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "plugValueWidge
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section", "Display Color Space", persistent = False )
 
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent = False )
-
 for view in config.getViews( defaultDisplay ) :
 	Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "preset:" + view, view, persistent = False )
+
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:section", "OCIO Context", persistent = False )
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section:OCIO Context:collapsed", False, persistent = False )
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter" )
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:customWidget:addButton:index", -1 )
 
 # update the display transform from the plugs
 
@@ -76,7 +82,13 @@ def __setDisplayTransform() :
 	d.setInputColorSpaceName( OCIO.Constants.ROLE_SCENE_LINEAR )
 	d.setDisplay( defaultDisplay )
 	d.setView( preferences["displayColorSpace"]["view"].getValue() )
-	processor = config.getProcessor( d )
+
+	context = config.getCurrentContext().createEditableCopy()
+	for variable in preferences["displayColorSpace"]["context"] :
+		if variable["enabled"].getValue() :
+			context.setStringVar( variable["name"].getValue(), variable["value"].getValue() )
+
+	processor = config.getProcessor( d, context = context )
 
 	def f( c ) :
 
@@ -107,6 +119,10 @@ def __displayTransformCreator( name ) :
 	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
 	result["display"].setValue( defaultDisplay )
 	result["view"].setValue( name )
+
+	for plug in preferences["displayColorSpace"]["context"] :
+		result["context"].addChild( plug.createCounterpart( plug.getName(), plug.Direction.In ) )
+	result["context"].setInput( preferences["displayColorSpace"]["context"] )
 
 	return result
 
