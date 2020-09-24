@@ -100,6 +100,9 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			"fileFormat" : IECore.StringData( "openexr" ),
 			"dataType" : IECore.StringData( "float" ),
 		} )
+		if hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206 :
+			expectedMetadata['oiio:subimages'] = IECore.IntData( 1 )
+
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
 
 		channelNames = n["out"]["channelNames"].getValue()
