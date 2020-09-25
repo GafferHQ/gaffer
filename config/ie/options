@@ -312,6 +312,7 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "PyOpenGL", "3" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, "noarch" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "Qt.py", qtPyVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "six", os.environ["SIX_VERSION"] ),
 
 ]
 

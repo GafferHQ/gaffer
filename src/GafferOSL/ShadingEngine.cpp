@@ -636,7 +636,7 @@ struct ShadingContextWrapper
 {
 
 	ShadingContextWrapper()
-		:	shadingContext( ::shadingSystem()->get_context() )
+		:	shadingContext( ::shadingSystem()->get_context( /* threadInfo */ nullptr ) )
 	{
 	}
 
