@@ -822,14 +822,17 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.render()
 
+		worldToCameraKey = "worldtocamera"
+		if hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206 :
+			worldToCameraKey = "worldToCamera"
 
 		for i in range( 3 ):
 			image = IECoreImage.ImageReader( self.temporaryDirectory() + "/beauty%i.exr"%i ).read()
-			self.assertEqual( image.blindData()["worldtocamera"].value,
+			self.assertEqual( image.blindData()[worldToCameraKey].value,
 				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
 
 		image = IECoreImage.ImageReader( self.temporaryDirectory() + "/diffuse2.exr" ).read()
-		self.assertEqual( image.blindData()["worldtocamera"].value,
+		self.assertEqual( image.blindData()[worldToCameraKey].value,
 			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
 
 	def testCameraMesh( self ) :
