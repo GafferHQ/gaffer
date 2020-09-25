@@ -271,7 +271,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			self.assertTrue( display.getDriver().isSame( driversCreated[0][0] ) )
 
 			# Ensure all the output plugs have been dirtied
-			expectedDirty = { "__driverCount", "out" }.union( { c.getName() for c in display["out"].children() } )
+			expectedDirty = { "__driverCount", "__channelDataCount", "out" }.union( { c.getName() for c in display["out"].children() } )
 			self.assertEqual( expectedDirty, set( e[0].getName() for e in dirtiedPlugs ) )
 
 			del dirtiedPlugs[:]
