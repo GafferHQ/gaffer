@@ -193,10 +193,11 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		GafferImage::ImageProcessorPtr m_displayTransform;
 		OpenColorIO::ConstTransformRcPtr m_gpuOcioTransform;
 
-		IECoreGL::Shader *shader() const;
-		mutable GLuint m_lut3dTextureID;
-		mutable IECoreGL::ShaderPtr m_shader;
-		mutable bool m_shaderDirty;
+		IE_CORE_FORWARDDECLARE( TileShader ); /// \todo Move to rendering section below
+		TileShader *shader() const;  /// \todo Move to rendering section below
+		GLuint m_unused; /// \todo Remove
+		mutable TileShaderPtr m_shader; /// \todo Move to rendering section below
+		mutable bool m_shaderDirty; /// \todo Move to rendering section below
 
 		bool m_useGPU;
 		bool m_labelsVisible;
