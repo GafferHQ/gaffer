@@ -1,3 +1,10 @@
+0.58.x.x (relative to 0.58.2.0)
+
+Fixes
+-----
+
+- Node Editor : Fix bug in section decoration when a plug was set to its user default.
+
 0.58.2.0 (relative to 0.58.1.0)
 ========
 
