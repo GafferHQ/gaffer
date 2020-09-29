@@ -613,20 +613,25 @@ GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugVal
 
 class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
 
-		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
-		if "enabled" in plug and rowPlug != rowPlug.parent().defaultRow() :
+		enabledPlugs = [ p["enabled"] for p in plugs if "enabled" in p ]
+		valuePlugs = [ p["value"] for p in plugs if "value" in p ]
+
+		assert( len(enabledPlugs) == len(valuePlugs) )
+
+		rowPlug = ( next( iter( plugs ) ) ).ancestor( Gaffer.Spreadsheet.RowPlug )
+		if enabledPlugs and rowPlug != rowPlug.parent().defaultRow() :
 			enabledPlugValueWidget = GafferUI.BoolPlugValueWidget(
-				plug["enabled"],
+				enabledPlugs,
 				displayMode=GafferUI.BoolWidget.DisplayMode.Switch
 			)
 			self.__row.append( enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
 
-		plugValueWidget = self.__createValueWidget( plug["value"] )
+		plugValueWidget = self.__createValueWidget( valuePlugs )
 
 		# Apply some fixed widths for some widgets, otherwise they're
 		# a bit too eager to grow. \todo Should we change the underlying
@@ -635,12 +640,12 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__row.append( plugValueWidget )
 
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
 	def childPlugValueWidget( self, childPlug ) :
 
 		for widget in self.__row :
-			if widget.getPlug() == childPlug :
+			if childPlug in widget.getPlugs() :
 				return widget
 
 		return None
@@ -650,27 +655,32 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		cls.__plugValueWidgetCreators[plugType] = plugValueWidgetCreator
 
-	def __createValueWidget( self, plug ) :
+	def __createValueWidget( self, plugs ) :
 
 		creator = self.__plugValueWidgetCreators.get(
-			plug.__class__,
+			next( iter( plugs ) ).__class__,
 			GafferUI.PlugValueWidget.create
 		)
 
-		w = creator( plug )
+		w = creator( plugs )
 		assert( isinstance( w, GafferUI.PlugValueWidget ) )
 		return w
 
 	__plugValueWidgetCreators = {}
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
-		if "enabled" in self.getPlug() :
-			enabled = False
-			with self.getContext() :
-				with IECore.IgnoredExceptions( Exception ) :
-					enabled = self.getPlug()["enabled"].getValue()
-			self.__row[-1].setEnabled( enabled )
+		# TODO Properly support multiple plugs
+
+		plugs = self.getPlugs()
+		if len( plugs ) == 1 :
+			plug = next( iter( self.getPlugs() ) )
+			if "enabled" in plug :
+				enabled = False
+				with self.getContext() :
+					with IECore.IgnoredExceptions( Exception ) :
+						enabled = plug["enabled"].getValue()
+				self.__row[-1].setEnabled( enabled )
 
 	__numericFieldWidth = 60
 
@@ -683,7 +693,7 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 				widget._qtWidget().setFixedWidth( cls.__numericFieldWidth )
 				widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
 
-			for childPlug in Gaffer.Plug.Range( widget.getPlug() ) :
+			for childPlug in Gaffer.Plug.Range( next( iter( widget.getPlugs() ) ) ) :
 				childWidget = widget.childPlugValueWidget( childPlug )
 				if childWidget is not None :
 					walk( childWidget )
@@ -763,7 +773,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		tableView.setEditTriggers( tableView.NoEditTriggers )
 		tableView.setSelectionMode( QtWidgets.QAbstractItemView.ExtendedSelection )
-		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 
 		# Drawing
 
@@ -780,10 +791,28 @@ class _PlugTableView( GafferUI.Widget ) :
 			QtWidgets.QSizePolicy.Fixed if mode == self.Mode.Defaults else QtWidgets.QSizePolicy.Maximum,
 		)
 
+		# Selection changed signalling
+
+		tableView.selectionModel().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self.__selectionChangedSignal = GafferUI.WidgetSignal()
+
+		# Keys
+
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+
+	def selectionChangedSignal( self ) :
+
+		return self.__selectionChangedSignal
+
 	def plugAt( self, position ) :
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
 		return self._qtWidget().model().plugForIndex( index )
+
+	def selectedPlugs( self ) :
+
+		selection = self._qtWidget().selectionModel().selectedIndexes()
+		return self._qtWidget().model().plugsForIndices( selection )
 
 	def editPlug( self, plug, scrollTo = True ) :
 
@@ -819,6 +848,18 @@ class _PlugTableView( GafferUI.Widget ) :
 	def getVisibleSection( self ) :
 
 		return self.__visibleSection
+
+	def __keyPress( self, widget, event ) :
+
+		if event.key == "Return" :
+			self.__editSelection()
+			return True
+
+		return False
+
+	def __selectionChanged( self, selected, deselected ) :
+
+		self.__selectionChangedSignal( self )
 
 	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
 
@@ -958,22 +999,59 @@ class _PlugTableView( GafferUI.Widget ) :
 				# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
 				# and all connected client code.
 				self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
-				self.__plugMenu = GafferUI.Menu(
-					self.__menuPlugValueWidget._popupMenuDefinition()
-				)
+				definition = self.__menuPlugValueWidget._popupMenuDefinition()
+				self.__appendPlugContextMenu( definition )
+				self.__plugMenu = GafferUI.Menu( definition )
 				self.__plugMenu.popup()
 
 			return True
 
-		elif event.buttons == event.Buttons.Left :
+		return False
+
+	def __buttonDoubleClick( self, widget, event ) :
+
+		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+		plug = self._qtWidget().model().plugForIndex( index )
+		if plug is None :
+			return False
+
+		if event.buttons == event.Buttons.Left :
 
 			valuePlug = plug["value"] if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug
-			if not isinstance( valuePlug, Gaffer.BoolPlug ) :
+			if isinstance( valuePlug, Gaffer.BoolPlug ) :
+				valuePlug.setValue( not valuePlug.getValue() )
+			else :
 				self.editPlug( plug, scrollTo = False )
 
 			return True
 
 		return False
+
+	def __appendPlugContextMenu( self, definition ) :
+
+		selectedPlugs = self.selectedPlugs()
+
+		definition.prepend( "/Edit divider", { "divider" : True } )
+
+		definition.prepend( "/Edit Selection", {
+			"active" : self.__canMultiEdit( selectedPlugs ),
+			"command" : Gaffer.WeakMethod( self.__editSelection )
+		} )
+
+	@staticmethod
+	def __canMultiEdit( plugs ) :
+
+		return sole( [ type(p["value"]) for p in plugs ] ) is not None
+
+	def __editSelection( self ) :
+
+		selectedPlugs = self.selectedPlugs()
+
+		if not self.__canMultiEdit( selectedPlugs ) :
+			raise RuntimeError( "Can't multi-edit selection as it contains mixed plug types" )
+
+		pos = GafferUI.Widget.mousePosition()
+		_EditWindow.popupEditor( selectedPlugs, imath.Box2i( pos, pos ) )
 
 	def __headerButtonPress( self, header, event ) :
 
@@ -1116,6 +1194,10 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		else :
 			return row["cells"][index.column()]
 
+	def plugsForIndices( self, modelIndexList ) :
+
+		return [ self.plugForIndex( i ) for i in modelIndexList ]
+
 	def valuePlugForIndex( self, index ) :
 
 		plug = self.plugForIndex( index )
@@ -1154,6 +1236,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				return QtCore.QModelIndex()
 
 		return self.index( rowIndex, columnIndex )
+
 
 	# Overrides for methods inherited from QAbstractTableModel
 	# --------------------------------------------------------
@@ -1215,8 +1298,8 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		if not Gaffer.MetadataAlgo.readOnly( plug ) :
 			result |= QtCore.Qt.ItemIsEditable
-			if isinstance( plug, Gaffer.BoolPlug ) :
-				result |= QtCore.Qt.ItemIsUserCheckable
+			#if isinstance( plug, Gaffer.BoolPlug ) :
+			#	result |= QtCore.Qt.ItemIsUserCheckable
 
 		return result
 
@@ -1441,15 +1524,18 @@ class _EditWindow( GafferUI.Window ) :
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 	@classmethod
-	def popupEditor( cls, plug, plugBound ) :
+	def popupEditor( cls, plugOrPlugs, plugBound ) :
 
-		plugValueWidget = GafferUI.PlugValueWidget.create( plug )
+		if not isinstance( plugOrPlugs, ( tuple, list ) ) :
+			plugOrPlugs = [ plugOrPlugs ]
+
+		plugValueWidget = GafferUI.PlugValueWidget.create( plugOrPlugs )
 		cls.__currentWindow = _EditWindow( plugValueWidget )
 
 		if isinstance( plugValueWidget, _CellPlugValueWidget ) :
-			valuePlugValueWidget = plugValueWidget.childPlugValueWidget( plug["value"] )
+			valuePlugValueWidget = plugValueWidget.childPlugValueWidget( plugOrPlugs[0]["value"] )
 			if isinstance( valuePlugValueWidget, GafferUI.PresetsPlugValueWidget ) :
-				if not Gaffer.Metadata.value( valuePlugValueWidget.getPlug(), "presetsPlugValueWidget:isCustom" ) :
+				if not Gaffer.Metadata.value( next( iter( valuePlugValueWidget.getPlugs() ) ), "presetsPlugValueWidget:isCustom" ) :
 					valuePlugValueWidget.menu().popup()
 					return
 
@@ -1504,7 +1590,7 @@ class _EditWindow( GafferUI.Window ) :
 		if widget is not None and widgetUsable( widget ) :
 			return widget
 
-		for childPlug in Gaffer.Plug.Range( plugValueWidget.getPlug() ) :
+		for childPlug in Gaffer.Plug.Range( next( iter( plugValueWidget.getPlugs() ) ) ) :
 			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
 			if childWidget is not None :
 				childTextWidget = cls.__textWidget( childWidget )
@@ -2302,3 +2388,17 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 	)
 
 GafferUI.NodeEditor.toolMenuSignal().connect( __nodeEditorToolMenu, scoped = False )
+
+# Utility in the spirit of `all()` and `any()`. If all values in `sequence`
+# are equal, returns that value, otherwise returns `None`.
+## \todo Copied from Gaffer.PlugValueWidget. Is there somewhere more sensible we can put this? Cortex perhaps?
+def sole( sequence ) :
+
+	result = None
+	for i, v in enumerate( sequence ) :
+		if i == 0 :
+			result = v
+		elif v != result :
+			return None
+
+	return result
