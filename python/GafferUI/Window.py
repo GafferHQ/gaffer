@@ -39,6 +39,7 @@ import six
 import sys
 import warnings
 import imath
+import functools
 
 import IECore
 
@@ -211,7 +212,13 @@ class Window( GafferUI.ContainerWidget ) :
 			childWindow._applyVisibility()
 
 		if removeOnClose :
-			childWindow.closedSignal().connect( lambda w : w.parent().removeChild( w ), scoped = False )
+			# Delay removal of the window reference to an idle callback
+			# to avoid issues where Qt destroy event is called when
+			# the object has already been garbage collected
+			childWindow.closedSignal().connect(
+				lambda w : GafferUI.EventLoop.addIdleCallback( functools.partial( w.parent().removeChild, w ) ),
+				scoped = False
+			)
 
 	## Returns a list of all the windows parented to this one.
 	def childWindows( self ) :
