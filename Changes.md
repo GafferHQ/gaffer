@@ -291,6 +291,8 @@ Build
   - Fixed bug when the selected location doesn't exist in the input scene.
 - Attributes : Fixed bug that could prevent interactive updates when the `global` plug was on.
 - CollectScenes : Fixed childNames hashing bug.
+- SceneWriter : Fixed error caused by computed filenames with a dependency on time. This
+  makes it possible to write to a sequence of cache files rather than one monolithic file.
 - GafferArnold : Added missing GafferOSL Python bindings import.
 
 0.57.7.1 (relative to 0.57.7.0)
