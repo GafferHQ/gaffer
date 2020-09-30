@@ -76,8 +76,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 
 			if messages is not None :
 				messageWidget = GafferUI.MessageWidget()
-				for m in messages :
-					messageWidget.messageHandler().handle( m.level, m.context, m.message )
+				messageWidget.setMessages( messages )
 
 			if details is not None :
 				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
