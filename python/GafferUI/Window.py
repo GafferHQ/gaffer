@@ -211,7 +211,14 @@ class Window( GafferUI.ContainerWidget ) :
 			childWindow._applyVisibility()
 
 		if removeOnClose :
-			childWindow.closedSignal().connect( lambda w : w.parent().removeChild( w ), scoped = False )
+
+			def remove( childWindow ) :
+
+				childWindow.parent().removeChild( childWindow )
+				assert( not childWindow.visible() )
+				GafferUI.WidgetAlgo.keepUntilIdle( childWindow )
+
+			childWindow.closedSignal().connect( remove, scoped = False )
 
 	## Returns a list of all the windows parented to this one.
 	def childWindows( self ) :
