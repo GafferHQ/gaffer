@@ -65,6 +65,7 @@ Fixes
   - Fixed handling of interpolation for normals.
   - Fixed writing of indexed primitive variables to non-indexed USD attributes.
   - Fixed handling of GeometricInterpretation/Role.
+- TransformTools : Fixed bug finding existing nodes inside EditScopes.
 - Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
 - PlugAlgo/BoxIO : Fixed bug handling nested compound plugs.
 - Resample : Fixed hash of intermediate `deep` plug.

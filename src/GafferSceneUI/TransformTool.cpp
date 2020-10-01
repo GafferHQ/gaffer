@@ -272,6 +272,13 @@ TransformTool::Selection::Selection(
 	}
 }
 
+void TransformTool::Selection::initFromHistory( const GafferScene::SceneAlgo::History *history )
+{
+	m_upstreamScene = history->scene;
+	m_upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	m_upstreamContext = history->context;
+}
+
 void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::History *history )
 {
 	// Check for SceneNode and return if there isn't one or it is disabled.
@@ -368,9 +375,7 @@ void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::
 	// We found the TransformPlug and the upstream scene which authors the transform.
 	// Recording this will terminate the search in `initWalk()`.
 
-	m_upstreamScene = history->scene;
-	m_upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	m_upstreamContext = history->context;
+	initFromHistory( history );
 
 	// Now figure out if we're allowed to edit the transform, and set ourselves up
 	// for editing if we are.
@@ -405,57 +410,126 @@ void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::
 	m_transformEdit = transformEdit;
 }
 
-void TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *history, bool &editScopeFound )
+void TransformTool::Selection::initFromEditScope( const GafferScene::SceneAlgo::History *history )
 {
-	// See if we're at the EditScope. We look for this even after
-	// `initFromSceneNode()` has succeeded, so we can differentiate between
-	// the EditScope not being in the history at all, or it being
-	// overridden downstream.
-	Node *node = history->scene->node();
-	if( !editScopeFound && node == m_editScope && history->scene == m_editScope->outPlug() )
-	{
-		editScopeFound = true;
-		if( !m_upstreamScene )
-		{
-			m_upstreamScene = history->scene;
-			m_upstreamPath = history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			m_upstreamContext = history->context;
-			m_transformEdit = EditScopeAlgo::acquireTransformEdit( m_editScope.get(), m_upstreamPath, /* createIfNecessary = */ false );
-			Context::Scope scopedContext( history->context.get() );
-			if( m_editScope->enabledPlug()->getValue() )
-			{
-				m_editable = true;
-			}
-			else
-			{
-				m_warning = "EditScope disabled";
-			}
+	initFromHistory( history );
 
-			ScenePlug::ScenePath spacePath = m_upstreamPath;
-			spacePath.pop_back();
-			m_transformSpace = m_upstreamScene->fullTransform( spacePath );
-		}
-		else
-		{
-			m_editable = false;
-			m_warning = "EditScope overridden downstream";
-		}
+	Context::Scope scopedContext( m_upstreamContext.get() );
+
+	if( !m_editScope->enabledPlug()->getValue() )
+	{
+		m_warning = "EditScope disabled";
 		return;
 	}
 
-	// See if there's an editable SceneNode here. We only
-	// look for these if we haven't already found the node
-	// that authored the transform.
+	m_editable = true;
+
+	m_transformEdit = EditScopeAlgo::acquireTransformEdit( m_editScope.get(), m_upstreamPath, /* createIfNeccesary = */ false );
+
+	ScenePlug::ScenePath spacePath = m_upstreamPath;
+	spacePath.pop_back();
+	m_transformSpace = m_upstreamScene->fullTransform( spacePath );
+}
+
+void TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *history, bool &editScopeFound, const GafferScene::SceneAlgo::History *editScopeOutHistory )
+{
+	// Walk the history looking for a suitable node to edit.
+	// Transform tools only support editing the last node to author the targets
+	// transform (otherwise manipulators may be incorrectly placed or the
+	// transform overwritten).
+
+	Node *node = history->scene->node();
+
 	if( !m_upstreamScene )
 	{
+		// First, check for a supported node in this history entry
 		initFromSceneNode( history );
+
+		// If we found a node to edit here and the user has requested a
+		// specific scope, check if the edit is in it.
+		if( m_upstreamScene && m_editScope )
+		{
+			editScopeFound = m_upstreamScene->ancestor<EditScope>() == m_editScope;
+		}
 	}
 
-	// Keep looking upstream.
+	// If the user has requested an edit scope, and we've not found it yet,
+	// check this entry.  We do this regardless of whether we already have an
+	// edit so we can differentiate between a missing edit scope and one that
+	// is overridden downstream.
+	if( m_editScope && !editScopeFound )
+	{
+		EditScope *editScope = runTimeCast<EditScope>( node );
+
+		if( editScope && editScope == m_editScope )
+		{
+			if( m_upstreamScene )
+			{
+				// If we're here with an existing edit, then it means it is
+				// downstream of the requested scope.
+				editScopeFound = true;
+
+				m_warning = "EditScope overridden downstream";
+				m_editable = false;
+			}
+			else if( history->scene == editScope->outPlug() )
+			{
+				// We only consider using an EditScope to author new edits on
+				// the way in (from the Node Graph perspective). This allows nodes
+				// inside to take precedence, however we need to use the
+				// history from the scopes output, so keep track of it for the
+				// rest of the walk.
+				editScopeOutHistory = history;
+			}
+			else if( history->scene == editScope->inPlug() )
+			{
+				editScopeFound = true;
+
+				if( editScopeOutHistory )
+				{
+					initFromEditScope( editScopeOutHistory );
+				}
+				else
+				{
+					// This can happen if the viewed node is inside the chosen EditScope
+					m_warning = "EditScope output not in history";
+					m_editable = false;
+				}
+			}
+		}
+	}
+
+	if( initRequirementsSatisfied( editScopeFound ) )
+	{
+		return;
+	}
+
 	for( const auto &p : history->predecessors )
 	{
-		initWalk( p.get(), editScopeFound );
+		initWalk( p.get(), editScopeFound, editScopeOutHistory );
+
+		if( initRequirementsSatisfied( editScopeFound ) )
+		{
+			return;
+		}
 	}
+
+	// If we get to here, we've exhausted all upstream history, without finding
+	// the input to the chosen scope. This can happen if the object is created
+	// inside a nested edit scope - as we can't use the creation node as it is
+	// in another scope. The requested scope is still valid though.
+	if( editScopeOutHistory && history->scene == editScopeOutHistory->scene )
+	{
+		editScopeFound = true;
+		initFromEditScope( editScopeOutHistory );
+	}
+}
+
+bool TransformTool::Selection::initRequirementsSatisfied( bool editScopeFound )
+{
+	// If we don't have an EditScope specified, having a node to edit is enough.
+	// If we do, we need to make sure we have found it.
+	return ( m_upstreamScene && !m_editScope ) || ( m_editScope && editScopeFound );
 }
 
 const GafferScene::ScenePlug *TransformTool::Selection::scene() const

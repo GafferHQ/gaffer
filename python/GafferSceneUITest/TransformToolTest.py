@@ -161,6 +161,59 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection.warning(), "" )
 		self.assertEqual( selection.upstreamScene(), editScope["out"] )
 
+		# Ensure that we use any existing node within an EditScope in preference
+		# to creating a new tweak node
+
+		plane2 = GafferScene.Plane()
+		plane2["name"].setValue( "otherPlane" )
+		editScope["plane2"] = plane2
+
+		editScope["parent"] = GafferScene.Parent()
+		editScope["parent"]["parent"].setValue( "/" )
+		editScope["parent"]["in"].setInput( editScope["BoxOut"]["in"].getInput() )
+		editScope["parent"]["children"][0].setInput( plane2["out"] )
+		editScope["BoxOut"]["in"].setInput( editScope["parent"]["out"] )
+
+		selection = GafferSceneUI.TransformTool.Selection( transform["out"], "/otherPlane", Gaffer.Context(), editScope )
+
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.warning(), "" )
+		self.assertEqual( selection.upstreamScene(), plane2["out"] )
+		self.assertEqual( selection.editScope(), editScope )
+		self.assertEqual( selection.editTarget(), plane2["transform"] )
+
+		# Ensure we handle being inside the chosen edit scope
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["parent"]["out"], "/plane", Gaffer.Context(), editScope )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "EditScope output not in history" )
+
+	def testNestedEditScopes( self ) :
+
+		outerScope = Gaffer.EditScope()
+		outerScope.setup( GafferScene.ScenePlug() )
+		innerScope = Gaffer.EditScope()
+		outerScope["Inner"] = innerScope
+		innerScope.setup( outerScope["BoxIn"]["out"] )
+		innerScope["in"].setInput( outerScope["BoxIn"]["out"] )
+		innerScope["parent"] = GafferScene.Parent()
+		innerScope["parent"]["parent"].setValue( "/" )
+		innerScope["parent"]["in"].setInput( innerScope["BoxIn"]["out"] )
+		innerScope["BoxOut"]["in"].setInput( innerScope["parent"]["out"] )
+		innerScope["plane"] = GafferScene.Plane()
+		innerScope["parent"]["children"][0].setInput( innerScope["plane"]["out"] )
+		outerScope["BoxOut"]["in"].setInput( innerScope["out"] )
+
+		selection = GafferSceneUI.TransformTool.Selection( outerScope["out"], "/plane", Gaffer.Context(), innerScope )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.editTarget(), innerScope["plane"]["transform"] )
+		self.assertEqual( selection.editScope(), innerScope )
+
+		selection = GafferSceneUI.TransformTool.Selection( outerScope["out"], "/plane", Gaffer.Context(), outerScope )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.editTarget(), outerScope )
+		self.assertEqual( selection.editScope(), outerScope )
+
 	def testSceneReaderSelectionEditability( self ) :
 
 		sceneReader = GafferScene.SceneReader()

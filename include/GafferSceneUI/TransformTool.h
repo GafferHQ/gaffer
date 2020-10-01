@@ -169,8 +169,16 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 			private :
 
+				void initFromHistory( const GafferScene::SceneAlgo::History *history );
 				void initFromSceneNode( const GafferScene::SceneAlgo::History *history );
-				void initWalk( const GafferScene::SceneAlgo::History *history, bool &editScopeFound );
+				void initFromEditScope( const GafferScene::SceneAlgo::History *history );
+				void initWalk(
+					const GafferScene::SceneAlgo::History *history,
+					bool &editScopeFound,
+					const GafferScene::SceneAlgo::History *editScopeOutHistory = nullptr
+				);
+				bool initRequirementsSatisfied( bool editScopeFound );
+
 				void throwIfNotEditable() const;
 				Imath::M44f transformToLocalSpace() const;
 
