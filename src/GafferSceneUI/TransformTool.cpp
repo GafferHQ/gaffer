@@ -104,20 +104,6 @@ int filterResult( const FilterPlug *filter, const ScenePlug *scene )
 	return filter->getValue();
 }
 
-bool ancestorMakesChildNodesReadOnly( const Node *node )
-{
-	node = node->parent<Node>();
-	while( node )
-	{
-		if( MetadataAlgo::getChildNodesAreReadOnly( node ) )
-		{
-			return true;
-		}
-		node = node->parent<Node>();
-	}
-	return false;
-}
-
 // Similar to `plug->source()`, but able to traverse through
 // Spreadsheet outputs to find the appropriate input row.
 V3fPlug *spreadsheetAwareSource( V3fPlug *plug, std::string &failureReason )
@@ -400,17 +386,31 @@ void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::
 		return;
 	}
 
-	if(
-		ancestorMakesChildNodesReadOnly( transformEdit.translate->node() ) ||
-		ancestorMakesChildNodesReadOnly( transformEdit.rotate->node() ) ||
-		ancestorMakesChildNodesReadOnly( transformEdit.scale->node() ) ||
-		ancestorMakesChildNodesReadOnly( transformEdit.pivot->node() )
-	)
+	const auto readOnlyAncestors = {
+		MetadataAlgo::readOnlyReason( transformEdit.translate.get() ),
+		MetadataAlgo::readOnlyReason( transformEdit.rotate.get() ),
+		MetadataAlgo::readOnlyReason( transformEdit.scale.get() ),
+		MetadataAlgo::readOnlyReason( transformEdit.pivot.get() ),
+	};
+
+	for( auto graphComponent : readOnlyAncestors )
 	{
-		// Inside a Reference node or similar. Unlike a regular read-only
-		// status, the user has no chance of unlocking this node to edit it.
-		m_warning = "Transform is authored by a read-only node";
-		return;
+		// Unlike normal read-only nodes, the user won't be able to simply
+		// unlock a reference node, so we disable editing.
+		if( const Node *node = runTimeCast<const Node>( graphComponent ) )
+		{
+			if( Gaffer::MetadataAlgo::getChildNodesAreReadOnly( node ) )
+			{
+				m_warning = "Transform is locked as it is inside \"" + displayName( node ) + "\" which disallows edits to its children";
+				return;
+			}
+		}
+
+		if( graphComponent )
+		{
+			m_warning = "\"" + displayName( graphComponent ) + "\" is locked";
+			break;
+		}
 	}
 
 	m_editable = true;
@@ -426,6 +426,12 @@ void TransformTool::Selection::initFromEditScope( const GafferScene::SceneAlgo::
 	if( !m_editScope->enabledPlug()->getValue() )
 	{
 		m_warning = "The target EditScope \"" + displayName( m_editScope.get() ) + "\" is disabled";
+		return;
+	}
+
+	if( const GraphComponent *readOnlyComponent = EditScopeAlgo::transformEditReadOnlyReason( m_editScope.get(), m_upstreamPath ) )
+	{
+		m_warning = "\"" + displayName( readOnlyComponent ) + "\" is locked";
 		return;
 	}
 
@@ -1009,7 +1015,7 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 
 void TransformTool::metadataChanged( IECore::InternedString key )
 {
-	if( !MetadataAlgo::readOnlyAffectedByChange( key ) || m_handlesDirty )
+	if( !MetadataAlgo::readOnlyAffectedByChange( key ) )
 	{
 		return;
 	}
@@ -1021,10 +1027,19 @@ void TransformTool::metadataChanged( IECore::InternedString key )
 	// so that a hidden Viewer has no overhead, so we just assume the worst
 	// for now and do a more accurate analysis in `updateHandles()`.
 
-	m_handlesDirty = true;
-	view()->viewportGadget()->renderRequestSignal()(
-		view()->viewportGadget()
-	);
+	if( !m_selectionDirty )
+	{
+		m_selectionDirty = true;
+		selectionChangedSignal()( *this );
+	}
+
+	if( !m_handlesDirty )
+	{
+		m_handlesDirty = true;
+		view()->viewportGadget()->renderRequestSignal()(
+			view()->viewportGadget()
+		);
+	}
 }
 
 void TransformTool::updateSelection() const

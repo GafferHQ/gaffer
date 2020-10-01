@@ -256,6 +256,40 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		edit = selection.acquireTransformEdit()
 		self.assertTrue( editScope.isAncestorOf( edit.translate ) )
 
+		# Check readOnly is respected
+
+		plane["name"].setValue( "plane2" )
+
+		Gaffer.MetadataAlgo.setReadOnly( plane["transform"]["translate"], True )
+
+		# We still allow 'editing' of existing plugs, but the handles should take care of disabling themselves.
+		selection = GafferSceneUI.TransformTool.Selection( plane["out"], "/plane2", Gaffer.Context(), None )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.warning(), "\"Plane.transform.translate\" is locked" )
+
+		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane2", Gaffer.Context(), editScope )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "\"EditScope\" is locked" )
+		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+			self.assertIsNone( selection.acquireTransformEdit() )
+
+		Gaffer.MetadataAlgo.setReadOnly( editScope, False )
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane2", Gaffer.Context(), editScope )
+		edit = selection.acquireTransformEdit()
+
+		Gaffer.MetadataAlgo.setReadOnly( edit.translate.ancestor( Gaffer.Spreadsheet.RowsPlug ).source(), True  )
+
+		plane["name"].setValue( "plane3" )
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane3", Gaffer.Context(), editScope )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "\"EditScope.TransformEdits.edits\" is locked" )
+		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+			self.assertIsNone( selection.acquireTransformEdit() )
+
 	def testDontEditUpstreamOfReference( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -297,6 +331,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection.upstreamScene(), script["reference"]["transform"]["out"] )
 		self.assertEqual( selection.upstreamPath(), "/plane" )
 		self.assertEqual( selection.upstreamContext()["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( selection.warning(), "Transform is locked as it is inside \"reference\" which disallows edits to its children" )
 		self.assertFalse( selection.editable() )
 
 if __name__ == "__main__":
