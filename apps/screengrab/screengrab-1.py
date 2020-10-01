@@ -251,6 +251,13 @@ class screengrab( Gaffer.Application ) :
 			with open( commandFile ) as f :
 				six.exec_( compile( f.read(), commandFile, "exec" ), d, d )
 
+		# Early out if we haven't been asked to save anything (we assume
+		# something meaningful was grabbed by one of the commands above).
+
+		if not args["image"].value :
+			self.__cleanup()
+			return 0
+
 		# Select any nodes we've been asked to.
 		for name in args["selection"] :
 			script.selection().add( script.descendant( name ) )
@@ -345,9 +352,12 @@ class screengrab( Gaffer.Application ) :
 
 		# Write the image, creating a directory for it if necessary.
 
-		if args["image"].value :
-			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
-			GafferUI.WidgetAlgo.grab( widget = self.getGrabWidget(), imagePath = args["image"].value )
+		IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
+		GafferUI.WidgetAlgo.grab( widget = self.getGrabWidget(), imagePath = args["image"].value )
+
+		self.__cleanup()
+
+	def __cleanup( self ) :
 
 		# Remove the script and any reference to the grab widget up so
 		# we can shut down cleanly.
