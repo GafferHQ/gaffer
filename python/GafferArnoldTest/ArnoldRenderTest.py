@@ -1090,17 +1090,22 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testOSLShaders( self ) :
 
-		swizzle = GafferOSL.OSLShader()
-		swizzle.loadShader( "MaterialX/mx_swizzle_color_float" )
-		swizzle["parameters"]["in"].setValue( imath.Color3f( 0, 0, 1 ) )
-		swizzle["parameters"]["channels"].setValue( "b" )
+		blue = GafferOSL.OSLShader()
+		blue.loadShader( "Maths/MixColor" )
+		blue["parameters"]["a"].setValue( imath.Color3f( 0, 0, 1 ) )
 
-		pack = GafferOSL.OSLShader()
-		pack.loadShader( "MaterialX/mx_pack_color" )
-		pack["parameters"]["in1"].setInput( swizzle["out"]["out"] )
+		green = GafferOSL.OSLShader()
+		green.loadShader( "Maths/MixColor" )
+		green["parameters"]["a"].setValue( imath.Color3f( 0, 1, 0 ) )
+
+		mix = GafferOSL.OSLShader()
+		mix.loadShader( "Maths/MixColor" )
+		mix["parameters"]["a"].setInput( blue["out"]["out"] )
+		mix["parameters"]["b"].setInput( green["out"]["out"] )
+		mix["parameters"]["m"].setValue( 0.5 )
 
 		ball = GafferArnold.ArnoldShaderBall()
-		ball["shader"].setInput( pack["out"] )
+		ball["shader"].setInput( mix["out"] )
 
 		catalogue = GafferImage.Catalogue()
 
@@ -1129,7 +1134,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			handler.waitFor( 0.1 ) #Just need to let the catalogue update
 
-			self.assertEqual( self.__color4fAtUV( catalogue, imath.V2f( 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
+			self.assertEqual( self.__color4fAtUV( catalogue, imath.V2f( 0.5 ) ), imath.Color4f( 0, 0.5, 0.5, 1 ) )
 
 	def testDefaultLightsMistakesDontForceLinking( self ) :
 

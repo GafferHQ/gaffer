@@ -336,14 +336,6 @@ namespace ShaderNetworkAlgo
 
 std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const AtNode *parentNode )
 {
-	ShaderNetworkPtr networkCopy;
-	if( true ) // todo : make conditional on OSL < 1.10
-	{
-		networkCopy = shaderNetwork->copy();
-		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
-		shaderNetwork = networkCopy.get();
-	}
-
 	ShaderMap converted;
 	vector<AtNode *> result;
 	const InternedString output = shaderNetwork->getOutput().shader;

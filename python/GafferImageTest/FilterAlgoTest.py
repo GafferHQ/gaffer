@@ -71,7 +71,19 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		s = GafferImage.Sampler( redDotCentered["out"], "R", sampleRegion, GafferImage.Sampler.BoundingMode.Black )
 
-		filters = GafferImage.FilterAlgo.filterNames()
+		filters = [
+			'box', 'triangle', 'gaussian', 'sharp-gaussian', 'catmull-rom', 'blackman-harris',
+			'sinc', 'lanczos3', 'radial-lanczos3', 'mitchell', 'bspline', 'disk', 'cubic',
+			'keys', 'simon', 'rifman', 'smoothGaussian',
+		]
+		if filters != GafferImage.FilterAlgo.filterNames() :
+			print(
+				"INFO : GafferImageTest.FilterAlgoTest.testFilterDerivatives : " +
+				"Some image filters have not been tested ({}). Consider updating the reference images to account for the newly available filters.".format(
+					list(set(filters).symmetric_difference(set(GafferImage.FilterAlgo.filterNames())))
+				)
+			)
+
 		dirs = [
 			(imath.V2f(1,0), imath.V2f(0,1)),
 			(imath.V2f(5,0), imath.V2f(0,1)),

@@ -970,13 +970,9 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
-	ShaderNetworkPtr networkCopy;
-	if( true ) /// \todo Make conditional on OSL < 1.10
-	{
-		networkCopy = shaderNetwork->copy();
-		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
-		shaderNetwork = networkCopy.get();
-	}
+	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
+	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get(), OSL_VERSION );
+	shaderNetwork = networkCopy.get();
 
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
