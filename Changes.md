@@ -12,6 +12,7 @@ API
 
 - MessageWidget : `setMessages()` now also accepts messages in the format used by IECore.CapturingMessageHandler.
 - WidgetAlgo : Added `keepUntilIdle()` method.
+- OpenColorIOTransform : Added `processor()` and `processorHash()` public methods.
 
 0.58.2.0 (relative to 0.58.1.0)
 ========
