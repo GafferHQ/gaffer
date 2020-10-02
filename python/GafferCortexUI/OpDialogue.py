@@ -180,7 +180,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 			with GafferUI.Collapsible( "Details", collapsed = True ) as self.__messageCollapsible :
 
-				self.__messageWidget = GafferUI.MessageWidget()
+				self.__messageWidget = GafferUI.MessageWidget( toolbars = True )
 
 				# connect to the collapsible state change so we can increase the window
 				# size when the details pane is first shown.
