@@ -7,6 +7,7 @@ Fixes
 - Node Editor : Fix bug in section decoration when a plug was set to its user default.
 - ErrorDialogue : Fixed extremely slow display of warning and error messages. This was particularly apparent when showing errors that occurred while opening files.
 - Viewer : Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
+- UVView : Fixed a performance regression vs 0.57 when displaying many UDIM textures.
 
 API
 ---
