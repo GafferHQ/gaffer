@@ -109,7 +109,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 
 		selection = GafferSceneUI.TransformTool.Selection( plane["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope not in history" )
+		self.assertEqual( selection.warning(), "The target EditScope \"EditScope\" is not in the scene history" )
 		self.assertRaises( RuntimeError, selection.acquireTransformEdit )
 		self.assertRaises( RuntimeError, selection.transformSpace )
 		self.assertEqual( selection.editScope(), editScope )
@@ -132,7 +132,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		editScope["enabled"].setValue( False )
 		selection = GafferSceneUI.TransformTool.Selection( transform["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope disabled" )
+		self.assertEqual( selection.warning(), "The target EditScope \"EditScope\" is disabled" )
 		self.assertEqual( selection.editScope(), editScope )
 
 		editScope["enabled"].setValue( True )
@@ -150,7 +150,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 
 		selection = GafferSceneUI.TransformTool.Selection( transform["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope overridden downstream" )
+		self.assertEqual( selection.warning(), "The target EditScope \"EditScope\" is overridden downstream by \"Transform\"" )
 		self.assertEqual( selection.upstreamScene(), transform["out"] )
 
 		# Disable the downstream node and we should be back in business.
@@ -186,7 +186,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 
 		selection = GafferSceneUI.TransformTool.Selection( editScope["parent"]["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope output not in history" )
+		self.assertEqual( selection.warning(), "The output of the target EditScope \"EditScope\" is not in the scene history" )
 
 	def testNestedEditScopes( self ) :
 

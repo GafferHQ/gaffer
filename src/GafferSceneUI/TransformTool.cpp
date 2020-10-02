@@ -203,6 +203,11 @@ class HandlesGadget : public Gadget
 // TransformTool::Selection
 //////////////////////////////////////////////////////////////////////////
 
+/// \todo Work out how to avoid baking graph component names into message
+/// strings. We decided to put up with the stale name bugs here as the benefit
+/// of better informing user outweighs the (hopefully less frequent) times
+/// that the message is out of date.
+
 TransformTool::Selection::Selection()
 	:	m_editable( false )
 {
@@ -261,14 +266,16 @@ TransformTool::Selection::Selection(
 
 	if( editScope && !editScopeFound )
 	{
-		m_warning = "EditScope not in history";
+		m_warning = "The target EditScope \"" + displayName( editScope.get() ) + "\" is not in the scene history";
 		m_editable = false;
 		return;
 	}
 
 	if( m_path.size() != path.size() )
 	{
-		m_warning = "Editing parent location";
+		std::string pathString;
+		GafferScene::ScenePlug::pathToString( m_path, pathString );
+		m_warning = "Editing parent location \"" + pathString + "\"";
 	}
 }
 
@@ -418,7 +425,7 @@ void TransformTool::Selection::initFromEditScope( const GafferScene::SceneAlgo::
 
 	if( !m_editScope->enabledPlug()->getValue() )
 	{
-		m_warning = "EditScope disabled";
+		m_warning = "The target EditScope \"" + displayName( m_editScope.get() ) + "\" is disabled";
 		return;
 	}
 
@@ -469,7 +476,7 @@ void TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *
 				// downstream of the requested scope.
 				editScopeFound = true;
 
-				m_warning = "EditScope overridden downstream";
+				m_warning = "The target EditScope \"" + displayName( m_editScope.get() ) + "\" is overridden downstream by \"" + displayName( m_upstreamScene->node() ) + "\"";
 				m_editable = false;
 			}
 			else if( history->scene == editScope->outPlug() )
@@ -492,7 +499,7 @@ void TransformTool::Selection::initWalk( const GafferScene::SceneAlgo::History *
 				else
 				{
 					// This can happen if the viewed node is inside the chosen EditScope
-					m_warning = "EditScope output not in history";
+					m_warning = "The output of the target EditScope \"" + displayName( m_editScope.get() ) + "\" is not in the scene history";
 					m_editable = false;
 				}
 			}
@@ -598,7 +605,7 @@ const EditScope *TransformTool::Selection::editScope() const
 Gaffer::GraphComponent *TransformTool::Selection::editTarget() const
 {
 	throwIfNotEditable();
-	if( m_editScope )
+	if( m_editScope && !m_transformEdit )
 	{
 		return m_editScope.get();
 	}
@@ -791,6 +798,11 @@ Imath::M44f TransformTool::Selection::orientedTransform( Orientation orientation
 	result[3][2] = downstreamWorldPivot[2];
 
 	return result;
+}
+
+std::string TransformTool::Selection::displayName( const GraphComponent *component )
+{
+	return component->relativeName( component->ancestor<ScriptNode>() );
 }
 
 //////////////////////////////////////////////////////////////////////////

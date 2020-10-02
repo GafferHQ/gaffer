@@ -197,6 +197,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 				Imath::M44f m_transformSpace;
 				bool m_aimConstraint;
 
+				static std::string displayName( const GraphComponent *component );
 		};
 
 		/// Returns the current selection.
