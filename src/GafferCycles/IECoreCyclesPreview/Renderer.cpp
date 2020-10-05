@@ -4019,6 +4019,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					m_session->set_pause( m_pause );
 					return;
 				}
+				else
+				{
+					// Scene needs a full update, but because we called updateCamera()
+					// already we need to make sure to tag the camera so it does update
+					// in the later steps.
+					m_scene->camera->tag_update();
+				}
+				
 			}
 
 			while( true )
