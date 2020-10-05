@@ -160,7 +160,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 ) as self.__progressUI :
 
-			GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( imath.V2i( 1 ), preferredSize = imath.V2i( 1, 1 ) )
 
 			self.__progressIconFrame = GafferUI.Frame(
 				borderStyle = GafferUI.Frame.BorderStyle.None_,
@@ -176,7 +176,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 				}
 			)
 
-			GafferUI.Spacer( imath.V2i( 250, 1 ), parenting = { "expand"  : True } )
+			GafferUI.Spacer( imath.V2i( 250, 1 ), preferredSize = imath.V2i( 250, 1 ) )
 
 			with GafferUI.Collapsible( "Details", collapsed = True ) as self.__messageCollapsible :
 
