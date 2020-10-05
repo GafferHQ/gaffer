@@ -4165,6 +4165,20 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = device_fallback;
 			}
 
+			if( m_sessionParams.denoising.use )
+			{
+				/* Add additional denoising devices if we are rendering and denoising
+				* with different devices. */
+				m_sessionParams.device.add_denoising_devices( m_sessionParams.denoising.type );
+
+				/* Check if denoiser is supported by device. */
+				if( !( m_sessionParams.device.denoisers & m_sessionParams.denoising.type ) )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Chosen denoising is not compatible with device." );
+					m_sessionParams.denoising.use = false;
+				}
+			}
+
 			if( m_session )
 			{
 				// A trick to retain the same pointer when re-creating a session.

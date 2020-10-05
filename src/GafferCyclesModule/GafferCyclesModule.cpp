@@ -82,13 +82,15 @@ static py::list getDevices()
 		d["id"] = device.id;
 		d["num"] = device.num;
 		d["display_device"] = device.display_device;
-		//d["advanced_shading"] = device.advanced_shading;
 		d["has_half_images"] = device.has_half_images;
 		d["has_volume_decoupled"] = device.has_volume_decoupled;
+		d["has_adaptive_stop_per_sample"] = device.has_adaptive_stop_per_sample;
 		d["has_osl"] = device.has_osl;
 		d["use_split_kernel"] = device.use_split_kernel;
 		d["has_profiling"] = device.has_profiling;
 		d["cpu_threads"] = device.cpu_threads;
+		d["has_peer_memory"] = device.has_peer_memory;
+		d["denoisers"] = device.denoisers;
 
 		if( device.type == ccl::DEVICE_OPTIX )
 			py::scope().attr( "hasOptixDenoise" ) = true;
