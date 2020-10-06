@@ -402,6 +402,8 @@ ImageGadget::ImageGadget()
 	m_gradeNode = new Grade;
 	m_gradeNode->inPlug()->setInput( m_clampNode->outPlug() );
 	m_gradeNode->channelsPlug()->setValue( "*" );
+
+	m_unused2 = 0; // Keep clang happy
 }
 
 ImageGadget::~ImageGadget()
