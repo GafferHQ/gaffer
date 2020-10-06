@@ -4,7 +4,7 @@
 Improvements
 ------------
 
-- Preferences : Added support for OpenColorIO context variables.
+- Preferences : Added support for OpenColorIO context variables. These may contain references to Gaffer context variables via the standard `${variable}` syntax, but please note that such variables are only available in the Viewer and not in the rest of the UI (for instance, colour swatches and pickers).
 
 Fixes
 -----
