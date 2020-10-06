@@ -412,7 +412,21 @@ sys.path.extend( [
 os.environ["OCIO"] = os.path.join( IEEnv.Environment.rootPath(), "config", "openColorIO", "nuke-default", "config.ocio" )
 
 # we need these imported so we can run the commands to generate the documentation
-ENV_VARS_TO_IMPORT="PATH PYTHONPATH PYTHONHOME IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION SCONS_VERSION"
+ENV_VARS_TO_IMPORT = " ".join( [
+	"PATH",
+	"PYTHONPATH",
+	"PYTHONHOME",
+	"IEENV_ROOT",
+	"IEENV_DISABLE_WRAPPER_ENV_CHECK",
+	"IEENV_WORKING_PATH",
+	"IECORE_FONT_PATHS",
+	"IECOREGL_SHADER_INCLUDE_PATHS",
+	"SCONS_VERSION",
+	"DOXYGEN_VERSION",
+	"OSL_VERSION",
+	"OCIO",
+] )
+
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 
