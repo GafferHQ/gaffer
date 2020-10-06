@@ -66,6 +66,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/container/flat_map.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
@@ -76,9 +77,10 @@
 #include "tbb/partitioner.h"
 #include "tbb/spin_mutex.h"
 
-#include <memory>
-#include <thread>
 #include <functional>
+#include <memory>
+#include <sstream>
+#include <thread>
 #include <unordered_set>
 
 using namespace std;
@@ -3371,8 +3373,37 @@ class ArnoldGlobals
 			const IECore::Msg::Level level = \
 				( logmask == AI_LOG_DEBUG ) ? IECore::Msg::Level::Debug : g_ieMsgLevels[ min( severity, 3 ) ];
 
-			g_currentMessageHandler->handle( level, "Arnold", std::string( tabs, ' ' ) + msg_string );
+			std::stringstream msg;
+
+			const int flags = AiMsgGetConsoleFlags();
+			if( flags & AI_LOG_TIMESTAMP )
+			{
+				const boost::posix_time::time_duration elapsed = boost::posix_time::millisec( AiMsgUtilGetElapsedTime() );
+				msg << std::setfill( '0' );
+				msg << std::setw( 2 ) << elapsed.hours() << ":";
+				msg << std::setw( 2 ) << elapsed.minutes() << ":";
+				msg << std::setw( 2 ) << elapsed.seconds() << " ";
+			}
+			if( flags & AI_LOG_MEMORY )
+			{
+				const size_t mb = AiMsgUtilGetUsedMemory() / 1024 / 1024;
+				msg << std::setfill( ' ' ) << std::setw( 4 );
+				if( mb < 1024 )
+				{
+					msg << mb << "MB  ";
+				}
+				else
+				{
+					msg.setf( std::ios::fixed, std::ios::floatfield );
+					msg << setprecision( 1 ) << ( float( mb ) / 1024.0f ) << "GB ";
+				}
+			}
+
+			msg << std::string( tabs, ' ' ) << msg_string;
+
+			g_currentMessageHandler->handle( level, "Arnold", msg.str() );
 		}
+
 		static IECore::MessageHandlerPtr g_currentMessageHandler;
 		static const std::vector<IECore::MessageHandler::Level> g_ieMsgLevels;
 
