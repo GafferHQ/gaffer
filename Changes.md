@@ -1,3 +1,11 @@
+0.57.7.x (relative to 0.57.7.2)
+========
+
+Fixes
+-----
+
+- Encapsulate : Fixed bug where globals and render sets were evaluated in the wrong context.
+
 0.57.7.2 (relative to 0.57.7.1)
 ========
 
