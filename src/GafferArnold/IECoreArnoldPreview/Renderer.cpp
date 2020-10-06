@@ -3368,7 +3368,10 @@ class ArnoldGlobals
 		// we have to make do with a global handler.
 		static void aiMsgCallback( int logmask, int severity, const char *msg_string, int tabs )
 		{
-			g_currentMessageHandler->handle( g_ieMsgLevels[ min( severity, 3 ) ], "Arnold", std::string( tabs, ' ' ) + msg_string );
+			const IECore::Msg::Level level = \
+				( logmask == AI_LOG_DEBUG ) ? IECore::Msg::Level::Debug : g_ieMsgLevels[ min( severity, 3 ) ];
+
+			g_currentMessageHandler->handle( level, "Arnold", std::string( tabs, ' ' ) + msg_string );
 		}
 		static IECore::MessageHandlerPtr g_currentMessageHandler;
 		static const std::vector<IECore::MessageHandler::Level> g_ieMsgLevels;
