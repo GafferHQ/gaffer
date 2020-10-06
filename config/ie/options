@@ -411,22 +411,32 @@ sys.path.extend( [
 
 os.environ["OCIO"] = os.path.join( IEEnv.Environment.rootPath(), "config", "openColorIO", "nuke-default", "config.ocio" )
 
-# we need these imported so we can run the commands to generate the documentation
+# we need these imported so we can run subprocess commands
+# variables specified in this list AND present in os.environ
+# will be setup in the scons env.
 ENV_VARS_TO_IMPORT = " ".join( [
 	"PATH",
 	"PYTHONPATH",
 	"PYTHONHOME",
 	"IEENV_ROOT",
 	"IEENV_DISABLE_WRAPPER_ENV_CHECK",
+	"IEENV_LIBRARY_PREFIX_PATH",
 	"IEENV_WORKING_PATH",
 	"IECORE_FONT_PATHS",
 	"IECOREGL_SHADER_INCLUDE_PATHS",
+	"COMPILER_VERSION",
 	"SCONS_VERSION",
 	"DOXYGEN_VERSION",
 	"OSL_VERSION",
 	"OCIO",
 ] )
 
+# required if scons compiler version doesn't match the build compiler version
+os.environ["COMPILER_VERSION"] = compilerVersion
+# required for subprocesses that need to locate standard libs (eg oslc)
+os.environ["IEENV_LIBRARY_PREFIX_PATH"] = "/software/tools/lib/$PLATFORM/$COMPILER/$COMPILER_VERSION"
+# make sure the OSL we are building with is the one used by oslc
+os.environ["OSL_VERSION"] = oslVersion
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 
