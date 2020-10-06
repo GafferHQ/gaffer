@@ -186,6 +186,9 @@ class CompoundEditor( GafferUI.Editor ) :
 		panel.__titleChangedConnection = None
 		panel._applyVisibility()
 
+		assert( not panel.visible() )
+		GafferUI.WidgetAlgo.keepUntilIdle( panel )
+
 	def __visibilityChanged(self, widget) :
 
 		v = self.visible()

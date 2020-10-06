@@ -483,7 +483,7 @@ class _EditorWindow( GafferUI.Window ) :
 
 	def __nodeSetMemberRemoved( self, set, node ) :
 
-		if not len( set ) :
+		if not len( set ) and self.parent() is not None :
 			self.parent().removeChild( self )
 
 

@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import functools
 import os
 import sys
 import six
@@ -116,3 +117,13 @@ def grab( widget, imagePath ) :
 		pixmap = QtGui.QPixmap.grabWindow( long( widget._qtWidget().winId() ) )
 
 	pixmap.save( imagePath )
+
+## Useful as a workaround when you want to dispose of a GafferUI.Widget immediately,
+# but Qt bugs prevent you from doing so.
+def keepUntilIdle( widget ) :
+
+	def keep( o ) :
+
+		return False # Removes idle callback
+
+	GafferUI.EventLoop.addIdleCallback( functools.partial( keep, widget ) )

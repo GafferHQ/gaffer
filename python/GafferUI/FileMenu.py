@@ -148,7 +148,6 @@ def __open( currentScript, fileName ) :
 	if not script :
 		return
 
-	removeCurrentScript = False
 	if not currentScript["fileName"].getValue() and not currentScript["unsavedChanges"].getValue() :
 		# the current script is empty - the user will think of the operation as loading
 		# the new script into the current window, rather than adding a new window. so make it
@@ -157,18 +156,10 @@ def __open( currentScript, fileName ) :
 		## \todo We probably want a way of querying and setting geometry in the public API
 		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
 		currentWindow.setVisible( False )
-		removeCurrentScript = True
-
-	# We must defer the removal of the old script because otherwise we trigger a crash bug
-	# in PySide - I think this is because the menu item that invokes us is a child of
-	# currentWindow, and that will get deleted immediately when the script is removed.
-	if removeCurrentScript :
-		GafferUI.EventLoop.addIdleCallback( functools.partial( __removeScript, application, currentScript ) )
-
-def __removeScript( application, script ) :
-
-	application["scripts"].removeChild( script )
-	return False # remove idle callback
+		application["scripts"].removeChild( currentScript )
+		# Defer destruction of `currentWindow` to avoid Qt crash (because we are invoked from
+		# a menu parented to it).
+		GafferUI.WidgetAlgo.keepUntilIdle( currentWindow )
 
 ## A function suitable as the submenu callable for a File/OpenRecent menu item. It must be invoked
 # from a menu which has a ScriptWindow in its ancestry.

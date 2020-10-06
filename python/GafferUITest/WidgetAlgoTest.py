@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import weakref
 import imath
 
 import IECore
@@ -91,6 +92,18 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 		GafferUI.EventLoop.mainEventLoop().start()
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/grab.png" ) )
+
+	def testKeepUntilIdle( self ) :
+
+		widget = GafferUI.Label()
+		weakWidget = weakref.ref( widget )
+
+		GafferUI.WidgetAlgo.keepUntilIdle( widget )
+		del widget
+		self.assertIsNotNone( weakWidget() )
+
+		self.waitForIdle()
+		self.assertIsNone( weakWidget() )
 
 if __name__ == "__main__":
 	unittest.main()

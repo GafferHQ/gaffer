@@ -78,6 +78,7 @@ class NotificationMessageHandler( IECore.MessageHandler ) :
 	def __windowClosed( cls, window ) :
 
 		cls.__windows.remove( window )
+		GafferUI.WidgetAlgo.keepUntilIdle( window )
 
 class _Window( GafferUI.Window ) :
 

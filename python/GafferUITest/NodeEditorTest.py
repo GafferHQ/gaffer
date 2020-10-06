@@ -104,8 +104,9 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 		nw.close()
 		del nw
 
-		self.assertEqual( nww(), None )
 		self.assertEqual( sw.childWindows(), [] )
+		self.waitForIdle()
+		self.assertEqual( nww(), None )
 
 		ne2 = GafferUI.NodeEditor.acquire( s["n"] )
 		self.assertIsInstance( ne2, GafferUI.NodeEditor )
