@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferTest
+import GafferUITest
 
-class PlugValueWidgetTest( unittest.TestCase ) :
+class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testContext( self ) :
 
