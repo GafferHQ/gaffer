@@ -316,13 +316,14 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
-		if Gaffer.NodeAlgo.presets( self.getPlug() ) :
-			menuDefinition.append(
-				"/Preset", {
-					"subMenu" : Gaffer.WeakMethod( self.__presetsSubMenu ),
-					"active" : self._editable()
-				}
-			)
+		with self.getContext() :
+			if Gaffer.NodeAlgo.presets( self.getPlug() ) :
+				menuDefinition.append(
+					"/Preset", {
+						"subMenu" : Gaffer.WeakMethod( self.__presetsSubMenu ),
+						"active" : self._editable()
+					}
+				)
 
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
@@ -559,9 +560,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with self.getContext() :
 			currentPreset = Gaffer.NodeAlgo.currentPreset( self.getPlug() )
+			presetNames = Gaffer.NodeAlgo.presets( self.getPlug() )
 
 		result = IECore.MenuDefinition()
-		for presetName in Gaffer.NodeAlgo.presets( self.getPlug() ) :
+		for presetName in presetNames :
 			menuPath = presetName if presetName.startswith( "/" ) else "/" + presetName
 			result.append(
 				menuPath, {
@@ -575,8 +577,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyPreset( self, presetName, *unused ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
+		with self.getContext() :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+				Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
 
 	def __applyReadOnly( self, readOnly ) :
 
