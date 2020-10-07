@@ -35,6 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/BackgroundTask.h"
+
+#include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/ThreadState.h"
 
@@ -318,6 +320,21 @@ void BackgroundTask::cancelAffectedTasks( const GraphComponent *actionSubject )
 	/// \todo Investigate fancier approaches.
 
 	const ScriptNode *s = scriptNode( actionSubject );
+	if( !s )
+	{
+		if( auto application = actionSubject->ancestor<ApplicationRoot>() )
+		{
+			// No ScriptNode, but still under an ApplicationRoot, most likely
+			// on the Preferences node. Cancel _everything_, so that preferences
+			// plugs can be used as inputs to other nodes.
+			for( const auto &s : ScriptNode::Range( *application->scripts() ) )
+			{
+				cancelAffectedTasks( s.get() );
+			}
+		}
+		return;
+	}
+
 	auto range = a.get<1>().equal_range( s );
 
 	// Call cancel for everything first.

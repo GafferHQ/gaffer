@@ -37,6 +37,7 @@
 #include "GafferImage/OpenColorIOTransform.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Process.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -65,6 +66,24 @@ typedef tbb::null_mutex OCIOMutex;
 #endif
 
 static OCIOMutex g_ocioMutex;
+
+struct ProcessorProcess : public Process
+{
+
+	public :
+
+		ProcessorProcess( InternedString type, const OpenColorIOTransform *node )
+			:	Process( type, node->outPlug() )
+		{
+		}
+
+		static InternedString processorProcessType;
+		static InternedString processorHashProcessType;
+
+};
+
+InternedString ProcessorProcess::processorProcessType( "openColorIOTransform:processor" );
+InternedString ProcessorProcess::processorHashProcessType( "openColorIOTransform:processorHash" );
 
 } // namespace
 
@@ -104,6 +123,39 @@ const Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
+OpenColorIO::ConstProcessorRcPtr OpenColorIOTransform::processor() const
+{
+	// Process is necessary to trigger substitutions for plugs
+	// pulled on by `transform()` and `ocioContext()`.
+	ProcessorProcess process( ProcessorProcess::processorProcessType, this );
+
+	OpenColorIO::ConstTransformRcPtr colorTransform = transform();
+	if( !colorTransform )
+	{
+		return nullptr;
+	}
+
+	OCIOMutex::scoped_lock lock( g_ocioMutex );
+	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+	OpenColorIO::ConstContextRcPtr context = ocioContext( config );
+	return config->getProcessor( context, colorTransform, OpenColorIO::TRANSFORM_DIR_FORWARD );
+}
+
+IECore::MurmurHash OpenColorIOTransform::processorHash() const
+{
+	// Process is necessary to trigger substitutions for plugs
+	// that may be pulled on by `hashTransform()`.
+	ProcessorProcess process( ProcessorProcess::processorHashProcessType, this );
+
+	IECore::MurmurHash result;
+	hashTransform( Context::current(), result );
+	if( auto *p = contextPlug() )
+	{
+		p->hash( result );
+	}
+	return result;
+}
+
 bool OpenColorIOTransform::enabled() const
 {
 	if( !ColorProcessor::enabled() )
@@ -135,15 +187,9 @@ bool OpenColorIOTransform::affectsColorData( const Gaffer::Plug *input ) const
 void OpenColorIOTransform::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ColorProcessor::hashColorData( context, h );
-	if( contextPlug() )
-	{
-		contextPlug()->hash( h );
-	}
 
-	{
-		ImagePlug::GlobalScope c( Context::current() );
-		hashTransform( context, h );
-	}
+	ImagePlug::GlobalScope c( context );
+	h.append( processorHash() );
 }
 
 OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::ConstConfigRcPtr config) const
@@ -196,23 +242,15 @@ OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::Co
 
 void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
 {
-	OpenColorIO::ConstTransformRcPtr colorTransform;
-	{
-		ImagePlug::GlobalScope c( context );
-		colorTransform = transform();
-	}
-
-	if( !colorTransform )
-	{
-		return;
-	}
-
 	OpenColorIO::ConstProcessorRcPtr processor;
 	{
-		OCIOMutex::scoped_lock lock( g_ocioMutex );
-		OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
-		OpenColorIO::ConstContextRcPtr context = ocioContext( config );
-		processor = config->getProcessor( context, colorTransform, OpenColorIO::TRANSFORM_DIR_FORWARD );
+		ImagePlug::GlobalScope c( context );
+		processor = this->processor();
+	}
+
+	if( !processor )
+	{
+		return;
 	}
 
 	OpenColorIO::PlanarImageDesc image(

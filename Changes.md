@@ -1,17 +1,25 @@
 0.58.x.x (relative to 0.58.2.0)
 ========
 
+Improvements
+------------
+
+- Preferences : Added support for OpenColorIO context variables. These may contain references to Gaffer context variables via the standard `${variable}` syntax, but please note that such variables are only available in the Viewer and not in the rest of the UI (for instance, colour swatches and pickers).
+
 Fixes
 -----
 
 - Node Editor : Fix bug in section decoration when a plug was set to its user default.
 - ErrorDialogue : Fixed extremely slow display of warning and error messages. This was particularly apparent when showing errors that occurred while opening files.
+- Viewer : Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
+- UVView : Fixed a performance regression vs 0.57 when displaying many UDIM textures.
 
 API
 ---
 
 - MessageWidget : `setMessages()` now also accepts messages in the format used by IECore.CapturingMessageHandler.
 - WidgetAlgo : Added `keepUntilIdle()` method.
+- OpenColorIOTransform : Added `processor()` and `processorHash()` public methods.
 
 0.58.2.0 (relative to 0.58.1.0)
 ========
