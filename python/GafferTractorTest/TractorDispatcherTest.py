@@ -144,7 +144,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		variable["name"].setValue("service")
 		variable["value"].setValue("myService")
 
-		s["job"] = Gaffer.TaskList()
+		s["job"] = GafferDispatch.TaskList()
 		s["job"]["preTasks"][0].setInput( s["context"]["out"] )
 
 		dispatcher = self.__dispatcher()
