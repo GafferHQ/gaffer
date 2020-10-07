@@ -908,5 +908,26 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertFalse( e.hasDeformation() )
 
+	def testReadConstantArraySize1( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/attribute.osl" )
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "constantColor" } )
+			},
+			output = "output"
+		) )
+
+		p = self.rectanglePoints()
+		p["constantColor"] = IECore.Color3fVectorData( [ imath.Color3f( 1, 2, 3 ) ] )
+
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			self.assertEqual(
+				c,
+				imath.Color3f( 1, 2, 3 )
+			)
+
 if __name__ == "__main__":
 	unittest.main()

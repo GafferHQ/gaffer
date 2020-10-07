@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Encapsulate : Fixed bug where globals and render sets were evaluated in the wrong context.
+- OSLObject : Fixed invalid reads from Constant array primitive variables.
 
 0.57.7.2 (relative to 0.57.7.1)
 ========
