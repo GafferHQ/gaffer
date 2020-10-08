@@ -39,8 +39,9 @@ import unittest
 
 import GafferTest
 import GafferUI
+import GafferUITest
 
-class NumericSliderTest( unittest.TestCase ) :
+class NumericSliderTest( GafferUITest.TestCase ) :
 
 	def testConstruction( self ) :
 
