@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.2.1)
 ========
 
+Improvements
+------------
+
+- SceneReader : Improved loading performance of shared resources such as sets and instanced objects.
+
 API
 ---
 

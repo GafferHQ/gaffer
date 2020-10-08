@@ -164,6 +164,22 @@ size_t SceneReader::supportedExtensions( std::vector<std::string> &extensions )
 	return extensions.size();
 }
 
+Gaffer::ValuePlug::CachePolicy SceneReader::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug()->objectPlug() || output == outPlug()->setPlug() )
+	{
+		// For expensive reads, block rather than allow multiple threads to load duplicates
+		// of the same thing.
+		/// \todo Consider doing this for other children of `outPlug()` too, but
+		/// bear in mind that this is probably not a good idea for `boundPlug()`.
+		/// Because `computeBound()` forwards to `parent->childBoundsPlug()->getValue()`
+		/// and that uses TaskCollaboration, we want to allow as many threads through
+		/// as possible to take advantage of collaboration.
+		return ValuePlug::CachePolicy::Standard;
+	}
+	return SceneNode::computeCachePolicy( output );
+}
+
 void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashBound( path, context, parent, h );

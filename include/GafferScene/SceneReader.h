@@ -84,6 +84,8 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 
 	protected :
 
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
 		/// \todo These methods defer to SceneInterface::hash() to do most of the work, but we could go further.
 		/// Currently we still hash in fileNamePlug() and refreshCountPlug() because we don't trust the current
 		/// implementation of SceneCache::hash() - it should hash the filename and modification time, but instead
