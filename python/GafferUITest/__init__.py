@@ -118,6 +118,7 @@ from .DocumentationAlgoTest import DocumentationAlgoTest
 from .ExamplesTest import ExamplesTest
 from .NodeSetEditorTest import NodeSetEditorTest
 from .BackdropNodeGadgetTest import BackdropNodeGadgetTest
+from .PresetsPlugValueWidgetTest import PresetsPlugValueWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()
