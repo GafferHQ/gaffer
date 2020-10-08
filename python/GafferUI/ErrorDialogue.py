@@ -75,7 +75,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 				)
 
 			if messages is not None :
-				messageWidget = GafferUI.MessageWidget()
+				messageWidget = GafferUI.MessageWidget( toolbars = True )
 				messageWidget.setMessages( messages )
 
 			if details is not None :
