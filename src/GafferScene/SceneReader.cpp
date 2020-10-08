@@ -115,6 +115,46 @@ double timeAsDouble( const Context *context )
 	return static_cast<double>( context->getFrame() ) / static_cast<double>( context->getFramesPerSecond() );
 }
 
+ValuePlug::CachePolicy cachePolicyFromEnv( const char *name )
+{
+	if( const char *cp = getenv( name ) )
+	{
+		IECore::msg(
+			IECore::Msg::Info, "SceneReader", fmt::format( "{} is set to {}.", name, cp )
+		);
+
+		if( !strcmp( cp, "Standard" ) )
+		{
+			return ValuePlug::CachePolicy::Standard;
+		}
+		else if( !strcmp( cp, "TaskCollaboration" ) )
+		{
+			return ValuePlug::CachePolicy::TaskCollaboration;
+		}
+		else if( !strcmp( cp, "TaskIsolation" ) )
+		{
+			return ValuePlug::CachePolicy::TaskIsolation;
+		}
+		else if( !strcmp( cp, "Legacy" ) )
+		{
+			return ValuePlug::CachePolicy::Legacy;
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "SceneReader",
+				fmt::format( "Invalid value \"{}\" for {}. Must be Standard, TaskCollaboration, TaskIsolation or Legacy.", cp, name )
+			);
+		}
+	}
+
+	return ValuePlug::CachePolicy::Legacy;
+}
+
+const ValuePlug::CachePolicy g_objectCachePolicy = cachePolicyFromEnv( "GAFFERSCENE_SCENEREADER_OBJECT_CACHEPOLICY" );
+const ValuePlug::CachePolicy g_setNamesCachePolicy = cachePolicyFromEnv( "GAFFERSCENE_SCENEREADER_SETNAMES_CACHEPOLICY" );
+const ValuePlug::CachePolicy g_setCachePolicy = cachePolicyFromEnv( "GAFFERSCENE_SCENEREADER_SET_CACHEPOLICY" );
+
 } // namespace
 
 SceneReader::SceneReader( const std::string &name )
@@ -212,6 +252,29 @@ size_t SceneReader::supportedExtensions( std::vector<std::string> &extensions )
 {
 	extensions = SceneInterface::supportedExtensions();
 	return extensions.size();
+}
+
+Gaffer::ValuePlug::CachePolicy SceneReader::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	/// \todo Determine ideal cache policies and change default for when policy isn't
+	/// specified by the environment. Consider doing this for other children of `outPlug()` too, but
+	/// bear in mind that `CachePolicy::Standard` is not a good idea for `boundPlug()`. Because
+	/// `computeBound()` forwards to `parent->childBoundsPlug()->getValue()` and that uses
+	/// TaskCollaboration, we want to allow as many threads through as possible.
+	if( output == outPlug()->objectPlug() )
+	{
+		return g_objectCachePolicy;
+	}
+	else if( output == outPlug()->setPlug() )
+	{
+		return g_setCachePolicy;
+	}
+	else if( output == outPlug()->setNamesPlug() )
+	{
+		return g_setNamesCachePolicy;
+	}
+
+	return SceneNode::computeCachePolicy( output );
 }
 
 void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const

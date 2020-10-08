@@ -6,6 +6,16 @@ Fixes
 
 - Gaffer module : Delayed loading of config files until the Gaffer module is completely defined.
 
+API
+---
+
+- SceneReader : Added environment variables to control cache policies.
+  - `GAFFERSCENE_SCENEREADER_OBJECT_CACHEPOLICY` controls the policy for objects.
+  - `GAFFERSCENE_SCENEREADER_SETNAMES_CACHEPOLICY` controls the policy for set names.
+  - `GAFFERSCENE_SCENEREADER_SET_CACHEPOLICY` controls the policy for sets.
+  - Default policies remain unchanged, but `Standard` policy may yield improved performance and
+    reduced memory usage for Alembic or USD files making heavy use of instancing.
+
 1.2.6.0 (relative to 1.2.5.0)
 =======
 
