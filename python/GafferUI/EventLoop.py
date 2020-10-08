@@ -161,6 +161,11 @@ class EventLoop( object ) :
 		assert( style is not None )
 		__qtApplication = QtWidgets.QApplication( [ "gaffer" ] )
 
+	# Ensure that PySide creates the wrapper for the main thread while
+	# running the main thread. PySide adds a property when first wrapping,
+	# and this can't be done on any other thread.
+	__qtApplication.thread()
+
 	__mainEventLoop = None
 	## Returns the main event loop for the application. This should always
 	# be started before running any other nested event loops. In the standalone

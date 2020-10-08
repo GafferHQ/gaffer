@@ -36,9 +36,11 @@
 ##########################################################################
 
 import unittest
+import os
 import threading
 import time
 import functools
+import subprocess32 as subprocess
 
 import IECore
 
@@ -223,6 +225,12 @@ class EventLoopTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( self.__runOnceCalls, 2 )
 		self.assertEqual( self.__addRunOnceCalls, 2 )
+
+	def testExecuteOnUIThreadBeforeEnsureIdleTimer( self ) :
+
+		subprocess.check_call(
+			[ "gaffer", "python", os.path.join( os.path.dirname( __file__ ), "scripts", "executeOnUIThread.py" ) ]
+		)
 
 	def setUp( self ) :
 
