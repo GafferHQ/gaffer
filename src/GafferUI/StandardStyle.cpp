@@ -119,9 +119,13 @@ IECoreGL::GroupPtr line( const V3f &p0, const V3f &p1 )
 	return result;
 }
 
-IECoreGL::MeshPrimitivePtr cylinder()
+IECoreGL::MeshPrimitivePtr cylinder( bool forSelection )
 {
-	static IECoreGL::MeshPrimitivePtr result;
+	static IECoreGL::MeshPrimitivePtr visualResult;
+	static IECoreGL::MeshPrimitivePtr selectionResult;
+
+	IECoreGL::MeshPrimitivePtr &result = forSelection ? selectionResult : visualResult;
+
 	if( result )
 	{
 		return result;
@@ -138,7 +142,7 @@ IECoreGL::MeshPrimitivePtr cylinder()
 	vector<V3f> &p = pData->writable();
 
 	const float height = 1.0f;
-	const float radius = 0.03f;
+	const float radius = forSelection ? 0.1f : 0.03f;
 
 	const int numDivisions = 30;
 	for( int i = 0; i < numDivisions; ++i )
@@ -166,13 +170,12 @@ IECoreGL::MeshPrimitivePtr cylinder()
 	return result;
 }
 
-IECoreGL::MeshPrimitivePtr torus()
+IECoreGL::MeshPrimitivePtr torus( bool forSelection )
 {
-	static IECoreGL::MeshPrimitivePtr result;
-	if( result )
-	{
-		return result;
-	}
+	static IECoreGL::MeshPrimitivePtr visualResult;
+	static IECoreGL::MeshPrimitivePtr selectionResult;
+
+	IECoreGL::MeshPrimitivePtr &result = forSelection ? selectionResult : visualResult;
 
 	/// \todo Move this bit to IECore::MeshPrimitive::createTorus().
 	IECore::IntVectorDataPtr verticesPerFaceData = new IECore::IntVectorData;
@@ -184,10 +187,10 @@ IECoreGL::MeshPrimitivePtr torus()
 	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 	vector<V3f> &p = pData->writable();
 
-	const float radiusJ = 0.03;
+	const float radiusJ = forSelection ? 0.1 : 0.03;
 	const float radiusI = 1 + radiusJ;
 
-	const int numDivisionsI = 30;
+	const int numDivisionsI = 60;
 	const int numDivisionsJ = 15;
 	for( int i = 0; i < numDivisionsI; ++i )
 	{
@@ -281,9 +284,15 @@ IECoreGL::MeshPrimitivePtr cube()
 	return result;
 }
 
-IECoreGL::GroupPtr translateHandle( Style::Axes axes )
+using HandleMap = boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr>;
+
+IECoreGL::GroupPtr translateHandle( Style::Axes axes, bool forSelection )
 {
-	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
+	static HandleMap visualHandles;
+	static HandleMap selectionHandles;
+
+	HandleMap &handles = forSelection ? selectionHandles : visualHandles;
+
 	if( handles[axes] )
 	{
 		return handles[axes];
@@ -306,7 +315,7 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 		group->addChild( line( V3f( 0 ), V3f( 0, 1, 0 ) ) );
 		// Cylinder provides a chunkier handle for picking when
 		// bigger on screen, like the TranslateHandle.
-		group->addChild( cylinder() );
+		group->addChild( cylinder( forSelection ) );
 		group->addChild( coneGroup );
 
 		if( axes == Style::X )
@@ -346,9 +355,13 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 	return group;
 }
 
-IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
+IECoreGL::GroupPtr rotateHandle( Style::Axes axes, bool forSelection )
 {
-	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
+	static HandleMap visualHandles;
+	static HandleMap selectionHandles;
+
+	HandleMap &handles = forSelection ? selectionHandles : visualHandles;
+
 	if( handles[axes] )
 	{
 		return handles[axes];
@@ -357,7 +370,7 @@ IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 	IECoreGL::GroupPtr group = new IECoreGL::Group;
 	if( axes == Style::X || axes == Style::Y || axes == Style::Z )
 	{
-		group->addChild( torus() );
+		group->addChild( torus( forSelection ) );
 
 		group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 		group->getState()->add(
@@ -403,19 +416,18 @@ const IECoreGL::Group *rotateHandleXYZHighlight()
 	return group.get();
 }
 
-IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
+IECoreGL::GroupPtr scaleHandle( Style::Axes axes, bool forSelection )
 {
-	static boost::container::flat_map<Style::Axes, IECoreGL::GroupPtr> handles;
-	if( handles[axes] )
-	{
-		return handles[axes];
-	}
+	static HandleMap visualHandles;
+	static HandleMap selectionHandles;
+
+	HandleMap &handles = forSelection ? selectionHandles : visualHandles;
 
 	IECoreGL::GroupPtr group;
 
 	if( axes == Style::XY || axes == Style::XZ || axes == Style::YZ )
 	{
-		group = translateHandle( axes );
+		group = translateHandle( axes, forSelection );
 	}
 	else
 	{
@@ -427,7 +439,7 @@ IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
 
 		if( axes != Style::XYZ )
 		{
-			group->addChild( cylinder() );
+			group->addChild( cylinder( forSelection ) );
 		}
 		group->addChild( cubeGroup );
 
@@ -970,7 +982,8 @@ void StandardStyle::renderTranslateHandle( Axes axes, State state ) const
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
-	translateHandle( axes )->render( glState );
+	const bool forSelection = IECoreGL::Selector::currentSelector() != nullptr;
+	translateHandle( axes, forSelection )->render( glState );
 }
 
 void StandardStyle::renderRotateHandle( Axes axes, State state, const Imath::V3f &highlightVector ) const
@@ -980,12 +993,13 @@ void StandardStyle::renderRotateHandle( Axes axes, State state, const Imath::V3f
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
 
-	if( !IECoreGL::Selector::currentSelector() && axes == XYZ )
+	const bool forSelection = IECoreGL::Selector::currentSelector() != nullptr;
+	if( !forSelection && axes == XYZ )
 	{
 		// XYZ sphere holds out other handles, but does not draw.
 		glColorMask( false, false, false, false );
 	}
-	rotateHandle( axes )->render( glState );
+	rotateHandle( axes, forSelection )->render( glState );
 	glColorMask( true, true, true, true );
 
 	if( state == HighlightedState && axes == XYZ )
@@ -1004,7 +1018,8 @@ void StandardStyle::renderScaleHandle( Axes axes, State state ) const
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
-	scaleHandle( axes )->render( glState );
+	const bool forSelection = IECoreGL::Selector::currentSelector() != nullptr;
+	scaleHandle( axes, forSelection )->render( glState );
 }
 
 void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const

@@ -39,9 +39,10 @@ import unittest
 import IECore
 import Gaffer
 import GafferUI
+import GafferUITest
 import sys
 
-class MultiSelectionMenuTest( unittest.TestCase ) :
+class MultiSelectionMenuTest( GafferUITest.TestCase ) :
 
 	def testSliceAssignment( self ) :
 

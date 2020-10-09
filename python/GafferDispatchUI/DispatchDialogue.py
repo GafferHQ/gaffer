@@ -115,7 +115,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				self.__progressLabel = GafferUI.Label( parenting = { "horizontalAlignment" : GafferUI.HorizontalAlignment.Center } )
 
 			with GafferUI.Collapsible( "Details", collapsed = True, parenting = { "expand" : True } ) as self.__messageCollapsible :
-				self.__messageWidget = GafferUI.MessageWidget()
+				self.__messageWidget = GafferUI.MessageWidget( toolbars = True )
 				# connect to the collapsible state change so we can increase the window
 				# size when the details pane is first shown.
 				self.__messageCollapsibleConneciton = self.__messageCollapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__messageCollapsibleChanged ) )

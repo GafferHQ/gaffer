@@ -192,9 +192,9 @@ Imath::Box3f Capsule::bound() const
 void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfExpired();
+	ScenePlug::GlobalScope scope( m_context.get() );
 	IECore::ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
 	RendererAlgo::RenderSets renderSets( m_scene );
-	Context::Scope scope( m_context.get() );
 	RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, /* lightLinks = */ nullptr, renderer, m_root );
 }
 

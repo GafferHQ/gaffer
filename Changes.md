@@ -26,6 +26,35 @@ Breaking Changes
 
 - Gadget : Added new virtual method and private member variables.
 
+0.58.3.0 (relative to 0.58.2.0)
+========
+
+Improvements
+------------
+
+- Preferences : Added support for OpenColorIO context variables. These may contain references to Gaffer context variables via the standard `${variable}` syntax, but please note that such variables are only available in the Viewer and not in the rest of the UI (for instance, colour swatches and pickers).
+- Viewer : Increased the size of transform tool handle hit areas.
+- Arnold : Moved debug log messages into the Debug severity and added support for Memory and Timestamp options.
+
+Fixes
+-----
+
+- Node Editor : Fix bug in section decoration when a plug was set to its user default.
+- ErrorDialogue : Fixed extremely slow display of warning and error messages. This was particularly apparent when showing errors that occurred while opening files.
+- Viewer : Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
+- UVView : Fixed a performance regression vs 0.57 when displaying many UDIM textures.
+- OpDialogue, DispatchDialogue, ErrorDialogue : Fixed missing filtering controls for progress messages.
+- Encapsulate : Fixed bug where globals and render sets were evaluated in the wrong context.
+- OSLObject : Fixed invalid reads from Constant array primitive variables.
+- PresetsPlugValueWidget/PlugValueWidget : Fixed bugs handling context-sensitive presets.
+
+API
+---
+
+- MessageWidget : `setMessages()` now also accepts messages in the format used by IECore.CapturingMessageHandler.
+- WidgetAlgo : Added `keepUntilIdle()` method.
+- OpenColorIOTransform : Added `processor()` and `processorHash()` public methods.
+
 0.58.2.0 (relative to 0.58.1.0)
 ========
 
@@ -281,6 +310,16 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.6.0.
+
+0.57.7.3 (relative to 0.57.7.2)
+========
+
+Fixes
+-----
+
+- Encapsulate : Fixed bug where globals and render sets were evaluated in the wrong context.
+- OSLObject : Fixed invalid reads from Constant array primitive variables.
+- PresetsPlugValueWidget/PlugValueWidget : Fixed bugs handling context-sensitive presets.
 
 0.57.7.2 (relative to 0.57.7.1)
 ========

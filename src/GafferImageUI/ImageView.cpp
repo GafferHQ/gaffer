@@ -598,6 +598,9 @@ void ImageView::insertDisplayTransform()
 		if( displayTransform )
 		{
 			m_displayTransforms[name] = displayTransform;
+			// Even though technically the ImageGadget will own `displayTransform`,
+			// we must parent it into our preprocessor so that `BackgroundTask::cancelAffectedTasks()`
+			// can find the relevant tasks to cancel if plugs on `displayTransform` are edited.
 			getPreprocessor()->addChild( displayTransform );
 		}
 	}

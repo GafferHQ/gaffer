@@ -289,12 +289,12 @@ class RenderState
 				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get(), /* createUStrings = */ true );
 				if( userData.dataView.data )
 				{
+					userData.numValues = std::max( userData.dataView.type.arraylen, 1 );
 					if( userData.dataView.type.arraylen )
 					{
 						// we unarray the TypeDesc so we can use it directly with
 						// convertValue() in get_userdata().
 						userData.dataView.type.unarray();
-						userData.array = true;
 					}
 					m_userData.insert( make_pair( ustring( it->first.c_str() ), userData ) );
 				}
@@ -355,10 +355,7 @@ class RenderState
 			}
 
 			const char *src = static_cast<const char *>( it->second.dataView.data );
-			if( it->second.array )
-			{
-				src += pointIndex * it->second.dataView.type.elementsize();
-			}
+			src += std::min( pointIndex, it->second.numValues - 1 ) * it->second.dataView.type.elementsize();
 
 			return convertValue( value, type, src,  it->second.dataView.type );
 		}
@@ -392,13 +389,8 @@ class RenderState
 
 		struct UserData
 		{
-			UserData()
-				:	array( false )
-			{
-			}
-
 			IECoreImage::OpenImageIOAlgo::DataView dataView;
-			bool array;
+			size_t numValues;
 		};
 
 		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
@@ -970,13 +962,9 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
-	ShaderNetworkPtr networkCopy;
-	if( true ) /// \todo Make conditional on OSL < 1.10
-	{
-		networkCopy = shaderNetwork->copy();
-		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
-		shaderNetwork = networkCopy.get();
-	}
+	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
+	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get(), OSL_VERSION );
+	shaderNetwork = networkCopy.get();
 
 	ShadingSystem *shadingSystem = ::shadingSystem();
 

@@ -179,6 +179,9 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		// Settings to control how the image is displayed.
 
+		void displayTransformPlugDirtied( const Gaffer::Plug *plug );
+		bool usingGPU() const;
+
 		Channels m_rgbaChannels;
 		int m_soloChannel;
 		ImageGadgetSignal m_channelsChangedSignal;
@@ -191,14 +194,13 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		GafferImage::ClampPtr m_clampNode;
 		GafferImage::GradePtr m_gradeNode;
 		GafferImage::ImageProcessorPtr m_displayTransform;
-		OpenColorIO::ConstTransformRcPtr m_gpuOcioTransform;
+		OpenColorIO::ConstTransformRcPtr m_unused1; /// \todo Remove
 
-		IECoreGL::Shader *shader( bool dirty, const OpenColorIO::ConstTransformRcPtr& transform, GLuint &lut3d_textureID ) const;
-		mutable GLuint m_lut3dTextureID;
-		mutable IECoreGL::ShaderPtr m_shader;
-
-		mutable bool m_shaderDirty;
-
+		IE_CORE_FORWARDDECLARE( TileShader ); /// \todo Move to rendering section below
+		TileShader *shader() const;  /// \todo Move to rendering section below
+		GLuint m_unused2; /// \todo Remove
+		mutable TileShaderPtr m_shader; /// \todo Move to rendering section below
+		mutable bool m_shaderDirty; /// \todo Move to rendering section below
 
 		bool m_useGPU;
 		bool m_labelsVisible;

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,76 +34,60 @@
 #
 ##########################################################################
 
-import os
 import unittest
-import weakref
-import imath
 
 import IECore
-import IECoreImage
 
+import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
-import Qt
-from Qt import QtWidgets
+class PresetsPlugValueWidgetTest( GafferUITest.TestCase ) :
 
-class WidgetAlgoTest( GafferUITest.TestCase ) :
+	def testContextDependentPresets( self ) :
 
-	def testGrab( self ) :
+		s = Gaffer.ScriptNode()
 
-		with GafferUI.Window() as w :
-			b = GafferUI.Button( "HI!" )
+		s["variables"].addChild(
+			Gaffer.NameValuePlug( "testPresetName", IECore.StringData( "presetA" ), "testPresetName" )
+		)
 
-		w.setVisible( True )
-		self.waitForIdle( 1000 )
+		s["s"] = GafferTest.StringInOutNode()
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["s"]["in"] = context.get( "testPresetName", "none" )' )
 
-		GafferUI.WidgetAlgo.grab( b, self.temporaryDirectory() + "/grab.png" )
+		s["m"] = GafferTest.MultiplyNode()
 
-		i = IECore.Reader.create( self.temporaryDirectory() + "/grab.png" ).read()
+		values = { "presetA" : 3, "presetB" : 4 }
 
-		## \todo Should we have an official method for getting
-		# physical pixel size like this? Or should `grab()` downsize
-		# to return an image with the logical pixel size?
-		expectedSize = imath.V2f( b.size() )
-		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			screen= QtWidgets.QApplication.primaryScreen()
-			windowHandle = b._qtWidget().windowHandle()
-			if windowHandle :
-				screen = windowHandle.screen()
-			expectedSize *= screen.devicePixelRatio()
+		def presetNames( plug ) :
+			return IECore.StringVectorData( [ s["s"]["out"].getValue() ] )
 
-		self.assertEqual( imath.V2f( i.displayWindow.size() ) + imath.V2f( 1 ), expectedSize )
+		def presetValues( plug ) :
+			return IECore.IntVectorData( [ values[ s["s"]["out"].getValue() ] ] )
 
-	def testGrabWithEventLoopRunning( self ) :
+		Gaffer.Metadata.registerValue( GafferTest.MultiplyNode, "op1", "presetNames", presetNames )
+		Gaffer.Metadata.registerValue( GafferTest.MultiplyNode, "op1", "presetValues", presetValues )
 
-		with GafferUI.Window() as w :
-			b = GafferUI.Button( "HI!" )
+		w = GafferUI.PresetsPlugValueWidget( s["m"]["op1"] )
 
-		w.setVisible( True )
-		self.waitForIdle( 100000 )
+		self.assertEqual( [ "/presetA" ], [ i[0] for i in w._PresetsPlugValueWidget__menuDefinition().items() ] )
+		w._PresetsPlugValueWidget__applyPreset( None, "presetA" )
+		self.assertEqual( s["m"]["op1"].getValue(), 3 )
 
-		def grab() :
+		s["variables"]["testPresetName"]["value"].setValue( "presetB" )
 
-			GafferUI.WidgetAlgo.grab( b, self.temporaryDirectory() + "/grab.png" )
-			GafferUI.EventLoop.mainEventLoop().stop()
+		self.assertEqual( [ "/presetB" ], [ i[0] for i in w._PresetsPlugValueWidget__menuDefinition().items() ] )
+		w._PresetsPlugValueWidget__applyPreset( None, "presetB" )
+		self.assertEqual( s["m"]["op1"].getValue(), 4 )
 
-		GafferUI.EventLoop.addIdleCallback( grab )
-		GafferUI.EventLoop.mainEventLoop().start()
+	def tearDown( self ) :
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/grab.png" ) )
+		GafferUITest.TestCase.tearDown( self )
 
-	def testKeepUntilIdle( self ) :
-
-		widget = GafferUI.Label()
-		weakWidget = weakref.ref( widget )
-
-		GafferUI.WidgetAlgo.keepUntilIdle( widget )
-		del widget
-		self.assertIsNotNone( weakWidget() )
-
-		self.waitForIdle()
-		self.assertIsNone( weakWidget() )
+		Gaffer.Metadata.deregisterValue( GafferTest.MultiplyNode, "op1", "presetNames" )
+		Gaffer.Metadata.deregisterValue( GafferTest.MultiplyNode, "op1", "presetValues" )
 
 if __name__ == "__main__":
 	unittest.main()

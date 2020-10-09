@@ -129,6 +129,17 @@ class MessageWidget( GafferUI.Widget ) :
 	# via the widget's message handler \see messageHandler().
 	def setMessages( self, messages ) :
 
+		if not isinstance( messages, Gaffer.Private.IECorePreview.Messages ) :
+			# Since IECorePreview.Messages is not public yet, we also support the legacy
+			# message format currently used by IECore.CapturingMessageHandler.
+			# \todo Update CapturingMessageHandler to use the new format.
+			converted = Gaffer.Private.IECorePreview.Messages()
+			for m in messages :
+				converted.add( Gaffer.Private.IECorePreview.Message(
+					m.level, m.context, m.message
+				) )
+			messages = converted
+
 		self.__table.setMessages( messages )
 
 	## Returns (a copy of) the messages displayed by the widget.

@@ -46,6 +46,7 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
+from Qt import QtGui
 from Qt import QtWidgets
 
 class TestWidget( GafferUI.Widget ) :
@@ -391,6 +392,33 @@ class WindowTest( GafferUITest.TestCase ) :
 		w = weakref.ref( child )
 		del child
 		self.assertEqual( w(), None )
+
+	def testRemoveOnCloseCrash( self ) :
+
+		parent = GafferUI.Window()
+		parent.setChild( GafferUI.Label( "Hello" ) )
+		parent.setVisible( True )
+
+		for i in range( 0, 50 ) :
+
+			child = GafferUI.Window()
+			child.setChild( GafferUI.Label( "World" ) )
+
+			parent.addChildWindow( child, removeOnClose = True )
+			child.setVisible( True )
+			self.waitForIdle()
+
+			qWindow = child._qtWidget().windowHandle()
+			weakChild = weakref.ref( child )
+			del child
+
+			# Simulate a click on the close button of the QWindow for the child
+			# window. This ripples down to the close handling in GafferUI.Window,
+			# and should remove the child window cleanly.
+			QtWidgets.QApplication.sendEvent( qWindow, QtGui.QCloseEvent() )
+			self.waitForIdle( 1000 )
+			self.assertEqual( parent.childWindows(), [] )
+			self.assertEqual( weakChild(), None )
 
 if __name__ == "__main__":
 	unittest.main()

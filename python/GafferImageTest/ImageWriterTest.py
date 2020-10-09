@@ -44,6 +44,7 @@ import six
 import imath
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -496,14 +497,20 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				self.assertTrue( metaName in writerMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {} ({})".format(metaName, str(expectedMetadata[metaName]), ext, name) )
 				self.assertEqual( expectedMetadata[metaName], writerMetadata[metaName], "Metadata does not match for key \"{}\" : {} ({})".format(metaName, ext, name) )
 
+			# OIIO 2.2 no longer considers tiffs to have a dataWindow, but some of our
+			# reference images were written with an older OIIO that mistakenly read/writes
+			# this metadata. Note non-OIIO apps like RV do not read this metadata.
+			# See https://github.com/OpenImageIO/oiio/pull/2521 for an explanation
+			ignoreDataWindow = ext in ( "tif", "tiff" ) and hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206
+
 			if not removeAlpha:
-				self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True )
+				self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
 			else:
 				deleteChannels = GafferImage.DeleteChannels()
 				deleteChannels["channels"].setValue( "A" )
 				deleteChannels["in"].setInput( expectedOutput["out"] )
 
-				self.assertImagesEqual( deleteChannels["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True )
+				self.assertImagesEqual( deleteChannels["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
 
 	def __addExpectedIPTCMetadata( self, metadata, expectedMetadata ) :
 
@@ -757,8 +764,14 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# been changed at all, regardless of which metadata
 		# was provided to the writers.
 
-		self.assertImagesEqual( misledWriter["in"], misledReader["out"], ignoreMetadata = True )
-		self.assertImagesEqual( misledReader["out"], regularReader["out"], ignoreMetadata = True )
+		# OIIO 2.2 no longer considers tiffs to have a dataWindow, but some of our
+		# reference images were written with an older OIIO that mistakenly read/writes
+		# this metadata. Note non-OIIO apps like RV do not read this metadata.
+		# See https://github.com/OpenImageIO/oiio/pull/2521 for an explanation
+		ignoreDataWindow = ext in ( "tif", "tiff" ) and hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206
+
+		self.assertImagesEqual( misledWriter["in"], misledReader["out"], ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
+		self.assertImagesEqual( misledReader["out"], regularReader["out"], ignoreMetadata = True, ignoreDataWindow = ignoreDataWindow )
 
 		# Load the metadata from the files, and figure out what
 		# metadata we expect to have based on what we expect the

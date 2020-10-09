@@ -44,12 +44,19 @@ import GafferImage
 
 def colorSpacePresetNames( plug ) :
 
-	return IECore.StringVectorData( [ "None" ] + sorted( map( lambda x: "Roles/{0}".format( x.replace( "_", " ").title() ), GafferImage.OpenColorIOTransform.availableRoles() ) ) + sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )  )
-
+	return IECore.StringVectorData(
+		[ "None" ] +
+		[ "Roles/{0}".format( x.replace( "_", " ").title() ) for x in sorted( GafferImage.OpenColorIOTransform.availableRoles() ) ] +
+		sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )
+	)
 
 def colorSpacePresetValues( plug ) :
 
-	return IECore.StringVectorData( [ "" ] + sorted( GafferImage.OpenColorIOTransform.availableRoles() ) + sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() ) )
+	return IECore.StringVectorData(
+		[ "" ] +
+		sorted( GafferImage.OpenColorIOTransform.availableRoles() ) +
+		sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )
+	)
 
 Gaffer.Metadata.registerNode(
 
@@ -60,11 +67,6 @@ Gaffer.Metadata.registerNode(
 	Applies color transformations provided by
 	OpenColorIO.
 	""",
-
-	# Add a + button for creating new plugs in the Context tab.
-	"layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter",
-	"layout:customWidget:addButton:section", "Context",
-	"layout:customWidget:addButton:index", -2,
 
 	plugs = {
 
@@ -82,6 +84,9 @@ Gaffer.Metadata.registerNode(
 			## \todo Perhaps we should invent some metadata scheme to give
 			# this behaviour to the CompoundDataPlugValueWidget?
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter",
+			"layout:customWidget:addButton:index", -1,
+
 			"layout:section", "Context",
 			"layout:index", -3,
 
@@ -93,7 +98,7 @@ Gaffer.Metadata.registerNode(
 
 class _ContextFooter( GafferUI.Widget ) :
 
-	def __init__( self, node, **kw ) :
+	def __init__( self, plug, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		GafferUI.Widget.__init__( self, row, **kw )
@@ -112,12 +117,12 @@ class _ContextFooter( GafferUI.Widget ) :
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-		self.__node = node
+		self.__plug = plug
 
 	def __clicked( self, button ) :
 
-		if Gaffer.MetadataAlgo.readOnly( self.__node["context"] ) :
+		if Gaffer.MetadataAlgo.readOnly( self.__plug ) :
 			return
 
-		with Gaffer.UndoScope( self.__node.ancestor( Gaffer.ScriptNode ) ) :
-			self.__node["context"].addChild( Gaffer.NameValuePlug( "", "", True, "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		with Gaffer.UndoScope( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
+			self.__plug.addChild( Gaffer.NameValuePlug( "", "", True, "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )

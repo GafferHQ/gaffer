@@ -121,6 +121,7 @@ from .BackdropNodeGadgetTest import BackdropNodeGadgetTest
 from .StringPlugValueWidgetTest import StringPlugValueWidgetTest
 from .BoolPlugValueWidgetTest import BoolPlugValueWidgetTest
 from .NumericWidgetTest import NumericWidgetTest
+from .PresetsPlugValueWidgetTest import PresetsPlugValueWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

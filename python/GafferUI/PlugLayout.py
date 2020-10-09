@@ -392,7 +392,7 @@ class PlugLayout( GafferUI.Widget ) :
 		valueChanged = plug.getInput() is not None
 		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
 			if Gaffer.NodeAlgo.hasUserDefault( plug ) :
-				valueChanged = Gaffer.NodeAlgo.isSetToUserDefault( plug )
+				valueChanged = not Gaffer.NodeAlgo.isSetToUserDefault( plug )
 			else :
 				valueChanged = not plug.isSetToDefault()
 		return valueChanged

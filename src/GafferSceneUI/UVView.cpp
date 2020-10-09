@@ -503,6 +503,13 @@ class TextureGadget : public GafferUI::Gadget
 
 			setChild( g_imageGadgetName, new ImageGadget );
 			imageGadget()->setLabelsVisible( false );
+			// ImageGadget currently does no sharing of GPU shaders between
+			// instances, and GPU shaders for OCIO take a prohibitively long
+			// time to construct for the numbers of gadgets we make for typical
+			// UDIM counts. Disable GPU path until this is sorted. Since the
+			// texture images are static, we really don't need GPU performance
+			// anyway.
+			imageGadget()->setUseGPU( false );
 			imageGadget()->setImage( m_resize->outPlug() );
 		}
 

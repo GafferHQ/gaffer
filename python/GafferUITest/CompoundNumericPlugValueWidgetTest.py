@@ -39,8 +39,9 @@ import unittest
 import Gaffer
 import GafferTest
 import GafferUI
+import GafferUITest
 
-class CompoundNumericPlugValueWidgetTest( unittest.TestCase ) :
+class CompoundNumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 

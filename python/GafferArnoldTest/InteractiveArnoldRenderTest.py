@@ -278,7 +278,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["Tex"] = GafferArnold.ArnoldShader( "image" )
 		s["Tex"].loadShader( "image" )
-		s["Tex"]["parameters"]["filename"].setValue( "python/GafferArnoldTest/images/sphereLightBake.exr" )
+		s["Tex"]["parameters"]["filename"].setValue( "${GAFFER_ROOT}/python/GafferArnoldTest/images/sphereLightBake.exr" )
 		s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 1, 0, 0 ) )
 
 		s["Light"] = GafferArnold.ArnoldLight( "quad_light" )

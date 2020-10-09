@@ -197,16 +197,11 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 				for p, v in self.__initialValues.items() :
 					p.setValue( v )
 
-		# ideally we'd just remove ourselves from our parent immediately, but that would
-		# trigger this bug :
-		#
-		# 	https://bugreports.qt-project.org/browse/QTBUG-26761
-		#
-		# so instead we destroy ourselves on the next idle event.
-
-		GafferUI.EventLoop.addIdleCallback( self.__destroy )
+		self.parent().removeChild( self )
+		# Workaround for https://bugreports.qt-project.org/browse/QTBUG-26761.
+		assert( not self.visible() )
+		GafferUI.WidgetAlgo.keepUntilIdle( self )
 
 	def __destroy( self, *unused ) :
 
 		self.parent().removeChild( self )
-		return False # to remove idle callback
