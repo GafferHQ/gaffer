@@ -487,5 +487,46 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			s2["b2"]["p"]["children"].getInput().fullName()
 		)
 
+	def testSetPassThroughWhenNoParent( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "set" )
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( sphere["out"] )
+		parent["children"][0].setInput( cube["out"] )
+
+		self.assertEqual( parent["out"].set( "set" ), sphere["out"].set( "set" ) )
+		self.assertEqual( parent["out"].setHash( "set" ), sphere["out"].setHash( "set" ) )
+
+	def testContextVariableForParent( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "set" )
+
+		collect = GafferScene.CollectScenes()
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( collect["out"] )
+		parent["children"][0].setInput( sphere["out"] )
+		parent["parent"].setValue( "${parent}" )
+
+		with Gaffer.Context() as context :
+
+			context["parent"] = "/a"
+			self.assertEqual(
+				parent["out"].set( "set" ).value.paths(),
+				[ "/a/sphere" ]
+			)
+
+			context["parent"] = "/b"
+			self.assertEqual(
+				parent["out"].set( "set" ).value.paths(),
+				[ "/b/sphere" ]
+			)
+
 if __name__ == "__main__":
 	unittest.main()
