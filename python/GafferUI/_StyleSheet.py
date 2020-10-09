@@ -101,7 +101,7 @@ _styleColors = {
 	"errorColor" : (255, 85, 85),
 	"animatedColor" : (128, 152, 94),
 
-	"foregroundError" : ( 196, 80, 80 ),
+	"foregroundError" : ( 255, 80, 80 ),
 	"foregroundWarning" : ( 239, 129, 24 ),
 	"foregroundInfo" : ( 128, 179, 254 ),
 	"foregroundDebug" : ( 163, 163, 163 ),
