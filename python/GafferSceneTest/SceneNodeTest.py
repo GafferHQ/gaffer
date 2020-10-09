@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 import threading
 import imath
@@ -372,6 +373,25 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( plane["out"].childBounds( "/plane" ), imath.Box3f() )
 		self.assertEqual( sphere["out"].childBounds( "/sphere" ), imath.Box3f() )
+
+	def testEnabledEvaluationUsesGlobalContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			path = context.get("scene:path", None )
+			assert( path is None )
+			parent["plane"]["enabled"] = True
+			"""
+		) )
+
+		with Gaffer.ContextMonitor( script["expression"] ) as monitor :
+			self.assertSceneValid( script["plane"]["out"] )
+
+		self.assertEqual( monitor.combinedStatistics().numUniqueValues( "scene:path" ), 0 )
 
 	def setUp( self ) :
 

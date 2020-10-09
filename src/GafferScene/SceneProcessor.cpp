@@ -125,7 +125,7 @@ const Plug *SceneProcessor::correspondingInput( const Plug *output ) const
 void SceneProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ScenePlug *scenePlug = output->parent<ScenePlug>();
-	if( scenePlug && !enabledPlug()->getValue() )
+	if( scenePlug && !enabled( context ) )
 	{
 		// if we're hashing the output scene, and we're disabled, we need to
 		// pass through the hash from the inPlug().
@@ -141,7 +141,7 @@ void SceneProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 void SceneProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
 {
 	const ScenePlug *scenePlug = output->parent<ScenePlug>();
-	if( scenePlug && !enabledPlug()->getValue() )
+	if( scenePlug && !enabled( context ) )
 	{
 		// if we're computing the output scene, and we're disabled, we need to
 		// pass through the scene from inPlug().
