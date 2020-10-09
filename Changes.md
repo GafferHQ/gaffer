@@ -29,6 +29,11 @@ Breaking Changes
 - OpenColorIOTransform : Made `transform()` method protected rather than public.
 - BackgroundMethodTest : Removed public visibility from private `TestWidget` and `WaitingSlot`.
 
+Build
+-----
+
+- Dependencies : Updated to version 2.0.0
+
 0.58.3.0 (relative to 0.58.2.0)
 ========
 
