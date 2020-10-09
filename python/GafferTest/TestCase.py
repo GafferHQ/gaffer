@@ -81,10 +81,11 @@ class TestCase( unittest.TestCase ) :
 			IECore.MessageHandler.setDefaultHandler( testMessageHandler )
 			self.addCleanup( functools.partial( self.__messageHandlerCleanup, defaultHandler, failureMessageHandler ) )
 
-		# Clear the cache so that each test starts afresh. This is
+		# Clear the cache and hash cache so that each test starts afresh. This is
 		# important for tests which use monitors to assert that specific
 		# processes are being invoked as expected.
 		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache()
 
 	def tearDown( self ) :
 

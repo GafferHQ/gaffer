@@ -73,6 +73,7 @@ class TestRunner( unittest.TextTestRunner ) :
 				timings = []
 				for i in range( 0, self.__repeat ) :
 					Gaffer.ValuePlug.clearCache() # Put each iteration on an equal footing
+					Gaffer.ValuePlug.clearHashCache()
 					TestRunner.PerformanceScope._total = None
 					t = time.time()
 					result = method( *args, **kw )
