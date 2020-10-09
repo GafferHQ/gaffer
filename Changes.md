@@ -16,6 +16,9 @@ Fixes
 - Viewer : Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
 - UVView : Fixed a performance regression vs 0.57 when displaying many UDIM textures.
 - OpDialogue, DispatchDialogue, ErrorDialogue : Fixed missing filtering controls for progress messages.
+- Encapsulate : Fixed bug where globals and render sets were evaluated in the wrong context.
+- OSLObject : Fixed invalid reads from Constant array primitive variables.
+- PresetsPlugValueWidget/PlugValueWidget : Fixed bugs handling context-sensitive presets.
 
 API
 ---
@@ -282,6 +285,16 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.6.0.
+
+0.57.7.3 (relative to 0.57.7.2)
+========
+
+Fixes
+-----
+
+- Encapsulate : Fixed bug where globals and render sets were evaluated in the wrong context.
+- OSLObject : Fixed invalid reads from Constant array primitive variables.
+- PresetsPlugValueWidget/PlugValueWidget : Fixed bugs handling context-sensitive presets.
 
 0.57.7.2 (relative to 0.57.7.1)
 ========
