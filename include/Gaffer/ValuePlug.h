@@ -165,6 +165,8 @@ class GAFFER_API ValuePlug : public Plug
 		/// Clears the cache.
 		static void clearCache();
 		//@}
+		//
+		static void weirdPrep();
 
 		/// @name Hash cache management
 		/// In addition to the cache of recently computed values, we also

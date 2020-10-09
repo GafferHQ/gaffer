@@ -146,6 +146,8 @@ class LRUCache : private boost::noncopyable
 		/// Returns the current cost of all cached items.
 		Cost currentCost() const;
 
+		void weirdPrep();
+
 	private :
 
 		// Data

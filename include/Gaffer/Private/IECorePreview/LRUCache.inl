@@ -40,6 +40,7 @@
 
 #include "IECore/Canceller.h"
 #include "IECore/Exception.h"
+#include "IECore/MurmurHash.h"
 
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/member.hpp"
@@ -50,11 +51,29 @@
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
 #include "tbb/tbb_thread.h"
+#include "tbb/parallel_for.h"
 
 #include <cassert>
 #include <iostream>
 #include <tuple>
 #include <vector>
+
+namespace
+{
+template<typename Key>
+Key makeUniqueKey( size_t i )
+{
+	return Key( i );
+}
+
+template<>
+IECore::MurmurHash makeUniqueKey<IECore::MurmurHash>( size_t i )
+{
+	IECore::MurmurHash m;
+	m.append( i );
+	return m;	
+}
+}
 
 namespace IECorePreview
 {
@@ -284,6 +303,10 @@ class Serial
 			list.erase( it );
 
 			return true;
+		}
+
+		void weirdPrep()
+		{
 		}
 
 		typename LRUCache::Cost currentCost;
@@ -597,6 +620,10 @@ class Parallel
 			}
 		}
 
+		void weirdPrep()
+		{
+		}
+
 		AtomicCost currentCost;
 
 	private :
@@ -625,6 +652,8 @@ bool spawnsTasks( const Key &key )
 {
 	return true;
 }
+
+
 
 /// Thread-safe policy that uses TaskMutex so that threads waiting on
 /// the cache can still perform useful work.
@@ -972,6 +1001,52 @@ class TaskParallel
 			}
 		}
 
+		void weirdPrep()
+		{
+			int N = 40000000;
+			tbb::parallel_for(
+
+				tbb::blocked_range<size_t>( 0, N ),
+
+				[this]( const tbb::blocked_range<size_t> &r ) {
+
+					IECore::MurmurHash m;
+					for( size_t i=r.begin(); i!=r.end(); ++i )
+					{
+						Handle handle;
+						acquire( makeUniqueKey<Key>( i ), handle, LRUCachePolicy::InsertWritable );
+						int cost = 10;
+						handle.writable().cost = cost;
+						currentCost += cost;
+						push( handle );
+						handle.release();
+					}
+
+				}
+			);
+
+			int foo = m_bins.size();	
+			m_bins.resize( 0 );
+			m_bins.resize( foo );
+			/*std::cerr << "CLEAR\n";
+			for( auto &b : m_bins )
+			{
+				//b.map = Map();
+				//b.map.template get<0>().clear();
+				//b.map.template get<0>().swap( Map() );
+				Map foo;
+				b.map.swap( foo );
+				//std::cerr << "B: " << b.map.template get<0>().size() << "\n";
+				//b.map.shrink_to_fit();
+			}*/
+            m_popBinIndex = 0;
+            m_popIterator = m_bins[0].map.begin();
+            currentCost = 0;
+			std::cerr << "DONE CLEAR\n";
+			//m_bins.clear();
+			//m_bins.shrink_to_fit();
+		}
+
 		AtomicCost currentCost;
 
 	private :
@@ -1026,11 +1101,18 @@ template<typename Key, typename Value, template <typename> class Policy, typenam
 void LRUCache<Key, Value, Policy, GetterKey>::clear()
 {
 	Key key;
+
 	CacheEntry cacheEntry;
 	while( m_policy.pop( key, cacheEntry ) )
 	{
 		eraseInternal( key, cacheEntry );
 	}
+}
+
+template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
+void LRUCache<Key, Value, Policy, GetterKey>::weirdPrep()
+{
+	m_policy.weirdPrep();
 }
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>

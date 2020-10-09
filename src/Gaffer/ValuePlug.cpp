@@ -51,6 +51,7 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+
 #include <atomic>
 
 using namespace Gaffer;
@@ -162,6 +163,13 @@ struct HashCacheKey
 	HashCacheKey( const ValuePlug *plug, const Context *context, uint64_t dirtyCount )
 		:	plug( plug ), contextHash( context->hash() ), dirtyCount( dirtyCount )
 	{
+	}
+
+	// TODO
+	HashCacheKey( size_t i )
+		:	plug( nullptr ), dirtyCount( 0 )
+	{
+		contextHash.append( i );
 	}
 
 	bool operator == ( const HashCacheKey &other ) const
@@ -608,6 +616,7 @@ class ValuePlug::ComputeProcess : public Process
 
 		static void clearCache()
 		{
+			std::cerr << "CL: " << g_cache.currentCost() << "\n";
 			g_cache.clear();
 		}
 
@@ -778,6 +787,8 @@ class ValuePlug::ComputeProcess : public Process
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
 		// for that hash. This allows us to cache results for faster repeat evaluation
 		typedef IECorePreview::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr, IECorePreview::LRUCachePolicy::TaskParallel, ComputeProcessKey> Cache;
+
+		public:
 		static Cache g_cache;
 
 		IECore::ConstObjectPtr m_result;
@@ -898,6 +909,34 @@ ValuePlug::~ValuePlug()
 	// Legacy mode doesn't use `m_dirtyCount` or `g_dirtyCountEpoch`, so needs
 	// dirtying separately.
 	HashProcess::dirtyLegacyCache();
+}
+
+void ValuePlug::weirdPrep()
+{
+	/*int N = 40000000;
+	tbb::parallel_for(
+
+		tbb::blocked_range<size_t>( 0, N ),
+
+		[]( const tbb::blocked_range<size_t> &r ) {
+
+			IECore::MurmurHash m;
+			for( size_t i=r.begin(); i!=r.end(); ++i )
+			{
+				m.append( i );
+				ComputeProcess::g_cache.set( ComputeProcessKey( nullptr, nullptr, nullptr, ValuePlug::CachePolicy::Legacy, &m ), new IECore::IntData( 42 ), 10 );
+			}
+
+		}
+	);*/
+	/*IECore::MurmurHash m;
+	for( int i = 0; i < N; i++ )
+	{
+		m.append( i );
+		ComputeProcess::g_cache.set( ComputeProcessKey( nullptr, nullptr, nullptr, ValuePlug::CachePolicy::Legacy, &m ), new IECore::IntData( 42 ), 1000 );
+	}*/
+
+	ComputeProcess::g_cache.weirdPrep();
 }
 
 bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
