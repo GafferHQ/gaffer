@@ -378,12 +378,12 @@ ImageGadget::ImageGadget()
 		m_clipping( false ),
 		m_exposure( 0.0f ),
 		m_gamma( 1.0f ),
-		m_shaderDirty( true ),
 		m_useGPU( true ),
 		m_labelsVisible( true ),
 		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
-		m_renderRequestPending( false )
+		m_renderRequestPending( false ),
+		m_shaderDirty( true )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -409,8 +409,6 @@ ImageGadget::ImageGadget()
 	m_gradeNode = new Grade;
 	m_gradeNode->inPlug()->setInput( m_clampNode->outPlug() );
 	m_gradeNode->channelsPlug()->setValue( "*" );
-
-	m_unused2 = 0; // Keep clang happy
 }
 
 ImageGadget::~ImageGadget()
