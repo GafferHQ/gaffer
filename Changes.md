@@ -26,6 +26,7 @@ Breaking Changes
 
 - Gadget : Added new virtual method and private member variables.
 - ImageGadget : Removed/moved private member variables.
+- OpenColorIOTransform : Made `transform()` method protected rather than public.
 
 0.58.3.0 (relative to 0.58.2.0)
 ========
