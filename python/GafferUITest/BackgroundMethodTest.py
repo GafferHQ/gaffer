@@ -46,7 +46,7 @@ import GafferUITest
 
 class BackgroundMethodTest( GafferUITest.TestCase ) :
 
-	class TestWidget( GafferUI.NumericWidget ) :
+	class __TestWidget( GafferUI.NumericWidget ) :
 
 		def __init__( self, **kw ) :
 
@@ -107,23 +107,24 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 			return self.__script["n"]["sum"]
 
-	class WaitingSlot( GafferTest.CapturingSlot ) :
+	class __SetValueWaitingSlot( GafferTest.CapturingSlot ) :
 
-		def __init__( self, signal ) :
+		def __init__( self, valueWidget ) :
 
-			GafferTest.CapturingSlot.__init__( self, signal )
+			GafferTest.CapturingSlot.__init__( self, valueWidget.valueChangedSignal() )
 
 		def wait( self ) :
 
-			while len( self ) == 0 :
+			while not any( e[1] == GafferUI.NumericWidget.ValueChangedReason.SetValue for e in self ) :
 				GafferUI.EventLoop.waitForIdle()
 
 	def test( self ) :
 
 		with GafferUI.Window() as window :
-			w = self.TestWidget()
+			w = self.__TestWidget()
 
 		window.setVisible( True )
+		self.waitForIdle( 1 )
 
 		self.assertFalse( w.updateInBackground.running( w ) )
 		self.assertEqual( w.numPreCalls, 0 )
@@ -132,7 +133,7 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 		w.node()["op1"].setValue( 1 )
 
-		ws = self.WaitingSlot( w.valueChangedSignal() )
+		ws = self.__SetValueWaitingSlot( w )
 
 		w.updateInBackground( 100 )
 		self.assertEqual( w.getEnabled(), False )
@@ -159,11 +160,12 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 	def testCancelWhenHidden( self ) :
 
 		with GafferUI.Window() as window :
-			w = self.TestWidget()
+			w = self.__TestWidget()
 
 		window.setVisible( True )
+		self.waitForIdle( 1 )
 
-		ws = self.WaitingSlot( w.valueChangedSignal() )
+		ws = self.__SetValueWaitingSlot( w )
 		w.updateInBackground( 1 )
 		window.setVisible( False )
 
@@ -184,12 +186,13 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 	def testExceptions( self ) :
 
 		with GafferUI.Window() as window :
-			w = self.TestWidget()
+			w = self.__TestWidget()
 			w.throw = True
 
 		window.setVisible( True )
+		self.waitForIdle( 1 )
 
-		ws = self.WaitingSlot( w.valueChangedSignal() )
+		ws = self.__SetValueWaitingSlot( w )
 		w.updateInBackground( 1000 )
 
 		ws.wait()
@@ -204,13 +207,14 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 	def testSecondCallSupercedesFirst( self ) :
 
 		with GafferUI.Window() as window :
-			w = self.TestWidget()
+			w = self.__TestWidget()
 
 		window.setVisible( True )
+		self.waitForIdle( 1 )
 
 		w.node()["op1"].setValue( 2 )
 
-		ws = self.WaitingSlot( w.valueChangedSignal() )
+		ws = self.__SetValueWaitingSlot( w )
 
 		w.updateInBackground( 10 )
 		w.updateInBackground( 11 )
