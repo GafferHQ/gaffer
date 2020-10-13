@@ -42,8 +42,8 @@ jobs:
             buildType: RELEASE
             variant: linux-python2
             publish: true
-            containerImage: gafferhq/build:1.1.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.6.0/gafferDependencies-1.6.0-linux.tar.gz
+            containerImage: gafferhq/build:1.2.0
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.0.0a5/gafferDependencies-2.0.0-Python2-linux.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -56,8 +56,8 @@ jobs:
             buildType: DEBUG
             variant: linux-python2
             publish: false
-            containerImage: gafferhq/build:1.1.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.6.0/gafferDependencies-1.6.0-linux.tar.gz
+            containerImage: gafferhq/build:1.2.0
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.0.0a5/gafferDependencies-2.0.0-Python2-linux.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -68,7 +68,7 @@ jobs:
             buildType: RELEASE
             variant: linux-python3
             publish: true
-            containerImage: gafferhq/build:1.1.0
+            containerImage: gafferhq/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.0.0a5/gafferDependencies-2.0.0-Python3-linux.tar.gz
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
@@ -79,7 +79,7 @@ jobs:
             variant: macos-python2
             publish: true
             containerImage:
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/1.6.0/gafferDependencies-1.6.0-osx.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.0.0a5/gafferDependencies-2.0.0-Python2-osx.tar.gz
             testRunner: bash -c
             sconsCacheMegabytes: 400
 
@@ -113,8 +113,6 @@ jobs:
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity&
         useradd -m testUser
-        # Works around issues with earlier Python versions, remove once the Docker image is updated
-        pip install --user sphinx==1.8.1
       if: runner.os == 'Linux'
 
     - name: 'Install Python Modules'
