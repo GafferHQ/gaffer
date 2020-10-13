@@ -194,13 +194,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		GafferImage::ClampPtr m_clampNode;
 		GafferImage::GradePtr m_gradeNode;
 		GafferImage::ImageProcessorPtr m_displayTransform;
-		OpenColorIO::ConstTransformRcPtr m_unused1; /// \todo Remove
-
-		IE_CORE_FORWARDDECLARE( TileShader ); /// \todo Move to rendering section below
-		TileShader *shader() const;  /// \todo Move to rendering section below
-		GLuint m_unused2; /// \todo Remove
-		mutable TileShaderPtr m_shader; /// \todo Move to rendering section below
-		mutable bool m_shaderDirty; /// \todo Move to rendering section below
 
 		bool m_useGPU;
 		bool m_labelsVisible;
@@ -314,6 +307,11 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void visibilityChanged();
 		void renderTiles() const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
+
+		IE_CORE_FORWARDDECLARE( TileShader )
+		TileShader *shader() const;
+		mutable TileShaderPtr m_shader;
+		mutable bool m_shaderDirty;
 
 };
 
