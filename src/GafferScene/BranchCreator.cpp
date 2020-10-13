@@ -569,10 +569,11 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 	if( parentPaths.isEmpty() )
 	{
 		h = inPlug()->setPlug()->hash();
+		return;
 	}
 
 	FilteredSceneProcessor::hashSet( setName, context, parent, h );
-	h.append( inPlug()->setHash( setName ) );
+	inPlug()->setPlug()->hash( h );
 
 	for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
 	{
@@ -585,6 +586,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 		MurmurHash branchSetHash;
 		hashBranchSet( parentPath, setName, context, branchSetHash );
 		h.append( branchSetHash );
+		h.append( parentPath.data(), parentPath.size() );
 	}
 }
 
@@ -593,7 +595,7 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 	ConstPathMatcherDataPtr parentPathsData = parentPathsPlug()->getValue();
 	const PathMatcher &parentPaths = parentPathsData->readable();
 
-	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
+	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 	if( parentPaths.isEmpty() )
 	{
 		return inputSetData;

@@ -1,3 +1,8 @@
+0.57.7.x (relative to 0.57.7.3)
+========
+
+- BranchCreator : Fixed bugs affecting set computation.
+
 0.57.7.3 (relative to 0.57.7.2)
 ========
 
