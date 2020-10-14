@@ -48,6 +48,7 @@ from Qt import QtWidgets
 from Qt import QtCompat
 
 from . import _Algo
+from . import _ProxyModels
 from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
 from ._PlugTableModel import _PlugTableModel
@@ -57,14 +58,15 @@ from .._TableView import _TableView
 
 class _PlugTableView( GafferUI.Widget ) :
 
-	Mode = _PlugTableModel.Mode
+	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
 
 	def __init__( self, plug, context, mode, **kw ) :
 
 		tableView = _TableView()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
-		tableView.setModel( _PlugTableModel( plug, context, mode ) )
+		self.__mode = mode;
+		tableView.setModel( self.__displayModel( plug, context, mode ) )
 
 		# Headers and column sizing
 
@@ -174,6 +176,20 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return self.__visibleSection
 
+	def __displayModel( self, rowsPlug, context, mode ) :
+
+		self.__model = _PlugTableModel( rowsPlug, context )
+
+		if mode == self.Mode.RowNames :
+			proxy = _ProxyModels.RowNamesProxyModel()
+		elif mode == self.Mode.Cells :
+			proxy = _ProxyModels.CellsProxyModel()
+		else :
+			proxy = _ProxyModels.DefaultsProxyModel()
+
+		proxy.setSourceModel( self.__model )
+		return proxy
+
 	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
 
 		if self.__callingMoveSection :
@@ -202,7 +218,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applyColumnWidthMetadata( self, cellPlug = None ) :
 
-		if self._qtWidget().model().mode() == self.Mode.RowNames :
+		if self.__mode == self.Mode.RowNames :
 			return
 
 		defaultCells = self._qtWidget().model().rowsPlug().defaultRow()["cells"]
@@ -230,7 +246,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applySectionOrderMetadata( self ) :
 
-		if self._qtWidget().model().mode() == self.Mode.RowNames :
+		if self.__mode == self.Mode.RowNames :
 			return
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
@@ -243,7 +259,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __applyColumnVisibility( self ) :
 
-		if self._qtWidget().model().mode() == self.Mode.RowNames :
+		if self.__mode == self.Mode.RowNames :
 			return
 
 		# Changing column visibility seems to cause the
