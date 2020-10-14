@@ -31,6 +31,7 @@ Improvements
 - Warp : Defaulted `useDerivatives` to off for nodes created via the UI. Using derivatives is only beneficial when the warp is highly anisotropic, and it has a significant performance impact.
 - CopyChannels : Improved performance for the special case of a single input.
 - Catalogue/Viewer : Improved tile throughput for interactive renders.
+- Performance : Replaced standard memory allocator with [jemalloc](http://jemalloc.net/). Set `GAFFER_JEMALLOC=0` to disable this and use the standard allocator.
 
 Fixes
 -----

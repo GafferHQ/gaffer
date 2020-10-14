@@ -292,6 +292,15 @@ for extension in $GAFFER_EXTENSION_PATHS; do
 done
 unset IFS
 
+# Set up jemalloc
+##########################################################################
+
+if [[ $GAFFER_JEMALLOC != "0" ]] ; then
+	if [[ `uname` = "Linux" ]] ; then
+		appendToPath "$GAFFER_ROOT/lib/libjemalloc.so" LD_PRELOAD
+	fi
+fi
+
 # Run gaffer itself
 ##########################################################################
 
