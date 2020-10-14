@@ -45,18 +45,19 @@ from Qt import QtCore
 
 from . import _Formatting
 
+## The underlying model that provides data for the various TableViews used
+# in the SpreadsheetUI. It can be remapped into the specific
+# RowNames/Defaults/Cells views via one of the available proxy models.
 class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
-	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
 	CellPlugEnabledRole = QtCore.Qt.UserRole
 
-	def __init__( self, rowsPlug, context, mode, parent = None ) :
+	def __init__( self, rowsPlug, context, parent = None ) :
 
 		QtCore.QAbstractTableModel.__init__( self, parent )
 
 		self.__rowsPlug = rowsPlug
 		self.__context = context
-		self.__mode = mode
 
 		self.__plugDirtiedConnection = rowsPlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 		self.__rowAddedConnection = rowsPlug.childAddedSignal().connect( Gaffer.WeakMethod( self.__rowAdded ) )
@@ -69,10 +70,6 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 	# Methods of our own
 	# ------------------
 
-	def mode( self ) :
-
-		return self.__mode
-
 	def rowsPlug( self ) :
 
 		return self.__rowsPlug
@@ -82,15 +79,15 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		if not index.isValid() :
 			return None
 
-		if self.__mode in ( self.Mode.Cells, self.Mode.RowNames ) :
-			row = self.__rowsPlug[index.row()+1]
-		else :
-			row = self.__rowsPlug[0]
+		row = self.__rowsPlug[ index.row() ]
 
-		if self.__mode == self.Mode.RowNames :
-			return row[index.column()]
+		# Columns map across the logical view
+		# name, enabled, cells[ index - 2 ]
+
+		if index.column() < 2 :
+			return row[ index.column() ]
 		else :
-			return row["cells"][index.column()]
+			return row["cells"][ index.column() - 2 ]
 
 	def valuePlugForIndex( self, index ) :
 
@@ -103,31 +100,23 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 	def indexForPlug( self, plug ) :
 
 		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+
 		if rowPlug is None :
 			return QtCore.QModelIndex()
 
-		if self.__mode in ( self.Mode.Cells, self.Mode.RowNames ) :
-			rowIndex = rowPlug.parent().children().index( rowPlug )
-			if rowIndex == 0 :
-				return QtCore.QModelIndex()
-			else :
-				rowIndex -= 1
-		else :
-			rowIndex = 0
+		rowIndex = rowPlug.parent().children().index( rowPlug )
 
-		if self.__mode == self.Mode.RowNames :
-			if plug == rowPlug["name"] :
-				columnIndex = 0
-			elif plug == rowPlug["enabled"] :
-				columnIndex = 1
-			else :
-				return QtCore.QModelIndex()
+		columnIndex = None
+		if plug == rowPlug["name"] :
+			columnIndex = 0
+		elif plug == rowPlug["enabled"] :
+			columnIndex = 1
 		else :
 			cellPlug = plug if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-			if cellPlug is not None :
-				columnIndex = rowPlug["cells"].children().index( cellPlug )
-			else :
-				return QtCore.QModelIndex()
+			columnIndex = rowPlug["cells"].children().index( cellPlug ) + 2 if cellPlug is not None else None
+
+		if columnIndex is None :
+			return QtCore.QModelIndex()
 
 		return self.index( rowIndex, columnIndex )
 
@@ -159,30 +148,33 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		if parent.isValid() :
 			return 0
 
-		if self.__mode == self.Mode.Defaults :
-			return 1
-		else :
-			return len( self.__rowsPlug ) - 1
+		return len( self.__rowsPlug )
 
 	def columnCount( self, parent = QtCore.QModelIndex() ) :
 
 		if parent.isValid() :
 			return 0
 
-		if self.__mode == self.Mode.RowNames :
-			return 2
-		else :
-			return len( self.__rowsPlug[0]["cells"] )
+		return len( self.__rowsPlug[0]["cells"] ) + 2
 
 	def headerData( self, section, orientation, role ) :
 
-		if role == QtCore.Qt.DisplayRole :
-			if orientation == QtCore.Qt.Horizontal and self.__mode != self.Mode.RowNames :
-				cellPlug = self.__rowsPlug.defaultRow()["cells"][section]
+		if role != QtCore.Qt.DisplayRole :
+			return
+
+		if orientation == QtCore.Qt.Horizontal :
+
+			if section < 2 :
+				label = ( "Name", "Enabled" )[ section ]
+			else :
+				cellPlug = self.__rowsPlug.defaultRow()["cells"][ section - 2 ]
 				label = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" )
 				if not label :
 					label = IECore.CamelCase.toSpaced( cellPlug.getName() )
-				return label
+			return label
+
+		else :
+
 			return section
 
 	def flags( self, index ) :
