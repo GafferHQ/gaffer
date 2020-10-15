@@ -60,13 +60,13 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
 
-	def __init__( self, plug, context, mode, **kw ) :
+	def __init__( self, model, mode, **kw ) :
 
 		tableView = _TableView()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
 		self.__mode = mode;
-		tableView.setModel( self.__displayModel( plug, context, mode ) )
+		tableView.setModel( self.__displayModel( mode, model ) )
 
 		# Headers and column sizing
 
@@ -176,18 +176,17 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return self.__visibleSection
 
-	def __displayModel( self, rowsPlug, context, mode ) :
+	@classmethod
+	def __displayModel( cls, mode, model ) :
 
-		self.__model = _PlugTableModel( rowsPlug, context )
-
-		if mode == self.Mode.RowNames :
+		if mode == cls.Mode.RowNames :
 			proxy = _ProxyModels.RowNamesProxyModel()
-		elif mode == self.Mode.Cells :
+		elif mode == cls.Mode.Cells :
 			proxy = _ProxyModels.CellsProxyModel()
 		else :
 			proxy = _ProxyModels.DefaultsProxyModel()
 
-		proxy.setSourceModel( self.__model )
+		proxy.setSourceModel( model )
 		return proxy
 
 	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
