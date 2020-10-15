@@ -132,7 +132,7 @@ OpenColorIO::ConstProcessorRcPtr OpenColorIOTransform::processor() const
 	OpenColorIO::ConstTransformRcPtr colorTransform = transform();
 	if( !colorTransform )
 	{
-		return nullptr;
+		return OpenColorIO::ConstProcessorRcPtr();
 	}
 
 	OCIOMutex::scoped_lock lock( g_ocioMutex );

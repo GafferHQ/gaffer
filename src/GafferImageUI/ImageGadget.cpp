@@ -262,7 +262,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				glUseProgram( m_previousProgram );
 			}
 
-			void loadTile( const IECoreGL::Texture *channelTextures[4], bool active )
+			void loadTile( IECoreGL::ConstTexturePtr channelTextures[4], bool active )
 			{
 				for( int i = 0; i < 4; ++i )
 				{
@@ -1175,7 +1175,7 @@ void ImageGadget::renderTiles() const
 		for( tileOrigin.x = ImagePlug::tileOrigin( dataWindow.min ).x; tileOrigin.x < dataWindow.max.x; tileOrigin.x += ImagePlug::tileSize() )
 		{
 			bool active = false;
-			const IECoreGL::Texture *channelTextures[4];
+			IECoreGL::ConstTexturePtr channelTextures[4];
 			for( int i = 0; i < 4; ++i )
 			{
 				const InternedString channelName = m_soloChannel == -1 ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];

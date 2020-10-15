@@ -34,6 +34,14 @@ Build
 
 - Dependencies : Updated to version 2.0.0
 
+0.58.3.1 (relative to 0.58.3.0)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed crash when viewing a rapidly changing monochrome image or soloed channel.
+
 0.58.3.0 (relative to 0.58.2.0)
 ========
 
