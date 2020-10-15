@@ -52,6 +52,7 @@ from . import _ProxyModels
 from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
 from ._PlugTableModel import _PlugTableModel
+from ._ProxySelectionModel import _ProxySelectionModel
 from ._SectionChooser import _SectionChooser
 
 from .._TableView import _TableView
@@ -60,13 +61,14 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
 
-	def __init__( self, model, mode, **kw ) :
+	def __init__( self, sharedSelectionModel, mode, **kw ) :
 
 		tableView = _TableView()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
 		self.__mode = mode;
-		tableView.setModel( self.__displayModel( mode, model ) )
+
+		self.__setupModels( mode, sharedSelectionModel )
 
 		# Headers and column sizing
 
@@ -118,8 +120,10 @@ class _PlugTableView( GafferUI.Widget ) :
 		# our own editing via PlugValueWidgets in _EditWindow.
 
 		tableView.setEditTriggers( tableView.NoEditTriggers )
-		tableView.setSelectionMode( QtWidgets.QAbstractItemView.NoSelection )
+		tableView.setSelectionMode( tableView.ExtendedSelection )
+		tableView.setSelectionBehavior( tableView.SelectRows if mode == self.Mode.RowNames else tableView.SelectItems )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 
 		# Drawing
 
@@ -176,18 +180,24 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return self.__visibleSection
 
-	@classmethod
-	def __displayModel( cls, mode, model ) :
+	def __setupModels( self, mode, sharedSelectionModel ) :
 
-		if mode == cls.Mode.RowNames :
-			proxy = _ProxyModels.RowNamesProxyModel()
-		elif mode == cls.Mode.Cells :
-			proxy = _ProxyModels.CellsProxyModel()
+		if mode == self.Mode.RowNames :
+			proxy = _ProxyModels.RowNamesProxyModel
+		elif mode == self.Mode.Cells :
+			proxy = _ProxyModels.CellsProxyModel
 		else :
-			proxy = _ProxyModels.DefaultsProxyModel()
+			proxy = _ProxyModels.DefaultsProxyModel
 
-		proxy.setSourceModel( model )
-		return proxy
+		tableView = self._qtWidget()
+
+		viewProxy = proxy( tableView )
+		viewProxy.setSourceModel( sharedSelectionModel.model() )
+
+		selectionProxy = _ProxySelectionModel( viewProxy, sharedSelectionModel, tableView )
+
+		tableView.setModel( viewProxy )
+		tableView.setSelectionModel( selectionProxy )
 
 	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
 
@@ -311,38 +321,45 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __buttonPress( self, widget, event ) :
 
+		if event.buttons != event.Buttons.Right :
+			return False
+
 		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
 		plug = self._qtWidget().model().plugForIndex( index )
 		if plug is None :
 			return False
 
-		if event.buttons == event.Buttons.Right :
+		if index.flags() & QtCore.Qt.ItemIsEnabled :
 
-			if index.flags() & QtCore.Qt.ItemIsEnabled :
+			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
+				plug = plug["value"]
+			## \todo We need to make this temporary PlugValueWidget just so we
+			# can show a plug menu. We should probably refactor so we can do it
+			# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
+			# and all connected client code.
+			self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
+			self.__plugMenu = GafferUI.Menu(
+				self.__menuPlugValueWidget._popupMenuDefinition()
+			)
+			self.__plugMenu.popup()
 
-				if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
-					plug = plug["value"]
-				## \todo We need to make this temporary PlugValueWidget just so we
-				# can show a plug menu. We should probably refactor so we can do it
-				# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
-				# and all connected client code.
-				self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
-				self.__plugMenu = GafferUI.Menu(
-					self.__menuPlugValueWidget._popupMenuDefinition()
-				)
-				self.__plugMenu.popup()
+		return True
 
-			return True
+	def __buttonDoubleClick( self, widget, event ) :
 
-		elif event.buttons == event.Buttons.Left :
+		if event.buttons != event.Buttons.Left :
+			return False
 
-			valuePlug = plug["value"] if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug
-			if not isinstance( valuePlug, Gaffer.BoolPlug ) :
-				self.editPlug( plug, scrollTo = False )
+		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+		plug = self._qtWidget().model().plugForIndex( index )
+		if plug is None :
+			return False
 
-			return True
+		valuePlug = plug["value"] if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug
+		if not isinstance( valuePlug, Gaffer.BoolPlug ) :
+			self.editPlug( plug, scrollTo = False )
 
-		return False
+		return True
 
 	def __headerButtonPress( self, header, event ) :
 
