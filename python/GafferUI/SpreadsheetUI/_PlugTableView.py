@@ -52,6 +52,7 @@ from . import _ProxyModels
 from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
 from ._PlugTableModel import _PlugTableModel
+from ._ProxySelectionModel import _ProxySelectionModel
 from ._SectionChooser import _SectionChooser
 
 from .._TableView import _TableView
@@ -60,13 +61,13 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
 
-	def __init__( self, model, mode, **kw ) :
+	def __init__( self, selectionModel, mode, **kw ) :
 
 		tableView = _TableView()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
 		self.__mode = mode;
-		tableView.setModel( self.__displayModel( model ) )
+		self.__setupModels( selectionModel )
 
 		# Headers and column sizing
 
@@ -176,18 +177,22 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return self.__visibleSection
 
-	def __displayModel( self, model ) :
+	def __setupModels( self, selectionModel ) :
+
+		tableView = self._qtWidget()
 
 		if self.__mode == self.Mode.RowNames :
-			proxy = _ProxyModels.RowNamesProxyModel( self._qtWidget() )
+			viewProxy = _ProxyModels.RowNamesProxyModel( tableView )
 		elif self.__mode == self.Mode.Cells :
-			proxy = _ProxyModels.CellsProxyModel( self._qtWidget() )
+			viewProxy = _ProxyModels.CellsProxyModel( tableView )
 		else :
-			proxy = _ProxyModels.DefaultsProxyModel( self._qtWidget() )
+			viewProxy = _ProxyModels.DefaultsProxyModel( tableView )
 
-		proxy.setSourceModel( model )
+		viewProxy.setSourceModel( selectionModel.model() )
+		tableView.setModel( viewProxy )
 
-		return proxy
+		selectionProxy = _ProxySelectionModel( viewProxy, selectionModel, tableView )
+		tableView.setSelectionModel( selectionProxy )
 
 	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
 

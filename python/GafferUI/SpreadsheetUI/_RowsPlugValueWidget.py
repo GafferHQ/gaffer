@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
 from Qt import QtWidgets
 
 from . import _Algo
@@ -65,6 +66,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug )
 
 		model = _PlugTableModel( plug, self.getContext(), self._qtWidget() )
+		selectionModel = QtCore.QItemSelectionModel( model, self._qtWidget() )
 
 		with self.__grid :
 
@@ -88,14 +90,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Spacer( imath.V2i( 1, 8 ) )
 
 			self.__defaultTable = _PlugTableView(
-				model, _PlugTableView.Mode.Defaults,
+				selectionModel, _PlugTableView.Mode.Defaults,
 				parenting = {
 					"index" : ( 1, 1 ),
 				}
 			)
 
 			self.__rowNamesTable = _PlugTableView(
-				model, _PlugTableView.Mode.RowNames,
+				selectionModel, _PlugTableView.Mode.RowNames,
 				parenting = {
 					"index" : ( 0, 2 ),
 				}
@@ -103,7 +105,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__updateRowNamesWidth()
 
 			self.__cellsTable = _PlugTableView(
-				model, _PlugTableView.Mode.Cells,
+				selectionModel, _PlugTableView.Mode.Cells,
 				parenting = {
 					"index" : ( 1, 2 ),
 				}
