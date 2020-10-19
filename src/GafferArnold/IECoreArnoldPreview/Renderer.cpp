@@ -613,7 +613,7 @@ class ArnoldShader : public IECore::RefCounted
 	public :
 
 		ArnoldShader( const IECoreScene::ShaderNetwork *shaderNetwork, NodeDeleter nodeDeleter, const std::string &name, const AtNode *parentNode )
-			:	m_nodeDeleter( nodeDeleter )
+			:	m_nodeDeleter( nodeDeleter ), m_hash( shaderNetwork->Object::hash() )
 		{
 			m_nodes = ShaderNetworkAlgo::convert( shaderNetwork, name, parentNode );
 		}
@@ -644,10 +644,16 @@ class ArnoldShader : public IECore::RefCounted
 			nodes.insert( nodes.end(), m_nodes.begin(), m_nodes.end() );
 		}
 
+		void hash( IECore::MurmurHash &h ) const
+		{
+			h.append( m_hash );
+		}
+
 	private :
 
 		NodeDeleter m_nodeDeleter;
 		std::vector<AtNode *> m_nodes;
+		const IECore::MurmurHash m_hash;
 
 };
 
@@ -740,6 +746,9 @@ IE_CORE_DECLAREPTR( ShaderCache )
 namespace
 {
 
+// Forward declaration
+bool isConvertedProcedural( const AtNode *node );
+
 IECore::InternedString g_surfaceShaderAttributeName( "surface" );
 IECore::InternedString g_lightShaderAttributeName( "light" );
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
@@ -811,7 +820,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes ), m_allAttributes( attributes )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -1017,14 +1026,14 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			// Check that we're not looking at an impossible request
 			// to edit geometric attributes.
 
+			const AtNode *geometry = node;
+			if( AiNodeIs( node, g_ginstanceArnoldString ) )
+			{
+				geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, g_nodeArnoldString ) );
+			}
+
 			if( previousAttributes )
 			{
-				const AtNode *geometry = node;
-				if( AiNodeIs( node, g_ginstanceArnoldString ) )
-				{
-					geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, g_nodeArnoldString ) );
-				}
-
 				IECore::TypeId objectType = IECore::InvalidTypeId;
 				bool meshInterpolationIsLinear = false;
 				bool proceduralIsVolumetric = false;
@@ -1049,6 +1058,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				else if( AiNodeIs( geometry, g_sphereArnoldString ) )
 				{
 					objectType = IECoreScene::SpherePrimitive::staticTypeId();
+				}
+				else if( isConvertedProcedural( geometry ) )
+				{
+					objectType = IECoreScenePreview::Procedural::staticTypeId();
 				}
 
 				IECore::MurmurHash previousGeometryHash;
@@ -1085,6 +1098,20 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			for( ArnoldAttributes::UserAttributes::const_iterator it = m_user.begin(), eIt = m_user.end(); it != eIt; ++it )
 			{
 				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
+			}
+
+			// Early out for IECoreScene::Procedurals. Arnold's inheritance rules for procedurals are back
+			// to front, with any explicitly set parameters on the procedural node overriding parameters of child
+			// nodes completely. We emulate the inheritance we want in ArnoldProceduralRenderer.
+
+			if( isConvertedProcedural( geometry ) )
+			{
+				// Arnold neither inherits nor overrides visibility parameters. Instead
+				// it does a bitwise `&` between the procedural and its children. Apply
+				// full visibility to the `ginstance` to override the full invisibility
+				// of the procedural it references.
+				AiNodeSetByte( node, g_visibilityArnoldString, AI_RAY_ALL );
+				return true;
 			}
 
 			// Add shape specific parameters.
@@ -1204,6 +1231,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		const std::vector<ArnoldShaderPtr>& lightFilterShaders() const
 		{
 			return m_lightFilterShaders;
+		}
+
+		const IECore::CompoundObject *allAttributes() const
+		{
+			return m_allAttributes.get();
 		}
 
 	private :
@@ -1580,13 +1612,63 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					break;
 				case IECoreVDB::VDBObjectTypeId :
 					h.append( m_volumePadding );
-
 					m_volume.hash( h );
 					break;
 				default :
+					if(
+						objectType == (IECore::TypeId)GafferScene::PreviewProceduralTypeId ||
+						IECore::RunTimeTyped::inheritsFrom( objectType, (IECore::TypeId)GafferScene::PreviewProceduralTypeId )
+					)
+					{
+						hashProceduralGeometry( h );
+					}
 					// No geometry attributes for this type.
 					break;
 			}
+		}
+
+		template<typename T>
+		void hashOptional( const T *t, IECore::MurmurHash &h ) const
+		{
+			if( t )
+			{
+				t->hash( h );
+			}
+			else
+			{
+				h.append( 0 );
+			}
+		}
+
+		void hashProceduralGeometry( IECore::MurmurHash &h ) const
+		{
+			// Everything except user attributes affects procedurals,
+			// because we have to manually inherit attributes by
+			// applying them to the child nodes of the procedural.
+			h.append( m_visibility );
+			h.append( m_sidedness );
+			h.append( m_shadingFlags );
+			hashOptional( m_surfaceShader.get(), h );
+			hashOptional( m_filterMap.get(), h );
+			hashOptional( m_uvRemap.get(), h );
+			hashOptional( m_lightShader.get(), h );
+			hashOptional( m_lightFilterShader.get(), h );
+			for( const auto &s : m_lightFilterShaders )
+			{
+				s->hash( h );
+			}
+			hashOptional( m_traceSets.get(), h );
+			hashOptional( m_transformType.get(), h );
+			h.append( m_stepSize );
+			h.append( m_stepScale );
+			h.append( m_volumePadding );
+			m_polyMesh.hash( true, h );
+			m_polyMesh.hash( false, h );
+			m_displacement.hash( h );
+			m_curves.hash( h );
+			m_volume.hash( h );
+			hashOptional( m_toonId.get(), h );
+			hashOptional( m_sssSetName.get(), h );
 		}
 
 		unsigned char m_visibility;
@@ -1608,11 +1690,23 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Curves m_curves;
 		Volume m_volume;
 		IECore::ConstStringDataPtr m_toonId;
+		IECore::ConstStringDataPtr m_sssSetName;
+		// When adding fields, please update `hashProceduralGeometry()`!
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;
 
-		IECore::ConstStringDataPtr m_sssSetName;
+		// The original attributes we were contructed from. We stash
+		// these so that they can be inherited manually when expanding
+		// procedurals.
+		/// \todo Instead of storing this, can be instead copy/update
+		/// the fields above directly when emulating inheritance? We are
+		/// avoiding that for now because it would mean child nodes of the
+		/// procedural referencing shaders etc generated outside of the
+		/// procedural. We saw crashes in Arnold when attempting that in the
+		/// past, but have been told by the developers since that it should
+		/// be supported.
+		IECore::ConstCompoundObjectPtr m_allAttributes;
 
 };
 
@@ -1674,7 +1768,7 @@ class Instance
 };
 
 // Forward declaration
-AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const std::string &nodeName, const AtNode *parentNode );
+AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const ArnoldAttributes *attributes, const std::string &nodeName, const AtNode *parentNode );
 
 class InstanceCache : public IECore::RefCounted
 {
@@ -1798,7 +1892,7 @@ class InstanceCache : public IECore::RefCounted
 			AtNode *node = nullptr;
 			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
 			{
-				node = convertProcedural( procedural, nodeName, m_parentNode );
+				node = convertProcedural( procedural, attributes, nodeName, m_parentNode );
 			}
 			else
 			{
@@ -1821,7 +1915,7 @@ class InstanceCache : public IECore::RefCounted
 			AtNode *node = nullptr;
 			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
 			{
-				node = convertProcedural( procedural, nodeName, m_parentNode );
+				node = convertProcedural( procedural, attributes, nodeName, m_parentNode );
 			}
 			else
 			{
@@ -2425,8 +2519,8 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		/// renderer instead?
 		/// \todo Pass through the parent message hander so we can redirect
 		/// IECore::msg message handlers here.
-		ProceduralRenderer( AtNode *procedural )
-			:	ArnoldRendererBase( nullNodeDeleter, procedural )
+		ProceduralRenderer( AtNode *procedural, IECore::ConstCompoundObjectPtr attributesToInherit )
+			:	ArnoldRendererBase( nullNodeDeleter, procedural ), m_attributesToInherit( attributesToInherit )
 		{
 		}
 
@@ -2438,6 +2532,27 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call output()" );
+		}
+
+		ArnoldRendererBase::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
+		{
+			// Emulate attribute inheritance.
+			IECore::CompoundObjectPtr fullAttributes = new IECore::CompoundObject;
+			for( const auto &a : m_attributesToInherit->members() )
+			{
+				if( !boost::starts_with( a.first.c_str(), "user:" ) )
+				{
+					// We ignore user attributes because they follow normal inheritance
+					// in Arnold anyway. They will be written onto the `ginstance` node
+					// referring to the procedural instead.
+					fullAttributes->members()[a.first] = a.second;
+				}
+			}
+			for( const auto &a : attributes->members() )
+			{
+				fullAttributes->members()[a.first] = a.second;
+			}
+			return ArnoldRendererBase::attributes( fullAttributes.get() );
 		}
 
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
@@ -2511,6 +2626,8 @@ class ProceduralRenderer final : public ArnoldRendererBase
 
 	private :
 
+		IECore::ConstCompoundObjectPtr m_attributesToInherit;
+
 		typedef tbb::spin_mutex NodesCreatedMutex;
 		NodesCreatedMutex m_nodesCreatedMutex;
 		vector<AtNode *> m_nodesCreated;
@@ -2559,13 +2676,13 @@ int procFunc( AtProceduralNodeMethods *methods )
 	return 1;
 }
 
-AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const std::string &nodeName, const AtNode *parentNode )
+AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const ArnoldAttributes *attributes, const std::string &nodeName, const AtNode *parentNode )
 {
 	AtNode *node = AiNode( g_proceduralArnoldString, AtString( nodeName.c_str() ), parentNode );
 
 	AiNodeSetPtr( node, g_funcPtrArnoldString, (void *)procFunc );
 
-	ProceduralRendererPtr renderer = new ProceduralRenderer( node );
+	ProceduralRendererPtr renderer = new ProceduralRenderer( node, attributes->allAttributes() );
 	procedural->render( renderer.get() );
 
 	ProceduralData *data = new ProceduralData;
@@ -2573,6 +2690,11 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 	AiNodeSetPtr( node, g_userPtrArnoldString, data );
 
 	return node;
+}
+
+bool isConvertedProcedural( const AtNode *node )
+{
+	return AiNodeIs( node, g_proceduralArnoldString ) && AiNodeGetPtr( node, g_funcPtrArnoldString ) == procFunc;
 }
 
 } // namespace

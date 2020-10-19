@@ -1,3 +1,11 @@
+0.58.x.x (relative to 0.58.3.2)
+========
+
+Fixes
+-----
+
+- Encapsulate : Fixed bugs in shader/attribute inheritance when rendering in Arnold (#3559).
+
 0.58.3.2 (relative to 0.58.3.1)
 ========
 
