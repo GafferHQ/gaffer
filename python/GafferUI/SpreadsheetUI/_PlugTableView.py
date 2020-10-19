@@ -92,19 +92,19 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__ignoreSectionResized = False
 			self.__callingMoveSection = False
 
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
-			)
-
 		else : # RowNames mode
 
 			tableView.horizontalHeader().resizeSection( 1, 22 )
-			tableView.horizontalHeader().setSectionResizeMode( 0, QtWidgets.QHeaderView.Stretch )
+			self.__applyRowNamesWidth()
 			# Style the row enablers as toggles rather than checkboxes.
 			## \todo Do the same for cells containing NameValuePlugs with enablers. This is tricky
 			# because we need to do it on a per-cell basis, so will need to use `_CellPlugItemDelegate.paint()`
 			# instead.
 			tableView.setProperty( "gafferToggleIndicator", True )
+
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
+		)
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
@@ -143,6 +143,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
 		return self._qtWidget().model().plugForIndex( index )
+
+	def selectedPlugs( self ) :
+
+		selection = self._qtWidget().selectionModel().selectedIndexes()
+		model = self._qtWidget().model()
+		return [ model.plugForIndex( i ) for i in selection ]
 
 	def editPlug( self, plug, scrollTo = True ) :
 
@@ -286,6 +292,14 @@ class _PlugTableView( GafferUI.Widget ) :
 		finally :
 			self.__ignoreSectionResized = False
 
+	def __applyRowNamesWidth( self ) :
+
+		if self.__mode != self.Mode.RowNames :
+			return
+
+		width = self.__getRowNameWidth()
+		self._qtWidget().horizontalHeader().resizeSection( 0, width )
+
 	@GafferUI.LazyMethod()
 	def __applySectionOrderLazily( self ) :
 
@@ -297,24 +311,33 @@ class _PlugTableView( GafferUI.Widget ) :
 			return
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
-		if not rowsPlug.isAncestorOf( plug ) :
-			return
 
-		if key == "spreadsheet:columnWidth" :
+		if self.__mode == self.Mode.RowNames :
 
-			if plug.parent() == rowsPlug.defaultRow()["cells"] :
-				self.__applyColumnWidthMetadata( cellPlug = plug )
+			if plug.isSame( rowsPlug.defaultRow() ) and key == "spreadsheet:rowNameWidth" :
+				self.__applyRowNamesWidth()
+				return
 
-		elif key == "spreadsheet:columnIndex" :
+		else :
 
-			# Typically we get a flurry of edits to columnIndex at once,
-			# so we use a lazy method to update the order once everything
-			# has been done.
-			self.__applySectionOrderLazily()
+			if not rowsPlug.isAncestorOf( plug ) :
+				return
 
-		elif key == "spreadsheet:section" :
+			if key == "spreadsheet:columnWidth" :
 
-			self.__applyColumnVisibility()
+				if plug.parent() == rowsPlug.defaultRow()["cells"] :
+					self.__applyColumnWidthMetadata( cellPlug = plug )
+
+			elif key == "spreadsheet:columnIndex" :
+
+				# Typically we get a flurry of edits to columnIndex at once,
+				# so we use a lazy method to update the order once everything
+				# has been done.
+				self.__applySectionOrderLazily()
+
+			elif key == "spreadsheet:section" :
+
+				self.__applyColumnVisibility()
 
 	def __buttonPress( self, widget, event ) :
 
@@ -322,23 +345,44 @@ class _PlugTableView( GafferUI.Widget ) :
 			return False
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
-		plug = self._qtWidget().model().plugForIndex( index )
-		if plug is None :
-			return False
 
-		if index.flags() & QtCore.Qt.ItemIsEnabled :
+		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+			return True
 
+		# Ensure the cell that was clicked is selected. This avoids any ambiguity
+		# as to whether the menu is operating on the cell that was right-clicked, or
+		# the cells that are selected. As double-click to edit also resets selection
+		# (Qt default) then this offers the most consistent experience.
+		selectionModel = self._qtWidget().selectionModel()
+		if not selectionModel.isSelected( index ) :
+			selectionModel.select( index, selectionModel.ClearAndSelect )
+
+		selectedPlugs = self.selectedPlugs()
+
+		if len( selectedPlugs ) == 1 :
+
+			plug = next( iter( selectedPlugs ) )
 			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
 				plug = plug["value"]
+
 			## \todo We need to make this temporary PlugValueWidget just so we
 			# can show a plug menu. We should probably refactor so we can do it
 			# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
 			# and all connected client code.
 			self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
-			self.__plugMenu = GafferUI.Menu(
-				self.__menuPlugValueWidget._popupMenuDefinition()
-			)
-			self.__plugMenu.popup()
+			definition = self.__menuPlugValueWidget._popupMenuDefinition()
+
+		else :
+
+			definition = IECore.MenuDefinition()
+
+		if self.__mode == self.Mode.RowNames :
+			self.__prependRowMenuItems( definition, selectedPlugs )
+		else :
+			self.__prependCellMenuItems( definition, selectedPlugs )
+
+		self.__plugMenu = GafferUI.Menu( definition )
+		self.__plugMenu.popup()
 
 		return True
 
@@ -402,11 +446,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		menuDefinition.append(
 			"/Delete Column",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteColumn), cellPlug ),
-				"active" : (
-					not Gaffer.MetadataAlgo.readOnly( cellPlug ) and
-					_Algo.dimensionsEditable( self._qtWidget().model().rowsPlug() )
-				)
+				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteColumn ), cellPlug ),
+				"active" : self.__canDeleteColumn( cellPlug )
 			}
 		)
 
@@ -414,6 +455,91 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__headerMenu.popup()
 
 		return True
+
+	def __prependRowMenuItems( self, menuDefinition, plugs ) :
+
+		rowPlugs = { p.ancestor( Gaffer.Spreadsheet.RowPlug ) for p in plugs }
+
+		pluralSuffix = "" if len( rowPlugs ) == 1 else "s"
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		items = []
+
+		rowsPlug = next( iter( rowPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug )
+
+		widths = [
+			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
+			( "Single", GafferUI.PlugWidget.labelWidth() ),
+			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
+		]
+
+		currentWidth = self.__getRowNameWidth()
+		for label, width in widths :
+			items.append( (
+				"/Width/{}".format( label ),
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setRowNameWidth ), width ),
+					"active" : not Gaffer.MetadataAlgo.readOnly( rowsPlug ),
+					"checkBox" : width == currentWidth,
+				}
+			) )
+
+		items.extend( (
+			(
+				"/__DeleteRowDivider__", { "divider" : True }
+			),
+			(
+				"/Delete Row%s" % pluralSuffix,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__deleteRows ), rowPlugs ),
+					"active" : self.__canDeleteRows( rowPlugs )
+				}
+			)
+		) )
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
+	def __prependCellMenuItems( self, menuDefinition, cellPlugs ) :
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		pluralSuffix = "" if len( cellPlugs ) == 1 else "s"
+
+		canChangeEnabledState, currentEnabledState = self.__canChangeCellEnabledState( cellPlugs )
+		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
+
+		items = [
+			(
+				( "/Disable Cell%s" if currentEnabledState else "/Enable Cell%s" ) % pluralSuffix,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setPlugValues ), enabledPlugs, not currentEnabledState ),
+					"active" : canChangeEnabledState
+				}
+			)
+		]
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
+	def __setRowNameWidth( self, width, *unused ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )
+
+	def __getRowNameWidth( self ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+
+		width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
+		return width if width is not None else GafferUI.PlugWidget.labelWidth()
 
 	def __setColumnLabel( self, cellPlug ) :
 
@@ -427,16 +553,65 @@ class _PlugTableView( GafferUI.Widget ) :
 			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 				Gaffer.Metadata.registerValue( cellPlug, "spreadsheet:columnLabel", label )
 
+	def __canDeleteColumn( self, cellPlug ) :
+
+		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
+		return not Gaffer.MetadataAlgo.readOnly( cellPlug ) and _Algo.dimensionsEditable( rowsPlug )
+
 	def __deleteColumn( self, cellPlug ) :
 
 		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
 		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 			rowsPlug.removeColumn( cellPlug.parent().children().index( cellPlug ) )
 
+	def __canDeleteRows( self, rowPlugs ) :
+
+		if not rowPlugs :
+			return False
+
+		rowsPlug = next( iter( rowPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug )
+		includesDefaultRow = rowsPlug.defaultRow() in rowPlugs
+		anyLocked = any( [ Gaffer.MetadataAlgo.readOnly( row ) for row in rowPlugs ] )
+
+		return _Algo.dimensionsEditable( rowsPlug ) and not includesDefaultRow and not anyLocked
+
+	def __deleteRows( self, rowPlugs ) :
+
+		with Gaffer.UndoScope( next( iter( rowPlugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for row in rowPlugs :
+				row.parent().removeChild( row )
+
+	def __canChangeCellEnabledState( self, cellPlugs ) :
+
+		# Disallow disable if the selection contains the default row, and any
+		# default row cells aren't adopting an enabled plug.
+		defaultRow = next( iter( cellPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug ).defaultRow()
+		defaultRowPlugs = [ c for c in cellPlugs if c.ancestor( Gaffer.Spreadsheet.RowPlug ) == defaultRow ]
+		haveRequiredDefaultsCells = defaultRowPlugs and any( [ "enabled" in cell for cell in defaultRowPlugs ] )
+
+		# ... or if any are locked
+		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
+		anyReadOnly = any( [ Gaffer.MetadataAlgo.readOnly( plug ) for plug in enabledPlugs ] )
+		allSettable = all( [ plug.settable() for plug in enabledPlugs ] )
+
+		enabled = True
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
+
+		return ( allSettable and not anyReadOnly and not haveRequiredDefaultsCells, enabled )
+
+	def __setPlugValues( self, plugs, value ) :
+
+		with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in plugs :
+				plug.setValue( value )
+
 	def __modelReset( self ) :
 
 		self.__applyColumnVisibility()
 		self.__applyColumnWidthMetadata()
+		self.__applyRowNamesWidth()
 
 	def __moveToSection( self, cellPlug, sectionName = None ) :
 
