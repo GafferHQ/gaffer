@@ -41,36 +41,66 @@ import IECore
 
 from Qt import QtWidgets
 
+from GafferUI.PlugValueWidget import sole
+
+from . import _Algo
+
 class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugOrPlugs, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugOrPlugs )
 
-		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
-		if "enabled" in plug and rowPlug != rowPlug.parent().defaultRow() :
-			enabledPlugValueWidget = GafferUI.BoolPlugValueWidget(
-				plug["enabled"],
+		plugs = self.getPlugs()
+
+		# If all cells have enabled plugs, we need to add a switch for them.
+		# If cells adopt the enabled plug from their value plug, we rely on the
+		# PlugValueWidget drawing the switch for us.
+		# However, in cases where the widget for the value plug doesn't support
+		# multiple plugs, we don't show a value, and so need to add our own
+		# switch so people can at least edit enabled state the cells.
+
+		cellEnabledPlugs = { p["enabled"] for p in plugs if "enabled" in p }
+		valuePlugs = { p["value"] for p in plugs }
+
+		addCellEnabledSwitch = len( cellEnabledPlugs ) == len( valuePlugs )
+
+		if self.canEdit( plugs ) :
+
+			plugValueWidget = self.__createValueWidget( valuePlugs )
+			if plugValueWidget is not None :
+				# Apply some fixed widths for some widgets, otherwise they're
+				# a bit too eager to grow. \todo Should we change the underlying
+				# behaviour of the widgets themselves?
+				self.__applyFixedWidths( plugValueWidget )
+				self.__row.append( plugValueWidget )
+			else :
+				self.__row.append( GafferUI.Label( "Unable to edit multiple plugs of this type" ) )
+				addCellEnabledSwitch = True
+
+		else :
+			self.__row.append( GafferUI.Label( "Unable to edit plugs with mixed types" ) )
+			addCellEnabledSwitch = True
+
+		if addCellEnabledSwitch :
+			self.__enabledPlugValueWidget = GafferUI.BoolPlugValueWidget(
+				[ p.enabledPlug() for p in plugs ],
 				displayMode=GafferUI.BoolWidget.DisplayMode.Switch
 			)
-			self.__row.append( enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
+			self.__enabledPlugValueWidget.setEnabled( _Algo.cellsCanBeDisabled( plugs ) )
+			self.__row.insert( 0, self.__enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
+		else :
+			self.__enabledPlugValueWidget = None
 
-		plugValueWidget = self.__createValueWidget( plug["value"] )
-
-		# Apply some fixed widths for some widgets, otherwise they're
-		# a bit too eager to grow. \todo Should we change the underlying
-		# behaviour of the widgets themselves?
-		self.__applyFixedWidths( plugValueWidget )
-
-		self.__row.append( plugValueWidget )
-
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
 	def childPlugValueWidget( self, childPlug ) :
 
 		for widget in self.__row :
-			if widget.getPlug() == childPlug :
+			if not isinstance( widget, GafferUI.PlugValueWidget ) :
+				continue
+			if childPlug in widget.getPlugs() :
 				return widget
 
 		return None
@@ -86,27 +116,59 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		cls.__plugValueWidgetCreators[plugType] = plugValueWidgetCreator
 
-	def __createValueWidget( self, plug ) :
+	@classmethod
+	def canEdit( cls, cellPlugs ) :
+
+		if not cellPlugs :
+			return False
+
+		if len( cellPlugs ) == 1 :
+			return True
+
+		def plugStructure( cell ) :
+			return [ p.__class__ for p in Gaffer.Plug.RecursiveRange( cell ) ]
+
+		if sole( [ plugStructure( c ) for c in cellPlugs ] ) is None :
+			return False
+
+		return True
+
+	def __createValueWidget( self, plugs ) :
 
 		creator = self.__plugValueWidgetCreators.get(
-			plug.__class__,
+			next( iter( plugs ) ).__class__,
 			GafferUI.PlugValueWidget.create
 		)
 
-		w = creator( plug )
+		# Not all value widgets support multiple plugs yet,
+		# so we need to be a little careful here.
+		if len( plugs ) == 1 :
+			# Ensure maximum compatability
+			w = creator( next( iter( plugs ) ) )
+		else :
+			try :
+				w = creator( plugs )
+			except :
+				return None
+
 		assert( isinstance( w, GafferUI.PlugValueWidget ) )
 		return w
 
 	__plugValueWidgetCreators = {}
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
-		if "enabled" in self.getPlug() :
-			enabled = False
-			with self.getContext() :
-				with IECore.IgnoredExceptions( Exception ) :
-					enabled = self.getPlug()["enabled"].getValue()
-			self.__row[-1].setEnabled( enabled )
+		if self.__enabledPlugValueWidget is None :
+			return
+
+		enabledPlugs = [ p.enabledPlug() for p in self.getPlugs() ]
+
+		enabled = False
+		with self.getContext() :
+			with IECore.IgnoredExceptions( Exception ) :
+				enabled = sole( [ p.getValue() for p in enabledPlugs ] )
+
+		self.__row[-1].setEnabled( enabled is True )
 
 	__numericFieldWidth = 60
 
@@ -119,7 +181,7 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 				widget._qtWidget().setFixedWidth( cls.__numericFieldWidth )
 				widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
 
-			for childPlug in Gaffer.Plug.Range( widget.getPlug() ) :
+			for childPlug in Gaffer.Plug.Range( next( iter( widget.getPlugs() ) ) ) :
 				childWidget = widget.childPlugValueWidget( childPlug )
 				if childWidget is not None :
 					walk( childWidget )

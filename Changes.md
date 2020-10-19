@@ -16,7 +16,7 @@ Improvements
   - Enabled cell selection, editing is now achieved with a double-click.
   - Added menu items to copy/paste the enabled state and value(s) of selected cells.
   - Added menu items to delete the selected rows.
-  - Added ability to copy/paste the enabled state and value(s) of selected cells.
+  - Added menu items to edit the values for all selected cells of the same type simultaneously.
 
 Fixes
 -----

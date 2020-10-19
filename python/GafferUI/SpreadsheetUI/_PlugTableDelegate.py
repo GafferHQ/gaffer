@@ -78,3 +78,14 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 			painter.fillRect( option.rect, overlayColor )
 
 		painter.restore()
+
+	__filteredEvents = ( QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonRelease )
+
+	def editorEvent( self, event, model, option, index ) :
+
+		if event.type() in self.__filteredEvents and bool( index.flags() & QtCore.Qt.ItemIsUserCheckable ) :
+			# Prevent checkable items from being editable via single click
+			return False
+		else :
+			return super( _PlugTableDelegate, self ).editorEvent( event, model, option, index )
+

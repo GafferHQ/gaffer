@@ -179,7 +179,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Select new row for editing. Have to do this on idle as otherwise it doesn't scroll
 		# right to the bottom.
-		GafferUI.EventLoop.addIdleCallback( functools.partial( self.__rowNamesTable.editPlug, row["name"] ) )
+		GafferUI.EventLoop.addIdleCallback( functools.partial( self.__rowNamesTable.editPlugs, [ row["name"] ] ) )
 
 	def __addRowButtonDragEnter( self, addButton, event ) :
 

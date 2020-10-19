@@ -141,6 +141,10 @@ class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
 
 		return self.mapFromSource( self.sourceModel().indexForPlug( plug ) )
 
+	def presentsCheckstate( self, index ) :
+
+		return self.sourceModel().presentsCheckstate( self.mapToSource( index ) )
+
 	def __dataChanged( self, topLeft, bottomRight, roles ) :
 
 		# Early out if the changed range doesn't intersect the remapped model
