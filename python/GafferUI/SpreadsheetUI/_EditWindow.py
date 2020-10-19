@@ -57,15 +57,18 @@ class _EditWindow( GafferUI.Window ) :
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 	@classmethod
-	def popupEditor( cls, plug, plugBound ) :
+	def popupEditor( cls, plugs, plugBound ) :
 
-		plugValueWidget = GafferUI.PlugValueWidget.create( plug )
+		if not isinstance( plugs, set ) :
+			plugs = { plugs }
+
+		plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
 		cls.__currentWindow = _EditWindow( plugValueWidget )
 
 		if isinstance( plugValueWidget, _CellPlugValueWidget ) :
-			valuePlugValueWidget = plugValueWidget.childPlugValueWidget( plug["value"] )
+			valuePlugValueWidget = plugValueWidget.childPlugValueWidget( next( iter( plugs ) )["value"] )
 			if isinstance( valuePlugValueWidget, GafferUI.PresetsPlugValueWidget ) :
-				if not Gaffer.Metadata.value( valuePlugValueWidget.getPlug(), "presetsPlugValueWidget:isCustom" ) :
+				if not Gaffer.Metadata.value( next( iter( valuePlugValueWidget.getPlugs() ) ), "presetsPlugValueWidget:isCustom" ) :
 					valuePlugValueWidget.menu().popup()
 					return
 
@@ -120,7 +123,7 @@ class _EditWindow( GafferUI.Window ) :
 		if widget is not None and widgetUsable( widget ) :
 			return widget
 
-		for childPlug in Gaffer.Plug.Range( plugValueWidget.getPlug() ) :
+		for childPlug in Gaffer.Plug.Range( next( iter( plugValueWidget.getPlugs() ) ) ) :
 			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
 			if childWidget is not None :
 				childTextWidget = cls.__textWidget( childWidget )

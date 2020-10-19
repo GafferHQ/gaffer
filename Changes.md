@@ -4,7 +4,8 @@
 Improvements
 ------------
 
-- Spreadsheet : Added ability to select one or more rows or cells and:
+- Spreadsheet : Added ability to select one or more rows or cells to :
+  - Edit the values for all selected cells of the same type simultaneously.
   - Copy their values and enabled state to other cells.
   - Delete the selected rows.
 
