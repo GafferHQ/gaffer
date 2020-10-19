@@ -50,16 +50,20 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneTest;
 
+/// \todo Remove
+#ifndef IECORE_INTERNEDSTRING_WITH_TBB_HASHER
+
 namespace IECore
 {
 
-/// \todo Move to Cortex
 size_t tbb_hasher( const InternedString &s )
 {
 	return tbb::tbb_hasher( s.string() );
 }
 
 } // namespace IECore
+
+#endif
 
 namespace
 {
