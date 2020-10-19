@@ -34,6 +34,14 @@ Build
 
 - Dependencies : Updated to version 2.0.0
 
+0.58.x.x (relative to 0.58.3.1)
+========
+
+Fixes
+-----
+
+- BranchCreator : Fixed bugs affecting set computation.
+
 0.58.3.1 (relative to 0.58.3.0)
 ========
 
@@ -326,6 +334,11 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.6.0.
+
+0.57.7.x (relative to 0.57.7.3)
+========
+
+- BranchCreator : Fixed bugs affecting set computation.
 
 0.57.7.3 (relative to 0.57.7.2)
 ========
