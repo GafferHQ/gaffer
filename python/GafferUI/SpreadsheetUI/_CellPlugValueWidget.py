@@ -50,8 +50,6 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not isinstance( plugs, set ) :
 			plugs = { plugs }
 
-		assert( self.canEdit( plugs ) )
-
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
 
@@ -66,15 +64,21 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 			self.__row.append( enabledPlugValueWidget, verticalAlignment=GafferUI.VerticalAlignment.Top )
 
-		plugValueWidget = self.__createValueWidget( valuePlugs )
-		if plugValueWidget is not None :
-			# Apply some fixed widths for some widgets, otherwise they're
-			# a bit too eager to grow. \todo Should we change the underlying
-			# behaviour of the widgets themselves?
-			self.__applyFixedWidths( plugValueWidget )
-			self.__row.append( plugValueWidget )
+		if self.canEdit( plugs ) :
+
+			plugValueWidget = self.__createValueWidget( valuePlugs )
+			if plugValueWidget is not None :
+				# Apply some fixed widths for some widgets, otherwise they're
+				# a bit too eager to grow. \todo Should we change the underlying
+				# behaviour of the widgets themselves?
+				self.__applyFixedWidths( plugValueWidget )
+				self.__row.append( plugValueWidget )
+			else :
+				self.__row.append( GafferUI.Label( "Unable to multi-edit values of this type" ) )
+
 		else :
-			self.__row.append( GafferUI.Label( "Unable to multi-edit values of this type." ) )
+			self.__row.append( GafferUI.Label( "Unable to multi-edit values with mixed types" ) )
+
 
 		self._updateFromPlugs()
 
