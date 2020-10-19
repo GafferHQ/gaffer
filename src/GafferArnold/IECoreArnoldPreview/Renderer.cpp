@@ -1383,104 +1383,104 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		};
 
-	struct Volume
-	{
-		Volume( const IECore::CompoundObject *attributes )
+		struct Volume
 		{
-			volumeGrids = attribute<IECore::StringVectorData>( g_volumeGridsAttributeName, attributes );
-			velocityGrids = attribute<IECore::StringVectorData>( g_velocityGridsAttributeName, attributes );
-			velocityScale = optionalAttribute<float>( g_velocityScaleAttributeName, attributes );
-			velocityFPS = optionalAttribute<float>( g_velocityFPSAttributeName, attributes );
-			velocityOutlierThreshold = optionalAttribute<float>( g_velocityOutlierThresholdAttributeName, attributes );
-			stepSize = optionalAttribute<float> ( g_volumeStepSizeAttributeName, attributes );
-			stepScale = optionalAttribute<float>( g_volumeStepScaleAttributeName, attributes );
-		}
-
-		IECore::ConstStringVectorDataPtr volumeGrids;
-		IECore::ConstStringVectorDataPtr velocityGrids;
-		boost::optional<float> velocityScale;
-		boost::optional<float> velocityFPS;
-		boost::optional<float> velocityOutlierThreshold;
-		boost::optional<float> stepSize;
-		boost::optional<float> stepScale;
-
-		void hash( IECore::MurmurHash &h ) const
-		{
-			if( volumeGrids )
+			Volume( const IECore::CompoundObject *attributes )
 			{
-				volumeGrids->hash( h );
+				volumeGrids = attribute<IECore::StringVectorData>( g_volumeGridsAttributeName, attributes );
+				velocityGrids = attribute<IECore::StringVectorData>( g_velocityGridsAttributeName, attributes );
+				velocityScale = optionalAttribute<float>( g_velocityScaleAttributeName, attributes );
+				velocityFPS = optionalAttribute<float>( g_velocityFPSAttributeName, attributes );
+				velocityOutlierThreshold = optionalAttribute<float>( g_velocityOutlierThresholdAttributeName, attributes );
+				stepSize = optionalAttribute<float> ( g_volumeStepSizeAttributeName, attributes );
+				stepScale = optionalAttribute<float>( g_volumeStepScaleAttributeName, attributes );
 			}
 
-			if( velocityGrids )
+			IECore::ConstStringVectorDataPtr volumeGrids;
+			IECore::ConstStringVectorDataPtr velocityGrids;
+			boost::optional<float> velocityScale;
+			boost::optional<float> velocityFPS;
+			boost::optional<float> velocityOutlierThreshold;
+			boost::optional<float> stepSize;
+			boost::optional<float> stepScale;
+
+			void hash( IECore::MurmurHash &h ) const
 			{
-				velocityGrids->hash( h );
-			}
-
-			h.append( velocityScale.get_value_or( 1.0f ) );
-			h.append( velocityFPS.get_value_or( 24.0f ) );
-			h.append( velocityOutlierThreshold.get_value_or( 0.001f ) );
-			h.append( stepSize.get_value_or( 0.0f ) );
-			h.append( stepScale.get_value_or( 1.0f ) );
-		}
-
-		void apply( AtNode *node ) const
-		{
-			if( volumeGrids && volumeGrids->readable().size() )
-			{
-				AtArray *array = ParameterAlgo::dataToArray( volumeGrids.get(), AI_TYPE_STRING );
-				AiNodeSetArray( node, g_volumeGridsArnoldString, array );
-			}
-
-			if( velocityGrids && velocityGrids->readable().size() )
-			{
-				AtArray *array = ParameterAlgo::dataToArray( velocityGrids.get(), AI_TYPE_STRING );
-				AiNodeSetArray( node, g_velocityGridsArnoldString, array );
-			}
-
-			if( !velocityScale || velocityScale.get() > 0 )
-			{
-				AtNode *options = AiUniverseGetOptions();
-				const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, "camera" ) );
-
-				if( arnoldCamera )
+				if( volumeGrids )
 				{
-					float shutterStart = AiNodeGetFlt( arnoldCamera, g_shutterStartArnoldString );
-					float shutterEnd = AiNodeGetFlt( arnoldCamera, g_shutterEndArnoldString );
+					volumeGrids->hash( h );
+				}
 
-					// We're getting very lucky here:
-					//  - Arnold has automatically set options.camera the first time we made a camera
-					//  - All cameras output by Gaffer at present will have the same shutter,
-					//    so it doesn't matter if we get it from the final render camera or not.
-					AiNodeSetFlt( node, g_motionStartArnoldString, shutterStart );
-					AiNodeSetFlt( node, g_motionEndArnoldString, shutterEnd );
+				if( velocityGrids )
+				{
+					velocityGrids->hash( h );
+				}
+
+				h.append( velocityScale.get_value_or( 1.0f ) );
+				h.append( velocityFPS.get_value_or( 24.0f ) );
+				h.append( velocityOutlierThreshold.get_value_or( 0.001f ) );
+				h.append( stepSize.get_value_or( 0.0f ) );
+				h.append( stepScale.get_value_or( 1.0f ) );
+			}
+
+			void apply( AtNode *node ) const
+			{
+				if( volumeGrids && volumeGrids->readable().size() )
+				{
+					AtArray *array = ParameterAlgo::dataToArray( volumeGrids.get(), AI_TYPE_STRING );
+					AiNodeSetArray( node, g_volumeGridsArnoldString, array );
+				}
+
+				if( velocityGrids && velocityGrids->readable().size() )
+				{
+					AtArray *array = ParameterAlgo::dataToArray( velocityGrids.get(), AI_TYPE_STRING );
+					AiNodeSetArray( node, g_velocityGridsArnoldString, array );
+				}
+
+				if( !velocityScale || velocityScale.get() > 0 )
+				{
+					AtNode *options = AiUniverseGetOptions();
+					const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, "camera" ) );
+
+					if( arnoldCamera )
+					{
+						float shutterStart = AiNodeGetFlt( arnoldCamera, g_shutterStartArnoldString );
+						float shutterEnd = AiNodeGetFlt( arnoldCamera, g_shutterEndArnoldString );
+
+						// We're getting very lucky here:
+						//  - Arnold has automatically set options.camera the first time we made a camera
+						//  - All cameras output by Gaffer at present will have the same shutter,
+						//    so it doesn't matter if we get it from the final render camera or not.
+						AiNodeSetFlt( node, g_motionStartArnoldString, shutterStart );
+						AiNodeSetFlt( node, g_motionEndArnoldString, shutterEnd );
+					}
+				}
+
+				if( velocityScale )
+				{
+					AiNodeSetFlt( node, g_velocityScaleArnoldString, velocityScale.get() );
+				}
+
+				if( velocityFPS )
+				{
+					AiNodeSetFlt( node, g_velocityFPSArnoldString, velocityFPS.get() );
+				}
+
+				if( velocityOutlierThreshold )
+				{
+					AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.get() );
+				}
+
+				if ( stepSize )
+				{
+					AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.get() * stepScale.get_value_or( 1.0f ) );
+				}
+				else if ( stepScale )
+				{
+					AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.get() );
 				}
 			}
-
-			if( velocityScale )
-			{
-				AiNodeSetFlt( node, g_velocityScaleArnoldString, velocityScale.get() );
-			}
-
-			if( velocityFPS )
-			{
-				AiNodeSetFlt( node, g_velocityFPSArnoldString, velocityFPS.get() );
-			}
-
-			if( velocityOutlierThreshold )
-			{
-				AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.get() );
-			}
-
-			if ( stepSize )
-			{
-				AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.get() * stepScale.get_value_or( 1.0f ) );
-			}
-			else if ( stepScale )
-			{
-				AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.get() );
-			}
-		}
-	};
+		};
 
 		enum ShadingFlags
 		{
