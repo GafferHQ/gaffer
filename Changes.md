@@ -1,6 +1,11 @@
 0.58.x.x (relative to 0.58.4.0)
 ========
 
+Improvements
+------------
+
+- Spreadsheet : Added ability to select one or more cells and copy their values and enabled state to other cells.
+
 Fixes
 -----
 

@@ -36,7 +36,7 @@
 
 from Qt import QtCore
 
-from _PlugTableModel import _PlugTableModel
+from ._PlugTableModel import _PlugTableModel
 
 class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
 

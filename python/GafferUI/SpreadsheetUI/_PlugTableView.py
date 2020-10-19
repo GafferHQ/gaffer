@@ -48,6 +48,7 @@ from Qt import QtWidgets
 from Qt import QtCompat
 
 from . import _Algo
+from . import _Clipboard
 from . import _ProxyModels
 from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
@@ -144,6 +145,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
 		return self._qtWidget().model().plugForIndex( index )
+
+	def selectedPlugs( self ) :
+
+		selection = self._qtWidget().selectionModel().selectedIndexes()
+		model = self._qtWidget().model()
+		return { model.plugForIndex( i ) for i in selection }
 
 	def editPlug( self, plug, scrollTo = True ) :
 
@@ -325,23 +332,37 @@ class _PlugTableView( GafferUI.Widget ) :
 			return False
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
-		plug = self._qtWidget().model().plugForIndex( index )
-		if plug is None :
-			return False
 
-		if index.flags() & QtCore.Qt.ItemIsEnabled :
+		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+			return True
+
+		selectionModel = self._qtWidget().selectionModel()
+
+		if not selectionModel.isSelected( index ) :
+			selectionModel.select( index, selectionModel.ClearAndSelect )
+
+		if len( selectionModel.selection().indexes() ) == 1 :
+
+			plug = self._qtWidget().model().plugForIndex( index )
+			if plug is None :
+				return False
 
 			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
 				plug = plug["value"]
+
 			## \todo We need to make this temporary PlugValueWidget just so we
 			# can show a plug menu. We should probably refactor so we can do it
 			# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
 			# and all connected client code.
 			self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
-			self.__plugMenu = GafferUI.Menu(
-				self.__menuPlugValueWidget._popupMenuDefinition()
-			)
-			self.__plugMenu.popup()
+			definition = self.__menuPlugValueWidget._popupMenuDefinition()
+
+		else :
+
+			definition = self.__multiSelectionMenuDefiniton()
+
+		self.__plugMenu = GafferUI.Menu( definition )
+		self.__plugMenu.popup()
 
 		return True
 
@@ -418,6 +439,34 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return True
 
+	def __multiSelectionMenuDefiniton( self ) :
+
+		definition = IECore.MenuDefinition()
+
+		selection = self.selectedPlugs()
+
+		plugMatrix = _Clipboard.createPlugMatrix( selection )
+
+		definition.append( "Copy Cells", {
+			"command" : Gaffer.WeakMethod( self.__copyCells ),
+			"active" : _Clipboard.canCopyCells( plugMatrix )
+		} )
+
+		clipboard = self.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
+
+		definition.append( "Paste Cells", {
+			"command" : Gaffer.WeakMethod( self.__pasteCells ),
+			"active" : _Clipboard.isCellData( clipboard ) and _Clipboard.canPasteCells( clipboard, plugMatrix )
+		} )
+
+		return definition
+
+	def __copyCells( self ) :
+		pass
+
+	def __pasteCells( self ) :
+		pass
+
 	def __setColumnLabel( self, cellPlug ) :
 
 		label = GafferUI.TextInputDialogue(
@@ -455,3 +504,4 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 			_SectionChooser.setSection( cellPlug, sectionName )
+
