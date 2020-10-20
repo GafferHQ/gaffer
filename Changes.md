@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - GraphEditor : Improved performance slightly for large graphs.
+- Warp : Defaulted `useDerivatives` to off for nodes created via the UI. Using derivatives is only beneficial when the warp is highly anisotropic, and it has a significant performance impact.
 
 Fixes
 -----
