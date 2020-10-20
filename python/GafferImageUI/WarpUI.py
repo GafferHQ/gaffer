@@ -92,6 +92,8 @@ Gaffer.Metadata.registerNode(
 			that mostly preserve the size of pixels, but could have a large impact if there is
 			heavy distortion.  Fixes problems with aliasing, at the cost of some extra calculations.
 			""",
+
+			"userDefault", False,
 		],
 
 	}
