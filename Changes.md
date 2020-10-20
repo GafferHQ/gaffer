@@ -11,6 +11,7 @@ Fixes
 -----
 
 - Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
+- PlugAlgo/BoxIO : Fixed bug handling nested compound plugs.
 
 API
 ---

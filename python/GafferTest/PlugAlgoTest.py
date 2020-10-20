@@ -528,5 +528,21 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s['a']['b']['op1'], "test" ), 10 )
 		self.assertEqual( Gaffer.Metadata.value( s['a']['op1'], "test" ), 10 )
 
+	def testPromoteCompoundPlugWithColorPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = Gaffer.Node()
+		s["b"]["n"]["user"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["n"]["user"]["p"]["c"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.PlugAlgo.promote( s["b"]["n"]["user"]["p"] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["b"]["n"]["user"]["p"]["c"] ), 3 )
+
 if __name__ == "__main__":
 	unittest.main()
