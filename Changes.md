@@ -1,6 +1,11 @@
 0.58.x.x (relative to 0.58.3.2)
 ========
 
+Improvements
+------------
+
+- Arnold Renderer : Improved performance when instancing large numbers of objects. A benchmark with 1 million instances shows a 25% reduction in scene generation time.
+
 Fixes
 -----
 

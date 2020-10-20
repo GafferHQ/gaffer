@@ -679,23 +679,29 @@ class ShaderCache : public IECore::RefCounted
 				shader->hashSubstitutions( attributes, hSubst );
 				h.append( hSubst );
 			}
-			Cache::accessor a;
-			m_cache.insert( a, h );
-			if( !a->second )
+
+			Cache::const_accessor readAccessor;
+			if( m_cache.find( readAccessor, h ) )
 			{
-				const std::string namePrefix = "shader:" + a->first.toString();
+				return readAccessor->second;
+			}
+
+			Cache::accessor writeAccessor;
+			if( m_cache.insert( writeAccessor, h ) )
+			{
+				const std::string namePrefix = "shader:" + writeAccessor->first.toString();
 				if( hSubst != IECore::MurmurHash() )
 				{
 					IECoreScene::ShaderNetworkPtr substitutedShader = shader->copy();
 					substitutedShader->applySubstitutions( attributes );
-					a->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, namePrefix, m_parentNode );
+					writeAccessor->second = new ArnoldShader( substitutedShader.get(), m_nodeDeleter, namePrefix, m_parentNode );
 				}
 				else
 				{
-					a->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
+					writeAccessor->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
 				}
 			}
-			return a->second;
+			return writeAccessor->second;
 		}
 
 		// Must not be called concurrently with anything.
@@ -1796,14 +1802,25 @@ class InstanceCache : public IECore::RefCounted
 			IECore::MurmurHash h = object->hash();
 			arnoldAttributes->hashGeometry( object, h );
 
-			Cache::accessor a;
-			m_cache.insert( a, h );
-			if( !a->second )
+			SharedAtNodePtr node;
+			Cache::const_accessor readAccessor;
+			if( m_cache.find( readAccessor, h ) )
 			{
-				a->second = convert( object, arnoldAttributes, "instance:" + h.toString() );
+				node = readAccessor->second;
+				readAccessor.release();
+			}
+			else
+			{
+				Cache::accessor writeAccessor;
+				if( m_cache.insert( writeAccessor, h ) )
+				{
+					writeAccessor->second = convert( object, arnoldAttributes, "instance:" + h.toString() );
+				}
+				node = writeAccessor->second;
+				writeAccessor.release();
 			}
 
-			return Instance( a->second, m_nodeDeleter, nodeName, m_parentNode );
+			return Instance( node, m_nodeDeleter, nodeName, m_parentNode );
 		}
 
 		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
@@ -1826,14 +1843,25 @@ class InstanceCache : public IECore::RefCounted
 			}
 			arnoldAttributes->hashGeometry( samples.front(), h );
 
-			Cache::accessor a;
-			m_cache.insert( a, h );
-			if( !a->second )
+			SharedAtNodePtr node;
+			Cache::const_accessor readAccessor;
+			if( m_cache.find( readAccessor, h ) )
 			{
-				a->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString() );
+				node = readAccessor->second;
+				readAccessor.release();
+			}
+			else
+			{
+				Cache::accessor writeAccessor;
+				if( m_cache.insert( writeAccessor, h ) )
+				{
+					writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString() );
+				}
+				node = writeAccessor->second;
+				writeAccessor.release();
 			}
 
-			return Instance( a->second, m_nodeDeleter, nodeName, m_parentNode );
+			return Instance( node, m_nodeDeleter, nodeName, m_parentNode );
 		}
 
 		// Must not be called concurrently with anything.
