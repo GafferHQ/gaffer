@@ -130,7 +130,7 @@ void applyDynamicFlag( Plug *plug )
 		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
-			if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)(*it)->typeId() ) != end( compoundTypes ) )
+			if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)(*it)->typeId() ) == end( compoundTypes ) )
 			{
 				it.prune();
 			}
