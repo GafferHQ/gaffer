@@ -37,6 +37,7 @@
 import imath
 import math
 import os
+import unittest
 
 import IECore
 import IECoreScene
@@ -54,6 +55,7 @@ import GafferImageTest
 
 from Qt import QtCore
 
+@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 	# Arnold outputs licensing warnings that would cause failures
