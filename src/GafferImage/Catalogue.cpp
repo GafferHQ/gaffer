@@ -971,9 +971,16 @@ void Catalogue::driverCreated( IECoreImage::DisplayDriver *driver, const IECore:
 	// Check the image is destined for catalogues in general
 	if( const StringData *portNumberData = parameters->member<StringData>( "displayPort" ) )
 	{
-		if( boost::lexical_cast<int>( portNumberData->readable() ) != displayDriverServer()->portNumber() )
+		try
 		{
-			return;
+			if( boost::lexical_cast<int>( portNumberData->readable() ) != displayDriverServer()->portNumber() )
+			{
+				return;
+			}
+		}
+		catch( boost::bad_lexical_cast &e )
+		{
+			throw IECore::Exception( "Invalid port number: <" + portNumberData->readable() + ">\n" );
 		}
 	}
 

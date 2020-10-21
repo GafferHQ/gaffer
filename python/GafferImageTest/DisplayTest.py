@@ -258,54 +258,56 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			port = server.portNumber()
 		)
 
-		self.assertTrue( len( driversCreated ), 1 )
+		try:
 
-		display = GafferImage.Display()
-		self.assertTrue( display.getDriver() is None )
+			self.assertTrue( len( driversCreated ), 1 )
 
-		dirtiedPlugs = GafferTest.CapturingSlot( display.plugDirtiedSignal() )
+			display = GafferImage.Display()
+			self.assertTrue( display.getDriver() is None )
 
-		display.setDriver( driversCreated[0][0] )
-		self.assertTrue( display.getDriver().isSame( driversCreated[0][0] ) )
+			dirtiedPlugs = GafferTest.CapturingSlot( display.plugDirtiedSignal() )
 
-		# Ensure all the output plugs have been dirtied
-		expectedDirty = { "__driverCount", "out" }.union( { c.getName() for c in display["out"].children() } )
-		self.assertEqual( expectedDirty, set( e[0].getName() for e in dirtiedPlugs ) )
+			display.setDriver( driversCreated[0][0] )
+			self.assertTrue( display.getDriver().isSame( driversCreated[0][0] ) )
 
-		del dirtiedPlugs[:]
+			# Ensure all the output plugs have been dirtied
+			expectedDirty = { "__driverCount", "__channelDataCount", "out" }.union( { c.getName() for c in display["out"].children() } )
+			self.assertEqual( expectedDirty, set( e[0].getName() for e in dirtiedPlugs ) )
 
-		driver.sendBucket( dataWindow, [ IECore.FloatVectorData( [ 0.5 ] * dataWindow.size().x * dataWindow.size().y ) ] )
+			del dirtiedPlugs[:]
 
-		self.assertEqual( display["out"]["format"].getValue().getDisplayWindow(), dataWindow )
-		self.assertEqual( display["out"]["dataWindow"].getValue(), dataWindow )
-		self.assertEqual( display["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "Y" ] ) )
-		self.assertEqual(
-			display["out"].channelData( "Y", imath.V2i( 0 ) ),
-			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
-		)
+			driver.sendBucket( dataWindow, [ IECore.FloatVectorData( [ 0.5 ] * dataWindow.size().x * dataWindow.size().y ) ] )
 
-		# Ensure only channel data has been dirtied
-		expectedDirty = { "channelData", "__channelDataCount", "out" }
-		self.assertEqual( set( e[0].getName() for e in dirtiedPlugs ), expectedDirty )
+			self.assertEqual( display["out"]["format"].getValue().getDisplayWindow(), dataWindow )
+			self.assertEqual( display["out"]["dataWindow"].getValue(), dataWindow )
+			self.assertEqual( display["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "Y" ] ) )
+			self.assertEqual(
+				display["out"].channelData( "Y", imath.V2i( 0 ) ),
+				IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+			)
 
-		display2 = GafferImage.Display()
-		display2.setDriver( display.getDriver(), copy = True )
+			# Ensure only channel data has been dirtied
+			expectedDirty = { "channelData", "__channelDataCount", "out" }
+			self.assertEqual( set( e[0].getName() for e in dirtiedPlugs ), expectedDirty )
 
-		self.assertImagesEqual( display["out"], display2["out"] )
+			display2 = GafferImage.Display()
+			display2.setDriver( display.getDriver(), copy = True )
 
-		driver.sendBucket( dataWindow, [ IECore.FloatVectorData( [ 1 ] * dataWindow.size().x * dataWindow.size().y ) ] )
+			self.assertImagesEqual( display["out"], display2["out"] )
 
-		self.assertEqual(
-			display["out"].channelData( "Y", imath.V2i( 0 ) ),
-			IECore.FloatVectorData( [ 1 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
-		)
+			driver.sendBucket( dataWindow, [ IECore.FloatVectorData( [ 1 ] * dataWindow.size().x * dataWindow.size().y ) ] )
 
-		self.assertEqual(
-			display2["out"].channelData( "Y", imath.V2i( 0 ) ),
-			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
-		)
+			self.assertEqual(
+				display["out"].channelData( "Y", imath.V2i( 0 ) ),
+				IECore.FloatVectorData( [ 1 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+			)
 
-		driver.close()
+			self.assertEqual(
+				display2["out"].channelData( "Y", imath.V2i( 0 ) ),
+				IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+			)
+		finally:
+			driver.close()
 
 	def __testTransferImage( self, fileName ) :
 

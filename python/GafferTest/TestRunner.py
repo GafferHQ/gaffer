@@ -73,6 +73,7 @@ class TestRunner( unittest.TextTestRunner ) :
 				timings = []
 				for i in range( 0, self.__repeat ) :
 					Gaffer.ValuePlug.clearCache() # Put each iteration on an equal footing
+					Gaffer.ValuePlug.clearHashCache()
 					TestRunner.PerformanceScope._total = None
 					t = time.time()
 					result = method( *args, **kw )
@@ -103,14 +104,24 @@ class TestRunner( unittest.TextTestRunner ) :
 
 		# Protected to allow access by PerformanceTestMethod.
 		_total = None
+		__numIterations = None
 
 		def __enter__( self ) :
 
 			self.__startTime = time.time()
+			return self
+
+		# Use when the test internally runs the critical sections multiple times
+		def setNumIterations( self, iterations ):
+
+			self.__numIterations = iterations
 
 		def __exit__( self, type, value, traceBack ) :
 
 			t = time.time() - self.__startTime
+			if self.__numIterations:
+				t = t / self.__numIterations
+
 			if TestRunner.PerformanceScope._total is not None :
 				TestRunner.PerformanceScope._total += t
 			else :

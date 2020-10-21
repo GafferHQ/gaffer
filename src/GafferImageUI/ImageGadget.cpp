@@ -110,6 +110,8 @@ void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 	monochromeFormat = g_monochromeFormat;
 	colorFormat = g_colorFormat;
 }
+
+uint64_t g_tileUpdateCount;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -666,6 +668,16 @@ bool ImageGadget::getPaused() const
 	return m_paused;
 }
 
+uint64_t ImageGadget::tileUpdateCount()
+{
+	return g_tileUpdateCount;
+}
+
+void ImageGadget::resetTileUpdateCount()
+{
+	g_tileUpdateCount = 0;
+}
+
 ImageGadget::State ImageGadget::state() const
 {
 	if( m_paused )
@@ -947,22 +959,32 @@ const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
 	{
 		GLenum monochromeTextureFormat, colorTextureFormat;
 		findUsableTextureFormats( monochromeTextureFormat, colorTextureFormat );
+		if( !m_texture )
+		{
+			GLuint texture;
+			glGenTextures( 1, &texture );
+			m_texture = new Texture( texture ); // Lock not needed, because this is only touched on the UI thread.
+			Texture::ScopedBinding binding( *m_texture );
 
-		GLuint texture;
-		glGenTextures( 1, &texture );
-		m_texture = new Texture( texture ); // Lock not needed, because this is only touched on the UI thread.
+			glTexImage2D(
+				GL_TEXTURE_2D, 0, monochromeTextureFormat, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED,
+				GL_FLOAT, nullptr
+			);
+
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		}
+
 		Texture::ScopedBinding binding( *m_texture );
-
 		glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-		glTexImage2D(
-			GL_TEXTURE_2D, 0, monochromeTextureFormat, ImagePlug::tileSize(), ImagePlug::tileSize(), 0, GL_RED,
+		glTexSubImage2D(
+			GL_TEXTURE_2D, 0, 0, 0, ImagePlug::tileSize(), ImagePlug::tileSize(), GL_RED,
 			GL_FLOAT, channelDataToConvert->readable().data()
 		);
 
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		g_tileUpdateCount++;
 	}
 
 	return m_texture ? m_texture.get() : blackTexture();
