@@ -6,12 +6,15 @@ Improvements
 
 - GraphEditor : Improved performance slightly for large graphs.
 - Warp : Defaulted `useDerivatives` to off for nodes created via the UI. Using derivatives is only beneficial when the warp is highly anisotropic, and it has a significant performance impact.
+- CopyChannels : Improved performance for the special case of a single input.
+- Catalogue/Viewer : Improved tile throughput for interactive renders.
 
 Fixes
 -----
 
 - Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
 - PlugAlgo/BoxIO : Fixed bug handling nested compound plugs.
+- Resample : Fixed hash of intermediate `deep` plug.
 
 API
 ---
@@ -22,6 +25,9 @@ API
   - Deprecated `requestRender()` method. Use `dirty()` instead.
 - OSLShader : Added `registerCompatibleShader()` method to allow connections from non-OSL shaders
  to be made.
+- ImageGadget : Added `tileUpdateCount()` and `resetTileUpdateCount()` methods. These are useful for measuring performance.
+- TestRunner : Added `PerformanceScope.setNumIterations()` method.
+- TestCase/TestRunner : The hash cache is now cleared before running each test.
 
 Breaking Changes
 ----------------
