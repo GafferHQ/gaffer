@@ -1,3 +1,11 @@
+0.57.7.x (relative to 0.57.7.4)
+========
+
+Fixes
+-----
+
+- Arnold Renderer : Fixed hangs when instancing the output of an Encapsulate node.
+
 0.57.7.4 (relative to 0.57.7.3)
 ========
 
