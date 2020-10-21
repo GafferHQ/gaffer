@@ -429,6 +429,7 @@ ENV_VARS_TO_IMPORT = " ".join( [
 	"DOXYGEN_VERSION",
 	"OSL_VERSION",
 	"OCIO",
+	"QT_QPA_PLATFORM_PLUGIN_PATH",
 ] )
 
 # required if scons compiler version doesn't match the build compiler version
@@ -439,6 +440,8 @@ os.environ["IEENV_LIBRARY_PREFIX_PATH"] = "/software/tools/lib/$PLATFORM/$COMPIL
 os.environ["OSL_VERSION"] = oslVersion
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
+# required to run gaffer gui for the doc builds
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "plugins" )
 
 # speed up the build a bit hopefully.
 BUILD_CACHEDIR = os.environ["IEBUILD_CACHEDIR"]
