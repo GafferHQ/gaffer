@@ -1,9 +1,32 @@
 0.59.x.x
 ========
 
+This release provides substantial improvements to USD support, an upgrade to Qt 5.12, and builds for both Python 2 and 3.
+
 Improvements
 ------------
 
+- USD :
+  - Mesh : Added automatic conversion of USD's `st` primitive variables to and from Gaffer's `uv` primitive variable.
+  - Curves : Added support for widths, type, wrap and basis.
+  - Points : Added support for widths and ids.
+  - Primitives :
+    - Added support for normals, velocity and acceleration.
+    - Added automatic conversion of USD's `displayColor` primitive variable to and from Gaffer's `Cs` primitive variable.
+  - Camera : Added reading of cameras and the standard cameras set.
+  - Instancing :
+    - Improved interoperability with UsdGeomPointInstancers :
+      - A new "usd:pointInstancers" set is automatically generated on reading, allowing a single Gaffer Instancer/SetFilter to target all point instancers.
+      - Renamed point instancer primitive variables to align with the defaults on the Instancer node.
+    - Improved performance and memory usage when reading scenes using USD's scenegraph instancing.
+  - Attributes : Added support for USD's visibility attribute, converting it to and from Gaffer's `scene:visible` attribute.
+  - Sets :
+    - All UsdCollections can now be loaded as Gaffer sets.
+    - Gaffer sets are now written to standard UsdCollections, and not to an unusable default prim.
+    - Substantially improved performance for both reading and writing.
+  - Untyped prims are now loaded as empty locations instead of being ignored.
+  - Improved warning logging.
+- ImageReader : Added initial support for reading RAW files.
 - GraphEditor : Improved performance slightly for large graphs.
 - Warp : Defaulted `useDerivatives` to off for nodes created via the UI. Using derivatives is only beneficial when the warp is highly anisotropic, and it has a significant performance impact.
 - CopyChannels : Improved performance for the special case of a single input.
@@ -12,6 +35,13 @@ Improvements
 Fixes
 -----
 
+- USD :
+  - Fixed writing of animated creases and corners.
+  - Fixed writing of animated sphere radius.
+  - Fixed various animation reading bugs.
+  - Fixed handling of interpolation for normals.
+  - Fixed writing of indexed primitive variables to non-indexed USD attributes.
+  - Fixed handling of GeometricInterpretation/Role.
 - Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
 - PlugAlgo/BoxIO : Fixed bug handling nested compound plugs.
 - Resample : Fixed hash of intermediate `deep` plug.
@@ -32,6 +62,9 @@ API
 Breaking Changes
 ----------------
 
+- USD :
+  - The `st`, `displayColor` and UsdGeomPointInstancer primitive variables have been renamed.
+  - Removed reading/writing of `cortex:` prefixed attributes.
 - Gadget : Added new virtual method and private member variables.
 - ImageGadget : Removed/moved private member variables.
 - OpenColorIOTransform : Made `transform()` method protected rather than public.
@@ -41,6 +74,13 @@ Build
 -----
 
 - Dependencies : Updated to version 2.0.0
+  - Qt 5.12.8
+  - Boost 1.68
+  - Cortex 10.1.0.0
+  - OpenEXR 2.4.1
+  - Appleseed 2.1.0-beta
+  - USD 20.11
+  - See https://github.com/GafferHQ/dependencies/releases/tag/2.0.0 for full details.
 
 0.58.3.2 (relative to 0.58.3.1)
 ========
