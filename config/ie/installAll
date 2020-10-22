@@ -3,51 +3,120 @@
 import IEEnv
 import os, sys, subprocess
 
+##########################################################################
+# parse SConstruct file for the gaffer version
+##########################################################################
+
+## \todo: this is duplicated from ./options but can we centralize it instead?
+def gafferRegistryVersion() :
+
+	import re
+	sconsFile = "SConstruct"
+	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion"]
+	varsToFind = list(versionVars)
+
+	varsFound = {}
+	with open( sconsFile, "r" ) as f :
+		for line in f :
+			for varName in varsToFind :
+				match = re.match( "^\s*%s\s*=\s*(?P<value>\d+).*$" % varName, line )
+				if match :
+					varsFound[varName] = match.groupdict()["value"]
+					varsToFind.remove( varName )
+					break
+			if not varsToFind:
+				break
+
+	if varsToFind:
+		raise Exception( "Could not find the gaffer version in the SConstruct file. Please review the parsing rules." )
+
+	return varsFound["gafferMilestoneVersion"] + "." + varsFound["gafferMajorVersion"] + ".0.0"
+
+gafferRegVersion = gafferRegistryVersion()
+
+##########################################################################
+# Run a single build
+##########################################################################
+
 def build( extraArgs = [] ) :
-	
+
+	argsToValidate = [ "GAFFER_VERSION={}".format( gafferRegVersion ) ] + extraArgs
+	if not IEEnv.Registry.validateVariation( argsToValidate ) :
+		print( "Skipped invalid variation combination: " + str(argsToValidate) + "\n" )
+		return
+
 	buildArgs = [ "scons" ]
 	buildArgs.append( "install" if "RELEASE=1" in sys.argv[1:] else "build" )
 	buildArgs.extend( extraArgs )
 	buildArgs.extend( sys.argv[1:] )
-	
-	print " ".join( buildArgs )
+
+	print( " ".join( buildArgs ) )
 	if subprocess.call( buildArgs ) != 0 :
-	
 		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
+	print( "Build succeeded: " + " ".join( buildArgs ) + "\n" )
+
+##########################################################################
+# Gather requirements
+##########################################################################
 
 platform = IEEnv.platform()
+defaultCompilerVersion = IEEnv.registry["platformDefaults"][platform]["compilerVersion"]
+
+cortexInfo = { x : IEEnv.registry["libraries"]["cortex"][x][platform] for x in IEEnv.activeVersions( IEEnv.registry["libraries"]["cortex"] ) }
+
+# fetch at least one active version of each renderer
+aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
+dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
+
+# find a specific appleseed version per compiler per cortex version
+appleseedCompilerMap = { x : {} for x in IEEnv.activeVersions( IEEnv.registry["compilers"]["gcc"] ) }
+for appleseedVersion in IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] ) :
+	compilerVersion = IEEnv.registry["apps"]["appleseed"][appleseedVersion][platform]["compilerVersion"]
+	for cortexCompatibilityVersion in cortexInfo.keys() :
+		if IEEnv.Registry.validateVariation( [
+			"COMPILER_VERSION={}".format( compilerVersion ),
+			"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
+			"APPLESEED_VERSION={}".format( appleseedVersion ),
+		] ) :
+			appleseedCompilerMap[compilerVersion][cortexCompatibilityVersion] = appleseedVersion
+
+##########################################################################
+# Loop over all builds
+##########################################################################
+
 if platform in ( "cent7.x86_64" ) :
 
-	# fetch at least one active version of each renderer
-	aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"], minimumVersion="5.2.2.1" )[-1]
-	dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
+	for cortexCompatibilityVersion, cortexReg in cortexInfo.items() :
 
-	extraArgs = [ "ARNOLD_VERSION="+aiVersion, "DL_VERSION="+dlVersion ]
+		# standalone build
+		compilerVersion = cortexReg.get( "compilerVersion", defaultCompilerVersion )
+		appleseedVersion = appleseedCompilerMap[compilerVersion][cortexCompatibilityVersion]
+		build( [
+			"COMPILER_VERSION={}".format( compilerVersion ),
+			"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
+			"APPLESEED_VERSION={}".format( appleseedVersion ),
+			"ARNOLD_VERSION={}".format( aiVersion ),
+			"DL_VERSION={}".format( dlVersion ),
+		] )
 
-	# find a specific appleseed version per compiler
-	compilerVersions = IEEnv.activeVersions( IEEnv.registry["compilers"]["gcc"] )
-	appleseedVersions = IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"], minimumVersion="2.0.5-beta-gcc4.8.3" )
-	appleseedCompilerMap = { x : [] for x in compilerVersions }
-	for appleseedVersion in appleseedVersions :
-		compilerVersion = IEEnv.registry["apps"]["appleseed"][appleseedVersion][platform]["compilerVersion"]
-		appleseedCompilerMap[compilerVersion].append( appleseedVersion )
+		# app specific builds
+		for app, minimumVersion in (
+			( "maya", None ),
+			( "houdini", "16.5.268" ),
+			( "nuke", None )
+		) :
+			for appVersion in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
+				compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
+				appleseedVersion = appleseedCompilerMap[compilerVersion][cortexCompatibilityVersion]
+				build( [
+					"APP={}".format( app ),
+					"APP_VERSION={}".format( appVersion ),
+					"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
+                    "APPLESEED_VERSION={}".format( appleseedVersion ),
+                    "ARNOLD_VERSION={}".format( aiVersion ),
+                    "DL_VERSION={}".format( dlVersion ),
+                ] )
 
-	# standalone build
-	compilerVersion = IEEnv.registry["platformDefaults"][platform]["compilerVersion"]
-	appleseedVersion = appleseedCompilerMap[compilerVersion][-1]
-	build( [ "COMPILER_VERSION=" + compilerVersion, "APPLESEED_VERSION="+appleseedVersion ] + extraArgs )
-
-	# app specific builds
-	for app, minimumVersion in (
-		( "maya", None ),
-		( "houdini", "16.5.268" ),
-		( "nuke", None )
-	) :
-		for appVersion in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
-			compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
-			appleseedVersion = appleseedCompilerMap.get( compilerVersion, appleseedVersions )[-1]
-			build( [ "APP=" + app, "APP_VERSION=" + appVersion, "APPLESEED_VERSION="+appleseedVersion ] + extraArgs )
-			
 else :
 
 	raise RuntimeError( "Unknown platform" )
