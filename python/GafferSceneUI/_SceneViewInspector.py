@@ -660,11 +660,12 @@ class _ParameterWidget( GafferUI.Widget ) :
 
 		with grid :
 
-			GafferUI.Label(
+			label = GafferUI.Label(
 				## \todo Prettify label text (remove snake case)
 				text = "<h5>" + IECore.CamelCase.toSpaced( parameter ) + "</h5>",
 				parenting = { "index" : ( slice( 0, 2 ), 0 ) }
 			)
+			label._qtWidget().setMaximumWidth( 140 )
 
 			self.__editButton = GafferUI.Button( image = "editOff.png", hasFrame = False,
 				parenting = {
@@ -924,7 +925,7 @@ class _ValueWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtWidgets.QLabel(), **kw )
 
 		self._qtWidget().setFixedHeight( 20 )
-		self._qtWidget().setMinimumWidth( 140 )
+		self._qtWidget().setFixedWidth( 140 )
 
 		self._qtWidget().setStyleSheet( "padding-left: 4px; padding-right: 4px;" )
 

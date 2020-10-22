@@ -1,3 +1,11 @@
+0.58.x.x (relative to 0.58.4.0)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed bug that caused the Inspector to grow very wide when inspecting long strings.
+
 0.58.4.0 (relative to 0.58.3.2)
 ========
 
