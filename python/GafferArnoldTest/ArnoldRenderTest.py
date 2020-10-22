@@ -1090,9 +1090,9 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testOSLShaders( self ) :
 
-		blue = GafferOSL.OSLShader()
-		blue.loadShader( "Maths/MixColor" )
-		blue["parameters"]["a"].setValue( imath.Color3f( 0, 0, 1 ) )
+		purple = GafferOSL.OSLShader()
+		purple.loadShader( "Maths/MixColor" )
+		purple["parameters"]["a"].setValue( imath.Color3f( 0.5, 0, 1 ) )
 
 		green = GafferOSL.OSLShader()
 		green.loadShader( "Maths/MixColor" )
@@ -1100,7 +1100,9 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		mix = GafferOSL.OSLShader()
 		mix.loadShader( "Maths/MixColor" )
-		mix["parameters"]["a"].setInput( blue["out"]["out"] )
+		# test component connections
+		mix["parameters"]["a"][2].setInput( purple["out"]["out"][2] )
+		# test color connections
 		mix["parameters"]["b"].setInput( green["out"]["out"] )
 		mix["parameters"]["m"].setValue( 0.5 )
 

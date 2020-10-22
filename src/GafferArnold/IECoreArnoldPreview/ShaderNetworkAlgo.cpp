@@ -336,6 +336,11 @@ namespace ShaderNetworkAlgo
 
 std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const AtNode *parentNode )
 {
+	// \todo: remove this conversion once Arnold supports it natively
+	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
+	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
+	shaderNetwork = networkCopy.get();
+
 	ShaderMap converted;
 	vector<AtNode *> result;
 	const InternedString output = shaderNetwork->getOutput().shader;

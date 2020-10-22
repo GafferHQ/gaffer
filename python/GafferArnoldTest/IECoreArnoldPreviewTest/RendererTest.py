@@ -412,21 +412,33 @@ class RendererTest( GafferTest.TestCase ) :
 
 			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "test" ), "shader" )
 
-			# OSL 1.10+ allows component level connections, in which case we will
-			# get a link to each channel directly.
-			component = arnold.c_int()
-			rSource = arnold.AiNodeGetLink( outputNode, "param_a.r", component )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( rSource ) ), "osl" )
-			self.assertEqual( arnold.AiNodeGetStr( rSource, "shadername" ), "Maths/MixColor" )
-			self.assertEqual( component.value, 2 ) # r is driven by b
+			pack = arnold.AiNodeGetLink( outputNode, "param_a" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( pack ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( pack, "shadername" ), "MaterialX/mx_pack_color" )
 
-			gSource = arnold.AiNodeGetLink( outputNode, "param_a.g", component )
-			self.assertReferSameNode( rSource, gSource )
-			self.assertEqual( component.value, 0 ) # g is driven by r
+			swizzleR = arnold.AiNodeGetLink( pack, "param_in1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleR ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleR, "shadername" ), "MaterialX/mx_swizzle_color_float" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleR, "param_channels" ), "b" )
+			swizzleRSource = arnold.AiNodeGetLink( swizzleR, "param_in" )
 
-			bSource = arnold.AiNodeGetLink( outputNode, "param_a.b", component )
-			self.assertReferSameNode( rSource, bSource )
-			self.assertEqual( component.value, 1 ) # b is driven by g
+			swizzleG = arnold.AiNodeGetLink( pack, "param_in2" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleG ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleG, "shadername" ), "MaterialX/mx_swizzle_color_float" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleG, "param_channels" ), "r" )
+			swizzleGSource = arnold.AiNodeGetLink( swizzleG, "param_in" )
+
+			swizzleB = arnold.AiNodeGetLink( pack, "param_in3" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleB ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleB, "shadername" ), "MaterialX/mx_swizzle_color_float" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleB, "param_channels" ), "g" )
+			swizzleBSource = arnold.AiNodeGetLink( swizzleG, "param_in" )
+
+			self.assertReferSameNode( swizzleRSource, swizzleGSource )
+			self.assertReferSameNode( swizzleRSource, swizzleBSource )
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( swizzleRSource ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( swizzleRSource, "shadername" ), "Maths/MixColor" )
 
 	def testLightNames( self ) :
 
