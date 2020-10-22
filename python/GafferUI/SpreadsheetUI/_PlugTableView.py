@@ -350,6 +350,8 @@ class _PlugTableView( GafferUI.Widget ) :
 			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
 				plug = plug["value"]
 
+			cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+
 			## \todo We need to make this temporary PlugValueWidget just so we
 			# can show a plug menu. We should probably refactor so we can do it
 			# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
@@ -357,9 +359,16 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
 			definition = self.__menuPlugValueWidget._popupMenuDefinition()
 
+			if self.__mode == self.Mode.RowNames :
+				self.__prependRowMenuItems( definition, plug.ancestor( Gaffer.Spreadsheet.RowPlug ) )
+			elif cellPlug is not None :
+				self.__prependCellMenuItems( definition, [ cellPlug ] )
+
 		else :
 
-			definition = self.__multiSelectionMenuDefiniton()
+			definition = IECore.MenuDefinition()
+			if self.__mode != self.Mode.RowNames :
+				self.__prependCellMenuItems( definition, self.selectedPlugs() )
 
 		self.__plugMenu = GafferUI.Menu( definition )
 		self.__plugMenu.popup()
@@ -439,33 +448,155 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return True
 
-	def __multiSelectionMenuDefiniton( self ) :
+	def __prependRowMenuItems( self, menuDefinition, rowPlug ) :
 
-		definition = IECore.MenuDefinition()
+		if rowPlug == rowPlug.parent().defaultRow() :
+			return
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		items = []
+
+		widths = [
+			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
+			( "Single", GafferUI.PlugWidget.labelWidth() ),
+			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
+		]
+
+		currentWidth = _PlugTableView._getRowNameWidth( rowPlug.parent() )
+		for label, width in widths :
+			items.append( (
+				"/Width/{}".format( label ),
+				{
+					"command" : functools.partial( self.__setRowNameWidth, rowPlug, width ),
+					"active" : not Gaffer.MetadataAlgo.readOnly( rowPlug ),
+					"checkBox" : width == currentWidth,
+				}
+			) )
+
+		items.extend( (
+			(
+				"/__DeleteRowDivider__", { "divider" : True }
+			),
+			(
+				"/Delete Row",
+				{
+					"command" : functools.partial( _Algo.deleteRow, rowPlug ),
+					"active" : (
+						not Gaffer.MetadataAlgo.readOnly( rowPlug ) and
+						_Algo.dimensionsEditable( rowPlug.parent() )
+					)
+				}
+			)
+		) )
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
+	def __prependCellMenuItems( self, menuDefinition, cellPlugs ) :
+
+		if len( cellPlugs ) == 0 :
+			return
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		pluralSuffix = "" if len( cellPlugs ) == 1 else "s"
+
+		defaultRow = next( iter( cellPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug ).defaultRow()
+		defaultRowPlugs = [ c for c in cellPlugs if c.ancestor( Gaffer.Spreadsheet.RowPlug ) == defaultRow ]
+
+		# Disallow disable if the selection contains the default row, and any default row cells aren't adopting
+		# an enabled plug, but do allow a mix of 'should be disable-able but locked/connected' and ok plugs.
+		disabledAllowed = not defaultRowPlugs or any( [ "enabled" not in cell for cell in defaultRowPlugs ] )
+		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
+		readOnly = all( [ Gaffer.MetadataAlgo.readOnly( plug ) for plug in enabledPlugs ] )
+		settable = all( [ plug.settable() for plug in enabledPlugs ] )
+
+		with self.__getContext() :
+			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
+
+		items = [
+			(
+				( "/Disable Cell%s" if enabled else "/Enable Cell%s" ) % pluralSuffix,
+				{
+					"command" : functools.partial( _Algo.setPlugValues, enabledPlugs, not enabled ),
+					"active" : not readOnly and settable
+				}
+			)
+		]
+
+		plugMatrix = _Clipboard.createPlugMatrix( cellPlugs )
+		clipboard = self.__getClipboard()
+
+		items.extend( (
+			(
+				"/__CopyPasteCellsDivider__", { "divider" : True }
+			),
+			(
+				"Copy Cell%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__copyCells ),
+					"active" : _Clipboard.canCopyCells( plugMatrix )
+				}
+			),
+			(
+				"Paste Cell%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__pasteCells ),
+					"active" : _Clipboard.isCellData( clipboard ) and _Clipboard.canPasteCells( clipboard, plugMatrix )
+				}
+			)
+		) )
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
+	def __getClipboard( self ) :
+
+		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
+		return appRoot.getClipboardContents()
+
+	def __setClipboard( self, data ) :
+
+		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
+		return appRoot.setClipboardContents( data )
+
+	def __copyCells( self ) :
 
 		selection = self.selectedPlugs()
 
-		plugMatrix = _Clipboard.createPlugMatrix( selection )
+		with self.__getContext() :
+			clipboardData = _Clipboard.cellData( _Clipboard.createPlugMatrix( selection ) )
 
-		definition.append( "Copy Cells", {
-			"command" : Gaffer.WeakMethod( self.__copyCells ),
-			"active" : _Clipboard.canCopyCells( plugMatrix )
-		} )
-
-		clipboard = self.ancestor( Gaffer.ApplicationRoot ).getClipboardContents()
-
-		definition.append( "Paste Cells", {
-			"command" : Gaffer.WeakMethod( self.__pasteCells ),
-			"active" : _Clipboard.isCellData( clipboard ) and _Clipboard.canPasteCells( clipboard, plugMatrix )
-		} )
-
-		return definition
-
-	def __copyCells( self ) :
-		pass
+		self.__setClipboard( clipboardData )
 
 	def __pasteCells( self ) :
-		pass
+
+		scriptNode = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ScriptNode )
+
+		targetPlugs = _Clipboard.createPlugMatrix( self.selectedPlugs() )
+
+		# Required for current time if keyframing
+		with self.__getContext() :
+			with Gaffer.UndoScope( scriptNode ) :
+				_Clipboard.pasteCells( self.__getClipboard(), targetPlugs )
+
+	def __getContext( self ) :
+
+		editor = self.ancestor( GafferUI.Editor )
+		if editor is not None:
+			return editor.getContext()
+
+		scriptNode = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ScriptNode )
+		if scriptNode is not None :
+			return scriptNode.context()
+
+		return Gaffer.Context.current()
 
 	def __setColumnLabel( self, cellPlug ) :
 
@@ -484,6 +615,12 @@ class _PlugTableView( GafferUI.Widget ) :
 		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
 		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 			rowsPlug.removeColumn( cellPlug.parent().children().index( cellPlug ) )
+
+	@staticmethod
+	def __setRowNameWidth( rowPlug, width, *unused ) :
+
+		with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
+			_PlugTableView._setRowNameWidth( rowPlug.parent(), width )
 
 	def __modelReset( self ) :
 
@@ -505,3 +642,20 @@ class _PlugTableView( GafferUI.Widget ) :
 		with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 			_SectionChooser.setSection( cellPlug, sectionName )
 
+	@staticmethod
+	def _affectsRowNameWidth( key ) :
+
+		return key == "spreadsheet:rowNameWidth"
+
+	@staticmethod
+	def _getRowNameWidth( rowsPlug ) :
+
+		assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
+		width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
+		return width if width is not None else GafferUI.PlugWidget.labelWidth()
+
+	@staticmethod
+	def _setRowNameWidth( rowsPlug, width ) :
+
+		assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
+		Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )

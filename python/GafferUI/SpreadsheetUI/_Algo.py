@@ -109,6 +109,21 @@ def addColumn( spreadsheet, plug ) :
 
 	return columnIndex
 
+def setPlugValues( plugs, value ) :
+
+	if not plugs :
+		return
+
+	with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
+		for plug in plugs :
+			if not Gaffer.MetadataAlgo.readOnly( plug ) and plug.settable() :
+				plug.setValue( value )
+
+def deleteRow( rowPlug ) :
+
+	with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
+		rowPlug.parent().removeChild( rowPlug )
+
 # Note, function may present dialogues
 def createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :
 

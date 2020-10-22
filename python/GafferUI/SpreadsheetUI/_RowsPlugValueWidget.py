@@ -173,24 +173,6 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
 		)
 
-	@staticmethod
-	def _affectsRowNameWidth( key ) :
-
-		return key == "spreadsheet:rowNameWidth"
-
-	@staticmethod
-	def _getRowNameWidth( rowsPlug ) :
-
-		assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
-		width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
-		return width if width is not None else GafferUI.PlugWidget.labelWidth()
-
-	@staticmethod
-	def _setRowNameWidth( rowsPlug, width ) :
-
-		assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
-		Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )
-
 	def __addRowButtonClicked( self, *unused ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
@@ -258,7 +240,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __updateRowNamesWidth( self ) :
 
-		self.__rowNamesTable._qtWidget().setFixedWidth( self._getRowNameWidth( self.getPlug() ) )
+		self.__rowNamesTable._qtWidget().setFixedWidth( _PlugTableView._getRowNameWidth( self.getPlug() ) )
 
 	def __updateDefaultRowVisibility( self ) :
 
@@ -276,7 +258,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if plug is not None and _RowsPlugValueWidget._affectsRowNameWidth( key ) :
+		if plug is not None and _PlugTableView._affectsRowNameWidth( key ) :
 			if self.getPlug().isAncestorOf( plug ) :
 				self.__updateRowNamesWidth()
 
