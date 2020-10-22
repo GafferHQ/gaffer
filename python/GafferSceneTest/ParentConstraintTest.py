@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import six
 
 import IECore
 
@@ -74,6 +75,14 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( constraint["out"] )
 
 		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), group["out"].fullTransform( "/group/target" ) )
+
+		# Test behaviour for missing target
+		plane1["name"].setValue( "targetX" )
+		with six.assertRaisesRegex( self, RuntimeError, 'ParentConstraint.out.transform : Constraint target does not exist: "/group/target"' ):
+			constraint["out"].fullTransform( "/group/constrained" )
+
+		constraint["ignoreMissingTarget"].setValue( True )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
 
 	def testRelativeTransform( self ) :
 

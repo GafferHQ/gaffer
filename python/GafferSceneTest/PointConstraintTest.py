@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import six
 
 import IECore
 
@@ -114,6 +115,18 @@ class PointConstraintTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ).translation().x, constrainedTranslate.x )
 		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ).translation().y, constrainedTranslate.y )
 		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ).translation().z, constrainedTranslate.z )
+
+		# Test behaviour for missing target
+		plane1["name"].setValue( "targetX" )
+		constraint["xEnabled"].setValue( True )
+		constraint["yEnabled"].setValue( True )
+		constraint["zEnabled"].setValue( True )
+		with six.assertRaisesRegex( self, RuntimeError, 'PointConstraint.out.transform : Constraint target does not exist: "/group/target"' ):
+			constraint["out"].fullTransform( "/group/constrained" )
+
+		constraint["ignoreMissingTarget"].setValue( True )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
+
 
 if __name__ == "__main__":
 	unittest.main()

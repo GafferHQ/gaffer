@@ -52,6 +52,7 @@ Constraint::Constraint( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "target" ) );
+	addChild( new BoolPlug( "ignoreMissingTarget" ) );
 	addChild( new IntPlug( "targetMode", Plug::In, Origin, Origin, BoundCenter ) );
 	addChild( new V3fPlug( "targetOffset" ) );
 
@@ -74,24 +75,34 @@ const Gaffer::StringPlug *Constraint::targetPlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::BoolPlug *Constraint::ignoreMissingTargetPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1);
+}
+
+const Gaffer::BoolPlug *Constraint::ignoreMissingTargetPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1);
+}
+
 Gaffer::IntPlug *Constraint::targetModePlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::IntPlug *Constraint::targetModePlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::V3fPlug *Constraint::targetOffsetPlug()
 {
-	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::V3fPlug *Constraint::targetOffsetPlug() const
 {
-	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -100,6 +111,8 @@ void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 
 	if(
 		input == targetPlug() ||
+		input == ignoreMissingTargetPlug() ||
+		input == inPlug()->existsPlug() ||
 		input == targetModePlug() ||
 		input->parent<Plug>() == targetOffsetPlug() ||
 		// TypeId comparison is necessary to avoid calling pure virtual
@@ -119,12 +132,19 @@ bool Constraint::processesTransform() const
 
 void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
+	ScenePath targetPath;
+	tokenizeTargetPath( targetPath );
+
+	if( !inPlug()->exists( targetPath ) )
+	{
+		ignoreMissingTargetPlug()->hash( h );
+		return;
+	}
+
 	ScenePath parentPath = path;
 	parentPath.pop_back();
 	h.append( inPlug()->fullTransformHash( parentPath ) );
 
-	ScenePath targetPath;
-	tokenizeTargetPath( targetPath );
 	h.append( inPlug()->fullTransformHash( targetPath ) );
 
 	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
@@ -141,14 +161,28 @@ void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Co
 
 Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
+	ScenePath targetPath;
+	tokenizeTargetPath( targetPath );
+
+	if( !inPlug()->exists( targetPath ) )
+	{
+		if( ignoreMissingTargetPlug()->getValue() )
+		{
+			return inputTransform;
+		}
+		else
+		{
+			throw IECore::Exception( boost::str(
+				boost::format( "Constraint target does not exist: \"%s\".  Use 'ignoreMissingTarget' option if you want to just skip this constraint" ) % targetPlug()->getValue() ) );
+		}
+	}
+
 	ScenePath parentPath = path;
 	parentPath.pop_back();
 
 	const M44f parentTransform = inPlug()->fullTransform( parentPath );
 	const M44f fullInputTransform = inputTransform * parentTransform;
 
-	ScenePath targetPath;
-	tokenizeTargetPath( targetPath );
 	M44f fullTargetTransform = inPlug()->fullTransform( targetPath );
 
 	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();

@@ -70,6 +70,9 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 		Gaffer::StringPlug *targetPlug();
 		const Gaffer::StringPlug *targetPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingTargetPlug();
+		const Gaffer::BoolPlug *ignoreMissingTargetPlug() const;
+
 		Gaffer::IntPlug *targetModePlug();
 		const Gaffer::IntPlug *targetModePlug() const;
 
