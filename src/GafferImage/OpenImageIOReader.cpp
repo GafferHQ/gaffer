@@ -898,12 +898,13 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 	else if( output == tileBatchPlug() )
 	{
 		h.append( context->get<V3i>( g_tileBatchIndexContextName ) );
-		{
-			ImagePlug::GlobalScope c( context );
-			hashFileName( context, h );
-			refreshCountPlug()->hash( h );
-			missingFrameModePlug()->hash( h );
-		}
+
+		Gaffer::Context::EditableScope c( context );
+		c.remove( g_tileBatchIndexContextName );
+
+		hashFileName( c.context(), h );
+		refreshCountPlug()->hash( h );
+		missingFrameModePlug()->hash( h );
 	}
 }
 
@@ -933,8 +934,12 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 	{
 		V3i tileBatchIndex = context->get<V3i>( g_tileBatchIndexContextName );
 
+		Gaffer::Context::EditableScope c( context );
+		c.remove( g_tileBatchIndexContextName );
+
 		std::string fileName = fileNamePlug()->getValue();
-		FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+		FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, c.context() );
+
 		if( !file )
 		{
 			throw IECore::Exception( "OpenImageIOReader - trying to evaluate tileBatchPlug() with invalid file, this should never happen." );

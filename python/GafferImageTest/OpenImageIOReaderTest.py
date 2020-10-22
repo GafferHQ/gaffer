@@ -515,6 +515,19 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 				self.assertImagesEqual( r["out"], offsetIn["out"], ignoreMetadata = True )
 
+	def testFileNameContext( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["reader"] = GafferImage.OpenImageIOReader()
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["reader"]["fileName"] = "%s"' % self.fileName )
+
+		with Gaffer.ContextMonitor( root = s["expression"] ) as cm :
+			GafferImage.ImageAlgo.tiles( s["reader"]["out"] )
+
+		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond'] ) )
+
 	def testMultipartRead( self ) :
 
 		rgbReader = GafferImage.OpenImageIOReader()
