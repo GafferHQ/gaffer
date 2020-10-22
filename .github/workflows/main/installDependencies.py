@@ -43,7 +43,7 @@ import hashlib
 # Determine default archive URL.
 
 platform = "osx" if sys.platform == "darwin" else "linux"
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/2.0.0a5/gafferDependencies-2.0.0-Python2-" + platform + ".tar.gz"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/2.0.0/gafferDependencies-2.0.0-Python2-" + platform + ".tar.gz"
 
 # Parse command line arguments.
 
