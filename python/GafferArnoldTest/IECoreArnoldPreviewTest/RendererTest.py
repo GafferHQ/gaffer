@@ -2401,6 +2401,184 @@ class RendererTest( GafferTest.TestCase ) :
 		# Check they both have names
 		self.assertTrue( all( [ arnold.AiNodeGetName( x ) for x in trueSpheres ] ) )
 
+	def __assertProceduralsInheritShaders( self, inheritedColor, internalColor ) :
+
+		def colorAttributes( renderer, color ) :
+
+			attributes = IECore.CompoundObject()
+			if color is not None :
+				attributes["ai:surface"] = IECoreScene.ShaderNetwork(
+					{
+						"output" : IECoreScene.Shader( "flat", "ai:surface",  { "color" : color } ),
+					},
+					output = "output"
+				)
+
+			return renderer.attributes( attributes )
+
+		class SphereProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
+
+			def __init__( self, color = None ) :
+
+				GafferScene.Private.IECoreScenePreview.Procedural.__init__( self )
+				self.__color = color
+
+			def render( self, renderer ) :
+
+				renderer.object(
+					"/sphere",
+					IECoreScene.SpherePrimitive(),
+					colorAttributes( renderer, self.__color ),
+				)
+
+		IECore.registerRunTimeTyped( SphereProcedural )
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		outputFileName = self.temporaryDirectory() + "/beauty.exr"
+		r.output(
+			"test",
+			IECoreScene.Output(
+				outputFileName,
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+
+		r.object( "/procedural", SphereProcedural( color = internalColor ), colorAttributes( r, color = inheritedColor ) )
+		r.render()
+
+		image = IECoreImage.ImageReader( outputFileName ).read()
+		dimensions = image.dataWindow.size() + imath.V2i( 1 )
+		centreIndex = dimensions.x * int( dimensions.y * 0.5 ) + int( dimensions.x * 0.5 )
+		color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
+		self.assertEqual( color, internalColor or inheritedColor )
+
+	def testProceduralShaderInheritance( self ) :
+
+		self.__assertProceduralsInheritShaders( None, imath.Color3f( 0, 1, 0 ) )
+		self.__assertProceduralsInheritShaders( imath.Color3f( 1, 0, 0 ), None )
+		self.__assertProceduralsInheritShaders( imath.Color3f( 1, 0, 0 ), imath.Color3f( 0, 1, 0 ) )
+
+	def testProceduralInstancingWithAttributes( self ) :
+
+		class SphereProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
+
+			def render( self, renderer ) :
+
+				renderer.object(
+					"/sphere",
+					IECoreScene.SpherePrimitive(),
+					renderer.attributes( IECore.CompoundObject() ),
+				)
+
+		IECore.registerRunTimeTyped( SphereProcedural )
+
+		# Because we have to manually emulate attribute inheritance for procedural contents,
+		# we have to be careful not to instance identical procedurals if they have different
+		# attributes. We must make an exception for "user:" attributes though, since Arnold
+		# does support those properly, and it is very common to vary user attributes on
+		# otherwise identical procedurals (think GafferScene::Instancer).
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		attributeVariants = {
+			"defaultAttributes" : IECore.CompoundObject(),
+			"cameraOnAttributes" : IECore.CompoundObject( { "ai:visibility:camera" : IECore.BoolData( True ) } ),
+			"cameraOffAttributes" : IECore.CompoundObject( { "ai:visibility:camera" : IECore.BoolData( False ) } ),
+			"userAttributes" : IECore.CompoundObject( { "user:a" : IECore.IntData( 10 ) } ),
+			"userAttributes2" : IECore.CompoundObject( { "user:a" : IECore.IntData( 11 ), "user:b" : IECore.IntData( 12 ) } ),
+		}
+
+		attributeVariants["cameraOffUserAttributes"] = attributeVariants["userAttributes"].copy()
+		attributeVariants["cameraOffUserAttributes"].update( attributeVariants["cameraOffAttributes"] )
+
+		objectVariants = {}
+		for name, attributes in attributeVariants.items() :
+
+			objectVariants[name] = renderer.object(
+				name,
+				SphereProcedural(),
+				renderer.attributes( attributes )
+			)
+
+		# Check that we are instancing procedurals as expected.
+
+		self.assertEqual( len( self.__allNodes( nodeEntryName = "procedural" ) ), 2 )
+		self.assertEqual( len( self.__allNodes( nodeEntryName = "ginstance" ) ), len( attributeVariants ) )
+
+		instanceSharers = [
+			# All the same because camera visibility is on, and user attributes arent' relevant.
+			( "defaultAttributes", "cameraOnAttributes", "userAttributes", "userAttributes2" ),
+			# All the same because camera visibility is off.
+			( "cameraOffAttributes", "cameraOffUserAttributes" ),
+		]
+
+		for sharers in instanceSharers :
+			firstNode = arnold.AiNodeLookUpByName( sharers[0] )
+			for name in sharers :
+				node = arnold.AiNodeLookUpByName( name )
+				self.assertTrue( arnold.AiNodeIs( node, "ginstance" ) )
+				self.assertReferSameNode(
+					arnold.AiNodeGetPtr( node, "node" ),
+					arnold.AiNodeGetPtr( firstNode, "node" ),
+				)
+
+		# Check that the user attributes are applied on the `ginstance` nodes.
+
+		for name, attributes in attributeVariants.items() :
+
+			node = arnold.AiNodeLookUpByName( name )
+			for attributeName, attributeValue in attributes.items() :
+				if attributeName.startswith( "user:" ) :
+					self.assertEqual(
+						arnold.AiNodeGetInt( node, attributeName ),
+						attributeValue.value
+					)
+
+		# Check that attempts to edit the attributes fail if they would
+		# require edits to the children of the procedural.
+
+		self.assertTrue(
+			objectVariants["defaultAttributes"].attributes(
+				renderer.attributes( attributeVariants["cameraOnAttributes"] )
+			)
+		)
+
+		self.assertFalse(
+			objectVariants["defaultAttributes"].attributes(
+				renderer.attributes( attributeVariants["cameraOffAttributes"] )
+			)
+		)
+
+		# Check that the user attributes are not applied to the child nodes
+		# generated by the procedurals.
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/beauty.exr",
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+
+		renderer.render()
+
+		for sphere in self.__allNodes( nodeEntryName = "sphere" ) :
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:a" ) )
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:b" ) )
+
 	@staticmethod
 	def __aovShaders() :
 
