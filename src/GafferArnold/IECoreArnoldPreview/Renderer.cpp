@@ -1107,9 +1107,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( isConvertedProcedural( geometry ) )
 			{
 				// Arnold neither inherits nor overrides visibility parameters. Instead
-				// it does a bitwise `&` between the procedural and its children. Apply
-				// full visibility to the `ginstance` to override the full invisibility
-				// of the procedural it references.
+				// it does a bitwise `&` between the procedural and its children. The
+				// `procedural` node itself will have `visibility == 0` applied by the
+				// `Instance` constructor, so it can be instanced without the original
+				// being seen. Override that by applying full visibility to the `ginstance`
+				// so that the children of the procedural have full control of their final
+				// visibility.
 				AiNodeSetByte( node, g_visibilityArnoldString, AI_RAY_ALL );
 				return true;
 			}
