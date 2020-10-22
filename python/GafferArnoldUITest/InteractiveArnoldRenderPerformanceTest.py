@@ -37,7 +37,7 @@
 import imath
 import math
 import os
-import time
+import unittest
 
 import IECore
 import IECoreScene
@@ -55,6 +55,7 @@ import GafferImageTest
 
 from Qt import QtCore
 
+@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 	# Arnold outputs licensing warnings that would cause failures
@@ -155,10 +156,7 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 			timer.setInterval( 20 )
 			timer.timeout.connect( testFunc )
 
-			startTime = 0
-
 			GafferImageUI.ImageGadget.resetTileUpdateCount()
-			startTime = time.time()
 			timer.start()
 
 			with GafferTest.TestRunner.PerformanceScope() as ps:
@@ -178,17 +176,13 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 					h.waitFor( 2 )
 				arnoldStartupErrors = mh.messages
 
-				startTime = 0
-
 				tc = Gaffer.ScopedConnection( GafferImageTest.connectProcessTilesToPlugDirtiedSignal( watchNode["out"] ) )
 
 				with GafferTest.TestRunner.PerformanceScope() as ps:
 					with Gaffer.PerformanceMonitor() as m:
-						startTime = time.time()
 						for i in range( 250 ):
 							script["Camera"]["transform"]["translate"]["x"].setValue( math.sin( ( i + 1 ) * 0.1 ) )
 							h.waitFor( 0.02 )
-						endTime = time.time()
 
 					ps.setNumIterations( m.plugStatistics( watchNode["out"]["channelData"].source() ).computeCount )
 

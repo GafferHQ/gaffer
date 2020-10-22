@@ -178,12 +178,7 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 							continue;
 						}
 
-
-						// we must create a new object to hold the updated tile data,
-						// because the old one might well have been returned from
-						// computeChannelData and be being held in the cache.
 						vector<float> &buffer = tile->backBuffer;
-
 						const Box2i tileBound( tileOrigin, tileOrigin + Imath::V2i( GafferImage::ImagePlug::tileSize() ) );
 						const Box2i transferBound = IECore::boxIntersection( tileBound, gafferBox );
 
