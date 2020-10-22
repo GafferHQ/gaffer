@@ -114,15 +114,20 @@ def setPlugValues( plugs, value ) :
 	if not plugs :
 		return
 
-	with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
 		for plug in plugs :
 			if not Gaffer.MetadataAlgo.readOnly( plug ) and plug.settable() :
 				plug.setValue( value )
 
-def deleteRow( rowPlug ) :
+def deleteRows( rowPlugs ) :
 
-	with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
-		rowPlug.parent().removeChild( rowPlug )
+	if not rowPlugs :
+		return
+
+	with Gaffer.UndoScope( next( iter( rowPlugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+		for row in rowPlugs :
+			if not Gaffer.MetadataAlgo.readOnly( row ) :
+				row.parent().removeChild( row )
 
 # Note, function may present dialogues
 def createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :

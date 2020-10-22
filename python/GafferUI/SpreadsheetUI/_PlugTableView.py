@@ -360,14 +360,18 @@ class _PlugTableView( GafferUI.Widget ) :
 			definition = self.__menuPlugValueWidget._popupMenuDefinition()
 
 			if self.__mode == self.Mode.RowNames :
-				self.__prependRowMenuItems( definition, plug.ancestor( Gaffer.Spreadsheet.RowPlug ) )
+				self.__prependRowMenuItems( definition, [ plug.ancestor( Gaffer.Spreadsheet.RowPlug ) ] )
 			elif cellPlug is not None :
 				self.__prependCellMenuItems( definition, [ cellPlug ] )
 
 		else :
 
 			definition = IECore.MenuDefinition()
-			if self.__mode != self.Mode.RowNames :
+
+			if self.__mode == self.Mode.RowNames :
+				rows = { plug.ancestor( Gaffer.Spreadsheet.RowPlug ) for plug in self.selectedPlugs() }
+				self.__prependRowMenuItems( definition, rows )
+			else :
 				self.__prependCellMenuItems( definition, self.selectedPlugs() )
 
 		self.__plugMenu = GafferUI.Menu( definition )
@@ -448,10 +452,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return True
 
-	def __prependRowMenuItems( self, menuDefinition, rowPlug ) :
+	def __prependRowMenuItems( self, menuDefinition, rowPlugs ) :
 
-		if rowPlug == rowPlug.parent().defaultRow() :
+		if len( rowPlugs ) == 0 :
 			return
+
+		pluralSuffix = "" if len( rowPlugs ) == 1 else "s"
 
 		targetDivider = "/__SpreadsheetRowAndCellDivider__"
 		if menuDefinition.item( targetDivider ) is None :
@@ -459,34 +465,38 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		items = []
 
+		rowsPlug = next( iter( rowPlugs ) ).parent()
+
 		widths = [
 			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
 			( "Single", GafferUI.PlugWidget.labelWidth() ),
 			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
 		]
-
-		currentWidth = _PlugTableView._getRowNameWidth( rowPlug.parent() )
+		currentWidth = _PlugTableView._getRowNameWidth( rowsPlug )
 		for label, width in widths :
 			items.append( (
 				"/Width/{}".format( label ),
 				{
-					"command" : functools.partial( self.__setRowNameWidth, rowPlug, width ),
-					"active" : not Gaffer.MetadataAlgo.readOnly( rowPlug ),
+					"command" : functools.partial( self.__setRowNameWidth, rowsPlug, width ),
+					"active" : not Gaffer.MetadataAlgo.readOnly( rowsPlug ),
 					"checkBox" : width == currentWidth,
 				}
 			) )
+
+		includesDefaultRow = any( [ row.isSame( rowsPlug.defaultRow() ) for row in rowPlugs ] )
+		allLocked = all( [ Gaffer.MetadataAlgo.readOnly( row ) for row in rowPlugs ] )
 
 		items.extend( (
 			(
 				"/__DeleteRowDivider__", { "divider" : True }
 			),
 			(
-				"/Delete Row",
+				"/Delete Row%s" % pluralSuffix,
 				{
-					"command" : functools.partial( _Algo.deleteRow, rowPlug ),
+					"command" : functools.partial( _Algo.deleteRows, rowPlugs ),
 					"active" : (
-						not Gaffer.MetadataAlgo.readOnly( rowPlug ) and
-						_Algo.dimensionsEditable( rowPlug.parent() )
+						not includesDefaultRow and not allLocked and
+						_Algo.dimensionsEditable( rowsPlug )
 					)
 				}
 			)
@@ -617,10 +627,10 @@ class _PlugTableView( GafferUI.Widget ) :
 			rowsPlug.removeColumn( cellPlug.parent().children().index( cellPlug ) )
 
 	@staticmethod
-	def __setRowNameWidth( rowPlug, width, *unused ) :
+	def __setRowNameWidth( rowsPlug, width, *unused ) :
 
 		with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
-			_PlugTableView._setRowNameWidth( rowPlug.parent(), width )
+			_PlugTableView._setRowNameWidth( rowsPlug, width )
 
 	def __modelReset( self ) :
 

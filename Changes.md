@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Spreadsheet : Added ability to select one or more cells and copy their values and enabled state to other cells.
+- Spreadsheet : Added ability to select one or more rows or cells and:
+  - Copy their values and enabled state to other cells.
+  - Delete the selected rows.
 
 Fixes
 -----
