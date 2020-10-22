@@ -135,6 +135,13 @@ class stats( Gaffer.Application ) :
 				),
 
 				IECore.StringParameter(
+					name = "globals",
+					description = "The name of a SceneNode or ScenePlug to examine. "
+						"Only the globals will be evaluated. ",
+					defaultValue = "",
+				),
+
+				IECore.StringParameter(
 					name = "location",
 					description = "The path to a location in the scene. If this is specified "
 						"then that single location will be generated profiled, otherwise "
@@ -336,6 +343,10 @@ class stats( Gaffer.Application ) :
 
 			self.__writeScene( script, args )
 
+		if args["globals"].value :
+
+			self.__writeGlobals( script, args )
+
 		if args["image"].value :
 
 			self.__writeImage( script, args )
@@ -528,6 +539,46 @@ class stats( Gaffer.Application ) :
 		## \todo Calculate and write scene stats
 		#  - Locations
 		#  - Unique objects, attributes etc
+
+	def __writeGlobals( self, script, args ) :
+
+		import GafferDispatch
+		import GafferScene
+		import GafferSceneTest
+
+		scene = script.descendant( args["globals"].value )
+		if isinstance( scene, Gaffer.Node ) :
+			scene = next( GafferScene.ScenePlug.RecursiveOutputRange( scene ), None )
+
+		if scene is None :
+			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
+			return
+		if not isinstance( scene, GafferScene.ScenePlug ) :
+			IECore.msg( IECore.Msg.Level.Error, "stats", "Not a scene plug: \"%s\" " % args["scene"].value )
+			return
+
+		contextSanitiser = _NullContextManager()
+		if args["contextSanitiser"].value :
+			contextSanitiser = GafferSceneTest.ContextSanitiser()
+
+		def computeGlobals() :
+
+			with self.__context( script, args ) as context :
+				for frame in self.__frames( script, args ) :
+					context.setFrame( frame )
+					scene.globals()
+
+		if args["preCache"].value :
+			computeGlobals()
+
+		memory = _Memory.maxRSS()
+		with _Timer() as sceneTimer :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+				with contextSanitiser :
+					computeGlobals()
+
+		self.__timers["Globals generation"] = sceneTimer
+		self.__memory["Globals generation"] = _Memory.maxRSS() - memory
 
 	def __writeImage( self, script, args ) :
 
