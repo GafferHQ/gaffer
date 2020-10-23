@@ -132,12 +132,12 @@ bool Constraint::processesTransform() const
 
 void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ScenePath targetPath;
-	tokenizeTargetPath( targetPath );
+	auto targetPathOpt = targetPath();
 
-	if( !inPlug()->exists( targetPath ) )
+	if( !targetPathOpt )
 	{
-		ignoreMissingTargetPlug()->hash( h );
+		// Pass through input unchanged
+		h = inPlug()->transformPlug()->hash();
 		return;
 	}
 
@@ -145,13 +145,13 @@ void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Co
 	parentPath.pop_back();
 	h.append( inPlug()->fullTransformHash( parentPath ) );
 
-	h.append( inPlug()->fullTransformHash( targetPath ) );
+	h.append( inPlug()->fullTransformHash( *targetPathOpt ) );
 
 	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
 	h.append( targetMode );
 	if( targetMode != Origin )
 	{
-		h.append( inPlug()->boundHash( targetPath ) );
+		h.append( inPlug()->boundHash( *targetPathOpt ) );
 	}
 
 	targetOffsetPlug()->hash( h );
@@ -161,20 +161,11 @@ void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Co
 
 Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
-	ScenePath targetPath;
-	tokenizeTargetPath( targetPath );
+	auto targetPathOpt = targetPath();
 
-	if( !inPlug()->exists( targetPath ) )
+	if( !targetPathOpt )
 	{
-		if( ignoreMissingTargetPlug()->getValue() )
-		{
-			return inputTransform;
-		}
-		else
-		{
-			throw IECore::Exception( boost::str(
-				boost::format( "Constraint target does not exist: \"%s\".  Use 'ignoreMissingTarget' option if you want to just skip this constraint" ) % targetPlug()->getValue() ) );
-		}
+		return inputTransform;
 	}
 
 	ScenePath parentPath = path;
@@ -183,12 +174,12 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 	const M44f parentTransform = inPlug()->fullTransform( parentPath );
 	const M44f fullInputTransform = inputTransform * parentTransform;
 
-	M44f fullTargetTransform = inPlug()->fullTransform( targetPath );
+	M44f fullTargetTransform = inPlug()->fullTransform( *targetPathOpt );
 
 	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
 	if( targetMode != Origin )
 	{
-		const Box3f targetBound = inPlug()->bound( targetPath );
+		const Box3f targetBound = inPlug()->bound( *targetPathOpt );
 		if( !targetBound.isEmpty() )
 		{
 			switch( targetMode )
@@ -214,8 +205,30 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 	return fullConstrainedTransform * parentTransform.inverse();
 }
 
-void Constraint::tokenizeTargetPath( ScenePath &path ) const
+boost::optional<ScenePlug::ScenePath> Constraint::targetPath() const
 {
 	std::string targetPathAsString = targetPlug()->getValue();
-	ScenePlug::stringToPath( targetPathAsString, path );
+
+	if( targetPathAsString == "" )
+	{
+		return boost::none;
+	}
+
+	ScenePath targetPath;
+	ScenePlug::stringToPath( targetPathAsString, targetPath );
+
+	if( !inPlug()->exists( targetPath ) )
+	{
+		if( ignoreMissingTargetPlug()->getValue() )
+		{
+			return boost::none;
+		}
+		else
+		{
+			throw IECore::Exception( boost::str(
+				boost::format( "Constraint target does not exist: \"%s\".  Use 'ignoreMissingTarget' option if you want to just skip this constraint" ) % targetPathAsString ) );
+		}
+	}
+
+	return targetPath;
 }

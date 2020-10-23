@@ -98,7 +98,7 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 	private :
 
-		void tokenizeTargetPath( ScenePath &path ) const;
+		boost::optional<ScenePath> targetPath() const;
 
 		static size_t g_firstPlugIndex;
 

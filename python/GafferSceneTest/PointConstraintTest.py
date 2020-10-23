@@ -127,6 +127,13 @@ class PointConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint["ignoreMissingTarget"].setValue( True )
 		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
 
+		# Constrain to root
+		constraint["target"].setValue( "/" )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ).translation(), imath.V3f(0) )
+
+		# No op
+		constraint["target"].setValue( "" )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
 
 if __name__ == "__main__":
 	unittest.main()

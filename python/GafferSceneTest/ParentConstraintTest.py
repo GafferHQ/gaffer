@@ -84,6 +84,13 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint["ignoreMissingTarget"].setValue( True )
 		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
 
+		# Constrain to root and no-op empty constraint ( these are identical for a ParentConstraint )
+		constraint["target"].setValue( "/" )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
+		constraint["target"].setValue( "" )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), constraint["in"].fullTransform( "/group/constrained" ) )
+
+
 	def testRelativeTransform( self ) :
 
 		plane1 = GafferScene.Plane()
