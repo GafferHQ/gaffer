@@ -673,5 +673,197 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.runBoundaryCorrectness( 16 )
 		self.runBoundaryCorrectness( 32 )
 
+	def mergePerf( self, operation, mismatch ):
+		r = GafferImage.Checkerboard( "Checkerboard" )
+		r["format"].setValue( GafferImage.Format( 4096, 3112, 1.000 ) )
+		# Make the size of the checkerboard not a perfect multiple of tile size
+		# in case we ever fix Checkerboard to notice when tiles are repeated
+		# and return an identical hash ( which would invalidate this performance
+		# test )
+		r["size"].setValue( imath.V2f( 64.01 ) )
+
+		alphaShuffle = GafferImage.Shuffle()
+		alphaShuffle["in"].setInput( r["out"] )
+		alphaShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+
+		transform = GafferImage.Offset()
+		transform["in"].setInput( alphaShuffle["out"] )
+		if mismatch:
+			transform["offset"].setValue( imath.V2i( 4000, 3000 ) )
+		else:
+			transform["offset"].setValue( imath.V2i( 26, 42 ) )
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( operation )
+		merge["in"][0].setInput( alphaShuffle["out"] )
+		merge["in"][1].setInput( transform["out"] )
+
+		# Precache upstream network, we're only interested in the performance of Merge
+		GafferImage.ImageAlgo.tiles( alphaShuffle["out"] )
+		GafferImage.ImageAlgo.tiles( transform["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImage.ImageAlgo.tiles( merge["out"] )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testAddPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Add, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testAddMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Add, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testAtopPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Atop, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testAtopMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Atop, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testDividePerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Divide, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testDivideMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Divide, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testInPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.In, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testInMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.In, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testOutPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Out, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testOutMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Out, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMaskPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Mask, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMaskMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Mask, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testOutPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Out, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testOutMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Out, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMaskPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Mask, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMaskMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Mask, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMattePerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Matte, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMatteMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Matte, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMultiplyPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Multiply, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMultiplyMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Multiply, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testOverPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Over, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testOverMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Over, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testSubtractPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Subtract, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testSubtractMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Subtract, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testDifferencePerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Difference, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testDifferenceMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Difference, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testUnderPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Under, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testUnderMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Under, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMinPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Min, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMinMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Min, True )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMaxPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Max, False )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
+	def testMaxMismatchPerf( self ):
+		self.mergePerf( GafferImage.Merge.Operation.Max, True )
+
 if __name__ == "__main__":
 	unittest.main()
