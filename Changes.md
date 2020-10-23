@@ -10,7 +10,10 @@ Fixes
 -----
 
 - Encapsulate : Fixed bugs in shader/attribute inheritance when rendering in Arnold (#3559).
-- Arnold : Fixed OSLShader connections between color components.
+- Arnold Renderer :
+  - Fixed OSLShader connections between color components.
+  - Fixed hangs when instancing the output of an Encapsulate node.
+- CropWindowTool : Fixed error handling bugs.
 - ImageReader : Fixed bug which caused fileName to be evaluated in unnecessary contexts.
 
 0.58.3.2 (relative to 0.58.3.1)
@@ -316,6 +319,15 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.6.0.
+
+0.57.7.5 (relative to 0.57.7.4)
+========
+
+Fixes
+-----
+
+- Arnold Renderer : Fixed hangs when instancing the output of an Encapsulate node.
+- CropWindowTool : Fixed error handling bugs.
 
 0.57.7.4 (relative to 0.57.7.3)
 ========

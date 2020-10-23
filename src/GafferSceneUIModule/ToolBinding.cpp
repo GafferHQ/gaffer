@@ -185,6 +185,7 @@ void GafferSceneUIModule::bindTools()
 
 	{
 		GafferBindings::NodeClass<CropWindowTool>( nullptr, no_init )
+			.def( init<GafferUI::View *>() )
 			.def( "status", &CropWindowTool::status )
 			.def( "plug", &cropWindowToolPlugWrapper )
 			.def( "enabledPlug", &cropWindowToolEnabledPlugWrapper )
