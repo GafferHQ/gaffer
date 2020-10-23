@@ -154,6 +154,10 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __valueChanged( self, widget, reason ) :
 
+		if reason == GafferUI.NumericWidget.ValueChangedReason.InvalidEdit :
+			self._updateFromPlugs()
+			return
+
 		if self._editable( canEditAnimation = True ) :
 
 			if not widget.changesShouldBeMerged( self.__lastChangedReason, reason ) :
