@@ -1,5 +1,5 @@
-0.59.x.x
-========
+0.59.0.0b1
+==========
 
 This release provides substantial improvements to USD support, an upgrade to Qt 5.12, and builds for both Python 2 and 3.
 
