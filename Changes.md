@@ -83,6 +83,20 @@ Build
   - USD 20.11
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.0.0 for full details.
 
+0.58.4.0 (relative to 0.58.3.2)
+========
+
+Improvements
+------------
+
+- Arnold Renderer : Improved performance when instancing large numbers of objects. A benchmark with 1 million instances shows a 25% reduction in scene generation time.
+- Encapsulate : Fixed bugs in shader/attribute inheritance when rendering in Arnold (#3559).
+- Arnold Renderer :
+  - Fixed OSLShader connections between color components.
+  - Fixed hangs when instancing the output of an Encapsulate node.
+- CropWindowTool : Fixed error handling bugs.
+- ImageReader : Fixed bug which caused fileName to be evaluated in unnecessary contexts.
+
 0.58.3.2 (relative to 0.58.3.1)
 ========
 
@@ -383,6 +397,15 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.6.0.
+
+0.57.7.5 (relative to 0.57.7.4)
+========
+
+Fixes
+-----
+
+- Arnold Renderer : Fixed hangs when instancing the output of an Encapsulate node.
+- CropWindowTool : Fixed error handling bugs.
 
 0.57.7.4 (relative to 0.57.7.3)
 ========

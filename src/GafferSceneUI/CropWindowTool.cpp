@@ -735,66 +735,75 @@ void CropWindowTool::preRender()
 		return;
 	}
 
-	const Box2f r = resolutionGate();
-
-	if( runTimeCast<SceneView>( view() ) )
+	try
 	{
-		// This is the only check we have that tells us whether we have an
-		// appropriate camera to support the presentation of a crop window.
-		// We don't have any other signals tied to this, hence the need to
-		// check here before render.
-		if( r.isEmpty() )
+		const Box2f r = resolutionGate();
+
+		if( runTimeCast<SceneView>( view() ) )
 		{
-			setErrorMessage( "Error: No applicable crop window for this view" );
+			// This is the only check we have that tells us whether we have an
+			// appropriate camera to support the presentation of a crop window.
+			// We don't have any other signals tied to this, hence the need to
+			// check here before render.
+			if( r.isEmpty() )
+			{
+				setErrorMessage( "Error: No applicable crop window for this view" );
+				setOverlayVisible( false );
+				return;
+			}
+
+			setOverlayVisible( true );
+		}
+
+		if( !m_overlayDirty )
+		{
+			return;
+		}
+		m_overlayDirty = false;
+
+		findScenePlug();
+
+		// This occurs in the ImageView hosted case, when we don't know which node
+		// may have rendered the image being viewed.
+		if( !scenePlug()->getInput() )
+		{
 			setOverlayVisible( false );
 			return;
 		}
 
-		setOverlayVisible( true );
-	}
+		Box2f cropWindow( V2f( 0 ), V2f( 1 ) );
+		findCropWindowPlug();
+		if( m_cropWindowPlug )
+		{
+			cropWindow = m_cropWindowPlug->getValue();
+		}
+		if( runTimeCast<ImageView>( view() ) )
+		{
+			flipNDCOrigin( cropWindow );
+		}
 
-	if( !m_overlayDirty )
-	{
-		return;
-	}
-	m_overlayDirty = false;
-
-	findScenePlug();
-
-	// This occurs in the ImageView hosted case, when we don't know which node
-	// may have rendered the image being viewed.
-	if( !scenePlug()->getInput() )
-	{
-		setOverlayVisible( false );
-		return;
-	}
-
-	Box2f cropWindow( V2f( 0 ), V2f( 1 ) );
-	findCropWindowPlug();
-	if( m_cropWindowPlug )
-	{
-		cropWindow = m_cropWindowPlug->getValue();
-	}
-	if( runTimeCast<ImageView>( view() ) )
-	{
-		flipNDCOrigin( cropWindow );
-	}
-
-	BlockedConnection blockedConnection( m_overlayRectangleChangedConnection );
-	m_overlay->setRectangle(
-		Box2f(
-			V2f(
-				lerp( r.min.x, r.max.x, cropWindow.min.x ),
-				lerp( r.min.y, r.max.y, cropWindow.min.y )
-			),
-			V2f(
-				lerp( r.min.x, r.max.x, cropWindow.max.x ),
-				lerp( r.min.y, r.max.y, cropWindow.max.y )
+		BlockedConnection blockedConnection( m_overlayRectangleChangedConnection );
+		m_overlay->setRectangle(
+			Box2f(
+				V2f(
+					lerp( r.min.x, r.max.x, cropWindow.min.x ),
+					lerp( r.min.y, r.max.y, cropWindow.min.y )
+				),
+				V2f(
+					lerp( r.min.x, r.max.x, cropWindow.max.x ),
+					lerp( r.min.y, r.max.y, cropWindow.max.y )
+				)
 			)
-		)
-	);
+		);
 
-	setOverlayVisible( true );
+		setOverlayVisible( true );
+
+	}
+	catch( const std::exception &e )
+	{
+		setErrorMessage( std::string("Error: ") + e.what() );
+		setOverlayVisible( false );
+	}
 }
 
 void CropWindowTool::findScenePlug()
@@ -807,7 +816,17 @@ void CropWindowTool::findScenePlug()
 	if( runTimeCast<ImageView>( view() ) )
 	{
 		std::string msg;
-		ScenePlug *scene = findSceneForImage( imagePlug(), msg );
+		ScenePlug *scene = nullptr;
+
+		try
+		{
+			scene = findSceneForImage( imagePlug(), msg );
+		}
+		catch( const std::exception &e )
+		{
+			msg = std::string( "Error: " ) + e.what();
+		}
+
 		scenePlug()->setInput( scene );
 		if( !scene )
 		{
@@ -833,51 +852,67 @@ void CropWindowTool::findCropWindowPlug()
 
 	findScenePlug();
 
-	const GafferScene::ScenePlug::ScenePath rootPath;
-	SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
-	const bool foundAnEnabledPlug = findCropWindowPlug( history.get(), /* enabledOnly = */ true );
-	// If we didn't find an enabled cropWindow plug upstream, or we did and it's
-	// read-only, look again for any other plugs that could be edited, but aren't
-	// enabled yet. We'll enable it if the user makes an edit.
-	if( !foundAnEnabledPlug || MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
+	try
 	{
-		findCropWindowPlug( history.get(), /* enabledOnly = */ false );
-	}
-
-	if( m_cropWindowPlug )
-	{
-		const std::string plugName =  m_cropWindowPlug->relativeName( m_cropWindowPlug->ancestor<ScriptNode>() );
-
-		// Even after the second search, we could still be read-only
-		if( MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
+		const GafferScene::ScenePlug::ScenePath rootPath;
+		SceneAlgo::History::Ptr history = SceneAlgo::history( scenePlug()->globalsPlug(), rootPath );
+		const bool foundAnEnabledPlug = findCropWindowPlug( history.get(), /* enabledOnly = */ true );
+		// If we didn't find an enabled cropWindow plug upstream, or we did and it's
+		// read-only, look again for any other plugs that could be edited, but aren't
+		// enabled yet. We'll enable it if the user makes an edit.
+		if( !foundAnEnabledPlug || MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
 		{
-			m_overlay->setEditable( false );
-			setOverlayMessage( "Warning: <b>" + plugName + "</b> is locked" );
+			findCropWindowPlug( history.get(), /* enabledOnly = */ false );
+		}
+
+		if( m_cropWindowPlug )
+		{
+			const std::string plugName =  m_cropWindowPlug->relativeName( m_cropWindowPlug->ancestor<ScriptNode>() );
+
+			// Even after the second search, we could still be read-only
+			if( MetadataAlgo::readOnly( m_cropWindowPlug.get() ) )
+			{
+				m_overlay->setEditable( false );
+				setOverlayMessage( "Warning: <b>" + plugName + "</b> is locked" );
+			}
+			else
+			{
+				bool plugEditable = m_cropWindowPlug->settable();
+
+				// If our cropWindow plug hasn't been enabled, we need to check if it's corresponding 'enabled'
+				// plug is editable, it could be expressioned or locked even if our value plug isn't.
+				if( m_cropWindowEnabledPlug && m_cropWindowEnabledPlug->getValue() == false )
+				{
+					plugEditable &= ( m_cropWindowEnabledPlug->settable() && !MetadataAlgo::readOnly( m_cropWindowEnabledPlug.get() ) );
+				}
+
+				m_overlay->setEditable( plugEditable );
+				setOverlayMessage( plugEditable
+					? ( "Info: Editing <b>" + plugName + "</b>" )
+					: ( "Warning: <b>" + plugName + "</b> isn't editable" )
+				);
+			}
+
+			m_cropWindowPlugDirtiedConnection = m_cropWindowPlug->node()->plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
 		}
 		else
 		{
-			bool plugEditable = m_cropWindowPlug->settable();
-
-			// If our cropWindow plug hasn't been enabled, we need to check if it's corresponding 'enabled'
-			// plug is editable, it could be expressioned or locked even if our value plug isn't.
-			if( m_cropWindowEnabledPlug && m_cropWindowEnabledPlug->getValue() == false )
-			{
-				plugEditable &= ( m_cropWindowEnabledPlug->settable() && !MetadataAlgo::readOnly( m_cropWindowEnabledPlug.get() ) );
-			}
-
-			m_overlay->setEditable( plugEditable );
-			setOverlayMessage( plugEditable
-				? ( "Info: Editing <b>" + plugName + "</b>" )
-				: ( "Warning: <b>" + plugName + "</b> isn't editable" )
-			);
+			// Though this is an 'error' for the user, `setErrorMessage` is used in situations when the
+			// tool has failed such that the overlay is hidden. As we still show the overlay without a plug
+			// (as the crop is still defined in the scene), we use the overlay message instead.
+			setOverlayMessage( "Error: No crop window found. Insert a <b>StandardOptions</b> node." );
 		}
 
-		m_cropWindowPlugDirtiedConnection = m_cropWindowPlug->node()->plugDirtiedSignal().connect( boost::bind( &CropWindowTool::plugDirtied, this, ::_1 ) );
 	}
-	else
+	catch( const std::exception &e )
+	{
+		m_cropWindowPlug = nullptr;
+		setOverlayMessage( std::string("Error: ") + e.what() );
+	}
+
+	if( !m_cropWindowPlug )
 	{
 		m_overlay->setEditable( false );
-		setOverlayMessage( "Error: No crop window found. Insert a <b>StandardOptions</b> node." );
 		m_cropWindowPlugDirtiedConnection.disconnect();
 	}
 
