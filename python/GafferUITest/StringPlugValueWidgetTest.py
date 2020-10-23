@@ -47,11 +47,15 @@ class StringPlugValueWidgetTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 		n["user"]["p1"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["user"]["p2"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		Gaffer.Metadata.registerValue( n["user"]["p1"], "stringPlugValueWidget:continuousUpdate", True )
+
+		n["user"]["p1"].setValue( "p1" )
+		n["user"]["p2"].setValue( "p2" )
 
 		w = GafferUI.StringPlugValueWidget( n["user"]["p1"] )
 		self.assertEqual( w.getPlug(), n["user"]["p1"] )
 		self.assertEqual( w.getPlugs(), { n["user"]["p1"] } )
-		self.assertEqual( w.textWidget().getText(), "" )
+		self.assertEqual( w.textWidget().getText(), "p1" )
 		self.assertEqual( w.textWidget()._qtWidget().placeholderText(), "" )
 
 		n["user"]["p1"].setValue( "x" )
@@ -59,6 +63,14 @@ class StringPlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.textWidget()._qtWidget().placeholderText(), "" )
 
 		w.setPlugs( n["user"].children() )
+
+		self.assertEqual( n["user"]["p1"].getValue(), "x" )
+		self.assertEqual( n["user"]["p2"].getValue(), "p2" )
+		self.assertEqual( w.textWidget().getText(), "" )
+		self.assertEqual( w.textWidget()._qtWidget().placeholderText(), "---" )
+
+		w = GafferUI.StringPlugValueWidget( n["user"].children() )
+		self.assertEqual( w.getPlugs(), { n["user"]["p1"], n["user"]["p2"] } )
 		self.assertEqual( w.textWidget().getText(), "" )
 		self.assertEqual( w.textWidget()._qtWidget().placeholderText(), "---" )
 

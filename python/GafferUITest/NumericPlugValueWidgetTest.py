@@ -90,6 +90,26 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( n["user"]["i1"], True )
 		self.assertFalse( w.numericWidget().getEditable() )
 
+	def testChangeToMixedPlugsDoesntOverwriteExistingPlugValues( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["i1"] = Gaffer.IntPlug()
+		n["user"]["i2"] = Gaffer.IntPlug()
+		n["user"]["i1"].setValue( 1 )
+		n["user"]["i2"].setValue( 2 )
+
+		w = GafferUI.NumericPlugValueWidget( n["user"]["i1"] )
+		self.assertEqual( w.numericWidget().getText(), "1" )
+		self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "" )
+
+		w.setPlugs( n["user"].children() )
+		self.assertEqual( w.getPlugs(), { n["user"]["i1"], n["user"]["i2"] } )
+
+		self.assertEqual( n["user"]["i1"].getValue(), 1 )
+		self.assertEqual( n["user"]["i2"].getValue(), 2 )
+		self.assertEqual( w.numericWidget().getText(), "" )
+		self.assertEqual( w.numericWidget()._qtWidget().placeholderText(), "---" )
+
 	def testMixedOrInvalidValuesPreservesExisting( self ) :
 
 		n = Gaffer.Node()

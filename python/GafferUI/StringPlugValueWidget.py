@@ -86,7 +86,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# calling setText() in this situation, otherwise the
 			# cursor is always moving to the end whenever a key is
 			# pressed in continuousUpdate mode.
-			self.__textWidget.setText( text )
+			with Gaffer.BlockedConnection( self.__textChangedConnection ) :
+				self.__textWidget.setText( text )
 
 		self.__textWidget.setErrored( errored )
 
