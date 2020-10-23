@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Encapsulate : Fixed bugs in shader/attribute inheritance when rendering in Arnold (#3559).
+- Arnold : Fixed OSLShader connections between color components.
 
 0.58.3.2 (relative to 0.58.3.1)
 ========
