@@ -48,6 +48,16 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Plug )
 IE_CORE_FORWARDDECLARE( ScriptNode )
 
+#define GAFFER_NODE_DECLARE_TYPE( TYPE, TYPEID, BASETYPE ) \
+	IE_CORE_DECLARERUNTIMETYPEDEXTENSION( TYPE, TYPEID, BASETYPE ) \
+	using Iterator = Gaffer::FilteredChildIterator<Gaffer::TypePredicate<TYPE>>; \
+	using RecursiveIterator = Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<TYPE>, Gaffer::TypePredicate<Gaffer::Node>>; \
+	using Range = Gaffer::FilteredChildRange<Gaffer::TypePredicate<TYPE>>; \
+	using RecursiveRange = Gaffer::FilteredRecursiveChildRange<Gaffer::TypePredicate<TYPE>, Gaffer::TypePredicate<Gaffer::Node>>;
+
+#define GAFFER_NODE_DEFINE_TYPE( TYPE ) \
+	IE_CORE_DEFINERUNTIMETYPED( TYPE )
+
 /// The primary class from which node graphs are constructed. Nodes may
 /// have any number of child plugs which provide values and/or define connections
 /// to the plugs of other nodes. They provide signals for the monitoring of changes
@@ -62,7 +72,7 @@ class GAFFER_API Node : public GraphComponent
 		Node( const std::string &name=defaultName<Node>() );
 		~Node() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Node, NodeTypeId, GraphComponent );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Node, NodeTypeId, GraphComponent );
 
 		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
 		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;

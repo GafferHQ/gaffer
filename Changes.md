@@ -9,6 +9,9 @@ Improvements
 API
 ---
 
+- Node :
+  - Improved speed of `RecursiveIterator` and `RecursiveRange` for nodes.
+  - Added new `GAFFER_NODE_DECLARE_TYPE` and `GAFFER_NODE_DEFINE_TYPE` macros. Subclasses should use these in preference to `GAFFER_GRAPHCOMPONENT_DECLARE_TYPE` and `GAFFER_GRAPHCOMPONENT_DEFINE_TYPE`.
 - Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
 
 0.59.0.0b1
