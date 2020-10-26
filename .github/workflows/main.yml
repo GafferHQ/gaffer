@@ -107,7 +107,7 @@ jobs:
 
     - name: Install toolchain (Linux)
       run: |
-        echo "::add-path::/opt/rh/devtoolset-6/root/bin"
+        echo /opt/rh/devtoolset-6/root/bin >> $GITHUB_PATH
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity&
         useradd -m testUser
@@ -123,27 +123,27 @@ jobs:
     - name: Set Custom Variables
       run: |
         .github/workflows/main/setBuildVars.py
-        echo "::set-env name=GAFFER_SPHINX::`which sphinx-build`"
+        echo GAFFER_SPHINX=`which sphinx-build` >> $GITHUB_ENV
       env:
        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        GAFFER_BUILD_VARIANT: ${{ matrix.variant }}
 
     - name: Disable macOS PR Docs
       run: |
-        echo "::set-env name=GAFFER_SPHINX::doesNotExist"
-        echo "::set-env name=GAFFER_VALIDATE_EXTRA_FLAGS::--skipDocs"
+        echo GAFFER_SPHINX=doesNotExist >> $GITHUB_ENV
+        echo GAFFER_VALIDATE_EXTRA_FLAGS=--skipDocs >> $GITHUB_ENV
       if: runner.os == 'macOS' && env.GAFFER_GITHUB_RELEASEID == ''
 
     - name: Install dependencies
-      # The `::set-env` shenanigans creates an environment variable
+      # The `$GITHUB_ENV` shenanigans creates an environment variable
       # containing the hash of the archive, for use in the cache key
       # below.
       run: |
-        python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "::set-env name=GAFFER_DEPENDENCIES_HASH::{archiveDigest}"
+        echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
         ./config/installArnold.sh
         ./config/installDelight.sh
-        echo ::set-env name=ARNOLD_ROOT::$GITHUB_WORKSPACE/arnoldRoot
-        echo ::set-env name=DELIGHT::$GITHUB_WORKSPACE/3delight
+        echo ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot >> $GITHUB_ENV
+        echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
 
     - name: Cache
       uses: actions/cache@v1
