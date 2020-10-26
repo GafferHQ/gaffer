@@ -790,6 +790,8 @@ class _EditWindow( GafferUI.Window ) :
 		container = GafferUI.ListContainer( spacing = 4 )
 		GafferUI.Window.__init__( self, "", child = container, borderWidth = 8, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
 
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+
 		for p in plugs :
 			## \todo Figure out when/if this is about to happen, and disable
 			# editing beforehand.
@@ -867,6 +869,19 @@ class _EditWindow( GafferUI.Window ) :
 			else :
 				textWidget.setFocussed( True )
 
+	def __visibilityChanged( self, unused ) :
+
+		if self.visible() :
+			return
+
+		# The modal popup will hide the window without de-focusing the
+		# current widget. Ultimately this results in un-committed edits
+		# from being lost. Force the active widget to resign focus.
+		focusWidget = QtWidgets.QApplication.focusWidget()
+		if focusWidget is not None :
+			gafferWidget = GafferUI.Widget._owner( focusWidget )
+			if gafferWidget is not None and self.isAncestorOf( gafferWidget ) :
+				gafferWidget._qtWidget().clearFocus()
 
 	def __paintEvent( self, event ) :
 

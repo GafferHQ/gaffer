@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- Viewer : Fixed bug that caused the Inspector to grow very wide when inspecting long strings.
+- Viewer :
+  - Fixed bug that caused the Inspector to grow very wide when inspecting long strings.
+  - Fixed bug that caused a second click to be required to apply edits when closing an Inspector edit window by clicking outside the popup.
 - NumericPlugValueWidget : Fixed bug that caused plug values to be set to 0 if editing completed with invalid text.
 - StringPlugValueWidget : Fixed bug that could cause plug values to be overwritten when editing multiple plugs and focus was lost without change, or the value state changed to mixed via external action.
 
