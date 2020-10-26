@@ -1,3 +1,11 @@
+0.59.x.x (relative to 0.59.0.0b1)
+========
+
+Improvements
+------------
+
+- NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
+
 0.59.0.0b1
 ==========
 
