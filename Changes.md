@@ -9,6 +9,7 @@ Fixes
   - Fixed bug that caused a second click to be required to apply edits when closing an Inspector edit window by clicking outside the popup.
 - NumericPlugValueWidget : Fixed bug that caused plug values to be set to 0 if editing completed with invalid text.
 - StringPlugValueWidget : Fixed bug that could cause plug values to be overwritten when editing multiple plugs and focus was lost without change, or the value state changed to mixed via external action.
+- TypedObjectPlug : Fixed serialisation of values for which `repr()` is not available (#106).
 
 API
 ---
