@@ -69,6 +69,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"ignoreMissingTarget" : [
+
+			"description",
+			"""
+			Causes the constraint to do nothing if the target location
+			doesn't exist in the scene, instead of erroring.
+			""",
+
+		],
+
 		"targetMode" : [
 
 			"description",

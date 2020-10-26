@@ -5,6 +5,8 @@ Improvements
 ------------
 
 - Arnold Renderer : Improved performance when instancing large numbers of objects. A benchmark with 1 million instances shows a 25% reduction in scene generation time.
+- Constraints : Behaviour if the target location didn't exist was previously undefined, and often an error. This behaviour has now been specified - it is now consistently an error, unless you set the new `ignoreMissingTarget` plug, in which case the constraint will just do nothing. Also, a target of "" is now a no-op, and you must explicitly enter "
+/" in order to constraint to the scene root.
 
 Fixes
 -----
