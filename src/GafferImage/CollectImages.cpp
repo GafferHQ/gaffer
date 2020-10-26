@@ -103,7 +103,7 @@ void sourceLayerAndChannel( const string &destChannel, const vector<string> &roo
 // CollectImages
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CollectImages );
+GAFFER_NODE_DEFINE_TYPE( CollectImages );
 
 size_t CollectImages::g_firstPlugIndex = 0;
 

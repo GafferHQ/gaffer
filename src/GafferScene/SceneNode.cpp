@@ -53,7 +53,7 @@ using namespace IECore;
 using namespace GafferScene;
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneNode );
+GAFFER_NODE_DEFINE_TYPE( SceneNode );
 
 size_t SceneNode::g_firstPlugIndex = 0;
 

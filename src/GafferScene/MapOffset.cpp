@@ -47,7 +47,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MapOffset );
+GAFFER_NODE_DEFINE_TYPE( MapOffset );
 
 size_t MapOffset::g_firstPlugIndex = 0;
 

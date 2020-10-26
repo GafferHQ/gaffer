@@ -41,7 +41,7 @@
 
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ComputeNode );
+GAFFER_NODE_DEFINE_TYPE( ComputeNode );
 
 ComputeNode::ComputeNode( const std::string &name )
 	:	DependencyNode( name )

@@ -54,7 +54,7 @@ class GAFFERIMAGE_API Constant : public FlatImageSource
 		Constant( const std::string &name=defaultName<Constant>() );
 		~Constant() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Constant, ConstantTypeId, FlatImageSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Constant, ConstantTypeId, FlatImageSource );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

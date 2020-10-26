@@ -41,7 +41,7 @@
 using namespace Gaffer;
 using namespace GafferDelight;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DelightAttributes );
+GAFFER_NODE_DEFINE_TYPE( DelightAttributes );
 
 DelightAttributes::DelightAttributes( const std::string &name )
 	:	GafferScene::Attributes( name )

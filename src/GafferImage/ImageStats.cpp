@@ -92,7 +92,7 @@ std::string channelName( const ValuePlug *outChannelPlug, const vector<string> &
 // ImageStats
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageStats );
+GAFFER_NODE_DEFINE_TYPE( ImageStats );
 
 size_t ImageStats::g_firstPlugIndex = 0;
 

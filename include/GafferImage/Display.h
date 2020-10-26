@@ -56,7 +56,7 @@ class GAFFERIMAGE_API Display : public ImageNode
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Display, DisplayTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Display, DisplayTypeId, ImageNode );
 
 		Display( const std::string &name = defaultName<Display>() );
 		~Display() override;

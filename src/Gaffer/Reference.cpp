@@ -290,7 +290,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 // Reference
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Reference );
+GAFFER_NODE_DEFINE_TYPE( Reference );
 
 Reference::Reference( const std::string &name )
 	:	SubGraph( name ), m_plugEdits( new PlugEdits( this ) )

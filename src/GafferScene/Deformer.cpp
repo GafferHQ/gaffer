@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Deformer );
+GAFFER_NODE_DEFINE_TYPE( Deformer );
 
 size_t Deformer::g_firstPlugIndex = 0;
 

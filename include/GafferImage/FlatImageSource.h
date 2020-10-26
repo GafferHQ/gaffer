@@ -55,7 +55,7 @@ class GAFFERIMAGE_API FlatImageSource : public ImageNode
 
 		~FlatImageSource() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::FlatImageSource, FlatImageSourceTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::FlatImageSource, FlatImageSourceTypeId, ImageNode );
 
 	protected :
 

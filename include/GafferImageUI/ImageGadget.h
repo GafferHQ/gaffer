@@ -97,7 +97,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		ImageGadget();
 		~ImageGadget() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImageUI::ImageGadget, ImageGadgetTypeId, Gadget );
+		GAFFER_NODE_DECLARE_TYPE( GafferImageUI::ImageGadget, ImageGadgetTypeId, Gadget );
 
 		Imath::Box3f bound() const override;
 

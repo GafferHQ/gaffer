@@ -47,7 +47,7 @@ class GAFFERSCENE_API ObjectToScene : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ObjectToScene, ObjectToSceneTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ObjectToScene, ObjectToSceneTypeId, ObjectSource );
 
 		ObjectToScene( const std::string &name=defaultName<ObjectToScene>() );
 		~ObjectToScene() override;

@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ReverseWinding );
+GAFFER_NODE_DEFINE_TYPE( ReverseWinding );
 
 ReverseWinding::ReverseWinding( const std::string &name )
 	:	ObjectProcessor( name )

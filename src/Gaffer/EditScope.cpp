@@ -70,7 +70,7 @@ std::vector<std::string> &processorNames()
 // EditScope
 // =========
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( EditScope );
+GAFFER_NODE_DEFINE_TYPE( EditScope );
 
 EditScope::EditScope( const std::string &name )
 	:	Box( name )

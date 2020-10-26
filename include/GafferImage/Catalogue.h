@@ -62,7 +62,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Catalogue, CatalogueTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Catalogue, CatalogueTypeId, ImageNode );
 
 		Catalogue( const std::string &name = defaultName<Catalogue>() );
 		~Catalogue() override;

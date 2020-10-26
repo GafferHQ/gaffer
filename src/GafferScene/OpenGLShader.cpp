@@ -61,7 +61,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenGLShader );
+GAFFER_NODE_DEFINE_TYPE( OpenGLShader );
 
 namespace
 {

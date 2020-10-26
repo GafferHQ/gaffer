@@ -378,7 +378,7 @@ const IECoreImage::DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> 
 // Implementation of the Display class itself
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Display );
+GAFFER_NODE_DEFINE_TYPE( Display );
 
 size_t Display::g_firstPlugIndex = 0;
 

@@ -57,7 +57,7 @@ class GAFFERARNOLD_API ArnoldCameraShaders : public GafferScene::Shader
 		ArnoldCameraShaders( const std::string &name=defaultName<ArnoldCameraShaders>() );
 		~ArnoldCameraShaders() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldCameraShaders, ArnoldCameraShadersTypeId, GafferScene::Shader );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldCameraShaders, ArnoldCameraShadersTypeId, GafferScene::Shader );
 
 		GafferScene::ShaderPlug *filterMapPlug();
 		const GafferScene::ShaderPlug *filterMapPlug() const;

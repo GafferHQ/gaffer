@@ -37,7 +37,7 @@
 
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Median );
+GAFFER_NODE_DEFINE_TYPE( Median );
 
 Median::Median( const std::string &name )
 	:   RankFilter( name, MedianRank )

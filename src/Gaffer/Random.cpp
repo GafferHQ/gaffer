@@ -48,7 +48,7 @@
 using namespace Gaffer;
 using namespace Imath;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Random );
+GAFFER_NODE_DEFINE_TYPE( Random );
 
 size_t Random::g_firstPlugIndex = 0;
 

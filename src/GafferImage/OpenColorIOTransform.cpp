@@ -87,7 +87,7 @@ InternedString ProcessorProcess::processorHashProcessType( "openColorIOTransform
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenColorIOTransform );
+GAFFER_NODE_DEFINE_TYPE( OpenColorIOTransform );
 
 size_t OpenColorIOTransform::g_firstPlugIndex = 0;
 

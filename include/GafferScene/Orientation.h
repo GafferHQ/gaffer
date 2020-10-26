@@ -57,7 +57,7 @@ class GAFFERSCENE_API Orientation : public ObjectProcessor
 		Orientation( const std::string &name=defaultName<Orientation>() );
 		~Orientation() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Orientation, OrientationTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Orientation, OrientationTypeId, ObjectProcessor );
 
 		enum class Mode
 		{

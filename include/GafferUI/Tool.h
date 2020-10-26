@@ -78,7 +78,7 @@ class GAFFERUI_API Tool : public Gaffer::Node
 
 		~Tool() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::Tool, ToolTypeId, Gaffer::Node );
+		GAFFER_NODE_DECLARE_TYPE( GafferUI::Tool, ToolTypeId, Gaffer::Node );
 
 		View *view();
 		const View *view() const;

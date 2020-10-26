@@ -49,7 +49,7 @@ class GAFFERSCENE_API Cube : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Cube, CubeTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Cube, CubeTypeId, ObjectSource );
 
 		Cube( const std::string &name=defaultName<Cube>() );
 		~Cube() override;

@@ -98,7 +98,7 @@ Box3f boundAndAutoStepSize( const std::string &fileName, const std::set<std::str
 // ArnoldVDB
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldVDB );
+GAFFER_NODE_DEFINE_TYPE( ArnoldVDB );
 
 size_t ArnoldVDB::g_firstPlugIndex = 0;
 

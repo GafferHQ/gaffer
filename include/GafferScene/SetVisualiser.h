@@ -68,7 +68,7 @@ class GAFFERSCENE_API SetVisualiser : public AttributeProcessor
 		SetVisualiser( const std::string &name=defaultName<SetVisualiser>() );
 		~SetVisualiser() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SetVisualiser, SetVisualiserTypeId, AttributeProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::SetVisualiser, SetVisualiserTypeId, AttributeProcessor );
 
 		Gaffer::StringPlug *setsPlug();
 		const Gaffer::StringPlug *setsPlug() const;

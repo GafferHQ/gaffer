@@ -102,7 +102,7 @@ PlugPtr Shuffle::ChannelPlug::createCounterpart( const std::string &name, Direct
 
 size_t Shuffle::g_firstPlugIndex = 0;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Shuffle );
+GAFFER_NODE_DEFINE_TYPE( Shuffle );
 
 Shuffle::Shuffle( const std::string &name )
 	:	ImageProcessor( name )

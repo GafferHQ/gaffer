@@ -46,7 +46,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PrimitiveVariableProcessor );
+GAFFER_NODE_DEFINE_TYPE( PrimitiveVariableProcessor );
 
 size_t PrimitiveVariableProcessor::g_firstPlugIndex = 0;
 

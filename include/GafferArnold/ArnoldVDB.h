@@ -50,7 +50,7 @@ class GAFFERARNOLD_API ArnoldVDB : public GafferScene::ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldVDB, ArnoldVDBTypeId, GafferScene::ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldVDB, ArnoldVDBTypeId, GafferScene::ObjectSource );
 
 		ArnoldVDB( const std::string &name=defaultName<ArnoldVDB>() );
 		~ArnoldVDB() override;

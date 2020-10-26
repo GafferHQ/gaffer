@@ -50,7 +50,7 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 
 		~AttributeProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::AttributeProcessor, AttributeProcessorTypeId, FilteredSceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::AttributeProcessor, AttributeProcessorTypeId, FilteredSceneProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

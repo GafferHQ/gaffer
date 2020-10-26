@@ -57,7 +57,7 @@ class GAFFERCORTEX_API ExecutableOpHolder : public ParameterisedHolderTaskNode
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferCortex::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderTaskNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferCortex::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderTaskNode );
 
 		ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
 

@@ -62,7 +62,7 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 		SceneReader( const std::string &name=defaultName<SceneReader>() );
 		~SceneReader() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SceneReader, SceneReaderTypeId, SceneNode )
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneReader, SceneReaderTypeId, SceneNode )
 
 		/// Holds the name of the file to be loaded.
 		Gaffer::StringPlug *fileNamePlug();

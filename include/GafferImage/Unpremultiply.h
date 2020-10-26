@@ -53,7 +53,7 @@ class GAFFERIMAGE_API Unpremultiply : public ChannelDataProcessor
 		Unpremultiply( const std::string &name=defaultName<Unpremultiply>() );
 		~Unpremultiply() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Unpremultiply, UnpremultiplyTypeId, ChannelDataProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Unpremultiply, UnpremultiplyTypeId, ChannelDataProcessor );
 
 		//! @name Plug Accessors
 		/// Returns a pointer to the node's plugs.

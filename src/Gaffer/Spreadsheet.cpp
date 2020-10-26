@@ -814,7 +814,7 @@ Gaffer::PlugPtr Spreadsheet::CellPlug::createCounterpart( const std::string &nam
 //////////////////////////////////////////////////////////////////////////
 
 size_t Spreadsheet::g_firstPlugIndex = 0;
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Spreadsheet );
+GAFFER_NODE_DEFINE_TYPE( Spreadsheet );
 
 Spreadsheet::Spreadsheet( const std::string &name )
 	:	ComputeNode( name )

@@ -42,7 +42,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardOptions );
+GAFFER_NODE_DEFINE_TYPE( StandardOptions );
 
 StandardOptions::StandardOptions( const std::string &name )
 	:	Options( name )

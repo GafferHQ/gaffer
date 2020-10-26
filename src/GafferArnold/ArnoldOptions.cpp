@@ -40,7 +40,7 @@
 using namespace Imath;
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldOptions );
+GAFFER_NODE_DEFINE_TYPE( ArnoldOptions );
 
 ArnoldOptions::ArnoldOptions( const std::string &name )
 	:	GafferScene::Options( name )

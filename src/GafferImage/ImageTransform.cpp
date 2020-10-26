@@ -197,7 +197,7 @@ class ImageTransform::CleanScope : boost::noncopyable
 // ImageTransform
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageTransform );
+GAFFER_NODE_DEFINE_TYPE( ImageTransform );
 
 size_t ImageTransform::g_firstPlugIndex = 0;
 

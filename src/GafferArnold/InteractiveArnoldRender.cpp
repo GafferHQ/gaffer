@@ -66,7 +66,7 @@ typedef std::pair<IntPlug *, InteractiveRender::State> Interrupted;
 // InteractiveArnoldRender
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( InteractiveArnoldRender );
+GAFFER_NODE_DEFINE_TYPE( InteractiveArnoldRender );
 
 InteractiveArnoldRender::InteractiveArnoldRender( const std::string &name )
 	:	InteractiveRender( "Arnold", name )

@@ -55,7 +55,7 @@ class GAFFER_API Box : public SubGraph
 		Box( const std::string &name=defaultName<Box>() );
 		~Box() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Box, BoxTypeId, SubGraph );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Box, BoxTypeId, SubGraph );
 
 		/// \deprecated Use PlugAlgo::canPromote() instead.
 		bool canPromotePlug( const Plug *descendantPlug ) const;

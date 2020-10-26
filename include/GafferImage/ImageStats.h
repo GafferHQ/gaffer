@@ -57,7 +57,7 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 		ImageStats( const std::string &name=staticTypeName() );
 		~ImageStats() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

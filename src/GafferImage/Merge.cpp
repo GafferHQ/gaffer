@@ -69,7 +69,7 @@ float opMax( float A, float B, float a, float b){ return std::max( A, B ); }
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Merge );
+GAFFER_NODE_DEFINE_TYPE( Merge );
 
 size_t Merge::g_firstPlugIndex = 0;
 

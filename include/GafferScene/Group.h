@@ -59,7 +59,7 @@ class GAFFERSCENE_API Group : public SceneProcessor
 		Group( const std::string &name=defaultName<Group>() );
 		~Group() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Group, GroupTypeId, SceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Group, GroupTypeId, SceneProcessor );
 
 		/// \deprecated. Use inPlugs() instead.
 		ScenePlug *nextInPlug();

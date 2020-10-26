@@ -40,7 +40,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AttributeProcessor );
+GAFFER_NODE_DEFINE_TYPE( AttributeProcessor );
 
 AttributeProcessor::AttributeProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault )
 	:	FilteredSceneProcessor( name, filterDefault )

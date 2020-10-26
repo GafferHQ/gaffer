@@ -49,7 +49,7 @@ using namespace GafferScene;
 
 static InternedString g_ellipsis( "..." );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Set );
+GAFFER_NODE_DEFINE_TYPE( Set );
 
 size_t Set::g_firstPlugIndex = 0;
 

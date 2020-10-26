@@ -54,7 +54,7 @@ class GAFFERSCENE_API Attributes : public AttributeProcessor
 		Attributes( const std::string &name=defaultName<Attributes>() );
 		~Attributes() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Attributes, AttributesTypeId, AttributeProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Attributes, AttributesTypeId, AttributeProcessor );
 
 		Gaffer::CompoundDataPlug *attributesPlug();
 		const Gaffer::CompoundDataPlug *attributesPlug() const;

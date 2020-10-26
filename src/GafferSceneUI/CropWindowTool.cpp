@@ -486,7 +486,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 // CropWindowTool implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CropWindowTool );
+GAFFER_NODE_DEFINE_TYPE( CropWindowTool );
 
 size_t CropWindowTool::g_firstPlugIndex = 0;
 CropWindowTool::ToolDescription<CropWindowTool, SceneView> CropWindowTool::g_sceneToolDescription;

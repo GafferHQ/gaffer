@@ -66,7 +66,7 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		Gaffer::CompoundDataPlug *contextPlug();
 		const Gaffer::CompoundDataPlug *contextPlug() const;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::OpenColorIOTransform, OpenColorIOTransformTypeId, ColorProcessor );
 
 		/// Returns the OCIO processor for this node, taking into account
 		/// the current Gaffer context and the OCIO context specified by

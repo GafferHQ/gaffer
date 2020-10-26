@@ -49,7 +49,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeepMerge );
+GAFFER_NODE_DEFINE_TYPE( DeepMerge );
 
 size_t DeepMerge::g_firstPlugIndex = 0;
 

@@ -72,7 +72,7 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 		Shader( const std::string &name=defaultName<Shader>() );
 		~Shader() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Shader, ShaderTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Shader, ShaderTypeId, Gaffer::ComputeNode );
 
 		/// A plug defining the name of the shader.
 		Gaffer::StringPlug *namePlug();

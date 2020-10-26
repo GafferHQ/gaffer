@@ -41,7 +41,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldAOVShader );
+GAFFER_NODE_DEFINE_TYPE( ArnoldAOVShader );
 
 size_t ArnoldAOVShader::g_firstPlugIndex = 0;
 

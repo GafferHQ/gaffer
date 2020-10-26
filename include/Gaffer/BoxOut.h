@@ -52,7 +52,7 @@ class GAFFER_API BoxOut : public BoxIO
 		BoxOut( const std::string &name=defaultName<BoxOut>() );
 		~BoxOut() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::BoxOut, BoxOutTypeId, BoxIO );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::BoxOut, BoxOutTypeId, BoxIO );
 
 		template<typename T=Plug>
 		T *passThroughPlug();

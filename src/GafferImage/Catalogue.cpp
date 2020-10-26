@@ -712,7 +712,7 @@ bool undoingOrRedoing( const Node *node )
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Catalogue );
+GAFFER_NODE_DEFINE_TYPE( Catalogue );
 
 size_t Catalogue::g_firstPlugIndex = 0;
 

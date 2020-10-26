@@ -43,7 +43,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyOptions );
+GAFFER_NODE_DEFINE_TYPE( CopyOptions );
 
 size_t CopyOptions::g_firstPlugIndex = 0;
 

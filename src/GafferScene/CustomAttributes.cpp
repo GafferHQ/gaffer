@@ -39,7 +39,7 @@
 using namespace Imath;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CustomAttributes );
+GAFFER_NODE_DEFINE_TYPE( CustomAttributes );
 
 CustomAttributes::CustomAttributes( const std::string &name )
 	:	Attributes( name )

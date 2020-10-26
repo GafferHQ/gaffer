@@ -57,7 +57,7 @@ class GAFFERIMAGE_API DisplayTransform : public OpenColorIOTransform
 		DisplayTransform( const std::string &name=defaultName<DisplayTransform>() );
 		~DisplayTransform() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::DisplayTransform, DisplayTransformTypeId, OpenColorIOTransform );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::DisplayTransform, DisplayTransformTypeId, OpenColorIOTransform );
 
 		Gaffer::StringPlug *inputColorSpacePlug();
 		const Gaffer::StringPlug *inputColorSpacePlug() const;

@@ -52,7 +52,7 @@ class GAFFERSCENE_API ShuffleAttributes : public AttributeProcessor
 		ShuffleAttributes( const std::string &name=defaultName<ShuffleAttributes>() );
 		~ShuffleAttributes() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShuffleAttributes, ShuffleAttributesTypeId, AttributeProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShuffleAttributes, ShuffleAttributesTypeId, AttributeProcessor );
 
 		Gaffer::ShufflesPlug *shufflesPlug();
 		const Gaffer::ShufflesPlug *shufflesPlug() const;

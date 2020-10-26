@@ -57,7 +57,7 @@ namespace
 
 }
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Grade );
+GAFFER_NODE_DEFINE_TYPE( Grade );
 
 size_t Grade::g_firstPlugIndex = 0;
 

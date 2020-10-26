@@ -72,7 +72,7 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 		ImageWriter( const std::string &name=defaultName<ImageWriter>() );
 		~ImageWriter() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageWriter, ImageWriterTypeId, TaskNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageWriter, ImageWriterTypeId, TaskNode );
 
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;

@@ -50,7 +50,7 @@ class GAFFERSCENE_API CurveSampler : public PrimitiveSampler
 		CurveSampler( const std::string &name = defaultName<CurveSampler>() );
 		~CurveSampler() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CurveSampler, CurveSamplerTypeId, PrimitiveSampler );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::CurveSampler, CurveSamplerTypeId, PrimitiveSampler );
 
 		Gaffer::StringPlug *curveIndexPlug();
 		const Gaffer::StringPlug *curveIndexPlug() const;

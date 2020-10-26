@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferSceneTest;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TestShader )
+GAFFER_NODE_DEFINE_TYPE( TestShader )
 
 TestShader::TestShader( const std::string &name )
 	:	Shader( name )

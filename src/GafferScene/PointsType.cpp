@@ -45,7 +45,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PointsType );
+GAFFER_NODE_DEFINE_TYPE( PointsType );
 
 size_t PointsType::g_firstPlugIndex = 0;
 

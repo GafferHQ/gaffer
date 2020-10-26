@@ -111,7 +111,7 @@ IECoreImage::DisplayDriverServer *displayDriverServer()
 //////////////////////////////////////////////////////////////////////////
 
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ShaderView );
+GAFFER_NODE_DEFINE_TYPE( ShaderView );
 
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 

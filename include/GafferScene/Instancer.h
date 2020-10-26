@@ -51,7 +51,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Instancer( const std::string &name=defaultName<Instancer>() );
 		~Instancer() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Instancer, InstancerTypeId, BranchCreator );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Instancer, InstancerTypeId, BranchCreator );
 
 		enum class PrototypeMode
 		{

@@ -535,7 +535,7 @@ class Shader::NetworkBuilder
 
 static IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Shader );
+GAFFER_NODE_DEFINE_TYPE( Shader );
 
 size_t Shader::g_firstPlugIndex = 0;
 const IECore::InternedString Shader::g_outputParameterContextName( "scene:shader:outputParameter" );

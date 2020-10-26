@@ -58,7 +58,7 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		Render( const std::string &name=defaultName<Render>() );
 		~Render() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
 
 		enum Mode
 		{

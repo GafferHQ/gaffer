@@ -60,7 +60,7 @@ class GAFFERIMAGE_API Text : public Shape
 		Text( const std::string &name=defaultName<Text>() );
 		~Text() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Text, TextTypeId, Shape );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Text, TextTypeId, Shape );
 
 		enum HorizontalAlignment
 		{

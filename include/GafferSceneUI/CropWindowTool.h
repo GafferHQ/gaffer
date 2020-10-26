@@ -71,7 +71,7 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 		using StatusChangedSignal = boost::signal<void (CropWindowTool &)>;
 		StatusChangedSignal &statusChangedSignal();
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::CropWindowTool, CropWindowToolTypeId, GafferUI::Tool );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::CropWindowTool, CropWindowToolTypeId, GafferUI::Tool );
 
 	private :
 

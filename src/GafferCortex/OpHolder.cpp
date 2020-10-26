@@ -46,7 +46,7 @@
 using namespace IECore;
 using namespace GafferCortex;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpHolder )
+GAFFER_NODE_DEFINE_TYPE( OpHolder )
 
 OpHolder::OpHolder( const std::string &name )
 	:	ParameterisedHolderComputeNode( name ), m_resultParameterHandler( nullptr )

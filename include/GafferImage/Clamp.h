@@ -59,7 +59,7 @@ class GAFFERIMAGE_API Clamp : public ChannelDataProcessor
 		Clamp( const std::string &name=defaultName<Clamp>() );
 		~Clamp() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Clamp, ClampTypeId, ChannelDataProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Clamp, ClampTypeId, ChannelDataProcessor );
 
 		//! @name Plug Accessors
 		/// Returns a pointer to the node's plugs.

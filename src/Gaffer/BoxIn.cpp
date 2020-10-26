@@ -38,7 +38,7 @@
 
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BoxIn )
+GAFFER_NODE_DEFINE_TYPE( BoxIn )
 
 BoxIn::BoxIn( const std::string &name )
 	:	BoxIO( Plug::In, name )

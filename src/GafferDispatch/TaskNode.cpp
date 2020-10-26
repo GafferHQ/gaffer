@@ -278,7 +278,7 @@ void TaskNode::TaskPlug::postTasks( Tasks &tasks ) const
 // TaskNode implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TaskNode )
+GAFFER_NODE_DEFINE_TYPE( TaskNode )
 
 size_t TaskNode::g_firstPlugIndex;
 

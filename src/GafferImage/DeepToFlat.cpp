@@ -49,7 +49,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeepToFlat );
+GAFFER_NODE_DEFINE_TYPE( DeepToFlat );
 
 size_t DeepToFlat::g_firstPlugIndex = 0;
 

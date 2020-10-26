@@ -60,7 +60,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		OSLObject( const std::string &name=defaultName<OSLObject>() );
 		~OSLObject() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::Deformer );
+		GAFFER_NODE_DECLARE_TYPE( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::Deformer );
 
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;

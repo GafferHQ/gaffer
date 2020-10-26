@@ -55,7 +55,7 @@ using namespace GafferScene;
 static IECore::InternedString g_lightFiltersSetName( "__lightFilters" );
 static IECore::InternedString g_filteredLightsAttributeName( "filteredLights" );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LightFilter );
+GAFFER_NODE_DEFINE_TYPE( LightFilter );
 
 size_t LightFilter::g_firstPlugIndex = 0;
 

@@ -58,7 +58,7 @@ using namespace Gaffer;
 
 size_t Expression::g_firstPlugIndex;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Expression );
+GAFFER_NODE_DEFINE_TYPE( Expression );
 
 Expression::Expression( const std::string &name )
 	:	ComputeNode( name ), m_engine( nullptr )

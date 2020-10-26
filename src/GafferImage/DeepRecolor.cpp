@@ -44,7 +44,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeepRecolor );
+GAFFER_NODE_DEFINE_TYPE( DeepRecolor );
 
 size_t DeepRecolor::g_firstPlugIndex = 0;
 

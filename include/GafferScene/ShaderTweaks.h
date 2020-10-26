@@ -53,7 +53,7 @@ class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 		ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
 		~ShaderTweaks() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, AttributeProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, AttributeProcessor );
 
 		Gaffer::StringPlug *shaderPlug();
 		const Gaffer::StringPlug *shaderPlug() const;

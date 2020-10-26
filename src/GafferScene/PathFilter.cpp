@@ -58,7 +58,7 @@ const int g_descendantRoots = numeric_limits<int>::max();
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PathFilter );
+GAFFER_NODE_DEFINE_TYPE( PathFilter );
 
 size_t PathFilter::g_firstPlugIndex = 0;
 

@@ -92,7 +92,7 @@ class GAFFERSCENE_API MeshTangents : public ObjectProcessor
 		Gaffer::StringPlug *biTangentPlug();
 		const Gaffer::StringPlug *biTangentPlug() const;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshTangents, MeshTangentsTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshTangents, MeshTangentsTypeId, ObjectProcessor );
 
 	protected :
 

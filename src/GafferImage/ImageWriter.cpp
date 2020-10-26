@@ -1244,7 +1244,7 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 // ImageWriter implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageWriter );
+GAFFER_NODE_DEFINE_TYPE( ImageWriter );
 
 size_t ImageWriter::g_firstPlugIndex = 0;
 
@@ -1638,7 +1638,7 @@ void ImageWriter::execute() const
 	}
 
 	// Write out the channel data
-	
+
 	const ColorSpace *appropriateColorSpaceNode = hasAlpha ? colorSpaceUnpremultedNode() : colorSpaceNode();
 
 	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );

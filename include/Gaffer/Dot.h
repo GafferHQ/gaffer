@@ -55,7 +55,7 @@ class GAFFER_API Dot : public DependencyNode
 		Dot( const std::string &name=defaultName<Dot>() );
 		~Dot() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Dot, DotTypeId, DependencyNode );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Dot, DotTypeId, DependencyNode );
 
 		/// Because plugs are strongly typed in Gaffer, a
 		/// Dot cannot be set up in advance to work with

@@ -56,7 +56,7 @@ class GAFFER_API Animation : public ComputeNode
 		Animation( const std::string &name=defaultName<Animation>() );
 		~Animation() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
 
 		/// Defines the method used to interpolate
 		/// between a key and the previous one.

@@ -48,7 +48,7 @@ class IECORE_EXPORT TimeWarp : public ContextProcessor
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::TimeWarp, TimeWarpTypeId, ContextProcessor );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::TimeWarp, TimeWarpTypeId, ContextProcessor );
 
 		TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
 		~TimeWarp() override;

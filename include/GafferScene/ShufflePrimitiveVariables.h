@@ -52,7 +52,7 @@ class GAFFERSCENE_API ShufflePrimitiveVariables : public Deformer
 		ShufflePrimitiveVariables( const std::string &name=defaultName<ShufflePrimitiveVariables>() );
 		~ShufflePrimitiveVariables() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ShufflePrimitiveVariables, ShufflePrimitiveVariablesTypeId, Deformer );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShufflePrimitiveVariables, ShufflePrimitiveVariablesTypeId, Deformer );
 
 		Gaffer::ShufflesPlug *shufflesPlug();
 		const Gaffer::ShufflesPlug *shufflesPlug() const;

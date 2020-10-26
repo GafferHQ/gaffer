@@ -57,7 +57,7 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 		Constraint( const std::string &name=defaultName<Constraint>() );
 		~Constraint() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Constraint, ConstraintTypeId, SceneElementProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Constraint, ConstraintTypeId, SceneElementProcessor );
 
 		enum TargetMode
 		{

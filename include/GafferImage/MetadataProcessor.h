@@ -54,7 +54,7 @@ class GAFFERIMAGE_API MetadataProcessor : public ImageProcessor
 		MetadataProcessor( const std::string &name=defaultName<MetadataProcessor>() );
 		~MetadataProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::MetadataProcessor, MetadataProcessorTypeId, ImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::MetadataProcessor, MetadataProcessorTypeId, ImageProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

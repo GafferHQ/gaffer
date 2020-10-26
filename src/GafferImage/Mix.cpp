@@ -49,7 +49,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Mix );
+GAFFER_NODE_DEFINE_TYPE( Mix );
 
 size_t Mix::g_firstPlugIndex = 0;
 

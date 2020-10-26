@@ -58,7 +58,7 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
 
 		Filter( const std::string &name=defaultName<Filter>() );
 		~Filter() override;

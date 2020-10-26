@@ -53,7 +53,7 @@ class GAFFERARNOLD_API InteractiveArnoldRender : public GafferScene::Interactive
 		InteractiveArnoldRender( const std::string &name=defaultName<InteractiveArnoldRender>() );
 		~InteractiveArnoldRender() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::InteractiveRender );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::InteractiveRender );
 
 		/// Utility to call AiUniverseCacheFlush() and
 		/// restart any running sessions.

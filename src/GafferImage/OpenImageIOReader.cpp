@@ -752,7 +752,7 @@ FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode
 // OpenImageIOReader implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenImageIOReader );
+GAFFER_NODE_DEFINE_TYPE( OpenImageIOReader );
 
 size_t OpenImageIOReader::g_firstPlugIndex = 0;
 

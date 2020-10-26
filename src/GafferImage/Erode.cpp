@@ -37,7 +37,7 @@
 
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Erode );
+GAFFER_NODE_DEFINE_TYPE( Erode );
 
 Erode::Erode( const std::string &name )
 	:   RankFilter( name, ErodeRank )

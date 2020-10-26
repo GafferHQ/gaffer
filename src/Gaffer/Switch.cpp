@@ -49,7 +49,7 @@ using namespace Gaffer;
 static IECore::InternedString g_inPlugsName( "in" );
 static IECore::InternedString g_outPlugName( "out" );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Switch );
+GAFFER_NODE_DEFINE_TYPE( Switch );
 
 size_t Switch::g_firstPlugIndex = 0;
 

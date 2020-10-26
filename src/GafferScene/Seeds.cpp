@@ -48,7 +48,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Seeds );
+GAFFER_NODE_DEFINE_TYPE( Seeds );
 
 size_t Seeds::g_firstPlugIndex = 0;
 

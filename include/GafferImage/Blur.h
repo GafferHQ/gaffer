@@ -53,7 +53,7 @@ class GAFFERIMAGE_API Blur : public FlatImageProcessor
 		Blur( const std::string &name=defaultName<Blur>() );
 		~Blur() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Blur, BlurTypeId, FlatImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Blur, BlurTypeId, FlatImageProcessor );
 
 		Gaffer::V2fPlug *radiusPlug();
 		const Gaffer::V2fPlug *radiusPlug() const;

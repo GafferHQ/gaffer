@@ -44,7 +44,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MeshTangents );
+GAFFER_NODE_DEFINE_TYPE( MeshTangents );
 
 size_t MeshTangents::g_firstPlugIndex = 0;
 

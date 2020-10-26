@@ -80,7 +80,7 @@ class GAFFER_API ScriptNode : public Node
 		ScriptNode( const std::string &name=defaultName<Node>() );
 		~ScriptNode() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::ScriptNode, ScriptNodeTypeId, Node );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::ScriptNode, ScriptNodeTypeId, Node );
 
 		/// Accepts parenting only to a ScriptContainer.
 		bool acceptsParent( const GraphComponent *potentialParent ) const override;

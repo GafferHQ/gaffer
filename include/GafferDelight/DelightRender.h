@@ -53,7 +53,7 @@ class GAFFERDELIGHT_API DelightRender : public GafferScene::Render
 		DelightRender( const std::string &name=defaultName<DelightRender>() );
 		~DelightRender() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferDelight::DelightRender, DelightRenderTypeId, GafferScene::Render );
+		GAFFER_NODE_DECLARE_TYPE( GafferDelight::DelightRender, DelightRenderTypeId, GafferScene::Render );
 
 };
 

@@ -43,7 +43,7 @@
 using namespace IECore;
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Dot );
+GAFFER_NODE_DEFINE_TYPE( Dot );
 
 static InternedString g_inPlugName( "in" );
 static InternedString g_outPlugName( "out" );

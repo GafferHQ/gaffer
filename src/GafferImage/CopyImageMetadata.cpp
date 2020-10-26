@@ -46,7 +46,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyImageMetadata );
+GAFFER_NODE_DEFINE_TYPE( CopyImageMetadata );
 
 size_t CopyImageMetadata::g_firstPlugIndex = 0;
 

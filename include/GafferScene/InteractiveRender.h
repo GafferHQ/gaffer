@@ -63,7 +63,7 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		InteractiveRender( const std::string &name=defaultName<InteractiveRender>() );
 		~InteractiveRender() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::InteractiveRender, GafferScene::InteractiveRenderTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::InteractiveRender, GafferScene::InteractiveRenderTypeId, Gaffer::ComputeNode );
 
 		enum State
 		{

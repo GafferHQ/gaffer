@@ -39,7 +39,7 @@
 using namespace GafferScene;
 using namespace GafferAppleseed;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AppleseedRender );
+GAFFER_NODE_DEFINE_TYPE( AppleseedRender );
 
 AppleseedRender::AppleseedRender( const std::string &name )
 	:	Render( "Appleseed", name )

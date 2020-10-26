@@ -54,7 +54,7 @@ class GAFFER_API EditScope : public Box
 		EditScope( const std::string &name=defaultName<EditScope>() );
 		~EditScope() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::EditScope, EditScopeTypeId, Box );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::EditScope, EditScopeTypeId, Box );
 
 		/// Setup and plugs
 		/// ===============

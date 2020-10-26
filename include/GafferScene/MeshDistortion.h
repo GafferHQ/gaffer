@@ -53,7 +53,7 @@ class GAFFERSCENE_API MeshDistortion : public ObjectProcessor
 		MeshDistortion( const std::string &name=defaultName<MeshDistortion>() );
 		~MeshDistortion() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshDistortion, MeshDistortionTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshDistortion, MeshDistortionTypeId, ObjectProcessor );
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;

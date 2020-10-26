@@ -39,7 +39,7 @@
 
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Preferences );
+GAFFER_NODE_DEFINE_TYPE( Preferences );
 
 Preferences::Preferences( const std::string &name )
 	:	Node( name )

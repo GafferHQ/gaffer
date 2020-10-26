@@ -58,7 +58,7 @@ class GAFFERSCENE_API MeshType : public ObjectProcessor
 		MeshType( const std::string &name=defaultName<MeshType>() );
 		~MeshType() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MeshType, MeshTypeTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshType, MeshTypeTypeId, ObjectProcessor );
 
 		Gaffer::StringPlug *meshTypePlug();
 		const Gaffer::StringPlug *meshTypePlug() const;

@@ -50,7 +50,7 @@ using namespace Gaffer;
 // Empty implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Empty );
+GAFFER_NODE_DEFINE_TYPE( Empty );
 
 size_t Empty::g_firstPlugIndex = 0;
 

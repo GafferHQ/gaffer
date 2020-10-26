@@ -60,7 +60,7 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 		OpenImageIOReader( const std::string &name=defaultName<OpenImageIOReader>() );
 		~OpenImageIOReader() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::OpenImageIOReader, OpenImageIOReaderTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::OpenImageIOReader, OpenImageIOReaderTypeId, ImageNode );
 
 		enum MissingFrameMode
 		{

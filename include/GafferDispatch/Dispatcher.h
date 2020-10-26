@@ -105,7 +105,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		Dispatcher( const std::string &name=defaultName<Dispatcher>() );
 		~Dispatcher() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
 		typedef boost::signal<bool (const Dispatcher *, const std::vector<TaskNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
 		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &), Gaffer::CatchingSignalCombiner<void> > DispatchSignal;

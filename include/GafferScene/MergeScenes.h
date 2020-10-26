@@ -52,7 +52,7 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 		MergeScenes( const std::string &name=defaultName<MergeScenes>() );
 		~MergeScenes() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MergeScenes, MergeScenesTypeId, SceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MergeScenes, MergeScenesTypeId, SceneProcessor );
 
 		enum class Mode
 		{

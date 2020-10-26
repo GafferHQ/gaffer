@@ -45,7 +45,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Premultiply );
+GAFFER_NODE_DEFINE_TYPE( Premultiply );
 
 size_t Premultiply::g_firstPlugIndex = 0;
 

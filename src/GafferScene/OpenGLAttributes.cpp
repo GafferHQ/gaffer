@@ -41,7 +41,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OpenGLAttributes );
+GAFFER_NODE_DEFINE_TYPE( OpenGLAttributes );
 
 OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	:	Attributes( name )
@@ -50,10 +50,10 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 
 	// drawing parameters
 
-	attributes->addChild( new NameValuePlug( "gl:primitive:solid", new IECore::BoolData( true ), false, "primitiveSolid" ) ); 
+	attributes->addChild( new NameValuePlug( "gl:primitive:solid", new IECore::BoolData( true ), false, "primitiveSolid" ) );
 
-	attributes->addChild( new NameValuePlug( "gl:primitive:wireframe", new IECore::BoolData( true ), false, "primitiveWireframe" ) ); 
-	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeColor", new IECore::Color4fData( Color4f( 0.25, 0.6, 0.85, 1 ) ), false, "primitiveWireframeColor" ) ); 
+	attributes->addChild( new NameValuePlug( "gl:primitive:wireframe", new IECore::BoolData( true ), false, "primitiveWireframe" ) );
+	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeColor", new IECore::Color4fData( Color4f( 0.25, 0.6, 0.85, 1 ) ), false, "primitiveWireframeColor" ) );
 	attributes->addChild( new NameValuePlug( "gl:primitive:wireframeWidth", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.1f, 32.0f ), false, "primitiveWireframeWidth" ) );
 
 	attributes->addChild( new NameValuePlug( "gl:primitive:outline", new IECore::BoolData( true ), false, "primitiveOutline" ) );
@@ -70,7 +70,7 @@ OpenGLAttributes::OpenGLAttributes( const std::string &name )
 	// points primitive parameters
 
 	attributes->addChild( new NameValuePlug( "gl:pointsPrimitive:useGLPoints", new IECore::StringData( "forGLPoints" ), false, "pointsPrimitiveUseGLPoints" ) );
-	attributes->addChild( new NameValuePlug( "gl:pointsPrimitive:glPointWidth", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.1f, 128.0f ), false, "pointsPrimitiveGLPointWidth" ) ); 
+	attributes->addChild( new NameValuePlug( "gl:pointsPrimitive:glPointWidth", new FloatPlug( "value", Gaffer::Plug::Direction::In, 1.0f, 0.1f, 128.0f ), false, "pointsPrimitiveGLPointWidth" ) );
 
 	// curves primitive parameters
 

@@ -59,7 +59,7 @@ using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TranslateTool );
+GAFFER_NODE_DEFINE_TYPE( TranslateTool );
 
 TranslateTool::ToolDescription<TranslateTool, SceneView> TranslateTool::g_toolDescription;
 

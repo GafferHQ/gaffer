@@ -50,7 +50,7 @@ class GAFFERSCENE_API PointConstraint : public Constraint
 		PointConstraint( const std::string &name=defaultName<PointConstraint>() );
 		~PointConstraint() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PointConstraint, PointConstraintTypeId, Constraint );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::PointConstraint, PointConstraintTypeId, Constraint );
 
 		Gaffer::V3fPlug *offsetPlug();
 		const Gaffer::V3fPlug *offsetPlug() const;

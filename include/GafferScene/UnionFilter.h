@@ -48,7 +48,7 @@ class GAFFERSCENE_API UnionFilter : public FilterProcessor
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::UnionFilter, UnionFilterTypeId, FilterProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::UnionFilter, UnionFilterTypeId, FilterProcessor );
 
 		UnionFilter( const std::string &name=defaultName<UnionFilter>() );
 		~UnionFilter() override;

@@ -67,7 +67,7 @@ class GAFFERIMAGE_API ImageProcessor : public ImageNode
 		ImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
 		~ImageProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageProcessor, ImageProcessorTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageProcessor, ImageProcessorTypeId, ImageNode );
 
 		/// Returns the primary image input. For nodes with multiple inputs
 		/// this will be the first child of the inPlugs() array. For nodes

@@ -46,7 +46,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Parent );
+GAFFER_NODE_DEFINE_TYPE( Parent );
 
 size_t Parent::g_firstPlugIndex = 0;
 

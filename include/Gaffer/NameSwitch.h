@@ -49,7 +49,7 @@ class IECORE_EXPORT NameSwitch : public Switch
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::NameSwitch, NameSwitchTypeId, Switch );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::NameSwitch, NameSwitchTypeId, Switch );
 
 		NameSwitch( const std::string &name=GraphComponent::defaultName<NameSwitch>() );
 		~NameSwitch() override;

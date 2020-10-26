@@ -46,7 +46,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeepState );
+GAFFER_NODE_DEFINE_TYPE( DeepState );
 
 namespace
 {

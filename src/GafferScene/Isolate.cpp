@@ -105,7 +105,7 @@ struct Isolate::SetsToKeep
 // Isolate
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Isolate );
+GAFFER_NODE_DEFINE_TYPE( Isolate );
 
 size_t Isolate::g_firstPlugIndex = 0;
 

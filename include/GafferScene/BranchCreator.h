@@ -63,7 +63,7 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 
 		~BranchCreator() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::BranchCreator, BranchCreatorTypeId, FilteredSceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::BranchCreator, BranchCreatorTypeId, FilteredSceneProcessor );
 
 		Gaffer::StringPlug *parentPlug();
 		const Gaffer::StringPlug *parentPlug() const;

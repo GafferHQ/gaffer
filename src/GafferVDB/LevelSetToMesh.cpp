@@ -170,7 +170,7 @@ IECoreScene::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, do
 // VolumeToMesh implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LevelSetToMesh );
+GAFFER_NODE_DEFINE_TYPE( LevelSetToMesh );
 
 size_t LevelSetToMesh::g_firstPlugIndex = 0;
 

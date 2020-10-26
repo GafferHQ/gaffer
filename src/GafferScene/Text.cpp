@@ -91,7 +91,7 @@ FontCache *fontCache()
 // Text implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Text );
+GAFFER_NODE_DEFINE_TYPE( Text );
 
 size_t Text::g_firstPlugIndex = 0;
 

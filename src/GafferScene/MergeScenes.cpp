@@ -58,7 +58,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 size_t MergeScenes::g_firstPlugIndex = 0;
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( MergeScenes );
+GAFFER_NODE_DEFINE_TYPE( MergeScenes );
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities

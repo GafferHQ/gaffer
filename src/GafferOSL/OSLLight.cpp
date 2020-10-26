@@ -55,7 +55,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferOSL;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLLight );
+GAFFER_NODE_DEFINE_TYPE( OSLLight );
 
 size_t OSLLight::g_firstPlugIndex = 0;
 

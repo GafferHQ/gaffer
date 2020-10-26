@@ -41,7 +41,7 @@
 
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TimeWarp );
+GAFFER_NODE_DEFINE_TYPE( TimeWarp );
 
 size_t TimeWarp::g_firstPlugIndex;
 

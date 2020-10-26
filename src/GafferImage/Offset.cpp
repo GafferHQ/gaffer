@@ -51,7 +51,7 @@ using namespace GafferImage;
 // Offset node
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Offset );
+GAFFER_NODE_DEFINE_TYPE( Offset );
 
 size_t Offset::g_firstPlugIndex = 0;
 

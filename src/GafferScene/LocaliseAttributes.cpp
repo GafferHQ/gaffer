@@ -41,7 +41,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LocaliseAttributes );
+GAFFER_NODE_DEFINE_TYPE( LocaliseAttributes );
 
 size_t LocaliseAttributes::g_firstPlugIndex = 0;
 

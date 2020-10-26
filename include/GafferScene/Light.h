@@ -51,7 +51,7 @@ class GAFFERSCENE_API Light : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Light, LightTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Light, LightTypeId, ObjectSource );
 
 		Light( const std::string &name=defaultName<Light>() );
 		~Light() override;

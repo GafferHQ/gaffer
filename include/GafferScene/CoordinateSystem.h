@@ -47,7 +47,7 @@ class GAFFERSCENE_API CoordinateSystem : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CoordinateSystem, CoordinateSystemTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::CoordinateSystem, CoordinateSystemTypeId, ObjectSource );
 
 		CoordinateSystem( const std::string &name=defaultName<CoordinateSystem>() );
 		~CoordinateSystem() override;

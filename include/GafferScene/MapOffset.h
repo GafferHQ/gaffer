@@ -58,7 +58,7 @@ class GAFFERSCENE_API MapOffset : public ObjectProcessor
 		MapOffset( const std::string &name=defaultName<MapOffset>() );
 		~MapOffset() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::MapOffset, MapOffsetTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::MapOffset, MapOffsetTypeId, ObjectProcessor );
 
 		Gaffer::V2fPlug *offsetPlug();
 		const Gaffer::V2fPlug *offsetPlug() const;

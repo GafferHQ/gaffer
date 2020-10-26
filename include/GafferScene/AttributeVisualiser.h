@@ -60,7 +60,7 @@ class GAFFERSCENE_API AttributeVisualiser : public AttributeProcessor
 		AttributeVisualiser( const std::string &name=defaultName<AttributeVisualiser>() );
 		~AttributeVisualiser() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::AttributeVisualiser, AttributeVisualiserTypeId, AttributeProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::AttributeVisualiser, AttributeVisualiserTypeId, AttributeProcessor );
 
 		enum Mode
 		{

@@ -52,7 +52,7 @@ class GAFFERSCENE_API Parameters : public ObjectProcessor
 		Parameters( const std::string &name=defaultName<Parameters>() );
 		~Parameters() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Parameters, ParametersTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Parameters, ParametersTypeId, ObjectProcessor );
 
 		Gaffer::CompoundDataPlug *parametersPlug();
 		const Gaffer::CompoundDataPlug *parametersPlug() const;

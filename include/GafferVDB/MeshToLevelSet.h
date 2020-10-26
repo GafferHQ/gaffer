@@ -60,7 +60,7 @@ class GAFFERVDB_API MeshToLevelSet : public GafferScene::SceneElementProcessor
 		MeshToLevelSet( const std::string &name=defaultName<MeshToLevelSet>() );
 		~MeshToLevelSet() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::SceneElementProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::SceneElementProcessor );
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;

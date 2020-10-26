@@ -71,7 +71,7 @@ static bool g_oslRegistration = OSLShader::registerCompatibleShader( "ai:surface
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldShader );
+GAFFER_NODE_DEFINE_TYPE( ArnoldShader );
 
 ArnoldShader::ArnoldShader( const std::string &name )
 	:	GafferScene::Shader( name )

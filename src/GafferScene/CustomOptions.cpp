@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CustomOptions );
+GAFFER_NODE_DEFINE_TYPE( CustomOptions );
 
 size_t CustomOptions::g_firstPlugIndex = 0;
 

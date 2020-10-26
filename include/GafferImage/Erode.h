@@ -50,7 +50,7 @@ class GAFFERIMAGE_API Erode : public RankFilter
 		Erode( const std::string &name=defaultName<Erode>() );
 		~Erode() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Erode, ErodeTypeId, RankFilter );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Erode, ErodeTypeId, RankFilter );
 
 };
 

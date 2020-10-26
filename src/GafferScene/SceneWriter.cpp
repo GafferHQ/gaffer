@@ -151,7 +151,7 @@ struct LocationWriter
 
 }
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneWriter );
+GAFFER_NODE_DEFINE_TYPE( SceneWriter );
 
 size_t SceneWriter::g_firstPlugIndex = 0;
 

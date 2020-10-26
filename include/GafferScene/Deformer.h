@@ -55,7 +55,7 @@ class GAFFERSCENE_API Deformer : public ObjectProcessor
 
 		~Deformer() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Deformer, DeformerTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Deformer, DeformerTypeId, ObjectProcessor );
 
 		Gaffer::BoolPlug *adjustBoundsPlug();
 		const Gaffer::BoolPlug *adjustBoundsPlug() const;

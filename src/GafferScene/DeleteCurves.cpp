@@ -49,7 +49,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteCurves );
+GAFFER_NODE_DEFINE_TYPE( DeleteCurves );
 
 size_t DeleteCurves::g_firstPlugIndex = 0;
 

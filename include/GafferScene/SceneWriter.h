@@ -58,7 +58,7 @@ class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
 		~SceneWriter() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SceneWriter, SceneWriterTypeId, GafferDispatch::TaskNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneWriter, SceneWriterTypeId, GafferDispatch::TaskNode );
 
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;

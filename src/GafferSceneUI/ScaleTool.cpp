@@ -60,7 +60,7 @@ using namespace GafferSceneUI;
 // ScaleTool
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ScaleTool );
+GAFFER_NODE_DEFINE_TYPE( ScaleTool );
 
 ScaleTool::ToolDescription<ScaleTool, SceneView> ScaleTool::g_toolDescription;
 

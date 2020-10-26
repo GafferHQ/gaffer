@@ -56,7 +56,7 @@ class GAFFERCORTEX_API OpHolder : public ParameterisedHolderComputeNode
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferCortex::OpHolder, OpHolderTypeId, ParameterisedHolderComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferCortex::OpHolder, OpHolderTypeId, ParameterisedHolderComputeNode );
 
 		OpHolder( const std::string &name=defaultName<OpHolder>() );
 

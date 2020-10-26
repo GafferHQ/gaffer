@@ -50,7 +50,7 @@ class GAFFER_API SubGraph : public DependencyNode
 		SubGraph( const std::string &name=defaultName<SubGraph>() );
 		~SubGraph() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::SubGraph, SubGraphTypeId, DependencyNode );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::SubGraph, SubGraphTypeId, DependencyNode );
 
 		/// Does nothing
 		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
