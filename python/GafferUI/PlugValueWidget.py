@@ -242,6 +242,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 			creators = { cls.__creator( plugs, useTypeOnly ) }
 		else :
 			creators = { cls.__creator( p, useTypeOnly ) for p in plugs }
+			# Not all PlugValueWidgets support multiple plugs, and some
+			# except in their constructors if passed a sequence type.
+			# Unwrap where possible.
+			if len( plugs ) == 1 :
+				plugs = next( iter( plugs ) )
 
 		if len( creators ) > 1 :
 			raise Exception( "Multiple widget creators" )
