@@ -40,20 +40,25 @@ import Gaffer
 import GafferUI
 
 ## The NameLabel class displays a label which is kept in sync with the name of
-# a particular GraphComponent. The label acts as a drag source for dragging the
-# GraphComponent to another widget.
+# one or more GraphComponents. The label acts as a drag source for dragging the
+# GraphComponents to another widget.
 class NameLabel( GafferUI.Label ) :
 
 	def __init__( self, graphComponent, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, numComponents=1, formatter=None, **kw ) :
+
+		if isinstance( graphComponent, Gaffer.GraphComponent ) :
+			graphComponents = { graphComponent }
+		else :
+			graphComponents = graphComponent or set()
 
 		GafferUI.Label.__init__( self, "", horizontalAlignment, verticalAlignment, **kw )
 
 		self.__formatter = formatter if formatter is not None else self.defaultFormatter
 		self.__numComponents = numComponents
 
-		self.__connections = []
-		self.__graphComponent = False # force setGraphComponent() to update no matter what
-		self.setGraphComponent( graphComponent )
+		self.__connections = {}
+		self.__graphComponents = None # force setGraphComponent() to update no matter what
+		self.setGraphComponents( graphComponents )
 
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
@@ -69,19 +74,33 @@ class NameLabel( GafferUI.Label ) :
 
 	def setGraphComponent( self, graphComponent ) :
 
-		if graphComponent is not None and self.__graphComponent is not False :
-			if graphComponent.isSame( self.__graphComponent ) :
-				return
-		elif self.__graphComponent is None :
-			return
-
-		self.__graphComponent = graphComponent
-		self.__setupConnections()
-		self.__setText()
+		self.setGraphComponents( { graphComponent } if graphComponent is not None else set() )
 
 	def getGraphComponent( self ) :
 
-		return self.__graphComponent
+		numComponents = len( self.__graphComponents )
+
+		if numComponents > 1 :
+			raise RuntimeError( "getGraphComponent called with multiple GraphComponents" )
+		elif numComponents == 1 :
+			return next( iter( self.__graphComponents ) )
+
+		return None
+
+	def setGraphComponents( self, graphComponents ) :
+
+		assert( isinstance( graphComponents, set ) )
+
+		if graphComponents == self.__graphComponents :
+			return
+
+		self.__graphComponents = graphComponents.copy()
+		self.__setupConnections()
+		self.__setText()
+
+	def getGraphComponents( self ):
+
+		return self.__graphComponents.copy()
 
 	## Specifies how many levels of the hierarchy to be displayed in
 	# the name. A value of 1 shows only the name of getGraphComponent().
@@ -119,11 +138,20 @@ class NameLabel( GafferUI.Label ) :
 
 		return ".".join( IECore.CamelCase.toSpaced( g.getName() ) for g in graphComponents )
 
-	def __setupConnections( self, reuseUntil=None ) :
+	def __setupConnections( self ) :
 
-		if self.__graphComponent is None :
-			self.__connections = []
+		if not self.__graphComponents :
+			self.__connections = {}
 			return
+
+		for component in self.__graphComponents :
+			self.__updateConnections( component )
+
+		for component in list( self.__connections.keys() ) :
+			if component not in self.__graphComponents :
+				del self.__connections[ component ]
+
+	def __updateConnections( self, component, reuseUntil=None ) :
 
 		# when a parent has changed somewhere in the hierarchy,
 		# we only need to make new connections for the components
@@ -139,11 +167,11 @@ class NameLabel( GafferUI.Label ) :
 		updatedConnections = []
 
 		n = 0
-		g = self.__graphComponent
+		g = component
 		reuse = reuseUntil is not None
 		while g is not None and n < self.__numComponents :
 			if reuse :
-				updatedConnections.extend( self.__connections[n*2:n*2+2] )
+				updatedConnections.extend( self.__connections[ component ][ n*2 : n*2+2 ] )
 			else :
 				updatedConnections.append( g.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) ) )
 				if n < self.__numComponents - 1 :
@@ -155,36 +183,57 @@ class NameLabel( GafferUI.Label ) :
 			g = g.parent()
 			n += 1
 
-		self.__connections = updatedConnections
+		self.__connections[ component ] = updatedConnections
 
 	def __parentChanged( self, child, oldParent ) :
 
 		self.__setText()
-		self.__setupConnections( reuseUntil = child )
+
+		for leaf in self.__graphComponents :
+			if child.isSame( leaf ) or child.isAncestorOf( leaf ) :
+				self.__updateConnections( leaf, reuseUntil = child )
+				break
 
 	def __setText( self, *unwantedArgs ) :
 
-		graphComponents = []
+		names = set()
 
-		n = 0
-		g = self.__graphComponent
-		while g is not None and n < self.__numComponents :
-			graphComponents.append( g )
-			g = g.parent()
-			n += 1
+		for leafComponent in self.__graphComponents :
 
-		graphComponents.reverse()
-		GafferUI.Label.setText( self, self.__formatter( graphComponents ) )
+			hierarchyComponents = []
+
+			n = 0
+			g = leafComponent
+			while g is not None and n < self.__numComponents :
+				hierarchyComponents.append( g )
+				g = g.parent()
+				n += 1
+
+			hierarchyComponents.reverse()
+
+			names.add( self.__formatter( hierarchyComponents ) )
+
+		if len( names ) == 1 :
+			label = next( iter( names ) )
+		elif names :
+			label = "---"
+		else:
+			label = ""
+
+		GafferUI.Label.setText( self, label )
 
 	def __buttonPress( self, widget, event ) :
 
-		return self.getGraphComponent() is not None and event.buttons & ( event.Buttons.Left | event.Buttons.Middle )
+		return bool( self.getGraphComponents() ) and event.buttons & ( event.Buttons.Left | event.Buttons.Middle )
 
 	def __dragBegin( self, widget, event ) :
 
 		if event.buttons & ( event.Buttons.Left | event.Buttons.Middle ) :
 			GafferUI.Pointer.setCurrent( "nodes" )
-			return self.getGraphComponent()
+			if len( self.__graphComponents ) == 1 :
+				return next( iter( self.__graphComponents ) )
+			else :
+				return Gaffer.StandardSet( self.__graphComponents )
 
 		return None
 
