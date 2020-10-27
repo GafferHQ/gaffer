@@ -42,6 +42,8 @@ import Gaffer
 import GafferUI
 import GafferUI.SpreadsheetUI
 
+from GafferUI.PlugValueWidget import sole
+
 ## Supported plug metadata :
 #
 # - "nameValuePlugPlugValueWidget:ignoreNamePlug", set to True to ignore the name plug and instead show a
@@ -51,14 +53,25 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, childPlug ) :
 
+		if isinstance( childPlug, Gaffer.Plug ) :
+			childPlugs = { childPlug }
+		else :
+			childPlugs = childPlug or set()
+
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlugs )
 
-		if not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) or Gaffer.Metadata.value(
-				childPlug, "nameValuePlugPlugValueWidget:ignoreNamePlug" ):
+		assert( len( childPlugs ) > 0 )
+
+		# We use a non-editable label for the name for non-dynamic plugs, or any that request it
+
+		anyStatic = any( [ not p.getFlags( Gaffer.Plug.Flags.Dynamic ) for p in childPlugs ] )
+		anyIgnoreName = any( [ Gaffer.Metadata.value( p, "nameValuePlugPlugValueWidget:ignoreNamePlug" ) for p in childPlugs ] )
+
+		if anyStatic or anyIgnoreName :
 			nameWidget = GafferUI.LabelPlugValueWidget(
-				childPlug,
+				childPlugs,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Center,
 			)
@@ -70,39 +83,39 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 			# a tricky task.
 			nameWidget.label()._qtWidget().setFixedHeight( 20 )
 		else :
-			nameWidget = GafferUI.StringPlugValueWidget( childPlug["name"] )
+			nameWidget = GafferUI.StringPlugValueWidget( { plug["name"] for plug in childPlugs } )
 			nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
 		self.__row.append( nameWidget,
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top
 		)
 
-		if "enabled" in childPlug :
+		if all( [ "enabled" in plug for plug in childPlugs ] ) :
 			self.__row.append(
 				GafferUI.BoolPlugValueWidget(
-					childPlug["enabled"],
+					{ plug["enabled"] for plug in childPlugs },
 					displayMode = GafferUI.BoolWidget.DisplayMode.Switch
 				),
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 			)
 
-		self.__row.append( GafferUI.PlugValueWidget.create( childPlug["value"] ), expand = True )
+		self.__row.append( GafferUI.PlugValueWidget.create( { plug["value"] for plug in childPlugs } ), expand = True )
 
-		self._updateFromPlug()
+		self._updateFromPlugs()
 
-	def setPlug( self, plug ) :
+	def setPlugs( self, plugs ) :
 
-		GafferUI.PlugValueWidget.setPlug( self, plug )
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
 
 		if isinstance( self.__row[0], GafferUI.LabelPlugValueWidget ) :
-			self.__row[0].setPlug( plug )
+			self.__row[0].setPlugs( plugs )
 		else :
-			self.__row[0].setPlug( plug["name"] )
+			self.__row[0].setPlugs({ plug["name"] for plug in plugs } )
 
-		if "enabled" in plug :
-			self.__row[1].setPlug( plug["enabled"] )
+		if all( [ "enabled" in plug for plug in plugs ] ) :
+			self.__row[1].setPlugs( { plug["enabled"] for plug in plugs } )
 
-		self.__row[-1].setPlug( plug["value"] )
+		self.__row[-1].setPlugs( { plug["value"] for plug in plugs } )
 
 	def hasLabel( self ) :
 
@@ -111,7 +124,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__row :
-			if w.getPlug().isSame( childPlug ) :
+			if childPlug in w.getPlugs() :
 				return w
 
 		return None
@@ -134,16 +147,16 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__row[0].getVisible()
 
-	def _updateFromPlug( self ) :
+	def _updateFromPlugs( self ) :
 
-		if "enabled" in self.getPlug() :
+		if all( [ "enabled" in plug for plug in self.getPlugs()] ) :
 			with self.getContext() :
-				enabled = self.getPlug()["enabled"].getValue()
+				enabled = sole( [ plug["enabled"].getValue() for plug in self.getPlugs() ] )
 
 			if isinstance( self.__row[0], GafferUI.StringPlugValueWidget ) :
-				self.__row[0].setEnabled( enabled )
+				self.__row[0].setEnabled( enabled is True )
 
-			self.__row[-1].setEnabled( enabled )
+			self.__row[-1].setEnabled( enabled is True )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.NameValuePlug, NameValuePlugValueWidget )
 
