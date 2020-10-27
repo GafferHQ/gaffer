@@ -6,6 +6,11 @@ Improvements
 
 - NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
 
+API
+---
+
+- Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
+
 0.59.0.0b1
 ==========
 

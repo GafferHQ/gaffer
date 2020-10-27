@@ -269,10 +269,10 @@ class GAFFER_API ValuePlug : public Plug
 
 IE_CORE_DECLAREPTR( ValuePlug )
 
+/// \deprecated Use ValuePlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ValuePlug> > ValuePlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ValuePlug> > InputValuePlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ValuePlug> > OutputValuePlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ValuePlug>, PlugPredicate<> > RecursiveValuePlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ValuePlug>, PlugPredicate<> > RecursiveInputValuePlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ValuePlug>, PlugPredicate<> > RecursiveOutputValuePlugIterator;
