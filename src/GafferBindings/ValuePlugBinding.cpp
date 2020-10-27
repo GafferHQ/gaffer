@@ -106,7 +106,25 @@ std::string valueRepr( boost::python::object &o )
 	// types with the module name, and also works around problems
 	// when round-tripping empty Box2fs.
 	object repr = boost::python::import( "IECore" ).attr( "repr" );
-	return extract<std::string>( repr( o ) );
+	std::string result = extract<std::string>( repr( o ) );
+	if( result.size() && result[0] != '<' )
+	{
+		return result;
+	}
+
+	extract<IECore::ConstObjectPtr> objectExtractor( o );
+	if( objectExtractor.check() )
+	{
+		// Fall back to base64 encoding
+		IECore::ConstObjectPtr object = objectExtractor();
+		return
+			"Gaffer.Serialisation.objectFromBase64( \"" +
+			Serialisation::objectToBase64( object.get() ) +
+			"\" )"
+		;
+	}
+
+	return "";
 }
 
 std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, const Serialisation &serialisation, bool &canCondense )
@@ -203,7 +221,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 		}
 
 		const std::string defaultValue = valueRepr( pythonDefaultValue );
-		if( defaultValue.size() && defaultValue[0] != '<' )
+		if( defaultValue.size() )
 		{
 			result += "defaultValue = " + defaultValue + ", ";
 		}

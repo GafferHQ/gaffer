@@ -43,6 +43,8 @@
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Set.h"
 
+#include "IECore/Object.h"
+
 namespace GafferBindings
 {
 
@@ -86,6 +88,12 @@ class GAFFERBINDINGS_API Serialisation
 		/// If object is a type object rather than an instance, then the path for the type
 		/// object itself is returned.
 		static std::string classPath( boost::python::object &object );
+
+		/// Encodes any IECore::Object into a base64 encoded string.
+		/// \todo Perhaps these would be useful as `IECore::ObjectAlgo`?
+		static std::string objectToBase64( const IECore::Object *object );
+		/// Creates an object from a string previously encoded with `objectToBase64()`.
+		static IECore::ObjectPtr objectFromBase64( const std::string &base64 );
 
 		/// The Serialiser class may be implemented differently for specific types to customise
 		/// their serialisation.

@@ -49,9 +49,13 @@
 
 #include "IECorePython/ScopedGILLock.h"
 
+#include "IECore/MemoryIndexedIO.h"
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string.hpp"
+#include "boost/archive/iterators/base64_from_binary.hpp"
+#include "boost/archive/iterators/binary_from_base64.hpp"
+#include "boost/archive/iterators/transform_width.hpp"
 #include "boost/format.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 #include "boost/tokenizer.hpp"
@@ -434,6 +438,62 @@ Serialisation::SerialiserMap &Serialisation::serialiserMap()
 		m[GraphComponent::staticTypeId()] = new Serialiser();
 	}
 	return m;
+}
+
+std::string Serialisation::objectToBase64( const IECore::Object *object )
+{
+	// Serialise the object to a buffer in memory.
+
+	IECore::MemoryIndexedIOPtr io = new IECore::MemoryIndexedIO( nullptr, {}, IECore::IndexedIO::Write );
+	object->save( io, "o" );
+	IECore::CharVectorDataPtr buffer = io->buffer();
+
+	// Base64 encode that buffer. `boost::beast` has a nice simple version of
+	// this that takes care of all the padding, but it is in a private namespace.
+	// So we use the less useable version in `boost::archive`.
+
+	// Pad buffer to multiple of 3, as required by `transform_width`.
+	const int remainder = buffer->readable().size() % 3;
+	const int padding = remainder ? 3 - remainder : 0;
+	buffer->writable().resize( buffer->readable().size() + padding, 0 );
+
+	// Encode to base64.
+	using namespace boost::archive::iterators;
+	using BufferIterator = std::vector<char>::const_iterator;
+	using Base64Iterator = base64_from_binary<transform_width<BufferIterator, 6, 8>>;
+	std::string result( Base64Iterator( buffer->readable().begin() ), Base64Iterator( buffer->readable().end() ) );
+
+	// Replace the output padding with '=', so we can discard it
+	// after decoding.
+	std::fill( result.end() - padding, result.end(), '=' );
+
+	return result;
+}
+
+IECore::ObjectPtr Serialisation::objectFromBase64( const std::string &base64 )
+{
+	// Decode to buffer
+
+	IECore::CharVectorDataPtr buffer = new CharVectorData;
+	using namespace boost::archive::iterators;
+	using Base64Iterator = transform_width<binary_from_base64<std::string::const_iterator>, 8, 6>;
+	buffer->writable().assign( Base64Iterator( base64.begin() ), Base64Iterator( base64.end() ) );
+
+	// Remove padding
+
+	if( base64.size() )
+	{
+		auto it = base64.rbegin();
+		while( *it++ == '=' )
+		{
+			buffer->writable().pop_back();
+		}
+	}
+
+	// Deserialise object from buffer.
+
+	MemoryIndexedIOPtr io = new MemoryIndexedIO( buffer, {}, IECore::IndexedIO::Read );
+	return Object::load( io, "o" );
 }
 
 //////////////////////////////////////////////////////////////////////////
