@@ -45,6 +45,9 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Preferences )
 
+/// \todo Derive from Node and merge with `Gaffer.Application`,
+/// using `Gaffer::Plugs` instead of `IECore::Parameters` to
+/// provide command-line arguments.
 class GAFFER_API ApplicationRoot : public GraphComponent
 {
 
