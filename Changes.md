@@ -15,6 +15,11 @@ API
   - Deprecated all namespace-level iterator typedefs for Node and its subclasses. Use the class-level typedefs instead.
 - Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
 
+Breaking Changes
+----------------
+
+- RendererAlgo : Changed type used to represent sample times from `std::set<float>` to `std::vector<float>`, to align with the `IECoreScenePreview::Renderer` API.
+
 0.59.0.0b1
 ==========
 

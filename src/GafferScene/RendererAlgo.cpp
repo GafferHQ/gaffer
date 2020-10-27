@@ -81,11 +81,12 @@ using namespace GafferScene;
 namespace
 {
 
-void motionTimes( size_t segments, const V2f &shutter, std::set<float> &times )
+void motionTimes( size_t segments, const V2f &shutter, std::vector<float> &times )
 {
+	times.reserve( segments + 1 );
 	for( size_t i = 0; i<segments + 1; ++i )
 	{
-		times.insert( lerp( shutter[0], shutter[1], (float)i / (float)segments ) );
+		times.push_back( lerp( shutter[0], shutter[1], (float)i / (float)segments ) );
 	}
 }
 
@@ -118,7 +119,7 @@ void createOutputDirectories( const IECore::CompoundObject *globals )
 	}
 }
 
-void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes )
+void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::vector<float> &sampleTimes )
 {
 	// Static case
 
@@ -136,9 +137,9 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 
 	bool moving = false;
 	samples.reserve( sampleTimes.size() );
-	for( std::set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it )
+	for( const float sampleTime : sampleTimes )
 	{
-		timeContext.setFrame( *it );
+		timeContext.setFrame( sampleTime );
 		const M44f m = scene->transformPlug()->getValue();
 		if( !moving && !samples.empty() && m != samples.front() )
 		{
@@ -154,7 +155,7 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 	}
 }
 
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes )
+void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::vector<float> &sampleTimes )
 {
 
 	// Static case
@@ -178,9 +179,9 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 	bool moving = false;
 	MurmurHash lastHash;
 	samples.reserve( sampleTimes.size() );
-	for( std::set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it )
+	for( const float sampleTime : sampleTimes )
 	{
-		timeContext.setFrame( *it );
+		timeContext.setFrame( sampleTime );
 
 		const MurmurHash objectHash = scene->objectPlug()->hash();
 		ConstObjectPtr object = scene->objectPlug()->getValue( &objectHash );
@@ -988,7 +989,7 @@ struct LocationOutput
 		void updateTransform( const ScenePlug *scene )
 		{
 			const size_t segments = motionSegments( m_options.transformBlur, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName );
-			vector<M44f> samples; set<float> sampleTimes;
+			vector<M44f> samples; vector<float> sampleTimes;
 			RendererAlgo::transformSamples( scene, segments, m_options.shutter, samples, sampleTimes );
 
 			if( sampleTimes.empty() )
@@ -1007,10 +1008,10 @@ struct LocationOutput
 				updatedTransformTimes.reserve( samples.size() );
 
 				vector<M44f>::const_iterator s = samples.begin();
-				for( set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it, ++s )
+				for( const float sampleTime : sampleTimes )
 				{
-					updatedTransformSamples.push_back( *s * transform( *it ) );
-					updatedTransformTimes.push_back( *it );
+					updatedTransformSamples.push_back( *s++ * transform( sampleTime ) );
+					updatedTransformTimes.push_back( sampleTime );
 				}
 
 				m_transformSamples = updatedTransformSamples;
@@ -1225,7 +1226,7 @@ struct ObjectOutput : public LocationOutput
 			return true;
 		}
 
-		vector<ConstVisibleRenderablePtr> samples; set<float> sampleTimes;
+		vector<ConstVisibleRenderablePtr> samples; vector<float> sampleTimes;
 		RendererAlgo::objectSamples( scene, deformationSegments(), shutter(), samples, sampleTimes );
 		if( !samples.size() )
 		{
@@ -1240,14 +1241,13 @@ struct ObjectOutput : public LocationOutput
 		}
 		else
 		{
-			/// \todo Can we rejig things so these conversions aren't necessary?
+			/// \todo Can we rejig things so this conversion isn't necessary?
 			vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
-			vector<float> timesVector( sampleTimes.begin(), sampleTimes.end() );
-			for( vector<ConstVisibleRenderablePtr>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+			for( const auto &sample : samples )
 			{
-				objectsVector.push_back( it->get() );
+				objectsVector.push_back( sample.get() );
 			}
-			objectInterface = renderer()->object( name( path ), objectsVector, timesVector, attributesInterface.get() );
+			objectInterface = renderer()->object( name( path ), objectsVector, sampleTimes, attributesInterface.get() );
 		}
 
 		if( objectInterface )
