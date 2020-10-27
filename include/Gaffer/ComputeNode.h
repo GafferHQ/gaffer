@@ -91,6 +91,7 @@ class GAFFER_API ComputeNode : public DependencyNode
 
 };
 
+/// \deprecated Use ComputeNode::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<ComputeNode> > ComputeNodeIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<ComputeNode> > RecursiveComputeNodeIterator;
 

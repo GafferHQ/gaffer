@@ -198,6 +198,7 @@ class GAFFER_API Node : public GraphComponent
 
 IE_CORE_DECLAREPTR( Node )
 
+/// \deprecated Use Node::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<Node> > NodeIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<Node> > RecursiveNodeIterator;
 

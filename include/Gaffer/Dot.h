@@ -105,6 +105,7 @@ class GAFFER_API Dot : public DependencyNode
 
 IE_CORE_DECLAREPTR( Dot )
 
+/// \deprecated Use Dot::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<Dot> > DotIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<Dot> > RecursiveDotIterator;
 

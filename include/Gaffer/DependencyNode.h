@@ -91,6 +91,7 @@ class GAFFER_API DependencyNode : public Node
 
 };
 
+/// \deprecated Use DependencyNode::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<DependencyNode> > RecursiveDependencyNodeIterator;
 

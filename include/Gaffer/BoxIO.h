@@ -188,6 +188,7 @@ class GAFFER_API BoxIO : public Node
 
 IE_CORE_DECLAREPTR( BoxIO )
 
+/// \deprecated Use BoxIO::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<BoxIO> > BoxIOIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<BoxIO> > RecursiveBoxIOIterator;
 
