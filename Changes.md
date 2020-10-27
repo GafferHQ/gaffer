@@ -1,3 +1,20 @@
+0.58.x.x (relative to 0.58.4.0)
+========
+
+Fixes
+-----
+
+- Viewer :
+  - Fixed bug that caused the Inspector to grow very wide when inspecting long strings.
+  - Fixed bug that caused a second click to be required to apply edits when closing an Inspector edit window by clicking outside the popup.
+- NumericPlugValueWidget : Fixed bug that caused plug values to be set to 0 if editing completed with invalid text.
+- StringPlugValueWidget : Fixed bug that could cause plug values to be overwritten when editing multiple plugs and focus was lost without change, or the value state changed to mixed via external action.
+
+API
+---
+
+- NumericWidget : Fixed bug that caused `editingFinished` to be called with the wrong `reason` when the widget was left with an invalid value. `Invalid` is now passed in these cases.
+
 0.58.4.0 (relative to 0.58.3.2)
 ========
 

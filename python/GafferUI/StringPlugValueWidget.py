@@ -48,6 +48,8 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, **kw ) :
 
+		self.__continuousUpdate = False
+
 		self.__textWidget = GafferUI.TextWidget()
 
 		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plugs, **kw )
@@ -55,7 +57,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self._addPopupMenu( self.__textWidget )
 
 		self.__textWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
+		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
 		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 
 		self._updateFromPlugs()
@@ -86,22 +88,38 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# calling setText() in this situation, otherwise the
 			# cursor is always moving to the end whenever a key is
 			# pressed in continuousUpdate mode.
-			self.__textWidget.setText( text )
+			with Gaffer.BlockedConnection( self.__textChangedConnection ) :
+				self.__textWidget.setText( text )
 
 		self.__textWidget.setErrored( errored )
 
-		self.__textChangedConnection.block(
-			any( not Gaffer.Metadata.value( p, "stringPlugValueWidget:continuousUpdate" ) for p in self.getPlugs() )
-		)
+		self.__continuousUpdate = all( Gaffer.Metadata.value( p, "stringPlugValueWidget:continuousUpdate" ) for p in self.getPlugs() )
 
 		placeHolder = ""
 		if value is None and len( self.getPlugs() ) :
 			placeHolder = "---"
+			# Mixed values require interaction before we commit the widget
+			# value to the plugs. This prevents mixed values being overriden
+			# by the empty string in the widget when it loses focus.
+			self.__editRequiresInteraction = True
 		else :
-			placeHolder = sole( Gaffer.Metadata.value( p, "stringPlugValueWidget:placeholderText" ) for p in self.getPlugs() ) or ""
+			placeHolder = self.__placeholderText()
+			self.__editRequiresInteraction = False
 		self.textWidget()._qtWidget().setPlaceholderText( placeHolder )
 
 		self.__textWidget.setEditable( self._editable() )
+
+	def __editInteractionOccured( self ) :
+
+		if self.__editRequiresInteraction == False :
+			return
+
+		self.__editRequiresInteraction = False
+		self.textWidget()._qtWidget().setPlaceholderText( self.__placeholderText() )
+
+	def __placeholderText( self ) :
+
+		return sole( Gaffer.Metadata.value( p, "stringPlugValueWidget:placeholderText" ) for p in self.getPlugs() ) or ""
 
 	def __keyPress( self, widget, event ) :
 
@@ -111,15 +129,38 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return False
 
 		# escape abandons everything
-		if event.key=="Escape" :
+		if event.key == "Escape" :
 			self._updateFromPlugs()
 			return True
+		elif event.key == "Backspace" :
+			# Allow a 'delete' press with the initial keyboard focus and a
+			# mixed value placeholder to give the appearance of removing the
+			# mixed value, allowing all plugs to be set to an empty string.
+			self.__editInteractionOccured()
 
 		return False
 
 	def __textChanged( self, textWidget ) :
 
 		assert( textWidget is self.__textWidget )
+
+		self.__editInteractionOccured()
+
+		if self.__continuousUpdate == True :
+			self.__setPlugValues()
+
+	def __editingFinished( self, textWidget ) :
+
+		assert( textWidget is self.__textWidget )
+
+		# If we required user editing (ie: mixed value placeholder) and haven't
+		# had any, do nothing, so we don't stomp over the existing plug values.
+		if self.__editRequiresInteraction :
+			return
+
+		self.__setPlugValues()
+
+	def __setPlugValues( self ) :
 
 		if self._editable() :
 			text = self.__textWidget.getText()
