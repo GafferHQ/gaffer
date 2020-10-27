@@ -248,7 +248,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		creator = next( iter( creators ) )
 		if creator is not None :
-			return creator( plugs )
+			# As not all PlugValueWidgets support multiple plugs,
+			# we unwrap where possible.
+			if isinstance( plugs, set ) and len( plugs ) == 1 :
+				return creator( next( iter( plugs ) ) )
+			else :
+				return creator( plugs )
 
 		return None
 
