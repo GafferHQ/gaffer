@@ -163,4 +163,16 @@ void GafferImageModule::bindCatalogue()
 		Serialisation::registerSerialiser( Catalogue::staticTypeId(), new CatalogueSerialiser );
 	}
 
+	// Expose Catalogue::InternalImages as if they were plain ImageNodes. We don't
+	// want to bind them fully because then we'd be exposing a private class, but
+	// we need to register them so that they can be returned to Python
+	// successfully when inspecting Catalogue internals in the UI.
+	//
+	// See "Boost.Python and slightly more tricky inheritance" at
+	// http://lists.boost.org/Archives/boost/2005/09/93017.php for more details.
+
+	boost::python::objects::copy_class_object(
+		type_id<ImageNode>(), Catalogue::internalImageTypeInfo()
+	);
+
 }

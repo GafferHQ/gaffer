@@ -46,6 +46,14 @@
 #include "IECoreImage/DisplayDriver.h"
 #include "IECoreImage/DisplayDriverServer.h"
 
+namespace GafferImageModule
+{
+
+// Forward declaration to enable friend declaration.
+void bindCatalogue();
+
+} // namespace GafferImageModule
+
 namespace GafferImage
 {
 
@@ -150,6 +158,10 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		static size_t g_firstPlugIndex;
+
+		// For bindings
+		friend void GafferImageModule::bindCatalogue();
+		static const std::type_info &internalImageTypeInfo();
 
 };
 

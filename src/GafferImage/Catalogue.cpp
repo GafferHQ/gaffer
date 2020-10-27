@@ -1106,3 +1106,7 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 
 }
 
+const std::type_info &Catalogue::internalImageTypeInfo()
+{
+	return typeid( InternalImage );
+}
