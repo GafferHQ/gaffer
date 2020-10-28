@@ -94,19 +94,19 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__ignoreSectionResized = False
 			self.__callingMoveSection = False
 
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
-			)
-
 		else : # RowNames mode
 
 			tableView.horizontalHeader().resizeSection( 1, 22 )
-			tableView.horizontalHeader().setSectionResizeMode( 0, QtWidgets.QHeaderView.Stretch )
+			self.__applyRowNamesWidth()
 			# Style the row enablers as toggles rather than checkboxes.
 			## \todo Do the same for cells containing NameValuePlugs with enablers. This is tricky
 			# because we need to do it on a per-cell basis, so will need to use `_CellPlugItemDelegate.paint()`
 			# instead.
 			tableView.setProperty( "gafferToggleIndicator", True )
+
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
+		)
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
@@ -296,6 +296,15 @@ class _PlugTableView( GafferUI.Widget ) :
 		finally :
 			self.__ignoreSectionResized = False
 
+	def __applyRowNamesWidth( self ) :
+
+		if self.__mode != self.Mode.RowNames :
+			return
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		width = _PlugTableView.__getRowNameWidth( rowsPlug )
+		self._qtWidget().horizontalHeader().resizeSection( 0, width )
+
 	@GafferUI.LazyMethod()
 	def __applySectionOrderLazily( self ) :
 
@@ -307,24 +316,33 @@ class _PlugTableView( GafferUI.Widget ) :
 			return
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
-		if not rowsPlug.isAncestorOf( plug ) :
-			return
 
-		if key == "spreadsheet:columnWidth" :
+		if self.__mode == self.Mode.RowNames :
 
-			if plug.parent() == rowsPlug.defaultRow()["cells"] :
-				self.__applyColumnWidthMetadata( cellPlug = plug )
+			if plug.isSame( rowsPlug.defaultRow() ) and key == "spreadsheet:rowNameWidth" :
+				self.__applyRowNamesWidth()
+				return
 
-		elif key == "spreadsheet:columnIndex" :
+		else :
 
-			# Typically we get a flurry of edits to columnIndex at once,
-			# so we use a lazy method to update the order once everything
-			# has been done.
-			self.__applySectionOrderLazily()
+			if not rowsPlug.isAncestorOf( plug ) :
+				return
 
-		elif key == "spreadsheet:section" :
+			if key == "spreadsheet:columnWidth" :
 
-			self.__applyColumnVisibility()
+				if plug.parent() == rowsPlug.defaultRow()["cells"] :
+					self.__applyColumnWidthMetadata( cellPlug = plug )
+
+			elif key == "spreadsheet:columnIndex" :
+
+				# Typically we get a flurry of edits to columnIndex at once,
+				# so we use a lazy method to update the order once everything
+				# has been done.
+				self.__applySectionOrderLazily()
+
+			elif key == "spreadsheet:section" :
+
+				self.__applyColumnVisibility()
 
 	def __buttonPress( self, widget, event ) :
 
@@ -472,12 +490,12 @@ class _PlugTableView( GafferUI.Widget ) :
 			( "Single", GafferUI.PlugWidget.labelWidth() ),
 			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
 		]
-		currentWidth = _PlugTableView._getRowNameWidth( rowsPlug )
+		currentWidth = _PlugTableView.__getRowNameWidth( rowsPlug )
 		for label, width in widths :
 			items.append( (
 				"/Width/{}".format( label ),
 				{
-					"command" : functools.partial( self.__setRowNameWidth, rowsPlug, width ),
+					"command" : functools.partial( _PlugTableView.__setRowNameWidth, rowsPlug, width ),
 					"active" : not Gaffer.MetadataAlgo.readOnly( rowsPlug ),
 					"checkBox" : width == currentWidth,
 				}
@@ -608,6 +626,18 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return Gaffer.Context.current()
 
+	@staticmethod
+	def __setRowNameWidth( rowsPlug, width, *unused ) :
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )
+
+	@staticmethod
+	def __getRowNameWidth( rowsPlug ) :
+
+		width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
+		return width if width is not None else GafferUI.PlugWidget.labelWidth()
+
 	def __setColumnLabel( self, cellPlug ) :
 
 		label = GafferUI.TextInputDialogue(
@@ -626,16 +656,11 @@ class _PlugTableView( GafferUI.Widget ) :
 		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 			rowsPlug.removeColumn( cellPlug.parent().children().index( cellPlug ) )
 
-	@staticmethod
-	def __setRowNameWidth( rowsPlug, width, *unused ) :
-
-		with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
-			_PlugTableView._setRowNameWidth( rowsPlug, width )
-
 	def __modelReset( self ) :
 
 		self.__applyColumnVisibility()
 		self.__applyColumnWidthMetadata()
+		self.__applyRowNamesWidth()
 
 	def __moveToSection( self, cellPlug, sectionName = None ) :
 
@@ -652,20 +677,3 @@ class _PlugTableView( GafferUI.Widget ) :
 		with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 			_SectionChooser.setSection( cellPlug, sectionName )
 
-	@staticmethod
-	def _affectsRowNameWidth( key ) :
-
-		return key == "spreadsheet:rowNameWidth"
-
-	@staticmethod
-	def _getRowNameWidth( rowsPlug ) :
-
-		assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
-		width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
-		return width if width is not None else GafferUI.PlugWidget.labelWidth()
-
-	@staticmethod
-	def _setRowNameWidth( rowsPlug, width ) :
-
-		assert( isinstance( rowsPlug, Gaffer.Spreadsheet.RowsPlug ) )
-		Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )

@@ -102,7 +102,6 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					"index" : ( 0, 2 ),
 				}
 			)
-			self.__updateRowNamesWidth()
 
 			self.__cellsTable = _PlugTableView(
 				selectionModel, _PlugTableView.Mode.Cells,
@@ -238,10 +237,6 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__statusLabel.setText( "" )
 
-	def __updateRowNamesWidth( self ) :
-
-		self.__rowNamesTable._qtWidget().setFixedWidth( _PlugTableView._getRowNameWidth( self.getPlug() ) )
-
 	def __updateDefaultRowVisibility( self ) :
 
 		visible = Gaffer.Metadata.value( self.getPlug(), "spreadsheet:defaultRowVisible" )
@@ -257,10 +252,6 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__defaultTable._qtWidget().setRowHidden( 0, not visible )
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if plug is not None and _PlugTableView._affectsRowNameWidth( key ) :
-			if self.getPlug().isAncestorOf( plug ) :
-				self.__updateRowNamesWidth()
 
 		if plug == self.getPlug() and key == "spreadsheet:defaultRowVisible" :
 			self.__updateDefaultRowVisibility()
