@@ -64,7 +64,7 @@ class GAFFERIMAGE_API Resample : public FlatImageProcessor
 		Resample( const std::string &name=defaultName<Resample>() );
 		~Resample() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resample, ResampleTypeId, FlatImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Resample, ResampleTypeId, FlatImageProcessor );
 
 		enum Debug
 		{

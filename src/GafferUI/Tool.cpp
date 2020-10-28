@@ -43,7 +43,7 @@
 using namespace Gaffer;
 using namespace GafferUI;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Tool );
+GAFFER_NODE_DEFINE_TYPE( Tool );
 
 size_t Tool::g_firstPlugIndex = 0;
 

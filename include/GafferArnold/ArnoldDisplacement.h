@@ -60,7 +60,7 @@ class GAFFERARNOLD_API ArnoldDisplacement : public GafferScene::Shader
 		ArnoldDisplacement( const std::string &name=defaultName<ArnoldDisplacement>() );
 		~ArnoldDisplacement() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldDisplacement, ArnoldDisplacementTypeId, GafferScene::Shader );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldDisplacement, ArnoldDisplacementTypeId, GafferScene::Shader );
 
 		GafferScene::ShaderPlug *mapPlug();
 		const GafferScene::ShaderPlug *mapPlug() const;

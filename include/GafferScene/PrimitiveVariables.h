@@ -52,7 +52,7 @@ class GAFFERSCENE_API PrimitiveVariables : public ObjectProcessor
 		PrimitiveVariables( const std::string &name=defaultName<PrimitiveVariables>() );
 		~PrimitiveVariables() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, ObjectProcessor );
 
 		Gaffer::CompoundDataPlug *primitiveVariablesPlug();
 		const Gaffer::CompoundDataPlug *primitiveVariablesPlug() const;

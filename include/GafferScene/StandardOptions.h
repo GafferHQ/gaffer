@@ -51,7 +51,7 @@ class GAFFERSCENE_API StandardOptions : public Options
 		StandardOptions( const std::string &name=defaultName<StandardOptions>() );
 		~StandardOptions() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::StandardOptions, StandardOptionsTypeId, Options );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::StandardOptions, StandardOptionsTypeId, Options );
 
 };
 

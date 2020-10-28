@@ -71,7 +71,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	//       - h
 
 	std::vector<NodePtr> nodes;
-	for( RecursiveNodeIterator it( a.get() ); !it.done(); it++ )
+	for( Node::RecursiveIterator it( a.get() ); !it.done(); it++ )
 	{
 		nodes.push_back( *it );
 	}

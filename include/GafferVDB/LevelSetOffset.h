@@ -56,7 +56,7 @@ class GAFFERVDB_API LevelSetOffset : public GafferScene::SceneElementProcessor
 		LevelSetOffset(const std::string &name = defaultName<LevelSetOffset>() );
 		~LevelSetOffset() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferVDB::LevelSetOffset, LevelSetOffsetTypeId, GafferScene::SceneElementProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::LevelSetOffset, LevelSetOffsetTypeId, GafferScene::SceneElementProcessor );
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;

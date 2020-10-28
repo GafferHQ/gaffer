@@ -52,7 +52,7 @@ class GAFFERSCENE_API Parent : public BranchCreator
 		Parent( const std::string &name=defaultName<Parent>() );
 		~Parent() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Parent, ParentTypeId, BranchCreator );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Parent, ParentTypeId, BranchCreator );
 
 		Gaffer::ArrayPlug *childrenPlug();
 		const Gaffer::ArrayPlug *childrenPlug() const;

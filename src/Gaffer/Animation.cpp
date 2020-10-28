@@ -427,7 +427,7 @@ const FloatPlug *Animation::CurvePlug::outPlug() const
 // Animation implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Animation );
+GAFFER_NODE_DEFINE_TYPE( Animation );
 
 size_t Animation::g_firstPlugIndex = 0;
 

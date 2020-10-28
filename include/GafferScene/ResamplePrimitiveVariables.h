@@ -50,7 +50,7 @@ class GAFFERSCENE_API ResamplePrimitiveVariables : public PrimitiveVariableProce
 		ResamplePrimitiveVariables( const std::string &name = defaultName<ResamplePrimitiveVariables>() );
 		~ResamplePrimitiveVariables() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ResamplePrimitiveVariables, ResamplePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ResamplePrimitiveVariables, ResamplePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
 
 		Gaffer::IntPlug *interpolationPlug();
 		const Gaffer::IntPlug *interpolationPlug() const;

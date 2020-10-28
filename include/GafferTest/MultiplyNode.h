@@ -54,7 +54,7 @@ class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 		MultiplyNode( const std::string &name=defaultName<MultiplyNode>(), bool brokenAffects = false );
 		~MultiplyNode() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferTest::MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferTest::MultiplyNode, MultiplyNodeTypeId, Gaffer::ComputeNode );
 
 		Gaffer::IntPlug *op1Plug();
 		const Gaffer::IntPlug *op1Plug() const;

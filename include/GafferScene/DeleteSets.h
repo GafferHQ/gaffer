@@ -57,7 +57,7 @@ class GAFFERSCENE_API DeleteSets : public SceneProcessor
 		DeleteSets( const std::string &name=defaultName<DeleteSets>() );
 		~DeleteSets() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeleteSets, DeleteSetsTypeId, SceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteSets, DeleteSetsTypeId, SceneProcessor );
 
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;

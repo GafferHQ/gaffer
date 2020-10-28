@@ -82,7 +82,7 @@ OutputMap &outputMap()
 // Outputs implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Outputs );
+GAFFER_NODE_DEFINE_TYPE( Outputs );
 
 size_t Outputs::g_firstPlugIndex = 0;
 

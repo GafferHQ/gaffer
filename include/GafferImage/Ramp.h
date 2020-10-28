@@ -62,7 +62,7 @@ class GAFFERIMAGE_API Ramp : public FlatImageSource
 		Ramp( const std::string &name=defaultName<Ramp>() );
 		~Ramp() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Ramp, RampTypeId, FlatImageSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Ramp, RampTypeId, FlatImageSource );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

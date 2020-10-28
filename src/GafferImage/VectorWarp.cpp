@@ -126,7 +126,7 @@ struct VectorWarp::Engine : public Warp::Engine
 // VectorWarp implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( VectorWarp );
+GAFFER_NODE_DEFINE_TYPE( VectorWarp );
 
 size_t VectorWarp::g_firstPlugIndex = 0;
 

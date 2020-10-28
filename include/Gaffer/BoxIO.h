@@ -81,7 +81,7 @@ class GAFFER_API BoxIO : public Node
 
 		~BoxIO() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::BoxIO, BoxIOTypeId, Node );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::BoxIO, BoxIOTypeId, Node );
 
 		StringPlug *namePlug();
 		const StringPlug *namePlug() const;
@@ -188,6 +188,7 @@ class GAFFER_API BoxIO : public Node
 
 IE_CORE_DECLAREPTR( BoxIO )
 
+/// \deprecated Use BoxIO::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<BoxIO> > BoxIOIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<BoxIO> > RecursiveBoxIOIterator;
 

@@ -41,7 +41,7 @@ using namespace std;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Options );
+GAFFER_NODE_DEFINE_TYPE( Options );
 
 size_t Options::g_firstPlugIndex = 0;
 

@@ -57,7 +57,7 @@ class GAFFERSCENE_API SetFilter : public Filter
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SetFilter, SetFilterTypeId, Filter );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::SetFilter, SetFilterTypeId, Filter );
 
 		SetFilter( const std::string &name=defaultName<SetFilter>() );
 		~SetFilter() override;

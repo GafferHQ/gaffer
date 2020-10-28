@@ -42,7 +42,7 @@
 
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ContextVariables );
+GAFFER_NODE_DEFINE_TYPE( ContextVariables );
 
 size_t ContextVariables::g_firstPlugIndex;
 

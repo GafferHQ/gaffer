@@ -94,7 +94,7 @@ size_t Render::g_firstPlugIndex = 0;
 
 static IECore::InternedString g_rendererContextName( "scene:renderer" );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Render );
+GAFFER_NODE_DEFINE_TYPE( Render );
 
 Render::Render( const std::string &name )
 	:	Render( /* rendererType = */ InternedString(), name )

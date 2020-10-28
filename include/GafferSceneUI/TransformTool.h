@@ -61,7 +61,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 
 		~TransformTool() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::TransformTool, TransformToolTypeId, SelectionTool );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::TransformTool, TransformToolTypeId, SelectionTool );
 
 		enum Orientation
 		{

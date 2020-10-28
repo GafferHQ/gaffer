@@ -39,7 +39,7 @@
 using namespace Imath;
 using namespace GafferAppleseed;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AppleseedOptions );
+GAFFER_NODE_DEFINE_TYPE( AppleseedOptions );
 
 AppleseedOptions::AppleseedOptions( const std::string &name )
 	:	GafferScene::Options( name )

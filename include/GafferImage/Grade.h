@@ -58,7 +58,7 @@ class GAFFERIMAGE_API Grade : public ChannelDataProcessor
 		Grade( const std::string &name=defaultName<Grade>() );
 		~Grade() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Grade, GradeTypeId, ChannelDataProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Grade, GradeTypeId, ChannelDataProcessor );
 
         //! @name Plug Accessors
         /// Returns a pointer to the node's plugs.

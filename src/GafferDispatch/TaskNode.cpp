@@ -131,7 +131,7 @@ InternedString TaskNodeProcess::postTasksProcessType( "taskNode:postTasks" );
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TaskNode::TaskPlug );
+GAFFER_PLUG_DEFINE_TYPE( TaskNode::TaskPlug );
 
 TaskNode::TaskPlug::TaskPlug( const std::string &name, Direction direction, unsigned flags )
 	:	Plug( name, direction, flags )
@@ -278,7 +278,7 @@ void TaskNode::TaskPlug::postTasks( Tasks &tasks ) const
 // TaskNode implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TaskNode )
+GAFFER_NODE_DEFINE_TYPE( TaskNode )
 
 size_t TaskNode::g_firstPlugIndex;
 

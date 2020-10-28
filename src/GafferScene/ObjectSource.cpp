@@ -50,7 +50,7 @@ using namespace GafferScene;
 
 static IECore::InternedString g_emptyString( "" );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ObjectSource );
+GAFFER_NODE_DEFINE_TYPE( ObjectSource );
 
 size_t ObjectSource::g_firstPlugIndex = 0;
 

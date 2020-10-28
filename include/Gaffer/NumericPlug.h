@@ -105,18 +105,16 @@ typedef NumericPlug<int> IntPlug;
 IE_CORE_DECLAREPTR( FloatPlug );
 IE_CORE_DECLAREPTR( IntPlug );
 
+/// \deprecated Use FloatPlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, FloatPlug> > FloatPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, FloatPlug> > InputFloatPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, FloatPlug> > OutputFloatPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntPlug> > IntPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, IntPlug> > InputIntPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, IntPlug> > OutputIntPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, PlugPredicate<> > RecursiveFloatPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, FloatPlug>, PlugPredicate<> > RecursiveInputFloatPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, PlugPredicate<> > RecursiveOutputFloatPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, IntPlug>, PlugPredicate<> > RecursiveIntPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, IntPlug>, PlugPredicate<> > RecursiveInputIntPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, IntPlug>, PlugPredicate<> > RecursiveOutputIntPlugIterator;

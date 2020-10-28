@@ -240,7 +240,7 @@ const IECore::InternedString g_framesPerSecond( "framesPerSecond" );
 // ScriptNode implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ScriptNode );
+GAFFER_NODE_DEFINE_TYPE( ScriptNode );
 
 size_t ScriptNode::g_firstPlugIndex = 0;
 ScriptNode::SerialiseFunction ScriptNode::g_serialiseFunction;

@@ -54,7 +54,7 @@ class GAFFERIMAGE_API DeepMerge : public ImageProcessor
 		DeepMerge( const std::string &name=defaultName<DeepMerge>() );
 		~DeepMerge() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::DeepMerge, DeepMergeTypeId, ImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepMerge, DeepMergeTypeId, ImageProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

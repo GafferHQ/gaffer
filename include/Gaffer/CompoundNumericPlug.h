@@ -143,50 +143,40 @@ IE_CORE_DECLAREPTR( V3iPlug );
 IE_CORE_DECLAREPTR( Color3fPlug );
 IE_CORE_DECLAREPTR( Color4fPlug );
 
+/// \deprecated Use  V2fPlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2fPlug> > V2fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V2fPlug> > InputV2fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2fPlug> > OutputV2fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3fPlug> > V3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V3fPlug> > InputV3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fPlug> > OutputV3fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2iPlug> > V2iPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V2iPlug> > InputV2iPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2iPlug> > OutputV2iPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3iPlug> > V3iPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V3iPlug> > InputV3iPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3iPlug> > OutputV3iPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug> > Color3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Color3fPlug> > InputColor3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color3fPlug> > OutputColor3fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug> > Color4fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Color4fPlug> > InputColor4fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color4fPlug> > OutputColor4fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2fPlug>, PlugPredicate<> > RecursiveV2fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2fPlug>, PlugPredicate<> > RecursiveInputV2fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2fPlug>, PlugPredicate<> > RecursiveOutputV2fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3fPlug>, PlugPredicate<> > RecursiveV3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3fPlug>, PlugPredicate<> > RecursiveInputV3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3fPlug>, PlugPredicate<> > RecursiveOutputV3fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2iPlug>, PlugPredicate<> > RecursiveV2iPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2iPlug>, PlugPredicate<> > RecursiveInputV2iPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2iPlug>, PlugPredicate<> > RecursiveOutputV2iPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3iPlug>, PlugPredicate<> > RecursiveV3iPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3iPlug>, PlugPredicate<> > RecursiveInputV3iPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3iPlug>, PlugPredicate<> > RecursiveOutputV3iPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug>, PlugPredicate<> > RecursiveColor3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color3fPlug>, PlugPredicate<> > RecursiveInputColor3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color3fPlug>, PlugPredicate<> > RecursiveOutputColor3fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug>, PlugPredicate<> > RecursiveColor4fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color4fPlug>, PlugPredicate<> > RecursiveInputColor4fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color4fPlug>, PlugPredicate<> > RecursiveOutputColor4fPlugIterator;

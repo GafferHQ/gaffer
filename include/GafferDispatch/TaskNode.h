@@ -113,7 +113,7 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 		typedef std::vector<Task> Tasks;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
 
 		TaskNode( const std::string &name=defaultName<TaskNode>() );
 		~TaskNode() override;

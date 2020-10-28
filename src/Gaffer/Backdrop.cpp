@@ -40,7 +40,7 @@
 
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Backdrop );
+GAFFER_NODE_DEFINE_TYPE( Backdrop );
 
 size_t Backdrop::g_firstPlugIndex = 0;
 

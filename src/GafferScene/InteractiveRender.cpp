@@ -145,7 +145,7 @@ static InternedString g_rendererContextName( "scene:renderer" );
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( InteractiveRender );
+GAFFER_NODE_DEFINE_TYPE( InteractiveRender );
 
 InteractiveRender::InteractiveRender( const std::string &name )
 	:	InteractiveRender( /* rendererType = */ InternedString(), name )

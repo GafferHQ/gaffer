@@ -61,7 +61,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferOSL;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLObject );
+GAFFER_NODE_DEFINE_TYPE( OSLObject );
 
 size_t OSLObject::g_firstPlugIndex;
 

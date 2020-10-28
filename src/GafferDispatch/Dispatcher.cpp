@@ -121,7 +121,7 @@ Dispatcher::DispatchSignal Dispatcher::g_dispatchSignal;
 Dispatcher::PostDispatchSignal Dispatcher::g_postDispatchSignal;
 std::string Dispatcher::g_defaultDispatcherType = "";
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Dispatcher )
+GAFFER_NODE_DEFINE_TYPE( Dispatcher )
 
 Dispatcher::Dispatcher( const std::string &name )
 	: Node( name )

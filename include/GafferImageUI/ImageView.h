@@ -85,7 +85,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		ImageView( const std::string &name = defaultName<ImageView>() );
 		~ImageView() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
+		GAFFER_NODE_DECLARE_TYPE( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
 
 		Gaffer::BoolPlug *clippingPlug();
 		const Gaffer::BoolPlug *clippingPlug() const;

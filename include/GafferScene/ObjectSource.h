@@ -58,7 +58,7 @@ class GAFFERSCENE_API ObjectSource : public SceneNode
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ObjectSource, ObjectSourceTypeId, SceneNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ObjectSource, ObjectSourceTypeId, SceneNode );
 
 		~ObjectSource() override;
 

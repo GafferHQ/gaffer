@@ -48,7 +48,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ColorSpace );
+GAFFER_NODE_DEFINE_TYPE( ColorSpace );
 
 size_t ColorSpace::g_firstPlugIndex = 0;
 

@@ -50,7 +50,7 @@ class GAFFERSCENE_API DeleteOutputs : public DeleteGlobals
 		DeleteOutputs( const std::string &name=defaultName<DeleteOutputs>() );
 		~DeleteOutputs() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::DeleteOutputs, DeleteOutputsTypeId, DeleteGlobals );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteOutputs, DeleteOutputsTypeId, DeleteGlobals );
 
 	protected :
 

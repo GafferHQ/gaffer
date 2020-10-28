@@ -167,7 +167,7 @@ void setFrom( Plug *dst, const Plug *src )
 // BoxIO
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BoxIO );
+GAFFER_NODE_DEFINE_TYPE( BoxIO );
 
 size_t BoxIO::g_firstPlugIndex = 0;
 

@@ -44,7 +44,7 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Cube );
+GAFFER_NODE_DEFINE_TYPE( Cube );
 
 size_t Cube::g_firstPlugIndex = 0;
 

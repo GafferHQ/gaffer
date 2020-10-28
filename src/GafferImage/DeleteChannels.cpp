@@ -45,7 +45,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteChannels );
+GAFFER_NODE_DEFINE_TYPE( DeleteChannels );
 
 size_t DeleteChannels::g_firstPlugIndex = 0;
 

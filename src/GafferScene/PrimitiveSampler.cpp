@@ -157,7 +157,7 @@ OutputVariableFunction addPrimitiveVariable( Primitive *outputPrimitive, const s
 // Sampler
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PrimitiveSampler );
+GAFFER_NODE_DEFINE_TYPE( PrimitiveSampler );
 
 size_t PrimitiveSampler::g_firstPlugIndex = 0;
 

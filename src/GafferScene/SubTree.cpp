@@ -48,7 +48,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SubTree );
+GAFFER_NODE_DEFINE_TYPE( SubTree );
 
 size_t SubTree::g_firstPlugIndex = 0;
 

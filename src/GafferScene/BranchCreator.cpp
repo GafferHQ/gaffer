@@ -85,7 +85,7 @@ void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString
 //////////////////////////////////////////////////////////////////////////
 
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( BranchCreator );
+GAFFER_NODE_DEFINE_TYPE( BranchCreator );
 
 size_t BranchCreator::g_firstPlugIndex = 0;
 

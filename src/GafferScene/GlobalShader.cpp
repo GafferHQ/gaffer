@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GlobalShader );
+GAFFER_NODE_DEFINE_TYPE( GlobalShader );
 
 size_t GlobalShader::g_firstPlugIndex = 0;
 

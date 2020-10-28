@@ -101,7 +101,7 @@ void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
 // CameraTool
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CameraTool );
+GAFFER_NODE_DEFINE_TYPE( CameraTool );
 
 CameraTool::ToolDescription<CameraTool, SceneView> CameraTool::g_toolDescription;
 

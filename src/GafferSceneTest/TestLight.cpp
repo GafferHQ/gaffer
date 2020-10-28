@@ -43,7 +43,7 @@
 using namespace Gaffer;
 using namespace GafferSceneTest;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TestLight )
+GAFFER_NODE_DEFINE_TYPE( TestLight )
 
 TestLight::TestLight( const std::string &name )
 	:	Light( name )

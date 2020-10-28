@@ -57,7 +57,7 @@ const ScenePlug::ScenePath g_emptyScenePath;
 
 }
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CollectTransforms );
+GAFFER_NODE_DEFINE_TYPE( CollectTransforms );
 
 size_t CollectTransforms::g_firstPlugIndex = 0;
 

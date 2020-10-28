@@ -491,7 +491,7 @@ class Instancer::EngineData : public Data
 // Instancer
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Instancer );
+GAFFER_NODE_DEFINE_TYPE( Instancer );
 
 size_t Instancer::g_firstPlugIndex = 0;
 

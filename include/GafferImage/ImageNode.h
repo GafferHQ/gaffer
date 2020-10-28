@@ -56,7 +56,7 @@ class GAFFERIMAGE_API ImageNode : public Gaffer::ComputeNode
 		ImageNode( const std::string &name=defaultName<ImageNode>() );
 		~ImageNode() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
 
 		/// All ImageNodes have at least one output ImagePlug for passing on their result. More
 		/// may be added by derived classes if necessary.

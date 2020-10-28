@@ -57,7 +57,7 @@ class GAFFERSCENE_API LightFilter : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::LightFilter, LightFilterTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::LightFilter, LightFilterTypeId, ObjectSource );
 
 		~LightFilter() override;
 

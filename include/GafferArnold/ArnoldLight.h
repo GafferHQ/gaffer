@@ -53,7 +53,7 @@ class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
 
 		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
 		~ArnoldLight() override;

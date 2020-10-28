@@ -53,7 +53,7 @@ class GAFFERSCENE_API GlobalsProcessor : public SceneProcessor
 		GlobalsProcessor( const std::string &name=defaultName<GlobalsProcessor>() );
 		~GlobalsProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

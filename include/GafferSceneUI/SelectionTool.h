@@ -58,7 +58,7 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		~SelectionTool() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
 
 	private :
 

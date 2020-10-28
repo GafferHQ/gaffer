@@ -45,7 +45,7 @@ using namespace Gaffer;
 
 size_t NameSwitch::g_firstPlugIndex = 0;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NameSwitch );
+GAFFER_NODE_DEFINE_TYPE( NameSwitch );
 
 NameSwitch::NameSwitch( const std::string &name )
 	:	Switch( name )

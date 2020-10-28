@@ -61,7 +61,7 @@ class GAFFERIMAGE_API FlatImageProcessor : public ImageProcessor
 		FlatImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
 		~FlatImageProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::FlatImageProcessor, FlatImageProcessorTypeId, ImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::FlatImageProcessor, FlatImageProcessorTypeId, ImageProcessor );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

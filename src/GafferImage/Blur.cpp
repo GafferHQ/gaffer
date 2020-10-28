@@ -45,7 +45,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Blur );
+GAFFER_NODE_DEFINE_TYPE( Blur );
 
 const char *g_blurFilterName = "smoothGaussian";
 

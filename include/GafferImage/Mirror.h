@@ -52,7 +52,7 @@ class GAFFERIMAGE_API Mirror : public FlatImageProcessor
 		Mirror( const std::string &name=defaultName<Mirror>() );
 		~Mirror() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Mirror, MirrorTypeId, FlatImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Mirror, MirrorTypeId, FlatImageProcessor );
 
 		Gaffer::BoolPlug *horizontalPlug();
 		const Gaffer::BoolPlug *horizontalPlug() const;

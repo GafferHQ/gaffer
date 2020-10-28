@@ -51,7 +51,7 @@ class GAFFERIMAGE_API Empty : public ImageNode
 		Empty( const std::string &name=defaultName<Empty>() );
 		~Empty() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Empty, EmptyTypeId, ImageNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Empty, EmptyTypeId, ImageNode );
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;

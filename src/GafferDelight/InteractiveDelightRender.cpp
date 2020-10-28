@@ -40,7 +40,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferDelight;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( InteractiveDelightRender );
+GAFFER_NODE_DEFINE_TYPE( InteractiveDelightRender );
 
 InteractiveDelightRender::InteractiveDelightRender( const std::string &name )
 	:	InteractiveRender( "3Delight", name )

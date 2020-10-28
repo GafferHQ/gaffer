@@ -59,7 +59,7 @@ using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferOSL;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLImage );
+GAFFER_NODE_DEFINE_TYPE( OSLImage );
 
 size_t OSLImage::g_firstPlugIndex = 0;
 
@@ -312,7 +312,7 @@ void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 	}
 
 	if(
-		std::find( channelNamesData->readable().begin(), channelNamesData->readable().end(), channelName ) != 
+		std::find( channelNamesData->readable().begin(), channelNamesData->readable().end(), channelName ) !=
 		channelNamesData->readable().end()
 	)
 	{

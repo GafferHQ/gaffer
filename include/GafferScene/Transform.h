@@ -52,7 +52,7 @@ class GAFFERSCENE_API Transform : public SceneElementProcessor
 		Transform( const std::string &name=defaultName<Transform>() );
 		~Transform() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Transform, TransformTypeId, SceneElementProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Transform, TransformTypeId, SceneElementProcessor );
 
 		enum Space
 		{

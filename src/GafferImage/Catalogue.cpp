@@ -712,7 +712,7 @@ bool undoingOrRedoing( const Node *node )
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Catalogue );
+GAFFER_NODE_DEFINE_TYPE( Catalogue );
 
 size_t Catalogue::g_firstPlugIndex = 0;
 
@@ -1106,3 +1106,7 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 
 }
 
+const std::type_info &Catalogue::internalImageTypeInfo()
+{
+	return typeid( InternalImage );
+}

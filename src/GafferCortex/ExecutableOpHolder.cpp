@@ -48,7 +48,7 @@
 using namespace IECore;
 using namespace GafferCortex;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ExecutableOpHolder )
+GAFFER_NODE_DEFINE_TYPE( ExecutableOpHolder )
 
 ExecutableOpHolder::ExecutableOpHolder( const std::string &name )
 	:	ParameterisedHolderTaskNode( name )

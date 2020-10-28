@@ -250,7 +250,7 @@ class CollectScenes::SourcePathScope : public SourceScope
 // CollectScenes
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CollectScenes );
+GAFFER_NODE_DEFINE_TYPE( CollectScenes );
 
 size_t CollectScenes::g_firstPlugIndex = 0;
 

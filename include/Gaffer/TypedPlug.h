@@ -107,50 +107,40 @@ IE_CORE_DECLAREPTR( AtomicBox2fPlug );
 IE_CORE_DECLAREPTR( AtomicBox3fPlug );
 IE_CORE_DECLAREPTR( AtomicBox2iPlug );
 
+/// \deprecated Use BoolPlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, BoolPlug> > BoolPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, BoolPlug> > InputBoolPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, BoolPlug> > OutputBoolPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M33fPlug> > M33fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, M33fPlug> > InputM33fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, M33fPlug> > OutputM33fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M44fPlug> > M44fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, M44fPlug> > InputM44fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, M44fPlug> > OutputM44fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2fPlug> > AtomicBox2fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox2fPlug> > InputAtomicBox2fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox2fPlug> > OutputAtomicBox2fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox3fPlug> > AtomicBox3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox3fPlug> > InputAtomicBox3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox3fPlug> > OutputAtomicBox3fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2iPlug> > AtomicBox2iPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicBox2iPlug> > InputAtomicBox2iPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicBox2iPlug> > OutputAtomicBox2iPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, BoolPlug>, PlugPredicate<> > RecursiveBoolPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, BoolPlug>, PlugPredicate<> > RecursiveInputBoolPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, BoolPlug>, PlugPredicate<> > RecursiveOutputBoolPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, M33fPlug>, PlugPredicate<> > RecursiveM33fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, M33fPlug>, PlugPredicate<> > RecursiveInputM33fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, M33fPlug>, PlugPredicate<> > RecursiveOutputM33fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, M44fPlug>, PlugPredicate<> > RecursiveM44fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, M44fPlug>, PlugPredicate<> > RecursiveInputM44fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, M44fPlug>, PlugPredicate<> > RecursiveOutputM44fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2fPlug>, PlugPredicate<> > RecursiveAtomicBox2fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicBox2fPlug>, PlugPredicate<> > RecursiveInputAtomicBox2fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicBox2fPlug>, PlugPredicate<> > RecursiveOutputAtomicBox2fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicBox3fPlug>, PlugPredicate<> > RecursiveAtomicBox3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicBox3fPlug>, PlugPredicate<> > RecursiveInputAtomicBox3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicBox3fPlug>, PlugPredicate<> > RecursiveOutputAtomicBox3fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicBox2iPlug>, PlugPredicate<> > RecursiveAtomicBox2iPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicBox2iPlug>, PlugPredicate<> > RecursiveInputAtomicBox2iPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicBox2iPlug>, PlugPredicate<> > RecursiveOutputAtomicBox2iPlugIterator;

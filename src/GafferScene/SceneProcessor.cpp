@@ -42,7 +42,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneProcessor );
+GAFFER_NODE_DEFINE_TYPE( SceneProcessor );
 
 size_t SceneProcessor::g_firstPlugIndex = 0;
 

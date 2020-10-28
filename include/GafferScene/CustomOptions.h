@@ -52,7 +52,7 @@ class GAFFERSCENE_API CustomOptions : public GafferScene::Options
 		CustomOptions( const std::string &name=defaultName<CustomOptions>() );
 		~CustomOptions() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::CustomOptions, CustomOptionsTypeId, Options );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::CustomOptions, CustomOptionsTypeId, Options );
 
 		Gaffer::StringPlug *prefixPlug();
 		const Gaffer::StringPlug *prefixPlug() const;

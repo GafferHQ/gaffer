@@ -53,7 +53,7 @@ class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::FilteredSceneProces
 		ArnoldMeshLight( const std::string &name=defaultName<ArnoldMeshLight>() );
 		~ArnoldMeshLight() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, FilteredSceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, FilteredSceneProcessor );
 
 	private :
 

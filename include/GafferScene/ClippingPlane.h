@@ -47,7 +47,7 @@ class GAFFERSCENE_API ClippingPlane : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ClippingPlane, ClippingPlaneTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ClippingPlane, ClippingPlaneTypeId, ObjectSource );
 
 		ClippingPlane( const std::string &name=defaultName<ClippingPlane>() );
 		~ClippingPlane() override;

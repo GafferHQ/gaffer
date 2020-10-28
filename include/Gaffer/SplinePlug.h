@@ -189,26 +189,22 @@ IE_CORE_DECLAREPTR( SplineffPlug );
 IE_CORE_DECLAREPTR( SplinefColor3fPlug );
 IE_CORE_DECLAREPTR( SplinefColor4fPlug );
 
+/// \deprecated Use SplineffPlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug> > SplineffPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplineffPlug> > InputSplineffPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplineffPlug> > OutputSplineffPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug> > SplinefColor3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug> > InputSplinefColor3fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug> > OutputSplinefColor3fPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor4fPlug> > SplinefColor4fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor4fPlug> > InputSplinefColor4fPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor4fPlug> > OutputSplinefColor4fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug>, PlugPredicate<> > RecursiveSplineffPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplineffPlug>, PlugPredicate<> > RecursiveInputSplineffPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplineffPlug>, PlugPredicate<> > RecursiveOutputSplineffPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug>, PlugPredicate<> > RecursiveSplinefColor3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug>, PlugPredicate<> > RecursiveInputSplinefColor3fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug>, PlugPredicate<> > RecursiveOutputSplinefColor3fPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplinefColor4fPlug>, PlugPredicate<> > RecursiveSplinefColor4fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplinefColor4fPlug>, PlugPredicate<> > RecursiveInputSplinefColor4fPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplinefColor4fPlug>, PlugPredicate<> > RecursiveOutputSplinefColor4fPlugIterator;

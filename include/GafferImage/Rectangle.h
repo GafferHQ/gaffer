@@ -59,7 +59,7 @@ class GAFFERIMAGE_API Rectangle : public Shape
 		Rectangle( const std::string &name=defaultName<Rectangle>() );
 		~Rectangle() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Rectangle, RectangleTypeId, Shape );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Rectangle, RectangleTypeId, Shape );
 
 		Gaffer::Box2fPlug *areaPlug();
 		const Gaffer::Box2fPlug *areaPlug() const;

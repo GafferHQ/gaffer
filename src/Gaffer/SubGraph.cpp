@@ -41,7 +41,7 @@
 using namespace IECore;
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SubGraph );
+GAFFER_NODE_DEFINE_TYPE( SubGraph );
 
 static IECore::InternedString g_enabledName( "enabled" );
 

@@ -43,7 +43,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldColorManager );
+GAFFER_NODE_DEFINE_TYPE( ArnoldColorManager );
 
 size_t ArnoldColorManager::g_firstPlugIndex = 0;
 

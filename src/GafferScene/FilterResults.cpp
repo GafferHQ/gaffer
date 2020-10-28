@@ -46,7 +46,7 @@ using namespace GafferScene;
 
 size_t FilterResults::g_firstPlugIndex = 0;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FilterResults )
+GAFFER_NODE_DEFINE_TYPE( FilterResults )
 
 FilterResults::FilterResults( const std::string &name )
 	:	ComputeNode( name )

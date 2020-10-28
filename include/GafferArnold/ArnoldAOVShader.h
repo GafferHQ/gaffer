@@ -55,7 +55,7 @@ class GAFFERARNOLD_API ArnoldAOVShader : public GafferScene::GlobalShader
 		ArnoldAOVShader( const std::string &name=defaultName<ArnoldAOVShader>() );
 		~ArnoldAOVShader() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldAOVShader, ArnoldAOVShaderTypeId, GafferScene::GlobalShader );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldAOVShader, ArnoldAOVShaderTypeId, GafferScene::GlobalShader );
 
 		Gaffer::StringPlug *optionSuffixPlug();
 		const Gaffer::StringPlug *optionSuffixPlug() const;

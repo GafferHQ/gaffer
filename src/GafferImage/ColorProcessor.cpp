@@ -54,7 +54,7 @@ const IECore::InternedString g_layerNameKey( "image:colorProcessor:__layerName" 
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ColorProcessor );
+GAFFER_NODE_DEFINE_TYPE( ColorProcessor );
 
 size_t ColorProcessor::g_firstPlugIndex = 0;
 

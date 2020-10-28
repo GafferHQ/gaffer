@@ -54,7 +54,7 @@ class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 		ColorProcessor( const std::string &name=defaultName<ColorProcessor>() );
 		~ColorProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );
 
 		Gaffer::BoolPlug *processUnpremultipliedPlug();
 		const Gaffer::BoolPlug *processUnpremultipliedPlug() const;

@@ -43,7 +43,7 @@
 using namespace GafferScene;
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Filter );
+GAFFER_NODE_DEFINE_TYPE( Filter );
 
 const IECore::InternedString Filter::inputSceneContextName( "scene:filter:inputScene" );
 size_t Filter::g_firstPlugIndex = 0;

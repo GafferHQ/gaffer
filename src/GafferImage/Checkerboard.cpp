@@ -73,7 +73,7 @@ float filteredStripes( float x, float period, float filterWidth )
 // Checkerboard implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Checkerboard );
+GAFFER_NODE_DEFINE_TYPE( Checkerboard );
 
 size_t Checkerboard::g_firstPlugIndex = 0;
 

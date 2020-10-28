@@ -46,7 +46,7 @@ using namespace Gaffer;
 namespace GafferImage
 {
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteImageMetadata );
+GAFFER_NODE_DEFINE_TYPE( DeleteImageMetadata );
 
 size_t DeleteImageMetadata::g_firstPlugIndex = 0;
 

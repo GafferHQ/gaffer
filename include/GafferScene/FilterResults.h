@@ -57,7 +57,7 @@ class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 		FilterResults( const std::string &name=defaultName<FilterResults>() );
 		~FilterResults() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::FilterResults, FilterResultsTypeId, ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::FilterResults, FilterResultsTypeId, ComputeNode );
 
 		ScenePlug *scenePlug();
 		const ScenePlug *scenePlug() const;

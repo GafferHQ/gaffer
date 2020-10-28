@@ -59,7 +59,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		ShaderView( const std::string &name = defaultName<ShaderView>() );
 		~ShaderView() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::ShaderView, ShaderViewTypeId, GafferImageUI::ImageView );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ShaderView, ShaderViewTypeId, GafferImageUI::ImageView );
 
 		Gaffer::StringPlug *scenePlug();
 		const Gaffer::StringPlug *scenePlug() const;

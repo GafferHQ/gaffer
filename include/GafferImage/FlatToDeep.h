@@ -66,7 +66,7 @@ class GAFFERIMAGE_API FlatToDeep : public ImageProcessor
 		FlatToDeep( const std::string &name=defaultName<FlatToDeep>() );
 		~FlatToDeep() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::FlatToDeep, FlatToDeepTypeId, ImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::FlatToDeep, FlatToDeepTypeId, ImageProcessor );
 
 		Gaffer::IntPlug *zModePlug();
 		const Gaffer::IntPlug *zModePlug() const;

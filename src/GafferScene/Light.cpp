@@ -53,7 +53,7 @@ using namespace GafferScene;
 static IECore::InternedString g_lightsSetName( "__lights" );
 static IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Light );
+GAFFER_NODE_DEFINE_TYPE( Light );
 
 size_t Light::g_firstPlugIndex = 0;
 

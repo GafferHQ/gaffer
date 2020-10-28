@@ -60,7 +60,7 @@ class GAFFERIMAGE_API DeepState : public ImageProcessor
 		DeepState( const std::string &name=defaultName<DeepState>() );
 		~DeepState() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::DeepState, DeepStateTypeId, ImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepState, DeepStateTypeId, ImageProcessor );
 
 		Gaffer::IntPlug *deepStatePlug();
 		const Gaffer::IntPlug *deepStatePlug() const;

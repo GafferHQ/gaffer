@@ -53,7 +53,7 @@ class GAFFERSCENE_API Outputs : public GlobalsProcessor
 		Outputs( const std::string &name=defaultName<Outputs>() );
 		~Outputs() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
 
 		Gaffer::ValuePlug *outputsPlug();
 		const Gaffer::ValuePlug *outputsPlug() const;

@@ -146,7 +146,7 @@ ShaderTypeSet &compatibleShaders()
 // OSLShader
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( OSLShader );
+GAFFER_NODE_DEFINE_TYPE( OSLShader );
 
 OSLShader::OSLShader( const std::string &name )
 	:	GafferScene::Shader( name )

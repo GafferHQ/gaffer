@@ -52,7 +52,7 @@ class GAFFERARNOLD_API ArnoldLightFilter : public GafferScene::LightFilter
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferArnold::ArnoldLightFilter, ArnoldLightFilterTypeId, GafferScene::LightFilter );
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldLightFilter, ArnoldLightFilterTypeId, GafferScene::LightFilter );
 
 		ArnoldLightFilter( const std::string &name=defaultName<ArnoldLightFilter>() );
 		~ArnoldLightFilter() override;

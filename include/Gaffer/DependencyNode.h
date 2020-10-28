@@ -58,7 +58,7 @@ class GAFFER_API DependencyNode : public Node
 		DependencyNode( const std::string &name=defaultName<DependencyNode>() );
 		~DependencyNode() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::DependencyNode, DependencyNodeTypeId, Node );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::DependencyNode, DependencyNodeTypeId, Node );
 
 		typedef std::vector<const Plug *> AffectedPlugsContainer;
 
@@ -91,6 +91,7 @@ class GAFFER_API DependencyNode : public Node
 
 };
 
+/// \deprecated Use DependencyNode::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<DependencyNode> > RecursiveDependencyNodeIterator;
 

@@ -48,7 +48,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CopyPrimitiveVariables );
+GAFFER_NODE_DEFINE_TYPE( CopyPrimitiveVariables );
 
 size_t CopyPrimitiveVariables::g_firstPlugIndex = 0;
 

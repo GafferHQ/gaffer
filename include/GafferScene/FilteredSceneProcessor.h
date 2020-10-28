@@ -57,7 +57,7 @@ class GAFFERSCENE_API FilteredSceneProcessor : public SceneProcessor
 		FilteredSceneProcessor( const std::string &name=defaultName<FilteredSceneProcessor>(), IECore::PathMatcher::Result filterDefault = IECore::PathMatcher::EveryMatch );
 		~FilteredSceneProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
 
 		FilterPlug *filterPlug();
 		const FilterPlug *filterPlug() const;

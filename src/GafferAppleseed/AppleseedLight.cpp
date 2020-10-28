@@ -56,7 +56,7 @@ using namespace GafferAppleseed;
 namespace asf = foundation;
 namespace asr = renderer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AppleseedLight );
+GAFFER_NODE_DEFINE_TYPE( AppleseedLight );
 
 size_t AppleseedLight::g_firstPlugIndex = 0;
 

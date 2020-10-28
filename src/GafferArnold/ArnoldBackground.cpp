@@ -38,7 +38,7 @@
 
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldBackground );
+GAFFER_NODE_DEFINE_TYPE( ArnoldBackground );
 
 ArnoldBackground::ArnoldBackground( const std::string &name )
 	:	GlobalShader( name )

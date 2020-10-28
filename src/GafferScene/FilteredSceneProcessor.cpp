@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FilteredSceneProcessor );
+GAFFER_NODE_DEFINE_TYPE( FilteredSceneProcessor );
 
 size_t FilteredSceneProcessor::g_firstPlugIndex = 0;
 

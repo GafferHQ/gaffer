@@ -43,7 +43,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CDL );
+GAFFER_NODE_DEFINE_TYPE( CDL );
 
 size_t CDL::g_firstPlugIndex = 0;
 

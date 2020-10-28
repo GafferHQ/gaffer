@@ -54,7 +54,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Group );
+GAFFER_NODE_DEFINE_TYPE( Group );
 
 size_t Group::g_firstPlugIndex = 0;
 

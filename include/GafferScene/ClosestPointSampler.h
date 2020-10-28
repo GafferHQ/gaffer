@@ -50,7 +50,7 @@ class GAFFERSCENE_API ClosestPointSampler : public PrimitiveSampler
 		ClosestPointSampler( const std::string &name = defaultName<ClosestPointSampler>() );
 		~ClosestPointSampler() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ClosestPointSampler, ClosestPointSamplerTypeId, PrimitiveSampler );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ClosestPointSampler, ClosestPointSamplerTypeId, PrimitiveSampler );
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;

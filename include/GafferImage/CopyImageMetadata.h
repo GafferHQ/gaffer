@@ -50,7 +50,7 @@ class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
 		CopyImageMetadata( const std::string &name=defaultName<CopyImageMetadata>() );
 		~CopyImageMetadata() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::CopyImageMetadata, CopyImageMetadataTypeId, MetadataProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::CopyImageMetadata, CopyImageMetadataTypeId, MetadataProcessor );
 
 		/// \todo: If ImageProcessor provides an ArrayPlug for "in" instead,
 		/// we can remove this secondary image plug.

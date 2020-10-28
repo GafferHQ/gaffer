@@ -58,7 +58,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldLight );
+GAFFER_NODE_DEFINE_TYPE( ArnoldLight );
 
 size_t ArnoldLight::g_firstPlugIndex = 0;
 

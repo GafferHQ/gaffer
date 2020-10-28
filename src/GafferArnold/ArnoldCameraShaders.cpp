@@ -55,7 +55,7 @@ IECore::InternedString g_inputShaderAttributeNames[] = { "osl:shader", "ai:surfa
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldCameraShaders );
+GAFFER_NODE_DEFINE_TYPE( ArnoldCameraShaders );
 
 size_t ArnoldCameraShaders::g_firstPlugIndex = 0;
 

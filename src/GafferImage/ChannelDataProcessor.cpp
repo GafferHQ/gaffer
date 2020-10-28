@@ -44,7 +44,7 @@
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ChannelDataProcessor );
+GAFFER_NODE_DEFINE_TYPE( ChannelDataProcessor );
 
 size_t ChannelDataProcessor::g_firstPlugIndex = 0;
 

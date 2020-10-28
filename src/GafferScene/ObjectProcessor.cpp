@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ObjectProcessor );
+GAFFER_NODE_DEFINE_TYPE( ObjectProcessor );
 
 size_t ObjectProcessor::g_firstPlugIndex;
 

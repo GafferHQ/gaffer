@@ -58,7 +58,7 @@ class GAFFERIMAGE_API ColorSpace : public OpenColorIOTransform
 		ColorSpace( const std::string &name=defaultName<ColorSpace>() );
 		~ColorSpace() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::ColorSpace, ColorSpaceTypeId, OpenColorIOTransform );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::ColorSpace, ColorSpaceTypeId, OpenColorIOTransform );
 
 		Gaffer::StringPlug *inputSpacePlug();
 		const Gaffer::StringPlug *inputSpacePlug() const;

@@ -56,7 +56,7 @@ class GAFFERIMAGE_API DeepSampler : public Gaffer::ComputeNode
 		DeepSampler( const std::string &name=defaultName<DeepSampler>() );
 		~DeepSampler() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::DeepSampler, DeepSamplerTypeId, ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepSampler, DeepSamplerTypeId, ComputeNode );
 
 		ImagePlug *imagePlug();
 		const ImagePlug *imagePlug() const;

@@ -169,110 +169,85 @@ IE_CORE_DECLAREPTR( CompoundObjectPlug );
 IE_CORE_DECLAREPTR( AtomicCompoundDataPlug );
 IE_CORE_DECLAREPTR( PathMatcherDataPlug );
 
+/// \deprecated Use ObjectPlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectPlug> > OutputObjectPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, BoolVectorDataPlug> > BoolVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, BoolVectorDataPlug> > InputBoolVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, BoolVectorDataPlug> > OutputBoolVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntVectorDataPlug> > IntVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, IntVectorDataPlug> > InputIntVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, IntVectorDataPlug> > OutputIntVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, FloatVectorDataPlug> > FloatVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, FloatVectorDataPlug> > InputFloatVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, FloatVectorDataPlug> > OutputFloatVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, StringVectorDataPlug> > StringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, StringVectorDataPlug> > InputStringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringVectorDataPlug> > OutputStringVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, InternedStringVectorDataPlug> > InternedStringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, InternedStringVectorDataPlug> > InputInternedStringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, InternedStringVectorDataPlug> > OutputInternedStringVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2iVectorDataPlug> > V2iVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V2iVectorDataPlug> > InputV2iVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2iVectorDataPlug> > OutputV2iVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3fVectorDataPlug> > V3fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V3fVectorDataPlug> > InputV3fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fVectorDataPlug> > OutputV3fVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color3fVectorDataPlug> > Color3fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Color3fVectorDataPlug> > InputColor3fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color3fVectorDataPlug> > OutputColor3fVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, M44fVectorDataPlug> > M44fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, M44fVectorDataPlug> > InputM44fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, M44fVectorDataPlug> > OutputM44fVectorDataPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectVectorPlug> > ObjectVectorPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectVectorPlug> > InputObjectVectorPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ObjectVectorPlug> > OutputObjectVectorPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, CompoundObjectPlug> > CompoundObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, CompoundObjectPlug> > InputCompoundObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, CompoundObjectPlug> > OutputCompoundObjectPlugIterator;
-
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicCompoundDataPlug> > AtomicCompoundDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicCompoundDataPlug> > InputAtomicCompoundDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicCompoundDataPlug> > OutputAtomicCompoundDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug>, PlugPredicate<> > RecursiveObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ObjectPlug>, PlugPredicate<> > RecursiveInputObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ObjectPlug>, PlugPredicate<> > RecursiveOutputObjectPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, BoolVectorDataPlug>, PlugPredicate<> > RecursiveBoolVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, BoolVectorDataPlug>, PlugPredicate<> > RecursiveInputBoolVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, BoolVectorDataPlug>, PlugPredicate<> > RecursiveOutputBoolVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, IntVectorDataPlug>, PlugPredicate<> > RecursiveIntVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, IntVectorDataPlug>, PlugPredicate<> > RecursiveInputIntVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, IntVectorDataPlug>, PlugPredicate<> > RecursiveOutputIntVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatVectorDataPlug>, PlugPredicate<> > RecursiveFloatVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, FloatVectorDataPlug>, PlugPredicate<> > RecursiveInputFloatVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatVectorDataPlug>, PlugPredicate<> > RecursiveOutputFloatVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, StringVectorDataPlug>, PlugPredicate<> > RecursiveStringVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, StringVectorDataPlug>, PlugPredicate<> > RecursiveInputStringVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, StringVectorDataPlug>, PlugPredicate<> > RecursiveOutputStringVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, InternedStringVectorDataPlug>, PlugPredicate<> > RecursiveInternedStringVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, InternedStringVectorDataPlug>, PlugPredicate<> > RecursiveInputInternedStringVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, InternedStringVectorDataPlug>, PlugPredicate<> > RecursiveOutputInternedStringVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2iVectorDataPlug>, PlugPredicate<> > RecursiveV2iVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2iVectorDataPlug>, PlugPredicate<> > RecursiveInputV2iVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2iVectorDataPlug>, PlugPredicate<> > RecursiveOutputV2iVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3fVectorDataPlug>, PlugPredicate<> > RecursiveV3fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3fVectorDataPlug>, PlugPredicate<> > RecursiveInputV3fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3fVectorDataPlug>, PlugPredicate<> > RecursiveOutputV3fVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color3fVectorDataPlug>, PlugPredicate<> > RecursiveColor3fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color3fVectorDataPlug>, PlugPredicate<> > RecursiveInputColor3fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color3fVectorDataPlug>, PlugPredicate<> > RecursiveOutputColor3fVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, M44fVectorDataPlug>, PlugPredicate<> > RecursiveM44fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, M44fVectorDataPlug>, PlugPredicate<> > RecursiveInputM44fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, M44fVectorDataPlug>, PlugPredicate<> > RecursiveOutputM44fVectorDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ObjectVectorPlug>, PlugPredicate<> > RecursiveObjectVectorPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ObjectVectorPlug>, PlugPredicate<> > RecursiveInputObjectVectorPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ObjectVectorPlug>, PlugPredicate<> > RecursiveOutputObjectVectorPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, CompoundObjectPlug>, PlugPredicate<> > RecursiveCompoundObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, CompoundObjectPlug>, PlugPredicate<> > RecursiveInputCompoundObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, CompoundObjectPlug>, PlugPredicate<> > RecursiveOutputCompoundObjectPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveAtomicCompoundDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveInputAtomicCompoundDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveOutputAtomicCompoundDataPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, PathMatcherDataPlug>, PlugPredicate<> > RecursivePathMatcherDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, PathMatcherDataPlug>, PlugPredicate<> > RecursiveInputPathMatcherDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, PathMatcherDataPlug>, PlugPredicate<> > RecursiveOutputPathMatcherDataPlugIterator;

@@ -167,7 +167,7 @@ ShaderNetworkPtr stripeShader( float stripeWidth, size_t numColorsUsed, const st
 } // end anon namespace
 
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SetVisualiser );
+GAFFER_NODE_DEFINE_TYPE( SetVisualiser );
 
 size_t SetVisualiser::g_firstPlugIndex = 0;
 

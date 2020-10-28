@@ -52,7 +52,7 @@ class GAFFER_API Reference : public SubGraph
 		Reference( const std::string &name=defaultName<Reference>() );
 		~Reference() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Reference, ReferenceTypeId, SubGraph );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Reference, ReferenceTypeId, SubGraph );
 
 		/// Loads the specified script, which should have been exported
 		/// using Box::exportForReference().
@@ -85,6 +85,7 @@ class GAFFER_API Reference : public SubGraph
 
 IE_CORE_DECLAREPTR( Reference )
 
+/// \deprecated Use Reference::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
 

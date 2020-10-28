@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteOptions );
+GAFFER_NODE_DEFINE_TYPE( DeleteOptions );
 
 DeleteOptions::DeleteOptions( const std::string &name )
 	:	DeleteGlobals( name )

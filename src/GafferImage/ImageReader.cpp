@@ -109,7 +109,7 @@ class FrameMaskScope : public Context::EditableScope
 // ImageReader implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageReader );
+GAFFER_NODE_DEFINE_TYPE( ImageReader );
 
 size_t ImageReader::g_firstChildIndex = 0;
 

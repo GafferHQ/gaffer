@@ -52,7 +52,7 @@ class GAFFERSCENE_API ParentConstraint : public Constraint
 		ParentConstraint( const std::string &name=defaultName<ParentConstraint>() );
 		~ParentConstraint() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::ParentConstraint, ParentConstraintTypeId, Constraint );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::ParentConstraint, ParentConstraintTypeId, Constraint );
 
 		Gaffer::TransformPlug *relativeTransformPlug();
 		const Gaffer::TransformPlug *relativeTransformPlug() const;

@@ -49,7 +49,7 @@ class GAFFERIMAGE_API VectorWarp : public Warp
 		VectorWarp( const std::string &name=defaultName<Warp>() );
 		~VectorWarp() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::VectorWarp, VectorWarpTypeId, Warp );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::VectorWarp, VectorWarpTypeId, Warp );
 
 		ImagePlug *vectorPlug();
 		const ImagePlug *vectorPlug() const;

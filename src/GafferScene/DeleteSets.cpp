@@ -68,7 +68,7 @@ bool keep( InternedString set, const std::string &names, bool invert )
 
 } // namespace
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DeleteSets );
+GAFFER_NODE_DEFINE_TYPE( DeleteSets );
 
 size_t DeleteSets::g_firstPlugIndex(0);
 

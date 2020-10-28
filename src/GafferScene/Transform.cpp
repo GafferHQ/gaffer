@@ -42,7 +42,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Transform );
+GAFFER_NODE_DEFINE_TYPE( Transform );
 
 size_t Transform::g_firstPlugIndex = 0;
 

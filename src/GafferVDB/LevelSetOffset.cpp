@@ -50,7 +50,7 @@ using namespace IECoreVDB;
 using namespace Gaffer;
 using namespace GafferVDB;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( LevelSetOffset );
+GAFFER_NODE_DEFINE_TYPE( LevelSetOffset );
 
 size_t LevelSetOffset::g_firstPlugIndex = 0;
 

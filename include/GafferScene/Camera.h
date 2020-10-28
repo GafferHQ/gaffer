@@ -49,7 +49,7 @@ class GAFFERSCENE_API Camera : public ObjectSource
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Camera, CameraTypeId, ObjectSource );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Camera, CameraTypeId, ObjectSource );
 
 		Camera( const std::string &name=defaultName<Camera>() );
 		~Camera() override;

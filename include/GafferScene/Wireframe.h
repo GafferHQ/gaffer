@@ -57,7 +57,7 @@ class GAFFERSCENE_API Wireframe : public Deformer
 		Wireframe( const std::string &name=defaultName<Wireframe>() );
 		~Wireframe() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Wireframe, WireframeTypeId, Deformer );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Wireframe, WireframeTypeId, Deformer );
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;

@@ -39,7 +39,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ParentConstraint );
+GAFFER_NODE_DEFINE_TYPE( ParentConstraint );
 
 size_t ParentConstraint::g_firstPlugIndex = 0;
 

@@ -47,7 +47,7 @@
 using namespace Gaffer;
 using namespace GafferUI;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( View );
+GAFFER_NODE_DEFINE_TYPE( View );
 
 size_t View::g_firstPlugIndex = 0;
 

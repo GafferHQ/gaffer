@@ -42,7 +42,7 @@
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FlatImageSource );
+GAFFER_NODE_DEFINE_TYPE( FlatImageSource );
 
 FlatImageSource::FlatImageSource( const std::string &name )
 	:	ImageNode( name )

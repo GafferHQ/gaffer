@@ -56,7 +56,7 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 		SceneNode( const std::string &name=defaultName<SceneNode>() );
 		~SceneNode() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SceneNode, SceneNodeTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneNode, SceneNodeTypeId, Gaffer::ComputeNode );
 
 		/// All SceneNodes have at least one output ScenePlug for passing on their result. More
 		/// may be added by derived classes if necessary.

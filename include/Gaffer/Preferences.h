@@ -51,7 +51,7 @@ class GAFFER_API Preferences : public Node
 		Preferences( const std::string &name=defaultName<Preferences>() );
 		~Preferences() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Preferences, PreferencesTypeId, Node );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Preferences, PreferencesTypeId, Node );
 
 		/// Accepts only Plugs.
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;

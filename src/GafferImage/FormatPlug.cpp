@@ -47,7 +47,7 @@
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FormatPlug );
+GAFFER_PLUG_DEFINE_TYPE( FormatPlug );
 
 const IECore::InternedString g_defaultFormatContextName( "image:defaultFormat" );
 static const IECore::InternedString g_defaultFormatPlugName( "defaultFormat" );

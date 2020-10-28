@@ -50,12 +50,13 @@ class GAFFER_API BoxIn : public BoxIO
 		BoxIn( const std::string &name=defaultName<BoxIn>() );
 		~BoxIn() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::BoxIn, BoxInTypeId, BoxIO );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::BoxIn, BoxInTypeId, BoxIO );
 
 };
 
 IE_CORE_DECLAREPTR( BoxIn )
 
+/// \deprecated Use BoxIn::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<BoxIn> > BoxInIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<BoxIn> > RecursiveBoxInIterator;
 

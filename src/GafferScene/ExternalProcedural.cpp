@@ -44,7 +44,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ExternalProcedural );
+GAFFER_NODE_DEFINE_TYPE( ExternalProcedural );
 
 size_t ExternalProcedural::g_firstPlugIndex = 0;
 

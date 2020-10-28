@@ -61,7 +61,7 @@ class GAFFERSCENE_API Set : public FilteredSceneProcessor
 		Set( const std::string &name=defaultName<Set>() );
 		~Set() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::Set, SetTypeId, FilteredSceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Set, SetTypeId, FilteredSceneProcessor );
 
 		enum Mode
 		{

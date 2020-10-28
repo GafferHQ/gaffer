@@ -90,7 +90,7 @@ V2i mirror( const V2i &point, bool horizontal, bool vertical, const Box2i &displ
 // Mirror
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Mirror );
+GAFFER_NODE_DEFINE_TYPE( Mirror );
 
 size_t Mirror::g_firstPlugIndex = 0;
 

@@ -53,7 +53,7 @@ class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 		CDL( const std::string &name=defaultName<CDL>() );
 		~CDL() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
 
 		Gaffer::Color3fPlug *slopePlug();
 		const Gaffer::Color3fPlug *slopePlug() const;

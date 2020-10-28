@@ -52,7 +52,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Shape );
+GAFFER_NODE_DEFINE_TYPE( Shape );
 
 size_t Shape::g_firstPlugIndex = 0;
 static std::string g_shapeChannelName( "__shape" );

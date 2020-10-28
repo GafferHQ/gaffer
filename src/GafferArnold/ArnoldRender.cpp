@@ -39,7 +39,7 @@
 using namespace GafferScene;
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldRender );
+GAFFER_NODE_DEFINE_TYPE( ArnoldRender );
 
 ArnoldRender::ArnoldRender( const std::string &name )
 	:	Render( "Arnold", name )

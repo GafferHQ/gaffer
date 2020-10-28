@@ -88,7 +88,7 @@ float filteredPulse( float edge0, float edge1, float x, float w )
 // Rectangle
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Rectangle );
+GAFFER_NODE_DEFINE_TYPE( Rectangle );
 
 size_t Rectangle::g_firstPlugIndex = 0;
 

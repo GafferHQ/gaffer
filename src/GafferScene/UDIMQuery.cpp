@@ -52,7 +52,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( UDIMQuery );
+GAFFER_NODE_DEFINE_TYPE( UDIMQuery );
 
 size_t UDIMQuery::g_firstPlugIndex = 0;
 

@@ -55,7 +55,7 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 
 	public :
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferOSL::OSLLight, OSLLightTypeId, GafferScene::Light );
+		GAFFER_NODE_DECLARE_TYPE( GafferOSL::OSLLight, OSLLightTypeId, GafferScene::Light );
 
 		OSLLight( const std::string &name=defaultName<OSLLight>() );
 		~OSLLight() override;

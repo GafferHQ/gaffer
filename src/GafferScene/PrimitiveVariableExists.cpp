@@ -46,7 +46,7 @@ using namespace IECore;
 using namespace GafferScene;
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( PrimitiveVariableExists );
+GAFFER_NODE_DEFINE_TYPE( PrimitiveVariableExists );
 
 size_t PrimitiveVariableExists::g_firstPlugIndex = 0;
 

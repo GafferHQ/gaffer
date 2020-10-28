@@ -45,7 +45,7 @@ using namespace IECore;
 using namespace GafferImage;
 using namespace Gaffer;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FlatToDeep );
+GAFFER_NODE_DEFINE_TYPE( FlatToDeep );
 
 size_t FlatToDeep::g_firstPlugIndex = 0;
 

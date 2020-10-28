@@ -55,7 +55,7 @@ class GAFFER_API Backdrop : public Node
 		Backdrop( const std::string &name=defaultName<Backdrop>() );
 		~Backdrop() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::Backdrop, BackdropTypeId, Node );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::Backdrop, BackdropTypeId, Node );
 
 		StringPlug *titlePlug();
 		const StringPlug *titlePlug() const;
@@ -74,6 +74,7 @@ class GAFFER_API Backdrop : public Node
 
 IE_CORE_DECLAREPTR( Backdrop )
 
+/// \deprecated Use Backdrop::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<Backdrop> > BackdropIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<Backdrop> > RecursiveBackdropIterator;
 

@@ -788,5 +788,16 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				c["catalogue:imageName"] = "Red"
 				box["catalogue"]["out"].metadata()
 
+	def testInternalImagePythonType( self ) :
+
+		c = GafferImage.Catalogue()
+		c["images"].addChild( c.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" ) )
+
+		for g in Gaffer.GraphComponent.RecursiveRange( c ) :
+			self.assertTrue(
+				isinstance( g, Gaffer.Plug ) or
+				isinstance( g, Gaffer.Node )
+			)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -57,7 +57,7 @@ class GAFFERSCENE_API SceneElementProcessor : public FilteredSceneProcessor
 		SceneElementProcessor( const std::string &name=defaultName<SceneElementProcessor>(), IECore::PathMatcher::Result filterDefault = IECore::PathMatcher::EveryMatch );
 		~SceneElementProcessor() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneElementProcessor, SceneElementProcessorTypeId, FilteredSceneProcessor );
 
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;

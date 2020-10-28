@@ -39,7 +39,7 @@
 using namespace Imath;
 using namespace GafferDelight;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( DelightOptions );
+GAFFER_NODE_DEFINE_TYPE( DelightOptions );
 
 DelightOptions::DelightOptions( const std::string &name )
 	:	GafferScene::Options( name )

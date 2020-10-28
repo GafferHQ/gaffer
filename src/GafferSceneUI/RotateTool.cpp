@@ -63,7 +63,7 @@ using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( RotateTool );
+GAFFER_NODE_DEFINE_TYPE( RotateTool );
 
 RotateTool::ToolDescription<RotateTool, SceneView> RotateTool::g_toolDescription;
 

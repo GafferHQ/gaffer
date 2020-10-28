@@ -43,7 +43,7 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferArnold;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ArnoldAttributes );
+GAFFER_NODE_DEFINE_TYPE( ArnoldAttributes );
 
 ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	:	GafferScene::Attributes( name )

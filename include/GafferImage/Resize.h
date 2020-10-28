@@ -61,7 +61,7 @@ class GAFFERIMAGE_API Resize : public FlatImageProcessor
 		Resize( const std::string &name=defaultName<Resize>() );
 		~Resize() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::Resize, ResizeTypeId, FlatImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::Resize, ResizeTypeId, FlatImageProcessor );
 
 		enum FitMode
 		{

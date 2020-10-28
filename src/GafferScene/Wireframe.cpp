@@ -191,7 +191,7 @@ CurvesPrimitivePtr wireframe( const MeshPrimitive *mesh, const std::string &posi
 // Wireframe
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Wireframe );
+GAFFER_NODE_DEFINE_TYPE( Wireframe );
 
 size_t Wireframe::g_firstPlugIndex = 0;
 

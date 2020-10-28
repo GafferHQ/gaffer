@@ -74,7 +74,7 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		SceneView( const std::string &name = defaultName<SceneView>() );
 		~SceneView() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
 
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;

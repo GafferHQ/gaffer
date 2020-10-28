@@ -45,7 +45,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ImageSampler );
+GAFFER_NODE_DEFINE_TYPE( ImageSampler );
 
 size_t ImageSampler::g_firstPlugIndex = 0;
 

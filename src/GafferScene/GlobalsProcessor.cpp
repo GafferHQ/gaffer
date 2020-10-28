@@ -40,7 +40,7 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GlobalsProcessor );
+GAFFER_NODE_DEFINE_TYPE( GlobalsProcessor );
 
 GlobalsProcessor::GlobalsProcessor( const std::string &name )
 	:	SceneProcessor( name )

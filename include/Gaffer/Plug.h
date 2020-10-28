@@ -321,7 +321,6 @@ struct PlugPredicate
 typedef FilteredChildIterator<PlugPredicate<> > PlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Plug> > InputPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Plug> > OutputPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<> > RecursivePlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Plug>, PlugPredicate<> > RecursiveInputPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Plug>, PlugPredicate<> > RecursiveOutputPlugIterator;

@@ -1535,7 +1535,7 @@ class SceneView::Camera : public boost::signals::trackable
 // SceneView implementation
 //////////////////////////////////////////////////////////////////////////
 
-GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( SceneView );
+GAFFER_NODE_DEFINE_TYPE( SceneView );
 
 size_t SceneView::g_firstPlugIndex = 0;
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );

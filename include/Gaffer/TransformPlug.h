@@ -75,10 +75,10 @@ class GAFFER_API TransformPlug : public ValuePlug
 
 IE_CORE_DECLAREPTR( TransformPlug );
 
+/// \deprecated Use TransformPlug::Iterator etc instead
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, TransformPlug> > TransformPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, TransformPlug> > InputTransformPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, TransformPlug> > OutputTransformPlugIterator;
-
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, TransformPlug>, PlugPredicate<> > RecursiveTransformPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, TransformPlug>, PlugPredicate<> > RecursiveInputTransformPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, TransformPlug>, PlugPredicate<> > RecursiveOutputTransformPlugIterator;

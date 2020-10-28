@@ -53,7 +53,7 @@ class GAFFERIMAGE_API RankFilter : public FlatImageProcessor
 
 		~RankFilter() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferImage::RankFilter, RankFilterTypeId, FlatImageProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::RankFilter, RankFilterTypeId, FlatImageProcessor );
 
 		Gaffer::V2iPlug *radiusPlug();
 		const Gaffer::V2iPlug *radiusPlug() const;

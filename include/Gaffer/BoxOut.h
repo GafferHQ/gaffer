@@ -52,7 +52,7 @@ class GAFFER_API BoxOut : public BoxIO
 		BoxOut( const std::string &name=defaultName<BoxOut>() );
 		~BoxOut() override;
 
-		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::BoxOut, BoxOutTypeId, BoxIO );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::BoxOut, BoxOutTypeId, BoxIO );
 
 		template<typename T=Plug>
 		T *passThroughPlug();
@@ -71,6 +71,7 @@ class GAFFER_API BoxOut : public BoxIO
 
 IE_CORE_DECLAREPTR( BoxOut )
 
+/// \deprecated Use BoxOut::Iterator etc instead.
 typedef FilteredChildIterator<TypePredicate<BoxOut> > BoxOutIterator;
 typedef FilteredRecursiveChildIterator<TypePredicate<BoxOut> > RecursiveBoxOutIterator;
 
