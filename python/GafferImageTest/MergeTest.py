@@ -673,6 +673,25 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.runBoundaryCorrectness( 16 )
 		self.runBoundaryCorrectness( 32 )
 
+	def testEmptyDataWindowMerge( self ):
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 512, 512, 1.000 ) )
+		constant["color"].setValue( imath.Color4f( 1 ) )
+
+		offset = GafferImage.Offset()
+		offset["in"].setInput( constant["out"] )
+		offset["offset"].setValue( imath.V2i( -1024 ) )
+
+		emptyCrop = GafferImage.Crop()
+		emptyCrop["in"].setInput( constant["out"] )
+		emptyCrop["area"].setValue( imath.Box2i( imath.V2i( -10 ), imath.V2i( -100 ) ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( offset["out"] )
+		merge["in"][1].setInput( emptyCrop["out"] )
+
+		self.assertEqual( merge["out"].dataWindow(), imath.Box2i( imath.V2i( -1024 ), imath.V2i( -512 ) ) )
+
 	def mergePerf( self, operation, mismatch ):
 		r = GafferImage.Checkerboard( "Checkerboard" )
 		r["format"].setValue( GafferImage.Format( 4096, 3112, 1.000 ) )

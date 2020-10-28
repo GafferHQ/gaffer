@@ -10,6 +10,11 @@ Fixes
 - ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
 - SpreadsheetUI : Fixed bug that prevented column headers from updating.
 
+Improvements
+------------
+
+- Merge : Optimize image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
+
 0.59.0.0b2 (relative to 0.59.0.0b1)
 ==========
 
