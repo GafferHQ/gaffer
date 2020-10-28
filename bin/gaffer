@@ -56,6 +56,8 @@ fi
 
 export LC_NUMERIC=C
 
+##########################################################################
+
 # Find where this script is located, resolving any symlinks that were used
 # to invoke it. Set GAFFER_ROOT based on the script location.
 ##########################################################################
@@ -192,6 +194,14 @@ fi
 if [[ -e $GAFFER_ROOT/qt/plugins ]] ; then
 	export QT_QPA_PLATFORM_PLUGIN_PATH="$GAFFER_ROOT/qt/plugins"
 fi
+
+# Work around issue with Qt 5.12+ when using a wacom tablet on linux.
+#   See https://bugreports.qt.io/browse/QTBUG-77826
+# This can hopefully be removed once this patch is in:
+#   https://codereview.qt-project.org/c/qt/qtbase/+/284141
+##########################################################################
+
+export QT_XCB_TABLET_LEGACY_COORDINATES=1
 
 # Get the executable path set up, for running child processes from Gaffer
 ##########################################################################
