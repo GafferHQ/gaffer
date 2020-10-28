@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,51 +34,8 @@
 #
 ##########################################################################
 
-import unittest
-
-import IECore
-
 import GafferScene
-import GafferSceneTest
 
-class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
-
-	def test( self ) :
-
-		sphere = GafferScene.Sphere()
-
-		defaultAdaptors = GafferScene.RendererAlgo.createAdaptors()
-		defaultAdaptors["in"].setInput( sphere["out"] )
-
-		def a() :
-
-			r = GafferScene.StandardAttributes()
-			r["attributes"]["doubleSided"]["enabled"].setValue( True )
-			r["attributes"]["doubleSided"]["value"].setValue( False )
-
-			return r
-
-		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
-
-		testAdaptors = GafferScene.RendererAlgo.createAdaptors()
-		testAdaptors["in"].setInput( sphere["out"] )
-
-		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
-		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
-		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
-
-		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
-
-		defaultAdaptors2 = GafferScene.RendererAlgo.createAdaptors()
-		defaultAdaptors2["in"].setInput( sphere["out"] )
-
-		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-
-	def tearDown( self ) :
-
-		GafferSceneTest.SceneTestCase.tearDown( self )
-		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
-
-if __name__ == "__main__":
-	unittest.main()
+# Backwards compatibility for old bindings which were not namespaced correctly.
+for n in ( "registerAdaptor", "deregisterAdaptor", "createAdaptors" ) :
+	setattr( GafferScene, n, getattr( GafferScene.RendererAlgo, n ) )

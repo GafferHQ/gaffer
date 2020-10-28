@@ -72,7 +72,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
 
-		GafferScene.deregisterAdaptor( "Test" )
+		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
 
 	def testExecute( self ) :
 
@@ -816,7 +816,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			return result
 
-		GafferScene.registerAdaptor( "Test", a )
+		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
 
 		sphere = GafferScene.Sphere()
 

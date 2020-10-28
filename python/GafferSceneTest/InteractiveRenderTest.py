@@ -1877,7 +1877,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			return result
 
-		GafferScene.registerAdaptor( "Test", a )
+		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
 
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
@@ -2095,7 +2095,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
 
-		GafferScene.deregisterAdaptor( "Test" )
+		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
 
 	## Should be used in test cases to create an InteractiveRender node
 	# suitably configured for error reporting. If failOnError is

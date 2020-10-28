@@ -83,6 +83,10 @@ namespace GafferSceneModule
 void bindRendererAlgo()
 {
 
+	object module( borrowed( PyImport_AddModule( "GafferScene.RendererAlgo" ) ) );
+	scope().attr( "RendererAlgo" ) = module;
+	scope moduleScope( module );
+
 	def( "registerAdaptor", &registerAdaptorWrapper );
 	def( "deregisterAdaptor", &RendererAlgo::deregisterAdaptor );
 	def( "createAdaptors", &RendererAlgo::createAdaptors );
