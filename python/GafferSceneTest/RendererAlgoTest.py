@@ -36,8 +36,12 @@
 
 import unittest
 
+import imath
+
 import IECore
 
+import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -74,6 +78,21 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
+
+	def testObjectSamples( self ) :
+
+		frame = GafferTest.FrameNode()
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+		sphere["radius"].setInput( frame["output"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( sphere["out"], 1, imath.V2f( 0.75, 1.25 ) )
+
+		self.assertEqual( [ s.radius() for s in samples ], [ 0.75, 1.25 ] )
+		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
 
 	def tearDown( self ) :
 

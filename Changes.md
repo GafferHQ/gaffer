@@ -14,7 +14,9 @@ API
   - Added new `GAFFER_NODE_DECLARE_TYPE` and `GAFFER_NODE_DEFINE_TYPE` macros. Subclasses should use these in preference to `GAFFER_GRAPHCOMPONENT_DECLARE_TYPE` and `GAFFER_GRAPHCOMPONENT_DEFINE_TYPE`.
   - Deprecated all namespace-level iterator typedefs for Node and its subclasses. Use the class-level typedefs instead.
 - Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
-- RendererAlgo : Moved RendererAlgo bindings into a `GafferScene.RendererAlgo` submodule. The old names are provided for temporary backwards compatibility but are considered deprecated and will be removed in the future.
+- RendererAlgo :
+  - Moved RendererAlgo bindings into a `GafferScene.RendererAlgo` submodule. The old names are provided for temporary backwards compatibility but are considered deprecated and will be removed in the future.
+  - Added Python binding for `objectSamples()` function.
 
 Breaking Changes
 ----------------
