@@ -17,6 +17,7 @@ API
 - RendererAlgo :
   - Moved RendererAlgo bindings into a `GafferScene.RendererAlgo` submodule. The old names are provided for temporary backwards compatibility but are considered deprecated and will be removed in the future.
   - Added Python binding for `objectSamples()` function.
+- SceneTestCase : Changed base class to ImageTestCase, to provide methods for comparing images.
 
 Breaking Changes
 ----------------
