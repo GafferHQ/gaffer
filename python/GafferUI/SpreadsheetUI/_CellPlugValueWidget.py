@@ -125,15 +125,14 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Not all value widgets support multiple plugs yet,
 		# so we need to be a little careful here.
-
-		try :
-			if len( plugs ) == 1 :
-				# Ensure maximum compatability
-				w = creator( next( iter( plugs ) ) )
-			else :
+		if len( plugs ) == 1 :
+			# Ensure maximum compatability
+			w = creator( next( iter( plugs ) ) )
+		else :
+			try :
 				w = creator( plugs )
-		except GafferUI.PlugValueWidget.MultiplePlugsError :
-			return None
+			except :
+				return None
 
 		assert( isinstance( w, GafferUI.PlugValueWidget ) )
 		return w
