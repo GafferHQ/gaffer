@@ -157,6 +157,8 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 
 void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::vector<float> &sampleTimes )
 {
+	samples.clear();
+	sampleTimes.clear();
 
 	// Static case
 
@@ -174,7 +176,8 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 
 	motionTimes( segments, shutter, sampleTimes );
 
-	Context::EditableScope timeContext( Context::current() );
+	const Context *frameContext = Context::current();
+	Context::EditableScope timeContext( frameContext );
 
 	bool moving = false;
 	MurmurHash lastHash;
@@ -197,12 +200,15 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 			samples.push_back( primitive );
 			lastHash = objectHash;
 		}
-		else if( const VisibleRenderable *renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
+		else if( runTimeCast<const VisibleRenderable>( object.get() ) )
 		{
 			// We can't motion blur these chappies, so just take the one
-			// sample.
-			samples.push_back( renderable );
-			break;
+			// sample. This must be at the frame time rather than shutter
+			// open time so that non-interpolable objects appear in the right
+			// position relative to non-blurred objects.
+			Context::Scope frameScope( frameContext );
+			objectSamples( scene, /* segments = */ 0, shutter, samples, sampleTimes );
+			return;
 		}
 		else
 		{

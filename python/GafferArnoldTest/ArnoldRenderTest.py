@@ -1307,5 +1307,89 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			lightFilter = arnold.AiNodeLookUpByName( "lightFilter:/lightGroup/lightFilter" )
 			self.assertEqual( arnold.AiNodeGetStr( lightFilter, "geometry_type" ), "cylinder" )
 
+	def testEncapsulateDeformationBlur( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# Make a sphere where the red channel has the value of the current frame.
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["sphereFilter"] = GafferScene.PathFilter()
+		s["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		s["frame"] = GafferTest.FrameNode()
+
+		s["flat"] = GafferArnold.ArnoldShader()
+		s["flat"].loadShader( "flat" )
+		s["flat"]["parameters"]["color"].setValue( imath.Color3f( 0 ) )
+		s["flat"]["parameters"]["color"]["r"].setInput( s["frame"]["output"] )
+
+		s["assignment"] = GafferScene.ShaderAssignment()
+		s["assignment"]["in"].setInput( s["sphere"]["out"] )
+		s["assignment"]["shader"].setInput( s["flat"]["out"] )
+		s["assignment"]["filter"].setInput( s["sphereFilter"]["out"] )
+
+		# Put the sphere in a capsule.
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["assignment"]["out"] )
+
+		s["groupFilter"] = GafferScene.PathFilter()
+		s["groupFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		s["encapsulate"] = GafferScene.Encapsulate()
+		s["encapsulate"]["in"].setInput( s["group"]["out"] )
+		s["encapsulate"]["filter"].setInput( s["groupFilter"]["out"] )
+
+		# Do a render at frame 1, with deformation blur off.
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				os.path.join( self.temporaryDirectory(), "deformationBlurOff.exr" ),
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["encapsulate"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["outputs"]["out"] )
+
+		s["arnoldOptions"] = GafferArnold.ArnoldOptions()
+		s["arnoldOptions"]["in"].setInput( s["options"]["out"] )
+		s["arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
+		s["arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 6 )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["arnoldOptions"]["out"] )
+		s["render"]["task"].execute()
+
+		# Do another render at frame 1, but with deformation blur on.
+
+		s["options"]["options"]["deformationBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["deformationBlur"]["value"].setValue( True )
+		s["options"]["options"]["shutter"]["enabled"].setValue( True )
+		s["options"]["options"]["shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
+		s["outputs"]["outputs"][0]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "deformationBlurOn.exr" ) )
+		s["render"]["task"].execute()
+
+		# Check that the renders are the same.
+
+		s["deformationOff"] = GafferImage.ImageReader()
+		s["deformationOff"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "deformationBlurOff.exr" ) )
+
+		s["deformationOn"] = GafferImage.ImageReader()
+		s["deformationOn"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "deformationBlurOn.exr" ) )
+
+		# The `maxDifference` is huge to account for noise and watermarks, but is still low enough to check what
+		# we want, since if the Encapsulate was sampled at shutter open and not the frame, the difference would be
+		# 0.5.
+		self.assertImagesEqual( s["deformationOff"]["out"], s["deformationOn"]["out"], maxDifference = 0.24, ignoreMetadata = True )
+
 if __name__ == "__main__":
 	unittest.main()

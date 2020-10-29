@@ -94,6 +94,22 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( [ s.radius() for s in samples ], [ 0.75, 1.25 ] )
 		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
 
+	def testNonInterpolableObjectSamples( self ) :
+
+		frame = GafferTest.FrameNode()
+
+		procedural = GafferScene.ExternalProcedural()
+		procedural["parameters"]["frame"] = Gaffer.NameValuePlug( "frame", 0.0 )
+		procedural["parameters"]["frame"]["value"].setInput( frame["output"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "procedural" ] )
+			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( procedural["out"], 1, imath.V2f( 0.75, 1.25 ) )
+
+		self.assertEqual( len( samples ), 1 )
+		self.assertEqual( samples[0].parameters()["frame"].value, 1.0 )
+		self.assertEqual( sampleTimes, [] )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
