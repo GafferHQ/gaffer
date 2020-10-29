@@ -160,6 +160,9 @@ class EventLoop( object ) :
 		style = QtWidgets.QApplication.setStyle( "Fusion" )
 		assert( style is not None )
 		__qtApplication = QtWidgets.QApplication( [ "gaffer" ] )
+		# Fixes laggy interaction with tablets, equivalent to the old
+		# QT_COMPRESS_TABLET_EVENTS env var supported in Maya Qt builds.
+		__qtApplication.setAttribute( QtCore.Qt.AA_CompressTabletEvents, True )
 
 	__mainEventLoop = None
 	## Returns the main event loop for the application. This should always
