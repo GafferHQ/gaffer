@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- InteractiveRender : Added a warning when attribute edits require geometry to be regenerated, as this can have a performance impact. Examples in Arnold include subdivision changes or changes to attributes inherited by procedurals.
 - NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
 
 Fixes
