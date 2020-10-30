@@ -345,7 +345,10 @@ void InteractiveRender::update()
 	// and kick off a render.
 	assert( requiredState == Running );
 
-	m_controller->update();
+	{
+		IECore::MessageHandler::Scope messageScope( m_messageHandler.get() );
+		m_controller->update();
+	}
 
 	m_state = requiredState;
 	m_renderer->render();

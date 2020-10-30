@@ -382,6 +382,7 @@ class RenderController::SceneGraph
 							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
+								controller->m_failedAttributeEdits++;
 							}
 						}
 					}
@@ -1027,6 +1028,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_updateRequested( false ),
+		m_failedAttributeEdits( 0 ),
 		m_dirtyGlobalComponents( NoGlobalComponent ),
 		m_globals( new CompoundObject )
 {
@@ -1371,6 +1373,16 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			// know our entire scene has been updated successfully.
 			m_changedGlobalComponents = NoGlobalComponent;
 			m_updateRequired = false;
+			if( m_failedAttributeEdits )
+			{
+				IECore::msg(
+					IECore::Msg::Warning, "RenderController",
+					boost::format( "%1% attribute edit%2% required geometry to be regenerated" )
+						% m_failedAttributeEdits
+						% ( m_failedAttributeEdits > 1 ? "s" : "" )
+				);
+				m_failedAttributeEdits = 0;
+			}
 			if( m_lightLinks )
 			{
 				m_lightLinks->clean();

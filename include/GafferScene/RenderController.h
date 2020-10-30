@@ -44,6 +44,7 @@
 
 #include "boost/signals.hpp"
 
+#include <atomic>
 #include <functional>
 
 namespace GafferScene
@@ -124,6 +125,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		UpdateRequiredSignal m_updateRequiredSignal;
 		bool m_updateRequired;
 		bool m_updateRequested;
+		std::atomic<uint64_t> m_failedAttributeEdits;
 
 		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		unsigned m_dirtyGlobalComponents;
