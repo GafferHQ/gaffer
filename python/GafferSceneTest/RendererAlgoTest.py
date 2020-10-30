@@ -36,8 +36,12 @@
 
 import unittest
 
+import imath
+
 import IECore
 
+import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -47,7 +51,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		sphere = GafferScene.Sphere()
 
-		defaultAdaptors = GafferScene.createAdaptors()
+		defaultAdaptors = GafferScene.RendererAlgo.createAdaptors()
 		defaultAdaptors["in"].setInput( sphere["out"] )
 
 		def a() :
@@ -58,27 +62,58 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 			return r
 
-		GafferScene.registerAdaptor( "Test", a )
+		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
 
-		testAdaptors = GafferScene.createAdaptors()
+		testAdaptors = GafferScene.RendererAlgo.createAdaptors()
 		testAdaptors["in"].setInput( sphere["out"] )
 
 		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
 		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
 		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
 
-		GafferScene.deregisterAdaptor( "Test" )
+		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
 
-		defaultAdaptors2 = GafferScene.createAdaptors()
+		defaultAdaptors2 = GafferScene.RendererAlgo.createAdaptors()
 		defaultAdaptors2["in"].setInput( sphere["out"] )
 
 		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 
+	def testObjectSamples( self ) :
+
+		frame = GafferTest.FrameNode()
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+		sphere["radius"].setInput( frame["output"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( sphere["out"], 1, imath.V2f( 0.75, 1.25 ) )
+
+		self.assertEqual( [ s.radius() for s in samples ], [ 0.75, 1.25 ] )
+		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
+
+	def testNonInterpolableObjectSamples( self ) :
+
+		frame = GafferTest.FrameNode()
+
+		procedural = GafferScene.ExternalProcedural()
+		procedural["parameters"]["frame"] = Gaffer.NameValuePlug( "frame", 0.0 )
+		procedural["parameters"]["frame"]["value"].setInput( frame["output"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "procedural" ] )
+			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( procedural["out"], 1, imath.V2f( 0.75, 1.25 ) )
+
+		self.assertEqual( len( samples ), 1 )
+		self.assertEqual( samples[0].parameters()["frame"].value, 1.0 )
+		self.assertEqual( sampleTimes, [] )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
-		GafferScene.deregisterAdaptor( "Test" )
+		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
 
 if __name__ == "__main__":
 	unittest.main()

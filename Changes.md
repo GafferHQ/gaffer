@@ -6,6 +6,11 @@ Improvements
 
 - NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
 
+Fixes
+-----
+
+- Encapsulate : Fixed incorrect motion blur when deformation blur is turned on for the Capsule itself (#3557).
+
 API
 ---
 
@@ -14,6 +19,17 @@ API
   - Added new `GAFFER_NODE_DECLARE_TYPE` and `GAFFER_NODE_DEFINE_TYPE` macros. Subclasses should use these in preference to `GAFFER_GRAPHCOMPONENT_DECLARE_TYPE` and `GAFFER_GRAPHCOMPONENT_DEFINE_TYPE`.
   - Deprecated all namespace-level iterator typedefs for Node and its subclasses. Use the class-level typedefs instead.
 - Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
+- RendererAlgo :
+  - Moved RendererAlgo bindings into a `GafferScene.RendererAlgo` submodule. The old names are provided for temporary backwards compatibility but are considered deprecated and will be removed in the future.
+  - Added Python binding for `objectSamples()` function.
+- SceneTestCase : Changed base class to ImageTestCase, to provide methods for comparing images.
+
+Breaking Changes
+----------------
+
+- RendererAlgo :
+  - Objects which don't support deformation blur are now always sampled at the integer frame time. Previously they were sampled at shutter open time if deformation blur was turned on.
+  - Changed type used to represent sample times from `std::set<float>` to `std::vector<float>`, to align with the `IECoreScenePreview::Renderer` API.
 
 0.59.0.0b1
 ==========

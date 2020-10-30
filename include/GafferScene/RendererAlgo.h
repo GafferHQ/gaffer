@@ -70,12 +70,12 @@ GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *glob
 /// the sampling is performed evenly across the shutter interval, which should have been obtained via
 /// SceneAlgo::shutter(). If all samples turn out to be identical, they will be collapsed automatically
 /// into a single sample. The sampleTimes container is only filled if there is more than one sample.
-GAFFERSCENE_API void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes );
+GAFFERSCENE_API void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::vector<float> &sampleTimes );
 
 /// Samples the object from the current location in preparation for output to the renderer. Sampling parameters
 /// are as for the transformSamples() method. Multiple samples will only be generated for Primitives, since other
 /// object types cannot be interpolated anyway.
-GAFFERSCENE_API void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
+GAFFERSCENE_API void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::vector<float> &sampleTimes );
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.

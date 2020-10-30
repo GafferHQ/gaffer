@@ -42,12 +42,44 @@
 #include "GafferScene/SceneProcessor.h"
 
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
 using namespace GafferScene;
 
 namespace
 {
+
+tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath::V2f &shutter, bool copy )
+{
+	std::vector<IECoreScene::ConstVisibleRenderablePtr> samples;
+	std::vector<float> sampleTimes;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		RendererAlgo::objectSamples( &scene, segments, shutter, samples, sampleTimes );
+	}
+
+	list pythonSamples;
+	for( auto &s : samples )
+	{
+		if( copy )
+		{
+			pythonSamples.append( s->copy() );
+		}
+		else
+		{
+			pythonSamples.append( boost::const_pointer_cast<IECoreScene::VisibleRenderable>( s ) );
+		}
+	}
+
+	list pythonSampleTimes;
+	for( auto &s : sampleTimes )
+	{
+		pythonSampleTimes.append( s );
+	}
+
+	return make_tuple( pythonSamples, pythonSampleTimes );
+}
 
 struct AdaptorWrapper
 {
@@ -82,6 +114,12 @@ namespace GafferSceneModule
 
 void bindRendererAlgo()
 {
+
+	object module( borrowed( PyImport_AddModule( "GafferScene.RendererAlgo" ) ) );
+	scope().attr( "RendererAlgo" ) = module;
+	scope moduleScope( module );
+
+	def( "objectSamples", &objectSamplesWrapper, ( arg( "scene" ), arg( "segments" ), arg( "shutter" ), arg( "_copy" ) = true ) );
 
 	def( "registerAdaptor", &registerAdaptorWrapper );
 	def( "deregisterAdaptor", &RendererAlgo::deregisterAdaptor );

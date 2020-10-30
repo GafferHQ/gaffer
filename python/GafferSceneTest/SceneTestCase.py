@@ -44,15 +44,15 @@ import IECore
 import IECoreScene
 
 import Gaffer
-import GafferTest
+import GafferImageTest
 import GafferScene
 import GafferSceneTest
 
-class SceneTestCase( GafferTest.TestCase ) :
+class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 	def setUp( self ) :
 
-		GafferTest.TestCase.setUp( self )
+		GafferImageTest.ImageTestCase.setUp( self )
 
 		sanitiser = GafferSceneTest.ContextSanitiser()
 		sanitiser.__enter__()
