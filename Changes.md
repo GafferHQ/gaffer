@@ -22,6 +22,7 @@ Fixes
 - Box/Reference :
   - Fixed export and referencing of TransformPlugs with modified default values (#3946).
   - Fixed export and referencing of CompoundDataPlugs with modified default values (#3907).
+  - Fixed loss of spreadsheet values when using "Duplicate as Box" (#3972).
 - Spreadsheet : Fixed serialisation of default values which do not match those of the default row.
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 - Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.

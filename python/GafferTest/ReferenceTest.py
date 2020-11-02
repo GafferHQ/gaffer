@@ -1460,6 +1460,70 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( script["reference"]["p"].isSetToDefault() )
 		self.assertEqual( script["reference"]["p"].defaultHash(), script["box"]["p"].defaultHash() )
 
+	def testPromotedSpreadsheetDuplicateAsBox( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Promote Spreadsheet to Box and export for referencing.
+
+		script["box"] = Gaffer.Box()
+
+		script["box"]["spreadsheet"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheet"]["rows"].addRow()
+		script["box"]["spreadsheet"]["rows"][1]["name"].setValue( "test" )
+		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
+		script["box"]["rows"].resetDefault()
+
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		# Reference and then duplicate as box. This is using the same
+		# method as used by the "Duplicate as Box" menu in the UI.
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
+		script["duplicate"] = Gaffer.Box()
+		script.executeFile( script["reference"].fileName(), parent = script["duplicate"] )
+		self.assertEqual( script["duplicate"]["rows"][1]["name"].defaultValue(), "test" )
+		self.assertEqual( script["duplicate"]["rows"][1]["name"].getValue(), "test" )
+
+		# Now copy/paste the duplicated box. The row should have retained its name.
+
+		script.execute( script.serialise( filter = Gaffer.StandardSet( [ script["duplicate"] ] ) ) )
+		self.assertEqual( script["duplicate1"]["rows"][1]["name"].defaultValue(), "test" )
+		self.assertEqual( script["duplicate1"]["rows"][1]["name"].getValue(), "test" )
+
+	def testSpreadsheetWithMixedDefaultAndValueEdits( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Make box and promoted spreadsheet
+
+		script["box"] = Gaffer.Box()
+
+		script["box"]["spreadsheet"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.V3iPlug( "c1", defaultValue = imath.V3i( 1, 2, 3 ) ) )
+		script["box"]["spreadsheet"]["rows"].addRow()
+		promoted = Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
+
+		# Mess with cell values and defaults
+
+		promoted[1]["cells"]["c1"]["value"]["x"].setValue( 2 ) # Non-default value. Should be ignored on export.
+		promoted[1]["cells"]["c1"]["value"]["y"].setValue( 3 )
+		promoted[1]["cells"]["c1"]["value"]["y"].resetDefault() # Modified default. Should be preserved on export.
+		promoted[1]["cells"]["c1"]["value"]["z"].setValue( 4 )
+		promoted[1]["cells"]["c1"]["value"]["z"].resetDefault() # Modified default. Should be preserved on export.
+
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertTrue( script["reference"]["rows"].isSetToDefault() )
+		self.assertEqual( script["reference"]["rows"][1]["cells"]["c1"]["value"]["x"].getValue(), 1 )
+		self.assertEqual( script["reference"]["rows"][1]["cells"]["c1"]["value"]["y"].getValue(), 3 )
+		self.assertEqual( script["reference"]["rows"][1]["cells"]["c1"]["value"]["z"].getValue(), 4 )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
