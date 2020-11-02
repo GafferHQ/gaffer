@@ -39,29 +39,97 @@
 
 #include "TransformPlugBinding.h"
 
-#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/ValuePlugBinding.h"
 
 #include "Gaffer/TransformPlug.h"
 
-#include "IECorePython/RunTimeTypedBinding.h"
-
 using namespace boost::python;
+using namespace Imath;
 using namespace GafferBindings;
 using namespace Gaffer;
+
+namespace
+{
+
+class TransformPlugSerialiser : public ValuePlugSerialiser
+{
+
+	public :
+
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+		{
+			// The children will be created by the constructor
+			return false;
+		}
+
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		{
+			return repr( static_cast<const TransformPlug *>( graphComponent ), &serialisation );
+		}
+
+		static std::string repr( const TransformPlug *plug, const Serialisation *serialisation )
+		{
+			std::string result = "Gaffer.TransformPlug( \"" + plug->getName().string() + "\", ";
+
+			if( plug->direction() != Plug::In )
+			{
+				result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
+			}
+
+			auto appendDefault = [&result]( const V3f &d, const V3f &defaultD, const char *name )
+			{
+				static boost::format formatter( "%1% = imath.V3f( %2%, %3%, %4% ), " );
+				if( d != defaultD )
+				{
+					result += boost::str( formatter % name % d.x % d.y % d.z );
+				}
+			};
+			appendDefault( plug->translatePlug()->defaultValue(), V3f( 0 ), "defaultTranslate" );
+			appendDefault( plug->rotatePlug()->defaultValue(), V3f( 0 ), "defaultRotate" );
+			appendDefault( plug->scalePlug()->defaultValue(), V3f( 1 ), "defaultScale" );
+			appendDefault( plug->pivotPlug()->defaultValue(), V3f( 0 ), "defaultPivot" );
+
+			const unsigned flags = plug->getFlags();
+			if( flags != Plug::Default )
+			{
+				result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
+			}
+
+			result += ")";
+			return result;
+		}
+
+
+};
+
+std::string repr( const TransformPlug *plug )
+{
+	Serialisation s( plug );
+	return TransformPlugSerialiser::repr( plug, &s );
+}
+
+} // namespace
 
 void GafferModule::bindTransformPlug()
 {
 	PlugClass<TransformPlug>()
 		.def(
-			init< const std::string &, Gaffer::Plug::Direction, unsigned >
+			init<const std::string &, Gaffer::Plug::Direction, const V3f &, const V3f &, const V3f &, const V3f &, unsigned>
 			(
 				(
 					arg( "name" ) = Gaffer::GraphComponent::defaultName<TransformPlug>(),
 					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "defaultTranslate" ) = Imath::V3f( 0 ),
+					arg( "defaultRotate" ) = Imath::V3f( 0 ),
+					arg( "defaultScale" ) = Imath::V3f( 1 ),
+					arg( "defaultPivot" ) = Imath::V3f( 0 ),
 					arg( "flags" ) = Gaffer::Plug::Default
 				)
 			)
 		)
 		.def( "matrix", &TransformPlug::matrix )
+		.def( "repr", &repr )
 	;
+
+	Serialisation::registerSerialiser( Gaffer::TransformPlug::staticTypeId(), new TransformPlugSerialiser );
 }

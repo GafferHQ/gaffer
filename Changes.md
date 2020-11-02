@@ -11,6 +11,16 @@ Fixes
 
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 
+API
+---
+
+- TransformPlug : Added constructor arguments for specifying child plug default values.
+
+Breaking Changes
+----------------
+
+- TransformPlug : Added constructor arguments.
+
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========
 

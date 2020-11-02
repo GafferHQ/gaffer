@@ -48,7 +48,15 @@ class GAFFER_API TransformPlug : public ValuePlug
 
 	public :
 
-		TransformPlug( const std::string &name = defaultName<TransformPlug>(), Direction direction=In, unsigned flags = Default );
+		TransformPlug(
+			const std::string &name = defaultName<TransformPlug>(),
+			Direction direction=In,
+			const Imath::V3f &defaultTranslate = Imath::V3f( 0 ),
+			const Imath::V3f &defaultRotate = Imath::V3f( 0 ),
+			const Imath::V3f &defaultScale = Imath::V3f( 1 ),
+			const Imath::V3f &defaultPivot = Imath::V3f( 0 ),
+			unsigned flags = Default
+		);
 		~TransformPlug() override;
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::TransformPlug, TransformPlugTypeId, ValuePlug );
