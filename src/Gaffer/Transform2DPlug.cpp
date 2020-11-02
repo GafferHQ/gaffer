@@ -45,7 +45,14 @@ GAFFER_PLUG_DEFINE_TYPE( Transform2DPlug );
 
 size_t Transform2DPlug::g_firstPlugIndex = 0;
 
-Transform2DPlug::Transform2DPlug( const std::string &name, Direction direction, unsigned flags )
+Transform2DPlug::Transform2DPlug(
+	const std::string &name, Direction direction,
+	const Imath::V2f &defaultTranslate,
+	float defaultRotate,
+	const Imath::V2f &defaultScale,
+	const Imath::V2f &defaultPivot,
+	unsigned flags
+)
 	:	ValuePlug( name, direction, flags )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -54,7 +61,7 @@ Transform2DPlug::Transform2DPlug( const std::string &name, Direction direction, 
 		new V2fPlug(
 			"translate",
 			direction,
-			V2f( 0 ),
+			defaultTranslate,
 			V2f( limits<float>::min() ),
 			V2f( limits<float>::max() ),
 			flags
@@ -65,7 +72,7 @@ Transform2DPlug::Transform2DPlug( const std::string &name, Direction direction, 
 		new FloatPlug(
 			"rotate",
 			direction,
-			0.,
+			defaultRotate,
 			limits<float>::min(),
 			limits<float>::max(),
 			flags
@@ -76,7 +83,7 @@ Transform2DPlug::Transform2DPlug( const std::string &name, Direction direction, 
 		new V2fPlug(
 			"scale",
 			direction,
-			V2f( 1 ),
+			defaultScale,
 			V2f( limits<float>::min() ),
 			V2f( limits<float>::max() ),
 			flags
@@ -87,7 +94,7 @@ Transform2DPlug::Transform2DPlug( const std::string &name, Direction direction, 
 		new V2fPlug(
 			"pivot",
 			direction,
-			V2f( 0 ),
+			defaultPivot,
 			V2f( limits<float>::min() ),
 			V2f( limits<float>::max() ),
 			flags
@@ -107,7 +114,14 @@ bool Transform2DPlug::acceptsChild( const GraphComponent *potentialChild ) const
 
 PlugPtr Transform2DPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new Transform2DPlug( name, direction, getFlags() );
+	return new Transform2DPlug(
+		name, direction,
+		translatePlug()->defaultValue(),
+		rotatePlug()->defaultValue(),
+		scalePlug()->defaultValue(),
+		pivotPlug()->defaultValue(),
+		getFlags()
+	);
 }
 
 V2fPlug *Transform2DPlug::translatePlug()

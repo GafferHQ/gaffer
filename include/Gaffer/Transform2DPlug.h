@@ -47,7 +47,15 @@ class GAFFER_API Transform2DPlug : public ValuePlug
 
 	public :
 
-		Transform2DPlug( const std::string &name = defaultName<Transform2DPlug>(), Direction direction=In, unsigned flags = Default );
+		Transform2DPlug(
+			const std::string &name = defaultName<Transform2DPlug>(),
+			Direction direction=In,
+			const Imath::V2f &defaultTranslate = Imath::V2f( 0 ),
+			float defaultRotate = 0,
+			const Imath::V2f &defaultScale = Imath::V2f( 1 ),
+			const Imath::V2f &defaultPivot = Imath::V2f( 0 ),
+			unsigned flags = Default
+		);
 		~Transform2DPlug() override;
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::Transform2DPlug, Transform2DPlugTypeId, ValuePlug );
