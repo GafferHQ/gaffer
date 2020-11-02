@@ -426,21 +426,6 @@ void Reference::loadInternal( const std::string &fileName )
 		}
 	}
 
-	// figure out what version of gaffer was used to save the reference. prior to
-	// version 0.9.0.0, references could contain setValue() calls for promoted plugs,
-	// and we must make sure they don't clobber the user-set values on the reference node.
-	int milestoneVersion = 0;
-	int majorVersion = 0;
-	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
-	{
-		milestoneVersion = v->readable();
-	}
-	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:majorVersion" ) )
-	{
-		majorVersion = v->readable();
-	}
-	const bool versionPriorTo09 = milestoneVersion == 0 && majorVersion < 9;
-
 	// Transfer connections, values and metadata from the old plugs onto the corresponding new ones.
 
 	for( std::map<std::string, Plug *>::const_iterator it = previousPlugs.begin(), eIt = previousPlugs.end(); it != eIt; ++it )
@@ -453,7 +438,7 @@ void Reference::loadInternal( const std::string &fileName )
 			{
 				if( newPlug->direction() == Plug::In && oldPlug->direction() == Plug::In )
 				{
-					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ !versionPriorTo09 );
+					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ true );
 				}
 				transferOutputs( oldPlug, newPlug );
 

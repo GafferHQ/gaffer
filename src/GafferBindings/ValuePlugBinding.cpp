@@ -76,30 +76,6 @@ bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *seri
 	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
 }
 
-bool shouldOmitDefaultValue( const Gaffer::ValuePlug *plug )
-{
-	if( const Reference *reference = IECore::runTimeCast<const Reference>( plug->node() ) )
-	{
-		// Prior to version 0.9.0.0, `.grf` files created with `Box::exportForReference()`
-		// could contain setValue() calls for promoted plugs like this one. When such
-		// files have been loaded on a Reference node, we must always serialise the plug values
-		// from the Reference node, lest they should get clobbered by the setValue() calls
-		// in the `.grf` file.
-		int milestoneVersion = 0;
-		int majorVersion = 0;
-		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
-		{
-			milestoneVersion = v->readable();
-		}
-		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:majorVersion" ) )
-		{
-			majorVersion = v->readable();
-		}
-		return milestoneVersion > 0 || majorVersion > 8;
-	}
-	return true;
-}
-
 std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, const Serialisation &serialisation, bool &canCondense )
 {
 	// There's nothing to do if the plug isn't serialisable.
@@ -157,7 +133,7 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 
 	object pythonValue = pythonPlug.attr( "getValue" )();
 
-	if( shouldOmitDefaultValue( plug ) && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
 		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 		if( pythonValue == pythonDefaultValue )

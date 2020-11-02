@@ -30,6 +30,7 @@ API
 Breaking Changes
 ----------------
 
+- Reference : Removed support for boxes exported prior to version 0.9.0.0.
 - TransformPlug/Transform2DPlug : Added constructor arguments.
 - ValuePlug : Added virtual method.
 
