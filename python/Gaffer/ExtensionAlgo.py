@@ -142,7 +142,7 @@ def __nodeDefinition( box, extension ) :
 	with Gaffer.Context() as context :
 		context["serialiser:includeVersionMetadata"] = IECore.BoolData( False )
 		context["serialiser:protectParentNamespace"] = IECore.BoolData( False )
-		context["valuePlugSerialiser:resetParentPlugDefaults"] = IECore.BoolData( True )
+		context["valuePlugSerialiser:omitParentNodePlugValues"] = IECore.BoolData( True )
 		context["plugSerialiser:includeParentPlugMetadata"] = IECore.BoolData( False )
 		constructor = Gaffer.Serialisation( box, "self", children ).result()
 

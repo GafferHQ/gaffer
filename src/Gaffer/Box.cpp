@@ -168,7 +168,7 @@ void Box::exportForReference( const std::string &fileName ) const
 	}
 
 	ContextPtr context = new Context;
-	context->set( "valuePlugSerialiser:resetParentPlugDefaults", true );
+	context->set( "valuePlugSerialiser:omitParentNodePlugValues", true );
 	context->set( "serialiser:includeParentMetadata", true );
 	Context::Scope scopedContext( context.get() );
 
