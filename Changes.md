@@ -16,6 +16,9 @@ API
 
 - Serialisation : Added `objectToBase64()` and `objectFromBase64()` methods to provide base64 encoding and decoding for all `IECore::Objects`.
 - NumericWidget : Fixed bug that caused `editingFinished` to be called with the wrong `reason` when the widget was left with an invalid value. `Invalid` is now passed in these cases.
+- PlugValueWidget : Improved support for legacy widgets in `PlugValueWidget.create` when used to create widgets for single plugs supplied in a set.
+- NameLabel : Added support for multiple graph components in the constructor, added `setGraphComponents`/`getGraphComponents` methods.
+- LabelPlugValueWidget, NameValuePlugValuePlug : Added support for multiple plugs.
 
 0.58.4.0 (relative to 0.58.3.2)
 ========
