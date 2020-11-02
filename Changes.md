@@ -9,6 +9,10 @@ Improvements
 0.58.5.2 (relative to 0.58.5.1)
 ========
 
+Improvements
+------------
+- Spreadsheet : Enabled cell selection, editing is now achieved with a double-click.
+
 Fixes
 -----
 
