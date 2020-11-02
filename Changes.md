@@ -1,6 +1,11 @@
 0.58.x.x (relative to 0.58.4.0)
 ========
 
+Improvements
+------------
+
+- Stats app : Added `-context` argument to specify additional context variables for the processes being measured.
+
 Fixes
 -----
 
@@ -11,6 +16,7 @@ Fixes
 - StringPlugValueWidget : Fixed bug that could cause plug values to be overwritten when editing multiple plugs and focus was lost without change, or the value state changed to mixed via external action.
 - TypedObjectPlug : Fixed serialisation of values for which `repr()` is not available (#106).
 - Editor : Fixed bug that caused child widgets to lose focus when the mouse re-enters an Editor that already has focus.
+- Stats app : The `-canceller` argument is now honoured when using `-task` to measure task execution time.
 
 API
 ---

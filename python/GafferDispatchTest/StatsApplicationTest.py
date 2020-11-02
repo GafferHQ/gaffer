@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,31 +34,42 @@
 #
 ##########################################################################
 
-# Utility classes
+import inspect
+import unittest
+import subprocess32 as subprocess
 
-from .TextWriter import TextWriter
-from .LoggingTaskNode import LoggingTaskNode
-from .DebugDispatcher import DebugDispatcher
-from .ErroringTaskNode import ErroringTaskNode
+import Gaffer
+import GafferTest
+import GafferDispatch
 
-# Test cases
+class StatsApplicationTest( GafferTest.TestCase ) :
 
-from .DispatcherTest import DispatcherTest
-from .LocalDispatcherTest import LocalDispatcherTest
-from .TaskNodeTest import TaskNodeTest
-from .TaskSwitchTest import TaskSwitchTest
-from .PythonCommandTest import PythonCommandTest
-from .SystemCommandTest import SystemCommandTest
-from .TaskListTest import TaskListTest
-from .WedgeTest import WedgeTest
-from .TaskContextVariablesTest import TaskContextVariablesTest
-from .ExecuteApplicationTest import ExecuteApplicationTest
-from .TaskPlugTest import TaskPlugTest
-from .FrameMaskTest import FrameMaskTest
-from .DispatchApplicationTest import DispatchApplicationTest
-from .ModuleTest import ModuleTest
-from .StatsApplicationTest import StatsApplicationTest
+	def testContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			r"""
+			import sys
+			for k in context.keys() :
+				sys.stdout.write( "{} {}\n".format( k, context[k] ) )
+			"""
+		) )
+
+		script["fileName"].setValue( self.temporaryDirectory() + "/script.gfr" )
+		script.save()
+
+		o = subprocess.check_output(
+			[
+				"gaffer", "stats", script["fileName"].getValue(),
+				"-task", "command",
+				"-context", "-valueOne", "1", "-valueTwo", "2"
+			],
+			universal_newlines = True
+		)
+
+		self.assertIn( "valueOne 1", o )
+		self.assertIn( "valueTwo 2", o )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
