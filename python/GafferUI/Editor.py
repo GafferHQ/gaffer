@@ -206,8 +206,23 @@ class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
 
 	def __enter( self, widget ) :
 
-		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
-			self._qtWidget().setFocus()
+		currentFocusWidget = QtWidgets.QApplication.focusWidget()
+
+		# Don't disrupt in-progress text edits
+		if isinstance( currentFocusWidget, ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
+			return
+
+		try :
+			gafferWidget = GafferUI.Widget._owner( currentFocusWidget )
+		except :
+			gafferWidget = None
+
+		# Don't adjust focus if it is already with one of our children. This can happen,
+		# for example, when a popup window launched by a child widget is dismissed.
+		if gafferWidget is not None and ( gafferWidget is self or self.isAncestorOf( gafferWidget ) ) :
+			return
+
+		self._qtWidget().setFocus()
 
 	def __leave( self, widget ) :
 
