@@ -110,16 +110,6 @@ PlugPtr Transform2DPlug::createCounterpart( const std::string &name, Direction d
 	return new Transform2DPlug( name, direction, getFlags() );
 }
 
-V2fPlug *Transform2DPlug::pivotPlug()
-{
-	return getChild<V2fPlug>( g_firstPlugIndex+3 );
-}
-
-const V2fPlug *Transform2DPlug::pivotPlug() const
-{
-	return getChild<V2fPlug>( g_firstPlugIndex+3 );
-}
-
 V2fPlug *Transform2DPlug::translatePlug()
 {
 	return getChild<V2fPlug>( g_firstPlugIndex );
@@ -148,6 +138,16 @@ V2fPlug *Transform2DPlug::scalePlug()
 const V2fPlug *Transform2DPlug::scalePlug() const
 {
 	return getChild<V2fPlug>( g_firstPlugIndex+2 );
+}
+
+V2fPlug *Transform2DPlug::pivotPlug()
+{
+	return getChild<V2fPlug>( g_firstPlugIndex+3 );
+}
+
+const V2fPlug *Transform2DPlug::pivotPlug() const
+{
+	return getChild<V2fPlug>( g_firstPlugIndex+3 );
 }
 
 Imath::M33f Transform2DPlug::matrix() const

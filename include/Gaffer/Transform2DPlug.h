@@ -55,14 +55,14 @@ class GAFFER_API Transform2DPlug : public ValuePlug
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
-		V2fPlug *pivotPlug();
-		const V2fPlug *pivotPlug() const;
 		V2fPlug *translatePlug();
 		const V2fPlug *translatePlug() const;
 		FloatPlug *rotatePlug();
 		const FloatPlug *rotatePlug() const;
 		V2fPlug *scalePlug();
 		const V2fPlug *scalePlug() const;
+		V2fPlug *pivotPlug();
+		const V2fPlug *pivotPlug() const;
 
 		Imath::M33f matrix() const;
 
