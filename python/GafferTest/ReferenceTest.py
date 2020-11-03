@@ -1415,6 +1415,29 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( script["reference1"]["rows"][1]["cells"].keys(), script["box"]["rows"][1]["cells"].keys() )
 		self.assertEqual( script["reference1"]["rows"][1]["cells"]["string"]["value"].getValue(), "test" )
 
+	def testTransformPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+
+		script["box"]["t2"] = Gaffer.Transform2DPlug( defaultTranslate = imath.V2f( 10, 11 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["t2"]["rotate"].setValue( 10 )
+		script["box"]["t3"] = Gaffer.TransformPlug( defaultTranslate = imath.V3f( 10, 11, 12 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["t3"]["rotate"].setValue( imath.V3f( 1, 2, 3 ) )
+
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertTrue( script["reference"]["t2"].isSetToDefault() )
+		for name in script["reference"]["t2"].keys() :
+			self.assertEqual( script["reference"]["t2"][name].defaultValue(), script["box"]["t2"][name].defaultValue() )
+
+		self.assertTrue( script["reference"]["t3"].isSetToDefault() )
+		for name in script["reference"]["t3"].keys() :
+			self.assertEqual( script["reference"]["t3"][name].defaultValue(), script["box"]["t3"][name].defaultValue() )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
