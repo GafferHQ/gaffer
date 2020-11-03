@@ -1438,6 +1438,28 @@ class ReferenceTest( GafferTest.TestCase ) :
 		for name in script["reference"]["t3"].keys() :
 			self.assertEqual( script["reference"]["t3"][name].defaultValue(), script["box"]["t3"][name].defaultValue() )
 
+	def testCompoundDataPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+
+		script["box"]["p"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["p"]["m"] = Gaffer.NameValuePlug( "a", 10, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( script["box"]["p"]["m"]["name"].defaultValue(), "a" )
+		self.assertEqual( script["box"]["p"]["m"]["value"].defaultValue(), 10 )
+		self.assertEqual( script["box"]["p"]["m"]["enabled"].defaultValue(), True )
+		script["box"]["p"]["m"]["name"].setValue( "b" )
+		script["box"]["p"]["m"]["value"].setValue( 11 )
+		script["box"]["p"]["m"]["enabled"].setValue( False )
+
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertTrue( script["reference"]["p"].isSetToDefault() )
+		self.assertEqual( script["reference"]["p"].defaultHash(), script["box"]["p"].defaultHash() )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
