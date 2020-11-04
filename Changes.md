@@ -11,6 +11,7 @@ Fixes
 -----
 
 - Encapsulate : Fixed incorrect motion blur when deformation blur is turned on for the Capsule itself (#3557).
+- MenuBar : Fixed Qt bug that prevented hover interaction with the menu bar when using a tablet.
 
 API
 ---
