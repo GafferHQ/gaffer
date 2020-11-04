@@ -95,6 +95,34 @@ void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
 	}
 }
 
+/// Assigns a value to something, reassigning the original
+/// value when it goes out of scope. If `experimental::scope_exit`
+/// makes it into the C++ standard, we could use that instead.
+template<typename T>
+class ScopedAssignment : boost::noncopyable
+{
+	public :
+
+		ScopedAssignment( T &target, const T &value )
+			:	m_target( target ), m_originalValue( target )
+		{
+			m_target = value;
+		}
+
+		~ScopedAssignment()
+		{
+			m_target = m_originalValue;
+		}
+
+	private :
+
+		T &m_target;
+		T m_originalValue;
+
+};
+
+bool g_editingTransform = false;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -181,7 +209,17 @@ void CameraTool::plugDirtied( const Gaffer::Plug *plug )
 		plug == view()->editScopePlug()
 	)
 	{
-		m_cameraSelectionDirty = true;
+		if( !g_editingTransform )
+		{
+			m_cameraSelectionDirty = true;
+		}
+		else
+		{
+			// If the scene is dirtied as a result of an edit we make,
+			// we do not expect it to invalidate our selection. Nor do we
+			// want the performance hit of selection updates during dragging,
+			// so we simply don't dirty the selection.
+		}
 		view()->viewportGadget()->renderRequestSignal()( view()->viewportGadget() );
 	}
 }
@@ -360,6 +398,7 @@ void CameraTool::viewportCameraChanged()
 
 	// Now apply this offset to the current value on the transform plug.
 
+	ScopedAssignment<bool> editingScope( g_editingTransform, true );
 	UndoScope undoScope( selection.editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
 	auto edit = selection.acquireTransformEdit();
 
