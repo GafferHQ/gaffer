@@ -401,6 +401,23 @@ IECore::ConstInternedStringVectorDataPtr Duplicate::computeBranchChildNames( con
 	}
 }
 
+bool Duplicate::affectsBranchSetNames( const Gaffer::Plug *input ) const
+{
+	return input == inPlug()->setNamesPlug();
+}
+
+void Duplicate::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
+	h = inPlug()->setNamesPlug()->hash();
+}
+
+IECore::ConstInternedStringVectorDataPtr Duplicate::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
+{
+	assert( parentPath.size() == 0 ); // Expectation driven by `constantBranchSetNames() == true`
+	return inPlug()->setNamesPlug()->getValue();
+}
+
 bool Duplicate::affectsBranchSet( const Gaffer::Plug *input ) const
 {
 	return

@@ -232,7 +232,7 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 
 	if(
-		input == parentPathsPlug() ||
+		affectsParentPathsForSet( input ) ||
 		input == mappingPlug() ||
 		input == inPlug()->setPlug() ||
 		affectsBranchSet( input )
@@ -565,9 +565,7 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeSetNames( const G
 
 void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstPathMatcherDataPtr parentPathsData = parentPathsPlug()->getValue();
-	const PathMatcher &parentPaths = parentPathsData->readable();
-
+	const PathMatcher parentPaths = parentPathsForSet( setName, context );
 	if( parentPaths.isEmpty() )
 	{
 		h = inPlug()->setPlug()->hash();
@@ -594,10 +592,9 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 
 IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstPathMatcherDataPtr parentPathsData = parentPathsPlug()->getValue();
-	const PathMatcher &parentPaths = parentPathsData->readable();
-
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
+
+	const PathMatcher parentPaths = parentPathsForSet( setName, context );
 	if( parentPaths.isEmpty() )
 	{
 		return inputSetData;
@@ -629,6 +626,40 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 	}
 
 	return outputSetData;
+}
+
+IECore::PathMatcher BranchCreator::parentPathsForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const
+{
+	if( constantBranchSetNames() )
+	{
+		// All branches provide the same sets. If that doesn't include the set in question
+		// then we don't need to visit any of the parent paths at all, and can early out
+		// in `hashSet()` and `computeSet()`.
+		ConstInternedStringVectorDataPtr branchSetNamesData;
+		{
+			ScenePlug::GlobalScope globalScope( context );
+			branchSetNamesData = computeBranchSetNames( ScenePlug::ScenePath(), context );
+		}
+		if( !branchSetNamesData )
+		{
+			return IECore::PathMatcher();
+		}
+		const auto &branchSetNames = branchSetNamesData->readable();
+		if( find( branchSetNames.begin(), branchSetNames.end(), setName ) == branchSetNames.end() )
+		{
+			return IECore::PathMatcher();
+		}
+	}
+
+	return parentPathsPlug()->getValue()->readable();
+}
+
+bool BranchCreator::affectsParentPathsForSet( const Gaffer::Plug *input ) const
+{
+	return
+		( constantBranchSetNames() && affectsBranchSetNames( input ) ) ||
+		input == parentPathsPlug()
+	;
 }
 
 bool BranchCreator::affectsBranchBound( const Gaffer::Plug *input ) const

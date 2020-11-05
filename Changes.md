@@ -1,6 +1,11 @@
 0.58.x.x (relative to 0.58.4.0)
 ========
 
+> Caution : A performance enhancement introduced in BranchCreator may reveal latent bugs in derived classes.
+> If a derived class implements `computeBranchSet()` it is now essential that it also implements
+> `computeBranchSetNames()` appropriately. It is no longer sufficient to rely on the set names existing on
+> the main input.
+
 Improvements
 ------------
 
@@ -8,6 +13,7 @@ Improvements
   - Added `-context` argument to specify additional context variables for the processes being measured.
   - Improved accuracy of timings produced by `-scene` and `-image`.
 - CameraTool : Improved performance when moving lights/cameras in look-through mode.
+- Instancer/Parent : Improved performance when computing sets which do not exist on the prototypes/children.
 
 Fixes
 -----

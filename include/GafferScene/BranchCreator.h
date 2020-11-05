@@ -172,6 +172,11 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstDataPtr computeMapping( const Gaffer::Context *context ) const;
 
+		// Returns the parent paths that should be used to compute a set. If these are empty,
+		// the input set will be passed through unchanged.
+		IECore::PathMatcher parentPathsForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const;
+		bool affectsParentPathsForSet( const Gaffer::Plug *input ) const;
+
 		// Computes the relevant parent and branch paths for computing the result
 		// at the specified path. Returns a PathMatcher::Result to describe where path is
 		// relative to the parent, as follows :
