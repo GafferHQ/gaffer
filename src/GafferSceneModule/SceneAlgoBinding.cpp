@@ -209,6 +209,11 @@ ShaderTweaksPtr shaderTweaksWrapper( const ScenePlug &scene, const ScenePlug::Sc
 	return SceneAlgo::shaderTweaks( &scene, path, attributeName );
 }
 
+std::string historyIDContextNameWrapper()
+{
+	return SceneAlgo::historyIDContextName().string();
+}
+
 std::string sourceSceneNameWrapper( const GafferImage::ImagePlug &image )
 {
 	IECorePython::ScopedGILRelease r;
@@ -280,6 +285,11 @@ void bindSceneAlgo()
 	def( "source", &sourceWrapper );
 	def( "objectTweaks", &objectTweaksWrapper );
 	def( "shaderTweaks", &shaderTweaksWrapper );
+
+	def( "historyIDContextName", &historyIDContextNameWrapper );
+
+	// Render metadata
+
 	def( "sourceSceneName", &sourceSceneNameWrapper );
 	def( "sourceScene", &sourceSceneWrapper );
 

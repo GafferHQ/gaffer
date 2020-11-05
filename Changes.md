@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Stats app : Added `-context` argument to specify additional context variables for the processes being measured.
+- CameraTool : Improved performance when moving lights/cameras in look-through mode.
 
 Fixes
 -----
@@ -26,6 +27,7 @@ API
 - PlugValueWidget : Improved support for legacy widgets in `PlugValueWidget.create` when used to create widgets for single plugs supplied in a set.
 - NameLabel : Added support for multiple graph components in the constructor, added `setGraphComponents`/`getGraphComponents` methods.
 - LabelPlugValueWidget, NameValuePlugValuePlug : Added support for multiple plugs.
+- SceneAlgo : Added Python binding for `historyIDContextName()`. Woe betide you if you find a need for it.
 
 0.58.4.0 (relative to 0.58.3.2)
 ========
