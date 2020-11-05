@@ -509,10 +509,12 @@ class stats( Gaffer.Application ) :
 		if args["contextSanitiser"].value :
 			contextSanitiser = GafferSceneTest.ContextSanitiser()
 
+		frames = self.__frames( script, args )
+
 		def computeScene() :
 
 			with self.__context( script, args ) as context :
-				for frame in self.__frames( script, args ) :
+				for frame in frames :
 					context.setFrame( frame )
 
 					if isinstance( scene, GafferDispatch.TaskNode.TaskPlug ) :
@@ -536,9 +538,9 @@ class stats( Gaffer.Application ) :
 			computeScene()
 
 		memory = _Memory.maxRSS()
-		with _Timer() as sceneTimer :
-			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
-				with contextSanitiser :
+		with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+			with contextSanitiser :
+				with _Timer() as sceneTimer :
 					computeScene()
 
 		self.__timers["Scene generation"] = sceneTimer
@@ -565,10 +567,12 @@ class stats( Gaffer.Application ) :
 		if args["contextSanitiser"].value :
 			contextSanitiser = GafferImageTest.ContextSanitiser()
 
+		frames = self.__frames( script, args )
+
 		def computeImage() :
 
 			with self.__context( script, args ) as context :
-				for frame in self.__frames( script, args ) :
+				for frame in frames :
 					context.setFrame( frame )
 					GafferImageTest.processTiles( image )
 
@@ -576,9 +580,9 @@ class stats( Gaffer.Application ) :
 			computeImage()
 
 		memory = _Memory.maxRSS()
-		with _Timer() as imageTimer :
-			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
-				with contextSanitiser :
+		with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+			with contextSanitiser :
+				with _Timer() as imageTimer :
 					computeImage()
 
 		self.__timers["Image generation"] = imageTimer

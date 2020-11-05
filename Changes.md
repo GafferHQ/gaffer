@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Stats app : Added `-context` argument to specify additional context variables for the processes being measured.
+- Stats app :
+  - Added `-context` argument to specify additional context variables for the processes being measured.
+  - Improved accuracy of timings produced by `-scene` and `-image`.
 - CameraTool : Improved performance when moving lights/cameras in look-through mode.
 
 Fixes
