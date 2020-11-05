@@ -11,10 +11,12 @@ Improvements
 
 Improvements
 ------------
+
 - Spreadsheet :
   - Enabled cell selection, editing is now achieved with a double-click.
   - Added menu items to copy/paste the enabled state and value(s) of selected cells.
   - Added menu items to delete the selected rows.
+  - Added ability to copy/paste the enabled state and value(s) of selected cells.
 
 Fixes
 -----

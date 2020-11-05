@@ -48,6 +48,7 @@ from Qt import QtWidgets
 from Qt import QtCompat
 
 from . import _Algo
+from . import _ClipboardAlgo
 from . import _ProxyModels
 from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
@@ -123,6 +124,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		tableView.setSelectionBehavior( tableView.SelectItems )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		# Drawing
 
@@ -402,6 +404,28 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return True
 
+	def __keyPress( self, widget, event ) :
+
+		if event.modifiers == event.Modifiers.Control :
+
+			if event.key in ( "C", "V", "X" ) :
+
+				if self.__mode != self.Mode.RowNames :
+
+					if event.key == "C" :
+						self.__copyCells()
+						return True
+
+					if event.key == "V" :
+						self.__pasteCells()
+						return True
+
+				else :
+					# Prevent shortcuts falling through which is confusing
+					return True
+
+		return False
+
 	def __headerButtonPress( self, header, event ) :
 
 		if event.buttons != event.Buttons.Right :
@@ -524,8 +548,67 @@ class _PlugTableView( GafferUI.Widget ) :
 			)
 		]
 
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( cellPlugs )
+
+		items.extend( (
+			(
+				"/__CopyPasteCellsDivider__", { "divider" : True }
+			),
+			(
+				"Copy Cell%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__copyCells ),
+					"active" : _ClipboardAlgo.canCopyPlugs( plugMatrix ),
+					"shortCut" : "Ctrl+C"
+				}
+			),
+			(
+				"Paste Cell%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__pasteCells ),
+					"active" : _ClipboardAlgo.canPasteCells( self.__getClipboard(), plugMatrix ),
+					"shortCut" : "Ctrl+V"
+				}
+			)
+		) )
+
 		for path, args in reversed( items ) :
 			menuDefinition.prepend( path, args )
+
+	def __getClipboard( self ) :
+
+		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
+		return appRoot.getClipboardContents()
+
+	def __setClipboard( self, data ) :
+
+		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
+		return appRoot.setClipboardContents( data )
+
+	def __copyCells( self ) :
+
+		selection = self.selectedPlugs()
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( selection )
+
+		if not plugMatrix or not _ClipboardAlgo.canCopyPlugs( plugMatrix ) :
+			return
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
+
+		self.__setClipboard( clipboardData )
+
+	def __pasteCells( self ) :
+
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( self.selectedPlugs() )
+		clipboard = self.__getClipboard()
+
+		if not plugMatrix or not _ClipboardAlgo.canPasteCells( clipboard, plugMatrix ) :
+			return
+
+		context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
+		with Gaffer.UndoScope( plugMatrix[0][0].ancestor( Gaffer.ScriptNode ) ) :
+			_ClipboardAlgo.pasteCells( clipboard, plugMatrix, context.getTime() )
 
 	def __setRowNameWidth( self, width, *unused ) :
 
