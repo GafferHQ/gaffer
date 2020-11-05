@@ -575,6 +575,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 	FilteredSceneProcessor::hashSet( setName, context, parent, h );
 	inPlug()->setPlug()->hash( h );
 
+	/// \todo Parallelise.
 	for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
 	{
 		const ScenePlug::ScenePath &parentPath = *it;
@@ -603,6 +604,7 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
+	/// \todo Parallelise.
 	vector<InternedString> outputPrefix;
 	for( PathMatcher::Iterator it = parentPaths.begin(), eIt = parentPaths.end(); it != eIt; ++it )
 	{
@@ -626,6 +628,19 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 	}
 
 	return outputSetData;
+}
+
+Gaffer::ValuePlug::CachePolicy BranchCreator::hashCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug()->setPlug() )
+	{
+		// Technically we do not _need_ TaskIsolation because we have not yet
+		// multithreaded `hashSet()`. But we still benefit from requesting it
+		// because it means the hash is stored in the global cache, where it is
+		// shared between all threads and is almost guaranteed not to be evicted.
+		return ValuePlug::CachePolicy::TaskIsolation;
+	}
+	return FilteredSceneProcessor::hashCachePolicy( output );
 }
 
 IECore::PathMatcher BranchCreator::parentPathsForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const

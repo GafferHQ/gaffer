@@ -98,6 +98,8 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const override;
 		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
+		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
+
 		/// @name Branch evaluation methods
 		/// These must be implemented by derived classes. The hashBranch*() methods must either :
 		///

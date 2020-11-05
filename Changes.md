@@ -13,7 +13,9 @@ Improvements
   - Added `-context` argument to specify additional context variables for the processes being measured.
   - Improved accuracy of timings produced by `-scene` and `-image`.
 - CameraTool : Improved performance when moving lights/cameras in look-through mode.
-- Instancer/Parent : Improved performance when computing sets which do not exist on the prototypes/children.
+- Instancer/Parent :
+  - Improved performance when computing sets which do not exist on the prototypes/children.
+  - Improved interactive performance by reducing likelihood of cache eviction for set hashes.
 
 Fixes
 -----
