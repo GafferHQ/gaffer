@@ -36,6 +36,7 @@
 
 #include "GafferScene/SetFilter.h"
 
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SetAlgo.h"
 
@@ -112,7 +113,6 @@ void SetFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		ScenePlug::GlobalScope globalScope( context ); // Removes `scene:filter:inputScene`
 		SetAlgo::setExpressionHash( setExpressionPlug()->getValue(), getInputScene( context ), h );
 	}
-
 }
 
 void SetFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
@@ -155,6 +155,14 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 
 	Gaffer::Context::EditableScope expressionResultScope( context );
 	expressionResultScope.remove( ScenePlug::scenePathContextName );
+	// Remove unique value used by `SceneAlgo::history()` to disable caching.
+	// This is OK because `history()` would discard this branch of computation
+	// anyway. The benefit is that we avoid cache misses for potentially
+	// expensive set computations.
+	//
+	// \todo Ideally we would deal with this in `history()` itself, perhaps
+	// with a mechanism for enabling/disabling caching on the fly.
+	expressionResultScope.remove( SceneAlgo::historyIDContextName() );
 
 	expressionResultPlug()->hash( h );
 }
@@ -170,6 +178,8 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 
 	Gaffer::Context::EditableScope expressionResultScope( context );
 	expressionResultScope.remove( ScenePlug::scenePathContextName );
+	// See comments in `hashMatch()`.
+	expressionResultScope.remove( SceneAlgo::historyIDContextName() );
 
 	ConstPathMatcherDataPtr set = expressionResultPlug()->getValue();
 
