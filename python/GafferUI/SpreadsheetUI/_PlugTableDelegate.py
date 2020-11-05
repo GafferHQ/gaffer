@@ -60,7 +60,9 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 		painter.save()
 
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-		overlayColor = QtGui.QColor( 40, 40, 40, 200 )
+
+		overlayAlpha = 100 if option.state & QtWidgets.QStyle.State_Selected else 200
+		overlayColor = QtGui.QColor( 40, 40, 40, overlayAlpha )
 
 		if not cellPlugEnabled :
 
