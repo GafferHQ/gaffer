@@ -1,4 +1,4 @@
-0.58.x.x (relative to 0.58.4.0)
+0.58.5.0 (relative to 0.58.4.0)
 ========
 
 > Caution : A performance enhancement introduced in BranchCreator may reveal latent bugs in derived classes.
