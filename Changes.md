@@ -81,6 +81,9 @@ Fixes
 - Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
 - PlugAlgo/BoxIO : Fixed bug handling nested compound plugs.
 - Resample : Fixed hash of intermediate `deep` plug.
+- String matching :
+  - Fixed erroneous matches in specific cases involving multiple space-separated patterns and the `*` wildcard.
+  - Fixed severe performance problem caused by many `*` wildcards in space-separated match patterns.
 
 API
 ---
