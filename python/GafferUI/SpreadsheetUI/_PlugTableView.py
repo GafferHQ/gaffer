@@ -359,6 +359,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
 
+		# Disabled items won't show up in the selection model
 		if not index.flags() & QtCore.Qt.ItemIsEnabled :
 			return True
 
@@ -435,6 +436,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 			if event.key == "Return" :
 				self.__returnKeyPress()
+				return True
+
+			if event.key == "D" :
+				# See note in __prependRowMenuItems
+				if self.__mode != self.Mode.RowNames :
+					self.__toggleCellEnabledState()
 				return True
 
 		elif event.modifiers == event.Modifiers.Control :
@@ -561,6 +568,11 @@ class _PlugTableView( GafferUI.Widget ) :
 				}
 			) )
 
+		# We don't have an item for managing the enabled state of rows, because when a
+		# row is disabled (via Qt.ItemIsEnabled flag), those indices are no longer reported
+		# from the selection model. So you could use the item to turn them off, but its
+		# hard to turn them back on again.
+
 		items.extend( (
 			(
 				"/__DeleteRowDivider__", { "divider" : True }
@@ -593,7 +605,8 @@ class _PlugTableView( GafferUI.Widget ) :
 				( "/Disable Cell%s" if currentEnabledState else "/Enable Cell%s" ) % pluralSuffix,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setPlugValues ), enabledPlugs, not currentEnabledState ),
-					"active" : canChangeEnabledState
+					"active" : canChangeEnabledState,
+					"shortCut" : "D"
 				}
 			)
 		]
