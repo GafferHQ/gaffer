@@ -35,6 +35,7 @@
 ##########################################################################
 
 import imath
+import six
 
 import IECore
 
@@ -245,6 +246,33 @@ class SerialisationTest( GafferTest.TestCase ) :
 		bIdentifier = serialisation.identifier( node["b"] )
 		self.assertEqual( bIdentifier, "" )
 		self.assertEqual( serialisation.childIdentifier( bIdentifier, node["b"]["op1"] ), "" )
+
+	def testBase64ObjectConversions( self ) :
+
+		# Test StringData with all possible byte values (except 0,
+		# because we can't construct a StringData with a null at the start).
+		allBytes = bytes().join( [ six.int2byte( i ) for i in range( 1, 256 ) ] )
+		for i in range( 0, len( allBytes ) ) :
+			o = IECore.StringData( allBytes[:i] )
+			b = Gaffer.Serialisation.objectToBase64( o )
+			self.assertEqual(
+				Gaffer.Serialisation.objectFromBase64( b ),
+				o
+			)
+
+		# Test CompoundData
+		o = IECore.CompoundData( {
+			"a" : 10,
+			"b" : 20,
+			"c" : IECore.CompoundData( {
+				"d" : imath.V3f( 1, 2, 3 )
+			} )
+		} )
+		b = Gaffer.Serialisation.objectToBase64( o )
+		self.assertEqual(
+			Gaffer.Serialisation.objectFromBase64( b ),
+			o
+		)
 
 if __name__ == "__main__":
 	unittest.main()

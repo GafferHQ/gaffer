@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import six
 
 import IECore
 
@@ -80,6 +81,24 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		direction = aim["out"].fullTransform( "/group/constrained" ).multDirMatrix( aim["aim"].getValue() )
 		self.assertAlmostEqual( (targetTranslate - constrainedTranslate).normalized().dot( direction.normalized() ), 1, 6 )
+
+
+		# Test behaviour for missing target
+		plane1["name"].setValue( "targetX" )
+		with six.assertRaisesRegex( self, RuntimeError, 'AimConstraint.out.transform : Constraint target does not exist: "/group/target"' ):
+			aim["out"].fullTransform( "/group/constrained" )
+
+		aim["ignoreMissingTarget"].setValue( True )
+		self.assertEqual( aim["out"].fullTransform( "/group/constrained" ), aim["in"].fullTransform( "/group/constrained" ) )
+
+		# Constrain to root
+		aim["target"].setValue( "/" )
+		direction = aim["out"].fullTransform( "/group/constrained" ).multDirMatrix( aim["aim"].getValue() )
+		self.assertAlmostEqual( (-constrainedTranslate).normalized().dot( direction.normalized() ), 1, 6 )
+
+		# No op
+		aim["target"].setValue( "" )
+		self.assertEqual( aim["out"].fullTransform( "/group/constrained" ), aim["in"].fullTransform( "/group/constrained" ) )
 
 	def testConstrainedWithExistingRotation( self ) :
 

@@ -43,9 +43,11 @@ import sys
 import json
 
 # GitHub Action workflow variables can be populated at run-time by echoing special
-# strings to a process output. The following allows vars to be set:
+# strings to an env file. The following allows vars to be set:
 #
-#    echo ::set-env name=<name>::<value>
+#   https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-commands-for-github-actions#environment-files
+#
+#   echo var=value >> $GITHUB_ENV
 #
 # We make use of this mechanism to allow custom logic to define the build name
 # as well as determine the correct commit hash depending on the nature of the
@@ -143,11 +145,13 @@ buildName = nameFormats.get( trigger, nameFormats['default'] ).format( **formatV
 
 ## Set vars in the downstream workflow environment
 
-print( "Setting $GAFFER_BUILD_NAME to '%s'" % buildName )
-print( "::set-env name=GAFFER_BUILD_NAME::%s" % buildName )
+with open( os.environ["GITHUB_ENV"], "a" ) as f :
 
-print( "Setting $GAFFER_SOURCE_COMMIT to '%s'" % commit )
-print( "::set-env name=GAFFER_SOURCE_COMMIT::%s" % commit )
+	print( "Setting $GAFFER_BUILD_NAME to '%s'" % buildName )
+	f.write( 'GAFFER_BUILD_NAME=%s\n' % buildName )
 
-print( "Setting $GAFFER_GITHUB_RELEASEID to '%s'" % releaseId )
-print( "::set-env name=GAFFER_GITHUB_RELEASEID::%s" % releaseId )
+	print( "Setting $GAFFER_SOURCE_COMMIT to '%s'" % commit )
+	f.write( 'GAFFER_SOURCE_COMMIT=%s\n' % commit )
+
+	print( "Setting $GAFFER_GITHUB_RELEASEID to '%s'" % releaseId )
+	f.write( 'GAFFER_GITHUB_RELEASEID=%s\n' % releaseId )

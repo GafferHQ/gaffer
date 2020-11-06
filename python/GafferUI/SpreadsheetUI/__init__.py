@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,31 +34,41 @@
 #
 ##########################################################################
 
-# Utility classes
+from . import _Metadata
+from . import _Menus
 
-from .TextWriter import TextWriter
-from .LoggingTaskNode import LoggingTaskNode
-from .DebugDispatcher import DebugDispatcher
-from .ErroringTaskNode import ErroringTaskNode
+from ._CellPlugValueWidget import _CellPlugValueWidget
+from ._PlugTableModel import _PlugTableModel
 
-# Test cases
+# Value Formatting
+# ================
 
-from .DispatcherTest import DispatcherTest
-from .LocalDispatcherTest import LocalDispatcherTest
-from .TaskNodeTest import TaskNodeTest
-from .TaskSwitchTest import TaskSwitchTest
-from .PythonCommandTest import PythonCommandTest
-from .SystemCommandTest import SystemCommandTest
-from .TaskListTest import TaskListTest
-from .WedgeTest import WedgeTest
-from .TaskContextVariablesTest import TaskContextVariablesTest
-from .ExecuteApplicationTest import ExecuteApplicationTest
-from .TaskPlugTest import TaskPlugTest
-from .FrameMaskTest import FrameMaskTest
-from .DispatchApplicationTest import DispatchApplicationTest
-from .ModuleTest import ModuleTest
-from .StatsApplicationTest import StatsApplicationTest
+from ._Formatting import registerValueFormatter, formatValue
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+# Editing
+# =======
+#
+# By default, `PlugValueWidget.create( cell["value"] )` is used to create
+# a widget for editing cells in the spreadsheet, but custom editors may be
+# provided for specific plug types.
+
+# Registers a function to return a PlugValueWidget for editing cell
+# value plugs of the specified type.
+def registerValueWidget( plugType, plugValueWidgetCreator ) :
+
+	_CellPlugValueWidget.registerValueWidget( plugType, plugValueWidgetCreator )
+
+# Decorations
+# ===========
+
+## Registers a function to return a decoration to be shown
+# alongside the formatted value. Currently the only supported
+# return type is `Color3f`.
+def registerDecoration( plugType, decorator ) :
+
+	_PlugTableModel.registerDecoration( plugType, decorator )
+
+## Returns the decoration for the specified plug.
+def decoration( plug ) :
+
+	return _PlugTableModel.decoration( plug )

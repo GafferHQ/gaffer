@@ -121,6 +121,48 @@ Build
   - USD 20.11
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.0.0 for full details.
 
+0.58.5.0 (relative to 0.58.4.0)
+========
+
+> Caution : A performance enhancement introduced in BranchCreator may reveal latent bugs in derived classes.
+> If a derived class implements `computeBranchSet()` it is now essential that it also implements
+> `computeBranchSetNames()` appropriately. It is no longer sufficient to rely on the set names existing on
+> the main input.
+
+Improvements
+------------
+
+- Stats app :
+  - Added `-context` argument to specify additional context variables for the processes being measured.
+  - Improved accuracy of timings produced by `-scene` and `-image`.
+- CameraTool : Improved performance when moving lights/cameras in look-through mode.
+- Instancer/Parent :
+  - Improved performance when computing sets which do not exist on the prototypes/children.
+  - Improved interactive performance by reducing likelihood of cache eviction for set hashes.
+- SetFilter : Improved interactive performance for CameraTool/TransformTool by enabling use of cached values.
+
+Fixes
+-----
+
+- Viewer :
+  - Fixed bug that caused the Inspector to grow very wide when inspecting long strings.
+  - Fixed bug that caused a second click to be required to apply edits when closing an Inspector edit window by clicking outside the popup.
+- NumericPlugValueWidget : Fixed bug that caused plug values to be set to 0 if editing completed with invalid text.
+- StringPlugValueWidget : Fixed bug that could cause plug values to be overwritten when editing multiple plugs and focus was lost without change, or the value state changed to mixed via external action.
+- TypedObjectPlug : Fixed serialisation of values for which `repr()` is not available (#106).
+- Editor : Fixed bug that caused child widgets to lose focus when the mouse re-enters an Editor that already has focus.
+- Stats app : The `-canceller` argument is now honoured when using `-task` to measure task execution time.
+
+API
+---
+
+- Serialisation : Added `objectToBase64()` and `objectFromBase64()` methods to provide base64 encoding and decoding for all `IECore::Objects`.
+- NumericWidget : Fixed bug that caused `editingFinished` to be called with the wrong `reason` when the widget was left with an invalid value. `Invalid` is now passed in these cases.
+- PlugValueWidget : Improved support for legacy widgets in `PlugValueWidget.create` when used to create widgets for single plugs supplied in a set.
+- NameLabel : Added support for multiple graph components in the constructor, added `setGraphComponents`/`getGraphComponents` methods.
+- LabelPlugValueWidget, NameValuePlugValuePlug : Added support for multiple plugs.
+- SceneAlgo : Added Python binding for `historyIDContextName()`. Woe betide you if you find a need for it.
+
 0.58.4.0 (relative to 0.58.3.2)
 ========
 

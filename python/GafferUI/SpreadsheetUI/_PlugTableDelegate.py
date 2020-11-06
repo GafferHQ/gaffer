@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,31 +34,45 @@
 #
 ##########################################################################
 
-# Utility classes
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
-from .TextWriter import TextWriter
-from .LoggingTaskNode import LoggingTaskNode
-from .DebugDispatcher import DebugDispatcher
-from .ErroringTaskNode import ErroringTaskNode
+from ._PlugTableModel import _PlugTableModel
 
-# Test cases
+class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 
-from .DispatcherTest import DispatcherTest
-from .LocalDispatcherTest import LocalDispatcherTest
-from .TaskNodeTest import TaskNodeTest
-from .TaskSwitchTest import TaskSwitchTest
-from .PythonCommandTest import PythonCommandTest
-from .SystemCommandTest import SystemCommandTest
-from .TaskListTest import TaskListTest
-from .WedgeTest import WedgeTest
-from .TaskContextVariablesTest import TaskContextVariablesTest
-from .ExecuteApplicationTest import ExecuteApplicationTest
-from .TaskPlugTest import TaskPlugTest
-from .FrameMaskTest import FrameMaskTest
-from .DispatchApplicationTest import DispatchApplicationTest
-from .ModuleTest import ModuleTest
-from .StatsApplicationTest import StatsApplicationTest
+	def __init__( self, parent = None ) :
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+		QtWidgets.QStyledItemDelegate.__init__( self, parent )
+
+	def paint( self, painter, option, index ) :
+
+		QtWidgets.QStyledItemDelegate.paint( self, painter, option, index )
+
+		flags = index.flags()
+		enabled = flags & QtCore.Qt.ItemIsEnabled and flags & QtCore.Qt.ItemIsEditable
+		cellPlugEnabled = index.data( _PlugTableModel.CellPlugEnabledRole )
+
+		if enabled and cellPlugEnabled :
+			return
+
+		painter.save()
+
+		painter.setRenderHint( QtGui.QPainter.Antialiasing )
+		overlayColor = QtGui.QColor( 40, 40, 40, 200 )
+
+		if not cellPlugEnabled :
+
+			painter.fillRect( option.rect, overlayColor )
+
+			pen = QtGui.QPen( QtGui.QColor( 20, 20, 20, 150 ) )
+			pen.setWidth( 2 )
+			painter.setPen( pen )
+			painter.drawLine( option.rect.bottomLeft(), option.rect.topRight() )
+
+		if not enabled :
+
+			painter.fillRect( option.rect, overlayColor )
+
+		painter.restore()

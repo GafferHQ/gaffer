@@ -70,6 +70,9 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 		Gaffer::StringPlug *targetPlug();
 		const Gaffer::StringPlug *targetPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingTargetPlug();
+		const Gaffer::BoolPlug *ignoreMissingTargetPlug() const;
+
 		Gaffer::IntPlug *targetModePlug();
 		const Gaffer::IntPlug *targetModePlug() const;
 
@@ -95,7 +98,7 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 	private :
 
-		void tokenizeTargetPath( ScenePath &path ) const;
+		boost::optional<ScenePath> targetPath() const;
 
 		static size_t g_firstPlugIndex;
 

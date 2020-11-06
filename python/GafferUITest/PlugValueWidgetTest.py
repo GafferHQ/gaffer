@@ -135,6 +135,33 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		with six.assertRaisesRegex( self, Exception, "Multiple widget creators" ) :
 			GafferUI.PlugValueWidget.create( n["user"].children() )
 
+	def testCreateSupportsLegacyWidgetsWithSinglePlugs( self ) :
+
+		class SinglePlugOnlyWidget( GafferUI.PlugValueWidget ) :
+
+			def __init__( self, plug, **kw  ) :
+
+				GafferUI.PlugValueWidget.__init__( self, GafferUI.TextWidget(), plug, **kw )
+
+				if not isinstance( plug, Gaffer.Plug ) :
+					raise GafferUI.PlugValueWidget.MultiplePlugsError()
+
+		class LegacyWidgetTestPlug( Gaffer.ValuePlug ) :
+			pass
+
+		IECore.registerRunTimeTyped( LegacyWidgetTestPlug )
+		GafferUI.PlugValueWidget.registerType( LegacyWidgetTestPlug, SinglePlugOnlyWidget )
+
+		n = Gaffer.Node()
+		n["user"]["p1"] = LegacyWidgetTestPlug()
+		n["user"]["p2"] = LegacyWidgetTestPlug()
+
+		self.assertIsInstance( GafferUI.PlugValueWidget.create( n["user"]["p1"] ), SinglePlugOnlyWidget )
+		self.assertIsInstance( GafferUI.PlugValueWidget.create( { n["user"]["p1"] } ), SinglePlugOnlyWidget )
+
+		with self.assertRaises( GafferUI.PlugValueWidget.MultiplePlugsError ) :
+			GafferUI.PlugValueWidget.create( { n["user"]["p1"], n["user"]["p2"] } )
+
 	def testAcquire( self ) :
 
 		s = Gaffer.ScriptNode()

@@ -51,7 +51,7 @@ from Qt import QtGui
 ## \todo Fix bug when pressing up arrow with cursor to left of minus sign
 class NumericWidget( GafferUI.TextWidget ) :
 
-	ValueChangedReason = IECore.Enum.create( "Invalid", "SetValue", "DragBegin", "DragMove", "DragEnd", "Increment", "Edit" )
+	ValueChangedReason = IECore.Enum.create( "Invalid", "SetValue", "DragBegin", "DragMove", "DragEnd", "Increment", "Edit", "InvalidEdit" )
 
 	def __init__( self, value, **kw ) :
 
@@ -264,13 +264,18 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 		assert( widget is self )
 
+		reason = self.ValueChangedReason.Edit
+
 		# In __incrementIndex we temporarily pad with leading
 		# zeroes in order to achieve consistent editing. Revert
 		# back to our standard form now so we don't leave it in
 		# this state.
-		self.setText( self.__valueToString( self.getValue() ) )
+		try :
+			self.setText( self.__valueToString( self.getValue() ) )
+		except ValueError as e :
+			reason = self.ValueChangedReason.InvalidEdit
 
-		self.__emitValueChanged( self.ValueChangedReason.Edit )
+		self.__emitValueChanged( reason )
 
 	def __setValueInternal( self, value, reason ) :
 
@@ -337,7 +342,7 @@ class _ExpressionValidator( QtGui.QValidator ) :
 		try :
 			operand1 = self.__numericType( match.group( 1 ) )
 		except :
-			return "0"
+			return text
 
 		try :
 			operand2 = self.__numericType( match.group( 3 ) )

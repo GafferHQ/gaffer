@@ -38,6 +38,8 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
+import six
+
 class NameLabelTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
@@ -61,7 +63,10 @@ class NameLabelTest( GafferUITest.TestCase ) :
 		n.setName( "somethingElse" )
 		self.assertEqual( l.getText(), "SOMETHINGELSE" )
 
-	def testMultipleComponents( self ) :
+		l.setGraphComponent( None )
+		self.assertEqual( l.getText(), "" )
+
+	def testMultipleHierarchyComponents( self ) :
 
 		n1 = Gaffer.Node( "n1" )
 		n1["n2"] = Gaffer.Node()
@@ -138,6 +143,34 @@ class NameLabelTest( GafferUITest.TestCase ) :
 
 		n.setName( "B" )
 		self.assertTrue( l.getText(), "woteva" )
+
+	def testMultipleComponents( self ) :
+
+		n1 = Gaffer.Node( "n1" )
+		n2 = Gaffer.Node( "n2" )
+
+		l = GafferUI.NameLabel( { n1, n2 } )
+
+		self.assertEqual( l.getGraphComponents(), { n1, n2 } )
+		with six.assertRaisesRegex( self, RuntimeError, "getGraphComponent called with multiple GraphComponents" ) :
+			l.getGraphComponent()
+
+		self.assertTrue( l.getText(), "---" )
+
+		n1["user"]["plug"] = Gaffer.Plug()
+		n2["user"]["plug"] = Gaffer.Plug()
+
+		l.setGraphComponents( set() )
+		self.assertEqual( l.getText(), "" )
+
+		l.setGraphComponents( { n1["user"]["plug"], n2["user"]["plug"] } )
+		self.assertEqual( l.getText(), "Plug" )
+
+		l.setNumComponents( 2 )
+		self.assertTrue( l.getText(), "---" )
+
+		l.setGraphComponent( None )
+		self.assertEqual( l.getText(), "" )
 
 if __name__ == "__main__":
 	unittest.main()

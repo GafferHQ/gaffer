@@ -340,5 +340,41 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		)
 		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( script["editScope"], "/camera" ) )
 
+	def testNoUnecessaryHistoryCalls( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["camera"] = GafferScene.Camera()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["camera"]["out"] )
+
+		view["camera"]["lookThroughEnabled"].setValue( True )
+		view["camera"]["lookThroughCamera"].setValue( "/camera" )
+
+		tool = GafferSceneUI.CameraTool( view )
+		tool["active"].setValue( True )
+
+		# Force CameraTool update, since it is done lazily just prior to render.
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+		with Gaffer.ContextMonitor() as cm :
+
+			view.viewportGadget().setCameraTransform(
+				imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
+			)
+
+			# Force update
+			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+		# We do not want the CameraTool to have performed a `SceneAlgo::history`
+		# query during the edit, as they can be expensive and aren't suitable
+		# for repeated use during drags etc.
+		self.assertNotIn( GafferScene.SceneAlgo.historyIDContextName(), cm.combinedStatistics().variableNames() )
+
+		self.assertEqual(
+			script["camera"]["transform"]["translate"].getValue(),
+			imath.V3f( 1, 2, 3 )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

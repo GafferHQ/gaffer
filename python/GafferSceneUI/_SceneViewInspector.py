@@ -660,11 +660,12 @@ class _ParameterWidget( GafferUI.Widget ) :
 
 		with grid :
 
-			GafferUI.Label(
+			label = GafferUI.Label(
 				## \todo Prettify label text (remove snake case)
 				text = "<h5>" + IECore.CamelCase.toSpaced( parameter ) + "</h5>",
 				parenting = { "index" : ( slice( 0, 2 ), 0 ) }
 			)
+			label._qtWidget().setMaximumWidth( 140 )
 
 			self.__editButton = GafferUI.Button( image = "editOff.png", hasFrame = False,
 				parenting = {
@@ -789,6 +790,8 @@ class _EditWindow( GafferUI.Window ) :
 		container = GafferUI.ListContainer( spacing = 4 )
 		GafferUI.Window.__init__( self, "", child = container, borderWidth = 8, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
 
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+
 		for p in plugs :
 			## \todo Figure out when/if this is about to happen, and disable
 			# editing beforehand.
@@ -866,6 +869,19 @@ class _EditWindow( GafferUI.Window ) :
 			else :
 				textWidget.setFocussed( True )
 
+	def __visibilityChanged( self, unused ) :
+
+		if self.visible() :
+			return
+
+		# The modal popup will hide the window without de-focusing the
+		# current widget. Ultimately this results in un-committed edits
+		# from being lost. Force the active widget to resign focus.
+		focusWidget = QtWidgets.QApplication.focusWidget()
+		if focusWidget is not None :
+			gafferWidget = GafferUI.Widget._owner( focusWidget )
+			if gafferWidget is not None and self.isAncestorOf( gafferWidget ) :
+				gafferWidget._qtWidget().clearFocus()
 
 	def __paintEvent( self, event ) :
 
@@ -924,7 +940,7 @@ class _ValueWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, QtWidgets.QLabel(), **kw )
 
 		self._qtWidget().setFixedHeight( 20 )
-		self._qtWidget().setMinimumWidth( 140 )
+		self._qtWidget().setFixedWidth( 140 )
 
 		self._qtWidget().setStyleSheet( "padding-left: 4px; padding-right: 4px;" )
 
