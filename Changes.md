@@ -5,6 +5,7 @@ Fixes
 -----
 
 - ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
+- SpreadsheetUI : Fixed bug that prevented column headers from updating.
 
 0.58.5.0 (relative to 0.58.4.0)
 ========

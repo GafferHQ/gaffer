@@ -64,16 +64,16 @@ class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
 
 		assert( isinstance( model, _PlugTableModel ) )
 
-		# _PlugTableModel only emits modelReset and dataChanged signals (for now)
+		# _PlugTableModel only emits modelReset and [header]DataChanged signals (for now)
 		# so we can avoid the headache of remapping the plethora of row/column signals.
 
 		oldModel = self.sourceModel()
 		if oldModel :
-			oldModel.dataChanged.disconnect( self.__dataChanged )
-			oldModel.modelReset.disconnect( self.modelReset )
+			oldModel.disconnect( self )
 
 		if model :
 			model.dataChanged.connect( self.__dataChanged )
+			model.headerDataChanged.connect( self.__headerDataChanged )
 			model.modelReset.connect( self.modelReset )
 
 		self.beginResetModel()
@@ -163,6 +163,24 @@ class __PlugTableProxyModel( QtCore.QAbstractProxyModel ) :
 			proxyBottomRight = self.index( self.rowCount() - 1, self.columnCount() - 1 )
 
 		self.dataChanged.emit( proxyTopLeft, proxyBottomRight, roles )
+
+	def __headerDataChanged( self, orientation, first, last ) :
+
+		if orientation == QtCore.Qt.Vertical :
+			limit = self.rowCount() - 1
+			offset = self.__startRow
+		else :
+			limit = self.columnCount() - 1
+			offset = self.__startColumn
+
+		# Don't propagate if the changed range is outside of our remapping
+		if first - offset > limit or last < offset :
+			return
+
+		first = max( first - offset, 0 )
+		last = min( last - offset, limit )
+
+		self.headerDataChanged.emit( orientation, first, last )
 
 class RowNamesProxyModel( __PlugTableProxyModel ) :
 
