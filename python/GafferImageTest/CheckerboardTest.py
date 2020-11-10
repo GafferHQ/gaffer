@@ -61,8 +61,8 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 			expectedValue = checkerboard["colorA"][i].getValue()
 			s = GafferImage.Sampler( checkerboard["out"], channel, checkerboard["out"]["dataWindow"].getValue() )
-			self.assertAlmostEqual( s.sample( 12, 12 ), expectedValue, delta = 0.001 )
-			self.assertAlmostEqual( s.sample( 72, 72 ), expectedValue, delta = 0.001 )
+			self.assertEqual( s.sample( 12, 12 ), expectedValue )
+			self.assertEqual( s.sample( 72, 72 ), expectedValue )
 
 	def testFormatHash( self ) :
 
@@ -154,7 +154,8 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/GafferChecker.exr" )
 
-		self.assertImagesEqual( checkerboard["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
+		# The image
+		self.assertImagesEqual( checkerboard["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.0002 )
 
 	def testFilterWidth( self ) :
 
@@ -167,8 +168,37 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( checkerboard["out"] )
+
+		# Pixels on the border could be classified as within the filter width due to floating point precision,
+		# and could have floating point error
 		sampler["pixel"].setValue( imath.V2f( 101, 54 ) )
-		self.assertAlmostEqual( checkerboard["colorB"].getValue().r, sampler["color"].getValue().r, delta = 0.001 )
+		self.assertAlmostEqual( checkerboard["colorB"].getValue().r, sampler["color"].getValue().r, delta = 0.0000001 )
+
+		# Pixels on the interior of a checker must be exact
+		sampler["pixel"].setValue( imath.V2f( 102, 54 ) )
+		self.assertEqual( checkerboard["colorB"].getValue().r, sampler["color"].getValue().r )
+
+	def testValuesIdentical( self ):
+
+		checkerboard = GafferImage.Checkerboard()
+		checkerboard["format"].setValue( GafferImage.Format( 1024, 1024, 1 ) )
+		checkerboard["size"].setValue( imath.V2f( 14 ) )
+
+		offset = GafferImage.Offset()
+		offset["in"].setInput( checkerboard["out"] )
+		offset["offset"].setValue( imath.V2i( 7 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( checkerboard["out"] )
+		merge["in"][1].setInput( offset["out"] )
+		merge["operation"].setValue( GafferImage.Merge.Operation.Difference )
+
+		imageStats = GafferImage.ImageStats()
+		imageStats["in"].setInput( merge["out"] )
+		imageStats["area"].setValue( imath.Box2i( imath.V2i( 7 ), imath.V2i( 1024 ) ) )
+
+		self.assertLess( imageStats["max"][0].getValue(), 2e-5 )
+		self.assertLess( imageStats["average"][0].getValue(), 5e-7 )
 
 if __name__ == "__main__":
 	unittest.main()
