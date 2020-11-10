@@ -1,3 +1,11 @@
+0.58.x.x (relative to 0.58.5.0)
+========
+
+Fixes
+-----
+
+- ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
+
 0.58.5.0 (relative to 0.58.4.0)
 ========
 

@@ -1565,6 +1565,8 @@
 		page STRING "Transmission"
 	[attr transmit_aovs]
 		page STRING "Transmission"
+	[attr dielectric_priority]
+		page STRING "Transmission"
 
 	[attr subsurface]
 		page STRING "Subsurface"
