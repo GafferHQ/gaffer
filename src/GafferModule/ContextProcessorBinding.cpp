@@ -107,6 +107,7 @@ class SetupBasedNodeSerialiser : public NodeSerialiser
 
 		// Add a call to `setup()` to recreate the plugs.
 
+		/// \todo Avoid creating a temporary plug.
 		PlugPtr plug = inPlug->createCounterpart( g_inPlugName, Plug::In );
 		plug->setFlags( Plug::Dynamic, false );
 

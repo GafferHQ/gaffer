@@ -927,7 +927,24 @@ class Plug::DirtyPlugs
 			}
 
 			m_graph.clear();
-			m_plugs.clear();
+			// Using swap instead of `clear()` because libstdc++'s `clear()`
+			// method is linear in the number of buckets, _not_ in `size()` as
+			// required by the standard :
+			//
+			// - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67922
+			// - https://cplusplus.github.io/LWG/issue2550
+			//
+			// This caused severe performance regressions when making many
+			// small calls to `emit()` after previously growing `m_plugs` to
+			// a large size.
+			//
+			/// \todo Consider `m_plugs.erase( m_plugs.begin(), m_plugs.end() )`
+			/// as an alternative. This appears to be slightly slower for the
+			/// many-small-emits case, but may provide benefits through reduced
+			/// allocation for several large emissions. Also investigate the
+			/// root causes of the many-small-emits cases.
+			PlugMap emptyPlugs;
+			m_plugs.swap( emptyPlugs );
 		}
 
 		Graph m_graph;
