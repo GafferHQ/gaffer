@@ -129,6 +129,7 @@ class BoxIOSerialiser : public NodeSerialiser
 
 		// Add a call to `setup()` to recreate the plugs.
 
+		/// \todo Avoid creating a temporary plug.
 		PlugPtr plug = boxIO->plug()->createCounterpart( boxIO->plug()->getName(), Plug::In );
 		plug->setFlags( Plug::Dynamic, false );
 

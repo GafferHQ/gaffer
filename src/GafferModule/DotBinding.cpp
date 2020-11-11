@@ -97,6 +97,7 @@ class DotSerialiser : public NodeSerialiser
 
 		// Add a call to `setup()` to recreate the plugs.
 
+		/// \todo Avoid creating a temporary plug.
 		PlugPtr plug = dot->inPlug()->createCounterpart( "in", Plug::In );
 		plug->setFlags( Plug::Dynamic, false );
 
