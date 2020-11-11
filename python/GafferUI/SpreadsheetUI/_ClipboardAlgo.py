@@ -134,6 +134,30 @@ def pasteCells( valueMatrix, plugs, atTime ) :
 		for targetColumnIndex, cell in enumerate( row ) :
 			__setValueFromData( cell, __dataForPlug( targetRowIndex, targetColumnIndex, valueMatrix ), atTime )
 
+# Returns True if the supplied data can be pasted as new rows, this
+# requires the target plugs columns to have matching data types.
+def canPasteRows( data, rowsPlug ) :
+
+	if not isValueMatrix( data ) :
+		return False
+
+	# Check global read-only status, early out if none can be modified
+	if Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
+		return False
+
+	defaultsData = valueMatrix( [ rowsPlug.defaultRow().children() ] )[0]
+	return __dataSchemaMatches( data[0], defaultsData )
+
+# Pastes the supplied data as new rows at the end of the supplied rows plug.
+def pasteRows( valueMatrix, rowsPlug ) :
+
+	assert( canPasteRows( valueMatrix, rowsPlug ) )
+
+	# addRows currently returns None, so this is easier
+	newRows = [ rowsPlug.addRow() for _ in valueMatrix ]
+	# We know these aren't animated as we've just made them so time is irrelevant
+	pasteCells( valueMatrix, [ row.children() for row in newRows ], 0 )
+
 ## Takes an arbitrary list of spreadsheet CellPlugs (perhaps as obtained from a
 # selection, which may be in a jumbled order) and groups them, ordered by row
 # then by column to be compatible with copy/paste.

@@ -432,6 +432,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __keyPress( self, widget, event ) :
 
+		forRows = self.__mode == self.Mode.RowNames
+
 		if event.modifiers == event.Modifiers.None_ :
 
 			if event.key == "Return" :
@@ -440,7 +442,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 			if event.key == "D" :
 				# See note in __prependRowMenuItems
-				if self.__mode != self.Mode.RowNames :
+				if not forRows :
 					self.__toggleCellEnabledState()
 				return True
 
@@ -448,19 +450,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 			if event.key in ( "C", "V", "X" ) :
 
-				if self.__mode != self.Mode.RowNames :
+				if event.key == "C" :
+					self.__copyRows() if forRows else self.__copyCells()
+				elif event.key == "V" :
+					self.__pasteRows() if forRows else self.__pasteCells()
 
-					if event.key == "C" :
-						self.__copyCells()
-						return True
-
-					if event.key == "V" :
-						self.__pasteCells()
-						return True
-
-				else :
-					# Prevent shortcuts falling through which is confusing
-					return True
+				return True
 
 		return False
 
@@ -573,7 +568,28 @@ class _PlugTableView( GafferUI.Widget ) :
 		# from the selection model. So you could use the item to turn them off, but its
 		# hard to turn them back on again.
 
+		clipboard = self.__getClipboard()
+		pasteRowsPluralSuffix = "" if _ClipboardAlgo.isValueMatrix( clipboard ) and len( clipboard ) == 1 else "s"
+
 		items.extend( (
+			(
+				"/__CopyPasteRowsDivider__", { "divider" : True }
+			),
+			(
+				"Copy Row%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__copyRows ),
+					"shortCut" : "Ctrl+C"
+				}
+			),
+			(
+				"Paste Row%s" % pasteRowsPluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__pasteRows ),
+					"active" : _ClipboardAlgo.canPasteRows( self.__getClipboard(), rowsPlug ),
+					"shortCut" : "Ctrl+V"
+				}
+			),
 			(
 				"/__DeleteRowDivider__", { "divider" : True }
 			),
@@ -682,6 +698,27 @@ class _PlugTableView( GafferUI.Widget ) :
 		context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
 		with Gaffer.UndoScope( plugMatrix[0][0].ancestor( Gaffer.ScriptNode ) ) :
 			_ClipboardAlgo.pasteCells( clipboard, plugMatrix, context.getTime() )
+
+	def __copyRows( self ) :
+
+		rowPlugs = _PlugTableView.__orderedRowsPlugs( self.selectedPlugs() )
+		plugMatrix = [ row.children() for row in rowPlugs ]
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
+
+		self.__setClipboard( clipboardData )
+
+	def __pasteRows( self ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		clipboard = self.__getClipboard()
+
+		if not _ClipboardAlgo.canPasteRows( clipboard, rowsPlug ) :
+			return
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			_ClipboardAlgo.pasteRows( clipboard, rowsPlug )
 
 	def __setRowNameWidth( self, width, *unused ) :
 

@@ -82,7 +82,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		rowsPlug.addColumn( nameValuePlug, "column7", adoptEnabledPlug = True )
 
-		for i in range( 1, numRows ) :
+		for i in range( 1, numRows + 1 ) :
 			rowsPlug.addRow()["name"].setValue( "row%d" % i )
 			rowsPlug[i]["cells"][0]["value"].setValue( "s%d" % ( i ) )
 			rowsPlug[i]["cells"][2]["enabled"].setValue( i % 2 )
@@ -435,6 +435,41 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		expected = sourceHashes[:] + sourceHashes[:]
 		self.assertEqual( self.__cellPlugHashes( destCells ), expected )
+
+	def testCanPasteRows( self ) :
+
+		s = self.__createSpreadsheet()
+
+		subsetValueMatrix = _ClipboardAlgo.valueMatrix( [ [ s["rows"][r]["cells"][c] for c in range(2) ] for r in range( 2, 4 ) ] )
+		self.assertFalse( _ClipboardAlgo.canPasteRows( subsetValueMatrix, s["rows"] ) )
+
+		sourceRows = [ s["rows"][r].children() for r in range( 2, 3 ) ]
+		rowData = _ClipboardAlgo.valueMatrix( sourceRows )
+
+		self.assertTrue( _ClipboardAlgo.canPasteRows( rowData, s["rows"] ) )
+
+		s2 = Gaffer.Spreadsheet()
+		s2["rows"].addColumn( Gaffer.IntPlug(), "intColumn", False )
+
+		self.assertFalse( _ClipboardAlgo.canPasteRows( rowData, s2["rows"] ) )
+
+	def testPasteRows( self ) :
+
+		s = self.__createSpreadsheet( numRows = 5 )
+
+		sourceRows = [ s["rows"][r].children() for r in range( 2, 4 ) ]
+		sourceHashes = self.__cellPlugHashes( sourceRows )
+		rowData = _ClipboardAlgo.valueMatrix( sourceRows )
+
+		self.assertEqual( len( s["rows"].children() ), 6 )
+		existingHashes = self.__cellPlugHashes( [ s["rows"][r].children() for r in range( 6 ) ] )
+
+		_ClipboardAlgo.pasteRows( rowData, s["rows"] )
+
+		self.assertEqual( len( s["rows"].children() ), 6 + 2 )
+		newHashes = self.__cellPlugHashes( [ s["rows"][r].children() for r in range( 6 + 2 ) ] )
+
+		self.assertEqual( newHashes, existingHashes + sourceHashes )
 
 	def testClipboardRespectsReadOnly( self ) :
 
