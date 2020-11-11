@@ -35,6 +35,7 @@
 ##########################################################################
 
 import imath
+import unittest
 import six
 
 import IECore
@@ -273,6 +274,31 @@ class SerialisationTest( GafferTest.TestCase ) :
 			Gaffer.Serialisation.objectFromBase64( b ),
 			o
 		)
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testSwitchPerformance( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		def build( maxDepth, upstreamNode = None, depth = 0 ) :
+
+			node = Gaffer.Switch()
+			node.setup( Gaffer.V3iPlug() )
+			if upstreamNode is not None :
+				node["in"][0].setInput( upstreamNode["out"] )
+
+			script.addChild( node )
+
+			if depth < maxDepth :
+				build( maxDepth, node, depth + 1 )
+				build( maxDepth, node, depth + 1 )
+
+		with Gaffer.DirtyPropagationScope() :
+			build( 13 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			script.serialise()
 
 if __name__ == "__main__":
 	unittest.main()

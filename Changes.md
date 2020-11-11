@@ -121,6 +121,16 @@ Build
   - USD 20.11
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.0.0 for full details.
 
+0.58.5.1 (relative to 0.58.5.0)
+========
+
+Fixes
+-----
+
+- Plug : Fixed performance regression in dirtiness handling vs version 0.57. This affected script saving performance and GraphEditor navigation performance in particular.
+- ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
+- SpreadsheetUI : Fixed bug that prevented column headers from updating.
+
 0.58.5.0 (relative to 0.58.4.0)
 ========
 

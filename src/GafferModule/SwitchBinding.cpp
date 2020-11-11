@@ -100,6 +100,7 @@ class SwitchSerialiser : public NodeSerialiser
 
 		// Add a call to `setup()` to recreate the plugs.
 
+		/// \todo Avoid creating a temporary plug.
 		PlugPtr plug = sw->inPlugs()->getChild<Plug>( 0 )->createCounterpart( "in", Plug::In );
 		if( IECore::runTimeCast<const NameSwitch>( sw ) )
 		{
