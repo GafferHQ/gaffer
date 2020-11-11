@@ -102,7 +102,7 @@ void ScaleTool::updateHandles( float rasterScale )
 		this->selection().back().orientedTransform( Local )
 	);
 
-	for( ScaleHandleIterator it( handles() ); !it.done(); ++it )
+	for( ScaleHandle::Iterator it( handles() ); !it.done(); ++it )
 	{
 		bool enabled = true;
 		for( const auto &s : selection() )

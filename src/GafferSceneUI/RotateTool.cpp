@@ -146,7 +146,7 @@ void RotateTool::updateHandles( float rasterScale )
 		selection().back().orientedTransform( orientation )
 	);
 
-	for( RotateHandleIterator it( handles() ); !it.done(); ++it )
+	for( RotateHandle::Iterator it( handles() ); !it.done(); ++it )
 	{
 		bool enabled = true;
 		for( const auto &s : selection() )

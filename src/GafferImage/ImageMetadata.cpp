@@ -98,7 +98,7 @@ IECore::ConstCompoundDataPtr ImageMetadata::computeProcessedMetadata( const Gaff
 	result->writable() = inputMetadata->readable();
 
 	std::string name;
-	for ( NameValuePlugIterator it( p ); !it.done(); ++it )
+	for( NameValuePlug::Iterator it( p ); !it.done(); ++it )
 	{
 		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if ( d )

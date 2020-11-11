@@ -166,7 +166,9 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 IE_CORE_DECLAREPTR( StandardNodeGadget )
 
+[[deprecated("Use `StandardNodeGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<StandardNodeGadget> > StandardNodeGadgetIterator;
+[[deprecated("Use `StandardNodeGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<StandardNodeGadget> > RecursiveStandardNodeGadgetIterator;
 
 } // namespace GafferUI

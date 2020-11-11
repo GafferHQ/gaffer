@@ -75,7 +75,7 @@ class GAFFER_API ShufflePlug : public ValuePlug
 
 };
 
-/// \deprecated Use ShufflePlug::Iterator instead
+[[deprecated("Use `ShufflePlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ShufflePlug> > ShufflePlugIterator;
 
 IE_CORE_DECLAREPTR( ShufflePlug )

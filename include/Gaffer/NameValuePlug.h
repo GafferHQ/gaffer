@@ -134,7 +134,7 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 
 };
 
-/// \deprecated Use NameValuePlug::Iterator instead
+[[deprecated("Use `NameValuePlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, NameValuePlug> > NameValuePlugIterator;
 
 IE_CORE_DECLAREPTR( NameValuePlug );

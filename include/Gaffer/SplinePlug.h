@@ -190,24 +190,41 @@ IE_CORE_DECLAREPTR( SplineffPlug );
 IE_CORE_DECLAREPTR( SplinefColor3fPlug );
 IE_CORE_DECLAREPTR( SplinefColor4fPlug );
 
-/// \deprecated Use SplineffPlug::Iterator etc instead
+[[deprecated("Use `SplineffPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug> > SplineffPlugIterator;
+[[deprecated("Use `SplineffPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplineffPlug> > InputSplineffPlugIterator;
+[[deprecated("Use `SplineffPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplineffPlug> > OutputSplineffPlugIterator;
+[[deprecated("Use `SplinefColor3fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug> > SplinefColor3fPlugIterator;
+[[deprecated("Use `SplinefColor3fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug> > InputSplinefColor3fPlugIterator;
+[[deprecated("Use `SplinefColor3fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug> > OutputSplinefColor3fPlugIterator;
+[[deprecated("Use `SplinefColor4fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, SplinefColor4fPlug> > SplinefColor4fPlugIterator;
+[[deprecated("Use `SplinefColor4fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, SplinefColor4fPlug> > InputSplinefColor4fPlugIterator;
+[[deprecated("Use `SplinefColor4fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, SplinefColor4fPlug> > OutputSplinefColor4fPlugIterator;
+[[deprecated("Use `SplineffPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplineffPlug>, PlugPredicate<> > RecursiveSplineffPlugIterator;
+[[deprecated("Use `SplineffPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplineffPlug>, PlugPredicate<> > RecursiveInputSplineffPlugIterator;
+[[deprecated("Use `SplineffPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplineffPlug>, PlugPredicate<> > RecursiveOutputSplineffPlugIterator;
+[[deprecated("Use `SplinefColor3fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplinefColor3fPlug>, PlugPredicate<> > RecursiveSplinefColor3fPlugIterator;
+[[deprecated("Use `SplinefColor3fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplinefColor3fPlug>, PlugPredicate<> > RecursiveInputSplinefColor3fPlugIterator;
+[[deprecated("Use `SplinefColor3fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplinefColor3fPlug>, PlugPredicate<> > RecursiveOutputSplinefColor3fPlugIterator;
+[[deprecated("Use `SplinefColor4fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, SplinefColor4fPlug>, PlugPredicate<> > RecursiveSplinefColor4fPlugIterator;
+[[deprecated("Use `SplinefColor4fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, SplinefColor4fPlug>, PlugPredicate<> > RecursiveInputSplinefColor4fPlugIterator;
+[[deprecated("Use `SplinefColor4fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, SplinefColor4fPlug>, PlugPredicate<> > RecursiveOutputSplinefColor4fPlugIterator;
 
 } // namespace Gaffer

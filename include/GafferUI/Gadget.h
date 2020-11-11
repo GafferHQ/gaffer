@@ -346,7 +346,9 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 };
 
+[[deprecated("Use `Gadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;
+[[deprecated("Use `Gadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Gadget> > RecursiveGadgetIterator;
 
 } // namespace GafferUI

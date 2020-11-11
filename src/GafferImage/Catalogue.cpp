@@ -193,7 +193,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			removeDisplays();
 			size_t numDisplays = 0;
-			for( DisplayIterator it( other ); !it.done(); ++it )
+			for( Display::Iterator it( other ); !it.done(); ++it )
 			{
 				Display *display = it->get();
 				DisplayPtr displayCopy = new Display;
@@ -354,7 +354,7 @@ class Catalogue::InternalImage : public ImageNode
 		void removeDisplays()
 		{
 			vector<Display *> toDelete;
-			for( DisplayIterator it( this ); !it.done(); ++it )
+			for( Display::Iterator it( this ); !it.done(); ++it )
 			{
 				toDelete.push_back( it->get() );
 			}
@@ -428,7 +428,7 @@ class Catalogue::InternalImage : public ImageNode
 				InternalImagePtr imageCopy = new InternalImage;
 
 				size_t i = 0;
-				for( DisplayIterator it( client ); !it.done(); ++it )
+				for( Display::Iterator it( client ); !it.done(); ++it )
 				{
 					Display *display = it->get();
 					DisplayPtr displayCopy = new Display;

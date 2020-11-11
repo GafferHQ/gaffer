@@ -173,7 +173,7 @@ void Random::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	if( input == seedPlug() || input == contextEntryPlug() )
 	{
 		outputs.push_back( outFloatPlug() );
-		for( ValuePlugIterator componentIt( outColorPlug() ); !componentIt.done(); ++componentIt )
+		for( ValuePlug::Iterator componentIt( outColorPlug() ); !componentIt.done(); ++componentIt )
 		{
 			outputs.push_back( componentIt->get() );
 		}
@@ -189,7 +189,7 @@ void Random::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 		input == valuePlug()
 	)
 	{
-		for( ValuePlugIterator componentIt( outColorPlug() ); !componentIt.done(); ++componentIt )
+		for( ValuePlug::Iterator componentIt( outColorPlug() ); !componentIt.done(); ++componentIt )
 		{
 			outputs.push_back( componentIt->get() );
 		}

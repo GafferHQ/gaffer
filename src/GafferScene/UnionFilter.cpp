@@ -65,7 +65,7 @@ void UnionFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( InputIntPlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( IntPlug::InputIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->hash( h );
 	}
@@ -74,7 +74,7 @@ void UnionFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *cont
 unsigned UnionFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	unsigned result = IECore::PathMatcher::NoMatch;
-	for( InputIntPlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( IntPlug::InputIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		result |= (*it)->getValue();
 	}

@@ -205,7 +205,7 @@ class LayoutEngine
 			// Build a map from node to vertex so we can use it to lookup nodes
 			// when inserting edges.
 
-			for( NodeIterator it( graphGadget->getRoot() ); !it.done(); ++it )
+			for( Node::Iterator it( graphGadget->getRoot() ); !it.done(); ++it )
 			{
 				Node *node = it->get();
 				const NodeGadget *nodeGadget = graphGadget->nodeGadget( node );
@@ -232,7 +232,7 @@ class LayoutEngine
 
 			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
 			{
-				for( RecursiveInputPlugIterator pIt( it->first ); !pIt.done(); ++pIt )
+				for( Plug::RecursiveInputIterator pIt( it->first ); !pIt.done(); ++pIt )
 				{
 					ConnectionGadget *connection = graphGadget->connectionGadget( pIt->get() );
 					if( !connection || connection->getMinimised() )
@@ -527,7 +527,7 @@ class LayoutEngine
 
 			for( NodesToVertices::const_iterator nodeIt = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); nodeIt != eIt; ++nodeIt )
 			{
-				for( RecursiveInputPlugIterator plugIt( nodeIt->first ); !plugIt.done(); ++plugIt )
+				for( Plug::RecursiveInputIterator plugIt( nodeIt->first ); !plugIt.done(); ++plugIt )
 				{
 					const Plug *dstPlug = plugIt->get();
 					const Plug *srcPlug = dstPlug->getInput();
@@ -1097,7 +1097,7 @@ class LayoutEngine
 			}
 
 			bool leftEdgeBlocked = false;
-			for( RecursiveNoduleIterator it( dstNodeGadget ); !it.done(); ++it )
+			for( Nodule::RecursiveIterator it( dstNodeGadget ); !it.done(); ++it )
 			{
 				V3f noduleTangent = dstNodeGadget->connectionTangent( it->get() );
 
@@ -1175,7 +1175,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 		}
 
 		bool hasInputs = false;
-		for( RecursiveInputPlugIterator it( node ); !it.done(); ++it )
+		for( Plug::RecursiveInputIterator it( node ); !it.done(); ++it )
 		{
 			if( (*it)->getInput() && nodeGadget->nodule( it->get() ) )
 			{
@@ -1437,7 +1437,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 
 size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const
 {
-	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
+	for( Plug::RecursiveOutputIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
 		if( auto nodule = nodeGadget->nodule( it->get() ) )
 		{
@@ -1471,7 +1471,7 @@ size_t StandardGraphLayout::outputPlugs( GraphGadget *graph, Gaffer::Set *nodes,
 size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
 {
 	plugs.clear();
-	for( RecursiveInputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
+	for( Plug::RecursiveInputIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
 		if( (*it)->getInput() == nullptr and nodeGadget->nodule( it->get() ) )
 		{
@@ -1492,7 +1492,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 		return nullptr;
 	}
 
-	for( RecursiveOutputPlugIterator it( dependencyNode ); !it.done(); ++it )
+	for( Plug::RecursiveOutputIterator it( dependencyNode ); !it.done(); ++it )
 	{
 		if( dependencyNode->correspondingInput( it->get() ) == input )
 		{

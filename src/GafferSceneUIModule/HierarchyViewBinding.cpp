@@ -97,7 +97,7 @@ class HierarchyViewFilter : public Gaffer::PathFilter
 			if( m_scene )
 			{
 				node = const_cast<Node *>( m_scene->node() );
-				for( ValuePlugIterator it( m_scene.get() ); !it.done(); ++it )
+				for( ValuePlug::Iterator it( m_scene.get() ); !it.done(); ++it )
 				{
 					sceneDirtied( it->get() );
 				}

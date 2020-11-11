@@ -172,7 +172,7 @@ void Switch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer 
 		{
 			if( out->children().size() )
 			{
-				for( RecursiveOutputPlugIterator it( out ); !it.done(); ++it )
+				for( Plug::RecursiveOutputIterator it( out ); !it.done(); ++it )
 				{
 					if( !(*it)->children().size() )
 					{

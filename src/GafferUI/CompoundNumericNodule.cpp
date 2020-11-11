@@ -205,7 +205,7 @@ bool CompoundNumericNodule::canCreateConnection( const Gaffer::Plug *endpoint ) 
 	}
 
 	// Things like float <-> Color3f.[rgb]
-	for( PlugIterator it( plug() ); !it.done(); ++it )
+	for( Plug::Iterator it( plug() ); !it.done(); ++it )
 	{
 		if( canConnect( endpoint, it->get() ) )
 		{
@@ -236,7 +236,7 @@ void CompoundNumericNodule::createConnection( Gaffer::Plug *endpoint )
 
 	vector<Plug *> plugs;
 	string allName;
-	for( PlugIterator it( plug() ); !it.done(); ++it )
+	for( Plug::Iterator it( plug() ); !it.done(); ++it )
 	{
 		if( canConnect( endpoint, it->get() ) )
 		{
@@ -335,7 +335,7 @@ void CompoundNumericNodule::updateChildNoduleVisibility()
 			addChild( layout );
 			if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 			{
-				for( PlugIterator it( plug() ); !it.done(); ++it )
+				for( Plug::Iterator it( plug() ); !it.done(); ++it )
 				{
 					if( Nodule *nodule = layout->nodule( it->get() ) )
 					{
@@ -352,7 +352,7 @@ void CompoundNumericNodule::updateChildNoduleVisibility()
 			removeChild( layout );
 			if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 			{
-				for( PlugIterator it( plug() ); !it.done(); ++it )
+				for( Plug::Iterator it( plug() ); !it.done(); ++it )
 				{
 					if( Nodule *nodule = layout->nodule( it->get() ) )
 					{

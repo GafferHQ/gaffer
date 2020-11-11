@@ -70,7 +70,7 @@ void CompoundObjectSource::affects( const Plug *input, AffectedPlugsContainer &o
 	SceneNode::affects( input, outputs );
 	if( input == inPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
+		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

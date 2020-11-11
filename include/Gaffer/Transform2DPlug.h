@@ -81,12 +81,17 @@ class GAFFER_API Transform2DPlug : public ValuePlug
 
 IE_CORE_DECLAREPTR( Transform2DPlug );
 
-/// \deprecated Use Transform2DPlug::Iterator etc instead
+[[deprecated("Use `Transform2DPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Transform2DPlug> > Transform2DPlugIterator;
+[[deprecated("Use `Transform2DPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Transform2DPlug> > InputTransform2DPlugIterator;
+[[deprecated("Use `Transform2DPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Transform2DPlug> > OutputTransform2DPlugIterator;
+[[deprecated("Use `Transform2DPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Invalid, Transform2DPlug>, PlugPredicate<> > RecursiveTransform2DPlugPlugIterator;
+[[deprecated("Use `Transform2DPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::In, Transform2DPlug>, PlugPredicate<> > RecursiveInputTransform2DPlugPlugIterator;
+[[deprecated("Use `Transform2DPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Gaffer::Plug::Out, Transform2DPlug>, PlugPredicate<> > RecursiveOutputTransform2DPlugPlugIterator;
 
 } // namespace Gaffer

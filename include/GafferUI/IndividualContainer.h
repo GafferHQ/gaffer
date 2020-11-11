@@ -72,7 +72,9 @@ class GAFFERUI_API IndividualContainer : public ContainerGadget
 
 IE_CORE_DECLAREPTR( IndividualContainer );
 
+[[deprecated("Use `IndividualContainer::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<IndividualContainer> > IndividualContainerIterator;
+[[deprecated("Use `IndividualContainer::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<IndividualContainer> > RecursiveIndividualContainerIterator;
 
 } // namespace GafferUI

@@ -169,7 +169,7 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 		)
 		{
 			// Reject switches which have inputs from non-shader nodes.
-			for( PlugIterator it( switchNode->inPlugs() ); !it.done(); ++it )
+			for( Plug::Iterator it( switchNode->inPlugs() ); !it.done(); ++it )
 			{
 				if( (*it)->getInput() && !isShaderOutPlug( (*it)->source() ) )
 				{

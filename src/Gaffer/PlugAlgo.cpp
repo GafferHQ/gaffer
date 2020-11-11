@@ -84,7 +84,7 @@ void replacePlugWalk( Plug *existingPlug, Plug *plug, ConnectionsVector &connect
 	if( plug->children().size() )
 	{
 		// Recurse
-		for( PlugIterator it( plug ); !it.done(); ++it )
+		for( Plug::Iterator it( plug ); !it.done(); ++it )
 		{
 			if( Plug *existingChildPlug = existingPlug->getChild<Plug>( (*it)->getName() ) )
 			{
@@ -621,7 +621,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 	}
 
 	// Check all the children of this plug too
-	for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+	for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 	{
 		if( !validatePromotability( it->get(), parent, throwExceptions, /* childPlug = */ true ) )
 		{
@@ -657,7 +657,7 @@ void applyDynamicFlag( Plug *plug )
 	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 3;
 	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)plug->typeId() ) != compoundTypesEnd )
 	{
-		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+		for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
 			if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)(*it)->typeId() ) == compoundTypesEnd )
@@ -677,7 +677,7 @@ void setFrom( Plug *dst, const Plug *src )
 	}
 	else
 	{
-		for( PlugIterator it( dst ); !it.done(); ++it )
+		for( Plug::Iterator it( dst ); !it.done(); ++it )
 		{
 			Plug *dstChild = it->get();
 			const Plug *srcChild = src->getChild<Plug>( dstChild->getName() );
@@ -861,7 +861,7 @@ void unpromote( Plug *plug )
 	while( plugToRemove->parent<Plug>() && plugToRemove->parent<Plug>() != externalNode->userPlug() )
 	{
 		plugToRemove = plugToRemove->parent<Plug>();
-		for( PlugIterator it( plugToRemove ); !it.done(); ++it )
+		for( Plug::Iterator it( plugToRemove ); !it.done(); ++it )
 		{
 			if(
 				( (*it)->direction() == Plug::In && (*it)->outputs().size() ) ||

@@ -228,7 +228,7 @@ void BackdropNodeGadget::framed( std::vector<Gaffer::Node *> &nodes ) const
 	const Box3f bound3 = transformedBound( graphGadget );
 	const Box2f bound2( V2f( bound3.min.x, bound3.min.y ), V2f( bound3.max.x, bound3.max.y ) );
 
-	for( NodeIterator it( nodeParent ); !it.done(); ++it )
+	for( Node::Iterator it( nodeParent ); !it.done(); ++it )
 	{
 		if( node() == it->get() )
 		{

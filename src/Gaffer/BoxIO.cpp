@@ -127,7 +127,7 @@ void applyDynamicFlag( Plug *plug )
 	auto compoundTypes = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
 	if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)plug->typeId() ) != end( compoundTypes ) )
 	{
-		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+		for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
 			if( find( begin( compoundTypes ), end( compoundTypes ), (Gaffer::TypeId)(*it)->typeId() ) == end( compoundTypes ) )
@@ -151,7 +151,7 @@ void setFrom( Plug *dst, const Plug *src )
 	}
 	else
 	{
-		for( PlugIterator it( dst ); !it.done(); ++it )
+		for( Plug::Iterator it( dst ); !it.done(); ++it )
 		{
 			Plug *dstChild = it->get();
 			const Plug *srcChild = src->getChild<Plug>( dstChild->getName() );
@@ -621,7 +621,7 @@ Plug *BoxIO::promote( Plug *plug )
 
 bool BoxIO::canInsert( const Box *box )
 {
-	for( PlugIterator it( box ); !it.done(); ++it )
+	for( Plug::Iterator it( box ); !it.done(); ++it )
 	{
 		const Plug *plug = it->get();
 		if( plug->direction() == Plug::In )
@@ -651,9 +651,9 @@ bool BoxIO::canInsert( const Box *box )
 void BoxIO::insert( Box *box )
 {
 	// Must take a copy of children because adding a child
-	// would invalidate our PlugIterator.
+	// would invalidate our Plug::Iterator.
 	GraphComponent::ChildContainer children = box->children();
-	for( PlugIterator it( children ); !it.done(); ++it )
+	for( Plug::Iterator it( children ); !it.done(); ++it )
 	{
 		Plug *plug = it->get();
 		if( plug->direction() == Plug::In )

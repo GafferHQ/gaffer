@@ -366,7 +366,7 @@ bool TaskNode::affectsTask( const Plug *input ) const
 
 void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
 {
-	for( TaskPlugIterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
+	for( TaskPlug::Iterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
 	{
 		tasks.push_back( Task( *cIt, context ) );
 	}
@@ -374,7 +374,7 @@ void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
 
 void TaskNode::postTasks( const Context *context, Tasks &tasks ) const
 {
-	for( TaskPlugIterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
+	for( TaskPlug::Iterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
 	{
 		tasks.push_back( Task( *cIt, context ) );
 	}

@@ -90,7 +90,9 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 
 IE_CORE_DECLAREPTR( DotNodeGadget )
 
+[[deprecated("Use `DotNodeGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<DotNodeGadget> > DotNodeGadgetIterator;
+[[deprecated("Use `DotNodeGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<DotNodeGadget> > RecursiveDotNodeGadgetIterator;
 
 } // namespace GafferUI

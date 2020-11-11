@@ -143,7 +143,9 @@ class GAFFERUI_API NoduleLayout : public Gadget
 
 IE_CORE_DECLAREPTR( NoduleLayout )
 
+[[deprecated("Use `NoduleLayout::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<NoduleLayout> > NoduleLayoutIterator;
+[[deprecated("Use `NoduleLayout::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<NoduleLayout> > RecursiveNoduleLayoutIterator;
 
 } // namespace GafferUI

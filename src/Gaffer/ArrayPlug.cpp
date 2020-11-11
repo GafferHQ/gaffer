@@ -55,7 +55,7 @@ bool hasInput( const Plug *p )
 	{
 		return true;
 	}
-	for( PlugIterator it( p ); !it.done(); ++it )
+	for( Plug::Iterator it( p ); !it.done(); ++it )
 	{
 		if( hasInput( it->get() ) )
 		{
@@ -127,7 +127,7 @@ void ArrayPlug::setInput( PlugPtr input )
 PlugPtr ArrayPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	ArrayPlugPtr result = new ArrayPlug( name, direction, nullptr, m_minSize, m_maxSize, getFlags(), resizeWhenInputsChange() );
-	for( PlugIterator it( this ); !it.done(); ++it )
+	for( Plug::Iterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}

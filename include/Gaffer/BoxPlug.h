@@ -120,30 +120,53 @@ IE_CORE_DECLAREPTR( Box3iPlug );
 IE_CORE_DECLAREPTR( Box2fPlug );
 IE_CORE_DECLAREPTR( Box3fPlug );
 
-/// \deprecated Use Box2iPlug::Iterator etc instead
+[[deprecated("Use `Box2iPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Box2iPlug> > Box2iPlugIterator;
+[[deprecated("Use `Box2iPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Box2iPlug> > InputBox2iPlugIterator;
+[[deprecated("Use `Box2iPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Box2iPlug> > OutputBox2iPlugIterator;
+[[deprecated("Use `Box3iPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Box3iPlug> > Box3iPlugIterator;
+[[deprecated("Use `Box3iPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Box3iPlug> > InputBox3iPlugIterator;
+[[deprecated("Use `Box3iPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Box3iPlug> > OutputBox3iPlugIterator;
+[[deprecated("Use `Box2fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Box2fPlug> > Box2fPlugIterator;
+[[deprecated("Use `Box2fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Box2fPlug> > InputBox2fPlugIterator;
+[[deprecated("Use `Box2fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Box2fPlug> > OutputBox2fPlugIterator;
+[[deprecated("Use `Box3fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Box3fPlug> > Box3fPlugIterator;
+[[deprecated("Use `Box3fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Box3fPlug> > InputBox3fPlugIterator;
+[[deprecated("Use `Box3fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Box3fPlug> > OutputBox3fPlugIterator;
+[[deprecated("Use `Box2iPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box2iPlug>, PlugPredicate<> > RecursiveBox2iPlugIterator;
+[[deprecated("Use `Box2iPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box2iPlug>, PlugPredicate<> > RecursiveInputBox2iPlugIterator;
+[[deprecated("Use `Box2iPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box2iPlug>, PlugPredicate<> > RecursiveOutputBox2iPlugIterator;
+[[deprecated("Use `Box3iPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box3iPlug>, PlugPredicate<> > RecursiveBox3iPlugIterator;
+[[deprecated("Use `Box3iPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box3iPlug>, PlugPredicate<> > RecursiveInputBox3iPlugIterator;
+[[deprecated("Use `Box3iPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box3iPlug>, PlugPredicate<> > RecursiveOutputBox3iPlugIterator;
+[[deprecated("Use `Box2fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box2fPlug>, PlugPredicate<> > RecursiveBox2fPlugIterator;
+[[deprecated("Use `Box2fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box2fPlug>, PlugPredicate<> > RecursiveInputBox2fPlugIterator;
+[[deprecated("Use `Box2fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box2fPlug>, PlugPredicate<> > RecursiveOutputBox2fPlugIterator;
+[[deprecated("Use `Box3fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Box3fPlug>, PlugPredicate<> > RecursiveBox3fPlugIterator;
+[[deprecated("Use `Box3fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Box3fPlug>, PlugPredicate<> > RecursiveInputBox3fPlugIterator;
+[[deprecated("Use `Box3fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Box3fPlug>, PlugPredicate<> > RecursiveOutputBox3fPlugIterator;
 
 } // namespace Gaffer

@@ -664,7 +664,7 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 	FlatImageProcessor::hashDataWindow( output, context, h );
 
 	operationPlug()->hash( h );
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -678,7 +678,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	Imath::Box2i dataWindow;
 	Operation op = (Operation)operationPlug()->getValue();
 	bool first = true;
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -694,7 +694,7 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 {
 	FlatImageProcessor::hashChannelNames( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -708,7 +708,7 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -756,7 +756,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		finalTileDataWindowLocal = boxIntersection( fullBound, finalDataWindowLocal );
 	}
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
 		{
@@ -859,7 +859,7 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 
 	bool partialBound = false;
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
 		{

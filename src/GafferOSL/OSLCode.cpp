@@ -129,14 +129,14 @@ string generate( const OSLCode *shader, string &shaderName )
 
 	string result;
 
-	for( PlugIterator it( shader->parametersPlug() ); !it.done(); ++it )
+	for( Plug::Iterator it( shader->parametersPlug() ); !it.done(); ++it )
 	{
 		result += parameter( it->get() );
 	}
 
 	result += "\n";
 
-	for( PlugIterator it( shader->outPlug() ); !it.done(); ++it )
+	for( Plug::Iterator it( shader->outPlug() ); !it.done(); ++it )
 	{
 		result += parameter( it->get() );
 	}

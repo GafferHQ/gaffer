@@ -78,12 +78,18 @@ class GAFFERSCENE_API ShaderPlug : public Gaffer::Plug
 
 IE_CORE_DECLAREPTR( ShaderPlug );
 
+[[deprecated("Use `ShaderPlug::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ShaderPlug> > ShaderPlugIterator;
+[[deprecated("Use `ShaderPlug::InputIterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ShaderPlug> > InputShaderPlugIterator;
+[[deprecated("Use `ShaderPlug::OutputIterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ShaderPlug> > OutputShaderPlugIterator;
 
+[[deprecated("Use `ShaderPlug::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ShaderPlug>, Gaffer::PlugPredicate<> > RecursiveShaderPlugIterator;
+[[deprecated("Use `ShaderPlug::RecursiveInputIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ShaderPlug>, Gaffer::PlugPredicate<> > RecursiveInputShaderPlugIterator;
+[[deprecated("Use `ShaderPlug::RecursiveOutputIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ShaderPlug>, Gaffer::PlugPredicate<> > RecursiveOutputShaderPlugIterator;
 
 } // namespace GafferScene

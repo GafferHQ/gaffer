@@ -417,7 +417,7 @@ struct Annotate
 			// Accumulate the statistics for all plugs belonging to this node.
 
 			PerformanceMonitor::Statistics result;
-			for( RecursivePlugIterator plugIt( &node ); !plugIt.done(); ++plugIt )
+			for( Plug::RecursiveIterator plugIt( &node ); !plugIt.done(); ++plugIt )
 			{
 				auto it = m_statistics.find( plugIt->get() );
 				if( it != m_statistics.end() )
@@ -431,7 +431,7 @@ struct Annotate
 			std::vector<ChildStatistics> childStatistics;
 			Value maxChildValue( 0 );
 
-			for( NodeIterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
+			for( Node::Iterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
 			{
 				Node &childNode = **childNodeIt;
 				const auto cs = walk( childNode, metric, textKey, colorKey );
@@ -478,7 +478,7 @@ ContextMonitor::Statistics annotateContextWalk( Node &node, const ContextMonitor
 	// Accumulate the statistics for all plugs belonging to this node.
 
 	ContextMonitor::Statistics result;
-	for( RecursivePlugIterator plugIt( &node ); !plugIt.done(); ++plugIt )
+	for( Plug::RecursiveIterator plugIt( &node ); !plugIt.done(); ++plugIt )
 	{
 		auto it = statistics.find( plugIt->get() );
 		if( it != statistics.end() )
@@ -492,7 +492,7 @@ ContextMonitor::Statistics annotateContextWalk( Node &node, const ContextMonitor
 	std::vector<ChildStatistics> childStatistics;
 	size_t maxUniqueContexts( 0 );
 
-	for( NodeIterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
+	for( Node::Iterator childNodeIt( &node ); !childNodeIt.done(); ++childNodeIt )
 	{
 		Node &childNode = **childNodeIt;
 		const auto cs = annotateContextWalk( childNode, statistics );

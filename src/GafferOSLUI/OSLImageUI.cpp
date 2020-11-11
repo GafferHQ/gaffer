@@ -110,7 +110,7 @@ class OSLImagePlugAdder : public PlugAdder
 		std::set<std::string> usedNames() const
 		{
 			std::set<std::string> used;
-			for( NameValuePlugIterator it( m_plugsParent.get() ); !it.done(); ++it )
+			for( NameValuePlug::Iterator it( m_plugsParent.get() ); !it.done(); ++it )
 			{
 				// TODO - this method for checking if a plug variesWithContext should probably live in PlugAlgo
 				// ( it's based on Switch::variesWithContext )

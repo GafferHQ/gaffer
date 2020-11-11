@@ -143,42 +143,77 @@ IE_CORE_DECLAREPTR( V3iPlug );
 IE_CORE_DECLAREPTR( Color3fPlug );
 IE_CORE_DECLAREPTR( Color4fPlug );
 
-/// \deprecated Use  V2fPlug::Iterator etc instead
+[[deprecated("Use `V2fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2fPlug> > V2fPlugIterator;
+[[deprecated("Use `V2fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V2fPlug> > InputV2fPlugIterator;
+[[deprecated("Use `V2fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2fPlug> > OutputV2fPlugIterator;
+[[deprecated("Use `V3fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3fPlug> > V3fPlugIterator;
+[[deprecated("Use `V3fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V3fPlug> > InputV3fPlugIterator;
+[[deprecated("Use `V3fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3fPlug> > OutputV3fPlugIterator;
+[[deprecated("Use `V2iPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2iPlug> > V2iPlugIterator;
+[[deprecated("Use `V2iPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V2iPlug> > InputV2iPlugIterator;
+[[deprecated("Use `V2iPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2iPlug> > OutputV2iPlugIterator;
+[[deprecated("Use `V3iPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3iPlug> > V3iPlugIterator;
+[[deprecated("Use `V3iPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V3iPlug> > InputV3iPlugIterator;
+[[deprecated("Use `V3iPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, V3iPlug> > OutputV3iPlugIterator;
+[[deprecated("Use `Color3fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug> > Color3fPlugIterator;
+[[deprecated("Use `Color3fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Color3fPlug> > InputColor3fPlugIterator;
+[[deprecated("Use `Color3fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color3fPlug> > OutputColor3fPlugIterator;
+[[deprecated("Use `Color4fPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug> > Color4fPlugIterator;
+[[deprecated("Use `Color4fPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, Color4fPlug> > InputColor4fPlugIterator;
+[[deprecated("Use `Color4fPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, Color4fPlug> > OutputColor4fPlugIterator;
+[[deprecated("Use `V2fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2fPlug>, PlugPredicate<> > RecursiveV2fPlugIterator;
+[[deprecated("Use `V2fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2fPlug>, PlugPredicate<> > RecursiveInputV2fPlugIterator;
+[[deprecated("Use `V2fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2fPlug>, PlugPredicate<> > RecursiveOutputV2fPlugIterator;
+[[deprecated("Use `V3fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3fPlug>, PlugPredicate<> > RecursiveV3fPlugIterator;
+[[deprecated("Use `V3fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3fPlug>, PlugPredicate<> > RecursiveInputV3fPlugIterator;
+[[deprecated("Use `V3fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3fPlug>, PlugPredicate<> > RecursiveOutputV3fPlugIterator;
+[[deprecated("Use `V2iPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2iPlug>, PlugPredicate<> > RecursiveV2iPlugIterator;
+[[deprecated("Use `V2iPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2iPlug>, PlugPredicate<> > RecursiveInputV2iPlugIterator;
+[[deprecated("Use `V2iPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2iPlug>, PlugPredicate<> > RecursiveOutputV2iPlugIterator;
+[[deprecated("Use `V3iPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3iPlug>, PlugPredicate<> > RecursiveV3iPlugIterator;
+[[deprecated("Use `V3iPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3iPlug>, PlugPredicate<> > RecursiveInputV3iPlugIterator;
+[[deprecated("Use `V3iPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V3iPlug>, PlugPredicate<> > RecursiveOutputV3iPlugIterator;
+[[deprecated("Use `Color3fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color3fPlug>, PlugPredicate<> > RecursiveColor3fPlugIterator;
+[[deprecated("Use `Color3fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color3fPlug>, PlugPredicate<> > RecursiveInputColor3fPlugIterator;
+[[deprecated("Use `Color3fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color3fPlug>, PlugPredicate<> > RecursiveOutputColor3fPlugIterator;
+[[deprecated("Use `Color4fPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, Color4fPlug>, PlugPredicate<> > RecursiveColor4fPlugIterator;
+[[deprecated("Use `Color4fPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Color4fPlug>, PlugPredicate<> > RecursiveInputColor4fPlugIterator;
+[[deprecated("Use `Color4fPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Color4fPlug>, PlugPredicate<> > RecursiveOutputColor4fPlugIterator;
 
 } // namespace Gaffer

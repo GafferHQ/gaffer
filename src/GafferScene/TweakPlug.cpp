@@ -348,7 +348,7 @@ bool TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 
 	bool appliedTweaks = false;
 	bool removedConnections = false;
-	for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
+	for( TweakPlug::Iterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
 	{
 		const TweakPlug *tweakPlug = tIt->get();
 		const std::string name = tweakPlug->namePlug()->getValue();
@@ -525,7 +525,7 @@ bool TweaksPlug::acceptsInput( const Plug *input ) const
 Gaffer::PlugPtr TweaksPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new TweaksPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); !it.done(); ++it )
+	for( Plug::Iterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}
@@ -535,7 +535,7 @@ Gaffer::PlugPtr TweaksPlug::createCounterpart( const std::string &name, Directio
 bool TweaksPlug::applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode ) const
 {
 	bool applied = false;
-	for( TweakPlugIterator it( this ); !it.done(); ++it )
+	for( TweakPlug::Iterator it( this ); !it.done(); ++it )
 	{
 		if( (*it)->applyTweak( parameters, missingMode ) )
 		{

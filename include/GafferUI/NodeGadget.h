@@ -124,7 +124,9 @@ class GAFFERUI_API NodeGadget : public Gadget
 
 IE_CORE_DECLAREPTR( NodeGadget );
 
+[[deprecated("Use `NodeGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<NodeGadget> > NodeGadgetIterator;
+[[deprecated("Use `NodeGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<NodeGadget> > RecursiveNodeGadgetIterator;
 
 } // namespace GafferUI

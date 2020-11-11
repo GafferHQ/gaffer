@@ -108,7 +108,7 @@ IECore::ConstObjectPtr CameraTweaks::computeProcessedObject( const ScenePath &pa
 
 	IECoreScene::CameraPtr result = inputCamera->copy();
 
-	for( TweakPlugIterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
+	for( TweakPlug::Iterator tIt( tweaksPlug ); !tIt.done(); ++tIt )
 	{
 		if( !(*tIt)->enabledPlug()->getValue() )
 		{

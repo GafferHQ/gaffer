@@ -94,7 +94,9 @@ class GAFFERUI_API PlugGadget : public ContainerGadget
 
 IE_CORE_DECLAREPTR( PlugGadget )
 
+[[deprecated("Use `PlugGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<PlugGadget> > PlugGadgetIterator;
+[[deprecated("Use `PlugGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<PlugGadget> > RecursivePlugGadgetIterator;
 
 } // namespace GafferUI

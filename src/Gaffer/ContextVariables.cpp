@@ -138,7 +138,7 @@ void ContextVariables::compute( ValuePlug *output, const Context *context ) cons
 		IECore::CompoundDataMap &result = resultData->writable();
 
 		std::string name;
-		for( NameValuePlugIterator it( variablesPlug() ); !it.done(); ++it )
+		for( NameValuePlug::Iterator it( variablesPlug() ); !it.done(); ++it )
 		{
 			IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
 			if( data )

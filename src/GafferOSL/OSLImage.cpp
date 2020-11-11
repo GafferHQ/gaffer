@@ -264,7 +264,7 @@ void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *con
 	else if( output == affectedChannelsPlug() )
 	{
 		bool hasClosures = false;
-		for( NameValuePlugIterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
+		for( NameValuePlug::Iterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
 		{
 			BoolPlug* enabledPlug = (*inputPlug)->enabledPlug();
 			if( enabledPlug )
@@ -310,7 +310,7 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		set<string> result;
 
 		bool hasClosures = false;
-		for( NameValuePlugIterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
+		for( NameValuePlug::Iterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
 		{
 			BoolPlug* enabledPlug = (*inputPlug)->enabledPlug();
 			if( enabledPlug )
@@ -675,7 +675,7 @@ void OSLImage::updateChannels()
 
 	std::string code = "Ci = 0;\n";
 
-	for( NameValuePlugIterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
+	for( NameValuePlug::Iterator inputPlug( channelsPlug() ); !inputPlug.done(); ++inputPlug )
 	{
 		std::string prefix = "";
 		BoolPlug* enabledPlug = (*inputPlug)->enabledPlug();

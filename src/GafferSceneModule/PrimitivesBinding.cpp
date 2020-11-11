@@ -76,7 +76,7 @@ class LightSerialiser : public GafferBindings::NodeSerialiser
 		// \todo - Remove this once old scripts have been converted
 		// Before we start serialization, clean up any old scripts that might have dynamic parameters on lights
 		// ( Now we create the parameters with a loadShader after the constructor, so they don't need to be dynamic )
-		for( PlugIterator it( light->parametersPlug() ); !it.done(); ++it )
+		for( Plug::Iterator it( light->parametersPlug() ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Gaffer::Plug::Dynamic, false );
 		}

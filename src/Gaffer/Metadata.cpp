@@ -612,7 +612,7 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	}
 	else
 	{
-		for( RecursiveNodeIterator it( root ); !it.done(); ++it )
+		for( Node::RecursiveIterator it( root ); !it.done(); ++it )
 		{
 			if( valueInternal( it->get(), key, instanceOnly ) )
 			{

@@ -86,7 +86,7 @@ void visitAuxiliaryConnections( const GraphGadget *graphGadget, const NodeGadget
 	/// private plugs for its inputs, and we can ignore all private plugs
 	/// unconditionally.
 	const bool ignorePrivatePlugs = !runTimeCast<const Expression>( dstNode );
-	for( Gaffer::RecursivePlugIterator it( dstNode ); !it.done(); ++it )
+	for( Gaffer::Plug::RecursiveIterator it( dstNode ); !it.done(); ++it )
 	{
 		const Gaffer::Plug *dstPlug = it->get();
 		if( ignorePrivatePlugs && boost::starts_with( dstPlug->getName().c_str(), "__" ) )
