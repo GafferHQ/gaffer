@@ -1,3 +1,15 @@
+0.59.0.0b3 (relative to 0.59.0.0b2)
+==========
+
+Fixes
+-----
+
+> Note : These are from 0.58_maintenance, and can be omitted when compiling the final 0.59.0.0 release notes.
+
+- Plug : Fixed performance regression in dirtiness handling vs version 0.57. This affected script saving performance and GraphEditor navigation performance in particular.
+- ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
+- SpreadsheetUI : Fixed bug that prevented column headers from updating.
+
 0.59.0.0b2 (relative to 0.59.0.0b1)
 ==========
 
