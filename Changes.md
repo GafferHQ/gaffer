@@ -1,3 +1,11 @@
+0.58.x.x (relative to 0.58.5.1)
+========
+
+Fixes
+-----
+
+- ArnoldAttributes : Fixed minimum value for `subdivIterations` plug. It is now `0` rather than `1`.
+
 0.58.5.1 (relative to 0.58.5.0)
 ========
 
