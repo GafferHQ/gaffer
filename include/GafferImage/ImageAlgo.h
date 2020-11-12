@@ -101,6 +101,16 @@ inline bool channelExists( const ImagePlug *image, const std::string &channelNam
 /// Returns true if the specified channel exists in channelNames
 inline bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
 
+
+/// Helpers for indexing tiles with an unwrapped integer index
+/// ==============================
+///
+
+inline int numTileIndices( const Imath::Box2i &dataWindow );
+inline int tileIndexFromOrigin( const Imath::V2i &tileOrigin, const Imath::Box2i &dataWindow );
+inline Imath::V2i tileOriginFromIndex( int i, const Imath::Box2i &dataWindow );
+
+
 /// Parallel processing functions
 /// ==============================
 ///

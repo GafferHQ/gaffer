@@ -55,6 +55,14 @@ namespace ImageAlgo
 namespace Detail
 {
 
+inline Imath::Box2i tileRangeFromDataWindow( const Imath::Box2i &dataWindow )
+{
+    return Imath::Box2i(
+        ImagePlug::tileOrigin( dataWindow.min ) / ImagePlug::tileSize(),
+        ImagePlug::tileOrigin( dataWindow.max - Imath::V2i( 1 ) ) / ImagePlug::tileSize() + Imath::V2i( 1 )
+    );
+}
+
 class TileInputIterator : public boost::iterator_facade<TileInputIterator, const Imath::V2i, boost::forward_traversal_tag>
 {
 
@@ -244,6 +252,37 @@ inline bool channelExists( const std::vector<std::string> &channelNames, const s
 {
 	return std::find( channelNames.begin(), channelNames.end(), channelName ) != channelNames.end();
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Helpers for indexing tiles with an unwrapped integer index
+//////////////////////////////////////////////////////////////////////////
+
+inline int numTileIndices( const Imath::Box2i &dataWindow )
+{
+	const Imath::V2i tileRangeSize = Detail::tileRangeFromDataWindow( dataWindow ).size();
+	return tileRangeSize.x * tileRangeSize.y;
+}
+
+inline int tileIndexFromOrigin( const Imath::V2i &tileOrigin, const Imath::Box2i &dataWindow )
+{
+	const Imath::Box2i tileRange = Detail::tileRangeFromDataWindow( dataWindow );
+	Imath::V2i index2D = tileOrigin / ImagePlug::tileSize();
+	return ( tileRange.max.y - 1 - index2D.y ) * tileRange.size().x + ( index2D.x - tileRange.min.x );
+}
+
+inline Imath::V2i tileOriginFromIndex( int index, const Imath::Box2i &dataWindow )
+{
+	const Imath::Box2i tileRange = Detail::tileRangeFromDataWindow( dataWindow );
+	return Imath::V2i(
+		(( index % tileRange.size().x ) + tileRange.min.x) * ImagePlug::tileSize(),
+		( tileRange.max.y - 1 - ( index / tileRange.size().x ) ) * ImagePlug::tileSize()
+	);
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Parallel processing functions
+//////////////////////////////////////////////////////////////////////////
+
 
 template <class TileFunctor>
 void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder )
