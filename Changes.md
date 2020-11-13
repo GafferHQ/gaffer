@@ -16,6 +16,7 @@ API
 ---
 
 - TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
+- ValuePlugSerialiser : Added `valueRepr()` method.
 
 Breaking Changes
 ----------------

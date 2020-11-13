@@ -62,6 +62,8 @@ class GAFFERBINDINGS_API ValuePlugSerialiser : public PlugSerialiser
 		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
 
 		static std::string repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments = "", const Serialisation *serialisation = nullptr );
+		/// Returns a serialisation suitable for use in a `setValue()` or `setDefaultValue()` call.
+		static std::string valueRepr( const boost::python::object &value );
 
 };
 
