@@ -1,22 +1,24 @@
-0.59.0.0b3 (relative to 0.59.0.0b2)
-==========
+0.59.x.x (relative to 0.59.0.0b3)
+========
+
+Improvements
+------------
+
+- Merge : Optimized image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
 
 Fixes
 -----
 
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 
+0.59.0.0b3 (relative to 0.59.0.0b2)
+==========
+
 > Note : These are from 0.58_maintenance, and can be omitted when compiling the final 0.59.0.0 release notes.
 
 - Plug : Fixed performance regression in dirtiness handling vs version 0.57. This affected script saving performance and GraphEditor navigation performance in particular.
 - ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
 - SpreadsheetUI : Fixed bug that prevented column headers from updating.
-
-Improvements
-------------
-
-- Merge : Optimize image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
-
 
 0.59.0.0b2 (relative to 0.59.0.0b1)
 ==========
