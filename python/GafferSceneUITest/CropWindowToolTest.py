@@ -61,7 +61,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 		# View camera isn't a real camera
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Error: No applicable crop window for this view" )
 
 		# Working camera, no node to edit
@@ -69,7 +69,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		view["camera"]["lookThroughCamera"].setValue( "/camera" )
 		view["camera"]["lookThroughEnabled"].setValue( True )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Error: No crop window found. Insert a <b>StandardOptions</b> node." )
 
 		# Editable
@@ -78,14 +78,14 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		options["in"].setInput( camera["out"] )
 		view["in"].setInput( options["out"] )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Info: Editing <b>StandardOptions.options.renderCropWindow.value</b>" )
 
 		# Locked value plug
 
 		Gaffer.MetadataAlgo.setReadOnly( options["options"]["renderCropWindow"]["value"], True )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Warning: <b>StandardOptions.options.renderCropWindow.value</b> is locked" )
 
 		# Locked/off enabled plug
@@ -94,7 +94,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		options["options"]["renderCropWindow"]["enabled"].setValue( False )
 		Gaffer.MetadataAlgo.setReadOnly( options["options"]["renderCropWindow"]["enabled"], True )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Warning: <b>StandardOptions.options.renderCropWindow.value</b> isn't editable" )
 
 		# Check status across visible/invisible overlay transitions (this is
@@ -103,12 +103,12 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 		view["camera"]["lookThroughEnabled"].setValue( False )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Error: No applicable crop window for this view" )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Warning: <b>StandardOptions.options.renderCropWindow.value</b> isn't editable" )
 
 	def testImageViewStatus( self ) :
@@ -132,14 +132,14 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 		script["image"]["fileName"].setValue( "/i/do/not/exist.exr" )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Error: image.__oiioReader.out.format : OpenImageIOReader : Could not create ImageInput : Could not open file \"/i/do/not/exist.exr\"" )
 
 		# Missing metadata
 
 		script["image"]["fileName"].setValue( "${GAFFER_ROOT}/resources/images/macaw.exr" )
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Error: No <b>gaffer:sourceScene</b> metadata in image" )
 
 		script["meta"] = GafferImage.ImageMetadata()
@@ -152,7 +152,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 		# Valid options path
 
-		self.waitForIdle( 1 )
+		self.waitForIdle( 1000 )
 		self.assertEqual( tool.status(), "Info: Editing <b>options.options.renderCropWindow.value</b>" )
 
 
