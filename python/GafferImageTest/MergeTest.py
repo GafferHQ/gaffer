@@ -718,11 +718,11 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		merge["in"][1].setInput( transform["out"] )
 
 		# Precache upstream network, we're only interested in the performance of Merge
-		GafferImage.ImageAlgo.tiles( alphaShuffle["out"], _copy = False )
-		GafferImage.ImageAlgo.tiles( transform["out"], _copy = False )
+		GafferImageTest.processTiles( alphaShuffle["out"] )
+		GafferImageTest.processTiles( transform["out"] )
 
 		with GafferTest.TestRunner.PerformanceScope() :
-			GafferImage.ImageAlgo.tiles( merge["out"], _copy = False )
+			GafferImageTest.processTiles( merge["out"] )
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5)
