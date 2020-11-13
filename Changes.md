@@ -5,6 +5,7 @@ Fixes
 -----
 
 - ArnoldAttributes : Fixed minimum value for `subdivIterations` plug. It is now `0` rather than `1`.
+- Spline editor : Fixed bug that prevented dragging of spline points.
 
 0.58.5.1 (relative to 0.58.5.0)
 ========
