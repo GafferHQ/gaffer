@@ -73,7 +73,7 @@ class NameLabel( GafferUI.Label ) :
 
 		GafferUI.Label.setText( self, text )
 
-		self.__connections = []
+		self.__connections = {}
 
 	def setGraphComponent( self, graphComponent ) :
 
