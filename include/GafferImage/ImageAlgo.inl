@@ -117,13 +117,6 @@ class TileInputIterator : public boost::iterator_facade<TileInputIterator, const
 
 };
 
-struct OriginAndName
-{
-	Imath::V2i origin;
-	std::string name;
-};
-
-template <class Iterator>
 class TileInputFilter
 {
 	public:
