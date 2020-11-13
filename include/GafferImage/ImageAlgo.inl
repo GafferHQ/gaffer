@@ -63,92 +63,36 @@ inline Imath::Box2i tileRangeFromDataWindow( const Imath::Box2i &dataWindow )
     );
 }
 
-class TileInputIterator : public boost::iterator_facade<TileInputIterator, const Imath::V2i, boost::forward_traversal_tag>
-{
-
-	public :
-
-		TileInputIterator(
-			const Imath::Box2i &window,
-			const TileOrder tileOrder
-		) :
-			m_range( ImagePlug::tileOrigin( window.min ), ImagePlug::tileOrigin( window.max - Imath::V2i( 1 ) ) ),
-			m_tileOrder( tileOrder )
-		{
-			switch( m_tileOrder )
-			{
-				case Unordered :
-				case TopToBottom :
-					m_tileOrigin = Imath::V2i( m_range.min.x, m_range.max.y );
-					break;
-				case BottomToTop :
-					m_tileOrigin = ImagePlug::tileOrigin( m_range.min );
-					break;
-			}
-		}
-
-		bool done() const
-		{
-			return !m_range.intersects( m_tileOrigin );
-		}
-
-	private :
-
-		friend class boost::iterator_core_access;
-
-		void increment()
-		{
-			m_tileOrigin.x += ImagePlug::tileSize();
-			if( m_tileOrigin.x > m_range.max.x )
-			{
-				m_tileOrigin.x = m_range.min.x;
-				switch( m_tileOrder )
-				{
-					case Unordered :
-					case TopToBottom :
-						m_tileOrigin.y -= ImagePlug::tileSize();
-						break;
-					case BottomToTop :
-						m_tileOrigin.y += ImagePlug::tileSize();
-				}
-			}
-		}
-
-		const Imath::V2i &dereference() const
-		{
-			return m_tileOrigin;
-		}
-
-		const Imath::Box2i m_range;
-		const ImageAlgo::TileOrder m_tileOrder;
-		Imath::V2i m_tileOrigin;
-
-};
-
 class TileInputFilter
 {
 	public:
-		TileInputFilter( Iterator &it )
-			:	m_it( it )
+		TileInputFilter( const Imath::Box2i &dataWindow, TileOrder tileOrder )
+			:	m_dataWindow( dataWindow ), m_numTileIndices( numTileIndices( dataWindow ) ),
+				m_tileOrder( tileOrder ), m_index( 0 )
 		{}
 
-		typename Iterator::value_type operator()( tbb::flow_control &fc ) const
+		Imath::V2i operator()( tbb::flow_control &fc ) const
 		{
-			if( m_it.done() )
+			if( m_index == m_numTileIndices )
 			{
 				fc.stop();
-				return typename Iterator::value_type();
+				return Imath::V2i();
 			}
 
-			typename Iterator::value_type result = *m_it;
-			++m_it;
+			int i = m_tileOrder == BottomToTop ? m_numTileIndices - 1 - m_index : m_index;
+			Imath::V2i result = tileOriginFromIndex( i, m_dataWindow );
+			m_index++;
 			return result;
 		}
 
 	private:
 
-		Iterator &m_it;
-
+		const Imath::Box2i &m_dataWindow;
+		const int m_numTileIndices;
+		const TileOrder m_tileOrder;
+		// I don't understand why the previous m_it didn't need to be declared mutable, since
+		// it is altered in "operator( ... ) const"
+		mutable int m_index;
 };
 
 } // namespace Detail
@@ -297,7 +241,6 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 		}
 	}
 
-	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
 	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
@@ -305,7 +248,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 
 		tbb::make_filter<void, Imath::V2i>(
 			tbb::filter::serial,
-			Detail::TileInputFilter<Detail::TileInputIterator>( tileIterator )
+			Detail::TileInputFilter( processWindow, tileOrder )
 		) &
 
 		tbb::make_filter<Imath::V2i, void>(
@@ -385,7 +328,6 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 	typedef typename std::result_of<TileFunctor( const ImagePlug *, const Imath::V2i & )>::type TileFunctorResult;
 	typedef std::pair<Imath::V2i, TileFunctorResult> TileFilterResult;
 
-	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
 	const Gaffer::ThreadState &threadState = Gaffer::ThreadState::current();
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
@@ -393,7 +335,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 
 		tbb::make_filter<void, Imath::V2i>(
 			tbb::filter::serial,
-			Detail::TileInputFilter<Detail::TileInputIterator>( tileIterator )
+			Detail::TileInputFilter( processWindow, tileOrder )
 		) &
 
 		tbb::make_filter<Imath::V2i, TileFilterResult>(
