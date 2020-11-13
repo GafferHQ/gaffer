@@ -940,6 +940,11 @@ void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 	}
 }
 
+void ImageGadget::Tile::finishedUpdate()
+{
+	m_active = false;
+}
+
 const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
 {
 	const auto now = std::chrono::steady_clock::now();
@@ -1069,27 +1074,40 @@ void ImageGadget::updateTiles()
 
 	auto tileFunctor = [this, channelsToCompute] ( const ImagePlug *image, const V2i &tileOrigin ) {
 
-		vector<Tile::Update> updates;
-		ImagePlug::ChannelDataScope channelScope( Context::current() );
-		for( auto &channelName : channelsToCompute )
+		try
 		{
-			channelScope.setChannelName( channelName );
-			Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
-			updates.push_back( tile.computeUpdate( image ) );
+
+			vector<Tile::Update> updates;
+			ImagePlug::ChannelDataScope channelScope( Context::current() );
+			for( auto &channelName : channelsToCompute )
+			{
+				channelScope.setChannelName( channelName );
+				Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
+				updates.push_back( tile.computeUpdate( image ) );
+			}
+
+			Tile::applyUpdates( updates );
+
+			if( refCount() && !m_renderRequestPending.exchange( true ) )
+			{
+				// Must hold a reference to stop us dying before our UI thread call is scheduled.
+				ImageGadgetPtr thisRef = this;
+				ParallelAlgo::callOnUIThread(
+					[thisRef] {
+						thisRef->m_renderRequestPending = false;
+						thisRef->Gadget::dirty( DirtyType::Render );
+					}
+				);
+			}
 		}
-
-		Tile::applyUpdates( updates );
-
-		if( refCount() && !m_renderRequestPending.exchange( true ) )
+		catch (...)
 		{
-			// Must hold a reference to stop us dying before our UI thread call is scheduled.
-			ImageGadgetPtr thisRef = this;
-			ParallelAlgo::callOnUIThread(
-				[thisRef] {
-					thisRef->m_renderRequestPending = false;
-					thisRef->Gadget::dirty( DirtyType::Render );
-				}
-			);
+			// Make sure we don't leave behind active indicators if the computation is cancelled
+			for( auto &channelName : channelsToCompute )
+			{
+				m_tiles[TileIndex(tileOrigin, channelName)].finishedUpdate();
+			}
+			throw;
 		}
 	};
 

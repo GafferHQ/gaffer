@@ -279,6 +279,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			// Called from the UI thread.
 			const IECoreGL::Texture *texture( bool &active );
 
+			void finishedUpdate();
+
 			private :
 
 				IECore::MurmurHash m_channelDataHash;
