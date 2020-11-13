@@ -385,7 +385,8 @@ ImageGadget::ImageGadget()
 		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
 		m_renderRequestPending( false ),
-		m_shaderDirty( true )
+		m_shaderDirty( true ),
+		m_maxTileUpdated( 0 )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -411,6 +412,7 @@ ImageGadget::ImageGadget()
 	m_gradeNode = new Grade;
 	m_gradeNode->inPlug()->setInput( m_clampNode->outPlug() );
 	m_gradeNode->channelsPlug()->setValue( "*" );
+
 }
 
 ImageGadget::~ImageGadget()
@@ -1067,7 +1069,7 @@ void ImageGadget::updateTiles()
 	// Do the actual work of generating the tiles asynchronously,
 	// in the background.
 
-	auto tileFunctor = [this, channelsToCompute] ( const ImagePlug *image, const V2i &tileOrigin ) {
+	auto tileFunctor = [this, channelsToCompute, dataWindow] ( const ImagePlug *image, const V2i &tileOrigin ) {
 
 		vector<Tile::Update> updates;
 		ImagePlug::ChannelDataScope channelScope( Context::current() );
@@ -1079,6 +1081,12 @@ void ImageGadget::updateTiles()
 		}
 
 		Tile::applyUpdates( updates );
+
+		// Set the m_maxTileUpdated atomic to the maximum between us and any other threads
+		int index = ImageAlgo::tileIndexFromOrigin( tileOrigin, dataWindow );
+		int prevMax = m_maxTileUpdated;
+		while( prevMax < index && !m_maxTileUpdated.compare_exchange_weak( prevMax, index ))
+        {}
 
 		if( refCount() && !m_renderRequestPending.exchange( true ) )
 		{
@@ -1093,6 +1101,11 @@ void ImageGadget::updateTiles()
 		}
 	};
 
+	if( m_maxTileUpdated >= ImageAlgo::numTileIndices( dataWindow ) - 1 )
+	{
+		m_maxTileUpdated = 0;
+	}
+	int startIndex = m_maxTileUpdated;
 
 	// callOnBackgroundThread requires a "subject" that will trigger task cancellation
 	// when dirtied.  This subject usually needs to be in a script, but there's a special
@@ -1107,8 +1120,8 @@ void ImageGadget::updateTiles()
 		m_image.get(),
 		// OK to capture `this` via raw pointer, because ~ImageGadget waits for
 		// the background process to complete.
-		[this, channelsToCompute, dataWindow, tileFunctor, tilesImage] {
-			ImageAlgo::parallelProcessTiles( tilesImage, tileFunctor, dataWindow );
+		[this, channelsToCompute, dataWindow, tileFunctor, tilesImage, startIndex] {
+			ImageAlgo::parallelProcessTiles( tilesImage, tileFunctor, dataWindow, ImageAlgo::Unordered, startIndex );
 			m_dirtyFlags &= ~TilesDirty;
 			if( refCount() )
 			{

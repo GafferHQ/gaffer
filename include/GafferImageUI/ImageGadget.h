@@ -316,6 +316,10 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		mutable TileShaderPtr m_shader;
 		mutable bool m_shaderDirty;
 
+		// Track index of the max tile that got updated last render.  This may not be the max tile in
+		// the dataWindow, if the last render was cancelled.
+		std::atomic<int> m_maxTileUpdated;
+
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )
