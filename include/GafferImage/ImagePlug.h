@@ -218,6 +218,13 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		{
 			return ( ( point.y - tileOrigin.y ) << tileSizeLog2() ) + point.x - tileOrigin.x;
 		};
+
+		/// Returns the pixel corresponding to an unwrapped index
+		inline static Imath::V2i indexPixel( int index, const Imath::V2i &tileOrigin )
+		{
+			int y = index >> tileSizeLog2();
+			return Imath::V2i( index - ( y << tileSizeLog2() ) + tileOrigin.x, y + tileOrigin.y );
+		};
 		//@}
 
 	private :

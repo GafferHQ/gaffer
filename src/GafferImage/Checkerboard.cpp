@@ -55,16 +55,16 @@ using namespace Gaffer;
 namespace
 {
 
-float filteredStripes( float x, float period, float filterWidth )
+inline float filteredStripes( float x, float period, float filterWidth )
 {
-	float w = filterWidth / period * .5;
-	float x0 = x / period - w;
-	float x1 = x / period + w;
-	float floorX0 = floor( x0 );
-	float floorX1 = floor( x1 );
-	return ( ( .5f * floorX1 + max( 0.f, x1 - floorX1 - .5f ) ) -
-		( .5f * floorX0 + max( 0.f, x0 - floorX0 - .5f ) ) ) /
-		( w * 2 );
+	// \todo : round / floor and int conversion are actually pretty slow by default.
+	// Could be worth trying out some intrinsics here, though of course, if we actually
+	// wanted this to not be slow, having a separable code path when there is no rotation
+	// would be a much bigger speedup
+	float xp = x / ( period * 0.5f );
+	float nearestBoundary = round( xp );
+	float boundaryDirection = (((int)nearestBoundary) % 2 ) == 0 ? -1.0f : 1.0f;
+	return max( 0.0f, min( 1.0f, ( ( xp - nearestBoundary ) * ( period * 0.5f ) / filterWidth * boundaryDirection + 0.5f ) ) );
 }
 
 } // namespace
