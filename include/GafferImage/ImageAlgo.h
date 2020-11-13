@@ -128,7 +128,8 @@ void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	TileFunctor &&functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
-	TileOrder tileOrder = Unordered
+	TileOrder tileOrder = Unordered,
+	int startIndex = 0 // Offset the order in which tiles will be processed by changing the start tile
 );
 
 // Call the functor in parallel, once per tile per channel
@@ -138,7 +139,8 @@ void parallelProcessTiles(
 	const std::vector<std::string> &channelNames,
 	TileFunctor &&functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
-	TileOrder tileOrder = Unordered
+	TileOrder tileOrder = Unordered,
+	int startIndex = 0 // Offset the order in which tiles will be processed by changing the start tile
 );
 
 // Process all tiles in parallel using TileFunctor, passing the
@@ -149,7 +151,8 @@ void parallelGatherTiles(
 	const TileFunctor &tileFunctor, // Signature : T tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
 	GatherFunctor &&gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, T &tileFunctorResult )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
-	TileOrder tileOrder = Unordered
+	TileOrder tileOrder = Unordered,
+	int startIndex = 0 // Offset the order in which tiles will be processed by changing the start tile
 );
 
 // Process all tiles in parallel using TileFunctor, passing the
@@ -161,7 +164,8 @@ void parallelGatherTiles(
 	const TileFunctor &tileFunctor, // Signature : T tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	GatherFunctor &&gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, T &tileFunctorResult )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
-	TileOrder tileOrder = Unordered
+	TileOrder tileOrder = Unordered,
+	int startIndex = 0 // Offset the order in which tiles will be processed by changing the start tile
 );
 
 /// Whole image operations

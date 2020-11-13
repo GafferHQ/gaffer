@@ -66,9 +66,9 @@ inline Imath::Box2i tileRangeFromDataWindow( const Imath::Box2i &dataWindow )
 class TileInputFilter
 {
 	public:
-		TileInputFilter( const Imath::Box2i &dataWindow, TileOrder tileOrder )
+		TileInputFilter( const Imath::Box2i &dataWindow, TileOrder tileOrder, int startIndex )
 			:	m_dataWindow( dataWindow ), m_numTileIndices( numTileIndices( dataWindow ) ),
-				m_tileOrder( tileOrder ), m_index( 0 )
+				m_tileOrder( tileOrder ), m_index( 0 ), m_startIndex( startIndex )
 		{}
 
 		Imath::V2i operator()( tbb::flow_control &fc ) const
@@ -80,7 +80,7 @@ class TileInputFilter
 			}
 
 			int i = m_tileOrder == BottomToTop ? m_numTileIndices - 1 - m_index : m_index;
-			Imath::V2i result = tileOriginFromIndex( i, m_dataWindow );
+			Imath::V2i result = tileOriginFromIndex( ( i + m_startIndex ) % m_numTileIndices, m_dataWindow );
 			m_index++;
 			return result;
 		}
@@ -93,6 +93,7 @@ class TileInputFilter
 		// I don't understand why the previous m_it didn't need to be declared mutable, since
 		// it is altered in "operator( ... ) const"
 		mutable int m_index;
+		const int m_startIndex;
 };
 
 } // namespace Detail
@@ -229,7 +230,7 @@ inline Imath::V2i tileOriginFromIndex( int index, const Imath::Box2i &dataWindow
 
 
 template <class TileFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder )
+void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder, int startIndex )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -248,7 +249,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 
 		tbb::make_filter<void, Imath::V2i>(
 			tbb::filter::serial,
-			Detail::TileInputFilter( processWindow, tileOrder )
+			Detail::TileInputFilter( processWindow, tileOrder, startIndex )
 		) &
 
 		tbb::make_filter<Imath::V2i, void>(
@@ -272,7 +273,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 }
 
 template <class TileFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder )
+void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder, int startIndex )
 {
 
 	// In theory, we could run in parallel over all tiles and channels at the same time.  However,
@@ -309,11 +310,11 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 		);
 	};
 
-	parallelProcessTiles( imagePlug, f, window, tileOrder );
+	parallelProcessTiles( imagePlug, f, window, tileOrder, startIndex );
 }
 
 template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder, int startIndex )
 {
 	Imath::Box2i processWindow = window;
 	if( BufferAlgo::empty( processWindow ) )
@@ -335,7 +336,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 
 		tbb::make_filter<void, Imath::V2i>(
 			tbb::filter::serial,
-			Detail::TileInputFilter( processWindow, tileOrder )
+			Detail::TileInputFilter( processWindow, tileOrder, startIndex )
 		) &
 
 		tbb::make_filter<Imath::V2i, TileFilterResult>(
@@ -376,7 +377,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 }
 
 template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder, int startIndex )
 {
 	typedef typename std::result_of<TileFunctor( const ImagePlug *, const std::string &, const Imath::V2i & )>::type TileFunctorResult;
 	typedef std::vector< TileFunctorResult > WholeTileResult;
@@ -419,7 +420,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 		}
 	};
 
-	parallelGatherTiles( imagePlug, f, g, window, tileOrder );
+	parallelGatherTiles( imagePlug, f, g, window, tileOrder, startIndex );
 }
 
 } // namespace ImageAlgo
