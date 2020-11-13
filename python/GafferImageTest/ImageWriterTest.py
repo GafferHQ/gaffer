@@ -392,12 +392,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 						onePixelDataWindow = imath.Box2i( imath.V2i( 0, 99 ), imath.V2i( 1, 100 ) )
 						self.assertEqual( reRead["out"].dataWindow(), onePixelDataWindow )
 
-						emptyPixelData = IECore.CompoundData( dict( [
-							( key,  IECore.CompoundData( {
-								"0, 64" : IECore.FloatVectorData() if key != "sampleOffsets"
-									else GafferImage.ImagePlug.emptyTileSampleOffsets()
-							} ) ) for key in [ "sampleOffsets", "R", "G","B", "A", "Z", "ZBack" ]
-						] ) )
+						emptyPixelData = IECore.CompoundObject()
+						emptyPixelData["tileOrigins"] = IECore.V2iVectorData( [ imath.V2i( 0, 64 ) ] )
+						emptyPixelData["sampleOffsets"] = IECore.ObjectVector( [ GafferImage.ImagePlug.emptyTileSampleOffsets() ] )
+						for channel in [ "R", "G","B", "A", "Z", "ZBack" ]:
+							emptyPixelData[channel] = IECore.ObjectVector( [ IECore.FloatVectorData() ] )
 						self.assertEqual( GafferImage.ImageAlgo.tiles( reRead["out"] ), emptyPixelData )
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.

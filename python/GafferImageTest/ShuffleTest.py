@@ -218,16 +218,16 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		flatGreen = GafferImage.ImageAlgo.tiles( flatShuffle["out"] )
 		deepGreen = GafferImage.ImageAlgo.tiles( deepShuffle["out"] )
 
-		for k in flatGreen["R"].keys():
-			self.assertEqual( flatGreen["R"][k], GafferImage.ImagePlug.blackTile() )
-			self.assertEqual( flatGreen["G"][k], GafferImage.ImagePlug.whiteTile() )
-			self.assertEqual( flatGreen["B"][k], GafferImage.ImagePlug.blackTile() )
+		for i in range( len( flatGreen["R"] ) ):
+			self.assertEqual( flatGreen["R"][i], GafferImage.ImagePlug.blackTile() )
+			self.assertEqual( flatGreen["G"][i], GafferImage.ImagePlug.whiteTile() )
+			self.assertEqual( flatGreen["B"][i], GafferImage.ImagePlug.blackTile() )
 
-			numSamples = deepGreen["sampleOffsets"][k][-1]
+			numSamples = deepGreen["sampleOffsets"][i][-1]
 
-			self.assertEqual( deepGreen["R"][k], IECore.FloatVectorData( [ 0.0 ] * numSamples ) )
-			self.assertEqual( deepGreen["G"][k], IECore.FloatVectorData( [ 1.0 ] * numSamples ) )
-			self.assertEqual( deepGreen["B"][k], IECore.FloatVectorData( [ 0.0 ] * numSamples ) )
+			self.assertEqual( deepGreen["R"][i], IECore.FloatVectorData( [ 0.0 ] * numSamples ) )
+			self.assertEqual( deepGreen["G"][i], IECore.FloatVectorData( [ 1.0 ] * numSamples ) )
+			self.assertEqual( deepGreen["B"][i], IECore.FloatVectorData( [ 0.0 ] * numSamples ) )
 
 		deepPremult = GafferImage.Premultiply()
 		deepPremult["in"].setInput( deepShuffle["out"] )
