@@ -298,24 +298,56 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 	vector<float> &result = resultData->writable();
 	result.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	float w0;
-	float h0;
-	float v;
-
-	for( int y = 0; y < ImagePlug::tileSize(); ++y )
+	// If there is no dependency between X and Y, we can treat them separably, for much better perf
+	if( transform[0][1] == 0 && transform[1][0] == 0 )
 	{
+		// Position of pixel <0,0>
+		float xOffset = inverseTransform[2][0] + (tileOrigin.x + .5f) * inverseTransform[0][0];
+		float yOffset = inverseTransform[2][1] + (tileOrigin.y + .5f) * inverseTransform[1][1];
+
+		// Use the first scanline as a buffer to store the x component of the checkerboard
 		for( int x = 0; x < ImagePlug::tileSize(); ++x )
 		{
-			V2f p( tileOrigin.x + x + .5f, tileOrigin.y + y + .5f );
-			p *= inverseTransform;
-
-			w0 = filteredStripes( p.x, size.x, filterWidth.x );
-			h0 = filteredStripes( p.y, size.y, filterWidth.y );
-
-			v = lerp<float>( w0, 1 - w0, h0 );
-			result.push_back( lerp<float>( valueA, valueB, v ) );
+			float w0 = filteredStripes( x * inverseTransform[0][0] + xOffset, size.x, filterWidth.x );
+			result.push_back( w0 );
 		}
 
+		// Compute the y components and fill the rest of the image by copying the x components
+		// stored in the first scanline
+		for( int y = 1; y < ImagePlug::tileSize(); ++y )
+		{
+			float h0 = filteredStripes( y * inverseTransform[1][1] + yOffset, size.y, filterWidth.y );
+			for( int x = 0; x < ImagePlug::tileSize(); ++x )
+			{
+				float v = lerp<float>( result[x], 1 - result[x], h0 );
+				result.push_back( lerp<float>( valueA, valueB, v ) );
+			}
+		}
+
+		// Apply the y component to the first scanline
+		float h0 = filteredStripes( yOffset, size.y, filterWidth.y );
+		for( int x = 0; x < ImagePlug::tileSize(); ++x )
+		{
+			float v = lerp<float>( result[x], 1 - result[x], h0 );
+			result[x] = lerp<float>( valueA, valueB, v );
+		}
+	}
+	else
+	{
+		for( int y = 0; y < ImagePlug::tileSize(); ++y )
+		{
+			for( int x = 0; x < ImagePlug::tileSize(); ++x )
+			{
+				V2f p( tileOrigin.x + x + .5f, tileOrigin.y + y + .5f );
+				p *= inverseTransform;
+
+				float w0 = filteredStripes( p.x, size.x, filterWidth.x );
+				float h0 = filteredStripes( p.y, size.y, filterWidth.y );
+
+				float v = lerp<float>( w0, 1 - w0, h0 );
+				result.push_back( lerp<float>( valueA, valueB, v ) );
+			}
+		}
 	}
 
 	return resultData;

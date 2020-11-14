@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Merge : Optimized image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
+- Checkerboard : Optimize case when rotation is 0
 
 Fixes
 -----
