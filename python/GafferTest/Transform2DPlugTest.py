@@ -118,5 +118,43 @@ class Transform2DPlugTest( GafferTest.TestCase ) :
 		self.assertNotEqual( p.typeId(), Gaffer.ValuePlug.staticTypeId() )
 		self.assertTrue( p.isInstanceOf( Gaffer.ValuePlug.staticTypeId() ) )
 
+	def testDefaultValues( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.Transform2DPlug(
+			defaultTranslate = imath.V2f( 1, 2 ),
+			defaultRotate = 3,
+			defaultScale = imath.V2f( 4, 5 ),
+			defaultPivot = imath.V2f( 6, 7 ),
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		self.assertEqual( s["n"]["user"]["p"]["translate"].defaultValue(), imath.V2f( 1, 2 ) )
+		self.assertEqual( s["n"]["user"]["p"]["rotate"].defaultValue(), 3 )
+		self.assertEqual( s["n"]["user"]["p"]["scale"].defaultValue(), imath.V2f( 4, 5 ) )
+		self.assertEqual( s["n"]["user"]["p"]["pivot"].defaultValue(), imath.V2f( 6, 7 ) )
+
+		s["n"]["user"]["p2"] = s["n"]["user"]["p"].createCounterpart( "p2", Gaffer.Plug.Direction.In )
+		self.assertEqual( s["n"]["user"]["p2"]["translate"].defaultValue(), imath.V2f( 1, 2 ) )
+		self.assertEqual( s["n"]["user"]["p2"]["rotate"].defaultValue(), 3 )
+		self.assertEqual( s["n"]["user"]["p2"]["scale"].defaultValue(), imath.V2f( 4, 5 ) )
+		self.assertEqual( s["n"]["user"]["p2"]["pivot"].defaultValue(), imath.V2f( 6, 7 ) )
+
+		s["n"]["user"]["p2"]["translate"].setValue( imath.V2f( -1, -2 ) )
+		s["n"]["user"]["p2"]["translate"].resetDefault()
+		self.assertEqual( s["n"]["user"]["p2"]["translate"].defaultValue(), imath.V2f( -1, -2 ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n"]["user"]["p"]["translate"].defaultValue(), imath.V2f( 1, 2 ) )
+		self.assertEqual( s2["n"]["user"]["p"]["rotate"].defaultValue(), 3 )
+		self.assertEqual( s2["n"]["user"]["p"]["scale"].defaultValue(), imath.V2f( 4, 5 ) )
+		self.assertEqual( s2["n"]["user"]["p"]["pivot"].defaultValue(), imath.V2f( 6, 7 ) )
+		self.assertEqual( s2["n"]["user"]["p2"]["translate"].defaultValue(), imath.V2f( -1, -2 ) )
+		self.assertEqual( s2["n"]["user"]["p2"]["rotate"].defaultValue(), 3 )
+		self.assertEqual( s2["n"]["user"]["p2"]["scale"].defaultValue(), imath.V2f( 4, 5 ) )
+		self.assertEqual( s2["n"]["user"]["p2"]["pivot"].defaultValue(), imath.V2f( 6, 7 ) )
+
 if __name__ == "__main__":
 	unittest.main()

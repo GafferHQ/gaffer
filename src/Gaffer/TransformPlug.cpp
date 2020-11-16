@@ -46,22 +46,26 @@ GAFFER_PLUG_DEFINE_TYPE( TransformPlug );
 
 size_t TransformPlug::g_firstPlugIndex = 0;
 
-TransformPlug::TransformPlug( const std::string &name, Direction direction, unsigned flags )
+TransformPlug::TransformPlug(
+	const std::string &name, Direction direction,
+	const V3f &defaultTranslate,
+	const V3f &defaultRotate,
+	const V3f &defaultScale,
+	const V3f &defaultPivot,
+	unsigned flags
+)
 	:	ValuePlug( name, direction, flags )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-
-	// We create our children automatically, so they should never be created dynamically
-	unsigned childFlags = flags & ~Plug::Dynamic;
 
 	addChild(
 		new V3fPlug(
 			"translate",
 			direction,
-			V3f( 0 ),
+			defaultTranslate,
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			childFlags
+			flags
 		)
 	);
 
@@ -69,10 +73,10 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 		new V3fPlug(
 			"rotate",
 			direction,
-			V3f( 0 ),
+			defaultRotate,
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			childFlags
+			flags
 		)
 	);
 
@@ -80,10 +84,10 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 		new V3fPlug(
 			"scale",
 			direction,
-			V3f( 1 ),
+			defaultScale,
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			childFlags
+			flags
 		)
 	);
 
@@ -91,10 +95,10 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 		new V3fPlug(
 			"pivot",
 			direction,
-			V3f( 0 ),
+			defaultPivot,
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			childFlags
+			flags
 		)
 	);
 }
@@ -110,7 +114,14 @@ bool TransformPlug::acceptsChild( const GraphComponent *potentialChild ) const
 
 PlugPtr TransformPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
-	return new TransformPlug( name, direction, getFlags() );
+	return new TransformPlug(
+		name, direction,
+		translatePlug()->defaultValue(),
+		rotatePlug()->defaultValue(),
+		scalePlug()->defaultValue(),
+		pivotPlug()->defaultValue(),
+		getFlags()
+	);
 }
 
 V3fPlug *TransformPlug::translatePlug()
