@@ -1,3 +1,11 @@
+0.58.x.x (relative to 0.58.5.2)
+========
+
+Improvements
+------------
+
+- Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
+
 0.58.5.2 (relative to 0.58.5.1)
 ========
 
