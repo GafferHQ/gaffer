@@ -143,6 +143,7 @@ class GAFFER_API SplinePlug : public ValuePlug
 		void setToDefault() override;
 		bool isSetToDefault() const override;
 		void resetDefault() override;
+		IECore::MurmurHash defaultHash() const override;
 
 		/// Sets the value of the points and interpolation child plugs
 		/// \undoable

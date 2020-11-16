@@ -848,6 +848,39 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			self.assertEqual( row["cells"]["c1"].enabledPlug(), row["cells"]["c1"]["value"]["enabled"] )
 			self.assertEqual( row["cells"]["c1"].enabledPlug().getValue(), True )
 
+	def testDefaultValueSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = Gaffer.Spreadsheet()
+		s["s"]["rows"].addColumn( Gaffer.V3iPlug( "c1", defaultValue = imath.V3i( 1, 2, 3 ) ) )
+		s["s"]["rows"].addColumn( Gaffer.Box2iPlug( "c2", defaultValue = imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) ) ) )
+		s["s"]["rows"].addRows( 3 )
+
+		# Change defaults for some plugs
+
+		s["s"]["rows"][1]["name"].setValue( "testName" )
+		s["s"]["rows"][1]["cells"]["c1"]["value"].setValue( imath.V3i( 4, 5, 6 ) )
+		s["s"]["rows"][2]["enabled"].setValue( False )
+		s["s"]["rows"][2]["cells"]["c1"]["value"]["x"].setValue( 10 )
+		s["s"]["rows"][3]["cells"]["c1"]["enabled"].setValue( False )
+		s["s"]["rows"][3]["cells"]["c2"]["value"].setValue( imath.Box2i( imath.V2i( 10 ), imath.V2i( 11 ) ) )
+		s["s"]["rows"][1]["name"].resetDefault()
+
+		# Change values for some plugs, some of which also had their
+		# defaults changed.
+
+		s["s"]["rows"][1]["name"].setValue( "testName2" )
+		s["s"]["rows"][1]["cells"]["c1"]["value"]["x"].setValue( 7 )
+		s["s"]["rows"][3]["enabled"].setValue( False )
+
+		# Check that everything round-trips correctly through a serialisation and load.
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s["s"]["rows"].defaultHash(), s2["s"]["rows"].defaultHash() )
+		self.assertEqual( s["s"]["rows"].hash(), s2["s"]["rows"].hash() )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testAddRowPerformance( self ) :
 

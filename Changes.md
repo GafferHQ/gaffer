@@ -9,6 +9,7 @@ Improvements
 Fixes
 -----
 
+- Spreadsheet : Fixed serialisation of default values which do not match those of the default row.
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 - Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.
 
@@ -16,11 +17,14 @@ API
 ---
 
 - TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
+- ValuePlug : Added `defaultHash()` virtual method.
+- ValuePlugSerialiser : Added `valueRepr()` method.
 
 Breaking Changes
 ----------------
 
 - TransformPlug/Transform2DPlug : Added constructor arguments.
+- ValuePlug : Added virtual method.
 
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========
