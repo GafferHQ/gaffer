@@ -60,7 +60,7 @@ class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
 		self.assertSceneHashesEqual( p["out"], d["out"], checks = self.allSceneChecks - { "object" } )
-		self.assertSceneHashesEqual( p["out"], d["out"], pathsToIgnore = ( "/plane" ) )
+		self.assertSceneHashesEqual( p["out"], d["out"], pathsToPrune = ( "/plane" ) )
 		self.assertNotIn( "uv", d["out"].object( "/plane" ) )
 		self.assertIn( "P", d["out"].object( "/plane" ) )
 

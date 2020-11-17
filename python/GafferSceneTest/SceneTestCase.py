@@ -190,14 +190,21 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 				)
 			)
 
-	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
+	def assertScenesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToPrune = (), checks = allSceneChecks ) :
 
 		assert( checks.issubset( self.allSceneChecks ) )
 
 		def walkScene( scenePath1, scenePath2 ) :
 
-			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
-				self.assertPathsEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, checks.intersection( self.allPathChecks ) )
+			if pathsToPrune and self.__pathToString( scenePath1 ) in pathsToPrune :
+				return
+
+			self.assertPathsEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, checks.intersection( self.allPathChecks ) )
+
+			# Sometimes we may not want to fail because of different orders of childNames, so we may not
+			# put "childNames" in `checks` - but we still need to visit the same locations regardless of
+			# which scene comes first, otherwise the rest of the checks don't make any sense
+			self.assertEqual( set( scenePlug1.childNames( scenePath1 ) ), set( scenePlug2.childNames( scenePath2 ) ) )
 
 			childNames = scenePlug1.childNames( scenePath1 )
 			for childName in childNames :
@@ -222,7 +229,16 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 		if "sets" in checks :
 			self.assertEqual( scenePlug1.setNames(), scenePlug2.setNames() )
 			for setName in scenePlug1.setNames() :
-				self.assertEqual( scenePlug1.set( setName ), scenePlug2.set( setName ) )
+				if not pathsToPrune:
+					self.assertEqual( scenePlug1.set( setName ), scenePlug2.set( setName ) )
+				else:
+					if scenePlug1.set( setName ) != scenePlug2.set( setName ):
+						pruned1 = scenePlug1.set( setName )
+						pruned2 = scenePlug2.set( setName )
+						for p in pathsToPrune:
+							pruned1.value.prune( p )
+							pruned2.value.prune( p )
+						self.assertEqual( pruned1, pruned2 )
 
 	def assertPathHashesEqual( self, scenePlug1, scenePath1, scenePlug2, scenePath2, checks = allPathChecks ) :
 
@@ -254,15 +270,16 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 				)
 			)
 
-	def assertSceneHashesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
+	def assertSceneHashesEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToPrune = (), checks = allSceneChecks ) :
 
 		assert( checks.issubset( self.allSceneChecks ) )
 
 		def walkScene( scenePath1, scenePath2 ) :
 
-			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
+			if pathsToPrune and self.__pathToString( scenePath1 ) in pathsToPrune :
+				return
 
-				self.assertPathHashesEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, checks.intersection( self.allPathChecks ) )
+			self.assertPathHashesEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, checks.intersection( self.allPathChecks ) )
 
 			childNames = scenePlug1.childNames( scenePath1 )
 			for childName in childNames :
@@ -289,19 +306,20 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 			for setName in scenePlug1.setNames() :
 				self.assertEqual( scenePlug1.setHash( setName ), scenePlug2.setHash( setName ) )
 
-	def assertSceneHashesNotEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToIgnore = (), checks = allSceneChecks ) :
+	def assertSceneHashesNotEqual( self, scenePlug1, scenePlug2, scenePlug2PathPrefix = "", pathsToPrune = (), checks = allSceneChecks ) :
 
 		def walkScene( scenePath1, scenePath2 ) :
 
-			if ( not pathsToIgnore ) or ( self.__pathToString( scenePath1 ) not in pathsToIgnore ) :
+			if pathsToPrune and self.__pathToString( scenePath1 ) in pathsToPrune :
+				return
 
-				pathChecks = checks.intersection( self.allPathChecks )
-				if len( scenePath1 ) == 0 :
-					# Hashes will automatically be equal for these plugs at the root,
-					# because they are dealt with automatically in the SceneNode base class.
-					pathChecks -= { "attributes", "object", "transform" }
+			pathChecks = checks.intersection( self.allPathChecks )
+			if len( scenePath1 ) == 0 :
+				# Hashes will automatically be equal for these plugs at the root,
+				# because they are dealt with automatically in the SceneNode base class.
+				pathChecks -= { "attributes", "object", "transform" }
 
-				self.assertPathHashesNotEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, pathChecks )
+			self.assertPathHashesNotEqual( scenePlug1, scenePath1, scenePlug2, scenePath2, pathChecks )
 
 			childNames = scenePlug1.childNames( scenePath1 )
 			for childName in childNames :

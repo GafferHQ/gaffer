@@ -79,7 +79,7 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( r["out"].object( "/cow" ), m["out"].object( "/cow" ) )
 		self.assertSceneHashesEqual( r["out"], m["out"], checks = self.allPathChecks - { "object" } )
 
-		self.assertScenesEqual( r["out"], m["out"], pathsToIgnore = ( "/cow", ) )
+		self.assertScenesEqual( r["out"], m["out"], pathsToPrune = ( "/cow", ) )
 
 		self.assertEqual( m["out"].object( "/cow" ).interpolation, "catmullClark" )
 		self.assertNotIn( "N", m["out"].object( "/cow" ) )
