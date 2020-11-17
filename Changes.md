@@ -20,6 +20,7 @@ API
 - TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
 - ValuePlug : Added `defaultHash()` virtual method.
 - ValuePlugSerialiser : Added `valueRepr()` method.
+- ImageAlgo : `tiles()` now returns a top level dictionary containing all the tileOrigins as a V2iVectorData, and each channel as an ObjectVectorData of channelDatas with corresponding indices. This allows `tiles()` to run substantially faster, more than twice as fast if the input network is very cheap.
 
 Breaking Changes
 ----------------

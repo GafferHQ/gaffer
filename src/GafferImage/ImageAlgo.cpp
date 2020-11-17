@@ -97,9 +97,25 @@ class CopyTile
 
 };
 
-std::string tileOriginToString( const Imath::V2i &tileOrigin )
+
+// \todo : We likely need to come up with a better general way of iterating tiles, which could
+// translate back and forth from a tileOrigin to a flat index.  This potentially be used in
+// parallelProcessTiles, and could potentially be public so that code that uses tiles() would
+// have an easy way to look up tile data for a particular tileOrigin.
+//
+// When that gets implemented, it should replace these private functions.
+Imath::Box2i tileRangeFromDataWindow( const Imath::Box2i &dataWindow )
 {
-	return std::to_string( tileOrigin.x ) + ", " + std::to_string( tileOrigin.y );
+	return Imath::Box2i(
+		ImagePlug::tileOrigin( dataWindow.min ) / ImagePlug::tileSize(),
+		ImagePlug::tileOrigin( dataWindow.max - Imath::V2i( 1 ) ) / ImagePlug::tileSize()
+	);
+}
+
+int tileIndex( const Imath::V2i &tileOrigin, const Imath::Box2i &tileRange )
+{
+	Imath::V2i offset = tileOrigin / ImagePlug::tileSize() - tileRange.min;
+	return offset.y * ( tileRange.size().x + 1 ) + offset.x;
 }
 
 } // namespace
@@ -219,30 +235,46 @@ IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug
 	return result;
 }
 
-IECore::ConstCompoundDataPtr GafferImage::ImageAlgo::tiles( const ImagePlug *imagePlug )
+IECore::ConstCompoundObjectPtr GafferImage::ImageAlgo::tiles( const ImagePlug *imagePlug )
 {
-	IECore::CompoundDataPtr result = new IECore::CompoundData();
 	const Imath::Box2i dataWindow = imagePlug->dataWindowPlug()->getValue();
 	IECore::ConstStringVectorDataPtr channelNamesData = imagePlug->channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
 
 	bool deep = imagePlug->deepPlug()->getValue();
 
-	IECore::CompoundDataPtr sampleOffsets = new IECore::CompoundData();
+	Imath::Box2i tileRange = tileRangeFromDataWindow( dataWindow );
 
-	ImageAlgo::parallelGatherTiles(
+	int numTiles = tileIndex( ImagePlug::tileOrigin( dataWindow.max - Imath::V2i( 1 ) ), tileRange ) + 1;
+
+	IECore::V2iVectorDataPtr tileOrigins = new IECore::V2iVectorData();
+	std::vector<Imath::V2i> &tileOriginsWritable = tileOrigins->writable();
+	tileOriginsWritable.resize( numTiles );
+
+	IECore::ObjectVectorPtr sampleOffsetResults = new IECore::ObjectVector();
+	sampleOffsetResults->members().resize( numTiles );
+
+	std::vector<IECore::ObjectVectorPtr> channelDataResults( channelNames.size() );
+	for( unsigned int i = 0; i < channelNames.size(); i++ )
+	{
+		channelDataResults[i] = new IECore::ObjectVector();
+		channelDataResults[i]->members().resize( numTiles );
+	}
+
+	ImageAlgo::parallelProcessTiles(
 		imagePlug,
 		// Tile
-		[] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin )
+		[ &tileOriginsWritable, &sampleOffsetResults, &channelDataResults, &channelNames, &tileRange, deep ] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin )
 		{
-			return imageP->sampleOffsetsPlug()->getValue();
-		},
-		// Gather
-		[ &sampleOffsets, deep ] ( const ImagePlug *imageP, const Imath::V2i &tileOrigin, IECore::ConstIntVectorDataPtr data )
-		{
+			int tileI = tileIndex( tileOrigin, tileRange );
+			tileOriginsWritable[tileI] = tileOrigin;
+
+			IECore::ConstIntVectorDataPtr sampleOffsets = imageP->sampleOffsetsPlug()->getValue();
 			if( deep )
 			{
-				sampleOffsets->writable()[ tileOriginToString( tileOrigin ) ] = const_cast<IECore::IntVectorData*>(data.get() );
+				// As is kinda common, we have to cheat with a const cast while we're stuffing members into
+				// a data structure that is safe because it will be become const as soon as we're done filling it
+				sampleOffsetResults->members()[ tileI ] = const_cast<IECore::IntVectorData*>( sampleOffsets.get() );
 			}
 			else
 			{
@@ -251,35 +283,35 @@ IECore::ConstCompoundDataPtr GafferImage::ImageAlgo::tiles( const ImagePlug *ima
 				// Currently, tiles() is used mostly in tests, so it seem good to verify this.
 				// If tiles() gets used in somewhere performance critical, it would be good to make this check
 				// optional.
-				if( data != ImagePlug::flatTileSampleOffsets() )
+				if( sampleOffsets != ImagePlug::flatTileSampleOffsets() )
 				{
 					throw IECore::Exception( "Accessing tiles on flat image with invalid sample offsets" );
 				}
+			}
+
+			ImagePlug::ChannelDataScope channelDataScope( Gaffer::Context::current() );
+			for( unsigned int i = 0; i < channelNames.size(); i++ )
+			{
+				channelDataScope.setChannelName( channelNames[i] );
+				channelDataResults[i]->members()[tileI] = const_cast<IECore::FloatVectorData*>(
+					imageP->channelDataPlug()->getValue().get()
+				);
 			}
 		},
 		dataWindow
 	);
 
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject();
+	result->members()["tileOrigins"] = tileOrigins;
 	if( deep )
 	{
-		result->writable()["sampleOffsets"] = sampleOffsets;
+		result->members()["sampleOffsets"] = sampleOffsetResults;
 	}
 
-	ImageAlgo::parallelGatherTiles(
-		imagePlug, channelNames,
-		// Tile
-		[] ( const ImagePlug *imageP, const string &channelName, const Imath::V2i &tileOrigin )
-		{
-			return imageP->channelDataPlug()->getValue();
-		},
-		// Gather
-		[ &result ] ( const ImagePlug *imageP, const string &channelName, const Imath::V2i &tileOrigin, IECore::ConstFloatVectorDataPtr data )
-		{
-			IECore::CompoundDataPtr channel = result->member<IECore::CompoundData>( channelName, false, true );
-			channel->writable()[ tileOriginToString( tileOrigin ) ] = const_cast<IECore::FloatVectorData*>( data.get() );
-		},
-		dataWindow
-	);
+	for( unsigned int i = 0; i < channelNames.size(); i++ )
+	{
+		result->members()[channelNames[i]] = channelDataResults[i];
+	}
 
 	return result;
 }

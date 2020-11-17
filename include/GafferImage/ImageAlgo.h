@@ -41,6 +41,7 @@
 
 #include "GafferImage/Export.h"
 
+#include "IECore/CompoundObject.h"
 #include "IECore/Export.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
@@ -175,7 +176,7 @@ GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug );
 /// and tile.  Among other things, this makes it possible to efficiently test
 /// from Python whether two ImagePlugs have identical pixel data.  Unlike the
 /// image() method above, it works on deep images.
-GAFFERIMAGE_API IECore::ConstCompoundDataPtr tiles( const ImagePlug *imagePlug );
+GAFFERIMAGE_API IECore::ConstCompoundObjectPtr tiles( const ImagePlug *imagePlug );
 
 /// Deep Utils
 /// ==============================

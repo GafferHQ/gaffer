@@ -115,13 +115,16 @@ class ImageTestCase( GafferTest.TestCase ) :
 			pixelDataB = GafferImage.ImageAlgo.tiles( imageB )
 			if pixelDataA != pixelDataB:
 				self.assertEqual( pixelDataA.keys(), pixelDataB.keys() )
+				self.assertEqual( pixelDataA["tileOrigins"], pixelDataB["tileOrigins"] )
 				for k in pixelDataA.keys():
-					self.assertEqual( pixelDataA[k].keys(), pixelDataB[k].keys() )
-					for j in pixelDataA[k].keys():
-						if pixelDataA[k][j] != pixelDataB[k][j]:
-							self.assertEqual( len( pixelDataA[k][j] ), len( pixelDataB[k][j] ), " while checking pixel data %s : %s" % ( k, j ) )
-							for i in range( len( pixelDataA[k][j] ) ):
-								self.assertEqual( pixelDataA[k][j][i], pixelDataB[k][j][i] , " while checking pixel data %s : %s at index %i" % ( k, j, i ) )
+					if k == "tileOrigins":
+						continue
+					for i in range( len( pixelDataA[k] ) ):
+						if pixelDataA[k][i] != pixelDataB[k][i]:
+							tileStr = str( pixelDataA["tileOrigins"][i] )
+							self.assertEqual( len( pixelDataA[k][i] ), len( pixelDataB[k][i] ), " while checking pixel data %s : %s" % ( k, tileStr ) )
+							for j in range( len( pixelDataA[k][i] ) ):
+								self.assertEqual( pixelDataA[k][i][j], pixelDataB[k][i][j] , " while checking pixel data %s : %s at index %i" % ( k, tileStr, j ) )
 
 
 	## Returns an image node with an empty data window. This is useful in
