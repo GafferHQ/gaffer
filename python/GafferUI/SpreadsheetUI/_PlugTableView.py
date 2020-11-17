@@ -434,6 +434,10 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		forRows = self.__mode == self.Mode.RowNames
 
+		if event.key == "Space" :
+			self.__spaceBarPressed()
+			return True
+
 		if event.modifiers == event.Modifiers.None_ :
 
 			if event.key == "Return" :
@@ -477,6 +481,16 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__toggleBooleans( valuePlugs )
 		else :
 			self.__editSelectedPlugs()
+
+	def __spaceBarPressed( self ) :
+
+		# Qt has the odd behaviour that space will toggle the selection of the
+		# focused cell, unless it has a checked state, and then it'll toggle
+		# that. As we support `return` to do that, then make sure space only
+		# ever toggles the selection state of the focused cell.
+		currentIndex = self._qtWidget().selectionModel().currentIndex()
+		if currentIndex.isValid() :
+			self._qtWidget().selectionModel().select( currentIndex, QtCore.QItemSelectionModel.Toggle )
 
 	def __headerButtonPress( self, header, event ) :
 
