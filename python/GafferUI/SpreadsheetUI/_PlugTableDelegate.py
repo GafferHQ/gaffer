@@ -54,6 +54,16 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 		enabled = flags & QtCore.Qt.ItemIsEnabled and flags & QtCore.Qt.ItemIsEditable
 		cellPlugEnabled = index.data( _PlugTableModel.CellPlugEnabledRole )
 
+		if option.state & QtWidgets.QStyle.State_HasFocus :
+
+			if option.state & QtWidgets.QStyle.State_Selected :
+				focusColour = QtGui.QColor( QtCore.Qt.white )
+			else :
+				focusColour = option.palette.color( QtGui.QPalette.Highlight )
+
+			focusColour.setAlpha( 30 )
+			painter.fillRect( option.rect, focusColour )
+
 		if enabled and cellPlugEnabled :
 			return
 
