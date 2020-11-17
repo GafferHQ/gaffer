@@ -126,8 +126,12 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 	private :
 
 		void plugSet( Gaffer::Plug *plug );
+		void plugDirtied( Gaffer::Plug *plug );
 		bool keyPress( const GafferUI::KeyEvent &event );
 		void preRender();
+
+		boost::signals::scoped_connection m_viewportCameraChangedConnection;
+		void viewportCameraChanged();
 
 		void insertDisplayTransform();
 
@@ -136,6 +140,9 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
+		bool m_reframeOnChange;
+
+		bool reframeToFit();
 
 		class ChannelChooser;
 		std::unique_ptr<ChannelChooser> m_channelChooser;

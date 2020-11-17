@@ -51,6 +51,7 @@
 #include "GafferUI/StandardStyle.h"
 #include "GafferUI/Style.h"
 
+#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/StringPlug.h"
@@ -358,7 +359,8 @@ ImageView::ViewDescription<ImageView> ImageView::g_viewDescription( GafferImage:
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
 		m_imageGadget( new ImageGadget() ),
-		m_framed( false )
+		m_framed( false ),
+		m_reframeOnChange( false )
 {
 
 	// build the preprocessor we use for applying colour
@@ -395,8 +397,10 @@ ImageView::ImageView( const std::string &name )
 	// connect up to some signals
 
 	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
+	plugDirtiedSignal().connect( boost::bind( &ImageView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &ImageView::keyPress, this, ::_2 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &ImageView::preRender, this ) );
+	m_viewportCameraChangedConnection = viewportGadget()->cameraChangedSignal().connect( boost::bind( &ImageView::viewportCameraChanged, this ) );
 
 	// get our display transform right
 
@@ -529,14 +533,39 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	}
 }
 
+void ImageView::plugDirtied( Gaffer::Plug *plug )
+{
+	if( plug == inPlug() )
+	{
+		if( m_reframeOnChange )
+		{
+			m_framed = false;
+		}
+	}
+}
+
+
+bool ImageView::reframeToFit()
+{
+	const Box3f b = m_imageGadget->bound();
+	if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
+	{
+		BlockedConnection blockedConnection( m_viewportCameraChangedConnection );
+		viewportGadget()->frame( b );
+		m_framed = true;
+		return true;
+	}
+
+	return false;
+}
+
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
 	if( event.key == "F" && !event.modifiers )
 	{
-		const Box3f b = m_imageGadget->bound();
-		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
+		m_reframeOnChange = true;
+		if( reframeToFit() )
 		{
-			viewportGadget()->frame( b );
 			return true;
 		}
 	}
@@ -572,14 +601,12 @@ void ImageView::preRender()
 		return;
 	}
 
-	const Box3f b = m_imageGadget->bound();
-	if( b.isEmpty() )
-	{
-		return;
-	}
+	reframeToFit();
+}
 
-	viewportGadget()->frame( b );
-	m_framed = true;
+void ImageView::viewportCameraChanged()
+{
+	m_reframeOnChange = false;
 }
 
 void ImageView::insertDisplayTransform()
