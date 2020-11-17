@@ -200,5 +200,33 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 		self.assertLess( imageStats["max"][0].getValue(), 2e-5 )
 		self.assertLess( imageStats["average"][0].getValue(), 5e-7 )
 
+	def testSeparableCodePath( self ):
+
+		# Make sure that there is no inordinate difference between the special optimized code
+		# when rotation is 0 and the general code
+		checker1 = GafferImage.Checkerboard()
+		checker1["size"].setValue( imath.V2f( 35, 121 ) )
+		checker1["transform"]["translate"].setValue( imath.V2f( 214.849503, -199.025101 ) )
+		checker1["transform"]["scale"].setValue( imath.V2f( 7.1413002, 0.640600026 ) )
+
+		checker2 = GafferImage.Checkerboard()
+		checker2["size"].setValue( imath.V2f( 35, 121 ) )
+		checker2["transform"]["translate"].setValue( imath.V2f( 214.849503, -199.025101 ) )
+		checker2["transform"]["scale"].setValue( imath.V2f( 7.1413002, 0.640600026 ) )
+		checker2["transform"]["rotate"].setValue( 1e-6 )
+
+		diff = GafferImage.Merge()
+		diff["in"][0].setInput( checker2["out"] )
+		diff["in"][1].setInput( checker1["out"] )
+		diff["operation"].setValue( GafferImage.Merge.Operation.Difference )
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( diff["out"] )
+		stats["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 1920, 1080 ) ) )
+
+		self.assertGreater( stats["max"].getValue()[0], 0 ) # Should produce some change
+		self.assertLess( stats["max"].getValue()[0], 1e-4 ) # But nothing visible
+		self.assertLess( stats["average"].getValue()[0], 1e-6 )
+
 if __name__ == "__main__":
 	unittest.main()
