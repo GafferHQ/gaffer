@@ -6,6 +6,11 @@ Improvements
 
 - Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
 
+API
+---
+
+- Catalogue : Added `gaffer:isRendering` metadata, set to `True` if the viewed image is still receiving data from a display driver.
+
 0.58.5.2 (relative to 0.58.5.1)
 ========
 
