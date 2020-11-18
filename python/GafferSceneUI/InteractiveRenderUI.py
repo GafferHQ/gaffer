@@ -152,13 +152,14 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 
 	def __imageIsRendering( self, imagePlug ) :
 
-		# Make-shift detection of an in-progress render.
-		# Finished images have the `fileFormat` key courtesy of OIIO.
-		## \TODO add more formal metadata to determine this
+		rendering = False
+
 		try :
-			return "fileFormat" not in imagePlug.metadata()
+			rendering = imagePlug.metadata()[ "gaffer:isRendering" ].value
 		except :
-			return False
+			pass
+
+		return rendering
 
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :

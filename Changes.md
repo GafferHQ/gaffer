@@ -6,6 +6,11 @@ Improvements
 
 - Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
 
+Fixes
+-----
+
+- Viewer : Render controls should now work when viewing a render after it has passed through a compositing network, providing `gaffer:sourceScene` and `gaffer:isRendering` metadata is preserved (#3888).
+
 API
 ---
 
