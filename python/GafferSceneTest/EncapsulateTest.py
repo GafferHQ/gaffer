@@ -63,7 +63,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		groupB = GafferScene.Group()
 		groupB["in"][0].setInput( sphere["out"] )
-		groupB["in"][1].setInput( sphere["out"] )
+		groupB["in"][1].setInput( cube["out"] )
 		groupB["name"].setValue( "groupB" )
 
 		groupA = GafferScene.Group()
