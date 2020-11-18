@@ -13,7 +13,9 @@ Improvements
 
 - Merge : Optimized image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
 - Box :
-  - Improved strategy used for exporting for referencing. Before, the current values of the Box plugs were converted into the default values of the Reference during export. This was error prone as it was too easy to export new defaults after changing values for testing. We now export default values as they are, and omit current values completely.
+  - Improved strategy used for exporting for referencing. Before, the current values of the Box plugs were converted into the default values of the Reference during export. This was error prone as it was too easy to export new defaults after changing values for testing. We now export default values as they are, and omit current values completely. Two new menu items allow the default values to be authored explicitly from the current values at any time.
+  - Added "Reset Default Values" item to NodeEditor tool menu. This sets the default values for all plugs from their current values.
+  - Added "Reset Default Value" item to plug context menu. This sets the default value from the current value.
 - Checkerboard : Optimized image generation when rotation is 0.
 
 Fixes

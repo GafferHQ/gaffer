@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import inspect
 import functools
 
 import IECore
@@ -137,9 +138,19 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 	if not isinstance( node, Gaffer.Box ) :
 		return
 
+	nonDefaultPlugs = __nonDefaultPlugs( node )
+
+	menuDefinition.append( "/ResetDefaultsDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Reset Default Values",
+		{
+			"command" : functools.partial( __resetDefaultValues, plugs = nonDefaultPlugs ),
+			"active" : len( nonDefaultPlugs ) and all( not Gaffer.MetadataAlgo.readOnly( p ) for p in nonDefaultPlugs )
+		}
+	)
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Export reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
-	menuDefinition.append( "/Import reference...", { "command" : functools.partial( __importReference, node = node ) } )
+	menuDefinition.append( "/Export Reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
+	menuDefinition.append( "/Import Reference...", { "command" : functools.partial( __importReference, node = node ) } )
 
 	if Gaffer.BoxIO.canInsert( node ) :
 		menuDefinition.append( "/UpgradeDivider", { "divider" : True } )
@@ -149,7 +160,82 @@ def __showContents( graphEditor, box ) :
 
 	GafferUI.GraphEditor.acquire( box )
 
+def __nonDefaultPlugs( box ) :
+
+	def __nonDefaultWalk( plug ) :
+
+		if Gaffer.Metadata.value( plug, "userDefault", instanceOnly = True ) is not None :
+			return True
+
+		if len( plug ) == 0 :
+			if isinstance( plug, Gaffer.ValuePlug ) and not plug.isSetToDefault() :
+				if plug.getInput() is None :
+					return True
+				else :
+					# Plug will always say it is not set to default, but
+					# we don't care as we don't export connections.
+					pass
+			return False
+		else :
+			return any( __nonDefaultWalk( c ) for c in plug )
+
+	return [
+		p for p in Gaffer.Plug.Range( box )
+		if not p.getName().startswith( "__" )
+		and __nonDefaultWalk( p )
+	]
+
+def __resetDefaultValues( plugs ) :
+
+	with Gaffer.UndoScope( plugs[0].ancestor( Gaffer.ScriptNode ) ) :
+		for p in plugs :
+			p.resetDefault()
+			# If someone is going to the trouble of authoring a
+			# default, they don't want a pre-existing userDefault
+			# to ruin things.
+			Gaffer.Metadata.deregisterValue( p, "userDefault" )
+			for c in Gaffer.Plug.RecursiveRange( p ) :
+				Gaffer.Metadata.deregisterValue( c, "userDefault" )
+
+def __formatPlugs( box, plugs ) :
+
+	result = ""
+
+	for section in GafferUI.PlugLayout.layoutSections( box ) :
+		for plug in GafferUI.PlugLayout.layoutOrder( box, section = section ) :
+			if plug not in plugs :
+				continue
+			result += "{}.{}\n".format(
+				section,
+				Gaffer.Metadata.value( plug, "label" ) or IECore.CamelCase.toSpaced( plug.getName() )
+			)
+
+	return result
+
 def __exportForReferencing( menu, node ) :
+
+	nonDefaultPlugs = __nonDefaultPlugs( node )
+	if len( nonDefaultPlugs ) :
+		dialogue = GafferUI.ConfirmationDialogue(
+			title = "Export without current values?",
+			message = inspect.cleandoc(
+				"""
+				Not all plugs are at their default values, and non-default
+				values will not be exported. Export anyway?
+				"""
+			),
+			details = __formatPlugs( node, nonDefaultPlugs ) + "\n\n" +
+			inspect.cleandoc(
+				"""
+				Defaults can be reset for the whole node using "Reset Default
+				Values" in the NodeEditor tool menu or for individual plugs
+				using "Reset Default Value" in the plug context menu.
+				"""
+			).replace( "\n", " " ),
+			confirmLabel = "Export"
+		)
+		if not dialogue.waitForConfirmation() :
+			return
 
 	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
 
@@ -274,8 +360,24 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 # PlugValueWidget menu
 ##########################################################################
 
+def __appendPlugResetDefaultMenuItems( menuDefinition, plug, readOnlyUI ) :
+
+	if not isinstance( plug.node(), Gaffer.Box ) :
+		return
+
+	readOnly = readOnlyUI or Gaffer.MetadataAlgo.readOnly( plug )
+
+	menuDefinition.append(
+		"/Reset Default Value",
+		{
+			"command" : functools.partial( __resetDefaultValues, [ plug ] ),
+			"active" : isinstance( plug, Gaffer.ValuePlug ) and not plug.isSetToDefault() and not readOnly,
+		}
+	)
+
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
+	__appendPlugResetDefaultMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnlyUI = plugValueWidget.getReadOnly() )
 	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnlyUI = plugValueWidget.getReadOnly() )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
