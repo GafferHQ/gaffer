@@ -131,6 +131,25 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( encapsulate["out"].set( "sphereSet" ).value.paths(), [ "/groupA/sphere" ] )
 		self.assertEqual( encapsulate["out"].set( "cubeSet" ).value.paths(), [] )
 
+		# As a double check, test that this setup works properly with Unencapsulate
+		unencapsulateFilter = GafferScene.PathFilter()
+
+		unencapsulate = GafferScene.Unencapsulate()
+		unencapsulate["in"].setInput( encapsulate["out"] )
+		unencapsulate["filter"].setInput( unencapsulateFilter["out"] )
+
+		# We can reverse the encapsulate by unencapsulating everything
+		unencapsulateFilter["paths"].setValue( IECore.StringVectorData( [ "..." ] ) )
+		self.assertScenesEqual( encapsulate["in"], unencapsulate["out"] )
+
+		# Or by targetting just the path that was encapsulated
+		unencapsulateFilter["paths"].setValue( IECore.StringVectorData( [ "/groupA/groupB" ] ) )
+		self.assertScenesEqual( encapsulate["in"], unencapsulate["out"] )
+
+		# But if we don't target that path, the scene stays encapsulated
+		unencapsulateFilter["paths"].setValue( IECore.StringVectorData( [ "/groupA/" ] ) )
+		self.assertScenesEqual( encapsulate["out"], unencapsulate["out"] )
+
 	def testCapsuleHash( self ) :
 
 		sphere = GafferScene.Sphere()
