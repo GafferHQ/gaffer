@@ -459,3 +459,19 @@ Search                               :kbd:`Ctrl` + :kbd:`F`
 Scroll to bottom                     :kbd:`B`
 ==================================== ================================================
 ```
+
+## Spreadsheet ##
+
+```eval_rst
+================================================== ================================================================
+Action                                             Control or shorcut
+================================================== ================================================================
+Toggle/edit selected cells                         :kbd:`Return` or |M1| |M1|
+Toggle Enabled state of selected cells             :kbd:`D`
+Copy/Paste selected cells or rows                  :kbd:`Ctrl` + :kbd:`C`/:kbd:`V`
+Move cell selection                                :kbd:`Up`, :kbd:`Down`, :kbd:`Left`, :kbd:`Right`
+Extend cell selection                              :kbd:`Shift` + :kbd:`Up`, :kbd:`Down`, :kbd:`Left`, :kbd:`Right`
+Move keyboard focus                                :kbd:`Ctrl` + :kbd:`Up`, :kbd:`Down`, :kbd:`Left`, :kbd:`Right`
+Toggle selection state of cell with keyboard focus :kbd:`Space`
+================================================== ================================================================
+```
