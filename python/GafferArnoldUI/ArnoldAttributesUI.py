@@ -616,7 +616,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Raymarching step size is calculated using this value 
+			Raymarching step size is calculated using this value
 			multiplied by the volume voxel size or volumeStepSize if set.
 			""",
 
@@ -629,8 +629,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Override the step size taken when raymarching volumes. 
-			If this value is disabled or zero then value is calculated from the voxel size.  
+			Override the step size taken when raymarching volumes.
+			If this value is disabled or zero then value is calculated from the voxel size.
 			""",
 
 			"layout:section", "Volume",
@@ -642,7 +642,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Raymarching step size is calculated using this value 
+			Raymarching step size is calculated using this value
 			multiplied by the shapeStepSize.
 			""",
 
@@ -657,7 +657,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			A non-zero value causes an object to be treated
 			as a volume container, and a value of 0 causes
-			an object to be treated as regular geometry.  
+			an object to be treated as regular geometry.
 			""",
 
 			"layout:section", "Volume",

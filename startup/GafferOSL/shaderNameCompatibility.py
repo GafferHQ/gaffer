@@ -52,7 +52,7 @@ def __loadShaderWrapper( originalLoadShader ) :
 			"Maths/VectorAdd" : "Maths/AddVector",
 			"Maths/VectorMultiply" : "Maths/ScaleVector",
 		}.get( shaderName, shaderName )
-		
+
 		return originalLoadShader( self, renamed, **kwargs )
 
 	return loadRenamedShader

@@ -69,12 +69,12 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 	T destinationContainer;
 
 	size_t i = 0;
-	std::vector<::ShuffleValues> shuffleValues( this->children().size() );	
+	std::vector<::ShuffleValues> shuffleValues( this->children().size() );
 	for( auto &plug : ShufflePlug::Range( *this ) )
 	{
 		shuffleValues[i].enabled = plug->enabledPlug()->getValue();
 		shuffleValues[i].deleteSource = plug->deleteSourcePlug()->getValue();
-		shuffleValues[i].sourcePattern = plug->sourcePlug()->getValue();		
+		shuffleValues[i].sourcePattern = plug->sourcePlug()->getValue();
 		++i;
 	}
 

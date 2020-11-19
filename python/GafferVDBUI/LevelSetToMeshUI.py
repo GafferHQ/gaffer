@@ -52,8 +52,8 @@ GafferUI.Metadata.registerNode(
 		'isoValue' : [
 			'description',
 			"""
-			Value which defines the isosurface to convert to a mesh primitive. 
-			Usually this is set to zero but setting a small positive number will generate a dilated mesh and negative will create an eroded mesh. 
+			Value which defines the isosurface to convert to a mesh primitive.
+			Usually this is set to zero but setting a small positive number will generate a dilated mesh and negative will create an eroded mesh.
 			"""
 		],
 		'adaptivity' : [

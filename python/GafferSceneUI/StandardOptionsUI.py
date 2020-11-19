@@ -153,7 +153,7 @@ plugsMetadata = {
 		its aspect ratio. If the aperture's aspect ratio is larger than
 		the resolution's, the top/bottom edges of the aperture will be
 		cropped. If it's smaller, then the top/bottom edges will
-		capture extra vertical scene content. 
+		capture extra vertical scene content.
 		- _Vertical:_ The aperture gate will fit vertically between the
 		top/bottom edges of the resolution gate, while preserving its
 		aspect ratio. If the aperture's aspect ratio is larger than the
@@ -171,7 +171,7 @@ plugsMetadata = {
 		preserving its aspect ratio. In other words, it will make the
 		opposite choice of the _Fit_ mode. If the two gates' aspect
 		ratios differ, the aperture will be horizontally or vertically
-		cropped. 
+		cropped.
 		- _Distort:_ The aperture gate will match the size of the
 		resolution gate. If their aspect ratios differ, the resulting
 		image will appear vertically or horizontally stretched or

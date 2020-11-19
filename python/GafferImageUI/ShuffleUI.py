@@ -85,8 +85,8 @@ Gaffer.Metadata.registerNode(
 		"channels.*.in" : [
 
 			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "__white", "__black" ] ), 
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "White", "Black" ] ), 
+			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "__white", "__black" ] ),
+			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "White", "Black" ] ),
 
 		],
 

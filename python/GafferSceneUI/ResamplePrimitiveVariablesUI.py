@@ -49,120 +49,120 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	<p>Resamples the list of primitive variables in <i>Names</i> for either mesh, curves or point primitives.</p>
-	
+
 	<p>The reampling algorithm either expands or reduces each primitive variable's data based on the primitive type, primitive variable source interpolation and target interpolation as detailed in the tables below</p>
-	
+
 	<h4>Mesh Primitive</h4>
 	<table border="2" style="width:100%;border:1px black">
 	  <tr>
 	  	<td>source / target</td>
 		<td>Constant</td>
-		<td>Uniform</td> 
+		<td>Uniform</td>
 		<td>Vertex</td>
 		<td>FaceVarying</td>
 	  </tr>
 	  <tr>
 	    <td>Constant</td>
 		<td>-</td>
-		<td>copy</td> 
+		<td>copy</td>
 		<td>copy</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>Uniform</td>
 		<td>average</td>
-		<td>-</td> 
+		<td>-</td>
 		<td>copy</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>Vertex / Varying</td>
 		<td>average</td>
-		<td>polygon average</td> 
+		<td>polygon average</td>
 		<td>-</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>FaceVarying</td>
 		<td>average</td>
-		<td>polygon average</td> 
+		<td>polygon average</td>
 		<td>vertex average</td>
 		<td>-</td>
 	  </tr>
 	</table>
-	
+
 	<h4>Curves Primitive</h4>
 	<table border="2" style="width:100%;border:1px black">
 	  <tr>
 	  	<td>source / target</td>
 		<td>Constant</td>
-		<td>Uniform</td> 
+		<td>Uniform</td>
 		<td>Vertex</td>
 		<td>FaceVarying</td>
 	  </tr>
 	  <tr>
 	    <td>Constant</td>
 		<td>-</td>
-		<td>copy</td> 
+		<td>copy</td>
 		<td>copy</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>Uniform</td>
 		<td>average</td>
-		<td>-</td> 
+		<td>-</td>
 		<td>copy</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>Vertex</td>
 		<td>average</td>
-		<td>curve average</td> 
+		<td>curve average</td>
 		<td>-</td>
 		<td>evaluated</td>
 	  </tr>
 	  <tr>
 	    <td>Varying / FaceVarying</td>
 		<td>average</td>
-		<td>curve average</td> 
+		<td>curve average</td>
 		<td>evaluated</td>
 		<td>-</td>
 	  </tr>
 	</table>
-		
+
 	<h4>Points Primitive</h4>
 	<table border="2" style="width:100%;border:1px black">
 	  <tr>
 	  	<td>source / target</td>
 		<td>Constant</td>
-		<td>Uniform</td> 
+		<td>Uniform</td>
 		<td>Vertex / FaceVarying</td>
 	  </tr>
 	  <tr>
 	    <td>Constant</td>
 		<td>-</td>
-		<td>copy</td> 
+		<td>copy</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>Uniform</td>
 		<td>copy</td>
-		<td>-</td> 
+		<td>-</td>
 		<td>copy</td>
 	  </tr>
 	  <tr>
 	    <td>Vertex / Varying / FaceVarying</td>
 		<td>average</td>
-		<td>average</td> 
+		<td>average</td>
 		<td>-</td>
 	  </tr>
 
 	</table>
-	
+
 	<p><i>evaluated</i> : spline evaluated to approximate vertex or varying values</p>
 	<p><i>copy</i> : expand source values to target based on topology </p>
-	<p><i>average</i> : calculate the mean of the primitive variable (either for the whole primitive, for face / curve or vertex)</p> 
-	
+	<p><i>average</i> : calculate the mean of the primitive variable (either for the whole primitive, for face / curve or vertex)</p>
+
 	""",
 
 	plugs = {

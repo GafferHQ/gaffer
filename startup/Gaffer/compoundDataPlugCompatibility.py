@@ -42,7 +42,7 @@ def addMember( self, name, defaultValueOrValuePlug, plugName = "member1", plugFl
 	)
 	self.addChild( n )
 	return n
-	
+
 def addOptionalMember( self, name, defaultValueOrValuePlug, plugName = "member1", plugFlags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, enabled = False ):
 	n = Gaffer.NameValuePlug( name, defaultValueOrValuePlug, enabled, plugName,
 		**( { "flags" : plugFlags } if not isinstance( defaultValueOrValuePlug, Gaffer.Plug ) else {} )

@@ -61,10 +61,10 @@ def __convertCortexSpline( spline, oldType, newType ):
 
 	return result
 
-	
+
 
 def __initWrapper( originalInit, defaultName, oldValueType, valueType ):
-	
+
 	def init( self, name = defaultName, direction = Gaffer.Plug.Direction.In,
 		defaultValue = valueType(), flags = Gaffer.Plug.Flags.Default ):
 
@@ -78,16 +78,16 @@ Gaffer.SplinefColor3fPlug.__init__ = __initWrapper( Gaffer.SplinefColor3fPlug.__
 	IECore.SplinefColor3f, Gaffer.SplineDefinitionfColor3f )
 
 def __setValueWrapper( originalSetValue, oldValueType, valueType ):
-	
+
 	def setValue( self, value ):
 
 		originalSetValue( self, __convertCortexSpline( value, oldValueType, valueType ) )
 
 	return setValue
 
-Gaffer.SplineffPlug.setValue = __setValueWrapper( Gaffer.SplineffPlug.setValue, 
+Gaffer.SplineffPlug.setValue = __setValueWrapper( Gaffer.SplineffPlug.setValue,
 	IECore.Splineff, Gaffer.SplineDefinitionff )
-Gaffer.SplinefColor3fPlug.setValue = __setValueWrapper( Gaffer.SplinefColor3fPlug.setValue, 
+Gaffer.SplinefColor3fPlug.setValue = __setValueWrapper( Gaffer.SplinefColor3fPlug.setValue,
 	IECore.SplinefColor3f, Gaffer.SplineDefinitionfColor3f )
 
 
@@ -100,7 +100,7 @@ class __DummyIgnoreAllSetValuesRecursive( object ) :
 		return self
 
 def __getitemWrapper( originalGetitem ):
-	
+
 	def getItem( self, item ):
 
 		if item == "basis":

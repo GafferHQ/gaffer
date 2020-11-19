@@ -167,7 +167,7 @@ Gaffer.Metadata.registerNode(
 			"divider", True,
 		],
 
-		
+
 		"applyMedianFilter" : [
 			"description",
 			"""

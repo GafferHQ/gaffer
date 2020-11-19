@@ -83,7 +83,7 @@ class DeepRecolorTest( GafferImageTest.ImageTestCase ) :
 		flatCombine["in"][0].setInput( representativeFlat["out"] )
 		flatCombine["in"][1].setInput( unpremult["out"] )
 		flatCombine["channels"].setValue( "[RGB]" )
-	
+
 		premult = GafferImage.Premultiply()
 		premult["in"].setInput( flatCombine["out"] )
 

@@ -52,5 +52,5 @@
 		gaffer.default       VECTOR2  1.2 3.4
 	[attr filename]
 		gaffer.default       STRING  "overrideDefault"
-	[attr filter] 
+	[attr filter]
 		gaffer.default       STRING  "closest"
