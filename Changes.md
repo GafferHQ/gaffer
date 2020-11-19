@@ -38,6 +38,7 @@ API
   - Added `valueRepr()` method.
   - Added support for `valuePlugSerialiser:omitParentNodePlugValues` context variable. This is used for exporting Boxes for referencing, and by ExtensionAlgo.
 - ImageAlgo : `tiles()` now returns a top level dictionary containing all the tileOrigins as a V2iVectorData, and each channel as an ObjectVectorData of channelDatas with corresponding indices. This allows `tiles()` to run substantially faster, more than twice as fast if the input network is very cheap.
+- ConfirmationDialogue : Added optional `details` constructor argument which accepts text to be shown in a collapsed "Details" section.
 
 Breaking Changes
 ----------------
