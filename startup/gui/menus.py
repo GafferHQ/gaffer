@@ -199,6 +199,7 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 
 			visibilityPlug = Gaffer.NameValuePlug( "dl:visibility.camera", False, "cameraVisibility", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			node["attributes"].addChild( visibilityPlug )
+			Gaffer.Metadata.registerValue( visibilityPlug, "nameValuePlugPlugValueWidget:ignoreNamePlug", True )
 			Gaffer.MetadataAlgo.setReadOnly( visibilityPlug["name"], True )
 
 			return node
