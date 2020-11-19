@@ -39,6 +39,8 @@
 
 #include "GafferImage/MetadataProcessor.h"
 
+#include "Gaffer/StringPlug.h"
+
 namespace GafferImage
 {
 
