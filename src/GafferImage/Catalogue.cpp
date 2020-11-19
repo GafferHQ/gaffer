@@ -38,6 +38,7 @@
 
 #include "GafferImage/Constant.h"
 #include "GafferImage/CopyChannels.h"
+#include "GafferImage/DeleteImageMetadata.h"
 #include "GafferImage/Display.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImageMetadata.h"
@@ -81,6 +82,11 @@ size_t hash_value( const Imath::V2i &v )
 }
 
 IMATH_INTERNAL_NAMESPACE_HEADER_EXIT
+
+namespace
+{
+	std::string g_isRenderingMetadataName = "gaffer:isRendering";
+}
 
 //////////////////////////////////////////////////////////////////////////
 // InternalImage.
@@ -136,12 +142,18 @@ class Catalogue::InternalImage : public ImageNode
 			// Adds on a description to the output
 			addChild( new ImageMetadata() );
 			imageMetadata()->inPlug()->setInput( imageSwitch()->outPlug() );
-			NameValuePlugPtr meta = new NameValuePlug( "ImageDescription", new StringData(), true, "member1" );
-			imageMetadata()->metadataPlug()->addChild( meta );
-			meta->valuePlug()->setInput( descriptionPlug() );
-			meta->enabledPlug()->setInput( descriptionPlug() ); // Enable only for non-empty strings
+
+			NameValuePlugPtr descriptionMeta = new NameValuePlug( "ImageDescription", new StringData(), true, "imageDescription" );
+			imageMetadata()->metadataPlug()->addChild( descriptionMeta );
+			descriptionMeta->valuePlug()->setInput( descriptionPlug() );
+			descriptionMeta->enabledPlug()->setInput( descriptionPlug() ); // Enable only for non-empty strings
+
+			NameValuePlugPtr isRenderingMeta = new NameValuePlug( g_isRenderingMetadataName, new BoolData( true ), true, "isRendering" );
+			imageMetadata()->metadataPlug()->addChild( isRenderingMeta );
 
 			outPlug()->setInput( imageMetadata()->outPlug() );
+
+			isRendering( false );
 		}
 
 		~InternalImage() override
@@ -190,6 +202,8 @@ class Catalogue::InternalImage : public ImageNode
 				copyChannels()->inPlugs()->getChild<Plug>( numDisplays++ )->setInput( displayCopy->outPlug() );
 			}
 
+			isRendering( false );
+
 			m_saver = nullptr;
 			if( other->m_saver )
 			{
@@ -206,8 +220,11 @@ class Catalogue::InternalImage : public ImageNode
 
 		void save( const std::string &fileName ) const
 		{
+			DeleteImageMetadataPtr deleteMetadata = new DeleteImageMetadata();
+			deleteMetadata->inPlug()->setInput( const_cast<ImagePlug *>( outPlug() ) );
+			deleteMetadata->namesPlug()->setValue( g_isRenderingMetadataName );
 			ImageWriterPtr imageWriter = new ImageWriter;
-			imageWriter->inPlug()->setInput( const_cast<ImagePlug *>( outPlug() ) );
+			imageWriter->inPlug()->setInput( deleteMetadata->outPlug() );
 			imageWriter->fileNamePlug()->setValue( fileName );
 			imageWriter->taskPlug()->execute();
 		}
@@ -266,6 +283,7 @@ class Catalogue::InternalImage : public ImageNode
 			}
 
 			updateImageFlags( Plug::Serialisable, false ); // Don't serialise in-progress renders
+			isRendering( true );
 
 			return true;
 		}
@@ -282,6 +300,7 @@ class Catalogue::InternalImage : public ImageNode
 			// Save the image to disk. We do this in the background because
 			// saving large images with many AOVs takes several seconds.
 
+			isRendering( false );
 			m_saver = AsynchronousSaver::create( this );
 		}
 
@@ -312,6 +331,12 @@ class Catalogue::InternalImage : public ImageNode
 		}
 
 	private :
+
+		void isRendering( bool rendering )
+		{
+			NameValuePlug *isRendering = static_cast<NameValuePlug *>( imageMetadata()->metadataPlug()->getChild( "isRendering" ) );
+			static_cast<BoolPlug *>( isRendering->enabledPlug() )->setValue( rendering );
+		}
 
 		void updateImageFlags( unsigned flags, bool enable )
 		{
