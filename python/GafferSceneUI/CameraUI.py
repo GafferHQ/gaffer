@@ -343,7 +343,7 @@ plugsMetadata = {
 
 			"description",
 			"""
-			Attributes that affect the visualisation of this Light in the Viewer.
+			Attributes that affect the visualisation of this camera in the Viewer.
 			""",
 
 			"layout:section", "Visualisation",
