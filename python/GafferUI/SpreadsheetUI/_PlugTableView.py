@@ -43,12 +43,16 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 from Qt import QtCore
 from Qt import QtWidgets
 from Qt import QtCompat
 
 from . import _Algo
+from . import _ClipboardAlgo
 from . import _ProxyModels
+from ._CellPlugValueWidget import _CellPlugValueWidget
 from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
 from ._PlugTableModel import _PlugTableModel
@@ -63,7 +67,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __init__( self, selectionModel, mode, **kw ) :
 
-		tableView = _TableView()
+		tableView = _NavigableTable()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
 		self.__mode = mode;
@@ -92,19 +96,19 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__ignoreSectionResized = False
 			self.__callingMoveSection = False
 
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
-			)
-
 		else : # RowNames mode
 
 			tableView.horizontalHeader().resizeSection( 1, 22 )
-			tableView.horizontalHeader().setSectionResizeMode( 0, QtWidgets.QHeaderView.Stretch )
+			self.__applyRowNamesWidth()
 			# Style the row enablers as toggles rather than checkboxes.
 			## \todo Do the same for cells containing NameValuePlugs with enablers. This is tricky
 			# because we need to do it on a per-cell basis, so will need to use `_CellPlugItemDelegate.paint()`
 			# instead.
 			tableView.setProperty( "gafferToggleIndicator", True )
+
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
+			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
+		)
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
@@ -119,8 +123,11 @@ class _PlugTableView( GafferUI.Widget ) :
 		# our own editing via PlugValueWidgets in _EditWindow.
 
 		tableView.setEditTriggers( tableView.NoEditTriggers )
-		tableView.setSelectionMode( QtWidgets.QAbstractItemView.NoSelection )
+		tableView.setSelectionMode( tableView.ExtendedSelection )
+		tableView.setSelectionBehavior( tableView.SelectItems )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		# Drawing
 
@@ -142,28 +149,42 @@ class _PlugTableView( GafferUI.Widget ) :
 		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
 		return self._qtWidget().model().plugForIndex( index )
 
-	def editPlug( self, plug, scrollTo = True ) :
+	def selectedPlugs( self ) :
 
-		index = self._qtWidget().model().indexForPlug( plug )
-		assert( index.isValid() )
+		selection = self._qtWidget().selectionModel().selectedIndexes()
+		model = self._qtWidget().model()
+		return [ model.plugForIndex( i ) for i in selection ]
 
-		if not index.flags() & QtCore.Qt.ItemIsEnabled or not index.flags() & QtCore.Qt.ItemIsEditable :
+	def editPlugs( self, plugs, scrollTo = True, allowDirectEditing = True, position = None ) :
+
+		tableView = self._qtWidget()
+		selectionModel = tableView.selectionModel()
+
+		indexes = [ tableView.model().indexForPlug( plug ) for plug in plugs ]
+		assert( all( [ index.isValid() for index in indexes ] ) )
+
+		if not all( [ index.flags() & ( QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable ) for index in indexes ] ) :
 			return
 
 		if scrollTo :
-			self._qtWidget().scrollTo( index )
+			tableView.scrollTo( indexes[ -1 ] )
 
-		rect = self._qtWidget().visualRect( index )
-		rect.setTopLeft( self._qtWidget().viewport().mapToGlobal( rect.topLeft() ) )
-		rect.setBottomRight( self._qtWidget().viewport().mapToGlobal( rect.bottomRight() ) )
+		self.__selectIndexes( indexes )
 
-		_EditWindow.popupEditor(
-			plug,
-			imath.Box2i(
-				imath.V2i( rect.left(), rect.bottom() ),
-				imath.V2i( rect.right(), rect.top() )
+		if position is None :
+
+			visibleRect = tableView.visualRect( selectionModel.currentIndex() )
+			rect = QtCore.QRect(
+				tableView.viewport().mapToGlobal( visibleRect.topLeft() ),
+				tableView.viewport().mapToGlobal( visibleRect.bottomRight() )
 			)
-		)
+			bound = imath.Box2i( imath.V2i( rect.left(), rect.bottom() ), imath.V2i( rect.right(), rect.top() ) )
+
+		else :
+
+			bound = imath.Box2i( position, position )
+
+		self.__showEditor( plugs, bound, allowDirectEditing )
 
 	def setVisibleSection( self, sectionName ) :
 
@@ -284,6 +305,14 @@ class _PlugTableView( GafferUI.Widget ) :
 		finally :
 			self.__ignoreSectionResized = False
 
+	def __applyRowNamesWidth( self ) :
+
+		if self.__mode != self.Mode.RowNames :
+			return
+
+		width = self.__getRowNameWidth()
+		self._qtWidget().horizontalHeader().resizeSection( 0, width )
+
 	@GafferUI.LazyMethod()
 	def __applySectionOrderLazily( self ) :
 
@@ -295,59 +324,173 @@ class _PlugTableView( GafferUI.Widget ) :
 			return
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
-		if not rowsPlug.isAncestorOf( plug ) :
-			return
 
-		if key == "spreadsheet:columnWidth" :
+		if self.__mode == self.Mode.RowNames :
 
-			if plug.parent() == rowsPlug.defaultRow()["cells"] :
-				self.__applyColumnWidthMetadata( cellPlug = plug )
+			if plug.isSame( rowsPlug.defaultRow() ) and key == "spreadsheet:rowNameWidth" :
+				self.__applyRowNamesWidth()
+				return
 
-		elif key == "spreadsheet:columnIndex" :
+		else :
 
-			# Typically we get a flurry of edits to columnIndex at once,
-			# so we use a lazy method to update the order once everything
-			# has been done.
-			self.__applySectionOrderLazily()
+			if not rowsPlug.isAncestorOf( plug ) :
+				return
 
-		elif key == "spreadsheet:section" :
+			if key == "spreadsheet:columnWidth" :
 
-			self.__applyColumnVisibility()
+				if plug.parent() == rowsPlug.defaultRow()["cells"] :
+					self.__applyColumnWidthMetadata( cellPlug = plug )
+
+			elif key == "spreadsheet:columnIndex" :
+
+				# Typically we get a flurry of edits to columnIndex at once,
+				# so we use a lazy method to update the order once everything
+				# has been done.
+				self.__applySectionOrderLazily()
+
+			elif key == "spreadsheet:section" :
+
+				self.__applyColumnVisibility()
 
 	def __buttonPress( self, widget, event ) :
+
+		if event.buttons != event.Buttons.Right :
+			return False
+
+		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+
+		# Disabled items won't show up in the selection model
+		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+			return True
+
+		# Ensure the cell that was clicked is selected. This avoids any ambiguity
+		# as to whether the menu is operating on the cell that was right-clicked, or
+		# the cells that are selected. As double-click to edit also resets selection
+		# (Qt default) then this offers the most consistent experience.
+		selectionModel = self._qtWidget().selectionModel()
+		if not selectionModel.isSelected( index ) :
+			selectionModel.select( index, selectionModel.ClearAndSelect )
+
+		selectedPlugs = self.selectedPlugs()
+
+		if len( selectedPlugs ) == 1 :
+
+			plug = next( iter( selectedPlugs ) )
+			if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
+				plug = plug["value"]
+
+			## \todo We need to make this temporary PlugValueWidget just so we
+			# can show a plug menu. We should probably refactor so we can do it
+			# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
+			# and all connected client code.
+			self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
+			definition = self.__menuPlugValueWidget._popupMenuDefinition()
+
+		else :
+
+			definition = IECore.MenuDefinition()
+
+		if self.__mode == self.Mode.RowNames :
+			self.__prependRowMenuItems( definition, selectedPlugs )
+		else :
+			self.__prependCellMenuItems( definition, selectedPlugs )
+
+		self.__plugMenu = GafferUI.Menu( definition )
+		self.__plugMenu.popup()
+
+		return True
+
+	def __buttonDoubleClick( self, widget, event ) :
+
+		if event.buttons != event.Buttons.Left :
+			return False
+
+		# Consistency is a little tricky here. Ideally we'd have the same
+		# interaction for all plug types, without adding unnecessary steps. We
+		# standardise 'return/double click opens edit window'. But in the
+		# interest of simplifying common steps, there are the following
+		# exceptions.
+		#
+		#  - Bools: Return/double-click toggles the value. Requires right-click
+		#    to display the edit window.
+		#
+		#  - Presets: Return/Double click displays the popup menu, requires right-click
+		#    to display the edit window.
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
 		plug = self._qtWidget().model().plugForIndex( index )
 		if plug is None :
 			return False
 
-		if event.buttons == event.Buttons.Right :
-
-			if index.flags() & QtCore.Qt.ItemIsEnabled :
-
-				if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) :
-					plug = plug["value"]
-				## \todo We need to make this temporary PlugValueWidget just so we
-				# can show a plug menu. We should probably refactor so we can do it
-				# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
-				# and all connected client code.
-				self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
-				self.__plugMenu = GafferUI.Menu(
-					self.__menuPlugValueWidget._popupMenuDefinition()
-				)
-				self.__plugMenu.popup()
-
-			return True
-
-		elif event.buttons == event.Buttons.Left :
-
+		if self._qtWidget().model().presentsCheckstate( index ) :
 			valuePlug = plug["value"] if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug
-			if not isinstance( valuePlug, Gaffer.BoolPlug ) :
-				self.editPlug( plug, scrollTo = False )
+			self.__toggleBooleans( [ valuePlug ] )
+		else :
+			self.editPlugs( [ plug ], scrollTo = False, position = GafferUI.Widget.mousePosition() )
 
+		return True
+
+	def __keyPress( self, widget, event ) :
+
+		forRows = self.__mode == self.Mode.RowNames
+
+		if event.key == "Space" :
+			self.__spaceBarPressed()
 			return True
+
+		if event.modifiers == event.Modifiers.None_ :
+
+			if event.key == "Return" :
+				self.__returnKeyPress()
+				return True
+
+			if event.key == "D" :
+				# See note in __prependRowMenuItems
+				if not forRows :
+					self.__toggleCellEnabledState()
+				return True
+
+		elif event.modifiers == event.Modifiers.Control :
+
+			if event.key in ( "C", "V", "X" ) :
+
+				if event.key == "C" :
+					self.__copyRows() if forRows else self.__copyCells()
+				elif event.key == "V" :
+					self.__pasteRows() if forRows else self.__pasteCells()
+
+				return True
 
 		return False
+
+	def __returnKeyPress( self ) :
+
+		# If the selection is presented as a checkbox, toggle rather than
+		# opening the edit window.  This matches the single-click toggle mouse
+		# interaction.
+
+		selectionModel = self._qtWidget().selectionModel()
+		selectedIndexes = selectionModel.selectedIndexes()
+
+		if not selectedIndexes :
+			return
+
+		model = selectionModel.model()
+		if all( [ model.presentsCheckstate( i ) for i in selectedIndexes ] ) :
+			valuePlugs = [ model.valuePlugForIndex( i ) for i in selectedIndexes ]
+			self.__toggleBooleans( valuePlugs )
+		else :
+			self.__editSelectedPlugs()
+
+	def __spaceBarPressed( self ) :
+
+		# Qt has the odd behaviour that space will toggle the selection of the
+		# focused cell, unless it has a checked state, and then it'll toggle
+		# that. As we support `return` to do that, then make sure space only
+		# ever toggles the selection state of the focused cell.
+		currentIndex = self._qtWidget().selectionModel().currentIndex()
+		if currentIndex.isValid() :
+			self._qtWidget().selectionModel().select( currentIndex, QtCore.QItemSelectionModel.Toggle )
 
 	def __headerButtonPress( self, header, event ) :
 
@@ -393,11 +536,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		menuDefinition.append(
 			"/Delete Column",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteColumn), cellPlug ),
-				"active" : (
-					not Gaffer.MetadataAlgo.readOnly( cellPlug ) and
-					_Algo.dimensionsEditable( self._qtWidget().model().rowsPlug() )
-				)
+				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteColumn ), cellPlug ),
+				"active" : self.__canDeleteColumn( cellPlug )
 			}
 		)
 
@@ -405,6 +545,252 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__headerMenu.popup()
 
 		return True
+
+	def __prependRowMenuItems( self, menuDefinition, plugs ) :
+
+		rowPlugs = { p.ancestor( Gaffer.Spreadsheet.RowPlug ) for p in plugs }
+
+		pluralSuffix = "" if len( rowPlugs ) == 1 else "s"
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		items = []
+
+		rowsPlug = next( iter( rowPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug )
+
+		widths = [
+			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
+			( "Single", GafferUI.PlugWidget.labelWidth() ),
+			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
+		]
+
+		currentWidth = self.__getRowNameWidth()
+		for label, width in widths :
+			items.append( (
+				"/Width/{}".format( label ),
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setRowNameWidth ), width ),
+					"active" : not Gaffer.MetadataAlgo.readOnly( rowsPlug ),
+					"checkBox" : width == currentWidth,
+				}
+			) )
+
+		# We don't have an item for managing the enabled state of rows, because when a
+		# row is disabled (via Qt.ItemIsEnabled flag), those indices are no longer reported
+		# from the selection model. So you could use the item to turn them off, but its
+		# hard to turn them back on again.
+
+		clipboard = self.__getClipboard()
+		pasteRowsPluralSuffix = "" if _ClipboardAlgo.isValueMatrix( clipboard ) and len( clipboard ) == 1 else "s"
+
+		items.extend( (
+			(
+				"/__CopyPasteRowsDivider__", { "divider" : True }
+			),
+			(
+				"Copy Row%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__copyRows ),
+					"shortCut" : "Ctrl+C"
+				}
+			),
+			(
+				"Paste Row%s" % pasteRowsPluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__pasteRows ),
+					"active" : _ClipboardAlgo.canPasteRows( self.__getClipboard(), rowsPlug ),
+					"shortCut" : "Ctrl+V"
+				}
+			),
+			(
+				"/__DeleteRowDivider__", { "divider" : True }
+			),
+			(
+				"/Delete Row%s" % pluralSuffix,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__deleteRows ), rowPlugs ),
+					"active" : self.__canDeleteRows( rowPlugs )
+				}
+			)
+		) )
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
+	def __prependCellMenuItems( self, menuDefinition, cellPlugs ) :
+
+		targetDivider = "/__SpreadsheetRowAndCellDivider__"
+		if menuDefinition.item( targetDivider ) is None :
+			menuDefinition.prepend( targetDivider, { "divider" : True } )
+
+		pluralSuffix = "" if len( cellPlugs ) == 1 else "s"
+
+		canChangeEnabledState, currentEnabledState = self.__canChangeCellEnabledState( cellPlugs )
+		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
+
+		items = [
+			(
+				( "/Disable Cell%s" if currentEnabledState else "/Enable Cell%s" ) % pluralSuffix,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setPlugValues ), enabledPlugs, not currentEnabledState ),
+					"active" : canChangeEnabledState,
+					"shortCut" : "D"
+				}
+			)
+		]
+
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( cellPlugs )
+
+		items.extend( (
+
+			( "/__EditCellsDivider__", { "divider" : True } ),
+
+			(
+				"/Edit Cell%s" % pluralSuffix,
+				{
+					"active" : _CellPlugValueWidget.canEdit( cellPlugs ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__editSelectedPlugs ), False )
+				}
+			),
+
+			( "/__CopyPasteCellsDivider__", { "divider" : True } ),
+
+			(
+				"Copy Cell%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__copyCells ),
+					"active" : _ClipboardAlgo.canCopyPlugs( plugMatrix ),
+					"shortCut" : "Ctrl+C"
+				}
+			),
+			(
+				"Paste Cell%s" % pluralSuffix,
+				{
+					"command" : Gaffer.WeakMethod( self.__pasteCells ),
+					"active" : _ClipboardAlgo.canPasteCells( self.__getClipboard(), plugMatrix ),
+					"shortCut" : "Ctrl+V"
+				}
+			)
+		) )
+
+		for path, args in reversed( items ) :
+			menuDefinition.prepend( path, args )
+
+	def __getClipboard( self ) :
+
+		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
+		return appRoot.getClipboardContents()
+
+	def __setClipboard( self, data ) :
+
+		appRoot = self._qtWidget().model().rowsPlug().ancestor( Gaffer.ApplicationRoot )
+		return appRoot.setClipboardContents( data )
+
+	def __copyCells( self ) :
+
+		selection = self.selectedPlugs()
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( selection )
+
+		if not plugMatrix or not _ClipboardAlgo.canCopyPlugs( plugMatrix ) :
+			return
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
+
+		self.__setClipboard( clipboardData )
+
+	def __pasteCells( self ) :
+
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( self.selectedPlugs() )
+		clipboard = self.__getClipboard()
+
+		if not plugMatrix or not _ClipboardAlgo.canPasteCells( clipboard, plugMatrix ) :
+			return
+
+		context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
+		with Gaffer.UndoScope( plugMatrix[0][0].ancestor( Gaffer.ScriptNode ) ) :
+			_ClipboardAlgo.pasteCells( clipboard, plugMatrix, context.getTime() )
+
+	def __copyRows( self ) :
+
+		rowPlugs = _PlugTableView.__orderedRowsPlugs( self.selectedPlugs() )
+		plugMatrix = [ row.children() for row in rowPlugs ]
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
+
+		self.__setClipboard( clipboardData )
+
+	def __pasteRows( self ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		clipboard = self.__getClipboard()
+
+		if not _ClipboardAlgo.canPasteRows( clipboard, rowsPlug ) :
+			return
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			_ClipboardAlgo.pasteRows( clipboard, rowsPlug )
+
+	def __setRowNameWidth( self, width, *unused ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			Gaffer.Metadata.registerValue( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth", width )
+
+	def __getRowNameWidth( self ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+
+		width = Gaffer.Metadata.value( rowsPlug.defaultRow(), "spreadsheet:rowNameWidth" )
+		return width if width is not None else GafferUI.PlugWidget.labelWidth()
+
+	def __editSelectedPlugs( self, allowDirectEditing = True ) :
+
+		selectedPlugs = self.selectedPlugs()
+
+		if self.__mode == self.Mode.RowNames :
+			# Multi-editing row names makes no sense, so pick the first one.
+			# It will also be muddled up with the value cells.
+			rows = _PlugTableView.__orderedRowsPlugs( selectedPlugs )
+			selectedPlugs = { rows[0]["name"] }
+
+		self.editPlugs( selectedPlugs, allowDirectEditing = allowDirectEditing )
+
+	def __showEditor( self, plugs, plugBound, allowDirectEditing ) :
+
+		self.__lastPresetsMenuWidget = None
+
+		if allowDirectEditing :
+			# Show a presets menu directly to avoid an unnecessary interaction step
+			# This sadly leaks the widget, but there isn't a lot we can do at present.
+			plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
+			if isinstance( plugValueWidget, _CellPlugValueWidget ) :
+				valuePlugValueWidget = plugValueWidget.childPlugValueWidget( next( iter( plugs ) )["value"] )
+				if isinstance( valuePlugValueWidget, GafferUI.PresetsPlugValueWidget ) :
+					if not Gaffer.Metadata.value( next( iter( valuePlugValueWidget.getPlugs() ) ), "presetsPlugValueWidget:isCustom" ) :
+						self.__lastPresetsMenuWidget = plugValueWidget
+						valuePlugValueWidget.menu().popup( position = plugBound.center() )
+						return
+
+		_EditWindow.popupEditor( plugs, plugBound )
+
+	# Clears and selects a non-contiguous list of indexes if they're not already selected.
+	def __selectIndexes( self, indexes ) :
+
+		selectionModel = self._qtWidget().selectionModel()
+
+		if set( selectionModel.selectedIndexes() ) != set( indexes ) :
+			selection = QtCore.QItemSelection()
+			for index in indexes :
+				selection.select( index, index )
+			selectionModel.select( selection, QtCore.QItemSelectionModel.ClearAndSelect )
+
+		if not selectionModel.isSelected( selectionModel.currentIndex() ) :
+			selectionModel.setCurrentIndex( indexes[ -1 ], QtCore.QItemSelectionModel.ClearAndSelect )
 
 	def __setColumnLabel( self, cellPlug ) :
 
@@ -418,16 +804,78 @@ class _PlugTableView( GafferUI.Widget ) :
 			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 				Gaffer.Metadata.registerValue( cellPlug, "spreadsheet:columnLabel", label )
 
+	def __canDeleteColumn( self, cellPlug ) :
+
+		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
+		return not Gaffer.MetadataAlgo.readOnly( cellPlug ) and _Algo.dimensionsEditable( rowsPlug )
+
 	def __deleteColumn( self, cellPlug ) :
 
 		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
 		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 			rowsPlug.removeColumn( cellPlug.parent().children().index( cellPlug ) )
 
+	def __canDeleteRows( self, rowPlugs ) :
+
+		if not rowPlugs :
+			return False
+
+		rowsPlug = next( iter( rowPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug )
+		includesDefaultRow = rowsPlug.defaultRow() in rowPlugs
+		anyLocked = any( [ Gaffer.MetadataAlgo.readOnly( row ) for row in rowPlugs ] )
+
+		return _Algo.dimensionsEditable( rowsPlug ) and not includesDefaultRow and not anyLocked
+
+	def __deleteRows( self, rowPlugs ) :
+
+		with Gaffer.UndoScope( next( iter( rowPlugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for row in rowPlugs :
+				row.parent().removeChild( row )
+
+	def __canChangeCellEnabledState( self, cellPlugs ) :
+
+		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
+		anyReadOnly = any( [ Gaffer.MetadataAlgo.readOnly( plug ) for plug in enabledPlugs ] )
+		allSettable = all( [ plug.settable() for plug in enabledPlugs ] )
+
+		enabled = True
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
+
+		return ( _Algo.cellsCanBeDisabled( cellPlugs ) and allSettable and not anyReadOnly, enabled )
+
+	def __toggleBooleans( self, plugs ) :
+
+		if not plugs :
+			return
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			checked = sole( [ plug.getValue() for plug in plugs ] )
+		with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+			self.__setPlugValues( plugs, not checked )
+
+	def __toggleCellEnabledState( self ) :
+
+		cellPlugs = [ p for p in self.selectedPlugs() if isinstance( p, Gaffer.Spreadsheet.CellPlug ) ]
+
+		canChange, currentState = self.__canChangeCellEnabledState( cellPlugs )
+		if not canChange :
+			return
+
+		self.__setPlugValues( [ cell.enabledPlug() for cell in cellPlugs ], not currentState )
+
+	def __setPlugValues( self, plugs, value ) :
+
+		with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in plugs :
+				plug.setValue( value )
+
 	def __modelReset( self ) :
 
 		self.__applyColumnVisibility()
 		self.__applyColumnWidthMetadata()
+		self.__applyRowNamesWidth()
 
 	def __moveToSection( self, cellPlug, sectionName = None ) :
 
@@ -443,3 +891,31 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 			_SectionChooser.setSection( cellPlug, sectionName )
+
+	@staticmethod
+	def __orderedRowsPlugs( plugs ) :
+
+		rowPlugs = { p.ancestor( Gaffer.Spreadsheet.RowPlug ) for p in plugs }
+		if rowPlugs :
+			allRows = next( iter( rowPlugs ) ).parent().children()
+			return sorted( rowPlugs, key = allRows.index )
+
+		return []
+
+# Ensures navigation key presses aren't stolen by any application-level actions.
+class _NavigableTable( _TableView ) :
+
+	__protectedKeys = (
+		QtCore.Qt.Key_Left,
+		QtCore.Qt.Key_Right,
+		QtCore.Qt.Key_Up,
+		QtCore.Qt.Key_Down
+	)
+
+	def event( self, event ) :
+
+		if event.type() == QtCore.QEvent.ShortcutOverride and event.key() in self.__protectedKeys :
+			event.accept()
+			return True
+		else :
+			return _TableView.event( self, event )
