@@ -48,8 +48,6 @@
 #include "GafferUI/DragDropEvent.h"
 #include "GafferUI/Tool.h"
 
-#include "Gaffer/CompoundDataPlug.h"
-
 namespace GafferSceneUI
 {
 

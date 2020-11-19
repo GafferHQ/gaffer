@@ -43,7 +43,6 @@
 #include "GafferScene/FilterPlug.h"
 #include "GafferScene/ScenePlug.h"
 
-#include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/StringPlug.h"
 

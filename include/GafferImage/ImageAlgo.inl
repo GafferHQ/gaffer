@@ -306,7 +306,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 	// multiple threads needing to compute the same tile channel at the same time, which currently can
 	// resulting in duplicate computes or spinlocking.
 	//
-	// In theory, we could access one channel, then run the rest in parallel, but the overhead of a 
+	// In theory, we could access one channel, then run the rest in parallel, but the overhead of a
 	// parallel_for with a small number of items is significant when the upstream network is fast.
 	//
 	// The simplest option is just to process the channels within a tile serially

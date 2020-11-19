@@ -39,6 +39,8 @@
 
 #include "GafferImage/MetadataProcessor.h"
 
+#include "Gaffer/StringPlug.h"
+
 namespace GafferImage
 {
 
@@ -52,8 +54,6 @@ class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CopyImageMetadata, CopyImageMetadataTypeId, MetadataProcessor );
 
-		/// \todo: If ImageProcessor provides an ArrayPlug for "in" instead,
-		/// we can remove this secondary image plug.
 		ImagePlug *copyFromPlug();
 		const ImagePlug *copyFromPlug() const;
 

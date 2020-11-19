@@ -84,7 +84,7 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 		complementAndHalve["channels"].setValue( '[A]' )
 		complementAndHalve["multiply"].setValue( imath.Color4f( 1, 1, 1, -0.5 ) )
 		complementAndHalve["offset"].setValue( imath.Color4f( 0, 0, 0, 0.5 ) )
-		
+
 		alphaOnlyReference = GafferImage.DeleteChannels()
 		alphaOnlyReference["in"].setInput( complementAndHalve["out"] )
 		alphaOnlyReference["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )

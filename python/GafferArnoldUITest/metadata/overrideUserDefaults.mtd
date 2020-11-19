@@ -50,5 +50,5 @@
 		gaffer.userDefault       VECTOR2  12.0 13.0
 	[attr filename]
 		gaffer.userDefault       STRING  "overrideUserDefault"
-	[attr filter] 
+	[attr filter]
 		gaffer.userDefault       STRING  "bilinear"

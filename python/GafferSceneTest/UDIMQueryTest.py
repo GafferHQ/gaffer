@@ -75,7 +75,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test a basic single UDIM
 		self.assertEqual( dictResult(), {'1001': {'/group/plane': {}}} )
-	
+
 		# Add an attribute
 		udimQuery["attributes"].setValue( 'attributeA attributeB attributeC' )
 		customAttributes0 = GafferScene.CustomAttributes()
@@ -91,7 +91,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		projCam["projection"].setValue( 'orthographic' )
 		projCam["orthographicAperture"].setValue( imath.V2f( 1 ) )
 		group["in"][1].setInput( projCam["out"] )
-		
+
 
 		mapProjection = GafferScene.MapProjection()
 		mapProjection["camera"].setValue( '/group/camera' )
@@ -131,19 +131,19 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		customAttributes2["in"].setInput( group["out"] )
 		customAttributes2["filter"].setInput( rootFilter["out"] )
 		customAttributes2["attributes"].addChild( Gaffer.NameValuePlug( "attributeC", "inherited" ) )
-		
+
 		mapProjection["in"].setInput( customAttributes2["out"] )
 
 		self.assertEqual( dictResult(), dict(
 			[(i, {'/group/plane': {'attributeA': IECore.StringData( 'test' ), 'attributeC': IECore.StringData( 'inherited' )}}) for i in [ "1002", "1003", "1012", "1013" ]] +
-			[("1027", {'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 ), 'attributeC': IECore.StringData( 'inherited' )}})] + 
+			[("1027", {'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 ), 'attributeC': IECore.StringData( 'inherited' )}})] +
 			[(i, {'/group/plane2': {'attributeC': IECore.StringData( 'inherited' )}}) for i in ["1038", "1039", "1048", "1049"]]
  ) )
 
 		# Switch back to default uv set so that everything lands on top of each other
 		udimQuery["uvSet"].setValue( 'uv' )
 
-		self.assertEqual( dictResult(), 
+		self.assertEqual( dictResult(),
 			{ "1001" : {
 				'/group/plane': {'attributeA': IECore.StringData( 'test' ), 'attributeC': IECore.StringData( 'inherited' )},
 				'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 ), 'attributeC': IECore.StringData( 'inherited' )},
@@ -165,7 +165,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 			c = udimQuery["out"].getValue().items()
 			return { key0:{ key1:dict(val1.items()) for (key1,val1) in val0.items() } for (key0,val0) in c }
 
-		
+
 		# Test a basic single UDIM
 		initialHash = udimQuery["out"].hash()
 		self.assertEqual( dictResult(), {'1001': {'/plane': {}}} )

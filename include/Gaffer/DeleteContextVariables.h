@@ -37,7 +37,6 @@
 #ifndef GAFFER_DELETECONTEXTVARIABLES_H
 #define GAFFER_DELETECONTEXTVARIABLES_H
 
-#include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/StringPlug.h"
 

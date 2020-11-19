@@ -192,7 +192,7 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		# the way. we store the original size policy on the widget and reapply it in removeChild().
 		widget.__originalSizePolicy = widget._qtWidget().sizePolicy()
 		widget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
-	
+
 	def __updateStyles( self ) :
 
 		# Had issues using ints

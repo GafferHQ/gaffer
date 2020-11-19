@@ -458,7 +458,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		), "python" )
 
 		self["__SizeMaxExpression"] = Gaffer.Expression()
-		self["__SizeMaxExpression"].setExpression( 
+		self["__SizeMaxExpression"].setExpression(
 			"parent.__SizeLoop.next = max( int( parent.__imageSize ), parent.__SizeLoop.previous )",
 			"OSL"
 		)

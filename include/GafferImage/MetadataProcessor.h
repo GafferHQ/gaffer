@@ -39,8 +39,6 @@
 
 #include "GafferImage/ImageProcessor.h"
 
-#include "Gaffer/CompoundDataPlug.h"
-
 namespace GafferImage
 {
 

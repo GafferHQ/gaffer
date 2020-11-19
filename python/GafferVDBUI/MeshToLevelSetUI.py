@@ -51,13 +51,13 @@ GafferUI.Metadata.registerNode(
 		'voxelSize' : [
 			'description',
 			"""
-			Size of the voxel in the level set grid. Smaller voxel sizes will increase resolution, take more memory & longer to process. 
+			Size of the voxel in the level set grid. Smaller voxel sizes will increase resolution, take more memory & longer to process.
 			"""
 		],
 		'exteriorBandwidth' : [
 			'description',
 			"""
-			Defines the exterior width of the level set in voxel units. 
+			Defines the exterior width of the level set in voxel units.
 			"""
 		],
 		'interiorBandwidth' : [

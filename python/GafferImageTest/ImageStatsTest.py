@@ -179,8 +179,8 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 			imath.Box2i( imath.V2i( 3, 5 ), imath.V2i( 300, 300 ) )
 		]:
 			s["area"].setValue( a )
-		
-			hashes = {}	
+
+			hashes = {}
 			for x in range( 0, 300, 64 ):
 				for y in range( 0, 300, 64 ):
 					c = Gaffer.Context()
@@ -207,7 +207,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 				numSame += 1
 			else:
 				numDiff += 1
-		
+
 		# Check that interior hashes stay the same
 		self.assertEqual( numSame, 16 )
 
