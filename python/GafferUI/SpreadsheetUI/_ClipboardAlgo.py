@@ -107,6 +107,8 @@ def isValueMatrix( data ) :
 # \note Triggers compute of the target plugs to determine value compatibility.
 def canPasteCells( valueMatrix, plugMatrix ) :
 
+	valueMatrix = __coerceToValueMatrixIfRequired( valueMatrix )
+
 	if not isValueMatrix( valueMatrix ) :
 		return False
 
@@ -130,6 +132,8 @@ def canPasteCells( valueMatrix, plugMatrix ) :
 	return True
 
 def pasteCells( valueMatrix, plugs, atTime ) :
+
+	valueMatrix = __coerceToValueMatrixIfRequired( valueMatrix )
 
 	assert( canPasteCells( valueMatrix, plugs ) )
 
@@ -191,6 +195,13 @@ def createPlugMatrixFromCells( cellPlugs ) :
 		matrix.append( sorted( cells, key = rowCells.index ) )
 
 	return matrix
+
+def __coerceToValueMatrixIfRequired( data ) :
+
+	if isinstance( data, IECore.Data ) :
+		data = IECore.ObjectVector( [ IECore.ObjectVector( [ data ] ) ] )
+
+	return data
 
 # Wraps the lookup indices into the available data space
 def __dataForPlug( targetRowIndex, targetColumnIndex, data ) :

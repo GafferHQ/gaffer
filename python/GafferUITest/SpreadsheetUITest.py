@@ -644,5 +644,22 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 2.0 )
 		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
 
+	def testPasteBasicValues( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.IntPlug( defaultValue = 1 ) )
+		s["rows"].addColumn( Gaffer.NameValuePlug( "i", Gaffer.IntPlug( defaultValue = 2 ) ) )
+		row = s["rows"].addRow()
+
+		data = IECore.IntData( 3 )
+
+		plugMatrix = [ s["rows"][1]["cells"].children() ]
+		self.assertTrue( _ClipboardAlgo.canPasteCells( data, plugMatrix ) )
+
+		_ClipboardAlgo.pasteCells( data, plugMatrix, 0 )
+
+		self.assertEqual( row["cells"][0]["value"].getValue(), 3 )
+		self.assertEqual( row["cells"][1]["value"]["value"].getValue(), 3 )
+
 if __name__ == "__main__":
 	unittest.main()
