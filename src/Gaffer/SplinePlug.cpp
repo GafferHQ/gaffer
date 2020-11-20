@@ -295,7 +295,7 @@ SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const V
 	addChild( new IntPlug( "interpolation", direction, SplineDefinitionInterpolationCatmullRom,
 		SplineDefinitionInterpolationLinear, SplineDefinitionInterpolationMonotoneCubic ) );
 
-	setValue( defaultValue );
+	setToDefault();
 }
 
 template<typename T>
@@ -358,34 +358,26 @@ template<typename T>
 void SplinePlug<T>::setToDefault()
 {
 	setValue( m_defaultValue );
+	for( const auto &p : ValuePlug::Range( *this ) )
+	{
+		p->resetDefault();
+	}
 }
 
 template<typename T>
 void SplinePlug<T>::resetDefault()
 {
+	ValuePlug::resetDefault();
+
 	const T newDefault = getValue();
 	const T oldDefault = m_defaultValue;
 	Action::enact(
 		this,
 		[this, newDefault] () {
 			this->m_defaultValue = newDefault;
-			for( auto &p : Plug::RecursiveRange( *this ) )
-			{
-				if( p->children().empty() )
-				{
-					propagateDirtiness( p.get() );
-				}
-			}
 		},
 		[this, oldDefault] () {
 			this->m_defaultValue = oldDefault;
-			for( auto &p : Plug::RecursiveRange( *this ) )
-			{
-				if( p->children().empty() )
-				{
-					propagateDirtiness( p.get() );
-				}
-			}
 		}
 	);
 }

@@ -311,6 +311,8 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s1 )
 		self.assertTrue( p.isSetToDefault() )
+		for cp in Gaffer.ValuePlug.RecursiveRange( p ) :
+			self.assertTrue( cp.isSetToDefault() )
 
 		p.setValue( s2 )
 		self.assertEqual( p.defaultValue(), s1 )
@@ -321,12 +323,58 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s1 )
 		self.assertTrue( p.isSetToDefault() )
+		for cp in Gaffer.ValuePlug.RecursiveRange( p ) :
+			self.assertTrue( cp.isSetToDefault() )
 
-		p.setValue( s2 )
-		p.resetDefault()
-		self.assertEqual( p.defaultValue(), s2 )
-		self.assertEqual( p.getValue(), s2 )
-		self.assertTrue( p.isSetToDefault() )
+	def testResetDefault( self ) :
+
+		s1 = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		s2 = Gaffer.SplineDefinitionff(
+			(
+				( 1, 1 ),
+				( 0, 0 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		script = Gaffer.ScriptNode()
+		script["n"] = Gaffer.Node()
+		script["n"]["user"]["p"] = Gaffer.SplineffPlug( "a", defaultValue = s1, flags = Gaffer.Plug.Flags.Dynamic )
+
+		def assertPreconditions() :
+
+			self.assertEqual( script["n"]["user"]["p"].getValue(), s1 )
+			self.assertEqual( script["n"]["user"]["p"].defaultValue(), s1 )
+			for p in Gaffer.ValuePlug.RecursiveRange( script["n"] ) :
+				self.assertTrue( p.isSetToDefault() )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( script ) :
+			script["n"]["user"]["p"].setValue( s2 )
+			script["n"]["user"]["p"].resetDefault()
+
+		def assertPostconditions() :
+
+			self.assertEqual( script["n"]["user"]["p"].getValue(), s2 )
+			self.assertEqual( script["n"]["user"]["p"].defaultValue(), s2 )
+			for p in Gaffer.ValuePlug.RecursiveRange( script["n"] ) :
+				self.assertTrue( p.isSetToDefault() )
+
+		script.undo()
+		assertPreconditions()
+
+		script.redo()
+		assertPostconditions()
 
 	def testPlugFlags( self ) :
 
