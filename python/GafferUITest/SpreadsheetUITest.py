@@ -558,5 +558,75 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		assertNVPEqual( row["cells"][2]["value"], "c", False, 4 )
 		assertNVPEqual( row["cells"][3]["value"], "d", False, 4 )
 
+		# Test cross-pasting between plugs with/without enabled plugs
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][3] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
+
+		assertNVPEqual( row["cells"][0]["value"], "a", None, 4 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][2] ] ], 0 )
+
+		assertNVPEqual( row["cells"][2]["value"], "c", False, 2 )
+
+		# Test cross-pasting between ValuePlugs and NameValuePlugs
+
+		s["rows"].addColumn( Gaffer.IntPlug( defaultValue = 5 ) )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][4] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][1], row["cells"][2] ] ], 0 )
+
+		assertNVPEqual( row["cells"][1]["value"], "b", None, 5 )
+		assertNVPEqual( row["cells"][2]["value"], "c", False, 5 )
+
+		row["cells"][2]["value"]["value"].setValue( 3 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][2] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][4] ] ], 0 )
+
+		self.assertEqual( row["cells"][4]["value"].getValue(), 3 )
+
+	def testCellEnabled( self ) :
+
+		# Test that cell enabled states are correctly remapped when
+		# cross-pasting between simple, adopted and unadopted columns.
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.IntPlug(), "valueOnly" )
+		s["rows"].addColumn( Gaffer.NameValuePlug( "a", Gaffer.IntPlug( defaultValue = 1 ), True ), "adopted", adoptEnabledPlug = True )
+		s["rows"].addColumn( Gaffer.NameValuePlug( "u", Gaffer.IntPlug( defaultValue = 2 ), True ), "unadopted", adoptEnabledPlug = False )
+		row = s["rows"].addRow()
+
+		def resetEnabledState() :
+			for cell in row["cells"].children() :
+				cell.enabledPlug().setValue( True )
+			row["cells"]["unadopted"]["value"]["enabled"].setValue( True )
+
+		def assertPostCondition( valueOnly, adopted, unadopted, unadoptedEnabled ) :
+			self.assertEqual( row["cells"]["valueOnly"].enabledPlug().getValue(), valueOnly )
+			self.assertEqual( row["cells"]["adopted"].enabledPlug().getValue(), adopted )
+			self.assertEqual( row["cells"]["unadopted"].enabledPlug().getValue(), unadopted )
+			self.assertEqual( row["cells"]["unadopted"]["value"]["enabled"].getValue(), unadoptedEnabled )
+
+		self.assertEqual( row["cells"]["valueOnly"].enabledPlug(), row["cells"]["valueOnly"]["enabled"] )
+		self.assertEqual( row["cells"]["adopted"].enabledPlug(), row["cells"]["adopted"]["value"]["enabled"] )
+		self.assertEqual( row["cells"]["unadopted"].enabledPlug(), row["cells"]["unadopted"]["enabled"] )
+		self.assertEqual( row["cells"]["unadopted"]["value"]["enabled"].getValue(), True )
+
+		for source, targets, expected in (
+			( "valueOnly", ( "adopted", "unadopted" ),   ( False, False, False, True ) ),
+			( "adopted",   ( "valueOnly", "unadopted" ), ( False, False, False, False ) ),
+			( "unadopted", ( "valueOnly", "adopted" ),   ( False, False, False, True ) )
+		) :
+
+			resetEnabledState()
+			row["cells"][ source ].enabledPlug().setValue( False )
+
+			data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][ source ] ] ] )
+			_ClipboardAlgo.pasteCells( data, [ [ row["cells"][ t ] for t in targets ] ], 0 )
+
+			assertPostCondition( *expected )
+
 if __name__ == "__main__":
 	unittest.main()

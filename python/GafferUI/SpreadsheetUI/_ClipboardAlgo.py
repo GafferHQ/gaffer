@@ -275,11 +275,25 @@ class ValueAdaptor :
 	@classmethod
 	def _canSet( cls, data, plug ) :
 
-		return cls.dataSchemaMatches( data, cls.get( plug ) )
+		plugData = cls.get( plug )
+
+		if cls.dataSchemaMatches( data, plugData ) :
+			return True
+
+		# Support basic value embedding for NameValuePlug -> ValuePlug
+		if isinstance( data, IECore.CompoundData ) and "value" in data :
+			return cls.dataSchemaMatches( data[ "value" ], plugData )
+
+		return False
 
 	## Derived classes should re-implement _canSet to match any custom logic added here.
 	@classmethod
 	def _set( cls, data, plug, atTime ) :
+
+		if isinstance( data, IECore.CompoundData ) :
+			# Only perform schema check for compound data types, to allow value coercion for basic types
+			if not cls.dataSchemaMatches( data, cls.get( plug ) ) and "value" in data :
+				data = data[ "value" ]
 
 		if hasattr( plug, 'setValue' ) :
 			cls._setOrKeyValue( plug, data, atTime )
@@ -308,15 +322,81 @@ class ValueAdaptor :
 class NameValuePlugValueAdaptor( ValueAdaptor ) :
 
 	@classmethod
-	def _set( cls, data, plug, atTime ) :
+	def _canSet( cls, data, nameValuePlug ) :
+
+		if isinstance( data, IECore.CompoundData ) and "value" in data :
+			valueData = data[ "value" ]
+			if "enabled" in nameValuePlug :
+				if "enabled" in data and not ValueAdaptor.canSet( data[ "enabled" ], nameValuePlug[ "enabled" ] ) :
+					return False
+		else :
+			# Allow simple data to be pasted onto the value plug
+			valueData = data
+
+		return ValueAdaptor.canSet( valueData, nameValuePlug[ "value" ] )
+
+	@classmethod
+	def _set( cls, data, nameValuePlug, atTime ) :
 
 		# We should _never_ set the name of an NVP as it's not exposed in the
 		# UI. It's only there as it simplifies things greatly if we don't
 		# special case plugs in the general case in the Spreadsheet. If we did,
 		# and you pasted across columns, it would duplicate the plug name,
 		# which can have catastrophic results for nodes such as StandardOptions.
-		for child in plug.children() :
-			if child.getName() != "name" :
-				cls.set( child, data[ child.getName() ], atTime )
+
+		if isinstance( data, IECore.CompoundData ) and "value" in data :
+			valueData = data[ "value" ]
+			enabledData = data[ "enabled" ] if "enabled" in data else None
+		else :
+			# Allow simple data to be pasted onto the value plug
+			valueData = data
+			enabledData = None
+
+		cls.set( nameValuePlug[ "value" ], valueData, atTime )
+
+		if "enabled" in nameValuePlug and enabledData is not None :
+			cls.set( nameValuePlug[ "enabled" ], enabledData, atTime )
 
 ValueAdaptor.registerAdaptor( Gaffer.NameValuePlug, NameValuePlugValueAdaptor )
+
+class CellPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, cellPlug ) :
+
+		enabledData, valueData = CellPlugValueAdaptor.__enabledAndValueData( data )
+
+		if enabledData is not None and not ValueAdaptor.canSet( enabledData, cellPlug.enabledPlug() ) :
+			return False
+
+		return ValueAdaptor.canSet( valueData, cellPlug[ "value" ] )
+
+	@classmethod
+	def _set( cls, data, cellPlug, atTime ) :
+
+		enabledData, valueData = CellPlugValueAdaptor.__enabledAndValueData( data )
+
+		ValueAdaptor.set( cellPlug[ "value" ], valueData, atTime )
+
+		# Set enabled state last, such that when copying from a cell that doesn't adopt
+		# an enabled plug, to one that does, the final 'enabled' state matches.
+		if enabledData is not None :
+			ValueAdaptor.set( cellPlug.enabledPlug(), enabledData, atTime )
+
+	@staticmethod
+	def __enabledAndValueData( data ) :
+
+		enabledData = None
+
+		if isinstance( data, IECore.CompoundData ) and "value" in data :
+			valueData = data[ "value" ]
+			if "enabled" in data :
+				enabledData = data[ "enabled" ]
+			elif "enabled" in valueData :
+				enabledData = valueData[ "enabled" ]
+		else :
+			valueData = data
+
+		return enabledData, valueData
+
+ValueAdaptor.registerAdaptor( Gaffer.Spreadsheet.CellPlug, CellPlugValueAdaptor )
