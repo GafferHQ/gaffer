@@ -47,6 +47,8 @@ import IECore
 #
 # `plugMatrix` should be a row-major list of value plugs,
 # as returned by createPlugMatrixFromCells, ie: [ [ r1c1, ... ], [ r2c1, ... ] ]
+#
+# \note Triggers compute of the source plugs to determine value compatibility.
 def canCopyPlugs( plugMatrix ) :
 
 	if not plugMatrix :
@@ -59,11 +61,11 @@ def canCopyPlugs( plugMatrix ) :
 	if len( plugMatrix ) > 1 :
 
 		def rowData( row ) :
-			return [ __getValueAsData( cell ) for cell in row ]
+			return [ ValueAdaptor.get( cell ) for cell in row ]
 
 		columnTemplate = rowData( plugMatrix[0] )
 		for row in plugMatrix[ 1 : ] :
-			if not __dataSchemaMatches( rowData( row ), columnTemplate )  :
+			if not ValueAdaptor.dataSchemaMatches( rowData( row ), columnTemplate )  :
 				return False
 
 	return True
@@ -73,7 +75,7 @@ def valueMatrix( plugMatrix ) :
 
 	assert( canCopyPlugs( plugMatrix ) )
 	return IECore.ObjectVector(
-		[ IECore.ObjectVector( [ __getValueAsData( column ) for column in row ] ) for row in plugMatrix ]
+		[ IECore.ObjectVector( [ ValueAdaptor.get( column ) for column in row ] ) for row in plugMatrix ]
 	)
 
 # Returns True if the supplied object appears to be pasteable cell data
@@ -94,7 +96,7 @@ def isValueMatrix( data ) :
 		return False
 
 	for i in range( 1, len(data) ) :
-		if not __dataSchemaMatches( data[i], templateRow ) :
+		if not ValueAdaptor.dataSchemaMatches( data[i], templateRow ) :
 			return False
 
 	return True
@@ -102,6 +104,7 @@ def isValueMatrix( data ) :
 # Returns True if the supplied data can be pasted on to the supplied
 # spreadsheet cell plugs, in that the cell value types are compatible with the
 # corresponding valueMatrix.
+# \note Triggers compute of the target plugs to determine value compatibility.
 def canPasteCells( valueMatrix, plugMatrix ) :
 
 	if not isValueMatrix( valueMatrix ) :
@@ -121,7 +124,7 @@ def canPasteCells( valueMatrix, plugMatrix ) :
 	for targetRowIndex, row in enumerate( plugMatrix ) :
 		for targetColumnIndex, cell in enumerate( row ) :
 			data = __dataForPlug( targetRowIndex, targetColumnIndex, valueMatrix )
-			if not __dataSchemaMatches( data, __getValueAsData( cell ) ) :
+			if not ValueAdaptor.canSet( data, cell ) :
 				return False
 
 	return True
@@ -130,9 +133,9 @@ def pasteCells( valueMatrix, plugs, atTime ) :
 
 	assert( canPasteCells( valueMatrix, plugs ) )
 
-	for targetRowIndex, row in enumerate( plugs ) :
-		for targetColumnIndex, cell in enumerate( row ) :
-			__setValueFromData( cell, __dataForPlug( targetRowIndex, targetColumnIndex, valueMatrix ), atTime )
+	for rowIndex, row in enumerate( plugs ) :
+		for columnIndex, cell in enumerate( row ) :
+			ValueAdaptor.set( cell, __dataForPlug( rowIndex, columnIndex, valueMatrix ), atTime )
 
 # Returns True if the supplied data can be pasted as new rows, this
 # requires the target plugs columns to have matching data types.
@@ -146,7 +149,7 @@ def canPasteRows( data, rowsPlug ) :
 		return False
 
 	defaultsData = valueMatrix( [ rowsPlug.defaultRow().children() ] )[0]
-	return __dataSchemaMatches( data[0], defaultsData )
+	return ValueAdaptor.dataSchemaMatches( data[0], defaultsData )
 
 # Pastes the supplied data as new rows at the end of the supplied rows plug.
 def pasteRows( valueMatrix, rowsPlug ) :
@@ -194,21 +197,118 @@ def __dataForPlug( targetRowIndex, targetColumnIndex, data ) :
 
 	return data[ targetRowIndex % len(data) ][ targetColumnIndex % len(data[0]) ]
 
-# Returns an IECore.Data that represents either the plug value, or a hierarchy
-# of CompoundData representing the values of the plug's leaves.
-def __getValueAsData( plug ) :
+## Value Adaptors bridge plugs and data within a value matrix.
+# They allow custom extraction of plug data for copy or mis-matched types to be
+# adapted to a target plug for paste. Adaptors are registered via plug class.
+# Derived classes should re-implement _canSet, _set or _get as required.
+class ValueAdaptor :
 
-	if hasattr( plug, 'getValue' ) :
-		return IECore.CompoundData( { "v" : plug.getValue() } )["v"]
+	__registry = {}
 
-	return IECore.CompoundData( { child.getName() : __getValueAsData( child ) for child in plug } )
+	# \return An IECore.Data that represents either the plug value, or a hierarchy
+	# of CompoundData representing the values of the plug's leaves.
+	@staticmethod
+	def get( plug ) :
 
-def __setValueFromData( plug, data, atTime ) :
+		return ValueAdaptor.__adaptor( plug )._get( plug )
 
-	if Gaffer.MetadataAlgo.readOnly( plug ) :
-		return
+	## \return True if the supplied data can be set on the specified plug either
+	# directly, or via some transformation.
+	# \note Triggers compute of the target plugs.
+	@staticmethod
+	def canSet( data, plug ) :
 
-	if isinstance( plug, Gaffer.NameValuePlug ) :
+		return ValueAdaptor.__adaptor( plug )._canSet( data, plug )
+
+	## Sets the specified plug's value at the given time, keyframing animated values.
+	# \note This should be called from within an UndoScope.
+	@staticmethod
+	def set( plug, data, atTime ) :
+
+		if Gaffer.MetadataAlgo.readOnly( plug ) :
+			return
+
+		ValueAdaptor.__adaptor( plug )._set( data, plug, atTime )
+
+	## \return True if the schema (ie. class hierarchy) of the two supplied
+	# objects match, regardless of their values.
+	@staticmethod
+	def dataSchemaMatches( data, otherData ) :
+
+		if type( data ) != type( otherData ) :
+			return False
+
+		if isinstance( data, ( dict, IECore.CompoundData ) ) :
+
+			if data.keys() != otherData.keys() :
+				return False
+			for a, b in zip( data.values(), otherData.values() ) :
+				if not ValueAdaptor.dataSchemaMatches( a, b ) :
+					return False
+
+		elif isinstance( data, ( list, tuple, IECore.ObjectVector ) ) :
+
+			if len( data ) != len( otherData ) :
+				return False
+			for a, b in zip( data, otherData ) :
+				if not ValueAdaptor.dataSchemaMatches( a, b ) :
+					return False
+
+		return True
+
+	@staticmethod
+	def registerAdaptor( plugType, cls ) :
+
+		ValueAdaptor.__registry[ plugType ] = cls
+
+	@classmethod
+	def _get( cls, plug ) :
+
+		if hasattr( plug, 'getValue' ) :
+			return IECore.CompoundData( { "v" : plug.getValue() } )["v"]
+
+		return IECore.CompoundData( { child.getName() : ValueAdaptor.get( child ) for child in plug } )
+
+	## Derived classes should take care to ensure that _canSet only returns True
+	# when _set is capable of transforming the supplied data so that it can be
+	# set on the specified plug.
+	@classmethod
+	def _canSet( cls, data, plug ) :
+
+		return cls.dataSchemaMatches( data, cls.get( plug ) )
+
+	## Derived classes should re-implement _canSet to match any custom logic added here.
+	@classmethod
+	def _set( cls, data, plug, atTime ) :
+
+		if hasattr( plug, 'setValue' ) :
+			cls._setOrKeyValue( plug, data, atTime )
+		else :
+			for childName, childData in data.items() :
+				cls.set( plug[ childName ], childData, atTime )
+
+	@staticmethod
+	def _setOrKeyValue( plug, value, atTime ) :
+
+		if hasattr( value, 'value' ) :
+			value = value.value
+
+		if Gaffer.Animation.isAnimated( plug ) :
+			curve = Gaffer.Animation.acquire( plug )
+			if not Gaffer.MetadataAlgo.readOnly( curve ) :
+				curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Type.Linear ) )
+		elif plug.settable() :
+			plug.setValue( value )
+
+	@staticmethod
+	def __adaptor( plug ) :
+
+		return ValueAdaptor.__registry.get( type( plug ), ValueAdaptor )
+
+class NameValuePlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _set( cls, data, plug, atTime ) :
 
 		# We should _never_ set the name of an NVP as it's not exposed in the
 		# UI. It's only there as it simplifies things greatly if we don't
@@ -217,44 +317,6 @@ def __setValueFromData( plug, data, atTime ) :
 		# which can have catastrophic results for nodes such as StandardOptions.
 		for child in plug.children() :
 			if child.getName() != "name" :
-				__setValueFromData( child, data[ child.getName() ], atTime )
+				cls.set( child, data[ child.getName() ], atTime )
 
-	elif hasattr( plug, 'setValue' ) :
-
-		if hasattr( data, 'value' ) :
-			data = data.value
-
-		if Gaffer.Animation.isAnimated( plug ) :
-			curve = Gaffer.Animation.acquire( plug )
-			if not Gaffer.MetadataAlgo.readOnly( curve ) :
-				curve.addKey( Gaffer.Animation.Key( atTime, data, Gaffer.Animation.Type.Linear ) )
-		elif plug.settable() :
-			plug.setValue( data )
-
-	else :
-
-		for childName, childData in data.items() :
-			__setValueFromData( plug[ childName ], childData, atTime )
-
-def __dataSchemaMatches( data, otherData ) :
-
-	if type( data ) != type( otherData ) :
-		return False
-
-	if isinstance( data, ( dict, IECore.CompoundData ) ) :
-
-		if data.keys() != otherData.keys() :
-			return False
-		for a, b in zip( data.values(), otherData.values() ) :
-			if not __dataSchemaMatches( a, b ) :
-				return False
-
-	elif isinstance( data, ( list, tuple, IECore.ObjectVector ) ) :
-
-		if len( data ) != len( otherData ) :
-			return False
-		for a, b in zip( data, otherData ) :
-			if not __dataSchemaMatches( a, b ) :
-				return False
-
-	return True
+ValueAdaptor.registerAdaptor( Gaffer.NameValuePlug, NameValuePlugValueAdaptor )
