@@ -208,7 +208,18 @@ def __setValueFromData( plug, data, atTime ) :
 	if Gaffer.MetadataAlgo.readOnly( plug ) :
 		return
 
-	if hasattr( plug, 'setValue' ) :
+	if isinstance( plug, Gaffer.NameValuePlug ) :
+
+		# We should _never_ set the name of an NVP as it's not exposed in the
+		# UI. It's only there as it simplifies things greatly if we don't
+		# special case plugs in the general case in the Spreadsheet. If we did,
+		# and you pasted across columns, it would duplicate the plug name,
+		# which can have catastrophic results for nodes such as StandardOptions.
+		for child in plug.children() :
+			if child.getName() != "name" :
+				__setValueFromData( child, data[ child.getName() ], atTime )
+
+	elif hasattr( plug, 'setValue' ) :
 
 		if hasattr( data, 'value' ) :
 			data = data.value
