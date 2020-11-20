@@ -628,5 +628,21 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 			assertPostCondition( *expected )
 
+	def testIntToFloatConversion( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.FloatPlug( defaultValue = 1.0 ) )
+		s["rows"].addColumn( Gaffer.IntPlug( defaultValue = 2 ) )
+		row = s["rows"].addRow()
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 1.0 )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
+
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 2.0 )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
+
 if __name__ == "__main__":
 	unittest.main()

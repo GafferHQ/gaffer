@@ -400,3 +400,13 @@ class CellPlugValueAdaptor( ValueAdaptor ) :
 		return enabledData, valueData
 
 ValueAdaptor.registerAdaptor( Gaffer.Spreadsheet.CellPlug, CellPlugValueAdaptor )
+
+class FloatPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, plug ) :
+
+		# FloatPlug.setValue will take care of this for us
+		return isinstance( data, ( IECore.FloatData, IECore.IntData ) )
+
+ValueAdaptor.registerAdaptor( Gaffer.FloatPlug, FloatPlugValueAdaptor )
