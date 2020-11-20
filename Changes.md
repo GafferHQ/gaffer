@@ -160,6 +160,29 @@ Build
   - USD 20.11
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.0.0 for full details.
 
+0.58.x.x (relative to 0.58.5.2)
+========
+
+Improvements
+------------
+
+- Spreadsheet :
+  - Enabled cell selection, editing is now achieved with a double-click.
+  - Added menu items to cells & defaults sections to copy/paste the enabled state and value(s) of selected cells.
+  - Added menu items to the row names section to copy/paste or delete the selected rows.
+  - Added menu items to edit the values for all selected cells of the same type simultaneously.
+- Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
+
+Fixes
+-----
+
+- Viewer : Render controls should now work when viewing a render after it has passed through a compositing network, providing `gaffer:sourceScene` and `gaffer:isRendering` metadata is preserved (#3888).
+
+API
+---
+
+- Catalogue : Added `gaffer:isRendering` metadata, set to `True` if the viewed image is still receiving data from a display driver.
+
 0.58.5.2 (relative to 0.58.5.1)
 ========
 

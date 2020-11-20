@@ -111,6 +111,22 @@ def addColumn( spreadsheet, plug ) :
 # UI Helpers
 # ----------
 
+# Returns True if all the supplied cells can be disabled. This may be false if
+# the list contains cells in the default row that aren't adopting the enabled
+# plug from their value plug.
+def cellsCanBeDisabled( cellPlugs ) :
+
+	if not cellPlugs :
+		return False
+
+	defaultRow = next( iter( cellPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug ).defaultRow()
+	defaultRowCells = [ cell for cell in cellPlugs if cell.ancestor( Gaffer.Spreadsheet.RowPlug ).isSame( defaultRow ) ]
+	for cell in defaultRowCells :
+		if "enabled" in cell :
+			return False
+
+	return True
+
 # Note, function may present dialogues.
 ## \todo Needs UndoScope removing
 def createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :

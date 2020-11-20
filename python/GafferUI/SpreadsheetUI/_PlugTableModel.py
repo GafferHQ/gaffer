@@ -281,6 +281,10 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		return True
 
+	def presentsCheckstate( self, index )  :
+
+		return self.__checkStatePlug( index ) is not None
+
 	# Methods of our own
 	# ------------------
 

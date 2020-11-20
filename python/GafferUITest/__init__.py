@@ -122,6 +122,7 @@ from .StringPlugValueWidgetTest import StringPlugValueWidgetTest
 from .BoolPlugValueWidgetTest import BoolPlugValueWidgetTest
 from .NumericWidgetTest import NumericWidgetTest
 from .PresetsPlugValueWidgetTest import PresetsPlugValueWidgetTest
+from .SpreadsheetUITest import SpreadsheetUITest
 
 if __name__ == "__main__":
 	unittest.main()

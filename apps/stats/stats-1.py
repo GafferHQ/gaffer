@@ -138,6 +138,12 @@ class stats( Gaffer.Application ) :
 					defaultValue = True,
 				),
 
+				IECore.BoolParameter(
+					name = "serialise",
+					description = "Reports serialisation time for the script.",
+					defaultValue = False,
+				),
+
 				IECore.StringParameter(
 					name = "scene",
 					description = "The name of a SceneNode or ScenePlug to examine. "
@@ -345,6 +351,9 @@ class stats( Gaffer.Application ) :
 
 			self.__writeNodes( script )
 
+		if args["serialise"].value :
+			self.__serialise( script, args )
+
 		if args["scene"].value :
 
 			self.__writeScene( script, args )
@@ -488,6 +497,18 @@ class stats( Gaffer.Application ) :
 			frames = [ script.context().getFrame() ]
 
 		return frames
+
+	def __serialise( self, script, args ) :
+
+		memory = _Memory.maxRSS()
+		# We don't expect serialisation to trigger any processes that the monitors would see,
+		# but we definitely want to know if they do.
+		with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+			with _Timer() as timer :
+				script.serialise()
+
+		self.__timers["Serialisation"] = timer
+		self.__memory["Serialisation"] = _Memory.maxRSS() - memory
 
 	def __writeScene( self, script, args ) :
 

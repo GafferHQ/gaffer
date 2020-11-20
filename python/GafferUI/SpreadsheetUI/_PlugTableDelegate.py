@@ -54,13 +54,25 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 		enabled = flags & QtCore.Qt.ItemIsEnabled and flags & QtCore.Qt.ItemIsEditable
 		cellPlugEnabled = index.data( _PlugTableModel.CellPlugEnabledRole )
 
+		if option.state & QtWidgets.QStyle.State_HasFocus :
+
+			if option.state & QtWidgets.QStyle.State_Selected :
+				focusColour = QtGui.QColor( QtCore.Qt.white )
+			else :
+				focusColour = option.palette.color( QtGui.QPalette.Highlight )
+
+			focusColour.setAlpha( 30 )
+			painter.fillRect( option.rect, focusColour )
+
 		if enabled and cellPlugEnabled :
 			return
 
 		painter.save()
 
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-		overlayColor = QtGui.QColor( 40, 40, 40, 200 )
+
+		overlayAlpha = 100 if option.state & QtWidgets.QStyle.State_Selected else 200
+		overlayColor = QtGui.QColor( 40, 40, 40, overlayAlpha )
 
 		if not cellPlugEnabled :
 
@@ -76,3 +88,14 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 			painter.fillRect( option.rect, overlayColor )
 
 		painter.restore()
+
+	__filteredEvents = ( QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonRelease )
+
+	def editorEvent( self, event, model, option, index ) :
+
+		if event.type() in self.__filteredEvents and bool( index.flags() & QtCore.Qt.ItemIsUserCheckable ) :
+			# Prevent checkable items from being editable via single click
+			return False
+		else :
+			return super( _PlugTableDelegate, self ).editorEvent( event, model, option, index )
+

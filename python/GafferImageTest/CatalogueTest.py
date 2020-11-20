@@ -64,6 +64,8 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		return result
 
+	__catalogueIsRenderingMetadataKey = "gaffer:isRendering"
+
 	def testImages( self ) :
 
 		images = []
@@ -184,7 +186,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
-		self.sendImage( r["out"], c )
+
+		driver = self.sendImage( r["out"], c, close = False )
+		self.assertEqual( c["out"]["metadata"].getValue()[ self.__catalogueIsRenderingMetadataKey ].value, True )
+		driver.close()
+		self.assertNotIn( self.__catalogueIsRenderingMetadataKey, c["out"]["metadata"].getValue() )
 
 		self.assertEqual( len( c["images"] ), 1 )
 		self.assertEqual( c["images"][0]["fileName"].getValue(), "" )
@@ -232,10 +238,12 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
 		self.sendImage( r["out"], s["c"] )
-
 		self.assertEqual( len( s["c"]["images"] ), 1 )
 		self.assertEqual( os.path.dirname( s["c"]["images"][0]["fileName"].getValue() ), s["c"]["directory"].getValue() )
 		self.assertImagesEqual( s["c"]["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0003 )
+
+		r["fileName"].setValue( s["c"]["images"][0]["fileName"].getValue() )
+		self.assertNotIn( self.__catalogueIsRenderingMetadataKey, r["out"]["metadata"].getValue() )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -243,6 +251,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( len( s2["c"]["images"] ), 1 )
 		self.assertEqual( s2["c"]["images"][0]["fileName"].getValue(), s["c"]["images"][0]["fileName"].getValue() )
 		self.assertImagesEqual( s2["c"]["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0003 )
+
+		r["fileName"].setValue( s2["c"]["images"][0]["fileName"].getValue() )
+		self.assertNotIn( self.__catalogueIsRenderingMetadataKey, r["out"]["metadata"].getValue() )
 
 	def testCatalogueName( self ) :
 
@@ -536,6 +547,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( c["images"][1]["description"].getValue(), c["images"][0]["description"].getValue() )
 		self.assertEqual( c["images"][1]["fileName"].getValue(), c["images"][0]["fileName"].getValue() )
+
+		c["imageIndex"].setValue( 1 )
+		self.assertNotIn( self.__catalogueIsRenderingMetadataKey, c["out"]["metadata"].getValue() )
 
 	def testDeleteBeforeSaveCompletes( self ) :
 

@@ -49,100 +49,9 @@ from ._SectionChooser import _SectionChooser
 # ------
 #
 # Code that provides extensions to standard Gaffer menus.
-#
-# \todo Determine if menu additions that are only relevant due to the specific
-# implementation of another class (eg: plug context menu additions due to the
-# reuse if PlugValueWidget in _CellPlugValueWidget) should be moved to those
-# classes instead of here.
 
 # Plug context menu
 # =================
-
-def __setPlugValue( plug, value ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.setValue( value )
-
-def __deleteRow( rowPlug ) :
-
-	with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
-		rowPlug.parent().removeChild( rowPlug )
-
-def __setRowNameWidth( rowPlug, width, *unused ) :
-
-	with Gaffer.UndoScope( rowPlug.ancestor( Gaffer.ScriptNode ) ) :
-		_RowsPlugValueWidget._setRowNameWidth( rowPlug.parent(), width )
-
-def __prependRowAndCellMenuItems( menuDefinition, plugValueWidget ) :
-
-	plug = plugValueWidget.getPlug()
-	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
-	if rowPlug is None :
-		return
-
-	isDefaultRow = rowPlug == rowPlug.parent().defaultRow()
-
-	def ensureDivider() :
-		if menuDefinition.item( "/__SpreadsheetRowAndCellDivider__" ) is None :
-			menuDefinition.prepend( "/__SpreadsheetRowAndCellDivider__", { "divider" : True } )
-
-	# Row menu items
-
-	if plug.parent() == rowPlug and not isDefaultRow :
-
-		ensureDivider()
-
-		menuDefinition.prepend(
-			"/Delete Row",
-			{
-				"command" : functools.partial( __deleteRow, rowPlug ),
-				"active" : (
-					not plugValueWidget.getReadOnly() and
-					not Gaffer.MetadataAlgo.readOnly( rowPlug ) and
-					_Algo.dimensionsEditable( rowPlug.parent() )
-				)
-			}
-		)
-
-		widths = [
-			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
-			( "Single", GafferUI.PlugWidget.labelWidth() ),
-			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
-		]
-
-		currentWidth = _RowsPlugValueWidget._getRowNameWidth( rowPlug.parent() )
-		for label, width in reversed( widths ) :
-			menuDefinition.prepend(
-				"/Width/{}".format( label ),
-				{
-					"command" : functools.partial( __setRowNameWidth, rowPlug, width ),
-					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( rowPlug ),
-					"checkBox" : width == currentWidth,
-				}
-			)
-
-	# Cell menu items
-
-	cellPlug = plug if isinstance( plug, Gaffer.Spreadsheet.CellPlug ) else plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-	if cellPlug is not None :
-
-		if not isDefaultRow or "enabled" not in cellPlug :
-
-			ensureDivider()
-
-			enabled = None
-			enabledPlug = cellPlug.enabledPlug()
-			with plugValueWidget.getContext() :
-				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-					enabled = enabledPlug.getValue()
-
-			menuDefinition.prepend(
-				"/Disable Cell" if enabled else "/Enable Cell",
-				{
-					"command" : functools.partial( __setPlugValue, enabledPlug, not enabled ),
-					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( enabledPlug ) and enabledPlug.settable()
-				}
-			)
 
 def __spreadsheetSubMenu( plug, command, showSections = True ) :
 
@@ -273,7 +182,6 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	## \todo We're prepending rather than appending so that we get the ordering we
 	# want with respect to the Expression menu items. Really we need external control
 	# over this ordering.
-	__prependRowAndCellMenuItems( menuDefinition, plugValueWidget )
 	__prependSpreadsheetCreationMenuItems( menuDefinition, plugValueWidget )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
