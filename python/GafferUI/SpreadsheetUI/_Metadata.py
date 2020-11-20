@@ -71,6 +71,16 @@ Gaffer.Metadata.registerNode(
 
 	> Note : The matching rules are identical to the ones used by the
 	> NameSwitch node.
+
+	## Keyboard Shortcuts
+
+	- **<kbd>Return</kbd>**/**<kbd>Double Click</kbd>** Toggle/Edit selected cells.
+	- **<kbd>D</kbd>** Toggle Enabled state of selected cells.
+	- **<kbd>Ctrl</kbd> + <kbd>C</kbd>**/**<kbd>V</kbd>** Copy/Paste selected cells or rows.
+	- **<kbd>Up</kbd>**, **<kbd>Down</kbd>**, **<kbd>Left</kbd>**, **<kbd>Right</kbd>** Move cell selection.
+	- **<kbd>Shift</kbd> + <kbd>Up</kbd>**, **<kbd>Down</kbd>**, **<kbd>Left</kbd>**, **<kbd>Right</kbd>** Extend cell selection.
+	- **<kbd>Ctrl</kbd> + <kbd>Up</kbd>**, **<kbd>Down</kbd>**, **<kbd>Left</kbd>**, **<kbd>Right</kbd>** Move keyboard focus.
+	- **<kbd>Space</kbd>** Toggle selection state of cell with keyboard focus.
 	""",
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
