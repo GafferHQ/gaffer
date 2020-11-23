@@ -54,9 +54,15 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 	public :
 
 		Capsule();
-		/// A copy of `context` is taken. It is the responsibility of the
-		/// caller to provide a `hash` that uniquely identifies the entire
-		/// subtree from the root down, taking into account the context.
+		/// Context must be a freshly constructed context which the capsule
+		/// will take ownership of. This context should omit context
+		/// variables that are not needed when evaluating the capsule
+		/// ( including scene:path which is overridden when evaluating the
+		/// capsule ).
+		///
+		/// It is the responsibility of the caller to provide a `hash` that
+		/// uniquely identifies the entire subtree from the root down,
+		/// taking into account the context.
 		///
 		/// The capsule is invalidated by any subsequent graph edits
 		/// that dirty the scene (because the stored hash will no longer
@@ -66,7 +72,7 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		Capsule(
 			const ScenePlug *scene,
 			const ScenePlug::ScenePath &root,
-			const Gaffer::Context &context,
+			Gaffer::ContextPtr &&context,
 			const IECore::MurmurHash &hash,
 			const Imath::Box3f &bound
 		);

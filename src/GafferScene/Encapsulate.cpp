@@ -142,10 +142,16 @@ IECore::ConstObjectPtr Encapsulate::computeObject( const ScenePath &path, const 
 {
 	if( filterValueChecked( context ) & IECore::PathMatcher::ExactMatch )
 	{
+		ContextPtr capsuleContext = new Context( *context );
+
+		// We don't want to include the scenePath of the original location of the capsule
+		// as part of the context used downstream to evaluate the insides of the capsule
+		capsuleContext->remove( ScenePlug::scenePathContextName );
+
 		return new Capsule(
 			inPlug()->source<ScenePlug>(),
 			path,
-			*context,
+			std::move( capsuleContext ),
 			outPlug()->objectPlug()->hash(),
 			inPlug()->boundPlug()->getValue()
 		);

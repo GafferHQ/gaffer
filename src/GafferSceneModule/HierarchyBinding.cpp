@@ -80,21 +80,25 @@ ContextPtr context( const Capsule &c )
 	return const_cast<Context *>( c.context() );
 }
 
+CapsulePtr capsuleConstructor( const ScenePlug *scene,
+            const ScenePlug::ScenePath &root,
+            const Gaffer::Context &context,
+            const IECore::MurmurHash &hash,
+            const Imath::Box3f &bound
+)
+
+{
+    CapsulePtr result = new Capsule( scene, root, new Context( context ), hash, bound );
+    return result;
+}
+
 } // namespace
 
 void GafferSceneModule::bindHierarchy()
 {
 
 	IECorePython::RunTimeTypedClass<Capsule>()
-		.def(
-			init<
-				const ScenePlug *,
-				const ScenePlug::ScenePath &,
-				const Gaffer::Context &,
-				const IECore::MurmurHash &,
-				const Imath::Box3f &
-			>()
-		)
+		.def( "__init__", boost::python::make_constructor( capsuleConstructor ) )
 		.def( "scene", &scene )
 		.def( "root", &root )
 		.def( "context", &context )

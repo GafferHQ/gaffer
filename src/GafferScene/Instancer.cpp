@@ -1196,10 +1196,13 @@ IECore::ConstObjectPtr Instancer::computeObject( const ScenePath &path, const Ga
 		parentAndBranchPaths( path, parentPath, branchPath );
 		if( branchPath.size() == 2 )
 		{
+			Gaffer::ContextPtr capsuleContext = new Context( *context );
+			capsuleContext->remove( ScenePlug::scenePathContextName );
+
 			return new Capsule(
 				capsuleScenePlug(),
 				context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) ,
-				*context,
+				std::move( capsuleContext ),
 				outPlug()->objectPlug()->hash(),
 				outPlug()->boundPlug()->getValue()
 			);
