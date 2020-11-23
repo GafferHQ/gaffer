@@ -42,6 +42,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
@@ -418,7 +419,23 @@ void Reference::loadInternal( const std::string &fileName )
 			// Make the loaded plugs non-dynamic, because we don't want them
 			// to be serialised in the script the reference is in - the whole
 			// point is that they are referenced.
+			/// \todo Plug flags are not working. We need to introduce an
+			/// alternative mechanism based on querying parent nodes/plugs
+			/// for serialisation requirements at the point of serialisation.
 			plug->setFlags( Plug::Dynamic, false );
+
+			if(
+				runTimeCast<const SplineffPlug>( plug ) ||
+				runTimeCast<const SplinefColor3fPlug>( plug ) ||
+				runTimeCast<const SplinefColor4fPlug>( plug )
+			)
+			{
+				// Avoid recursion as it makes it impossible to serialise
+				// the `x/y` children of spline points. See SplinePlugSerialiser
+				// for further details of spline serialisation.
+				continue;
+			}
+
 			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
 			{
 				(*it)->setFlags( Plug::Dynamic, false );

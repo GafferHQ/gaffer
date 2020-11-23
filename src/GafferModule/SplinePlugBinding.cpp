@@ -132,18 +132,46 @@ void bindSplineDefinition( const char *name)
 	;
 }
 
+const IECore::InternedString g_interpolation( "interpolation" );
+const IECore::InternedString g_omitParentNodePlugValues( "valuePlugSerialiser:omitParentNodePlugValues" );
+
 class SplinePlugSerialiser : public ValuePlugSerialiser
 {
 
 	public :
 
-		std::string postConstructor( const Gaffer::GraphComponent *child, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postConstructor( const Gaffer::GraphComponent *plug, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
-			// this isn't ideal, but the newly constructed spline plug will already have child plugs representing the points for the
-			// default value - so we get rid of those so the real value can be loaded appropriately (using the usual mechanism for
-			// dynamic plugs). the alternative would be to have a special private SplinePlug constructor used only by the serialisation,
-			// which wouldn't make the plugs in the first place.
-			return ValuePlugSerialiser::postConstructor( child, identifier, serialisation ) + identifier + ".clearPoints()\n";
+			std::string result = ValuePlugSerialiser::postConstructor( plug, identifier, serialisation );
+			if( !omitValue( plug, serialisation ) )
+			{
+				// This isn't ideal, but the newly constructed spline plug will already have child plugs representing the points for the
+				// default value. So we get rid of those so the real value can be loaded appropriately by serialising plug constructors
+				// (see below).
+				result += identifier + ".clearPoints()\n";
+			}
+			return result;
+		}
+
+		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+		{
+			if( child->getName() == g_interpolation )
+			{
+				return ValuePlugSerialiser::childNeedsSerialisation( child, serialisation );
+			}
+			// Plug representing a point. These are added dynamically so we need to serialise them
+			// if we want to serialise the value.
+			return !omitValue( child, serialisation );
+		}
+
+	private :
+
+		bool omitValue( const Gaffer::GraphComponent *plug, const Serialisation &serialisation ) const
+		{
+			return
+				plug->ancestor<Node>() == serialisation.parent() &&
+				Context::current()->get<bool>( g_omitParentNodePlugValues, false )
+			;
 		}
 
 };
