@@ -311,6 +311,8 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s1 )
 		self.assertTrue( p.isSetToDefault() )
+		for cp in Gaffer.ValuePlug.RecursiveRange( p ) :
+			self.assertTrue( cp.isSetToDefault() )
 
 		p.setValue( s2 )
 		self.assertEqual( p.defaultValue(), s1 )
@@ -321,12 +323,58 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.defaultValue(), s1 )
 		self.assertEqual( p.getValue(), s1 )
 		self.assertTrue( p.isSetToDefault() )
+		for cp in Gaffer.ValuePlug.RecursiveRange( p ) :
+			self.assertTrue( cp.isSetToDefault() )
 
-		p.setValue( s2 )
-		p.resetDefault()
-		self.assertEqual( p.defaultValue(), s2 )
-		self.assertEqual( p.getValue(), s2 )
-		self.assertTrue( p.isSetToDefault() )
+	def testResetDefault( self ) :
+
+		s1 = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		s2 = Gaffer.SplineDefinitionff(
+			(
+				( 1, 1 ),
+				( 0, 0 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		script = Gaffer.ScriptNode()
+		script["n"] = Gaffer.Node()
+		script["n"]["user"]["p"] = Gaffer.SplineffPlug( "a", defaultValue = s1, flags = Gaffer.Plug.Flags.Dynamic )
+
+		def assertPreconditions() :
+
+			self.assertEqual( script["n"]["user"]["p"].getValue(), s1 )
+			self.assertEqual( script["n"]["user"]["p"].defaultValue(), s1 )
+			for p in Gaffer.ValuePlug.RecursiveRange( script["n"] ) :
+				self.assertTrue( p.isSetToDefault() )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( script ) :
+			script["n"]["user"]["p"].setValue( s2 )
+			script["n"]["user"]["p"].resetDefault()
+
+		def assertPostconditions() :
+
+			self.assertEqual( script["n"]["user"]["p"].getValue(), s2 )
+			self.assertEqual( script["n"]["user"]["p"].defaultValue(), s2 )
+			for p in Gaffer.ValuePlug.RecursiveRange( script["n"] ) :
+				self.assertTrue( p.isSetToDefault() )
+
+		script.undo()
+		assertPreconditions()
+
+		script.redo()
+		assertPostconditions()
 
 	def testPlugFlags( self ) :
 
@@ -384,8 +432,8 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.getName(), "p2" )
 		self.assertTrue( isinstance( p2, Gaffer.SplineffPlug ) )
 		self.assertEqual( p2.numPoints(), p1.numPoints() )
-		self.assertTrue( p2.getValue(), p1.getValue() )
-		self.assertTrue( p2.defaultValue(), p1.defaultValue() )
+		self.assertTrue( p2.isSetToDefault() )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
 
 	def testPromoteToBox( self ) :
 
@@ -402,6 +450,35 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.SplineffPlug( defaultValue=spline )
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		p = Gaffer.PlugAlgo.promote( b["n"]["p"] )
+
+		self.assertEqual( p.defaultValue(), b["n"]["p"].defaultValue() )
+		self.assertEqual( p.numPoints(), b["n"]["p"].numPoints() )
+		self.assertEqual( p.getValue().interpolation, b["n"]["p"].getValue().interpolation )
+		self.assertEqual( len( p.getValue().points() ), len( b["n"]["p"].getValue().points() ) )
+		self.assertEqual( p.getValue(), b["n"]["p"].getValue() )
+		self.assertTrue( b["n"]["p"].getInput().isSame( p ) )
+
+	def testPromoteToBoxWithExtraPoints( self ) :
+
+		spline = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.SplineffPlug( defaultValue=spline )
+		i = s["n"]["p"].addPoint()
+		s["n"]["p"][i]["x"].setValue( 0.1 )
+		s["n"]["p"][i]["y"].setValue( 0.2 )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
 		p = Gaffer.PlugAlgo.promote( b["n"]["p"] )
