@@ -432,8 +432,8 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p2.getName(), "p2" )
 		self.assertTrue( isinstance( p2, Gaffer.SplineffPlug ) )
 		self.assertEqual( p2.numPoints(), p1.numPoints() )
-		self.assertTrue( p2.getValue(), p1.getValue() )
-		self.assertTrue( p2.defaultValue(), p1.defaultValue() )
+		self.assertTrue( p2.isSetToDefault() )
+		self.assertEqual( p2.defaultValue(), p1.defaultValue() )
 
 	def testPromoteToBox( self ) :
 
