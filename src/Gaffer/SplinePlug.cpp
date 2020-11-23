@@ -345,6 +345,12 @@ template<typename T>
 PlugPtr SplinePlug<T>::createCounterpart( const std::string &name, Direction direction ) const
 {
 	Ptr result = new SplinePlug<T>( name, direction, m_defaultValue, getFlags() );
+	result->clearPoints();
+	for( unsigned i = 0; i < numPoints(); ++i )
+	{
+		const ValuePlug *p = pointPlug( i );
+		result->addChild( p->createCounterpart( p->getName(), direction ) );
+	}
 	return result;
 }
 

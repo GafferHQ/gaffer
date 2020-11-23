@@ -461,6 +461,35 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p.getValue(), b["n"]["p"].getValue() )
 		self.assertTrue( b["n"]["p"].getInput().isSame( p ) )
 
+	def testPromoteToBoxWithExtraPoints( self ) :
+
+		spline = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.SplineffPlug( defaultValue=spline )
+		i = s["n"]["p"].addPoint()
+		s["n"]["p"][i]["x"].setValue( 0.1 )
+		s["n"]["p"][i]["y"].setValue( 0.2 )
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
+		p = Gaffer.PlugAlgo.promote( b["n"]["p"] )
+
+		self.assertEqual( p.defaultValue(), b["n"]["p"].defaultValue() )
+		self.assertEqual( p.numPoints(), b["n"]["p"].numPoints() )
+		self.assertEqual( p.getValue().interpolation, b["n"]["p"].getValue().interpolation )
+		self.assertEqual( len( p.getValue().points() ), len( b["n"]["p"].getValue().points() ) )
+		self.assertEqual( p.getValue(), b["n"]["p"].getValue() )
+		self.assertTrue( b["n"]["p"].getInput().isSame( p ) )
+
 	def testSerialisationWithMorePointsThanDefault( self ) :
 
 		s1 = Gaffer.SplineDefinitionff(
