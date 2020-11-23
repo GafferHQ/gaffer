@@ -180,7 +180,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/ball1" ] ) )
 		a["filter"].setInput( f["out"] )
-		self.assertSceneHashesEqual( input["out"], a["out"], pathsToIgnore = ( "/ball1", ) )
+		self.assertSceneHashesEqual( input["out"], a["out"], pathsToPrune = ( "/ball1", ) )
 
 		c = Gaffer.Context()
 		c["scene:path"] = IECore.InternedStringVectorData( [ "ball1" ] )

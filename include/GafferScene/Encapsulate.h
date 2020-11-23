@@ -69,6 +69,8 @@ class GAFFERSCENE_API Encapsulate : public FilteredSceneProcessor
 
 		void plugDirtied( const Gaffer::Plug *plug );
 
+		IECore::PathMatcher::Result filterValueChecked( const Gaffer::Context *context ) const;
+
 		uint64_t m_dirtyCount;
 
 		static size_t g_firstPlugIndex;

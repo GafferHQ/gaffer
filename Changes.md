@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.0.0b3)
 ========
 
+Features
+--------
+
+- Unencapsulate : Added new node to expand capsules created by Encapsulate back into regular scene hierarchy. This discards the performance advantages of working with capsules, but is useful for debugging, or when it is necessary to alter a capsule's contents downstream.
+
 Improvements
 ------------
 

@@ -203,7 +203,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["parent"].setValue( "/plane" )
 		instancer["name"].setValue( "" )
 
-		self.assertScenesEqual( instancer["out"], plane["out"], pathsToIgnore = ( "/plane", ) )
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		deleteObject = GafferScene.DeleteObject()
+		deleteObject["in"].setInput( plane["out"] )
+		deleteObject["filter"].setInput( f["out"] )
+
+		self.assertScenesEqual( instancer["out"], deleteObject["out"] )
 
 	def testEmptyParent( self ) :
 

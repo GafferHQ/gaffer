@@ -231,7 +231,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( s["out"] )
 
-		self.assertScenesEqual( s["out"], a["out"], pathsToIgnore = [ "/", ] )
+		self.assertScenesEqual( s["out"], a["out"] )
 		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group" ] ) )
 		self.assertEqual( s["out"].bound( "/" ), a["out"].bound( "/group" ) )
 

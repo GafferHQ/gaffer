@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,64 +34,34 @@
 #
 ##########################################################################
 
-import unittest
-
-import IECore
-import IECoreScene
-
 import Gaffer
-import GafferTest
+import GafferUI
+
 import GafferScene
-import GafferSceneTest
 
-class DeletePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
+##########################################################################
+# Metadata
+##########################################################################
 
-	def test( self ) :
+Gaffer.Metadata.registerNode(
 
-		p = GafferScene.Plane()
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( p["out"] )
+	GafferScene.Unencapsulate,
 
-		self.assertEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"] )
-		self.assertIn( "uv", d["out"].object( "/plane" ) )
+	"description",
+	"""
+	Expands capsules created by Encapsulate back into regular scene hierarchy. This discards the
+	performance advantages of working with capsules, but is useful for debugging, or when it is
+	necessary to alter the internals of a capsule.
+	""",
 
-		d["names"].setValue( "uv e" )
+	plugs = {
 
-		self.assertNotEqual( p["out"].object( "/plane" ), d["out"].object( "/plane" ) )
-		self.assertSceneHashesEqual( p["out"], d["out"], checks = self.allSceneChecks - { "object" } )
-		self.assertSceneHashesEqual( p["out"], d["out"], pathsToPrune = ( "/plane" ) )
-		self.assertNotIn( "uv", d["out"].object( "/plane" ) )
-		self.assertIn( "P", d["out"].object( "/plane" ) )
+		"parent" : [
 
-	def testNonPrimitiveObject( self ) :
+			"description", "Deprecated. Use `filter` input instead.",
 
-		c = GafferScene.Camera()
+		],
 
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( c["out"] )
+	}
 
-		self.assertSceneValid( d["out"] )
-		self.assertIsInstance( d["out"].object( "/camera" ), IECoreScene.Camera )
-
-	def testAffects( self ) :
-
-		d = GafferScene.DeletePrimitiveVariables()
-
-		cs = GafferTest.CapturingSlot( d.plugDirtiedSignal() )
-		self.assertEqual( len( cs ), 0 )
-
-		d["enabled"].setValue( False )
-		self.assertTrue( "out" in [ x[0].getName() for x in cs ] )
-
-	def testWildcards( self ) :
-
-		p = GafferScene.Plane()
-		d = GafferScene.DeletePrimitiveVariables()
-		d["in"].setInput( p["out"] )
-
-		d["names"].setValue( "*" )
-		self.assertEqual( d["out"].object( "/plane" ).keys(), [] )
-
-if __name__ == "__main__":
-	unittest.main()
+)

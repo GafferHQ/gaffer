@@ -457,7 +457,9 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		g2["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
-		self.assertSceneHashesEqual( g1["out"], g2["out"], pathsToIgnore = ( "/", "/group", ) )
+
+		self.assertEqual( g1["out"].transformHash( "/group/plane" ), g2["out"].transformHash( "/group/plane" ) )
+		self.assertEqual( g1["out"].boundHash( "/group/plane" ), g2["out"].boundHash( "/group/plane" ) )
 		self.assertSceneHashesEqual( g1["out"], g2["out"], checks = self.allSceneChecks - { "transform", "bound" } )
 		self.assertNotEqual( g1["out"].transformHash( "/group" ), g2["out"].transformHash( "/group" ) )
 		self.assertEqual( g1["out"].boundHash( "/group" ), g2["out"].boundHash( "/group" ) )

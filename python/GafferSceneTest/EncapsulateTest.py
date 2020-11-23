@@ -37,6 +37,7 @@
 import inspect
 import unittest
 import os
+import six
 import subprocess
 
 import IECore
@@ -63,7 +64,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		groupB = GafferScene.Group()
 		groupB["in"][0].setInput( sphere["out"] )
-		groupB["in"][1].setInput( sphere["out"] )
+		groupB["in"][1].setInput( cube["out"] )
 		groupB["name"].setValue( "groupB" )
 
 		groupA = GafferScene.Group()
@@ -130,6 +131,31 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( encapsulate["out"].set( "sphereSet" ).value.paths(), [ "/groupA/sphere" ] )
 		self.assertEqual( encapsulate["out"].set( "cubeSet" ).value.paths(), [] )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, "Encapsulate.out.childNames : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
+			encapsulate["out"].childNames( "/groupA/groupB/sphere" )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, "Encapsulate.out.object : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
+			encapsulate["out"].object( "/groupA/groupB/sphere" )
+
+		# As a double check, test that this setup works properly with Unencapsulate
+		unencapsulateFilter = GafferScene.PathFilter()
+
+		unencapsulate = GafferScene.Unencapsulate()
+		unencapsulate["in"].setInput( encapsulate["out"] )
+		unencapsulate["filter"].setInput( unencapsulateFilter["out"] )
+
+		# We can reverse the encapsulate by unencapsulating everything
+		unencapsulateFilter["paths"].setValue( IECore.StringVectorData( [ "..." ] ) )
+		self.assertScenesEqual( encapsulate["in"], unencapsulate["out"] )
+
+		# Or by targetting just the path that was encapsulated
+		unencapsulateFilter["paths"].setValue( IECore.StringVectorData( [ "/groupA/groupB" ] ) )
+		self.assertScenesEqual( encapsulate["in"], unencapsulate["out"] )
+
+		# But if we don't target that path, the scene stays encapsulated
+		unencapsulateFilter["paths"].setValue( IECore.StringVectorData( [ "/groupA/" ] ) )
+		self.assertScenesEqual( encapsulate["out"], unencapsulate["out"] )
 
 	def testCapsuleHash( self ) :
 

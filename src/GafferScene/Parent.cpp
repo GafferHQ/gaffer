@@ -158,6 +158,10 @@ Imath::Box3f Parent::computeBranchBound( const ScenePath &parentPath, const Scen
 {
 	if( branchPath.size() == 0 )
 	{
+		// NOTE : that this branch is currently unused, since BranchCreator only calls computeBranchBound once we're
+		// inside a branch ( at the top level, it assumes it needs to just merge all the child bounds anyway ).
+		// Perhaps in the future, some of the use cases of BranchCreator could be optimized if we changed it so
+		// it did use this path.
 		Box3f combinedBound;
 		for( auto &p : ScenePlug::Range( *childrenPlug() ) )
 		{

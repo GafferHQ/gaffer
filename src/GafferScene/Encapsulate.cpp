@@ -95,9 +95,23 @@ void Encapsulate::affects( const Plug *input, AffectedPlugsContainer &outputs ) 
 	}
 }
 
+IECore::PathMatcher::Result Encapsulate::filterValueChecked( const Gaffer::Context *context ) const
+{
+	IECore::PathMatcher::Result f = filterValue( context );
+	if( f & IECore::PathMatcher::AncestorMatch )
+	{
+		std::string locationStr;
+		ScenePlug::pathToString( context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ), locationStr );
+		throw IECore::Exception(
+			"Tried to access path \"" + locationStr + "\", but its ancestor has been converted to a capsule"
+		);
+	}
+	return f;
+}
+
 void Encapsulate::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
+	if( filterValueChecked( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		FilteredSceneProcessor::hashObject( path, context, parent, h );
 		// What we really want here is a hash uniquely identifying the
@@ -124,7 +138,7 @@ void Encapsulate::hashObject( const ScenePath &path, const Gaffer::Context *cont
 
 IECore::ConstObjectPtr Encapsulate::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
+	if( filterValueChecked( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return new Capsule(
 			inPlug()->source<ScenePlug>(),
@@ -142,7 +156,7 @@ IECore::ConstObjectPtr Encapsulate::computeObject( const ScenePath &path, const 
 
 void Encapsulate::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
+	if( filterValueChecked( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		h = outPlug()->childNamesPlug()->defaultValue()->Object::hash();
 	}
@@ -154,7 +168,7 @@ void Encapsulate::hashChildNames( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstInternedStringVectorDataPtr Encapsulate::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
+	if( filterValueChecked( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return outPlug()->childNamesPlug()->defaultValue();
 	}
