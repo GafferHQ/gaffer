@@ -524,5 +524,39 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		key = curve.getKey( 1002 )
 		self.assertEqual( key.getValue(), 5 )
 
+	def testNameValuePlugs( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.NameValuePlug( "a", Gaffer.IntPlug( defaultValue = 1 ) ) )
+		s["rows"].addColumn( Gaffer.NameValuePlug( "b", Gaffer.IntPlug( defaultValue = 2 ) ) )
+		row = s["rows"].addRow()
+
+		def assertNVPEqual( plug, name, enabled, value ) :
+			self.assertEqual( plug["name"].getValue(), name )
+			self.assertEqual( plug["value"].getValue(), value )
+			if enabled is not None :
+				self.assertEqual( plug["enabled"].getValue(), enabled )
+
+		assertNVPEqual( row["cells"][0]["value"], "a", None, 1 )
+		assertNVPEqual( row["cells"][1]["value"], "b", None, 2 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][1] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][0] ] ], 0 )
+
+		assertNVPEqual( row["cells"][0]["value"], "a", None, 2 )
+		assertNVPEqual( row["cells"][1]["value"], "b", None, 2 )
+
+		s["rows"].addColumn( Gaffer.NameValuePlug( "c", Gaffer.IntPlug( defaultValue = 3 ), True ) )
+		s["rows"].addColumn( Gaffer.NameValuePlug( "d", Gaffer.IntPlug( defaultValue = 4 ), False ) )
+
+		assertNVPEqual( row["cells"][2]["value"], "c", True, 3 )
+		assertNVPEqual( row["cells"][3]["value"], "d", False, 4 )
+
+		data = _ClipboardAlgo.valueMatrix( [ [ row["cells"][3] ] ] )
+		_ClipboardAlgo.pasteCells( data, [ [ row["cells"][2] ] ], 0 )
+
+		assertNVPEqual( row["cells"][2]["value"], "c", False, 4 )
+		assertNVPEqual( row["cells"][3]["value"], "d", False, 4 )
+
 if __name__ == "__main__":
 	unittest.main()
