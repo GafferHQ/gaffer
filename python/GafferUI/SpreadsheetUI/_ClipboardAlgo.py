@@ -142,7 +142,7 @@ def pasteCells( valueMatrix, plugs, atTime ) :
 
 	for rowIndex, row in enumerate( plugs ) :
 		for columnIndex, cell in enumerate( row ) :
-			ValueAdaptor.set( cell, __dataForPlug( rowIndex, columnIndex, valueMatrix ), atTime )
+			ValueAdaptor.set( __dataForPlug( rowIndex, columnIndex, valueMatrix ), cell, atTime )
 
 ## Returns a value matrix for the supplied row plugs.
 def copyRows( rowPlugs ) :
@@ -244,7 +244,7 @@ class ValueAdaptor :
 	## Sets the specified plug's value at the given time, keyframing animated values.
 	# \note This should be called from within an UndoScope.
 	@staticmethod
-	def set( plug, data, atTime ) :
+	def set( data, plug, atTime ) :
 
 		if Gaffer.MetadataAlgo.readOnly( plug ) :
 			return
@@ -320,7 +320,7 @@ class ValueAdaptor :
 			ValueAdaptor._setOrKeyValue( plug, data, atTime )
 		else :
 			for childName, childData in data.items() :
-				ValueAdaptor.set( plug[ childName ], childData, atTime )
+				ValueAdaptor.set( childData, plug[ childName ], atTime )
 
 	@staticmethod
 	def _setOrKeyValue( plug, value, atTime ) :
@@ -373,10 +373,10 @@ class NameValuePlugValueAdaptor( ValueAdaptor ) :
 			valueData = data
 			enabledData = None
 
-		ValueAdaptor.set( nameValuePlug[ "value" ], valueData, atTime )
+		ValueAdaptor.set( valueData, nameValuePlug[ "value" ], atTime )
 
 		if "enabled" in nameValuePlug and enabledData is not None :
-			ValueAdaptor.set( nameValuePlug[ "enabled" ], enabledData, atTime )
+			ValueAdaptor.set( enabledData, nameValuePlug[ "enabled" ], atTime )
 
 ValueAdaptor.registerAdaptor( Gaffer.NameValuePlug, NameValuePlugValueAdaptor )
 
@@ -397,12 +397,12 @@ class CellPlugValueAdaptor( ValueAdaptor ) :
 
 		enabledData, valueData = CellPlugValueAdaptor.__enabledAndValueData( data )
 
-		ValueAdaptor.set( cellPlug[ "value" ], valueData, atTime )
+		ValueAdaptor.set( valueData, cellPlug[ "value" ], atTime )
 
 		# Set enabled state last, such that when copying from a cell that doesn't adopt
 		# an enabled plug, to one that does, the final 'enabled' state matches.
 		if enabledData is not None :
-			ValueAdaptor.set( cellPlug.enabledPlug(), enabledData, atTime )
+			ValueAdaptor.set( enabledData, cellPlug.enabledPlug(), atTime )
 
 	@staticmethod
 	def __enabledAndValueData( data ) :
@@ -454,13 +454,13 @@ class RowPlugValueAdaptor( ValueAdaptor ) :
 
 		# Name/enabled
 		for plugName in ( "name", "enabled" ) :
-			ValueAdaptor.set( rowPlug[ plugName ], rowData[ plugName ], atTime )
+			ValueAdaptor.set( rowData[ plugName ], rowPlug[ plugName ], atTime )
 
 		# Cells
 		cellData = rowData[ "cells" ]
 		for cell in rowPlug[ "cells" ].children() :
 			data = cellData.get( cell.getName(), None )
 			if data is not None :
-				ValueAdaptor.set( cell, data, atTime )
+				ValueAdaptor.set( data, cell, atTime )
 
 ValueAdaptor.registerAdaptor( Gaffer.Spreadsheet.RowPlug, RowPlugValueAdaptor )
