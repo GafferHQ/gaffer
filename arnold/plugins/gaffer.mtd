@@ -1940,6 +1940,8 @@
 			page STRING "Rim Lighting"
 		[attr rim_light_color]
 			page STRING "Rim Lighting"
+		[attr rim_light_tint]
+			page STRING "Rim Lighting"
 		[attr rim_light_width]
 			page STRING "Rim Lighting"
 
@@ -1978,6 +1980,8 @@
 		[attr aov_highlight]
 			page STRING "AOV"
 		[attr aov_rim_light]
+			page STRING "AOV"
+		[attr aov_prefix]
 			page STRING "AOV"
 
 		[attr IOR]
