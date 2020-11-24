@@ -38,6 +38,7 @@
 #include "Gaffer/SplinePlug.h"
 
 #include "Gaffer/Action.h"
+#include "Gaffer/ComputeNode.h"
 
 using namespace Gaffer;
 
@@ -391,6 +392,20 @@ void SplinePlug<T>::resetDefault()
 template<typename T>
 bool SplinePlug<T>::isSetToDefault() const
 {
+	for( const auto &p : Plug::RecursiveRange( *this ) )
+	{
+		if( p->children().empty() )
+		{
+			const Plug *s = p->source();
+			if( s->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( s->node() ) )
+			{
+				// Value is computed, and therefore can vary by context. There is no
+				// single "current value", so no true concept of whether or not it's at
+				// the default.
+				return false;
+			}
+		}
+	}
 	return getValue() == m_defaultValue;
 }
 
