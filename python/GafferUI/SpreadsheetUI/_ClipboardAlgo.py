@@ -296,14 +296,14 @@ class ValueAdaptor :
 	@classmethod
 	def _canSet( cls, data, plug ) :
 
-		plugData = cls.get( plug )
+		plugData = ValueAdaptor.get( plug )
 
 		if cls.dataSchemaMatches( data, plugData ) :
 			return True
 
 		# Support basic value embedding for NameValuePlug -> ValuePlug
 		if isinstance( data, IECore.CompoundData ) and "value" in data :
-			return cls.dataSchemaMatches( data[ "value" ], plugData )
+			return ValueAdaptor.dataSchemaMatches( data[ "value" ], plugData )
 
 		return False
 
@@ -313,14 +313,14 @@ class ValueAdaptor :
 
 		if isinstance( data, IECore.CompoundData ) :
 			# Only perform schema check for compound data types, to allow value coercion for basic types
-			if not cls.dataSchemaMatches( data, cls.get( plug ) ) and "value" in data :
+			if not ValueAdaptor.dataSchemaMatches( data, ValueAdaptor.get( plug ) ) and "value" in data :
 				data = data[ "value" ]
 
 		if hasattr( plug, 'setValue' ) :
-			cls._setOrKeyValue( plug, data, atTime )
+			ValueAdaptor._setOrKeyValue( plug, data, atTime )
 		else :
 			for childName, childData in data.items() :
-				cls.set( plug[ childName ], childData, atTime )
+				ValueAdaptor.set( plug[ childName ], childData, atTime )
 
 	@staticmethod
 	def _setOrKeyValue( plug, value, atTime ) :
@@ -373,10 +373,10 @@ class NameValuePlugValueAdaptor( ValueAdaptor ) :
 			valueData = data
 			enabledData = None
 
-		cls.set( nameValuePlug[ "value" ], valueData, atTime )
+		ValueAdaptor.set( nameValuePlug[ "value" ], valueData, atTime )
 
 		if "enabled" in nameValuePlug and enabledData is not None :
-			cls.set( nameValuePlug[ "enabled" ], enabledData, atTime )
+			ValueAdaptor.set( nameValuePlug[ "enabled" ], enabledData, atTime )
 
 ValueAdaptor.registerAdaptor( Gaffer.NameValuePlug, NameValuePlugValueAdaptor )
 
