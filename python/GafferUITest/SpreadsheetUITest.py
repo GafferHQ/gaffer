@@ -443,8 +443,7 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		subsetValueMatrix = _ClipboardAlgo.valueMatrix( [ [ s["rows"][r]["cells"][c] for c in range(2) ] for r in range( 2, 4 ) ] )
 		self.assertFalse( _ClipboardAlgo.canPasteRows( subsetValueMatrix, s["rows"] ) )
 
-		sourceRows = [ s["rows"][r].children() for r in range( 2, 3 ) ]
-		rowData = _ClipboardAlgo.valueMatrix( sourceRows )
+		rowData = _ClipboardAlgo.copyRows( [ s["rows"][r] for r in ( 2, 3 ) ] )
 
 		self.assertTrue( _ClipboardAlgo.canPasteRows( rowData, s["rows"] ) )
 
@@ -457,19 +456,84 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 		s = self.__createSpreadsheet( numRows = 5 )
 
-		sourceRows = [ s["rows"][r].children() for r in range( 2, 4 ) ]
+		sourceRows = [ [ s["rows"][r] ] for r in range( 2, 4 ) ]
 		sourceHashes = self.__cellPlugHashes( sourceRows )
 		rowData = _ClipboardAlgo.valueMatrix( sourceRows )
 
 		self.assertEqual( len( s["rows"].children() ), 6 )
-		existingHashes = self.__cellPlugHashes( [ s["rows"][r].children() for r in range( 6 ) ] )
+		existingHashes = self.__cellPlugHashes( [ [ s["rows"][r] ] for r in range( 6 ) ] )
 
 		_ClipboardAlgo.pasteRows( rowData, s["rows"] )
 
 		self.assertEqual( len( s["rows"].children() ), 6 + 2 )
-		newHashes = self.__cellPlugHashes( [ s["rows"][r].children() for r in range( 6 + 2 ) ] )
+		newHashes = self.__cellPlugHashes( [ [ s["rows"][r] ] for r in range( 6 + 2 ) ] )
 
 		self.assertEqual( newHashes, existingHashes + sourceHashes )
+
+	def testPastedRowsMatchByColumn( self ) :
+
+		s1 = Gaffer.Spreadsheet()
+		s1["rows"].addColumn( Gaffer.StringPlug( defaultValue = "s1String" ), "string" )
+		s1["rows"].addColumn( Gaffer.IntPlug( defaultValue = 1 ), "int" )
+		s1["rows"].addColumn( Gaffer.FloatPlug( defaultValue = 3.0 ), "float" )
+		s1["rows"].addRow()
+
+		s2 = Gaffer.Spreadsheet()
+		s2["rows"].addColumn( Gaffer.FloatPlug( defaultValue = 5.0 ), "float" )
+		s2["rows"].addColumn( Gaffer.StringPlug( defaultValue = "s2String" ), "string" )
+		s2["rows"].addColumn( Gaffer.IntPlug( defaultValue = 6 ), "int" )
+		s2["rows"].addColumn( Gaffer.IntPlug( defaultValue = 7 ), "anotherInt" )
+
+		# Fewer columns -> more columns
+
+		data = _ClipboardAlgo.copyRows( [ s1["rows"][1] ] )
+		self.assertTrue( _ClipboardAlgo.canPasteRows( data, s2["rows"] ) )
+		_ClipboardAlgo.pasteRows( data, s2["rows"] )
+
+		s1r1 = s1["rows"][1]["cells"]
+		s2d = s2["rows"].defaultRow()["cells"]
+		expectedHashes = self.__cellPlugHashes( [ [ s1r1["float"], s1r1["string"], s1r1["int"], s2d["anotherInt"] ] ] )
+		self.assertEqual( self.__cellPlugHashes( [ s2["rows"][1]["cells"].children() ] ), expectedHashes )
+
+		# More columns -> fewer columns
+
+		s2["rows"].addRow()
+
+		data = _ClipboardAlgo.copyRows( [ s2["rows"][2] ] )
+		self.assertTrue( _ClipboardAlgo.canPasteRows( data, s1["rows"] ) )
+		_ClipboardAlgo.pasteRows( data, s1["rows"] )
+
+		s2r2 = s2["rows"][2]["cells"]
+		expectedHashes = self.__cellPlugHashes( [ [ s2r2["string"], s2r2["int"], s2r2["float"] ] ] )
+		self.assertEqual( self.__cellPlugHashes( [ s1["rows"][2]["cells"].children() ] ), expectedHashes )
+
+		# Conflicting match
+
+		s1["rows"].addColumn( Gaffer.StringPlug(), "mismatched" )
+		s2["rows"].addColumn( Gaffer.IntPlug(), "mismatched" )
+
+		data = _ClipboardAlgo.copyRows( [ s1["rows"][2] ] )
+		self.assertFalse( _ClipboardAlgo.canPasteRows( data, s2["rows"] ) )
+
+		# No Matches
+
+		s3 =  Gaffer.Spreadsheet()
+		s3["rows"].addColumn( Gaffer.IntPlug(), "a" )
+		s3["rows"].addRow()
+
+		s4 =  Gaffer.Spreadsheet()
+		s4["rows"].addColumn( Gaffer.IntPlug(), "b" )
+		s4["rows"].addRow()
+
+		data = _ClipboardAlgo.valueMatrix( [ [ s3["rows"][1] ] ] )
+		self.assertFalse( _ClipboardAlgo.canPasteRows( data, s4["rows"] ) )
+
+		# Test match with value coercion
+
+		s4["rows"].addColumn( Gaffer.FloatPlug( defaultValue = 5.0 ), "a" )
+		self.assertTrue( _ClipboardAlgo.canPasteRows( data, s4["rows"] ) )
+		_ClipboardAlgo.pasteRows( data, s4["rows"] )
+		self.assertEqual( s4["rows"][2]["cells"]["a"]["value"].getValue(), 0.0 )
 
 	def testClipboardRespectsReadOnly( self ) :
 

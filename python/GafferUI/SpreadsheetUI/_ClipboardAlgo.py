@@ -71,6 +71,9 @@ def canCopyPlugs( plugMatrix ) :
 	return True
 
 ## Builds a 'paste-able' data for the supplied plug matrix
+# For Spreadsheet rows, the matrix should consist of a single column
+# containing the Spreadsheet.RowPlug for each row to be copied.
+# \see copyRows
 def valueMatrix( plugMatrix ) :
 
 	assert( canCopyPlugs( plugMatrix ) )
@@ -141,8 +144,16 @@ def pasteCells( valueMatrix, plugs, atTime ) :
 		for columnIndex, cell in enumerate( row ) :
 			ValueAdaptor.set( cell, __dataForPlug( rowIndex, columnIndex, valueMatrix ), atTime )
 
-# Returns True if the supplied data can be pasted as new rows, this
-# requires the target plugs columns to have matching data types.
+## Returns a value matrix for the supplied row plugs.
+def copyRows( rowPlugs ) :
+
+	return valueMatrix( [ [ row ] for row in rowPlugs ] )
+
+## Returns True if the supplied data can be pasted as new rows.
+# Columns are matched by name (and type), allowing rows to be copied
+# between Spreadsheets with different configurations. Cells in the
+# target Spreadsheet with no data will be set to the default value for
+# that column.
 def canPasteRows( data, rowsPlug ) :
 
 	if not isValueMatrix( data ) :
@@ -152,8 +163,7 @@ def canPasteRows( data, rowsPlug ) :
 	if Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
 		return False
 
-	defaultsData = valueMatrix( [ rowsPlug.defaultRow().children() ] )[0]
-	return ValueAdaptor.dataSchemaMatches( data[0], defaultsData )
+	return canPasteCells( data, [ [ rowsPlug.defaultRow() ] ] )
 
 # Pastes the supplied data as new rows at the end of the supplied rows plug.
 def pasteRows( valueMatrix, rowsPlug ) :
@@ -163,7 +173,7 @@ def pasteRows( valueMatrix, rowsPlug ) :
 	# addRows currently returns None, so this is easier
 	newRows = [ rowsPlug.addRow() for _ in valueMatrix ]
 	# We know these aren't animated as we've just made them so time is irrelevant
-	pasteCells( valueMatrix, [ row.children() for row in newRows ], 0 )
+	pasteCells( valueMatrix, [ [ row ] for row in newRows ], 0 )
 
 ## Takes an arbitrary list of spreadsheet CellPlugs (perhaps as obtained from a
 # selection, which may be in a jumbled order) and groups them, ordered by row
@@ -421,3 +431,36 @@ class FloatPlugValueAdaptor( ValueAdaptor ) :
 		return isinstance( data, ( IECore.FloatData, IECore.IntData ) )
 
 ValueAdaptor.registerAdaptor( Gaffer.FloatPlug, FloatPlugValueAdaptor )
+
+## Allows RowPlugs to be copy/pasted across different column configurations,
+# matching by the column names.
+class RowPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, rowPlug ) :
+
+		if not isinstance( data, IECore.CompoundData ) or set( data.keys() ) != { "name", "enabled", "cells" } :
+			return False
+
+		cellData = data[ "cells" ]
+		matchingCells = [ cell for cell in rowPlug[ "cells" ].children() if cell.getName() in cellData ]
+		if not matchingCells :
+			return False
+
+		return all( [ ValueAdaptor.canSet( cellData[ cell.getName() ], cell ) for cell in matchingCells ] )
+
+	@classmethod
+	def _set( cls, rowData, rowPlug, atTime ) :
+
+		# Name/enabled
+		for plugName in ( "name", "enabled" ) :
+			ValueAdaptor.set( rowPlug[ plugName ], rowData[ plugName ], atTime )
+
+		# Cells
+		cellData = rowData[ "cells" ]
+		for cell in rowPlug[ "cells" ].children() :
+			data = cellData.get( cell.getName(), None )
+			if data is not None :
+				ValueAdaptor.set( cell, data, atTime )
+
+ValueAdaptor.registerAdaptor( Gaffer.Spreadsheet.RowPlug, RowPlugValueAdaptor )
