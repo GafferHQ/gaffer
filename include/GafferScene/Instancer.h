@@ -96,7 +96,11 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::StringPlug *attributePrefixPlug();
 		const Gaffer::StringPlug *attributePrefixPlug() const;
 
+		Gaffer::BoolPlug *encapsulateInstanceGroupsPlug();
+		const Gaffer::BoolPlug *encapsulateInstanceGroupsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
 
 	protected :
 
@@ -121,9 +125,15 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		void hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
 
+		void hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+IECore::ConstObjectPtr computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
+
 		bool affectsBranchChildNames( const Gaffer::Plug *input ) const override;
 		void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
+
+		void hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstInternedStringVectorDataPtr computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 		bool affectsBranchSetNames( const Gaffer::Plug *input ) const override;
 		void hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -132,6 +142,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		bool affectsBranchSet( const Gaffer::Plug *input ) const override;
 		void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const override;
+
+		void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 	private :
 
@@ -142,6 +155,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		Gaffer::AtomicCompoundDataPlug *prototypeChildNamesPlug();
 		const Gaffer::AtomicCompoundDataPlug *prototypeChildNamesPlug() const;
+
+		GafferScene::ScenePlug *capsuleScenePlug();
+		const GafferScene::ScenePlug *capsuleScenePlug() const;
 
 		ConstEngineDataPtr engine( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 		void engineHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;

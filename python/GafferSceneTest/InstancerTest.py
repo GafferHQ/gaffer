@@ -125,6 +125,39 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( instancer["out"].bound( instancePath ), sphere.bound() )
 			self.assertEqual( instancer["out"].childNames( instancePath ), IECore.InternedStringVectorData() )
 
+		# Test encapsulation options
+		encapInstancer = GafferScene.Instancer()
+		encapInstancer["in"].setInput( seedsInput["out"] )
+		encapInstancer["prototypes"].setInput( instanceInput["out"] )
+		encapInstancer["parent"].setValue( "/seeds" )
+		encapInstancer["name"].setValue( "instances" )
+		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+
+		unencapFilter = GafferScene.PathFilter()
+		unencapFilter["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		unencap = GafferScene.Unencapsulate()
+		unencap["in"].setInput( encapInstancer["out"] )
+		unencap["filter"].setInput( unencapFilter["out"] )
+
+		self.assertTrue( isinstance( encapInstancer["out"].object( "/seeds/instances/sphere/" ), GafferScene.Capsule ) )
+		self.assertEqual( encapInstancer["out"].childNames( "/seeds/instances/sphere/" ), IECore.InternedStringVectorData() )
+		self.assertScenesEqual( unencap["out"], instancer["out"] )
+
+		# Edit seeds object
+		freezeTransform = GafferScene.FreezeTransform()
+		freezeTransform["in"].setInput( seedsInput["out"] )
+		freezeTransform["filter"].setInput( unencapFilter["out"] )
+
+		instancer["in"].setInput( freezeTransform["out"] )
+		encapInstancer["in"].setInput( freezeTransform["out"] )
+
+		self.assertScenesEqual( unencap["out"], instancer["out"] )
+
+		# Then set it back ( to make sure that we don't pull expired Capsules out of the cache )
+		freezeTransform["enabled"].setValue( False )
+		self.assertScenesEqual( unencap["out"], instancer["out"] )
+
 	def testThreading( self ) :
 
 		sphere = IECoreScene.SpherePrimitive()
@@ -1121,6 +1154,27 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"/object/instances/cubeGroup/2/cube",
 			}
 		)
+
+		# Test encapsulation options
+		encapInstancer = GafferScene.Instancer()
+		encapInstancer["in"].setInput( objectToScene["out"] )
+		encapInstancer["prototypes"].setInput( instances["out"] )
+		encapInstancer["parent"].setValue( "/object" )
+		encapInstancer["prototypeIndex"].setValue( "index" )
+		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+
+		unencapFilter = GafferScene.PathFilter()
+		unencapFilter["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		unencap = GafferScene.Unencapsulate()
+		unencap["in"].setInput( encapInstancer["out"] )
+		unencap["filter"].setInput( unencapFilter["out"] )
+
+		# Sets should be empty while encapsulated
+		self.assertEqual( encapInstancer["out"].set( "sphereSet" ).value.paths(), [] )
+		self.assertEqual( encapInstancer["out"].set( "cubeSet" ).value.paths(), [] )
+		# But should match after unencapsulating
+		self.assertScenesEqual( unencap["out"], instancer["out"] )
 
 	def testSetsWithDeepPrototypeRoots( self ) :
 

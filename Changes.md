@@ -21,6 +21,7 @@ Features
 --------
 
 - Unencapsulate : Added new node to expand capsules created by Encapsulate back into regular scene hierarchy. This discards the performance advantages of working with capsules, but is useful for debugging, or when it is necessary to alter a capsule's contents downstream.
+- Instancer : Added "encapsulateInstanceGroups" option, which outputs the instances within capsules.  This improves performance in some cases.
 
 Improvements
 ------------

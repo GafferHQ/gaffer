@@ -285,6 +285,24 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"encapsulateInstanceGroups" : [
+
+			"description",
+			"""
+			Convert each group of instances into a capsule, which won't
+			be expanded until you Unencapsulate or render.  When keeping
+			these locations encapsulated, downstream nodes can't see the
+			list of instances, which prevents editing them, but saves
+			performance.  In particular, using the encapsulation built
+			into the instancer saves expanding the sets from the prototypes
+			prematurely, which can be quite expensive.
+			""",
+			"label", "Instance Groups",
+
+			"layout:section", "Settings.Encapsulate",
+
+		],
+
 	}
 
 )
