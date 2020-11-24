@@ -1,6 +1,14 @@
 0.59.x.x (relative to 0.59.0.0)
 ========
 
+Features
+--------
+
+- Instancer : Added `encapsulateInstanceGroups` plug, which outputs the instances within capsules. This has the same performance benefits as using an Encapsulate node downstream, with the following additional benefits :
+  - Significantly improved performance when the prototypes define sets. A benchmarch with 1 million instances saw set generation time go from 10s using a downstream Encapsulate node to 0.002s using `encapsulateInstanceGroups`.
+  - Fewer unnecessary capsule invalidations, resulting in fewer interactive rendering updates.
+  - Convenience.
+
 Fixes
 -----
 
