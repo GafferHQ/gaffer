@@ -109,18 +109,12 @@ void Capsule::setScene( const ScenePlug *scene )
 	//   we need, without the bloat of the boost versions. And making the
 	//   GraphComponent signal accessors threadsafe.
 	// - Ditching all the signal handling in capsules. It is only used
-	//   to track the erroneous usage of "expired" capsules, which can
-	//   only arise from bugs elsewhere. I can't recall seeing an expired
-	//   capsule yet.
+	//   to track the erroneous usage of capsules where the source scene
+	//   plug has been moved, which can only arise from bugs elsewhere.
+	//   I can't recall seeing an expired capsule yet.
 	static tbb::spin_mutex g_signalMutex;
 	tbb::spin_mutex::scoped_lock signalLock( g_signalMutex );
 
-	if( const Node *node = m_scene ? m_scene->node() : nullptr )
-	{
-		const_cast<Node *>( node )->plugDirtiedSignal().disconnect(
-			boost::bind( &Capsule::plugDirtied, this, ::_1 )
-		);
-	}
 	if( m_scene )
 	{
 		const_cast<ScenePlug *>( m_scene )->parentChangedSignal().disconnect(
@@ -134,12 +128,6 @@ void Capsule::setScene( const ScenePlug *scene )
 	{
 		const_cast<ScenePlug *>( m_scene )->parentChangedSignal().connect(
 			boost::bind( &Capsule::parentChanged, this, ::_1 )
-		);
-	}
-	if( const Node *node = m_scene ? m_scene->node() : nullptr )
-	{
-		const_cast<Node *>( node )->plugDirtiedSignal().connect(
-			boost::bind( &Capsule::plugDirtied, this, ::_1 )
 		);
 	}
 
@@ -158,7 +146,7 @@ bool Capsule::isEqualTo( const IECore::Object *other ) const
 
 void Capsule::hash( IECore::MurmurHash &h ) const
 {
-	throwIfExpired();
+	throwIfNoScene();
 
 	Procedural::hash( h );
 	h.append( m_hash );
@@ -198,13 +186,13 @@ void Capsule::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) cons
 
 Imath::Box3f Capsule::bound() const
 {
-	throwIfExpired();
+	throwIfNoScene();
 	return m_bound;
 }
 
 void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
-	throwIfExpired();
+	throwIfNoScene();
 	ScenePlug::GlobalScope scope( m_context.get() );
 	IECore::ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
 	RendererAlgo::RenderSets renderSets( m_scene );
@@ -213,32 +201,20 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 
 const ScenePlug *Capsule::scene() const
 {
-	throwIfExpired();
+	throwIfNoScene();
 	return m_scene;
 }
 
 const ScenePlug::ScenePath &Capsule::root() const
 {
-	throwIfExpired();
+	throwIfNoScene();
 	return m_root;
 }
 
 const Gaffer::Context *Capsule::context() const
 {
-	throwIfExpired();
+	throwIfNoScene();
 	return m_context.get();
-}
-
-void Capsule::plugDirtied( const Gaffer::Plug *plug )
-{
-	if( plug->parent() == m_scene && plug != m_scene->globalsPlug() )
-	{
-		// Our hash is based on the state of the graph at the
-		// moment we were constructed. If the graph has subsequently
-		// changed then we are no longer valid. Mark ourselves as
-		// expired.
-		setScene( nullptr );
-	}
 }
 
 void Capsule::parentChanged( const Gaffer::GraphComponent *graphComponent )
@@ -247,11 +223,11 @@ void Capsule::parentChanged( const Gaffer::GraphComponent *graphComponent )
 	setScene( nullptr );
 }
 
-void Capsule::throwIfExpired() const
+void Capsule::throwIfNoScene() const
 {
 	if( !m_scene )
 	{
-		throw IECore::Exception( "Capsule has expired" );
+		throw IECore::Exception( "Source scene plug no longer valid." );
 	}
 }
 

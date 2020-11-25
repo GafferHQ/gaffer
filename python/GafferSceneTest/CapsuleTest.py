@@ -73,17 +73,9 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( capsuleCopy.bound(), sphere["out"].bound( "/" ) )
 		self.assertEqual( capsuleCopy.hash(), capsule.hash() )
 
-		sphere["radius"].setValue( 2 )
+		del sphere
 
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.scene )
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.root )
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.hash )
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsule.bound )
-
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.scene )
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.root )
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.hash )
-		six.assertRaisesRegex( self, RuntimeError, "Capsule has expired", capsuleCopy.bound )
+		six.assertRaisesRegex( self, RuntimeError, "Source scene plug no longer valid.", capsule.scene )
 
 if __name__ == "__main__":
 	unittest.main()
