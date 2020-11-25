@@ -537,38 +537,35 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 	def testClipboardRespectsReadOnly( self ) :
 
-		s = self.__createSpreadsheet()
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.V3fPlug() )
+		s["rows"].addColumn( Gaffer.NameValuePlug( "v", Gaffer.V3fPlug(), True ) )
+		s["rows"].addRows( 8 )
 
-		Gaffer.MetadataAlgo.setReadOnly( s["rows"][2]["cells"][2]["value"], True )
-		Gaffer.MetadataAlgo.setReadOnly( s["rows"][3]["cells"][2], True )
-		Gaffer.MetadataAlgo.setReadOnly( s["rows"], True )
-		Gaffer.MetadataAlgo.setReadOnly( s, True )
+		targets = (
+			s["rows"][2]["cells"][1]["value"]["value"][1],
+			s["rows"][2]["cells"][1]["value"]["enabled"],
+			s["rows"][2]["cells"][1]["value"],
+			s["rows"][3]["cells"][1],
+			s["rows"],
+			s
+		)
 
-		sourceCells = [ [ s["rows"][r]["cells"][1] ] for r in range( 7 ) ]
-		sourceHashes = self.__cellPlugHashes( sourceCells )
+		# We shouldn't consider the NVP's name ever, so this can stay locked
+		Gaffer.MetadataAlgo.setReadOnly( s["rows"][2]["cells"][1]["value"]["name"], True )
+
+		for t in targets :
+			Gaffer.MetadataAlgo.setReadOnly( t, True )
+
+		sourceCells = [ [ s["rows"][r]["cells"][0] ] for r in range( 7 ) ]
 		data = _ClipboardAlgo.valueMatrix( sourceCells )
+		destCells = [ [ s["rows"][r]["cells"][1] ] for r in range( 7 ) ]
 
-		destCells = [ [ s["rows"][r]["cells"][2] ] for r in range( 7 ) ]
-		origHashes = self.__cellPlugHashes( destCells )
+		for t in reversed( targets ) :
+			self.assertFalse( _ClipboardAlgo.canPasteCells( data, destCells ) )
+			Gaffer.MetadataAlgo.setReadOnly( t, False )
 
-		self.assertFalse( _ClipboardAlgo.canPasteCells( data, destCells ) )
-
-		Gaffer.MetadataAlgo.setReadOnly( s, False )
-		self.assertFalse( _ClipboardAlgo.canPasteCells( data, destCells ) )
-
-		Gaffer.MetadataAlgo.setReadOnly( s["rows"], False )
 		self.assertTrue( _ClipboardAlgo.canPasteCells( data, destCells ) )
-
-		origLockedValueHash = s["rows"][2]["cells"][2]["value"].hash()
-
-		_ClipboardAlgo.pasteCells( data, destCells, 0 )
-		updatedHashes = self.__cellPlugHashes( destCells )
-
-		for i in ( 0, 1, 4, 5, 6 ) :
-			self.assertEqual( updatedHashes[i][0], sourceHashes[i][0] )
-		self.assertEqual( s["rows"][2]["cells"][2]["enabled"].hash(), s["rows"][2]["cells"][1]["enabled"].hash() )
-		self.assertEqual( s["rows"][2]["cells"][2]["value"].hash(), origLockedValueHash )
-		self.assertEqual( updatedHashes[3][0], origHashes[3][0] )
 
 	def testPasteCellsSetsKeyframe( self ) :
 

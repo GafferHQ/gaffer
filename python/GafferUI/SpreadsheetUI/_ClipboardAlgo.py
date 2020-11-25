@@ -254,9 +254,6 @@ class ValueAdaptor :
 	@staticmethod
 	def set( data, plug, atTime ) :
 
-		if Gaffer.MetadataAlgo.readOnly( plug ) :
-			return
-
 		ValueAdaptor.__adaptor( plug )._set( data, plug, atTime )
 
 	## \return True if the schema (ie. class hierarchy) of the two supplied
@@ -303,6 +300,13 @@ class ValueAdaptor :
 	# set on the specified plug.
 	@classmethod
 	def _canSet( cls, data, plug ) :
+
+		# Ensure we consider child plugs, eg: components of a V3fPlug
+		if Gaffer.MetadataAlgo.readOnly( plug ) :
+			return False
+		for p in Gaffer.Plug.RecursiveRange( plug ) :
+			if Gaffer.MetadataAlgo.getReadOnly( p ) :
+				return False
 
 		plugData = ValueAdaptor.get( plug )
 
