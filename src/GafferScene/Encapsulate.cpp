@@ -253,7 +253,7 @@ IECore::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedS
 
 void Encapsulate::plugDirtied( const Gaffer::Plug *plug )
 {
-	if( plug->parent() == outPlug() )
+	if( plug->parent() == inPlug() )
 	{
 		++m_dirtyCount;
 	}
