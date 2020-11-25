@@ -221,7 +221,15 @@ def __dataForPlug( targetRowIndex, targetColumnIndex, data ) :
 ## Value Adaptors bridge plugs and data within a value matrix.
 # They allow custom extraction of plug data for copy or mis-matched types to be
 # adapted to a target plug for paste. Adaptors are registered via plug class.
+# Callers should always use the base class ValueAdaptor get/canSet/set methods.
 # Derived classes should re-implement _canSet, _set or _get as required.
+#
+# Note: At present, unless overridden, ValueAdaptors are not recursive. ie: An
+# adaptor will only be used if there is one registered for the specific plug
+# passed to get/canSet/set. Some adaptors may choose to call get/canSet/set
+# themselves to allow other registered adaptors to run for their child plugs.
+# This prohibits per-leaf/nested value adaption, but hopefully simplifies
+# understanding of when a specific adaptor may run.
 class ValueAdaptor :
 
 	__registry = {}
@@ -288,7 +296,7 @@ class ValueAdaptor :
 		if hasattr( plug, 'getValue' ) :
 			return IECore.CompoundData( { "v" : plug.getValue() } )["v"]
 
-		return IECore.CompoundData( { child.getName() : ValueAdaptor.get( child ) for child in plug } )
+		return IECore.CompoundData( { child.getName() : cls._get( child ) for child in plug } )
 
 	## Derived classes should take care to ensure that _canSet only returns True
 	# when _set is capable of transforming the supplied data so that it can be
@@ -320,7 +328,7 @@ class ValueAdaptor :
 			ValueAdaptor._setOrKeyValue( plug, data, atTime )
 		else :
 			for childName, childData in data.items() :
-				ValueAdaptor.set( childData, plug[ childName ], atTime )
+				cls._set( childData, plug[ childName ], atTime )
 
 	@staticmethod
 	def _setOrKeyValue( plug, value, atTime ) :
