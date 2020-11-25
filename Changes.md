@@ -43,6 +43,7 @@ API
 - ImageAlgo : `tiles()` now returns a top level dictionary containing all the tileOrigins as a V2iVectorData, and each channel as an ObjectVectorData of channelDatas with corresponding indices. This allows `tiles()` to run substantially faster, more than twice as fast if the input network is very cheap.
 - ConfirmationDialogue : Added optional `details` constructor argument which accepts text to be shown in a collapsed "Details" section.
 - Capsule : Expiry is no longer detected based on the dirtyCount of the source scene.  This removes a debugging tool that could be useful, but allows nodes that create Capsules to have more granular hashing behaviour - if the behaviour of the source scene is captured by a hash that can be used by the capsule, then we can reuse the capsule when that hash matches, and we don't need to invalidate if the capsule is changed back to a cached value.
+- ValuePlug : Added `dirtyCount` public method.
 
 Breaking Changes
 ----------------
@@ -55,6 +56,7 @@ Breaking Changes
 - NameValuePlugValueWidget : Removed support for using the `Plug.Dynamic` flag to determine whether or not the `name` plug is shown. Use `nameValuePlugValueWidget:ignoreNamePlug` metadata instead.
 - Light/Camera : Removed button for adding custom plugs in the "Visualisation" section.
 - Metadata : Removed compatibility for loading graph bookmarks created in versions prior to 0.33.0.0. Resave the file from Gaffer 0.58.0.0 to preserve the bookmarks if necessary.
+- Encapsulate : Removed data member
 
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========
