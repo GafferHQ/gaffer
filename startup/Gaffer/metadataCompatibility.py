@@ -36,23 +36,6 @@
 
 import Gaffer
 
-def __registerValueWrapper( originalRegisterValue ) :
-
-	def registerValue( *args, **kw ) :
-
-		if len( args ) == 3 and isinstance( args[0], Gaffer.Node ) :
-			if args[1] == "graphBookmarks:bookmarked" :
-				args = list( args )
-				args[1] = "bookmarked"
-			if args[1] == "bookmarked" and not args[2] :
-				return # No need to explicitly store `bookmarked==False`
-
-		originalRegisterValue( *args, **kw )
-
-	return staticmethod( registerValue )
-
-Gaffer.Metadata.registerValue = __registerValueWrapper( Gaffer.Metadata.registerValue )
-
 # Monkey patching for continued support of deprecated methods that are used in
 # legacy .gfr files.
 

@@ -473,19 +473,6 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.setBookmarked( s["n"], False )
 		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
 
-	def testLoadLegacyBookmarks( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyBookmarks.gfr" )
-		s.load()
-
-		self.assertTrue( Gaffer.MetadataAlgo.getBookmarked( s["Bookmarked"] ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["Bookmarked"], instanceOnly = True ) ), 1 )
-		self.assertFalse( Gaffer.MetadataAlgo.getBookmarked( s["Unbookmarked"] ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["Unbookmarked"], instanceOnly = True ) ), 0 )
-		self.assertTrue( Gaffer.MetadataAlgo.getBookmarked( s["OldBookmarked"] ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["OldBookmarked"], instanceOnly = True ) ), 1 )
-
 	def testNumericBookmarks( self ) :
 
 		s = Gaffer.ScriptNode()

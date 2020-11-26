@@ -53,6 +53,7 @@ Breaking Changes
 - ValuePlugSerialiser : Removed support for `valuePlugSerialiser:resetParentPlugDefaults` context variable.
 - NameValuePlugValueWidget : Removed support for using the `Plug.Dynamic` flag to determine whether or not the `name` plug is shown. Use `nameValuePlugValueWidget:ignoreNamePlug` metadata instead.
 - Light/Camera : Removed button for adding custom plugs in the "Visualisation" section.
+- Metadata : Removed compatibility for loading graph bookmarks created in versions prior to 0.33.0.0. Resave the file from Gaffer 0.58.0.0 to preserve the bookmarks if necessary.
 
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========
