@@ -1,6 +1,8 @@
 0.59.x.x (relative to 0.59.0.0b3)
 ========
 
+> Caution : The current plug values are now omitted when exporting a Box for referencing. See Improvements section for more details.
+
 Features
 --------
 
@@ -10,28 +12,44 @@ Improvements
 ------------
 
 - Merge : Optimized image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
-- Checkerboard : Optimize case when rotation is 0
+- Box :
+  - Improved strategy used for exporting for referencing. Before, the current values of the Box plugs were converted into the default values of the Reference during export. This was error prone as it was too easy to export new defaults after changing values for testing. We now export default values as they are, and omit current values completely. Two new menu items allow the default values to be authored explicitly from the current values at any time.
+  - Added "Reset Default Values" item to NodeEditor tool menu. This sets the default values for all plugs from their current values.
+  - Added "Reset Default Value" item to plug context menu. This sets the default value from the current value.
+- Checkerboard : Optimized image generation when rotation is 0.
 
 Fixes
 -----
 
+- Box/Reference :
+  - Fixed export and referencing of TransformPlugs with modified default values (#3946).
+  - Fixed export and referencing of CompoundDataPlugs with modified default values (#3907).
+  - Fixed loss of spreadsheet values when using "Duplicate as Box" (#3972).
+  - Fixed export and referencing of SplinePlugs.
 - Spreadsheet : Fixed serialisation of default values which do not match those of the default row.
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 - Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.
+- SplinePlug : Fixed bug that meant `isSetToDefault()` could return true even if it had computed inputs. It now returns false in this case, and never triggers an upstream compute.
 
 API
 ---
 
 - TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
 - ValuePlug : Added `defaultHash()` virtual method.
-- ValuePlugSerialiser : Added `valueRepr()` method.
+- ValuePlugSerialiser :
+  - Added `valueRepr()` method.
+  - Added support for `valuePlugSerialiser:omitParentNodePlugValues` context variable. This is used for exporting Boxes for referencing, and by ExtensionAlgo.
 - ImageAlgo : `tiles()` now returns a top level dictionary containing all the tileOrigins as a V2iVectorData, and each channel as an ObjectVectorData of channelDatas with corresponding indices. This allows `tiles()` to run substantially faster, more than twice as fast if the input network is very cheap.
+- ConfirmationDialogue : Added optional `details` constructor argument which accepts text to be shown in a collapsed "Details" section.
 
 Breaking Changes
 ----------------
 
+- Box : The current plug values are now omitted when exporting for referencing, rather than being transformed into new default values.
+- Reference : Removed support for boxes exported prior to version 0.9.0.0.
 - TransformPlug/Transform2DPlug : Added constructor arguments.
 - ValuePlug : Added virtual method.
+- ValuePlugSerialiser : Removed support for `valuePlugSerialiser:resetParentPlugDefaults` context variable.
 
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========

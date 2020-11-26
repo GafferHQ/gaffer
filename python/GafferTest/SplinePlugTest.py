@@ -698,5 +698,35 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		p.setValue( s2 )
 		self.assertEqual( p.defaultHash(), h )
 
+	def testIsSetToDefaultAndConnections( self ) :
+
+		definition = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+
+		plug = Gaffer.SplineffPlug( defaultValue = definition )
+		self.assertTrue( plug.isSetToDefault() )
+
+		# Static (not computed) input providing the same value as default.
+
+		staticInput = plug.pointPlug( 1 ).createCounterpart( "input", Gaffer.Plug.Direction.In )
+		plug.pointPlug( 1 ).setInput( staticInput )
+		self.assertTrue( plug.isSetToDefault() )
+
+		# Computed input that happens to provide the same value as default.
+		# This is treated as non-default, because it could differ by context
+		# and `ValuePlug::isSetToDefault()` is documented as never triggering
+		# computes.
+
+		computedInput = GafferTest.AddNode()
+		plug.pointPlug( 0 )["x"].setInput( computedInput["sum"] )
+		self.assertFalse( plug.isSetToDefault() )
+
 if __name__ == "__main__":
 	unittest.main()

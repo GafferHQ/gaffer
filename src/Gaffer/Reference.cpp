@@ -42,6 +42,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/SplinePlug.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
@@ -418,28 +419,29 @@ void Reference::loadInternal( const std::string &fileName )
 			// Make the loaded plugs non-dynamic, because we don't want them
 			// to be serialised in the script the reference is in - the whole
 			// point is that they are referenced.
+			/// \todo Plug flags are not working. We need to introduce an
+			/// alternative mechanism based on querying parent nodes/plugs
+			/// for serialisation requirements at the point of serialisation.
 			plug->setFlags( Plug::Dynamic, false );
+
+			if(
+				runTimeCast<const SplineffPlug>( plug ) ||
+				runTimeCast<const SplinefColor3fPlug>( plug ) ||
+				runTimeCast<const SplinefColor4fPlug>( plug )
+			)
+			{
+				// Avoid recursion as it makes it impossible to serialise
+				// the `x/y` children of spline points. See SplinePlugSerialiser
+				// for further details of spline serialisation.
+				continue;
+			}
+
 			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
 			{
 				(*it)->setFlags( Plug::Dynamic, false );
 			}
 		}
 	}
-
-	// figure out what version of gaffer was used to save the reference. prior to
-	// version 0.9.0.0, references could contain setValue() calls for promoted plugs,
-	// and we must make sure they don't clobber the user-set values on the reference node.
-	int milestoneVersion = 0;
-	int majorVersion = 0;
-	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
-	{
-		milestoneVersion = v->readable();
-	}
-	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:majorVersion" ) )
-	{
-		majorVersion = v->readable();
-	}
-	const bool versionPriorTo09 = milestoneVersion == 0 && majorVersion < 9;
 
 	// Transfer connections, values and metadata from the old plugs onto the corresponding new ones.
 
@@ -453,7 +455,7 @@ void Reference::loadInternal( const std::string &fileName )
 			{
 				if( newPlug->direction() == Plug::In && oldPlug->direction() == Plug::In )
 				{
-					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ !versionPriorTo09 );
+					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ true );
 				}
 				transferOutputs( oldPlug, newPlug );
 

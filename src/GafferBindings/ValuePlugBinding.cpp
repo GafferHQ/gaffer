@@ -61,44 +61,7 @@ using namespace Gaffer;
 namespace
 {
 
-bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *serialisation )
-{
-	if( !serialisation )
-	{
-		return false;
-	}
-
-	if( plug->node() != serialisation->parent() || plug->getInput() )
-	{
-		return false;
-	}
-
-	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
-}
-
-bool shouldOmitDefaultValue( const Gaffer::ValuePlug *plug )
-{
-	if( const Reference *reference = IECore::runTimeCast<const Reference>( plug->node() ) )
-	{
-		// Prior to version 0.9.0.0, `.grf` files created with `Box::exportForReference()`
-		// could contain setValue() calls for promoted plugs like this one. When such
-		// files have been loaded on a Reference node, we must always serialise the plug values
-		// from the Reference node, lest they should get clobbered by the setValue() calls
-		// in the `.grf` file.
-		int milestoneVersion = 0;
-		int majorVersion = 0;
-		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
-		{
-			milestoneVersion = v->readable();
-		}
-		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:majorVersion" ) )
-		{
-			majorVersion = v->readable();
-		}
-		return milestoneVersion > 0 || majorVersion > 8;
-	}
-	return true;
-}
+const IECore::InternedString g_omitParentNodePlugValues( "valuePlugSerialiser:omitParentNodePlugValues" );
 
 std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, const Serialisation &serialisation, bool &canCondense )
 {
@@ -157,7 +120,7 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 
 	object pythonValue = pythonPlug.attr( "getValue" )();
 
-	if( shouldOmitDefaultValue( plug ) && PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
 		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 		if( pythonValue == pythonDefaultValue )
@@ -183,16 +146,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 	object pythonPlug( PlugPtr( const_cast<ValuePlug *>( plug ) ) );
 	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
-		object pythonDefaultValue;
-		if( shouldResetPlugDefault( plug, serialisation ) )
-		{
-			pythonDefaultValue = pythonPlug.attr( "getValue" )();
-		}
-		else
-		{
-			pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		}
-
+		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 		const std::string defaultValue = valueRepr( pythonDefaultValue );
 		if( defaultValue.size() )
 		{
@@ -276,31 +230,10 @@ std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *gr
 	{
 		// Top level ValuePlug. We are responsible for emitting the
 		// appropriate `setValue()` calls for this and all descendants.
-
-		const bool resetDefault = shouldResetPlugDefault( plug, &serialisation );
-		const bool isRowsPlug = IECore::runTimeCast<const Spreadsheet::RowsPlug>( plug );
-
-		if( !resetDefault || isRowsPlug )
+		if( plug->node() != serialisation.parent() || !Context::current()->get<bool>( g_omitParentNodePlugValues, false ) )
 		{
 			bool unused;
 			result = valueSerialisationWalk( plug, identifier, serialisation, unused ) + result;
-		}
-
-		if( isRowsPlug && resetDefault )
-		{
-			// RowsPlugs serialise their children independently via `addRow()` and `addColumn()`
-			// so we don't have the opportunity to reset default values in `repr()`. Instead we
-			// emit `setValue()` calls above and then call `resetDefault()` here afterwards.
-			//
-			/// \todo Replace the `shouldResetPlugDefault()` mechanism entirely. It only exists
-			/// to allow users to author default values when exporting references and extensions.
-			/// But this implicit introduction of new defaults during export is too error-prone.
-			/// It's very easy to change values for testing and then forget to change them back
-			/// before exporting again. Instead we should just expose `ValuePlug::resetDefault()`
-			/// to the user so that they can explicitly set the default at their convenience.
-			/// Then we should omit the `setValue()` calls when exporting instead, so that the
-			/// user can't inadvertently replace the default they carefully authored.
-			result += identifier + ".resetDefault()\n";
 		}
 	}
 
