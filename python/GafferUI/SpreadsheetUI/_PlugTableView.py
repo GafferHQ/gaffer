@@ -630,6 +630,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		canChangeEnabledState, currentEnabledState = self.__canChangeCellEnabledState( cellPlugs )
 		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
 
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( cellPlugs )
+
 		items = [
 			(
 				( "/Disable Cell%s" if currentEnabledState else "/Enable Cell%s" ) % pluralSuffix,
@@ -638,12 +640,7 @@ class _PlugTableView( GafferUI.Widget ) :
 					"active" : canChangeEnabledState,
 					"shortCut" : "D"
 				}
-			)
-		]
-
-		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( cellPlugs )
-
-		items.extend( (
+			),
 
 			( "/__EditCellsDivider__", { "divider" : True } ),
 
@@ -673,7 +670,7 @@ class _PlugTableView( GafferUI.Widget ) :
 					"shortCut" : "Ctrl+V"
 				}
 			)
-		) )
+		]
 
 		for path, args in reversed( items ) :
 			menuDefinition.prepend( path, args )
