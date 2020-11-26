@@ -7,7 +7,7 @@ Improvements
 - Spreadsheet :
   - Enabled cell selection, editing is now achieved with a double-click.
   - Added menu items to cells & defaults sections to copy/paste the enabled state and value(s) of selected cells.
-  - Added menu items to the row names section to copy/paste or delete the selected rows.
+  - Added menu items to the row names section to disable, copy/paste or delete the selected rows.
   - Added menu items to edit the values for all selected cells of the same type simultaneously.
 - Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
 
