@@ -26,6 +26,7 @@ Fixes
   - Fixed export and referencing of CompoundDataPlugs with modified default values (#3907).
   - Fixed loss of spreadsheet values when using "Duplicate as Box" (#3972).
   - Fixed export and referencing of SplinePlugs.
+  - Fixed incorrect presentation of referenced CompoundDataPlugs (#4020).
 - Spreadsheet : Fixed serialisation of default values which do not match those of the default row.
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 - Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.
@@ -50,6 +51,8 @@ Breaking Changes
 - TransformPlug/Transform2DPlug : Added constructor arguments.
 - ValuePlug : Added virtual method.
 - ValuePlugSerialiser : Removed support for `valuePlugSerialiser:resetParentPlugDefaults` context variable.
+- NameValuePlugValueWidget : Removed support for using the `Plug.Dynamic` flag to determine whether or not the `name` plug is shown. Use `nameValuePlugValueWidget:ignoreNamePlug` metadata instead.
+- Light/Camera : Removed button for adding custom plugs in the "Visualisation" section.
 
 0.59.0.0b3 (relative to 0.59.0.0b2)
 ==========

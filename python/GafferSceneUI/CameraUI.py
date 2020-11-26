@@ -339,6 +339,12 @@ plugsMetadata = {
 
 	],
 
+	"renderSettingOverrides.*" : [
+
+		"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+	],
+
 	"visualiserAttributes" : [
 
 			"description",
@@ -347,6 +353,13 @@ plugsMetadata = {
 			""",
 
 			"layout:section", "Visualisation",
+			"compoundDataPlugValueWidget:editable", False,
+
+	],
+
+	"visualiserAttributes.*" : [
+
+		"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
 
 	],
 

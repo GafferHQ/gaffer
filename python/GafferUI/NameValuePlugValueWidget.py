@@ -47,8 +47,7 @@ from GafferUI.PlugValueWidget import sole
 ## Supported plug metadata :
 #
 # - "nameValuePlugPlugValueWidget:ignoreNamePlug", set to True to ignore the name plug and instead show a
-#   label with the name of the NameValuePlug.  This is the same behaviour you get by default if the plug
-#   is not dynamic
+#   label with the name of the NameValuePlug.
 class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, childPlug ) :
@@ -60,12 +59,9 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		## \todo We should support no plugs here. Move the UI configuration into setPlugs
 		assert( len( self.getPlugs() ) > 0 )
 
-		# We use a non-editable label for the name for non-dynamic plugs, or any that request it
+		# We use a non-editable label if requested by "nameValuePlugPlugValueWidget:ignoreNamePlug" metadata.
 
-		anyStatic = any( [ not p.getFlags( Gaffer.Plug.Flags.Dynamic ) for p in self.getPlugs() ] )
-		anyIgnoreName = any( [ Gaffer.Metadata.value( p, "nameValuePlugPlugValueWidget:ignoreNamePlug" ) for p in self.getPlugs() ] )
-
-		if anyStatic or anyIgnoreName :
+		if any( Gaffer.Metadata.value( p, "nameValuePlugPlugValueWidget:ignoreNamePlug" ) for p in self.getPlugs() ) :
 			nameWidget = GafferUI.LabelPlugValueWidget(
 				self.getPlugs(),
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,

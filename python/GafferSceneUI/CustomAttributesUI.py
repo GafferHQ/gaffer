@@ -64,6 +64,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.*" : [
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", False,
+
+		],
+
 		"attributes.*.name" : [
 
 			"ui:scene:acceptsAttributeName", True,

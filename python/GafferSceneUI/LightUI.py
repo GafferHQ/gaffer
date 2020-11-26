@@ -105,6 +105,13 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Visualisation",
+			"compoundDataPlugValueWidget:editable", False,
+
+		],
+
+		"visualiserAttributes.*" : [
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
 
 		],
 
