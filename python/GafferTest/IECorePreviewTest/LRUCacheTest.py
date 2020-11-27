@@ -195,5 +195,17 @@ class LRUCacheTest( GafferTest.TestCase ) :
 
 		GafferTest.testLRUCacheUncacheableItem( "taskParallel" )
 
+	def testGetIfCachedSerial( self ) :
+
+		GafferTest.testLRUCacheGetIfCached( "serial" )
+
+	def testGetIfCachedParallel( self ) :
+
+		GafferTest.testLRUCacheGetIfCached( "parallel" )
+
+	def testGetIfCachedTaskParallel( self ) :
+
+		GafferTest.testLRUCacheGetIfCached( "taskParallel" )
+
 if __name__ == "__main__":
 	unittest.main()

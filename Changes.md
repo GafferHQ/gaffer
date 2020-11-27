@@ -25,6 +25,7 @@ API
 ---
 
 - Catalogue : Added `gaffer:isRendering` metadata, set to `True` if the viewed image is still receiving data from a display driver.
+- LRUCache : Added `getIfCached()` method.
 
 0.58.5.2 (relative to 0.58.5.1)
 ========

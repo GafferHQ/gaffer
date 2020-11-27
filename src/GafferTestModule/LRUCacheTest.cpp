@@ -668,6 +668,45 @@ void testLRUCacheUncacheableItem( const std::string &policy )
 	DispatchTest<TestLRUCacheUncacheableItem>()( policy );
 }
 
+template<template<typename> class Policy>
+struct TestLRUCacheGetIfCached
+{
+
+	void operator()()
+	{
+		using Cache = IECorePreview::LRUCache<int, int, Policy>;
+
+		Cache cache(
+			[]( int key, size_t &cost ) {
+				cost = 1;
+				return key;
+			},
+			1000
+		);
+
+		GAFFERTEST_ASSERT( !cache.getIfCached( 0 ) );
+		GAFFERTEST_ASSERT( !cache.getIfCached( 1 ) );
+
+		GAFFERTEST_ASSERTEQUAL( cache.get( 0 ), 0 );
+		cache.set( 1, 1, 1 );
+		GAFFERTEST_ASSERTEQUAL( cache.get( 1 ), 1 );
+
+		GAFFERTEST_ASSERTEQUAL( *cache.getIfCached( 0 ), 0 );
+		GAFFERTEST_ASSERTEQUAL( *cache.getIfCached( 1 ), 1 );
+
+		cache.erase( 0 );
+		GAFFERTEST_ASSERT( !cache.getIfCached( 0 ) );
+		GAFFERTEST_ASSERTEQUAL( *cache.getIfCached( 1 ), 1 );
+
+	}
+
+};
+
+void testLRUCacheGetIfCached( const std::string &policy )
+{
+	DispatchTest<TestLRUCacheGetIfCached>()( policy );
+}
+
 } // namespace
 
 void GafferTestModule::bindLRUCacheTest()
@@ -681,4 +720,5 @@ void GafferTestModule::bindLRUCacheTest()
 	def( "testLRUCacheExceptions", &testLRUCacheExceptions );
 	def( "testLRUCacheCancellation", &testLRUCacheCancellation );
 	def( "testLRUCacheUncacheableItem", &testLRUCacheUncacheableItem );
+	def( "testLRUCacheGetIfCached", &testLRUCacheGetIfCached );
 }

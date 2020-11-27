@@ -1130,6 +1130,33 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 }
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
+boost::optional<Value> LRUCache<Key, Value, Policy, GetterKey>::getIfCached( const Key &key )
+{
+	typename Policy<LRUCache>::Handle handle;
+	if( !m_policy.acquire( key, handle, LRUCachePolicy::FindReadable ) )
+	{
+		return boost::none;
+	}
+
+	const CacheEntry &cacheEntry = handle.readable();
+	const Status status = cacheEntry.status();
+
+	if( status==Uncached )
+	{
+		return boost::none;
+	}
+	else if( status==Cached )
+	{
+		m_policy.push( handle );
+		return boost::get<Value>( cacheEntry.state );
+	}
+	else
+	{
+		std::rethrow_exception( boost::get<std::exception_ptr>( cacheEntry.state ) );
+	}
+}
+
+template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
 bool LRUCache<Key, Value, Policy, GetterKey>::set( const Key &key, const Value &value, Cost cost )
 {
 	typename Policy<LRUCache>::Handle handle;
