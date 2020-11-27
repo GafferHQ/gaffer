@@ -176,7 +176,7 @@ class LRUCache : private boost::noncopyable
 			//
 			// - Uncached : A boost::blank instance
 			// - Cached : The Value itself
-			// - Failed ; The exception thrown by the GetterFn
+			// - Failed : The exception thrown by the GetterFn
 			typedef boost::variant<boost::blank, Value, std::exception_ptr> State;
 
 			State state;
