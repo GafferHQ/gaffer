@@ -608,6 +608,66 @@ void testLRUCacheCancellation( const std::string &policy )
 	DispatchTest<TestLRUCacheCancellation>()( policy );
 }
 
+// This test exposes a potential source of bugs when some items
+// are too big to store in the cache, and their getter recurses
+// to pull another item from the cache. This leads to `Handle::acquire`
+// taking an optimistic read lock on the item, only to find it
+// is uncached and the lock must be upgraded to a writer. If multiple
+// threads do this at once, and we are not careful, deadlock can
+// ensue.
+template<template<typename> class Policy>
+struct TestLRUCacheUncacheableItem
+{
+
+	void operator()()
+	{
+		using Cache = IECorePreview::LRUCache<int, int, Policy>;
+		using CachePtr = std::unique_ptr<Cache>;
+
+		CachePtr cache;
+		cache.reset(
+			new Cache(
+				[&cache]( int key, size_t &cost ) {
+					if( key == 0 )
+					{
+						// Too big to cache
+						cost = std::numeric_limits<size_t>::max();
+						// Recursive call to cache, with new key chosen to require
+						// the same bin as this key.
+						return cache->get( key + tbb::tbb_thread::hardware_concurrency() );
+					}
+					else
+					{
+						cost = 1;
+						return key;
+					}
+				},
+				1000
+			)
+		);
+
+		for( int i = 0; i < 10000; ++i )
+		{
+			cache->clear();
+			tbb::parallel_for(
+				tbb::blocked_range<size_t>( 0, 100 ),
+				[&]( const tbb::blocked_range<size_t> &r ) {
+					for( size_t i = r.begin(); i < r.end(); ++i )
+					{
+						cache->get( 0 );
+					}
+				}
+			);
+		}
+	}
+
+};
+
+void testLRUCacheUncacheableItem( const std::string &policy )
+{
+	DispatchTest<TestLRUCacheUncacheableItem>()( policy );
+}
+
 } // namespace
 
 void GafferTestModule::bindLRUCacheTest()
@@ -620,4 +680,5 @@ void GafferTestModule::bindLRUCacheTest()
 	def( "testLRUCacheClearFromGet", &testLRUCacheClearFromGet );
 	def( "testLRUCacheExceptions", &testLRUCacheExceptions );
 	def( "testLRUCacheCancellation", &testLRUCacheCancellation );
+	def( "testLRUCacheUncacheableItem", &testLRUCacheUncacheableItem );
 }

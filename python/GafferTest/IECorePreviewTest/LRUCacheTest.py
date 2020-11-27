@@ -183,5 +183,17 @@ class LRUCacheTest( GafferTest.TestCase ) :
 
 		GafferTest.testLRUCacheCancellation( "taskParallel" )
 
+	def testUncacheableItemSerial( self ) :
+
+		GafferTest.testLRUCacheUncacheableItem( "serial" )
+
+	def testUncacheableItemParallel( self ) :
+
+		GafferTest.testLRUCacheUncacheableItem( "parallel" )
+
+	def testUncacheableItemTaskParallel( self ) :
+
+		GafferTest.testLRUCacheUncacheableItem( "taskParallel" )
+
 if __name__ == "__main__":
 	unittest.main()
