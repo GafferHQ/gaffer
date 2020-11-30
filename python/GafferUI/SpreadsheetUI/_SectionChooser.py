@@ -59,7 +59,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		tabBar.setDrawBase( False )
 		tabBar.setMovable( True )
 		tabBar.setExpanding( False )
-		tabBar.setUsesScrollButtons( False )
+		tabBar.setUsesScrollButtons( True )
 
 		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenuRequested ) )
