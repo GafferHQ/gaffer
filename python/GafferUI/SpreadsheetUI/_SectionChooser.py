@@ -59,7 +59,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		tabBar.setDrawBase( False )
 		tabBar.setMovable( True )
 		tabBar.setExpanding( False )
-		tabBar.setUsesScrollButtons( False )
+		tabBar.setUsesScrollButtons( True )
 
 		tabBar.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
 		tabBar.customContextMenuRequested.connect( Gaffer.WeakMethod( self.__contextMenuRequested ) )
@@ -193,11 +193,15 @@ class _SectionChooser( GafferUI.Widget ) :
 			for sectionName in newSectionNames :
 				self._qtWidget().addTab( sectionName )
 			if currentSectionName in newSectionNames :
-				self._qtWidget().setCurrentIndex( newSectionNames.index( currentSectionName ) )
+				self.__setCurrent( newSectionNames.index( currentSectionName ) )
 			else :
 				self.currentSectionChangedSignal()( self )
 		finally :
 			self.__ignoreCurrentChanged = False
+
+	def __setCurrent( self, index ) :
+
+		self._qtWidget().setCurrentIndex( index )
 
 	def __currentChanged( self, index ) :
 
@@ -259,7 +263,7 @@ class _SectionChooser( GafferUI.Widget ) :
 
 			# And choose the renamed tab if necessary.
 			if sectionIsCurrent :
-				self._qtWidget().setCurrentIndex( sectionNames.index( sectionName ) )
+				self.__setCurrent( sectionNames.index( sectionName ) )
 
 	def __deleteSection( self, sectionName ) :
 
@@ -296,7 +300,7 @@ class _SectionChooser( GafferUI.Widget ) :
 			self.__assignSectionOrder( self.__rowsPlug, newSectionNames )
 
 			if sectionIsCurrent :
-				self._qtWidget().setCurrentIndex( newSectionNames.index( toSectionName ) )
+				self.__setCurrent( newSectionNames.index( toSectionName ) )
 
 	def __removeSectioning( self ) :
 
@@ -313,6 +317,16 @@ class _SectionChooser( GafferUI.Widget ) :
 
 		m = IECore.MenuDefinition()
 		sectionName = self._qtWidget().tabText( self._qtWidget().tabAt( pos ) )
+
+		for index, name in enumerate( self.sectionNames( self.__rowsPlug ) ) :
+			m.append(
+				"/Switch to/%s" % name,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setCurrent ), index )
+				}
+			)
+
+		m.append( "/__EditDivider__", { "divider" : True } )
 
 		m.append(
 			"/Rename",

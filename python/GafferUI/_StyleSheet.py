@@ -1,4 +1,3 @@
-
 ##########################################################################
 #
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
@@ -682,6 +681,40 @@ _styleSheet = string.Template(
 
 		border-radius: $widgetCornerRadius;
 
+	}
+
+	/* The interaction between stylesheets and QTabBar sub controls is somewhat */
+	/* 'delicate'. Some selectors only seem to support a sub-set of properties. */
+	/* The presentation of the selectors below isn't ideal, but represents a    */
+	/* pragmatic compromise that was more readily achievable.                   */
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::scroller {
+		width: 20px;
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tear {
+		image: none;
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton {
+		background: $backgroundHighlight;
+		border: 1px solid $backgroundDark;
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::left-arrow {
+		image: url($GAFFER_ROOT/graphics/arrowLeft10.png);
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::left-arrow:disabled {
+		image: url($GAFFER_ROOT/graphics/arrowLeftDisabled10.png);
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::right-arrow { /* the arrow mark in the tool buttons */
+		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
+	}
+
+	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::right-arrow:disabled { /* the arrow mark in the tool buttons */
+		image: url($GAFFER_ROOT/graphics/arrowRightDisabled10.png);
 	}
 
 	/* Splitters */
