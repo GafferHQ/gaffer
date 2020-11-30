@@ -593,7 +593,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			(
 				( "/Disable Row%s" if currentEnabledState else "/Enable Row%s" ) % pluralSuffix,
 				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setPlugValues ), enabledPlugs, not currentEnabledState ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setRowEnabledState ), enabledPlugs, not currentEnabledState ),
 					"active" : canChangeEnabledState
 				}
 			),
@@ -844,6 +844,20 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		enabledPlugs = [ row["enabled"] for row in rowPlugs ]
 		return self.__canChangeEnabledState( enabledPlugs )
+
+	def __setRowEnabledState( self, enabledPlugs, enabled ) :
+
+		self.__setPlugValues( enabledPlugs, enabled )
+
+		# Clear the row name column selection if rows have been disabled.
+		# They don't show up in selectionModel.selection().
+		if not enabled :
+			selectionModel = self._qtWidget().selectionModel()
+			nameColumnIndex = self._qtWidget().model().index( 0, 0 )
+			flags = QtCore.QItemSelectionModel.Columns | QtCore.QItemSelectionModel.Deselect
+			selectionModel.select( nameColumnIndex, flags )
+			if selectionModel.currentIndex().column() == 0 :
+				selectionModel.clearCurrentIndex()
 
 	def __canChangeCellEnabledState( self, cellPlugs ) :
 
