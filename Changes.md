@@ -9,6 +9,7 @@ Improvements
   - Added menu items to cells & defaults sections to copy/paste the enabled state and value(s) of selected cells.
   - Added menu items to the row names section to copy/paste or delete the selected rows.
   - Added menu items to edit the values for all selected cells of the same type simultaneously.
+  - Added menu items to the section chooser to quickly select a specific section.
 - Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
 
 Fixes
