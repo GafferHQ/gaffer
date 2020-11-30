@@ -45,6 +45,7 @@ Improvements
   - Added "Reset Default Values" item to NodeEditor tool menu. This sets the default values for all plugs from their current values.
   - Added "Reset Default Value" item to plug context menu. This sets the default value from the current value.
 - ImageReader : Added initial support for reading RAW files.
+- CustomAttributes : `extraAttributes` is now a CompoundObjectPlug, allowing it to define complex attribute values including shading networks.
 - GraphEditor : Improved performance slightly for large graphs.
 - Warp : Defaulted `useDerivatives` to off for nodes created via the UI. Using derivatives is only beneficial when the warp is highly anisotropic, and it has a significant performance impact.
 - CopyChannels : Improved performance for the special case of a single input.
@@ -132,6 +133,7 @@ Breaking Changes
 - ValuePlug : Added virtual method.
 - ValuePlugSerialiser : Removed support for `valuePlugSerialiser:resetParentPlugDefaults` context variable.
 - NameValuePlugValueWidget : Removed support for using the `Plug.Dynamic` flag to determine whether or not the `name` plug is shown. Use `nameValuePlugValueWidget:ignoreNamePlug` metadata instead.
+- Attributes : Changed type of `extraAttributes` plug from AtomicCompoundDataPlug to CompoundObjectPlug.
 - Light/Camera : Removed button for adding custom plugs in the "Visualisation" section.
 - Metadata : Removed compatibility for loading graph bookmarks created in versions prior to 0.33.0.0. Resave the file from Gaffer 0.58.0.0 to preserve the bookmarks if necessary.
 - RendererAlgo :

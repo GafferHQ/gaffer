@@ -54,7 +54,7 @@ Attributes::Attributes( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "attributes" ) );
 	addChild( new BoolPlug( "global", Plug::In, false ) );
-	addChild( new AtomicCompoundDataPlug( "extraAttributes", Plug::In, new IECore::CompoundData ) );
+	addChild( new CompoundObjectPlug( "extraAttributes", Plug::In, new IECore::CompoundObject ) );
 
 	// Connect to signals we use to manage pass-throughs for globals
 	// and attributes based on the value of globalPlug().
@@ -86,14 +86,14 @@ const Gaffer::BoolPlug *Attributes::globalPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::AtomicCompoundDataPlug *Attributes::extraAttributesPlug()
+Gaffer::CompoundObjectPlug *Attributes::extraAttributesPlug()
 {
-	return getChild<Gaffer::AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::CompoundObjectPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::AtomicCompoundDataPlug *Attributes::extraAttributesPlug() const
+const Gaffer::CompoundObjectPlug *Attributes::extraAttributesPlug() const
 {
-	return getChild<Gaffer::AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::CompoundObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -160,11 +160,10 @@ IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context
 		}
 	}
 
-	IECore::ConstCompoundDataPtr extraAttributesData = extraAttributesPlug()->getValue();
-	const IECore::CompoundDataMap &extraAttributes = extraAttributesData->readable();
-	for( IECore::CompoundDataMap::const_iterator it = extraAttributes.begin(), eIt = extraAttributes.end(); it != eIt; ++it )
+	IECore::ConstCompoundObjectPtr extraAttributes = extraAttributesPlug()->getValue();
+	for( const auto &e : extraAttributes->members() )
 	{
-		result->members()["attribute:" + it->first.string()] = it->second.get();
+		result->members()["attribute:" + e.first.string()] = e.second;
 	}
 
 	return result;
@@ -203,10 +202,8 @@ void Attributes::hashProcessedAttributes( const ScenePath &path, const Gaffer::C
 IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
 {
 	const CompoundDataPlug *ap = attributesPlug();
-	IECore::ConstCompoundDataPtr extraAttributesData = extraAttributesPlug()->getValue();
-	const IECore::CompoundDataMap &extraAttributes = extraAttributesData->readable();
-
-	if( !ap->children().size() && extraAttributes.empty() )
+	IECore::ConstCompoundObjectPtr extraAttributes = extraAttributesPlug()->getValue();
+	if( !ap->children().size() && extraAttributes->members().empty() )
 	{
 		return inputAttributes;
 	}
@@ -224,10 +221,9 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 	result->members() = inputAttributes->members();
 
 	ap->fillCompoundObject( result->members() );
-
-	for( IECore::CompoundDataMap::const_iterator it = extraAttributes.begin(), eIt = extraAttributes.end(); it != eIt; ++it )
+	for( const auto &e : extraAttributes->members() )
 	{
-		result->members()[it->first] = it->second.get();
+		result->members()[e.first] = e.second;
 	}
 
 	return result;
