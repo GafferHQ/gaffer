@@ -134,8 +134,8 @@ GAFFER_API Node *getNumericBookmark( ScriptNode *script, int bookmark );
 GAFFER_API int numericBookmark( const Node *node );
 GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
 
-/// Utilities
-/// =========
+/// Change queries
+/// ==============
 
 /// Determines if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`
 /// or `Metadata:nodeValueChangedSignal()`) affects a given plug or node.
@@ -147,6 +147,9 @@ GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::Typ
 /// As above, but determines if any ancestor will be affected.
 GAFFER_API bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 GAFFER_API bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
+
+/// Copying
+/// =======
 
 /// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
 /// \undoable
