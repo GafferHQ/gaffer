@@ -264,5 +264,28 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["user"]["p1"].getValue(), v2 )
 		self.assertEqual( s2["n"]["user"]["p2"].getValue(), v1 )
 
+	def testConnectCompoundDataToCompoundObject( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["compoundData"] = Gaffer.AtomicCompoundDataPlug( defaultValue = IECore.CompoundData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["compoundObject"] = Gaffer.CompoundObjectPlug( defaultValue = IECore.CompoundObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.assertTrue( s["n"]["user"]["compoundObject"].acceptsInput( s["n"]["user"]["compoundData"] ) )
+		self.assertFalse( s["n"]["user"]["compoundData"].acceptsInput( s["n"]["user"]["compoundObject"] ) )
+
+		s["n"]["user"]["compoundObject"].setInput( s["n"]["user"]["compoundData"] )
+		self.assertEqual( s["n"]["user"]["compoundObject"].getInput(), s["n"]["user"]["compoundData"] )
+		self.assertEqual( s["n"]["user"]["compoundObject"].getValue(), IECore.CompoundObject() )
+
+		s["n"]["user"]["compoundData"].setValue( IECore.CompoundData( { "a" : IECore.IntData( 10 ) } ) )
+		self.assertEqual( s["n"]["user"]["compoundObject"].getValue(), IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["n"]["user"]["compoundObject"].getInput(), s2["n"]["user"]["compoundData"] )
+		self.assertEqual( s2["n"]["user"]["compoundObject"].getValue(), IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) )
+
 if __name__ == "__main__":
 	unittest.main()
