@@ -418,6 +418,10 @@ class _PlugTableView( GafferUI.Widget ) :
 		#    to display the edit window.
 
 		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+
+		if not index.flags() & QtCore.Qt.ItemIsEnabled :
+			return True
+
 		plug = self._qtWidget().model().plugForIndex( index )
 		if plug is None :
 			return False
