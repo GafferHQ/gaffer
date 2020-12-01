@@ -9,6 +9,11 @@ Features
   - Fewer unnecessary capsule invalidations, resulting in fewer interactive rendering updates.
   - Convenience.
 
+Improvements
+------------
+
+- Spreadsheet : Added support for plug drag and drop. Dropping a plug on a compatible cell will connect it to the cell's value plug.
+
 Fixes
 -----
 

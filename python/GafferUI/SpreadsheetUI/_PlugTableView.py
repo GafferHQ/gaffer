@@ -96,6 +96,11 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__ignoreSectionResized = False
 			self.__callingMoveSection = False
 
+			self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+			self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+			self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+			self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+
 		else : # RowNames mode
 
 			tableView.horizontalHeader().resizeSection( 1, 22 )
@@ -355,6 +360,115 @@ class _PlugTableView( GafferUI.Widget ) :
 			elif key == "spreadsheet:section" :
 
 				self.__applyColumnVisibility()
+
+	def __dragEnter( self, widget, event ) :
+
+		if Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
+			return False
+
+		if not isinstance( event.data, Gaffer.Plug ) :
+			return False
+
+		self.__currentDragDestinationPlug = None
+		return True
+
+	def __dragMove( self, widget, event ) :
+
+		cellPlug = self.plugAt( event.line.p0 )
+
+		if self.__currentDragDestinationPlug == cellPlug :
+			return
+
+		self.__currentDragDestinationPlug = cellPlug
+
+		selectionModel = self._qtWidget().selectionModel()
+		selectionModel.clear()
+
+		if cellPlug is None:
+			return
+
+		sourcePlug, targetPlug = self.__connectionPlugs( event.data, cellPlug )
+		if self.__canConnect( sourcePlug, targetPlug ) :
+			selectionModel.select(
+				self._qtWidget().model().indexForPlug( cellPlug ),
+				QtCore.QItemSelectionModel.SelectCurrent
+			)
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__currentDragDestinationPlug = None
+		self._qtWidget().selectionModel().clear()
+
+	def __drop( self, widget, event ) :
+
+		self.__currentDragDestinationPlug = None
+
+		cellPlug = self.plugAt( event.line.p0 )
+
+		if isinstance( event.data, IECore.Data ) :
+			if not _ClipboardAlgo.canPasteCells( event.data, [ [ cellPlug ] ] ) :
+				return False
+			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
+				context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
+				_ClipboardAlgo.pasteCells( event.data, [ [ cellPlug ] ], context.getTime() )
+		else :
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, cellPlug )
+			if not self.__canConnect( sourcePlug, targetPlug ) :
+				return False
+			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
+				targetPlug.setInput( sourcePlug )
+
+		return True
+
+	def __connectionPlugs( self, sourcePlug, targetPlug ) :
+
+		if isinstance( targetPlug, Gaffer.Spreadsheet.CellPlug ) :
+			targetPlug = targetPlug[ "value" ]
+
+		if isinstance( targetPlug, Gaffer.NameValuePlug ) :
+			if not isinstance( sourcePlug, Gaffer.NameValuePlug ) :
+				targetPlug = targetPlug[ "value" ]
+		else :
+			if isinstance( sourcePlug, Gaffer.NameValuePlug ) :
+				sourcePlug = sourcePlug[ "value" ]
+
+		return sourcePlug, targetPlug
+
+	def __canConnect( self, sourcePlug, targetPlug ) :
+
+		if targetPlug is None :
+			return False
+
+		if Gaffer.MetadataAlgo.readOnly( targetPlug ) :
+			return False
+
+		if any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in Gaffer.Plug.RecursiveRange( targetPlug ) ) :
+			return False
+
+		model = self._qtWidget().model()
+		flags = model.flags( model.indexForPlug( targetPlug.ancestor( Gaffer.Spreadsheet.CellPlug ) ) )
+		if not flags & QtCore.Qt.ItemIsEnabled :
+			return False
+
+		if not targetPlug.acceptsInput( sourcePlug ) :
+			return False
+
+		return True
+
+	def __positionInCellGrid( self, position ) :
+
+		# The event coordinate origin includes the header view.
+		# Queries to indexAt etc... need the origin to be in the
+		# table view itself.
+
+		cellPosition = imath.V3f( position )
+
+		if self._qtWidget().verticalHeader().isVisible() :
+			cellPosition.x -= self._qtWidget().verticalHeader().frameRect().width()
+		if self._qtWidget().horizontalHeader().isVisible() :
+			cellPosition.y -= self._qtWidget().horizontalHeader().frameRect().height()
+
+		return cellPosition
 
 	def __buttonPress( self, widget, event ) :
 

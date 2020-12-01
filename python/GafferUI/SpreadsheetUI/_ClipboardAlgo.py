@@ -335,6 +335,25 @@ class ValueAdaptor :
 				cls._set( childData, plug[ childName ], atTime )
 
 	@staticmethod
+	def _canSetKeyOrValue( plug ) :
+
+		def settable( p ) :
+			if Gaffer.Animation.isAnimated( p ) :
+				curve = Gaffer.Animation.acquire( p )
+				return not Gaffer.MetadataAlgo.readOnly( curve )
+			else :
+				return p.settable()
+
+		# Ensure we consider child plugs, eg: components of a V3fPlug
+		if Gaffer.MetadataAlgo.readOnly( plug ) or not settable( plug ) :
+			return False
+		for p in Gaffer.Plug.RecursiveRange( plug ) :
+			if Gaffer.MetadataAlgo.getReadOnly( p ) :
+				return False
+
+		return True
+
+	@staticmethod
 	def _setOrKeyValue( plug, value, atTime ) :
 
 		if hasattr( value, 'value' ) :
