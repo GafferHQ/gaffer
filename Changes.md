@@ -19,6 +19,7 @@ Fixes
 - SplinePlug :
   - Fixed bugs affecting default values. All child plugs are now at their default values following construction and following a call to either `setToDefault()` or `resetDefault()`.
   - Fixed bug that prevented a spline from being promoted to a Box if it had a non-default number of points. This also affected the use of a spline as the input to an Expression.
+- LRUCache : Fixed bug which could cause hangs during scene generation (#4016).
 - ArnoldShader : Moved the toon shader's `rim_light_tint` and `aov_prefix` parameters to appropriate sections in the UI.
 - Spreadsheet : Fixed bug that caused sections to overflow the available space.
 
@@ -26,6 +27,7 @@ API
 ---
 
 - Catalogue : Added `gaffer:isRendering` metadata, set to `True` if the viewed image is still receiving data from a display driver.
+- LRUCache : Added `getIfCached()` method.
 
 0.58.5.2 (relative to 0.58.5.1)
 ========

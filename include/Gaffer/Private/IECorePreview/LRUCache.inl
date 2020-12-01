@@ -460,14 +460,19 @@ class Parallel
 						{
 							if( !m_writable && mode == Insert && it->cacheEntry.status() == LRUCache::Uncached )
 							{
-								// We found an old item that doesn't have
-								// a value. This can either be because it
-								// was erased but hasn't been popped yet,
-								// or because the item was too big to fit
-								// in the cache. Upgrade to writer status
-								// so it can be updated in get().
-								m_itemLock.upgrade_to_writer();
-								m_writable = true;
+								// We found an old item that doesn't have a
+								// value. This can either be because it was
+								// erased but hasn't been popped yet, or because
+								// the item was too big to fit in the cache. We
+								// need to get writer status so it can be
+								// updated in `get()`, but we can't use the obvious
+								// `m_itemLock.upgrade_to_writer()` call as it can
+								// lead to deadlock. So we must retry using
+								// InsertWritable instead.
+								mode = InsertWritable;
+								m_itemLock.release();
+								binLock.release();
+								continue;
 							}
 							// Success!
 							m_item = &*it;
@@ -605,6 +610,8 @@ class Parallel
 
 		Bin &bin( const Key &key )
 		{
+			// Note : `testLRUCacheUncacheableItem()` requires keys to share
+			// a bin, and needs updating if the indexing strategy changes.
 			size_t binIndex = boost::hash<Key>()( key ) % m_bins.size();
 			return m_bins[binIndex];
 		};
@@ -832,13 +839,19 @@ class TaskParallel
 								mode == Insert && it->cacheEntry.status() == LRUCache::Uncached
 							)
 							{
-								// We found an old item that doesn't have
-								// a value. This can either be because it
-								// was erased but hasn't been popped yet,
-								// or because the item was too big to fit
-								// in the cache. Upgrade to writer status
-								// so it can be updated in get().
-								m_itemLock.upgradeToWriter();
+								// We found an old item that doesn't have a
+								// value. This can either be because it was
+								// erased but hasn't been popped yet, or because
+								// the item was too big to fit in the cache. We
+								// need to get writer status so it can be
+								// updated in `get()`, but we can't use the obvious
+								// `m_itemLock.upgradeToWriter()` call as it can
+								// lead to deadlock. So we must retry using
+								// InsertWritable instead.
+								mode = InsertWritable;
+								m_itemLock.release();
+								binLock.release();
+								continue;
 							}
 							// Success!
 							m_item = &*it;
@@ -980,6 +993,8 @@ class TaskParallel
 
 		Bin &bin( const Key &key )
 		{
+			// Note : `testLRUCacheUncacheableItem()` requires keys to share
+			// a bin, and needs updating if the indexing strategy changes.
 			size_t binIndex = boost::hash<Key>()( key ) % m_bins.size();
 			return m_bins[binIndex];
 		};
@@ -1102,6 +1117,33 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 		}
 
 		return value;
+	}
+	else if( status==Cached )
+	{
+		m_policy.push( handle );
+		return boost::get<Value>( cacheEntry.state );
+	}
+	else
+	{
+		std::rethrow_exception( boost::get<std::exception_ptr>( cacheEntry.state ) );
+	}
+}
+
+template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
+boost::optional<Value> LRUCache<Key, Value, Policy, GetterKey>::getIfCached( const Key &key )
+{
+	typename Policy<LRUCache>::Handle handle;
+	if( !m_policy.acquire( key, handle, LRUCachePolicy::FindReadable ) )
+	{
+		return boost::none;
+	}
+
+	const CacheEntry &cacheEntry = handle.readable();
+	const Status status = cacheEntry.status();
+
+	if( status==Uncached )
+	{
+		return boost::none;
 	}
 	else if( status==Cached )
 	{
