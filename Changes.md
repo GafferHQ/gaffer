@@ -26,7 +26,10 @@ Improvements
       - A new "usd:pointInstancers" set is automatically generated on reading, allowing a single Gaffer Instancer/SetFilter to target all point instancers.
       - Renamed point instancer primitive variables to align with the defaults on the Instancer node.
     - Improved performance and memory usage when reading scenes using USD's scenegraph instancing.
-  - Attributes : Added support for USD's visibility attribute, converting it to and from Gaffer's `scene:visible` attribute.
+  - Attributes :
+    - Added support for USD's visibility attribute, converting it to and from Gaffer's `scene:visible` attribute.
+    - Added support for USD's `purpose` attribute, converting it to and from a `usd:purpose` string attribute in Gaffer.
+    - Added support for USD's `kind` attribute, converting it to and from a `usd:kind` string attribute in Gaffer.
   - Sets :
     - All UsdCollections can now be loaded as Gaffer sets.
     - Gaffer sets are now written to standard UsdCollections, and not to an unusable default prim.
@@ -135,14 +138,15 @@ Breaking Changes
 Build
 -----
 
-- Dependencies : Updated to version 2.0.0
+- Dependencies : Updated to version 2.1.1
   - Qt 5.12.8
   - Boost 1.68
-  - Cortex 10.1.0.0
+  - Cortex 10.1.2.0
   - OpenEXR 2.4.1
   - Appleseed 2.1.0-beta
   - USD 20.11
-  - See https://github.com/GafferHQ/dependencies/releases/tag/2.0.0 for full details.
+  - OpenSSL 1.1.1h
+  - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
 
 0.58.x.x (relative to 0.58.5.2)
 ========
