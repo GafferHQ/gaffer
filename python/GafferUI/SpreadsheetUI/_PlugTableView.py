@@ -724,10 +724,9 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __copyRows( self ) :
 
 		rowPlugs = _PlugTableView.__orderedRowsPlugs( self.selectedPlugs() )
-		plugMatrix = [ row.children() for row in rowPlugs ]
 
 		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
-			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
+			clipboardData = _ClipboardAlgo.copyRows( rowPlugs )
 
 		self.__setClipboard( clipboardData )
 
