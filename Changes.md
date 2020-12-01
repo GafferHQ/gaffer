@@ -1,5 +1,7 @@
-0.59.x.x (relative to 0.59.0.0b3)
+0.59.0.0
 ========
+
+This release provides substantial improvements to USD support, an upgrade to Qt 5.12, and builds for both Python 2 and 3.
 
 > Caution : The current plug values are now omitted when exporting a Box for referencing. See Improvements section for more details.
 
@@ -7,105 +9,6 @@ Features
 --------
 
 - Unencapsulate : Added new node to expand capsules created by Encapsulate back into regular scene hierarchy. This discards the performance advantages of working with capsules, but is useful for debugging, or when it is necessary to alter a capsule's contents downstream.
-
-Improvements
-------------
-
-- Merge : Optimized image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
-- Box :
-  - Improved strategy used for exporting for referencing. Before, the current values of the Box plugs were converted into the default values of the Reference during export. This was error prone as it was too easy to export new defaults after changing values for testing. We now export default values as they are, and omit current values completely. Two new menu items allow the default values to be authored explicitly from the current values at any time.
-  - Added "Reset Default Values" item to NodeEditor tool menu. This sets the default values for all plugs from their current values.
-  - Added "Reset Default Value" item to plug context menu. This sets the default value from the current value.
-- Checkerboard : Optimized image generation when rotation is 0.
-
-Fixes
------
-
-- Box/Reference :
-  - Fixed export and referencing of TransformPlugs with modified default values (#3946).
-  - Fixed export and referencing of CompoundDataPlugs with modified default values (#3907).
-  - Fixed loss of spreadsheet values when using "Duplicate as Box" (#3972).
-  - Fixed export and referencing of SplinePlugs.
-  - Fixed incorrect presentation of referenced CompoundDataPlugs (#4020).
-- Spreadsheet : Fixed serialisation of default values which do not match those of the default row.
-- Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
-- Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.
-- SplinePlug : Fixed bug that meant `isSetToDefault()` could return true even if it had computed inputs. It now returns false in this case, and never triggers an upstream compute.
-
-API
----
-
-- TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
-- ValuePlug : Added `defaultHash()` virtual method.
-- ValuePlugSerialiser :
-  - Added `valueRepr()` method.
-  - Added support for `valuePlugSerialiser:omitParentNodePlugValues` context variable. This is used for exporting Boxes for referencing, and by ExtensionAlgo.
-- ImageAlgo : `tiles()` now returns a top level dictionary containing all the tileOrigins as a V2iVectorData, and each channel as an ObjectVectorData of channelDatas with corresponding indices. This allows `tiles()` to run substantially faster, more than twice as fast if the input network is very cheap.
-- ConfirmationDialogue : Added optional `details` constructor argument which accepts text to be shown in a collapsed "Details" section.
-- Capsule : Expiry is no longer detected based on the dirtyCount of the source scene.  This removes a debugging tool that could be useful, but allows nodes that create Capsules to have more granular hashing behaviour - if the behaviour of the source scene is captured by a hash that can be used by the capsule, then we can reuse the capsule when that hash matches, and we don't need to invalidate if the capsule is changed back to a cached value.
-- ValuePlug : Added `dirtyCount` public method.
-
-Breaking Changes
-----------------
-
-- Box : The current plug values are now omitted when exporting for referencing, rather than being transformed into new default values.
-- Reference : Removed support for boxes exported prior to version 0.9.0.0.
-- TransformPlug/Transform2DPlug : Added constructor arguments.
-- ValuePlug : Added virtual method.
-- ValuePlugSerialiser : Removed support for `valuePlugSerialiser:resetParentPlugDefaults` context variable.
-- NameValuePlugValueWidget : Removed support for using the `Plug.Dynamic` flag to determine whether or not the `name` plug is shown. Use `nameValuePlugValueWidget:ignoreNamePlug` metadata instead.
-- Light/Camera : Removed button for adding custom plugs in the "Visualisation" section.
-- Metadata : Removed compatibility for loading graph bookmarks created in versions prior to 0.33.0.0. Resave the file from Gaffer 0.58.0.0 to preserve the bookmarks if necessary.
-- Encapsulate : Removed data member
-
-0.59.0.0b3 (relative to 0.59.0.0b2)
-==========
-
-> Note : These are from 0.58_maintenance, and can be omitted when compiling the final 0.59.0.0 release notes.
-
-- Plug : Fixed performance regression in dirtiness handling vs version 0.57. This affected script saving performance and GraphEditor navigation performance in particular.
-- ArnoldShader : Moved Arnold 6.1's new `standard_surface.dielectic_priority` parameter to the Transmission section of the UI.
-- SpreadsheetUI : Fixed bug that prevented column headers from updating.
-
-0.59.0.0b2 (relative to 0.59.0.0b1)
-==========
-
-Improvements
-------------
-
-- InteractiveRender : Added a warning when attribute edits require geometry to be regenerated, as this can have a performance impact. Examples in Arnold include subdivision changes or changes to attributes inherited by procedurals.
-- NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
-
-Fixes
------
-
-- Encapsulate : Fixed incorrect motion blur when deformation blur is turned on for the Capsule itself (#3557).
-- MenuBar : Fixed Qt bug that prevented hover interaction with the menu bar when using a tablet.
-
-API
----
-
-- Node :
-  - Improved speed of `RecursiveIterator` and `RecursiveRange` for nodes.
-  - Added new `GAFFER_NODE_DECLARE_TYPE` and `GAFFER_NODE_DEFINE_TYPE` macros. Subclasses should use these in preference to `GAFFER_GRAPHCOMPONENT_DECLARE_TYPE` and `GAFFER_GRAPHCOMPONENT_DEFINE_TYPE`.
-  - Deprecated all namespace-level iterator typedefs for Node and its subclasses. Use the class-level typedefs instead.
-- Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
-- RendererAlgo :
-  - Moved RendererAlgo bindings into a `GafferScene.RendererAlgo` submodule. The old names are provided for temporary backwards compatibility but are considered deprecated and will be removed in the future.
-  - Added Python binding for `objectSamples()` function.
-- SceneTestCase : Changed base class to ImageTestCase, to provide methods for comparing images.
-
-Breaking Changes
-----------------
-
-- RendererAlgo :
-  - Objects which don't support deformation blur are now always sampled at the integer frame time. Previously they were sampled at shutter open time if deformation blur was turned on.
-  - Changed type used to represent sample times from `std::set<float>` to `std::vector<float>`, to align with the `IECoreScenePreview::Renderer` API.
-
-0.59.0.0b1
-==========
-
-This release provides substantial improvements to USD support, an upgrade to Qt 5.12, and builds for both Python 2 and 3.
 
 Improvements
 ------------
@@ -130,12 +33,20 @@ Improvements
     - Substantially improved performance for both reading and writing.
   - Untyped prims are now loaded as empty locations instead of being ignored.
   - Improved warning logging.
+- Box :
+  - Improved strategy used for exporting for referencing. Before, the current values of the Box plugs were converted into the default values of the Reference during export. This was error prone as it was too easy to export new defaults after changing values for testing. We now export default values as they are, and omit current values completely. Two new menu items allow the default values to be authored explicitly from the current values at any time.
+  - Added "Reset Default Values" item to NodeEditor tool menu. This sets the default values for all plugs from their current values.
+  - Added "Reset Default Value" item to plug context menu. This sets the default value from the current value.
 - ImageReader : Added initial support for reading RAW files.
 - GraphEditor : Improved performance slightly for large graphs.
 - Warp : Defaulted `useDerivatives` to off for nodes created via the UI. Using derivatives is only beneficial when the warp is highly anisotropic, and it has a significant performance impact.
 - CopyChannels : Improved performance for the special case of a single input.
 - Catalogue/Viewer : Improved tile throughput for interactive renders.
 - Performance : Replaced standard memory allocator with [jemalloc](http://jemalloc.net/). Set `GAFFER_JEMALLOC=0` to disable this and use the standard allocator.
+- Merge : Optimized image merging.  This has been tackled in several ways, with different levels of impact.  Some extreme cases, such as using a multiply to merge two large datawindows with little overlap, now produce much smaller data windows.  Other cases can benefit a lot from being able to pass through input tiles unmodified.  For cases without a huge shortcut, there is an approximately 20% speedup from lower level optimization.
+- Checkerboard : Optimized image generation when rotation is 0.
+- InteractiveRender : Added a warning when attribute edits require geometry to be regenerated, as this can have a performance impact. Examples in Arnold include subdivision changes or changes to attributes inherited by procedurals.
+- NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
 
 Fixes
 -----
@@ -153,6 +64,18 @@ Fixes
 - String matching :
   - Fixed erroneous matches in specific cases involving multiple space-separated patterns and the `*` wildcard.
   - Fixed severe performance problem caused by many `*` wildcards in space-separated match patterns.
+- Box/Reference :
+  - Fixed export and referencing of TransformPlugs with modified default values (#3946).
+  - Fixed export and referencing of CompoundDataPlugs with modified default values (#3907).
+  - Fixed loss of spreadsheet values when using "Duplicate as Box" (#3972).
+  - Fixed export and referencing of SplinePlugs.
+  - Fixed incorrect presentation of referenced CompoundDataPlugs (#4020).
+- Encapsulate : Fixed incorrect motion blur when deformation blur is turned on for the Capsule itself (#3557).
+- Spreadsheet : Fixed serialisation of default values which do not match those of the default row.
+- Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
+- Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.
+- SplinePlug : Fixed bug that meant `isSetToDefault()` could return true even if it had computed inputs. It now returns false in this case, and never triggers an upstream compute.
+- MenuBar : Fixed Qt bug that prevented hover interaction with the menu bar when using a tablet.
 
 API
 ---
@@ -166,6 +89,25 @@ API
 - ImageGadget : Added `tileUpdateCount()` and `resetTileUpdateCount()` methods. These are useful for measuring performance.
 - TestRunner : Added `PerformanceScope.setNumIterations()` method.
 - TestCase/TestRunner : The hash cache is now cleared before running each test.
+- TransformPlug/Transform2DPlug : Added constructor arguments for specifying child plug default values.
+- ValuePlug :
+  - Added `defaultHash()` virtual method.
+  - Added `dirtyCount()` public method.
+- ValuePlugSerialiser :
+  - Added `valueRepr()` method.
+  - Added support for `valuePlugSerialiser:omitParentNodePlugValues` context variable. This is used for exporting Boxes for referencing, and by ExtensionAlgo.
+- ImageAlgo : `tiles()` now returns a top level dictionary containing all the tileOrigins as a V2iVectorData, and each channel as an ObjectVectorData of channelDatas with corresponding indices. This allows `tiles()` to run substantially faster, more than twice as fast if the input network is very cheap.
+- ConfirmationDialogue : Added optional `details` constructor argument which accepts text to be shown in a collapsed "Details" section.
+- Node :
+  - Improved speed of `RecursiveIterator` and `RecursiveRange` for nodes.
+  - Added new `GAFFER_NODE_DECLARE_TYPE` and `GAFFER_NODE_DEFINE_TYPE` macros. Subclasses should use these in preference to `GAFFER_GRAPHCOMPONENT_DECLARE_TYPE` and `GAFFER_GRAPHCOMPONENT_DEFINE_TYPE`.
+  - Deprecated all namespace-level iterator typedefs for Node and its subclasses. Use the class-level typedefs instead.
+- Plug : Deprecated all namespace-level iterator typedefs for Plug and its subclasses. Use the class-level typedefs instead.
+- RendererAlgo :
+  - Moved RendererAlgo bindings into a `GafferScene.RendererAlgo` submodule. The old names are provided for temporary backwards compatibility but are considered deprecated and will be removed in the future.
+  - Added Python binding for `objectSamples()` function.
+- SceneTestCase : Changed base class to ImageTestCase, to provide methods for comparing images.
+- Capsule : Expiry is no longer detected based on the dirtyCount of the source scene. This removes a debugging tool that could be useful, but allows nodes that create Capsules to have more granular hashing behaviour. If the behaviour of the source scene is captured by a hash that can be used by the capsule, then we can reuse the capsule when that hash matches, and we don't need to invalidate if the capsule is changed back to a cached value.
 
 Breaking Changes
 ----------------
@@ -177,6 +119,18 @@ Breaking Changes
 - ImageGadget : Removed/moved private member variables.
 - OpenColorIOTransform : Made `transform()` method protected rather than public.
 - BackgroundMethodTest : Removed public visibility from private `TestWidget` and `WaitingSlot`.
+- Box : The current plug values are now omitted when exporting for referencing, rather than being transformed into new default values.
+- Reference : Removed support for boxes exported prior to version 0.9.0.0.
+- TransformPlug/Transform2DPlug : Added constructor arguments.
+- ValuePlug : Added virtual method.
+- ValuePlugSerialiser : Removed support for `valuePlugSerialiser:resetParentPlugDefaults` context variable.
+- NameValuePlugValueWidget : Removed support for using the `Plug.Dynamic` flag to determine whether or not the `name` plug is shown. Use `nameValuePlugValueWidget:ignoreNamePlug` metadata instead.
+- Light/Camera : Removed button for adding custom plugs in the "Visualisation" section.
+- Metadata : Removed compatibility for loading graph bookmarks created in versions prior to 0.33.0.0. Resave the file from Gaffer 0.58.0.0 to preserve the bookmarks if necessary.
+- RendererAlgo :
+  - Objects which don't support deformation blur are now always sampled at the integer frame time. Previously they were sampled at shutter open time if deformation blur was turned on.
+  - Changed type used to represent sample times from `std::set<float>` to `std::vector<float>`, to align with the `IECoreScenePreview::Renderer` API.
+- Encapsulate : Removed private data member.
 
 Build
 -----
