@@ -1,3 +1,11 @@
+0.57.7.x (relative to 0.57.7.5)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed corruption of the GL stack and potential crash caused by exceptions thrown during draw.
+
 0.57.7.5 (relative to 0.57.7.4)
 ========
 

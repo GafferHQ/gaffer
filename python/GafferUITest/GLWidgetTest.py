@@ -153,5 +153,25 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( b1.parent(), None )
 		self.assertEqual( b2.parent(), None )
 
+	def testDrawExceptionsHandled( self ) :
+
+		class TestWidget( GafferUI.GLWidget ) :
+
+			def _draw( self ) :
+				raise RuntimeError( "Draw Exception" )
+
+		w = GafferUI.Window( borderWidth = 10 )
+		g = TestWidget()
+		w.setChild( g )
+
+		with IECore.CapturingMessageHandler() as mh :
+			w.setVisible( True )
+			self.waitForIdle( 1000 )
+
+		self.assertEqual(
+			{ ( m.level, m.context, m.message ) for m in mh.messages },
+			{ ( IECore.Msg.Level.Error, "GLWidget", "Draw Exception" ) }
+		)
+
 if __name__ == "__main__":
 	unittest.main()
