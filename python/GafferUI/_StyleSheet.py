@@ -689,7 +689,7 @@ _styleSheet = string.Template(
 	/* pragmatic compromise that was more readily achievable.                   */
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::scroller {
-		width: 20px;
+		width: 40px;
 	}
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tear {
