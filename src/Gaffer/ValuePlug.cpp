@@ -637,40 +637,42 @@ class ValuePlug::ComputeProcess : public Process
 			{
 				return ComputeProcess( processKey ).m_result;
 			}
+			else if( processKey.cachePolicy == CachePolicy::Legacy )
+			{
+				// Legacy code path, necessary until all task-spawning computes
+				// have declared an appropriate cache policy. We can't perform
+				// the compute inside `cacheGetter()` because that is called
+				// from inside a lock. If tasks were spawned without being
+				// isolated, TBB could steal an outer task which tries to get
+				// the same item from the cache, leading to deadlock.
+				if( auto result = g_cache.getIfCached( processKey ) )
+				{
+					return *result;
+				}
+				ComputeProcess process( processKey );
+				// Store the value in the cache, after first checking that this
+				// hasn't been done already. The check is useful because it's
+				// common for an upstream compute triggered by us to have
+				// already done the work, and calling memoryUsage() can be very
+				// expensive for some datatypes. A prime example of this is the
+				// attribute state passed around in GafferScene - it's common
+				// for a selective filter to mean that the attribute compute is
+				// implemented as a pass-through (thus an upstream node will
+				// already have computed the same result) and the attribute data
+				// itself consists of many small objects for which computing
+				// memory usage is slow.
+				/// \todo Accessing the LRUCache multiple times like this does
+				/// have an overhead, and at some point we'll need to address
+				/// that.
+				if( !g_cache.getIfCached( processKey ) )
+				{
+					g_cache.set( processKey, process.m_result, process.m_result->memoryUsage() );
+				}
+				return process.m_result;
+			}
 			else
 			{
-				IECore::ConstObjectPtr result = g_cache.get( processKey );
-
-				if( result )
-				{
-					return result;
-				}
-				else
-				{
-					// Legacy code path, necessary until all task-spawning computes have
-					// declared an appropriate cache policy. We can't perform the compute
-					// inside `cacheGetter()` because that is called from inside a lock. If
-					// tasks were spawned without being isolated, TBB could steal an outer
-					// task which tries to get the same item from the cache, leading to deadlock.
-					assert( processKey.cachePolicy == CachePolicy::Legacy );
-					ComputeProcess process( processKey );
-					// Store the value in the cache, after first checking that this hasn't
-					// been done already. The check is useful because it's common for an
-					// upstream compute triggered by us to have already
-					// done the work, and calling memoryUsage() can be very expensive for some
-					// datatypes. A prime example of this is the attribute state passed around
-					// in GafferScene - it's common for a selective filter to mean that the
-					// attribute compute is implemented as a pass-through (thus an upstream node
-					// will already have computed the same result) and the attribute data itself
-					// consists of many small objects for which computing memory usage is slow.
-					/// \todo Accessing the LRUCache multiple times like this does have an
-					/// overhead, and at some point we'll need to address that.
-					if( !g_cache.get( processKey ) )
-					{
-						g_cache.set( processKey, process.m_result, process.m_result->memoryUsage() );
-					}
-					return process.m_result;
-				}
+				return g_cache.get( processKey );
 			}
 		}
 
@@ -758,20 +760,14 @@ class ValuePlug::ComputeProcess : public Process
 					);
 					break;
 				}
-				case CachePolicy::Uncached :
-					// Should not have got here.
+				default :
+					// Should not get here, because these cases are
+					// dealt with directly in `ComputeProcess::value()`.
 					assert( false );
 					break;
-				default :
-					// Can't do the work inside the cache, because we don't know if
-					// the compute will lead to deadlock. We'll do the work outside.
-					break;
 			}
-			// Using max size for legacy policy so that our null result will never be
-			// cached. This avoids `assert( processKey.cachePolicy == CachePolicy::Legacy )`
-			// being triggered in `ComputeProcess::value()` when a plug with a legacy
-			// policy implements a pass-through from a plug with non-legacy policy.
-			cost = result ? result->memoryUsage() : std::numeric_limits<size_t>::max();
+
+			cost = result->memoryUsage();
 			return result;
 		}
 

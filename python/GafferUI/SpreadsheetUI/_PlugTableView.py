@@ -445,7 +445,10 @@ class _PlugTableView( GafferUI.Widget ) :
 				return True
 
 			if event.key == "D" :
-				# See note in __prependRowMenuItems
+				# We don't have a shortcut for managing the enabled state of rows, because when a
+				# row is disabled (via Qt.ItemIsEnabled flag), those indices are no longer reported
+				# from the selection model. So you could use the key to turn them off, but its
+				# hard to turn them back on again with it.
 				if not forRows :
 					self.__toggleCellEnabledState()
 				return True
@@ -577,15 +580,23 @@ class _PlugTableView( GafferUI.Widget ) :
 				}
 			) )
 
-		# We don't have an item for managing the enabled state of rows, because when a
-		# row is disabled (via Qt.ItemIsEnabled flag), those indices are no longer reported
-		# from the selection model. So you could use the item to turn them off, but its
-		# hard to turn them back on again.
-
 		clipboard = self.__getClipboard()
 		pasteRowsPluralSuffix = "" if _ClipboardAlgo.isValueMatrix( clipboard ) and len( clipboard ) == 1 else "s"
 
+		canChangeEnabledState, currentEnabledState = self.__canChangeRowEnabledState( rowPlugs )
+		enabledPlugs = [ row["enabled"] for row in rowPlugs ]
+
 		items.extend( (
+			(
+				"/__DisableRowsDivider__", { "divider" : True }
+			),
+			(
+				( "/Disable Row%s" if currentEnabledState else "/Enable Row%s" ) % pluralSuffix,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setRowEnabledState ), enabledPlugs, not currentEnabledState ),
+					"active" : canChangeEnabledState
+				}
+			),
 			(
 				"/__CopyPasteRowsDivider__", { "divider" : True }
 			),
@@ -630,6 +641,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		canChangeEnabledState, currentEnabledState = self.__canChangeCellEnabledState( cellPlugs )
 		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
 
+		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( cellPlugs )
+
 		items = [
 			(
 				( "/Disable Cell%s" if currentEnabledState else "/Enable Cell%s" ) % pluralSuffix,
@@ -638,12 +651,7 @@ class _PlugTableView( GafferUI.Widget ) :
 					"active" : canChangeEnabledState,
 					"shortCut" : "D"
 				}
-			)
-		]
-
-		plugMatrix = _ClipboardAlgo.createPlugMatrixFromCells( cellPlugs )
-
-		items.extend( (
+			),
 
 			( "/__EditCellsDivider__", { "divider" : True } ),
 
@@ -673,7 +681,7 @@ class _PlugTableView( GafferUI.Widget ) :
 					"shortCut" : "Ctrl+V"
 				}
 			)
-		) )
+		]
 
 		for path, args in reversed( items ) :
 			menuDefinition.prepend( path, args )
@@ -716,10 +724,9 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __copyRows( self ) :
 
 		rowPlugs = _PlugTableView.__orderedRowsPlugs( self.selectedPlugs() )
-		plugMatrix = [ row.children() for row in rowPlugs ]
 
 		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
-			clipboardData = _ClipboardAlgo.valueMatrix( plugMatrix )
+			clipboardData = _ClipboardAlgo.copyRows( rowPlugs )
 
 		self.__setClipboard( clipboardData )
 
@@ -832,9 +839,33 @@ class _PlugTableView( GafferUI.Widget ) :
 			for row in rowPlugs :
 				row.parent().removeChild( row )
 
+	def __canChangeRowEnabledState( self, rowPlugs ) :
+
+		enabledPlugs = [ row["enabled"] for row in rowPlugs ]
+		return self.__canChangeEnabledState( enabledPlugs )
+
+	def __setRowEnabledState( self, enabledPlugs, enabled ) :
+
+		self.__setPlugValues( enabledPlugs, enabled )
+
+		# Clear the row name column selection if rows have been disabled.
+		# They don't show up in selectionModel.selection().
+		if not enabled :
+			selectionModel = self._qtWidget().selectionModel()
+			nameColumnIndex = self._qtWidget().model().index( 0, 0 )
+			flags = QtCore.QItemSelectionModel.Columns | QtCore.QItemSelectionModel.Deselect
+			selectionModel.select( nameColumnIndex, flags )
+			if selectionModel.currentIndex().column() == 0 :
+				selectionModel.clearCurrentIndex()
+
 	def __canChangeCellEnabledState( self, cellPlugs ) :
 
 		enabledPlugs = [ cell.enabledPlug() for cell in cellPlugs ]
+		allSettable, enabled = self.__canChangeEnabledState( enabledPlugs )
+		return ( _Algo.cellsCanBeDisabled( cellPlugs ) and allSettable, enabled )
+
+	def __canChangeEnabledState( self, enabledPlugs ) :
+
 		anyReadOnly = any( [ Gaffer.MetadataAlgo.readOnly( plug ) for plug in enabledPlugs ] )
 		allSettable = all( [ plug.settable() for plug in enabledPlugs ] )
 
@@ -843,7 +874,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
 				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
 
-		return ( _Algo.cellsCanBeDisabled( cellPlugs ) and allSettable and not anyReadOnly, enabled )
+		return ( allSettable and not anyReadOnly, enabled )
 
 	def __toggleBooleans( self, plugs ) :
 
