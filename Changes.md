@@ -11,6 +11,7 @@ Improvements
   - Added menu items to edit the values for all selected cells of the same type simultaneously.
   - Added menu items to the section chooser to quickly select a specific section.
 - Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
+- Viewer : Improved highlighting of EditScope selector when an EditScope is active.
 
 Fixes
 -----
