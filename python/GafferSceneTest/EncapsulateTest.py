@@ -205,6 +205,27 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		encapsulate["in"].setInput( group1["out"] )
 		assertHashesUnique( "/group" )
 
+		# Test changing the filter or globals
+		group2["in"][1].setInput( group1["out"] )
+
+		options = GafferScene.CustomOptions()
+		options["in"].setInput( group2["out"] )
+
+		encapsulate["in"].setInput( options["out"] )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/group/group" ] ) )
+
+		c = encapsulate["out"].object( "/group/group" )
+
+		# Changing filter doesn't affect hash
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/group/group", "/group/group2" ] ) )
+		self.assertEqual( c, encapsulate["out"].object( "/group/group" ) )
+
+		# Changing globals shouldn't affect hash
+		# \todo : But it currently does due to current issue with handling motion blur.  Change this
+		# assertNotEqual to an assertEqual after fixing shutter handling for capsules
+		options["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+		self.assertNotEqual( c, encapsulate["out"].object( "/group/group" ) )
+
 	def testSetMemberAtRoot( self ) :
 
 		sphere = GafferScene.Sphere()

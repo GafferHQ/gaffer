@@ -145,6 +145,7 @@ void GafferModule::bindValuePlug()
 		.staticmethod( "getHashCacheMode" )
 		.def( "setHashCacheMode", &ValuePlug::setHashCacheMode )
 		.staticmethod( "setHashCacheMode" )
+		.def( "dirtyCount", &ValuePlug::dirtyCount )
 		.def( "__repr__", &repr )
 	;
 

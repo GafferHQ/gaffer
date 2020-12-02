@@ -60,8 +60,9 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		///
 		/// The capsule is invalidated by any subsequent graph edits
 		/// that dirty the scene (because the stored hash will no longer
-		/// match the scene). Any attempt to use such an expired capsule
-		/// will throw an exception.
+		/// match the scene).  We rely on the node creating the capsule
+		/// to flag it as dirty, and trigger a cancellation that will
+		/// prevent the invalid capsule from being used.
 		Capsule(
 			const ScenePlug *scene,
 			const ScenePlug::ScenePath &root,
@@ -83,15 +84,17 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 	private :
 
 		void setScene( const ScenePlug *scene );
-		void plugDirtied( const Gaffer::Plug *plug );
 		void parentChanged( const Gaffer::GraphComponent *graphComponent );
-		void throwIfExpired() const;
+		void throwIfNoScene() const;
 
 		IECore::MurmurHash m_hash;
 		Imath::Box3f m_bound;
 		// Note that we don't own a reference to m_scene because we expect
-		// the graph to remain unchanged. Instead we use parentChanged to
-		// detect any unparenting and then expire the capsule.
+		// the graph to remain unchanged, and holding a reference to a plug
+		// in something stored in the plug value cache can complicate the
+		// release of resources ( usually there is no way for a cache eviction
+		// to alter graph components ). Instead we use parentChanged to
+		// detect any unparenting and null out the scene.
 		const ScenePlug *m_scene;
 		ScenePlug::ScenePath m_root;
 		Gaffer::ConstContextPtr m_context;

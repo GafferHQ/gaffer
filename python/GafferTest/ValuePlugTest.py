@@ -148,6 +148,43 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( cs ), 1 )
 
+	def testDirtyCountPlug( self ) :
+
+		# The dirtyCount is relative to the current dirtyCountEpoch
+		refPlug = Gaffer.ValuePlug()
+		epoch = refPlug.dirtyCount()
+
+
+		i = Gaffer.IntPlug()
+		self.assertEqual( i.dirtyCount(), epoch + 0 )
+		i.setValue( 10 )
+		self.assertEqual( i.dirtyCount(), epoch + 1 )
+		i.setValue( 20 )
+		self.assertEqual( i.dirtyCount(), epoch + 2 )
+
+		i2 = Gaffer.IntPlug()
+		v = Gaffer.ValuePlug()
+
+		self.assertEqual( i2.dirtyCount(), epoch + 0 )
+		self.assertEqual( v.dirtyCount(), epoch + 0 )
+
+		# Need to parent to a node before dirtying based on plug reparenting will work
+		n = Gaffer.Node()
+		n.addChild( v )
+
+		self.assertEqual( v.dirtyCount(), epoch + 1 )
+		self.assertEqual( i2.dirtyCount(), epoch + 0 )
+
+		# Parenting dirties both parent and child
+		v.addChild( i2 )
+		self.assertEqual( v.dirtyCount(), epoch + 2 )
+		self.assertEqual( i2.dirtyCount(), epoch + 1 )
+
+		# Setting the value of the child should also dirty the parent
+		i2.setValue( 10 )
+		self.assertEqual( v.dirtyCount(), epoch + 3 )
+		self.assertEqual( i2.dirtyCount(), epoch + 2 )
+
 	def testCopyPasteDoesntRetainComputedValues( self ) :
 
 		s = Gaffer.ScriptNode()

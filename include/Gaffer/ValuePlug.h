@@ -205,6 +205,17 @@ class GAFFER_API ValuePlug : public Plug
 
 		//@}
 
+		/// Returns a counter that increments when this plug is been dirtied
+		/// ( but doesn't necessarily start at 0 ). This is used internally
+		/// for cache invalidation but may also be useful for debugging and
+		/// as part of a "poor man's hash" where computing the full upstream
+		/// hash might be prohibitively expensive
+		/// (see `Encapsulate::hashObject()` for example).
+		uint64_t dirtyCount() const
+		{
+			return m_dirtyCount;
+		}
+
 	protected :
 
 		/// This constructor must be used by all derived classes which wish
