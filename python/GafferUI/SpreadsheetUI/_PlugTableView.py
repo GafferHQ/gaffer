@@ -366,7 +366,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		if Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
 			return False
 
-		if not isinstance( event.data, Gaffer.Plug ) :
+		if not isinstance( event.data, ( Gaffer.Plug, IECore.Data ) ) :
 			return False
 
 		self.__currentDragDestinationPlug = None
@@ -387,8 +387,14 @@ class _PlugTableView( GafferUI.Widget ) :
 		if cellPlug is None:
 			return
 
-		sourcePlug, targetPlug = self.__connectionPlugs( event.data, cellPlug )
-		if self.__canConnect( sourcePlug, targetPlug ) :
+		select = False
+		if isinstance( event.data, IECore.Data ) :
+			select = _ClipboardAlgo.canPasteCells( event.data, [ [ cellPlug ] ] )
+		else :
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, cellPlug )
+			select = self.__canConnect( sourcePlug, targetPlug )
+
+		if select :
 			selectionModel.select(
 				self._qtWidget().model().indexForPlug( cellPlug ),
 				QtCore.QItemSelectionModel.SelectCurrent
@@ -403,16 +409,16 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		self.__currentDragDestinationPlug = None
 
-		cellPlug = self.plugAt( event.line.p0 )
+		plug = self.plugAt( event.line.p0 )
 
 		if isinstance( event.data, IECore.Data ) :
-			if not _ClipboardAlgo.canPasteCells( event.data, [ [ cellPlug ] ] ) :
+			if not _ClipboardAlgo.canPasteCells( event.data, [ [ plug ] ] ) :
 				return False
-			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 				context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
-				_ClipboardAlgo.pasteCells( event.data, [ [ cellPlug ] ], context.getTime() )
+				_ClipboardAlgo.pasteCells( event.data, [ [ plug ] ], context.getTime() )
 		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, cellPlug )
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, plug )
 			if not self.__canConnect( sourcePlug, targetPlug ) :
 				return False
 			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :

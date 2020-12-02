@@ -12,7 +12,7 @@ Features
 Improvements
 ------------
 
-- Spreadsheet : Added support for plug drag and drop. Dropping a plug on a compatible cell will connect it to the cell's value plug.
+- Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
 
 Fixes
 -----
