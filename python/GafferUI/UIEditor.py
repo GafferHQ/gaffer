@@ -1498,7 +1498,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		metadata = Gaffer.Metadata.value( self.getPlug(), "plugValueWidget:type" )
 		registeredWidgets = self.__registeredPlugValueWidgets( self.getPlug() )
 
-		for label, widgetMetadata in registeredWidgets.iteritems() :
+		for label, widgetMetadata in registeredWidgets.items() :
 			if widgetMetadata == metadata :
 				self.__widgetMenu.setText( label )
 				return
