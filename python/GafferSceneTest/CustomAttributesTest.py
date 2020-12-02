@@ -370,6 +370,28 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+	def testAssignShader( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphereFilter"] = GafferScene.PathFilter()
+		script["sphereFilter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		attributes = IECore.CompoundObject( {
+			"ai:surface" : IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "flat" ) }, output = "output" )
+		} )
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["sphere"]["out"] )
+		script["attributes"]["filter"].setInput( script["sphereFilter"]["out"] )
+		script["attributes"]["extraAttributes"].setValue( attributes )
+		self.assertEqual( script["attributes"]["out"].attributes( "/sphere" ), attributes )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( script2["attributes"]["out"].attributes( "/sphere" ), attributes )
+
 	def testDirtyPropagation( self ) :
 
 		attributes = GafferScene.CustomAttributes()

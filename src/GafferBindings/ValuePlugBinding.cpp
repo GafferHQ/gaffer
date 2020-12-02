@@ -132,6 +132,28 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue ) + " )\n";
 }
 
+std::string compoundObjectRepr( const IECore::CompoundObject *o )
+{
+	std::string items;
+	for( const auto &e : o->members() )
+	{
+		if( items.size() )
+		{
+			items += ", ";
+		}
+		items += "'" + e.first.string() + "' : " + ValuePlugSerialiser::valueRepr( object( e.second ) );
+	}
+
+	if( items.empty() )
+	{
+		return "IECore.CompoundObject()";
+	}
+	else
+	{
+		return "IECore.CompoundObject( { " + items + "} )";
+	}
+}
+
 } // namespace
 
 std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments, const Serialisation *serialisation )
@@ -242,6 +264,17 @@ std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *gr
 
 std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value )
 {
+	// CompoundObject may contain objects which can only be serialised
+	// via `objectToBase64()`, so we need to override the standard Cortex
+	// serialiser.
+
+	boost::python::extract<IECore::CompoundObjectPtr> compoundObjectExtractor( value );
+	if( compoundObjectExtractor.check() )
+	{
+		auto co = compoundObjectExtractor();
+		return compoundObjectRepr( co.get() );
+	}
+
 	// We use IECore.repr() because it correctly prefixes the imath
 	// types with the module name, and also works around problems
 	// when round-tripping empty Box2fs.

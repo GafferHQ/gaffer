@@ -239,6 +239,13 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 			)
 		)
 
+		v3 = IECore.CompoundObject( {
+			"a" : IECore.IntData( 10 ),
+			"b" : v1,
+			"c" : v2,
+			"d" : IECore.StringData( "test" ),
+		} )
+
 		with self.assertRaises( Exception ) :
 			eval( repr( v1 ) )
 
@@ -246,23 +253,29 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["user"]["p1"] = Gaffer.ObjectPlug( defaultValue = v1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["user"]["p2"] = Gaffer.ObjectPlug( defaultValue = v2, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p3"] = Gaffer.ObjectPlug( defaultValue = v3, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 		self.assertEqual( s2["n"]["user"]["p1"].defaultValue(), v1 )
 		self.assertEqual( s2["n"]["user"]["p2"].defaultValue(), v2 )
+		self.assertEqual( s2["n"]["user"]["p3"].defaultValue(), v3 )
 		self.assertEqual( s2["n"]["user"]["p1"].getValue(), v1 )
 		self.assertEqual( s2["n"]["user"]["p2"].getValue(), v2 )
+		self.assertEqual( s2["n"]["user"]["p3"].getValue(), v3 )
 
 		s["n"]["user"]["p1"].setValue( v2 )
-		s["n"]["user"]["p2"].setValue( v1 )
+		s["n"]["user"]["p2"].setValue( v3 )
+		s["n"]["user"]["p3"].setValue( v1 )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 		self.assertEqual( s2["n"]["user"]["p1"].defaultValue(), v1 )
 		self.assertEqual( s2["n"]["user"]["p2"].defaultValue(), v2 )
+		self.assertEqual( s2["n"]["user"]["p3"].defaultValue(), v3 )
 		self.assertEqual( s2["n"]["user"]["p1"].getValue(), v2 )
-		self.assertEqual( s2["n"]["user"]["p2"].getValue(), v1 )
+		self.assertEqual( s2["n"]["user"]["p2"].getValue(), v3 )
+		self.assertEqual( s2["n"]["user"]["p3"].getValue(), v1 )
 
 	def testConnectCompoundDataToCompoundObject( self ) :
 
