@@ -1,3 +1,12 @@
+0.59.x.x (relative to 0.59.0.0)
+========
+
+API
+---
+
+- M33fVectorDataPlug : Added new plug type for specifying arrays of 3x3 matrices.
+- PlugAlgo : `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
+
 0.59.0.0
 ========
 

@@ -139,6 +139,7 @@ enum TypeId
 	ShufflesPlugTypeId = 110092,
 	EditScopeTypeId = 110093,
 	MessagesDataTypeId = 110094,
+	M33fVectorDataPlugTypeId = 110095,
 
 	LastTypeId = 110159,
 

@@ -374,6 +374,10 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const M44fVectorData *>( value ) );
 		}
+		case M33fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const M33fVectorData *>( value ) );
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
@@ -451,6 +455,8 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 			return static_cast<const Color3fVectorDataPlug *>( plug )->getValue()->copy();
 		case M44fVectorDataPlugTypeId :
 			return static_cast<const M44fVectorDataPlug *>( plug )->getValue()->copy();
+		case M33fVectorDataPlugTypeId :
+			return static_cast<const M33fVectorDataPlug *>( plug )->getValue()->copy();
 		case SplineffPlugTypeId :
 			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue().spline() );
 		case SplinefColor3fPlugTypeId :
@@ -459,6 +465,8 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 			return new M44fData( static_cast<const TransformPlug *>( plug )->matrix() );
 		case M44fPlugTypeId :
 			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
+		case M33fPlugTypeId :
+			return new M33fData( static_cast<const M33fPlug *>( plug )->getValue() );
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
