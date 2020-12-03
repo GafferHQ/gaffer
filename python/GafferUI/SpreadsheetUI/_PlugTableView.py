@@ -424,6 +424,21 @@ class _PlugTableView( GafferUI.Widget ) :
 			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
 				targetPlug.setInput( sourcePlug )
 
+		index = self._qtWidget().model().indexForPlug( cellPlug )
+		selectionModel = self._qtWidget().selectionModel()
+		selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
+		selectionModel.setCurrentIndex( index, QtCore.QItemSelectionModel.ClearAndSelect )
+
+		# People regularly have spreadsheets in separate windows. Ensure the
+		# sheet has focus after drop has concluded. It will have returned to
+		# the origin of the drag.
+		def focusOnIdle() :
+			if not self._qtWidget().isActiveWindow() :
+				self._qtWidget().activateWindow()
+			self._qtWidget().setFocus()
+			return False
+
+		GafferUI.EventLoop.addIdleCallback( focusOnIdle )
 		return True
 
 	def __connectionPlugs( self, sourcePlug, targetPlug ) :
