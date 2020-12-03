@@ -3,7 +3,11 @@
 
 This release provides substantial improvements to USD support, an upgrade to Qt 5.12, and builds for both Python 2 and 3.
 
-> Caution : The current plug values are now omitted when exporting a Box for referencing. See Improvements section for more details.
+> Caution :
+>
+> - The current plug values are now omitted when exporting a Box for referencing. See Improvements section for more details.
+> - Serialisation fixes for dynamic TransformPlugs and Transform2DPlugs mean that files saved in Gaffer 0.59 may not load
+>   in Gaffer 0.58. This only affects plugs with customised default values.
 
 Features
 --------
@@ -78,7 +82,6 @@ Fixes
 - Checkerboard : Checker colors are now exactly equal to the colorA and colorB parameters.  Previously, there were very tiny floating point errors which grew larger as the distance from origin increased.
 - Transform2DPlug : Fixed serialisation of dynamic plugs, such as plugs promoted to a Box.
 - SplinePlug : Fixed bug that meant `isSetToDefault()` could return true even if it had computed inputs. It now returns false in this case, and never triggers an upstream compute.
-- MenuBar : Fixed Qt bug that prevented hover interaction with the menu bar when using a tablet.
 
 API
 ---
