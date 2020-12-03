@@ -183,6 +183,7 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( Gaffer.V3fVectorDataPlug.ValueType is IECore.V3fVectorData )
 		self.assertTrue( Gaffer.Color3fVectorDataPlug.ValueType is IECore.Color3fVectorData )
 		self.assertTrue( Gaffer.M44fVectorDataPlug.ValueType is IECore.M44fVectorData )
+		self.assertTrue( Gaffer.M33fVectorDataPlug.ValueType is IECore.M33fVectorData )
 		self.assertTrue( Gaffer.V2iVectorDataPlug.ValueType is IECore.V2iVectorData )
 		self.assertTrue( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
 		self.assertTrue( Gaffer.AtomicCompoundDataPlug.ValueType is IECore.CompoundData )
