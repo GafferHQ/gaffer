@@ -463,6 +463,50 @@ class FloatPlugValueAdaptor( ValueAdaptor ) :
 
 ValueAdaptor.registerAdaptor( Gaffer.FloatPlug, FloatPlugValueAdaptor )
 
+class StringPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, plug ) :
+
+		if isinstance( data, IECore.StringVectorData ) :
+			if len( data ) < 2 :
+				return True
+
+		return ValueAdaptor._canSet( data, plug )
+
+	@classmethod
+	def _set( cls, data, plug, atTime ) :
+
+		if isinstance( data, IECore.StringVectorData ) :
+			if len( data ) == 1 :
+				data = IECore.StringData( data[ 0 ] )
+			else :
+				data = IECore.StringData( "" )
+
+		ValueAdaptor._set( data, plug, atTime )
+
+ValueAdaptor.registerAdaptor( Gaffer.StringPlug, StringPlugValueAdaptor )
+
+class StringVectorDataPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, plug ) :
+
+		if isinstance( data, IECore.StringData ) :
+			return True
+
+		return ValueAdaptor._canSet( data, plug )
+
+	@classmethod
+	def _set( cls, data, plug, atTime ) :
+
+		if isinstance( data, IECore.StringData ) :
+			data = IECore.StringVectorData( [ data.value ] )
+
+		ValueAdaptor._set( data, plug, atTime )
+
+ValueAdaptor.registerAdaptor( Gaffer.StringVectorDataPlug, StringVectorDataPlugValueAdaptor )
+
 ## Allows RowPlugs to be copy/pasted across different column configurations,
 # matching by the column names.
 class RowPlugValueAdaptor( ValueAdaptor ) :

@@ -705,6 +705,36 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), 2.0 )
 		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), 2 )
 
+	def testStringConversion( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.StringPlug() )
+		s["rows"].addColumn( Gaffer.StringVectorDataPlug( "v", defaultValue = IECore.StringVectorData() ) )
+		row = s["rows"].addRow()
+
+		bothColumns = [ s["rows"][1]["cells"].children() ]
+
+		data = IECore.StringData( "string" )
+		self.assertTrue( _ClipboardAlgo.canPasteCells( data, bothColumns ) )
+		_ClipboardAlgo.pasteCells( data, bothColumns, 0 )
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), "string" )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), IECore.StringVectorData( [ "string" ] ) )
+
+		for data in (
+			IECore.StringVectorData( [] ),
+			IECore.StringVectorData( [ "one" ] )
+		) :
+			self.assertTrue( _ClipboardAlgo.canPasteCells( data, bothColumns ) )
+			_ClipboardAlgo.pasteCells( data, bothColumns, 0 )
+			self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), data[0] if data else "" )
+			self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), data )
+
+		data = IECore.StringVectorData( [ "one", "two" ] )
+		self.assertFalse( _ClipboardAlgo.canPasteCells( data, bothColumns ) )
+		self.assertTrue( _ClipboardAlgo.canPasteCells( data, [ [ s["rows"][1]["cells"][1] ] ] ) )
+		_ClipboardAlgo.pasteCells( data, [ [ s["rows"][1]["cells"][1] ] ], 0 )
+		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), data )
+
 	def testPasteBasicValues( self ) :
 
 		s = Gaffer.Spreadsheet()
