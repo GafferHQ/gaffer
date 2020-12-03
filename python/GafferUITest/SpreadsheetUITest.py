@@ -752,5 +752,18 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( row["cells"][0]["value"].getValue(), 3 )
 		self.assertEqual( row["cells"][1]["value"]["value"].getValue(), 3 )
 
+	def testCantPasteWithConnections( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.IntPlug() )
+		s["rows"].addRow()
+
+		self.assertTrue( _ClipboardAlgo.canPasteCells( IECore.IntData( 1 ), [ s["rows"][1]["cells"].children() ] ) )
+
+		p = Gaffer.IntPlug()
+		s["rows"][1]["cells"][0]["value"].setInput( p )
+
+		self.assertFalse( _ClipboardAlgo.canPasteCells( IECore.IntData( 1 ), [ s["rows"][1]["cells"].children() ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

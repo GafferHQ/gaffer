@@ -301,12 +301,8 @@ class ValueAdaptor :
 	@classmethod
 	def _canSet( cls, data, plug ) :
 
-		# Ensure we consider child plugs, eg: components of a V3fPlug
-		if Gaffer.MetadataAlgo.readOnly( plug ) :
+		if not cls._canSetKeyOrValue( plug ) :
 			return False
-		for p in Gaffer.Plug.RecursiveRange( plug ) :
-			if Gaffer.MetadataAlgo.getReadOnly( p ) :
-				return False
 
 		plugData = ValueAdaptor.get( plug )
 
@@ -361,9 +357,8 @@ class ValueAdaptor :
 
 		if Gaffer.Animation.isAnimated( plug ) :
 			curve = Gaffer.Animation.acquire( plug )
-			if not Gaffer.MetadataAlgo.readOnly( curve ) :
-				curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Type.Linear ) )
-		elif plug.settable() :
+			curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Type.Linear ) )
+		else :
 			plug.setValue( value )
 
 	@staticmethod
@@ -458,8 +453,11 @@ class FloatPlugValueAdaptor( ValueAdaptor ) :
 	@classmethod
 	def _canSet( cls, data, plug ) :
 
-		# FloatPlug.setValue will take care of this for us
-		return isinstance( data, ( IECore.FloatData, IECore.IntData ) )
+		# FloatPlug.setValue will take care conversion for us
+		if isinstance( data, ( IECore.FloatData, IECore.IntData ) ) :
+			return cls._canSetKeyOrValue( plug )
+
+		return ValueAdaptor._canSet( data, plug )
 
 ValueAdaptor.registerAdaptor( Gaffer.FloatPlug, FloatPlugValueAdaptor )
 
@@ -470,7 +468,7 @@ class StringPlugValueAdaptor( ValueAdaptor ) :
 
 		if isinstance( data, IECore.StringVectorData ) :
 			if len( data ) < 2 :
-				return True
+				return cls._canSetKeyOrValue( plug )
 
 		return ValueAdaptor._canSet( data, plug )
 
@@ -493,7 +491,7 @@ class StringVectorDataPlugValueAdaptor( ValueAdaptor ) :
 	def _canSet( cls, data, plug ) :
 
 		if isinstance( data, IECore.StringData ) :
-			return True
+			return cls._canSetKeyOrValue( plug )
 
 		return ValueAdaptor._canSet( data, plug )
 
