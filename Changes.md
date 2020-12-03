@@ -1,6 +1,11 @@
 0.60.x.x
 ========
 
+Build
+-----
+
+- Moved minimum required C++ standard to C++14.
+
 0.59.0.0
 ========
 
