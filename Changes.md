@@ -22,8 +22,10 @@ Fixes
   - Fixed bug that prevented a spline from being promoted to a Box if it had a non-default number of points. This also affected the use of a spline as the input to an Expression.
 - LRUCache : Fixed bug which could cause hangs during scene generation (#4016).
 - ArnoldShader : Moved the toon shader's `rim_light_tint` and `aov_prefix` parameters to appropriate sections in the UI.
-- Spreadsheet : Fixed bug that caused sections to overflow the available space.
 - Attributes : Added support for loading `extraAttributes` values and connections from Gaffer 0.59 and above.
+- Spreadsheet :
+  - Fixed bug that caused sections to overflow the available space.
+  - Fixed bug that prevented Set Expression helper menu items from appearing when accessed from a Spreadsheet cell.
 
 API
 ---
