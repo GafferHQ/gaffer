@@ -670,7 +670,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( selection ), 1 )
 		self.assertEqual( selection[0].editTarget(), script["sceneReader"]["transform"] )
 		self.assertEqual( selection[0].path(), "/group" )
-		self.assertEqual( selection[0].warning(), "Editing parent location" )
+		self.assertEqual( selection[0].warning(), "Editing parent location \"/group\"" )
 
 	def testSelectionRefersToFirstPublicPlug( self ) :
 

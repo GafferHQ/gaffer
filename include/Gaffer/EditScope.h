@@ -44,8 +44,27 @@ namespace Gaffer
 
 class BoxOut;
 
-/// A container node for interactive tools to make nodes
-/// in as necessary.
+/// A container node for interactive tools to make nodes in as necessary.
+///
+/// EditScopes and Tools
+/// ====================
+///
+/// Tools that affect change by modifying nodes/plugs in the Node Graph
+/// should use the following logic to determine their edit target:
+///
+///  - If no EditScope has been selected, use the last (closest) upstream
+///    target.
+///
+///  - If an EditScope has been selected, prefer existing targets inside
+///    the EditScope over using the EditScopeAlgo to acquire a new target.
+///
+///  - If an EditScope has been selected, but is upstream of another target
+///    either error (if overrides preclude editing), or allow editing with
+///    a suitable warning identifying the last downstream target.
+///
+///  - If an EditScope has been selected but is not in the scene history,
+///    error.
+///
 class GAFFER_API EditScope : public Box
 {
 

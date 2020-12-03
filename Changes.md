@@ -55,6 +55,7 @@ Improvements
 - Checkerboard : Optimized image generation when rotation is 0.
 - InteractiveRender : Added a warning when attribute edits require geometry to be regenerated, as this can have a performance impact. Examples in Arnold include subdivision changes or changes to attributes inherited by procedurals.
 - NodeMenu : Removed Loop node. This node can have severe consequences for performance if used inappropriately. Depending on the use case, the Collect nodes and others often provide a more performant alternative. The Loop node can still be created via the scripting API, but we recommend you consider the alternatives and/or request advice before using it.
+- TransformTool : Improved tool state messaging to include node names and/or paths.
 
 Fixes
 -----
@@ -66,6 +67,7 @@ Fixes
   - Fixed handling of interpolation for normals.
   - Fixed writing of indexed primitive variables to non-indexed USD attributes.
   - Fixed handling of GeometricInterpretation/Role.
+- TransformTools : Fixed bug finding existing nodes inside EditScopes.
 - Viewer : Fixed bug that caused mouse clicks in empty toolbar regions to be ignored.
 - PlugAlgo/BoxIO : Fixed bug handling nested compound plugs.
 - Resample : Fixed hash of intermediate `deep` plug.

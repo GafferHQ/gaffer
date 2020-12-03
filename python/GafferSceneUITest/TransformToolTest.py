@@ -109,7 +109,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 
 		selection = GafferSceneUI.TransformTool.Selection( plane["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope not in history" )
+		self.assertEqual( selection.warning(), "The target EditScope \"EditScope\" is not in the scene history" )
 		self.assertRaises( RuntimeError, selection.acquireTransformEdit )
 		self.assertRaises( RuntimeError, selection.transformSpace )
 		self.assertEqual( selection.editScope(), editScope )
@@ -132,7 +132,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		editScope["enabled"].setValue( False )
 		selection = GafferSceneUI.TransformTool.Selection( transform["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope disabled" )
+		self.assertEqual( selection.warning(), "The target EditScope \"EditScope\" is disabled" )
 		self.assertEqual( selection.editScope(), editScope )
 
 		editScope["enabled"].setValue( True )
@@ -150,7 +150,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 
 		selection = GafferSceneUI.TransformTool.Selection( transform["out"], "/plane", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
-		self.assertEqual( selection.warning(), "EditScope overridden downstream" )
+		self.assertEqual( selection.warning(), "The target EditScope \"EditScope\" is overridden downstream by \"Transform\"" )
 		self.assertEqual( selection.upstreamScene(), transform["out"] )
 
 		# Disable the downstream node and we should be back in business.
@@ -160,6 +160,59 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( selection.editable() )
 		self.assertEqual( selection.warning(), "" )
 		self.assertEqual( selection.upstreamScene(), editScope["out"] )
+
+		# Ensure that we use any existing node within an EditScope in preference
+		# to creating a new tweak node
+
+		plane2 = GafferScene.Plane()
+		plane2["name"].setValue( "otherPlane" )
+		editScope["plane2"] = plane2
+
+		editScope["parent"] = GafferScene.Parent()
+		editScope["parent"]["parent"].setValue( "/" )
+		editScope["parent"]["in"].setInput( editScope["BoxOut"]["in"].getInput() )
+		editScope["parent"]["children"][0].setInput( plane2["out"] )
+		editScope["BoxOut"]["in"].setInput( editScope["parent"]["out"] )
+
+		selection = GafferSceneUI.TransformTool.Selection( transform["out"], "/otherPlane", Gaffer.Context(), editScope )
+
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.warning(), "" )
+		self.assertEqual( selection.upstreamScene(), plane2["out"] )
+		self.assertEqual( selection.editScope(), editScope )
+		self.assertEqual( selection.editTarget(), plane2["transform"] )
+
+		# Ensure we handle being inside the chosen edit scope
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["parent"]["out"], "/plane", Gaffer.Context(), editScope )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "The output of the target EditScope \"EditScope\" is not in the scene history" )
+
+	def testNestedEditScopes( self ) :
+
+		outerScope = Gaffer.EditScope()
+		outerScope.setup( GafferScene.ScenePlug() )
+		innerScope = Gaffer.EditScope()
+		outerScope["Inner"] = innerScope
+		innerScope.setup( outerScope["BoxIn"]["out"] )
+		innerScope["in"].setInput( outerScope["BoxIn"]["out"] )
+		innerScope["parent"] = GafferScene.Parent()
+		innerScope["parent"]["parent"].setValue( "/" )
+		innerScope["parent"]["in"].setInput( innerScope["BoxIn"]["out"] )
+		innerScope["BoxOut"]["in"].setInput( innerScope["parent"]["out"] )
+		innerScope["plane"] = GafferScene.Plane()
+		innerScope["parent"]["children"][0].setInput( innerScope["plane"]["out"] )
+		outerScope["BoxOut"]["in"].setInput( innerScope["out"] )
+
+		selection = GafferSceneUI.TransformTool.Selection( outerScope["out"], "/plane", Gaffer.Context(), innerScope )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.editTarget(), innerScope["plane"]["transform"] )
+		self.assertEqual( selection.editScope(), innerScope )
+
+		selection = GafferSceneUI.TransformTool.Selection( outerScope["out"], "/plane", Gaffer.Context(), outerScope )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.editTarget(), outerScope )
+		self.assertEqual( selection.editScope(), outerScope )
 
 	def testSceneReaderSelectionEditability( self ) :
 
@@ -203,6 +256,40 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		edit = selection.acquireTransformEdit()
 		self.assertTrue( editScope.isAncestorOf( edit.translate ) )
 
+		# Check readOnly is respected
+
+		plane["name"].setValue( "plane2" )
+
+		Gaffer.MetadataAlgo.setReadOnly( plane["transform"]["translate"], True )
+
+		# We still allow 'editing' of existing plugs, but the handles should take care of disabling themselves.
+		selection = GafferSceneUI.TransformTool.Selection( plane["out"], "/plane2", Gaffer.Context(), None )
+		self.assertTrue( selection.editable() )
+		self.assertEqual( selection.warning(), "\"Plane.transform.translate\" is locked" )
+
+		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane2", Gaffer.Context(), editScope )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "\"EditScope\" is locked" )
+		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+			self.assertIsNone( selection.acquireTransformEdit() )
+
+		Gaffer.MetadataAlgo.setReadOnly( editScope, False )
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane2", Gaffer.Context(), editScope )
+		edit = selection.acquireTransformEdit()
+
+		Gaffer.MetadataAlgo.setReadOnly( edit.translate.ancestor( Gaffer.Spreadsheet.RowsPlug ).source(), True  )
+
+		plane["name"].setValue( "plane3" )
+
+		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane3", Gaffer.Context(), editScope )
+		self.assertFalse( selection.editable() )
+		self.assertEqual( selection.warning(), "\"EditScope.TransformEdits.edits\" is locked" )
+		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+			self.assertIsNone( selection.acquireTransformEdit() )
+
 	def testDontEditUpstreamOfReference( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -244,6 +331,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection.upstreamScene(), script["reference"]["transform"]["out"] )
 		self.assertEqual( selection.upstreamPath(), "/plane" )
 		self.assertEqual( selection.upstreamContext()["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
+		self.assertEqual( selection.warning(), "Transform is locked as it is inside \"reference\" which disallows edits to its children" )
 		self.assertFalse( selection.editable() )
 
 if __name__ == "__main__":
