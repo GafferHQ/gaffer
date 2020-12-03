@@ -36,6 +36,7 @@
 
 import IECore
 
+import Gaffer
 import GafferUI
 import GafferUITest
 import GafferSceneTest
@@ -56,6 +57,36 @@ class ShaderUITest( GafferUITest.TestCase ) :
 			n1.transformedBound( None ).center().y,
 			n2.transformedBound( None ).center().y
 		)
+	
+	def testNameValuePlugNodules( self ) :
+		s = GafferSceneTest.TestShader()
+
+		g = GafferUI.NodeGadget.create( s )
+		n1 = g.nodule( s["parameters"]["nvPlug"]["name"] )
+		n2 = g.nodule( s["parameters"]["nvPlug"]["enabled"] )
+		n3 = g.nodule( s["parameters"]["nvPlug"]["value"] )
+
+		self.assertEqual( 
+			Gaffer.Metadata.value( s["parameters"]["nvPlug"], "nodule:type" ),
+			"GafferUI::CompoundNodule"
+		)
+		self.assertEqual( 
+			Gaffer.Metadata.value( s["parameters"]["nvPlug"]["name"], "nodule:type" ),
+			""
+		)
+		self.assertEqual( 
+			Gaffer.Metadata.value( s["parameters"]["nvPlug"]["enabled"], "nodule:type" ),
+			""
+		)
+		self.assertEqual( 
+			Gaffer.Metadata.value( s["parameters"]["nvPlug"]["value"], "nodule:type" ),
+			None
+		)
+		self.assertEqual(
+			Gaffer.Metadata.value( s["parameters"]["nvPlug"]["value"], "noduleLayout:label" ),
+			"nv"
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()

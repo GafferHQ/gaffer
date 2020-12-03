@@ -334,6 +334,45 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 				network.inputConnections( "n3" ),
 				[ network.Connection( network.Parameter( n, "", ), network.Parameter( "n3", "c" ) ) ]
 			)
+	
+	def testNameValuePlug( self ) :
+
+		s = GafferSceneTest.TestShader( "s" )
+		s["type"].setValue( "test:surface" )
+
+		# test value is included
+		network = s.attributes()["test:surface"]
+		self.assertIn( "nv", network.outputShader().parameters )
+
+		# test plug is disabled
+		s["parameters"]["nvPlug"]["enabled"].setValue( False )
+		network = s.attributes()["test:surface"]
+		self.assertNotIn( "nv", network.outputShader().parameters )
+
+		# test plug is enabled again
+		s["parameters"]["nvPlug"]["enabled"].setValue( True )
+		network = s.attributes()["test:surface"]
+		self.assertIn( "nv", network.outputShader().parameters )
+
+		# test shader network
+		n = GafferSceneTest.TestShader( "n" )
+		s["parameters"]["nvPlug"]["value"].setInput( n["out"] )
+		network = s.attributes()["test:surface"]
+		self.assertEqual( len( network ), 2 )
+		self.assertEqual(
+			network.inputConnections( "s" ),
+			[ network.Connection( network.Parameter( "n", "" ), network.Parameter( "s", "nv" ) ) ]
+		)
+
+		#test shader network disabled
+		s["parameters"]["nvPlug"]["enabled"].setValue( False )
+		network = s.attributes()["test:surface"]
+		self.assertEqual( len( network ), 1 )
+
+		#test NameValuePlug without switch
+		netowrk = s.attributes()["test:surface"]
+		self.assertIn( "nvNoSwitch", network.outputShader().parameters )
+	
 
 if __name__ == "__main__":
 	unittest.main()

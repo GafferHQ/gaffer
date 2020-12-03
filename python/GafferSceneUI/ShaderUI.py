@@ -61,6 +61,28 @@ def __parameterUserDefault( plug ) :
 		"userDefault"
 	)
 
+def __parameterNoduleType( plug ) :
+
+	if isinstance( plug, Gaffer.NameValuePlug ) :
+		return "GafferUI::CompoundNodule"
+	
+	return None
+
+def __nameValueParameterChildNoduleType( plug ) :
+
+	if isinstance( plug.parent(), Gaffer.NameValuePlug ) :
+		return ""
+	
+	return None
+
+def __nameValueParameterValueLabel( plug ) :
+
+	plugParent = plug.parent()
+	if isinstance( plugParent, Gaffer.NameValuePlug ) :
+		return plugParent["name"].getValue()
+	
+	return None
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Shader,
@@ -133,6 +155,32 @@ Gaffer.Metadata.registerNode(
 
 			"userDefault", __parameterUserDefault,
 
+		],
+
+		"parameters.*" : [
+
+			# Set NameValuePlug parameters' nodule to CompoundNodule
+			"nodule:type", __parameterNoduleType
+		],
+
+		"parameters.*.name" : [
+
+			# Set the "name" plug nodule to hidden, only if
+			# it is a child of a NameValuePlug
+			"nodule:type", __nameValueParameterChildNoduleType
+		],
+
+		"parameters.*.enabled" : [
+
+			# Set the "enabled" plug nodule to hidden, only if
+			# it is a child of a NameValuePlug
+			"nodule:type", __nameValueParameterChildNoduleType
+		],
+
+		"parameters.*.value" : [
+
+			# Take the nodule label from the name plug
+			"noduleLayout:label", __nameValueParameterValueLabel
 		],
 
 		"out" : [

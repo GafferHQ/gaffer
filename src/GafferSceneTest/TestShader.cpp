@@ -38,6 +38,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/NameValuePlug.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -57,6 +58,17 @@ TestShader::TestShader( const std::string &name )
 	addChild( new Color3fPlug( "out", Plug::Out ) );
 	parametersPlug()->addChild( new IntPlug( "i" ) );
 	parametersPlug()->addChild( new Color3fPlug( "c" ) );
+	parametersPlug()->addChild( new NameValuePlug( 
+		"nv", 
+		new Color3fPlug( "nvc" ),
+		true,
+		"nvPlug"
+	) );
+	parametersPlug()->addChild( new NameValuePlug( 
+		"nvNoSwitch", 
+		new Color3fPlug( "nvc" ),
+		"nvPlugNoSwitch"
+	) );
 }
 
 TestShader::~TestShader()

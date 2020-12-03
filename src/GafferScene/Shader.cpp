@@ -44,6 +44,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Switch.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/NameValuePlug.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
@@ -350,7 +351,15 @@ class Shader::NetworkBuilder
 
 		void hashParameterWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
 		{
-			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
+			if( const Gaffer::NameValuePlug *nameValueParameter = IECore::runTimeCast<const Gaffer::NameValuePlug>( parameter ) )
+			{
+				h.append( nameValueParameter->enabledPlug()->hash() );
+				h.append( nameValueParameter->namePlug()->hash() );
+
+				// Recurse NameValue parameter to include values of Array or Compound parameter
+				hashParameterWalk(nameValueParameter->valuePlug(), h);
+			}
+			else if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
 				// Compound parameter - recurse
 				for( InputPlugIterator it( parameter ); !it.done(); ++it )
@@ -375,7 +384,15 @@ class Shader::NetworkBuilder
 
 		void addParameterWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECoreScene::Shader *shader, vector<IECoreScene::ShaderNetwork::Connection> &connections )
 		{
-			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
+			if( const Gaffer::NameValuePlug *nameValuePlug = IECore::runTimeCast<const Gaffer::NameValuePlug>( parameter ) )
+			{
+				// Recurse NameValue parameter to catch values of Array or Compound parameter
+				if( !nameValuePlug->enabledPlug() || nameValuePlug->enabledPlug()->getValue() )
+				{
+					addParameterWalk( nameValuePlug->valuePlug(), nameValuePlug->namePlug()->getValue(), shader, connections );
+				}
+			}
+			else if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
 				// Compound parameter - recurse
 				for( InputPlugIterator it( parameter ); !it.done(); ++it )
