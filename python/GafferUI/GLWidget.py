@@ -202,7 +202,10 @@ class GLWidget( GafferUI.Widget ) :
 		if self.__multisample:
 			GL.glEnable( GL.GL_MULTISAMPLE )
 
-		self._draw()
+		try :
+			self._draw()
+		except Exception as e :
+			IECore.msg( IECore.Msg.Level.Error, "GLWidget", str( e ) )
 
 class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 

@@ -136,6 +136,23 @@ def __setValue( plug, value, *unused ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( value )
 
+def __spreadsheetTargetNode( plug ) :
+
+	# Find the first node the plug's column is connected to
+	# if it is a spreadsheet cell.
+
+	cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+
+	# Could be a user plug on a Spreadsheet node
+	if cellPlug is None :
+		return None
+
+	outputs = plug.node()[ "out" ][ cellPlug.getName() ].outputs()
+	if not outputs :
+		return None
+
+	return outputs[ 0 ].node()
+
 def __downstreamNodes( plug ) :
 
 	result = set()
@@ -195,6 +212,10 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 			insertAt = (cursorPosition, cursorPosition)
 
 	node = plug.node()
+
+	if isinstance( node, Gaffer.Spreadsheet ) :
+		node = __spreadsheetTargetNode( plug ) or node
+
 	if isinstance( node, GafferScene.Filter ) :
 		nodes = __downstreamNodes( node["out"] )
 	else :

@@ -156,7 +156,7 @@ Build
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
 
-0.58.x.x (relative to 0.58.5.2)
+0.58.6.0 (relative to 0.58.5.2)
 ========
 
 Improvements
@@ -169,17 +169,23 @@ Improvements
   - Added menu items to edit the values for all selected cells of the same type simultaneously.
   - Added menu items to the section chooser to quickly select a specific section.
 - Stats app : Added `-serialise` argument to measure the time taken to serialise the script.
+- Viewer : Improved highlighting of EditScope selector when an EditScope is active.
 
 Fixes
 -----
 
-- Viewer : Render controls should now work when viewing a render after it has passed through a compositing network, providing `gaffer:sourceScene` and `gaffer:isRendering` metadata is preserved (#3888).
+- Viewer :
+  - Render controls should now work when viewing a render after it has passed through a compositing network, providing `gaffer:sourceScene` and `gaffer:isRendering` metadata is preserved (#3888).
+  - Fixed corruption of the GL stack and potential crash caused by exceptions thrown during draw.
 - SplinePlug :
   - Fixed bugs affecting default values. All child plugs are now at their default values following construction and following a call to either `setToDefault()` or `resetDefault()`.
   - Fixed bug that prevented a spline from being promoted to a Box if it had a non-default number of points. This also affected the use of a spline as the input to an Expression.
 - LRUCache : Fixed bug which could cause hangs during scene generation (#4016).
 - ArnoldShader : Moved the toon shader's `rim_light_tint` and `aov_prefix` parameters to appropriate sections in the UI.
-- Spreadsheet : Fixed bug that caused sections to overflow the available space.
+- Attributes : Added support for loading `extraAttributes` values and connections from Gaffer 0.59 and above.
+- Spreadsheet :
+  - Fixed bug that caused sections to overflow the available space.
+  - Fixed bug that prevented Set Expression helper menu items from appearing when accessed from a Spreadsheet cell.
 
 API
 ---
@@ -562,6 +568,14 @@ Build
 -----
 
 - Updated to GafferHQ/dependencies 1.6.0.
+
+0.57.7.6 (relative to 0.57.7.5)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed corruption of the GL stack and potential crash caused by exceptions thrown during draw.
 
 0.57.7.5 (relative to 0.57.7.4)
 ========

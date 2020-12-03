@@ -208,7 +208,10 @@ def __defaultCellMetadata( plug, key ) :
 for key in [
 	"spreadsheet:columnLabel",
 	"plugValueWidget:type",
-	"presetsPlugValueWidget:allowCustom"
+	"presetsPlugValueWidget:allowCustom",
+	"ui:scene:acceptsSetName",
+	"ui:scene:acceptsSetNames",
+	"ui:scene:acceptsSetExpression"
 ] :
 
 	Gaffer.Metadata.registerValue(
