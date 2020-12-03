@@ -40,8 +40,6 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
 
-#include "boost/make_unique.hpp"
-
 #include <mutex>
 #include <stack>
 
@@ -102,7 +100,7 @@ GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread(
 	ContextPtr backgroundContext = new Context( *Context::current() );
 	Monitor::MonitorSet backgroundMonitors = Monitor::current();
 
-	return boost::make_unique<BackgroundTask>(
+	return std::make_unique<BackgroundTask>(
 
 		subject,
 
