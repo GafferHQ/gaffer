@@ -55,7 +55,7 @@ buildDir=${1:-"build/gaffer-$gafferMilestoneVersion.$gafferMajorVersion.$gafferM
 
 # Get the prebuilt dependencies package and unpack it into the build directory
 
-dependenciesVersion="2.0.0"
+dependenciesVersion="2.1.1"
 dependenciesVersionSuffix=""
 dependenciesPythonVersion="2"
 dependenciesFileName="gafferDependencies-$dependenciesVersion-Python$dependenciesPythonVersion-$platform.tar.gz"
