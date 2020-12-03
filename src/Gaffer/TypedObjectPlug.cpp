@@ -57,6 +57,46 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::CompoundObjectPlug, CompoundObjectPlug
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicCompoundDataPlug, AtomicCompoundDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::PathMatcherDataPlug, PathMatcherDataPlugTypeId )
 
+// Specialise CompoundObjectPlug to accept connections from CompoundDataPlug
+
+template<>
+bool CompoundObjectPlug::acceptsInput( const Plug *input ) const
+{
+	if( !ValuePlug::acceptsInput( input ) )
+	{
+		return false;
+	}
+
+	if( input )
+	{
+		return
+			input->isInstanceOf( staticTypeId() ) ||
+			input->isInstanceOf( AtomicCompoundDataPlug::staticTypeId() )
+		;
+	}
+	return true;
+}
+
+template<>
+void CompoundObjectPlug::setFrom( const ValuePlug *other )
+{
+	switch( static_cast<Gaffer::TypeId>( other->typeId() ) )
+	{
+		case CompoundObjectPlugTypeId :
+			setValue( static_cast<const CompoundObjectPlug *>( other )->getValue() );
+			break;
+		case AtomicCompoundDataPlugTypeId : {
+			IECore::ConstCompoundDataPtr d = static_cast<const AtomicCompoundDataPlug *>( other )->getValue();
+			IECore::CompoundObjectPtr o = new IECore::CompoundObject;
+			o->members().insert( d->readable().begin(), d->readable().end() );
+			setValue( o );
+			break;
+		}
+		default :
+			throw IECore::Exception( "Unsupported plug type" );
+	}
+}
+
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
 template class TypedObjectPlug<IECore::BoolVectorData>;

@@ -62,8 +62,8 @@ class GAFFERSCENE_API Attributes : public AttributeProcessor
 		Gaffer::BoolPlug *globalPlug();
 		const Gaffer::BoolPlug *globalPlug() const;
 
-		Gaffer::AtomicCompoundDataPlug *extraAttributesPlug();
-		const Gaffer::AtomicCompoundDataPlug *extraAttributesPlug() const;
+		Gaffer::CompoundObjectPlug *extraAttributesPlug();
+		const Gaffer::CompoundObjectPlug *extraAttributesPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
