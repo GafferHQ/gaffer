@@ -1386,6 +1386,14 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
+	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"][editScopeActive="true"] QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]
+	{
+		border: 1px solid rgb( 46, 75, 107 );
+		border-top-color: rgb( 75, 113, 155 );
+		border-left-color: rgb( 75, 113, 155 );
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
+	}
+
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
 		padding: 1px;
 	}
