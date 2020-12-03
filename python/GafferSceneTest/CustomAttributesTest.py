@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -385,6 +386,33 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertIn( attributes["out"]["globals"], { x[0] for x in cs } )
 		self.assertEqual( attributes["out"].globals(), IECore.CompoundObject( { "option:render:camera" : IECore.StringData( "" ) } ) )
+
+	def testLoadExtraAttributesFrom0_59( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "extraAttributes-0.59.0.0.gfr" ) )
+		script.load()
+
+		self.assertEqual(
+			script["CustomAttributesWithExpression"]["out"].attributes( "/sphere" ),
+			IECore.CompoundObject( {
+				"a" : IECore.StringData( "a" )
+			} )
+		)
+
+		self.assertEqual(
+			script["CustomAttributesWithValue"]["out"].attributes( "/sphere" ),
+			IECore.CompoundObject( {
+				"b" : IECore.StringData( "b" )
+			} )
+		)
+
+		self.assertEqual(
+			script["CustomAttributesWithConnection"]["out"].attributes( "/sphere" ),
+			IECore.CompoundObject( {
+				"c" : IECore.StringData( "c" )
+			} )
+		)
 
 if __name__ == "__main__":
 	unittest.main()

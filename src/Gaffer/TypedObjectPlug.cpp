@@ -37,6 +37,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "Gaffer/Node.h"
 #include "Gaffer/TypedObjectPlug.inl"
 
 namespace Gaffer
@@ -56,6 +57,78 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::ObjectVectorPlug, ObjectVectorPlugType
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::CompoundObjectPlug, CompoundObjectPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicCompoundDataPlug, AtomicCompoundDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::PathMatcherDataPlug, PathMatcherDataPlugTypeId )
+
+// Specialise AtomicCompoundDataPlug to provide forward compatibility for connections
+// from `Attributes.extraAttributes` in Gaffer 0.59.
+
+const IECore::InternedString g_extraAttributes( "extraAttributes" );
+
+bool supportCompoundObjectInput( const AtomicCompoundDataPlug *plug )
+{
+	if( plug->getName() != g_extraAttributes )
+	{
+		return false;
+	}
+
+	const Node *node = plug->node();
+	if( !node )
+	{
+		return false;
+	}
+
+	return node->isInstanceOf( "GafferScene::Attributes" );
+}
+
+template<>
+bool AtomicCompoundDataPlug::acceptsInput( const Plug *input ) const
+{
+	if( !ValuePlug::acceptsInput( input ) )
+	{
+		return false;
+	}
+
+	if( input )
+	{
+		return
+			input->isInstanceOf( staticTypeId() ) ||
+			( input->isInstanceOf( CompoundObjectPlug::staticTypeId() ) && supportCompoundObjectInput( this ) )
+		;
+	}
+	return true;
+}
+
+template<>
+void AtomicCompoundDataPlug::setFrom( const ValuePlug *other )
+{
+	switch( static_cast<Gaffer::TypeId>( other->typeId() ) )
+	{
+		case AtomicCompoundDataPlugTypeId :
+			setValue( static_cast<const AtomicCompoundDataPlug *>( other )->getValue() );
+			break;
+		case CompoundObjectPlugTypeId : {
+			if( supportCompoundObjectInput( this ) )
+			{
+				IECore::ConstCompoundObjectPtr o = static_cast<const CompoundObjectPlug *>( other )->getValue();
+				IECore::CompoundDataPtr d = new IECore::CompoundData;
+				for( const auto &e : o->members() )
+				{
+					if( auto *ed = IECore::runTimeCast<IECore::Data>( e.second.get() ) )
+					{
+						d->writable()[e.first] = ed;
+					}
+					else
+					{
+						throw IECore::Exception( "Unsupported object type" );
+					}
+				}
+				setValue( d );
+				break;
+			}
+		}
+		default :
+			throw IECore::Exception( "Unsupported plug type" );
+	}
+}
 
 // explicit instantiation
 template class TypedObjectPlug<IECore::Object>;
