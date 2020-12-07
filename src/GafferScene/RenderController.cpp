@@ -49,7 +49,6 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/container/flat_set.hpp"
-#include "boost/make_unique.hpp"
 
 #include "tbb/task.h"
 
@@ -1041,7 +1040,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 	{
 		// We avoid light linking overhead for the GL renderer,
 		// because we know it doesn't support it.
-		m_lightLinks = boost::make_unique<LightLinks>();
+		m_lightLinks = std::make_unique<LightLinks>();
 	}
 
 	CompoundObjectPtr boundAttributes = new CompoundObject;
