@@ -89,9 +89,12 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 			_SplinePlugValueDialogue.acquire( self.getPlug() )
 			return True
 
-GafferUI.PlugValueWidget.registerType( Gaffer.SplineffPlug, SplinePlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor3fPlug, SplinePlugValueWidget )
-GafferUI.PlugValueWidget.registerType( Gaffer.SplinefColor4fPlug, SplinePlugValueWidget )
+for plugType in ( Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug ) :
+
+	GafferUI.PlugValueWidget.registerType( plugType, SplinePlugValueWidget )
+	Gaffer.Metadata.registerValue( plugType, "interpolation", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+	for name, value in sorted( Gaffer.SplineDefinitionInterpolation.names.items() ):
+		Gaffer.Metadata.registerValue( plugType, "interpolation", "preset:" + name, value )
 
 ## \todo See comments for `ColorSwatchPlugValueWidget._ColorPlugValueDialogue`.
 # I think the best approach is probably to move the `acquire()` mechanism to the
