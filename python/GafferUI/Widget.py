@@ -1035,7 +1035,7 @@ class _EventFilter( QtCore.QObject ) :
 			event = GafferUI.ButtonEvent(
 				Widget._buttons( qEvent.button() ),
 				Widget._buttons( qEvent.buttons() ),
-				self.__positionToLine( qEvent.pos() ),
+				self.__widgetSpaceLine( qEvent, widget ),
 				0.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
@@ -1064,7 +1064,7 @@ class _EventFilter( QtCore.QObject ) :
 				event = GafferUI.ButtonEvent(
 					Widget._buttons( qEvent.button() ),
 					Widget._buttons( qEvent.buttons() ),
-					self.__positionToLine( qEvent.pos() ),
+					self.__widgetSpaceLine( qEvent, widget ),
 					0.0,
 					Widget._modifiers( qEvent.modifiers() ),
 				)
@@ -1083,7 +1083,7 @@ class _EventFilter( QtCore.QObject ) :
 			event = GafferUI.ButtonEvent(
 				Widget._buttons( qEvent.button() ),
 				Widget._buttons( qEvent.buttons() ),
-				self.__positionToLine( qEvent.pos() ),
+				self.__widgetSpaceLine( qEvent, widget ),
 				0.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
@@ -1103,7 +1103,7 @@ class _EventFilter( QtCore.QObject ) :
 			event = GafferUI.ButtonEvent(
 				Widget._buttons( qEvent.button() ),
 				Widget._buttons( qEvent.buttons() ),
-				self.__positionToLine( qEvent.pos() ),
+				self.__widgetSpaceLine( qEvent, widget ),
 				0.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
@@ -1136,7 +1136,7 @@ class _EventFilter( QtCore.QObject ) :
 			event = GafferUI.ButtonEvent(
 				GafferUI.ButtonEvent.Buttons.None_,
 				Widget._buttons( qEvent.buttons() ),
-				self.__positionToLine( qEvent.pos() ),
+				self.__widgetSpaceLine( qEvent, widget ),
 				qEvent.delta() / 8.0,
 				Widget._modifiers( qEvent.modifiers() ),
 			)
@@ -1206,12 +1206,12 @@ class _EventFilter( QtCore.QObject ) :
 			self.__lastButtonPressWidget = None
 			return False
 
-		if ( self.__lastButtonPressEvent.line.p0 - self.__positionToLine( qEvent.pos() ).p0 ).length() < 3 :
-			return False
-
 		sourceWidget = self.__lastButtonPressWidget()
 		if sourceWidget is None :
 			# the widget died
+			return False
+
+		if ( self.__lastButtonPressEvent.line.p0 - self.__widgetSpaceLine( qEvent, sourceWidget ).p0 ).length() < 3 :
 			return False
 
 		if sourceWidget._dragBeginSignal is None :
@@ -1241,8 +1241,7 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
-		candidateWidget = Widget.widgetAt( cursorPos )
+		candidateWidget = Widget.widgetAt( imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() ) )
 
 		if candidateWidget is self.__dragDropEvent.destinationWidget :
 			return
@@ -1251,7 +1250,7 @@ class _EventFilter( QtCore.QObject ) :
 		if candidateWidget is not None :
 			while candidateWidget is not None :
 				if candidateWidget._dragEnterSignal is not None :
-					self.__dragDropEvent.line = self.__positionToLine( cursorPos - candidateWidget.bound().min() )
+					self.__dragDropEvent.line = self.__widgetSpaceLine( qEvent, candidateWidget )
 					if candidateWidget._dragEnterSignal( candidateWidget, self.__dragDropEvent ) :
 						newDestinationWidget = candidateWidget
 						break
@@ -1268,7 +1267,7 @@ class _EventFilter( QtCore.QObject ) :
 			previousDestinationWidget = self.__dragDropEvent.destinationWidget
 			self.__dragDropEvent.destinationWidget = newDestinationWidget
 			if previousDestinationWidget is not None and previousDestinationWidget._dragLeaveSignal is not None :
-				self.__dragDropEvent.line = self.__positionToLine( cursorPos - previousDestinationWidget.bound().min() )
+				self.__dragDropEvent.line = self.__widgetSpaceLine( qEvent, previousDestinationWidget )
 				previousDestinationWidget._dragLeaveSignal( previousDestinationWidget, self.__dragDropEvent )
 
 	def __updateDrag( self, qObject, qEvent ) :
@@ -1285,10 +1284,7 @@ class _EventFilter( QtCore.QObject ) :
 			return True
 
 		if dst._dragMoveSignal :
-
-			cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
-			self.__dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min() )
-
+			self.__dragDropEvent.line = self.__widgetSpaceLine( qEvent, dst )
 			dst._dragMoveSignal( dst, self.__dragDropEvent )
 
 		return True
@@ -1325,12 +1321,10 @@ class _EventFilter( QtCore.QObject ) :
 
 		# Emit dropSignal() on the destination.
 
-		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
-
 		dst = dragDropEvent.destinationWidget
 		if dst is not None and dst._dropSignal :
 
-			dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min() )
+			dragDropEvent.line = self.__widgetSpaceLine( qEvent, dst )
 			dragDropEvent.dropResult = dst._dropSignal( dst, dragDropEvent )
 
 		# Emit dragEndSignal() on source.
@@ -1338,7 +1332,7 @@ class _EventFilter( QtCore.QObject ) :
 		src = dragDropEvent.sourceWidget
 		if src._dragEndSignal :
 
-			dragDropEvent.line = self.__positionToLine( cursorPos - src.bound().min() )
+			dragDropEvent.line = self.__widgetSpaceLine( qEvent, src )
 
 			src._dragEndSignal(
 				src,
@@ -1347,16 +1341,18 @@ class _EventFilter( QtCore.QObject ) :
 
 		return True
 
-	def __positionToLine( self, pos ) :
+	# Maps the position of the supplied Qt mouse event into the coordinate
+	# space of the target Gaffer widget. This is required as certain widget
+	# configurations (eg: QTableView with a visible header) result in qEvent
+	# coordinate origins differing from the Gaffer Widget's origin.
+	def __widgetSpaceLine( self, qEvent, targetWidget ) :
 
-		if isinstance( pos, imath.V2i ) :
-			x, y = pos.x, pos.y
-		else :
-			x, y = pos.x(), pos.y()
+		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+		cursorPos -= targetWidget.bound().min()
 
 		return IECore.LineSegment3f(
-			imath.V3f( x, y, 1 ),
-			imath.V3f( x, y, 0 )
+			imath.V3f( cursorPos.x, cursorPos.y, 1 ),
+			imath.V3f( cursorPos.x, cursorPos.y, 0 )
 		)
 
 # this single instance is used by all widgets

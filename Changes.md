@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.0.0)
 ========
 
+Fixes
+-----
+
+- Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
+
 API
 ---
 
