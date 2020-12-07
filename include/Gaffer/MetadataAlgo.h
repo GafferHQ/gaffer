@@ -151,8 +151,15 @@ GAFFER_API bool ancestorAffectedByChange( const GraphComponent *graphComponent, 
 /// Copying
 /// =======
 
-/// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
+/// Copies metadata from one target to another.
 /// \undoable
+/// \todo Default `persistent` to true after removing the deprecated overload below.
+GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, bool persistent );
+/// As above, but skipping items where `predicate( const GraphComponent *from, const GraphComponent *to, name )` returns false.
+/// \undoable
+template<typename Predicate>
+void copyIf( const GraphComponent *from, GraphComponent *to, Predicate &&predicate, bool persistent = true );
+/// \deprecated Either use the simpler version of `copy()`, or use `copyIf()` to implement exclusions.
 GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
 
 /// Copy nodule and noodle color meta data from srcPlug to dstPlug
@@ -162,5 +169,7 @@ GAFFER_API void copyColors( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, 
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
+
+#include "Gaffer/MetadataAlgo.inl"
 
 #endif // GAFFER_METADATAALGO_H

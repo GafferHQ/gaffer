@@ -373,6 +373,14 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		for k in Gaffer.Metadata.registeredValues( t ) :
 			self.assertEqual( Gaffer.Metadata.value( t, k ), Gaffer.Metadata.value( s, k ) )
 
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copyIf( s, t, lambda f, t, n : n.startswith( "a" ) )
+		self.assertEqual( registeredTestValues( t ), { "a", "a2" } )
+
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copyIf( s, t, lambda f, t, n : n.startswith( "c" ) )
+		self.assertEqual( registeredTestValues( t ), { "c" } )
+
 	def testCopyColorKeepExisting( self ) :
 
 		plug1 = Gaffer.IntPlug()
