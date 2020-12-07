@@ -717,7 +717,11 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 
 	Node *externalNode = ::externalNode( plug );
 	const bool dynamic = runTimeCast<Box>( externalNode ) || parent == externalNode->userPlug();
-	MetadataAlgo::copy( plug, externalPlug.get(), excludeMetadata, /* persistentOnly = */ dynamic, /* persistent = */ dynamic );
+	// We use `persistent = dynamic` so that `promoteWithName()` can be used in
+	// constructors for custom nodes, to promote a plug from an internal
+	// network. In this case, we don't want the metadata to be serialised with
+	// the node, as it will be recreated upon construction anyway.
+	MetadataAlgo::copy( plug, externalPlug.get(), excludeMetadata, /* persistentOnly = */ false, /* persistent = */ dynamic );
 	if( dynamic )
 	{
 		applyDynamicFlag( externalPlug.get() );

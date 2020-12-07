@@ -14,6 +14,7 @@ Fixes
 
 - Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
 - Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
+- PlugAlgo : Fixed metadata handling when promoting plugs which were themselves promoted from the constructor of a custom node.
 
 API
 ---
