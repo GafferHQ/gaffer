@@ -597,5 +597,27 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"] ) )
 		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"], persistentOnly = True ) )
 
+	def testPromotableMetadata( self ) :
+
+		box = Gaffer.Box()
+		box["n"] = Gaffer.Node()
+		box["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "a", 10 )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "b", 20 )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "b:promotable", False )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "c", 30 )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "c:promotable", True )
+
+		p = Gaffer.PlugAlgo.promote( box["n"]["user"]["p"] )
+		self.assertEqual( Gaffer.Metadata.value( p, "a" ), 10 )
+		self.assertIsNone( Gaffer.Metadata.value( p, "b" ) )
+		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
+		self.assertNotIn( "b", Gaffer.Metadata.registeredValues( p ) )
+		self.assertNotIn( "b:promotable", Gaffer.Metadata.registeredValues( p ) )
+		self.assertEqual( Gaffer.Metadata.value( p, "c" ), 30 )
+		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
+		self.assertNotIn( "c:promotable", Gaffer.Metadata.registeredValues( p ) )
+
 if __name__ == "__main__":
 	unittest.main()

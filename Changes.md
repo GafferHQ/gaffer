@@ -20,8 +20,10 @@ API
 ---
 
 - M33fVectorDataPlug : Added new plug type for specifying arrays of 3x3 matrices.
-- PlugAlgo : `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
 - FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
+- PlugAlgo :
+  - `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
+  - `promote()` allows metadata to be excluded from promotion by registering a `<metadataName>:promotable` metadata value of `false`.
 - MetadataAlgo :
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.

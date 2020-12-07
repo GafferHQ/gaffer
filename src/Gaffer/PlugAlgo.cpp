@@ -717,11 +717,40 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 
 	Node *externalNode = ::externalNode( plug );
 	const bool dynamic = runTimeCast<Box>( externalNode ) || parent == externalNode->userPlug();
-	// We use `persistent = dynamic` so that `promoteWithName()` can be used in
-	// constructors for custom nodes, to promote a plug from an internal
-	// network. In this case, we don't want the metadata to be serialised with
-	// the node, as it will be recreated upon construction anyway.
-	MetadataAlgo::copy( plug, externalPlug.get(), excludeMetadata, /* persistentOnly = */ false, /* persistent = */ dynamic );
+
+	MetadataAlgo::copyIf(
+		plug, externalPlug.get(),
+		[&excludeMetadata]( const GraphComponent *from, const GraphComponent *to, InternedString name ) {
+			if( StringAlgo::matchMultiple( name.string(), excludeMetadata ) )
+			{
+				/// \todo Remove `excludeMetadata` and rely on registered exclusions only. An obstacle
+				/// to doing this is making it easy to exclude `layout:*` without lots and lots of
+				/// individual exclusions.
+				return false;
+			}
+			if( boost::ends_with( name.string(), ":promotable" ) )
+			{
+				// No need to promote "<name>:promotable". If it's true, that's the default
+				// which will apply to the promoted plug anyway. And if it's false, then we're not
+				// promoting.
+				return false;
+			}
+			if( auto promotable = Metadata::value<BoolData>( from, name.string() + ":promotable" ) )
+			{
+				if( !promotable->readable() )
+				{
+					return false;
+				}
+			}
+			return true;
+		},
+		// We use `persistent = dynamic` so that `promoteWithName()` can be used in
+		// constructors for custom nodes, to promote a plug from an internal
+		// network. In this case, we don't want the metadata to be serialised with
+		// the node, as it will be recreated upon construction anyway.
+		/* persistent = */ dynamic
+	);
+
 	if( dynamic )
 	{
 		applyDynamicFlag( externalPlug.get() );
