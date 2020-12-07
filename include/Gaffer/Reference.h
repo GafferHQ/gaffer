@@ -73,8 +73,6 @@ class GAFFER_API Reference : public SubGraph
 		bool isReferencePlug( const Plug *plug ) const;
 		void transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const;
 
-		void convertPersistentMetadata( Plug *plug ) const;
-
 		std::string m_fileName;
 		ReferenceLoadedSignal m_referenceLoadedSignal;
 
