@@ -14,6 +14,7 @@ Fixes
 
 - Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
 - Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
+- CatalogueSelect : Fixed broken presets for promoted `imageName` plugs.
 - PlugAlgo : Fixed metadata handling when promoting plugs which were themselves promoted from the constructor of a custom node.
 - NodeAlgo : Fixed corner case where a preset could be listed twice if it was specified by both `preset:<name>` and `presetNames`.
 
