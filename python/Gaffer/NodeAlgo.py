@@ -60,7 +60,10 @@ def presets( plug ) :
 		if n.startswith( "preset:" ) :
 			result.append( n[7:] )
 
-	result.extend( Gaffer.Metadata.value( plug, "presetNames" ) or [] )
+	presetNames = Gaffer.Metadata.value( plug, "presetNames" )
+	if presetNames :
+		toOmit = set( result )
+		result.extend( [ n for n in presetNames if n not in toOmit ] )
 
 	return result
 

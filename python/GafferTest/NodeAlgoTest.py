@@ -202,6 +202,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		# a preset registered individually should take precedence
 
 		Gaffer.Metadata.registerValue( node["op1"], "preset:c", 10 )
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [ "c", "a", "b" ] )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
 
 		Gaffer.NodeAlgo.applyPreset( node["op1"], "c" )
