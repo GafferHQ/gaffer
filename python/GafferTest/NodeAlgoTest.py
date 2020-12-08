@@ -209,6 +209,33 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 10 )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), "c" )
 
+	def testConnectedPresets( self ) :
+
+		box = Gaffer.Box()
+		box["n"] = GafferTest.AddNode()
+		p = Gaffer.PlugAlgo.promote( box["n"]["op1"] )
+
+		self.assertEqual( Gaffer.NodeAlgo.presets( p ), [] )
+		self.assertEqual( Gaffer.NodeAlgo.presets( box["n"]["op1"] ), [] )
+
+		Gaffer.Metadata.registerValue( box["n"]["op1"], "preset:a", 10 )
+		self.assertEqual( Gaffer.NodeAlgo.presets( box["n"]["op1"] ), [ "a" ] )
+		self.assertEqual( Gaffer.NodeAlgo.presets( p ), [ "a" ] )
+
+		Gaffer.Metadata.registerValue( box["n"]["op1"], "presetNames", IECore.StringVectorData( [ "b" ] ) )
+		Gaffer.Metadata.registerValue( box["n"]["op1"], "presetValues", IECore.IntVectorData( [ 20 ] ) )
+		self.assertEqual( Gaffer.NodeAlgo.presets( box["n"]["op1"] ), [ "a", "b" ] )
+		self.assertEqual( Gaffer.NodeAlgo.presets( p ), [ "a", "b" ] )
+
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( p ), None )
+		Gaffer.NodeAlgo.applyPreset( p, "a" )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( p ), "a" )
+		self.assertEqual( p.getValue(), 10 )
+
+		Gaffer.NodeAlgo.applyPreset( p, "b" )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( p ), "b" )
+		self.assertEqual( p.getValue(), 20 )
+
 	def __visitationGraph( self ) :
 
 		# L1_1     L1_2

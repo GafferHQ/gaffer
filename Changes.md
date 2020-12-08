@@ -25,6 +25,10 @@ API
 - PlugAlgo :
   - `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
   - `promote()` allows metadata to be excluded from promotion by registering a `<metadataName>:promotable` metadata value of `false`.
+- NodeAlgo : If an input plug does not have presets of its own, it now inherits them from its first output. This is particularly useful
+  when promoting plugs which have dynamic presets which are computed on demand. Previously the presets would have been baked in
+  to the promoted plug, but by preventing promotion using `presetNames:promotable = false` and `presetValues:promotable = false`
+  the promoted plug can continue to use the dynamic presets.
 - MetadataAlgo :
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
