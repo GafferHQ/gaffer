@@ -118,17 +118,12 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 
 	// Emit the `setValue()` call for this plug.
 
-	object pythonValue = pythonPlug.attr( "getValue" )();
-
-	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+	if( plug->isSetToDefault() )
 	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		if( pythonValue == pythonDefaultValue )
-		{
-			return "";
-		}
+		return "";
 	}
 
+	object pythonValue = pythonPlug.attr( "getValue" )();
 	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue ) + " )\n";
 }
 
