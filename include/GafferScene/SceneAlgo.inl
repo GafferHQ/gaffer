@@ -172,7 +172,7 @@ class LocationTask : public tbb::task
 template <class ThreadableFunctor>
 struct ThreadableFilteredFunctor
 {
-	ThreadableFilteredFunctor( ThreadableFunctor &f, const Gaffer::IntPlug *filter ): m_f( f ), m_filter( filter ){}
+	ThreadableFilteredFunctor( ThreadableFunctor &f, const GafferScene::FilterPlug *filter ): m_f( f ), m_filter( filter ){}
 
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
@@ -194,7 +194,7 @@ struct ThreadableFilteredFunctor
 	}
 
 	ThreadableFunctor &m_f;
-	const Gaffer::IntPlug *m_filter;
+	const FilterPlug *m_filter;
 
 };
 
@@ -262,7 +262,7 @@ void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const Gaffer
 }
 
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f )
+void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const GafferScene::FilterPlug *filterPlug, ThreadableFunctor &f )
 {
 	Detail::ThreadableFilteredFunctor<ThreadableFunctor> ff( f, filterPlug );
 	parallelTraverse( scene, ff );

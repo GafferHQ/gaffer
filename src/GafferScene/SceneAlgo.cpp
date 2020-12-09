@@ -141,7 +141,7 @@ void GafferScene::SceneAlgo::matchingPaths( const Filter *filter, const ScenePlu
 	matchingPaths( filter->outPlug(), scene, paths );
 }
 
-void GafferScene::SceneAlgo::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+void GafferScene::SceneAlgo::matchingPaths( const FilterPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
 	ThreadablePathAccumulator f( paths );
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f );

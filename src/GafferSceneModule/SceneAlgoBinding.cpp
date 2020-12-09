@@ -94,7 +94,7 @@ void matchingPathsWrapper1( const Filter *filter, const ScenePlug *scene, PathMa
 	SceneAlgo::matchingPaths( filter, scene, paths );
 }
 
-void matchingPathsWrapper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+void matchingPathsWrapper2( const FilterPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
