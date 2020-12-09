@@ -415,19 +415,6 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 	return result;
 }
 
-/// \todo It's error prone to have to use SceneScope like this. Consider
-/// improvements to the FilterPlug so that you're forced to pass a scene
-/// somehow. The use of the context to provide the input scene is questionable
-/// anyway, and we don't tend to cache evaluations for `Filter.out`. So perhaps
-/// Filters shouldn't even be ComputeNodes, and FilterPlug shouldn't be an
-/// IntPlug, and instead we should pass a scene directly to some sort of
-/// `FilterPlug::match( const ScenePlug *scene )` method?
-int filterResult( const FilterPlug *filter, const ScenePlug *scene )
-{
-	FilterPlug::SceneScope scope( Context::current(), scene );
-	return filter->getValue();
-}
-
 void addGenericAttributePredecessors( const SceneAlgo::History::Predecessors &source, SceneAlgo::AttributeHistory *destination )
 {
 	for( auto &h : source )
@@ -443,7 +430,7 @@ void addCopyAttributesPredecessors( const CopyAttributes *copyAttributes, const 
 {
 	const ScenePlug *sourceScene = copyAttributes->inPlug();
 	if(
-		( filterResult( copyAttributes->filterPlug(), copyAttributes->inPlug() ) & PathMatcher::ExactMatch ) &&
+		( copyAttributes->filterPlug()->match( copyAttributes->inPlug() ) & PathMatcher::ExactMatch ) &&
 		StringAlgo::matchMultiple( destination->attributeName, copyAttributes->attributesPlug()->getValue() )
 	)
 	{
@@ -486,7 +473,7 @@ void addShuffleAttributesPredecessors( const ShuffleAttributes *shuffleAttribute
 	// has come from.
 
 	InternedString sourceAttributeName = destination->attributeName;
-	if( filterResult( shuffleAttributes->filterPlug(), shuffleAttributes->inPlug() ) & PathMatcher::ExactMatch )
+	if( shuffleAttributes->filterPlug()->match( shuffleAttributes->inPlug() ) & PathMatcher::ExactMatch )
 	{
 		auto inputAttributes = shuffleAttributes->inPlug()->attributesPlug()->getValue();
 		map<InternedString, InternedString> shuffledNames;
@@ -554,7 +541,7 @@ SceneProcessor *objectTweaksWalk( const SceneAlgo::History *h )
 		if( h->scene == tweaks->outPlug() )
 		{
 			Context::Scope contextScope( h->context.get() );
-			if( filterResult( tweaks->filterPlug(), tweaks->inPlug() ) & PathMatcher::ExactMatch )
+			if( tweaks->filterPlug()->match( tweaks->inPlug() ) & PathMatcher::ExactMatch )
 			{
 				return tweaks;
 			}
@@ -581,7 +568,7 @@ ShaderTweaks *shaderTweaksWalk( const SceneAlgo::AttributeHistory *h )
 			Context::Scope contextScope( h->context.get() );
 			if(
 				StringAlgo::matchMultiple( h->attributeName, tweaks->shaderPlug()->getValue() ) &&
-				( filterResult( tweaks->filterPlug(), tweaks->inPlug() ) & PathMatcher::ExactMatch )
+				( tweaks->filterPlug()->match( tweaks->inPlug() ) & PathMatcher::ExactMatch )
 			)
 			{
 				return tweaks;
