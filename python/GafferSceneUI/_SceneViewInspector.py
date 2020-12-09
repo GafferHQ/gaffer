@@ -470,7 +470,7 @@ class _ParameterInspector( object ) :
 			if not node["enabled"].getValue() :
 				return None
 
-			if "filter" in node and not ( node["filter"].getValue() & IECore.PathMatcher.Result.ExactMatch ) :
+			if "filter" in node and not ( node["filter"].match( attributeHistory.scene ) & IECore.PathMatcher.Result.ExactMatch ) :
 				return None
 
 			if isinstance( node, ( GafferScene.Light, GafferScene.LightFilter ) ) :
