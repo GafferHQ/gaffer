@@ -176,11 +176,7 @@ struct ThreadableFilteredFunctor
 
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
-		IECore::PathMatcher::Result match;
-		{
-			FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
-			match = (IECore::PathMatcher::Result)m_filter->getValue();
-		}
+		IECore::PathMatcher::Result match = (IECore::PathMatcher::Result)m_filter->match( scene );
 
 		if( match & IECore::PathMatcher::ExactMatch )
 		{
