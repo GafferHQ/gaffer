@@ -1,3 +1,11 @@
+0.58.6.x (relative to 0.58.6.0)
+========
+
+API
+---
+
+- FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
+
 0.58.6.0 (relative to 0.58.5.2)
 ========
 

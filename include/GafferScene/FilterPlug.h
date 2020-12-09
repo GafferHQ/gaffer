@@ -88,6 +88,10 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 		/// usage, see `FilteredSceneProcessor::affects()`.
 		void sceneAffects( const Gaffer::Plug *scenePlugChild, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const;
 
+		/// Evaluates the filter for the specified scene plug. Should be used in preference to
+		/// singular calls to getValue(), as it ensures a suitable SceneScope before evaluating the filter.
+		unsigned match( const ScenePlug *scene ) const;
+
 		/// Name of a context variable used to provide the input
 		/// scene to the filter
 		static const IECore::InternedString inputSceneContextName;
