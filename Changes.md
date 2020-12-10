@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
 - Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
 
 API
@@ -11,6 +12,7 @@ API
 
 - M33fVectorDataPlug : Added new plug type for specifying arrays of 3x3 matrices.
 - PlugAlgo : `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
+- FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
 
 0.59.0.0
 ========
@@ -169,6 +171,19 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.x (relative to 0.58.6.0)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+
+API
+---
+
+- FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
 
 0.58.6.0 (relative to 0.58.5.2)
 ========

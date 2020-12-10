@@ -98,12 +98,6 @@ M44f signOnlyScaling( const M44f &m )
 	return result;
 }
 
-int filterResult( const FilterPlug *filter, const ScenePlug *scene )
-{
-	FilterPlug::SceneScope scope( Context::current(), scene );
-	return filter->getValue();
-}
-
 // Similar to `plug->source()`, but able to traverse through
 // Spreadsheet outputs to find the appropriate input row.
 V3fPlug *spreadsheetAwareSource( V3fPlug *plug, std::string &failureReason )
@@ -294,7 +288,7 @@ void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::
 	{
 		if(
 			history->scene == constraint->outPlug() &&
-			( filterResult( constraint->filterPlug(), constraint->inPlug() ) & PathMatcher::ExactMatch )
+			( constraint->filterPlug()->match( constraint->inPlug() ) & PathMatcher::ExactMatch )
 		)
 		{
 			m_aimConstraint = true;
@@ -326,7 +320,7 @@ void TransformTool::Selection::initFromSceneNode( const GafferScene::SceneAlgo::
 	{
 		if(
 			history->scene == transform->outPlug() &&
-			( filterResult( transform->filterPlug(), transform->inPlug() ) & PathMatcher::ExactMatch )
+			( transform->filterPlug()->match( transform->inPlug() ) & PathMatcher::ExactMatch )
 		)
 		{
 			transformPlug = const_cast<TransformPlug *>( transform->transformPlug() );
