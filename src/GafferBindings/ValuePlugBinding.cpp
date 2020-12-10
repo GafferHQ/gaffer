@@ -53,6 +53,8 @@
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/format.hpp"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace boost::python;
 using namespace GafferBindings;
@@ -63,7 +65,7 @@ namespace
 
 const IECore::InternedString g_omitParentNodePlugValues( "valuePlugSerialiser:omitParentNodePlugValues" );
 
-std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, const Serialisation &serialisation, bool &canCondense )
+std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, Serialisation &serialisation, bool &canCondense )
 {
 	// There's nothing to do if the plug isn't serialisable.
 	if( !plug->getFlags( Plug::Serialisable ) )
@@ -124,10 +126,10 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 	}
 
 	object pythonValue = pythonPlug.attr( "getValue" )();
-	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue ) + " )\n";
+	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue, &serialisation ) + " )\n";
 }
 
-std::string compoundObjectRepr( const IECore::CompoundObject *o )
+std::string compoundObjectRepr( const IECore::CompoundObject *o, Serialisation *serialisation )
 {
 	std::string items;
 	for( const auto &e : o->members() )
@@ -136,7 +138,7 @@ std::string compoundObjectRepr( const IECore::CompoundObject *o )
 		{
 			items += ", ";
 		}
-		items += "'" + e.first.string() + "' : " + ValuePlugSerialiser::valueRepr( object( e.second ) );
+		items += "'" + e.first.string() + "' : " + ValuePlugSerialiser::valueRepr( object( e.second ), serialisation );
 	}
 
 	if( items.empty() )
@@ -151,7 +153,7 @@ std::string compoundObjectRepr( const IECore::CompoundObject *o )
 
 } // namespace
 
-std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments, const Serialisation *serialisation )
+std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments, Serialisation *serialisation )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -164,7 +166,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
 		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		const std::string defaultValue = valueRepr( pythonDefaultValue );
+		const std::string defaultValue = valueRepr( pythonDefaultValue, serialisation );
 		if( defaultValue.size() )
 		{
 			result += "defaultValue = " + defaultValue + ", ";
@@ -216,23 +218,6 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 
 }
 
-void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
-{
-	PlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
-
-	const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
-	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
-	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
-	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		std::string module = Serialisation::modulePath( pythonDefaultValue );
-		if( module.size() )
-		{
-			modules.insert( module );
-		}
-	}
-}
-
 std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const
 {
 	return repr( static_cast<const ValuePlug *>( graphComponent ), "", &serialisation );
@@ -257,7 +242,7 @@ std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *gr
 	return result;
 }
 
-std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value )
+std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value, Serialisation *serialisation )
 {
 	// CompoundObject may contain objects which can only be serialised
 	// via `objectToBase64()`, so we need to override the standard Cortex
@@ -267,7 +252,7 @@ std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value )
 	if( compoundObjectExtractor.check() )
 	{
 		auto co = compoundObjectExtractor();
-		return compoundObjectRepr( co.get() );
+		return compoundObjectRepr( co.get(), serialisation );
 	}
 
 	// We use IECore.repr() because it correctly prefixes the imath
@@ -281,6 +266,14 @@ std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value )
 	std::string result = extract<std::string>( (*g_repr)( value ) );
 	if( result.size() && result[0] != '<' )
 	{
+		if( serialisation )
+		{
+			const std::string module = Serialisation::modulePath( value );
+			if( module.size() )
+			{
+				serialisation->addModule( module );
+			}
+		}
 		return result;
 	}
 

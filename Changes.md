@@ -26,6 +26,9 @@ Breaking Changes
     - `postConstructor()`
     - `postHierarchy()`
     - `postScript()`
+- ValuePlugBinding :
+  - `repr()` now takes a `Serialisation *` where it used to take a `const Serialisation *`.
+  - `valueRepr()` now has an optional `serialisation` argument.
 
 Build
 -----

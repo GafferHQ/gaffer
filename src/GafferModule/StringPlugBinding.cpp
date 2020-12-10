@@ -101,7 +101,7 @@ std::string substitutionsRepr( unsigned substitutions )
 	return result;
 }
 
-std::string serialisationRepr( const Gaffer::StringPlug *plug, const Serialisation *serialisation )
+std::string serialisationRepr( const Gaffer::StringPlug *plug, Serialisation *serialisation )
 {
 	std::string extraArguments;
 	if( plug->substitutions() != IECore::StringAlgo::AllSubstitutions )

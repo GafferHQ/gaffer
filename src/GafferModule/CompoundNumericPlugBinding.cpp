@@ -58,7 +58,7 @@ namespace
 {
 
 template<typename T>
-std::string serialisationRepr( const T *plug, const Serialisation *serialisation = nullptr )
+std::string serialisationRepr( const T *plug, Serialisation *serialisation = nullptr )
 {
 	std::string extraArgs = "";
 
