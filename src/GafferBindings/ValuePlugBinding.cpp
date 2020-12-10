@@ -272,9 +272,13 @@ std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value )
 
 	// We use IECore.repr() because it correctly prefixes the imath
 	// types with the module name, and also works around problems
-	// when round-tripping empty Box2fs.
-	object repr = boost::python::import( "IECore" ).attr( "repr" );
-	std::string result = extract<std::string>( repr( value ) );
+	// when round-tripping empty Box2fs. Accessing it via `import`
+	// is slow so we do it only once and store in `g_repr`. We
+	// deliberately "leak" this value as otherwise it will be cleaned
+	// up during static destruction, _after_ Python has already shut
+	// down.
+	static object *g_repr = new boost::python::object( boost::python::import( "IECore" ).attr( "repr" ) );
+	std::string result = extract<std::string>( (*g_repr)( value ) );
 	if( result.size() && result[0] != '<' )
 	{
 		return result;
