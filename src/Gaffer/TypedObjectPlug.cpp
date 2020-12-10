@@ -52,6 +52,7 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::V2iVectorDataPlug, V2iVectorDataPlugTy
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::V3fVectorDataPlug, V3fVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::Color3fVectorDataPlug, Color3fVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::M44fVectorDataPlug, M44fVectorDataPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::M33fVectorDataPlug, M33fVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::ObjectVectorPlug, ObjectVectorPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::CompoundObjectPlug, CompoundObjectPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicCompoundDataPlug, AtomicCompoundDataPlugTypeId )
@@ -108,6 +109,7 @@ template class TypedObjectPlug<IECore::V2iVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::Color3fVectorData>;
 template class TypedObjectPlug<IECore::M44fVectorData>;
+template class TypedObjectPlug<IECore::M33fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
 template class TypedObjectPlug<IECore::CompoundObject>;
 template class TypedObjectPlug<IECore::CompoundData>;

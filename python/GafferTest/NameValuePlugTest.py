@@ -205,6 +205,7 @@ class NameValuePlugTest( GafferTest.TestCase ) :
 				IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 1, 5 ) ] ),
 				IECore.Color3fVectorData( [ imath.Color3f( x ) for x in range( 1, 5 ) ] ),
 				IECore.M44fVectorData( [ imath.M44f() * x for x in range( 1, 5 ) ] ),
+				IECore.M33fVectorData( [ imath.M33f() * x for x in range( 1, 5 ) ] ),
 				IECore.V2iVectorData( [ imath.V2i( x ) for x in range( 1, 5 ) ] ),
 				IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
 				IECore.V2fData( imath.V2f( 1, 2 ) ),

@@ -38,6 +38,8 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
+import IECore
+
 class FilterPlugTest( GafferSceneTest.SceneTestCase ) :
 
 	def testAcceptsInput( self ) :
@@ -61,6 +63,36 @@ class FilterPlugTest( GafferSceneTest.SceneTestCase ) :
 		dot = Gaffer.Dot()
 		dot.setup( Gaffer.IntPlug() )
 		self.assertFalse( filterPlug1.acceptsInput( dot["out"] ) )
+
+	def testMatch( self ) :
+
+		p = GafferScene.FilterPlug()
+
+		with self.assertRaises( Exception ) :
+			p.match( None )
+
+		c = GafferScene.Cube()
+		c["sets"].setValue( "cubeSet" )
+
+		ctx = Gaffer.Context()
+		ctx[ "scene:path" ] = IECore.InternedStringVectorData( [ "cube" ] )
+		with ctx :
+
+			f = GafferScene.SetFilter()
+			p.setInput( f["out"] )
+
+			f["setExpression"].setValue( "cubeSet" )
+			self.assertEqual( p.match( c["out"] ), IECore.PathMatcher.Result.ExactMatch )
+			f["setExpression"].setValue( "otherSet" )
+			self.assertEqual( p.match( c["out"] ), IECore.PathMatcher.Result.NoMatch )
+
+			f = GafferScene.PathFilter()
+			p.setInput( f["out"] )
+
+			f["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+			self.assertEqual( p.match( c["out"] ), IECore.PathMatcher.Result.ExactMatch )
+			f["paths"].setValue( IECore.StringVectorData( [ "/other" ] ) )
+			self.assertEqual( p.match( c["out"] ), IECore.PathMatcher.Result.NoMatch )
 
 if __name__ == "__main__":
 	unittest.main()

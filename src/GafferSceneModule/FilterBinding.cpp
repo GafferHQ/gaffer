@@ -63,6 +63,13 @@ ScenePlugPtr getInputScene( const Gaffer::Context *context )
 	return const_cast<ScenePlug *>( Filter::getInputScene( context ) );
 }
 
+int match( const FilterPlug &plug, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease r;
+	return plug.match( &scene );
+}
+
+
 } // namespace
 
 void GafferSceneModule::bindFilter()
@@ -95,6 +102,7 @@ void GafferSceneModule::bindFilter()
 				)
 			)
 		)
+		.def( "match", &match )
 	;
 
 	GafferBindings::DependencyNodeClass<PathFilter>();
