@@ -1,3 +1,16 @@
+0.58.6.x (relative to 0.58.6.0)
+========
+
+Fixes
+-----
+
+- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+
+API
+---
+
+- FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
+
 0.58.6.0 (relative to 0.58.5.2)
 ========
 

@@ -155,6 +155,12 @@ void FilterPlug::sceneAffects( const Gaffer::Plug *scenePlugChild, Gaffer::Depen
 	}
 }
 
+unsigned FilterPlug::match( const ScenePlug *scene ) const
+{
+	FilterPlug::SceneScope scope( Context::current(), scene );
+	return getValue();
+}
+
 FilterPlug::SceneScope::SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug )
 	:	EditableScope( context )
 {
