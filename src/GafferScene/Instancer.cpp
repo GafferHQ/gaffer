@@ -1174,9 +1174,9 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 			BranchCreator::hashBranchObject( parentPath, branchPath, context, h );
 			h.append( reinterpret_cast<uint64_t>( this ) );
 			/// We need to include anything that will affect how the capsule will expand
-			/// \todo : This should use `h.append( Capsule::capsuleDirtyCount( prototypesPlug() ) );`
-			/// but we can't use that currently because of the undesired dependency of the
-			/// capsule on the global shutter of the source scene
+			/// \todo : This should sum all the dirtyCounts of the children of prototypesPlug
+			/// except dirtyCount, once we fix motion blur behaviour so that Capsules don't
+			/// depend on the source scene's shutter settings
 			h.append( prototypesPlug()->dirtyCount() );
 			engineHash( parentPath, context, h );
 			h.append( context->hash() );
@@ -1196,13 +1196,10 @@ IECore::ConstObjectPtr Instancer::computeObject( const ScenePath &path, const Ga
 		parentAndBranchPaths( path, parentPath, branchPath );
 		if( branchPath.size() == 2 )
 		{
-			Gaffer::ContextPtr capsuleContext = new Context( *context );
-			capsuleContext->remove( ScenePlug::scenePathContextName );
-
 			return new Capsule(
 				capsuleScenePlug(),
 				context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) ,
-				std::move( capsuleContext ),
+				*context,
 				outPlug()->objectPlug()->hash(),
 				outPlug()->boundPlug()->getValue()
 			);

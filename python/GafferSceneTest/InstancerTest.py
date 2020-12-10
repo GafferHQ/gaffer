@@ -154,7 +154,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( unencap["out"], instancer["out"] )
 
-		# Then set it back ( to make sure that we don't pull expired Capsules out of the cache )
+		# Then set it back ( to make sure that returning to a previously cached value after
+		# changing the seeds doesn't pull an expired Capsule out of the cache )
 		freezeTransform["enabled"].setValue( False )
 		self.assertScenesEqual( unencap["out"], instancer["out"] )
 

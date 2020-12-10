@@ -6,6 +6,11 @@ Build
 
 - Moved minimum required C++ standard to C++14.
 
+Features
+--------
+
+- Instancer : Added "encapsulateInstanceGroups" option, which outputs the instances within capsules.  This improves performance in some cases.  Particularly important when there are a large number of instances, and there are sets defined on the prototypes input.  Expanding these sets to the instances can be quite expensive, and even a downstream encapsulate can't prevent the instancer from expanding sets, but the new built-in encapsulate feature can prevent premature set expansion.
+
 0.59.0.0
 ========
 
@@ -21,7 +26,6 @@ Features
 --------
 
 - Unencapsulate : Added new node to expand capsules created by Encapsulate back into regular scene hierarchy. This discards the performance advantages of working with capsules, but is useful for debugging, or when it is necessary to alter a capsule's contents downstream.
-- Instancer : Added "encapsulateInstanceGroups" option, which outputs the instances within capsules.  This improves performance in some cases.
 
 Improvements
 ------------
