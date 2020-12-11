@@ -51,13 +51,12 @@ using namespace GafferBindings;
 void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
 	Serialiser::moduleDependencies( graphComponent, modules, serialisation );
-	metadataModuleDependencies( static_cast<const Gaffer::Node *>( graphComponent ), modules );
 }
 
 std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	return Serialiser::postHierarchy( graphComponent, identifier, serialisation ) +
-		metadataSerialisation( static_cast<const Gaffer::Node *>( graphComponent ), identifier );
+		metadataSerialisation( static_cast<const Gaffer::Node *>( graphComponent ), identifier, serialisation );
 }
 
 bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const

@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- Serialisation : Reduced script save times by around 50%.
 - Expression : Improved error message when Python expression assigns an invalid value.
 
 API
@@ -29,6 +30,9 @@ Breaking Changes
 - ValuePlugBinding :
   - `repr()` now takes a `Serialisation *` where it used to take a `const Serialisation *`.
   - `valueRepr()` now has an optional `serialisation` argument.
+- MetadataBinding :
+  - Added `serialisation` required argument to `metadataSerialisation()`.
+  - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.
 
 Build
 -----

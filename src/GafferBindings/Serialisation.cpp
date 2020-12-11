@@ -152,13 +152,11 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	{
 		if( const Node *node = runTimeCast<const Node>( parent ) )
 		{
-			metadataModuleDependencies( node, m_modules );
-			m_postScript += metadataSerialisation( node, parentName );
+			m_postScript += metadataSerialisation( node, parentName, *this );
 		}
 		else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
 		{
-			metadataModuleDependencies( plug, m_modules );
-			m_postScript += metadataSerialisation( plug, parentName );
+			m_postScript += metadataSerialisation( plug, parentName, *this );
 		}
 	}
 }

@@ -157,7 +157,6 @@ const IECore::InternedString g_includeParentPlugMetadata( "plugSerialiser:includ
 void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
 	Serialiser::moduleDependencies( graphComponent, modules, serialisation );
-	metadataModuleDependencies( static_cast<const Plug *>( graphComponent ), modules );
 }
 
 std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const
@@ -187,7 +186,7 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 	}
 	if( shouldSerialiseMetadata )
 	{
-		result += metadataSerialisation( plug, identifier );
+		result += metadataSerialisation( plug, identifier, serialisation );
 	}
 
 	return result;
