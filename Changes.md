@@ -11,7 +11,11 @@ Breaking Changes
 
 - SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
 - DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.
-- Serialisation : Disabled copy construction.
+- Serialisation :
+  - Disabled copy construction.
+  - The following methods now take a `const object &` where they used to take `object &` :
+    - `modulePath()`
+    - `classPath()`
 
 Build
 -----

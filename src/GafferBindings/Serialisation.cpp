@@ -89,7 +89,7 @@ bool keyedByIndex( const GraphComponent *parent )
 	;
 }
 
-std::string modulePathInternal( boost::python::object &o )
+std::string modulePathInternal( const boost::python::object &o )
 {
 	if( !PyObject_HasAttrString( o.ptr(), "__module__" ) )
 	{
@@ -215,7 +215,7 @@ std::string Serialisation::modulePath( const IECore::RefCounted *object )
 	return modulePath( o );
 }
 
-std::string Serialisation::modulePath( boost::python::object &o )
+std::string Serialisation::modulePath( const boost::python::object &o )
 {
 	// Querying the module path is expensive and done frequently, so we cache
 	// results. The cache is not thread-safe, but since we are dealing with
@@ -236,7 +236,7 @@ std::string Serialisation::classPath( const IECore::RefCounted *object )
 	return classPath( o );
 }
 
-std::string Serialisation::classPath( boost::python::object &object )
+std::string Serialisation::classPath( const boost::python::object &object )
 {
 	std::string result = modulePath( object );
 	if( result.size() )

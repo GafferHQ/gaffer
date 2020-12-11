@@ -77,7 +77,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		/// Convenience function to return the name of the module where object is defined.
 		static std::string modulePath( const IECore::RefCounted *object );
 		/// As above, but returns the empty string for built in python types.
-		static std::string modulePath( boost::python::object &object );
+		static std::string modulePath( const boost::python::object &object );
 		/// Convenience function to return the name of the class which object is an instance of.
 		/// \note Prior to Python 3.3 there is no way to automatically obtain a qualified name for
 		/// a nested class (see http://www.python.org/dev/peps/pep-3155). In the meantime,
@@ -87,7 +87,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		/// Convenience function to return the name of the class which object is an instance of.
 		/// If object is a type object rather than an instance, then the path for the type
 		/// object itself is returned.
-		static std::string classPath( boost::python::object &object );
+		static std::string classPath( const boost::python::object &object );
 
 		/// Encodes any IECore::Object into a base64 encoded string.
 		/// \todo Perhaps these would be useful as `IECore::ObjectAlgo`?
