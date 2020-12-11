@@ -107,6 +107,10 @@ std::string serialisationRepr( const Gaffer::StringPlug *plug, Serialisation *se
 	if( plug->substitutions() != IECore::StringAlgo::AllSubstitutions )
 	{
 		extraArguments = "substitutions = " + substitutionsRepr( plug->substitutions() );
+		if( serialisation )
+		{
+			serialisation->addModule( "IECore" );
+		}
 	}
 	return ValuePlugSerialiser::repr( plug, extraArguments, serialisation );
 }
