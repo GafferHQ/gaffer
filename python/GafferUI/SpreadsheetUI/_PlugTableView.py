@@ -96,11 +96,6 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__ignoreSectionResized = False
 			self.__callingMoveSection = False
 
-			self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-			self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
-			self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-			self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
-
 		else : # RowNames mode
 
 			tableView.horizontalHeader().resizeSection( 1, 22 )
@@ -114,6 +109,11 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
 			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
 		)
+
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
@@ -374,29 +374,29 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __dragMove( self, widget, event ) :
 
-		cellPlug = self.plugAt( event.line.p0 )
+		destinationPlug = self.plugAt( event.line.p0 )
 
-		if self.__currentDragDestinationPlug == cellPlug :
+		if self.__currentDragDestinationPlug == destinationPlug :
 			return
 
-		self.__currentDragDestinationPlug = cellPlug
+		self.__currentDragDestinationPlug = destinationPlug
 
 		selectionModel = self._qtWidget().selectionModel()
 		selectionModel.clear()
 
-		if cellPlug is None:
+		if destinationPlug is None:
 			return
 
 		select = False
 		if isinstance( event.data, IECore.Data ) :
-			select = _ClipboardAlgo.canPasteCells( event.data, [ [ cellPlug ] ] )
+			select = _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] )
 		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, cellPlug )
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
 			select = self.__canConnect( sourcePlug, targetPlug )
 
 		if select :
 			selectionModel.select(
-				self._qtWidget().model().indexForPlug( cellPlug ),
+				self._qtWidget().model().indexForPlug( destinationPlug ),
 				QtCore.QItemSelectionModel.SelectCurrent
 			)
 
@@ -409,22 +409,22 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		self.__currentDragDestinationPlug = None
 
-		plug = self.plugAt( event.line.p0 )
+		destinationPlug = self.plugAt( event.line.p0 )
 
 		if isinstance( event.data, IECore.Data ) :
-			if not _ClipboardAlgo.canPasteCells( event.data, [ [ plug ] ] ) :
+			if not _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] ) :
 				return False
-			with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
 				context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
-				_ClipboardAlgo.pasteCells( event.data, [ [ plug ] ], context.getTime() )
+				_ClipboardAlgo.pasteCells( event.data, [ [ destinationPlug ] ], context.getTime() )
 		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, plug )
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
 			if not self.__canConnect( sourcePlug, targetPlug ) :
 				return False
 			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
 				targetPlug.setInput( sourcePlug )
 
-		index = self._qtWidget().model().indexForPlug( cellPlug )
+		index = self._qtWidget().model().indexForPlug( destinationPlug )
 		selectionModel = self._qtWidget().selectionModel()
 		selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
 		selectionModel.setCurrentIndex( index, QtCore.QItemSelectionModel.ClearAndSelect )
@@ -466,10 +466,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		if any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in Gaffer.Plug.RecursiveRange( targetPlug ) ) :
 			return False
 
-		model = self._qtWidget().model()
-		flags = model.flags( model.indexForPlug( targetPlug.ancestor( Gaffer.Spreadsheet.CellPlug ) ) )
-		if not flags & QtCore.Qt.ItemIsEnabled :
-			return False
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			if not targetPlug.ancestor( Gaffer.Spreadsheet.RowPlug )["enabled"].getValue() :
+				return False
 
 		if not targetPlug.acceptsInput( sourcePlug ) :
 			return False
