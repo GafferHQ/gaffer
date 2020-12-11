@@ -73,7 +73,7 @@ void loadColorManagerWrapper( ArnoldColorManager &c, const std::string &name, bo
 class ArnoldColorManagerSerialiser : public GafferBindings::NodeSerialiser
 {
 
-	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const GafferBindings::Serialisation &serialisation ) const override
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, GafferBindings::Serialisation &serialisation ) const override
 	{
 		std::string result = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
 

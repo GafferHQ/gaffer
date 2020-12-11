@@ -109,7 +109,7 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const auto *plug = static_cast<const Spreadsheet::RowsPlug *>( graphComponent );

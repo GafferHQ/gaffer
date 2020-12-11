@@ -117,24 +117,26 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 				IE_CORE_DECLAREMEMBERPTR( Serialiser );
 
-				/// Should be implemented to insert the names of any modules the serialiser will need
+				/// May be implemented to insert the names of any modules the serialiser will need
 				/// into the modules set. The default implementation returns modulePath( graphComponent ).
+				/// > Note : It is often more convenient to call `serialisation.addModule()` from one of
+				/// > the other virtual methods.
 				virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const;
 				/// Should be implemented to return a string which when executed will reconstruct the specified object.
 				/// The default implementation uses repr().
-				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
+				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const;
 				/// May be implemented to return a string which will be executed immediately after the object has been constructed and
 				/// parented. identifier is the name of a variable which refers to the object. The Serialisation may be used to query
 				/// the identifiers for other objects, but note that at this stage those objects may not have been constructed so it
 				/// is not safe to use them directly. Default implementation returns the empty string.
-				virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+				virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const;
 				/// May be implemented to return a string which will be executed once all objects have been constructed and parented.
 				/// At this point it is possible to request the identifiers of other objects via the Serialisation and refer to them in the result.
 				/// Typically this would be used for forming connections between plugs. The default implementation returns the empty string.
-				virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+				virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const;
 				/// May be implemented to return a string to be executed after all the postHierarchy strings. This
 				/// can be used to perform a final setup step. The default implementation returns an empty string.
-				virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+				virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const;
 				/// May be implemented to say whether or not the child needs to be serialised. The default
 				/// implementation returns true.
 				virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;

@@ -21,6 +21,11 @@ Breaking Changes
   - The following methods now take a `const object &` where they used to take `object &` :
     - `modulePath()`
     - `classPath()`
+  - The following methods now take a `Serialisation &` argument where they used to take `const Serialisation &` :
+    - `constructor()`
+    - `postConstructor()`
+    - `postHierarchy()`
+    - `postScript()`
 
 Build
 -----

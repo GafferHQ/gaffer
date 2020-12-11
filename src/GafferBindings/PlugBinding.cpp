@@ -160,12 +160,12 @@ void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComp
 	metadataModuleDependencies( static_cast<const Plug *>( graphComponent ), modules );
 }
 
-std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const
 {
 	return repr( static_cast<const Plug *>( graphComponent ) );
 }
 
-std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	const Plug *plug = static_cast<const Plug *>( graphComponent );
 

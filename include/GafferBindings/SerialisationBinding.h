@@ -94,7 +94,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			WrappedType::moduleDependencies( graphComponent, modules, serialisation );
 		}
 
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -117,7 +117,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			return WrappedType::constructor( graphComponent, serialisation );
 		}
 
-		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -140,7 +140,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			return WrappedType::postConstructor( graphComponent, identifier, serialisation );
 		}
 
-		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -163,7 +163,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			return WrappedType::postHierarchy( graphComponent, identifier, serialisation );
 		}
 
-		std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{

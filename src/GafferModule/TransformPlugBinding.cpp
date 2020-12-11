@@ -62,12 +62,12 @@ class TransformPlugSerialiser : public ValuePlugSerialiser
 			return false;
 		}
 
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
 			return repr( static_cast<const TransformPlug *>( graphComponent ), &serialisation );
 		}
 
-		static std::string repr( const TransformPlug *plug, const Serialisation *serialisation )
+		static std::string repr( const TransformPlug *plug, Serialisation *serialisation )
 		{
 			std::string result = "Gaffer.TransformPlug( \"" + plug->getName().string() + "\", ";
 

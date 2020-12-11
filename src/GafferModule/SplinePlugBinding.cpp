@@ -140,7 +140,7 @@ class SplinePlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		std::string postConstructor( const Gaffer::GraphComponent *plug, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postConstructor( const Gaffer::GraphComponent *plug, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( plug, identifier, serialisation );
 			if( !omitValue( plug, serialisation ) )

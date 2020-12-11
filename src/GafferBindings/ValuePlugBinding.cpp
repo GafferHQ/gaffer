@@ -233,12 +233,12 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 	}
 }
 
-std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const
 {
 	return repr( static_cast<const ValuePlug *>( graphComponent ), "", &serialisation );
 }
 
-std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	std::string result = PlugSerialiser::postHierarchy( graphComponent, identifier, serialisation );
 

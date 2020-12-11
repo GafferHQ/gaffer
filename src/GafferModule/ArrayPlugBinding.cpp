@@ -113,7 +113,7 @@ class ArrayPlugSerialiser : public PlugSerialiser
 			return PlugSerialiser::childNeedsConstruction( child, serialisation );
 		}
 
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
 			return ::repr( static_cast<const ArrayPlug *>( graphComponent ) );
 		}

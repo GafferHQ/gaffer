@@ -63,13 +63,12 @@ class NameValuePlugSerialiser : public ValuePlugSerialiser
 			return false;
 		}
 
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
 			return repr( static_cast<const NameValuePlug *>( graphComponent ), &serialisation );
 		}
 
-
-		static std::string repr( const Gaffer::NameValuePlug *plug, const Serialisation *serialisation )
+		static std::string repr( const Gaffer::NameValuePlug *plug, Serialisation *serialisation )
 		{
 			if( !plug->namePlug() || !plug->valuePlug() )
 			{

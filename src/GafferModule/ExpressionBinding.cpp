@@ -322,7 +322,7 @@ class ExpressionSerialiser : public NodeSerialiser
 		}
 	}
 
-	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 	{
 		// We delay the serialisation of the values for the engine and expression plugs
 		// until now so that `Expression::plugSet()` can successfully restore the engine

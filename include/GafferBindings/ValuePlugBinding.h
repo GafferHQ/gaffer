@@ -58,8 +58,8 @@ class GAFFERBINDINGS_API ValuePlugSerialiser : public PlugSerialiser
 	public :
 
 		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override;
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override;
-		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override;
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override;
 
 		static std::string repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments = "", const Serialisation *serialisation = nullptr );
 		/// Returns a serialisation suitable for use in a `setValue()` or `setDefaultValue()` call.

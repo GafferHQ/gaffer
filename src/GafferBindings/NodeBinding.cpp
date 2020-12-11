@@ -54,7 +54,7 @@ void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComp
 	metadataModuleDependencies( static_cast<const Gaffer::Node *>( graphComponent ), modules );
 }
 
-std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	return Serialiser::postHierarchy( graphComponent, identifier, serialisation ) +
 		metadataSerialisation( static_cast<const Gaffer::Node *>( graphComponent ), identifier );
