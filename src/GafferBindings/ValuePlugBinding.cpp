@@ -129,10 +129,10 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue, &serialisation ) + " )\n";
 }
 
-std::string compoundObjectRepr( const IECore::CompoundObject *o, Serialisation *serialisation )
+std::string compoundObjectRepr( const IECore::CompoundObject &o, Serialisation *serialisation )
 {
 	std::string items;
-	for( const auto &e : o->members() )
+	for( const auto &e : o.members() )
 	{
 		if( items.size() )
 		{
@@ -248,11 +248,10 @@ std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value, 
 	// via `objectToBase64()`, so we need to override the standard Cortex
 	// serialiser.
 
-	boost::python::extract<IECore::CompoundObjectPtr> compoundObjectExtractor( value );
+	boost::python::extract<const IECore::CompoundObject &> compoundObjectExtractor( value );
 	if( compoundObjectExtractor.check() )
 	{
-		auto co = compoundObjectExtractor();
-		return compoundObjectRepr( co.get(), serialisation );
+		return compoundObjectRepr( compoundObjectExtractor(), serialisation );
 	}
 
 	// We use IECore.repr() because it correctly prefixes the imath
