@@ -71,6 +71,9 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		/// necessary.
 		std::string childIdentifier( const std::string &parentIdentifier, Gaffer::GraphComponent::ChildIterator child ) const;
 
+		/// Ensures that `import moduleName` is included in the result.
+		void addModule( const std::string &moduleName );
+
 		/// Returns the result of the serialisation.
 		std::string result() const;
 
@@ -97,6 +100,16 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 		/// The Serialiser class may be implemented differently for specific types to customise
 		/// their serialisation.
+		///
+		/// \todo This was initially conceived as a read-only API, where Serialisation
+		/// made requests of Serialiser and used the results. That has proved to be a bit
+		/// awkward and slow as each of the virtual methods often do duplicate work such as
+		/// converting `graphComponent` to Python. The addition of `Serialisation::addModule()`
+		/// marked a departure from this design, allowing Serialisers to modify the serialisation
+		/// directly. It may make sense to continue in this direction by reducing the methods
+		/// on Serialiser and adding to the methods on Serialisation. The logical conclusion
+		/// may be a single `Serialiser::serialise()` method and various `Serialisation::add*()`
+		/// methods.
 		class Serialiser : public IECore::RefCounted
 		{
 

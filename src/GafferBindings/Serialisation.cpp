@@ -424,6 +424,11 @@ std::string Serialisation::childIdentifier( const std::string &parentIdentifier,
 	return result;
 }
 
+void Serialisation::addModule( const std::string &moduleName )
+{
+	m_modules.insert( moduleName );
+}
+
 void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser )
 {
 	serialiserMap()[targetType] = serialiser;

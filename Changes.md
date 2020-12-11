@@ -6,6 +6,11 @@ Improvements
 
 - Expression : Improved error message when Python expression assigns an invalid value.
 
+API
+---
+
+- Serialisation : Added `addModule()` method, for adding imports to the serialisation.
+
 Breaking Changes
 ----------------
 

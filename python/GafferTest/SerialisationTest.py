@@ -52,6 +52,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 			Gaffer.Node.__init__( self, name )
 
 			self.initArgument = initArgument
+			self.needsAdditionalModules = False
 
 			self["childNodeNeedingSerialisation"] = GafferTest.AddNode()
 			self["childNodeNotNeedingSerialisation"] = GafferTest.AddNode()
@@ -68,24 +69,32 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 			def constructor( self, node, serialisation ) :
 
+				if node.needsAdditionalModules :
+					serialisation.addModule( "ConstructorModule" )
 				return ( "GafferTest.SerialisationTest.SerialisationTestNode( \"%s\", %d )" % ( node.getName(), node.initArgument ) )
 
 			def postConstructor( self, node, identifier, serialisation ) :
 
 				result = Gaffer.NodeSerialiser.postConstructor( self, node, identifier, serialisation )
 				result += identifier + ".postConstructorWasHere = True\n"
+				if node.needsAdditionalModules :
+					serialisation.addModule( "PostConstructorModule" )
 				return result
 
 			def postHierarchy( self, node, identifier, serialisation ) :
 
 				result = Gaffer.NodeSerialiser.postHierarchy( self, node, identifier, serialisation )
 				result += identifier + ".postHierarchyWasHere = True\n"
+				if node.needsAdditionalModules :
+					serialisation.addModule( "PostHierarchyModule" )
 				return result
 
 			def postScript( self, node, identifier, serialisation ) :
 
 				result = Gaffer.NodeSerialiser.postScript( self, node, identifier, serialisation )
 				result += identifier + ".postScriptWasHere = True\n"
+				if node.needsAdditionalModules :
+					serialisation.addModule( "PostScriptModule" )
 				return result
 
 			def childNeedsSerialisation( self, child, serialisation ) :
@@ -126,6 +135,15 @@ class SerialisationTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"].postConstructorWasHere, True )
 		self.assertEqual( s2["n"].postHierarchyWasHere, True )
 		self.assertEqual( s2["n"].postScriptWasHere, True )
+
+		# Test calls to `Serialisation.addModule()`
+
+		s["n"].needsAdditionalModules = True
+		ss = s.serialise()
+		self.assertIn( "import ConstructorModule", ss )
+		self.assertIn( "import PostConstructorModule", ss )
+		self.assertIn( "import PostHierarchyModule", ss )
+		self.assertIn( "import PostScriptModule", ss )
 
 	def testParentAccessor( self ) :
 
@@ -299,6 +317,15 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			script.serialise()
+
+	def testAddModule( self ) :
+
+		node = Gaffer.Node()
+		serialisation = Gaffer.Serialisation( node )
+		serialisation.addModule( "MyModule" )
+		serialisation.addModule( "MyModule" )
+
+		self.assertEqual( serialisation.result().count( "import MyModule" ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()
