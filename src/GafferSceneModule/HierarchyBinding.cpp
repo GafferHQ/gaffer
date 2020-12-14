@@ -54,6 +54,7 @@
 #include "GafferScene/MotionPath.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -132,6 +133,20 @@ void GafferSceneModule::bindHierarchy()
 			.value( "IndexedRootsVariable", Instancer::PrototypeMode::IndexedRootsVariable )
 			.value( "RootPerVertex", Instancer::PrototypeMode::RootPerVertex )
 		;
+
+		GafferBindings::PlugClass<Instancer::ContextVariablePlug>()
+			.def( init<const char *, Plug::Direction, bool, unsigned>(
+					(
+						boost::python::arg_( "name" )=GraphComponent::defaultName<Instancer::ContextVariablePlug>(),
+						boost::python::arg_( "direction" )=Plug::In,
+						boost::python::arg_( "defaultEnable" )=true,
+						boost::python::arg_( "flags" )=Plug::Default
+					)
+				)
+			)
+			.attr( "__qualname__" ) = "Instancer.ContextVariablePlug"
+		;
+
 	}
 
 	{

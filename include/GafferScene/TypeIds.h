@@ -158,6 +158,7 @@ enum TypeId
 	CurveSamplerTypeId = 110613,
 	UnencapsulateTypeId = 110614,
 	MotionPathTypeId = 110615,
+	InstancerContextVariablePlugTypeId = 110616,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
