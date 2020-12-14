@@ -66,7 +66,15 @@ Gaffer.Metadata.registerNode(
 			"""
 			Invert the condition used to delete faces. If the primvar is zero then the face will be deleted.
 			"""
-		]
+		],
+
+		"ignoreMissingVariable" : [
+			"description",
+			"""
+			Causes the node to do nothing if the primitive variable doesn't exist on the curves, instead of erroring.
+			"""
+		],
+
 	}
 
 )

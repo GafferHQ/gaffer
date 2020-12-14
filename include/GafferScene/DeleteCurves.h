@@ -64,6 +64,9 @@ class GAFFERSCENE_API DeleteCurves : public Deformer
 		Gaffer::BoolPlug *invertPlug();
 		const Gaffer::BoolPlug *invertPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingVariablePlug();
+		const Gaffer::BoolPlug *ignoreMissingVariablePlug() const;
+
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteCurves, DeleteCurvesTypeId, Deformer );
 
 	protected :
