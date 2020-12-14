@@ -1494,9 +1494,11 @@ if haveSphinx and haveInkscape :
 
 	# Since we don't copy the docs reference scripts, the screengrab
 	# scripts must read them from the source, so we use the reference
-	# env var.
+	# env var. We also extend startup paths to include any config
+	# we need for the docs to build correctly.
 	docCommandEnv = commandEnv.Clone()
 	docCommandEnv["ENV"]["GAFFER_REFERENCE_PATHS"] = os.path.abspath( "doc/references" )
+	docCommandEnv["ENV"]["GAFFER_STARTUP_PATHS"] = os.path.abspath( "doc/startup" )
 
 	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
 	# environment.
