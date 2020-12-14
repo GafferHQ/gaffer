@@ -113,9 +113,7 @@ IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &pa
 
 	std::string deletePrimVarName = pointsPlug()->getValue();
 
-	/// \todo Remove. We take values verbatim everywhere else in Gaffer, and I don't
-	/// see any good reason to differ here.
-	if( boost::trim_copy( deletePrimVarName ).empty() )
+	if( deletePrimVarName.empty() )
 	{
 		return inputObject;
 	}

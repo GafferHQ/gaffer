@@ -10,6 +10,7 @@ Breaking Changes
 ----------------
 
 - SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
+- DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.
 
 Build
 -----
