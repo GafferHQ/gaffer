@@ -134,8 +134,8 @@ GAFFER_API Node *getNumericBookmark( ScriptNode *script, int bookmark );
 GAFFER_API int numericBookmark( const Node *node );
 GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
 
-/// Utilities
-/// =========
+/// Change queries
+/// ==============
 
 /// Determines if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`
 /// or `Metadata:nodeValueChangedSignal()`) affects a given plug or node.
@@ -148,8 +148,18 @@ GAFFER_API bool childAffectedByChange( const GraphComponent *parent, IECore::Typ
 GAFFER_API bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 GAFFER_API bool ancestorAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 
-/// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
+/// Copying
+/// =======
+
+/// Copies metadata from one target to another.
 /// \undoable
+/// \todo Default `persistent` to true after removing the deprecated overload below.
+GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, bool persistent );
+/// As above, but skipping items where `predicate( const GraphComponent *from, const GraphComponent *to, name )` returns false.
+/// \undoable
+template<typename Predicate>
+void copyIf( const GraphComponent *from, GraphComponent *to, Predicate &&predicate, bool persistent = true );
+/// \deprecated Either use the simpler version of `copy()`, or use `copyIf()` to implement exclusions.
 GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
 
 /// Copy nodule and noodle color meta data from srcPlug to dstPlug
@@ -159,5 +169,7 @@ GAFFER_API void copyColors( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, 
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
+
+#include "Gaffer/MetadataAlgo.inl"
 
 #endif // GAFFER_METADATAALGO_H

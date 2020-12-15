@@ -73,6 +73,10 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", __imagePresetNames,
 			"presetValues", __imagePresetValues,
+			# Don't promote presets so they are still computed dynamically for
+			# the promoted plug rather than being baked.
+			"presetNames:promotable", False,
+			"presetValues:promotable", False,
 
 		]
 	}

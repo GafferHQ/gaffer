@@ -44,6 +44,12 @@ import GafferTest
 
 class PlugAlgoTest( GafferTest.TestCase ) :
 
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "plugAlgoTest:a" )
+
 	def testPromote( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -543,6 +549,75 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 
 		self.assertEqual( len( s2["b"]["n"]["user"]["p"]["c"] ), 3 )
+
+	class AddTen( Gaffer.Node ) :
+
+		def __init__( self, name = "AddTen" ) :
+
+			Gaffer.Node.__init__( self, name )
+
+			self["__add"] = GafferTest.AddNode()
+			self["__add"]["op2"].setValue( 10 )
+
+			Gaffer.PlugAlgo.promoteWithName( self["__add"]["op1"], "in" )
+			Gaffer.PlugAlgo.promoteWithName( self["__add"]["sum"], "out" )
+
+	IECore.registerRunTimeTyped( AddTen )
+
+	def testPromoteInNodeConstructor( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "plugAlgoTest:a", "a" )
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+		script["box"]["n"] = self.AddTen()
+
+		# We want the metadata from the AddNode to have been promoted, but registered
+		# as non-persistent so that it won't be serialised unnecessarily.
+
+		self.assertEqual( Gaffer.Metadata.value( script["box"]["n"]["in"], "plugAlgoTest:a" ), "a" )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["n"]["in"] ) )
+		self.assertNotIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["n"]["in"], persistentOnly = True ) )
+
+		# And if we promote up one more level, we want that to work, and we want the
+		# new metadata to be persistent so that it will be serialised and restored.
+
+		Gaffer.PlugAlgo.promote( script["box"]["n"]["in"] )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["in"] ) )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["in"], persistentOnly = True ) )
+
+		# After serialisation and loading, everything should look the same.
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.value( script2["box"]["n"]["in"], "plugAlgoTest:a" ), "a" )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["n"]["in"] ) )
+		self.assertNotIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["n"]["in"], persistentOnly = True ) )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"] ) )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"], persistentOnly = True ) )
+
+	def testPromotableMetadata( self ) :
+
+		box = Gaffer.Box()
+		box["n"] = Gaffer.Node()
+		box["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "a", 10 )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "b", 20 )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "b:promotable", False )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "c", 30 )
+		Gaffer.Metadata.registerValue( box["n"]["user"]["p"], "c:promotable", True )
+
+		p = Gaffer.PlugAlgo.promote( box["n"]["user"]["p"] )
+		self.assertEqual( Gaffer.Metadata.value( p, "a" ), 10 )
+		self.assertIsNone( Gaffer.Metadata.value( p, "b" ) )
+		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
+		self.assertNotIn( "b", Gaffer.Metadata.registeredValues( p ) )
+		self.assertNotIn( "b:promotable", Gaffer.Metadata.registeredValues( p ) )
+		self.assertEqual( Gaffer.Metadata.value( p, "c" ), 30 )
+		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
+		self.assertNotIn( "c:promotable", Gaffer.Metadata.registeredValues( p ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -44,6 +44,7 @@
 #include "Gaffer/Plug.h"
 #include "Gaffer/ScriptNode.h"
 
+#include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
@@ -106,10 +107,33 @@ NodePtr getNumericBookmarkWrapper( ScriptNode &scriptNode, int bookmark )
 	return getNumericBookmark( &scriptNode, bookmark );
 }
 
-void copyWrapper( const GraphComponent &from, GraphComponent &to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
+void deprecatedCopyWrapper( const GraphComponent &from, GraphComponent &to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	copy( &from, &to, exclude, persistentOnly, persistent );
+}
+
+void copyWrapper( const GraphComponent &from, GraphComponent &to, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	copy( &from, &to, persistent );
+}
+
+void copyIfWrapper( const GraphComponent &from, GraphComponent &to, object predicate, bool persistent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	copyIf(
+		&from, &to,
+		[&predicate] ( const GraphComponent *from, const GraphComponent *to, IECore::InternedString name ) {
+			IECorePython::ScopedGILLock gilLock;
+			return (bool)predicate(
+				GraphComponentPtr( const_cast<GraphComponent *>( from ) ),
+				GraphComponentPtr( const_cast<GraphComponent *>( to ) ),
+				name.string()
+			);
+		},
+		persistent
+	);
 }
 
 void copyColorsWrapper( const Gaffer::Plug &srcPlug, Gaffer::Plug &dstPlug, bool overwrite )
@@ -192,7 +216,9 @@ void GafferModule::bindMetadataAlgo()
 		( arg( "graphComponent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
 	);
 
-	def( "copy", &copyWrapper, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
+	def( "copy", &deprecatedCopyWrapper, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
+	def( "copy", &copyWrapper, ( arg( "from" ), arg( "to" ), arg( "persistent" ) ) );
+	def( "copyIf", &copyIfWrapper, ( arg( "from" ), arg( "to" ), arg( "predicate" ), arg( "persistent" ) = true ) );
 
 	def( "copyColors", &copyColorsWrapper,  (arg( "srcPlug" ), arg( "dstPlug" ), arg( "overwrite") ));
 
