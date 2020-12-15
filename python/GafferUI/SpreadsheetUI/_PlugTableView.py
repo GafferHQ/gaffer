@@ -146,7 +146,11 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def plugAt( self, position ) :
 
-		index = self._qtWidget().indexAt( QtCore.QPoint( position.x, position.y ) )
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( position.x, position.y )
+		)
+		index = self._qtWidget().indexAt( point )
 		return self._qtWidget().model().plugForIndex( index )
 
 	def selectedPlugs( self ) :
@@ -357,7 +361,11 @@ class _PlugTableView( GafferUI.Widget ) :
 		if event.buttons != event.Buttons.Right :
 			return False
 
-		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+		)
+		index = self._qtWidget().indexAt( point )
 
 		# Disabled items won't show up in the selection model
 		if not index.flags() & QtCore.Qt.ItemIsEnabled :
@@ -417,7 +425,11 @@ class _PlugTableView( GafferUI.Widget ) :
 		#  - Presets: Return/Double click displays the popup menu, requires right-click
 		#    to display the edit window.
 
-		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+		)
+		index = self._qtWidget().indexAt( point )
 
 		if not index.flags() & QtCore.Qt.ItemIsEnabled :
 			return True
@@ -504,7 +516,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		if event.buttons != event.Buttons.Right :
 			return False
 
-		cellPlug = self.plugAt( event.line.p0 )
+		column = self._qtWidget().columnAt( event.line.p0.x )
+		cellPlug = self._qtWidget().model().plugForIndex( self._qtWidget().model().index( 0, column ) )
 		assert( cellPlug.ancestor( Gaffer.Spreadsheet.RowPlug ) == cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug ).defaultRow() )
 
 		menuDefinition = IECore.MenuDefinition()

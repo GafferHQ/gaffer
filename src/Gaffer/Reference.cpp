@@ -564,13 +564,3 @@ void Reference::transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) con
 	}
 }
 
-void Reference::convertPersistentMetadata( Plug *plug ) const
-{
-	vector<InternedString> keys;
-	Metadata::registeredValues( plug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
-	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
-	{
-		ConstDataPtr value = Metadata::value( plug, *it );
-		Metadata::registerValue( plug, *it, value, /* persistent = */ false );
-	}
-}

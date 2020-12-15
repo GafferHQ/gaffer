@@ -19,18 +19,39 @@ Build
 0.59.x.x (relative to 0.59.0.0)
 ========
 
+Features
+--------
+
+- Instancer : Added `encapsulateInstanceGroups` plug, which outputs the instances within capsules. This has the same performance benefits as using an Encapsulate node downstream, with the following additional benefits :
+  - Significantly improved performance when the prototypes define sets. A benchmarch with 1 million instances saw set generation time go from 10s using a downstream Encapsulate node to 0.002s using `encapsulateInstanceGroups`.
+  - Fewer unnecessary capsule invalidations, resulting in fewer interactive rendering updates.
+  - Convenience.
+
 Fixes
 -----
 
 - Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
 - Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
+- CatalogueSelect : Fixed broken presets for promoted `imageName` plugs.
+- PlugAlgo : Fixed metadata handling when promoting plugs which were themselves promoted from the constructor of a custom node.
+- NodeAlgo : Fixed corner case where a preset could be listed twice if it was specified by both `preset:<name>` and `presetNames`.
+- GafferUI : Fixed incorrect Tree/TableView horizontal header height.
 
 API
 ---
 
 - M33fVectorDataPlug : Added new plug type for specifying arrays of 3x3 matrices.
-- PlugAlgo : `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
 - FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
+- PlugAlgo :
+  - `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
+  - `promote()` allows metadata to be excluded from promotion by registering a `<metadataName>:promotable` metadata value of `false`.
+- NodeAlgo : If an input plug does not have presets of its own, it now inherits them from its first output. This is particularly useful
+  when promoting plugs which have dynamic presets which are computed on demand. Previously the presets would have been baked in
+  to the promoted plug, but by preventing promotion using `presetNames:promotable = false` and `presetValues:promotable = false`
+  the promoted plug can continue to use the dynamic presets.
+- MetadataAlgo :
+  - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
+  - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
 
 0.59.0.0
 ========

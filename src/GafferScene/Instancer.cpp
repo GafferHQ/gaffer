@@ -37,6 +37,7 @@
 
 #include "GafferScene/Instancer.h"
 
+#include "GafferScene/Capsule.h"
 #include "GafferScene/SceneAlgo.h"
 
 #include "GafferScene/Private/ChildNamesMap.h"
@@ -513,8 +514,16 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "scale", Plug::In ) );
 	addChild( new StringPlug( "attributes", Plug::In ) );
 	addChild( new StringPlug( "attributePrefix", Plug::In ) );
+	addChild( new BoolPlug( "encapsulateInstanceGroups", Plug::In ) );
 	addChild( new ObjectPlug( "__engine", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new AtomicCompoundDataPlug( "__prototypeChildNames", Plug::Out, new CompoundData ) );
+	addChild( new ScenePlug( "__capsuleScene", Plug::Out ) );
+
+	capsuleScenePlug()->boundPlug()->setInput( outPlug()->boundPlug() );
+	capsuleScenePlug()->transformPlug()->setInput( outPlug()->transformPlug() );
+	capsuleScenePlug()->attributesPlug()->setInput( outPlug()->attributesPlug() );
+	capsuleScenePlug()->setNamesPlug()->setInput( outPlug()->setNamesPlug() );
+	capsuleScenePlug()->globalsPlug()->setInput( outPlug()->globalsPlug() );
 }
 
 Instancer::~Instancer()
@@ -641,24 +650,44 @@ const Gaffer::StringPlug *Instancer::attributePrefixPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 11 );
 }
 
+Gaffer::BoolPlug *Instancer::encapsulateInstanceGroupsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 12 );
+}
+
+const Gaffer::BoolPlug *Instancer::encapsulateInstanceGroupsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 12 );
+}
+
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 12 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 13 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 12 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 13 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::prototypeChildNamesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 13 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 14 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::prototypeChildNamesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 13 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 14 );
+}
+
+GafferScene::ScenePlug *Instancer::capsuleScenePlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 15 );
+}
+
+const GafferScene::ScenePlug *Instancer::capsuleScenePlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 15 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -687,6 +716,33 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 	if( input == enginePlug() )
 	{
 		outputs.push_back( prototypeChildNamesPlug() );
+	}
+
+	// For the affects of our output plug, we can mostly rely on BranchCreator's mechanism driven
+	// by affectsBranchObject etc., but for these 3 plugs, we have an overridden hash/compute
+	// which in addition to everything that BranchCreator handles, are also affected by
+	// encapsulateInstanceGroupsPlug()
+	if( input == encapsulateInstanceGroupsPlug() )
+	{
+		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->childNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
+	}
+
+	// The capsule scene depends on all the same things as the regular output scene ( aside from not
+	// being affected by the encapsulate plug, which always must be true when it's evaluated anyway ),
+	// so we can leverage the logic in BranchCreator to drive it
+	if( input == outPlug()->objectPlug() )
+	{
+		outputs.push_back( capsuleScenePlug()->objectPlug() );
+	}
+	if( input == outPlug()->childNamesPlug() )
+	{
+		outputs.push_back( capsuleScenePlug()->childNamesPlug() );
+	}
+	if( input == outPlug()->setPlug() )
+	{
+		outputs.push_back( capsuleScenePlug()->setPlug() );
 	}
 }
 
@@ -1102,6 +1158,60 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 	}
 }
 
+void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	{
+		// Handling this special case here means an extra call to parentAndBranchPaths
+		// when we're encapsulating and we're not inside a branch - this is a small
+		// unnecessary cost, but by falling back to just using BranchCreator hashObject
+		// when branchPath.size() != 2, we are able to just use all the logic from
+		// BranchCreator, without exposing any new API surface
+		ScenePath parentPath, branchPath;
+		parentAndBranchPaths( path, parentPath, branchPath );
+		if( branchPath.size() == 2 )
+		{
+			BranchCreator::hashBranchObject( parentPath, branchPath, context, h );
+			h.append( reinterpret_cast<uint64_t>( this ) );
+			/// We need to include anything that will affect how the capsule will expand.
+			/// \todo Once we fix motion blur behaviour so that Capsules don't
+			/// depend on the source scene's shutter settings, we should be able to omit
+			/// the `dirtyCount` for `prototypesPlug()->globalsPlug()`, by summing the
+			/// count for its siblings instead.
+			h.append( prototypesPlug()->dirtyCount() );
+			engineHash( parentPath, context, h );
+			h.append( context->hash() );
+			outPlug()->boundPlug()->hash( h );
+			return;
+		}
+	}
+
+	BranchCreator::hashObject( path, context, parent, h );
+}
+
+IECore::ConstObjectPtr Instancer::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	{
+		ScenePath parentPath, branchPath;
+		parentAndBranchPaths( path, parentPath, branchPath );
+		if( branchPath.size() == 2 )
+		{
+			return new Capsule(
+				capsuleScenePlug(),
+				context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) ,
+				*context,
+				outPlug()->objectPlug()->hash(),
+				outPlug()->boundPlug()->getValue()
+			);
+
+		}
+	}
+
+	return BranchCreator::computeObject( path, context, parent );
+}
+
+
 bool Instancer::affectsBranchChildNames( const Gaffer::Plug *input ) const
 {
 	return
@@ -1173,6 +1283,37 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	}
 }
 
+void Instancer::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	{
+		ScenePath parentPath, branchPath;
+		parentAndBranchPaths( path, parentPath, branchPath );
+		if( branchPath.size() == 2 )
+		{
+			h = outPlug()->childNamesPlug()->defaultValue()->Object::hash();
+			return;
+		}
+	}
+
+	BranchCreator::hashChildNames( path, context, parent, h );
+}
+
+IECore::ConstInternedStringVectorDataPtr Instancer::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	{
+		ScenePath parentPath, branchPath;
+		parentAndBranchPaths( path, parentPath, branchPath );
+		if( branchPath.size() == 2 )
+		{
+			return outPlug()->childNamesPlug()->defaultValue();
+		}
+	}
+
+	return BranchCreator::computeChildNames( path, context, parent );
+}
+
 bool Instancer::affectsBranchSetNames( const Gaffer::Plug *input ) const
 {
 	return input == prototypesPlug()->setNamesPlug();
@@ -1239,6 +1380,27 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &pa
 	}
 
 	return outputSetData;
+}
+
+void Instancer::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	{
+		h = inPlug()->setPlug()->hash();
+		return;
+	}
+
+	BranchCreator::hashSet( setName, context, parent, h );
+}
+
+IECore::ConstPathMatcherDataPtr Instancer::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	if( parent != capsuleScenePlug() && encapsulateInstanceGroupsPlug()->getValue() )
+	{
+		return inPlug()->setPlug()->getValue();
+	}
+
+	return BranchCreator::computeSet( setName, context, parent );
 }
 
 Instancer::ConstEngineDataPtr Instancer::engine( const ScenePath &parentPath, const Gaffer::Context *context ) const

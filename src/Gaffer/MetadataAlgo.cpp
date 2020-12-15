@@ -463,6 +463,15 @@ bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const
 	return node->isInstanceOf( changedNodeTypeId );
 }
 
+void copy( const GraphComponent *from, GraphComponent *to, bool persistent )
+{
+	copyIf(
+		from, to,
+		[]( const GraphComponent *, const GraphComponent *, InternedString ) { return true; },
+		persistent
+	);
+}
+
 void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
 {
 	vector<IECore::InternedString> keys;

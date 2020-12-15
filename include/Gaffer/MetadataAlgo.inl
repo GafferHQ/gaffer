@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_REFERENCE_H
-#define GAFFER_REFERENCE_H
+#ifndef GAFFER_METADATAALGO_INL
+#define GAFFER_METADATAALGO_INL
 
-#include "Gaffer/SubGraph.h"
+#include "Gaffer/GraphComponent.h"
+#include "Gaffer/Metadata.h"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-class GAFFER_API Reference : public SubGraph
+namespace MetadataAlgo
 {
 
-	public :
+template<typename Predicate>
+void copyIf( const GraphComponent *from, GraphComponent *to, Predicate &&predicate, bool persistent )
+{
+	std::vector<IECore::InternedString> names;
+	Metadata::registeredValues( from, names, /* instanceOnly = */ false, /* persistentOnly = */ false );
+	for( const auto &name : names )
+	{
+		if( predicate( from, const_cast<const GraphComponent *>( to ), name ) )
+		{
+			Metadata::registerValue( to, name, Metadata::value<IECore::Data>( from, name ), persistent );
+		}
+	}
 
-		Reference( const std::string &name=defaultName<Reference>() );
-		~Reference() override;
+	for( const auto &child : from->children() )
+	{
+		if( auto childTo = to->getChild( child->getName() ) )
+		{
+			copyIf( child.get(), childTo, predicate, persistent );
+		}
+	}
+}
 
-		GAFFER_NODE_DECLARE_TYPE( Gaffer::Reference, ReferenceTypeId, SubGraph );
-
-		/// Loads the specified script, which should have been exported
-		/// using Box::exportForReference().
-		/// \undoable.
-		void load( const std::string &fileName );
-		/// Returns the name of the script currently being referenced.
-		const std::string &fileName() const;
-
-		typedef boost::signal<void ( Reference * )> ReferenceLoadedSignal;
-		/// Emitted when a reference is loaded (or unloaded following an undo).
-		ReferenceLoadedSignal &referenceLoadedSignal();
-
-		bool hasMetadataEdit( const Plug *plug, const IECore::InternedString key ) const;
-
-	private :
-
-		void loadInternal( const std::string &fileName );
-		bool isReferencePlug( const Plug *plug ) const;
-		void transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const;
-
-		std::string m_fileName;
-		ReferenceLoadedSignal m_referenceLoadedSignal;
-
-		class PlugEdits;
-		std::unique_ptr<PlugEdits> m_plugEdits;
-
-};
-
-IE_CORE_DECLAREPTR( Reference )
-
-/// \deprecated Use Reference::Iterator etc instead.
-typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
+} // namespace MetadataAlgo
 
 } // namespace Gaffer
 
-#endif // GAFFER_REFERENCE_H
+#endif // GAFFER_METADATAALGO_INL
