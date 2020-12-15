@@ -7,7 +7,7 @@
 
 The **Spreadsheet node** (_Utility_ > _Spreadsheet_) provides a tabular interface for mapping the values of one or more plugs to specific conditions in the graph. When one of the conditions is met, the spreadsheet applies all the values tied to that condition.
 
-Unlike spreadsheet tools found in other applications, a Gaffer spreadsheet does not manage the same property across multiple nodes of the same type at once. Rather, it is plug-centric, in that it connects to individual plugs on individual nodes, one at a time. In this plug-centric sense, spreadsheets are similar to Random or Expression nodes, both in how they are created and what they affect. The difference is that the spreadsheet offers the ability to specify a range of potential values in one interface.
+Unlike spreadsheet tools found in other applications, the Gaffer spreadsheet isn't designed to adjust the same plug on multiple nodes at the same time. Instead, each column connects to an individual plug on a specific node, allowing you to easily vary its value based on the current Context. This makes Spreadsheets similar to the Random or Expression nodes, both in how they are created and what they affect. The main difference is that the table-based interface of the spreadsheet simplifies the management of a range of potential values across multiple plugs.
 
 ```eval_rst
 .. figure:: images/interfaceSpreadsheetNodeInterface.png
