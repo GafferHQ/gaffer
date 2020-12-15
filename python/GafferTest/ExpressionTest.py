@@ -1454,5 +1454,26 @@ class ExpressionTest( GafferTest.TestCase ) :
 			self.assertAlmostEqual( s["dest%i"%i]["p"].getValue().y, 0.2 + 0.3 * i + 10 * i, places = 5 )
 			self.assertAlmostEqual( s["dest%i"%i]["p"].getValue().z, 0.3 + 0.3 * i + 10 * i, places = 5 )
 
+	def testNoneOutput( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['n']['user']['p'] = None" )
+		six.assertRaisesRegex( self,
+			Gaffer.ProcessException,
+			".*TypeError: Unsupported type for result \"None\" for expression output \"n.user.p\"",
+			s["n"]["user"]["p"].getValue
+		)
+
+		s["e"].setExpression( "import math; parent['n']['user']['p'] = math" )
+		six.assertRaisesRegex( self,
+			Gaffer.ProcessException,
+			".*TypeError: Unsupported type for result \"<module 'math' from .*\" for expression output \"n.user.p\"",
+			s["n"]["user"]["p"].getValue
+		)
+
 if __name__ == "__main__":
 	unittest.main()

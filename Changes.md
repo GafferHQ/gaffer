@@ -1,6 +1,11 @@
 0.60.x.x
 ========
 
+Improvements
+------------
+
+- Expression : Improved error message when Python expression assigns an invalid value.
+
 Breaking Changes
 ----------------
 
