@@ -150,6 +150,19 @@ Once connected, the corresponding column will imitate the tweak plug's elements,
 
 The enabled switch is tied to the cell's enabled state: disabling the cell disables the tweak. A tweak plug cell can be disabled in the Default row, letting you bypass the tweak entirely when none of the rows apply.
 
+### Working with a spreadsheet ###
+
+The spreadsheet generally behaves like a traditional 'office' spreadsheet application:
+
+- Single-click a cell to select it.
+- Double-click a cell to edit its value.
+- Use the arrow keys and <kbd>Return</kbd> to navigate/edit cells.
+- <kbd>Shift</kbd>/<kbd>Ctrl</kbd> click to extend the selection to cover multiple cells.
+
+When multiple cells are selected, they can be copied and pasted between rows, columns or even different spreadsheets. If all the values are of the same type, the whole selection can be edited in one go to quickly change multiple values.
+
+> Note : Right-click menu items and keyboard shortcuts always operate on the whole selection.
+
 
 ### Disconnecting a plug from a spreadsheet ###
 
@@ -167,13 +180,15 @@ The column and all of its values will be removed, and the plug will be disconnec
 
 To disable a cell:
 
-- Right-click it, then select _Disable Cell_ from the context menu, or
-- Click the cell to edit it, then click ![](images/toggleOn.png "the enabled switch").
+- Right-click it, then select _Disable Cell_ from the context menu.
+- Double-click the cell to edit it, then click ![](images/toggleOn.png "the enabled switch").
+- Single-click to select the cell, then press the <kbd>D</kbd> key.
 
 To enable a cell:
 
-- Right-click it, then select _Enable Cell_ from the context menu, or
-- Click the cell to edit it, then click ![](images/toggleOff.png "the enabled switch").
+- Right-click it, then select _Enable Cell_ from the context menu.
+- Double-click the cell to edit it, then click ![](images/toggleOff.png "the enabled switch").
+- Single-click to select the cell, then press the <kbd>D</kbd> key.
 
 > Note : If the affected plug is a compound or tweak plug, the enabled state of the cell is tied to the plug's enabled switch. Disabling the cell disables the plug, and vice versa.
 
@@ -404,5 +419,6 @@ In this example, the graph is structured to handle the beauty render of multiple
 ## See also ##
 
 - [Tutorial: Setting Up a Spreadsheet](../TutorialSettingUpASpreadsheet/index.md)
+- [Keyboard shortcuts reference](../../Interface/ControlsAndShortcuts/index.html#spreadsheet)
 - [Spreadsheet node animation](https://vimeo.com/424432020)
 - [Contexts](../Contexts/index.md)
