@@ -172,12 +172,12 @@ class PathListingWidget( GafferUI.Widget ) :
 	# exists at that position.
 	def pathAt( self, position ) :
 
-		position = self._qtWidget().viewport().mapFrom(
+		point = self._qtWidget().viewport().mapFrom(
 			self._qtWidget(),
 			QtCore.QPoint( position.x, position.y )
 		)
 
-		index = self._qtWidget().indexAt( position )
+		index = self._qtWidget().indexAt( point )
 		if not index.isValid() :
 			return None
 
@@ -514,7 +514,12 @@ class PathListingWidget( GafferUI.Widget ) :
 			# This is further complicated by the fact that the button presses we simulate for Qt
 			# will end up back in this function, so we have to be careful to ignore those.
 
-			index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+			point = self._qtWidget().viewport().mapFrom(
+				self._qtWidget(),
+				QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+			)
+			index = self._qtWidget().indexAt( point )
+
 			if self._qtWidget().selectionModel().isSelected( index ) :
 				# case 1 : existing selection.
 				self.__borrowedButtonPress = event
@@ -551,7 +556,11 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__borrowedButtonPress = None
 
 		# nothing to drag if there's no valid list entry under the pointer
-		index = self._qtWidget().indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+		)
+		index = self._qtWidget().indexAt( point )
 		if not index.isValid() :
 			return None
 
@@ -568,9 +577,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __emitButtonPress( self, event ) :
 
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+		)
+
 		qEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonPress,
-			QtCore.QPoint( event.line.p0.x, event.line.p0.y ),
+			point,
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier

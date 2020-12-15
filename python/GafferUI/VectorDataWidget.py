@@ -367,7 +367,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 	# data returned by getData().
 	def indexAt( self, position ) :
 
-		index = self.__tableView.indexAt( QtCore.QPoint( position[0], position[1] ) )
+		point = self.__tableView.viewport().mapFrom( self.__tableView, QtCore.QPoint( position[0], position[1] ) )
+		index = self.__tableView.indexAt( point )
 		return ( index.column(), index.row() )
 
 	## Returns a list of ( columnIndex, rowIndex ) for the currently
@@ -662,7 +663,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 			# This is further complicated by the fact that the button presses we simulate for Qt
 			# will end up back in this function, so we have to be careful to ignore those.
 
-			index = self.__tableView.indexAt( QtCore.QPoint( event.line.p0.x, event.line.p0.y ) )
+			point = self.__tableView.viewport().mapFrom(
+				self.__tableView,
+				QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+			)
+			index = self.__tableView.indexAt( point )
 			if self.__tableView.selectionModel().isSelected( index ) :
 				# case 1 : existing selection.
 				self.__borrowedButtonPress = event
@@ -714,9 +719,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 	def __emitButtonPress( self, event ) :
 
+		point = self.__tableView.viewport().mapFrom(
+			self.__tableView,
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+		)
+
 		qEvent = QtGui.QMouseEvent(
 			QtCore.QEvent.MouseButtonPress,
-			QtCore.QPoint( event.line.p0.x, event.line.p0.y ),
+			point,
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.LeftButton,
 			QtCore.Qt.NoModifier
