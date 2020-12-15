@@ -39,7 +39,7 @@ Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name
 __children["ImageReader_Editor"]["colorSpace"].setValue( 'linear' )
 __children["ImageReader_Editor"]["__uiPosition"].setValue( imath.V2f( -1.28354168, 12.4480476 ) )
 __children["Crop"]["in"].setInput( __children["Shuffle"]["out"] )
-__children["Crop"]["area"].setValue( imath.Box2i( imath.V2i( 145, 222 ), imath.V2i( 286, 278 ) ) )
+__children["Crop"]["area"].setValue( imath.Box2i( imath.V2i( 176, 222 ), imath.V2i( 314, 278 ) ) )
 __children["Crop"]["__uiPosition"].setValue( imath.V2f( -1.28796732, -3.88007712 ) )
 __children["ImageWriter"]["in"].setInput( __children["Crop"]["out"] )
 __children["ImageWriter"]["colorSpace"].setValue( 'linear' )
