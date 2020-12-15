@@ -1,6 +1,11 @@
 0.60.x.x
 ========
 
+Breaking Changes
+----------------
+
+- SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
+
 Build
 -----
 
