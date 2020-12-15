@@ -151,6 +151,31 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		virtual IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		//@}
 
+		// Computes the relevant parent and branch paths for computing the result
+		// at the specified path. Returns a PathMatcher::Result to describe where path is
+		// relative to the parent, as follows :
+		//
+		// AncestorMatch
+		//
+		// The path is on a branch below the parent, parentPath and branchPath
+		// are filled in appropriately, and branchPath will not be empty.
+		//
+		// ExactMatch
+		//
+		// The path is at the parent exactly, parentPath will be filled
+		// in appropriately and branchPath will be empty.
+		//
+		// DescendantMatch
+		//
+		// The path is above one or more parents. Neither parentPath nor branchPath
+		// will be filled in.
+		//
+		// NoMatch
+		//
+		// The path is a direct pass through from the input - neither
+		// parentPath nor branchPath will be filled in.
+		IECore::PathMatcher::Result parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+
 	private :
 
 		/// Returns the path specified by `parentPlug()`, only if it is non-empty
@@ -178,31 +203,6 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		// the input set will be passed through unchanged.
 		IECore::PathMatcher parentPathsForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		bool affectsParentPathsForSet( const Gaffer::Plug *input ) const;
-
-		// Computes the relevant parent and branch paths for computing the result
-		// at the specified path. Returns a PathMatcher::Result to describe where path is
-		// relative to the parent, as follows :
-		//
-		// AncestorMatch
-		//
-		// The path is on a branch below the parent, parentPath and branchPath
-		// are filled in appropriately, and branchPath will not be empty.
-		//
-		// ExactMatch
-		//
-		// The path is at the parent exactly, parentPath will be filled
-		// in appropriately and branchPath will be empty.
-		//
-		// DescendantMatch
-		//
-		// The path is above one or more parents. Neither parentPath nor branchPath
-		// will be filled in.
-		//
-		// NoMatch
-		//
-		// The path is a direct pass through from the input - neither
-		// parentPath nor branchPath will be filled in.
-		IECore::PathMatcher::Result parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 
