@@ -48,7 +48,7 @@
 namespace GafferBindings
 {
 
-class GAFFERBINDINGS_API Serialisation
+class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 {
 
 	public :

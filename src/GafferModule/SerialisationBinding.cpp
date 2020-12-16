@@ -90,7 +90,7 @@ IECore::ObjectPtr objectFromBase64Wrapper( const std::string &base64String )
 void GafferModule::bindSerialisation()
 {
 
-	scope s = boost::python::class_<Serialisation>( "Serialisation", no_init )
+	scope s = boost::python::class_<Serialisation, boost::noncopyable>( "Serialisation", no_init )
 		.def(
 			init<const Gaffer::GraphComponent *, const std::string &, const Gaffer::Set *>
 			(
