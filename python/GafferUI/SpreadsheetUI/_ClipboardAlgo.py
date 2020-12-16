@@ -301,12 +301,8 @@ class ValueAdaptor :
 	@classmethod
 	def _canSet( cls, data, plug ) :
 
-		# Ensure we consider child plugs, eg: components of a V3fPlug
-		if Gaffer.MetadataAlgo.readOnly( plug ) :
+		if not cls._canSetKeyOrValue( plug ) :
 			return False
-		for p in Gaffer.Plug.RecursiveRange( plug ) :
-			if Gaffer.MetadataAlgo.getReadOnly( p ) :
-				return False
 
 		plugData = ValueAdaptor.get( plug )
 
@@ -335,6 +331,25 @@ class ValueAdaptor :
 				cls._set( childData, plug[ childName ], atTime )
 
 	@staticmethod
+	def _canSetKeyOrValue( plug ) :
+
+		def settable( p ) :
+			if Gaffer.Animation.isAnimated( p ) :
+				curve = Gaffer.Animation.acquire( p )
+				return not Gaffer.MetadataAlgo.readOnly( curve )
+			else :
+				return p.settable()
+
+		# Ensure we consider child plugs, eg: components of a V3fPlug
+		if Gaffer.MetadataAlgo.readOnly( plug ) or not settable( plug ) :
+			return False
+		for p in Gaffer.Plug.RecursiveRange( plug ) :
+			if Gaffer.MetadataAlgo.getReadOnly( p ) :
+				return False
+
+		return True
+
+	@staticmethod
 	def _setOrKeyValue( plug, value, atTime ) :
 
 		if hasattr( value, 'value' ) :
@@ -342,9 +357,8 @@ class ValueAdaptor :
 
 		if Gaffer.Animation.isAnimated( plug ) :
 			curve = Gaffer.Animation.acquire( plug )
-			if not Gaffer.MetadataAlgo.readOnly( curve ) :
-				curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Type.Linear ) )
-		elif plug.settable() :
+			curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Type.Linear ) )
+		else :
 			plug.setValue( value )
 
 	@staticmethod
@@ -439,10 +453,57 @@ class FloatPlugValueAdaptor( ValueAdaptor ) :
 	@classmethod
 	def _canSet( cls, data, plug ) :
 
-		# FloatPlug.setValue will take care of this for us
-		return isinstance( data, ( IECore.FloatData, IECore.IntData ) )
+		# FloatPlug.setValue will take care conversion for us
+		if isinstance( data, ( IECore.FloatData, IECore.IntData ) ) :
+			return cls._canSetKeyOrValue( plug )
+
+		return ValueAdaptor._canSet( data, plug )
 
 ValueAdaptor.registerAdaptor( Gaffer.FloatPlug, FloatPlugValueAdaptor )
+
+class StringPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, plug ) :
+
+		if isinstance( data, IECore.StringVectorData ) :
+			if len( data ) < 2 :
+				return cls._canSetKeyOrValue( plug )
+
+		return ValueAdaptor._canSet( data, plug )
+
+	@classmethod
+	def _set( cls, data, plug, atTime ) :
+
+		if isinstance( data, IECore.StringVectorData ) :
+			if len( data ) == 1 :
+				data = IECore.StringData( data[ 0 ] )
+			else :
+				data = IECore.StringData( "" )
+
+		ValueAdaptor._set( data, plug, atTime )
+
+ValueAdaptor.registerAdaptor( Gaffer.StringPlug, StringPlugValueAdaptor )
+
+class StringVectorDataPlugValueAdaptor( ValueAdaptor ) :
+
+	@classmethod
+	def _canSet( cls, data, plug ) :
+
+		if isinstance( data, IECore.StringData ) :
+			return cls._canSetKeyOrValue( plug )
+
+		return ValueAdaptor._canSet( data, plug )
+
+	@classmethod
+	def _set( cls, data, plug, atTime ) :
+
+		if isinstance( data, IECore.StringData ) :
+			data = IECore.StringVectorData( [ data.value ] )
+
+		ValueAdaptor._set( data, plug, atTime )
+
+ValueAdaptor.registerAdaptor( Gaffer.StringVectorDataPlug, StringVectorDataPlugValueAdaptor )
 
 ## Allows RowPlugs to be copy/pasted across different column configurations,
 # matching by the column names.
