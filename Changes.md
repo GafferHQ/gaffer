@@ -28,6 +28,11 @@ Features
   - Fewer unnecessary capsule invalidations, resulting in fewer interactive rendering updates.
   - Convenience.
 
+Improvements
+------------
+
+- Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
+
 Fixes
 -----
 
@@ -37,6 +42,7 @@ Fixes
 - PlugAlgo : Fixed metadata handling when promoting plugs which were themselves promoted from the constructor of a custom node.
 - NodeAlgo : Fixed corner case where a preset could be listed twice if it was specified by both `preset:<name>` and `presetNames`.
 - GafferUI : Fixed incorrect Tree/TableView horizontal header height.
+- Spreadsheet : Fixed bug that allowed values to be pasted onto plugs with inputs.
 
 API
 ---

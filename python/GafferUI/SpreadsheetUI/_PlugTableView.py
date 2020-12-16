@@ -110,6 +110,11 @@ class _PlugTableView( GafferUI.Widget ) :
 			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
 		)
 
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
 
@@ -355,6 +360,135 @@ class _PlugTableView( GafferUI.Widget ) :
 			elif key == "spreadsheet:section" :
 
 				self.__applyColumnVisibility()
+
+	def __dragEnter( self, widget, event ) :
+
+		if Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
+			return False
+
+		if not isinstance( event.data, ( Gaffer.Plug, IECore.Data ) ) :
+			return False
+
+		self.__currentDragDestinationPlug = None
+		return True
+
+	def __dragMove( self, widget, event ) :
+
+		destinationPlug = self.plugAt( event.line.p0 )
+
+		if self.__currentDragDestinationPlug == destinationPlug :
+			return
+
+		self.__currentDragDestinationPlug = destinationPlug
+
+		selectionModel = self._qtWidget().selectionModel()
+		selectionModel.clear()
+
+		if destinationPlug is None:
+			return
+
+		select = False
+		if isinstance( event.data, IECore.Data ) :
+			select = _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] )
+		else :
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
+			select = self.__canConnect( sourcePlug, targetPlug )
+
+		if select :
+			selectionModel.select(
+				self._qtWidget().model().indexForPlug( destinationPlug ),
+				QtCore.QItemSelectionModel.SelectCurrent
+			)
+
+	def __dragLeave( self, widget, event ) :
+
+		self.__currentDragDestinationPlug = None
+		self._qtWidget().selectionModel().clear()
+
+	def __drop( self, widget, event ) :
+
+		self.__currentDragDestinationPlug = None
+
+		destinationPlug = self.plugAt( event.line.p0 )
+
+		if isinstance( event.data, IECore.Data ) :
+			if not _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] ) :
+				return False
+			with Gaffer.UndoScope( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
+				context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
+				_ClipboardAlgo.pasteCells( event.data, [ [ destinationPlug ] ], context.getTime() )
+		else :
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
+			if not self.__canConnect( sourcePlug, targetPlug ) :
+				return False
+			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
+				targetPlug.setInput( sourcePlug )
+
+		index = self._qtWidget().model().indexForPlug( destinationPlug )
+		selectionModel = self._qtWidget().selectionModel()
+		selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
+		selectionModel.setCurrentIndex( index, QtCore.QItemSelectionModel.ClearAndSelect )
+
+		# People regularly have spreadsheets in separate windows. Ensure the
+		# sheet has focus after drop has concluded. It will have returned to
+		# the origin of the drag.
+		def focusOnIdle() :
+			if not self._qtWidget().isActiveWindow() :
+				self._qtWidget().activateWindow()
+			self._qtWidget().setFocus()
+			return False
+
+		GafferUI.EventLoop.addIdleCallback( focusOnIdle )
+		return True
+
+	def __connectionPlugs( self, sourcePlug, targetPlug ) :
+
+		if isinstance( targetPlug, Gaffer.Spreadsheet.CellPlug ) :
+			targetPlug = targetPlug[ "value" ]
+
+		if isinstance( targetPlug, Gaffer.NameValuePlug ) :
+			if not isinstance( sourcePlug, Gaffer.NameValuePlug ) :
+				targetPlug = targetPlug[ "value" ]
+		else :
+			if isinstance( sourcePlug, Gaffer.NameValuePlug ) :
+				sourcePlug = sourcePlug[ "value" ]
+
+		return sourcePlug, targetPlug
+
+	def __canConnect( self, sourcePlug, targetPlug ) :
+
+		if targetPlug is None :
+			return False
+
+		if Gaffer.MetadataAlgo.readOnly( targetPlug ) :
+			return False
+
+		if any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in Gaffer.Plug.RecursiveRange( targetPlug ) ) :
+			return False
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			if not targetPlug.ancestor( Gaffer.Spreadsheet.RowPlug )["enabled"].getValue() :
+				return False
+
+		if not targetPlug.acceptsInput( sourcePlug ) :
+			return False
+
+		return True
+
+	def __positionInCellGrid( self, position ) :
+
+		# The event coordinate origin includes the header view.
+		# Queries to indexAt etc... need the origin to be in the
+		# table view itself.
+
+		cellPosition = imath.V3f( position )
+
+		if self._qtWidget().verticalHeader().isVisible() :
+			cellPosition.x -= self._qtWidget().verticalHeader().frameRect().width()
+		if self._qtWidget().horizontalHeader().isVisible() :
+			cellPosition.y -= self._qtWidget().horizontalHeader().frameRect().height()
+
+		return cellPosition
 
 	def __buttonPress( self, widget, event ) :
 
