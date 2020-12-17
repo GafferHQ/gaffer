@@ -1522,6 +1522,8 @@ if haveSphinx and haveInkscape :
 	docEnv.Alias( "docs", docGraphicsCommands )
 	docSource, docGenerationCommands = locateDocs( "doc/source", docCommandEnv )
 	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
+	# SCons doesn't know about the assorted outputs of sphinx, so only index.html ends up in the cache
+	docEnv.NoCache( docs )
 	docEnv.Depends( docGenerationCommands, docGraphicsCommands )
 	docEnv.Depends( docs, docGraphicsCommands )
 	docEnv.Depends( docs, "build" )
