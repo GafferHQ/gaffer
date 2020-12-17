@@ -168,7 +168,10 @@ jobs:
       # aborts them in a more timely fashion than the default 6hr timeout.
       timeout-minutes: 20
       run: |
-       scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        # Treats warnings-as-errors so we know about broken links
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/sphinx.json"
+        scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        echo "::remove-matcher owner=sphinx::"
       if: matrix.publish
 
     - name: Validate
