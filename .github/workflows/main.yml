@@ -99,8 +99,10 @@ jobs:
       # Prefer `pip install` where possible because it is faster
       # than `brew install`.
       run: |
-        sudo pip install scons==3.1.2
-        sudo pip install sphinx==1.8.1 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12
+        pip install scons==3.1.2
+        # Ensure scons is on PATH, at some point it vanished, maybe as part of GH Py 2-3 migration?
+        echo `pip show scons | grep "Location:" | cut -d ' ' -f2`/../../../bin >> $GITHUB_PATH
+        pip install sphinx==1.8.1 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12
         # Force inkscape < 1.0 until SConstruct is updated
         brew cask install xquartz https://raw.githubusercontent.com/Homebrew/homebrew-cask/5eafe6e9877c5524100b9ac1c5375fe8a2d039be/Casks/inkscape.rb
       if: runner.os == 'macOS'
