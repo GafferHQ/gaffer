@@ -1,4 +1,18 @@
-# BuildTarget: images/conceptContextsReadingContextVariable.png images/conceptContextsEditorFocus.png images/conceptContextsContextVariablesInExpressions.png images/conceptContextsContextVariablesInExpressionsNodeEditor.png images/conceptContextsRandomNode1.png images/conceptContextsRandomNode2.png images/conceptContextsRandomNode2NodeEditor.png images/conceptContextsQueryingResults.png images/conceptContextsQueryingResultsPythonEditor.png images/conceptContextsQueryingResultsFixedPythonEditor.png images/conceptContextsQueryingResultsSceneInspector.png images/conceptContextsInParallelBranchesNodeEditor.png images/conceptContextsInParallelBranches.png images/conceptContextsInParallelBranchesDownstream.png images/conceptContextsInParallelBranchesDownstreamNodeEditor.png
+# BuildTarget: images/conceptContextsContextVariablesInExpressions.png
+# BuildTarget: images/conceptContextsContextVariablesInExpressionsNodeEditor.png
+# BuildTarget: images/conceptContextsEditorFocus.png
+# BuildTarget: images/conceptContextsInParallelBranches.png
+# BuildTarget: images/conceptContextsInParallelBranchesDownstream.png
+# BuildTarget: images/conceptContextsInParallelBranchesDownstreamNodeEditor.png
+# BuildTarget: images/conceptContextsInParallelBranchesNodeEditor.png
+# BuildTarget: images/conceptContextsQueryingResults.png
+# BuildTarget: images/conceptContextsQueryingResultsFixedPythonEditor.png
+# BuildTarget: images/conceptContextsQueryingResultsPythonEditor.png
+# BuildTarget: images/conceptContextsQueryingResultsSceneInspector.png
+# BuildTarget: images/conceptContextsRandomNode1.png
+# BuildTarget: images/conceptContextsRandomNode2.png
+# BuildTarget: images/conceptContextsRandomNode2NodeEditor.png
+# BuildTarget: images/conceptContextsReadingContextVariable.png
 
 import os
 import time

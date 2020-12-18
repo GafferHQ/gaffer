@@ -1,4 +1,17 @@
+# BuildTarget: images/graphEditorAllNodes.png
+# BuildTarget: images/graphEditorGroupConnections.png
+# BuildTarget: images/graphEditorRearrangedNodes.png
+# BuildTarget: images/graphEditorShaderAssignmentConnections.png
+# BuildTarget: images/mainWindowFinalScene.png
+# BuildTarget: images/mainWindowSphereNode.png
+# BuildTarget: images/nodeEditorOpenGLPlug.png
 # BuildTarget: images/pythonEditorHelloWorld.png
+# BuildTarget: images/pythonEditorNodeReference.png
+# BuildTarget: images/pythonEditorPlugReference.png
+# BuildTarget: images/pythonEditorPlugValueReference.png
+# BuildTarget: images/viewerCameraPosition.png
+# BuildTarget: images/viewerFinalScene.png
+# BuildTarget: images/viewerSphereRadius.png
 
 import os
 import IECore
