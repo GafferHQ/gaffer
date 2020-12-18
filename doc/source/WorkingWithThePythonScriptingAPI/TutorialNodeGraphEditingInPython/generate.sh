@@ -1,5 +1,7 @@
 #! /bin/bash
 # BuildTarget: images/nodes.png
+# BuildTarget: images/plus.png
+# BuildTarget: images/values.png
 
 set -e
 
