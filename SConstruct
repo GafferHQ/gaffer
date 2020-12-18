@@ -1462,6 +1462,8 @@ def locateDocs( docRoot, env ) :
 					if targets:
 						command = env.Command( targets, sourceFile, generateDocs )
 						env.Depends( command, "build" )
+						if line.startswith( "# UndeclaredBuildTargets" ) :
+							env.NoCache( command )
 						# Force the commands to run serially, in case the doc generation
 						# has been run in parallel. Otherwise we can get overlapping
 						# screengrabs from the commands that launch Gaffer UIs.
