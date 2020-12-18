@@ -1455,8 +1455,11 @@ def locateDocs( docRoot, env ) :
 					# specifier so we need the second line
 					if ext == ".sh" :
 						line = s.readline()
-					if line.startswith( "# BuildTarget:" ) :
-						targets = [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ]
+					targets = []
+					while line.startswith( "# BuildTarget:" ) :
+						targets.extend( [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ] )
+						line = s.readline()
+					if targets:
 						command = env.Command( targets, sourceFile, generateDocs )
 						env.Depends( command, "build" )
 						# Force the commands to run serially, in case the doc generation
