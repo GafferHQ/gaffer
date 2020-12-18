@@ -162,6 +162,7 @@ jobs:
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test"
         echo "::remove-matcher owner=unittest::"
+      if: false
 
     - name: Build Docs and Package
       # We currently experience sporadic hangs in the docs builds (mac), this
