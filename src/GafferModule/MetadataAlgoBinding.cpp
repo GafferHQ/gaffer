@@ -107,6 +107,22 @@ NodePtr getNumericBookmarkWrapper( ScriptNode &scriptNode, int bookmark )
 	return getNumericBookmark( &scriptNode, bookmark );
 }
 
+void setFocusNodeWrapper( ScriptNode &scriptNode, Node &node )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	setFocusNode( &scriptNode, &node );
+}
+
+NodePtr getFocusNodeWrapper( ScriptNode &scriptNode )
+{
+	return getFocusNode( &scriptNode );
+}
+
+bool nodeIsFocusedWrapper( Node &node )
+{
+	return nodeIsFocused( &node );
+}
+
 void deprecatedCopyWrapper( const GraphComponent &from, GraphComponent &to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -181,6 +197,11 @@ void GafferModule::bindMetadataAlgo()
 	def( "getNumericBookmark", &getNumericBookmarkWrapper, ( arg( "scriptNode" ), arg( "bookmark" ) ) );
 	def( "numericBookmark", &numericBookmark, ( arg( "node" ) ) );
 	def( "numericBookmarkAffectedByChange", &numericBookmarkAffectedByChange, ( arg( "changedKey" ) ) );
+
+	def( "setFocusNode", &setFocusNodeWrapper, ( arg( "scriptNode" ), arg( "node" ) ) );
+	def( "getFocusNode", &getFocusNodeWrapper, ( arg( "scriptNode" ) ) );
+	def( "nodeIsFocused", &nodeIsFocusedWrapper, ( arg( "node" ) ) );
+	def( "focusNodeAffectedByChange", &focusNodeAffectedByChange, ( arg( "changedKey" ) ) );
 
 	def(
 		"affectedByChange",

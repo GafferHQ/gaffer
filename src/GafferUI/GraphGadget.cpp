@@ -1048,48 +1048,62 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
 		}
 
+		Gaffer::Node *node = nodeGadget->node();
+
 		if( nodeGadget )
 		{
-			Gaffer::Node *node = nodeGadget->node();
-			bool shiftHeld = event.modifiers & ButtonEvent::Shift;
-			bool controlHeld = event.modifiers & ButtonEvent::Control;
-			bool nodeSelected = m_scriptNode->selection()->contains( node );
-
-			std::vector<Gaffer::Node *> affectedNodes;
-			if( const BackdropNodeGadget *backdrop = runTimeCast<BackdropNodeGadget>( nodeGadget ) )
+			// Quick Hack: Adjust focus if the hit is in the lower section
+			V3f posInNode = event.line.p0 - nodeGadget->transformedBound().min;
+			if( posInNode.y < 1.75f )
 			{
-				if( !controlHeld )
+				if( Gaffer::ScriptNode *script = node->ancestor<Gaffer::ScriptNode>() )
 				{
-					backdrop->framed( affectedNodes );
-				}
-			}
-
-			if( ( event.modifiers & ButtonEvent::Alt ) && ( controlHeld || shiftHeld ) )
-			{
-				std::vector<NodeGadget *> connected;
-				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Shift ? Gaffer::Plug::In : Gaffer::Plug::Out );
-				for( std::vector<NodeGadget *>::const_iterator it = connected.begin(), eIt = connected.end(); it != eIt; ++it )
-				{
-					affectedNodes.push_back( (*it)->node() );
-				}
-			}
-
-			affectedNodes.push_back( node );
-
-			if( nodeSelected )
-			{
-				if( controlHeld )
-				{
-					m_scriptNode->selection()->remove( affectedNodes.begin(), affectedNodes.end() );
+					Gaffer::UndoScope undoScope( m_scriptNode );
+					Gaffer::MetadataAlgo::setFocusNode( script, node );
 				}
 			}
 			else
 			{
-				if( !controlHeld && !shiftHeld )
+				bool shiftHeld = event.modifiers & ButtonEvent::Shift;
+				bool controlHeld = event.modifiers & ButtonEvent::Control;
+				bool nodeSelected = m_scriptNode->selection()->contains( node );
+
+				std::vector<Gaffer::Node *> affectedNodes;
+				if( const BackdropNodeGadget *backdrop = runTimeCast<BackdropNodeGadget>( nodeGadget ) )
 				{
-					m_scriptNode->selection()->clear();
+					if( !controlHeld )
+					{
+						backdrop->framed( affectedNodes );
+					}
 				}
-				m_scriptNode->selection()->add( affectedNodes.begin(), affectedNodes.end() );
+
+				if( ( event.modifiers & ButtonEvent::Alt ) && ( controlHeld || shiftHeld ) )
+				{
+					std::vector<NodeGadget *> connected;
+					connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Shift ? Gaffer::Plug::In : Gaffer::Plug::Out );
+					for( std::vector<NodeGadget *>::const_iterator it = connected.begin(), eIt = connected.end(); it != eIt; ++it )
+					{
+						affectedNodes.push_back( (*it)->node() );
+					}
+				}
+
+				affectedNodes.push_back( node );
+
+				if( nodeSelected )
+				{
+					if( controlHeld )
+					{
+						m_scriptNode->selection()->remove( affectedNodes.begin(), affectedNodes.end() );
+					}
+				}
+				else
+				{
+					if( !controlHeld && !shiftHeld )
+					{
+						m_scriptNode->selection()->clear();
+					}
+					m_scriptNode->selection()->add( affectedNodes.begin(), affectedNodes.end() );
+				}
 			}
 
 			return true;

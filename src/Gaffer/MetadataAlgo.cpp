@@ -59,6 +59,7 @@ InternedString g_bookmarkedName( "bookmarked" );
 InternedString g_numericBookmarkBaseName( "numericBookmark" );
 IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
 IECore::InternedString g_noduleColorKey( "nodule:color" );
+InternedString g_focusedName( "focused" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -309,6 +310,53 @@ bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey )
 {
 	boost::regex expr{ g_numericBookmarkBaseName.string() + "[1-9]" };
 	return boost::regex_match( changedKey.string(), expr );
+}
+
+void setFocusNode( ScriptNode *scriptNode, Node *node )
+{
+	if( scriptNode->isExecuting() && node && node->ancestor<Reference>() )
+	{
+		return;
+	}
+
+	// Only one node can be the focus node at any one time
+	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, g_focusedName, /* instanceOnly = */ true ) )
+	{
+		Metadata::deregisterValue( nodeWithMetadata, g_focusedName );
+	}
+
+	if( !node )
+	{
+		return;
+	}
+
+	Metadata::registerValue( node, g_focusedName, new BoolData( true ), /* persistent = */ true );
+}
+
+Node *getFocusNode( ScriptNode *scriptNode )
+{
+	// Return the first valid one we find. There should only ever be just one valid matching node.
+	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, g_focusedName, /* instanceOnly = */ true ) )
+	{
+		return nodeWithMetadata;
+	}
+
+	return nullptr;
+}
+
+bool nodeIsFocused( Node *node )
+{
+	if( IECore::ConstBoolDataPtr f = Metadata::value<IECore::BoolData>( node, g_focusedName ) )
+	{
+		return f->readable();
+	}
+
+	return false;
+}
+
+bool focusNodeAffectedByChange( const IECore::InternedString &changedKey )
+{
+	return changedKey == g_focusedName;
 }
 
 bool affectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )

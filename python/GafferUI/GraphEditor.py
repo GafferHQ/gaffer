@@ -37,6 +37,7 @@
 
 import functools
 import imath
+import weakref
 
 import IECore
 
@@ -246,6 +247,21 @@ class GraphEditor( GafferUI.Editor ) :
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
 		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
 
+	@classmethod
+	def appendFocusMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
+
+		def focus( weakNode, *unused ) :
+			script = weakNode().ancestor( Gaffer.ScriptNode )
+			Gaffer.MetadataAlgo.setFocusNode( script, weakNode() )
+
+		menuDefinition.append( "/FocusDivider", { "divider" : True } )
+		menuDefinition.append( "/Focus Node", {
+			"command" : functools.partial( focus, weakref.ref( node ) ),
+			"active" : not Gaffer.MetadataAlgo.nodeIsFocused( node ),
+			"checkBox" : Gaffer.MetadataAlgo.nodeIsFocused( node ),
+			"shortCut" : "Ctrl+F"
+		} )
+
 	__nodeDoubleClickSignal = GafferUI.WidgetEventSignal()
 	## Returns a signal which is emitted whenever a node is double clicked.
 	# Slots should have the signature ( graphEditor, node ).
@@ -354,6 +370,11 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if event.key == "F" and not event.modifiers :
 			self.__frame( self.scriptNode().selection() )
+			return True
+		elif event.key == "F" and event.modifiers == event.Modifiers.Shift :
+			selection = self.scriptNode().selection()
+			if selection.size() == 1 :
+				Gaffer.MetadataAlgo.setFocusNode( selection[0].ancestor( Gaffer.ScriptNode ), selection[0] )
 			return True
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()

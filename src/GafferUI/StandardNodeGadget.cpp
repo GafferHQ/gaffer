@@ -71,6 +71,10 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferUI;
 
+namespace {
+	static Color3f g_focusColor( 0.75f );
+}
+
 //////////////////////////////////////////////////////////////////////////
 // ErrorGadget implementation
 //////////////////////////////////////////////////////////////////////////
@@ -225,7 +229,8 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 		m_labelsVisibleOnHover( true ),
 		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
-		m_oval( false )
+		m_oval( false ),
+		m_focused( false )
 {
 
 	// build our ui structure
@@ -314,7 +319,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 
 	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 	contentsColumn->addChild( contentsRow );
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0.8, 0 ) ) ) );
 
 	row->addChild( rightNoduleContainer );
 	column->addChild( bottomNoduleContainer );
@@ -350,6 +355,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	updateNodeEnabled();
 	updateIcon();
 	updateShape();
+	updateFocused();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -394,6 +400,17 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 				borderWidth,
 				state,
 				m_userColor.get_ptr()
+			);
+
+			const float splitY = b.min.y + 1.5f;
+			const float qw = ( b.max.x - b.min.x ) / 4.0f;
+
+			style->renderNodeFrame(
+				Box2f( V2f( b.min.x + qw, b.min.y + 0.75f ) + V2f( borderWidth ), V2f( b.max.x - qw, splitY ) - V2f( borderWidth ) ),
+				borderWidth,
+				m_focused ? Style::NormalState : state,
+				m_focused ? &g_focusColor : m_userColor.get_ptr(),
+				0.5f
 			);
 
 			break;
@@ -793,6 +810,13 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 			dirty( DirtyType::Render );
 		}
 	}
+	else if( MetadataAlgo::focusNodeAffectedByChange( key ) )
+	{
+		if( updateFocused() )
+		{
+			dirty( DirtyType::Render );
+		}
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -905,6 +929,17 @@ bool StandardNodeGadget::updateShape()
 		return false;
 	}
 	m_oval = oval;
+	return true;
+}
+
+bool StandardNodeGadget::updateFocused()
+{
+	bool focused = MetadataAlgo::nodeIsFocused( node() );
+	if( focused == m_focused )
+	{
+		return false;
+	}
+	m_focused = focused;
 	return true;
 }
 

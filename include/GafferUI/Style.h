@@ -126,7 +126,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		/// @name GraphEditor UI elements
 		//////////////////////////////////////////////////////////////////////////
 		//@{
-		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;
+		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = nullptr, const float borderThicknessMultiplier = 1.0f ) const = 0;
 		virtual void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;
 		/// The tangents give an indication of which direction is "out" from a node.
 		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;
