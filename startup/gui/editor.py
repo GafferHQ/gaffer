@@ -1,4 +1,3 @@
-##########################################################################
 #
 #  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
@@ -35,6 +34,7 @@
 ##########################################################################
 import weakref
 
+import Gaffer
 import GafferUI
 import GafferSceneUI
 
@@ -79,3 +79,9 @@ def __registerNodeSetMenuItems( editor, menuDefinition ) :
 	GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions( editor, menuDefinition )
 
 GafferUI.CompoundEditor.nodeSetMenuSignal().connect( __registerNodeSetMenuItems, scoped = False )
+
+GafferUI.GraphBookmarksUI.connect( application.root() )
+
+Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "nodeSets.label1", "userDefault", "IPR Scene" )
+Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "nodeSets.label2", "userDefault", "Batch Scene" )
+Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "nodeSets.label3", "userDefault", "Catalogue" )
