@@ -134,6 +134,14 @@ GAFFER_API Node *getNumericBookmark( ScriptNode *script, int bookmark );
 GAFFER_API int numericBookmark( const Node *node );
 GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
 
+/// Focus node
+/// ==========
+
+GAFFER_API void setFocusNode( ScriptNode *script, Node *node );
+GAFFER_API Node *getFocusNode( ScriptNode *script );
+GAFFER_API bool nodeIsFocused( Node *node );
+GAFFER_API bool focusNodeAffectedByChange( const IECore::InternedString &changedKey );
+
 /// Change queries
 /// ==============
 

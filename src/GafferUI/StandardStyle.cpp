@@ -678,7 +678,7 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 	renderNodeFrame( frame, borderWidth, state );
 }
 
-void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state, const Imath::Color3f *userColor ) const
+void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state, const Imath::Color3f *userColor, float borderWidthMultiplier ) const
 {
 
 	Box2f b = contents;
@@ -690,7 +690,7 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
-	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
+	glUniform1f( g_borderWidthParameter, ( 0.15f * borderWidthMultiplier ) / borderWidth );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 

@@ -95,6 +95,7 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 
 	menuDefinition.append( "/Edit...", { "command" : functools.partial( GafferUI.NodeEditor.acquire, node, floating = True ) } )
 
+	GafferUI.GraphEditor.appendFocusMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphEditor.appendEnabledPlugMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphEditor.appendConnectionVisibilityMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferDispatchUI.DispatcherUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )

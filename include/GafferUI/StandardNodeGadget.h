@@ -145,6 +145,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
+		bool updateFocused();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );
@@ -161,6 +162,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		ConnectionCreator *m_dragDestination;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
+		bool m_focused;
 
 };
 
