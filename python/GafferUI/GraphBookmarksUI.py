@@ -60,15 +60,18 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		}
 	)
 
+	script = node.ancestor( Gaffer.ScriptNode )
 	for i in range( 1, 10 ) :
-	  menuDefinition.append(
-		  "/Numeric Bookmark/%s" % i,
-		  {
-			  "command" : functools.partial( __assignNumericBookmark, node, i ),
-			  "shortCut" : "Ctrl+%i" % i,
-			  "active" : not Gaffer.MetadataAlgo.readOnly( node ),
-		  }
-	  )
+		name = numericBookmarkLabel( script, i )
+		title = "%d (%s)" % ( i, name ) if name else str(i)
+		menuDefinition.append(
+			"/Numeric Bookmark/%s" % title,
+			{
+				"command" : functools.partial( __assignNumericBookmark, node, i ),
+				"shortCut" : "Ctrl+%i" % i,
+				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+			}
+		)
 
 	menuDefinition.append(
 		"/Numeric Bookmark/Remove",
@@ -130,42 +133,70 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
 	n = editor.getNodeSet()
 
+	script = editor.ancestor( GafferUI.ScriptWindow ).scriptNode()
+
+	menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Numeric Bookmark" } )
+
 	for i in range( 1, 10 ) :
+		bookmarkNode = Gaffer.MetadataAlgo.getNumericBookmark( script, i )
+		label = numericBookmarkLabel( script, i )
+		title = "%d" % i
+		if bookmarkNode is not None :
+			title += ": %s" % bookmarkNode.getName()
+		if label :
+			title += " (%s)" % label
 		isCurrent = isinstance( n, Gaffer.NumericBookmarkSet ) and n.getBookmark() == i
-		menuDefinition.insertBefore( "/Numeric Bookmark/%d" % i, {
+		menuDefinition.append( "%s" % title, {
 			"command" : functools.partial( followBookmark, i, weakEditor ),
-			"checkBox" : isCurrent
-		}, "/Pin Divider" )
-
-
-	# Pin bookmarks
-
-	for i in range( 1, 10 ) :
-		menuDefinition.append( "/Bookmark/%s" % i, {
-				"command" : functools.partial( __findNumericBookmark, editor, i ),
-				"active" : Gaffer.MetadataAlgo.getNumericBookmark( editor.scriptNode(), i ) is not None,
+			"checkBox" : isCurrent,
+			"shortCut" : "%d" % i
 		} )
-
-	menuDefinition.append( "/Bookmark/Divider", { "divider" : True } )
-
-	bookmarks = __findableBookmarks( editor )
-	menuDefinition.append(
-		"/Bookmark/Other...",
-		{
-			"command" : functools.partial( __findBookmark, editor, bookmarks ),
-			"active" : len( bookmarks ),
-			"shortCut" : "B",
-		}
-	)
-
 
 def connectToEditor( editor ) :
 
 	editor.keyPressSignal().connect( __editorKeyPress, scoped = False )
 
+def connect( applicationRoot ) :
+
+	def add( scriptsPlug, script ) :
+		__addNumericBookmarkSettings( script )
+
+	applicationRoot["scripts"].childAddedSignal().connect( add, scoped = False )
+
+def numericBookmarkLabel( script, bookmark ) :
+
+	settings = __numericBookmarkSettings( script )
+	return settings["label%d" % bookmark ].getValue() if settings is not None else ""
+
 ##########################################################################
 # Internal implementation
 ##########################################################################
+
+def __numericBookmarkSettings( script ) :
+
+	if "numericBookmarks" in script :
+		return script["numericBookmarks"]
+
+	return None
+
+def __addNumericBookmarkSettings( script ) :
+
+	if __numericBookmarkSettings( script ) is not None :
+		return
+
+	dynamicFlags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+
+	p = Gaffer.Plug( flags = dynamicFlags )
+	for i in range( 1, 10 ) :
+		p[ "label%d" % i ] = Gaffer.StringPlug( flags = dynamicFlags )
+
+	script["numericBookmarks"] = p
+
+	for c in script["numericBookmarks"].children() :
+		Gaffer.NodeAlgo.applyUserDefault( c )
+
+Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "numericBookmarks", "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget" )
+Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "numericBookmarks", "layout:section", "Numeric Bookmarks" )
 
 def __setBookmarked( node, bookmarked ) :
 
@@ -306,7 +337,7 @@ def __findNumericBookmark( editor, numericBookmark ) :
 		editor.graphGadget().setRoot( node.parent() )
 		editor.frame( [ node ] )
 	else :
-		s = Gaffer.StandardSet( [ node ] )
+		s = Gaffer.NumericBookmarkSet( editor.scriptNode(), numericBookmark )
 		editor.setNodeSet( s )
 
 	return True
