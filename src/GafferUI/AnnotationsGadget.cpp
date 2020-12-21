@@ -88,23 +88,6 @@ IECoreGL::Texture *bookmarkTexture()
 	return bookmarkTexture.get();
 }
 
-IECoreGL::Texture *numericBookmarkTexture()
-{
-	static IECoreGL::TexturePtr numericBookmarkTexture;
-
-	if( !numericBookmarkTexture )
-	{
-		numericBookmarkTexture = ImageGadget::textureLoader()->load( "bookmarkStar.png" );
-
-		IECoreGL::Texture::ScopedBinding binding( *numericBookmarkTexture );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
-	}
-	return numericBookmarkTexture.get();
-}
-
 float g_offset = 0.5;
 float g_borderWidth = 0.5;
 float g_spacing = 0.25;
@@ -216,15 +199,21 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		{
 			if( !annotations.bookmarked )
 			{
-				style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), numericBookmarkTexture() );
+				const Color3f fill( 0.8f );
+
+				style->renderNodeFrame(
+					Box2f( V2f( b.min.x - 0.25, b.max.y - 0.75 ), V2f( b.min.x + 0.75, b.max.y + 0.25 ) ),
+					g_borderWidth, Style::NormalState,
+					&fill
+				);
 			}
 
+			const Color4f text( 0.0f, 0.0f, 0.0f, 1.0f );
 			const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );
 
-			const Imath::Color4f textColor( 1.0f );
 			glPushMatrix();
-				IECoreGL::glTranslate( V2f( b.min.x + 1.0 - textBounds.size().x * 0.5, b.max.y - textBounds.size().y * 0.5 - 0.7 ) );
-				style->renderText( Style::BodyText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
+				IECoreGL::glTranslate( V2f( b.min.x - textBounds.size().x * 0.5 + 0.25, b.max.y - textBounds.size().y * 0.5 - 0.25 ) );
+				style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &text );
 			glPopMatrix();
 		}
 
