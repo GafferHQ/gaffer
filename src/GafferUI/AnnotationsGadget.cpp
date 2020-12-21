@@ -61,6 +61,18 @@ using namespace std;
 namespace
 {
 
+static Color3f g_nodeSetColors[9] = {
+	Color3f( 182/255.0, 110/255.0, 120/255.0 ),
+	Color3f( 218/255.0, 204/255.0, 122/255.0 ),
+	Color3f( 90/255.0, 140/255.0, 71/255.0 ),
+	Color3f( 145/255.0, 110/255.0, 181/255.0 ),
+	Color3f( 120/255.0, 120/255.0, 210/255.0 ),
+	Color3f( 182/255.0, 110/255.0, 120/255.0 ),
+	Color3f( 218/255.0, 204/255.0, 122/255.0 ),
+	Color3f( 90/255.0, 140/255.0, 71/255.0 ),
+	Color3f( 145/255.0, 110/255.0, 181/255.0 )
+};
+
 Box2f nodeFrame( const NodeGadget *nodeGadget )
 {
 	const Box3f b = nodeGadget->transformedBound( nullptr );
@@ -156,11 +168,13 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			if( int bookmark = MetadataAlgo::numericBookmark( node ) )
 			{
 				annotations.numericBookmark = std::to_string( bookmark );
+				annotations.numericBookmarkIndex = bookmark;
 				annotations.renderable = true;
 			}
 			else
 			{
 				annotations.numericBookmark = InternedString();
+				annotations.numericBookmarkIndex = 0;
 			}
 
 			annotations.standardAnnotations.clear();
@@ -197,16 +211,11 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 		if( annotations.numericBookmark.string().size() )
 		{
-			if( !annotations.bookmarked )
-			{
-				const Color3f fill( 0.8f );
-
-				style->renderNodeFrame(
-					Box2f( V2f( b.min.x - 0.25, b.max.y - 0.75 ), V2f( b.min.x + 0.75, b.max.y + 0.25 ) ),
-					g_borderWidth, Style::NormalState,
-					&fill
-				);
-			}
+			style->renderNodeFrame(
+				Box2f( V2f( b.min.x - 0.25, b.max.y - 0.75 ), V2f( b.min.x + 0.75, b.max.y + 0.25 ) ),
+				g_borderWidth, Style::NormalState,
+				&g_nodeSetColors[ annotations.numericBookmarkIndex - 1 ]
+			);
 
 			const Color4f text( 0.0f, 0.0f, 0.0f, 1.0f );
 			const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );

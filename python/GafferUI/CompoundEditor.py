@@ -1552,9 +1552,11 @@ class _PinningWidget( _Frame ) :
 
 		bookmarkSet = self.__getBookmarkSet()
 		if bookmarkSet is not None :
+			self._qtWidget().setProperty( "nodeSet", bookmarkSet.getBookmark() )
 			self.__bookmarkNumber.setText( "%d" % bookmarkSet.getBookmark() )
 			self.__bookmarkNumber.setVisible( True )
 		else :
+			self._qtWidget().setProperty( "nodeSet", 0 )
 			self.__bookmarkNumber.setVisible( False )
 			self.__bookmarkNumber.setText( "" )
 
@@ -1571,6 +1573,7 @@ class _PinningWidget( _Frame ) :
 			linkGroupIndex = self.__drivenEditorGroup( editor )
 
 		self._qtWidget().setProperty( "linkGroup", linkGroupIndex )
+
 		self._repolish()
 
 	# Disclaimer:

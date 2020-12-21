@@ -99,6 +99,7 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 			std::vector<StandardAnnotation> standardAnnotations;
 			bool bookmarked = false;
 			IECore::InternedString numericBookmark;
+			size_t numericBookmarkIndex;
 			bool renderable = false;
 		};
 
