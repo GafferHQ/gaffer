@@ -71,6 +71,7 @@ __tempImagePath = __getTempFilePath( "{}.png".format( __imageName ) )
 script["SceneReader"] = GafferScene.SceneReader()
 script["SceneReader"]["fileName"].setValue( "${project:resources}/gafferBot/caches/gafferBot.scc" )
 script.selection().add( script["SceneReader"] )
+Gaffer.MetadataAlgo.setFocusNode( script, script["SceneReader"] )
 with GafferUI.Window( "Node Editor : SceneReader" ) as __nodeEditorWindow :
 
 	nodeEditor = GafferUI.NodeEditor( script )
@@ -93,6 +94,7 @@ __nodeEditorWindow.setVisible( False )
 # Tutorial: testing the variable substitution in main window
 # TODO: Automate the right window pane to be wider
 script.selection().add( script["SceneReader"] )
+Gaffer.MetadataAlgo.setFocusNode( script, script["SceneReader"] )
 __delay(1)
 with script.context():
 	viewer.view().viewportGadget().frame( script["SceneReader"]["out"].bound( "/" ) )

@@ -48,6 +48,7 @@ graphEditor.frame( Gaffer.StandardSet( [ script["Camera"] ] ) )
 
 # Interface: the camera visualizer in the Viewer
 script.selection().add( script["Camera"] )
+Gaffer.MetadataAlgo.setFocusNode( script, script["Camera"] )
 __delay( 0.1 )
 viewer.view()["grid"]["visible"].setValue( False )
 paths = IECore.PathMatcher( [ "/camera" ] )
