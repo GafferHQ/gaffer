@@ -36,6 +36,7 @@ GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorG
 script["fileName"].setValue( os.path.abspath( "scripts/conceptPerformanceBestPracticesContexts.gfr" ) )
 script.load()
 script.selection().add( Gaffer.StandardSet( [ script["CollectScenes"] ] ) )
+Gaffer.MetadataAlgo.setFocusNode( script, script["CollectScenes"] )
 __delay( 0.1 )
 viewport = viewer.view().viewportGadget()
 viewport.frame( viewport.getPrimaryChild().bound() )
