@@ -281,6 +281,7 @@
 		'nodeSetNumericBookmarkSet',
 		'nodeSetSourceSet',
 		'nodeSetStandardSet',
+		'nodeSetFocusNodeSet',
 		'plugAdder',
 		'plugAdderHighlighted',
 		'plus',
