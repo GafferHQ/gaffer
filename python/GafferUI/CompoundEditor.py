@@ -305,6 +305,10 @@ class CompoundEditor( GafferUI.Editor ) :
 					state[ self.__pathToEditor(n) ] = {
 						"nodeSet" : "Gaffer.NumericBookmarkSet( scriptNode, %d )" % nodeSet.getBookmark()
 					}
+				elif isinstance( nodeSet, Gaffer.FocusNodeSet ) :
+					state[ self.__pathToEditor(n) ] = {
+						"nodeSet" : "Gaffer.FocusNodeSet( scriptNode )"
+					}
 
 		return state
 
@@ -1519,6 +1523,9 @@ class _PinningWidget( _Frame ) :
 		elif event.key == "P" and not event.modifiers :
 			_PinningWidget.__pinToNodeSelection( editor )
 			return True
+		elif event.key == "F" and event.modifiers == event.Modifiers.Shift :
+			_PinningWidget.__followFocusNode( editor )
+			return True
 
 		return False
 
@@ -1608,6 +1615,9 @@ class _PinningWidget( _Frame ) :
 		if nodeSet == editor.scriptNode().selection() :
 			toolTipElements.append( "" )
 			toolTipElements.append( "Following the node selection." )
+		elif isinstance( nodeSet, Gaffer.FocusNodeSet ) :
+			toolTipElements.append( "" )
+			toolTipElements.append( "Following the Focus node"  )
 		elif isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
 			toolTipElements.append( "" )
 			toolTipElements.append( "Following Node Set %d." % nodeSet.getBookmark()  )
@@ -1646,6 +1656,14 @@ class _PinningWidget( _Frame ) :
 			editor = editor()
 
 		editor.setNodeSet( editor.scriptNode().selection() )
+
+	@staticmethod
+	def __followFocusNode( editor, *unused) :
+
+		if not isinstance( editor, GafferUI.NodeSetEditor ) :
+			editor = editor()
+
+		editor.setNodeSet( Gaffer.FocusNodeSet( editor.scriptNode() ) )
 
 	def __showEditorFocusMenu( self, *unused ) :
 
@@ -1690,6 +1708,11 @@ class _PinningWidget( _Frame ) :
 
 		m.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
 
+		m.append( "/Focus node", {
+			"command" : functools.partial( self.__followFocusNode, weakref.ref( editor ) ),
+			"checkBox" : drivingEditor is None and isinstance( editor.getNodeSet(), Gaffer.FocusNodeSet ),
+			"shortCut" : "Shift+f"
+		} )
 
 		m.append( "/Selection", {
 			"command" : functools.partial( self.__followNodeSelection, weakref.ref( editor ) ),

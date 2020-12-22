@@ -44,6 +44,7 @@
 #include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/ChildSet.h"
+#include "Gaffer/FocusNodeSet.h"
 #include "Gaffer/NumericBookmarkSet.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/StandardSet.h"
@@ -221,5 +222,8 @@ void GafferModule::bindSet()
 		.def( "getBookmark", &NumericBookmarkSet::getBookmark )
 	;
 
+	IECorePython::RunTimeTypedClass<FocusNodeSet>()
+		.def( boost::python::init<ScriptNodePtr>() )
+	;
 }
 

@@ -3209,10 +3209,18 @@
       <rect
          inkscape:label="nodeSetDrivertestMode"
          y="2064"
-         x="159"
+         x="174"
          height="13"
          width="13"
          id="nodeSetDrivertestMode"
+         style="display:inline;opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:0.91766286;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill" />
+      <rect
+         inkscape:label="nodeSetFocusNodeSet"
+         y="2064"
+         x="155"
+         height="13"
+         width="13"
+         id="nodeSetFocusNodeSet"
          style="display:inline;opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:0.91766286;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill" />
     </g>
     <rect
@@ -3358,6 +3366,15 @@
      id="layer1"
      transform="translate(0,-52.362183)"
      style="display:inline">
+    <rect
+       rx="1.5"
+       ry="1.5000001"
+       y="2119.8623"
+       x="155.5"
+       height="5.9998784"
+       width="12"
+       id="rect5721"
+       style="display:inline;opacity:1;fill:#6b6b6b;fill-opacity:1;stroke:#262626;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
        id="path12345"
        inkscape:label="move"
@@ -7797,13 +7814,22 @@
        y="66.362183"
        inkscape:label="#rect9457" />
     <rect
-       style="opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:#262626;stroke-width:0.91666669;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:#262626;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect5702"
-       width="10.083333"
-       height="10.083333"
-       x="139.5"
-       y="2117.8623"
-       ry="1.8333334"
-       rx="1.8333333" />
+       width="8"
+       height="7.9998784"
+       x="140.5"
+       y="2118.8623"
+       ry="1.4550898"
+       rx="1.4550899" />
+    <rect
+       style="display:inline;opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:#262626;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect5702-3"
+       width="6"
+       height="2.9998784"
+       x="158.5"
+       y="2122.8623"
+       ry="0.5"
+       rx="0.5" />
   </g>
 </svg>
