@@ -107,6 +107,17 @@ NodePtr getNumericBookmarkWrapper( ScriptNode &scriptNode, int bookmark )
 	return getNumericBookmark( &scriptNode, bookmark );
 }
 
+boost::python::list numericBookmarksWrapper( Node &node )
+{
+	std::vector<int> bookmarks = numericBookmarks( &node );
+	boost::python::list result;
+	for( const auto &i : bookmarks )
+	{
+		result.append( i );
+	}
+	return result;
+}
+
 void setFocusNodeWrapper( ScriptNode &scriptNode, Node &node )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -195,7 +206,7 @@ void GafferModule::bindMetadataAlgo()
 
 	def( "setNumericBookmark", &setNumericBookmarkWrapper, ( arg( "scriptNode" ), arg( "bookmark" ), arg( "node" ) ) );
 	def( "getNumericBookmark", &getNumericBookmarkWrapper, ( arg( "scriptNode" ), arg( "bookmark" ) ) );
-	def( "numericBookmark", &numericBookmark, ( arg( "node" ) ) );
+	def( "numericBookmarks", &numericBookmarksWrapper, ( arg( "node" ) ) );
 	def( "numericBookmarkAffectedByChange", &numericBookmarkAffectedByChange, ( arg( "changedKey" ) ) );
 
 	def( "setFocusNode", &setFocusNodeWrapper, ( arg( "scriptNode" ), arg( "node" ) ) );

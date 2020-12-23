@@ -271,13 +271,6 @@ void setNumericBookmark( ScriptNode *scriptNode, int bookmark, Node *node )
 		return;
 	}
 
-	// Replace a potentially existing value with the one that is to be assigned.
-	int currentValue = numericBookmark( node );
-	if( currentValue )
-	{
-		Metadata::deregisterValue( node, numericBookmarkMetadataName( currentValue) );
-	}
-
 	Metadata::registerValue( node, metadataName, new BoolData( true ), /* persistent = */ true );
 }
 
@@ -292,24 +285,31 @@ Node *getNumericBookmark( ScriptNode *scriptNode, int bookmark )
 	return nullptr;
 }
 
-int numericBookmark( const Node *node )
+std::vector<int> numericBookmarks( const Node *node )
 {
+	std::vector<int> bookmarks;
+
 	// Return the first one we find. There should only ever be just one valid matching value.
 	for( int bookmark = 1; bookmark < 10; ++bookmark )
 	{
 		if( Metadata::value<BoolData>( node, numericBookmarkMetadataName( bookmark ) ) )
 		{
-			return bookmark;
+			bookmarks.push_back( bookmark );
 		}
 	}
 
-	return 0;
+	return bookmarks;
 }
 
-bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey )
+int numericBookmarkAffectedByChange( const IECore::InternedString &changedKey )
 {
-	boost::regex expr{ g_numericBookmarkBaseName.string() + "[1-9]" };
-	return boost::regex_match( changedKey.string(), expr );
+	boost::smatch match;
+	boost::regex expr{ g_numericBookmarkBaseName.string() + "([1-9])" };
+	if( boost::regex_match( changedKey.string(), match, expr ) )
+	{
+		return std::atoi( &*match[1].first );
+	}
+	return 0;
 }
 
 void setFocusNode( ScriptNode *scriptNode, Node *node )

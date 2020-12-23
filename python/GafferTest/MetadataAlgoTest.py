@@ -490,18 +490,25 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["n1"] )
 
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["n1"] )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n1"] ), 1 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n1"] ), [1] )
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 2, s["n1"] )
+
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n1"] ), [1, 2] )
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["n2"] )  # moving the bookmark
 
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n1"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n1"] ), [2] )
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["n2"] )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n2"] ), 1 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n2"] ), [1] )
+
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, None )
 
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n2"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n2"] ), [] )
+
+
 
 	def testNumericBookmarksSerialisation( self ) :
 
@@ -517,8 +524,8 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["n1"] )
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 2 ), s["n2"] )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n3"] ), 0 )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["n4"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n3"] ), [] )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["n4"] ), [] )
 
 		del s["n3"]
 		del s["n4"]
@@ -549,7 +556,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		# Clashing Metadata was completely removed
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["n"], "numericBookmark1" ), None )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["r"]["n"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["r"]["n"] ), [] )
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["box"]["n"] )
 
 		# Even without the clash, the metadata is removed
@@ -560,19 +567,19 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		s["r2"].load( self.temporaryDirectory() + "/bookmarked.grf" )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r2"]["n"], "numericBookmark1" ), None )
-		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["r2"]["n"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarks( s["r2"]["n"] ), [] )
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
 
 	def testNumericBookmarkAffectedByChange( self ) :
 
 		# The naming convention for valid numeric bookmarks is "numericBookmark<1-9>"
 		for i in range( 1, 10 ) :
-			self.assertTrue( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark%s" % i ) )
+			self.assertEqual( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark%s" % i ), i )
 
-		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark0" ) )
-		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark-1" ) )
-		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark10" ) )
-		self.assertFalse( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "foo" ) )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark0" ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark-1" ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "numericBookmark10" ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmarkAffectedByChange( "foo" ), 0 )
 
 	def testAffectedByPlugTypeRegistration( self ) :
 

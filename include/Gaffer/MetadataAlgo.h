@@ -131,8 +131,8 @@ GAFFER_API void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks );
 GAFFER_API void setNumericBookmark( ScriptNode *script, int bookmark, Node *node );
 GAFFER_API Node *getNumericBookmark( ScriptNode *script, int bookmark );
 /// Returns 0 if the node isn't assigned, the bookmark otherwise.
-GAFFER_API int numericBookmark( const Node *node );
-GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
+GAFFER_API std::vector<int> numericBookmarks( const Node *node );
+GAFFER_API int numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
 
 /// Focus node
 /// ==========

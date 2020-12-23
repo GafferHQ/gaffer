@@ -103,12 +103,13 @@ std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent,
 		// \todo: To clean this up we might add a registerSerialisation( key,
 		// functionReturningSerialiser ) method. Once there's a second use case
 		// we'll have more information about what the API should look like.
-		if( MetadataAlgo::numericBookmarkAffectedByChange( *it ) )
+		int numericBookmark = MetadataAlgo::numericBookmarkAffectedByChange( *it );
+		if( numericBookmark )
 		{
 			result += boost::str(
 				boost::format( "Gaffer.MetadataAlgo.setNumericBookmark( %s.scriptNode(), %s, %s )\n" ) %
 				identifier %
-				MetadataAlgo::numericBookmark( IECore::runTimeCast<const Node>( graphComponent ) ) %
+				numericBookmark %
 				identifier
 			);
 		}

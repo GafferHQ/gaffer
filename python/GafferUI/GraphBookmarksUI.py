@@ -60,6 +60,8 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		}
 	)
 
+	nodeBookmarks = Gaffer.MetadataAlgo.numericBookmarks( node )
+
 	script = node.ancestor( Gaffer.ScriptNode )
 	for i in range( 1, 10 ) :
 		name = numericBookmarkLabel( script, i )
@@ -70,6 +72,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 				"command" : functools.partial( __assignNumericBookmark, node, i ),
 				"shortCut" : "Ctrl+%i" % i,
 				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+				"checkBox" : i in nodeBookmarks
 			}
 		)
 
@@ -78,7 +81,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 		{
 			"command" : functools.partial( __assignNumericBookmark, node, 0 ),
 			"shortCut" : "Ctrl+0",
-			"active" : Gaffer.MetadataAlgo.numericBookmark( node )
+			"active" : bool(nodeBookmarks)
 		}
 	)
 
@@ -309,15 +312,19 @@ def __findBookmark( editor, bookmarks = None ) :
 	editor.__findBookmarksMenu = GafferUI.Menu( menuDefinition, title = "Find Bookmark", searchable = True )
 	editor.__findBookmarksMenu.popup()
 
-def __assignNumericBookmark( node, numericBookmark ) :
+def __assignNumericBookmark( node, numericBookmark, *unused ) :
+
+	current = Gaffer.MetadataAlgo.numericBookmarks( node )
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 		if numericBookmark == 0 : # Remove the current numeric bookmark from selection
-			current = Gaffer.MetadataAlgo.numericBookmark( node )
-			if current :
-				Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), current, None )
+			for i in current :
+				Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), i, None )
 		else :
-			Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), numericBookmark, node )
+			if numericBookmark in current :
+				Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), numericBookmark, None )
+			else :
+				Gaffer.MetadataAlgo.setNumericBookmark( node.scriptNode(), numericBookmark, node )
 
 def __findNumericBookmark( editor, numericBookmark ) :
 

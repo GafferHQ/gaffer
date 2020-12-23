@@ -45,8 +45,10 @@
 #include "Gaffer/MetadataAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/join.hpp"
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+#include "boost/range/adaptor/transformed.hpp"
 
 using namespace GafferUI;
 using namespace Gaffer;
@@ -61,7 +63,8 @@ using namespace std;
 namespace
 {
 
-static Color3f g_nodeSetColors[9] = {
+static Color3f g_nodeSetColors[10] = {
+	Color3f( 0.75 ),
 	Color3f( 182/255.0, 110/255.0, 120/255.0 ),
 	Color3f( 218/255.0, 204/255.0, 122/255.0 ),
 	Color3f( 90/255.0, 140/255.0, 71/255.0 ),
@@ -165,10 +168,12 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			annotations.bookmarked = Gaffer::MetadataAlgo::getBookmarked( node );
 			annotations.renderable |= annotations.bookmarked;
 
-			if( int bookmark = MetadataAlgo::numericBookmark( node ) )
+			std::vector<int> bookmarks = MetadataAlgo::numericBookmarks( node );
+			if( bookmarks.size() )
 			{
-				annotations.numericBookmark = std::to_string( bookmark );
-				annotations.numericBookmarkIndex = bookmark;
+				const auto asStrings = bookmarks | boost::adaptors::transformed( static_cast<std::string(*)(int)>(std::to_string) );
+				annotations.numericBookmark = boost::algorithm::join( asStrings, ", " );
+				annotations.numericBookmarkIndex = bookmarks.size() == 1 ? bookmarks[0] : 0;
 				annotations.renderable = true;
 			}
 			else
@@ -205,27 +210,36 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 		const Box2f b = nodeFrame( ga.first );
 
+
+		float bookmarkOffset = 0.0f;
+
 		if( annotations.numericBookmark.string().size() )
 		{
-			style->renderNodeFrame(
-				Box2f( V2f( b.min.x - 0.25, b.max.y - 0.75 ), V2f( b.min.x + 0.75, b.max.y + 0.25 ) ),
-				g_borderWidth, Style::NormalState,
-				&g_nodeSetColors[ annotations.numericBookmarkIndex - 1 ]
-			);
-
 			const Color4f text( 0.0f, 0.0f, 0.0f, 1.0f );
 			const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );
 
+			bookmarkOffset += 1.0f + ( textBounds.size().x / 2.0f );
+
 			glPushMatrix();
 				IECoreGL::glTranslate( V2f( b.min.x - textBounds.size().x * 0.5 + 0.25, b.max.y - textBounds.size().y * 0.5 - 0.25 ) );
+				style->renderNodeFrame(
+					Box2f( V2f( -0.1f, 0.0f ), V2f( textBounds.size().x + 0.1f, textBounds.size().y ) ),
+					g_borderWidth, Style::NormalState,
+					&g_nodeSetColors[ annotations.numericBookmarkIndex ]
+				);
 				style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &text );
 			glPopMatrix();
 		}
 
 		if( annotations.bookmarked )
 		{
-			const float offset = annotations.numericBookmark.string().size() ? 1.25f : 0.0f;
-			style->renderImage( Box2f( V2f( b.min.x - 0.5 + offset, b.max.y - 1.25 ), V2f( b.min.x + 1.5 + offset, b.max.y + 0.75 ) ), bookmarkTexture() );
+			style->renderImage(
+				Box2f(
+					V2f( b.min.x - 0.5 + bookmarkOffset, b.max.y - 1.25 ),
+					V2f( b.min.x + 1.5 + bookmarkOffset, b.max.y + 0.75 )
+				),
+				bookmarkTexture()
+			);
 		}
 
 		if( annotations.standardAnnotations.size() )
