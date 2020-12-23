@@ -204,10 +204,6 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		}
 
 		const Box2f b = nodeFrame( ga.first );
-		if( annotations.bookmarked )
-		{
-			style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), bookmarkTexture() );
-		}
 
 		if( annotations.numericBookmark.string().size() )
 		{
@@ -224,6 +220,12 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 				IECoreGL::glTranslate( V2f( b.min.x - textBounds.size().x * 0.5 + 0.25, b.max.y - textBounds.size().y * 0.5 - 0.25 ) );
 				style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &text );
 			glPopMatrix();
+		}
+
+		if( annotations.bookmarked )
+		{
+			const float offset = annotations.numericBookmark.string().size() ? 1.25f : 0.0f;
+			style->renderImage( Box2f( V2f( b.min.x - 0.5 + offset, b.max.y - 1.25 ), V2f( b.min.x + 1.5 + offset, b.max.y + 0.75 ) ), bookmarkTexture() );
 		}
 
 		if( annotations.standardAnnotations.size() )
