@@ -149,3 +149,19 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( actualPointsDeletedBounds, expectedBoundingBox )
 
+	def testIgnoreMissing( self ) :
+
+		pointsScene = self.makePoints()
+		deletePoints = GafferScene.DeletePoints()
+		deletePoints["in"].setInput( pointsScene["out"] )
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/object' ] ) )
+		deletePoints["filter"].setInput( pathFilter["out"] )
+
+		self.assertNotEqual( deletePoints["in"].object( "/object" ), deletePoints["out"].object( "/object" ) )
+
+		deletePoints["points"].setValue( "doesNotExist" )
+		self.assertRaises( RuntimeError, deletePoints["out"].object, "/object" )
+
+		deletePoints["ignoreMissingVariable"].setValue( True )
+		self.assertEqual( deletePoints["in"].object( "/object" ), deletePoints["out"].object( "/object" ) )
