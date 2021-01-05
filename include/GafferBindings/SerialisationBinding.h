@@ -79,7 +79,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "moduleDependencies" );
 					if( f )
 					{
-						boost::python::object mo = f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), serialisation );
+						boost::python::object mo = f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), boost::ref( serialisation ) );
 						std::vector<std::string> mv;
 						boost::python::container_utils::extend_container( mv, mo );
 						modules.insert( mv.begin(), mv.end() );
@@ -94,7 +94,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			WrappedType::moduleDependencies( graphComponent, modules, serialisation );
 		}
 
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -105,7 +105,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					if( f )
 					{
 						return boost::python::extract<std::string>(
-							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), serialisation )
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), boost::ref( serialisation ) )
 						);
 					}
 				}
@@ -117,7 +117,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			return WrappedType::constructor( graphComponent, serialisation );
 		}
 
-		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -128,7 +128,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					if( f )
 					{
 						return boost::python::extract<std::string>(
-							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, boost::ref( serialisation ) )
 						);
 					}
 				}
@@ -140,7 +140,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			return WrappedType::postConstructor( graphComponent, identifier, serialisation );
 		}
 
-		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -151,7 +151,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					if( f )
 					{
 						return boost::python::extract<std::string>(
-							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, boost::ref( serialisation ) )
 						);
 					}
 				}
@@ -163,7 +163,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 			return WrappedType::postHierarchy( graphComponent, identifier, serialisation );
 		}
 
-		std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -174,7 +174,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					if( f )
 					{
 						return boost::python::extract<std::string>(
-							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, serialisation )
+							f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( graphComponent ) ), identifier, boost::ref( serialisation ) )
 						);
 					}
 				}
@@ -196,7 +196,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "childNeedsSerialisation" );
 					if( f )
 					{
-						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), serialisation );
+						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), boost::ref( serialisation ) );
 					}
 				}
 				catch( const boost::python::error_already_set &e )
@@ -217,7 +217,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "childNeedsConstruction" );
 					if( f )
 					{
-						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), serialisation );
+						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), boost::ref( serialisation ) );
 					}
 				}
 				catch( const boost::python::error_already_set &e )

@@ -40,6 +40,7 @@
 
 #include "GafferBindings/DataBinding.h"
 #include "GafferBindings/Serialisation.h"
+#include "GafferBindings/ValuePlugBinding.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
@@ -62,16 +63,7 @@ using namespace GafferBindings;
 namespace GafferBindings
 {
 
-void metadataModuleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules )
-{
-	/// \todo Derive from the registered values so we can support
-	/// datatypes from other modules.
-	modules.insert( "imath" );
-	modules.insert( "IECore" );
-	modules.insert( "Gaffer" );
-}
-
-std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent, const std::string &identifier )
+std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation )
 {
 	std::vector<InternedString> keys;
 	Metadata::registeredValues( graphComponent, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
@@ -97,8 +89,8 @@ std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent,
 		ConstDataPtr value = Metadata::value( graphComponent, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 
-		object repr = boost::python::import( "IECore" ).attr( "repr" );
-		std::string stringValue = extract<std::string>( repr( pythonValue ) );
+		/// \todo `valueRepr()` probably belongs somewhere more central. Maybe on Serialisation itself?
+		const std::string stringValue = ValuePlugSerialiser::valueRepr( pythonValue, &serialisation );
 
 		// \todo: To clean this up we might add a registerSerialisation( key,
 		// functionReturningSerialiser ) method. Once there's a second use case
@@ -123,6 +115,10 @@ std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent,
 		}
 	}
 
+	if( result.size() )
+	{
+		serialisation.addModule( "Gaffer" );
+	}
 	return result;
 }
 

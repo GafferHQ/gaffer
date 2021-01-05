@@ -60,6 +60,8 @@
 #include "boost/python/suite/indexing/container_utils.hpp"
 #include "boost/tokenizer.hpp"
 
+#include <unordered_map>
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -87,6 +89,52 @@ bool keyedByIndex( const GraphComponent *parent )
 	;
 }
 
+std::string modulePathInternal( const boost::python::object &o )
+{
+	if( !PyObject_HasAttrString( o.ptr(), "__module__" ) )
+	{
+		return "";
+	}
+	std::string modulePath = extract<std::string>( o.attr( "__module__" ) );
+	std::string objectName;
+	if( PyType_Check( o.ptr() ) )
+	{
+		objectName = extract<std::string>( o.attr( "__name__" ) );
+	}
+	else
+	{
+		objectName = extract<std::string>( o.attr( "__class__" ).attr( "__name__" ) );
+	}
+
+	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	std::string sanitisedModulePath;
+	Tokenizer tokens( modulePath, boost::char_separator<char>( "." ) );
+
+	for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
+	{
+		if( tIt->compare( 0, 1, "_" )==0 )
+		{
+			// assume that module path components starting with _ are bogus, and are used only to bring
+			// binary components into a namespace.
+			continue;
+		}
+		Tokenizer::iterator next = tIt; next++;
+		if( next==tokens.end() && *tIt == objectName )
+		{
+			// if the last module name is the same as the class name then assume this is just the file the
+			// class has been implemented in.
+			continue;
+		}
+		if( sanitisedModulePath.size() )
+		{
+			sanitisedModulePath += ".";
+		}
+		sanitisedModulePath += *tIt;
+	}
+
+	return sanitisedModulePath;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -104,13 +152,11 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 	{
 		if( const Node *node = runTimeCast<const Node>( parent ) )
 		{
-			metadataModuleDependencies( node, m_modules );
-			m_postScript += metadataSerialisation( node, parentName );
+			m_postScript += metadataSerialisation( node, parentName, *this );
 		}
 		else if( const Plug *plug = runTimeCast<const Plug>( parent ) )
 		{
-			metadataModuleDependencies( plug, m_modules );
-			m_postScript += metadataSerialisation( plug, parentName );
+			m_postScript += metadataSerialisation( plug, parentName, *this );
 		}
 	}
 }
@@ -167,50 +213,19 @@ std::string Serialisation::modulePath( const IECore::RefCounted *object )
 	return modulePath( o );
 }
 
-std::string Serialisation::modulePath( boost::python::object &o )
+std::string Serialisation::modulePath( const boost::python::object &o )
 {
-	if( !PyObject_HasAttrString( o.ptr(), "__module__" ) )
+	// Querying the module path is expensive and done frequently, so we cache
+	// results. The cache is not thread-safe, but since we are dealing with
+	// python objects, we know this thread must have the GIL, and therefore no
+	// other thread can access the cache concurrently.
+	static std::unordered_map<PyTypeObject *, std::string> g_cache;
+	auto inserted = g_cache.insert( { o.ptr()->ob_type, std::string() } );
+	if( inserted.second )
 	{
-		return "";
+		inserted.first->second = modulePathInternal( o );
 	}
-	std::string modulePath = extract<std::string>( o.attr( "__module__" ) );
-	std::string objectName;
-	if( PyType_Check( o.ptr() ) )
-	{
-		objectName = extract<std::string>( o.attr( "__name__" ) );
-	}
-	else
-	{
-		objectName = extract<std::string>( o.attr( "__class__" ).attr( "__name__" ) );
-	}
-
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
-	std::string sanitisedModulePath;
-	Tokenizer tokens( modulePath, boost::char_separator<char>( "." ) );
-
-	for( Tokenizer::iterator tIt=tokens.begin(); tIt!=tokens.end(); tIt++ )
-	{
-		if( tIt->compare( 0, 1, "_" )==0 )
-		{
-			// assume that module path components starting with _ are bogus, and are used only to bring
-			// binary components into a namespace.
-			continue;
-		}
-		Tokenizer::iterator next = tIt; next++;
-		if( next==tokens.end() && *tIt == objectName )
-		{
-			// if the last module name is the same as the class name then assume this is just the file the
-			// class has been implemented in.
-			continue;
-		}
-		if( sanitisedModulePath.size() )
-		{
-			sanitisedModulePath += ".";
-		}
-		sanitisedModulePath += *tIt;
-	}
-
-	return sanitisedModulePath;
+	return inserted.first->second;
 }
 
 std::string Serialisation::classPath( const IECore::RefCounted *object )
@@ -219,7 +234,7 @@ std::string Serialisation::classPath( const IECore::RefCounted *object )
 	return classPath( o );
 }
 
-std::string Serialisation::classPath( boost::python::object &object )
+std::string Serialisation::classPath( const boost::python::object &object )
 {
 	std::string result = modulePath( object );
 	if( result.size() )
@@ -407,6 +422,11 @@ std::string Serialisation::childIdentifier( const std::string &parentIdentifier,
 	return result;
 }
 
+void Serialisation::addModule( const std::string &moduleName )
+{
+	m_modules.insert( moduleName );
+}
+
 void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr serialiser )
 {
 	serialiserMap()[targetType] = serialiser;
@@ -509,24 +529,24 @@ void Serialisation::Serialiser::moduleDependencies( const Gaffer::GraphComponent
 	}
 }
 
-std::string Serialisation::Serialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+std::string Serialisation::Serialiser::constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const
 {
 	object o( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
 	std::string r = extract<std::string>( o.attr( "__repr__" )() );
 	return r;
 }
 
-std::string Serialisation::Serialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string Serialisation::Serialiser::postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	return "";
 }
 
-std::string Serialisation::Serialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string Serialisation::Serialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	return "";
 }
 
-std::string Serialisation::Serialiser::postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string Serialisation::Serialiser::postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	return "";
 }

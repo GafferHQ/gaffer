@@ -101,12 +101,16 @@ std::string substitutionsRepr( unsigned substitutions )
 	return result;
 }
 
-std::string serialisationRepr( const Gaffer::StringPlug *plug, const Serialisation *serialisation )
+std::string serialisationRepr( const Gaffer::StringPlug *plug, Serialisation *serialisation )
 {
 	std::string extraArguments;
 	if( plug->substitutions() != IECore::StringAlgo::AllSubstitutions )
 	{
 		extraArguments = "substitutions = " + substitutionsRepr( plug->substitutions() );
+		if( serialisation )
+		{
+			serialisation->addModule( "IECore" );
+		}
 	}
 	return ValuePlugSerialiser::repr( plug, extraArguments, serialisation );
 }
@@ -121,7 +125,7 @@ class StringPlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 		{
 			return serialisationRepr( static_cast<const StringPlug *>( graphComponent ), &serialisation );
 		}

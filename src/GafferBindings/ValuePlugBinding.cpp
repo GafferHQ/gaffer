@@ -53,6 +53,8 @@
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/format.hpp"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace boost::python;
 using namespace GafferBindings;
@@ -63,7 +65,7 @@ namespace
 
 const IECore::InternedString g_omitParentNodePlugValues( "valuePlugSerialiser:omitParentNodePlugValues" );
 
-std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, const Serialisation &serialisation, bool &canCondense )
+std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::string &identifier, Serialisation &serialisation, bool &canCondense )
 {
 	// There's nothing to do if the plug isn't serialisable.
 	if( !plug->getFlags( Plug::Serialisable ) )
@@ -118,30 +120,25 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 
 	// Emit the `setValue()` call for this plug.
 
-	object pythonValue = pythonPlug.attr( "getValue" )();
-
-	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
+	if( plug->isSetToDefault() )
 	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		if( pythonValue == pythonDefaultValue )
-		{
-			return "";
-		}
+		return "";
 	}
 
-	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue ) + " )\n";
+	object pythonValue = pythonPlug.attr( "getValue" )();
+	return identifier + ".setValue( " + ValuePlugSerialiser::valueRepr( pythonValue, &serialisation ) + " )\n";
 }
 
-std::string compoundObjectRepr( const IECore::CompoundObject *o )
+std::string compoundObjectRepr( const IECore::CompoundObject &o, Serialisation *serialisation )
 {
 	std::string items;
-	for( const auto &e : o->members() )
+	for( const auto &e : o.members() )
 	{
 		if( items.size() )
 		{
 			items += ", ";
 		}
-		items += "'" + e.first.string() + "' : " + ValuePlugSerialiser::valueRepr( object( e.second ) );
+		items += "'" + e.first.string() + "' : " + ValuePlugSerialiser::valueRepr( object( e.second ), serialisation );
 	}
 
 	if( items.empty() )
@@ -156,7 +153,7 @@ std::string compoundObjectRepr( const IECore::CompoundObject *o )
 
 } // namespace
 
-std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments, const Serialisation *serialisation )
+std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments, Serialisation *serialisation )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -169,7 +166,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
 	{
 		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		const std::string defaultValue = valueRepr( pythonDefaultValue );
+		const std::string defaultValue = valueRepr( pythonDefaultValue, serialisation );
 		if( defaultValue.size() )
 		{
 			result += "defaultValue = " + defaultValue + ", ";
@@ -221,29 +218,12 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 
 }
 
-void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
-{
-	PlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
-
-	const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
-	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
-	if( PyObject_HasAttrString( pythonPlug.ptr(), "defaultValue" ) )
-	{
-		object pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
-		std::string module = Serialisation::modulePath( pythonDefaultValue );
-		if( module.size() )
-		{
-			modules.insert( module );
-		}
-	}
-}
-
-std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const
 {
 	return repr( static_cast<const ValuePlug *>( graphComponent ), "", &serialisation );
 }
 
-std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const
 {
 	std::string result = PlugSerialiser::postHierarchy( graphComponent, identifier, serialisation );
 
@@ -262,26 +242,37 @@ std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *gr
 	return result;
 }
 
-std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value )
+std::string ValuePlugSerialiser::valueRepr( const boost::python::object &value, Serialisation *serialisation )
 {
 	// CompoundObject may contain objects which can only be serialised
 	// via `objectToBase64()`, so we need to override the standard Cortex
 	// serialiser.
 
-	boost::python::extract<IECore::CompoundObjectPtr> compoundObjectExtractor( value );
+	boost::python::extract<const IECore::CompoundObject &> compoundObjectExtractor( value );
 	if( compoundObjectExtractor.check() )
 	{
-		auto co = compoundObjectExtractor();
-		return compoundObjectRepr( co.get() );
+		return compoundObjectRepr( compoundObjectExtractor(), serialisation );
 	}
 
 	// We use IECore.repr() because it correctly prefixes the imath
 	// types with the module name, and also works around problems
-	// when round-tripping empty Box2fs.
-	object repr = boost::python::import( "IECore" ).attr( "repr" );
-	std::string result = extract<std::string>( repr( value ) );
+	// when round-tripping empty Box2fs. Accessing it via `import`
+	// is slow so we do it only once and store in `g_repr`. We
+	// deliberately "leak" this value as otherwise it will be cleaned
+	// up during static destruction, _after_ Python has already shut
+	// down.
+	static object *g_repr = new boost::python::object( boost::python::import( "IECore" ).attr( "repr" ) );
+	std::string result = extract<std::string>( (*g_repr)( value ) );
 	if( result.size() && result[0] != '<' )
 	{
+		if( serialisation )
+		{
+			const std::string module = Serialisation::modulePath( value );
+			if( module.size() )
+			{
+				serialisation->addModule( module );
+			}
+		}
 		return result;
 	}
 

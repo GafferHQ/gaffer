@@ -109,7 +109,7 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const auto *plug = static_cast<const Spreadsheet::RowsPlug *>( graphComponent );
@@ -188,7 +188,7 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 		//
 		// The strategy is a recursion where each child returns `true` if it needs the caller
 		// the emit a serialisation on its behalf and `false` otherwise.
-		bool defaultValueSerialisationsWalk( const ValuePlug *plug, const ValuePlug *defaultPlug, const Serialisation &serialisation, std::string &result ) const
+		bool defaultValueSerialisationsWalk( const ValuePlug *plug, const ValuePlug *defaultPlug, Serialisation &serialisation, std::string &result ) const
 		{
 			const size_t numChildren = plug->children().size();
 			assert( defaultPlug->children().size() == numChildren );
@@ -243,7 +243,7 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 				/// \todo Build identifier recursively (but lazily) and making sure to use the faster
 				/// version of `childIdentifier()`.
 				const std::string childPlugIdentifier = serialisation.identifier( childPlug );
-				result += childPlugIdentifier + ".setValue( " + valueRepr( pythonDefaultValue ) + " )\n";
+				result += childPlugIdentifier + ".setValue( " + valueRepr( pythonDefaultValue, &serialisation ) + " )\n";
 			}
 
 			return false;

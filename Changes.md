@@ -4,13 +4,35 @@
 Improvements
 ------------
 
+- Serialisation : Reduced script save times by around 50%.
 - Expression : Improved error message when Python expression assigns an invalid value.
+
+API
+---
+
+- Serialisation : Added `addModule()` method, for adding imports to the serialisation.
 
 Breaking Changes
 ----------------
 
 - SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
 - DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.
+- Serialisation :
+  - Disabled copy construction.
+  - The following methods now take a `const object &` where they used to take `object &` :
+    - `modulePath()`
+    - `classPath()`
+  - The following methods now take a `Serialisation &` argument where they used to take `const Serialisation &` :
+    - `constructor()`
+    - `postConstructor()`
+    - `postHierarchy()`
+    - `postScript()`
+- ValuePlugBinding :
+  - `repr()` now takes a `Serialisation *` where it used to take a `const Serialisation *`.
+  - `valueRepr()` now has an optional `serialisation` argument.
+- MetadataBinding :
+  - Added `serialisation` required argument to `metadataSerialisation()`.
+  - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.
 
 Build
 -----

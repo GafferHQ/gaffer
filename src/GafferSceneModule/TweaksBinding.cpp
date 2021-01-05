@@ -86,7 +86,7 @@ class TweakPlugSerialiser : public ValuePlugSerialiser
 		return false;
 	}
 
-	std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+	std::string constructor( const Gaffer::GraphComponent *graphComponent, Serialisation &serialisation ) const override
 	{
 		auto tweaksPlug = static_cast<const TweakPlug *>( graphComponent );
 
