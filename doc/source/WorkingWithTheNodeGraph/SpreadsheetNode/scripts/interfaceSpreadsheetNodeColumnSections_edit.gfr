@@ -53,7 +53,7 @@ Gaffer.Metadata.registerValue( __children["HighlightArea"], 'documentation:url',
 __children["HighlightArea"]["out"].setInput( __children["HighlightArea"]["BoxOut"]["__out"] )
 __children["HighlightArea"]["in"].setInput( __children["Shuffle"]["out"] )
 __children["HighlightArea"]["Alpha"].setValue( 0.4000000059604645 )
-__children["HighlightArea"]["CropArea"].setValue( imath.Box2i( imath.V2i( -160, -210 ), imath.V2i( 230, 32 ) ) )
+__children["HighlightArea"]["CropArea"].setValue( imath.Box2i( imath.V2i( -180, -207 ), imath.V2i( 260, 34 ) ) )
 __children["HighlightArea"]["BlurRadius"].setValue( imath.V2f( 6, 6 ) )
 __children["HighlightArea"]["__uiPosition"].setValue( imath.V2f( 4.95000029, 2.01796913 ) )
 __children["Shuffle"]["in"].setInput( __children["ImageReader_Editor"]["out"] )

@@ -92,7 +92,7 @@ __children["ImageTransform"]["__uiPosition"].setValue( imath.V2f( 4.64370966, 5.
 __children["Rectangle_Cell"]["out"].setInput( __children["Rectangle_Cell"]["__merge"]["out"] )
 __children["Rectangle_Cell"]["in"].setInput( __children["Merge"]["out"] )
 __children["Rectangle_Cell"]["color"].setValue( imath.Color4f( 0, 0.862699986, 0, 1 ) )
-__children["Rectangle_Cell"]["area"].setValue( imath.Box2f( imath.V2f( 164, 236 ), imath.V2f( 267, 236 ) ) )
+__children["Rectangle_Cell"]["area"].setValue( imath.Box2f( imath.V2f( 192, 236 ), imath.V2f( 295, 236 ) ) )
 __children["Rectangle_Cell"]["lineWidth"].setValue( 2.0 )
 __children["Rectangle_Cell"]["__uiPosition"].setValue( imath.V2f( -7.19426775, -10.3728542 ) )
 __children["Rectangle_Plug"]["out"].setInput( __children["Rectangle_Plug"]["__merge"]["out"] )

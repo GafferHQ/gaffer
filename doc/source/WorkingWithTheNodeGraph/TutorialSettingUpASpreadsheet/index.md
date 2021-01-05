@@ -57,7 +57,7 @@ The spreadsheet is now prepped to expand our one Context Variable, and we can di
 
 ## Adding rows and columns ##
 
-Let's add a row for our first shot. You'll notice that beneath the Default row there's a blank row. This will be the first row that is compared against the selector during processing. Click the row's pattern on the left, then type the first shot number, `1`. Let's assume this shot is noisy, and we need more samples. Enable the row's first cell (right-click > _Enable Cell_), and set its value to `42` (click it, then type the number).
+Let's add a row for our first shot. You'll notice that beneath the Default row there's a blank row. This will be the first row that is compared against the selector during processing. Click the row's pattern on the left, then type the first shot number, `1`. Let's assume this shot is noisy, and we need more samples. Enable the row's first cell (right-click > _Enable Cell_), and set its value to `42` (double-click it, then type the number).
 
 ```eval_rst
 .. image:: images/tutorialSettingUpASpreadsheetRow1.png
