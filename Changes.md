@@ -52,6 +52,9 @@ API
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
 - ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
+- RendererAlgo :
+  - Added `objectSamples()` overload which fills `vector<ConstObjectPtr>` rather than `vector<ConstVisibleRenderablePtr>`.
+  - Deprecated original `objectSamples()` method.
 
 Build
 -----

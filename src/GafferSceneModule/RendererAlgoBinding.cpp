@@ -52,7 +52,7 @@ namespace
 
 tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath::V2f &shutter, bool copy )
 {
-	std::vector<IECoreScene::ConstVisibleRenderablePtr> samples;
+	std::vector<IECore::ConstObjectPtr> samples;
 	std::vector<float> sampleTimes;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
@@ -68,7 +68,7 @@ tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath
 		}
 		else
 		{
-			pythonSamples.append( boost::const_pointer_cast<IECoreScene::VisibleRenderable>( s ) );
+			pythonSamples.append( boost::const_pointer_cast<IECore::Object>( s ) );
 		}
 	}
 
