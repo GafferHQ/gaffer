@@ -66,6 +66,7 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 			const std::string &fileName = "",
 			const IECore::MessageHandlerPtr &messageHandler = IECore::MessageHandlerPtr()
 		);
+		~CapturingRenderer() override;
 
 		/// Introspection
 		/// =============
@@ -161,8 +162,9 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 
 		IECore::MessageHandlerPtr m_messageHandler;
 
+		RenderType m_renderType;
 		std::atomic_bool m_rendering;
-		using ObjectMap = tbb::concurrent_hash_map<std::string, const CapturedObject *>;
+		using ObjectMap = tbb::concurrent_hash_map<std::string, CapturedObject *>;
 		ObjectMap m_capturedObjects;
 
 		static Renderer::TypeDescription<CapturingRenderer> g_typeDescription;

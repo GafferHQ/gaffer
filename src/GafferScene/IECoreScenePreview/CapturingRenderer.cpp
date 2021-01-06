@@ -50,8 +50,23 @@ using namespace IECoreScenePreview;
 IECoreScenePreview::Renderer::TypeDescription<CapturingRenderer> CapturingRenderer::g_typeDescription( "Capturing" );
 
 CapturingRenderer::CapturingRenderer( RenderType type, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-	:	m_messageHandler( messageHandler ), m_rendering( false )
+	:	m_messageHandler( messageHandler ), m_renderType( type ), m_rendering( false )
 {
+}
+
+CapturingRenderer::~CapturingRenderer()
+{
+	for( auto o : m_capturedObjects )
+	{
+		// Reset soon-to-be-dangling pointer from CapturedObject, in
+		// case clients keep the object alive longer than the renderer.
+		o.second->m_renderer = nullptr;
+		if( m_renderType != Interactive )
+		{
+			// Remove reference added in `object()`.
+			o.second->removeRef();
+		}
+	}
 }
 
 const CapturingRenderer::CapturedObject *CapturingRenderer::capturedObject( const std::string &name ) const
@@ -134,6 +149,14 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 	CapturedObjectPtr result = new CapturedObject( this, name, samples, times );
 	result->attributes( attributes );
 	a->second = result.get();
+	if( m_renderType != Interactive )
+	{
+		// For non-interactive renders, the client code will typically drop
+		// their reference to the object immediately, but we still want to
+		// capture it for later examination. Add a reference to keep it alive.
+		// See ~CapturingRenderer for the associated `removeRef()`.
+		a->second->addRef();
+	}
 
 	return result;
 }
@@ -193,7 +216,12 @@ CapturingRenderer::CapturedObject::CapturedObject( CapturingRenderer *renderer, 
 
 CapturingRenderer::CapturedObject::~CapturedObject()
 {
-	m_renderer->m_capturedObjects.erase( m_name );
+	if( m_renderer && m_renderer->m_renderType == RenderType::Interactive )
+	{
+		// If the client of an interactive render drops ownership, that means
+		// they want the object to be deleted from the renderer.
+		m_renderer->m_capturedObjects.erase( m_name );
+	}
 }
 
 const std::vector<IECore::ConstObjectPtr> &CapturingRenderer::CapturedObject::capturedSamples() const
