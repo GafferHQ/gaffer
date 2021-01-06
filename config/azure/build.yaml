@@ -39,7 +39,7 @@ jobs:
         python --version
         # Pre-installs some floating dependencies of the main modules that no longer support 2.x
         pip install --user cryptography==2.9 &&
-        pip install --user azure-common==1.1.23 azure-nspkg==3.0.2 azure-storage-blob==2.1.0 azure-storage-common==2.1.0 azure-storage-nspkg==3.1.0 PyGithub==1.45
+        pip install --user azure-common==1.1.23 azure-nspkg==3.0.2 azure-storage-blob==2.1.0 azure-storage-common==2.1.0 azure-storage-nspkg==3.1.0 PyJWT==1.7.1 PyGithub==1.45
         # Works around issues with earlier Python versions, remove once the Docker image is updated
         pip install --user sphinx==1.8.1
      displayName: 'Install Python Modules'
