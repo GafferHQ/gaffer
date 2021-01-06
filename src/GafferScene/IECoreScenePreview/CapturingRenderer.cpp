@@ -105,6 +105,11 @@ Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name,
 	return this->object( name, camera, attributes );
 }
 
+Renderer::ObjectInterfacePtr CapturingRenderer::camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+{
+	return this->object( name, vector<const Object *>( samples.begin(), samples.end() ), times, attributes );
+}
+
 Renderer::ObjectInterfacePtr CapturingRenderer::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
 	return this->object( name, object, attributes );

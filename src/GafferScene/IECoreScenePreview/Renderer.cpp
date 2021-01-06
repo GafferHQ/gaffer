@@ -79,6 +79,11 @@ Renderer::~Renderer()
 
 }
 
+Renderer::ObjectInterfacePtr Renderer::camera( const std::string &name,  const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+{
+	return camera( name, samples[0], attributes );
+}
+
 IECore::DataPtr Renderer::command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters )
 {
 	throw IECore::NotImplementedException( "Renderer::command" );
