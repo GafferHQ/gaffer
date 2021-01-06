@@ -1,5 +1,10 @@
 #! /bin/bash
 # BuildTarget: images/gafferSceneUIRotateTool.png
+# BuildTarget: images/gafferSceneUITranslateTool.png
+# BuildTarget: images/cameraOff.png
+# BuildTarget: images/gafferSceneUICameraTool.png
+# BuildTarget: images/toggleOff.png
+# BuildTarget: images/plus.png
 
 set -e
 

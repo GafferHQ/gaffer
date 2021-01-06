@@ -1455,10 +1455,15 @@ def locateDocs( docRoot, env ) :
 					# specifier so we need the second line
 					if ext == ".sh" :
 						line = s.readline()
-					if line.startswith( "# BuildTarget:" ) :
-						targets = [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ]
+					targets = []
+					while line.startswith( "# BuildTarget:" ) :
+						targets.extend( [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ] )
+						line = s.readline()
+					if targets:
 						command = env.Command( targets, sourceFile, generateDocs )
 						env.Depends( command, "build" )
+						if line.startswith( "# UndeclaredBuildTargets" ) :
+							env.NoCache( command )
 						# Force the commands to run serially, in case the doc generation
 						# has been run in parallel. Otherwise we can get overlapping
 						# screengrabs from the commands that launch Gaffer UIs.
@@ -1494,9 +1499,11 @@ if haveSphinx and haveInkscape :
 
 	# Since we don't copy the docs reference scripts, the screengrab
 	# scripts must read them from the source, so we use the reference
-	# env var.
+	# env var. We also extend startup paths to include any config
+	# we need for the docs to build correctly.
 	docCommandEnv = commandEnv.Clone()
 	docCommandEnv["ENV"]["GAFFER_REFERENCE_PATHS"] = os.path.abspath( "doc/references" )
+	docCommandEnv["ENV"]["GAFFER_STARTUP_PATHS"] = os.path.abspath( "doc/startup" )
 
 	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
 	# environment.
@@ -1520,6 +1527,8 @@ if haveSphinx and haveInkscape :
 	docEnv.Alias( "docs", docGraphicsCommands )
 	docSource, docGenerationCommands = locateDocs( "doc/source", docCommandEnv )
 	docs = docEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", docSource, buildDocs )
+	# SCons doesn't know about the assorted outputs of sphinx, so only index.html ends up in the cache
+	docEnv.NoCache( docs )
 	docEnv.Depends( docGenerationCommands, docGraphicsCommands )
 	docEnv.Depends( docs, docGraphicsCommands )
 	docEnv.Depends( docs, "build" )

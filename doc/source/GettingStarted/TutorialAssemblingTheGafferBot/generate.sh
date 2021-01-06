@@ -1,5 +1,18 @@
 #! /bin/bash
 # BuildTarget: images/expansion.png
+# BuildTarget: images/plus.png
+# BuildTarget: images/nodeSetDriverNodeSelection.png
+# BuildTarget: images/nodeSetDriverNodeSet.png
+# BuildTarget: images/nodeSetStandardSet.png
+# BuildTarget: images/layoutButton.png
+# BuildTarget: images/objects.png
+# BuildTarget: images/addObjects.png
+# BuildTarget: images/replaceObjects.png
+# BuildTarget: images/collapsibleArrowRight.png
+# BuildTarget: images/timelinePlay.png
+# BuildTarget: images/removeObjects.png
+# BuildTarget: images/gafferSceneUITranslateTool.png
+# BuildTarget: images/gafferSceneUIRotateTool.png
 
 set -e
 

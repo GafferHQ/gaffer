@@ -1,4 +1,16 @@
-# BuildTarget: images/tutorialSettingUpASpreadsheetRow2Other.png images/tutorialSettingUpASpreadsheetRows2A2B.png images/tutorialSettingUpASpreadsheetOverscanValues.png images/tutorialSettingUpASpreadsheetFullName.png images/tutorialSettingUpASpreadsheetRow2.png images/tutorialSettingUpASpreadsheetCleanColumn.png images/tutorialSettingUpASpreadsheetDefaultCell.png images/tutorialSettingUpASpreadsheetRow1.png images/tutorialSettingUpASpreadsheetSelector.png images/tutorialSettingUpASpreadsheetNewSpreadsheet.png images/tutorialSettingUpASpreadsheetGlobalContextVariables.png images/tutorialSettingUpASpreadsheetAppleseedOptionsNode.png images/tutorialSettingUpASpreadsheetStandardOptionsNode.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetAppleseedOptionsNode.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetCleanColumn.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetDefaultCell.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetFullName.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetGlobalContextVariables.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetNewSpreadsheet.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetOverscanValues.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetRow1.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetRow2.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetRow2Other.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetRows2A2B.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetSelector.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetStandardOptionsNode.png
 
 import os
 import time

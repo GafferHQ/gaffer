@@ -1,0 +1,13 @@
+{
+	"problemMatcher": [
+		{
+			"owner": "sphinx",
+			"pattern": [
+				{
+					"regexp": "^(.+:.+ WARNING:.+)$",
+					"message": 1
+				}
+			]
+		}
+	]
+}

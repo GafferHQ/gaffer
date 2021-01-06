@@ -1,5 +1,8 @@
 #! /bin/bash
-# BuildTarget: images/gear.png images/plus.png images/toggleOn.png images/toggleOff.png
+# BuildTarget: images/gear.png
+# BuildTarget: images/plus.png
+# BuildTarget: images/toggleOn.png
+# BuildTarget: images/toggleOff.png
 
 set -e
 

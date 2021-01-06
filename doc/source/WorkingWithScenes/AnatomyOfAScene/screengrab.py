@@ -1,4 +1,9 @@
+# BuildTarget: images/hierarchyView.png
 # BuildTarget: images/sceneInspector.png
+# BuildTarget: images/sceneInspectorAttributesSection.png
+# BuildTarget: images/sceneInspectorBoundSection.png
+# BuildTarget: images/sceneInspectorObjectSection.png
+# BuildTarget: images/sceneInspectorTransformSection.png
 
 import IECore
 import time
