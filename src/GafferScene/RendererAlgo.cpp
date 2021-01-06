@@ -1121,18 +1121,49 @@ struct CameraOutput : public LocationOutput
 		const size_t cameraMatch = m_cameraSet.match( path );
 		if( cameraMatch & IECore::PathMatcher::ExactMatch )
 		{
-			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
-			if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
+			// Sample cameras and apply globals
+
+			vector<ConstObjectPtr> samples; vector<float> sampleTimes;
+			RendererAlgo::objectSamples( scene, deformationSegments(), shutter(), samples, sampleTimes );
+
+			vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
+			for( const auto &sample : samples )
 			{
-				IECoreScene::CameraPtr cameraCopy = camera->copy();
+				if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
+				{
+					IECoreScene::CameraPtr cameraSampleCopy = cameraSample->copy();
+					GafferScene::RendererAlgo::applyCameraGlobals( cameraSampleCopy.get(), m_globals, scene );
+					cameraSamples.push_back( cameraSampleCopy );
+				}
+			}
 
-				GafferScene::RendererAlgo::applyCameraGlobals( cameraCopy.get(), m_globals, scene );
+			// Create ObjectInterface
 
-				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->camera(
-					name( path ),
-					cameraCopy.get(),
-					attributesInterface().get()
-				);
+			if( cameraSamples.size() && cameraSamples.size() == samples.size() )
+			{
+				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
+				if( !sampleTimes.size() )
+				{
+					objectInterface = renderer()->camera(
+						name( path ),
+						cameraSamples[0].get(),
+						attributesInterface().get()
+					);
+				}
+				else
+				{
+					vector<const Camera *> rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
+					for( auto &c : cameraSamples )
+					{
+						rawCameraSamples.push_back( c.get() );
+					}
+					objectInterface = renderer()->camera(
+						name( path ),
+						rawCameraSamples,
+						sampleTimes,
+						attributesInterface().get()
+					);
+				}
 
 				if( objectInterface )
 				{
