@@ -120,7 +120,7 @@ jobs:
     - name: 'Install Python Modules'
       run: |
         python --version
-        pip install PyGitHub==1.45
+        pip install PyJWT==1.7.1 PyGitHub==1.45
 
     - name: Set Custom Variables
       run: |
