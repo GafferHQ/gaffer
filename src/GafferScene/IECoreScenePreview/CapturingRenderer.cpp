@@ -117,7 +117,7 @@ Renderer::ObjectInterfacePtr CapturingRenderer::lightFilter( const std::string &
 
 Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
-	return this->object( name, { object }, { 0.0f }, attributes );
+	return this->object( name, { object }, {}, attributes );
 }
 
 Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
