@@ -78,8 +78,6 @@ def __cameraSummary( plug ) :
 def __motionBlurSummary( plug ) :
 
 	info = []
-	if plug["cameraBlur"]["enabled"].getValue() :
-		info.append( "Camera " + ( "On" if plug["cameraBlur"]["value"].getValue() else "Off" ) )
 	if plug["transformBlur"]["enabled"].getValue() :
 		info.append( "Transform " + ( "On" if plug["transformBlur"]["value"].getValue() else "Off" ) )
 	if plug["deformationBlur"]["enabled"].getValue() :
@@ -325,21 +323,6 @@ plugsMetadata = {
 	],
 
 	# Motion blur plugs
-
-	"options.cameraBlur" : [
-
-		"description",
-		"""
-		Whether or not camera motion is taken into
-		account in the renderered image. To specify the
-		number of segments to use for camera motion, use
-		a StandardAttributes node filtered for the camera.
-		""",
-
-		"layout:section", "Motion Blur",
-		"label", "Camera",
-
-	],
 
 	"options.transformBlur" : [
 
