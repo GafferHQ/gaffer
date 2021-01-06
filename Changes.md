@@ -32,7 +32,7 @@ API
 - M33fVectorDataPlug : Added new plug type for specifying arrays of 3x3 matrices.
 - FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
 - PlugAlgo :
-  - `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
+  - `extractDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
   - `promote()` allows metadata to be excluded from promotion by registering a `<metadataName>:promotable` metadata value of `false`.
 - NodeAlgo : If an input plug does not have presets of its own, it now inherits them from its first output. This is particularly useful
   when promoting plugs which have dynamic presets which are computed on demand. Previously the presets would have been baked in
