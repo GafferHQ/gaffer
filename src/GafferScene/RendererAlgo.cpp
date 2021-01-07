@@ -1139,7 +1139,17 @@ struct CameraOutput : public LocationOutput
 
 			// Create ObjectInterface
 
-			if( cameraSamples.size() && cameraSamples.size() == samples.size() )
+			if( !samples.size() || cameraSamples.size() != samples.size() )
+			{
+				IECore::msg(
+					IECore::Msg::Warning,
+					"RendererAlgo::CameraOutput",
+					boost::format( "Camera missing for location \"%1%\" at frame %2%" )
+						% name( path )
+						% Context::current()->getFrame()
+				);
+			}
+			else
 			{
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
 				if( !sampleTimes.size() )
