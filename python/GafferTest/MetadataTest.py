@@ -108,37 +108,65 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testNodeSignals( self ) :
 
-		ns = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
-		ps = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		add = GafferTest.AddNode()
+		multiply = GafferTest.MultiplyNode()
+
+		addCS = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal( add ) )
+		multiplyCS = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal( multiply ) )
+
+		legacyNS = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		legacyPS = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "k", "something" )
 
-		self.assertEqual( len( ps ), 0 )
-		self.assertEqual( len( ns ), 1 )
-		self.assertEqual( ns[0], ( GafferTest.AddNode.staticTypeId(), "k", None ) )
+		self.assertEqual( len( multiplyCS ), 0 )
+		self.assertEqual( len( addCS ), 1 )
+		self.assertEqual( addCS[0], ( add, "k", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+
+		self.assertEqual( len( legacyPS ), 0 )
+		self.assertEqual( len( legacyNS ), 1 )
+		self.assertEqual( legacyNS[0], ( GafferTest.AddNode.staticTypeId(), "k", None ) )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "k", "somethingElse" )
 
-		self.assertEqual( len( ps ), 0 )
-		self.assertEqual( len( ns ), 2 )
-		self.assertEqual( ns[1], ( GafferTest.AddNode.staticTypeId(), "k", None ) )
+		self.assertEqual( len( multiplyCS ), 0 )
+		self.assertEqual( len( addCS ), 2 )
+		self.assertEqual( addCS[1], ( add, "k", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+
+		self.assertEqual( len( legacyPS ), 0 )
+		self.assertEqual( len( legacyNS ), 2 )
+		self.assertEqual( legacyNS[1], ( GafferTest.AddNode.staticTypeId(), "k", None ) )
 
 	def testPlugSignals( self ) :
 
-		ns = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
-		ps = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		add = GafferTest.AddNode()
+		multiply = GafferTest.MultiplyNode()
+
+		addCS = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal( add ) )
+		multiplyCS = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal( multiply ) )
+
+		legacyNS = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		legacyPS = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "k", "something" )
 
-		self.assertEqual( len( ps ), 1 )
-		self.assertEqual( len( ns ), 0 )
-		self.assertEqual( ps[0], ( GafferTest.AddNode.staticTypeId(), "op1", "k", None ) )
+		self.assertEqual( len( addCS ), 1 )
+		self.assertEqual( len( multiplyCS ), 0 )
+		self.assertEqual( addCS[0], ( add["op1"], "k", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+
+		self.assertEqual( len( legacyPS ), 1 )
+		self.assertEqual( len( legacyNS ), 0 )
+		self.assertEqual( legacyPS[0], ( GafferTest.AddNode.staticTypeId(), "op1", "k", None ) )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "k", "somethingElse" )
 
-		self.assertEqual( len( ps ), 2 )
-		self.assertEqual( len( ns ), 0 )
-		self.assertEqual( ps[1], ( GafferTest.AddNode.staticTypeId(), "op1", "k", None ) )
+		self.assertEqual( len( addCS ), 2 )
+		self.assertEqual( len( multiplyCS ), 0 )
+		self.assertEqual( addCS[1], ( add["op1"], "k", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+
+		self.assertEqual( len( legacyPS ), 2 )
+		self.assertEqual( len( legacyNS ), 0 )
+		self.assertEqual( legacyPS[1], ( GafferTest.AddNode.staticTypeId(), "op1", "k", None ) )
 
 	def testSignalsDontExposeInternedStrings( self ) :
 
@@ -219,30 +247,45 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		n = GafferTest.AddNode()
 
-		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
-		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal( n ) )
+		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal( n ) )
+
+		legacyNCS = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
+		legacyPCS = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
 
 		Gaffer.Metadata.registerValue( n, "signalTest", 1 )
 		Gaffer.Metadata.registerValue( n["op1"], "signalTest", 1 )
 
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
-		self.assertEqual( ncs[0], ( GafferTest.AddNode.staticTypeId(), "signalTest", n ) )
-		self.assertEqual( pcs[0], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest", n["op1"] ) )
+		self.assertEqual( ncs[0], ( n, "signalTest", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
+		self.assertEqual( pcs[0], ( n["op1"], "signalTest", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
+
+		self.assertEqual( len( legacyNCS ), 1 )
+		self.assertEqual( len( legacyPCS ), 1 )
+		self.assertEqual( legacyNCS[0], ( GafferTest.AddNode.staticTypeId(), "signalTest", n ) )
+		self.assertEqual( legacyPCS[0], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest", n["op1"] ) )
 
 		Gaffer.Metadata.registerValue( n, "signalTest", 1 )
 		Gaffer.Metadata.registerValue( n["op1"], "signalTest", 1 )
 
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
+		self.assertEqual( len( legacyNCS ), 1 )
+		self.assertEqual( len( legacyPCS ), 1 )
 
 		Gaffer.Metadata.registerValue( n, "signalTest", 2 )
 		Gaffer.Metadata.registerValue( n["op1"], "signalTest", 2 )
 
 		self.assertEqual( len( ncs ), 2 )
 		self.assertEqual( len( pcs ), 2 )
-		self.assertEqual( ncs[1], ( GafferTest.AddNode.staticTypeId(), "signalTest", n ) )
-		self.assertEqual( pcs[1], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest", n["op1"] ) )
+		self.assertEqual( ncs[1], ( n, "signalTest", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
+		self.assertEqual( pcs[1], ( n["op1"], "signalTest", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
+
+		self.assertEqual( len( legacyNCS ), 2 )
+		self.assertEqual( len( legacyPCS ), 2 )
+		self.assertEqual( legacyNCS[1], ( GafferTest.AddNode.staticTypeId(), "signalTest", n ) )
+		self.assertEqual( legacyPCS[1], ( GafferTest.AddNode.staticTypeId(), "op1", "signalTest", n["op1"] ) )
 
 	def testSerialisation( self ) :
 
@@ -1110,17 +1153,24 @@ class MetadataTest( GafferTest.TestCase ) :
 
 	def testRegisterPlugTypeMetadata( self ) :
 
+		node = Gaffer.Node()
+		node["user"]["p1"] = Gaffer.Color3fPlug()
+		node["user"]["p2"] = Gaffer.FloatPlug()
+
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal( node ) )
+
 		Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "testKey", "testValue" )
 		Gaffer.Metadata.registerValue( Gaffer.Color3fPlug, "testKey2", lambda plug : plug.staticTypeName() )
 
-		p1 = Gaffer.Color3fPlug()
-		p2 = Gaffer.FloatPlug()
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[0], ( node["user"]["p1"], "testKey", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
+		self.assertEqual( cs[1], ( node["user"]["p1"], "testKey2", Gaffer.Metadata.ValueChangedReason.StaticRegistration ) )
 
-		self.assertEqual( Gaffer.Metadata.value( p1, "testKey" ), "testValue" )
-		self.assertEqual( Gaffer.Metadata.value( p2, "testKey" ), None )
+		self.assertEqual( Gaffer.Metadata.value( node["user"]["p1"], "testKey" ), "testValue" )
+		self.assertEqual( Gaffer.Metadata.value( node["user"]["p2"], "testKey" ), None )
 
-		self.assertEqual( Gaffer.Metadata.value( p1, "testKey2" ), "Gaffer::Color3fPlug" )
-		self.assertEqual( Gaffer.Metadata.value( p2, "testKey2" ), None )
+		self.assertEqual( Gaffer.Metadata.value( node["user"]["p1"], "testKey2" ), "Gaffer::Color3fPlug" )
+		self.assertEqual( Gaffer.Metadata.value( node["user"]["p2"], "testKey2" ), None )
 
 	def testPlugTypeMetadataEmitsPlugValueChangedSignal( self ) :
 
