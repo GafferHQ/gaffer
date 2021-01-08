@@ -67,7 +67,6 @@ StandardOptions::StandardOptions( const std::string &name )
 
 	// Motion blur
 
-	options->addChild( new Gaffer::NameValuePlug( "render:cameraBlur", new IECore::BoolData( false ), false, "cameraBlur" ) );
 	options->addChild( new Gaffer::NameValuePlug( "render:transformBlur", new IECore::BoolData( false ), false, "transformBlur" ) );
 	options->addChild( new Gaffer::NameValuePlug( "render:deformationBlur", new IECore::BoolData( false ), false, "deformationBlur" ) );
 	options->addChild( new Gaffer::NameValuePlug( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), false, "shutter" ) );

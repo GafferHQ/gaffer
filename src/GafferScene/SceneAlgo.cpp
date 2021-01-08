@@ -182,9 +182,6 @@ IECore::ConstCompoundObjectPtr GafferScene::SceneAlgo::globalAttributes( const I
 
 Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *globals, const ScenePlug *scene )
 {
-	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
-	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
-
 	const BoolData *transformBlurData = globals->member<BoolData>( "option:render:transformBlur" );
 	const bool transformBlur = transformBlurData ? transformBlurData->readable() : false;
 
@@ -192,7 +189,7 @@ Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *global
 	const bool deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
 
 	V2f shutter( Context::current()->getFrame() );
-	if( cameraBlur || transformBlur || deformationBlur )
+	if( transformBlur || deformationBlur )
 	{
 		ConstCameraPtr camera = nullptr;
 		const StringData *cameraOption = globals->member<StringData>( "option:render:camera" );

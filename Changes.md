@@ -15,6 +15,7 @@ API
 Breaking Changes
 ----------------
 
+- StandardOptions : Removed `cameraBlur` plug. This never functioned as advertised, as the regular `transformBlur` and `deformationBlur` blur settings were applied to cameras instead. As before, a StandardAttributes node may be used to customise blur for individual cameras.
 - SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
 - DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.
 - Serialisation :
