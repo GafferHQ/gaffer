@@ -55,6 +55,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"targetScene" : [
+
+			"description",
+			"""
+			The scene containing the target location to which objects are
+			constrained. If this is unconnected, the main input scene
+			is used instead.
+			""",
+
+		],
+
 		"target" : [
 
 			"description",

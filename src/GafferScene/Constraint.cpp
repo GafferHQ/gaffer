@@ -51,6 +51,7 @@ Constraint::Constraint( const std::string &name )
 	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new ScenePlug( "targetScene" ) );
 	addChild( new StringPlug( "target" ) );
 	addChild( new BoolPlug( "ignoreMissingTarget" ) );
 	addChild( new IntPlug( "targetMode", Plug::In, Origin, Origin, BoundCenter ) );
@@ -65,44 +66,54 @@ Constraint::~Constraint()
 {
 }
 
+ScenePlug *Constraint::targetScenePlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
+const ScenePlug *Constraint::targetScenePlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex );
+}
+
 Gaffer::StringPlug *Constraint::targetPlug()
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::StringPlug *Constraint::targetPlug() const
 {
-	return getChild<Gaffer::StringPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::BoolPlug *Constraint::ignoreMissingTargetPlug()
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1);
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::BoolPlug *Constraint::ignoreMissingTargetPlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1);
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::IntPlug *Constraint::targetModePlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::IntPlug *Constraint::targetModePlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::V3fPlug *Constraint::targetOffsetPlug()
 {
-	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::V3fPlug *Constraint::targetOffsetPlug() const
 {
-	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 4 );
 }
 
 void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -113,6 +124,11 @@ void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 		input == targetPlug() ||
 		input == ignoreMissingTargetPlug() ||
 		input == inPlug()->existsPlug() ||
+		input == inPlug()->transformPlug() ||
+		input == inPlug()->boundPlug() ||
+		input == targetScenePlug()->existsPlug() ||
+		input == targetScenePlug()->transformPlug() ||
+		input == targetScenePlug()->boundPlug() ||
 		input == targetModePlug() ||
 		input->parent<Plug>() == targetOffsetPlug() ||
 		// TypeId comparison is necessary to avoid calling pure virtual
@@ -132,9 +148,8 @@ bool Constraint::processesTransform() const
 
 void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	auto targetPathOpt = targetPath();
-
-	if( !targetPathOpt )
+	auto targetOpt = target();
+	if( !targetOpt )
 	{
 		// Pass through input unchanged
 		h = inPlug()->transformPlug()->hash();
@@ -145,13 +160,13 @@ void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Co
 	parentPath.pop_back();
 	h.append( inPlug()->fullTransformHash( parentPath ) );
 
-	h.append( inPlug()->fullTransformHash( *targetPathOpt ) );
+	h.append( targetOpt->scene->fullTransformHash( targetOpt->path ) );
 
 	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
 	h.append( targetMode );
 	if( targetMode != Origin )
 	{
-		h.append( inPlug()->boundHash( *targetPathOpt ) );
+		h.append( targetOpt->scene->boundHash( targetOpt->path ) );
 	}
 
 	targetOffsetPlug()->hash( h );
@@ -161,9 +176,8 @@ void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Co
 
 Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
-	auto targetPathOpt = targetPath();
-
-	if( !targetPathOpt )
+	auto targetOpt = target();
+	if( !targetOpt )
 	{
 		return inputTransform;
 	}
@@ -174,12 +188,12 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 	const M44f parentTransform = inPlug()->fullTransform( parentPath );
 	const M44f fullInputTransform = inputTransform * parentTransform;
 
-	M44f fullTargetTransform = inPlug()->fullTransform( *targetPathOpt );
+	M44f fullTargetTransform = targetOpt->scene->fullTransform( targetOpt->path );
 
 	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
 	if( targetMode != Origin )
 	{
-		const Box3f targetBound = inPlug()->bound( *targetPathOpt );
+		const Box3f targetBound = targetOpt->scene->bound( targetOpt->path );
 		if( !targetBound.isEmpty() )
 		{
 			switch( targetMode )
@@ -205,10 +219,9 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 	return fullConstrainedTransform * parentTransform.inverse();
 }
 
-boost::optional<ScenePlug::ScenePath> Constraint::targetPath() const
+boost::optional<Constraint::Target> Constraint::target() const
 {
 	std::string targetPathAsString = targetPlug()->getValue();
-
 	if( targetPathAsString == "" )
 	{
 		return boost::none;
@@ -217,7 +230,15 @@ boost::optional<ScenePlug::ScenePath> Constraint::targetPath() const
 	ScenePath targetPath;
 	ScenePlug::stringToPath( targetPathAsString, targetPath );
 
-	if( !inPlug()->exists( targetPath ) )
+	const ScenePlug *targetScene = targetScenePlug();
+	if( !targetScene->getInput() )
+	{
+		// Backwards compatibility for time when there was
+		// no `targetScene` plug.
+		targetScene = inPlug();
+	}
+
+	if( !targetScene->exists( targetPath ) )
 	{
 		if( ignoreMissingTargetPlug()->getValue() )
 		{
@@ -230,5 +251,6 @@ boost::optional<ScenePlug::ScenePath> Constraint::targetPath() const
 		}
 	}
 
-	return targetPath;
+	return Target( { targetPath, targetScene } );
 }
+
