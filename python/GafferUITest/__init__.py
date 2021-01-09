@@ -67,7 +67,6 @@ from .ContainerWidgetTest import ContainerWidgetTest
 from .SelectionMenuTest import SelectionMenuTest
 from .StandardStyleTest import StandardStyleTest
 from .EditorTest import EditorTest
-from .NumericSliderTest import NumericSliderTest
 from .PlugValueWidgetTest import PlugValueWidgetTest
 from .PathListingWidgetTest import PathListingWidgetTest
 from .MultiLineTextWidgetTest import MultiLineTextWidgetTest

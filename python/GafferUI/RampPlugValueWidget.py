@@ -71,7 +71,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__slider = GafferUI.Slider()
 			self.__slider.setMinimumSize( 2 )
-			self.__positionsChangedConnection = self.__slider.positionChangedSignal().connect( Gaffer.WeakMethod( self.__positionsChanged ), scoped = False )
+			self.__positionsChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__positionsChanged ), scoped = False )
 			self.__slider.indexRemovedSignal().connect( Gaffer.WeakMethod( self.__indexRemoved ), scoped = False )
 			self.__slider.selectedIndexChangedSignal().connect( Gaffer.WeakMethod( self.__selectedIndexChanged ), scoped = False )
 
@@ -131,7 +131,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				positions.append( plug.pointXPlug( i ).getValue() )
 
 			with Gaffer.BlockedConnection( self.__positionsChangedConnection ) :
-				self.__slider.setPositions( positions )
+				self.__slider.setValues( positions )
 
 	def __positionsChanged( self, slider, reason ) :
 
@@ -145,10 +145,10 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			mergeGroup = "RampPlugValudWidget%d%d" % ( id( self, ), self.__positionsMergeGroupId )
 		) :
 
-			if len( slider.getPositions() ) == plug.numPoints() :
+			if len( slider.getValues() ) == plug.numPoints() :
 				rejected = False
 				# the user has moved an existing point on the slider
-				for index, position in enumerate( slider.getPositions() ) :
+				for index, position in enumerate( slider.getValues() ) :
 					if plug.pointXPlug( index ).getValue() != position :
 						curPlug = plug.pointXPlug( index )
 						if curPlug.settable() and not Gaffer.MetadataAlgo.readOnly( curPlug ):
@@ -162,9 +162,9 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# a new position was added on the end by the user clicking
 				# on an empty area of the slider.
 				numPoints = plug.numPoints()
-				assert( len( slider.getPositions() ) == numPoints + 1 )
+				assert( len( slider.getValues() ) == numPoints + 1 )
 				spline = plug.getValue().spline()
-				position = slider.getPositions()[numPoints]
+				position = slider.getValues()[numPoints]
 				plug.addPoint()
 				plug.pointXPlug( numPoints ).setValue( position )
 				plug.pointYPlug( numPoints ).setValue( spline( position ) )

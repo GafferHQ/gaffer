@@ -36,6 +36,7 @@
 ##########################################################################
 
 import math
+import six
 
 import IECore
 
@@ -46,31 +47,37 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-## The Slider class allows a user to specify a number of positions on a scale of 0.0 at one end
-# of the Widget and 1.0 at the other. Positions off the ends of the widget are mapped
-# to negative numbers and numbers greater than 1.0 respectively. Derived classes may
-# provide alternative interpretations for the scale and clamp values as appropriate. In
-# particular see the NumericSlider which allows the specification of the values at either
-# end of the scale along with hard minimum and maximum values.
 class Slider( GafferUI.Widget ) :
 
-	PositionChangedReason = IECore.Enum.create( "Invalid", "SetPositions", "Click", "IndexAdded", "IndexRemoved", "DragBegin", "DragMove", "DragEnd", "Increment" )
+	ValueChangedReason = IECore.Enum.create( "Invalid", "SetValues", "Click", "IndexAdded", "IndexRemoved", "DragBegin", "DragMove", "DragEnd", "Increment" )
 
-	def __init__( self, position=None, positions=None, **kw ) :
+	# The min and max arguments define the numeric values at the ends of the slider.
+	# By default, values outside this range will be clamped, but hardMin and hardMax
+	# may be specified to move the point at which the clamping happens outside of the
+	# slider itself.
+	#
+	# A single slider may show more than one value. Multiple values may be specified
+	# by passing a list to the `values` argument, or calling `setValues()` after
+	# construction.
+	def __init__( self, values=0.5, min=0, max=1, hardMin=None, hardMax=None, **kw ) :
+
+		if "value" in kw :
+			# Backwards compatibility with old `value` argument
+			assert( values == 0.5 )
+			values = kw["value"]
+			del kw["value"]
 
 		GafferUI.Widget.__init__( self, _Widget(), **kw )
 
-		assert( ( position is None ) or ( positions is None ) )
-
-		if positions is not None :
-			self.__positions = positions
-		else :
-			self.__positions = [ 0.5 if position is None else position ]
+		self.__min = min
+		self.__max = max
+		self.__hardMin = hardMin if hardMin is not None else self.__min
+		self.__hardMax = hardMax if hardMax is not None else self.__max
 
 		self.__selectedIndex = None
 		self.__sizeEditable = False
 		self.__minimumSize = 1
-		self.__positionIncrement = None
+		self.__increment = None
 		self._entered = False
 
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
@@ -83,38 +90,44 @@ class Slider( GafferUI.Widget ) :
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
-	## Convenience function to call setPositions( [ position ] )
-	def setPosition( self, p ) :
+		self.__values = []
+		if isinstance( values, ( six.integer_types, float ) ) :
+			self.__setValuesInternal( [ values ], self.ValueChangedReason.SetValues )
+		else :
+			self.__setValuesInternal( values, self.ValueChangedReason.SetValues )
 
-		self.setPositions( [ p ] )
+	## Convenience function to call setValues( [ value ] )
+	def setValue( self, value ) :
 
-	## Convenience function returning getPositions()[0] if there
-	# is only one position, and raising ValueError if not.
-	def getPosition( self ) :
+		self.setValues( [ value ] )
 
-		if len( self.__positions ) != 1 :
+	## Convenience function returning getValues()[0] if there
+	# is only one value, and raising ValueError if not.
+	def getValue( self ) :
+
+		if len( self.__values ) != 1 :
 			raise ValueError
 
-		return self.__positions[0]
+		return self.__values[0]
 
-	def setPositions( self, positions ) :
+	def setValues( self, values ) :
 
-		self._setPositionsInternal( positions, self.PositionChangedReason.SetPositions )
+		self.__setValuesInternal( values, self.ValueChangedReason.SetValues )
 
-	def getPositions( self ) :
+	def getValues( self ) :
 
-		return self.__positions
+		return self.__values
 
-	## A signal emitted whenever a position has been changed. Slots should
-	# have the signature slot( Slider, PositionChangedReason ).
-	def positionChangedSignal( self ) :
+	## A signal emitted whenever a value has been changed. Slots should
+	# have the signature slot( Slider, ValueChangedReason ).
+	def valueChangedSignal( self ) :
 
-		signal = getattr( self, "_positionChangedSignal", None )
-		if signal is None :
-			signal = Gaffer.Signal2()
-			self._positionChangedSignal = signal
+		try :
+			return self.__valueChangedSignal
+		except :
+			self.__valueChangedSignal = Gaffer.Signal2()
 
-		return signal
+		return self.__valueChangedSignal
 
 	## Returns True if a user would expect the specified sequence
 	# of changes to be merged into one undoable event.
@@ -126,13 +139,35 @@ class Slider( GafferUI.Widget ) :
 
 		return ( firstReason, secondReason ) in (
 			# click and drag
-			( cls.PositionChangedReason.Click, cls.PositionChangedReason.DragBegin ),
-			( cls.PositionChangedReason.DragBegin, cls.PositionChangedReason.DragMove ),
-			( cls.PositionChangedReason.DragMove, cls.PositionChangedReason.DragMove ),
-			( cls.PositionChangedReason.DragMove, cls.PositionChangedReason.DragEnd ),
+			( cls.ValueChangedReason.Click, cls.ValueChangedReason.DragBegin ),
+			( cls.ValueChangedReason.DragBegin, cls.ValueChangedReason.DragMove ),
+			( cls.ValueChangedReason.DragMove, cls.ValueChangedReason.DragMove ),
+			( cls.ValueChangedReason.DragMove, cls.ValueChangedReason.DragEnd ),
 			# increment
-			( cls.PositionChangedReason.Increment, cls.PositionChangedReason.Increment ),
+			( cls.ValueChangedReason.Increment, cls.ValueChangedReason.Increment ),
 		)
+
+	def setRange( self, min, max, hardMin=None, hardMax=None ) :
+
+		if hardMin is None :
+			hardMin = min
+		if hardMax is None :
+			hardMax = max
+
+		if min==self.__min and max==self.__max and hardMin==self.__hardMin and hardMax==self.__hardMax :
+			return
+
+		self.__min = min
+		self.__max = max
+		self.__hardMin = hardMin
+		self.__hardMax = hardMax
+
+		self.__setValuesInternal( self.__values, self.ValueChangedReason.Invalid ) # reclamps the values to the range if necessary
+		self._qtWidget().update()
+
+	def getRange( self ) :
+
+		return self.__min, self.__max, self.__hardMin, self.__hardMax
 
 	def indexRemovedSignal( self ) :
 
@@ -149,7 +184,7 @@ class Slider( GafferUI.Widget ) :
 			return
 
 		if index is not None :
-			if not len( self.__positions ) or index < 0 or index >= len( self.__positions ) :
+			if not len( self.__values ) or index < 0 or index >= len( self.__values ) :
 				raise IndexError
 
 		self.__selectedIndex = index
@@ -173,7 +208,7 @@ class Slider( GafferUI.Widget ) :
 
 		return signal
 
-	## Determines whether or not positions may be added/removed
+	## Determines whether or not values may be added/removed
 	def setSizeEditable( self, editable ) :
 
 		self.__sizeEditable = editable
@@ -182,7 +217,7 @@ class Slider( GafferUI.Widget ) :
 
 		return self.__sizeEditable
 
-	## Sets a size after which no more positions can
+	## Sets a size after which no more values can
 	# be removed.
 	def setMinimumSize( self, minimumSize ) :
 
@@ -192,48 +227,92 @@ class Slider( GafferUI.Widget ) :
 
 		return self.__minimumSize
 
-	## Sets the size of the position increment added/subtracted
+	## Sets the value increment added/subtracted
 	# when using the cursor keys. The default value of None
 	# uses an increment equivalent to the size of one pixel at
 	# the current slider size. An increment of 0 can be specified
 	# to disable the behaviour entirely.
-	## \todo Add setValueIncrement() method on NumericSlider.
-	def setPositionIncrement( self, increment ) :
+	def setIncrement( self, increment ) :
 
-		self.__positionIncrement = increment
+		self.__increment = increment
 
-	def getPositionIncrement( self ) :
+	def getIncrement( self ) :
 
-		return self.__positionIncrement
+		return self.__increment
 
-	## May be overridden by derived classes if necessary, but
-	# implementations must call the base class implementation
-	# after performing their own work, as the base class is
-	# responsible for emitting positionChangedSignal().
-	def _setPositionsInternal( self, positions, reason ) :
+	def __setValuesInternal( self, values, reason ) :
 
-		dragBeginOrEnd = reason in ( self.PositionChangedReason.DragBegin, self.PositionChangedReason.DragEnd )
-		if positions == self.__positions and not dragBeginOrEnd :
-			# early out if the positions haven't changed, but not if the
+		# We _always_ clamp to the hard min and max, as those are not optional.
+		# Optional clamping to soft min and max is performed before calling this
+		# function.
+		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
+
+		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
+		if values == self.__values and not dragBeginOrEnd :
+			# early out if the values haven't changed, but not if the
 			# reason is either end of a drag - we always signal those so
 			# that they will always come in matching pairs.
 			return
 
-		self.__positions = positions
+		self.__values = values
 		self._qtWidget().update()
 
-		self.__emitPositionChanged( reason )
+		self.__emitValueChanged( reason )
 
 	## \todo Colours should come from some unified style somewhere
 	def _drawBackground( self, painter ) :
 
 		size = self.size()
+		valueRange = self.__max - self.__min
+		if valueRange == 0 :
+			return
 
-		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0 ) )
-		pen.setWidth( 1 )
-		painter.setPen( pen )
+		idealSpacing = 10
+		idealNumTicks = float( size.x ) / idealSpacing
+		tickStep = valueRange / idealNumTicks
 
-		painter.drawLine( 0, size.y / 2, size.x, size.y / 2 )
+		logTickStep = math.log10( tickStep )
+		flooredLogTickStep = math.floor( logTickStep )
+		tickStep = math.pow( 10, flooredLogTickStep )
+		blend = (logTickStep - flooredLogTickStep)
+
+		tickValue = math.floor( self.__min / tickStep ) * tickStep
+		i = 0
+		while tickValue <= self.__max :
+			x = size.x * ( tickValue - self.__min ) / valueRange
+			if i % 100 == 0 :
+				height0 = height1 = 0.75
+				alpha0 = alpha1 = 1
+			elif i % 50 == 0 :
+				height0 = 0.75
+				height1 = 0.5
+				alpha0 = alpha1 = 1
+			elif i % 10 == 0 :
+				height0 = 0.75
+				height1 = 0.25
+				alpha0 = alpha1 = 1
+			elif i % 5 == 0 :
+				height0 = 0.5
+				height1 = 0
+				alpha0 = 1
+				alpha1 = 0
+			else :
+				height0 = 0.25
+				height1 = 0
+				alpha0 = 1
+				alpha1 = 0
+
+			alpha = alpha0 + (alpha1 - alpha0) * blend
+			height = height0 + (height1 - height0) * blend
+
+			pen = QtGui.QPen()
+			pen.setWidth( 0 )
+			pen.setColor( QtGui.QColor( 0, 0, 0, alpha * 255 ) )
+			painter.setPen( pen )
+
+			painter.drawLine( x, size.y, x, size.y * ( 1 - height ) )
+			tickValue += tickStep
+			i += 1
 
 	def _drawPosition( self, painter, position, highlighted, opacity=1 ) :
 
@@ -262,7 +341,7 @@ class Slider( GafferUI.Widget ) :
 					]
 				)
 			)
-		elif position > 1 :
+		elif position > size.x :
 			painter.drawPolygon(
 				QtGui.QPolygonF(
 					[
@@ -273,19 +352,19 @@ class Slider( GafferUI.Widget ) :
 				)
 			)
 		else :
-			painter.drawEllipse( QtCore.QPoint( position * size.x, size.y / 2 ), size.y / 4, size.y / 4 )
+			painter.drawEllipse( QtCore.QPoint( position, size.y / 2 ), size.y / 4, size.y / 4 )
 
 	def _indexUnderMouse( self ) :
 
 		size = self.size()
-		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self ).x / float( size.x )
+		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self ).x
 
 		result = None
-		for i, p in enumerate( self.__positions ) :
-			# clamp position inside 0-1 range so we can select
+		for i, v in enumerate( self.__values ) :
+			# clamp value inside range so we can select
 			# handles representing points outside the widget.
-			p = max( min( p, 1.0 ), 0.0 )
-			dist = math.fabs( mousePosition - p )
+			v = max( min( v, self.__max ), self.__min )
+			dist = math.fabs( mousePosition - self.__valueToPosition( v ) )
 			if result is None or dist < minDist :
 				result = i
 				minDist = dist
@@ -299,8 +378,7 @@ class Slider( GafferUI.Widget ) :
 			# but when the size is editable, we consider points to
 			# be under the mouse when they genuinely are beneath it,
 			# so that clicks elsewhere can add points.
-			pixelDist = minDist * size.x
-			if pixelDist < size.y / 2.0 :
+			if minDist < size.y / 2.0 :
 				return result
 			else :
 				return None
@@ -327,13 +405,13 @@ class Slider( GafferUI.Widget ) :
 		index = self._indexUnderMouse()
 		if index is not None :
 			self.setSelectedIndex( index )
-			if len( self.getPositions() ) == 1 :
-				self.__setPositionInternal( index, event.line.p0.x, self.PositionChangedReason.Click, clamp=True  )
+			if len( self.getValues() ) == 1 :
+				self.__setValueInternal( index, self.__positionToValue( event.line.p0.x, clamp = True ), self.ValueChangedReason.Click )
 		elif self.getSizeEditable() :
-			positions = self.getPositions()[:]
-			positions.append( float( event.line.p0.x ) / self.size().x )
-			self._setPositionsInternal( positions, self.PositionChangedReason.IndexAdded )
-			self.setSelectedIndex( len( self.getPositions() ) - 1 )
+			values = self.getValues()[:]
+			values.append( self.__positionToValue( event.line.p0.x, clamp = True ) )
+			self.__setValuesInternal( values, self.ValueChangedReason.IndexAdded )
+			self.setSelectedIndex( len( self.getValues() ) - 1 )
 
 		return True
 
@@ -347,30 +425,24 @@ class Slider( GafferUI.Widget ) :
 	def __dragEnter( self, widget, event ) :
 
 		if event.sourceWidget is self :
-			self.__setPositionInternal(
-				self.getSelectedIndex(), event.line.p0.x,
-				self.PositionChangedReason.DragBegin,
-				clamp = not (event.modifiers & event.modifiers.Shift ),
-			)
 			return True
 
 		return False
 
 	def __dragMove( self, widget, event ) :
 
-		self.__setPositionInternal(
-			self.getSelectedIndex(), event.line.p0.x,
-			self.PositionChangedReason.DragMove,
-			clamp = not (event.modifiers & event.modifiers.Shift ),
+		self.__setValueInternal(
+			self.getSelectedIndex(),
+			self.__positionToValue(
+				event.line.p0.x,
+				clamp = not (event.modifiers & event.modifiers.Shift )
+			),
+			self.ValueChangedReason.DragMove
 		)
 
 	def __dragEnd( self, widget, event ) :
 
-		self.__setPositionInternal(
-			self.getSelectedIndex(), event.line.p0.x,
-			self.PositionChangedReason.DragEnd,
-			clamp = not (event.modifiers & event.modifiers.Shift ),
-		)
+		self.__dragMove( widget, event )
 
 	def __keyPress( self, widget, event ) :
 
@@ -379,54 +451,69 @@ class Slider( GafferUI.Widget ) :
 
 		if event.key in ( "Left", "Right", "Up", "Down" ) :
 
-			if self.__positionIncrement == 0 :
+			if self.__increment == 0 :
 				return False
 
-			if self.__positionIncrement is None :
-				pixelIncrement = 1
+			if self.__increment is None :
+				increment = ( self.__max - self.__min ) / float( self.size().x )
 			else :
-				pixelIncrement = self.__positionIncrement * self.size().x
+				increment = self.__increment
 
-			x = self.getPositions()[self.getSelectedIndex()] * self.size().x
-			x += pixelIncrement if event.key in ( "Right", "Up" ) else -pixelIncrement
-			self.__setPositionInternal(
+			x = self.getValues()[self.getSelectedIndex()]
+			x += increment if event.key in ( "Right", "Up" ) else -increment
+			if not (event.modifiers & event.modifiers.Shift ) :
+				x = max( self.__min, min( self.__max, x ) )
+
+			self.__setValueInternal(
 				self.getSelectedIndex(), x,
-				self.PositionChangedReason.Increment,
-				clamp = not (event.modifiers & event.modifiers.Shift ),
+				self.ValueChangedReason.Increment,
 			)
 			return True
 
 		elif event.key in ( "Backspace", "Delete" ) :
 
 			index = self.getSelectedIndex()
-			if index is not None and self.getSizeEditable() and len( self.getPositions() ) > self.getMinimumSize() :
+			if index is not None and self.getSizeEditable() and len( self.getValues() ) > self.getMinimumSize() :
 
-				del self.__positions[index]
+				del self.__values[index]
 				signal = getattr( self, "_indexRemovedSignal", None )
 				if signal is not None :
 					signal( self, index )
-				self.__emitPositionChanged( self.PositionChangedReason.IndexRemoved )
+				self.__emitValueChanged( self.ValueChangedReason.IndexRemoved )
 
 				self._qtWidget().update()
 				return True
 
 		return False
 
-	def __setPositionInternal( self, index, widgetX, reason, clamp ) :
+	def __setValueInternal( self, index, value, reason ) :
 
-		position = float( widgetX ) / self.size().x
+		values = self.getValues()[:]
+		values[index] = value
+		self.__setValuesInternal( values, reason )
+
+	def __emitValueChanged( self, reason ) :
+
+		try :
+			signal = self.__valueChangedSignal
+		except :
+			return
+
+		signal( self, reason )
+
+	def __positionToValue( self, position, clamp = False ) :
+
+		f = position / float( self.size().x )
+		value = self.__min + ( self.__max - self.__min ) * f
 		if clamp :
-			position = min( 1.0, max( 0.0, position ) )
+			value = max( self.__min, min( self.__max, value ) )
 
-		positions = self.getPositions()[:]
-		positions[index] = position
-		self._setPositionsInternal( positions, reason )
+		return value
 
-	def __emitPositionChanged( self, reason ) :
+	def __valueToPosition( self, value ) :
 
-		signal = getattr( self, "_positionChangedSignal", None )
-		if signal is not None :
-			signal( self, reason )
+		f = ( value - self.__min ) / ( self.__max - self.__min )
+		return f * self.size().x
 
 class _Widget( QtWidgets.QWidget ) :
 
@@ -451,18 +538,17 @@ class _Widget( QtWidgets.QWidget ) :
 		owner._drawBackground( painter )
 
 		indexUnderMouse = owner._indexUnderMouse()
-		for index, position in enumerate( owner.getPositions() ) :
+		for index, value in enumerate( owner.getValues() ) :
 			owner._drawPosition(
 				painter,
-				position,
+				owner._Slider__valueToPosition( value ),
 				highlighted = index == indexUnderMouse or index == owner.getSelectedIndex()
 			)
 
 		if indexUnderMouse is None and owner.getSizeEditable() and owner._entered :
-			mousePosition = GafferUI.Widget.mousePosition( relativeTo = owner ).x / float( owner.size().x )
 			owner._drawPosition(
 				painter,
-				mousePosition,
+				GafferUI.Widget.mousePosition( relativeTo = owner ).x,
 				highlighted = True,
 				opacity = 0.5
 			)
@@ -474,7 +560,7 @@ class _Widget( QtWidgets.QWidget ) :
 				event.accept()
 				return True
 			if event.key() in ( QtCore.Qt.Key_Up, QtCore.Qt.Key_Down, QtCore.Qt.Key_Left, QtCore.Qt.Key_Right ) :
-				if GafferUI.Widget._owner( self ).getPositionIncrement() != 0 :
+				if GafferUI.Widget._owner( self ).getIncrement() != 0 :
 					event.accept()
 					return True
 

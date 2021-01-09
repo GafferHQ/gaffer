@@ -45,39 +45,39 @@ class SliderTest( GafferUITest.TestCase ) :
 	def testConstructor( self ) :
 
 		s = GafferUI.Slider()
-		self.assertEqual( s.getPosition(), 0.5 )
-		self.assertEqual( s.getPositions(), [ 0.5 ] )
+		self.assertEqual( s.getValue(), 0.5 )
+		self.assertEqual( s.getValues(), [ 0.5 ] )
 
-		s = GafferUI.Slider( position = 1 )
-		self.assertEqual( s.getPosition(), 1 )
-		self.assertEqual( s.getPositions(), [ 1 ] )
+		s = GafferUI.Slider( value = 1 )
+		self.assertEqual( s.getValue(), 1 )
+		self.assertEqual( s.getValues(), [ 1 ] )
 
-		s = GafferUI.Slider( positions = [ 0, 1 ] )
-		self.assertRaises( ValueError, s.getPosition )
-		self.assertEqual( s.getPositions(), [ 0, 1 ] )
+		s = GafferUI.Slider( values = [ 0, 1 ] )
+		self.assertRaises( ValueError, s.getValue )
+		self.assertEqual( s.getValues(), [ 0, 1 ] )
 
-		self.assertRaises( Exception, GafferUI.Slider, position = 1, positions = [ 1, 2 ] )
+		self.assertRaises( Exception, GafferUI.Slider, value = 1, values = [ 1, 2 ] )
 
-	def testPositionAccessors( self ) :
+	def testValueAccessors( self ) :
 
-		s = GafferUI.Slider( position = 1 )
+		s = GafferUI.Slider( value = 1, max = 4 )
 
-		self.assertEqual( s.getPosition(), 1 )
-		self.assertEqual( s.getPositions(), [ 1 ] )
+		self.assertEqual( s.getValue(), 1 )
+		self.assertEqual( s.getValues(), [ 1 ] )
 
-		s.setPosition( 2 )
+		s.setValue( 2 )
 
-		self.assertEqual( s.getPosition(), 2 )
-		self.assertEqual( s.getPositions(), [ 2 ] )
+		self.assertEqual( s.getValue(), 2 )
+		self.assertEqual( s.getValues(), [ 2 ] )
 
-		s.setPositions( [ 2, 3 ] )
+		s.setValues( [ 2, 3 ] )
 
-		self.assertRaises( ValueError, s.getPosition )
-		self.assertEqual( s.getPositions(), [ 2, 3 ] )
+		self.assertRaises( ValueError, s.getValue )
+		self.assertEqual( s.getValues(), [ 2, 3 ] )
 
 	def testSelectedIndex( self ) :
 
-		s = GafferUI.Slider( positions = [ 1, 2 ] )
+		s = GafferUI.Slider( values = [ 1, 2 ] )
 		self.assertEqual( s.getSelectedIndex(), None )
 
 		s.setSelectedIndex( 0 )
@@ -105,6 +105,84 @@ class SliderTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 2 )
 		self.assertTrue( cs[0][0] is s )
 		self.assertTrue( cs[1][0] is s )
+
+	def testSetRange( self ) :
+
+		s = GafferUI.Slider( value = 1, min = 0, max = 2 )
+		self.assertEqual( s.getValue(), 1 )
+		s.setRange( 0, 1 )
+		self.assertEqual( s.getValue(), 1 )
+
+	def testSetZeroRange( self ) :
+
+		s = GafferUI.Slider( value = 1, min = 1, max = 2 )
+
+		self.assertEqual( s.getValue(), 1 )
+		s.setRange( 1, 1 )
+		self.assertEqual( s.getValue(), 1 )
+
+	def testValuesOutsideRangeAreClamped( self ) :
+
+		s = GafferUI.Slider( value = 0.1, min = 0, max = 2 )
+
+		cs = GafferTest.CapturingSlot( s.valueChangedSignal() )
+
+		s.setValue( 3 )
+		self.assertEqual( s.getValue(), 2 )
+
+		self.assertEqual( len( cs ), 1 )
+
+		s.setValue( 3 )
+		self.assertEqual( s.getValue(), 2 )
+
+		# second attempt was clamped to same position as before, so shouldn't
+		# signal any changes.
+		self.assertEqual( len( cs ), 1 )
+
+	def testHardRange( self ) :
+
+		s = GafferUI.Slider( value = 0.1, min = 0, max = 2, hardMin=-1, hardMax=3 )
+		self.assertEqual( s.getRange(), ( 0, 2, -1, 3 ) )
+
+		cs = GafferTest.CapturingSlot( s.valueChangedSignal() )
+
+		s.setValue( 3 )
+		self.assertEqual( s.getValue(), 3 )
+		self.assertEqual( len( cs ), 1 )
+
+		s.setValue( 3.5 )
+		self.assertEqual( s.getValue(), 3 )
+		self.assertEqual( len( cs ), 1 )
+
+		s.setValue( -1 )
+		self.assertEqual( s.getValue(), -1 )
+		self.assertEqual( len( cs ), 2 )
+
+		s.setValue( -2 )
+		self.assertEqual( s.getValue(), -1 )
+		self.assertEqual( len( cs ), 2 )
+
+	def testSetRangeClampsValue( self ) :
+
+		s = GafferUI.Slider( value = 0.5, min = 0, max = 2 )
+
+		self.assertEqual( s.getValue(), 0.5 )
+
+		s.setRange( 1, 2 )
+		self.assertEqual( s.getValue(), 1 )
+
+	def testMultipleValues( self ) :
+
+		self.assertRaises( Exception, GafferUI.Slider, value = 0, values = [ 1, 2 ] )
+
+		s = GafferUI.Slider( values = [ 1, 1.5 ], min = 0, max = 2 )
+		self.assertEqual( s.getValues(), [ 1, 1.5 ] )
+		self.assertRaises( ValueError, s.getValue )
+
+	def testConstructWithValueOutOfRange( self ) :
+
+		s = GafferUI.Slider( 2, min = 0, max = 1 )
+		self.assertEqual( s.getValue(), 1 )
 
 if __name__ == "__main__":
 	unittest.main()
