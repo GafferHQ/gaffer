@@ -185,5 +185,34 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( parent["out"].fullTransform( "/target/constrained" ), constraint["out"].fullTransform( "/group/constrained" ) )
 
+	def testTargetScene( self ) :
+
+		cube = GafferScene.Cube()
+		sphere1 = GafferScene.Sphere()
+		sphere1["transform"]["translate"]["x"].setValue( 1 )
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["in"].setInput( cube["out"] )
+		parent["child"][0].setInput( sphere1["out"] )
+
+		sphere2 = GafferScene.Sphere()
+		sphere2["transform"]["translate"]["y"].setValue( 1 )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint["in"].setInput( parent["out"] )
+		constraint["filter"].setInput( cubeFilter["out"] )
+		constraint["target"].setValue( "/sphere" )
+		self.assertEqual( constraint["out"].fullTransform( "/cube" ), parent["out"].fullTransform( "/sphere" ) )
+
+		constraint["targetScene"].setInput( sphere2["out"] )
+		self.assertEqual( constraint["out"].fullTransform( "/cube" ), sphere2["out"].fullTransform( "/sphere" ) )
+
+		sphere2["name"].setValue( "ball" )
+		constraint["ignoreMissingTarget"].setValue( True )
+		self.assertEqual( constraint["out"].fullTransform( "/cube" ), constraint["in"].fullTransform( "/cube" ) )
+
 if __name__ == "__main__":
 	unittest.main()

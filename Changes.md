@@ -13,7 +13,8 @@ Improvements
 ------------
 
 - Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
-- DeleteFaces / DeletePoints / DeleteCurves : Added "ignoreMissingVariable" plug which allows users to opt-out of errors.
+- DeleteFaces/DeletePoints/DeleteCurves : Added `ignoreMissingVariable` plug which allows users to opt-out of errors.
+- Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
 
 Fixes
 -----

@@ -67,6 +67,9 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 			BoundCenter = 3
 		};
 
+		ScenePlug *targetScenePlug();
+		const ScenePlug *targetScenePlug() const;
+
 		Gaffer::StringPlug *targetPlug();
 		const Gaffer::StringPlug *targetPlug() const;
 
@@ -98,7 +101,13 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 	private :
 
-		boost::optional<ScenePath> targetPath() const;
+		struct Target
+		{
+			ScenePath path;
+			const ScenePlug *scene;
+		};
+
+		boost::optional<Target> target() const;
 
 		static size_t g_firstPlugIndex;
 
