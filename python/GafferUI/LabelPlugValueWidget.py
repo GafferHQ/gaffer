@@ -72,10 +72,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 		self.__label.dragEndSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
-
 		self._addPopupMenu( self.__label )
 
+		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
 
 	def label( self ) :
@@ -94,6 +93,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			else :
 				self.__editableLabel.setGraphComponent( None )
 
+		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
 
 	def setHighlighted( self, highlighted ) :
@@ -231,16 +231,23 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# did all the work ourselves.
 		return True
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __updatePlugMetadataChangedConnections( self ) :
 
-		if  not self.getPlugs() :
+		nodes = { plug.node() for plug in self.getPlugs() }
+		self.__plugMetadataChangedConnections = [
+			Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			for node in nodes
+		]
+
+	def __plugMetadataChanged( self, plug, key, reason ) :
+
+		if plug not in self.getPlugs() :
 			return
 
 		if key=="label" :
-			if any( [ Gaffer.MetadataAlgo.affectedByChange( p, nodeTypeId, plugPath, plug ) for p in self.getPlugs() ] ) :
-				# The NameLabel doesn't know that our formatter is sensitive
-				# to the metadata, so give it a little kick.
-				self.__label.setFormatter( self.__formatter )
+			# The NameLabel doesn't know that our formatter is sensitive
+			# to the metadata, so give it a little kick.
+			self.__label.setFormatter( self.__formatter )
 
 	@staticmethod
 	def __formatter( graphComponents ) :

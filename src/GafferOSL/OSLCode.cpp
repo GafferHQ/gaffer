@@ -461,7 +461,7 @@ void OSLCode::parameterAdded( const Gaffer::GraphComponent *parent, Gaffer::Grap
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
-		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
+		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
 
 	child->nameChangedSignal().connect( boost::bind( &OSLCode::parameterNameChanged, this ) );
@@ -475,7 +475,7 @@ void OSLCode::parameterRemoved( const Gaffer::GraphComponent *parent, Gaffer::Gr
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
-		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
+		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
 
 	child->nameChangedSignal().disconnect( boost::bind( &OSLCode::parameterNameChanged, this ) );

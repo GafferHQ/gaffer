@@ -72,7 +72,9 @@ class TweakPlugAdder : public PlugAdder
 			plugsParent->node()->plugInputChangedSignal().connect( boost::bind( &TweakPlugAdder::plugInputChanged, this, ::_1 ) );
 			plugsParent->childAddedSignal().connect( boost::bind( &TweakPlugAdder::childAdded, this ) );
 			plugsParent->childRemovedSignal().connect( boost::bind( &TweakPlugAdder::childRemoved, this ) );
-			Metadata::plugValueChangedSignal().connect( boost::bind( &TweakPlugAdder::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+			Metadata::plugValueChangedSignal( plugsParent->node() ).connect(
+				boost::bind( &TweakPlugAdder::plugMetadataChanged, this, ::_1, ::_2 )
+			);
 			buttonReleaseSignal().connect( boost::bind( &TweakPlugAdder::buttonRelease, this, ::_2 ) );
 
 			updateVisibility();
@@ -200,9 +202,9 @@ class TweakPlugAdder : public PlugAdder
 			updateVisibility();
 		}
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+		void plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key )
 		{
-			if( MetadataAlgo::childAffectedByChange( m_plugsParent.get(), nodeTypeId, plugPath, plug ) )
+			if( plug->parent() == m_plugsParent )
 			{
 				if( key == g_visibleKey || key == g_noduleTypeKey )
 				{

@@ -693,7 +693,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 					GafferUI.Label( "Description" )
 					self.__descriptionWidget = GafferUI.MultiLineStringPlugValueWidget( plug = None )
 
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
 
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
 
@@ -725,15 +725,10 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		self.__column.setEnabled( self._editable() )
 
-	def __plugMetadataValueChanged( self, typeId, plugPath, key, plug ) :
+	def __plugMetadataValueChanged( self, plug, key, reason ) :
 
-		if key != _columnsMetadataKey :
-			return
-
-		if plug and not plug.isSame( self.getPlug() ) :
-			return
-
-		self.__pathListing.setColumns( self.__listingColumns() )
+		if key == _columnsMetadataKey and plug == self.getPlug() :
+			self.__pathListing.setColumns( self.__listingColumns() )
 
 	def __getColumns( self ) :
 

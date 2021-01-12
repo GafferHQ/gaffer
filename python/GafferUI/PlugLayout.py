@@ -114,7 +114,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( self.__node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		# and since our activations are driven by plug values, we must respond
 		# when the plugs are dirtied.
@@ -523,11 +523,9 @@ class PlugLayout( GafferUI.Widget ) :
 		elif hasattr( widget, "plugValueWidget" ) :
 			widget.plugValueWidget().setContext( context )
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.MetadataAlgo.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
-		childAffected = Gaffer.MetadataAlgo.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
-		if not parentAffected and not childAffected :
+		if plug != self.__parent and plug.parent() != self.__parent :
 			return
 
 		if key in (

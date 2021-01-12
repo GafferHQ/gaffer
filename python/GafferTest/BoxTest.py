@@ -575,12 +575,12 @@ class BoxTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["r"] ] ) )
 		p = b.promotePlug( b["r"]["floatRange"] )
 
-		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal( b ) )
 
 		Gaffer.Metadata.registerValue( p, "description", "hello" )
 
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description", p ) )
+		self.assertEqual( cs[0], ( p, "description", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
 
 	def testNodeMetadata( self ) :
 
@@ -609,16 +609,16 @@ class BoxTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["r"] ] ) )
 		p = b.promotePlug( b["r"]["floatRange"] )
 
-		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal() )
-		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal() )
+		ncs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal( b ) )
+		pcs = GafferTest.CapturingSlot( Gaffer.Metadata.plugValueChangedSignal( b ) )
 
 		Gaffer.Metadata.registerValue( b, "description", "t" )
 		Gaffer.Metadata.registerValue( p, "description", "tt" )
 
 		self.assertEqual( len( ncs ), 1 )
 		self.assertEqual( len( pcs ), 1 )
-		self.assertEqual( ncs[0], ( Gaffer.Box.staticTypeId(), "description", b ) )
-		self.assertEqual( pcs[0], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description", p ) )
+		self.assertEqual( ncs[0], ( b, "description", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
+		self.assertEqual( pcs[0], ( p, "description", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
 
 		Gaffer.Metadata.registerValue( b, "description", "t" )
 		Gaffer.Metadata.registerValue( p, "description", "tt" )
@@ -631,8 +631,8 @@ class BoxTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( ncs ), 2 )
 		self.assertEqual( len( pcs ), 2 )
-		self.assertEqual( ncs[1], ( Gaffer.Box.staticTypeId(), "description", b ) )
-		self.assertEqual( pcs[1], ( Gaffer.Box.staticTypeId(), p.relativeName( b ), "description", p ) )
+		self.assertEqual( ncs[1], ( b, "description", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
+		self.assertEqual( pcs[1], ( p, "description", Gaffer.Metadata.ValueChangedReason.InstanceRegistration ) )
 
 	def testMetadataUndo( self ) :
 

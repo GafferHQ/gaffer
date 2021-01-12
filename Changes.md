@@ -6,6 +6,7 @@ Improvements
 
 - ImageWriter : Added `openexr.dwaCompressionLevel` plug. This controls the size/quality tradeoff when using DWAA or DWAB compression.
 - Reference : Rows may now be added to and removed from referenced spreadsheets. Initially this is only allowed if the spreadsheet was published without any rows, to avoid anticipated problems merging referenced rows and user-edited rows.
+- Metadata : Reduced signalling overhead, particularly when loading a script while the UI is open. One benchmark shows a reduction of 97%.
 
 Fixes
 -----

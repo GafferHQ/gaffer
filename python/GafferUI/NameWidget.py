@@ -67,7 +67,7 @@ class NameWidget( GafferUI.TextWidget ) :
 			if isinstance( self.__graphComponent, Gaffer.Node ) :
 				self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) )
 			elif isinstance( self.__graphComponent, Gaffer.Plug ) :
-				self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+				self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__graphComponent.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 			else :
 				self.__metadataChangedConnection = None
 		else :
@@ -109,10 +109,10 @@ class NameWidget( GafferUI.TextWidget ) :
 		) :
 			self.__updateEditability()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		if (
-			Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__graphComponent, nodeTypeId, plugPath, key, plug ) or
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__graphComponent, plug, key ) or
 			plug == self.__graphComponent and key == "renameable"
 		) :
 			self.__updateEditability()

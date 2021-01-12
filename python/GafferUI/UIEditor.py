@@ -619,9 +619,6 @@ class _PlugListing( GafferUI.Widget ) :
 		self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
-		self.__nodeMetadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) )
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-
 	def setPlugParent( self, parent ) :
 
 		assert( isinstance( parent, ( Gaffer.Plug, Gaffer.Node, type( None ) ) ) )
@@ -631,10 +628,19 @@ class _PlugListing( GafferUI.Widget ) :
 		self.__childAddedConnection = None
 		self.__childRemovedConnection = None
 		self.__childNameChangedConnections = {}
+		self.__metadataChangedConnections = []
 
 		if self.__parent is not None :
+
 			self.__childAddedConnection = self.__parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
 			self.__childRemovedConnection = self.__parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+
+			node = self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
+			self.__metadataChangedConnections = [
+				Gaffer.Metadata.nodeValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) ),
+				Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			]
+
 			for child in self.__parent.children() :
 				self.__updateChildNameChangedConnection( child )
 
@@ -768,7 +774,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 			return index
 
-		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+		with Gaffer.BlockedConnection( self.__metadataChangedConnections ) :
 			walk( self.__pathListing.getPath().copy().setFromString( "/" ).item() )
 			Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySections", emptySections )
 			Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySectionIndices", emptySectionIndices )
@@ -904,28 +910,17 @@ class _PlugListing( GafferUI.Widget ) :
 
 		self.__deleteSelected()
 
-	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
+	def __nodeMetadataChanged( self, node, key, reason ) :
 
-		if self.__parent is None :
-			return
-
-		if node is not None and not self.__parent.isSame( node ) :
-			return
-
-		if not self.__parent.isInstanceOf( nodeTypeId ) :
+		if node != self.__parent :
 			return
 
 		if key in ( "uiEditor:emptySections", "uiEditor:emptySectionIndices" ) :
 			self.__updatePathLazily()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if self.__parent is None :
-			return
-
-		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.MetadataAlgo.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
-		childAffected = Gaffer.MetadataAlgo.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
-		if not parentAffected and not childAffected :
+		if ( plug != self.__parent and plug.parent() != self.__parent ) :
 			return
 
 		if key in ( "layout:index", "layout:section", "uiEditor:emptySections", "uiEditor:emptySectionIndices" ) :
@@ -1128,7 +1123,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		plugValueWidget = None
 		if self.__plug is not None :
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 			self.__valueNode["presetValue"] = plug.createCounterpart( "presetValue", plug.Direction.In )
 			if hasattr( self.__plug, "getValue" ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True )
@@ -1156,12 +1151,9 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if self.__plug is None or not Gaffer.MetadataAlgo.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) :
-			return
-
-		if key.startswith( "preset:" ) :
+		if plug == self.__plug and key.startswith( "preset:" ) :
 			self.__updatePath()
 
 	def __selectionChanged( self, listing ) :
@@ -1405,8 +1397,6 @@ class _PlugEditor( GafferUI.Widget ) :
 
 			GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
-
 		self.__plug = None
 
 	def setPlug( self, plug ) :
@@ -1416,6 +1406,12 @@ class _PlugEditor( GafferUI.Widget ) :
 		self.__nameWidget.setGraphComponent( self.__plug )
 		for widget in self.__metadataWidgets.values() :
 			widget.setTarget( self.__plug )
+
+		self.__plugMetadataChangedConnection = None
+		if self.__plug is not None :
+			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__plug.node() ).connect(
+				Gaffer.WeakMethod( self.__plugMetadataChanged )
+			)
 
 		self.__updateWidgetMenuText()
 		self.__updateWidgetSettings()
@@ -1476,12 +1472,9 @@ class _PlugEditor( GafferUI.Widget ) :
 
 		return result
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if self.getPlug() is None :
-			return
-
-		if not Gaffer.MetadataAlgo.affectedByChange( self.getPlug(), nodeTypeId, plugPath, plug ) :
+		if plug != self.getPlug() :
 			return
 
 		if key == "plugValueWidget:type" :
