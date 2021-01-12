@@ -394,8 +394,11 @@ NoduleLayout::NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedSt
 	m_parent->childAddedSignal().connect( boost::bind( &NoduleLayout::childAdded, this, ::_2 ) );
 	m_parent->childRemovedSignal().connect( boost::bind( &NoduleLayout::childRemoved, this, ::_2 ) );
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &NoduleLayout::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &NoduleLayout::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Node *node = runTimeCast<Node>( parent.get() );
+	node = node ? node : parent->ancestor<Node>();
+
+	Metadata::plugValueChangedSignal( node ).connect( boost::bind( &NoduleLayout::plugMetadataChanged, this, ::_1, ::_2 ) );
+	Metadata::nodeValueChangedSignal( node ).connect( boost::bind( &NoduleLayout::nodeMetadataChanged, this, ::_1, ::_2 ) );
 
 	updateNoduleLayout();
 }
@@ -491,9 +494,9 @@ void NoduleLayout::childRemoved( Gaffer::GraphComponent *child )
 	}
 }
 
-void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void NoduleLayout::plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key )
 {
-	if( MetadataAlgo::childAffectedByChange( m_parent.get(), nodeTypeId, plugPath, plug ) )
+	if( plug->parent() == m_parent.get() )
 	{
 		if(
 			key == g_sectionKey || key == g_indexKey || key == g_visibleKey ||
@@ -505,34 +508,30 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore:
 		}
 	}
 
-	if( const Plug *typedParent = runTimeCast<const Plug>( m_parent.get() ) )
+	if( plug == m_parent.get() )
 	{
-		if( MetadataAlgo::affectedByChange( typedParent, nodeTypeId, plugPath, plug ) )
+		if( affectsSpacing( key, m_section ) )
 		{
-			if( affectsSpacing( key, m_section ) )
-			{
-				updateSpacing();
-			}
-			if( affectsDirection( key, m_section ) )
-			{
-				updateDirection();
-			}
-			if( affectsOrientation( key, m_section ) )
-			{
-				updateOrientation();
-			}
-			if( boost::starts_with( key.string(), "noduleLayout:customGadget" ) )
-			{
-				updateNoduleLayout();
-			}
+			updateSpacing();
+		}
+		if( affectsDirection( key, m_section ) )
+		{
+			updateDirection();
+		}
+		if( affectsOrientation( key, m_section ) )
+		{
+			updateOrientation();
+		}
+		if( boost::starts_with( key.string(), "noduleLayout:customGadget" ) )
+		{
+			updateNoduleLayout();
 		}
 	}
 }
 
-void NoduleLayout::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
+void NoduleLayout::nodeMetadataChanged( const Gaffer::Node *node, IECore::InternedString key )
 {
-	const Node *typedParent = runTimeCast<const Node>( m_parent.get() );
-	if( !typedParent || !MetadataAlgo::affectedByChange( typedParent, nodeTypeId, node ) )
+	if( node != m_parent.get() )
 	{
 		return;
 	}

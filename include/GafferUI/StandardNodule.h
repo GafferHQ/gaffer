@@ -93,7 +93,7 @@ class GAFFERUI_API StandardNodule : public Nodule
 
 	private :
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key );
 
 		bool updateUserColor();
 

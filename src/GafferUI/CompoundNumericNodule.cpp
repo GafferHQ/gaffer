@@ -154,7 +154,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( CompoundNumericNodule );
 CompoundNumericNodule::CompoundNumericNodule( Gaffer::PlugPtr plug )
 	:	StandardNodule( plug )
 {
-	Metadata::plugValueChangedSignal().connect( boost::bind( &CompoundNumericNodule::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+	Metadata::plugValueChangedSignal( plug->node() ).connect( boost::bind( &CompoundNumericNodule::plugMetadataChanged, this, ::_1, ::_2 ) );
 	updateChildNoduleVisibility();
 }
 
@@ -305,9 +305,9 @@ const NoduleLayout *CompoundNumericNodule::noduleLayout() const
 	return children().size() ? getChild<NoduleLayout>( 0 ) : nullptr;
 }
 
-void CompoundNumericNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void CompoundNumericNodule::plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key )
 {
-	if( !MetadataAlgo::affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
+	if( plug != this->plug() )
 	{
 		return;
 	}
