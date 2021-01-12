@@ -334,7 +334,8 @@ class CompoundEditor( GafferUI.Editor ) :
 					editor.setNodeSet( nodeSet )
 
 			except Exception as e :
-				sys.stderr.write(
+				IECore.msg(
+					IECore.Msg.Level.Error, "CompoundEditor",
 					"Unable to restore editor state for {editor}: {error}\n".format(
 						editor = "%s (%s)" % ( path, type(editor).__name__ ),
 						error = "%s: %s" % ( type(e).__name__, e )
