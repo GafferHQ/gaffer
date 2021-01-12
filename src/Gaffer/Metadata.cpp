@@ -59,8 +59,15 @@ using namespace tbb;
 using namespace IECore;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal implementation details
+//////////////////////////////////////////////////////////////////////////
+
 namespace
 {
+
+// Value storage for string targets
+// ================================
 
 typedef std::pair<InternedString, Metadata::ValueFunction> NamedValue;
 
@@ -81,6 +88,9 @@ MetadataMap &metadataMap()
 	static auto g_m = new MetadataMap;
 	return *g_m;
 }
+
+// Value storage for type-based targets
+// ====================================
 
 struct GraphComponentMetadata
 {
@@ -122,6 +132,9 @@ GraphComponentMetadataMap &graphComponentMetadataMap()
 	static auto g_m = new GraphComponentMetadataMap;
 	return *g_m;
 }
+
+// Value storage for instance targets
+// ==================================
 
 struct NamedInstanceValue
 {
@@ -294,6 +307,10 @@ void registeredInstanceValues( const GraphComponent *graphComponent, std::vector
 }
 
 } // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Public implementation
+//////////////////////////////////////////////////////////////////////////
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, IECore::ConstDataPtr value )
 {
