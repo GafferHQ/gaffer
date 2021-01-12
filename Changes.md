@@ -7,6 +7,7 @@ Improvements
 - Serialisation : Reduced script save times by around 50%.
 - Expression : Improved error message when Python expression assigns an invalid value.
 - Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
+- Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
 
 API
 ---

@@ -132,32 +132,10 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
 	for i in range( 1, 10 ) :
 		isCurrent = isinstance( n, Gaffer.NumericBookmarkSet ) and n.getBookmark() == i
-		menuDefinition.insertBefore( "/Numeric Bookmark/%d" % i, {
+		menuDefinition.append( "/Numeric Bookmark/%d" % i, {
 			"command" : functools.partial( followBookmark, i, weakEditor ),
 			"checkBox" : isCurrent
-		}, "/Pin Divider" )
-
-
-	# Pin bookmarks
-
-	for i in range( 1, 10 ) :
-		menuDefinition.append( "/Bookmark/%s" % i, {
-				"command" : functools.partial( __findNumericBookmark, editor, i ),
-				"active" : Gaffer.MetadataAlgo.getNumericBookmark( editor.scriptNode(), i ) is not None,
 		} )
-
-	menuDefinition.append( "/Bookmark/Divider", { "divider" : True } )
-
-	bookmarks = __findableBookmarks( editor )
-	menuDefinition.append(
-		"/Bookmark/Other...",
-		{
-			"command" : functools.partial( __findBookmark, editor, bookmarks ),
-			"active" : len( bookmarks ),
-			"shortCut" : "B",
-		}
-	)
-
 
 def connectToEditor( editor ) :
 

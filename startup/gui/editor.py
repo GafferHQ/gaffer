@@ -64,13 +64,13 @@ def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mod
 		highlightTarget = weakref.ref( targetEditor.parent().parent() if targetEditor._qtWidget().isHidden() else targetEditor.parent() )
 
 		isCurrent = existingMode == mode if existingDriver is targetEditor else False
-		menuDefinition.insertBefore( "/%s/%s" % ( subMenuTitle, title ), {
+		menuDefinition.append( "/%s/%s" % ( subMenuTitle, title ), {
 			"command" : lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
 			"active" : not editor.drivesNodeSet( targetEditor ),
 			"checkBox" : isCurrent,
 			"enter" : lambda : highlightTarget().setHighlighted( True ),
 			"leave" : lambda : highlightTarget().setHighlighted( False )
-		}, "/Pin Divider" )
+		} )
 
 # Simple follows, eg: Hierarchy -> Viewer
 def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
