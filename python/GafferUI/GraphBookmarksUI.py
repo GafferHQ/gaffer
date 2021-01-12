@@ -306,7 +306,7 @@ def __findNumericBookmark( editor, numericBookmark ) :
 		editor.graphGadget().setRoot( node.parent() )
 		editor.frame( [ node ] )
 	else :
-		s = Gaffer.StandardSet( [ node ] )
+		s = Gaffer.NumericBookmarkSet( editor.scriptNode(), numericBookmark )
 		editor.setNodeSet( s )
 
 	return True
