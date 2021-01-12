@@ -130,11 +130,19 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
 	n = editor.getNodeSet()
 
+	script = editor.ancestor( GafferUI.ScriptWindow ).scriptNode()
+
+	menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
+
 	for i in range( 1, 10 ) :
+		bookmarkNode = Gaffer.MetadataAlgo.getNumericBookmark( script, i )
+		title = "%d" % i
+		if bookmarkNode is not None :
+			title += " : %s" % bookmarkNode.getName()
 		isCurrent = isinstance( n, Gaffer.NumericBookmarkSet ) and n.getBookmark() == i
-		menuDefinition.append( "/Numeric Bookmark/%d" % i, {
+		menuDefinition.append( "%s" % title, {
 			"command" : functools.partial( followBookmark, i, weakEditor ),
-			"checkBox" : isCurrent
+			"checkBox" : isCurrent,
 		} )
 
 def connectToEditor( editor ) :

@@ -1608,7 +1608,7 @@ class _PinningWidget( _Frame ) :
 			toolTipElements.append( "Following the node selection." )
 		elif isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
 			toolTipElements.append( "" )
-			toolTipElements.append( "Following Bookmark %d." % nodeSet.getBookmark()  )
+			toolTipElements.append( "Following Numeric Bookmark %d." % nodeSet.getBookmark()  )
 		elif isinstance( nodeSet, Gaffer.StandardSet ) :
 			toolTipElements.append( "" )
 			n = len(nodeSet)
