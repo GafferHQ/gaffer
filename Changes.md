@@ -4,12 +4,15 @@
 Fixes
 -----
 
-- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+- Viewer :
+  - Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+  - Fixed bugs when using the CameraTool to manipulate scaled cameras or lights. Note: the Viewport projection will no longer display the effects of scale or shear components in the view matrix.
 
 API
 ---
 
 - FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
+- ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
 
 0.58.6.0 (relative to 0.58.5.2)
 ========
