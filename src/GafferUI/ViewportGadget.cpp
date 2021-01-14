@@ -784,11 +784,12 @@ const Imath::M44f &ViewportGadget::getCameraTransform() const
 
 void ViewportGadget::setCameraTransform( const Imath::M44f &transform )
 {
-	if( transform == getCameraTransform() )
+	const Imath::M44f viewTransform = Imath::sansScalingAndShear( transform );
+	if( viewTransform == getCameraTransform() )
 	{
 		return;
 	}
-	m_cameraController->setTransform( transform );
+	m_cameraController->setTransform( viewTransform );
 	m_cameraChangedSignal( this );
 	requestRender();
 }

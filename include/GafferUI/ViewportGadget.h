@@ -112,6 +112,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// A copy is taken.
 		void setCamera( IECoreScene::CameraPtr camera );
 
+		/// Note: Scale and shear is removed from the camera
+		/// matrix to prevent unstable interaction.
 		const Imath::M44f &getCameraTransform() const;
 		void setCameraTransform( const Imath::M44f &transform );
 		/// A signal emitted when the camera is changed, either by
