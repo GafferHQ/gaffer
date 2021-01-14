@@ -61,14 +61,14 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 	)
 
 	for i in range( 1, 10 ) :
-	  menuDefinition.append(
-		  "/Numeric Bookmark/%s" % i,
-		  {
-			  "command" : functools.partial( __assignNumericBookmark, node, i ),
-			  "shortCut" : "Ctrl+%i" % i,
-			  "active" : not Gaffer.MetadataAlgo.readOnly( node ),
-		  }
-	  )
+		menuDefinition.append(
+			"/Numeric Bookmark/%s" % i,
+			{
+				"command" : functools.partial( __assignNumericBookmark, node, i ),
+				"shortCut" : "Ctrl+%i" % i,
+				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+			}
+		)
 
 	menuDefinition.append(
 		"/Numeric Bookmark/Remove",
