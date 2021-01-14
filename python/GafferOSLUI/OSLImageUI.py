@@ -247,7 +247,6 @@ Gaffer.Metadata.registerNode(
 			# for the case where they get promoted to a box
 			# individually.
 			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
 			"noduleLayout:label", __channelLabelFromPlug,
 			"ui:visibleDimensions", lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
  		],
