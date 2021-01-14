@@ -61,14 +61,14 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 	)
 
 	for i in range( 1, 10 ) :
-	  menuDefinition.append(
-		  "/Numeric Bookmark/%s" % i,
-		  {
-			  "command" : functools.partial( __assignNumericBookmark, node, i ),
-			  "shortCut" : "Ctrl+%i" % i,
-			  "active" : not Gaffer.MetadataAlgo.readOnly( node ),
-		  }
-	  )
+		menuDefinition.append(
+			"/Numeric Bookmark/%s" % i,
+			{
+				"command" : functools.partial( __assignNumericBookmark, node, i ),
+				"shortCut" : "Ctrl+%i" % i,
+				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
+			}
+		)
 
 	menuDefinition.append(
 		"/Numeric Bookmark/Remove",
@@ -130,34 +130,20 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
 	n = editor.getNodeSet()
 
+	script = editor.ancestor( GafferUI.ScriptWindow ).scriptNode()
+
+	menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
+
 	for i in range( 1, 10 ) :
+		bookmarkNode = Gaffer.MetadataAlgo.getNumericBookmark( script, i )
+		title = "%d" % i
+		if bookmarkNode is not None :
+			title += " : %s" % bookmarkNode.getName()
 		isCurrent = isinstance( n, Gaffer.NumericBookmarkSet ) and n.getBookmark() == i
-		menuDefinition.insertBefore( "/Numeric Bookmark/%d" % i, {
+		menuDefinition.append( "%s" % title, {
 			"command" : functools.partial( followBookmark, i, weakEditor ),
-			"checkBox" : isCurrent
-		}, "/Pin Divider" )
-
-
-	# Pin bookmarks
-
-	for i in range( 1, 10 ) :
-		menuDefinition.append( "/Bookmark/%s" % i, {
-				"command" : functools.partial( __findNumericBookmark, editor, i ),
-				"active" : Gaffer.MetadataAlgo.getNumericBookmark( editor.scriptNode(), i ) is not None,
+			"checkBox" : isCurrent,
 		} )
-
-	menuDefinition.append( "/Bookmark/Divider", { "divider" : True } )
-
-	bookmarks = __findableBookmarks( editor )
-	menuDefinition.append(
-		"/Bookmark/Other...",
-		{
-			"command" : functools.partial( __findBookmark, editor, bookmarks ),
-			"active" : len( bookmarks ),
-			"shortCut" : "B",
-		}
-	)
-
 
 def connectToEditor( editor ) :
 
@@ -306,7 +292,7 @@ def __findNumericBookmark( editor, numericBookmark ) :
 		editor.graphGadget().setRoot( node.parent() )
 		editor.frame( [ node ] )
 	else :
-		s = Gaffer.StandardSet( [ node ] )
+		s = Gaffer.NumericBookmarkSet( editor.scriptNode(), numericBookmark )
 		editor.setNodeSet( s )
 
 	return True

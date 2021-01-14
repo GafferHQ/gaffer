@@ -45,28 +45,6 @@ def __editorCreated( editor ) :
 
 GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
 
-
-#### Editor follows Scene Selection
-
-# This makes the supplied editor follow the source node of the scene selection of another editor.
-# When followSelectionSource is True, the editor will follow the source node for the scene
-# selection (as observed by the targetEditor's nodeSet), instead of the targets nodeSet itself.
-# For example, a NodeEditor linked to a Viewer with followSelectionSource would show the source
-# node for any selected lights/objects.
-
-def __driveFromSceneSelectionSourceChangeCallback( editor, targetEditor ) :
-
-	sourceSet = targetEditor.getNodeSet()
-	context = targetEditor.getContext()
-	return GafferSceneUI.SourceSet( context, sourceSet )
-
-DriverModeSceneSelectionSource = "SceneSelectionSource"
-GafferUI.NodeSetEditor.registerNodeSetDriverMode(
-	DriverModeSceneSelectionSource, __driveFromSceneSelectionSourceChangeCallback,
-	"Following the scene selection's source node from {editor}."
-)
-
-
 ### Pinning Menu Items
 
 # Helper for registering unique menu items considering current state
@@ -86,13 +64,13 @@ def __addFollowMenuItem( menuDefinition, editor, targetEditor, subMenuTitle, mod
 		highlightTarget = weakref.ref( targetEditor.parent().parent() if targetEditor._qtWidget().isHidden() else targetEditor.parent() )
 
 		isCurrent = existingMode == mode if existingDriver is targetEditor else False
-		menuDefinition.insertBefore( "/%s/%s" % ( subMenuTitle, title ), {
+		menuDefinition.append( "/%s/%s" % ( subMenuTitle, title ), {
 			"command" : lambda _ : weakEditor().setNodeSetDriver( weakTarget(), mode ),
 			"active" : not editor.drivesNodeSet( targetEditor ),
 			"checkBox" : isCurrent,
 			"enter" : lambda : highlightTarget().setHighlighted( True ),
 			"leave" : lambda : highlightTarget().setHighlighted( False )
-		}, "/Pin Divider" )
+		} )
 
 # Simple follows, eg: Hierarchy -> Viewer
 def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
@@ -124,33 +102,10 @@ def __registerEditorNodeSetDriverItems( editor, menuDefinition ) :
 				itemNameCounts
 			)
 
-# Selection follows, ie: NodeEditor -> Viewer
-def __registerNodeSetFollowsSceneSelectionItems( editor, menuDefinition ) :
-
-	if not isinstance( editor, GafferUI.NodeEditor ) :
-		return
-
-	# We support Viewers and Hierarchy Views as they are the only
-	# standard editors that manipulate the selection in the context.
-	parentCompoundEditor = editor.ancestor( GafferUI.CompoundEditor )
-	targets = parentCompoundEditor.editors( GafferUI.Viewer )
-	targets.extend( parentCompoundEditor.editors( GafferSceneUI.HierarchyView ) )
-
-	itemNameCounts = {}
-	for target in targets :
-		if target is not editor :
-			__addFollowMenuItem( menuDefinition,
-				editor, target,
-				"Scene Selection",
-				DriverModeSceneSelectionSource,
-				itemNameCounts
-			)
-
 ## Registration
 
 def __registerNodeSetMenuItems( editor, menuDefinition ) :
 
-	__registerNodeSetFollowsSceneSelectionItems( editor, menuDefinition )
 	__registerEditorNodeSetDriverItems( editor, menuDefinition )
 
 	GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions( editor, menuDefinition )

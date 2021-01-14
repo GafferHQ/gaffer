@@ -334,7 +334,8 @@ class CompoundEditor( GafferUI.Editor ) :
 					editor.setNodeSet( nodeSet )
 
 			except Exception as e :
-				sys.stderr.write(
+				IECore.msg(
+					IECore.Msg.Level.Error, "CompoundEditor",
 					"Unable to restore editor state for {editor}: {error}\n".format(
 						editor = "%s (%s)" % ( path, type(editor).__name__ ),
 						error = "%s: %s" % ( type(e).__name__, e )
@@ -1607,7 +1608,7 @@ class _PinningWidget( _Frame ) :
 			toolTipElements.append( "Following the node selection." )
 		elif isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
 			toolTipElements.append( "" )
-			toolTipElements.append( "Following Bookmark %d." % nodeSet.getBookmark()  )
+			toolTipElements.append( "Following Numeric Bookmark %d." % nodeSet.getBookmark()  )
 		elif isinstance( nodeSet, Gaffer.StandardSet ) :
 			toolTipElements.append( "" )
 			n = len(nodeSet)
@@ -1666,10 +1667,21 @@ class _PinningWidget( _Frame ) :
 
 	def __addStandardItems( self, editor, m ) :
 
-		# @see CompoundEditor.nodeSetMenuSignal for details on the structure
-		# of this menu.
-
 		drivingEditor, _ = editor.getNodeSetDriver()
+		selection = editor.scriptNode().selection()
+
+		if len(selection) == 0 :
+			label = "Pin To Nothing"
+		elif len(selection) == 1 :
+			label = "Pin %s" % selection[0].getName()
+		else :
+			label = "Pin %d Selected Nodes" % len(selection)
+
+		m.append( "/Pin Node Selection", {
+			"command" : functools.partial( self.__pinToNodeSelection, weakref.ref( editor ) ),
+			"label" : label,
+			"shortCut" : "p"
+		} )
 
 		m.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
 
@@ -1677,14 +1689,6 @@ class _PinningWidget( _Frame ) :
 			"command" : functools.partial( self.__followNodeSelection, weakref.ref( editor ) ),
 			"checkBox" : drivingEditor is None and editor.getNodeSet().isSame( editor.scriptNode().selection() ),
 			"shortCut" : "n"
-		} )
-
-		m.append( "/Pin Divider", { "divider" : True, "label" : "Pin" } )
-
-		m.append( "/Pin Node Selection", {
-			"command" : functools.partial( self.__pinToNodeSelection, weakref.ref( editor ) ),
-			"label" : "Node Selection",
-			"shortCut" : "p"
 		} )
 
 	def __getNodeSetEditor( self ) :

@@ -116,6 +116,9 @@ class NodeSetEditor( GafferUI.Editor ) :
 	# If drivingEditor is None, any existing links will be broken.
 	def setNodeSetDriver( self, drivingEditor, mode = DriverModeNodeSet ) :
 
+		if mode not in self.__nodeSetDriverModes :
+			raise ValueError( "Unknown driver mode '%s'" % mode )
+
 		if drivingEditor is not None :
 			assert( isinstance( drivingEditor, GafferUI.NodeSetEditor ) )
 			# We also need to stop people creating infinite loops

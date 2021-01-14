@@ -6,6 +6,8 @@ Improvements
 
 - Serialisation : Reduced script save times by around 50%.
 - Expression : Improved error message when Python expression assigns an invalid value.
+- Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
+- Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
 
 API
 ---
@@ -34,6 +36,8 @@ Breaking Changes
 - MetadataBinding :
   - Added `serialisation` required argument to `metadataSerialisation()`.
   - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.
+- Editors : Removed the 'Follow Scene Selection' mode from the Node Editor Focus menu (#4074).
+- GafferSceneUI : Removed `SourceSet`.
 
 Build
 -----
