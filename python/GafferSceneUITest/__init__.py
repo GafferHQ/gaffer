@@ -50,7 +50,6 @@ from .ContextAlgoTest import ContextAlgoTest
 from .CameraToolTest import CameraToolTest
 from .VisualiserTest import VisualiserTest
 from .TransformToolTest import TransformToolTest
-from .SourceSetTest import SourceSetTest
 from .CropWindowToolTest import CropWindowToolTest
 
 if __name__ == "__main__":

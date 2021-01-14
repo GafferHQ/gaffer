@@ -37,6 +37,7 @@ Breaking Changes
   - Added `serialisation` required argument to `metadataSerialisation()`.
   - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.
 - Editors : Removed the 'Follow Scene Selection' mode from the Node Editor Focus menu (#4074).
+- GafferSceneUI : Removed `SourceSet`.
 
 Build
 -----
