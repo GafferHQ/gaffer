@@ -182,3 +182,20 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 		expectedBoundingBox = imath.Box3f( imath.V3f( 0, -1, 0 ), imath.V3f( 2, 1, 0 ) )
 
 		self.assertEqual( actualCurveDeletedBounds, expectedBoundingBox )
+
+	def testIgnoreMissing( self ) :
+
+		curvesScene = self.makeCurves()
+		deleteCurves = GafferScene.DeleteCurves()
+		deleteCurves["in"].setInput( curvesScene["out"] )
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/object' ] ) )
+		deleteCurves["filter"].setInput( pathFilter["out"] )
+
+		self.assertNotEqual( deleteCurves["in"].object( "/object" ), deleteCurves["out"].object( "/object" ) )
+
+		deleteCurves["curves"].setValue( "doesNotExist" )
+		self.assertRaises( RuntimeError, deleteCurves["out"].object, "/object" )
+
+		deleteCurves["ignoreMissingVariable"].setValue( True )
+		self.assertEqual( deleteCurves["in"].object( "/object" ), deleteCurves["out"].object( "/object" ) )

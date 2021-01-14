@@ -1,4 +1,7 @@
 # BuildTarget: images/blank.png
+# BuildTarget: images/parameters.png
+# BuildTarget: images/shaderBallColoredStripes.png
+# BuildTarget: images/shaderBallStripes.png
 
 import time
 

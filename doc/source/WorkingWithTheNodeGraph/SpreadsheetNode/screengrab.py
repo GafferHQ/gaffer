@@ -1,4 +1,25 @@
-# BuildTarget: images/interfaceSpreadsheetNode.png images/interfaceSpreadsheetNodeInterface.png images/interfaceSpreadsheetNodeRenderNetwork.png images/interfaceSpreadsheetNodeBreakdown.png images/interfaceSpreadsheetNodeAuxiliaryConnections.png images/taskSpreadsheetNodeAddPlugBasic.png images/taskSpreadsheetNodeAddPlugVectorWhole.png images/taskSpreadsheetNodeAddPlugVectorSingle.png images/taskSpreadsheetNodeAddPlugCompound.png images/interfaceSpreadsheetNodeCompoundEnabledSwitch.png images/taskSpreadsheetNodeAddPlugTweak.png images/interfaceSpreadsheetNodeDisabledCell.png images/interfaceSpreadsheetNodeFullName.png images/interfaceSpreadsheetNodePatternWidths.png images/taskSpreadsheetNodeResizeColumnAutomatic.png images/taskSpreadsheetNodeResizeColumnManual.png images/taskSpreadsheetNodeReorderColumn.png images/interfaceSpreadsheetNodeColumnSections.png images/taskSpreadsheetNodeReorderSection.png images/examplePerLocationTransformSpreadsheet.png images/examplePerLocationLightTweakSpreadsheet.png images/exampleMultiShotRenderSpreadsheet.png
+# BuildTarget: images/exampleMultiShotRenderSpreadsheet.png
+# BuildTarget: images/examplePerLocationLightTweakSpreadsheet.png
+# BuildTarget: images/examplePerLocationTransformSpreadsheet.png
+# BuildTarget: images/interfaceSpreadsheetNode.png
+# BuildTarget: images/interfaceSpreadsheetNodeAuxiliaryConnections.png
+# BuildTarget: images/interfaceSpreadsheetNodeBreakdown.png
+# BuildTarget: images/interfaceSpreadsheetNodeColumnSections.png
+# BuildTarget: images/interfaceSpreadsheetNodeCompoundEnabledSwitch.png
+# BuildTarget: images/interfaceSpreadsheetNodeDisabledCell.png
+# BuildTarget: images/interfaceSpreadsheetNodeFullName.png
+# BuildTarget: images/interfaceSpreadsheetNodeInterface.png
+# BuildTarget: images/interfaceSpreadsheetNodePatternWidths.png
+# BuildTarget: images/interfaceSpreadsheetNodeRenderNetwork.png
+# BuildTarget: images/taskSpreadsheetNodeAddPlugBasic.png
+# BuildTarget: images/taskSpreadsheetNodeAddPlugCompound.png
+# BuildTarget: images/taskSpreadsheetNodeAddPlugTweak.png
+# BuildTarget: images/taskSpreadsheetNodeAddPlugVectorSingle.png
+# BuildTarget: images/taskSpreadsheetNodeAddPlugVectorWhole.png
+# BuildTarget: images/taskSpreadsheetNodeReorderColumn.png
+# BuildTarget: images/taskSpreadsheetNodeReorderSection.png
+# BuildTarget: images/taskSpreadsheetNodeResizeColumnAutomatic.png
+# BuildTarget: images/taskSpreadsheetNodeResizeColumnManual.png
 
 import sys
 import os

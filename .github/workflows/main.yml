@@ -102,7 +102,8 @@ jobs:
         echo `pip show scons | grep "Location:" | cut -d ' ' -f2`/../../../bin >> $GITHUB_PATH
         pip install sphinx==1.8.1 sphinx_rtd_theme==0.4.3 recommonmark==0.5.0 docutils==0.12
         # Force inkscape < 1.0 until SConstruct is updated
-        brew cask install xquartz https://raw.githubusercontent.com/Homebrew/homebrew-cask/5eafe6e9877c5524100b9ac1c5375fe8a2d039be/Casks/inkscape.rb
+        brew install --cask xquartz &&
+        brew install --cask ./config/brew/Casks/inkscape.rb
       if: runner.os == 'macOS'
 
     - name: Install toolchain (Linux)
@@ -116,7 +117,7 @@ jobs:
     - name: 'Install Python Modules'
       run: |
         python --version
-        pip install PyGitHub==1.45
+        pip install PyJWT==1.7.1 PyGitHub==1.45
 
     - name: Set Custom Variables
       run: |
@@ -166,7 +167,10 @@ jobs:
       # aborts them in a more timely fashion than the default 6hr timeout.
       timeout-minutes: 20
       run: |
-       scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        # Treats warnings-as-errors so we know about broken links
+        echo "::add-matcher::./.github/workflows/main/problemMatchers/sphinx.json"
+        scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+        echo "::remove-matcher owner=sphinx::"
       if: matrix.publish
 
     - name: Validate

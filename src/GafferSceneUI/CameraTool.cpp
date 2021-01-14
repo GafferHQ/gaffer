@@ -373,6 +373,8 @@ void CameraTool::viewportCameraChanged()
 
 	// Figure out the offset from where the camera is in the scene
 	// to where the user has just moved the viewport camera.
+	// Note: The ViewportGadget will have removed any scale/shear from
+	// the matrix.
 
 	const M44f viewportCameraTransform = view()->viewportGadget()->getCameraTransform();
 	M44f cameraTransform;

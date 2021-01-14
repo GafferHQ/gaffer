@@ -238,7 +238,6 @@ Gaffer.Metadata.registerNode(
 			# for the case where they get promoted to a box
 			# individually.
 			"noduleLayout:section", "left",
-			"nodule:type", "GafferUI::StandardNodule",
 			"noduleLayout:label", lambda plug : plug.parent().getName() if plug.typeId() == GafferOSL.ClosurePlug.staticTypeId() else plug.parent()["name"].getValue(),
 			"ui:visibleDimensions", lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
 		],

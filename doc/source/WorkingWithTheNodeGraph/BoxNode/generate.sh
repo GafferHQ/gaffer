@@ -1,5 +1,8 @@
 #! /bin/bash
 # BuildTarget: images/gear.png
+# BuildTarget: images/info.png
+# BuildTarget: images/plugAdder.png
+# BuildTarget: images/valueChanged.png
 
 set -e
 

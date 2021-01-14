@@ -55,11 +55,17 @@ Improvements
 ------------
 
 - Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
+- DeleteFaces/DeletePoints/DeleteCurves : Added `ignoreMissingVariable` plug which allows users to opt-out of errors.
+- Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
+- OSLObject : Added support for connecting to the individual components of Vector, Point, Normal, UV and Color primitive variable inputs.
+- OSLImage : Added support for connecting to the individual components of channel inputs.
 
 Fixes
 -----
 
-- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+- Viewer :
+  - Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+  - Fixed bugs when using the CameraTool to manipulate scaled cameras or lights. Note: the Viewport projection will no longer display the effects of scale or shear components in the view matrix.
 - Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
 - CatalogueSelect : Fixed broken presets for promoted `imageName` plugs.
 - PlugAlgo : Fixed metadata handling when promoting plugs which were themselves promoted from the constructor of a custom node.
@@ -73,7 +79,7 @@ API
 - M33fVectorDataPlug : Added new plug type for specifying arrays of 3x3 matrices.
 - FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
 - PlugAlgo :
-  - `extraDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
+  - `extractDataFromPlug()` now supports M33fPlug and M33fVectorDataPlug.
   - `promote()` allows metadata to be excluded from promotion by registering a `<metadataName>:promotable` metadata value of `false`.
 - NodeAlgo : If an input plug does not have presets of its own, it now inherits them from its first output. This is particularly useful
   when promoting plugs which have dynamic presets which are computed on demand. Previously the presets would have been baked in
@@ -82,6 +88,7 @@ API
 - MetadataAlgo :
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
+- ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
 
 0.59.0.0
 ========
@@ -247,12 +254,15 @@ Build
 Fixes
 -----
 
-- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+- Viewer :
+  - Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+  - Fixed bugs when using the CameraTool to manipulate scaled cameras or lights. Note: the Viewport projection will no longer display the effects of scale or shear components in the view matrix.
 
 API
 ---
 
 - FilterPlug : Added `match` method to evaluate the filter for the specified `ScenePlug`.
+- ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
 
 0.58.6.0 (relative to 0.58.5.2)
 ========

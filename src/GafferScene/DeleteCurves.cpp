@@ -60,6 +60,7 @@ DeleteCurves::DeleteCurves( const std::string &name )
 
 	addChild( new StringPlug( "curves", Plug::In, "deleteCurves" ) );
 	addChild( new BoolPlug( "invert", Plug::In, false ) );
+	addChild( new BoolPlug( "ignoreMissingVariable", Plug::In, false ) );
 }
 
 DeleteCurves::~DeleteCurves()
@@ -86,12 +87,23 @@ const Gaffer::BoolPlug *DeleteCurves::invertPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1);
 }
 
+Gaffer::BoolPlug *DeleteCurves::ignoreMissingVariablePlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *DeleteCurves::ignoreMissingVariablePlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
 bool DeleteCurves::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
 		Deformer::affectsProcessedObject( input ) ||
 		input == curvesPlug() ||
-		input == invertPlug()
+		input == invertPlug() ||
+		input == ignoreMissingVariablePlug()
 	;
 }
 
@@ -101,6 +113,7 @@ void DeleteCurves::hashProcessedObject( const ScenePath &path, const Gaffer::Con
 	Deformer::hashProcessedObject( path, context, h );
 	curvesPlug()->hash( h );
 	invertPlug()->hash( h );
+	ignoreMissingVariablePlug()->hash( h );
 }
 
 IECore::ConstObjectPtr DeleteCurves::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
@@ -121,6 +134,11 @@ IECore::ConstObjectPtr DeleteCurves::computeProcessedObject( const ScenePath &pa
 	PrimitiveVariableMap::const_iterator it = curves->variables.find( deletePrimVarName );
 	if (it == curves->variables.end())
 	{
+		if( ignoreMissingVariablePlug()->getValue() )
+		{
+			return inputObject;
+		}
+
 		throw InvalidArgumentException( boost::str( boost::format( "DeleteCurves : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
 	}
 

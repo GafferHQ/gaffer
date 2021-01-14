@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -35,46 +35,8 @@
 ##########################################################################
 
 import Gaffer
-import GafferScene
+import GafferImageUI
 
-Gaffer.Metadata.registerNode(
-
-	GafferScene.DeleteFaces,
-
-	"description",
-	"""
-	Deletes faces from a mesh using a primitive variable to choose the faces.
-	""",
-
-	plugs = {
-
-		"adjustBounds" : [
-
-			"userDefault", False,
-
-		],
-
-		"faces" : [
-			"description",
-			"""
-			Uniformly interpolated int, float or bool primitive variable to choose which faces to delete. Note a non-zero value indicates the face will be deleted.
-			"""
-		],
-
-		"invert" : [
-			"description",
-			"""
-			Invert the condition used to delete faces. If the primvar is zero then the face will be deleted.
-			"""
-		],
-
-		"ignoreMissingVariable" : [
-			"description",
-			"""
-			Causes the node to do nothing if the primitive variable doesn't exist on the curves, instead of erroring.
-			"""
-		],
-
-	}
-
-)
+# We don't always run with a real GPU. This can result in assorted artefacts in the ImageView
+# display transform. Disable GPU LUTs by default.
+Gaffer.Metadata.registerValue( GafferImageUI.ImageView, "lutGPU", "userDefault", False )

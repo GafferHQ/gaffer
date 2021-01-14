@@ -150,5 +150,22 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		# including the sphere.
 		self.assertSceneValid( deleteFaces["out"] )
 
+	def testIgnoreMissing( self ) :
+
+		rectangle = self.makeRectangleFromTwoSquaresScene()
+		deleteFaces = GafferScene.DeleteFaces()
+		deleteFaces["in"].setInput( rectangle["out"] )
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/object' ] ) )
+		deleteFaces["filter"].setInput( pathFilter["out"] )
+
+		self.assertNotEqual( deleteFaces["in"].object( "/object" ), deleteFaces["out"].object( "/object" ) )
+
+		deleteFaces["faces"].setValue( "doesNotExist" )
+		self.assertRaises( RuntimeError, deleteFaces["out"].object, "/object" )
+
+		deleteFaces["ignoreMissingVariable"].setValue( True )
+		self.assertEqual( deleteFaces["in"].object( "/object" ), deleteFaces["out"].object( "/object" ) )
+
 if __name__ == "__main__":
 	unittest.main()

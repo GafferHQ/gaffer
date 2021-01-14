@@ -64,6 +64,9 @@ class GAFFERSCENE_API DeleteFaces : public Deformer
 		Gaffer::BoolPlug *invertPlug();
 		const Gaffer::BoolPlug *invertPlug() const;
 
+		Gaffer::BoolPlug *ignoreMissingVariablePlug();
+		const Gaffer::BoolPlug *ignoreMissingVariablePlug() const;
+
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteFaces, DeleteFacesTypeId, Deformer );
 
 	protected :

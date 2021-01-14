@@ -1,4 +1,9 @@
-# BuildTarget: images/graphEditorGroupFirst.png images/graphEditorGroupSecond.png images/conceptPerformanceBestPracticesContextsViewer.png images/conceptPerformanceBestPracticesContextsGraphEditor.png images/conceptPerformanceBestPracticesContextsStats.png images/conceptPerformanceBestPracticesContextsImprovedStats.png
+# BuildTarget: images/conceptPerformanceBestPracticesContextsGraphEditor.png
+# BuildTarget: images/conceptPerformanceBestPracticesContextsImprovedStats.png
+# BuildTarget: images/conceptPerformanceBestPracticesContextsStats.png
+# BuildTarget: images/conceptPerformanceBestPracticesContextsViewer.png
+# BuildTarget: images/graphEditorGroupFirst.png
+# BuildTarget: images/graphEditorGroupSecond.png
 
 import os
 import time

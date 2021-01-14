@@ -1,4 +1,27 @@
 # BuildTarget: images/mainDefaultLayout.png
+# BuildTarget: images/mainSceneReaderNode.png
+# BuildTarget: images/sceneReaderBound.png
+# BuildTarget: images/viewerSceneReaderBounding.png
+# BuildTarget: images/hierarchyViewExpandedTwoLevels.png
+# BuildTarget: images/mainHeadAndLeftLegExpanded.png
+# BuildTarget: images/viewerHeadAndLegsExpanded.png
+# BuildTarget: images/mainCameraNode.png
+# BuildTarget: images/mainGroupNode.png
+# BuildTarget: images/viewerCameraRepositioned.png
+# BuildTarget: images/viewerCameraRotated.png
+# BuildTarget: images/nodeEditorWindowCameraTransform.png
+# BuildTarget: images/graphEditorRenderSettings.png
+# BuildTarget: images/mainRenderGrey.png
+# BuildTarget: images/mainRenderSettingsWithGap.png
+# BuildTarget: images/graphEditorFirstShaderNodes.png
+# BuildTarget: images/graphEditorEnvironmentLightNode.png
+# BuildTarget: images/viewerRenderOneShader.png
+# BuildTarget: images/viewerRenderTextures.png
+# BuildTarget: images/graphEditorSecondShaderNodes.png
+# BuildTarget: images/mainRenderTwoShaders.png
+# BuildTarget: images/graphEditorPathFilterNode.png
+# BuildTarget: images/viewerSelectionFace.png
+# BuildTarget: images/viewerRenderFinal.png
 
 import os
 import time

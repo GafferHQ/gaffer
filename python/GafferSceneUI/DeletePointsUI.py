@@ -66,7 +66,15 @@ Gaffer.Metadata.registerNode(
 			"""
 			Invert the condition used to delete points. If the primvar is zero then the point will be deleted.
 			"""
-		]
+		],
+
+		"ignoreMissingVariable" : [
+			"description",
+			"""
+			Causes the node to do nothing if the primitive variable doesn't exist on the points, instead of erroring.
+			"""
+		],
+
 	}
 
 )
