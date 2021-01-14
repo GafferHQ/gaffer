@@ -21,7 +21,9 @@ Improvements
 Fixes
 -----
 
-- Viewer : Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+- Viewer :
+  - Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
+  - Fixed bugs when using the CameraTool to manipulate scaled cameras or lights. Note: the Viewport projection will no longer display the effects of scale or shear components in the view matrix.
 - Widget : Fixed incorrect `ButtonEvent` coordinate origin for mouse signals under certain widget configurations.
 - CatalogueSelect : Fixed broken presets for promoted `imageName` plugs.
 - PlugAlgo : Fixed metadata handling when promoting plugs which were themselves promoted from the constructor of a custom node.
@@ -44,6 +46,7 @@ API
 - MetadataAlgo :
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
+- ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
 
 0.59.0.0
 ========
