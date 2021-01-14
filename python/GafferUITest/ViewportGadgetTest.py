@@ -313,5 +313,20 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 				)
 			)
 
+	def testSetCameraTransform( self ) :
+
+		v = GafferUI.ViewportGadget()
+
+		m = imath.M44f()
+		m.translate( imath.V3f( 1, 2, 3 ) )
+		m.scale( imath.V3f( 4, 5, 6 ) )
+		m.shear( imath.V3f( 7, 8, 9 ) )
+
+		v.setCameraTransform( m )
+		self.assertNotEqual( v.getCameraTransform(), m )
+
+		m.removeScalingAndShear()
+		self.assertEqual( v.getCameraTransform(), m )
+
 if __name__ == "__main__":
 	unittest.main()

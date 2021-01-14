@@ -1,5 +1,6 @@
 #! /bin/bash
 # BuildTarget: images/pathChooser.png
+# BuildTarget: images/bookmarks.png
 
 set -e
 

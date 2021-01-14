@@ -1,10 +1,11 @@
 # BuildTarget: images/interfaceDefaultLightPlug.png
-# BuildTarget: images/interfaceLinkedLightsAttribute.png
 # BuildTarget: images/interfaceLightLinkSetupGraphEditor.png
-# BuildTarget: images/interfaceLinkedLightsPlug.png
-# BuildTarget: images/taskLightLinkingSetExpressionLocation.png
-# BuildTarget: images/interfaceLightSetNodeEditor.png
 # BuildTarget: images/interfaceLightSetGraphEditor.png
+# BuildTarget: images/interfaceLightSetNodeEditor.png
+# BuildTarget: images/interfaceLinkedLightsAttribute.png
+# BuildTarget: images/interfaceLinkedLightsPlug.png
+# BuildTarget: images/interfactLinkedLightsAttribute.png
+# BuildTarget: images/taskLightLinkingSetExpressionLocation.png
 # BuildTarget: images/taskLightLinkingSetExpressionSet.png
 
 import os

@@ -1,4 +1,14 @@
+# BuildTarget: images/exampleAnamorphicCameraSetup.png
+# BuildTarget: images/exampleSphericalCameraSetupArnoldTweaks.png
 # BuildTarget: images/interfaceCameraVisualizer.png
+# BuildTarget: images/renderDepthOfFieldBlur.png
+# BuildTarget: images/taskCameraApertureFocalLengthPlugs.png
+# BuildTarget: images/taskCameraCustomAperturePlugs.png
+# BuildTarget: images/taskCameraDepthOfFieldPlugs.png
+# BuildTarget: images/taskCameraFOVPlugs.png
+# BuildTarget: images/taskCameraRenderOverridePlugs.png
+# BuildTarget: images/taskCameraTweaksTweaks.png
+# BuildTarget: images/taskStandardOptionsDepthOfFieldPlug.png
 
 import os
 import subprocess32 as subprocess
