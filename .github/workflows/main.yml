@@ -29,18 +29,17 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux,
-          linux-debug,
+          linux-python2,
+          linux-python2-debug,
           linux-python3,
-          macos,
+          macos-python2,
         ]
 
         include:
 
-          - name: linux
+          - name: linux-python2
             os: ubuntu-16.04
             buildType: RELEASE
-            variant: linux-python2
             publish: true
             containerImage: gafferhq/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.1.1/gafferDependencies-2.1.1-Python2-linux.tar.gz
@@ -51,10 +50,9 @@ jobs:
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
-          - name: linux-debug
+          - name: linux-python2-debug
             os: ubuntu-16.04
             buildType: DEBUG
-            variant: linux-python2
             publish: false
             containerImage: gafferhq/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.1.1/gafferDependencies-2.1.1-Python2-linux.tar.gz
@@ -66,17 +64,15 @@ jobs:
           - name: linux-python3
             os: ubuntu-16.04
             buildType: RELEASE
-            variant: linux-python3
             publish: true
             containerImage: gafferhq/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.1.1/gafferDependencies-2.1.1-Python3-linux.tar.gz
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
-          - name: macos
+          - name: macos-python2
             os: macos-10.15
             buildType: RELEASE
-            variant: macos-python2
             publish: true
             containerImage:
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.1.1/gafferDependencies-2.1.1-Python2-osx.tar.gz
@@ -128,7 +124,7 @@ jobs:
         echo GAFFER_SPHINX=`which sphinx-build` >> $GITHUB_ENV
       env:
        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       GAFFER_BUILD_VARIANT: ${{ matrix.variant }}
+       GAFFER_BUILD_VARIANT: ${{ matrix.name }}
 
     - name: Disable macOS PR Docs
       run: |

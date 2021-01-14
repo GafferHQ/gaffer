@@ -118,7 +118,6 @@ if tag :
 # We have a couple of naming conventions for builds, depending on the nature of the trigger.
 
 formatVars = {
-	"buildTypeSuffix" : "-debug" if os.environ.get( "BUILD_TYPE", "" ) == "DEBUG" else "",
 	"variant" : os.environ["GAFFER_BUILD_VARIANT"],
 	"timestamp" : datetime.datetime.now().strftime( "%Y_%m_%d_%H%M" ),
 	"pullRequest" : pullRequest,
@@ -128,9 +127,9 @@ formatVars = {
 }
 
 nameFormats = {
-	"default" : "gaffer-{timestamp}-{shortCommit}-{variant}{buildTypeSuffix}",
-	"pull_request" : "gaffer-pr{pullRequest}-{branch}-{timestamp}-{shortCommit}-{variant}{buildTypeSuffix}",
-	"release" : "gaffer-{tag}-{variant}{buildTypeSuffix}"
+	"default" : "gaffer-{timestamp}-{shortCommit}-{variant}",
+	"pull_request" : "gaffer-pr{pullRequest}-{branch}-{timestamp}-{shortCommit}-{variant}",
+	"release" : "gaffer-{tag}-{variant}"
 }
 
 trigger = os.environ.get( 'GITHUB_EVENT_NAME', '' )
