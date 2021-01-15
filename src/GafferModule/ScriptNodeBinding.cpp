@@ -420,6 +420,22 @@ StandardSetPtr selection( ScriptNode &s )
 	return s.selection();
 }
 
+SetPtr focusSet( ScriptNode &s )
+{
+	return s.focusSet();
+}
+
+void setFocus( ScriptNode &s, Node *node )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.setFocus( node );
+}
+
+NodePtr getFocus( ScriptNode &s )
+{
+	return s.getFocus();
+}
+
 void undo( ScriptNode &s )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -516,6 +532,25 @@ struct UndoAddedSlotCaller
 
 };
 
+struct FocusChangedSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr script, NodePtr node )
+	{
+		try
+		{
+			slot( script, node );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+
+};
+
+
 } // namespace
 
 void GafferModule::bindScriptNode()
@@ -523,6 +558,10 @@ void GafferModule::bindScriptNode()
 	boost::python::scope s = NodeClass<ScriptNode, ScriptNodeWrapper>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )
+		.def( "setFocus", &setFocus )
+		.def( "getFocus", &getFocus )
+		.def( "focusChangedSignal", &ScriptNode::focusChangedSignal, boost::python::return_internal_reference<1>() )
+		.def( "focusSet", &focusSet )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )
 		.def( "undo", &undo )
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
@@ -547,5 +586,6 @@ void GafferModule::bindScriptNode()
 
 	SignalClass<ScriptNode::ActionSignal, DefaultSignalCaller<ScriptNode::ActionSignal>, ActionSlotCaller>( "ActionSignal" );
 	SignalClass<ScriptNode::UndoAddedSignal, DefaultSignalCaller<ScriptNode::UndoAddedSignal>, UndoAddedSlotCaller>( "UndoAddedSignal" );
+	SignalClass<ScriptNode::FocusChangedSignal, DefaultSignalCaller<ScriptNode::FocusChangedSignal>, FocusChangedSlotCaller>( "FocusChangedSignal" );
 
 }
