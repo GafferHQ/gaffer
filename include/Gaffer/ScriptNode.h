@@ -99,6 +99,24 @@ class GAFFER_API ScriptNode : public Node
 		const StandardSet *selection() const;
 		//@}
 
+		//! @name Focus
+		/// The ScriptNode maintains an optional, single, 'focus' node. This
+		/// may set by the user to the node whose output they are currently
+		/// considering in their actions. This can be used by tools and scripts
+		/// as an anchor for informational displays or programmatic operations.
+		/// The focus Set will reject multiple members, use `setFocus` as a
+		/// convenience to update the current focus node. A nullptr can be
+		/// passed to clear focus.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		void setFocus( Node *node );
+		Node *getFocus();
+		const Node *getFocus() const;
+		StandardSet *focus();
+		const StandardSet *focus() const;
+		//@}
+
+
 		//! @name History and undo
 		/// Certain methods in the graph API are undoable on request.
 		/// These methods are implemented in terms of the Action class -
@@ -272,6 +290,12 @@ class GAFFER_API ScriptNode : public Node
 
 		bool selectionSetAcceptor( const Set *s, const Set::Member *m );
 		StandardSetPtr m_selection;
+
+		// Focus
+		// =========
+
+		bool focusSetAcceptor( const Set *s, const Set::Member *m );
+		StandardSetPtr m_focus;
 
 		// Actions and undo
 		// ================

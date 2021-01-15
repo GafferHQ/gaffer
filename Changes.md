@@ -13,6 +13,7 @@ API
 ---
 
 - Serialisation : Added `addModule()` method, for adding imports to the serialisation.
+- ScriptNode : Added `focus()`, `setFocus()`, `getFocus()` methods to manage the script's Focus Node (#4074).
 
 Breaking Changes
 ----------------

@@ -250,6 +250,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	:
 	Node( name ),
 	m_selection( new StandardSet( /* removeOrphans = */ true ) ),
+	m_focus( new StandardSet( /* removeOrphans = */ true ) ),
 	m_undoIterator( m_undoList.end() ),
 	m_currentActionStage( Action::Invalid ),
 	m_executing( false ),
@@ -276,6 +277,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	m_context->set( g_frameEnd, 100 );
 
 	m_selection->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::selectionSetAcceptor, this, ::_1, ::_2 ) );
+	m_focus->memberAcceptanceSignal().connect( boost::bind( &ScriptNode::focusSetAcceptor, this, ::_1, ::_2 ) );
 
 	plugSetSignal().connect( boost::bind( &ScriptNode::plugSet, this, ::_1 ) );
 	m_context->changedSignal().connect( boost::bind( &ScriptNode::contextChanged, this, ::_1, ::_2 ) );
@@ -396,6 +398,57 @@ StandardSet *ScriptNode::selection()
 const StandardSet *ScriptNode::selection() const
 {
 	return m_selection.get();
+}
+
+bool ScriptNode::focusSetAcceptor( const Set *s, const Set::Member *m )
+{
+	if( s->size() != 0 )
+	{
+		return false;
+	}
+	const Node *n = IECore::runTimeCast<const Node>( m );
+	if( !n )
+	{
+		return false;
+	}
+	return this->isAncestorOf( n );
+}
+
+void ScriptNode::setFocus( Node *node )
+{
+	if( node && !this->isAncestorOf( node ) )
+	{
+		throw IECore::Exception( boost::str( boost::format( "%s is not a child of this script" ) % node->fullName() ) );
+	}
+
+	if( m_focus->size() > 0 )
+	{
+		m_focus->clear();
+	}
+	if( node )
+	{
+		m_focus->add( node );
+	}
+}
+
+Node *ScriptNode::getFocus()
+{
+	return m_focus->size() == 1 ? IECore::runTimeCast<Node>( m_focus->member( 0 ) ) : nullptr;
+}
+
+const Node *ScriptNode::getFocus() const
+{
+	return m_focus->size() == 1 ? IECore::runTimeCast<const Node>( m_focus->member( 0 ) ) : nullptr;
+}
+
+StandardSet *ScriptNode::focus()
+{
+	return m_focus.get();
+}
+
+const StandardSet *ScriptNode::focus() const
+{
+	return m_focus.get();
 }
 
 void ScriptNode::pushUndoState( UndoScope::State state, const std::string &mergeGroup )

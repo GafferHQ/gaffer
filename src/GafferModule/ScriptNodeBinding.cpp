@@ -415,6 +415,22 @@ StandardSetPtr selection( ScriptNode &s )
 	return s.selection();
 }
 
+StandardSetPtr focus( ScriptNode &s )
+{
+	return s.focus();
+}
+
+void setFocus( ScriptNode &s, Node *node )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.setFocus( node );
+}
+
+NodePtr getFocus( ScriptNode &s )
+{
+	return s.getFocus();
+}
+
 void undo( ScriptNode &s )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -518,6 +534,9 @@ void GafferModule::bindScriptNode()
 	boost::python::scope s = NodeClass<ScriptNode, ScriptNodeWrapper>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )
+		.def( "focus", &focus )
+		.def( "setFocus", &setFocus )
+		.def( "getFocus", &getFocus )
 		.def( "undoAvailable", &ScriptNode::undoAvailable )
 		.def( "undo", &undo )
 		.def( "redoAvailable", &ScriptNode::redoAvailable )
