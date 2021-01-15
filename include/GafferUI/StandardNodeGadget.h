@@ -162,6 +162,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
 
+		GadgetPtr m_focusGadget;
+
 };
 
 IE_CORE_DECLAREPTR( StandardNodeGadget )

@@ -1,6 +1,11 @@
 0.60.x.x
 ========
 
+Features
+--------
+
+- UI : Added Focus Node. Focus a node in the graph by clicking around it's edge, from the context menu or using the <kbd>Shift</kbd>-<kbd>F</kbd> shortcut.
+
 Improvements
 ------------
 

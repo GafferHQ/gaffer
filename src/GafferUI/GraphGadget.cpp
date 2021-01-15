@@ -303,11 +303,19 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 			m_selectionMemberRemovedConnection = m_scriptNode->selection()->memberRemovedSignal().connect(
 				boost::bind( &GraphGadget::selectionMemberRemoved, this, ::_1, ::_2 )
 			);
+			m_focusMemberAddedConnection = m_scriptNode->focus()->memberAddedSignal().connect(
+				boost::bind( &GraphGadget::focusMemberAdded, this, ::_1, ::_2 )
+			);
+			m_focusMemberRemovedConnection = m_scriptNode->focus()->memberRemovedSignal().connect(
+				boost::bind( &GraphGadget::focusMemberRemoved, this, ::_1, ::_2 )
+			);
 		}
 		else
 		{
 			m_selectionMemberAddedConnection.disconnect();
 			m_selectionMemberAddedConnection.disconnect();
+			m_focusMemberAddedConnection.disconnect();
+			m_focusMemberAddedConnection.disconnect();
 		}
 	}
 
@@ -887,6 +895,28 @@ void GraphGadget::selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped
 		if( NodeGadget *nodeGadget = findNodeGadget( node ) )
 		{
 			nodeGadget->setHighlighted( false );
+		}
+	}
+}
+
+void GraphGadget::focusMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member )
+{
+	if( Gaffer::Node *node = runTimeCast<Gaffer::Node>( member ) )
+	{
+		if( findNodeGadget( node ) )
+		{
+			dirty( DirtyType::Render );
+		}
+	}
+}
+
+void GraphGadget::focusMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
+{
+	if( Gaffer::Node *node = runTimeCast<Gaffer::Node>( member ) )
+	{
+		if( findNodeGadget( node ) )
+		{
+			dirty( DirtyType::Render );
 		}
 	}
 }

@@ -243,6 +243,13 @@ class GraphEditor( GafferUI.Editor ) :
 		if not GraphEditor.__childrenViewable( node ) :
 			return
 
+		menuDefinition.append( "/FocusDivider", { "divider" : True } )
+		menuDefinition.append( "/Focus", {
+			"command" : functools.partial( graphEditor.scriptNode().setFocus, node ),
+			"active" : not node.isSame( graphEditor.scriptNode().getFocus() ),
+			"shortCut" : "Shift+f"
+		} )
+
 		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
 		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
 
@@ -355,6 +362,10 @@ class GraphEditor( GafferUI.Editor ) :
 		if event.key == "F" and not event.modifiers :
 			self.__frame( self.scriptNode().selection() )
 			return True
+		elif event.key == "F" and event.modifiers == event.Modifiers.Shift :
+			selection = self.scriptNode().selection()
+			if len( selection ) > 0 :
+				self.scriptNode().setFocus( selection[0] )
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :

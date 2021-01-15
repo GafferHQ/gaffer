@@ -591,6 +591,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.25 );
 
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
@@ -683,11 +684,19 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 
 	Box2f b = contents;
 	V2f bw( borderWidth );
-	b.min -= bw;
-	b.max += bw;
+
+	// Make the selection hit area slightly smaller.
+	// TODO: This doesn't make sense in the context of renderFrame, only
+	// for node frames in conjunction with renderNodeFocusRegion.
+	if( !IECoreGL::Selector::currentSelector() )
+	{
+		b.min -= bw;
+		b.max += bw;
+	}
 
 	V2f cornerSizes = bw / b.size();
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
@@ -711,9 +720,48 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 
 }
 
+void StandardStyle::renderNodeFocusRegion( const Imath::Box2f &contents, float borderWidth, State state, const Imath::Color3f *userColor ) const
+{
+	Box2f b = contents;
+
+	const float glowWidth = 0.75f;
+	V2f bw( IECoreGL::Selector::currentSelector() ? glowWidth * 2.0f : glowWidth );
+	b.min -= bw;
+	b.max += bw;
+
+	if( state != DisabledState || IECoreGL::Selector::currentSelector() )
+	{
+		const V2f cw( IECoreGL::Selector::currentSelector() ? borderWidth * 2.0f : borderWidth );
+		V2f cornerSizes = ( 1.5f * cw ) / b.size();
+		glUniform1i( g_isCurveParameter, 0 );
+		glUniform1i( g_glowParameter, 1 );
+		glUniform1f( g_glowStrengthParameter, state == State::NormalState ? 0.6f : 0.2f );
+		glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+		glUniform1f( g_borderWidthParameter, glowWidth );
+		glUniform1i( g_edgeAntiAliasingParameter, 0 );
+		glUniform1i( g_textureTypeParameter, 0 );
+
+		glColor( Color4f( 1.0f, 1.0f, 1.0f, 0.75f ) );
+
+		glBegin( GL_QUADS );
+
+			glTexCoord2f( 0, 0 );
+			glVertex2f( b.min.x, b.min.y );
+			glTexCoord2f( 0, 1 );
+			glVertex2f( b.min.x, b.max.y );
+			glTexCoord2f( 1, 1 );
+			glVertex2f( b.max.x, b.max.y );
+			glTexCoord2f( 1, 0 );
+			glVertex2f( b.max.x, b.min.y );
+
+		glEnd();
+	}
+}
+
 void StandardStyle::renderNodule( float radius, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
 	glUniform1f( g_borderWidthParameter, 0.2f );
@@ -747,6 +795,7 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame, State state ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -846,6 +895,7 @@ Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const I
 void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -863,6 +913,7 @@ void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -880,6 +931,7 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1f( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -929,6 +981,7 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 
 	V2f cornerSizes = V2f( cornerRadius ) / boxSize;
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
@@ -963,6 +1016,7 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 	glColor( state == HighlightedState ? m_colors[HighlightColor] : m_colors[ForegroundColor] );
 
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -1035,6 +1089,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	texture->bind();
 
 	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
@@ -1062,6 +1117,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 void StandardStyle::renderLine( const IECore::LineSegment3f &line, float width, const Imath::Color4f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -1140,6 +1196,7 @@ float StandardStyle::getFontScale( TextType textType ) const
 void StandardStyle::renderConnectionInternal( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_glowParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -1296,6 +1353,8 @@ static const std::string &fragmentSource()
 		"#include \"IECoreGL/FilterAlgo.h\"\n"
 		"#include \"IECoreGL/ColorAlgo.h\"\n"
 
+		"uniform bool glow;"
+		"uniform float glowStrength;"
 		"uniform bool border;"
 		"uniform vec2 borderRadius;"
 		"uniform float borderWidth;"
@@ -1322,12 +1381,17 @@ static const std::string &fragmentSource()
 		"{"
 		"	OUTCOLOR = gl_Color;"
 
-		"	if( border )"
-		"	{"
-		"		vec2 v = max( borderRadius - gl_TexCoord[0].xy, vec2( 0.0 ) ) + max( gl_TexCoord[0].xy - vec2( 1.0 ) + borderRadius, vec2( 0.0 ) );"
-		"		v /= borderRadius;"
-		"		float r = length( v );"
+		"	vec2 v = max( borderRadius - gl_TexCoord[0].xy, vec2( 0.0 ) ) + max( gl_TexCoord[0].xy - vec2( 1.0 ) + borderRadius, vec2( 0.0 ) );"
+		"	v /= borderRadius;"
+		"	float r = length( v );"
 
+		"	if( glow )"
+		"	{"
+		"		OUTCOLOR.rgb = vec3( 1.0, 1.0, 1.0 );"
+		"		OUTCOLOR.a = ( 1.0 - ieFilteredStep( 1.0, r ) ) * glowStrength;"
+		"	}"
+		"	else if( border )"
+		"	{"
 		"		OUTCOLOR = mix( OUTCOLOR, vec4( 0.15, 0.15, 0.15, OUTCOLOR.a ), ieFilteredStep( 1.0 - borderWidth, r ) );"
 		"		OUTCOLOR.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
 		"	}"
@@ -1371,6 +1435,8 @@ static const std::string &fragmentSource()
 	return g_fragmentSource;
 }
 
+int StandardStyle::g_glowParameter;
+int StandardStyle::g_glowStrengthParameter;
 int StandardStyle::g_borderParameter;
 int StandardStyle::g_borderRadiusParameter;
 int StandardStyle::g_borderWidthParameter;
@@ -1393,6 +1459,8 @@ IECoreGL::Shader *StandardStyle::shader()
 	if( !g_shader )
 	{
 		g_shader = ShaderLoader::defaultShaderLoader()->create( vertexSource(), "", fragmentSource() );
+		g_glowParameter = g_shader->uniformParameter( "glow" )->location;
+		g_glowStrengthParameter = g_shader->uniformParameter( "glowStrength" )->location;
 		g_borderParameter = g_shader->uniformParameter( "border" )->location;
 		g_borderRadiusParameter = g_shader->uniformParameter( "borderRadius" )->location;
 		g_borderWidthParameter = g_shader->uniformParameter( "borderWidth" )->location;

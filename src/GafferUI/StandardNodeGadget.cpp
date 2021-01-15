@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 //  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
@@ -70,6 +70,119 @@ using namespace std;
 using namespace Imath;
 using namespace Gaffer;
 using namespace GafferUI;
+
+namespace {
+
+static const float g_borderWidth = 0.5f;
+
+//////////////////////////////////////////////////////////////////////////
+// FocusGadget
+//////////////////////////////////////////////////////////////////////////
+
+class FocusGadget : public NodeGadget
+{
+	public :
+
+		FocusGadget( Gaffer::NodePtr node )
+			: NodeGadget( node ),
+				m_oval( false ),
+				m_mouseOver( false )
+		{
+			buttonPressSignal().connect( boost::bind( &FocusGadget::buttonPressed, this, ::_1,  ::_2 ) );
+			enterSignal().connect( boost::bind( &FocusGadget::mouseEntered, this, ::_1,  ::_2 ) );
+			leaveSignal().connect( boost::bind( &FocusGadget::mouseLeft, this, ::_1,  ::_2 ) );
+		}
+
+		~FocusGadget()
+		{
+		}
+
+		void setOval( bool oval )
+		{
+			m_oval = oval;
+			dirty( DirtyType::Render );
+		}
+
+		bool getOval() const
+		{
+			return m_oval;
+		}
+
+		bool buttonPressed( GadgetPtr gadget, const ButtonEvent &event )
+		{
+			if( ScriptNode *script = node()->ancestor<ScriptNode>() )
+			{
+				script->setFocus( node() );
+				return true;
+			}
+
+			return false;
+		}
+
+		bool mouseEntered( GadgetPtr gadget, const ButtonEvent &event )
+		{
+			m_mouseOver = true;
+			dirty( DirtyType::Render );
+			return false;
+		}
+
+		bool mouseLeft( GadgetPtr gadget, const ButtonEvent &event )
+		{
+			m_mouseOver = false;
+			dirty( DirtyType::Render );
+			return false;
+		}
+
+
+		Imath::Box3f bound() const override
+		{
+			return IECore::runTimeCast<const StandardNodeGadget>( parent() )->bound();
+		}
+
+	protected :
+
+		void doRenderLayer( Layer layer, const Style *style ) const override
+		{
+			NodeGadget::doRenderLayer( layer, style );
+
+			const Box3f b = bound();
+			float borderWidth = 0.75f;
+
+			if( m_oval )
+			{
+				const V3f s = b.size();
+				borderWidth = std::min( s.x, s.y ) / 2.0f;
+			}
+
+			Style::State state = m_mouseOver ? Style::HighlightedState : Style::DisabledState;
+			if( node()->ancestor<ScriptNode>()->getFocus() == node() )
+			{
+				state = Style::NormalState;
+			}
+
+			style->renderNodeFocusRegion(
+				Box2f( V2f( b.min.x, b.min.y ), V2f( b.max.x, b.max.y ) ),
+				borderWidth,
+				state,
+				nullptr
+			);
+		}
+
+		bool hasLayer( Layer layer ) const override
+		{
+			return layer == GraphLayer::OverBackdrops;
+		}
+
+	private :
+
+		bool m_oval;
+		bool m_mouseOver;
+
+		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
+
+};
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ErrorGadget implementation
@@ -210,7 +323,6 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardNodeGadget );
 
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 
-static const float g_borderWidth = 0.5f;
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
@@ -225,11 +337,15 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 		m_labelsVisibleOnHover( true ),
 		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
-		m_oval( false )
+		m_oval( false ),
+		m_focusGadget( new FocusGadget( node ) )
 {
 
 	// build our ui structure
 	////////////////////////////////////////////////////////
+
+	// Ensure this is underneath any other gadgets we hold
+	addChild( m_focusGadget );
 
 	float minWidth = 10.0f;
 	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node.get(), g_minWidthKey ) )
@@ -358,7 +474,7 @@ StandardNodeGadget::~StandardNodeGadget()
 
 Imath::Box3f StandardNodeGadget::bound() const
 {
-	Box3f b = getChild<Gadget>( 0 )->bound();
+	Box3f b = getChild<Gadget>( 1 )->bound();
 
 	// cheat a little - shave a bit off to make it possible to
 	// select the node by having the drag region cover only the
@@ -417,7 +533,7 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 bool StandardNodeGadget::hasLayer( Layer layer ) const
 {
-	return layer != GraphLayer::Backdrops;
+	return true;
 }
 
 const Imath::Color3f *StandardNodeGadget::userColor() const
@@ -466,7 +582,7 @@ Imath::V3f StandardNodeGadget::connectionTangent( const ConnectionCreator *creat
 
 LinearContainer *StandardNodeGadget::noduleContainer( Edge edge )
 {
-	Gadget *column = getChild<Gadget>( 0 );
+	Gadget *column = getChild<Gadget>( 1 );
 
 	if( edge == TopEdge )
 	{
@@ -505,7 +621,7 @@ const NoduleLayout *StandardNodeGadget::noduleLayout( Edge edge ) const
 
 LinearContainer *StandardNodeGadget::paddingRow()
 {
-	return getChild<Gadget>( 0 ) // column
+	return getChild<Gadget>( 1 ) // column
 		->getChild<Gadget>( 1 ) // row
 		->getChild<Gadget>( 1 ) // contentsColumn
 		->getChild<LinearContainer>( 1 )
@@ -905,6 +1021,7 @@ bool StandardNodeGadget::updateShape()
 		return false;
 	}
 	m_oval = oval;
+	static_cast<FocusGadget *>( m_focusGadget.get() )->setOval( oval );
 	return true;
 }
 
