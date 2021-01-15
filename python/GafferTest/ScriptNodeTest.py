@@ -45,6 +45,7 @@ import stat
 import inspect
 import functools
 import six
+import imath
 
 import IECore
 
@@ -1462,6 +1463,122 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		s["fileName"].setValue( self.temporaryDirectory() + "/test2.gfr" )
 		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
+
+	def testDisableContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = Gaffer.NameValuePlug( "test", 10, defaultEnabled = True, name = "test", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
+		self.assertEqual( s.context()["test"], 10 )
+
+		p["enabled"].setValue( False )
+		self.assertNotIn( "test", s.context() )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertNotIn( "test", s2.context() )
+		s2["variables"]["test"]["enabled"].setValue( True )
+		self.assertEqual( s2.context()["test"], 10 )
+
+	def testDeleteContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = Gaffer.NameValuePlug( "test", 10, defaultEnabled = True, name = "test", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
+		self.assertEqual( s.context()["test"], 10 )
+
+		s["variables"].removeChild( p )
+		self.assertNotIn( "test", s.context() )
+
+	def testCompoundNumericContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = Gaffer.NameValuePlug( "test", imath.V3i( 1, 2, 3 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
+		self.assertEqual( s.context()["test"], imath.V3i( 1, 2, 3 ) )
+
+		p["value"]["y"].setValue( 10 )
+		self.assertEqual( s.context()["test"], imath.V3i( 1, 10, 3 ) )
+
+	def testDuplicateContextVariables( self ) :
+
+		# We don't want people to specify the same context variable twice,
+		# but if they do, we want to implement a simple rule : last enabled
+		# one in the list wins. This is the same rule used for CompoundDataPlugs
+		# everywhere.
+
+		s = Gaffer.ScriptNode()
+
+		p1 = Gaffer.NameValuePlug( "test", 1, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		p2 = Gaffer.NameValuePlug( "test", 2, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p1 )
+		s["variables"].addChild( p2 )
+		self.assertEqual( s.context()["test"], 2 )
+
+		p1["value"].setValue( 10 )
+		self.assertEqual( s.context()["test"], 2 )
+
+		p2["enabled"].setValue( False )
+		self.assertEqual( s.context()["test"], 10 )
+
+		p2["enabled"].setValue( True )
+		self.assertEqual( s.context()["test"], 2 )
+
+		s["variables"].removeChild( p2 )
+		self.assertEqual( s.context()["test"], 10 )
+
+		s["variables"].removeChild( p1 )
+		self.assertNotIn( "test", s.context() )
+
+	def testExternalContextVariable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# We don't really want people to manipulate the context directly like
+		# this; we want them to use `ScriptNode::variablesPlug()` instead. But
+		# it seems plausible that people would do this to implement a sort of
+		# non-persistent "context pinning" for interactive use. Until we support
+		# such a feature natively, make sure that we don't remove variables we
+		# know nothing about.
+		s.context()["externalTest"] = 10
+
+		p = Gaffer.NameValuePlug( "test", 1, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
+		self.assertEqual( s.context()["externalTest"], 10 )
+		self.assertEqual( s.context()["test"], 1 )
+
+		p["enabled"].setValue( False )
+		self.assertEqual( s.context()["externalTest"], 10 )
+		self.assertNotIn( "test", s.context() )
+
+		p["enabled"].setValue( True )
+		self.assertEqual( s.context()["externalTest"], 10 )
+		self.assertEqual( s.context()["test"], 1 )
+
+		s["variables"].removeChild( p )
+		self.assertEqual( s.context()["externalTest"], 10 )
+		self.assertNotIn( "test", s.context() )
+
+	def testChangeContextVariableName( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = Gaffer.NameValuePlug( "", 1, defaultEnabled = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["variables"].addChild( p )
+		self.assertNotIn( "", s.context() )
+
+		p["name"].setValue( "test" )
+		self.assertEqual( s.context()["test"], 1 )
+
+		p["name"].setValue( "testTwo" )
+		self.assertEqual( s.context()["testTwo"], 1 )
+		self.assertNotIn( "test", s.context() )
+
+		p["name"].setValue( "" )
+		self.assertNotIn( "testTwo", s.context() )
 
 if __name__ == "__main__":
 	unittest.main()
