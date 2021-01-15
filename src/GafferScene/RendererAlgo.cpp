@@ -721,11 +721,13 @@ void LightLinks::outputLightFilterLinks( const ScenePlug *scene )
 	// Update the `filteredLights` fields in our FilterLinks.
 
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+	const ThreadState &threadState = ThreadState::current();
 
 	tbb::parallel_for(
 		m_filterLinks.range(),
-		[scene]( FilterLinkMap::range_type &range )
+		[scene, &threadState]( FilterLinkMap::range_type &range )
 		{
+			ThreadState::Scope threadStateScope( threadState );
 			for( auto &f : range )
 			{
 				if( f.second.filteredLightsDirty )
@@ -746,6 +748,8 @@ void LightLinks::outputLightFilterLinks( const ScenePlug *scene )
 		m_lights.range(),
 		[this]( const LightMap::range_type &range )
 		{
+			// No need to scope `threadState` here, as `outputLightFilterLinks()`
+			// doesn't trigger Gaffer processes.
 			for( const auto &l : range )
 			{
 				outputLightFilterLinks( l.first, l.second.get() );

@@ -7,6 +7,7 @@ Fixes
 - Viewer :
   - Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
   - Fixed bugs when using the CameraTool to manipulate scaled cameras or lights. Note: the Viewport projection will no longer display the effects of scale or shear components in the view matrix.
+- Render/InteractiveRender : Fixed bug in light filter context handling. This could result in light filters not being linked to the correct lights, or cause exceptions during scene translation.
 
 API
 ---
