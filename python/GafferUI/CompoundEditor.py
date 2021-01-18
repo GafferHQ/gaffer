@@ -305,6 +305,10 @@ class CompoundEditor( GafferUI.Editor ) :
 					state[ self.__pathToEditor(n) ] = {
 						"nodeSet" : "Gaffer.NumericBookmarkSet( scriptNode, %d )" % nodeSet.getBookmark()
 					}
+				elif nodeSet.isSame( self.scriptNode().focus() ) :
+					state[ self.__pathToEditor(n) ] = {
+						"nodeSet" : "scriptNode.focus()"
+					}
 
 		return state
 
@@ -1517,6 +1521,9 @@ class _PinningWidget( _Frame ) :
 		if event.key == "N" and not event.modifiers :
 			_PinningWidget.__followNodeSelection( editor )
 			return True
+		elif event.key == "F" and event.modifiers == event.Modifiers.Shift :
+			_PinningWidget.__followFocusNode( editor )
+			return True
 		elif event.key == "P" and not event.modifiers :
 			_PinningWidget.__pinToNodeSelection( editor )
 			return True
@@ -1538,10 +1545,12 @@ class _PinningWidget( _Frame ) :
 
 		if drivingEditor is not None :
 			icon = "nodeSetDriver%s.png" % mode
-		elif not editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
-			icon = "nodeSet%s.png"  % editor.getNodeSet().__class__.__name__
-		else :
+		elif editor.getNodeSet().isSame( editor.scriptNode().selection() ) :
 			icon = "nodeSetDriverNodeSelection.png"
+		elif editor.getNodeSet().isSame( editor.scriptNode().focus() ) :
+			icon = "nodeSetDriverFocusNode.png"
+		else :
+			icon = "nodeSet%s.png"  % editor.getNodeSet().__class__.__name__
 
 		# Make sure we don't break if an image is missing when setImage throws
 		try :
@@ -1606,6 +1615,9 @@ class _PinningWidget( _Frame ) :
 		if nodeSet == editor.scriptNode().selection() :
 			toolTipElements.append( "" )
 			toolTipElements.append( "Following the node selection." )
+		if nodeSet == editor.scriptNode().focus() :
+			toolTipElements.append( "" )
+			toolTipElements.append( "Following the Focus Node." )
 		elif isinstance( nodeSet, Gaffer.NumericBookmarkSet ) :
 			toolTipElements.append( "" )
 			toolTipElements.append( "Following Numeric Bookmark %d." % nodeSet.getBookmark()  )
@@ -1644,6 +1656,14 @@ class _PinningWidget( _Frame ) :
 			editor = editor()
 
 		editor.setNodeSet( editor.scriptNode().selection() )
+
+	@staticmethod
+	def __followFocusNode( editor, *unused ) :
+
+		if not isinstance( editor, GafferUI.NodeSetEditor ) :
+			editor = editor()
+
+		editor.setNodeSet( editor.scriptNode().focus() )
 
 	def __showEditorFocusMenu( self, *unused ) :
 
@@ -1684,6 +1704,12 @@ class _PinningWidget( _Frame ) :
 		} )
 
 		m.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
+
+		m.append( "/Focus Node", {
+			"command" : functools.partial( self.__followFocusNode, weakref.ref( editor ) ),
+			"checkBox" : drivingEditor is None and editor.getNodeSet().isSame( editor.scriptNode().focus() ),
+			"shortCut" : "Shift+f"
+		} )
 
 		m.append( "/Node Selection", {
 			"command" : functools.partial( self.__followNodeSelection, weakref.ref( editor ) ),
