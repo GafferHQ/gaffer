@@ -7,6 +7,7 @@ Features
 - UI : Added Focus Node (#4074).
   - Focus a node in the graph by clicking around it's edge, from the context menu or using the <kbd>Shift</kbd>-<kbd>F</kbd> shortcut.
   - Editors can be set to follow the Focus node.
+  - Editors in the standard layouts now follow the Focus node by default.
 
 Improvements
 ------------
