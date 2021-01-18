@@ -53,6 +53,7 @@ _primitiveVariableNamesOptions = {
 	"uv" : IECore.V3fData( imath.V3f(0), IECore.GeometricData.Interpretation.UV ),
 	"scale" : IECore.V3fData( imath.V3f(1) ),
 	"width" : IECore.FloatData(),
+	"prototypeIndex" : IECore.IntData(),
 	"Cs" : IECore.Color3fData(),
 	"customInt" : IECore.IntData(),
 	"customFloat" : IECore.FloatData(),
