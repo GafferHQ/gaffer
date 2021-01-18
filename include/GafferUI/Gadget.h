@@ -90,10 +90,11 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		{
 			None = 0,
 			Back = 1,
-			MidBack = 2,
-			Main = 4,
-			MidFront = 8,
-			Front = 16,
+			BackMidBack = 2,
+			MidBack = 4,
+			Main = 8,
+			MidFront = 16,
+			Front = 32,
 		};
 
 		/// @name Parent-child relationships

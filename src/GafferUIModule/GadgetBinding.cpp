@@ -220,6 +220,7 @@ void GafferUIModule::bindGadget()
 
 	enum_<Gadget::Layer>( "Layer" )
 		.value( "Back", Gadget::Layer::Back )
+		.value( "BackMidBack", Gadget::Layer::BackMidBack )
 		.value( "MidBack", Gadget::Layer::MidBack )
 		.value( "Main", Gadget::Layer::Main )
 		.value( "MidFront", Gadget::Layer::MidFront )
