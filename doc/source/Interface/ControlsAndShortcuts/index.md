@@ -25,23 +25,21 @@ Undo                                  :kbd:`Ctrl` + :kbd:`Z`
 Redo                                  :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`Z`
 Step one frame forward                :kbd:`→`
 Step one frame backward               :kbd:`←`
-Fullscreen mode                       :raw-html:`<kbd>&#96;</kbd>`
+Fullscreen mode                       :kbd:`F11`
 Hide tabs of current panel            :kbd:`Ctrl` + :kbd:`T`
 ===================================== =============================================
 ```
 
 ### Pinnable Editors and Inspectors ###
 
-When editors are following another editor (linked), keybaord shortcuts will
-affect the master editor.
-
 ```eval_rst
 ===================================== =============================================
 Action                                Control or shortcut
 ===================================== =============================================
+Follow the focus node                 Hover cursor over editor, :raw-html:`<kbd>&#96;</kbd>`
 Pin the node selection                Hover cursor over editor, :kbd:`p`
 Pin numeric bookmark 1-9              Hover cursor over editor, :kbd:`1` - :kbd:`9`
-Follow to the node selection          Hover cursor over editor, :kbd:`u`
+Follow to the node selection          Hover cursor over editor, :kbd:`n`
 ===================================== =============================================
 ```
 
@@ -69,6 +67,7 @@ Enter `Box` node (subgraph)           :kbd:`↓`
 Leave `Box` node (subgraph)           :kbd:`↑`
 Search for nodes                      :kbd:`Ctrl` + :kbd:`F`
 Frame to numeric bookmark             :kbd:`1` … :kbd:`9`
+Frame to focus node                   :raw-html:`<kbd>&#96;</kbd>`
 ===================================== =============================================
 
 .. |M1| image:: images/mouseLeftClick.png
@@ -175,6 +174,27 @@ Duplicate outgoing connection         :kbd:`Shift`-|M1| and drag connection just
 ===================================== =============================================
 ```
 
+### Focus Node ###
+
+```eval_rst
+===================================== =============================================
+Action                                Control or shortcut
+===================================== =============================================
+Jump to focus node                    Hover cursor over editor, :raw-html:`<kbd>&#96;</kbd>`
+                                      
+                                      or
+                                      
+                                      |M1| |focusMenu|, select *Focus Node* > ...
+Assign focus to selected node         Hover cursor over node graph, :kbd:`Ctrl` + :raw-html:`<kbd>&#96;</kbd>`
+
+                                      or
+
+                                      Click on top right of node
+===================================== =============================================
+
+.. |focusMenu| image:: images/editorFocusMenuNodeSelection.png
+    :alt: Editor focus menu
+```
 
 ### Node bookmarks ###
 
