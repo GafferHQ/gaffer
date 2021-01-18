@@ -64,6 +64,7 @@ IE_CORE_FORWARDDECLARE( AuxiliaryConnectionsGadget );
 namespace GraphLayer
 {
 	constexpr Gadget::Layer Backdrops = Gadget::Layer::Back;
+	constexpr Gadget::Layer OverBackdrops = Gadget::Layer::OverBack;
 	constexpr Gadget::Layer Connections = Gadget::Layer::MidBack;
 	constexpr Gadget::Layer Nodes = Gadget::Layer::Main;
 	constexpr Gadget::Layer Highlighting = Gadget::Layer::MidFront;

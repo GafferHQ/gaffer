@@ -87,7 +87,8 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		enum class Layer
 		{
-			Back = -2,
+			Back = -3,
+			OverBack = -2,
 			MidBack = -1,
 			Main = 0,
 			MidFront = 1,
