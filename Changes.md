@@ -17,6 +17,11 @@ Improvements
 - Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
 - OSLObject : Added support for connecting to the individual components of Vector, Point, Normal, UV and Color primitive variable inputs.
 - OSLImage : Added support for connecting to the individual components of channel inputs.
+- SceneReader :
+  - Added support for USD skinning and blendshapes, which are now applied automatically to meshes during loading.
+  - Added interpolation for animated cameras loaded from Alembic caches.
+  - PointsPrimitive variables with Varying interpolation are now conformed to Vertex interpolation on load. This is particularly helpful when loading points written from Houdini.
+- SceneWriter : Added support for writing cameras to Alembic caches.
 
 Fixes
 -----
@@ -47,6 +52,11 @@ API
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
 - ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
+
+Build
+-----
+
+- Cortex : Updated to version 10.1.4.0.
 
 0.59.0.0
 ========
