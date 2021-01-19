@@ -672,7 +672,7 @@ class TextDiff( SideBySideDiff ) :
 ## A class to simplify the process of making rows with alternating colours.
 class Row( GafferUI.Widget ) :
 
-	def __init__( self, borderWidth = 4, alternate = False, **kw ) :
+	def __init__( self, borderWidth = 4, **kw ) :
 
 		self.__frame = GafferUI.Frame( borderWidth = borderWidth, borderStyle = GafferUI.Frame.BorderStyle.None_ )
 
@@ -682,25 +682,9 @@ class Row( GafferUI.Widget ) :
 			 GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 		)
 
-		self.__alternate = None
-		self.setAlternate( alternate )
-
 	def listContainer( self ) :
 
 		return self.__frame.getChild()
-
-	def setAlternate( self, alternate ) :
-
-		if alternate == self.__alternate :
-			return
-
-		self.__alternate = alternate
-		self.__frame._qtWidget().setProperty( "gafferAlternate", bool(alternate) )
-		self.__frame._repolish()
-
-	def getAlternate( self ) :
-
-		return self.__alternate
 
 ##########################################################################
 # Inspector
@@ -758,11 +742,11 @@ class Inspector( object ) :
 ## \todo This would probably be more accurately described as an InspectorRow
 class DiffRow( Row ) :
 
-	def __init__( self, inspector, diffCreator = TextDiff, alternate = False, **kw ) :
+	def __init__( self, inspector, diffCreator = TextDiff, **kw ) :
 
 		assert( isinstance( inspector, Inspector ) )
 
-		Row.__init__( self, alternate=alternate, **kw )
+		Row.__init__( self, **kw )
 
 		with self.listContainer() :
 
@@ -1102,7 +1086,6 @@ class DiffColumn( GafferUI.Widget ) :
 			patterns = " ".join( "*" + p + "*" if "*" not in p else p for p in patterns )
 
 		numValidRows = 0
-		numVisibleRows = 0
 		for row in self.__rowContainer :
 
 			visible = False
@@ -1112,9 +1095,6 @@ class DiffColumn( GafferUI.Widget ) :
 					visible = True
 
 			row.setVisible( visible )
-			if visible :
-				row.setAlternate( numVisibleRows % 2 )
-				numVisibleRows += 1
 
 		self.__header.setVisible( numValidRows )
 
@@ -1305,7 +1285,7 @@ class _InheritanceSection( Section ) :
 
 			if value is not None or atEitherEnd or prevValue is not None or i == 1 :
 
-				row = Row( borderWidth = 0, alternate = len( rows ) % 2 )
+				row = Row( borderWidth = 0 )
 				rows.append( row )
 				with row.listContainer() :
 
@@ -1493,7 +1473,7 @@ class _HistorySection( Section ) :
 					# just skip it.
 					continue
 
-			row = Row( borderWidth = 0, alternate = len( rows ) % 2 )
+			row = Row( borderWidth = 0 )
 			rows.append( row )
 
 			with row.listContainer() :
@@ -1663,24 +1643,17 @@ class __TransformSection( LocationSection ) :
 		LocationSection.__init__( self, collapsed = True, label = "Transform" )
 
 		with self._mainColumn() :
-			index = 0
 			for transform in ( "transform", "fullTransform" )  :
 
 				inspector = self.__Inspector( transform )
-				DiffRow(
-					inspector,
-					alternate = index % 2,
-				)
-				index += 1
+				DiffRow( inspector )
 
 				for component in ( "t", "r", "s", "h" ) :
 
 					DiffRow(
 						self.__Inspector( transform, component ),
 						diffCreator = functools.partial( self.__diffCreator, name = inspector.name() ),
-						alternate = index % 2,
 					)
-					index += 1
 
 	def update( self, targets ) :
 
@@ -1754,7 +1727,7 @@ class __BoundSection( LocationSection ) :
 
 		with self._mainColumn() :
 			self.__localBoundRow = DiffRow( self.__Inspector() )
-			self.__worldBoundRow = DiffRow( self.__Inspector( world = True ), alternate = True )
+			self.__worldBoundRow = DiffRow( self.__Inspector( world = True ) )
 
 	def update( self, targets ) :
 
@@ -2419,7 +2392,6 @@ class __OutputsSection( Section ) :
 				self.__rows[outputName] = row
 
 			row.update( targets )
-			row.setAlternate( len( rows ) % 2 )
 			rows.append( row )
 
 		self._mainColumn()[:] = rows
