@@ -1356,6 +1356,16 @@ _styleSheet = string.Template(
 	 * and use that to drive the styling.
 	 */
 
+	*[gafferDiff="A"],
+	*[gafferDiff="B"],
+	*[gafferDiff="AB"],
+	*[gafferDiff="Other"]
+	{
+		border: 1px solid $tintLighterSubtle;
+		border-top-color: $tintDarkerStrong;
+		border-left-color: $tintDarkerStrong;
+	}
+
 	*[gafferDiff="A"] {
 		background: solid rgba( 181, 30, 0, 80 );
 	}
@@ -1365,15 +1375,19 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferDiff="AB"] {
-		background: solid rgba( 170, 170, 170, 60 );
+		background: solid $tintDarker;
 	}
 
 	*[gafferDiff="Other"] {
-		background: solid rgba( 70, 184, 255, 25 );
+		background: solid rgba( 10, 94, 165, 25 );
 	}
 
 	*[gafferAlternate="true"] {
-		background-color: $backgroundAlt;
+		background-color: $tintLighterSubtle;
+	}
+
+	*[gafferAlternate="true" ] *[gafferDiff="AB"] {
+		background-color: $tintDarkerStrong;
 	}
 
 	*[gafferDiff="A"][gafferHighlighted="true"],
@@ -1432,6 +1446,7 @@ _styleSheet = string.Template(
 	/* relevant adjoining properties to false, rather than omitting them   */
 
 	*[gafferAdjoinedTop="true"] {
+		border-top: none;
 		border-top-left-radius: 0px;
 		border-top-right-radius: 0px;
 	}
@@ -1442,6 +1457,7 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferAdjoinedBottom="true"] {
+		border-bottom: none;
 		border-bottom-left-radius: 0px;
 		border-bottom-right-radius: 0px;
 	}
@@ -1452,6 +1468,7 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferAdjoinedLeft="true"] {
+		border-left: none;
 		border-top-left-radius: 0px;
 		border-bottom-left-radius: 0px;
 	}
@@ -1462,6 +1479,7 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferAdjoinedRight="true"] {
+		border-right: none;
 		border-top-right-radius: 0px;
 		border-bottom-right-radius: 0px;
 	}
