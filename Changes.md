@@ -13,6 +13,7 @@ Improvements
 ------------
 
 - Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
+- ArnoldRender : Added support for animated camera parameters, such as field of view.
 - DeleteFaces/DeletePoints/DeleteCurves : Added `ignoreMissingVariable` plug which allows users to opt-out of errors.
 - Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
 - OSLObject : Added support for connecting to the individual components of Vector, Point, Normal, UV and Color primitive variable inputs.
@@ -52,6 +53,9 @@ API
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
 - ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
+- RendererAlgo :
+  - Added `objectSamples()` overload which fills `vector<ConstObjectPtr>` rather than `vector<ConstVisibleRenderablePtr>`.
+  - Deprecated original `objectSamples()` method.
 
 Build
 -----

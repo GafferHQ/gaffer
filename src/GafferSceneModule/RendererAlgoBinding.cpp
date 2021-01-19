@@ -52,7 +52,7 @@ namespace
 
 tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath::V2f &shutter, bool copy )
 {
-	std::vector<IECoreScene::ConstVisibleRenderablePtr> samples;
+	std::vector<IECore::ConstObjectPtr> samples;
 	std::vector<float> sampleTimes;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
@@ -68,7 +68,7 @@ tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath
 		}
 		else
 		{
-			pythonSamples.append( boost::const_pointer_cast<IECoreScene::VisibleRenderable>( s ) );
+			pythonSamples.append( boost::const_pointer_cast<IECore::Object>( s ) );
 		}
 	}
 
@@ -107,6 +107,18 @@ void registerAdaptorWrapper( const std::string &name, object adaptor )
 	RendererAlgo::registerAdaptor( name, AdaptorWrapper( adaptor ) );
 }
 
+void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
+}
+
+void applyCameraGlobalsWrapper( IECoreScene::Camera &camera, const IECore::CompoundObject &globals, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	RendererAlgo::applyCameraGlobals( &camera, &globals, &scene );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -124,6 +136,14 @@ void bindRendererAlgo()
 	def( "registerAdaptor", &registerAdaptorWrapper );
 	def( "deregisterAdaptor", &RendererAlgo::deregisterAdaptor );
 	def( "createAdaptors", &RendererAlgo::createAdaptors );
+
+	class_<RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
+		.def( init<const ScenePlug *>() )
+	;
+
+	def( "outputCameras", &outputCamerasWrapper );
+
+	def( "applyCameraGlobals", &applyCameraGlobalsWrapper );
 
 }
 

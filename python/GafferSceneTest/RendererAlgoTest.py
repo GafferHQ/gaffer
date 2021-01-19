@@ -110,6 +110,69 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( samples[0].parameters()["frame"].value, 1.0 )
 		self.assertEqual( sampleTimes, [] )
 
+	def testObjectSamplesForCameras( self ) :
+
+		frame = GafferTest.FrameNode()
+		camera = GafferScene.Camera()
+		camera["perspectiveMode"].setValue( camera.PerspectiveMode.ApertureFocalLength )
+		camera["focalLength"].setInput( frame["output"] )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
+			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( camera["out"], 1, imath.V2f( 0.75, 1.25 ) )
+
+		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
+		self.assertEqual( [ s.parameters()["focalLength"].value for s in samples ], [ 0.75, 1.25 ] )
+
+	def testOutputCameras( self ) :
+
+		frame = GafferTest.FrameNode()
+		camera = GafferScene.Camera()
+		camera["perspectiveMode"].setValue( camera.PerspectiveMode.ApertureFocalLength )
+		camera["focalLength"].setInput( frame["output"] )
+
+		options = GafferScene.StandardOptions()
+		options["in"].setInput( camera["out"] )
+
+		renderSets = GafferScene.RendererAlgo.RenderSets( options["out"] )
+
+		def expectedCamera( frame ) :
+
+			with Gaffer.Context() as c :
+				c.setFrame( frame )
+				camera = options["out"].object( "/camera" )
+
+			GafferScene.RendererAlgo.applyCameraGlobals( camera, sceneGlobals, options["out"] )
+			return camera
+
+		# Non-animated case
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+		sceneGlobals = options["out"].globals()
+		GafferScene.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+
+		capturedCamera = renderer.capturedObject( "/camera" )
+
+		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 1 ) ] )
+		self.assertEqual( capturedCamera.capturedSampleTimes(), [] )
+
+		# Animated case
+
+		options["options"]["deformationBlur"]["enabled"].setValue( True )
+		options["options"]["deformationBlur"]["value"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+		sceneGlobals = options["out"].globals()
+		GafferScene.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+
+		capturedCamera = renderer.capturedObject( "/camera" )
+		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 0.75 ), expectedCamera( 1.25 ) ] )
+		self.assertEqual( capturedCamera.capturedSampleTimes(), [ 0.75, 1.25 ] )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

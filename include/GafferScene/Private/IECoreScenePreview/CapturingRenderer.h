@@ -66,6 +66,7 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 			const std::string &fileName = "",
 			const IECore::MessageHandlerPtr &messageHandler = IECore::MessageHandlerPtr()
 		);
+		~CapturingRenderer() override;
 
 		/// Introspection
 		/// =============
@@ -148,6 +149,7 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output ) override;
 		AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
 		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
@@ -161,8 +163,9 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 
 		IECore::MessageHandlerPtr m_messageHandler;
 
+		RenderType m_renderType;
 		std::atomic_bool m_rendering;
-		using ObjectMap = tbb::concurrent_hash_map<std::string, const CapturedObject *>;
+		using ObjectMap = tbb::concurrent_hash_map<std::string, CapturedObject *>;
 		ObjectMap m_capturedObjects;
 
 		static Renderer::TypeDescription<CapturingRenderer> g_typeDescription;

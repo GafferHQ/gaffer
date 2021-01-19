@@ -2951,6 +2951,46 @@ class RendererTest( GafferTest.TestCase ) :
 		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", ""), ("light", "color"))], output = "light" )
 		self.assertFalse( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
 
+	def testAnimatedCameras( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		c1 = IECoreScene.Camera()
+		c1.setProjection( "perspective" )
+		c1.setFocalLengthFromFieldOfView( 45 )
+		c2 = c1.copy()
+		c2.setFocalLengthFromFieldOfView( 55 )
+
+		r.camera(
+			"testCamera",
+			[ c1, c2 ], [ 1, 2 ],
+			r.attributes( IECore.CompoundObject() ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			n = arnold.AiNodeLookUpByName( "testCamera" )
+			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
+
+			self.assertEqual( arnold.AiNodeGetFlt( n, "motion_start" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( n, "motion_end" ), 2 )
+
+			array = arnold.AiNodeGetArray( n, "fov" )
+			self.assertEqual( arnold.AiArrayGetNumElements( array ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( array ), 2 )
+
+			self.assertAlmostEqual( arnold.AiArrayGetFlt( array, 0 ), c1.calculateFieldOfView().x, delta = 0.00001 )
+			self.assertAlmostEqual( arnold.AiArrayGetFlt( array, 1 ), c2.calculateFieldOfView().x, delta = 0.00001 )
+
 	@staticmethod
 	def __m44f( m ) :
 

@@ -74,7 +74,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		self.assertIsInstance( o, renderer.CapturedObject )
 		self.assertTrue( o.isSame( renderer.capturedObject( "o" ) ) )
 		self.assertEqual( o.capturedSamples(), [ IECoreScene.SpherePrimitive() ] )
-		self.assertEqual( o.capturedSampleTimes(), [ 0 ] )
+		self.assertEqual( o.capturedSampleTimes(), [] )
 		self.assertEqual( o.capturedAttributes(), attributes1 )
 		self.assertEqual( o.capturedLinks( "lights" ), None )
 		self.assertEqual( o.numAttributeEdits(), 1 )
@@ -146,6 +146,20 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 			renderer.lightFilter( "rl", IECore.NullObject(), renderableAttr ),
 			GafferScene.Private.IECoreScenePreview.Renderer.ObjectInterface
 		)
+
+	def testDeformingObject( self ) :
+
+		sphere1 = IECoreScene.SpherePrimitive( 1 )
+		sphere2 = IECoreScene.SpherePrimitive( 2 )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		o = renderer.object(
+			"o", [ sphere1, sphere2 ], [ 1, 2 ], renderer.attributes( IECore.CompoundObject() )
+		)
+
+		c = renderer.capturedObject( "o" )
+		self.assertEqual( c.capturedSamples(), [ sphere1, sphere2 ] )
+		self.assertEqual( c.capturedSampleTimes(), [ 1, 2 ] )
 
 if __name__ == "__main__":
 	unittest.main()
