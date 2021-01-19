@@ -147,6 +147,23 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &rend
 	return renderer.object( name, samples, times, attributes );
 }
 
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera1( Renderer &renderer, const std::string &name, const IECoreScene::Camera *camera, const Renderer::AttributesInterface *attributes )
+{
+	return renderer.camera( name, camera, attributes );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererCamera2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
+{
+	std::vector<const IECoreScene::Camera *> samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	std::vector<float> times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return renderer.camera( name, samples, times, attributes );
+}
+
 object rendererCommand( Renderer &renderer, const IECore::InternedString name, const IECore::CompoundDataMap &parameters = IECore::CompoundDataMap() )
 {
 	return dataToPython(
@@ -350,7 +367,8 @@ void GafferSceneModule::bindRender()
 
 			.def( "attributes", &Renderer::attributes )
 
-			.def( "camera", &Renderer::camera )
+			.def( "camera", &rendererCamera1 )
+			.def( "camera", &rendererCamera2 )
 			.def( "light", &Renderer::light )
 			.def( "lightFilter", &Renderer::lightFilter )
 

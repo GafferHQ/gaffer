@@ -59,10 +59,16 @@ Improvements
 ------------
 
 - Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
+- ArnoldRender : Added support for animated camera parameters, such as field of view.
 - DeleteFaces/DeletePoints/DeleteCurves : Added `ignoreMissingVariable` plug which allows users to opt-out of errors.
 - Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
 - OSLObject : Added support for connecting to the individual components of Vector, Point, Normal, UV and Color primitive variable inputs.
 - OSLImage : Added support for connecting to the individual components of channel inputs.
+- SceneReader :
+  - Added support for USD skinning and blendshapes, which are now applied automatically to meshes during loading.
+  - Added interpolation for animated cameras loaded from Alembic caches.
+  - PointsPrimitive variables with Varying interpolation are now conformed to Vertex interpolation on load. This is particularly helpful when loading points written from Houdini.
+- SceneWriter : Added support for writing cameras to Alembic caches.
 
 Fixes
 -----
@@ -93,6 +99,14 @@ API
   - Added `copyIf()` function, to copy metadata matching an arbitrary predicate.
   - Deprecated the complex form of `copy()` in favour of a simpler overload and the new `copyIf()` function.
 - ViewportGadget : `setCameraTransform` now properly removes scale and shear from the supplied matrix.
+- RendererAlgo :
+  - Added `objectSamples()` overload which fills `vector<ConstObjectPtr>` rather than `vector<ConstVisibleRenderablePtr>`.
+  - Deprecated original `objectSamples()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.1.4.0.
 
 0.59.0.0
 ========
@@ -261,6 +275,7 @@ Fixes
 - Viewer :
   - Fixed bug that caused the Inspector to edit the wrong node when SetFilters were in use.
   - Fixed bugs when using the CameraTool to manipulate scaled cameras or lights. Note: the Viewport projection will no longer display the effects of scale or shear components in the view matrix.
+- Render/InteractiveRender : Fixed bug in light filter context handling. This could result in light filters not being linked to the correct lights, or cause exceptions during scene translation.
 
 API
 ---

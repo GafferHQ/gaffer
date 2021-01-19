@@ -256,6 +256,11 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		///
 		/// May return a nullptr if the camera definition is not supported by the renderer.
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) = 0;
+		/// As above, but allowing animated camera parameters to be specified. A default implementation
+		/// that calls `camera( name, samples[0], attributes )` is provided for renderers which don't
+		/// support animated cameras. Renderers that do support animated cameras should implement a suitable
+		/// override.
+		virtual ObjectInterfacePtr camera( const std::string &name, const std::vector<const IECoreScene::Camera *> &samples, const std::vector<float> &times, const AttributesInterface *attributes );
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
 		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry
