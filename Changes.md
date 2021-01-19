@@ -9,6 +9,11 @@ Improvements
 - Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
 - Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
 
+Fixes
+-----
+
+- ScriptNode : Fixed bugs that allowed global variables to remain in the context after they had been disabled, renamed or deleted.
+
 API
 ---
 
@@ -38,6 +43,7 @@ Breaking Changes
   - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.
 - Editors : Removed the 'Follow Scene Selection' mode from the Node Editor Focus menu (#4074).
 - GafferSceneUI : Removed `SourceSet`.
+- ScriptNode : Added private member data.
 
 Build
 -----

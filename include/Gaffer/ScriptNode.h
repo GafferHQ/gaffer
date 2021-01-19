@@ -46,6 +46,8 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/UndoScope.h"
 
+#include "boost/container/flat_set.hpp"
+
 #include <functional>
 #include <stack>
 
@@ -320,7 +322,11 @@ class GAFFER_API ScriptNode : public Node
 		// =================
 
 		ContextPtr m_context;
+		// The names of variables that we have added to `m_context`
+		// from `variablesPlug()`.
+		boost::container::flat_set<IECore::InternedString> m_currentVariables;
 
+		void updateContextVariables();
 		void plugSet( Plug *plug );
 		void contextChanged( const Context *context, const IECore::InternedString &name );
 
