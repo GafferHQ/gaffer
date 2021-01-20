@@ -39,6 +39,7 @@ Breaking Changes
   - `repr()` now takes a `Serialisation *` where it used to take a `const Serialisation *`.
   - `valueRepr()` now has an optional `serialisation` argument.
 - Metadata : Added new signals which are emitted with per-node granularity. These provide significantly reduced overhead compared to _all_ metadata observers being notified of _all_ metadata changes.
+- MetadataAlgo : Added `readOnlyAffectedByChange()` overload suitable for use with new metadata signals.
 - MetadataBinding :
   - Added `serialisation` required argument to `metadataSerialisation()`.
   - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.
