@@ -42,6 +42,31 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+## Menu Presentation
+# -----------------
+# Many facilities have large numbers of sets with structured names. When
+# presented in a flat list, it can be hard to navigate. The path function
+# allows the name of a set to be amended or turned into a hierarchical menu
+# path (ie, by returning a string containing '/'s) - creating sub-menus
+# wherever Gaffer displays a list of sets.
+
+__menuPathFunction = lambda n : n
+
+## 'f' should be a callable that takes a set name, and returns a relative menu
+## path @see IECore.MenuDefinition.
+def setMenuPathFunction( f ) :
+
+	global __menuPathFunction
+	__menuPathFunction = f
+
+def getMenuPathFunction() :
+
+	global __menuPathFunction
+	return __menuPathFunction
+
+## Metadata
+#  --------
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Set,
@@ -238,6 +263,8 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 			newValue = ''.join( [ currentExpression[:insertAt[0]], operator, currentExpression[insertAt[1]:] ] )
 			menuDefinition.prepend( "/Operators/%s" % name, { "command" : functools.partial( __setValue, plug, newValue ) } )
 
+	pathFn = getMenuPathFunction()
+
 	for setName in reversed( sorted( list( setNames ) ) ) :
 
 		if acceptsSetExpression :
@@ -258,7 +285,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
 
-		menuDefinition.prepend( "/Sets/%s" % setName, parameters )
+		menuDefinition.prepend( "/Sets/%s" % pathFn( setName ), parameters )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu, scoped = False )
 
