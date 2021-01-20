@@ -1091,6 +1091,48 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
+		# Same tests with unindexed primvar
+		updateRoots( IECore.StringVectorData( [ "", "", "", ""] ), None )
+		self.assertUnderspecifiedRoots( script )
+		updateRoots( IECore.StringVectorData( [ "/foo", "/foo", "/foo", "/foo" ] ), None )
+		self.assertSingleRoot( script )
+		updateRoots( IECore.StringVectorData( [ "/foo", "/bar", "/bar", "/foo" ] ), None )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+		updateRoots( IECore.StringVectorData( [ "/foo/bar", "/bar", "/bar", "/foo/bar" ] ), None )
+		self.assertConflictingRootNames( script )
+		updateRoots( IECore.StringVectorData( [ "/bar", "/foo", "/foo", "/bar" ] ), None )
+		self.assertSwappedRoots( script )
+		updateRoots( IECore.StringVectorData( [ "", "/bar", "/bar", "" ] ), None )
+		self.assertSkippedRoots( script )
+		updateRoots( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube", "/bar/baz/cube", "/foo/bar/sphere" ] ), None )
+		self.assertRootsToLeaves( script )
+		updateRoots( IECore.StringVectorData( [ "/", "/", "/", "/" ] ), None )
+		self.assertRootsToRoot( script )
+		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist", "/does/not/exist", "/foo" ] ), None )
+		six.assertRaisesRegex( self,
+			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
+			script["instancer"]["out"].childNames, "/object/instances",
+		)
+
+		# Same tests with indexed primvar that isn't fully unique
+		updateRoots( IECore.StringVectorData( [ "", "" ] ), IECore.IntVectorData( [ 0, 0, 1, 1 ] ) )
+		self.assertUnderspecifiedRoots( script )
+		updateRoots( IECore.StringVectorData( [ "/foo", "/foo" ] ), IECore.IntVectorData( [ 0, 0, 1, 1 ] ) )
+		self.assertSingleRoot( script )
+		updateRoots( IECore.StringVectorData( [ "/foo", "/bar", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 2, 0 ] ) )
+		self.assertRootsMatchPrototypeSceneChildren( script )
+		updateRoots( IECore.StringVectorData( [ "/foo/bar", "/foo/bar", "/bar" ] ), IECore.IntVectorData( [ 0, 2, 2, 1 ] ) )
+		self.assertConflictingRootNames( script )
+		updateRoots( IECore.StringVectorData( [ "/bar", "/foo", "/foo" ] ), IECore.IntVectorData( [ 0, 2, 1, 0 ] ) )
+		self.assertSwappedRoots( script )
+		updateRoots( IECore.StringVectorData( [ "", "/bar", "", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 3, 2 ] ) )
+		self.assertSkippedRoots( script )
+		updateRoots( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube", "/bar/baz/cube" ] ), IECore.IntVectorData( [ 0, 1, 2, 0 ] ) )
+		self.assertRootsToLeaves( script )
+		updateRoots( IECore.StringVectorData( [ "/", "/" ] ), IECore.IntVectorData( [ 0, 0, 1, 0 ] ) )
+		self.assertRootsToRoot( script )
+
+
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
 		six.assertRaisesRegex( self,
 			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*does not exist.*",
