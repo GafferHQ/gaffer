@@ -22,6 +22,7 @@ API
 - SceneView : Added support for adaptors registered via `RendererAlgo::registerAdaptor()`.
 - RendererAlgo : Improved handling of null adaptors. These now issue a warning instead of causing a crash.
 - Metadata : Added new signals which are emitted with per-node granularity. These provide significantly reduced overhead compared to _all_ metadata observers being notified of _all_ metadata changes.
+- MetadataAlgo : Added `readOnlyAffectedByChange()` overload suitable for use with new metadata signals.
 
 0.59.1.0 (relative to 0.59.0.0)
 ========

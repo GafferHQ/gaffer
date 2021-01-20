@@ -203,6 +203,19 @@ bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::Typ
 	return false;
 }
 
+bool readOnlyAffectedByChange( const GraphComponent *graphComponent, const Gaffer::GraphComponent *changedGraphComponent, const IECore::InternedString &changedKey )
+{
+	if( changedKey == g_readOnlyName )
+	{
+		return changedGraphComponent == graphComponent || changedGraphComponent->isAncestorOf( graphComponent );
+	}
+	else if( changedKey == g_childNodesAreReadOnlyName )
+	{
+		return changedGraphComponent->isAncestorOf( graphComponent );
+	}
+	return false;
+}
+
 bool readOnlyAffectedByChange( const IECore::InternedString &changedKey )
 {
 	return changedKey == g_readOnlyName || changedKey == g_childNodesAreReadOnlyName;

@@ -103,6 +103,7 @@ GAFFER_API const GraphComponent *readOnlyReason( const GraphComponent *graphComp
 /// Determines if a metadata value change affects the result of `readOnly( graphComponent )`.
 GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const IECore::InternedString &changedKey, const Gaffer::Plug *changedPlug );
 GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, IECore::TypeId changedNodeTypeId, const IECore::InternedString &changedKey, const Gaffer::Node *changedNode );
+GAFFER_API bool readOnlyAffectedByChange( const GraphComponent *graphComponent, const Gaffer::GraphComponent *changedGraphComponent, const IECore::InternedString &changedKey );
 GAFFER_API bool readOnlyAffectedByChange( const IECore::InternedString &changedKey );
 
 /// Bookmarks
