@@ -52,7 +52,7 @@ import subprocess
 
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 59 # backwards-incompatible changes
-gafferMinorVersion = 0 # new backwards-compatible features
+gafferMinorVersion = 1 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
 
 # All of the following must be considered when determining

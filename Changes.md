@@ -1,9 +1,10 @@
-0.59.x.x (relative to 0.59.0.0)
+0.59.1.0 (relative to 0.59.0.0)
 ========
 
 Features
 --------
 
+- Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
 - Instancer : Added `encapsulateInstanceGroups` plug, which outputs the instances within capsules. This has the same performance benefits as using an Encapsulate node downstream, with the following additional benefits :
   - Significantly improved performance when the prototypes define sets. A benchmarch with 1 million instances saw set generation time go from 10s using a downstream Encapsulate node to 0.002s using `encapsulateInstanceGroups`.
   - Fewer unnecessary capsule invalidations, resulting in fewer interactive rendering updates.
@@ -12,7 +13,6 @@ Features
 Improvements
 ------------
 
-- Spreadsheet : Added support for drag and drop. Values and Plugs can be dragged from outside a Spreadsheet to a cell to set its value or connect to its value plug.
 - ArnoldRender : Added support for animated camera parameters, such as field of view.
 - DeleteFaces/DeletePoints/DeleteCurves : Added `ignoreMissingVariable` plug which allows users to opt-out of errors.
 - Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
@@ -36,6 +36,7 @@ Fixes
 - NodeAlgo : Fixed corner case where a preset could be listed twice if it was specified by both `preset:<name>` and `presetNames`.
 - GafferUI : Fixed incorrect Tree/TableView horizontal header height.
 - Spreadsheet : Fixed bug that allowed values to be pasted onto plugs with inputs.
+- Render/InteractiveRender : Fixed bug in light filter context handling. This could result in light filters not being linked to the correct lights, or cause exceptions during scene translation.
 
 API
 ---
