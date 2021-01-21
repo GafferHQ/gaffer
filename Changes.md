@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.1.0)
 ========
 
+Fixes
+-----
+
+- UIEditor : Fixed Python 3 compatibility in plug presets editor.
+
 API
 ---
 

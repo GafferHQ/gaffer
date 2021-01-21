@@ -1192,18 +1192,18 @@ class _PresetsEditor( GafferUI.Widget ) :
 		d = self.__pathListing.getPath().dict()
 
 		srcPath = self.__pathListing.getPath().copy().setFromString( event.data[0] )
-		srcIndex = d.keys().index( srcPath[0] )
+		srcIndex = list( d.keys() ).index( srcPath[0] )
 
 		targetPath = self.__pathListing.pathAt( event.line.p0 )
 		if targetPath is not None :
-			targetIndex = d.keys().index( targetPath[0] )
+			targetIndex = list( d.keys() ).index( targetPath[0] )
 		else :
 			targetIndex = 0 if event.line.p0.y < 1 else len( d )
 
 		if srcIndex == targetIndex :
 			return True
 
-		items = d.items()
+		items = list( d.items() )
 		item = items[srcIndex]
 		del items[srcIndex]
 		items.insert( targetIndex, item )
@@ -1287,7 +1287,8 @@ class _PresetsEditor( GafferUI.Widget ) :
 		# Sanitize name. Strictly speaking we should only need to replace '/',
 		# but PathListingWidget has a bug handling wildcards in selections, so
 		# we replace those too.
-		newName = newName.translate( string.maketrans( "/*?\\[", "_____" ) )
+		maketrans = str.maketrans if six.PY3 else string.maketrans
+		newName = newName.translate( maketrans( "/*?\\[", "_____" ) )
 
 		items = self.__pathListing.getPath().dict().items()
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
