@@ -37,14 +37,26 @@
 import os
 import shutil
 
-for subdir in ( "doc", "graphics" ) :
+def __link( source, target ) :
 
-	standaloneDir = os.path.join( ARGUMENTS['STANDALONE_INSTALL_DIR'], subdir )
-	appDir = os.path.join( ARGUMENTS['INSTALL_DIR'], subdir )
+	if source == target :
+		return
 
-	if os.path.isdir( standaloneDir ) :
+	if os.path.isdir( target ) :
+		if os.path.islink( target ) :
+			os.unlink( target )
+		else :
+			shutil.rmtree( target )
 
-		if os.path.isdir( appDir ) :
-			shutil.rmtree( appDir )
+	os.symlink(
+		os.path.relpath( source, os.path.dirname( target ) ),
+		target
+	)
 
-		shutil.copytree( standaloneDir, appDir, symlinks=True )
+# symlink to standalone install
+for subdir in ( "graphics", ) :
+	__link( os.path.join( ARGUMENTS['BASE_INSTALL_DIR'], "gaffer", subdir ), os.path.join( ARGUMENTS['INSTALL_DIR'], subdir ) )
+
+# symlink to public install
+for subdir in ( "doc", ) :
+	__link( os.path.join( ARGUMENTS['BASE_INSTALL_DIR'], "public", subdir ), os.path.join( ARGUMENTS['INSTALL_DIR'], subdir ) )

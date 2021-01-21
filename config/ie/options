@@ -386,11 +386,15 @@ CXX = os.path.join( compilerReg["location"], compilerReg["bin"] )
 
 SPHINX = os.path.join( sphinxRoot, "bin", "sphinx-build" )
 
-# for app installs we copy the docs and graphics from the standalone install
-if targetAppVersion and "install" in sys.argv :
-	SPHINX = "disableDocs"
-	INKSCAPE = "disableGraphics"
-	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall STANDALONE_INSTALL_DIR={baseInstallDir}/gaffer INSTALL_DIR=$INSTALL_DIR".format( baseInstallDir = baseInstallDir )
+if "install" in sys.argv :
+	# disable docs for releases (the postInstall command will symlink them from the public build)
+	if getOption( "RELEASE", "0" )=="1" :
+		SPHINX = "disableDocs"
+	# disable docs and graphics for all DCC installs (the postInstall command will symlink them our standalone build)
+	if targetAppVersion :
+		SPHINX = "disableDocs"
+		INKSCAPE = "disableGraphics"
+	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall BASE_INSTALL_DIR={baseInstallDir} INSTALL_DIR=$INSTALL_DIR".format( baseInstallDir = baseInstallDir )
 
 ##########################################################################
 # figure out the lib suffixes
