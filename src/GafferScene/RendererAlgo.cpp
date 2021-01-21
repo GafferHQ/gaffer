@@ -303,9 +303,19 @@ SceneProcessorPtr createAdaptors()
 	for( Adaptors::const_iterator it = a.begin(), eIt = a.end(); it != eIt; ++it )
 	{
 		SceneProcessorPtr adaptor = it->second();
-		result->addChild( adaptor );
-		adaptor->inPlug()->setInput( in );
-		in = adaptor->outPlug();
+		if( adaptor )
+		{
+			result->addChild( adaptor );
+			adaptor->inPlug()->setInput( in );
+			in = adaptor->outPlug();
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "RendererAlgo::createAdaptors",
+				boost::format( "Adaptor \"%1%\" returned null" ) % it->first
+			);
+		}
 	}
 
 	result->outPlug()->setInput( in );
