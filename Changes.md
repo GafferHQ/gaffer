@@ -50,6 +50,20 @@ Build
 
 - Moved minimum required C++ standard to C++14.
 
+0.59.x.x (relative to 0.59.1.0)
+========
+
+Fixes
+-----
+
+- UIEditor : Fixed Python 3 compatibility in plug presets editor.
+- NodeGadget : Fixed intermittent shutdown crash.
+
+API
+----
+
+- SetUI : Added `setMenuPathFunction()` & `getMenuPathFunction()` to allow Set names to be transformed before display in Gaffer menus.
+
 0.59.1.0 (relative to 0.59.0.0)
 ========
 
@@ -272,6 +286,14 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.x (relative to 0.58.6.1)
+========
+
+Fixes
+-----
+
+- NodeGadget : Fixed intermittent shutdown crash.
 
 0.58.6.1 (relative to 0.58.6.0)
 ========
