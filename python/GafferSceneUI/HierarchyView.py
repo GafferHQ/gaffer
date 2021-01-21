@@ -45,6 +45,7 @@ import GafferScene
 from . import _GafferSceneUI
 
 from . import ContextAlgo
+from . import SetUI
 
 ##########################################################################
 # HierarchyView
@@ -333,10 +334,12 @@ class _SetFilterWidget( GafferUI.PathFilterWidget ) :
 		if len( availableSets - builtInSets ) :
 			m.append( "/BuiltInDivider", { "divider" : True } )
 
+		pathFn = SetUI.getMenuPathFunction()
+
 		for s in sorted( availableSets | selectedSets ) :
 			if s in builtInSets :
 				continue
-			m.append( "/" + str( s ), item( s ) )
+			m.append( "/" + pathFn( s ), item( s ) )
 
 		return m
 

@@ -1,3 +1,11 @@
+0.59.x.x (relative to 0.59.1.0)
+========
+
+API
+---
+
+- SetUI : Added `setMenuPathFunction()` & `getMenuPathFunction()` to allow Set names to be transformed before display in Gaffer menus.
+
 0.59.1.0 (relative to 0.59.0.0)
 ========
 
