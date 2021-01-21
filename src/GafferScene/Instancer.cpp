@@ -210,9 +210,20 @@ class Instancer::EngineData : public Data
 			return m_numValidPrototypes;
 		}
 
-		inline int prototypeRemap( size_t protoIndex ) const
+		inline int prototypeRemap( int protoIndex ) const
 		{
-			return m_prototypeIndexRemap[ protoIndex % m_numPrototypes ];
+			if( m_prototypeIndexRemap.size() )
+			{
+				return m_prototypeIndexRemap[ protoIndex % m_numPrototypes ];
+			}
+			else
+			{
+				if( protoIndex == -1 )
+				{
+					return -1;
+				}
+				return protoIndex % m_numPrototypes;
+			}
 		}
 
 		inline int prototypeIndex( size_t pointIndex ) const
@@ -360,6 +371,8 @@ class Instancer::EngineData : public Data
 		{
 			const std::vector<std::string> *rootStrings = nullptr;
 
+			bool passthroughIndices = false;
+
 			switch( mode )
 			{
 				case PrototypeMode::IndexedRootsList :
@@ -421,6 +434,10 @@ class Instancer::EngineData : public Data
 					}
 
 					m_indices = view->indices();
+					if( !m_indices )
+					{
+						passthroughIndices = true;
+					}
 					rootStrings = &view->data();
 					if( rootStrings->empty() )
 					{
@@ -436,6 +453,9 @@ class Instancer::EngineData : public Data
 			m_roots.reserve( rootStrings->size() );
 			m_prototypeIndexRemap.reserve( rootStrings->size() );
 
+			std::unordered_map< std::string, size_t > existingRoots;
+
+			//bool needsRemap = false;
 			size_t i = 0;
 			ScenePlug::ScenePath path;
 			for( const auto &root : *rootStrings )
@@ -448,16 +468,38 @@ class Instancer::EngineData : public Data
 
 				if( path.empty() && root != "/" )
 				{
+					//needsRemap = true;
 					m_prototypeIndexRemap.emplace_back( -1 );
 					continue;
 				}
+
+				// TODO - must put root in canonical form somehow?
+				auto e = existingRoots.insert( std::pair< std::string, size_t >( root, i ) );
+				if( !e.second )
+				{
+					//needsRemap = true;
+					m_prototypeIndexRemap.emplace_back( e.first->second );
+					continue;
+				}
+
 				inputNames.emplace_back( new InternedStringVectorData( { root == "/" ? g_prototypeRootName : path.back() } ) );
 				m_roots.emplace_back( new InternedStringVectorData( path ) );
 				m_prototypeIndexRemap.emplace_back( i++ );
 			}
 
+			if( passthroughIndices )
+			{
+				m_indicesStorage = std::unique_ptr< std::vector<int> >( new std::vector<int>() );
+				m_prototypeIndexRemap.swap( *m_indicesStorage );
+				m_indices = m_indicesStorage.get();
+			}
+			/*else if( !needsRemap )
+			{
+				m_prototypeIndexRemap.resize( 0 );
+			}*/
+
 			m_names = new Private::ChildNamesMap( inputNames );
-			m_numPrototypes = m_prototypeIndexRemap.size();
+			m_numPrototypes = rootStrings->size();
 			m_numValidPrototypes = m_names->outputChildNames()->readable().size();
 		}
 
@@ -473,6 +515,8 @@ class Instancer::EngineData : public Data
 		const std::vector<Imath::Quatf> *m_orientations;
 		const std::vector<Imath::V3f> *m_scales;
 		const std::vector<float> *m_uniformScales;
+
+		std::unique_ptr< std::vector<int> > m_indicesStorage;
 
 		typedef std::unordered_map <int, size_t> IdsToPointIndices;
 		IdsToPointIndices m_idsToPointIndices;
