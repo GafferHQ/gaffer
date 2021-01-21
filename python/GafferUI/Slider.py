@@ -79,6 +79,7 @@ class Slider( GafferUI.Widget ) :
 		self.__minimumSize = 1
 		self.__increment = None
 		self.__snapIncrement = None
+		self.__hoverPositionVisible = False
 		self.__hoverEvent = None # The mouseMove event that gives us hover status
 
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
@@ -250,6 +251,14 @@ class Slider( GafferUI.Widget ) :
 	def getSnapIncrement( self ) :
 
 		return self.__snapIncrement
+
+	def setHoverPositionVisible( self, visible ) :
+
+		self.__hoverPositionVisible = visible
+
+	def getHoverPositionVisible( self ) :
+
+		return self.__hoverPositionVisible
 
 	## \todo Colours should come from some unified style somewhere
 	def _drawBackground( self, painter ) :
@@ -540,13 +549,21 @@ class Slider( GafferUI.Widget ) :
 				highlighted = index == indexUnderMouse or index == self.getSelectedIndex()
 			)
 
-		if indexUnderMouse is None and self.getSizeEditable() and self.__hoverEvent is not None :
-			self._drawPosition(
-				painter,
-				self.__valueToPosition( self.__eventValue( self.__hoverEvent ) ),
-				highlighted = True,
+		if self.__hoverEvent is not None :
+
+			opacity = None
+			if self.getSizeEditable() and indexUnderMouse is None :
 				opacity = 0.5
-			)
+			elif self.getHoverPositionVisible() :
+				opacity = 0.25
+
+			if opacity :
+				self._drawPosition(
+					painter,
+					self.__valueToPosition( self.__eventValue( self.__hoverEvent ) ),
+					highlighted = True,
+					opacity = opacity
+				)
 
 class _Widget( QtWidgets.QWidget ) :
 
