@@ -210,9 +210,14 @@ class Instancer::EngineData : public Data
 			return m_numValidPrototypes;
 		}
 
-		int prototypeIndex( size_t pointIndex ) const
+		inline int prototypeRemap( size_t protoIndex ) const
 		{
-			return m_prototypeIndexRemap[ ( m_indices ? (*m_indices)[pointIndex] : 0 ) % m_numPrototypes ];
+			return m_prototypeIndexRemap[ protoIndex % m_numPrototypes ];
+		}
+
+		inline int prototypeIndex( size_t pointIndex ) const
+		{
+			return prototypeRemap( m_indices ? (*m_indices)[pointIndex] : 0 );
 		}
 
 		const ScenePlug::ScenePath &prototypeRoot( const InternedString &name ) const
@@ -441,25 +446,14 @@ class Instancer::EngineData : public Data
 					throw IECore::Exception( boost::str( boost::format( "Prototype root \"%1%\" does not exist in the `prototypes` scene" ) % root ) );
 				}
 
-				if( path.empty() )
+				if( path.empty() && root != "/" )
 				{
-					if( root == "/" )
-					{
-						inputNames.emplace_back( new InternedStringVectorData( { g_prototypeRootName } ) );
-						m_roots.emplace_back( new InternedStringVectorData( path ) );
-						m_prototypeIndexRemap.emplace_back( i++ );
-					}
-					else
-					{
-						m_prototypeIndexRemap.emplace_back( -1 );
-					}
+					m_prototypeIndexRemap.emplace_back( -1 );
+					continue;
 				}
-				else
-				{
-					inputNames.emplace_back( new InternedStringVectorData( { path.back() } ) );
-					m_roots.emplace_back( new InternedStringVectorData( path ) );
-					m_prototypeIndexRemap.emplace_back( i++ );
-				}
+				inputNames.emplace_back( new InternedStringVectorData( { root == "/" ? g_prototypeRootName : path.back() } ) );
+				m_roots.emplace_back( new InternedStringVectorData( path ) );
+				m_prototypeIndexRemap.emplace_back( i++ );
 			}
 
 			m_names = new Private::ChildNamesMap( inputNames );
