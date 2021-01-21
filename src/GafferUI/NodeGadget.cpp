@@ -65,15 +65,20 @@ namespace
 typedef std::map<std::string, NodeGadget::NodeGadgetCreator> TypeCreatorMap;
 TypeCreatorMap &typeCreators()
 {
-	static TypeCreatorMap c;
-	return c;
+	// We tactically "leak" this map. NodeGadgetCreators are
+	// registered from Python, meaning we hold python objects in the TypeCreatorMap.
+	// Python completes shutdown before static destructors are run, and trying
+	// to destroy a Python object after Python shutdown can lead to crashes.
+	static auto c = new TypeCreatorMap;
+	return *c;
 }
 
 typedef std::map<IECore::TypeId, NodeGadget::NodeGadgetCreator> NodeCreatorMap;
 NodeCreatorMap &nodeCreators()
 {
-	static NodeCreatorMap c;
-	return c;
+	// See `typeCreators()` for note on "leak".
+	static auto c = new NodeCreatorMap;
+	return *c;
 }
 
 } // namespace
