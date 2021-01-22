@@ -79,6 +79,22 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
 
+	def testNullAdaptor( self ) :
+
+		def a() :
+
+			return None
+
+		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
+
+		with IECore.CapturingMessageHandler() as mh :
+			GafferScene.RendererAlgo.createAdaptors()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "RendererAlgo::createAdaptors" )
+		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
+
 	def testObjectSamples( self ) :
 
 		frame = GafferTest.FrameNode()

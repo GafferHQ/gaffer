@@ -1606,10 +1606,16 @@ SceneView::SceneView( const std::string &name )
 	preprocessor->addChild( deleteObjectFilter );
 	deleteObject->filterPlug()->setInput( deleteObjectFilter->outPlug() );
 
+	// add in any render adaptors that might have been registered
+
+	SceneProcessorPtr adaptors = RendererAlgo::createAdaptors();
+	preprocessor->addChild( adaptors );
+	adaptors->inPlug()->setInput( deleteObject->outPlug() );
+
 	// add in the node from the ShadingMode
 
 	preprocessor->addChild( m_shadingMode->preprocessor() );
-	m_shadingMode->preprocessor()->inPlug()->setInput( deleteObject->outPlug() );
+	m_shadingMode->preprocessor()->inPlug()->setInput( adaptors->outPlug() );
 
 	// add in the node from the DrawingMode
 
