@@ -463,5 +463,23 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+	def testCompoundDataExpression( self ) :
+
+		# `testLoadExtraAttributesFrom0_59()` gives us test coverage for loading
+		# serialised expressions which assign CompoundData to `extraAttributes`.
+		# But it's also possible to create such an expression directly via the
+		# API, which is what this test provides coverage for.
+
+		script = Gaffer.ScriptNode()
+
+		script["a"] = GafferScene.CustomAttributes()
+		script["e"] = Gaffer.Expression()
+		script["e"].setExpression( 'parent["a"]["extraAttributes"] = IECore.CompoundData( { "test" : 10 } )' )
+
+		self.assertEqual(
+			script["a"]["extraAttributes"].getValue(),
+			IECore.CompoundObject( { "test" : IECore.IntData( 10 ) } )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
