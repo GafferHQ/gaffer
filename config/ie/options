@@ -218,6 +218,7 @@ boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
 tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) 
 exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 usdVersion = targetAppReg.get( "usdVersion", cortexReg["usdVersion"] )
+alembicVersion = targetAppReg.get( "AlembicVersion", cortexReg["AlembicVersion"] )
 vdbVersion = targetAppReg.get( "OpenVDBVersion", cortexReg["OpenVDBVersion"] )
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
@@ -286,6 +287,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "PySide", pysideVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( OSLHOME, "lib64" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "cortex", cortexCompatibilityVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "Alembic", alembicVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python{0}".format( pythonVersion ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), "lib" ),
@@ -384,11 +386,15 @@ CXX = os.path.join( compilerReg["location"], compilerReg["bin"] )
 
 SPHINX = os.path.join( sphinxRoot, "bin", "sphinx-build" )
 
-# for app installs we copy the docs and graphics from the standalone install
-if targetAppVersion and "install" in sys.argv :
-	SPHINX = "disableDocs"
-	INKSCAPE = "disableGraphics"
-	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall STANDALONE_INSTALL_DIR={baseInstallDir}/gaffer INSTALL_DIR=$INSTALL_DIR".format( baseInstallDir = baseInstallDir )
+if "install" in sys.argv :
+	# disable docs for releases (the postInstall command will symlink them from the public build)
+	if getOption( "RELEASE", "0" )=="1" :
+		SPHINX = "disableDocs"
+	# disable docs and graphics for all DCC installs (the postInstall command will symlink them our standalone build)
+	if targetAppVersion :
+		SPHINX = "disableDocs"
+		INKSCAPE = "disableGraphics"
+	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall BASE_INSTALL_DIR={baseInstallDir} INSTALL_DIR=$INSTALL_DIR".format( baseInstallDir = baseInstallDir )
 
 ##########################################################################
 # figure out the lib suffixes
@@ -430,6 +436,7 @@ ENV_VARS_TO_IMPORT = " ".join( [
 	"OSL_VERSION",
 	"OCIO",
 	"QT_QPA_PLATFORM_PLUGIN_PATH",
+	"GAFFER_JEMALLOC",
 ] )
 
 # required if scons compiler version doesn't match the build compiler version
@@ -440,6 +447,8 @@ os.environ["IEENV_LIBRARY_PREFIX_PATH"] = "/software/tools/lib/$PLATFORM/$COMPIL
 os.environ["OSL_VERSION"] = oslVersion
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
+# disable jemalloc for doc builds. the docs run with the native gaffer binary and it can't locate our custom libjemalloc
+os.environ["GAFFER_JEMALLOC"] = "0"
 # required to run gaffer gui for the doc builds
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "plugins" )
 
