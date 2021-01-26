@@ -367,6 +367,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		shader.loadShader( "standard_surface" )
 
 		shader["parameters"]["base"].setValue( 1 )
+		shader["parameters"]["base_color"].setValue( imath.Color3f( 1 ) )
 		shader["parameters"]["specular_roughness"].setValue( 0 )
 		shader["parameters"]["metalness"].setValue( 1 )
 		shader["parameters"]["specular_IOR"].setValue( 100 )
