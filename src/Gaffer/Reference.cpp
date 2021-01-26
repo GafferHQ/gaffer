@@ -170,25 +170,26 @@ class Reference::PlugEdits : public boost::signals::trackable
 				return false;
 			}
 
-			return edit->m_metadataEdits.find( key ) != edit->m_metadataEdits.end();
+			return edit->metadataEdits.find( key ) != edit->metadataEdits.end();
 		}
 
-		const boost::container::flat_set<InternedString> &metadataEdits( const Plug *plug )
+		void transferEdits( Plug *oldPlug, Plug *newPlug ) const
 		{
-			const PlugEdit *edit = plugEdit( plug );
-			if( edit )
+			transferEditedMetadata( oldPlug, newPlug );
+		}
+
+		// Used to allow PlugEdits to track reference loading.
+		struct LoadingScope : boost::noncopyable
+		{
+			LoadingScope( PlugEdits *plugEdits )
+				:	m_blockedConnection( plugEdits->m_connection )
 			{
-				return edit->m_metadataEdits;
 			}
-
-			static boost::container::flat_set<InternedString> g_emptyContainer;
-			return g_emptyContainer;
-		}
-
-		boost::signals::scoped_connection &connection()
-		{
-			return m_connection;
-		}
+			private :
+				// Changes made during loading aren't user edits and mustn't be
+				// tracked, so we block the connection.
+				Gaffer::BlockedConnection m_blockedConnection;
+		};
 
 	private :
 
@@ -197,7 +198,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 
 		struct PlugEdit
 		{
-			boost::container::flat_set<InternedString> m_metadataEdits;
+			boost::container::flat_set<InternedString> metadataEdits;
 		};
 
 		std::unordered_map<const Plug*, PlugEdit> m_plugEdits;
@@ -262,15 +263,15 @@ class Reference::PlugEdits : public boost::signals::trackable
 				return;
 			}
 
-			if( edit->m_metadataEdits.find( key ) != edit->m_metadataEdits.end() )
+			if( edit->metadataEdits.find( key ) != edit->metadataEdits.end() )
 			{
 				return;
 			}
 
 			Action::enact(
 				m_reference,
-				[edit, key](){ edit->m_metadataEdits.insert( key ); },
-				[edit, key](){ edit->m_metadataEdits.erase( key ); }
+				[edit, key](){ edit->metadataEdits.insert( key ); },
+				[edit, key](){ edit->metadataEdits.erase( key ); }
 			);
 		}
 
@@ -283,6 +284,31 @@ class Reference::PlugEdits : public boost::signals::trackable
 			}
 
 			m_plugEdits.erase( plug );
+		}
+
+		void transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const
+		{
+			// Transfer metadata that was edited and won't be provided by a
+			// load. Note: Adding the metadata to a new plug
+			// automatically registers a PlugEdit for that plug.
+
+			if( auto *edit = plugEdit( srcPlug ) )
+			{
+				for( const InternedString &key : edit->metadataEdits )
+				{
+					Gaffer::Metadata::registerValue( dstPlug, key, Gaffer::Metadata::value<IECore::Data>( srcPlug, key ), /* persistent =*/ true );
+				}
+			}
+
+			// Recurse
+
+			for( PlugIterator it( srcPlug ); !it.done(); ++it )
+			{
+				if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
+				{
+					transferEditedMetadata( it->get(), dstChildPlug );
+				}
+			}
 		}
 
 };
@@ -404,9 +430,7 @@ void Reference::loadInternal( const std::string &fileName )
 	boost::filesystem::path path = sp.find( fileName );
 	if( !path.empty() )
 	{
-		// Changes made here aren't user edits and mustn't be tracked.
-		BlockedConnection blockedConnection( m_plugEdits->connection() );
-
+		PlugEdits::LoadingScope loadingScope( m_plugEdits.get() );
 		errors = script->executeFile( path.string(), this, /* continueOnError = */ true );
 	}
 
@@ -458,8 +482,7 @@ void Reference::loadInternal( const std::string &fileName )
 					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ true );
 				}
 				transferOutputs( oldPlug, newPlug );
-
-				transferEditedMetadata( oldPlug, newPlug );
+				m_plugEdits->transferEdits( oldPlug, newPlug );
 			}
 			catch( const std::exception &e )
 			{
@@ -541,26 +564,3 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 	// everything else must be from a reference then.
 	return true;
 }
-
-void Reference::transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const
-{
-	// Transfer metadata that was edited and won't be provided by a
-	// load. Note: Adding the metadata to a new plug
-	// automatically registers a PlugEdit for that plug.
-
-	for( const InternedString &key : m_plugEdits->metadataEdits( srcPlug ) )
-	{
-		Gaffer::Metadata::registerValue( dstPlug, key, Gaffer::Metadata::value<IECore::Data>( srcPlug, key ), /* persistent =*/ true);
-	}
-
-	// Recurse
-
-	for( PlugIterator it( srcPlug ); !it.done(); ++it )
-	{
-		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
-		{
-			transferEditedMetadata( it->get(), dstChildPlug );
-		}
-	}
-}
-
