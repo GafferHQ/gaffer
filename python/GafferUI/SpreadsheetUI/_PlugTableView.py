@@ -964,8 +964,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __canDeleteColumn( self, cellPlug ) :
 
-		rowsPlug = cellPlug.ancestor( Gaffer.Spreadsheet.RowsPlug )
-		return not Gaffer.MetadataAlgo.readOnly( cellPlug ) and _Algo.dimensionsEditable( rowsPlug )
+		if Gaffer.MetadataAlgo.readOnly( cellPlug ) :
+			return False
+		if isinstance( cellPlug.node(), Gaffer.Reference ) :
+			return False
+
+		return True
 
 	def __deleteColumn( self, cellPlug ) :
 
@@ -979,10 +983,20 @@ class _PlugTableView( GafferUI.Widget ) :
 			return False
 
 		rowsPlug = next( iter( rowPlugs ) ).ancestor( Gaffer.Spreadsheet.RowsPlug )
-		includesDefaultRow = rowsPlug.defaultRow() in rowPlugs
-		anyLocked = any( [ Gaffer.MetadataAlgo.readOnly( row ) for row in rowPlugs ] )
+		if rowsPlug.defaultRow() in rowPlugs :
+			return False
+		if any( [ Gaffer.MetadataAlgo.readOnly( row ) for row in rowPlugs ] ) :
+			return False
+		if isinstance( rowsPlug.node(), Gaffer.Reference ) :
+			# Can't delete rows unless they have been added as edits
+			# on top of the reference. Otherwise they will be recreated
+			# when the reference is reloaded anyway.
+			reference = rowsPlug.node()
+			for row in rowPlugs :
+				if not reference.isChildEdit( row ) :
+					return False
 
-		return _Algo.dimensionsEditable( rowsPlug ) and not includesDefaultRow and not anyLocked
+		return True
 
 	def __deleteRows( self, rowPlugs ) :
 
