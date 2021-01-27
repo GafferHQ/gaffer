@@ -65,7 +65,17 @@ class GAFFER_API Reference : public SubGraph
 		/// Emitted when a reference is loaded (or unloaded following an undo).
 		ReferenceLoadedSignal &referenceLoadedSignal();
 
+		/// Edits
+		/// =====
+		///
+		/// Edits are changes to referenced plugs that are made by the user
+		/// after the reference has been loaded via `load()`. The Reference
+		/// node provides some limited tracking of edits, exposing them
+		/// via the following methods.
+
 		bool hasMetadataEdit( const Plug *plug, const IECore::InternedString key ) const;
+		/// Returns true if `plug` has been added as a child of a referenced plug.
+		bool isChildEdit( const Plug *plug ) const;
 
 	private :
 

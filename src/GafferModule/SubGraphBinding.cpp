@@ -343,6 +343,7 @@ void GafferModule::bindSubGraph()
 		.def( "fileName", &Reference::fileName, return_value_policy<copy_const_reference>() )
 		.def( "referenceLoadedSignal", &Reference::referenceLoadedSignal, return_internal_reference<1>() )
 		.def( "hasMetadataEdit", &Reference::hasMetadataEdit )
+		.def( "isChildEdit", &Reference::isChildEdit )
 	;
 
 	SignalClass<Reference::ReferenceLoadedSignal, DefaultSignalCaller<Reference::ReferenceLoadedSignal>, ReferenceLoadedSlotCaller >( "ReferenceLoadedSignal" );
