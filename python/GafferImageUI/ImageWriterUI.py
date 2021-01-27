@@ -317,6 +317,8 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.OpenEXR",
 
+			"layout:activator:compressionIsDWA", lambda plug : plug["compression"].getValue() in ( "dwaa", "dwab" ),
+
 		],
 
 		"openexr.mode" : [
@@ -350,6 +352,18 @@ Gaffer.Metadata.registerNode(
 			"preset:B44A", "b44a",
 			"preset:DWAA", "dwaa",
 			"preset:DWAB", "dwab",
+
+		],
+
+		"openexr.dwaCompressionLevel" : [
+
+			"description",
+			"""
+			The compression level used when writing files with DWAA or DWAB compression.
+			Higher values decrease file size at the expense of image quality.
+			""",
+
+			"layout:activator", "compressionIsDWA",
 
 		],
 

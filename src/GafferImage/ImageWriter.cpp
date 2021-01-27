@@ -83,6 +83,7 @@ static InternedString g_chromaSubSamplingPlugName( "chromaSubSampling" );
 static InternedString g_compressionLevelPlugName( "compressionLevel" );
 static InternedString g_dataTypePlugName( "dataType" );
 static InternedString g_depthDataTypePlugName( "depthDataType" );
+static InternedString g_dwaCompressionLevelPlugName( "dwaCompressionLevel" );
 
 namespace
 {
@@ -1130,13 +1131,21 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 	}
 
 	const StringPlug *compressionPlug = optionsPlug->getChild<StringPlug>( g_compressionPlugName );
-
 	if( compressionPlug != nullptr )
 	{
 		spec->attribute( "compression", compressionPlug->getValue() );
 	}
 
-	if( fileFormatName == "jpeg" )
+	if( fileFormatName == "openexr" )
+	{
+		const string compression = compressionPlug->getValue();
+		if( compression == "dwaa" || compression == "dwab" )
+		{
+			const float level = optionsPlug->getChild<FloatPlug>( g_dwaCompressionLevelPlugName )->getValue();
+			spec->attribute( "compression", compression + ":" + to_string( level ) );
+		}
+	}
+	else if( fileFormatName == "jpeg" )
 	{
 		spec->attribute( "CompressionQuality", optionsPlug->getChild<IntPlug>( g_compressionQualityPlugName )->getValue() );
 		std::string subSampling = optionsPlug->getChild<StringPlug>( g_chromaSubSamplingPlugName )->getValue();
@@ -1289,6 +1298,8 @@ void ImageWriter::createFileFormatOptionsPlugs()
 	addChild( exrOptionsPlug );
 	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
 	exrOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zips" ) );
+	// OIIO clamps to the 10-250000 range, so don't allow the authoring of values outside that range.
+	exrOptionsPlug->addChild( new FloatPlug( g_dwaCompressionLevelPlugName, Plug::In, 45, 10, 250000 ) );
 	exrOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "half" ) );
 	exrOptionsPlug->addChild( new StringPlug( g_depthDataTypePlugName, Plug::In, "float" ) );
 

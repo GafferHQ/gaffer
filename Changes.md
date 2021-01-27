@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.1.0)
 ========
 
+Improvements
+------------
+
+- ImageWriter : Added `openexr.dwaCompressionLevel` plug. This controls the size/quality tradeoff when using DWAA or DWAB compression.
+
 Fixes
 -----
 
