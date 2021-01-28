@@ -214,6 +214,8 @@ class Reference::PlugEdits : public boost::signals::trackable
 			{
 				if( edit->sizeAfterLoad != -1 )
 				{
+					// Adding the child to `newPlug` removes it from `oldPlug`, hence
+					// `oldPlug` shrinks back to its original `sizeAfterLoad`.
 					while( oldPlug->children().size() > (size_t)edit->sizeAfterLoad )
 					{
 						newPlug->addChild( oldPlug->getChild( edit->sizeAfterLoad ) );
@@ -245,6 +247,10 @@ class Reference::PlugEdits : public boost::signals::trackable
 		Reference *m_reference;
 		boost::signals::scoped_connection m_connection;
 
+		// Struct for tracking all edits to a plug, where an edit is conceptually
+		// any change the user makes to the plug after it has been loaded by
+		// `Reference::load()`. In practice we currently only track metadata
+		// edits and the addition of children to a subset of plug types.
 		struct PlugEdit
 		{
 			boost::container::flat_set<InternedString> metadataEdits;
