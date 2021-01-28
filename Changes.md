@@ -4,11 +4,15 @@
 Improvements
 ------------
 
-- ArnoldOptions : Added sensible min/max limits to `options.progressiveMinAASamples`.
+- ArnoldOptions :
+  - Added `options.enableProgressiveRender` to allow progressive rendering to be disabled completely.
+  - Added sensible min/max limits to `options.progressiveMinAASamples`.
+  - Grouped interactive rendering options in a new section.
 
 Fixes
 -----
 
+- InteractiveArnoldRender : Fixed interactive updates to `ArnoldOptions.progressiveMinAASamples`.
 - NodeEditor : Fixed width of widgets for integer plugs with minimum values that require more space than maximum values.
 
 API

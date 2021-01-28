@@ -2764,6 +2764,7 @@ IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" )
 IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
 IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
+IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
 IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
@@ -2787,6 +2788,7 @@ class ArnoldGlobals
 				m_universeBlock( new IECoreArnold::UniverseBlock( /* writable = */ true ) ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
+				m_enableProgressiveRender( true ),
 				m_shaderCache( shaderCache ),
 				m_renderBegun( false ),
 				m_assFileName( fileName )
@@ -2970,6 +2972,18 @@ class ArnoldGlobals
 				{
 					return;
 				}
+			}
+			else if( name == g_enableProgressiveRenderOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_enableProgressiveRender = true;
+				}
+				else if( auto d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+				{
+					m_enableProgressiveRender = d->readable();
+				}
+				return;
 			}
 			else if( name == g_progressiveMinAASamplesOptionName )
 			{
@@ -3241,9 +3255,30 @@ class ArnoldGlobals
 					}
 					updateCamera( m_cameraName );
 
-					AiNodeSetBool( AiUniverseGetOptions(), g_enableProgressiveRenderString, true );
-					AiRenderSetHintBool( AtString( "progressive" ), true );
-					AiRenderSetHintInt( AtString( "progressive_min_AA_samples" ), m_progressiveMinAASamples.get_value_or( -4 ) );
+					// Set progressive options. This is a bit of a mess. There are two different
+					// "progressive" modes in Arnold :
+					//
+					// 1. A series of throwaway low-sampling renders of increasing resolution.
+					//    This is controlled by two render hints : `progressive` and
+					//    `progressive_min_AA_samples`.
+					// 2. Progressive sample-by-sample rendering of the final high quality image.
+					//    This is controlled by `options.enable_progressive_render`, although
+					//    SolidAngle don't recommend it be used for batch rendering.
+					//
+					// Technically these are orthogonal and could be used independently, but that
+					// makes for a confusing array of options and the necessity of explaining the
+					// two different versions of "progressive". Instead we enable #1 only when #2
+					// is enabled.
+
+					const int minAASamples = m_progressiveMinAASamples.get_value_or( -4 );
+					// Must never set `progressive_min_AA_samples > -1`, as it'll get stuck and
+					// Arnold will never let us set it back.
+					AiRenderSetHintInt( AtString( "progressive_min_AA_samples" ), std::min( minAASamples, -1 ) );
+					// It seems important to set `progressive` after `progressive_min_AA_samples`,
+					// otherwise Arnold may ignore changes to the latter. Disable entirely for
+					// `minAASamples == 0` to account for the workaround above.
+					AiRenderSetHintBool( AtString( "progressive" ), m_enableProgressiveRender && minAASamples < 0 );
+					AiNodeSetBool( AiUniverseGetOptions(), g_enableProgressiveRenderString, m_enableProgressiveRender );
 
 					if( !m_renderBegun )
 					{
@@ -3598,6 +3633,7 @@ class ArnoldGlobals
 		int m_consoleFlags;
 		boost::optional<int> m_frame;
 		boost::optional<int> m_aaSeed;
+		bool m_enableProgressiveRender;
 		boost::optional<int> m_progressiveMinAASamples;
 		boost::optional<bool> m_sampleMotion;
 		ShaderCache *m_shaderCache;
