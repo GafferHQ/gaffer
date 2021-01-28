@@ -341,11 +341,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Controls the number of rays per pixel
-			for the first low quality pass of
-			progressive rendering.  -4 will start
-			with large squares, 1 will start one
-			sample for every pixel.
+			Controls the coarseness of the first low resolution pass
+			of interactive rendering. A value of `-4` starts with 16x16 pixel
+			blocks, `-3` gives 8x8 blocks, `-2` gives 4x4, `-1` gives 2x2 and
+			`0` disables the low resolution passes completely.
 			""",
 
 			"layout:section", "Sampling",

@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.2.0)
 ========
 
+Improvements
+------------
+
+- ArnoldOptions : Added sensible min/max limits to `options.progressiveMinAASamples`.
+
 Fixes
 -----
 
