@@ -56,7 +56,7 @@ Node::Node( const std::string &name )
 
 Node::~Node()
 {
-	Metadata::clearInstanceMetadata( this );
+	Metadata::instanceDestroyed( this );
 }
 
 Node::UnaryPlugSignal &Node::plugSetSignal()

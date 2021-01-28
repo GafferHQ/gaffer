@@ -67,12 +67,12 @@ class MetadataWidget( GafferUI.Widget ) :
 		self.setEnabled( self.__target is not None )
 
 		if isinstance( self.__target, Gaffer.Node ) :
-			self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect(
-				Gaffer.WeakMethod( self.__nodeMetadataChanged )
+			self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal( self.__target ).connect(
+				Gaffer.WeakMethod( self.__metadataChanged )
 			)
 		elif isinstance( self.__target, Gaffer.Plug ) :
-			self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged )
+			self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__target.node() ).connect(
+				Gaffer.WeakMethod( self.__metadataChanged )
 			)
 		else :
 			self.__metadataChangedConnection = None
@@ -139,23 +139,9 @@ class MetadataWidget( GafferUI.Widget ) :
 
 		self._updateFromValue( v if v is not None else self.defaultValue() )
 
-	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
+	def __metadataChanged( self, target, key, reason ) :
 
-		if self.__key != key :
-			return
-		if node is not None and not node.isSame( self.__target ) :
-			return
-		if not self.__target.isInstanceOf( nodeTypeId ) :
-			return
-
-		self.__update()
-
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if self.__key != key :
-			return
-
-		if Gaffer.MetadataAlgo.affectedByChange( self.__target, nodeTypeId, plugPath, plug ) :
+		if key == self.__key and target == self.__target :
 			self.__update()
 
 	@staticmethod

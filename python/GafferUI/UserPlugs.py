@@ -123,9 +123,10 @@ class __PlugCreationWidget( GafferUI.Widget ) :
 		Gaffer.Metadata.nodeValueChangedSignal().connect(
 			Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False
 		)
-		Gaffer.Metadata.plugValueChangedSignal().connect(
-			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
-		)
+		if isinstance( plugParent, Gaffer.Plug ) :
+			Gaffer.Metadata.plugValueChangedSignal( plugParent.node() ).connect(
+				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
+			)
 
 		self.__updateReadOnly()
 
@@ -144,8 +145,7 @@ class __PlugCreationWidget( GafferUI.Widget ) :
 		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plugParent, nodeTypeId, key, node ) :
 			self.__updateReadOnly()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plugParent, nodeTypeId, plugPath, key, plug ) :
+		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__plugParent, plug, key ) :
 			self.__updateReadOnly()
-

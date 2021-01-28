@@ -74,7 +74,7 @@ class GAFFERUI_API CompoundNumericNodule : public StandardNodule
 		NoduleLayout *noduleLayout();
 		const NoduleLayout *noduleLayout() const;
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
+		void plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key );
 		void updateChildNoduleVisibility();
 
 		static NoduleTypeDescription<CompoundNumericNodule> g_noduleTypeDescription;

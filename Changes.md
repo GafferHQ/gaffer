@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Serialisation : Reduced script save times by around 50%.
+- Metadata : Reduced signalling overhead, particularly when loading a script while the UI is open. One benchmark shows a reduction of 97%.
 - Expression : Improved error message when Python expression assigns an invalid value.
 - Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
 - Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
@@ -38,6 +39,8 @@ Breaking Changes
 - ValuePlugBinding :
   - `repr()` now takes a `Serialisation *` where it used to take a `const Serialisation *`.
   - `valueRepr()` now has an optional `serialisation` argument.
+- Metadata : Added new signals which are emitted with per-node granularity. These provide significantly reduced overhead compared to _all_ metadata observers being notified of _all_ metadata changes.
+- MetadataAlgo : Added `readOnlyAffectedByChange()` overload suitable for use with new metadata signals.
 - MetadataBinding :
   - Added `serialisation` required argument to `metadataSerialisation()`.
   - Removed `metadataModuleDependencies()` method. Module dependencies are now declared automatically by `metadataSerialisation()`.

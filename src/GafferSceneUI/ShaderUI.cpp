@@ -68,7 +68,9 @@ class ShaderPlugAdder : public PlugAdder
 		{
 			plugsParent->childAddedSignal().connect( boost::bind( &ShaderPlugAdder::childAdded, this ) );
 			plugsParent->childRemovedSignal().connect( boost::bind( &ShaderPlugAdder::childRemoved, this ) );
-			Metadata::plugValueChangedSignal().connect( boost::bind( &ShaderPlugAdder::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+			Metadata::plugValueChangedSignal( plugsParent->ancestor<Node>() ).connect(
+				boost::bind( &ShaderPlugAdder::plugMetadataChanged, this, ::_1, ::_2 )
+			);
 
 			buttonReleaseSignal().connect( boost::bind( &ShaderPlugAdder::buttonRelease, this, ::_2 ) );
 
@@ -171,9 +173,9 @@ class ShaderPlugAdder : public PlugAdder
 			updateVisibility();
 		}
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+		void plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key )
 		{
-			if( MetadataAlgo::childAffectedByChange( m_plugsParent.get(), nodeTypeId, plugPath, plug ) )
+			if( plug->parent() == m_plugsParent )
 			{
 				if( key == g_visibleKey || key == g_noduleTypeKey )
 				{

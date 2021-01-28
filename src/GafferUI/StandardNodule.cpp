@@ -83,7 +83,7 @@ StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
 
 	dropSignal().connect( boost::bind( &StandardNodule::drop, this, ::_1, ::_2 ) );
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardNodule::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+	Metadata::plugValueChangedSignal( plug->node() ).connect( boost::bind( &StandardNodule::plugMetadataChanged, this, ::_1, ::_2 ) );
 
 	updateUserColor();
 }
@@ -474,9 +474,9 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 	}
 }
 
-void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void StandardNodule::plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key )
 {
-	if( !MetadataAlgo::affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
+	if( plug != this->plug() )
 	{
 		return;
 	}

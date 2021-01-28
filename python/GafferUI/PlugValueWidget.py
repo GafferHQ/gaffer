@@ -298,7 +298,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return (
 			self.__plugDirtiedConnections +
 			self.__plugInputChangedConnections +
-			[ self.__plugMetadataChangedConnection ]
+			self.__plugMetadataChangedConnections
 		)
 
 	## Returns True if the plug's values are editable as far as this UI is concerned
@@ -466,12 +466,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 			self.__updateContextConnection()
 			self._updateFromPlugs()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		for p in self.__plugs :
 			if (
-				Gaffer.MetadataAlgo.affectedByChange( p, nodeTypeId, plugPath, plug ) or
-				Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, nodeTypeId, plugPath, key, plug )
+				p == plug or
+				Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, plug, key )
 			) :
 				self._updateFromPlugs()
 				return
@@ -511,11 +511,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
 			for node in nodes
 		]
-
-		if self.__plugs :
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-		else :
-			self.__plugMetadataChangedConnection = None
+		self.__plugMetadataChangedConnections = [
+			Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			for node in nodes
+		]
 
 		scriptNode = next( iter( scriptNodes ), None )
 		self.__context = scriptNode.context() if scriptNode is not None else self.__fallbackContext

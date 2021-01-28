@@ -157,7 +157,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 		PlugEdits( Reference *reference )
 			:	m_reference( reference )
 		{
-			m_connection = Metadata::plugValueChangedSignal().connect( boost::bind( &PlugEdits::plugValueChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+			m_connection = Metadata::plugValueChangedSignal( reference ).connect( boost::bind( &PlugEdits::plugValueChanged, this, ::_1, ::_2, ::_3 ) );
 			m_reference->childRemovedSignal().connect( boost::bind( &PlugEdits::childRemoved, this, ::_1, ::_2 ) );
 		}
 
@@ -236,11 +236,12 @@ class Reference::PlugEdits : public boost::signals::trackable
 			return &m_plugEdits[plug];
 		}
 
-		void plugValueChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+		void plugValueChanged( const Gaffer::Plug *plug, IECore::InternedString key, Metadata::ValueChangedReason reason )
 		{
-			// We only record edits to this instance. If no plug is given, the
-			// change is to generic metadata, independently of instances.
-			if( !plug )
+			if(
+				reason == Metadata::ValueChangedReason::StaticRegistration ||
+				reason == Metadata::ValueChangedReason::StaticDeregistration
+			)
 			{
 				return;
 			}
@@ -257,8 +258,8 @@ class Reference::PlugEdits : public boost::signals::trackable
 			PlugEdit *edit = plugEdit( plug, /* createIfMissing = */ true );
 			if( !edit )
 			{
-				// May get a NULL edit even with createIfMissing = true,
-				// if the plug is not a reference plug on the right Reference node.
+				// May get a null edit even with `createIfMissing = true`,
+				// if the plug is not a reference plug node.
 				return;
 			}
 

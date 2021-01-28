@@ -157,7 +157,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			widget.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__cellsMouseMove ), scoped = False )
 			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__cellsLeave ), scoped = False )
 
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		self.__updateVisibleSections()
 		self.__updateDefaultRowVisibility()
@@ -251,7 +251,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# would do the trick?
 		self.__defaultTable._qtWidget().setRowHidden( 0, not visible )
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		if plug == self.getPlug() and key == "spreadsheet:defaultRowVisible" :
 			self.__updateDefaultRowVisibility()

@@ -341,6 +341,29 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s3["r"].load( self.temporaryDirectory() + "/test.grf" )
 		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "edited" )
 
+	def testStaticMetadataRegistrationIsntAnEdit( self ) :
+
+		# Export a box
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["staticMetadataTestPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		# Reference it
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		# Make a static metadata registration. Although this will
+		# be signalled as a metadata change, it must not be considered
+		# to be a metadata edit on the reference, as it does not apply
+		# to a specific plug instance.
+
+		Gaffer.Metadata.registerValue( Gaffer.Reference, "staticMetadataTestPlug", "test", 10 )
+		self.assertFalse( s["r"].hasMetadataEdit( s["r"]["staticMetadataTestPlug"], "test" ) )
+
 	def testAddPlugMetadata( self ) :
 
 		# Export a box with no metadata

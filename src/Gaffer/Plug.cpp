@@ -125,7 +125,7 @@ Plug::~Plug()
 		(*it)->setInputInternal( nullptr, true );
 		it = next;
 	}
-	Metadata::clearInstanceMetadata( this );
+	Metadata::instanceDestroyed( this );
 }
 
 bool Plug::acceptsChild( const GraphComponent *potentialChild ) const
