@@ -327,7 +327,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.01 )
+		self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.013 )
 		self.assertAlmostEqual( initialColor.g, 0, delta = 0.01 )
 
 		# Edit texture network and make sure the changes take effect
@@ -338,7 +338,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		updateColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertAlmostEqual( updateColor.r, 0, delta = 0.01 )
-		self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.01 )
+		self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.022 )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -367,6 +367,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		shader.loadShader( "standard_surface" )
 
 		shader["parameters"]["base"].setValue( 1 )
+		shader["parameters"]["base_color"].setValue( imath.Color3f( 1 ) )
 		shader["parameters"]["specular_roughness"].setValue( 0 )
 		shader["parameters"]["metalness"].setValue( 1 )
 		shader["parameters"]["specular_IOR"].setValue( 100 )
