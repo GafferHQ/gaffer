@@ -40,8 +40,6 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
-#include "Gaffer/Private/IECorePreview/ParallelAlgo.h"
-
 #include "IECoreArnold/CameraAlgo.h"
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
@@ -2723,7 +2721,7 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 	AiNodeSetPtr( node, g_funcPtrArnoldString, (void *)procFunc );
 
 	ProceduralRendererPtr renderer = new ProceduralRenderer( node, attributes->allAttributes() );
-	IECorePreview::ParallelAlgo::isolate(
+	tbb::this_task_arena::isolate(
 		// Isolate in case procedural spawns TBB tasks, because
 		// `convertProcedural()` is called behind a lock in
 		// `InstanceCache.get()`.

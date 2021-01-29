@@ -40,7 +40,6 @@
 
 #include "GafferTest/Assert.h"
 
-#include "Gaffer/Private/IECorePreview/ParallelAlgo.h"
 #include "Gaffer/Private/IECorePreview/TaskMutex.h"
 
 #include "tbb/enumerable_thread_specific.h"
@@ -132,7 +131,7 @@ void testTaskMutexWithinIsolate()
 
 	auto getMutexWithinIsolate = [&mutex]() {
 
-		ParallelAlgo::isolate(
+		tbb::this_task_arena::isolate(
 			[&mutex]() {
 				TaskMutex::ScopedLock lock( mutex );
 				GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::Write )
@@ -142,7 +141,7 @@ void testTaskMutexWithinIsolate()
 
 	};
 
-	ParallelAlgo::isolate(
+	tbb::this_task_arena::isolate(
 		[&]() {
 			tbb::parallel_for(
 				tbb::blocked_range<size_t>( 0, 1000000 ),
