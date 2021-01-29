@@ -170,34 +170,91 @@ class Reference::PlugEdits : public boost::signals::trackable
 				return false;
 			}
 
-			return edit->m_metadataEdits.find( key ) != edit->m_metadataEdits.end();
+			return edit->metadataEdits.find( key ) != edit->metadataEdits.end();
 		}
 
-		const boost::container::flat_set<InternedString> &metadataEdits( const Plug *plug )
+		bool isChildEdit( const Plug *plug ) const
 		{
-			const PlugEdit *edit = plugEdit( plug );
-			if( edit )
+			const Plug *parent = plug->parent<Plug>();
+			if( !parent )
 			{
-				return edit->m_metadataEdits;
+				return false;
 			}
 
-			static boost::container::flat_set<InternedString> g_emptyContainer;
-			return g_emptyContainer;
+			const PlugEdit *edit = plugEdit( parent );
+			if( !edit )
+			{
+				return false;
+			}
+
+			if( edit->sizeAfterLoad == -1 || parent->children().size() <= (size_t)edit->sizeAfterLoad )
+			{
+				return false;
+			}
+
+			// Conceptually we want to compare the index of `plug` against
+			// `sizeAfterLoad`. But finding the index currently requires linear
+			// search. We expect the UI to only allow creation of new plugs in
+			// originally-empty containers (to avoid merge hell on reload),
+			// meaning that `sizeAfterLoad` can be expected to be either 0 or 1
+			// (the latter for RowsPlug with a default row). So it is quicker to
+			// reverse the test and search for plug in the range `[0,
+			// sizeAfterLoad)`.
+			return !std::any_of(
+				parent->children().begin(), parent->children().begin() + edit->sizeAfterLoad,
+				[plug]( const GraphComponentPtr &child ) { return child == plug; }
+			);
 		}
 
-		boost::signals::scoped_connection &connection()
+		void transferEdits( Plug *oldPlug, Plug *newPlug ) const
 		{
-			return m_connection;
+			transferEditedMetadata( oldPlug, newPlug );
+			// Transfer additional children.
+			if( auto *edit = plugEdit( oldPlug ) )
+			{
+				if( edit->sizeAfterLoad != -1 )
+				{
+					// Adding the child to `newPlug` removes it from `oldPlug`, hence
+					// `oldPlug` shrinks back to its original `sizeAfterLoad`.
+					while( oldPlug->children().size() > (size_t)edit->sizeAfterLoad )
+					{
+						newPlug->addChild( oldPlug->getChild( edit->sizeAfterLoad ) );
+					}
+				}
+			}
 		}
+
+		// Used to allow PlugEdits to track reference loading.
+		struct LoadingScope : boost::noncopyable
+		{
+			LoadingScope( PlugEdits *plugEdits )
+				:	m_plugEdits( plugEdits ), m_blockedConnection( plugEdits->m_connection )
+			{
+			}
+			~LoadingScope()
+			{
+				m_plugEdits->loadingFinished();
+			}
+			private :
+				PlugEdits *m_plugEdits;
+				// Changes made during loading aren't user edits and mustn't be
+				// tracked, so we block the connection.
+				Gaffer::BlockedConnection m_blockedConnection;
+		};
 
 	private :
 
 		Reference *m_reference;
 		boost::signals::scoped_connection m_connection;
 
+		// Struct for tracking all edits to a plug, where an edit is conceptually
+		// any change the user makes to the plug after it has been loaded by
+		// `Reference::load()`. In practice we currently only track metadata
+		// edits and the addition of children to a subset of plug types.
 		struct PlugEdit
 		{
-			boost::container::flat_set<InternedString> m_metadataEdits;
+			boost::container::flat_set<InternedString> metadataEdits;
+			int64_t sizeAfterLoad = -1; // Default value means size not tracked
 		};
 
 		std::unordered_map<const Plug*, PlugEdit> m_plugEdits;
@@ -262,15 +319,15 @@ class Reference::PlugEdits : public boost::signals::trackable
 				return;
 			}
 
-			if( edit->m_metadataEdits.find( key ) != edit->m_metadataEdits.end() )
+			if( edit->metadataEdits.find( key ) != edit->metadataEdits.end() )
 			{
 				return;
 			}
 
 			Action::enact(
 				m_reference,
-				[edit, key](){ edit->m_metadataEdits.insert( key ); },
-				[edit, key](){ edit->m_metadataEdits.erase( key ); }
+				[edit, key](){ edit->metadataEdits.insert( key ); },
+				[edit, key](){ edit->metadataEdits.erase( key ); }
 			);
 		}
 
@@ -283,6 +340,61 @@ class Reference::PlugEdits : public boost::signals::trackable
 			}
 
 			m_plugEdits.erase( plug );
+		}
+
+		void loadingFinished()
+		{
+			for( auto &plug : Plug::Range( *m_reference ) )
+			{
+				if( !m_reference->isReferencePlug( plug.get() ) )
+				{
+					continue;
+				}
+
+				const IECore::TypeId plugType = plug->typeId();
+				if(
+					plugType != (IECore::TypeId)SpreadsheetRowsPlugTypeId &&
+					plugType != (IECore::TypeId)CompoundDataPlugTypeId
+				)
+				{
+					// We only support child edits for RowsPlugs and
+					// CompoundDataPlugs at present. It would be trivial
+					// to do the tracking for everything, but most types
+					// don't have dynamic numbers of children, and we
+					// probably don't want the overhead of a PlugEdit for
+					// everything else.
+					continue;
+				}
+				if( auto *edit = plugEdit( plug.get(), /* createIfMissing = */ true ) )
+				{
+					edit->sizeAfterLoad = plug->children().size();
+				}
+			}
+		}
+
+		void transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const
+		{
+			// Transfer metadata that was edited and won't be provided by a
+			// load. Note: Adding the metadata to a new plug
+			// automatically registers a PlugEdit for that plug.
+
+			if( auto *edit = plugEdit( srcPlug ) )
+			{
+				for( const InternedString &key : edit->metadataEdits )
+				{
+					Gaffer::Metadata::registerValue( dstPlug, key, Gaffer::Metadata::value<IECore::Data>( srcPlug, key ), /* persistent =*/ true );
+				}
+			}
+
+			// Recurse
+
+			for( PlugIterator it( srcPlug ); !it.done(); ++it )
+			{
+				if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
+				{
+					transferEditedMetadata( it->get(), dstChildPlug );
+				}
+			}
 		}
 
 };
@@ -404,9 +516,7 @@ void Reference::loadInternal( const std::string &fileName )
 	boost::filesystem::path path = sp.find( fileName );
 	if( !path.empty() )
 	{
-		// Changes made here aren't user edits and mustn't be tracked.
-		BlockedConnection blockedConnection( m_plugEdits->connection() );
-
+		PlugEdits::LoadingScope loadingScope( m_plugEdits.get() );
 		errors = script->executeFile( path.string(), this, /* continueOnError = */ true );
 	}
 
@@ -458,8 +568,7 @@ void Reference::loadInternal( const std::string &fileName )
 					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ true );
 				}
 				transferOutputs( oldPlug, newPlug );
-
-				transferEditedMetadata( oldPlug, newPlug );
+				m_plugEdits->transferEdits( oldPlug, newPlug );
 			}
 			catch( const std::exception &e )
 			{
@@ -491,6 +600,11 @@ void Reference::loadInternal( const std::string &fileName )
 bool Reference::hasMetadataEdit( const Plug *plug, const IECore::InternedString key ) const
 {
 	return m_plugEdits->hasMetadataEdit( plug, key );
+}
+
+bool Reference::isChildEdit( const Plug *plug ) const
+{
+	return m_plugEdits->isChildEdit( plug );
 }
 
 bool Reference::isReferencePlug( const Plug *plug ) const
@@ -541,26 +655,3 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 	// everything else must be from a reference then.
 	return true;
 }
-
-void Reference::transferEditedMetadata( const Plug *srcPlug, Plug *dstPlug ) const
-{
-	// Transfer metadata that was edited and won't be provided by a
-	// load. Note: Adding the metadata to a new plug
-	// automatically registers a PlugEdit for that plug.
-
-	for( const InternedString &key : m_plugEdits->metadataEdits( srcPlug ) )
-	{
-		Gaffer::Metadata::registerValue( dstPlug, key, Gaffer::Metadata::value<IECore::Data>( srcPlug, key ), /* persistent =*/ true);
-	}
-
-	// Recurse
-
-	for( PlugIterator it( srcPlug ); !it.done(); ++it )
-	{
-		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
-		{
-			transferEditedMetadata( it->get(), dstChildPlug );
-		}
-	}
-}
-

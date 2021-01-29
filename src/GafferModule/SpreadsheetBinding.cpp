@@ -113,50 +113,64 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const auto *plug = static_cast<const Spreadsheet::RowsPlug *>( graphComponent );
-			if( IECore::runTimeCast<const Reference>( plug->node() ) )
-			{
-				// References add all their plugs in `loadReference()`, so we don't need to serialise
-				// the rows and columns ourselves.
-				/// \todo For other plug types, the Reference prevents constructor serialisation
-				/// by removing the `Dynamic` flag from the plugs. We are aiming to remove this
-				/// flag though, so haven't exposed it via the `addColumn()/addRow()` API. In future
-				/// we need to improve the serialisation API so that Reference nodes can directly
-				/// request what they want without using flags.
-				return result;
-			}
+			const auto *reference = IECore::runTimeCast<const Reference>( plug->node() );
 
 			// Serialise columns
 
-			for( const auto &cell : Spreadsheet::CellPlug::Range( *plug->getChild<Spreadsheet::RowPlug>( 0 )->cellsPlug() ) )
+			if( !reference )
 			{
-				PlugPtr p = cell->valuePlug()->createCounterpart( cell->getName(), Plug::In );
-				const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( p.get() );
-				result += identifier + ".addColumn( " + plugSerialiser->constructor( p.get(), serialisation );
-				if( !cell->getChild<BoolPlug>( "enabled" ) )
+				for( const auto &cell : Spreadsheet::CellPlug::Range( *plug->getChild<Spreadsheet::RowPlug>( 0 )->cellsPlug() ) )
 				{
-					result += ", adoptEnabledPlug = True";
+					PlugPtr p = cell->valuePlug()->createCounterpart( cell->getName(), Plug::In );
+					const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( p.get() );
+					result += identifier + ".addColumn( " + plugSerialiser->constructor( p.get(), serialisation );
+					if( !cell->getChild<BoolPlug>( "enabled" ) )
+					{
+						result += ", adoptEnabledPlug = True";
+					}
+					result += " )\n";
 				}
-				result += " )\n";
+			}
+			else
+			{
+				// We don't currently allow users to add new columns to
+				// referenced spreadsheets, so we have nothing to do here. The
+				// referenced columns will be created in
+				// `Reference::loadReference()`.
 			}
 
 			// Serialise rows. We do this as an `addRows()` call because it is much faster
 			// than serialising a constructor for every single cell. It also shows people the
-			// API they should use for making their own spreadsheets.
-
-			const size_t numRows = plug->children().size();
-			if( numRows > 1 )
-			{
-				result += identifier + ".addRows( " + std::to_string( numRows - 1 ) + " )\n";
-			}
-
-			// If the default values for any cells have been modified, then we need to serialise
-			// those separately.
+			// API they should use for making their own spreadsheets. If the default values
+			// for any cells have been modified, then we need to serialise those separately.
 
 			std::string defaultValueSerialisation;
-			for( size_t rowIndex = 1; rowIndex < numRows; ++rowIndex )
+			size_t numRowsToAdd = 0;
+
+			for( size_t rowIndex = 1; rowIndex < plug->children().size(); ++rowIndex )
 			{
 				const auto *row = plug->getChild<Spreadsheet::RowPlug>( rowIndex );
+				if( reference )
+				{
+					// References typically add rows in `loadReference()`, and we don't need to serialise
+					// those. But we also allow users to add rows as edits on top of the reference, and
+					// we _do_ need to serialise those.
+					/// \todo Improve the serialisation API so we can query this need for serialisation
+					/// from nodes exported by ExtensionAlgo and any other nodes that might want to add
+					/// a pre-populated RowsPlug in a constructor. We are deliberately not using the Dynamic
+					/// flag for this as we are trying to phase it out.
+					numRowsToAdd += reference->isChildEdit( row );
+				}
+				else
+				{
+					numRowsToAdd += 1;
+				}
 				defaultValueSerialisationsWalk( row, plug->defaultRow(), serialisation, defaultValueSerialisation );
+			}
+
+			if( numRowsToAdd )
+			{
+				result += identifier + ".addRows( " + std::to_string( numRowsToAdd ) + " )\n";
 			}
 
 			if( defaultValueSerialisation.size() )

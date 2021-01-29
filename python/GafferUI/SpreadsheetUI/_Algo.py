@@ -47,13 +47,6 @@ from ._SectionChooser import _SectionChooser
 # suitable for that, but they do represent useful functionality we would like
 # to be more generally available.
 
-def dimensionsEditable( rowsPlug ) :
-
-	# We don't currently allow addition/removal of rows/columns
-	# when a RowsPlug is hosted on a Reference node, to avoid
-	# merge hell when reloading or updating the reference.
-	return not isinstance( rowsPlug.node(), Gaffer.Reference )
-
 ## \todo Needs UndoScope removing
 def createSpreadsheet( plug ) :
 

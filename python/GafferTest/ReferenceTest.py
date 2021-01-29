@@ -1593,6 +1593,82 @@ class ReferenceTest( GafferTest.TestCase ) :
 				self.assertEqual( script2["reference"]["spline"].defaultValue(), defaultValue )
 				self.assertFalse( script2["reference"]["spline"].isSetToDefault() )
 
+	def testAddingChildPlugs( self ) :
+
+		# Export a box with a CompoundDataPlug and RowsPlug,
+		# both without additional members/rows.
+
+		script = Gaffer.ScriptNode()
+
+		script["box"] = Gaffer.Box()
+
+		script["box"]["spreadsheet"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.IntPlug( "c1" ) )
+		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
+
+		script["box"]["node"] = Gaffer.Node()
+		script["box"]["node"]["user"]["compoundData"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		Gaffer.PlugAlgo.promoteWithName( script["box"]["node"]["user"]["compoundData"], "compoundData" )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		script["box"].exportForReference( fileName )
+
+		# Load it onto a Reference, and add some members/rows.
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( fileName )
+
+		script["reference"]["rows"].addRows( 2 )
+		for i, row in enumerate( script["reference"]["rows"] ) :
+			row["cells"]["c1"]["value"].setValue( i )
+
+		script["reference"]["compoundData"]["m1"] = Gaffer.NameValuePlug( "test1", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["reference"]["compoundData"]["m2"] = Gaffer.NameValuePlug( "test2", 20, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		def assertExpectedChildren( reference ) :
+
+			self.assertEqual( len( reference["rows"] ), 3 )
+			for i, row in enumerate( reference["rows"] ) :
+				self.assertEqual( row["cells"]["c1"]["value"].getValue(), i )
+				self.assertEqual( reference.isChildEdit( row ), i > 0 )
+
+			self.assertEqual( len( reference["spreadsheet"]["rows"] ), 3 )
+			self.assertEqual( reference["spreadsheet"]["rows"].getInput(), reference["rows"] )
+
+			self.assertEqual( len( reference["compoundData"] ), 2 )
+			self.assertEqual( reference["compoundData"]["m1"]["name"].getValue(), "test1" )
+			self.assertEqual( reference["compoundData"]["m1"]["value"].getValue(), 10 )
+			self.assertEqual( reference["compoundData"]["m2"]["name"].getValue(), "test2" )
+			self.assertEqual( reference["compoundData"]["m2"]["value"].getValue(), 20 )
+			self.assertTrue( reference.isChildEdit( reference["compoundData"]["m1"] ) )
+			self.assertTrue( reference.isChildEdit( reference["compoundData"]["m2"] ) )
+
+			self.assertEqual( len( reference["node"]["user"]["compoundData"] ), 2 )
+			self.assertEqual( reference["node"]["user"]["compoundData"].getInput(), reference["compoundData"] )
+
+			self.assertFalse( reference.isChildEdit( reference["rows"] ) )
+			self.assertFalse( reference.isChildEdit( reference["compoundData"] ) )
+			self.assertFalse( reference.isChildEdit( reference["compoundData"]["m1"]["value"] ) )
+
+		assertExpectedChildren( script["reference"] )
+
+		# Reload the reference, and check that our edits have been kept.
+
+		script["reference"].load( fileName )
+		assertExpectedChildren( script["reference"] )
+
+		# Do it again, to be sure edit tracking has been maintained
+		# across reload.
+
+		script["reference"].load( fileName )
+		assertExpectedChildren( script["reference"] )
+
+		# Save and reload the script, and check our edits have been kept.
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		assertExpectedChildren( script2["reference"] )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
