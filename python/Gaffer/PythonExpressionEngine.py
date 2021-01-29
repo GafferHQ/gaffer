@@ -357,6 +357,13 @@ def __boxPlugValueExtractor( plug, topLevelPlug, value ) :
 
 	return vector[index]
 
+def __compoundObjectPlugValueExtractor( plug, topLevelPlug, value ) :
+
+	if isinstance( value, IECore.CompoundData ) :
+		return IECore.CompoundObject( dict( value ) )
+	else :
+		return value
+
 def __defaultValueExtractor( plug, topLevelPlug, value ) :
 
 	with IECore.IgnoredExceptions( AttributeError ) :
@@ -398,6 +405,7 @@ _valueExtractors = {
 	Gaffer.Box2iPlug : __boxPlugValueExtractor,
 	Gaffer.Box3fPlug : __boxPlugValueExtractor,
 	Gaffer.Box3iPlug : __boxPlugValueExtractor,
+	Gaffer.CompoundObjectPlug : __compoundObjectPlugValueExtractor,
 }
 
 def _extractPlugValue( plug, topLevelPlug, value ) :

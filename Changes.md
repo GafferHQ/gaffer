@@ -56,16 +56,26 @@ Build
 0.59.x.x (relative to 0.59.1.0)
 ========
 
+Improvements
+------------
+
+- ImageWriter : Added `openexr.dwaCompressionLevel` plug. This controls the size/quality tradeoff when using DWAA or DWAB compression.
+- Reference : Rows may now be added to and removed from referenced spreadsheets. Initially this is only allowed if the spreadsheet was published without any rows, to avoid anticipated problems merging referenced rows and user-edited rows.
+
 Fixes
 -----
 
+- Reference : Fixed loss of additional CompoundDataPlug children during reloading.
 - UIEditor : Fixed Python 3 compatibility in plug presets editor.
 - NodeGadget : Fixed intermittent shutdown crash.
+- Expression : Fixed handling of expressions which assign CompoundData to `Attributes.extraAttributes`.
 
 API
 ----
 
 - SetUI : Added `setMenuPathFunction()` & `getMenuPathFunction()` to allow Set names to be transformed before display in Gaffer menus.
+- SceneView : Added support for adaptors registered via `RendererAlgo::registerAdaptor()`.
+- RendererAlgo : Improved handling of null adaptors. These now issue a warning instead of causing a crash.
 
 0.59.1.0 (relative to 0.59.0.0)
 ========
@@ -85,7 +95,9 @@ Improvements
 - ArnoldRender : Added support for animated camera parameters, such as field of view.
 - DeleteFaces/DeletePoints/DeleteCurves : Added `ignoreMissingVariable` plug which allows users to opt-out of errors.
 - Constraint : Added `targetScene` plug, to allow constraining to locations in another scene.
-- OSLObject : Added support for connecting to the individual components of Vector, Point, Normal, UV and Color primitive variable inputs.
+- OSLObject :
+  - Added support for connecting to the individual components of Vector, Point, Normal, UV and Color primitive variable inputs.
+  - Added `prototypeIndex` to primitive variable creation menus.
 - OSLImage : Added support for connecting to the individual components of channel inputs.
 - SceneReader :
   - Added support for USD skinning and blendshapes, which are now applied automatically to meshes during loading.

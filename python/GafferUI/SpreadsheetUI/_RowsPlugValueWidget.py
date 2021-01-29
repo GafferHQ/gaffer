@@ -135,7 +135,16 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ), scoped = False )
 			addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ), scoped = False )
 
-			addRowButton.setVisible( _Algo.dimensionsEditable( plug ) )
+			if isinstance( plug.node(), Gaffer.Reference ) :
+				# Currently we only allow new rows to be added to references
+				# that had no rows when they were exported. We don't want to
+				# get into merge hell trying to combine user-added and referenced
+				# rows, particularly as we are planning to add row-reordering
+				# features in future.
+				for row in plug.children()[1:] :
+					if not plug.node().isChildEdit( row ) :
+						addRowButton.setVisible( False )
+						break
 
 			self.__statusLabel = GafferUI.Label(
 				"",
