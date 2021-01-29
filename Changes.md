@@ -5,6 +5,7 @@ Fixes
 -----
 
 - NodeGadget : Fixed intermittent shutdown crash.
+- NumericWidget : Fixed editing bug in Qt 5.12.
 
 0.58.6.1 (relative to 0.58.6.0)
 ========
