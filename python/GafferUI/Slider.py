@@ -387,10 +387,10 @@ class Slider( GafferUI.Widget ) :
 		if index is not None :
 			self.setSelectedIndex( index )
 			if len( self.getValues() ) == 1 :
-				self.__setValueInternal( index, self.__positionToValue( event.line.p0.x, clamp = True ), self.ValueChangedReason.Click )
+				self.__setValueInternal( index, self.__eventValue( event ), self.ValueChangedReason.Click )
 		elif self.getSizeEditable() :
 			values = self.getValues()[:]
-			values.append( self.__positionToValue( event.line.p0.x, clamp = True ) )
+			values.append( self.__eventValue( event ) )
 			self.__setValuesInternal( values, self.ValueChangedReason.IndexAdded )
 			self.setSelectedIndex( len( self.getValues() ) - 1 )
 
@@ -414,10 +414,7 @@ class Slider( GafferUI.Widget ) :
 
 		self.__setValueInternal(
 			self.getSelectedIndex(),
-			self.__positionToValue(
-				event.line.p0.x,
-				clamp = not (event.modifiers & event.modifiers.Shift )
-			),
+			self.__eventValue( event ),
 			self.ValueChangedReason.DragMove
 		)
 
@@ -501,11 +498,12 @@ class Slider( GafferUI.Widget ) :
 
 		signal( self, reason )
 
-	def __positionToValue( self, position, clamp = False ) :
+	def __eventValue( self, event ) :
 
-		f = position / float( self.size().x )
+		f = event.line.p0.x / float( self.size().x )
 		value = self.__min + ( self.__max - self.__min ) * f
-		if clamp :
+		if not (event.modifiers & event.modifiers.Shift) :
+			# Clamp
 			value = max( self.__min, min( self.__max, value ) )
 
 		return value
