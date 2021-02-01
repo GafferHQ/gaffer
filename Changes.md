@@ -22,6 +22,13 @@ API
 Breaking Changes
 ----------------
 
+- Slider/NumericSlider :
+  - Refactored Slider to provide all the functionality of NumericSlider, and removed NumericSlider.
+  - Renamed initial constructor argument from `value` to `values`.
+  - Removed `setPositions()/getPositions()` and `setPosition()/getPosition()` methods from `Slider`. Use `setValues()/getValues()` and `setValue()/getValue()` instead.
+  - Removed `positionChangedSignal()` from `Slider`. Use `valueChangedSignal()` instead.
+  - Removed `PositionChangedReason` from `Slider`. Use `ValueChangedReason` instead.
+  - Removed `setPositionIncrement()/getPositionIncrement()` from `Slider`. Use `setIncrement()/getIncrement()` instead.
 - StandardOptions : Removed `cameraBlur` plug. This never functioned as advertised, as the regular `transformBlur` and `deformationBlur` blur settings were applied to cameras instead. As before, a StandardAttributes node may be used to customise blur for individual cameras.
 - SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
 - DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.

@@ -74,7 +74,7 @@ class Timeline( GafferUI.Editor ) :
 				max = float( scriptNode["frameRange"]["end"].getValue() ),
 				parenting = { "expand" : True },
 			)
-			self.__slider.setPositionIncrement( 0 ) # disable so the slider doesn't mask our global frame increment shortcut
+			self.__slider.setIncrement( 0 ) # disable so the slider doesn't mask our global frame increment shortcut
 			self.__sliderValueChangedConnection = self.__slider.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
 
 			self.__startButton = GafferUI.Button( image = "timelineStart.png", hasFrame=False )
@@ -152,7 +152,7 @@ class Timeline( GafferUI.Editor ) :
 		assert( widget is self.__slider or widget is self.__frame )
 
 		if widget is self.__slider :
-			## \todo Have the rounding come from NumericSlider, and allow the shift
+			## \todo Have the rounding come from Slider, and allow the shift
 			# modifier to choose fractional frame values.
 			frame = int( self.__slider.getValue() )
 		else :
@@ -250,14 +250,14 @@ class Timeline( GafferUI.Editor ) :
 
 GafferUI.Editor.registerType( "Timeline", Timeline )
 
-class _TimelineSlider( GafferUI.NumericSlider ) :
+class _TimelineSlider( GafferUI.Slider ) :
 
-	def __init__( self, value=None, min=0, max=1, hardMin=None, hardMax=None, values=None, **kw ) :
+	def __init__( self, value, min=0, max=1, **kw ) :
 
-		GafferUI.NumericSlider.__init__( self, value, min, max, hardMin, hardMax, values, **kw )
+		GafferUI.Slider.__init__( self, value, min, max, **kw )
 
 	def _drawPosition( self, painter, position, highlighted, opacity=1 ) :
 
 		size = self.size()
 		# \todo: make sure the TimelineSlider and the AnimationGadget always use the same color
-		painter.fillRect( int(position * size.x), 0, 2, size.y, QtGui.QColor( 240, 220, 40, 255 * opacity ) )
+		painter.fillRect( position, 0, 2, size.y, QtGui.QColor( 240, 220, 40, 255 * opacity ) )
