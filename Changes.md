@@ -52,6 +52,7 @@ Build
 -----
 
 - Moved minimum required C++ standard to C++14.
+- Moved minimum required TBB version to 2018 Update 3.
 
 0.59.x.x (relative to 0.59.1.0)
 ========

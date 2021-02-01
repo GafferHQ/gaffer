@@ -189,30 +189,13 @@ class TaskMutex : boost::noncopyable
 
 					m_mutex->m_executionState->arena.execute(
 						[this, &fWrapper] {
-#if TBB_INTERFACE_VERSION >= 10003
+							// Prior to TBB 2018 Update 3, `run_and_wait()` is buggy,
+							// causing calls to `wait()` on other threads to return
+							// immediately rather than do the work we want. Use
+							// `static_assert()` to ensure we never build with a buggy
+							// version.
+							static_assert( TBB_INTERFACE_VERSION >= 10003, "Minumum of TBB 2018 Update 3 required" );
 							m_mutex->m_executionState->taskGroup.run_and_wait( fWrapper );
-#else
-							// The `run_and_wait()` method is buggy until
-							// TBB 2018 Update 3, causing calls to `wait()` on other threads to
-							// return immediately rather than do the work we want.
-							// So we call `run()` and `wait()` separately. This has two
-							// downsides though :
-							//
-							// 1. It appears to trigger a TBB bug whereby it is sometimes
-							//    unable to destroy the internals of the `task_arena`. It
-							//    then spends increasing amounts of time in
-							//    `market::try_destroy_arena()`, doing a linear search through
-							//    all the zombie arenas until it finds the one it
-							//    wants to destroy, decides for some reason it can't destroy it,
-							//    and gives up. With large numbers of arenas this can add
-							//    huge overhead.
-							// 2. It does not guarantee that `fWrapper` runs on the same thread
-							//    that `run()` is called on (`run_and_wait()` does provide
-							//    that guarantee). This forces us into nasty ThreadStateFixer
-							//    workarounds in Gaffer/ValuePlug.cpp.
-							m_mutex->m_executionState->taskGroup.run( fWrapper );
-							m_mutex->m_executionState->taskGroup.wait();
-#endif
 						}
 					);
 

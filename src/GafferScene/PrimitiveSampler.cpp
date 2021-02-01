@@ -38,8 +38,6 @@
 
 #include "GafferScene/SceneAlgo.h"
 
-#include "Gaffer/Private/IECorePreview/ParallelAlgo.h"
-
 #include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/PrimitiveEvaluator.h"
