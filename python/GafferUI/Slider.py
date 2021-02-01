@@ -78,9 +78,8 @@ class Slider( GafferUI.Widget ) :
 		self.__sizeEditable = False
 		self.__minimumSize = 1
 		self.__increment = None
-		self._entered = False
+		self.__hoverEvent = None # The mouseMove event that gives us hover status
 
-		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
@@ -364,19 +363,16 @@ class Slider( GafferUI.Widget ) :
 			else :
 				return None
 
-	def __enter( self, widget ) :
-
-		self._entered = True
-		self._qtWidget().update()
-
 	def __leave( self, widget ) :
 
-		self._entered = False
+		self.__hoverEvent = None
 		self._qtWidget().update()
 
 	def __mouseMove( self, widget, event ) :
 
-		self._qtWidget().update()
+		if not event.buttons :
+			self.__hoverEvent = event
+			self._qtWidget().update()
 
 	def __buttonPress( self, widget, event ) :
 
@@ -394,6 +390,10 @@ class Slider( GafferUI.Widget ) :
 			self.__setValuesInternal( values, self.ValueChangedReason.IndexAdded )
 			self.setSelectedIndex( len( self.getValues() ) - 1 )
 
+		# Clear hover so we don't draw hover state on top
+		# of a just-clicked value or during drags.
+		self.__hoverEvent = None
+		self._qtWidget().update()
 		return True
 
 	def __dragBegin( self, widget, event ) :
@@ -525,10 +525,10 @@ class Slider( GafferUI.Widget ) :
 				highlighted = index == indexUnderMouse or index == self.getSelectedIndex()
 			)
 
-		if indexUnderMouse is None and self.getSizeEditable() and self._entered :
+		if indexUnderMouse is None and self.getSizeEditable() and self.__hoverEvent is not None :
 			self._drawPosition(
 				painter,
-				GafferUI.Widget.mousePosition( relativeTo = self ).x,
+				self.__valueToPosition( self.__eventValue( self.__hoverEvent ) ),
 				highlighted = True,
 				opacity = 0.5
 			)
