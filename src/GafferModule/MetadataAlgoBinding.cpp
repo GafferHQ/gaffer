@@ -168,6 +168,11 @@ void GafferModule::bindMetadataAlgo()
 	);
 	def(
 		"readOnlyAffectedByChange",
+		(bool (*)( const GraphComponent *, const GraphComponent *, const IECore::InternedString & ))&readOnlyAffectedByChange,
+		( arg( "graphComponent" ), arg( "changedGraphComponent"), arg( "changedKey" ) )
+	);
+	def(
+		"readOnlyAffectedByChange",
 		(bool (*)( const IECore::InternedString & ))&readOnlyAffectedByChange,
 		( arg( "changedKey" ) )
 	);

@@ -106,7 +106,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			# instead.
 			tableView.setProperty( "gafferToggleIndicator", True )
 
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect(
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( tableView.model().rowsPlug().node() ).connect(
 			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
 		)
 
@@ -327,10 +327,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		self.__applySectionOrderMetadata()
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if plug is None :
-			return
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
 

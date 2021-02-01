@@ -254,6 +254,18 @@ struct ValueChangedSlotCaller
 		return boost::signals::detail::unusable();
 	}
 
+	boost::signals::detail::unusable operator()( boost::python::object slot, Node *node, IECore::InternedString key, Metadata::ValueChangedReason reason )
+	{
+		slot( NodePtr( node ), key.c_str(), reason );
+		return boost::signals::detail::unusable();
+	}
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, Plug *plug, IECore::InternedString key, Metadata::ValueChangedReason reason )
+	{
+		slot( PlugPtr( plug ), key.c_str(), reason );
+		return boost::signals::detail::unusable();
+	}
+
 	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key, Node *node )
 	{
 		slot( nodeTypeId, key.c_str(), NodePtr( node ) );
@@ -386,10 +398,12 @@ void GafferModule::bindMetadata()
 		.def( "valueChangedSignal", &Metadata::valueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "valueChangedSignal" )
 
-		.def( "nodeValueChangedSignal", &Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.def( "nodeValueChangedSignal", (Metadata::NodeValueChangedSignal &(*)() )&Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.def( "nodeValueChangedSignal", (Metadata::NodeValueChangedSignal2 &(*)( Gaffer::Node * ) )&Metadata::nodeValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "nodeValueChangedSignal" )
 
-		.def( "plugValueChangedSignal", &Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.def( "plugValueChangedSignal", (Metadata::PlugValueChangedSignal &(*)() )&Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
+		.def( "plugValueChangedSignal", (Metadata::PlugValueChangedSignal2 &(*)( Gaffer::Node * ) )&Metadata::plugValueChangedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugValueChangedSignal" )
 
 		.def( "plugsWithMetadata", &plugsWithMetadata,
@@ -411,7 +425,16 @@ void GafferModule::bindMetadata()
 		.staticmethod( "nodesWithMetadata" )
 	;
 
+	enum_<Metadata::ValueChangedReason>( "ValueChangedReason" )
+		.value( "StaticRegistration", Metadata::ValueChangedReason::StaticRegistration )
+		.value( "StaticDeregistration", Metadata::ValueChangedReason::StaticDeregistration )
+		.value( "InstanceRegistration", Metadata::ValueChangedReason::InstanceRegistration )
+		.value( "InstanceDeregistration", Metadata::ValueChangedReason::InstanceDeregistration )
+	;
+
 	SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::ValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
+	SignalClass<Metadata::NodeValueChangedSignal2, DefaultSignalCaller<Metadata::NodeValueChangedSignal2>, ValueChangedSlotCaller>( "NodeValueChangedSignal2" );
+	SignalClass<Metadata::PlugValueChangedSignal2, DefaultSignalCaller<Metadata::PlugValueChangedSignal2>, ValueChangedSlotCaller>( "PlugValueChangedSignal2" );
 	SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
 	SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::PlugValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
 

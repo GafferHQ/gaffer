@@ -51,7 +51,6 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
 		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		self.setPlug( plug )
 
@@ -64,8 +63,12 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setPlug( self, plug )
 
 		self.__nameChangedConnection = None
+		self.__plugMetadataChangedConnection = None
 		if plug is not None :
 			self.__nameChangedConnection = plug.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect(
+				Gaffer.WeakMethod( self.__plugMetadataChanged )
+			)
 
 		self.__updateLabel()
 
@@ -104,10 +107,7 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 				with self.getContext() :
 					exec( code, executionDict, executionDict )
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if self.getPlug() is None :
-			return
-
-		if key=="label" and Gaffer.MetadataAlgo.affectedByChange( self.getPlug(), nodeTypeId, plugPath, plug ) :
+		if key=="label" and plug == self.getPlug() :
 			self.__updateLabel()

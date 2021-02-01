@@ -6,6 +6,7 @@ Improvements
 
 - ImageWriter : Added `openexr.dwaCompressionLevel` plug. This controls the size/quality tradeoff when using DWAA or DWAB compression.
 - Reference : Rows may now be added to and removed from referenced spreadsheets. Initially this is only allowed if the spreadsheet was published without any rows, to avoid anticipated problems merging referenced rows and user-edited rows.
+- Metadata : Reduced signalling overhead, particularly when loading a script while the UI is open. One benchmark shows a reduction of 97%.
 
 Fixes
 -----
@@ -21,6 +22,8 @@ API
 - SetUI : Added `setMenuPathFunction()` & `getMenuPathFunction()` to allow Set names to be transformed before display in Gaffer menus.
 - SceneView : Added support for adaptors registered via `RendererAlgo::registerAdaptor()`.
 - RendererAlgo : Improved handling of null adaptors. These now issue a warning instead of causing a crash.
+- Metadata : Added new signals which are emitted with per-node granularity. These provide significantly reduced overhead compared to _all_ metadata observers being notified of _all_ metadata changes.
+- MetadataAlgo : Added `readOnlyAffectedByChange()` overload suitable for use with new metadata signals.
 
 0.59.1.0 (relative to 0.59.0.0)
 ========

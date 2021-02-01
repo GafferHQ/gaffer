@@ -127,8 +127,8 @@ class GAFFERUI_API NoduleLayout : public Gadget
 		void childAdded( Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *child );
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
+		void plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key );
+		void nodeMetadataChanged( const Gaffer::Node *node, IECore::InternedString key );
 
 		std::vector<GadgetKey> layoutOrder();
 		void updateNoduleLayout();

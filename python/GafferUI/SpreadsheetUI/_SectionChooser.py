@@ -67,7 +67,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		tabBar.currentChanged.connect( Gaffer.WeakMethod( self.__currentChanged ) )
 		self.__ignoreCurrentChanged = False
 		tabBar.tabMoved.connect( Gaffer.WeakMethod( self.__tabMoved ) )
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		self.__rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = False )
 		self.__rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = False )
 
@@ -166,10 +166,7 @@ class _SectionChooser( GafferUI.Widget ) :
 				i
 			)
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if plug is None :
-			return
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		if key == "spreadsheet:section" and self.__rowsPlug.isAncestorOf( plug ) :
 			self.__updateTabs()

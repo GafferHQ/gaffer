@@ -64,7 +64,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__rowRemovedConnection = rowsPlug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__rowRemoved ) )
 		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ) )
 		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ) )
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
 
 	# Methods of our own
@@ -337,10 +337,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		if index.isValid() :
 			self.dataChanged.emit( index, index )
 
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if plug is None :
-			return
+	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		index = self.indexForPlug( plug )
 		if not index.isValid() :

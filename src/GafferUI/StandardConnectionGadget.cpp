@@ -78,7 +78,9 @@ StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodul
 	dragMoveSignal().connect( boost::bind( &StandardConnectionGadget::dragMove, this, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &StandardConnectionGadget::dragEnd, this, ::_2 ) );
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardConnectionGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
+	Metadata::plugValueChangedSignal( dstNodule->plug()->node() ).connect(
+		boost::bind( &StandardConnectionGadget::plugMetadataChanged, this, ::_1, ::_2 )
+	);
 
 	updateUserColor();
 }
@@ -91,6 +93,19 @@ void StandardConnectionGadget::setNodules( GafferUI::NodulePtr srcNodule, Gaffer
 {
 	ConnectionGadget::setNodules( srcNodule, dstNodule );
 	updateConnectionGeometry();
+
+	if( dstNodule->plug() != this->dstNodule()->plug() )
+	{
+		// Our metadata handling is only set up for our original destination
+		// nodule. The only apparent purpose of `setNodules()` seems to be to allow
+		// GraphGadget to respecify the _source_ nodule when it has been hidden
+		// or re-shown, so this is probably OK. Warn if this assumption
+		// proves false.
+		IECore::msg(
+			IECore::Msg::Warning, "StandardConnectionGadget::setNodules",
+			"Unexpected change of destination nodule"
+		);
+	}
 }
 
 const NodeGadget *StandardConnectionGadget::srcNodeGadget() const
@@ -667,9 +682,9 @@ void StandardConnectionGadget::leave( const ButtonEvent &event )
 	dirty( DirtyType::Render );
 }
 
-void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void StandardConnectionGadget::plugMetadataChanged( const Gaffer::Plug *plug, IECore::InternedString key )
 {
-	if( key != g_colorKey || !MetadataAlgo::affectedByChange( dstNodule()->plug(), nodeTypeId, plugPath, plug ) )
+	if( key != g_colorKey || plug != dstNodule()->plug() )
 	{
 		return;
 	}
