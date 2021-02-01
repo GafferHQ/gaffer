@@ -240,25 +240,6 @@ class Slider( GafferUI.Widget ) :
 
 		return self.__increment
 
-	def __setValuesInternal( self, values, reason ) :
-
-		# We _always_ clamp to the hard min and max, as those are not optional.
-		# Optional clamping to soft min and max is performed before calling this
-		# function.
-		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
-
-		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
-		if values == self.__values and not dragBeginOrEnd :
-			# early out if the values haven't changed, but not if the
-			# reason is either end of a drag - we always signal those so
-			# that they will always come in matching pairs.
-			return
-
-		self.__values = values
-		self._qtWidget().update()
-
-		self.__emitValueChanged( reason )
-
 	## \todo Colours should come from some unified style somewhere
 	def _drawBackground( self, painter ) :
 
@@ -491,6 +472,25 @@ class Slider( GafferUI.Widget ) :
 		values = self.getValues()[:]
 		values[index] = value
 		self.__setValuesInternal( values, reason )
+
+	def __setValuesInternal( self, values, reason ) :
+
+		# We _always_ clamp to the hard min and max, as those are not optional.
+		# Optional clamping to soft min and max is performed before calling this
+		# function, typically in `__eventValue()`.
+		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
+
+		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
+		if values == self.__values and not dragBeginOrEnd :
+			# early out if the values haven't changed, but not if the
+			# reason is either end of a drag - we always signal those so
+			# that they will always come in matching pairs.
+			return
+
+		self.__values = values
+		self._qtWidget().update()
+
+		self.__emitValueChanged( reason )
 
 	def __emitValueChanged( self, reason ) :
 
