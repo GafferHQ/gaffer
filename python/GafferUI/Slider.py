@@ -335,7 +335,7 @@ class Slider( GafferUI.Widget ) :
 		else :
 			painter.drawEllipse( QtCore.QPoint( position, size.y / 2 ), size.y / 4, size.y / 4 )
 
-	def _indexUnderMouse( self ) :
+	def __indexUnderMouse( self ) :
 
 		size = self.size()
 		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self ).x
@@ -383,7 +383,7 @@ class Slider( GafferUI.Widget ) :
 		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
 			return
 
-		index = self._indexUnderMouse()
+		index = self.__indexUnderMouse()
 		if index is not None :
 			self.setSelectedIndex( index )
 			if len( self.getValues() ) == 1 :
@@ -513,6 +513,26 @@ class Slider( GafferUI.Widget ) :
 		f = ( value - self.__min ) / ( self.__max - self.__min )
 		return f * self.size().x
 
+	def __draw( self, painter ) :
+
+		self._drawBackground( painter )
+
+		indexUnderMouse = self.__indexUnderMouse()
+		for index, value in enumerate( self.getValues() ) :
+			self._drawPosition(
+				painter,
+				self.__valueToPosition( value ),
+				highlighted = index == indexUnderMouse or index == self.getSelectedIndex()
+			)
+
+		if indexUnderMouse is None and self.getSizeEditable() and self._entered :
+			self._drawPosition(
+				painter,
+				GafferUI.Widget.mousePosition( relativeTo = self ).x,
+				highlighted = True,
+				opacity = 0.5
+			)
+
 class _Widget( QtWidgets.QWidget ) :
 
 	def __init__( self, parent=None ) :
@@ -533,23 +553,7 @@ class _Widget( QtWidgets.QWidget ) :
 		painter = QtGui.QPainter( self )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 
-		owner._drawBackground( painter )
-
-		indexUnderMouse = owner._indexUnderMouse()
-		for index, value in enumerate( owner.getValues() ) :
-			owner._drawPosition(
-				painter,
-				owner._Slider__valueToPosition( value ),
-				highlighted = index == indexUnderMouse or index == owner.getSelectedIndex()
-			)
-
-		if indexUnderMouse is None and owner.getSizeEditable() and owner._entered :
-			owner._drawPosition(
-				painter,
-				GafferUI.Widget.mousePosition( relativeTo = owner ).x,
-				highlighted = True,
-				opacity = 0.5
-			)
+		owner._Slider__draw( painter )
 
 	def event( self, event ) :
 
