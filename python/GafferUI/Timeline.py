@@ -151,13 +151,7 @@ class Timeline( GafferUI.Editor ) :
 
 		assert( widget is self.__slider or widget is self.__frame )
 
-		if widget is self.__slider :
-			## \todo Have the rounding come from Slider, and allow the shift
-			# modifier to choose fractional frame values.
-			frame = int( self.__slider.getValue() )
-		else :
-			frame = self.__frame.getValue()
-
+		frame = widget.getValue()
 		frame = float( max( frame, self.scriptNode()["frameRange"]["start"].getValue() ) )
 		frame = float( min( frame, self.scriptNode()["frameRange"]["end"].getValue() ) )
 

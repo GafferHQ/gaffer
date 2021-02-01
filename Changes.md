@@ -8,6 +8,7 @@ Improvements
 - Expression : Improved error message when Python expression assigns an invalid value.
 - Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
 - Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
+- Timeline : Added support for sub-frame dragging with a <kbd>Ctrl</kbd> modifier, and fixed snapping of the frame indicator for regular drag operations.
 
 Fixes
 -----
@@ -18,6 +19,7 @@ API
 ---
 
 - Serialisation : Added `addModule()` method, for adding imports to the serialisation.
+- Slider : Added optional value snapping for drag and button press operations. This is controlled via the `setSnapIncrement()` and `getSnapIncrement()` methods.
 
 Breaking Changes
 ----------------

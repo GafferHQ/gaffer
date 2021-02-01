@@ -78,6 +78,7 @@ class Slider( GafferUI.Widget ) :
 		self.__sizeEditable = False
 		self.__minimumSize = 1
 		self.__increment = None
+		self.__snapIncrement = None
 		self.__hoverEvent = None # The mouseMove event that gives us hover status
 
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
@@ -238,6 +239,17 @@ class Slider( GafferUI.Widget ) :
 	def getIncrement( self ) :
 
 		return self.__increment
+
+	## Sets the increment used for snapping values generated
+	# by interactions such as drags and button presses. Snapping
+	# can be ignored by by holding the `Ctrl` modifier.
+	def setSnapIncrement( self, increment ) :
+
+		self.__snapIncrement = increment
+
+	def getSnapIncrement( self ) :
+
+		return self.__snapIncrement
 
 	## \todo Colours should come from some unified style somewhere
 	def _drawBackground( self, painter ) :
@@ -505,6 +517,9 @@ class Slider( GafferUI.Widget ) :
 		if not (event.modifiers & event.modifiers.Shift) :
 			# Clamp
 			value = max( self.__min, min( self.__max, value ) )
+		if self.__snapIncrement and not (event.modifiers & GafferUI.ModifiableEvent.Modifiers.Control) :
+			# Snap
+			value = self.__snapIncrement * round( value / self.__snapIncrement )
 
 		return value
 
