@@ -1,4 +1,4 @@
-0.58.6.x (relative to 0.58.6.1)
+0.58.6.2 (relative to 0.58.6.1)
 ========
 
 Fixes
