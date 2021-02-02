@@ -78,9 +78,10 @@ class Slider( GafferUI.Widget ) :
 		self.__sizeEditable = False
 		self.__minimumSize = 1
 		self.__increment = None
-		self._entered = False
+		self.__snapIncrement = None
+		self.__hoverPositionVisible = False
+		self.__hoverEvent = None # The mouseMove event that gives us hover status
 
-		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
@@ -240,26 +241,27 @@ class Slider( GafferUI.Widget ) :
 
 		return self.__increment
 
-	def __setValuesInternal( self, values, reason ) :
+	## Sets the increment used for snapping values generated
+	# by interactions such as drags and button presses. Snapping
+	# can be ignored by by holding the `Ctrl` modifier.
+	def setSnapIncrement( self, increment ) :
 
-		# We _always_ clamp to the hard min and max, as those are not optional.
-		# Optional clamping to soft min and max is performed before calling this
-		# function.
-		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
+		self.__snapIncrement = increment
 
-		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
-		if values == self.__values and not dragBeginOrEnd :
-			# early out if the values haven't changed, but not if the
-			# reason is either end of a drag - we always signal those so
-			# that they will always come in matching pairs.
-			return
+	def getSnapIncrement( self ) :
 
-		self.__values = values
-		self._qtWidget().update()
+		return self.__snapIncrement
 
-		self.__emitValueChanged( reason )
+	def setHoverPositionVisible( self, visible ) :
 
-	## \todo Colours should come from some unified style somewhere
+		self.__hoverPositionVisible = visible
+
+	def getHoverPositionVisible( self ) :
+
+		return self.__hoverPositionVisible
+
+	## May be overridden by derived classes to customise
+	# the drawing of the background.
 	def _drawBackground( self, painter ) :
 
 		size = self.size()
@@ -314,22 +316,31 @@ class Slider( GafferUI.Widget ) :
 			tickValue += tickStep
 			i += 1
 
-	def _drawPosition( self, painter, position, highlighted, opacity=1 ) :
+	## May be overridden by derived classes to customise the
+	# drawing of the value indicator.
+	#
+	# `value`    : The value itself.
+	# `position` : The widget-relative position where the
+	#              indicator should be drawn.
+	# `state`    : A GafferUI.Style.State. DisabledState is used
+	#              to draw hover indicators, since there is
+	#              currently no dedicated state for this purpose.
+	def _drawValue( self, painter, value, position, state ) :
 
 		size = self.size()
 
-		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 * opacity ) )
+		pen = QtGui.QPen( QtGui.QColor( 0, 0, 0, 255 ) )
 		pen.setWidth( 1 )
 		painter.setPen( pen )
 
-		## \todo These colours need to come from the style, once we've
-		# unified the Gadget and Widget styling.
-		if highlighted :
-			brush = QtGui.QBrush( QtGui.QColor( 119, 156, 255, 255 * opacity ) )
+		if state == state.NormalState :
+			color = QtGui.QColor( 128, 128, 128, 255 )
 		else :
-			brush = QtGui.QBrush( QtGui.QColor( 128, 128, 128, 255 * opacity ) )
+			color = QtGui.QColor( 119, 156, 255, 255 )
+		painter.setBrush( QtGui.QBrush( color ) )
 
-		painter.setBrush( brush )
+		if state == state.DisabledState :
+			painter.setOpacity( 0.5 )
 
 		if position < 0 :
 			painter.drawPolygon(
@@ -354,7 +365,7 @@ class Slider( GafferUI.Widget ) :
 		else :
 			painter.drawEllipse( QtCore.QPoint( position, size.y / 2 ), size.y / 4, size.y / 4 )
 
-	def _indexUnderMouse( self ) :
+	def __indexUnderMouse( self ) :
 
 		size = self.size()
 		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self ).x
@@ -383,36 +394,37 @@ class Slider( GafferUI.Widget ) :
 			else :
 				return None
 
-	def __enter( self, widget ) :
-
-		self._entered = True
-		self._qtWidget().update()
-
 	def __leave( self, widget ) :
 
-		self._entered = False
+		self.__hoverEvent = None
 		self._qtWidget().update()
 
 	def __mouseMove( self, widget, event ) :
 
-		self._qtWidget().update()
+		if not event.buttons :
+			self.__hoverEvent = event
+			self._qtWidget().update()
 
 	def __buttonPress( self, widget, event ) :
 
 		if event.buttons != GafferUI.ButtonEvent.Buttons.Left :
 			return
 
-		index = self._indexUnderMouse()
+		index = self.__indexUnderMouse()
 		if index is not None :
 			self.setSelectedIndex( index )
 			if len( self.getValues() ) == 1 :
-				self.__setValueInternal( index, self.__positionToValue( event.line.p0.x, clamp = True ), self.ValueChangedReason.Click )
+				self.__setValueInternal( index, self.__eventValue( event ), self.ValueChangedReason.Click )
 		elif self.getSizeEditable() :
 			values = self.getValues()[:]
-			values.append( self.__positionToValue( event.line.p0.x, clamp = True ) )
+			values.append( self.__eventValue( event ) )
 			self.__setValuesInternal( values, self.ValueChangedReason.IndexAdded )
 			self.setSelectedIndex( len( self.getValues() ) - 1 )
 
+		# Clear hover so we don't draw hover state on top
+		# of a just-clicked value or during drags.
+		self.__hoverEvent = None
+		self._qtWidget().update()
 		return True
 
 	def __dragBegin( self, widget, event ) :
@@ -433,10 +445,7 @@ class Slider( GafferUI.Widget ) :
 
 		self.__setValueInternal(
 			self.getSelectedIndex(),
-			self.__positionToValue(
-				event.line.p0.x,
-				clamp = not (event.modifiers & event.modifiers.Shift )
-			),
+			self.__eventValue( event ),
 			self.ValueChangedReason.DragMove
 		)
 
@@ -492,6 +501,25 @@ class Slider( GafferUI.Widget ) :
 		values[index] = value
 		self.__setValuesInternal( values, reason )
 
+	def __setValuesInternal( self, values, reason ) :
+
+		# We _always_ clamp to the hard min and max, as those are not optional.
+		# Optional clamping to soft min and max is performed before calling this
+		# function, typically in `__eventValue()`.
+		values = [ max( self.__hardMin, min( self.__hardMax, x ) ) for x in values ]
+
+		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
+		if values == self.__values and not dragBeginOrEnd :
+			# early out if the values haven't changed, but not if the
+			# reason is either end of a drag - we always signal those so
+			# that they will always come in matching pairs.
+			return
+
+		self.__values = values
+		self._qtWidget().update()
+
+		self.__emitValueChanged( reason )
+
 	def __emitValueChanged( self, reason ) :
 
 		try :
@@ -501,12 +529,16 @@ class Slider( GafferUI.Widget ) :
 
 		signal( self, reason )
 
-	def __positionToValue( self, position, clamp = False ) :
+	def __eventValue( self, event ) :
 
-		f = position / float( self.size().x )
+		f = event.line.p0.x / float( self.size().x )
 		value = self.__min + ( self.__max - self.__min ) * f
-		if clamp :
+		if not (event.modifiers & event.modifiers.Shift) :
+			# Clamp
 			value = max( self.__min, min( self.__max, value ) )
+		if self.__snapIncrement and not (event.modifiers & GafferUI.ModifiableEvent.Modifiers.Control) :
+			# Snap
+			value = self.__snapIncrement * round( value / self.__snapIncrement )
 
 		return value
 
@@ -514,6 +546,32 @@ class Slider( GafferUI.Widget ) :
 
 		f = ( value - self.__min ) / ( self.__max - self.__min )
 		return f * self.size().x
+
+	def __draw( self, painter ) :
+
+		self._drawBackground( painter )
+
+		indexUnderMouse = self.__indexUnderMouse()
+		for index, value in enumerate( self.getValues() ) :
+			self._drawValue(
+				painter,
+				value,
+				self.__valueToPosition( value ),
+				GafferUI.Style.State.HighlightedState if index == indexUnderMouse or index == self.getSelectedIndex()
+				else GafferUI.Style.State.NormalState
+			)
+
+		if self.__hoverEvent is not None :
+			if (
+				self.getHoverPositionVisible() or
+				( self.getSizeEditable() and indexUnderMouse is None )
+			 ) :
+				self._drawValue(
+					painter,
+					self.__eventValue( self.__hoverEvent ),
+					self.__valueToPosition( self.__eventValue( self.__hoverEvent ) ),
+					state = GafferUI.Style.State.DisabledState
+				)
 
 class _Widget( QtWidgets.QWidget ) :
 
@@ -535,23 +593,7 @@ class _Widget( QtWidgets.QWidget ) :
 		painter = QtGui.QPainter( self )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 
-		owner._drawBackground( painter )
-
-		indexUnderMouse = owner._indexUnderMouse()
-		for index, value in enumerate( owner.getValues() ) :
-			owner._drawPosition(
-				painter,
-				owner._Slider__valueToPosition( value ),
-				highlighted = index == indexUnderMouse or index == owner.getSelectedIndex()
-			)
-
-		if indexUnderMouse is None and owner.getSizeEditable() and owner._entered :
-			owner._drawPosition(
-				painter,
-				GafferUI.Widget.mousePosition( relativeTo = owner ).x,
-				highlighted = True,
-				opacity = 0.5
-			)
+		owner._Slider__draw( painter )
 
 	def event( self, event ) :
 
