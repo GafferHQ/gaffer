@@ -250,7 +250,7 @@ Build
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
 
-0.58.6.x (relative to 0.58.6.1)
+0.58.6.2 (relative to 0.58.6.1)
 ========
 
 Fixes
