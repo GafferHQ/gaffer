@@ -157,6 +157,7 @@ enum TypeId
 	ClosestPointSamplerTypeId = 110612,
 	CurveSamplerTypeId = 110613,
 	UnencapsulateTypeId = 110614,
+	ImageSamplerTypeId = 110615,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

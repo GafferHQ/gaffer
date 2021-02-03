@@ -151,6 +151,7 @@ from .ClosestPointSamplerTest import ClosestPointSamplerTest
 from .CurveSamplerTest import CurveSamplerTest
 from .DeleteSetsTest import DeleteSetsTest
 from .UnencapsulateTest import UnencapsulateTest
+from .ImageSamplerTest import ImageSamplerTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
