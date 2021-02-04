@@ -553,6 +553,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.enableProgressiveMinAASamples" : [
+
+			"layout:section", "Interactive Rendering",
+			"label", "Enable Min AA Samples",
+
+		],
+
 		"options.progressiveMinAASamples" : [
 
 			"description",

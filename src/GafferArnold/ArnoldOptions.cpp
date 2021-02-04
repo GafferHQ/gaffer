@@ -77,6 +77,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	// Interactive rendering parameters
 
 	options->addChild( new Gaffer::NameValuePlug( "ai:enable_progressive_render", new IECore::BoolData( true ), false, "enableProgressiveRender" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:enable_progressive_min_AA_samples", new IECore::BoolData( true ), false, "enableProgressiveMinAASamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:progressive_min_AA_samples", new Gaffer::IntPlug( "value", Gaffer::Plug::In, -4, -10, 0 ), false, "progressiveMinAASamples" ) );
 
 	// Ray depth parameters

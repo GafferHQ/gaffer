@@ -2765,6 +2765,7 @@ IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
 IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
 IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
+IECore::InternedString g_enableProgressiveMinAASamplesOptionName( "ai:enable_progressive_min_AA_samples" );
 IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
@@ -2789,6 +2790,7 @@ class ArnoldGlobals
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_enableProgressiveRender( true ),
+				m_enableProgressiveMinAASamples( true ),
 				m_shaderCache( shaderCache ),
 				m_renderBegun( false ),
 				m_assFileName( fileName )
@@ -2982,6 +2984,18 @@ class ArnoldGlobals
 				else if( auto d = reportedCast<const IECore::BoolData>( value, "option", name ) )
 				{
 					m_enableProgressiveRender = d->readable();
+				}
+				return;
+			}
+			else if( name == g_enableProgressiveMinAASamplesOptionName )
+			{
+				if( value == nullptr )
+				{
+					m_enableProgressiveMinAASamples = true;
+				}
+				else if( auto d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+				{
+					m_enableProgressiveMinAASamples = d->readable();
 				}
 				return;
 			}
@@ -3273,11 +3287,11 @@ class ArnoldGlobals
 					const int minAASamples = m_progressiveMinAASamples.get_value_or( -4 );
 					// Must never set `progressive_min_AA_samples > -1`, as it'll get stuck and
 					// Arnold will never let us set it back.
-					AiRenderSetHintInt( AtString( "progressive_min_AA_samples" ), std::min( minAASamples, -1 ) );
+					AiRenderSetHintInt( AtString( "progressive_min_AA_samples" ), minAASamples );
 					// It seems important to set `progressive` after `progressive_min_AA_samples`,
 					// otherwise Arnold may ignore changes to the latter. Disable entirely for
 					// `minAASamples == 0` to account for the workaround above.
-					AiRenderSetHintBool( AtString( "progressive" ), m_enableProgressiveRender && minAASamples < 0 );
+					AiRenderSetHintBool( AtString( "progressive" ), m_enableProgressiveMinAASamples );
 					AiNodeSetBool( AiUniverseGetOptions(), g_enableProgressiveRenderString, m_enableProgressiveRender );
 
 					if( !m_renderBegun )
@@ -3634,6 +3648,7 @@ class ArnoldGlobals
 		boost::optional<int> m_frame;
 		boost::optional<int> m_aaSeed;
 		bool m_enableProgressiveRender;
+		bool m_enableProgressiveMinAASamples;
 		boost::optional<int> m_progressiveMinAASamples;
 		boost::optional<bool> m_sampleMotion;
 		ShaderCache *m_shaderCache;
