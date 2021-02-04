@@ -138,6 +138,55 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( collect["out"]["globals"].getValue()["option:user:test"], IECore.StringData( "a" ) )
 
+	def testMergeGlobals( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.CustomOptions()
+		script["options"]["options"]["test1"] = Gaffer.NameValuePlug( "user:test1", "${collect:rootName}", True )
+		script["options"]["options"]["test2"] = Gaffer.NameValuePlug( "user:test2", "${collect:rootName}", True )
+		script["options"]["options"]["test3"] = Gaffer.NameValuePlug( "user:test3", "${collect:rootName}", True )
+
+		script["spreadsheet"] = Gaffer.Spreadsheet()
+		script["spreadsheet"]["selector"].setValue( "${collect:rootName}" )
+		for option in script["options"]["options"].children() :
+			script["spreadsheet"]["rows"].addColumn( option["enabled"], option.getName() )
+			option["enabled"].setInput( script["spreadsheet"]["out"][option.getName()] )
+
+		for rowName in ( "a", "b" ) :
+			row = script["spreadsheet"]["rows"].addRow()
+			row["name"].setValue( rowName )
+			row["cells"]["test1"]["value"].setValue( rowName == "a" )
+			row["cells"]["test2"]["value"].setValue( True )
+			row["cells"]["test3"]["value"].setValue( rowName == "b" )
+
+		script["collect"] = GafferScene.CollectScenes()
+		script["collect"]["in"].setInput( script["options"]["out"] )
+		script["collect"]["rootNames"].setInput( script["spreadsheet"]["activeRowNames"] )
+
+		# Merging off
+
+		self.assertEqual(
+			script["collect"]["out"].globals(),
+			IECore.CompoundObject( {
+				"option:user:test1" : IECore.StringData( "a" ),
+				"option:user:test2" : IECore.StringData( "a" ),
+			} )
+		)
+
+		# Merging on
+
+		script["collect"]["mergeGlobals"].setValue( True )
+
+		self.assertEqual(
+			script["collect"]["out"].globals(),
+			IECore.CompoundObject( {
+				"option:user:test1" : IECore.StringData( "a" ),
+				"option:user:test2" : IECore.StringData( "b" ),
+				"option:user:test3" : IECore.StringData( "b" ),
+			} )
+		)
+
 	def testSubstitutions( self ) :
 
 		sphere = GafferScene.Sphere()
@@ -432,6 +481,11 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		with six.assertRaisesRegex( self, Gaffer.ProcessException, '"/root" contains nested roots' ) :
 			collect["out"].childNames( "/root" )
+
+	def testDefaultScene( self ) :
+
+		collect = GafferScene.CollectScenes()
+		self.assertScenesEqual( collect["out"], GafferScene.ScenePlug() )
 
 if __name__ == "__main__":
 	unittest.main()

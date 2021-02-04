@@ -262,6 +262,7 @@ CollectScenes::CollectScenes( const std::string &name )
 	addChild( new StringVectorDataPlug( "rootNames", Plug::In, new StringVectorData() ) );
 	addChild( new StringPlug( "rootNameVariable", Plug::In, "collect:rootName" ) );
 	addChild( new StringPlug( "sourceRoot", Plug::In, "/" ) );
+	addChild( new BoolPlug( "mergeGlobals" ) );
 	addChild( new ObjectPlug( "__rootTree", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 
 	outPlug()->childBoundsPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
@@ -301,14 +302,24 @@ const Gaffer::StringPlug *CollectScenes::sourceRootPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::BoolPlug *CollectScenes::mergeGlobalsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::BoolPlug *CollectScenes::mergeGlobalsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+}
+
 Gaffer::ObjectPlug *CollectScenes::rootTreePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::ObjectPlug *CollectScenes::rootTreePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 void CollectScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -356,7 +367,8 @@ void CollectScenes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	if(
 		input == rootTreePlug() ||
 		input == rootNameVariablePlug() ||
-		input == inPlug()->globalsPlug()
+		input == inPlug()->globalsPlug() ||
+		input == mergeGlobalsPlug()
 	)
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
@@ -554,30 +566,58 @@ IECore::ConstInternedStringVectorDataPtr CollectScenes::computeChildNames( const
 void CollectScenes::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	ConstRootTreePtr rootTree = boost::static_pointer_cast<const RootTree>( rootTreePlug()->getValue() );
-	if( rootTree->roots().size() )
+	if( !rootTree->roots().size() )
 	{
-		SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
-		sourceScope.setRoot( rootTree->roots()[0] );
-		h = inPlug()->globalsPlug()->hash();
+		h = inPlug()->globalsPlug()->defaultHash();
+		return;
+	}
+
+	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
+
+	if( mergeGlobalsPlug()->getValue() )
+	{
+		SceneProcessor::hashGlobals( context, parent, h );
+		for( const auto &root : rootTree->roots() )
+		{
+			sourceScope.setRoot( root );
+			inPlug()->globalsPlug()->hash( h );
+		}
 	}
 	else
 	{
-		h = inPlug()->globalsPlug()->defaultValue()->Object::hash();
+		sourceScope.setRoot( rootTree->roots()[0] );
+		h = inPlug()->globalsPlug()->hash();
 	}
 }
 
 IECore::ConstCompoundObjectPtr CollectScenes::computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstRootTreePtr rootTree = boost::static_pointer_cast<const RootTree>( rootTreePlug()->getValue() );
-	if( rootTree->roots().size() )
+	if( !rootTree->roots().size() )
 	{
-		SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
-		sourceScope.setRoot( rootTree->roots()[0] );
-		return inPlug()->globalsPlug()->getValue();
+		return inPlug()->globalsPlug()->defaultValue();
+	}
+
+	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
+
+	if( mergeGlobalsPlug()->getValue() )
+	{
+		CompoundObjectPtr result = new CompoundObject;
+		for( const auto &root : rootTree->roots() )
+		{
+			sourceScope.setRoot( root );
+			ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+			for( const auto &m : globals->members() )
+			{
+				result->members()[m.first] = m.second;
+			}
+		}
+		return result;
 	}
 	else
 	{
-		return inPlug()->globalsPlug()->defaultValue();
+		sourceScope.setRoot( rootTree->roots()[0] );
+		return inPlug()->globalsPlug()->getValue();
 	}
 }
 
