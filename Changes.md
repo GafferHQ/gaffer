@@ -15,6 +15,7 @@ Fixes
 
 - InteractiveArnoldRender : Fixed interactive updates to `ArnoldOptions.progressiveMinAASamples`.
 - NodeEditor : Fixed width of widgets for integer plugs with minimum values that require more space than maximum values.
+- Reference : Fixed bugs triggered by changing the number of columns in a referenced spreadsheet.
 
 API
 ---
