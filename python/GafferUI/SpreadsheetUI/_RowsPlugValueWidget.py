@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import traceback
 
 import imath
 
@@ -175,6 +176,24 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
+	__addRowButtonMenuSignal = None
+	## This signal is emitted whenever the add row button is clicked.
+	# If the resulting menu definition has been populated with items,
+	# a popup menu will be presented from the button.
+	# If only a single item is present, its command will be called
+	# immediately instead of presenting a menu.
+	# If no items are present, then the default behaviour is to
+	# add a single row to the end of the spreadsheet.
+	# The signal is called with the corresponding spreadsheet rows plug
+	# value widget.
+	@classmethod
+	def addRowButtonMenuSignal( cls ) :
+
+		if cls.__addRowButtonMenuSignal is None :
+			cls.__addRowButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addRowButtonMenuSignal
+
 	def _updateFromPlug( self ) :
 
 		self.__grid.setEnabled(
@@ -183,12 +202,21 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addRowButtonClicked( self, *unused ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			row = self.getPlug().addRow()
+		menuDefinition = IECore.MenuDefinition()
+		self.addRowButtonMenuSignal()( menuDefinition, self )
 
-		# Select new row for editing. Have to do this on idle as otherwise it doesn't scroll
-		# right to the bottom.
-		GafferUI.EventLoop.addIdleCallback( functools.partial( self.__rowNamesTable.editPlugs, [ row["name"] ] ) )
+		if menuDefinition.size() == 0 :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+				row = self.getPlug().addRow()
+			# Select new row for editing. Have to do this on idle as otherwise it doesn't scroll
+			# right to the bottom.
+			GafferUI.EventLoop.addIdleCallback( functools.partial( self.__rowNamesTable.editPlugs, [ row["name"] ] ) )
+		elif menuDefinition.size() == 1 :
+			_, item = menuDefinition.items()[0]
+			item.command()
+		else :
+			self.__popupMenu = GafferUI.Menu( menuDefinition )
+			self.__popupMenu.popup( parent = self )
 
 	def __addRowButtonDragEnter( self, addButton, event ) :
 
@@ -276,3 +304,29 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__cellsTable.setVisibleSection( section )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugValueWidget )
+
+# Signal with custom result combiner to prevent bad
+# slots blocking the execution of others.
+class _AddButtonMenuSignal( Gaffer.Signal2 ) :
+
+	def __init__( self ) :
+
+		Gaffer.Signal2.__init__( self, self.__combiner )
+
+	@staticmethod
+	def __combiner( results ) :
+
+		while True :
+			try :
+				next( results )
+			except StopIteration :
+				return
+			except Exception as e :
+				# Print message but continue to execute other slots
+				IECore.msg(
+					IECore.Msg.Level.Error,
+					"Spreadsheet Add Button menu", traceback.format_exc()
+				)
+				if six.PY3 :
+					# Remove circular references that would keep the widget in limbo.
+					e.__traceback__ = None
