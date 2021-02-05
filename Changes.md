@@ -8,6 +8,7 @@ Improvements
   - Added `options.enableProgressiveRender` to allow progressive rendering to be disabled completely.
   - Added sensible min/max limits to `options.progressiveMinAASamples`.
   - Grouped interactive rendering options in a new section.
+- CollectScenes : Added `mergeGlobals` plug. This allows the globals from all collected scenes to be merged, whereas before only the globals from the first scene were passed through.
 
 Fixes
 -----

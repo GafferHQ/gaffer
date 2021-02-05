@@ -105,6 +105,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"mergeGlobals" : [
+
+			"description",
+			"""
+			Controls how the output globals are generated from the collected
+			scenes. By default, the globals from the first scene alone
+			are passed through. When `mergeGlobals` is on, the globals from
+			all collected scenes are merged, with the last scene winning
+			in the case of multiple scenes specifying the same global.
+			""",
+
+		],
+
 	}
 
 )
