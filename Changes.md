@@ -6,6 +6,11 @@ API
 
 - LayoutPlugValueWidget : Added support for `layoutPlugValueWidget:orientation` metadata, with values of either `vertical` or `horizontal`.
 
+Build
+-----
+
+- Qt : Updated to version 5.12.10.
+
 0.59.2.0 (relative to 0.59.1.0)
 ========
 
