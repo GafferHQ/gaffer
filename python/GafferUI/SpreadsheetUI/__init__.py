@@ -39,6 +39,7 @@ from . import _Menus
 
 from ._CellPlugValueWidget import _CellPlugValueWidget
 from ._PlugTableModel import _PlugTableModel
+from ._RowsPlugValueWidget import _RowsPlugValueWidget
 
 # Value Formatting
 # ================
@@ -72,3 +73,10 @@ def registerDecoration( plugType, decorator ) :
 def decoration( plug ) :
 
 	return _PlugTableModel.decoration( plug )
+
+# Signals
+# =======
+
+def addRowButtonMenuSignal() :
+
+	return _RowsPlugValueWidget.addRowButtonMenuSignal()
