@@ -43,6 +43,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/Spreadsheet.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
@@ -209,19 +210,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 		void transferEdits( Plug *oldPlug, Plug *newPlug ) const
 		{
 			transferEditedMetadata( oldPlug, newPlug );
-			// Transfer additional children.
-			if( auto *edit = plugEdit( oldPlug ) )
-			{
-				if( edit->sizeAfterLoad != -1 )
-				{
-					// Adding the child to `newPlug` removes it from `oldPlug`, hence
-					// `oldPlug` shrinks back to its original `sizeAfterLoad`.
-					while( oldPlug->children().size() > (size_t)edit->sizeAfterLoad )
-					{
-						newPlug->addChild( oldPlug->getChild( edit->sizeAfterLoad ) );
-					}
-				}
-			}
+			transferChildEdits( oldPlug, newPlug );
 		}
 
 		// Used to allow PlugEdits to track reference loading.
@@ -398,6 +387,39 @@ class Reference::PlugEdits : public boost::signals::trackable
 			}
 		}
 
+		void transferChildEdits( Plug *oldPlug, Plug *newPlug ) const
+		{
+			if( newPlug->typeId() != oldPlug->typeId() )
+			{
+				return;
+			}
+
+			auto *edit = plugEdit( oldPlug );
+			if( !edit || edit->sizeAfterLoad == -1 )
+			{
+				return;
+			}
+
+			auto *newRows = runTimeCast<Spreadsheet::RowsPlug>( newPlug );
+			for( size_t i = edit->sizeAfterLoad; i < oldPlug->children().size(); ++i )
+			{
+				if( newRows )
+				{
+					// The only valid way to add children to a RowsPlug is to
+					// call `addRow()`. If we don't use that, our new rows may
+					// have the wrong number of columns if the columns in the
+					// referenced file have been changed.
+					Spreadsheet::RowPlug *newRow = newRows->addRow();
+					newRow->setName( oldPlug->getChild( i )->getName() );
+				}
+				else
+				{
+					const Plug *oldChild = oldPlug->getChild<Plug>( i );
+					newPlug->addChild( oldChild->createCounterpart( oldChild->getName(), oldChild->direction() ) );
+				}
+			}
+		}
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -564,12 +586,12 @@ void Reference::loadInternal( const std::string &fileName )
 		{
 			try
 			{
+				m_plugEdits->transferEdits( oldPlug, newPlug );
 				if( newPlug->direction() == Plug::In && oldPlug->direction() == Plug::In )
 				{
 					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ true );
 				}
 				transferOutputs( oldPlug, newPlug );
-				m_plugEdits->transferEdits( oldPlug, newPlug );
 			}
 			catch( const std::exception &e )
 			{
