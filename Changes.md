@@ -27,6 +27,11 @@ API
 - LayoutPlugValueWidget : Added support for `layoutPlugValueWidget:orientation` metadata, with values of either `vertical` or `horizontal`.
 - SpreadsheetUI : Added `addRowButtonMenuSignal` to allow customisation of Spreadsheet row addition within the UI (#4123).
 
+Build
+-----
+
+- Qt : Updated to version 5.12.10.
+
 0.59.2.0 (relative to 0.59.1.0)
 ========
 
