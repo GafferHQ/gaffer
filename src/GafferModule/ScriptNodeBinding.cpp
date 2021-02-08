@@ -146,6 +146,9 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		return false;
 	}
 
+	const IECore::Canceller *canceller = Context::current()->canceller();
+	IECore::Canceller::check( canceller );
+
 	assert( mod->kind == Module_kind );
 
 	// Loop over the top-level statements in the module body,
@@ -154,6 +157,8 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 	int numStatements = asdl_seq_LEN( mod->v.Module.body );
 	for( int i=0; i<numStatements; ++i )
 	{
+		IECore::Canceller::check( canceller );
+
 		// Make a new module containing just this one statement.
 		asdl_seq *newBody = asdl_seq_new( 1, arena.get() );
 		asdl_seq_SET( newBody, 0, asdl_seq_GET( mod->v.Module.body, i ) );

@@ -1,3 +1,12 @@
+0.59.x.x (relative to 0.59.4.0)
+========
+
+API
+---
+
+- EventLoop : Added `BlockedUIThreadExecution` context manager.
+- ScriptNode : Added support for cancellation of execution and serialisation.
+
 0.59.4.0 (relative to 0.59.3.0)
 ========
 
