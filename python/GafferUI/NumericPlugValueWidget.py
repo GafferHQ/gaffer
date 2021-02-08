@@ -211,11 +211,8 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for plug in self.getPlugs() :
 			plugCharWidth = Gaffer.Metadata.value( plug, "numericPlugValueWidget:fixedCharacterWidth" )
 			if plugCharWidth is None and isinstance( plug, Gaffer.IntPlug ) :
-				if plug.hasMaxValue() :
-					plugCharWidth = len( str( plug.maxValue() ) )
-				if plug.hasMinValue() :
-					minValueCharWidth = len( str( plug.minValue() ) )
-					plugCharWidth = max( plugCharWidth, minValueCharWidth ) if plugCharWidth is not None else minValueCharWidth
+				if plug.hasMinValue() and plug.hasMaxValue() :
+					plugCharWidth = max( len( str( plug.minValue() ) ), len( str( plug.maxValue() ) ) )
 			if plugCharWidth is not None :
 				charWidth = max( charWidth, plugCharWidth ) if charWidth is not None else plugCharWidth
 
