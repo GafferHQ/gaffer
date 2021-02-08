@@ -6,6 +6,8 @@ Fixes
 
 - NodeGadget : Fixed intermittent shutdown crash.
 - NumericWidget : Fixed editing bug in Qt 5.12.
+- Dispatch App : Fixed UI imports when not running in GUI mode.
+- Op App : Fixed UI imports when not running in GUI mode.
 
 0.58.6.1 (relative to 0.58.6.0)
 ========
