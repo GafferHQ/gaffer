@@ -137,8 +137,9 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 	def testFixedCharacterWidth( self ) :
 
 		n = Gaffer.Node()
-		n["user"]["i1"] = Gaffer.IntPlug( maxValue = 100 )
-		n["user"]["i2"] = Gaffer.IntPlug( maxValue = 1000 )
+		n["user"]["i1"] = Gaffer.IntPlug( minValue = 0, maxValue = 100 )
+		n["user"]["i2"] = Gaffer.IntPlug( minValue = 0, maxValue = 1000 )
+		n["user"]["i3"] = Gaffer.IntPlug( minValue = -5, maxValue = 0 )
 
 		w = GafferUI.NumericPlugValueWidget( n["user"]["i2"] )
 		self.assertEqual( w.numericWidget().getFixedCharacterWidth(), 4 )
@@ -151,6 +152,9 @@ class NumericPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		w.setPlugs( { n["user"]["i1"] } )
 		self.assertEqual( w.numericWidget().getFixedCharacterWidth(), 3 )
+
+		w.setPlugs( { n["user"]["i3"] } )
+		self.assertEqual( w.numericWidget().getFixedCharacterWidth(), 2 )
 
 if __name__ == "__main__":
 	unittest.main()

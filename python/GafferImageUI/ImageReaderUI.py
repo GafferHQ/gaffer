@@ -119,7 +119,10 @@ Gaffer.Metadata.registerNode(
 			and display window of the start frame.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._FrameMaskPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation", "horizontal",
+
+			"layout:activator:modeIsNotNone", lambda plug : plug["mode"].getValue() != GafferImage.ImageReader.FrameMaskMode.None_,
 
 		],
 
@@ -135,6 +138,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:label", "",
 
 		],
 
@@ -147,6 +151,9 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", lambda plug : IECore.StringVectorData( [ str(x) for x in plug.node()["__oiioReader"]["availableFrames"].getValue() ] ),
 			"presetValues", lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
+
+			"layout:label", "",
+			"layout:activator", "modeIsNotNone",
 
 		],
 
@@ -161,7 +168,10 @@ Gaffer.Metadata.registerNode(
 			and display window of the end frame.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._FrameMaskPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation", "horizontal",
+
+			"layout:activator:modeIsNotNone", lambda plug : plug["mode"].getValue() != GafferImage.ImageReader.FrameMaskMode.None_,
 
 		],
 
@@ -177,6 +187,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Clamp to Range", GafferImage.ImageReader.FrameMaskMode.ClampToFrame,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:label", "",
 
 		],
 
@@ -189,6 +200,9 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", lambda plug : IECore.StringVectorData( [ str(x) for x in plug.node()["__oiioReader"]["availableFrames"].getValue() ] ),
 			"presetValues", lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
+
+			"layout:label", "",
+			"layout:activator", "modeIsNotNone",
 
 		],
 
@@ -212,56 +226,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-class _FrameMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as self.__row :
-
-			GafferUI.PlugValueWidget.create( plug["mode"] )
-			GafferUI.PlugValueWidget.create( plug["frame"] )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
-
-	def setPlug( self, plug ) :
-
-		assert( len( plug ) == len( self.getPlug() ) )
-
-		GafferUI.PlugValueWidget.setPlug( self, plug )
-
-		for index, plug in enumerate( plug.children() ) :
-			self.__row[index].setPlug( plug )
-
-	def setHighlighted( self, highlighted ) :
-
-		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
-
-		for i in range( 0, len( self.getPlug() ) ) :
-			self.__row[i].setHighlighted( highlighted )
-
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			if isinstance( w, GafferUI.PlugValueWidget ) :
-				w.setReadOnly( readOnly )
-
-	def childPlugValueWidget( self, childPlug ) :
-
-		for i, p in enumerate( self.getPlug().children() ) :
-			if p.isSame( childPlug ) :
-				return self.__row[i]
-
-		return None
-
-	def _updateFromPlug( self ) :
-
-		with self.getContext() :
-			mode = self.getPlug()["mode"].getValue()
-
-		self.childPlugValueWidget( self.getPlug()["frame"] ).setEnabled( mode != GafferImage.ImageReader.FrameMaskMode.None_ )

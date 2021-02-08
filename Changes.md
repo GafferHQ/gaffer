@@ -70,7 +70,45 @@ Build
 - Moved minimum required C++ standard to C++14.
 - Moved minimum required TBB version to 2018 Update 3.
 
-0.59.x.x (relative to 0.59.1.0)
+0.59.3.0 (relative to 0.59.2.0)
+========
+
+Features
+--------
+
+- MotionPath : Added a node to generate curves representing location transforms tracked over a frame range.
+
+Improvements
+------------
+
+- ArnoldOptions :
+  - Added `options.enableProgressiveRender` to allow progressive rendering to be disabled completely.
+  - Added sensible min/max limits to `options.progressiveMinAASamples`.
+  - Grouped interactive rendering options in a new section.
+- CollectScenes : Added `mergeGlobals` plug. This allows the globals from all collected scenes to be merged, whereas before only the globals from the first scene were passed through.
+
+Fixes
+-----
+
+- InteractiveArnoldRender : Fixed interactive updates to `ArnoldOptions.progressiveMinAASamples`.
+- NodeEditor : Fixed width of widgets for integer plugs with minimum values that require more space than maximum values.
+- Reference : Fixed bugs triggered by changing the number of columns in a referenced spreadsheet.
+- NumericWidget : Fixed editing bug in Qt 5.12.
+- Dispatch App : Fixed UI imports when not running in GUI mode.
+- Op App : Fixed UI imports when not running in GUI mode.
+
+API
+---
+
+- LayoutPlugValueWidget : Added support for `layoutPlugValueWidget:orientation` metadata, with values of either `vertical` or `horizontal`.
+- SpreadsheetUI : Added `addRowButtonMenuSignal` to allow customisation of Spreadsheet row addition within the UI (#4123).
+
+Build
+-----
+
+- Qt : Updated to version 5.12.10.
+
+0.59.2.0 (relative to 0.59.1.0)
 ========
 
 Improvements
@@ -89,7 +127,7 @@ Fixes
 - Expression : Fixed handling of expressions which assign CompoundData to `Attributes.extraAttributes`.
 
 API
-----
+---
 
 - SetUI : Added `setMenuPathFunction()` & `getMenuPathFunction()` to allow Set names to be transformed before display in Gaffer menus.
 - SceneView : Added support for adaptors registered via `RendererAlgo::registerAdaptor()`.
@@ -322,7 +360,17 @@ Build
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
 
-0.58.6.x (relative to 0.58.6.1)
+0.58.6.3 (relative to 0.58.6.2)
+========
+
+Fixes
+-----
+
+- NumericWidget : Fixed editing bug in Qt 5.12.
+- Dispatch App : Fixed UI imports when not running in GUI mode.
+- Op App : Fixed UI imports when not running in GUI mode.
+
+0.58.6.2 (relative to 0.58.6.1)
 ========
 
 Fixes

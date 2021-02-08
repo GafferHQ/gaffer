@@ -51,6 +51,7 @@
 #include "GafferScene/Seeds.h"
 #include "GafferScene/SubTree.h"
 #include "GafferScene/Unencapsulate.h"
+#include "GafferScene/MotionPath.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -133,4 +134,17 @@ void GafferSceneModule::bindHierarchy()
 		;
 	}
 
+	{
+		scope s = GafferBindings::DependencyNodeClass<MotionPath>();
+
+		enum_<MotionPath::FrameMode>( "FrameMode" )
+			.value( "Relative", MotionPath::FrameMode::Relative )
+			.value( "Absolute", MotionPath::FrameMode::Absolute )
+			;
+
+		enum_<MotionPath::SamplingMode>( "SamplingMode" )
+			.value( "Variable", MotionPath::SamplingMode::Variable )
+			.value( "Fixed", MotionPath::SamplingMode::Fixed )
+			;
+	}
 }

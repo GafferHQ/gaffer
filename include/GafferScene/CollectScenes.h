@@ -68,6 +68,9 @@ class GAFFERSCENE_API CollectScenes : public SceneProcessor
 		Gaffer::StringPlug *sourceRootPlug();
 		const Gaffer::StringPlug *sourceRootPlug() const;
 
+		Gaffer::BoolPlug *mergeGlobalsPlug();
+		const Gaffer::BoolPlug *mergeGlobalsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

@@ -59,8 +59,6 @@ def __samplingSummary( plug ) :
 	info = []
 	if plug["aaSamples"]["enabled"].getValue() :
 		info.append( "AA %d" % plug["aaSamples"]["value"].getValue() )
-	if plug["progressiveMinAASamples"]["enabled"].getValue() :
-		info.append( "Min AA %d" % plug["progressiveMinAASamples"]["value"].getValue() )
 	if plug["giDiffuseSamples"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseSamples"]["value"].getValue() )
 	if plug["giSpecularSamples"]["enabled"].getValue() :
@@ -92,6 +90,15 @@ def __adaptiveSamplingSummary( plug ) :
 		info.append( "AA Max %d" % plug["aaSamplesMax"]["value"].getValue() )
 	if plug["aaAdaptiveThreshold"]["enabled"].getValue() :
 		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["aaAdaptiveThreshold"]["value"].getValue() ) )
+	return ", ".join( info )
+
+def __interactiveRenderingSummary( plug ) :
+
+	info = []
+	if plug["enableProgressiveRender"]["enabled"].getValue() :
+		info.append( "Progressive %s" % ( "On" if plug["enableProgressiveRender"]["value"].getValue() else "Off" ) )
+	if plug["progressiveMinAASamples"]["enabled"].getValue() :
+		info.append( "Min AA %d" % plug["progressiveMinAASamples"]["value"].getValue() )
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
@@ -236,6 +243,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Adaptive Sampling:summary", __adaptiveSamplingSummary,
+			"layout:section:Interactive Rendering:summary", __interactiveRenderingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Texturing:summary", __texturingSummary,
@@ -334,22 +342,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "AA Samples",
-
-		],
-
-		"options.progressiveMinAASamples" : [
-
-			"description",
-			"""
-			Controls the number of rays per pixel
-			for the first low quality pass of
-			progressive rendering.  -4 will start
-			with large squares, 1 will start one
-			sample for every pixel.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Progressive Min AA Samples",
 
 		],
 
@@ -499,6 +491,8 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Adaptive Sampling
+
 		"options.enableAdaptiveSampling" : [
 
 			"description",
@@ -541,6 +535,36 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Adaptive Sampling",
 			"label", "AA Adaptive Threshold",
+
+		],
+
+		# Interactive rendering
+
+		"options.enableProgressiveRender" : [
+
+			"description",
+			"""
+			Enables progressive rendering, with a series of coarse low-resolution
+			renders followed by a full quality render updated continuously.
+			""",
+
+			"layout:section", "Interactive Rendering",
+			"label", "Progressive",
+
+		],
+
+		"options.progressiveMinAASamples" : [
+
+			"description",
+			"""
+			Controls the coarseness of the first low resolution pass
+			of interactive rendering. A value of `-4` starts with 16x16 pixel
+			blocks, `-3` gives 8x8 blocks, `-2` gives 4x4, `-1` gives 2x2 and
+			`0` disables the low resolution passes completely.
+			""",
+
+			"layout:section", "Interactive Rendering",
+			"label", "Min AA Samples",
 
 		],
 

@@ -1692,6 +1692,61 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 		assertExpectedChildren( script2["reference"] )
 
+	def testAddAndRemoveSpreadsheetColumns( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["box"] = Gaffer.Box()
+
+		script["box"]["spreadsheet"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.IntPlug( "c1" ) )
+		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.FloatPlug( "c2" ) )
+		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		script["box"].exportForReference( fileName )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( fileName )
+
+		script["reference"]["rows"].addRows( 3 )
+
+		for i, row in enumerate( script["reference"]["rows"] ) :
+			row["cells"]["c1"]["value"].setValue( i )
+			row["cells"]["c2"]["value"].setValue( i + 1 )
+
+		def assertCellValues( referencedRows, removedColumns = {} ) :
+
+			for i, row in enumerate( script["reference"]["rows"] ) :
+				if "c1" not in removedColumns :
+					self.assertEqual( row["cells"]["c1"]["value"].getValue(), i )
+				if "c2" not in removedColumns :
+					self.assertEqual( row["cells"]["c2"]["value"].getValue(), i + 1 )
+
+		def assertColumnsMatch( referencedRows, expectedRow ) :
+
+			for row in referencedRows :
+				self.assertEqual( len( row["cells"] ), len( expectedRow["cells"] ) )
+				for i, cell in enumerate( row["cells"] ) :
+					self.assertEqual( cell.getName(), expectedRow["cells"][i].getName() )
+					self.assertEqual( repr( cell["value"] ), repr( expectedRow["cells"][i]["value"] ) )
+
+		assertCellValues( script["reference"]["rows"] )
+		assertColumnsMatch( script["reference"]["rows"], script["box"]["rows"].defaultRow() )
+
+		script["box"]["rows"].addColumn( Gaffer.StringPlug( "c3" ) )
+		script["box"]["rows"].addColumn( Gaffer.BoolPlug( "c4" ) )
+		script["box"]["rows"].removeColumn( 1 ) # Remove "c2"
+		script["box"].exportForReference( fileName )
+
+		script["reference"].load( fileName )
+		assertCellValues( script["reference"]["rows"], removedColumns = { "c2" } )
+		assertColumnsMatch( script["reference"]["rows"], script["box"]["rows"].defaultRow() )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		assertColumnsMatch( script2["reference"]["rows"], script["box"]["rows"].defaultRow() )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
