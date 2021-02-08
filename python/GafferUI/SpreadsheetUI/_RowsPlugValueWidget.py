@@ -36,6 +36,7 @@
 
 import functools
 import traceback
+import six
 
 import imath
 
