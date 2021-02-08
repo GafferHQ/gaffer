@@ -13,6 +13,7 @@ Improvements
 ------------
 
 - FrameMask : Improved performance when dealing with long frame ranges.
+- Node : Improved performance of type queries related to dispatch processes.
 
 0.59.3.0 (relative to 0.59.2.0)
 ========
