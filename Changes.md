@@ -9,6 +9,11 @@ Features
   - Seeds for randomisation.
   - Arbitrary context variables driven by primitive variables.
 
+Improvements
+------------
+
+- FrameMask : Improved performance when dealing with long frame ranges.
+
 0.59.3.0 (relative to 0.59.2.0)
 ========
 
