@@ -36,9 +36,11 @@
 
 import os
 
-import GafferUI
+if application["gui"].getTypedValue() :
 
-bookmarks = GafferUI.Bookmarks.acquire( application )
-bookmarks.setDefault( os.getcwd() )
-bookmarks.add( "Home", os.path.expandvars( "$HOME" ) )
-bookmarks.add( "Desktop", os.path.expandvars( "$HOME/Desktop" ) )
+	import GafferUI
+
+	bookmarks = GafferUI.Bookmarks.acquire( application )
+	bookmarks.setDefault( os.getcwd() )
+	bookmarks.add( "Home", os.path.expandvars( "$HOME" ) )
+	bookmarks.add( "Desktop", os.path.expandvars( "$HOME/Desktop" ) )

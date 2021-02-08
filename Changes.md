@@ -21,6 +21,9 @@ Fixes
 - InteractiveArnoldRender : Fixed interactive updates to `ArnoldOptions.progressiveMinAASamples`.
 - NodeEditor : Fixed width of widgets for integer plugs with minimum values that require more space than maximum values.
 - Reference : Fixed bugs triggered by changing the number of columns in a referenced spreadsheet.
+- NumericWidget : Fixed editing bug in Qt 5.12.
+- Dispatch App : Fixed UI imports when not running in GUI mode.
+- Op App : Fixed UI imports when not running in GUI mode.
 
 API
 ---
@@ -284,6 +287,16 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.3 (relative to 0.58.6.2)
+========
+
+Fixes
+-----
+
+- NumericWidget : Fixed editing bug in Qt 5.12.
+- Dispatch App : Fixed UI imports when not running in GUI mode.
+- Op App : Fixed UI imports when not running in GUI mode.
 
 0.58.6.2 (relative to 0.58.6.1)
 ========
