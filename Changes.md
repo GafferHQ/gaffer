@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.2.0)
 ========
 
+Features
+--------
+
+- MotionPath : Added a node to generate curves representing location transforms tracked over a frame range.
+
 Improvements
 ------------
 

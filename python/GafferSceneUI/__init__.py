@@ -164,6 +164,7 @@ from . import PrimitiveSamplerUI
 from . import ClosestPointSamplerUI
 from . import CurveSamplerUI
 from . import UnencapsulateUI
+from . import MotionPathUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
