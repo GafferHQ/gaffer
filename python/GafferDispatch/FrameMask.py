@@ -48,7 +48,7 @@ class FrameMask( GafferDispatch.TaskNode ) :
 
 	def preTasks( self, context ) :
 
-		frames = IECore.FrameList.parse( self["mask"].getValue() ).asList()
+		frames = _frameListCache.get( self["mask"].getValue() )
 		if ( not frames ) or ( context.getFrame() in frames ) :
 			return GafferDispatch.TaskNode.preTasks( self, context )
 		else :
@@ -63,3 +63,15 @@ class FrameMask( GafferDispatch.TaskNode ) :
 		pass
 
 IECore.registerRunTimeTyped( FrameMask, typeName = "GafferDispatch::FrameMask" )
+
+# We cache the results of `FrameList.asList()` as a set, to avoid regenerating
+# it on every frame, and to avoid linear search in `FrameMask.preTasks()`. This
+# gives substantial performance improvements when dispatching large frame
+# ranges.
+def __frameListCacheGetter( frameExpression ) :
+
+	frames = IECore.FrameList.parse( frameExpression ).asList()
+	return set( frames ), len( frames )
+
+# Enough for approximately an hour's worth of frames, at a cost of < 10Mb.
+_frameListCache = IECore.LRUCache( __frameListCacheGetter, 100000 )

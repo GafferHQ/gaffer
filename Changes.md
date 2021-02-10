@@ -70,6 +70,23 @@ Build
 - Moved minimum required C++ standard to C++14.
 - Moved minimum required TBB version to 2018 Update 3.
 
+0.59.x.x (relative to 0.59.3.0)
+========
+
+Features
+--------
+
+- Instancer : Added support for generating procedural variation via context variables.
+  - Time offsets for animation.
+  - Seeds for randomisation.
+  - Arbitrary context variables driven by primitive variables.
+
+Improvements
+------------
+
+- FrameMask : Improved performance when dealing with long frame ranges.
+- Node : Improved performance of type queries related to dispatch processes.
+
 0.59.3.0 (relative to 0.59.2.0)
 ========
 

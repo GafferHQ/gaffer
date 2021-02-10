@@ -43,7 +43,9 @@
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
 
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Switch.h"
 
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILLock.h"
@@ -85,22 +87,33 @@ class NodeWrapper : public GraphComponentWrapper<T>
 			// among types. Entering Python is incredibly costly for such
 			// a simple operation, and we perform these operations often,
 			// so this optimisation is well worth it.
-			//
-			// Note that we can't actually guarantee that we're not a
-			// ScriptNode or DependencyNode, but those queries are so
-			// common that we simply must accelerate them. We adjust for
-			// this slightly overzealous optimisation in ScriptNodeWrapper
-			// and DependencyNodeWrapper where we also override
-			// isInstanceOf() and make the necessary correction.
 			if(
-				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
-				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId ||
+				// We're a Node, so we cannot be a plug.
 				typeId == (IECore::TypeId)Gaffer::PlugTypeId ||
-				typeId == (IECore::TypeId)Gaffer::ValuePlugTypeId
+				typeId == (IECore::TypeId)Gaffer::ValuePlugTypeId ||
+				// We're a wrapper, so we can't be anything that we know isn't
+				// wrapped. It's important to optimise for ContextProcessor and
+				// Switch specifically, because they are queried heavily during
+				// the `Dispatcher::dispatch()` process.
+				typeId == (IECore::TypeId)Gaffer::ContextProcessorTypeId ||
+				typeId == (IECore::TypeId)Gaffer::SwitchTypeId ||
+				// We can't actually guarantee that we're not a ScriptNode or
+				// DependencyNode, but those queries are so common that we
+				// simply must accelerate them. We adjust for this slightly
+				// overzealous optimisation in ScriptNodeWrapper and
+				// DependencyNodeWrapper where we also override `isInstanceOf()`
+				// and make the necessary correction.
+				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId
 			)
 			{
 				return false;
 			}
+
+			// Ensure our assumptions above are not violated.
+			static_assert( !std::is_same<WrappedType, Gaffer::ContextProcessor>::value, "Wrapping not expected for type" );
+			static_assert( !std::is_same<WrappedType, Gaffer::Switch>::value, "Wrapping not expected for type" );
+
 			return GraphComponentWrapper<T>::isInstanceOf( typeId );
 		}
 
