@@ -72,7 +72,7 @@ import GafferUI
 #		pass
 #
 #	@updateInBackground.postCall
-#	def __updateInBackgroundPreCall( self, result )
+#	def __updateInBackgroundPostCall( self, result )
 #
 #		# Called on the UI thread with the result
 #		# of the background call (or any exception it
