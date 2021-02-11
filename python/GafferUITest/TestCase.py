@@ -37,7 +37,10 @@
 import os
 import sys
 import unittest
+import inspect
+import weakref
 
+import Gaffer
 import GafferTest
 import GafferUI
 
@@ -105,6 +108,35 @@ class TestCase( GafferTest.TestCase ) :
 						continue
 					for phrase in forbidden :
 						self.assertFalse( phrase in line, "Example %s references unstable '%s':\n%s" % ( e['filePath'], phrase, line ) )
+
+	def assertNodeUIsHaveExpectedLifetime( self, module ) :
+
+		for name in dir( module ) :
+
+			cls = getattr( module, name )
+			if not inspect.isclass( cls ) or not issubclass( cls, Gaffer.Node ) :
+				continue
+
+			script = Gaffer.ScriptNode()
+
+			try :
+				script["node"] = cls()
+			except :
+				continue
+
+			with GafferUI.Window() as window :
+				nodeUI = GafferUI.NodeUI.create( script["node"] )
+			window.setVisible( True )
+			self.waitForIdle( 10000 )
+
+			weakNodeUI = weakref.ref( nodeUI )
+			weakScript = weakref.ref( script )
+
+			del window, nodeUI
+			self.assertIsNone( weakNodeUI() )
+
+			del script
+			self.assertIsNone( weakScript() )
 
 	@staticmethod
 	def __widgetInstances() :

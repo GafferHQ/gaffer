@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,25 +34,17 @@
 #
 ##########################################################################
 
-from .SceneViewTest import SceneViewTest
-from .ShaderAssignmentUITest import ShaderAssignmentUITest
-from .StandardGraphLayoutTest import StandardGraphLayoutTest
-from .SceneGadgetTest import SceneGadgetTest
-from .SceneInspectorTest import SceneInspectorTest
-from .HierarchyViewTest import HierarchyViewTest
-from .DocumentationTest import DocumentationTest
-from .ShaderViewTest import ShaderViewTest
-from .ShaderUITest import ShaderUITest
-from .TranslateToolTest import TranslateToolTest
-from .ScaleToolTest import ScaleToolTest
-from .RotateToolTest import RotateToolTest
-from .ContextAlgoTest import ContextAlgoTest
-from .CameraToolTest import CameraToolTest
-from .VisualiserTest import VisualiserTest
-from .TransformToolTest import TransformToolTest
-from .SourceSetTest import SourceSetTest
-from .CropWindowToolTest import CropWindowToolTest
-from .NodeUITest import NodeUITest
+import unittest
+
+import GafferAppleseed
+import GafferAppleseedUI
+import GafferUITest
+
+class NodeUITest( GafferUITest.TestCase ) :
+
+	def testLifetimes( self ) :
+
+		self.assertNodeUIsHaveExpectedLifetime( GafferAppleseed )
 
 if __name__ == "__main__":
 	unittest.main()
