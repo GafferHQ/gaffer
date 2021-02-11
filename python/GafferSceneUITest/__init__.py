@@ -51,6 +51,7 @@ from .CameraToolTest import CameraToolTest
 from .VisualiserTest import VisualiserTest
 from .TransformToolTest import TransformToolTest
 from .CropWindowToolTest import CropWindowToolTest
+from .NodeUITest import NodeUITest
 
 if __name__ == "__main__":
 	unittest.main()
