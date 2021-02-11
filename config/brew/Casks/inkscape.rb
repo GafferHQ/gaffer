@@ -6,8 +6,6 @@ cask 'inkscape' do
   name 'Inkscape'
   homepage 'https://inkscape.org/'
 
-  depends_on x11: true
-
   app 'Inkscape.app'
   binary "#{appdir}/Inkscape.app/Contents/Resources/bin/inkscape"
 
