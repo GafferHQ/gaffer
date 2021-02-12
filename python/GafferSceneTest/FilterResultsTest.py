@@ -183,5 +183,31 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		Gaffer.ValuePlug.clearCache()
 		script["filterResults2"]["out"].getValue( h )
 
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHashPerf( self ):
+
+		sphere = GafferScene.Sphere()
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["target"].setValue( '/sphere' )
+		duplicate["copies"].setValue( 1000000 )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '...' ] ) )
+
+		filterResults = GafferScene.FilterResults()
+		filterResults["scene"].setInput( duplicate["out"] )
+		filterResults["filter"].setInput( pathFilter["out"] )
+
+		# Evaluate the root childNames beforehand to focus our timing on the hash
+		duplicate["out"].childNames( "/" )
+
+		with GafferTest.TestRunner.PerformanceScope():
+			filterResults["out"].hash()
+
+
+
 if __name__ == "__main__":
 	unittest.main()
