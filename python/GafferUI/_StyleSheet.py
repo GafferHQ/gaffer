@@ -1246,6 +1246,10 @@ _styleSheet = string.Template(
 		background-color: $backgroundRaised;
 	}
 
+	_TableView:disabled {
+		color: $foregroundFaded;
+	}
+
 	_TableView[gafferEditable="true"] {
 		padding: 0px;
 		gridline-color: $backgroundLowlight;

@@ -15,6 +15,7 @@ Improvements
 - FrameMask : Improved performance when dealing with long frame ranges.
 - Node : Improved performance of type queries related to dispatch processes.
 - FilterResults : Improved performance of hash.
+- PrimitiveInspector : Improved responsiveness by performing work in the background instead of locking the UI.
 
 API
 ---
