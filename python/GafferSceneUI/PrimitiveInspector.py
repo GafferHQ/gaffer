@@ -45,7 +45,6 @@ import GafferSceneUI
 
 import collections
 
-
 def _getPrimvarToolTip( primVarName, primvar ) :
 	toolTip = primVarName + " : "
 
@@ -175,6 +174,9 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 
 		nodeAndLocationContainer.append( self.__locationFrame )
 
+		self.__busyWidget = GafferUI.BusyWidget( size = 20 )
+		nodeAndLocationContainer.append( self.__busyWidget )
+
 		column.append( nodeAndLocationContainer )
 
 		column.append( self.__tabbedContainer )
@@ -260,90 +262,118 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		# next suitable plug from the current node set.
 		self._updateFromSet()
 
+
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __updateLazily( self ) :
-		self.__update()
+		self.__backgroundUpdate()
 
-	def __update( self ) :
+	@GafferUI.BackgroundMethod()
+	def __backgroundUpdate( self ) :
 
 		with self.getContext() :
 
-			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-			self.__locationFrame._repolish()
-			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
-			self.__nodeFrame._repolish()
+			if not self.__scenePlug :
+				return None
 
+			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+
+			if not targetPath :
+				return None
+
+			if not self.__scenePlug.exists( targetPath ) :
+				return None
+
+			return self.__scenePlug.object( targetPath )
+
+	@__backgroundUpdate.plug
+	def __backgroundUpdatePlug( self ) :
+		if self.__scenePlug:
+			return self.__scenePlug["object"]
+		else:
+			return None
+
+	@__backgroundUpdate.preCall
+	def __backgroundUpdatePreCall( self ) :
+
+		self.__busyWidget.setBusy( True )
+		for (k,widget) in self.__dataWidgets.items():
+			widget.setEnabled( False )
+
+		if self.__scenePlug :
+			self.__nodeLabel.setFormatter( _nodeLabelFormatter )
+			self.__nodeLabel.setGraphComponent( self.__scenePlug.node() )
+			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "AB" )
+		else:
+			self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
+			self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "Other" )
+		self.__nodeFrame._repolish()
+
+		if not self.__scenePlug:
+			self.__locationLabel.setText( "" )
+			self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
+		else:
+			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+			if targetPath :
+				self.__locationLabel.setText( targetPath )
+				self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
+			else:
+				self.__locationLabel.setText( "Select a location to inspect" )
+				self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
+		self.__locationFrame._repolish()
+
+	@__backgroundUpdate.postCall
+	def __backgroundUpdatePostCall( self, backgroundResult ) :
+
+		for (k,widget) in self.__dataWidgets.items():
+			widget.setEnabled( True )
+
+		self.__busyWidget.setBusy( False )
+
+		if self.__scenePlug:
+			targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+			if targetPath:
+				if backgroundResult:
+					self.__locationLabel.setText( targetPath )
+				else:
+					self.__locationFrame._qtWidget().setProperty( "gafferDiff", "Other" )
+					self.__locationFrame._repolish()
+					self.__locationLabel.setText( "Location %s does not exist" % targetPath )
+
+		if isinstance( backgroundResult, IECoreScene.Primitive ) :
 			headers = collections.OrderedDict()
 			primVars = collections.OrderedDict()
 			toolTips = collections.OrderedDict()
 
-			haveData = False
+			for primvarName in _orderPrimitiveVariables( backgroundResult.keys() ) :
+				primvar = backgroundResult[primvarName]
+				if not primvar.interpolation in primVars :
+					headers[primvar.interpolation] = []
+					primVars[primvar.interpolation] = []
+					toolTips[primvar.interpolation] = []
 
-			if self.__scenePlug :
+				headers[primvar.interpolation].append( primvarName )
+				primVars[primvar.interpolation].append( conditionPrimvar( primvar ) )
+				toolTips[primvar.interpolation].append( _getPrimvarToolTip( primvarName, primvar ) )
 
-				self.__nodeLabel.setFormatter( _nodeLabelFormatter )
-				self.__nodeLabel.setGraphComponent( self.__scenePlug.node() )
-				self.__nodeFrame._qtWidget().setProperty( "gafferDiff", "AB" )
-				self.__nodeFrame._repolish()
+			for interpolation in primVars.keys() :
 
-				targetPath = GafferSceneUI.ContextAlgo.getLastSelectedPath( self.getContext() )
+				pv = primVars.get( interpolation, None )
+				h = headers.get( interpolation, None )
+				t = toolTips.get( interpolation, None )
 
-				if targetPath :
+				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation],
+					"{0} ({1})".format( str( interpolation ), len( pv ) ) )
 
-					if self.__scenePlug.exists( targetPath ) :
+				self.__dataWidgets[interpolation].setToolTips( t )
+				self.__dataWidgets[interpolation].setHeader( h )
+				self.__dataWidgets[interpolation].setData( pv )
 
-						self.__locationLabel.setText( targetPath )
-						self.__locationFrame._qtWidget().setProperty( "gafferDiff", "AB" )
-						self.__locationFrame._repolish()
+		else:
 
-						obj = self.__scenePlug.object( targetPath )
-						if isinstance( obj, IECoreScene.Primitive ) :
+			for interpolation in self.__dataWidgets.keys():
 
-							haveData = True
-
-							for primvarName in _orderPrimitiveVariables( obj.keys() ) :
-								primvar = obj[primvarName]
-								if not primvar.interpolation in primVars :
-									headers[primvar.interpolation] = []
-									primVars[primvar.interpolation] = []
-									toolTips[primvar.interpolation] = []
-
-								headers[primvar.interpolation].append( primvarName )
-								primVars[primvar.interpolation].append( conditionPrimvar( primvar ) )
-								toolTips[primvar.interpolation].append( _getPrimvarToolTip( primvarName, primvar ) )
-
-							for interpolation in primVars.keys() :
-
-								pv = primVars.get( interpolation, None )
-								h = headers.get( interpolation, None )
-								t = toolTips.get( interpolation, None )
-
-								self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation],
-									"{0} ({1})".format( str( interpolation ), len( pv ) ) )
-
-								self.__dataWidgets[interpolation].setToolTips( t )
-								self.__dataWidgets[interpolation].setHeader( h )
-								self.__dataWidgets[interpolation].setData( pv )
-					else :
-
-						self.__locationLabel.setText( 'Location %s does not exist' % targetPath )
-
-				else :
-
-					self.__locationLabel.setText( "Select a location to inspect" )
-
-			else:
-
-				self.__nodeLabel.setFormatter( lambda x : "Select a node to inspect" )
-
-			if not haveData :
-
-				for interpolation in [IECoreScene.PrimitiveVariable.Interpolation.Constant, IECoreScene.PrimitiveVariable.Interpolation.Uniform,
-					IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECoreScene.PrimitiveVariable.Interpolation.Varying,
-					IECoreScene.PrimitiveVariable.Interpolation.FaceVarying] :
-
-					self.__dataWidgets[interpolation].setData( None )
-					self.__dataWidgets[interpolation].setToolTips( [] )
-					self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], str( interpolation ) )
+				self.__dataWidgets[interpolation].setData( None )
+				self.__dataWidgets[interpolation].setToolTips( [] )
+				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation], str( interpolation ) )
 
 GafferUI.Editor.registerType( "PrimitiveInspector", PrimitiveInspector )

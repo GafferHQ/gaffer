@@ -84,6 +84,11 @@ GAFFERSCENE_API void matchingPaths( const FilterPlug *filterPlug, const ScenePlu
 /// As above, but specifying the filter as a PathMatcher.
 GAFFERSCENE_API void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 
+/// Matching above, but doing a fast hash of the matching paths instead of storing all paths
+GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const Filter *filter, const ScenePlug *scene );
+GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene );
+GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const IECore::PathMatcher &filter, const ScenePlug *scene );
+
 /// Parallel scene traversal
 /// ========================
 

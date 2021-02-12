@@ -127,6 +127,30 @@ struct ThreadablePathAccumulator
 
 };
 
+struct ThreadablePathHashAccumulator
+{
+	ThreadablePathHashAccumulator(): m_h1Accum( 0 ), m_h2Accum( 0 ){}
+
+	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
+	{
+		// The hash should depend on all the paths visited, but doesn't depend on the order we visit them
+		// - in fact it must be consistent even when parallel traversal visits in a non-deterministic order.
+		// We can achieve this by summing all the element hashes into an atomic accumulator - because any
+		// change gets evenly distributed into the bit pattern of the MurmurHash, this sum will change if
+		// any element changes, but is not affected by what order the sum runs in.
+		// There isn't an easy way to do a 128 bit atomic sum, but two 64 bit sums should be pretty well
+		// as good ( the only weakness I can see is that if you summed 2**64 identical hashes, they would
+		// cancel out, but I can't see that arising here ).
+		IECore::MurmurHash h;
+		h.append( &path.front(), path.size() );
+		m_h1Accum += h.h1();
+		m_h2Accum += h.h2();
+		return true;
+	}
+
+	std::atomic<uint64_t> m_h1Accum, m_h2Accum;
+};
+
 } // namespace
 
 std::unordered_set<FilteredSceneProcessor *> GafferScene::SceneAlgo::filteredNodes( Filter *filter )
@@ -151,6 +175,25 @@ void GafferScene::SceneAlgo::matchingPaths( const PathMatcher &filter, const Sce
 {
 	ThreadablePathAccumulator f( paths );
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filter, f );
+}
+
+IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const Filter *filter, const ScenePlug *scene )
+{
+	return matchingPathsHash( filter->outPlug(), scene );
+}
+
+IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene )
+{
+	ThreadablePathHashAccumulator f;
+	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f );
+	return IECore::MurmurHash( f.m_h1Accum, f.m_h2Accum );
+}
+
+IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const PathMatcher &filter, const ScenePlug *scene )
+{
+	ThreadablePathHashAccumulator f;
+	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filter, f );
+	return IECore::MurmurHash( f.m_h1Accum, f.m_h2Accum );
 }
 
 //////////////////////////////////////////////////////////////////////////

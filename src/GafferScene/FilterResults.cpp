@@ -131,9 +131,7 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 
 	if( output == internalOutPlug() )
 	{
-		PathMatcherDataPtr data = new PathMatcherData;
-		SceneAlgo::matchingPaths( filterPlug(), scenePlug(), data->writable() );
-		data->hash( h );
+		h.append( SceneAlgo::matchingPathsHash( filterPlug(), scenePlug() ) );
 	}
 	else if( output == outPlug() )
 	{
