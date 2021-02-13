@@ -21,6 +21,7 @@ API
 ---
 
 - SceneAlgo : Added matchingPathsHash.
+- ViewportGadget : Added maxPlanarZoom to limit zooming in
 
 0.59.3.0 (relative to 0.59.2.0)
 ========
