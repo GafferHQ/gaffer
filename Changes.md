@@ -16,6 +16,7 @@ Improvements
 - Node : Improved performance of type queries related to dispatch processes.
 - FilterResults : Improved performance of hash.
 - PrimitiveInspector : Improved responsiveness by performing work in the background instead of locking the UI.
+- Graph Editor : Prevented zooming in so far you can't see nodes
 
 API
 ---
