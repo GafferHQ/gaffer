@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.4.0)
 ========
 
+Improvements
+------------
+
+- FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
+
 API
 ---
 
