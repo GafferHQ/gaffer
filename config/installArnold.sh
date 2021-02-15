@@ -37,7 +37,7 @@
 
 set -e
 
-arnoldVersion=6.0.1.0
+arnoldVersion=6.2.0.1
 
 if [[ `uname` = "Linux" ]] ; then
 	arnoldPlatform=linux
