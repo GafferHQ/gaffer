@@ -4,6 +4,7 @@
 API
 ---
 
+- BackgroundTaskDialogue : Added a new modal dialogue to assist in running tasks in the background.
 - EventLoop : Added `BlockedUIThreadExecution` context manager.
 - ScriptNode : Added support for cancellation of execution and serialisation.
 
