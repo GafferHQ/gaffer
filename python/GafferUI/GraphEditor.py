@@ -51,6 +51,7 @@ class GraphEditor( GafferUI.Editor ) :
 		# with our keyboard shortcuts and aren't that useful in the graph
 		viewportGadget = GafferUI.ViewportGadget()
 		viewportGadget.setPreciseMotionAllowed( False )
+		viewportGadget.setMaxPlanarZoom( imath.V2f( 25 ) )
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
 			gadget = viewportGadget,
