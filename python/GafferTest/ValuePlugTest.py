@@ -659,8 +659,9 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContentionForOneItem( self ) :
+		m = GafferTest.MultiplyNode()
 
-		GafferTest.testValuePlugContentionForOneItem()
+		GafferTest.parallelGetValue( m["product"], 10000000 )
 
 	def testIsSetToDefault( self ) :
 
