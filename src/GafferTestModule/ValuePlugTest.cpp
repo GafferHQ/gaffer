@@ -44,6 +44,9 @@
 
 #include "tbb/parallel_for.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
+
 using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferTest;
@@ -51,16 +54,21 @@ using namespace GafferTest;
 namespace
 {
 
-void testValuePlugContentionForOneItem()
+// Call getValue() on the given plug many times in parallel.
+//
+// Evaluating the same value over and over again is obviously not useful,
+// but it can help turn up performance issues that can happen when a
+// downstream graph ends up repeatedly evaluating something which turn out
+// not to vary.
+void parallelGetValue( const IntPlug *plug, int iterations )
 {
-	MultiplyNodePtr node = new MultiplyNode;
-
+	IECorePython::ScopedGILRelease gilRelease;
 	tbb::parallel_for(
-		tbb::blocked_range<int>( 0, 10000000 ),
-		[&node]( const tbb::blocked_range<int> &r ) {
+		tbb::blocked_range<int>( 0, iterations ),
+		[&plug]( const tbb::blocked_range<int> &r ) {
 			for( int i = r.begin(); i < r.end(); ++i )
 			{
-				node->productPlug()->getValue();
+				plug->getValue();
 			}
 		}
 	);
@@ -70,5 +78,5 @@ void testValuePlugContentionForOneItem()
 
 void GafferTestModule::bindValuePlugTest()
 {
-	def( "testValuePlugContentionForOneItem", &testValuePlugContentionForOneItem );
+	def( "parallelGetValue", &parallelGetValue );
 }
