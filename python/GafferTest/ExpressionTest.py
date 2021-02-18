@@ -1454,5 +1454,24 @@ class ExpressionTest( GafferTest.TestCase ) :
 			self.assertAlmostEqual( s["dest%i"%i]["p"].getValue().y, 0.2 + 0.3 * i + 10 * i, places = 5 )
 			self.assertAlmostEqual( s["dest%i"%i]["p"].getValue().z, 0.3 + 0.3 * i + 10 * i, places = 5 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testParallelPerformance( self ):
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			q = 0
+			while q != 10000000:
+				q += 1
+			parent['n']['user']['p'] = 0
+			"""
+		) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.parallelGetValue( s["n"]["user"]["p"], 100 )
+
 if __name__ == "__main__":
 	unittest.main()
