@@ -336,6 +336,23 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 	}
 }
 
+Gaffer::ValuePlug::CachePolicy Expression::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == executePlug() )
+	{
+		if( m_engine )
+		{
+			return m_engine->executeCachePolicy();
+		}
+		else
+		{
+			return ValuePlug::CachePolicy::Legacy;
+		}
+	}
+	return ComputeNode::computeCachePolicy( output );
+}
+
+
 void Expression::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == executePlug() )
