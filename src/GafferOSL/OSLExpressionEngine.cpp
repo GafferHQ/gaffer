@@ -331,9 +331,10 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		IECore::ConstObjectVectorPtr execute( const Gaffer::Context *context, const std::vector<const Gaffer::ValuePlug *> &proxyInputs ) const override
 		{
 			ShadingSystem *s = shadingSystem();
-			OSL::ShadingContext *shadingContext = s->get_context( /* threadInfo */ nullptr );
+			OSL::PerThreadInfo *threadInfo = s->create_thread_info();
+			OSL::ShadingContext *shadingContext = s->get_context( threadInfo );
 
-		    OSL::ShaderGlobals shaderGlobals;
+			OSL::ShaderGlobals shaderGlobals;
 			memset( (void *)&shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
 			if( m_needsTime )
@@ -391,6 +392,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			}
 
 			s->release_context( shadingContext );
+			s->destroy_thread_info( threadInfo );
 			return result;
 		}
 

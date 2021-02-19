@@ -623,23 +623,6 @@ OSL::ShadingSystem *shadingSystem()
 	return g_shadingSystem;
 }
 
-// This just exists to ensure that release is called
-struct ShadingContextWrapper
-{
-
-	ShadingContextWrapper()
-		:	shadingContext( ::shadingSystem()->get_context( /* threadInfo */ nullptr ) )
-	{
-	}
-
-	~ShadingContextWrapper()
-	{
-		::shadingSystem()->release_context( shadingContext );
-	}
-
-	ShadingContext *shadingContext;
-};
-
 } // namespace
 
 
@@ -841,6 +824,28 @@ class ShadingResults
 		tbb::spin_rw_mutex m_resultsMutex;
 
 };
+
+// Thread specific information needed during shading - this includes both the per-thread result cache,
+// and the OSL machinery that needs to be stored per "renderer-thread"
+struct ThreadInfo
+{
+	ThreadInfo()
+		: oslThreadInfo( ::shadingSystem()->create_thread_info() ),
+		  shadingContext( ::shadingSystem()->get_context( oslThreadInfo ) )
+	{
+	}
+
+	~ThreadInfo()
+	{
+		::shadingSystem()->release_context( shadingContext );
+		::shadingSystem()->destroy_thread_info( oslThreadInfo );
+	}
+
+	ShadingResults::DebugResultsMap debugResults;
+	OSL::PerThreadInfo *oslThreadInfo;
+	OSL::ShadingContext *shadingContext;
+};
+
 
 } // namespace
 
@@ -1198,17 +1203,16 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	// Iterate over the input points, doing the shading as we go
 
-	typedef tbb::enumerable_thread_specific<ShadingResults::DebugResultsMap> ThreadLocalDebugResults;
-	ThreadLocalDebugResults debugResultsCache;
+	tbb::enumerable_thread_specific<ThreadInfo> threadInfoCache;
 
 	const IECore::Canceller *canceller = context->canceller();
 
 	ShadingSystem *shadingSystem = ::shadingSystem();
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
-	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &debugResultsCache, canceller]( const tbb::blocked_range<size_t> &r )
+	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &threadInfoCache, canceller]( const tbb::blocked_range<size_t> &r )
 	{
-		ThreadLocalDebugResults::reference resultCache = debugResultsCache.local();
+		ThreadInfo &threadInfo = threadInfoCache.local();
 
 		ThreadRenderState threadRenderState( renderState );
 
@@ -1216,7 +1220,6 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 		threadShaderGlobals.renderstate = &threadRenderState;
 
-		ShadingContextWrapper contextWrapper;
 		for( size_t i = r.begin(); i < r.end(); ++i )
 		{
 			IECore::Canceller::check( canceller );
@@ -1248,9 +1251,9 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 			threadShaderGlobals.Ci = nullptr;
 
 			threadRenderState.pointIndex = i;
-			shadingSystem->execute( contextWrapper.shadingContext, shaderGroup, threadShaderGlobals );
+			shadingSystem->execute( threadInfo.shadingContext, shaderGroup, threadShaderGlobals );
 
-			results.addResult( i, threadShaderGlobals.Ci, resultCache );
+			results.addResult( i, threadShaderGlobals.Ci, threadInfo.debugResults );
 		}
 	};
 
