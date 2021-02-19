@@ -35,35 +35,11 @@
 ##########################################################################
 
 import os
-import sys
-import ctypes
 
 import IECore
 
 moduleSearchPath = IECore.SearchPath( os.environ["PYTHONPATH"] )
 if moduleSearchPath.find( "IECoreUSD" ) and moduleSearchPath.find( "pxr/Usd" ) :
-
-	# Import the USD Python module _without_ RTLD_GLOBAL, otherwise
-	# we get errors like the following spewed to the shell when we first
-	# open a USD file :
-	#
-	# ```
-	# Coding Error: in DefinePythonClass at line 932 of /disk1/john/dev/gafferDependencies/USD/working/USD-18.09/pxr/base/lib/tf/type.cpp
-	# -- TfType 'TfNotice' already has a defined Python type; cannot redefine
-	# ```
-	#
-	# > Note : RTLD_GLOBAL is turned on in the first place by IECore/__init__.py.
-	# > Ideally we'd stop doing that and wouldn't need this workaround. See
-	# > https://github.com/ImageEngine/cortex/pull/810.
-
-	try :
-		if hasattr( sys, "getdlopenflags" ):
-			originalDLOpenFlags = sys.getdlopenflags()
-			sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
-		from pxr import Usd
-	finally :
-		if hasattr( sys, "getdlopenflags" ):
-			sys.setdlopenflags( originalDLOpenFlags )
 
 	# Import IECoreUSD so that we get the USD SceneInterface registered,
 	# providing USD functionality to both the SceneReader and SceneWriter.

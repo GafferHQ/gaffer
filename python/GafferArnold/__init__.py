@@ -40,28 +40,7 @@ __import__( "GafferScene" )
 # are always loaded for these, even if people only import GafferArnold
 __import__( "GafferOSL" )
 
-try :
-
-	# Make sure we import _GafferArnold _without_ RTLD_GLOBAL. This prevents
-	# clashes between the LLVM symbols in libai.so and the Mesa OpenGL driver.
-	# Ideally we wouldn't use RTLD_GLOBAL anywhere - see
-	# https://github.com/ImageEngine/cortex/pull/810.
-
-	import sys
-	import ctypes
-
-	if hasattr( sys, "getdlopenflags" ):
-		originalDLOpenFlags = sys.getdlopenflags()
-		sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
-
-	from ._GafferArnold import *
-
-finally :
-
-	if hasattr( sys, "getdlopenflags" ):
-		sys.setdlopenflags( originalDLOpenFlags )
-		del originalDLOpenFlags
-	del sys, ctypes
+from ._GafferArnold import *
 
 from .ArnoldShaderBall import ArnoldShaderBall
 from .ArnoldTextureBake import ArnoldTextureBake

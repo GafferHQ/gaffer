@@ -34,21 +34,6 @@
 #
 ##########################################################################
 
-try :
-
-	# See comments in `GafferArnold/__init__.py`
-	import sys
-	import ctypes
-	if hasattr( sys, "getdlopenflags" ):
-		originalDLOpenFlags = sys.getdlopenflags()
-		sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
-
-	from ._IECoreArnold import *
-
-finally :
-	if hasattr( sys, "getdlopenflags" ):
-		sys.setdlopenflags( originalDLOpenFlags )
-		del originalDLOpenFlags
-	del sys, ctypes
+from ._IECoreArnold import *
 
 from .UniverseBlock import UniverseBlock
