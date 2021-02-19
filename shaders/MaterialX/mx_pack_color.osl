@@ -1,0 +1,17 @@
+// MaterialX removed this shader in a minor version revision. But we still need it in
+// `IECore::ShaderNetworkAlgo::convertOSLComponentConnections()` so we have reimplementd it here.
+// We originally used it to emulate component-level connections for colors, but OSL supports
+// that natively now. But we continue to use it to work around bugs in Arnold - see
+// `ArnoldRenderTest.testOSLShaders()`.
+/// \todo Remove once the Arnold bug is fixed.
+shader mx_pack_color
+(
+	float in1 = 0,
+	float in2 = 0,
+	float in3 = 0,
+	float in4 = 0,
+	output color out = 0
+)
+{
+	out = color( in1, in2, in3 );
+}
