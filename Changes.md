@@ -7,12 +7,15 @@ Improvements
 ------------
 
 - Serialisation : Reduced script save times by around 50%.
-- Expression : Improved error message when Python expression assigns an invalid value.
+- Expression :
+  - Improved performance of Python expression evaluation when the same result is required in multiple threads. Specific expression benchmarks have shown a 10x speedup and some production scenes show an overall 15-30% improvement. Caution : This can expose pre-existing bugs in other nodes - see Breaking Changes for details.
+  - Improved error message when Python expression assigns an invalid value.
 - Numeric Bookmarks : Changed the Editor <kbd>1</kbd>-<kbd>9</kbd> hotkeys to follow the bookmark rather than pinning it (#4074).
 - Editors : Simplified the Editor Focus Menu, removing some seldom used (but potentially ambiguous) modes (#4074).
 - Timeline :
   - Added support for sub-frame dragging with a <kbd>Ctrl</kbd> modifier, and fixed snapping of the frame indicator for regular drag operations.
   - The current frame is now drawn next to the playhead.
+- Improved performance of Python expressions when they are evaluated multiple times in parallel.  This is the first use of the Standard cache policy in a node which could be downstream of a custom Gaffer node that could make an improperly isolated call to tbb, triggering a hang.  If this causes a hang, set the env var GAFFER_PYTHONEXPRESSION_CACHEPOLICY=Legacy as a temporary workaround, and make sure that all C++ nodes that use tbb parallelism are isolating.
 
 Fixes
 -----
@@ -26,6 +29,7 @@ API
 - Slider :
   - Added optional value snapping for drag and button press operations. This is controlled via the `setSnapIncrement()` and `getSnapIncrement()` methods.
   - Added `setHoverPositionVisible()` and `getHoverPositionVisible()` accessors to control an optional position indicator drawn under the pointer.
+- Expression : Added `Engine::executeCachePolicy()` method which must be implemented by subclasses.
 
 Breaking Changes
 ----------------
@@ -65,6 +69,7 @@ Breaking Changes
 - Editors : Removed the 'Follow Scene Selection' mode from the Node Editor Focus menu (#4074).
 - GafferSceneUI : Removed `SourceSet`.
 - ScriptNode : Added private member data.
+- Expression : Changed the Python expression cache policy to `Standard`. This executes expressions behind a lock, and can cause hangs if buggy upstream nodes perform TBB tasks without an appropriate `TaskIsolation` or `TaskCollaboration` policy. In this case, the `GAFFER_PYTHONEXPRESSION_CACHEPOLICY` environment variable may be set to `Legacy` or `TaskIsolation` while the bugs are fixed.
 
 Build
 -----

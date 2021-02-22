@@ -120,6 +120,8 @@ class GAFFER_API Expression : public ComputeNode
 				/// to apply them to each of the individual output plugs.
 				/// \threading This function may be called concurrently.
 				virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const = 0;
+				/// What cache policy should be used for executing the expression.
+				virtual Gaffer::ValuePlug::CachePolicy executeCachePolicy() const = 0;
 				//@}
 
 				/// @name Language utilities
@@ -178,6 +180,8 @@ class GAFFER_API Expression : public ComputeNode
 
 		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
 		void compute( ValuePlug *output, const Context *context ) const override;
+
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
 	private :
 

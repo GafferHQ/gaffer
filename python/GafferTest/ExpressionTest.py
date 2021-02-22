@@ -1475,5 +1475,26 @@ class ExpressionTest( GafferTest.TestCase ) :
 			s["n"]["user"]["p"].getValue
 		)
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testParallelPerformance( self ):
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			q = 0
+			while q != 10000000:
+				q += 1
+			parent['n']['user']['p'] = 0
+			"""
+		) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.parallelGetValue( s["n"]["user"]["p"], 100 )
+
+
+
 if __name__ == "__main__":
 	unittest.main()
