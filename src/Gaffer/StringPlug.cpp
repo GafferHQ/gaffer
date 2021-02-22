@@ -136,6 +136,10 @@ IECore::MurmurHash StringPlug::hash() const
 			result.append( Context::current()->substitute( s->readable(), m_substitutions ) );
 			return result;
 		}
+		else
+		{
+			return s->Object::hash();
+		}
 	}
 
 	// no substitutions
