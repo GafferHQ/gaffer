@@ -21,7 +21,7 @@ Improvements
 API
 ---
 
-- SceneAlgo : Added matchingPathsHash.
+- SceneAlgo : Added `matchingPathsHash()` function.
 - ViewportGadget : Added `setMaxPlanarZoom()` and `getMaxPlanarZoom()` methods to limit zooming in.
 
 0.59.3.0 (relative to 0.59.2.0)
