@@ -68,6 +68,9 @@ class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 		Gaffer::PathMatcherDataPlug *outPlug();
 		const Gaffer::PathMatcherDataPlug *outPlug() const;
 
+		Gaffer::StringVectorDataPlug *outStringsPlug();
+		const Gaffer::StringVectorDataPlug *outStringsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

@@ -56,6 +56,7 @@ FilterResults::FilterResults( const std::string &name )
 	addChild( new FilterPlug( "filter" ) );
 	addChild( new PathMatcherDataPlug( "__internalOut", Gaffer::Plug::Out, new PathMatcherData ) );
 	addChild( new PathMatcherDataPlug( "out", Gaffer::Plug::Out, new PathMatcherData ) );
+	addChild( new StringVectorDataPlug( "outStrings", Gaffer::Plug::Out, new StringVectorData ) );
 }
 
 FilterResults::~FilterResults()
@@ -102,6 +103,16 @@ const Gaffer::PathMatcherDataPlug *FilterResults::outPlug() const
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::StringVectorDataPlug *FilterResults::outStringsPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringVectorDataPlug *FilterResults::outStringsPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+}
+
 void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
@@ -123,6 +134,11 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	{
 		outputs.push_back( outPlug() );
 	}
+
+	if( input == outPlug() )
+	{
+		outputs.push_back( outStringsPlug() );
+	}
 }
 
 void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -138,6 +154,10 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		ScenePlug::GlobalScope globalScope( context );
 		globalScope.remove( SceneAlgo::historyIDContextName() );
 		internalOutPlug()->hash( h );
+	}
+	else if( output == outStringsPlug() )
+	{
+		outPlug()->hash( h );
 	}
 }
 
@@ -155,6 +175,14 @@ void FilterResults::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 		ScenePlug::GlobalScope globalScope( context );
 		globalScope.remove( SceneAlgo::historyIDContextName() );
 		output->setFrom( internalOutPlug() );
+		return;
+	}
+	else if( output == outStringsPlug() )
+	{
+		ConstPathMatcherDataPtr paths = outPlug()->getValue();
+		StringVectorDataPtr strings = new StringVectorData();
+		paths->readable().paths( strings->writable() );
+		static_cast<StringVectorDataPlug *>( output )->setValue( strings );
 		return;
 	}
 

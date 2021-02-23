@@ -81,7 +81,22 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The results of the search.
+			The results of the search, as an `IECore::PathMatcher` object. This
+			is most useful for performing hierarchical queries and for iterating
+			through the paths without an expensive conversion to strings.
+			""",
+
+			"plugValueWidget:type", "",
+
+		],
+
+		"outStrings" : [
+
+			"description",
+			"""
+			The results of the search, converted to a list of strings. This is
+			useful for connecting directly to other plugs, such as
+			`Wedge.strings` or `CollectScenes.rootNames`.
 			""",
 
 			"plugValueWidget:type", "",
