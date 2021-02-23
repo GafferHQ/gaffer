@@ -56,3 +56,4 @@ DELIGHT_ROOT = os.environ["DELIGHT"]
 ARNOLD_ROOT = os.environ["ARNOLD_ROOT"]
 VTUNE_ROOT = "/disk1/apps/intel/system_studio_2018/vtune_amplifier_2018.1.0.535340"
 GAFFERCORTEX=1
+CXXSTD="c++14"
