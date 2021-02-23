@@ -131,9 +131,16 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void setCenterOfInterest( float centerOfInterest );
 		float getCenterOfInterest();
 
+		// The max planar zoom is the maximum pixel size in viewport pixels
+		// that a unit distance can be expanded to.  Used to avoid zooming
+		// in so close that the gadgets don't make any sense.
+		void setMaxPlanarZoom( const Imath::V2f &scale );
+		Imath::V2f getMaxPlanarZoom();
+
 		void frame( const Imath::Box3f &box );
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );
+
 
 		void fitClippingPlanes( const Imath::Box3f &box );
 

@@ -115,7 +115,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 	public :
 
 		CameraController()
-			:	m_planarMovement( true ), m_sourceCamera( new IECoreScene::Camera() ), m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ), m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
+			:	m_planarMovement( true ), m_maxPlanarZoom( 0.0f ), m_sourceCamera( new IECoreScene::Camera() ), m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ), m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
 		{
 		}
 
@@ -175,6 +175,16 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		float getCenterOfInterest()
 		{
 			return m_centerOfInterest;
+		}
+
+		void setMaxPlanarZoom( const Imath::V2f &scale )
+		{
+			m_maxPlanarZoom = scale;
+		}
+
+		Imath::V2f getMaxPlanarZoom()
+		{
+			return m_maxPlanarZoom;
 		}
 
 		/// Set the resolution of the viewport we are working in
@@ -562,6 +572,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				}
 				m_planarScale = m_motionPlanarScale * mult;
 
+				if( m_maxPlanarZoom != V2f( 0.0f ) )
+				{
+					m_planarScale = V2f(
+						std::max( m_planarScale.x, 1.0f / m_maxPlanarZoom.x ),
+						std::max( m_planarScale.y, 1.0f / m_maxPlanarZoom.y )
+					);
+				}
+
 				// Also apply a transform to keep the origin of the scale centered on the
 				// starting cursor position
 				V2f offset = V2f( -1, 1 ) * ( m_planarScale - m_motionPlanarScale ) *
@@ -585,6 +603,9 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		// between world units and pixels, independ of viewport resolution
 		// ( and m_sourceCamera will be null ).
 		bool m_planarMovement;
+
+		Imath::V2f m_maxPlanarZoom;
+
 
 		// m_sourceCamera provides the values for any camera properties
 		// which we don't override
@@ -817,6 +838,16 @@ void ViewportGadget::setCenterOfInterest( float centerOfInterest )
 float ViewportGadget::getCenterOfInterest()
 {
 	return m_cameraController->getCenterOfInterest();
+}
+
+void ViewportGadget::setMaxPlanarZoom( const Imath::V2f &scale )
+{
+	m_cameraController->setMaxPlanarZoom( scale );
+}
+
+Imath::V2f ViewportGadget::getMaxPlanarZoom()
+{
+	return m_cameraController->getMaxPlanarZoom();
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box )

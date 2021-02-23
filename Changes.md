@@ -101,11 +101,13 @@ Improvements
 - Node : Improved performance of type queries related to dispatch processes.
 - FilterResults : Improved performance of hash.
 - PrimitiveInspector : Improved responsiveness by performing work in the background instead of locking the UI.
+- Graph Editor : Prevented zooming in so far you can't see nodes.
 
 API
 ---
 
-- SceneAlgo : Added matchingPathsHash.
+- SceneAlgo : Added `matchingPathsHash()` function.
+- ViewportGadget : Added `setMaxPlanarZoom()` and `getMaxPlanarZoom()` methods to limit zooming in.
 
 0.59.3.0 (relative to 0.59.2.0)
 ========
