@@ -393,7 +393,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 						self.assertEqual( reRead["out"].dataWindow(), onePixelDataWindow )
 
 						emptyPixelData = IECore.CompoundObject()
-						emptyPixelData["tileOrigins"] = IECore.V2iVectorData( [ imath.V2i( 0, 64 ) ] )
+						emptyPixelData["tileOrigins"] = IECore.V2iVectorData( [ GafferImage.ImagePlug.tileOrigin( imath.V2i( 0, 99 ) ) ] )
 						emptyPixelData["sampleOffsets"] = IECore.ObjectVector( [ GafferImage.ImagePlug.emptyTileSampleOffsets() ] )
 						for channel in [ "R", "G","B", "A", "Z", "ZBack" ]:
 							emptyPixelData[channel] = IECore.ObjectVector( [ IECore.FloatVectorData() ] )
