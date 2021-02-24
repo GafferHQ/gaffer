@@ -19,6 +19,7 @@ Improvements
   - Improved performance of hash.
 - PrimitiveInspector : Improved responsiveness by performing work in the background instead of locking the UI.
 - Graph Editor : Prevented zooming in so far you can't see nodes.
+- FileMenu : Increased the maximum number of items in the "Open Recent" menu to 25.
 
 API
 ---
