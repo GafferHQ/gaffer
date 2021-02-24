@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import inspect
 import imath
 
 import IECore
@@ -532,6 +533,50 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 0, 20 ) :
 			sceneReader["refreshCount"].setValue( sceneReader["refreshCount"].getValue() + 1 )
 			GafferSceneTest.traverseScene( sceneReader["out"] )
+
+	def testGlobalHashesUseFileNameValue( self ) :
+
+		# This models a situation where a complex asset-managed reader uses a
+		# fileName expression which depends on the frame only in specific
+		# circumstances. In the cases that it doesn't actually use the frame in
+		# computing the filename, we want that to be reflected in the hash for
+		# global scene properties, so that we don't do unnecessary recomputation
+		# from frame to frame.
+
+		script = Gaffer.ScriptNode()
+		script["reader"] = GafferScene.SceneReader()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			frame = context.getFrame()
+			if False :
+				parent["reader"]["fileName"] = "test.{}.abc".format( int( frame ) )
+			else :
+				parent["reader"]["fileName"] = "test.abc"
+			"""
+		) )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 1 )
+			globalsHash = script["reader"]["out"].globalsHash()
+			setNamesHash = script["reader"]["out"].setNamesHash()
+			setHash = script["reader"]["out"].setHash( "test" )
+
+			c.setFrame( 2 )
+			self.assertEqual(
+				script["reader"]["out"].globalsHash(),
+				globalsHash
+			)
+			self.assertEqual(
+				script["reader"]["out"].setNamesHash(),
+				setNamesHash
+			)
+			self.assertEqual(
+				script["reader"]["out"].setHash( "test" ),
+				setHash
+			)
 
 if __name__ == "__main__":
 	unittest.main()
