@@ -36,6 +36,7 @@
 
 import os
 import imath
+import inspect
 
 import IECore
 
@@ -673,6 +674,186 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( oslImage["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 4, 4 ) ) )
 		self.assertEqual( oslImage["out"]["format"].getValue().getDisplayWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 4, 4 ) ) )
 		self.assertEqual( GafferImage.ImageAlgo.image( oslImage["out"] )["G"], IECore.FloatVectorData( [0.6] * 16 ) )
+
+	# Extreme example of doing something very expensive in OSLImage
+	def mandelbrotNode( self ):
+		mandelbrotCode = GafferOSL.OSLCode()
+		mandelbrotCode["parameters"].addChild( Gaffer.IntPlug( "iterations", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		mandelbrotCode["out"].addChild( Gaffer.FloatPlug( "outFloat", direction = Gaffer.Plug.Direction.Out ) )
+		mandelbrotCode["code"].setValue( inspect.cleandoc(
+			"""
+			// Basic mandelbrot adapted from surface shader here:
+			// https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/blob/master/src/shaders/mandelbrot.osl
+			point center = point (0,0,0);
+			float scale = 2;
+			point cent = center;
+			point c = scale * point(2*(u-0.5), 2*((1-v)-0.5), 0) + cent;
+			point z = c;
+			int i;
+			for (i = 1; i < iterations && dot(z,z) < 4.0; ++i) {
+			float x = z[0], y = z[1];
+			z = point (x*x - y*y, 2*x*y, 0) + c;
+			}
+			if (i < iterations) {
+				float f = pow(float(i)/iterations, 1/log10(float(iterations)));
+				outFloat = f;
+			} else {
+				outFloat = 0;
+			}
+			"""
+		) )
+		return mandelbrotCode
+
+	def testBadCachePolicyHang( self ):
+
+		# Using the legacy cache policy for OSLImage.shadingPlug creates a hang due to tbb task stealing,
+		# though it's a bit hard to actually demonstrate
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 128, 128, 1.000 ) )
+
+		# Need a slow to compute OSL code in order to trigger hang
+		mandelbrotCode = self.mandelbrotNode()
+
+		# In order to trigger the hang, we need to mix threads which are stuck waiting for an expression which
+		# uses the Standard policy with threads that are actually finishing, so that tbb tries to start up new
+		# threads while we're waiting for the expression result.  To do this, we use the "var" context variable
+		# to create two versions of this OSLCode
+		mandelbrotCode["varExpression"] = Gaffer.Expression()
+		mandelbrotCode["varExpression"].setExpression( 'parent.parameters.iterations = 100000 + context( "var", 0 );', "OSL" )
+
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value", defaultValue = imath.Color3f( 1, 1, 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "channel", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		oslImage["in"].setInput( constant["out"] )
+		oslImage["channels"]["channel"]["value"][0].setInput( mandelbrotCode["out"]["outFloat"] )
+		oslImage["channels"]["channel"]["value"][1].setInput( mandelbrotCode["out"]["outFloat"] )
+		oslImage["channels"]["channel"]["value"][2].setInput( mandelbrotCode["out"]["outFloat"] )
+
+		# This imageStats is use to create non-blocking slow calculations
+		imageStats = GafferImage.ImageStats()
+		imageStats["in"].setInput( oslImage["out"] )
+		imageStats["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 64, 64 ) ) )
+
+
+		# This box does the non-blocking slow calculation, followed by a blocking slow calculation.
+		# This ensures that tasks which do just the non-block calculation will start finishing while
+		# the blocking slow calculation is still running, allowing tbb to try running more threads
+		# on the blocking calcluation, realizing they can't run, and stealing tasks onto those threads
+		# which can hit the Standard policy lock on the expression upstream and deadlock, unless the
+		# OSLImage isolates its threads correctly
+		expressionBox = Gaffer.Box()
+		expressionBox.addChild( Gaffer.FloatVectorDataPlug( "inChannelData", defaultValue = IECore.FloatVectorData( [ ] ) ) )
+		expressionBox.addChild( Gaffer.FloatPlug( "inStat" ) )
+		expressionBox.addChild( Gaffer.FloatPlug( "out", direction = Gaffer.Plug.Direction.Out ) )
+		expressionBox["inChannelData"].setInput( oslImage["out"]["channelData"] )
+		expressionBox["inStat"].setInput( imageStats["average"]["r"] )
+
+		expressionBox["contextVariables"] = Gaffer.ContextVariables()
+		expressionBox["contextVariables"].setup( Gaffer.FloatVectorDataPlug( "in", defaultValue = IECore.FloatVectorData( [ ] ) ) )
+		expressionBox["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "image:tileOrigin", Gaffer.V2iPlug( "value" ), True, "member1" ) )
+		expressionBox["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "image:channelName", Gaffer.StringPlug( "value", defaultValue = 'R' ), True, "member2" ) )
+		expressionBox["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "var", Gaffer.IntPlug( "value", defaultValue = 1 ), True, "member3" ) )
+		expressionBox["contextVariables"]["in"].setInput( expressionBox["inChannelData"] )
+
+		expressionBox["expression"] = Gaffer.Expression()
+		expressionBox["expression"].setExpression( inspect.cleandoc(
+			"""
+			d = parent["contextVariables"]["out"]
+			parent["out"] = d[0] + parent["inStat"]
+			"""
+		) )
+
+		# Create a switch to mix which tasks perform the non-blocking or blocking calculation - we need a mixture
+		# to trigger the hang
+		switch = Gaffer.Switch()
+		switch.setup( Gaffer.IntPlug( "in", defaultValue = 0, ) )
+		switch["in"][0].setInput( expressionBox["out"] )
+		switch["in"][1].setInput( imageStats["average"]["r"] )
+
+		switch["switchExpression"] = Gaffer.Expression()
+		switch["switchExpression"].setExpression( 'parent.index = ( stoi( context( "testContext", "0" ) ) % 10 ) > 5;', "OSL" )
+
+		# In order to evaluate this expression a bunch of times at once with different values of "testContext",
+		# we set up a simple scene that can be evaluated with GafferSceneTest.traversScene.
+		# In theory, we could use a simple function that used a parallel_for to evaluate switch["out"], but for
+		# some reason we don't entirely understand, this does not trigger the hang
+		import GafferSceneTest
+		import GafferScene
+
+		sphere = GafferScene.Sphere()
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "foo", Gaffer.FloatPlug( "value" ), True, "member1" ) )
+		customAttributes["attributes"]["member1"]["value"].setInput( switch["out"] )
+		customAttributes["in"].setInput( sphere["out"] )
+		customAttributes["filter"].setInput( pathFilter["out"] )
+
+		collectScenes = GafferScene.CollectScenes()
+		collectScenes["in"].setInput( customAttributes["out"] )
+		collectScenes["rootNames"].setValue( IECore.StringVectorData( [ str(i) for i in range(1000) ] ) )
+		collectScenes["rootNameVariable"].setValue( 'testContext' )
+
+		# When OSLImage.shadingPlug is not correctly isolated, and grain size on ShadingEngine is smaller than the
+		# image tile size, this fails about 50% of the time.  Running it 5 times makes the failure pretty consistent.
+		for i in range( 5 ):
+			Gaffer.ValuePlug.clearCache()
+			Gaffer.ValuePlug.clearHashCache()
+			GafferSceneTest.traverseScene( collectScenes["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testMinimalPerf( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 4096, 4096 ) )
+
+		floatToColor = GafferOSL.OSLShader()
+		floatToColor.loadShader( "Conversion/FloatToColor" )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["in"].setInput( constant["out"] )
+		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
+		oslImage["channels"]["channel"]["value"].setInput( floatToColor["out"]["c"] )
+
+		GafferImage.ImageAlgo.image( constant["out"] )
+
+		# Run the fastest possible OSLImage on lots of tiles, to highlight any constant overhead
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImage.ImageAlgo.image( oslImage["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1)
+	def testCollaboratePerf( self ) :
+		# Test an expensive OSLImage, with many output tiles depending on the same input tiles,
+		# which should give TaskCollaborate a chance to show some benefit
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 128, 128 ) )
+
+		deleteChannels = GafferImage.DeleteChannels( "DeleteChannels" )
+		deleteChannels["in"].setInput( constant["out"] )
+		deleteChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		deleteChannels["channels"].setValue( 'R' )
+
+		mandelbrotCode = self.mandelbrotNode()
+		mandelbrotCode["parameters"]["iterations"].setValue( 500000 )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["in"].setInput( deleteChannels["out"] )
+		oslImage["channels"].addChild( Gaffer.NameValuePlug( "R", Gaffer.FloatPlug( "value" ), True, "channel" ) )
+		oslImage["channels"]["channel"]["value"].setInput( mandelbrotCode["out"]["outFloat"] )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( oslImage["out"] )
+		resize["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 2048 ) ), 1 ) )
+		# We use a resize because it pulls the input tiles repeatedly, we don't want to spend time on resizing
+		# pixels, so use a fast filter
+		resize["filter"].setValue( 'box' )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImage.ImageAlgo.image( resize["out"] )
 
 if __name__ == "__main__":
 	unittest.main()
