@@ -154,9 +154,6 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// \todo Do we need acceptsRemoval()?
 		/// \undoable
 		void removeChild( GraphComponentPtr child );
-		/// Removes all the children.
-		/// \undoable
-		void clearChildren();
 		/// Get an immediate child by name, performing a runTimeCast to T.
 		template<typename T=GraphComponent>
 		T *getChild( const IECore::InternedString &name );
@@ -174,6 +171,9 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
+		/// Removes all the children.
+		/// \undoable
+		void clearChildren();
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
 		template<typename T=GraphComponent>

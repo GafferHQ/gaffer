@@ -431,16 +431,6 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 	}
 }
 
-void GraphComponent::clearChildren()
-{
-	// because our storage is a vector, it's a good bit quicker to remove
-	// from the back to the front.
-	for( int i = (int)(m_children.size()) - 1; i >= 0; --i )
-	{
-		removeChild( m_children[i] );
-	}
-}
-
 void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitParentChanged )
 {
 	if( emitParentChanged )
@@ -479,6 +469,16 @@ size_t GraphComponent::index() const
 const GraphComponent::ChildContainer &GraphComponent::children() const
 {
 	return m_children;
+}
+
+void GraphComponent::clearChildren()
+{
+	// because our storage is a vector, it's a good bit quicker to remove
+	// from the back to the front.
+	for( int i = (int)(m_children.size()) - 1; i >= 0; --i )
+	{
+		removeChild( m_children[i] );
+	}
 }
 
 GraphComponent *GraphComponent::ancestor( IECore::TypeId type )
