@@ -88,8 +88,8 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
-		typedef boost::signal<void (GraphComponent *)> UnarySignal;
-		typedef boost::signal<void (GraphComponent *, GraphComponent *)> BinarySignal;
+		using UnarySignal = boost::signal<void (GraphComponent *)>;
+		using BinarySignal = boost::signal<void (GraphComponent *, GraphComponent *)>;
 
 		/// @name Naming
 		/// All GraphComponents have a name, which must be unique among
@@ -127,8 +127,8 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// The datatype used internally to store children.
-		typedef std::vector<GraphComponentPtr> ChildContainer;
-		typedef ChildContainer::const_iterator ChildIterator;
+		using ChildContainer = std::vector<GraphComponentPtr>;
+		using ChildIterator = ChildContainer::const_iterator;
 		/// Components can accept or reject potential children by implementing this
 		/// call. By default all children are accepted.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
