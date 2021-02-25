@@ -248,26 +248,6 @@ class NodeTest( GafferTest.TestCase ) :
 
 		self.assertRaises( RuntimeError, n1["in"].setInput, n2["out"] )
 
-	def testPlugFlagsChangedSignal( self ) :
-
-		n = Gaffer.Node()
-		n["p"] = Gaffer.Plug()
-
-		cs = GafferTest.CapturingSlot( n.plugFlagsChangedSignal() )
-		self.assertEqual( len( cs ), 0 )
-
-		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
-		self.assertEqual( len( cs ), 1 )
-		self.assertTrue( cs[0][0].isSame( n["p"] ) )
-
-		# second time should have no effect because they're the same
-		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
-		self.assertEqual( len( cs ), 1 )
-
-		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
-		self.assertEqual( len( cs ), 2 )
-		self.assertTrue( cs[1][0].isSame( n["p"] ) )
-
 	def testUserPlugs( self ) :
 
 		s = Gaffer.ScriptNode()

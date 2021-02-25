@@ -220,11 +220,6 @@ void Plug::setFlags( unsigned flags, bool enable )
 void Plug::setFlagsInternal( unsigned flags )
 {
 	m_flags = flags;
-
-	if( Node *n = node() )
-	{
-		n->plugFlagsChangedSignal()( this );
-	}
 }
 
 // The implementation of acceptsInputInternal() checks

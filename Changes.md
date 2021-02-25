@@ -70,6 +70,7 @@ Breaking Changes
 - GafferSceneUI : Removed `SourceSet`.
 - ScriptNode : Added private member data.
 - Expression : Changed the Python expression cache policy to `Standard`. This executes expressions behind a lock, and can cause hangs if buggy upstream nodes perform TBB tasks without an appropriate `TaskIsolation` or `TaskCollaboration` policy. In this case, the `GAFFER_PYTHONEXPRESSION_CACHEPOLICY` environment variable may be set to `Legacy` or `TaskIsolation` while the bugs are fixed.
+- Node : Removed `plugFlagsChangedSignal()`. We aim to phase flags out completely in future, and none of the current flags are expected to be changed after construction.
 
 Build
 -----
