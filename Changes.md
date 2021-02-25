@@ -27,6 +27,7 @@ Fixes
 API
 ---
 
+- GraphComponent : Added `reorderChildren()` and `childrenReorderedSignal()` methods.
 - Serialisation : Added `addModule()` method, for adding imports to the serialisation.
 - Slider :
   - Added optional value snapping for drag and button press operations. This is controlled via the `setSnapIncrement()` and `getSnapIncrement()` methods.

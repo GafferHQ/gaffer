@@ -49,6 +49,7 @@
 #include "boost/regex.hpp"
 
 #include <set>
+#include <unordered_map>
 
 using namespace Gaffer;
 using namespace IECore;
@@ -128,6 +129,7 @@ struct GraphComponent::Signals : boost::noncopyable
 	BinarySignal childAddedSignal;
 	BinarySignal childRemovedSignal;
 	BinarySignal parentChangedSignal;
+	ChildrenReorderedSignal childrenReorderedSignal;
 
 	// Utility to emit a signal if it has been created, but do nothing
 	// if it hasn't.
@@ -471,6 +473,92 @@ const GraphComponent::ChildContainer &GraphComponent::children() const
 	return m_children;
 }
 
+void GraphComponent::reorderChildren( const ChildContainer &newOrder )
+{
+	if( newOrder.size() != m_children.size() )
+	{
+		throw IECore::InvalidArgumentException(
+			boost::str( boost::format( "Wrong number of children specified (%1% but should be %2%)" ) % newOrder.size() % m_children.size() )
+		);
+	}
+
+	// Build map from child to index, so we can quickly look up the
+	// index for a particular child.
+
+	unordered_map<const GraphComponent *, size_t> indexMap;
+	size_t index = 0;
+	for( const auto &c : m_children )
+	{
+		indexMap[c.get()] = index++;
+	}
+
+	// Build list of indices corresponding to `newOrder`, validating
+	// `newOrder` as we go.
+
+	auto indices = std::make_shared<vector<size_t>>();
+	indices->reserve( m_children.size() );
+	for( const auto &child : newOrder )
+	{
+		if( child->parent() != this )
+		{
+			throw IECore::InvalidArgumentException(
+				boost::str( boost::format( "\"%1%\" is not a child of \"%2%\"" ) % child->fullName() % fullName() )
+			);
+		}
+
+		auto it = indexMap.find( child.get() );
+		if( it == indexMap.end() )
+		{
+			// We removed it from the map already
+			throw IECore::InvalidArgumentException(
+				boost::str( boost::format( "Child \"%1%\" is in more than one position" ) % child->getName() )
+			);
+		}
+		indices->push_back( it->second );
+		indexMap.erase( it );
+	}
+
+	assert( indexMap.empty() );
+
+	/// \todo For most likely reordering operations, indices will consist
+	/// mostly of sections where each index is 1 greater than the previous.
+	/// This could be compressed with a form of run-length encoding to limit
+	/// the amount of data we store in the undo queue.
+
+	// Add an action to do the work.
+
+	Action::enact(
+		this,
+		// Do
+		[this, indices] () {
+			ChildContainer children;
+			children.reserve( indices->size() );
+			for( auto i : *indices )
+			{
+				children.push_back( m_children[i] );
+			}
+			m_children = children;
+			childrenReordered( *indices );
+			Signals::emitLazily( m_signals.get(), &Signals::childrenReorderedSignal, this, *indices );
+		},
+		// Undo
+		[this, indices] () {
+			ChildContainer children;
+			children.resize( indices->size() );
+			vector<size_t> signalIndices;
+			signalIndices.resize( indices->size() );
+			for( size_t i = 0; i < indices->size(); ++i )
+			{
+				children[(*indices)[i]] = m_children[i];
+				signalIndices[(*indices)[i]] = i;
+			}
+			m_children = children;
+			childrenReordered( signalIndices );
+			Signals::emitLazily( m_signals.get(), &Signals::childrenReorderedSignal, this, signalIndices );
+		}
+	);
+}
+
 void GraphComponent::clearChildren()
 {
 	// because our storage is a vector, it's a good bit quicker to remove
@@ -563,11 +651,20 @@ GraphComponent::BinarySignal &GraphComponent::parentChangedSignal()
 	return signals()->parentChangedSignal;
 }
 
+GraphComponent::ChildrenReorderedSignal &GraphComponent::childrenReorderedSignal()
+{
+	return signals()->childrenReorderedSignal;
+}
+
 void GraphComponent::parentChanging( Gaffer::GraphComponent *newParent )
 {
 }
 
 void GraphComponent::parentChanged( Gaffer::GraphComponent *oldParent )
+{
+}
+
+void GraphComponent::childrenReordered( const std::vector<size_t> &oldIndices )
 {
 }
 

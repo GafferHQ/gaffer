@@ -45,9 +45,11 @@
 
 #include "Gaffer/GraphComponent.h"
 
+#include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "boost/format.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -136,6 +138,14 @@ void clearChildren( GraphComponent &g )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	g.clearChildren();
+}
+
+void reorderChildren( GraphComponent &g, object pythonNewOrder )
+{
+	GraphComponent::ChildContainer newOrder;
+	boost::python::container_utils::extend_container( newOrder, pythonNewOrder );
+	IECorePython::ScopedGILRelease gilRelease;
+	g.reorderChildren( newOrder );
 }
 
 GraphComponentPtr getChild( GraphComponent &g, const IECore::InternedString &n )
@@ -276,6 +286,28 @@ struct BinarySlotCaller
 	}
 };
 
+struct ChildrenReorderedSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, GraphComponentPtr g, const std::vector<size_t> &oldIndices )
+	{
+		try
+		{
+			boost::python::list oldIndicesList;
+			for( auto i : oldIndices )
+			{
+				oldIndicesList.append( i );
+			}
+			slot( g, oldIndicesList );
+		}
+		catch( const error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 } // namespace
 
 void GafferModule::bindGraphComponent()
@@ -293,6 +325,7 @@ void GafferModule::bindGraphComponent()
 		.def( "addChild", &addChild )
 		.def( "removeChild", &removeChild )
 		.def( "clearChildren", &clearChildren )
+		.def( "reorderChildren", &reorderChildren )
 		.def( "setChild", &setChild )
 		.def( "getChild", &getChild )
 		.def( "descendant", &descendant )
@@ -324,9 +357,11 @@ void GafferModule::bindGraphComponent()
 		.def( "childAddedSignal", &GraphComponent::childAddedSignal, return_internal_reference<1>() )
 		.def( "childRemovedSignal", &GraphComponent::childRemovedSignal, return_internal_reference<1>() )
 		.def( "parentChangedSignal", &GraphComponent::parentChangedSignal, return_internal_reference<1>() )
+		.def( "childrenReorderedSignal", &GraphComponent::childrenReorderedSignal, return_internal_reference<1>() )
 	;
 
 	SignalClass<GraphComponent::UnarySignal, DefaultSignalCaller<GraphComponent::UnarySignal>, UnarySlotCaller>( "UnarySignal" );
 	SignalClass<GraphComponent::BinarySignal, DefaultSignalCaller<GraphComponent::BinarySignal>, BinarySlotCaller>( "BinarySignal" );
+	SignalClass<GraphComponent::ChildrenReorderedSignal, DefaultSignalCaller<GraphComponent::ChildrenReorderedSignal>, ChildrenReorderedSlotCaller>( "BinarySignal" );
 
 }
