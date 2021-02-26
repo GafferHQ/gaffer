@@ -1,3 +1,11 @@
+0.58.6.x (relative to 0.58.6.4)
+========
+
+Fixes
+-----
+
+- ExtensionAlgo : Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+
 0.58.6.4 (relative to 0.58.6.3)
 ========
 

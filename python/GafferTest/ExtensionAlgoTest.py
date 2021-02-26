@@ -54,6 +54,8 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 
 	def testExport( self ) :
 
+		# Export
+
 		box = Gaffer.Box( "AddOne" )
 
 		box["__add"] = GafferTest.AddNode()
@@ -71,22 +73,61 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 
 		sys.path.append( os.path.join( self.temporaryDirectory(), "python" ) )
 
+		# Import and test
+
 		import TestExtension
 
-		node = TestExtension.AddOne()
-		node["in"].setValue( 2 )
-		self.assertEqual( node["out"].getValue(), 3 )
+		script = Gaffer.ScriptNode()
+		script["node"] = TestExtension.AddOne()
+		script["node"]["in"].setValue( 2 )
+		self.assertEqual( script["node"]["out"].getValue(), 3 )
 
 		import TestExtensionUI
 
-		self.assertEqual( Gaffer.Metadata.registeredValues( node, instanceOnly = True ), [] )
-		self.assertEqual( Gaffer.Metadata.registeredValues( node["in"], instanceOnly = True ), [] )
-		self.assertEqual( Gaffer.Metadata.registeredValues( node["out"], instanceOnly = True ), [] )
+		def assertExpectedMetadata( node ) :
 
-		self.assertEqual( Gaffer.Metadata.value( node, "description" ), "Test" )
-		self.assertEqual( Gaffer.Metadata.value( node["in"], "description" ), "The input" )
-		self.assertEqual( Gaffer.Metadata.value( node["out"], "description" ), "The output" )
-		self.assertEqual( Gaffer.Metadata.value( node["in"], "test" ), 1 )
+			self.assertEqual( Gaffer.Metadata.registeredValues( node, instanceOnly = True ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( node["in"], instanceOnly = True ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( node["out"], instanceOnly = True ), [] )
+
+			self.assertEqual( Gaffer.Metadata.value( node, "description" ), "Test" )
+			self.assertEqual( Gaffer.Metadata.value( node["in"], "description" ), "The input" )
+			self.assertEqual( Gaffer.Metadata.value( node["out"], "description" ), "The output" )
+			self.assertEqual( Gaffer.Metadata.value( node["in"], "test" ), 1 )
+
+		assertExpectedMetadata( script["node"] )
+
+		# Copy/paste and test
+
+		script.execute( script.serialise( filter = Gaffer.StandardSet( { script["node"] } ) ) )
+		self.assertEqual( script["node1"].keys(), script["node"].keys() )
+		self.assertEqual( script["node1"]["out"].getValue(), script["node"]["out"].getValue() )
+		assertExpectedMetadata( script["node1"] )
+
+	def testPlugTypes( self ) :
+
+		box = Gaffer.Box( "PlugTypes" )
+		box["int"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["float"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["string"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["v2i"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["v3i"] = Gaffer.V3iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["color4f"] = Gaffer.Color4fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["spline"] = Gaffer.SplinefColor3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.ExtensionAlgo.exportExtension( "PlugTypesExtension", [ box ], self.temporaryDirectory() )
+		sys.path.append( os.path.join( self.temporaryDirectory(), "python" ) )
+
+		import PlugTypesExtension
+		node = PlugTypesExtension.PlugTypes()
+
+		for plug in Gaffer.Plug.Range( node ) :
+			self.assertIsInstance( plug, type( box[plug.getName() ] ) )
+			if hasattr( plug, "getValue" ) :
+				self.assertEqual( plug.getValue(), box[plug.getName()].getValue() )
+
+		for plug in Gaffer.Plug.RecursiveRange( node ) :
+			self.assertFalse( plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
 if __name__ == "__main__":
 	unittest.main()
