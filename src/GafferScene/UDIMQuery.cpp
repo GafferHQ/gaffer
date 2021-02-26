@@ -329,3 +329,22 @@ void UDIMQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		ComputeNode::compute( output, context );
 	}
 }
+
+Gaffer::ValuePlug::CachePolicy UDIMQuery::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug() )
+	{
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return ComputeNode::computeCachePolicy( output );
+}
+
+Gaffer::ValuePlug::CachePolicy UDIMQuery::hashCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug() )
+	{
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return ComputeNode::hashCachePolicy( output );
+}
+
