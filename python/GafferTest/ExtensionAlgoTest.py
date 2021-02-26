@@ -129,5 +129,31 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		for plug in Gaffer.Plug.RecursiveRange( node ) :
 			self.assertFalse( plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
+	def testInternalExpression( self ) :
+
+		box = Gaffer.Box( "AddOne" )
+
+		box["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		box["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		box["__expression"] = Gaffer.Expression()
+		box["__expression"].setExpression( """parent["out"] = parent["in"] + 1""" )
+
+		Gaffer.ExtensionAlgo.exportExtension( "TestExtensionWithExpression", [ box ], self.temporaryDirectory() )
+
+		sys.path.append( os.path.join( self.temporaryDirectory(), "python" ) )
+		import TestExtensionWithExpression
+
+		script = Gaffer.ScriptNode()
+		script["node"] = TestExtensionWithExpression.AddOne()
+		script["node"]["in"].setValue( 2 )
+		self.assertEqual( script["node"]["out"].getValue(), 3 )
+
+		# Test copy/paste
+
+		script.execute( script.serialise( filter = Gaffer.StandardSet( { script["node"] } ) ) )
+		self.assertEqual( script["node1"].keys(), script["node"].keys() )
+		self.assertEqual( script["node1"]["out"].getValue(), 3 )
+
 if __name__ == "__main__":
 	unittest.main()

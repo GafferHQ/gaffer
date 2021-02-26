@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- ExtensionAlgo : Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+- ExtensionAlgo :
+  - Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+  - Fixed bug which prevented the use of internal Expression nodes.
 
 0.58.6.4 (relative to 0.58.6.3)
 ========
