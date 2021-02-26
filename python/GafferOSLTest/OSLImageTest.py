@@ -50,110 +50,191 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 	representativeDeepImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
 
 	def test( self ) :
+		for useClosure in [ False, True ]:
 
-		getRed = GafferOSL.OSLShader()
-		getRed.loadShader( "ImageProcessing/InChannel" )
-		getRed["parameters"]["channelName"].setValue( "R" )
+			getRed = GafferOSL.OSLShader()
+			getRed.loadShader( "ImageProcessing/InChannel" )
+			getRed["parameters"]["channelName"].setValue( "R" )
 
-		getGreen = GafferOSL.OSLShader()
-		getGreen.loadShader( "ImageProcessing/InChannel" )
-		getGreen["parameters"]["channelName"].setValue( "G" )
+			getGreen = GafferOSL.OSLShader()
+			getGreen.loadShader( "ImageProcessing/InChannel" )
+			getGreen["parameters"]["channelName"].setValue( "G" )
 
-		getBlue = GafferOSL.OSLShader()
-		getBlue.loadShader( "ImageProcessing/InChannel" )
-		getBlue["parameters"]["channelName"].setValue( "B" )
+			getBlue = GafferOSL.OSLShader()
+			getBlue.loadShader( "ImageProcessing/InChannel" )
+			getBlue["parameters"]["channelName"].setValue( "B" )
 
-		floatToColor = GafferOSL.OSLShader()
-		floatToColor.loadShader( "Conversion/FloatToColor" )
-		floatToColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
-		floatToColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
-		floatToColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
+			floatToColor = GafferOSL.OSLShader()
+			floatToColor.loadShader( "Conversion/FloatToColor" )
+			floatToColor["parameters"]["r"].setInput( getBlue["out"]["channelValue"] )
+			floatToColor["parameters"]["g"].setInput( getGreen["out"]["channelValue"] )
+			floatToColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
 
-		outRGB = GafferOSL.OSLShader()
-		outRGB.loadShader( "ImageProcessing/OutLayer" )
-		outRGB["parameters"]["layerColor"].setInput( floatToColor["out"]["c"] )
+			reader = GafferImage.ImageReader()
+			reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
 
-		imageShader = GafferOSL.OSLShader()
-		imageShader.loadShader( "ImageProcessing/OutImage" )
-		imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
+			shuffle = GafferImage.Shuffle()
+			shuffle["in"].setInput( reader["out"] )
+			shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
+			shuffle["channels"]["channel"]["out"].setValue( 'unchangedR' )
+			shuffle["channels"]["channel"]["in"].setValue( 'R' )
 
-		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
+			image = GafferOSL.OSLImage()
+			image["in"].setInput( shuffle["out"] )
 
-		image = GafferOSL.OSLImage()
-		image["in"].setInput( reader["out"] )
+			# we haven't connected the shader yet, so the node should act as a pass through
 
-		# we haven't connected the shader yet, so the node should act as a pass through
+			self.assertEqual( GafferImage.ImageAlgo.image( image["out"] ), GafferImage.ImageAlgo.image( shuffle["out"] ) )
 
-		self.assertEqual( GafferImage.ImageAlgo.image( image["out"] ), GafferImage.ImageAlgo.image( reader["out"] ) )
+			# that should all change when we hook up a shader
 
-		# that should all change when we hook up a shader
+			if useClosure:
 
-		image["channels"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug(), "testClosure" ) )
-		cs = GafferTest.CapturingSlot( image.plugDirtiedSignal() )
+				outRGB = GafferOSL.OSLShader()
+				outRGB.loadShader( "ImageProcessing/OutLayer" )
+				outRGB["parameters"]["layerColor"].setInput( floatToColor["out"]["c"] )
 
-		def checkDirtiness( expected):
-			self.assertEqual( [ i[0].fullName() for i in cs ], [ "OSLImage." + i for i in expected ] )
-			del cs[:]
+				imageShader = GafferOSL.OSLShader()
+				imageShader.loadShader( "ImageProcessing/OutImage" )
+				imageShader["parameters"]["in0"].setInput( outRGB["out"]["layer"] )
 
-		image["channels"]["testClosure"]["value"].setInput( imageShader["out"]["out"] )
+				image["channels"].addChild( Gaffer.NameValuePlug( "", GafferOSL.ClosurePlug(), "testClosure" ) )
 
-		checkDirtiness( [
-				"channels.testClosure.value", "channels.testClosure", "channels", "__shader", "__shading",
-				"out.channelNames", "out.channelData", "out"
-		] )
+			else:
 
-		inputImage = GafferImage.ImageAlgo.image( reader["out"] )
-		outputImage = GafferImage.ImageAlgo.image( image["out"] )
+				image["channels"].addChild( Gaffer.NameValuePlug( "", imath.Color3f(), "testColor" ) )
 
-		self.assertNotEqual( inputImage, outputImage )
-		self.assertEqual( outputImage["R"], inputImage["B"] )
-		self.assertEqual( outputImage["G"], inputImage["G"] )
-		self.assertEqual( outputImage["B"], inputImage["R"] )
+			cs = GafferTest.CapturingSlot( image.plugDirtiedSignal() )
 
-		# changes in the shader network should signal more dirtiness
+			def checkDirtiness( expected):
+				self.assertEqual( [ i[0].fullName() for i in cs ], [ "OSLImage." + i for i in expected ] )
+				del cs[:]
 
-		getGreen["parameters"]["channelName"].setValue( "R" )
-		checkDirtiness( [
-				"channels.testClosure.value", "channels.testClosure", "channels", "__shader", "__shading",
-				"out.channelNames", "out.channelData", "out"
-		] )
+			if useClosure:
+				image["channels"]["testClosure"]["value"].setInput( imageShader["out"]["out"] )
+				channelsDirtied = ["channels.testClosure.value", "channels.testClosure"]
+			else:
+				image["channels"]["testColor"]["value"].setInput( floatToColor["out"]["c"] )
+				channelsDirtied = [
+					"channels.testColor.value.r", "channels.testColor.value.g", "channels.testColor.value.b",
+					"channels.testColor.value", "channels.testColor"
+				]
 
-		floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
-		checkDirtiness( [
-				"channels.testClosure.value", "channels.testClosure", "channels", "__shader", "__shading",
-				"out.channelNames", "out.channelData", "out"
-		] )
+			checkDirtiness( channelsDirtied + [
+					"channels", "__shader", "__shading",
+					"__affectedChannels", "out.channelNames", "out.channelData", "out"
+			] )
 
-		inputImage = GafferImage.ImageAlgo.image( reader["out"] )
-		outputImage = GafferImage.ImageAlgo.image( image["out"] )
+			inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
 
-		self.assertEqual( outputImage["R"], inputImage["R"] )
-		self.assertEqual( outputImage["G"], inputImage["R"] )
-		self.assertEqual( outputImage["B"], inputImage["R"] )
+			with Gaffer.ContextMonitor( image["__shading"] ) as monitor :
+				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData( [ "A", "B", "G", "R", "unchangedR" ] ) )
+				# Evaluating channel names only requires evaluating the shading plug if we have a closure
+				self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 if useClosure else 0 )
 
-		image["in"].setInput( None )
-		checkDirtiness( [
-				'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-				'__shading',
-				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
-		] )
+				# Channels we don't touch should be passed through unaltered
+				for channel, changed in [('B',True), ('G',True), ('R',True), ('A',False), ('unchangedR',False) ]:
+					self.assertEqual(
+						image["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ) ==
+						shuffle["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ),
+						not changed
+					)
+					image["out"].channelData( channel, imath.V2i( 0, 0 ) )
 
-		image["defaultFormat"]["displayWindow"]["max"]["x"].setValue( 200 )
-		checkDirtiness( [
-				'defaultFormat.displayWindow.max.x', 'defaultFormat.displayWindow.max', 'defaultFormat.displayWindow', 'defaultFormat',
-				'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading',
-				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out'
-		] )
+			# Should only need one shading evaluate for all channels
+			self.assertEqual( monitor.combinedStatistics().numUniqueContexts(), 1 )
 
-		constant = GafferImage.Constant()
-		image["in"].setInput( constant["out"] )
+			outputImage = GafferImage.ImageAlgo.image( image["out"] )
 
-		checkDirtiness( [
-				'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-				'__shading',
-				'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
-		] )
+			self.assertNotEqual( inputImage, outputImage )
+			self.assertEqual( outputImage["R"], inputImage["B"] )
+			self.assertEqual( outputImage["G"], inputImage["G"] )
+			self.assertEqual( outputImage["B"], inputImage["R"] )
+
+			# changes in the shader network should signal more dirtiness
+
+			getGreen["parameters"]["channelName"].setValue( "R" )
+			checkDirtiness( channelsDirtied + [
+					"channels", "__shader", "__shading",
+					"__affectedChannels", "out.channelNames", "out.channelData", "out"
+			] )
+
+			floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
+			checkDirtiness( channelsDirtied + [
+					"channels", "__shader", "__shading",
+					"__affectedChannels", "out.channelNames", "out.channelData", "out"
+			] )
+
+
+			inputImage = GafferImage.ImageAlgo.image( shuffle["out"] )
+			outputImage = GafferImage.ImageAlgo.image( image["out"] )
+
+			self.assertEqual( outputImage["R"], inputImage["R"] )
+			self.assertEqual( outputImage["G"], inputImage["R"] )
+			self.assertEqual( outputImage["B"], inputImage["R"] )
+			self.assertEqual( outputImage["A"], inputImage["A"] )
+			self.assertEqual( outputImage["unchangedR"], inputImage["unchangedR"] )
+
+			image["in"].setInput( None )
+			checkDirtiness( [
+					'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
+					'__shading', '__affectedChannels',
+					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
+			] )
+
+			image["defaultFormat"]["displayWindow"]["max"]["x"].setValue( 200 )
+			checkDirtiness( [
+					'defaultFormat.displayWindow.max.x', 'defaultFormat.displayWindow.max', 'defaultFormat.displayWindow', 'defaultFormat',
+					'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading', '__affectedChannels',
+					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out'
+			] )
+
+			constant = GafferImage.Constant()
+			image["in"].setInput( constant["out"] )
+
+			checkDirtiness( [
+					'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
+					'__shading', '__affectedChannels',
+					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
+			] )
+
+			image["in"].setInput( shuffle["out"] )
+			if useClosure:
+				outRGB["parameters"]["layerName"].setValue( "newLayer" )
+			else:
+				image["channels"][0]["name"].setValue( "newLayer" )
+
+			self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
+				[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
+			) )
+
+			for channel in ['B', 'G', 'R', 'A', 'unchangedR' ]:
+				self.assertEqual(
+					image["out"].channelDataHash( channel, imath.V2i( 0, 0 ) ),
+					shuffle["out"].channelDataHash( channel, imath.V2i( 0, 0 ) )
+				)
+				self.assertEqual(
+					image["out"].channelData( channel, imath.V2i( 0, 0 ) ),
+					shuffle["out"].channelData( channel, imath.V2i( 0, 0 ) )
+				)
+
+			crop = GafferImage.Crop()
+			crop["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 0, 0 ) ) )
+			crop["in"].setInput( shuffle["out"] )
+
+			image["in"].setInput( crop["out"] )
+
+			if useClosure:
+				# When using closures, we can't find out about the new channels being added if the datawindow is
+				# empty
+				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
+					[ "A", "B", "G", "R", "unchangedR" ]
+				) )
+			else:
+				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
+					[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
+				) )
+
 
 
 	def testAcceptsShaderSwitch( self ) :
