@@ -1,3 +1,11 @@
+0.58.6.x (relative to 0.58.6.3)
+========
+
+Fixes
+-----
+
+- Layouts : Fixed broken keyboard shortcuts in floating editors.
+
 0.58.6.3 (relative to 0.58.6.2)
 ========
 
