@@ -367,6 +367,14 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 
 Gaffer::ValuePlug::CachePolicy OSLImage::computeCachePolicy( const Gaffer::ValuePlug *output ) const
 {
+	if( output == shadingPlug() )
+	{
+		// shadingEngine->shade( ... ) uses tbb internally, so we need to at least isolate it to
+		// prevent hangs due to task stealing causing false recursion.
+		// Using TaskCollaboration allows for an actual speedup when multiple threads request the
+		// same channelData
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
 	if( output == outPlug()->channelDataPlug() )
 	{
 		// We disable caching for the channel data plug, because our compute

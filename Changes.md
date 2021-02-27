@@ -24,7 +24,7 @@ Fixes
 
 - ScriptNode : Fixed bugs that allowed global variables to remain in the context after they had been disabled, renamed or deleted.
 - PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
-- UDIMQuery : Fixed incorrectly isolated TBB which could cause hang when other nodes use Standard cache policy. Now uses TaskCollaboration to improve performance.
+- UDIMQuery and OSLImage : Fixed incorrectly isolated TBB which could cause hang when other nodes use Standard cache policy. Now uses TaskCollaboration to improve performance.
 
 API
 ---
