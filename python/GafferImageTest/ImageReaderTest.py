@@ -53,6 +53,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 	colorSpaceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles_as_cineon.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 	jpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
+	largeFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_max_clamp.exr" )
 
 	def setUp( self ) :
 
@@ -91,7 +92,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 	def testChannelDataHashes( self ) :
 		# Test that two tiles within the same image have different hashes.
 		n = GafferImage.ImageReader()
-		n["fileName"].setValue( self.fileName )
+		n["fileName"].setValue( self.largeFileName )
 		h1 = n["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		h2 = n["out"].channelData( "R", imath.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
 

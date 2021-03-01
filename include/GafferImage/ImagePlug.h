@@ -229,7 +229,7 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 
 	private :
 
-		static int tileSizeLog2() { return 6; };
+		static int tileSizeLog2() { return 7; };
 
 		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );
 

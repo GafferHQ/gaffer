@@ -249,7 +249,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 
 		server = IECoreImage.DisplayDriverServer()
-		dataWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) )
+		dataWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( GafferImage.ImagePlug.tileSize() ) )
 
 		driver = self.Driver(
 			GafferImage.Format( dataWindow ),
