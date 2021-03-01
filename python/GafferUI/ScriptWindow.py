@@ -58,6 +58,10 @@ class ScriptWindow( GafferUI.Window ) :
 
 		menuDefinition = self.menuDefinition( script.applicationRoot() ) if script.applicationRoot() else IECore.MenuDefinition()
 		self.__listContainer.append( GafferUI.MenuBar( menuDefinition ) )
+		# Must parent `__listContainer` to the window before setting the layout,
+		# because `CompoundEditor.__parentChanged` needs to find the ancestor
+		# ScriptWindow.
+		self.setChild( self.__listContainer )
 
 		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot )
 		layouts = GafferUI.Layouts.acquire( applicationRoot ) if applicationRoot is not None else None
@@ -65,8 +69,6 @@ class ScriptWindow( GafferUI.Window ) :
 			self.setLayout( layouts.createDefault( script ) )
 		else :
 			self.setLayout( GafferUI.CompoundEditor( script ) )
-
-		self.setChild( self.__listContainer )
 
 		self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ), scoped = False )
 

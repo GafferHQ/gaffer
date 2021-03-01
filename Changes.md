@@ -22,6 +22,11 @@ Improvements
 - FileMenu : Increased the maximum number of items in the "Open Recent" menu to 25.
 - StringPlug : Improved accuracy of hashes for strings not containing substitutions.
 
+Fixes
+-----
+
+- Layouts : Fixed broken keyboard shortcuts in floating editors.
+
 API
 ---
 
@@ -317,6 +322,14 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.4 (relative to 0.58.6.3)
+========
+
+Fixes
+-----
+
+- Layouts : Fixed broken keyboard shortcuts in floating editors.
 
 0.58.6.3 (relative to 0.58.6.2)
 ========
