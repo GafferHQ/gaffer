@@ -84,7 +84,7 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
 
-0.59.x.x (relative to 0.59.3.0)
+0.59.4.0 (relative to 0.59.3.0)
 ========
 
 Features
@@ -100,9 +100,19 @@ Improvements
 
 - FrameMask : Improved performance when dealing with long frame ranges.
 - Node : Improved performance of type queries related to dispatch processes.
-- FilterResults : Improved performance of hash.
+- FilterResults :
+  - Added `outStrings` plug, which provides the result converted to a list of strings.
+  - Improved performance of hash.
 - PrimitiveInspector : Improved responsiveness by performing work in the background instead of locking the UI.
 - Graph Editor : Prevented zooming in so far you can't see nodes.
+- FileMenu : Increased the maximum number of items in the "Open Recent" menu to 25.
+- StringPlug : Improved accuracy of hashes for strings not containing substitutions.
+
+Fixes
+-----
+
+- Layouts : Fixed broken keyboard shortcuts in floating editors.
+- EventLoop : Fixed potential problem with UI thread execution.
 
 API
 ---
@@ -399,6 +409,14 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.4 (relative to 0.58.6.3)
+========
+
+Fixes
+-----
+
+- Layouts : Fixed broken keyboard shortcuts in floating editors.
 
 0.58.6.3 (relative to 0.58.6.2)
 ========

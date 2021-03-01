@@ -192,7 +192,11 @@ def openRecent( menu ) :
 
 ## This function adds a file to the list shown in the File/OpenRecent menu, and saves a recentFiles.py
 # in the application's user startup folder so the settings will persist.
-def addRecentFile( application, fileName ) :
+## \todo In a future major version, add a datetime argument and use it to
+# split the recent files menu into sections to make it easier to read. The
+# `_reserved` argument is a placeholder so that when we do this, older versions
+# will be able to continue to load the `recentFiles.py` config.
+def addRecentFile( application, fileName, *_reserved ) :
 
 	if isinstance( application, Gaffer.Application ) :
 		applicationRoot = application.root()
@@ -208,7 +212,7 @@ def addRecentFile( application, fileName ) :
 		applicationRoot.__recentFiles.remove( fileName )
 
 	applicationRoot.__recentFiles.insert( 0, fileName )
-	del applicationRoot.__recentFiles[6:]
+	del applicationRoot.__recentFiles[25:]
 
 	# Accessing via builtins to avoid shadowing by our own `open()` method above.
 	with __builtins__["open"]( os.path.join( applicationRoot.preferencesLocation(), "recentFiles.py" ), "w" ) as f :

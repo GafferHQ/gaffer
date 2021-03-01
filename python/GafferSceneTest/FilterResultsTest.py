@@ -46,6 +46,13 @@ import GafferSceneTest
 
 class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
+	def assertExpectedOutStrings( self, node ) :
+
+		self.assertEqual(
+			node["outStrings"].getValue(),
+			IECore.StringVectorData( node["out"].getValue().value.paths() )
+		)
+
 	def testChangingFilter( self ) :
 
 		p = GafferScene.Plane()
@@ -68,6 +75,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 				"/group/plane"
 			] )
 		)
+		self.assertExpectedOutStrings( n )
 
 		f["paths"].setValue( IECore.StringVectorData( [ "/group/p*" ] ) )
 
@@ -77,6 +85,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 				"/group/plane"
 			] )
 		)
+		self.assertExpectedOutStrings( n )
 
 	def testChangingScene( self ) :
 
@@ -92,6 +101,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		n["filter"].setInput( f["out"] )
 
 		self.assertEqual( n["out"].getValue().value, IECore.PathMatcher() )
+		self.assertExpectedOutStrings( n )
 
 		p["name"].setValue( "plain" )
 
@@ -101,6 +111,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 				"/group/plain"
 			] )
 		)
+		self.assertExpectedOutStrings( n )
 
 	def testDirtyPropagation( self ) :
 
@@ -206,8 +217,6 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope():
 			filterResults["out"].hash()
-
-
 
 if __name__ == "__main__":
 	unittest.main()

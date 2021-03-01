@@ -357,5 +357,25 @@ class StringPlugTest( GafferTest.TestCase ) :
 			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash2 ), "test.#.exr" )
 			self.assertEqual( substitionsOnIndirectlyHash2, substitionsOnIndirectlyHash1 )
 
+	def testHashUsesValue( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.StringInOutNode()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			"""parent["node"]["in"] = str( min( context.getFrame(), 10.0 ) )"""
+		)
+
+		hashes = {}
+		with Gaffer.Context() as context :
+			for i in range( 0, 20 ) :
+				context.setFrame( i )
+				hashes[i] = str( script["node"]["in"].hash() )
+
+		self.assertEqual( len( set( hashes.values() ) ), 11 )
+		for i in range( 10, 20 ) :
+			self.assertEqual( hashes[i], hashes[10] )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -331,7 +331,7 @@ class _UIThreadExecutor( QtCore.QObject ) :
 		# thread where we live.
 		self.__instances.add( self )
 
-	def event( self, event ) :
+	def customEvent( self, event ) :
 
 		if event.type() == self.executeEventType :
 			result = self.__callable()
