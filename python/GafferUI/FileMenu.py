@@ -119,12 +119,10 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( recoveryFileName or fileName )
 
-	with GafferUI.ErrorDialogue.ErrorHandler(
-		title = "Errors Occurred During Loading",
-		closeLabel = "Oy vey",
-		parentWindow = dialogueParentWindow
-	) :
-		script.load( continueOnError = True )
+	dialogue = GafferUI.BackgroundTaskDialogue( "Loading" )
+	result = dialogue.waitForBackgroundTask( None, functools.partial( script.load, continueOnError = True, ), dialogueParentWindow )
+	if isinstance( result, IECore.Cancelled ) :
+		return
 
 	if asNew or recoveryFileName :
 		# If we loaded a backup (or as new), rename the script to the old
@@ -231,8 +229,8 @@ def save( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
-		with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
-			script.save()
+		dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+		dialogue.waitForBackgroundTask( script["fileName"], script.save, parentWindow = scriptWindow )
 	else :
 		saveAs( menu )
 
@@ -254,12 +252,13 @@ def saveAs( menu ) :
 	if not path.endswith( ".gfr" ) :
 		path += ".gfr"
 
-	script["fileName"].setValue( path )
-	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
-		script.save()
+	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+	result = dialogue.waitForBackgroundTask( script["fileName"], functools.partial( script.serialiseToFile, path ), parentWindow = scriptWindow )
 
-	application = script.ancestor( Gaffer.ApplicationRoot )
-	addRecentFile( application, path )
+	if not isinstance( result, Exception ) :
+		script["fileName"].setValue( path )
+		application = script.ancestor( Gaffer.ApplicationRoot )
+		addRecentFile( application, path )
 
 ## A function suitable as the command for a File/Revert To Saved menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.
@@ -319,7 +318,8 @@ def exportSelection( menu ) :
 	if not path.endswith( ".gfr" ) :
 		path += ".gfr"
 
-	script.serialiseToFile( path, parent, script.selection() )
+	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
+	dialogue.waitForBackgroundTask( script["fileName"], functools.partial( script.serialiseToFile, path, parent, script.selection() ), parentWindow = scriptWindow )
 
 ## A function suitable as the command for a File/Import File... menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.

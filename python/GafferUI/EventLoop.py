@@ -253,6 +253,24 @@ class EventLoop( object ) :
 			cls.__qtApplication.postEvent( uiThreadExecutor(), QtCore.QEvent( QtCore.QEvent.Type( _UIThreadExecutor.executeEventType ) ) )
 			return None
 
+	## Context manager that blocks callables queued with `executeOnUIThread()`.
+	# The calls will be deferred until after the block exits. This is useful
+	# to defer graph edits that would cause unwanted cancellation of a
+	# BackgroundTask.
+	## \todo Blocking all UI thread execution is overkill. We could add a
+	# `subject` argument to `ParallelAlgo::callOnUIThread()`, mirroring the
+	# existing argument to `ParallelAlgo::callOnBackgroundThread()`. Then
+	# we could limit the blocking to calls with the relevant subject.
+	class BlockedUIThreadExecution( object ) :
+
+		def __enter__( self ) :
+
+			_UIThreadExecutor.blockExecution()
+
+		def __exit__( self, type, value, traceBack ) :
+
+			_UIThreadExecutor.unblockExecution()
+
 	@classmethod
 	def __ensureIdleTimer( cls ) :
 
@@ -317,6 +335,7 @@ class _UIThreadExecutor( QtCore.QObject ) :
 	executeEventType = QtCore.QEvent.registerEventType()
 
 	__instances = set()
+	__blockedInstances = None
 
 	def __init__( self, callable, resultCondition = None ) :
 
@@ -333,19 +352,49 @@ class _UIThreadExecutor( QtCore.QObject ) :
 
 	def customEvent( self, event ) :
 
-		if event.type() == self.executeEventType :
-			result = self.__callable()
-			if self.__resultCondition is not None :
-				self.__resultCondition.acquire()
-				self.__resultCondition.resultValue = result
-				self.__resultCondition.notify()
-				self.__resultCondition.release()
+		if event.type() != self.executeEventType :
+			return False
 
-			self.__instances.remove( self )
-
+		# If execution is blocked, then buffer the call.
+		if self.__blockedInstances is not None :
+			self.__blockedInstances.add( self )
 			return True
 
-		return False
+		# Otherwise go ahead and execute it.
+		result = self.__callable()
+		if self.__resultCondition is not None :
+			self.__resultCondition.acquire()
+			self.__resultCondition.resultValue = result
+			self.__resultCondition.notify()
+			self.__resultCondition.release()
+
+		self.__instances.remove( self )
+
+		return True
+
+	@classmethod
+	def blockExecution( cls ) :
+
+		assert( QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread() )
+
+		# Set up a container to buffer into
+		assert( cls.__blockedInstances is None )
+		cls.__blockedInstances = set()
+
+	@classmethod
+	def unblockExecution( cls ) :
+
+		assert( QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread() )
+
+		# Emit new events for each of the buffered calls,
+		# and then clear the buffer.
+		assert( isinstance( cls.__blockedInstances, set ) )
+		for executor in cls.__blockedInstances :
+			QtWidgets.QApplication.instance().postEvent(
+				executor, QtCore.QEvent( QtCore.QEvent.Type( _UIThreadExecutor.executeEventType ) )
+			)
+
+		cls.__blockedInstances = None
 
 # Service the requests made to `ParallelAlgo::callOnUIThread()`.
 Gaffer.ParallelAlgo.pushUIThreadCallHandler( EventLoop.executeOnUIThread )

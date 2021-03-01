@@ -1463,5 +1463,43 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() + "/test2.gfr" )
 		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
 
+	def testCancellationDuringLoad( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "previousSerialisationVersion.gfr" ) )
+
+		context = Gaffer.Context()
+		canceller = IECore.Canceller()
+		with Gaffer.Context( context, canceller ) :
+			canceller.cancel()
+			with self.assertRaises( IECore.Cancelled ) :
+				s.load()
+
+	def testCancellationDuringExecute( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		context = Gaffer.Context()
+		canceller = IECore.Canceller()
+		with Gaffer.Context( context, canceller ) :
+			canceller.cancel()
+			# Execution is done all in one go, and there's no point cancelling
+			# at the end when we've done all of the work anyway.
+			s.execute( "script.addChild( Gaffer.Node() )", continueOnError = False )
+			with self.assertRaises( IECore.Cancelled ) :
+				# Execution is done line-by-line, so making regular cancellation
+				# checks makes sense.
+				s.execute( "script.addChild( Gaffer.Node() )", continueOnError = True )
+
+	def testCancellationDuringSerialise( self ) :
+
+		s = Gaffer.ScriptNode()
+		context = Gaffer.Context()
+		canceller = IECore.Canceller()
+		with Gaffer.Context( context, canceller ) :
+			canceller.cancel()
+			with self.assertRaises( IECore.Cancelled ) :
+				s.serialise()
+
 if __name__ == "__main__":
 	unittest.main()

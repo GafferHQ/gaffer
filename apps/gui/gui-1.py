@@ -99,6 +99,10 @@ class gui( Gaffer.Application ) :
 		if len( args["scripts"] ) :
 			for fileName in args["scripts"] :
 				GafferUI.FileMenu.addScript( self.root(), fileName )
+			if not len( self.root()["scripts"] ) :
+				# Loading was cancelled, in which case we should quit the app.
+				GafferUI.EventLoop.mainEventLoop().stop()
+				return False # Remove idle callback
 		else :
 			scriptNode = Gaffer.ScriptNode()
 			Gaffer.NodeAlgo.applyUserDefaults( scriptNode )
