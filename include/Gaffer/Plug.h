@@ -228,6 +228,7 @@ class GAFFER_API Plug : public GraphComponent
 
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
+		void childrenReordered( const std::vector<size_t> &oldIndices ) override;
 
 		/// Initiates the propagation of dirtiness from the specified
 		/// plug to its outputs and affected plugs (as defined by

@@ -691,6 +691,41 @@ void Plug::parentChanged( Gaffer::GraphComponent *oldParent )
 	popDirtyPropagationScope();
 }
 
+void Plug::childrenReordered( const std::vector<size_t> &oldIndices )
+{
+	// Reorder the children of our outputs to match our new order. We disable
+	// undo while we do this, because `childrenReordered()` will be called again
+	// when the original action is undone anyway.
+	UndoScope undoDisabler( ancestor<ScriptNode>(), UndoScope::Disabled );
+	for( auto output : m_outputs )
+	{
+		if( output->children().size() != oldIndices.size() )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "Plug::childrenReordered",
+				boost::format( "Not reordering output \"%1%\" because its size doesn't match the input" ) % output->fullName()
+			);
+			continue;
+		}
+		GraphComponent::ChildContainer children; children.reserve( oldIndices.size() );
+		for( auto i : oldIndices )
+		{
+			children.push_back( output->getChild( i ) );
+		}
+		output->reorderChildren( children );
+	}
+
+	// Propagate dirtiness, because some nodes are sensitive
+	// to the ordering of plugs.
+	for( const auto &child : RecursiveRange( *this ) )
+	{
+		if( child->children().empty() )
+		{
+			propagateDirtiness( child.get() );
+		}
+	}
+}
+
 void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )
 {
 	// When a plug is reparented, we need to take into account
