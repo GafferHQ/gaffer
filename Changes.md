@@ -7,6 +7,11 @@ Improvements
 - TabbedContainer : Added menu button to allow selection of tabs that are not
   visible due to a lack of horizontal space.
 
+Fixes
+-----
+
+- PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
+
 API
 ---
 
