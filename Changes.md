@@ -1,4 +1,4 @@
-0.59.x.x (relative to 0.59.3.0)
+0.59.4.0 (relative to 0.59.3.0)
 ========
 
 Features
@@ -26,6 +26,7 @@ Fixes
 -----
 
 - Layouts : Fixed broken keyboard shortcuts in floating editors.
+- EventLoop : Fixed potential problem with UI thread execution.
 
 API
 ---
