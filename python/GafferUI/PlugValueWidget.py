@@ -464,7 +464,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		if plug in self.__plugs :
 			self.__updateContextConnection()
-			self._updateFromPlugs()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
