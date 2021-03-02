@@ -43,6 +43,7 @@
 #include "IECore/Timer.h"
 
 #include "boost/lexical_cast.hpp"
+#include "tbb/parallel_for.h"
 
 using namespace std;
 using namespace boost;
@@ -202,5 +203,41 @@ void GafferTest::testEditableScope()
 		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
 		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
 	}
+
+}
+
+void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool startInitialized )
+{
+	// We usually deal with contexts that already have some base stuff in them
+	ContextPtr baseContext = new Context();
+	for( int i = 0; i < numEntries; i++ )
+	{
+		baseContext->set( InternedString( i ), std::string( entrySize, 'x') );
+	}
+
+	const InternedString varyingVarName = "varyVar";
+	if( startInitialized )
+	{
+		baseContext->set( varyingVarName, -1 );
+	}
+
+	Context::Scope baseScope( baseContext.get() );
+
+	const ThreadState &threadState = ThreadState::current();
+
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, 10000000 ), [&threadState, &varyingVarName]( const tbb::blocked_range<size_t> &r )
+		{
+			// As part of the setCollaborate plug machinery, we put the parentPath in the context.
+			// Need to remove it before evaluating the prototype sets
+			for( size_t i = r.begin(); i != r.end(); ++i )
+			{
+				Context::EditableScope scope( threadState );
+				scope.set( varyingVarName, (int)i );
+
+				// This call is relied on by ValuePlug's HashCacheKey, so it is crucial that it be fast
+				scope.context()->hash();
+			}
+		}
+	);
 
 }

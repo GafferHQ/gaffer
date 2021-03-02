@@ -83,6 +83,7 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
 	def( "testScopingNullContext", &testScopingNullContext );
 	def( "testEditableScope", &testEditableScope );
+	def( "testContextHashPerformance", &testContextHashPerformance );
 	def( "testComputeNodeThreading", &testComputeNodeThreading );
 	def( "testDownstreamIterator", &testDownstreamIterator );
 

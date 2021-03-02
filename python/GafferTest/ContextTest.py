@@ -684,5 +684,15 @@ class ContextTest( GafferTest.TestCase ) :
 		context3 = Gaffer.Context( context1, omitCanceller = False )
 		self.assertIsNotNone( context3.canceller() )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testContextHashPerformance( self ) :
+
+		GafferTest.testContextHashPerformance( 10, 10, False )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testContextHashPerformanceStartInitialized( self ) :
+
+		GafferTest.testContextHashPerformance( 10, 10, True )
+
 if __name__ == "__main__":
 	unittest.main()

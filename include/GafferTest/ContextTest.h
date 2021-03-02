@@ -47,6 +47,7 @@ GAFFERTEST_API void testManySubstitutions();
 GAFFERTEST_API void testManyEnvironmentSubstitutions();
 GAFFERTEST_API void testScopingNullContext();
 GAFFERTEST_API void testEditableScope();
+GAFFERTEST_API void testContextHashPerformance( int numEntries, int entrySize, bool startInitialized );
 
 } // namespace GafferTest
 
