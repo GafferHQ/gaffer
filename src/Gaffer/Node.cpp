@@ -69,11 +69,6 @@ Node::UnaryPlugSignal &Node::plugInputChangedSignal()
 	return m_plugInputChangedSignal;
 }
 
-Node::UnaryPlugSignal &Node::plugFlagsChangedSignal()
-{
-	return m_plugFlagsChangedSignal;
-}
-
 Node::UnaryPlugSignal &Node::plugDirtiedSignal()
 {
 	return m_plugDirtiedSignal;

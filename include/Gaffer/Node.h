@@ -116,8 +116,6 @@ class GAFFER_API Node : public GraphComponent
 		/// onto an input plug of a plain Node (and potentially onwards if that plug
 		/// has its own output connections).
 		UnaryPlugSignal &plugDirtiedSignal();
-		/// Emitted when the flags are changed for a plug of this node.
-		UnaryPlugSignal &plugFlagsChangedSignal();
 		//@}
 
 		/// It's common for users to want to create their own plugs on
@@ -190,7 +188,6 @@ class GAFFER_API Node : public GraphComponent
 
 		UnaryPlugSignal m_plugSetSignal;
 		UnaryPlugSignal m_plugInputChangedSignal;
-		UnaryPlugSignal m_plugFlagsChangedSignal;
 		UnaryPlugSignal m_plugDirtiedSignal;
 		ErrorSignal m_errorSignal;
 

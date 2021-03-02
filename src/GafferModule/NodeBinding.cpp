@@ -118,7 +118,6 @@ void GafferModule::bindNode()
 			.def( "scriptNode", (ScriptNode *(Node::*)())&Node::scriptNode, return_value_policy<CastToIntrusivePtr>() )
 			.def( "plugSetSignal", &Node::plugSetSignal, return_internal_reference<1>() )
 			.def( "plugInputChangedSignal", &Node::plugInputChangedSignal, return_internal_reference<1>() )
-			.def( "plugFlagsChangedSignal", &Node::plugFlagsChangedSignal, return_internal_reference<1>() )
 			.def( "plugDirtiedSignal", &Node::plugDirtiedSignal, return_internal_reference<1>() )
 			.def( "errorSignal", (Node::ErrorSignal &(Node::*)())&Node::errorSignal, return_internal_reference<1>() )
 		;

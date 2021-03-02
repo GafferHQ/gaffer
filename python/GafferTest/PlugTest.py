@@ -647,19 +647,15 @@ class PlugTest( GafferTest.TestCase ) :
 
 		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
-		cs = GafferTest.CapturingSlot( s["n"].plugFlagsChangedSignal() )
 		with Gaffer.UndoScope( s["n"]["user"]["p"].ancestor( Gaffer.ScriptNode ) ) :
 			s["n"]["user"]["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
 			self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
-			self.assertEqual( len( cs ), 1 )
 
 		s.undo()
 		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
-		self.assertEqual( len( cs ), 2 )
 
 		s.redo()
 		self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
-		self.assertEqual( len( cs ), 3 )
 
 	def testParentConnectionIgnoresOutOfOrderChildConnections( self ) :
 
