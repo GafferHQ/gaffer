@@ -125,6 +125,18 @@ class {name}( Gaffer.SubGraph ) :
 
 {constructor}
 
+		self.__removeDynamicFlags()
+
+	# Remove dynamic flags using the same logic used by the Reference node.
+	## \todo : Create the plugs without the flags in the first place.
+	def __removeDynamicFlags( self ) :
+
+		for plug in Gaffer.Plug.Range( self ) :
+			plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
+			if not isinstance( plug, ( Gaffer.SplineffPlug, Gaffer.SplinefColor3fPlug, Gaffer.SplinefColor4fPlug ) ) :
+				for plug in Gaffer.Plug.RecursiveRange( plug ) :
+					plug.setFlags( Gaffer.Plug.Flags.Dynamic, False )
+
 IECore.registerRunTimeTyped( {name}, typeName = "{extension}::{name}" )
 """
 
