@@ -22,6 +22,7 @@ Fixes
 -----
 
 - ScriptNode : Fixed bugs that allowed global variables to remain in the context after they had been disabled, renamed or deleted.
+- PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
 
 API
 ---
