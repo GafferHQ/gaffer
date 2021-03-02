@@ -98,6 +98,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		else : # RowNames mode
 
+			if self.__canReorderRows() :
+				tableView.verticalHeader().setVisible( True )
+				tableView.verticalHeader().setSectionsMovable( True )
+				tableView.verticalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__rowMoved ) )
+				self.__ignoreRowMoved = False
+
 			tableView.horizontalHeader().resizeSection( 1, 22 )
 			self.__applyRowNamesWidth()
 			# Style the row enablers as toggles rather than checkboxes.
@@ -313,6 +319,50 @@ class _PlugTableView( GafferUI.Widget ) :
 					self._qtWidget().hideColumn( i )
 		finally :
 			self.__ignoreColumnResized = False
+
+	def __canReorderRows( self ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		if Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
+			return False
+
+		if isinstance( rowsPlug.node(), Gaffer.Reference ) :
+			reference = rowsPlug.node()
+			for row in rowsPlug.children()[1:] :
+				if not reference.isChildEdit( row ) :
+					return False
+
+		return True
+
+	def __rowMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
+
+		if self.__ignoreRowMoved :
+			return
+
+		# Qt implements row moves as a visual transform on top of the model.
+		# We want to implement them as edits to the order of the underlying
+		# RowPlugs. So we translate the change in visual transform to a call to
+		# `reorderChildren()`, and then reset the visual transform.
+
+		assert( oldVisualIndex == logicalIndex ) # Otherwise a previous visual transform reset failed
+
+		# Reorder rows
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		rows = list( rowsPlug.children() )
+		header = self._qtWidget().verticalHeader()
+		assert( len( rows ) == header.count() + 1 ) # Header doesn't know about the default row
+		rows = [ rows[0] ] + [ rows[header.logicalIndex(i)+1] for i in range( 0, header.count() ) ]
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			rowsPlug.reorderChildren( rows )
+
+		# Reset visual transform
+
+		self.__ignoreRowMoved = True
+		for i in range( min( oldVisualIndex, newVisualIndex ), max( oldVisualIndex, newVisualIndex ) + 1 ) :
+			header.moveSection( header.visualIndex( i ), i )
+		self.__ignoreRowMoved = False
 
 	def __applyRowNamesWidth( self ) :
 

@@ -62,6 +62,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__plugDirtiedConnection = rowsPlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 		self.__rowAddedConnection = rowsPlug.childAddedSignal().connect( Gaffer.WeakMethod( self.__rowAdded ) )
 		self.__rowRemovedConnection = rowsPlug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__rowRemoved ) )
+		self.__rowsReorderedConnection = rowsPlug.childrenReorderedSignal().connect( Gaffer.WeakMethod( self.__rowsReordered ) )
 		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ) )
 		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ) )
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
@@ -175,7 +176,9 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		else :
 
-			return section
+			# We don't want to display the indices, but we do need
+			# a big enough section to use for drag and drop.
+			return " "
 
 	def flags( self, index ) :
 
@@ -303,6 +306,11 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.headerDataChanged.emit( QtCore.Qt.Vertical, 0, self.rowCount() )
 
 	def __rowRemoved( self, rowsPlug, row ) :
+
+		## \todo Is there any benefit in finer-grained signalling?
+		self.__emitModelReset()
+
+	def __rowsReordered( self, rowsPlug, oldIndices ) :
 
 		## \todo Is there any benefit in finer-grained signalling?
 		self.__emitModelReset()

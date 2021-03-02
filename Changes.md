@@ -3,6 +3,11 @@
 
 > Note : This version is built against Arnold 6.2.0.1, and is not compatible with earlier Arnold versions.
 
+Features
+--------
+
+- Spreadsheet : Added drag and drop reordering of rows.
+
 Improvements
 ------------
 
