@@ -12,6 +12,8 @@ Improvements
     independently of the `selector` mechanism.
   - Added <kbd>+</kbd> button for adding new columns directly. Existing plugs may be dragged on
     to it and new plugs can be created from a popup menu.
+- CustomOptions : Added `extraOptions` plug to facilitate the creation of dynamic numbers of options
+  from a single expression.
 
 API
 ---

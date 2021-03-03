@@ -84,7 +84,13 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Advanced",
 
-		]
+		],
+
+		"extraOptions" : [
+
+			"plugValueWidget:type", None,
+
+		],
 
 	}
 

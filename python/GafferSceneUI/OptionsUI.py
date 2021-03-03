@@ -68,6 +68,29 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"extraOptions" : [
+
+			"description",
+			"""
+			An additional set of options to be added. Arbitrary numbers
+			of options may be specified within a single `IECore.CompoundObject`,
+			where each key/value pair in the object defines an option.
+			This is convenient when using an expression to define the options
+			and the option count might be dynamic. It can also be used to
+			create options whose type cannot be handled by the `options`
+			CompoundDataPlug.
+
+			If the same option is defined by both the `options` and the
+			`extraOptions` plugs, then the value from the `extraOptions`
+			is taken.
+			""",
+
+			"plugValueWidget:type", "",
+			"layout:section", "Extra",
+			"nodule:type", "",
+
+		],
+
 	}
 
 )
