@@ -15,9 +15,9 @@ Improvements
 - Timeline :
   - Added support for sub-frame dragging with a <kbd>Ctrl</kbd> modifier, and fixed snapping of the frame indicator for regular drag operations.
   - The current frame is now drawn next to the playhead.
-- Improved performance of Python expressions when they are evaluated multiple times in parallel.  This is the first use of the Standard cache policy in a node which could be downstream of a custom Gaffer node that could make an improperly isolated call to tbb, triggering a hang.  If this causes a hang, set the env var GAFFER_PYTHONEXPRESSION_CACHEPOLICY=Legacy as a temporary workaround, and make sure that all C++ nodes that use tbb parallelism are isolating.
-- Increased image processing tile size from 64 pixels to 128 pixels.  This reduces per-tile overhead on large images, dramatically increasing effective image performance in many cases.
-- OSLImage : Avoided some unecessary computes and hashing when calculating channel names or passing through channel data unaltered.
+- Improved performance of Python expressions when they are evaluated multiple times in parallel. This is the first use of the Standard cache policy in a node which could be downstream of a custom Gaffer node that could make an improperly isolated call to tbb, triggering a hang. If this causes a hang, set the env var GAFFER_PYTHONEXPRESSION_CACHEPOLICY=Legacy as a temporary workaround, and make sure that all C++ nodes that use tbb parallelism are isolating.
+- Increased image processing tile size from 64 pixels to 128 pixels. This reduces per-tile overhead on large images, dramatically increasing effective image performance in many cases.
+- OSLImage : Avoided some unnecessary computes and hashing when calculating channel names or passing through channel data unaltered.
 
 Fixes
 -----
