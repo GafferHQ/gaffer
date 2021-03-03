@@ -38,8 +38,8 @@
 
 #include "ValuePlugTest.h"
 
-#include "GafferTest/MultiplyNode.h"
-
+#include "Gaffer/Context.h"
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/ValuePlug.h"
 
 #include "tbb/parallel_for.h"
@@ -49,7 +49,6 @@
 
 using namespace boost::python;
 using namespace Gaffer;
-using namespace GafferTest;
 
 namespace
 {
@@ -74,9 +73,29 @@ void parallelGetValue( const IntPlug *plug, int iterations )
 	);
 }
 
+// Variant of the above which stores the iteration in a context variable, allowing
+// the parallel evaluates to vary
+void parallelGetValueWithVar( const IntPlug *plug, int iterations, const IECore::InternedString iterationVar )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	const ThreadState &threadState = ThreadState::current();
+	tbb::parallel_for(
+		tbb::blocked_range<int>( 0, iterations ),
+		[&plug, &iterationVar, &threadState]( const tbb::blocked_range<int> &r ) {
+			Context::EditableScope scope( threadState );
+			for( int i = r.begin(); i < r.end(); ++i )
+			{
+				scope.set( iterationVar, i );
+				plug->getValue();
+			}
+		}
+	);
+}
+
 } // namespace
 
 void GafferTestModule::bindValuePlugTest()
 {
 	def( "parallelGetValue", &parallelGetValue );
+	def( "parallelGetValue", &parallelGetValueWithVar );
 }
