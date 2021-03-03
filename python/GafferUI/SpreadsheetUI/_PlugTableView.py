@@ -328,6 +328,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if isinstance( rowsPlug.node(), Gaffer.Reference ) :
 			reference = rowsPlug.node()
+			# Default row (`[0]`) is irrelevant because it is always
+			# referenced and we won't try to reorder it anyway.
 			for row in rowsPlug.children()[1:] :
 				if not reference.isChildEdit( row ) :
 					return False
