@@ -58,9 +58,9 @@ using namespace IECoreGLPreview;
 namespace
 {
 
-typedef std::pair<IECore::InternedString, IECore::InternedString> AttributeAndShaderNames;
+using AttributeAndShaderNames = std::pair<IECore::InternedString, IECore::InternedString>;
 
-typedef boost::container::flat_map<AttributeAndShaderNames, ConstLightFilterVisualiserPtr> LightFilterVisualisers;
+using LightFilterVisualisers = boost::container::flat_map<AttributeAndShaderNames, ConstLightFilterVisualiserPtr>;
 LightFilterVisualisers &lightFilterVisualisers()
 {
 	static LightFilterVisualisers l;

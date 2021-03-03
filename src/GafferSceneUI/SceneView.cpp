@@ -394,8 +394,8 @@ class SceneView::ShadingMode : public Signals::Trackable
 			}
 		}
 
-		typedef std::map<std::string, SceneView::ShadingModeCreator> ShadingModeCreatorMap;
-		typedef std::map<std::string, SceneProcessorPtr> ShadingModes;
+		using ShadingModeCreatorMap = std::map<std::string, SceneView::ShadingModeCreator>;
+		using ShadingModes = std::map<std::string, SceneProcessorPtr>;
 
 		static ShadingModeCreatorMap &shadingModeCreators()
 		{

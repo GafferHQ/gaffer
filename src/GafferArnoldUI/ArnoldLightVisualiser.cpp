@@ -110,7 +110,7 @@ CompoundDataPtr surfaceTextureGetter( const SurfaceTextureCacheGetterKey &key, s
 	return nullptr;
 }
 
-typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, SurfaceTextureCacheGetterKey> SurfaceTextureCache;
+using SurfaceTextureCache = IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, SurfaceTextureCacheGetterKey>;
 // Cache cost is in bytes
 SurfaceTextureCache g_surfaceTextureCache( surfaceTextureGetter, 1024 * 1024 * 64 );
 

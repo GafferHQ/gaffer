@@ -49,7 +49,7 @@ IECORE_DECLARE_TYPEDDATA( MessagesData, IECorePreview::Messages, void, IECore::S
 namespace IECorePreview
 {
 
-typedef IECore::MessagesData MessagesData;
+using MessagesData = IECore::MessagesData;
 IE_CORE_DECLAREPTR( MessagesData );
 
 } // namespace IECorePreview

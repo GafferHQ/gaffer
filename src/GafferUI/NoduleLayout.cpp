@@ -96,7 +96,7 @@ IECore::InternedString g_compoundNoduleDirectionKey( "compoundNodule:direction" 
 
 // Custom gadget factory
 
-typedef map<string, NoduleLayout::CustomGadgetCreator> CustomGadgetCreatorMap;
+using CustomGadgetCreatorMap = map<string, NoduleLayout::CustomGadgetCreator>;
 CustomGadgetCreatorMap &customGadgetCreators()
 {
 	static CustomGadgetCreatorMap m;
@@ -145,7 +145,7 @@ bool visible( const GraphComponent *parent, const InternedString &gadgetName, IE
 
 // Plug metadata accessors. These affect the layout of individual nodules.
 
-typedef boost::variant<const Gaffer::Plug *, IECore::InternedString> GadgetKey;
+using GadgetKey = boost::variant<const Gaffer::Plug *, IECore::InternedString>;
 
 int layoutIndex( const Plug *plug, int defaultValue )
 {
@@ -552,7 +552,7 @@ void NoduleLayout::nodeMetadataChanged( const Gaffer::Node *node, IECore::Intern
 
 std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 {
-	typedef pair<int, GadgetKey> SortItem;
+	using SortItem = pair<int, GadgetKey>;
 	vector<SortItem> toSort;
 
 	// Add any plugs which should be visible

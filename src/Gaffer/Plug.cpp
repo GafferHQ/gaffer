@@ -217,8 +217,8 @@ class Plug::AcceptsInputCache
 	private :
 
 		struct ThreadData;
-		typedef std::pair<const Plug *, const Plug *> PlugPair;
-		typedef boost::unordered_map<PlugPair, bool> ResultMap;
+		using PlugPair = std::pair<const Plug *, const Plug *>;
+		using ResultMap = boost::unordered_map<PlugPair, bool>;
 
 	public :
 
@@ -818,17 +818,17 @@ class Plug::DirtyPlugs
 		// on the graph to give us an appropriate order to emit the dirty
 		// signals in, so that dirtiness is only signalled for an affected plug
 		// after it has been signalled for all upstream dirty plugs.
-		typedef boost::adjacency_list<vecS, vecS, directedS, PlugPtr> Graph;
-		typedef Graph::vertex_descriptor VertexDescriptor;
-		typedef Graph::edge_descriptor EdgeDescriptor;
+		using Graph = boost::adjacency_list<vecS, vecS, directedS, PlugPtr>;
+		using VertexDescriptor = Graph::vertex_descriptor;
+		using EdgeDescriptor = Graph::edge_descriptor;
 
-		typedef std::unordered_map<const Plug *, VertexDescriptor> PlugMap;
+		using PlugMap = std::unordered_map<const Plug *, VertexDescriptor>;
 
 		// Equivalent to the return type for map::insert - the first
 		// field is the vertex descriptor, and the second field is
 		// false if the vertex was already there, true if it was
 		// inserted.
-		typedef std::pair<VertexDescriptor, bool> InsertedVertex;
+		using InsertedVertex = std::pair<VertexDescriptor, bool>;
 
 		InsertedVertex insertVertex( Plug *plug )
 		{

@@ -150,7 +150,7 @@ void convert(Imath::Quatd& dest, const openvdb::math::Quatd& src)
 	dest = Imath::Quatd( src[3], src[0], src[1], src[2]);
 }
 
-typedef openvdb::points::PointDataGrid::TreeType::LeafCIter LeafIter;
+using LeafIter = openvdb::points::PointDataGrid::TreeType::LeafCIter;
 
 template<typename CortexType, typename VDBType, template <typename P> class StorageType = IECore::TypedData>
 void appendData(IECore::Data *destArray, const openvdb::points::AttributeArray& array, LeafIter leafIter)
@@ -179,14 +179,8 @@ IECore::DataPtr createArray( size_t size )
 
 struct Functions
 {
-	typedef std::function<IECore::DataPtr(size_t size)> CreateFn;
-	typedef std::function<
-		void (
-			IECore::Data *,
-			const openvdb::points::AttributeArray&,
-			LeafIter
-		)
-	> AppendFn;
+	using CreateFn = std::function<IECore::DataPtr ( size_t )>;
+	using AppendFn = std::function<void ( IECore::Data *, const openvdb::points::AttributeArray &, LeafIter )>;
 
 	Functions( CreateFn create , AppendFn append ) : m_create(create), m_append(append) {}
 

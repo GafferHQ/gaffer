@@ -438,8 +438,8 @@ class Catalogue::InternalImage : public ImageNode
 		struct AsynchronousSaver
 		{
 
-			typedef std::shared_ptr<AsynchronousSaver> Ptr;
-			typedef std::weak_ptr<AsynchronousSaver> WeakPtr;
+			using Ptr = std::shared_ptr<AsynchronousSaver>;
+			using WeakPtr = std::weak_ptr<AsynchronousSaver>;
 
 			static Ptr create( InternalImage *client )
 			{
@@ -516,8 +516,8 @@ class Catalogue::InternalImage : public ImageNode
 				m_clients.erase( client );
 			}
 
-			typedef std::pair<std::string, Imath::V2i> TileIndex;
-			typedef boost::unordered_map<TileIndex, IECore::MurmurHash> ChannelDataHashes;
+			using TileIndex = std::pair<std::string, Imath::V2i>;
+			using ChannelDataHashes = boost::unordered_map<TileIndex, IECore::MurmurHash>;
 			ChannelDataHashes channelDataHashes;
 
 			private :

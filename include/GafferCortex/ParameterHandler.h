@@ -86,7 +86,7 @@ class GAFFERCORTEX_API ParameterHandler : public IECore::RefCounted
 		static ParameterHandlerPtr create( IECore::ParameterPtr parameter );
 		/// A function for creating ParameterHandlers which will represent a Parameter with a plug on a given
 		/// parent.
-		typedef std::function<ParameterHandlerPtr ( IECore::ParameterPtr )> Creator;
+		using Creator = std::function<ParameterHandlerPtr ( IECore::ParameterPtr )>;
 		/// Registers a function which can return a ParameterHandler for a given Parameter type.
 		static void registerParameterHandler( IECore::TypeId parameterType, Creator creator );
 
@@ -110,7 +110,7 @@ class GAFFERCORTEX_API ParameterHandler : public IECore::RefCounted
 
 	private :
 
-		typedef std::map<IECore::TypeId, Creator> CreatorMap;
+		using CreatorMap = std::map<IECore::TypeId, Creator>;
 		static CreatorMap &creators();
 
 };

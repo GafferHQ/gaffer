@@ -52,7 +52,7 @@ using namespace Gaffer;
 namespace
 {
 
-typedef std::shared_ptr<UndoScope> UndoScopePtr;
+using UndoScopePtr = std::shared_ptr<UndoScope>;
 
 void deleter( UndoScope *undoScope )
 {

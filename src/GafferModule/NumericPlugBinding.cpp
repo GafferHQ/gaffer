@@ -77,7 +77,7 @@ typename T::ValueType getValue( const T *plug, const IECore::MurmurHash *precomp
 template<typename T>
 void bind()
 {
-	typedef typename T::ValueType V;
+	using V = typename T::ValueType;
 
 	PlugClass<T>()
 		.def( init<const char *, Plug::Direction, typename T::ValueType, typename T::ValueType, typename T::ValueType, unsigned>(

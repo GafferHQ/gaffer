@@ -59,10 +59,10 @@ using namespace GafferCortexModule;
 namespace
 {
 
-typedef ParameterisedHolderWrapper<NodeWrapper<ParameterisedHolderNode> > ParameterisedHolderNodeWrapper;
-typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ParameterisedHolderDependencyNode> > ParameterisedHolderDependencyNodeWrapper;
-typedef ParameterisedHolderWrapper<ComputeNodeWrapper<ParameterisedHolderComputeNode> > ParameterisedHolderComputeNodeWrapper;
-typedef ParameterisedHolderWrapper<TaskNodeWrapper<ParameterisedHolderTaskNode> > ParameterisedHolderTaskNodeWrapper;
+using ParameterisedHolderNodeWrapper = ParameterisedHolderWrapper<NodeWrapper<ParameterisedHolderNode> >;
+using ParameterisedHolderDependencyNodeWrapper = ParameterisedHolderWrapper<DependencyNodeWrapper<ParameterisedHolderDependencyNode> >;
+using ParameterisedHolderComputeNodeWrapper = ParameterisedHolderWrapper<ComputeNodeWrapper<ParameterisedHolderComputeNode> >;
+using ParameterisedHolderTaskNodeWrapper = ParameterisedHolderWrapper<TaskNodeWrapper<ParameterisedHolderTaskNode> >;
 
 template<typename T>
 class ParameterisedHolderSerialiser : public NodeSerialiser

@@ -64,7 +64,7 @@ class Container : public Base
 		static const char *staticTypeName();
 		static bool inheritsFrom( IECore::TypeId typeId );
 		static bool inheritsFrom( const char *typeName );
-		typedef Base BaseClass;
+		using BaseClass = Base;
 		//@}
 
 		/// Accepts only type T.

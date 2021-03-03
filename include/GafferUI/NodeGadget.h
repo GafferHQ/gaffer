@@ -90,7 +90,7 @@ class GAFFERUI_API NodeGadget : public Gadget
 		/// nullptr will be returned.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );
 
-		typedef std::function<NodeGadgetPtr ( Gaffer::NodePtr )> NodeGadgetCreator;
+		using NodeGadgetCreator = std::function<NodeGadgetPtr ( Gaffer::NodePtr )>;
 		/// Registers a named NodeGadget creator, optionally registering it as the default
 		/// creator for a particular type of node. The nodeGadgetType may subsequently be
 		/// used in a "nodeGadget:type" metadata registration to register the creator with

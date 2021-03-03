@@ -658,7 +658,7 @@ class File
 
 
 
-typedef std::shared_ptr<File> FilePtr;
+using FilePtr = std::shared_ptr<File>;
 
 // For success, file should be set, and error left null
 // For failure, file should be left null, and error should be set
@@ -699,7 +699,7 @@ CacheEntry fileCacheGetter( const std::string &fileName, size_t &cost, const IEC
 	return result;
 }
 
-typedef IECorePreview::LRUCache<std::string, CacheEntry> FileHandleCache;
+using FileHandleCache = IECorePreview::LRUCache<std::string, CacheEntry>;
 
 FileHandleCache *fileCache()
 {
@@ -886,7 +886,7 @@ size_t OpenImageIOReader::supportedExtensions( std::vector<std::string> &extensi
 		return extensions.size();
 	}
 
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 	Tokenizer formats( attr, boost::char_separator<char>( ";" ) );
 	for( Tokenizer::const_iterator fIt = formats.begin(), eFIt = formats.end(); fIt != eFIt; ++fIt )
 	{

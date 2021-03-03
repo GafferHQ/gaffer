@@ -51,7 +51,7 @@ class GAFFER_API CompoundPathFilter : public Gaffer::PathFilter
 
 	public :
 
-		typedef std::vector<PathFilterPtr> Filters;
+		using Filters = std::vector<PathFilterPtr>;
 
 		CompoundPathFilter( IECore::CompoundDataPtr userData = nullptr );
 		~CompoundPathFilter() override;

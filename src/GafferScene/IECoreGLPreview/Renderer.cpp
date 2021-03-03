@@ -191,7 +191,7 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
 	{
 		return d->readable();
@@ -367,8 +367,8 @@ IE_CORE_DECLAREPTR( OpenGLAttributes )
 namespace
 {
 
-typedef std::function<void ()> Edit;
-typedef tbb::concurrent_queue<Edit> EditQueue;
+using Edit = std::function<void ()>;
+using EditQueue = tbb::concurrent_queue<Edit>;
 
 class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 {
@@ -1202,13 +1202,13 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		// from m_editQueue.
 
 		unordered_map<InternedString, ConstOutputPtr> m_outputs;
-		typedef std::unordered_map<string, OpenGLCameraPtr> CameraMap;
+		using CameraMap = std::unordered_map<string, OpenGLCameraPtr>;
 		CameraMap m_cameras;
 
-		typedef std::vector<OpenGLObjectPtr> OpenGLObjectVector;
+		using OpenGLObjectVector = std::vector<OpenGLObjectPtr>;
 		OpenGLObjectVector m_objects;
 
-		typedef std::vector<OpenGLAttributesPtr> OpenGLAttributesVector;
+		using OpenGLAttributesVector = std::vector<OpenGLAttributesPtr>;
 		OpenGLAttributesVector m_attributes;
 
 		// Registration with factory

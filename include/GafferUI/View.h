@@ -121,7 +121,7 @@ class GAFFERUI_API View : public Gaffer::Node
 		//@{
 		/// Creates a View for the specified plug.
 		static ViewPtr create( Gaffer::PlugPtr input );
-		typedef std::function<ViewPtr ( Gaffer::PlugPtr )> ViewCreator;
+		using ViewCreator = std::function<ViewPtr ( Gaffer::PlugPtr )>;
 		/// Registers a function which will return a View instance for a
 		/// plug of a specific type.
 		static void registerView( IECore::TypeId plugType, ViewCreator creator );
@@ -185,12 +185,12 @@ class GAFFERUI_API View : public Gaffer::Node
 		UnarySignal m_contextChangedSignal;
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
-		typedef std::map<IECore::TypeId, ViewCreator> CreatorMap;
+		using CreatorMap = std::map<IECore::TypeId, ViewCreator>;
 		static CreatorMap &creators();
 
-		typedef std::pair<boost::regex, ViewCreator> RegexAndCreator;
-		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;
-		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
+		using RegexAndCreator = std::pair<boost::regex, ViewCreator>;
+		using RegexAndCreatorVector = std::vector<RegexAndCreator>;
+		using NamedCreatorMap = std::map<IECore::TypeId, RegexAndCreatorVector>;
 		static NamedCreatorMap &namedCreators();
 
 		static size_t g_firstPlugIndex;

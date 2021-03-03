@@ -682,8 +682,8 @@ class Dispatcher::Batcher
 			return static_cast<const TaskNode *>( task.plug()->node() )->dispatcherPlug();
 		}
 
-		typedef std::map<IECore::MurmurHash, TaskBatchPtr> BatchMap;
-		typedef std::map<IECore::MurmurHash, TaskBatchPtr> TaskToBatchMap;
+		using BatchMap = std::map<IECore::MurmurHash, TaskBatchPtr>;
+		using TaskToBatchMap = std::map<IECore::MurmurHash, TaskBatchPtr>;
 
 		TaskBatchPtr m_rootBatch;
 		BatchMap m_currentBatches;

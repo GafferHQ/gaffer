@@ -69,7 +69,7 @@ IE_CORE_FORWARDDECLARE( StandardSet );
 IE_CORE_FORWARDDECLARE( CompoundDataPlug );
 IE_CORE_FORWARDDECLARE( StringPlug );
 
-typedef Container<GraphComponent, ScriptNode> ScriptContainer;
+using ScriptContainer = Container<GraphComponent, ScriptNode>;
 IE_CORE_DECLAREPTR( ScriptContainer );
 
 /// The ScriptNode class represents a script - that is a single collection of
@@ -326,9 +326,9 @@ class GAFFER_API ScriptNode : public Node
 		// Called by undo/redo to cleanup after action stage
 		void postActionStageCleanup();
 
-		typedef std::stack<UndoScope::State> UndoStateStack;
-		typedef std::list<CompoundActionPtr> UndoList;
-		typedef UndoList::iterator UndoIterator;
+		using UndoStateStack = std::stack<UndoScope::State>;
+		using UndoList = std::list<CompoundActionPtr>;
+		using UndoIterator = UndoList::iterator;
 
 		ActionSignal m_actionSignal;
 		UndoAddedSignal m_undoAddedSignal;
@@ -344,8 +344,8 @@ class GAFFER_API ScriptNode : public Node
 		std::string serialiseInternal( const Node *parent, const Set *filter ) const;
 		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" );
 
-		typedef std::function<std::string ( const Node *, const Set * )> SerialiseFunction;
-		typedef std::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string &context )> ExecuteFunction;
+		using SerialiseFunction = std::function<std::string ( const Node *, const Set * )>;
+		using ExecuteFunction = std::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string & )>;
 
 		// Actual implementations reside in libGafferBindings (due to Python
 		// dependency), and are injected into these functions.

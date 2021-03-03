@@ -62,9 +62,9 @@ class GAFFER_API Metadata
 
 	public :
 
-		typedef std::function<IECore::ConstDataPtr ()> ValueFunction;
-		typedef std::function<IECore::ConstDataPtr ( const GraphComponent *graphComponent )> GraphComponentValueFunction;
-		typedef std::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
+		using ValueFunction = std::function<IECore::ConstDataPtr ()>;
+		using GraphComponentValueFunction = std::function<IECore::ConstDataPtr ( const GraphComponent * )>;
+		using PlugValueFunction = std::function<IECore::ConstDataPtr ( const Plug * )>;
 
 		/// Value registration
 		/// ==================

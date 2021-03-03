@@ -102,7 +102,7 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		/// empty bound.
 		const Imath::Box2f &resolutionGate() const;
 
-		typedef std::function<GafferScene::SceneProcessorPtr ()> ShadingModeCreator;
+		using ShadingModeCreator = std::function<GafferScene::SceneProcessorPtr ()>;
 
 		static void registerShadingMode( const std::string &name, ShadingModeCreator );
 		static void registeredShadingModes( std::vector<std::string> &names );

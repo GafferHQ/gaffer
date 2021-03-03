@@ -49,7 +49,7 @@ template <class F>
 struct RawConstructorDispatcher
 {
 
-	typedef typename boost::binary_traits<F>::result_type ResultType;
+	using ResultType = typename boost::binary_traits<F>::result_type;
 
 	RawConstructorDispatcher( F f )
 		: m_f( f )

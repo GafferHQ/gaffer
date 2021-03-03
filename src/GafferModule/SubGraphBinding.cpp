@@ -302,10 +302,10 @@ void load( Reference &r, const std::string &f )
 
 void GafferModule::bindSubGraph()
 {
-	typedef DependencyNodeWrapper<SubGraph> SubGraphWrapper;
+	using SubGraphWrapper = DependencyNodeWrapper<SubGraph>;
 	DependencyNodeClass<SubGraph, SubGraphWrapper>();
 
-	typedef DependencyNodeWrapper<Box> BoxWrapper;
+	using BoxWrapper = DependencyNodeWrapper<Box>;
 
 	DependencyNodeClass<Box, BoxWrapper>()
 		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ) ) )

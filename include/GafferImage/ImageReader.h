@@ -119,7 +119,7 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 		/// A function which can take information about a file being read, and return the colorspace
 		/// of the data within the file. This is used whenever the colorSpace plug is at its default
 		/// value.
-		typedef std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )> DefaultColorSpaceFunction;
+		using DefaultColorSpaceFunction = std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )>;
 		static void setDefaultColorSpaceFunction( DefaultColorSpaceFunction f );
 		static DefaultColorSpaceFunction getDefaultColorSpaceFunction();
 

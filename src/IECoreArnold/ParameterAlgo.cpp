@@ -220,8 +220,8 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 template<typename T, typename F>
 IECore::DataPtr arrayToDataInternal( AtArray *array, F f )
 {
-	typedef vector<T> VectorType;
-	typedef IECore::TypedData<vector<T> > DataType;
+	using VectorType = vector<T>;
+	using DataType = IECore::TypedData<vector<T> >;
 	typename DataType::Ptr data = new DataType;
 	VectorType &v = data->writable();
 

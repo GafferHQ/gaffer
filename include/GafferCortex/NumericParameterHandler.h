@@ -55,8 +55,8 @@ class GAFFERCORTEX_API NumericParameterHandler : public ParameterHandler
 
 		IE_CORE_DECLAREMEMBERPTR( NumericParameterHandler<T> );
 
-		typedef IECore::NumericParameter<T> ParameterType;
-		typedef Gaffer::NumericPlug<T> PlugType;
+		using ParameterType = IECore::NumericParameter<T>;
+		using PlugType = Gaffer::NumericPlug<T>;
 
 		NumericParameterHandler( typename ParameterType::Ptr parameter );
 		~NumericParameterHandler() override;

@@ -597,14 +597,14 @@ class TextureGadget : public GafferUI::Gadget
 		ResizePtr m_resize;
 		std::string m_displayTransform;
 
-		typedef std::unordered_map<std::string, GafferImage::ImageProcessorPtr> DisplayTransformMap;
+		using DisplayTransformMap = std::unordered_map<std::string, GafferImage::ImageProcessorPtr>;
 		DisplayTransformMap m_displayTransforms;
 
 };
 
 IE_CORE_DECLAREPTR( TextureGadget )
 
-typedef FilteredChildIterator<TypePredicate<TextureGadget>> TextureGadgetIterator;
+using TextureGadgetIterator = FilteredChildIterator<TypePredicate<TextureGadget> >;
 
 } // namespace
 

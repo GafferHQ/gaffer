@@ -440,7 +440,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 			Signals::ScopedConnection parentChangedConnection;
 		};
 
-		typedef std::map<ConstPlugPtr, PlugEntry> PlugErrors;
+		using PlugErrors = std::map<ConstPlugPtr, PlugEntry>;
 		PlugErrors m_errors;
 
 };

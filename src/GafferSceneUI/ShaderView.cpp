@@ -72,7 +72,7 @@ using namespace GafferSceneUI;
 namespace
 {
 
-typedef boost::container::flat_map<IECore::InternedString, ShaderView::RendererCreator> Renderers;
+using Renderers = boost::container::flat_map<IECore::InternedString, ShaderView::RendererCreator>;
 Renderers &renderers()
 {
 	// See comment in `sceneCreators()`.
@@ -80,8 +80,8 @@ Renderers &renderers()
 	return *r;
 }
 
-typedef std::pair<std::string, std::string> PrefixAndName;
-typedef boost::container::flat_map<PrefixAndName, ShaderView::SceneCreator> SceneCreators;
+using PrefixAndName = std::pair<std::string, std::string>;
+using SceneCreators = boost::container::flat_map<PrefixAndName, ShaderView::SceneCreator>;
 
 SceneCreators &sceneCreators()
 {
@@ -101,7 +101,7 @@ SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
 	return s;
 }
 
-typedef Gaffer::Signals::Signal<void ()> RendererRegistrationChangedSignal;
+using RendererRegistrationChangedSignal = Gaffer::Signals::Signal<void ()>;
 RendererRegistrationChangedSignal &rendererRegistrationChangedSignal()
 {
 	static RendererRegistrationChangedSignal s;

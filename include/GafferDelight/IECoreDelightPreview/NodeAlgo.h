@@ -62,8 +62,8 @@ bool convert( const std::vector<const IECore::Object *> &samples, const std::vec
 
 /// Signature of a function which can convert an IECore::Object
 /// into an NSI node.
-typedef bool (*Converter)( const IECore::Object *, NSIContext_t, const char * );
-typedef bool (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t context, const char * );
+using Converter = bool (*)( const IECore::Object *, NSIContext_t, const char * );
+using MotionConverter = bool (*)( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t constant, const char * );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -79,8 +79,8 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		typedef bool (*Converter)( const T *, NSIContext_t, const char * );
-		typedef bool (*MotionConverter)( const std::vector<const T *> &, const std::vector<float> &, NSIContext_t, const char * );
+		using Converter = bool (*)( const T *, NSIContext_t, const char * );
+		using MotionConverter = bool (*)( const std::vector<const T *> &, const std::vector<float> &, NSIContext_t, const char * );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{

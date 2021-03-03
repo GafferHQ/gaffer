@@ -42,7 +42,7 @@ using namespace GafferUI;
 
 static ConstPointerPtr g_current;
 
-typedef std::map<std::string, ConstPointerPtr> Registry;
+using Registry = std::map<std::string, ConstPointerPtr>;
 static Registry &registry()
 {
 	static Registry r;

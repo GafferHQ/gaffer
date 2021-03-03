@@ -201,7 +201,7 @@ void GafferModule::bindPathFilter()
 
 	// PathFilter
 
-	typedef PathFilterWrapper<PathFilter> Wrapper;
+	using Wrapper = PathFilterWrapper<PathFilter>;
 
 	{
 		scope s = RunTimeTypedClass<PathFilter, Wrapper>()

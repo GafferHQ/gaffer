@@ -318,7 +318,7 @@ GAFFER_NODE_DEFINE_TYPE( Cryptomatte );
 size_t Cryptomatte::g_firstPlugIndex = 0;
 
 // first channel contains id, second contains alpha contribution
-typedef std::unordered_map<std::string, std::string> ChannelMap;
+using ChannelMap = std::unordered_map<std::string, std::string>;
 static const ChannelMap g_channelMap = {
 	{"R", "G"},
 	{"B", "A"},

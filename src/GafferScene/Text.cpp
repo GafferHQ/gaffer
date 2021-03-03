@@ -75,7 +75,7 @@ FontPtr fontGetter( const std::string &fileName, size_t &cost, const IECore::Can
 	return new Font( resolvedFileName );
 }
 
-typedef IECorePreview::LRUCache<std::string, FontPtr> FontCache;
+using FontCache = IECorePreview::LRUCache<std::string, FontPtr>;
 
 FontCache *fontCache()
 {

@@ -71,7 +71,7 @@ class GAFFER_API BackgroundTask : public boost::noncopyable
 
 	public :
 
-		typedef std::function<void ( const IECore::Canceller &canceller )> Function;
+		using Function = std::function<void ( const IECore::Canceller & )>;
 
 		/// Launches a background task to run `function`, which is expected
 		/// to perform asynchronous computes using the `subject` plug.

@@ -58,7 +58,7 @@ struct Converters
 
 };
 
-typedef boost::unordered_map<IECore::TypeId, Converters> Registry;
+using Registry = boost::unordered_map<IECore::TypeId, Converters>;
 
 Registry &registry()
 {

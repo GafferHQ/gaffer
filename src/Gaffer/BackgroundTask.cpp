@@ -98,7 +98,7 @@ struct ActiveTask
 	ConstScriptNodePtr subject;
 };
 
-typedef boost::multi_index::multi_index_container<
+using ActiveTasks = boost::multi_index::multi_index_container<
 	ActiveTask,
 	boost::multi_index::indexed_by<
 		boost::multi_index::hashed_unique<
@@ -108,7 +108,7 @@ typedef boost::multi_index::multi_index_container<
 			boost::multi_index::member<ActiveTask, ConstScriptNodePtr, &ActiveTask::subject>
 		>
 	>
-> ActiveTasks;
+>;
 
 ActiveTasks &activeTasks()
 {

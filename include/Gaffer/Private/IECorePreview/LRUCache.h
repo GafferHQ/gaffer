@@ -97,16 +97,16 @@ class LRUCache : private boost::noncopyable
 {
 	public:
 
-		typedef size_t Cost;
-		typedef Key KeyType;
+		using Cost = size_t;
+		using KeyType = Key;
 
 		/// The GetterFunction is responsible for computing the value and cost for a cache entry
 		/// when given the key. It should throw a descriptive exception if it can't get the data for
 		/// any reason. Cancellation support requires that `IECore::Canceller::check( canceller )`
 		/// is called periodically.
-		typedef boost::function<Value ( const GetterKey &key, Cost &cost, const IECore::Canceller *canceller )> GetterFunction;
+		using GetterFunction = boost::function<Value ( const GetterKey &key, Cost &cost, const IECore::Canceller *canceller )>;
 		/// The optional RemovalCallback is called whenever an item is discarded from the cache.
-		typedef boost::function<void ( const Key &key, const Value &data )> RemovalCallback;
+		using RemovalCallback = boost::function<void ( const Key &key, const Value &data )>;
 
 		LRUCache( GetterFunction getter, Cost maxCost, RemovalCallback removalCallback = RemovalCallback(), bool cacheErrors = true );
 		virtual ~LRUCache();
@@ -186,7 +186,7 @@ class LRUCache : private boost::noncopyable
 			// - Uncached : A boost::blank instance
 			// - Cached : The Value itself
 			// - Failed : The exception thrown by the GetterFn
-			typedef boost::variant<boost::blank, Value, std::exception_ptr> State;
+			using State = boost::variant<boost::blank, Value, std::exception_ptr>;
 
 			State state;
 			Cost cost; // the cost for this item

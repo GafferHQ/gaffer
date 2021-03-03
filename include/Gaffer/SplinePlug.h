@@ -61,10 +61,10 @@ enum SplineDefinitionInterpolation
 template<typename T>
 struct GAFFER_API SplineDefinition
 {
-	typedef typename T::XType XType;
-	typedef typename T::YType YType;
-	typedef typename T::PointContainer PointContainer;
-	typedef typename PointContainer::value_type Point;
+	using XType = typename T::XType;
+	using YType = typename T::YType;
+	using PointContainer = typename T::PointContainer;
+	using Point = typename PointContainer::value_type;
 
 	SplineDefinition() : interpolation( SplineDefinitionInterpolationCatmullRom )
 	{
@@ -120,9 +120,9 @@ class GAFFER_API SplinePlug : public ValuePlug
 
 	public :
 
-		typedef T ValueType;
-		typedef typename PlugType<typename T::XType>::Type XPlugType;
-		typedef typename PlugType<typename T::YType>::Type YPlugType;
+		using ValueType = T;
+		using XPlugType = typename PlugType<typename T::XType>::Type;
+		using YPlugType = typename PlugType<typename T::YType>::Type;
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( SplinePlug<T>, ValuePlug );
 
@@ -178,13 +178,13 @@ class GAFFER_API SplinePlug : public ValuePlug
 		T m_defaultValue;
 };
 
-typedef SplineDefinition<IECore::Splineff> SplineDefinitionff;
-typedef SplineDefinition<IECore::SplinefColor3f> SplineDefinitionfColor3f;
-typedef SplineDefinition<IECore::SplinefColor4f> SplineDefinitionfColor4f;
+using SplineDefinitionff = SplineDefinition<IECore::Splineff>;
+using SplineDefinitionfColor3f = SplineDefinition<IECore::SplinefColor3f>;
+using SplineDefinitionfColor4f = SplineDefinition<IECore::SplinefColor4f>;
 
-typedef SplinePlug< SplineDefinitionff > SplineffPlug;
-typedef SplinePlug< SplineDefinitionfColor3f > SplinefColor3fPlug;
-typedef SplinePlug< SplineDefinitionfColor4f > SplinefColor4fPlug;
+using SplineffPlug = SplinePlug<SplineDefinitionff>;
+using SplinefColor3fPlug = SplinePlug<SplineDefinitionfColor3f>;
+using SplinefColor4fPlug = SplinePlug<SplineDefinitionfColor4f>;
 
 IE_CORE_DECLAREPTR( SplineffPlug );
 IE_CORE_DECLAREPTR( SplinefColor3fPlug );

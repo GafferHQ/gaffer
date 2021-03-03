@@ -133,7 +133,7 @@ boost::python::list taskPlugPostTasks( const TaskNode::TaskPlug &t )
 
 void GafferDispatchModule::bindTaskNode()
 {
-	typedef TaskNodeWrapper<TaskNode> Wrapper;
+	using Wrapper = TaskNodeWrapper<TaskNode>;
 
 	scope s = TaskNodeClass<TaskNode, Wrapper>();
 

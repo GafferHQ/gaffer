@@ -126,9 +126,9 @@ class IECORE_EXPORT Switch : public ComputeNode
 
 IE_CORE_DECLAREPTR( Switch );
 
-typedef Switch SwitchComputeNode;
-typedef SwitchPtr SwitchComputeNodePtr;
-typedef ConstSwitchPtr ConstSwitchComputeNodePtr;
+using SwitchComputeNode = Switch;
+using SwitchComputeNodePtr = SwitchPtr;
+using ConstSwitchComputeNodePtr = ConstSwitchPtr;
 
 } // namespace Gaffer
 

@@ -86,16 +86,16 @@ class GAFFER_API ContextMonitor : public Monitor
 
 			private :
 
-				typedef boost::unordered_set<IECore::MurmurHash> ContextSet;
-				typedef boost::unordered_map<IECore::MurmurHash, size_t> CountingMap;
-				typedef std::map<IECore::InternedString, CountingMap> VariableMap;
+				using ContextSet = boost::unordered_set<IECore::MurmurHash>;
+				using CountingMap = boost::unordered_map<IECore::MurmurHash, size_t>;
+				using VariableMap = std::map<IECore::InternedString, CountingMap>;
 
 				ContextSet m_contexts;
 				VariableMap m_variables;
 
 		};
 
-		typedef boost::unordered_map<ConstPlugPtr, Statistics> StatisticsMap;
+		using StatisticsMap = boost::unordered_map<ConstPlugPtr, Statistics>;
 
 		const StatisticsMap &allStatistics() const;
 		const Statistics &plugStatistics( const Plug *plug ) const;

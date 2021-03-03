@@ -168,7 +168,7 @@ void GafferImageModule::bindIO()
 	}
 
 	{
-		typedef TaskNodeWrapper<ImageWriter> ImageWriterWrapper;
+		using ImageWriterWrapper = TaskNodeWrapper<ImageWriter>;
 
 		scope s = TaskNodeClass<ImageWriter, ImageWriterWrapper>()
 			.def( "currentFileFormat", &ImageWriter::currentFileFormat )

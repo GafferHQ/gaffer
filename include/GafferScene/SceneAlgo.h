@@ -171,7 +171,7 @@ GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const
 struct History : public IECore::RefCounted
 {
 	IE_CORE_DECLAREMEMBERPTR( History )
-	typedef std::vector<Ptr> Predecessors;
+	using Predecessors = std::vector<Ptr>;
 
 	History() = default;
 	History( const ScenePlugPtr &scene, const Gaffer::ContextPtr &context ) : scene( scene ), context( context ) {}
@@ -276,7 +276,7 @@ GAFFERSCENE_API Imath::Box3f bound( const IECore::Object *object );
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.
-typedef std::function<SceneProcessorPtr ()> RenderAdaptor;
+using RenderAdaptor = std::function<SceneProcessorPtr ()>;
 /// Registers an adaptor.
 GAFFERSCENE_API void registerRenderAdaptor( const std::string &name, RenderAdaptor adaptor );
 /// Removes a previously registered adaptor.

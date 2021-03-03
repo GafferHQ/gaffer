@@ -57,8 +57,8 @@ class GAFFER_API CompoundNumericPlug : public ValuePlug
 
 	public :
 
-		typedef T ValueType;
-		typedef NumericPlug<typename T::BaseType> ChildType;
+		using ValueType = T;
+		using ChildType = NumericPlug<typename T::BaseType>;
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( CompoundNumericPlug<T>, ValuePlug );
 
@@ -127,14 +127,14 @@ class GAFFER_API CompoundNumericPlug : public ValuePlug
 
 };
 
-typedef CompoundNumericPlug<Imath::V2f> V2fPlug;
-typedef CompoundNumericPlug<Imath::V3f> V3fPlug;
+using V2fPlug = CompoundNumericPlug<Imath::V2f>;
+using V3fPlug = CompoundNumericPlug<Imath::V3f>;
 
-typedef CompoundNumericPlug<Imath::V2i> V2iPlug;
-typedef CompoundNumericPlug<Imath::V3i> V3iPlug;
+using V2iPlug = CompoundNumericPlug<Imath::V2i>;
+using V3iPlug = CompoundNumericPlug<Imath::V3i>;
 
-typedef CompoundNumericPlug<Imath::Color3f> Color3fPlug;
-typedef CompoundNumericPlug<Imath::Color4f> Color4fPlug;
+using Color3fPlug = CompoundNumericPlug<Imath::Color3f>;
+using Color4fPlug = CompoundNumericPlug<Imath::Color4f>;
 
 IE_CORE_DECLAREPTR( V2fPlug );
 IE_CORE_DECLAREPTR( V3fPlug );

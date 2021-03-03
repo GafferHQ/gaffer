@@ -180,7 +180,7 @@ class GAFFER_API Plug : public GraphComponent
 		/// @name Connections
 		///////////////////////////////////////////////////////////////////////
 		//@{
-		typedef std::list<Plug *> OutputContainer;
+		using OutputContainer = std::list<Plug *>;
 		/// Plugs may accept or reject a potential input by
 		/// implementing this method to return true for
 		/// acceptance and false for rejection. Implementations
@@ -282,7 +282,7 @@ IE_CORE_DECLAREPTR( Plug );
 template<typename T, Plug::Direction D>
 struct Plug::TypePredicate
 {
-	typedef T ChildType;
+	using ChildType = T;
 
 	bool operator()( const GraphComponentPtr &g ) const
 	{
@@ -303,7 +303,7 @@ struct Plug::TypePredicate
 template<Plug::Direction D=Plug::Invalid, typename T=Plug>
 struct PlugPredicate
 {
-	typedef T ChildType;
+	using ChildType = T;
 
 	bool operator()( const GraphComponentPtr &g ) const
 	{

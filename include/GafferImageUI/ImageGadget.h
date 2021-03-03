@@ -111,7 +111,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
-		typedef std::array<IECore::InternedString, 4> Channels;
+		using Channels = std::array<IECore::InternedString, 4>;
 		/// Chooses which 4 channels to display as RGBA.
 		/// For instance, to display Z as a greyscale image
 		/// with black alpha you would pass { "Z", "Z", "Z", "" }.
@@ -307,12 +307,12 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 				IECoreGL::TexturePtr m_texture;
 				bool m_active;
 				std::chrono::steady_clock::time_point m_activeStartTime;
-				typedef tbb::spin_mutex Mutex;
+				using Mutex = tbb::spin_mutex;
 				Mutex m_mutex;
 
 		};
 
-		typedef tbb::concurrent_unordered_map<TileIndex, Tile, TileIndex::Hash> Tiles;
+		using Tiles = tbb::concurrent_unordered_map<TileIndex, Tile, TileIndex::Hash>;
 		mutable Tiles m_tiles;
 
 		// Tile update. We update tiles asynchronously from background

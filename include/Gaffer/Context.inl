@@ -63,7 +63,7 @@ template<typename T>
 struct DataTraits
 {
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 
 };
 
@@ -71,7 +71,7 @@ template<typename T>
 struct DataTraits<Imath::Vec2<T> >
 {
 
-	typedef IECore::GeometricTypedData<Imath::Vec2<T> > DataType;
+	using DataType = IECore::GeometricTypedData<Imath::Vec2<T>>;
 
 };
 
@@ -79,7 +79,7 @@ template<typename T>
 struct DataTraits<Imath::Vec3<T> >
 {
 
-	typedef IECore::GeometricTypedData<Imath::Vec3<T> > DataType;
+	using DataType = IECore::GeometricTypedData<Imath::Vec3<T>>;
 
 };
 
@@ -158,7 +158,7 @@ void Context::set( const IECore::InternedString &name, const T &value )
 {
 	// Allocate a new typed Data, store it in m_allocMap so that it won't be deallocated,
 	// and call internalSet to reference it in the main m_map
-	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
+	using DataType = typename Gaffer::Detail::DataTraits<T>::DataType;
 	typename DataType::Ptr d = new DataType( value );
 	if( internalSet( name, Value( name, &d->readable() ) ) )
 	{

@@ -77,12 +77,12 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
 
-		using UpdateRequiredSignal = Gaffer::Signals::Signal<void (RenderController &)>;
+		using UpdateRequiredSignal = Gaffer::Signals::Signal<void ( RenderController & )>;
 		UpdateRequiredSignal &updateRequiredSignal();
 
 		bool updateRequired() const;
 
-		typedef std::function<void ( Gaffer::BackgroundTask::Status progress )> ProgressCallback;
+		using ProgressCallback = std::function<void (Gaffer::BackgroundTask::Status)>;
 
 		void update( const ProgressCallback &callback = ProgressCallback() );
 		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const ProgressCallback &callback = ProgressCallback(), const IECore::PathMatcher &priorityPaths = IECore::PathMatcher()  );

@@ -123,10 +123,10 @@ class GAFFERCORTEX_API ParameterisedHolder : public BaseType
 
 };
 
-typedef ParameterisedHolder<Gaffer::Node> ParameterisedHolderNode;
-typedef ParameterisedHolder<Gaffer::DependencyNode> ParameterisedHolderDependencyNode;
-typedef ParameterisedHolder<Gaffer::ComputeNode> ParameterisedHolderComputeNode;
-typedef ParameterisedHolder<GafferDispatch::TaskNode> ParameterisedHolderTaskNode;
+using ParameterisedHolderNode = ParameterisedHolder<Gaffer::Node>;
+using ParameterisedHolderDependencyNode = ParameterisedHolder<Gaffer::DependencyNode>;
+using ParameterisedHolderComputeNode = ParameterisedHolder<Gaffer::ComputeNode>;
+using ParameterisedHolderTaskNode = ParameterisedHolder<GafferDispatch::TaskNode>;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNode )
 IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNode )

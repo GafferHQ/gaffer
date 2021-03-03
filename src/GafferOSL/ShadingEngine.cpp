@@ -387,7 +387,7 @@ class RenderState
 
 	private :
 
-		typedef boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash > RenderStateTransforms;
+		using RenderStateTransforms = boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash>;
 		RenderStateTransforms m_transforms;
 
 		struct UserData
@@ -559,7 +559,7 @@ struct DebugParameters
 // Must be held in order to modify the shading system.
 // Should not be acquired before calling shadingSystem(),
 // since shadingSystem() itself will use it.
-typedef tbb::spin_mutex ShadingSystemWriteMutex;
+using ShadingSystemWriteMutex = tbb::spin_mutex;
 ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 
 OSL::ShadingSystem *shadingSystem()
@@ -678,7 +678,7 @@ class ShadingResults
 			void *basePointer;
 		};
 
-		typedef container::flat_map<ustring, DebugResult, OIIO::ustringPtrIsLess> DebugResultsMap;
+		using DebugResultsMap = container::flat_map<ustring, DebugResult, OIIO::ustringPtrIsLess>;
 
 		void addResult( size_t pointIndex, const ClosureColor *result, DebugResultsMap &threadCache )
 		{
@@ -944,7 +944,7 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 template <typename T>
 static T uniformValue( const IECore::CompoundData *points, const char *name )
 {
-	typedef TypedData<T> DataType;
+	using DataType = TypedData<T>;
 	const DataType *d = points->member<DataType>( name );
 	if( d )
 	{
@@ -959,7 +959,7 @@ static T uniformValue( const IECore::CompoundData *points, const char *name )
 template<typename T>
 static const T *varyingValue( const IECore::CompoundData *points, const char *name )
 {
-	typedef TypedData<vector<T> > DataType;
+	using DataType = TypedData<vector<T> >;
 	const DataType *d = points->member<DataType>( name );
 	if( d )
 	{

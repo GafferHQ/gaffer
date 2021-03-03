@@ -130,7 +130,7 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 			IECore::PathMatcher set;
 		};
 
-		typedef boost::container::flat_map<IECore::InternedString, Set> Sets;
+		using Sets = boost::container::flat_map<IECore::InternedString, Set>;
 
 		struct Updater;
 

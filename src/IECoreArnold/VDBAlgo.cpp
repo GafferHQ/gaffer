@@ -69,8 +69,8 @@ AtString g_volume("volume");
 ///! utility to allow us to stream directly into a UCharVectorData
 struct UCharVectorDataSink
 {
-	typedef char char_type;
-	typedef boost::iostreams::sink_tag category;
+	using char_type = char;
+	using category = boost::iostreams::sink_tag;
 
 	UCharVectorDataSink( IECore::UCharVectorData *storage ) : m_storage( storage->writable() )
 	{

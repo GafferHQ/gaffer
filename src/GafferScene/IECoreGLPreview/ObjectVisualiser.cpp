@@ -53,7 +53,7 @@ ObjectVisualiser::~ObjectVisualiser()
 namespace
 {
 
-typedef std::map<IECore::TypeId, ConstObjectVisualiserPtr> ObjectVisualisers;
+using ObjectVisualisers = std::map<IECore::TypeId, ConstObjectVisualiserPtr>;
 
 ObjectVisualisers &objectVisualisers()
 {

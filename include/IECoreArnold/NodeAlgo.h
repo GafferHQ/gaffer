@@ -59,10 +59,10 @@ IECOREARNOLD_API AtNode *convert( const std::vector<const IECore::Object *> &sam
 
 /// Signature of a function which can convert an IECore::Object
 /// into an Arnold object.
-typedef AtNode * (*Converter)( const IECore::Object *, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode );
+using Converter = AtNode *(*)( const IECore::Object *, AtUniverse *, const std::string &, const AtNode * );
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving Arnold object.
-typedef AtNode * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode );
+using MotionConverter = AtNode *(*)( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parent );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -78,8 +78,8 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		typedef AtNode *(*Converter)( const T *, AtUniverse *, const std::string&, const AtNode* );
-		typedef AtNode *(*MotionConverter)( const std::vector<const T *> &, float, float, AtUniverse *, const std::string&, const AtNode* );
+		using Converter = AtNode *(*)( const T *, AtUniverse *, const std::string &, const AtNode * );
+		using MotionConverter = AtNode *(*)( const std::vector<const T *> &, float, float, AtUniverse *, const std::string &, const AtNode * );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{

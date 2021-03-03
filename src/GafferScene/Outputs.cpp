@@ -59,8 +59,8 @@ using namespace GafferScene;
 namespace
 {
 
-typedef std::pair<std::string, OutputPtr> NamedOutput;
-typedef multi_index::multi_index_container<
+using NamedOutput = std::pair<std::string, OutputPtr>;
+using OutputMap = multi_index::multi_index_container<
 	NamedOutput,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
@@ -68,7 +68,7 @@ typedef multi_index::multi_index_container<
 		>,
 		multi_index::sequenced<>
 	>
-> OutputMap;
+>;
 
 OutputMap &outputMap()
 {

@@ -64,7 +64,7 @@ namespace
 
 const char *g_oslSearchPaths = getenv( "OSL_SHADER_PATHS" );
 
-typedef std::shared_ptr<OSLQuery> OSLQueryPtr;
+using OSLQueryPtr = std::shared_ptr<OSLQuery>;
 
 OSLQueryPtr oslQueryGetter( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
 {
@@ -79,7 +79,7 @@ OSLQueryPtr oslQueryGetter( const std::string &shaderName, size_t &cost, const I
 	return nullptr;
 }
 
-typedef IECorePreview::LRUCache<std::string, OSLQueryPtr, IECorePreview::LRUCachePolicy::Parallel> OSLQueryCache;
+using OSLQueryCache = IECorePreview::LRUCache<std::string, OSLQueryPtr, IECorePreview::LRUCachePolicy::Parallel>;
 OSLQueryCache g_oslQueryCache( oslQueryGetter, 128 );
 
 //////////////////////////////////////////////////////////////////////////

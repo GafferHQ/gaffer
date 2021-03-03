@@ -96,7 +96,7 @@ namespace python {
 template<>
 struct base_type_traits<PyCodeObject>
 {
-	typedef PyObject type;
+	using type = PyObject;
 };
 
 } // namespace python

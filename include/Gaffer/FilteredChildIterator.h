@@ -47,7 +47,7 @@ namespace Gaffer
 template<typename T>
 struct TypePredicate
 {
-	typedef T ChildType;
+	using ChildType = T;
 
 	bool operator()( const GraphComponentPtr &g ) const
 	{
@@ -61,16 +61,16 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 
 	public :
 
-		typedef typename Predicate::ChildType ChildType;
-		typedef boost::filter_iterator<Predicate, GraphComponent::ChildIterator> BaseIterator;
+		using ChildType = typename Predicate::ChildType;
+		using BaseIterator = boost::filter_iterator<Predicate, GraphComponent::ChildIterator>;
 
 		/// \todo It's inconvenient that our reference type
 		/// is ChildType::Ptr rather than just ChildType. It
 		/// leads to lots of ugly `it->get()` and `(*it)->`
 		/// calls. Change this for this class and also for
 		/// the RecursiveIterator classes.
-		typedef const typename ChildType::Ptr &reference;
-		typedef const typename ChildType::Ptr *pointer;
+		using reference = const typename ChildType::Ptr &;
+		using pointer = const typename ChildType::Ptr *;
 
 		FilteredChildIterator()
 			:	BaseIterator()

@@ -54,7 +54,7 @@ using namespace GafferBindings;
 using namespace GafferCortex;
 using namespace GafferCortexModule;
 
-typedef ParameterisedHolderWrapper<DependencyNodeWrapper<OpHolder> > OpHolderWrapper;
+using OpHolderWrapper = ParameterisedHolderWrapper<DependencyNodeWrapper<OpHolder> >;
 
 static IECore::OpPtr getOp( OpHolder &n )
 {

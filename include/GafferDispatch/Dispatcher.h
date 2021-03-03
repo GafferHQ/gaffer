@@ -69,7 +69,7 @@ namespace Detail
 
 struct PreDispatchSignalCombiner
 {
-	typedef bool result_type;
+	using result_type = bool;
 
 	template<typename InputIterator>
 	bool operator()( InputIterator first, InputIterator last ) const
@@ -105,9 +105,9 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
-		using PreDispatchSignal = Gaffer::Signals::Signal<bool (const Dispatcher *, const std::vector<TaskNodePtr> &), Detail::PreDispatchSignalCombiner>;
-		using DispatchSignal = Gaffer::Signals::Signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &), Gaffer::Signals::CatchingCombiner<void>>;
-		using PostDispatchSignal = Gaffer::Signals::Signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &, bool), Gaffer::Signals::CatchingCombiner<void>>;
+		using PreDispatchSignal = Gaffer::Signals::Signal<bool ( const Dispatcher *, const std::vector<TaskNodePtr> & ), Detail::PreDispatchSignalCombiner>;
+		using DispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher *, const std::vector<TaskNodePtr> & ), Gaffer::Signals::CatchingCombiner<void>>;
+		using PostDispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher *, const std::vector<TaskNodePtr> &, bool ), Gaffer::Signals::CatchingCombiner<void>>;
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +176,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		//@}
 
 		/// A function which creates a Dispatcher.
-		typedef std::function<DispatcherPtr ()> Creator;
+		using Creator = std::function<DispatcherPtr ()>;
 		/// SetupPlugsFn may be registered along with a Dispatcher Creator. It will be called by setupPlugs,
 		/// along with all other registered SetupPlugsFns. It is recommended that each registered dispatcher
 		/// store its plugs contained within a dedicated parent Plug, named according to the registration
@@ -186,7 +186,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		/// the TaskNode constructor, the non-dynamic plugs will always be created according to the current
 		/// definition, and will not be serialized into scripts. The downside of using non-dynamic plugs is that
 		/// loading a script before all Dispatchers have been registered could result in lost settings.
-		typedef std::function<void ( Gaffer::Plug *parentPlug )> SetupPlugsFn;
+		using SetupPlugsFn = std::function<void (Gaffer::Plug *)>;
 
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.
@@ -212,7 +212,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 
 		IE_CORE_FORWARDDECLARE( TaskBatch )
 
-		typedef std::vector<TaskBatchPtr> TaskBatches;
+		using TaskBatches = std::vector<TaskBatchPtr>;
 
 		/// A batch of tasks to be executed together, along
 		/// with references to batches of preTasks which must
@@ -281,7 +281,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 
 		void executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate = false ) const;
 
-		typedef std::map<std::string, std::pair<Creator, SetupPlugsFn> > CreatorMap;
+		using CreatorMap = std::map<std::string, std::pair<Creator, SetupPlugsFn>>;
 		static CreatorMap &creators();
 
 		class Batcher;

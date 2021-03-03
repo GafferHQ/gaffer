@@ -154,7 +154,7 @@ class GAFFER_API Expression : public ComputeNode
 				/// Creates an engine of the specified type.
 				static EnginePtr create( const std::string engineType );
 
-				typedef std::function<EnginePtr ()> Creator;
+				using Creator = std::function<EnginePtr ()>;
 				static void registerEngine( const std::string engineType, Creator creator );
 				static void registeredEngines( std::vector<std::string> &engineTypes );
 
@@ -169,7 +169,7 @@ class GAFFER_API Expression : public ComputeNode
 
 				friend class Expression;
 
-				typedef std::map<std::string, Creator> CreatorMap;
+				using CreatorMap = std::map<std::string, Creator>;
 				static CreatorMap &creators();
 
 		};

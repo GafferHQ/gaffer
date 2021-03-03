@@ -307,10 +307,10 @@ void GafferImageModule::bindCore()
 		.def( "whiteTile", &whiteTile, ( arg( "_copy" ) = true ) ).staticmethod( "whiteTile" )
 	;
 
-	typedef ComputeNodeWrapper<ImageNode> ImageNodeWrapper;
+	using ImageNodeWrapper = ComputeNodeWrapper<ImageNode>;
 	GafferBindings::DependencyNodeClass<ImageNode, ImageNodeWrapper>();
 
-	typedef ComputeNodeWrapper<FlatImageSource> FlatImageSourceWrapper;
+	using FlatImageSourceWrapper = ComputeNodeWrapper<FlatImageSource>;
 	GafferBindings::DependencyNodeClass<FlatImageSource, FlatImageSourceWrapper>();
 
 	class_<Format>( "Format" )

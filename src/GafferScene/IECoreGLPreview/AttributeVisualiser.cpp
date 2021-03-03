@@ -44,7 +44,7 @@ using namespace IECoreGLPreview;
 namespace
 {
 
-typedef std::vector<ConstAttributeVisualiserPtr> AttributeVisualisers;
+using AttributeVisualisers = std::vector<ConstAttributeVisualiserPtr>;
 
 AttributeVisualisers &visualisers()
 {

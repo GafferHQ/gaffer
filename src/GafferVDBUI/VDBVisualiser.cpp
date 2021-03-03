@@ -274,7 +274,7 @@ class VDBVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef VDBObject ObjectType;
+		using ObjectType = VDBObject;
 
 		VDBVisualiser()
 		{

@@ -95,7 +95,7 @@ inline const T *GraphComponent::descendant( const std::string &relativePath ) co
 		return nullptr;
 	}
 
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 
 	Tokenizer t( relativePath, boost::char_separator<char>( "." ) );
 	const GraphComponent *result = this;

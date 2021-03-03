@@ -241,7 +241,7 @@ class RendererServices : public OSL::RendererServices
 namespace
 {
 
-typedef pair<string, string> Replacement;
+using Replacement = pair<string, string>;
 bool replacementGreater( const Replacement &lhs, const Replacement &rhs )
 {
 	return lhs.first.size() > rhs.first.size();
@@ -804,7 +804,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			// just return it. OSL won't let us load the same shader
 			// again via LoadMemoryCompiledShader anyway.
 
-			typedef map<string, OSL::ShaderGroupRef> ShaderGroups;
+			using ShaderGroups = map<string, OSL::ShaderGroupRef>;
 			static ShaderGroups g_shaderGroups;
 			const ShaderGroups::const_iterator it = g_shaderGroups.find( shaderName );
 			if( it != g_shaderGroups.end() )

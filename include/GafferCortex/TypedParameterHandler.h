@@ -55,8 +55,8 @@ class GAFFERCORTEX_API TypedParameterHandler : public ParameterHandler
 
 		IE_CORE_DECLAREMEMBERPTR( TypedParameterHandler<T> );
 
-		typedef IECore::TypedParameter<T> ParameterType;
-		typedef typename Gaffer::PlugType<T>::Type PlugType;
+		using ParameterType = IECore::TypedParameter<T>;
+		using PlugType = typename Gaffer::PlugType<T>::Type;
 
 		TypedParameterHandler( typename ParameterType::Ptr parameter );
 		~TypedParameterHandler() override;

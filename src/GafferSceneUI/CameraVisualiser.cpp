@@ -56,7 +56,7 @@ class CameraVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef IECoreScene::Camera ObjectType;
+		using ObjectType = IECoreScene::Camera;
 
 		CameraVisualiser()
 		{

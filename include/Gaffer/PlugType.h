@@ -51,14 +51,14 @@ namespace Gaffer
 template<typename T>
 struct PlugType
 {
-	typedef void Type;
+	using Type = void;
 };
 
 #define GAFFER_PLUGTYPE_SPECIALISE( VALUETYPE, PLUGTYPE ) 	\
 	template<>												\
 	struct PlugType<VALUETYPE>								\
 	{														\
-		typedef PLUGTYPE Type;								\
+		using Type = PLUGTYPE;								\
 	};														\
 
 GAFFER_PLUGTYPE_SPECIALISE( float, FloatPlug )

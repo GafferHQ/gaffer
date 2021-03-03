@@ -78,8 +78,8 @@ class GAFFER_API Box : public SubGraph
 };
 
 /// \deprecated Use Box::Iterator etc instead.
-typedef FilteredChildIterator<TypePredicate<Box> > BoxIterator;
-typedef FilteredRecursiveChildIterator<TypePredicate<Box> > RecursiveBoxIterator;
+using BoxIterator = FilteredChildIterator<TypePredicate<Box> >;
+using RecursiveBoxIterator = FilteredRecursiveChildIterator<TypePredicate<Box> >;
 
 } // namespace Gaffer
 

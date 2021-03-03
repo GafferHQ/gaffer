@@ -145,7 +145,7 @@ ImageGadget::ImageGadget( const std::string &fileName )
 	// we'll load the actual texture later when we're sure a GL context exists,
 	// but we need to find the bounding box now so that bound() will always be correct.
 
-	typedef IECorePreview::LRUCache<std::string, Box3f> ImageBoundCache;
+	using ImageBoundCache = IECorePreview::LRUCache<std::string, Box3f>;
 	static ImageBoundCache g_imageBoundCache( boundGetter, 10000 );
 	m_bound = g_imageBoundCache.get( fileName );
 

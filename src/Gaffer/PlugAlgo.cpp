@@ -72,7 +72,7 @@ struct Connections
 	vector<PlugPtr> outputs;
 };
 
-typedef vector<Connections> ConnectionsVector;
+using ConnectionsVector = vector<Connections>;
 
 void replacePlugWalk( Plug *existingPlug, Plug *plug, ConnectionsVector &connections )
 {
@@ -183,9 +183,9 @@ ValuePlugPtr boxValuePlug( const std::string &name, Plug::Direction direction, u
 template<typename T>
 ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
 {
-	typedef typename T::ValueType ValueType;
-	typedef typename ValueType::BaseType BaseType;
-	typedef CompoundNumericPlug<ValueType> PlugType;
+	using ValueType = typename T::ValueType;
+	using BaseType = typename ValueType::BaseType;
+	using PlugType = CompoundNumericPlug<ValueType>;
 
 	typename PlugType::Ptr result = new PlugType(
 		name,
@@ -202,9 +202,9 @@ ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction 
 template<typename T>
 ValuePlugPtr geometricCompoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
 {
-	typedef typename T::ValueType ValueType;
-	typedef typename ValueType::BaseType BaseType;
-	typedef CompoundNumericPlug<ValueType> PlugType;
+	using ValueType = typename T::ValueType;
+	using BaseType = typename ValueType::BaseType;
+	using PlugType = CompoundNumericPlug<ValueType>;
 
 	typename PlugType::Ptr result = new PlugType(
 		name,

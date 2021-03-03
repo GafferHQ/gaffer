@@ -653,7 +653,7 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 
 	V2f cursor( bound.min.x, bound.max.y - coreFont->bound().size().y );
 
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 	boost::char_separator<char> separator( "", " \n\t" );
 	Tokenizer tokenizer( text, separator );
 	Tokenizer::iterator it = tokenizer.begin();

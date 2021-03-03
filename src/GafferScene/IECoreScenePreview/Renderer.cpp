@@ -48,7 +48,7 @@ using namespace IECoreScenePreview;
 namespace
 {
 
-typedef Renderer::Ptr (*Creator)( Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr & );
+using Creator = Renderer::Ptr (*)( Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr & );
 
 vector<IECore::InternedString> &types()
 {
@@ -56,7 +56,7 @@ vector<IECore::InternedString> &types()
 	return g_types;
 }
 
-typedef map<IECore::InternedString, Creator> CreatorMap;
+using CreatorMap = map<IECore::InternedString, Creator>;
 CreatorMap &creators()
 {
 	static CreatorMap g_creators;

@@ -98,7 +98,7 @@ struct TestLRUCache
 
 	void operator()()
 	{
-		typedef LRUCache<int, int, Policy> Cache;
+		using Cache = LRUCache<int, int, Policy>;
 		Cache cache(
 			[]( int key, size_t &cost, const IECore::Canceller *canceller ) { cost = 1; return key; },
 			m_maxCost
@@ -144,7 +144,7 @@ struct TestLRUCacheRemovalCallback
 	{
 		std::vector<std::pair<int, int>> removed;
 
-		typedef LRUCache<int, int, Policy> Cache;
+		using Cache = LRUCache<int, int, Policy>;
 		Cache cache(
 			// Getter
 			[]( int key, size_t &cost, const IECore::Canceller *canceller ) {
@@ -214,7 +214,7 @@ struct TestLRUCacheContentionForOneItem
 
 	void operator()()
 	{
-		typedef LRUCache<int, int, Policy> Cache;
+		using Cache = LRUCache<int, int, Policy>;
 		Cache cache(
 			[]( int key, size_t &cost, const IECore::Canceller *canceller ) { cost = 1; return key; },
 			100
@@ -256,8 +256,8 @@ struct TestLRUCacheRecursion
 
 	void operator()()
 	{
-		typedef LRUCache<int, int, Policy> Cache;
-		typedef std::unique_ptr<Cache> CachePtr;
+		using Cache = LRUCache<int, int, Policy>;
+		using CachePtr = std::unique_ptr<Cache>;
 
 		CachePtr cache;
 		cache.reset(
@@ -314,8 +314,8 @@ struct TestLRUCacheRecursionOnOneItem
 
 	void operator()()
 	{
-		typedef LRUCache<int, int, Policy> Cache;
-		typedef std::unique_ptr<Cache> CachePtr;
+		using Cache = LRUCache<int, int, Policy>;
+		using CachePtr = std::unique_ptr<Cache>;
 		int recursionDepth = 0;
 
 		CachePtr cache;
@@ -361,8 +361,8 @@ struct TestLRUCacheClearFromGet
 
 	void operator()()
 	{
-		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
-		typedef std::unique_ptr<Cache> CachePtr;
+		using Cache = IECorePreview::LRUCache<int, int, Policy>;
+		using CachePtr = std::unique_ptr<Cache>;
 
 		CachePtr cache;
 		cache.reset(
@@ -394,7 +394,7 @@ struct TestLRUCacheExceptions
 	{
 		std::vector<int> calls;
 
-		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
+		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 		Cache cache(
 			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
@@ -556,7 +556,7 @@ struct TestLRUCacheCancellation
 
 		IECore::Canceller canceller;
 
-		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
+		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 		Cache cache(
 			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
@@ -628,7 +628,7 @@ struct TestLRUCacheCancellationOfSecondGet
 
 		std::atomic_int getterCount; getterCount = 0;
 
-		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
+		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 		Cache cache(
 			[&getterCount]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				getterCount++;

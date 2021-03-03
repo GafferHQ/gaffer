@@ -173,7 +173,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser, const IECore::Canceller *canceller );
 
-		typedef std::map<IECore::TypeId, SerialiserPtr> SerialiserMap;
+		using SerialiserMap = std::map<IECore::TypeId, SerialiserPtr>;
 		static SerialiserMap &serialiserMap();
 
 };

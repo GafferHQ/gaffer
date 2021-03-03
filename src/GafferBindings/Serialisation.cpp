@@ -106,7 +106,7 @@ std::string modulePathInternal( const boost::python::object &o )
 		objectName = extract<std::string>( o.attr( "__class__" ).attr( "__name__" ) );
 	}
 
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 	std::string sanitisedModulePath;
 	Tokenizer tokens( modulePath, boost::char_separator<char>( "." ) );
 

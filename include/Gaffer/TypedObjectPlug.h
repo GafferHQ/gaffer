@@ -62,9 +62,9 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 
 	public :
 
-		typedef T ValueType;
-		typedef typename ValueType::Ptr ValuePtr;
-		typedef typename ValueType::ConstPtr ConstValuePtr;
+		using ValueType = T;
+		using ValuePtr = typename ValueType::Ptr;
+		using ConstValuePtr = typename ValueType::ConstPtr;
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TypedObjectPlug<T>, ValuePlug );
 
@@ -140,21 +140,21 @@ extern template class TypedObjectPlug<IECore::PathMatcherData>;
 
 #endif
 
-typedef TypedObjectPlug<IECore::Object> ObjectPlug;
-typedef TypedObjectPlug<IECore::BoolVectorData> BoolVectorDataPlug;
-typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
-typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
-typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
-typedef TypedObjectPlug<IECore::InternedStringVectorData> InternedStringVectorDataPlug;
-typedef TypedObjectPlug<IECore::V2iVectorData> V2iVectorDataPlug;
-typedef TypedObjectPlug<IECore::V3fVectorData> V3fVectorDataPlug;
-typedef TypedObjectPlug<IECore::Color3fVectorData> Color3fVectorDataPlug;
-typedef TypedObjectPlug<IECore::M44fVectorData> M44fVectorDataPlug;
-typedef TypedObjectPlug<IECore::M33fVectorData> M33fVectorDataPlug;
-typedef TypedObjectPlug<IECore::ObjectVector> ObjectVectorPlug;
-typedef TypedObjectPlug<IECore::CompoundObject> CompoundObjectPlug;
-typedef TypedObjectPlug<IECore::CompoundData> AtomicCompoundDataPlug;
-typedef TypedObjectPlug<IECore::PathMatcherData> PathMatcherDataPlug;
+using ObjectPlug = TypedObjectPlug<IECore::Object>;
+using BoolVectorDataPlug = TypedObjectPlug<IECore::BoolVectorData>;
+using IntVectorDataPlug = TypedObjectPlug<IECore::IntVectorData>;
+using FloatVectorDataPlug = TypedObjectPlug<IECore::FloatVectorData>;
+using StringVectorDataPlug = TypedObjectPlug<IECore::StringVectorData>;
+using InternedStringVectorDataPlug = TypedObjectPlug<IECore::InternedStringVectorData>;
+using V2iVectorDataPlug = TypedObjectPlug<IECore::V2iVectorData>;
+using V3fVectorDataPlug = TypedObjectPlug<IECore::V3fVectorData>;
+using Color3fVectorDataPlug = TypedObjectPlug<IECore::Color3fVectorData>;
+using M44fVectorDataPlug = TypedObjectPlug<IECore::M44fVectorData>;
+using M33fVectorDataPlug = TypedObjectPlug<IECore::M33fVectorData>;
+using ObjectVectorPlug = TypedObjectPlug<IECore::ObjectVector>;
+using CompoundObjectPlug = TypedObjectPlug<IECore::CompoundObject>;
+using AtomicCompoundDataPlug = TypedObjectPlug<IECore::CompoundData>;
+using PathMatcherDataPlug = TypedObjectPlug<IECore::PathMatcherData>;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
 IE_CORE_DECLAREPTR( BoolVectorDataPlug );

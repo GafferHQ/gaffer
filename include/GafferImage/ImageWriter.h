@@ -100,7 +100,7 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 
 		/// Note that this is intentionally identical to the ImageReader's DefaultColorSpaceFunction
 		/// definition, so that the same function can be used with both nodes.
-		typedef std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )> DefaultColorSpaceFunction;
+		using DefaultColorSpaceFunction = std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )>;
 		static void setDefaultColorSpaceFunction( DefaultColorSpaceFunction f );
 		static DefaultColorSpaceFunction getDefaultColorSpaceFunction();
 

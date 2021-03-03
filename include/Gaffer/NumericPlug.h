@@ -53,7 +53,7 @@ class GAFFER_API NumericPlug : public ValuePlug
 
 	public :
 
-		typedef T ValueType;
+		using ValueType = T;
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( NumericPlug<T>, ValuePlug );
 
@@ -91,16 +91,16 @@ class GAFFER_API NumericPlug : public ValuePlug
 
 	private :
 
-		typedef IECore::TypedData<T> DataType;
-		typedef typename DataType::Ptr DataTypePtr;
+		using DataType = IECore::TypedData<T>;
+		using DataTypePtr = typename DataType::Ptr;
 
 		T m_minValue;
 		T m_maxValue;
 
 };
 
-typedef NumericPlug<float> FloatPlug;
-typedef NumericPlug<int> IntPlug;
+using FloatPlug = NumericPlug<float>;
+using IntPlug = NumericPlug<int>;
 
 IE_CORE_DECLAREPTR( FloatPlug );
 IE_CORE_DECLAREPTR( IntPlug );

@@ -100,7 +100,7 @@ IECoreGL::RenderablePtr quadWireframe( const V2f &size )
 template<typename T>
 T parameterOrDefault( const IECore::CompoundData *parameters, const IECore::InternedString &name, const T &defaultValue )
 {
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *d = parameters->member<DataType>( name ) )
 	{
 		return d->readable();
@@ -152,7 +152,7 @@ CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost, const
 	return nullptr;
 }
 
-typedef IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
+using OSLTextureCache = IECorePreview::LRUCache<IECore::MurmurHash, CompoundDataPtr, IECorePreview::LRUCachePolicy::Parallel, OSLTextureCacheGetterKey>;
 OSLTextureCache g_oslTextureCache( getter, 1024 * 1024 * 64 );
 
 const char *texturedFragSource()

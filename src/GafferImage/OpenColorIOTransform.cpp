@@ -60,9 +60,9 @@ namespace
 // On other platforms we use a null_mutex so there should be no
 // performance impact at all.
 #ifdef __APPLE__
-typedef tbb::mutex OCIOMutex;
+using OCIOMutex = tbb::mutex;
 #else
-typedef tbb::null_mutex OCIOMutex;
+using OCIOMutex = tbb::null_mutex;
 #endif
 
 static OCIOMutex g_ocioMutex;

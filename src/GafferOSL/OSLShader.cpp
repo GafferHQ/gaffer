@@ -127,10 +127,10 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &co
 	return new ShadingEngine( network );
 }
 
-typedef IECorePreview::LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, IECorePreview::LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey> ShadingEngineCache;
+using ShadingEngineCache = IECorePreview::LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, IECorePreview::LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey>;
 ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
-typedef boost::container::flat_set<IECore::InternedString> ShaderTypeSet;
+using ShaderTypeSet = boost::container::flat_set<IECore::InternedString>;
 ShaderTypeSet &compatibleShaders()
 {
 	static ShaderTypeSet g_compatibleShaders;
@@ -325,7 +325,7 @@ Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 template<typename PlugType>
 Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
-	typedef typename PlugType::ValueType ValueType;
+	using ValueType = typename PlugType::ValueType;
 
 	ValueType defaultValue( 0 );
 	if( parameter->idefault.size() )
@@ -381,9 +381,9 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 template<typename PlugType>
 Plug *loadNumericArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
-	typedef typename PlugType::ValueType DataType;
-	typedef typename DataType::ValueType ValueType;
-	typedef typename ValueType::value_type ElementType;
+	using DataType = typename PlugType::ValueType;
+	using ValueType = typename DataType::ValueType;
+	using ElementType = typename ValueType::value_type;
 
 	typename DataType::Ptr defaultValueData = new DataType();
 	ValueType &defaultValueDataWritable = defaultValueData->writable();
@@ -430,8 +430,8 @@ Plug *loadNumericArrayParameter( const OSLQuery::Parameter *parameter, const Int
 template <typename PlugType>
 Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
-	typedef typename PlugType::ValueType ValueType;
-	typedef typename ValueType::BaseType BaseType;
+	using ValueType = typename PlugType::ValueType;
+	using BaseType = typename ValueType::BaseType;
 
 	ValueType defaultValue( 0 );
 	if( parameter->idefault.size() )
@@ -503,10 +503,10 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 template <typename PlugType>
 Plug *loadCompoundNumericArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
-	typedef typename PlugType::ValueType DataType;
-	typedef typename DataType::ValueType ValueType;
-	typedef typename ValueType::value_type ElementType;
-	typedef typename ElementType::BaseType BaseType;
+	using DataType = typename PlugType::ValueType;
+	using ValueType = typename DataType::ValueType;
+	using ElementType = typename ValueType::value_type;
+	using BaseType = typename ElementType::BaseType;
 
 	typename DataType::Ptr defaultValueData = new DataType();
 	ValueType &defaultValueDataWritable = defaultValueData->writable();
@@ -1243,7 +1243,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	return metadata;
 }
 
-typedef IECorePreview::LRUCache<std::string, IECore::ConstCompoundDataPtr> MetadataCache;
+using MetadataCache = IECorePreview::LRUCache<std::string, IECore::ConstCompoundDataPtr>;
 MetadataCache g_metadataCache( metadataGetter, 10000 );
 
 const IECore::CompoundData *OSLShader::metadata() const

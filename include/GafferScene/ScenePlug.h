@@ -140,7 +140,7 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 
 		/// The type used to specify the current scene path in
 		/// a Context object.
-		typedef std::vector<IECore::InternedString> ScenePath;
+		using ScenePath = std::vector<IECore::InternedString>;
 		/// The name used to specify the current scene path in a
 		/// Context object. You should use this variable instead
 		/// of hardcoding strings - it is both less error prone

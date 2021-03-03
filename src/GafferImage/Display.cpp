@@ -651,8 +651,8 @@ void Display::setupDriver( GafferDisplayDriverPtr driver )
 namespace
 {
 
-typedef set<PlugPtr> PlugSet;
-typedef std::unique_ptr<PlugSet> PlugSetPtr;
+using PlugSet = set<PlugPtr>;
+using PlugSetPtr = std::unique_ptr<PlugSet>;
 
 struct PendingUpdates
 {

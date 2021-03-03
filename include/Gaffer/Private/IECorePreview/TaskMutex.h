@@ -104,7 +104,7 @@ namespace IECorePreview
 class TaskMutex : boost::noncopyable
 {
 
-	typedef tbb::spin_rw_mutex InternalMutex;
+	using InternalMutex = tbb::spin_rw_mutex;
 
 	public :
 
@@ -408,7 +408,7 @@ class TaskMutex : boost::noncopyable
 		};
 		IE_CORE_DECLAREPTR( ExecutionState );
 
-		typedef tbb::spin_mutex ExecutionStateMutex;
+		using ExecutionStateMutex = tbb::spin_mutex;
 		ExecutionStateMutex m_executionStateMutex; // Protects m_executionState
 		ExecutionStatePtr m_executionState;
 

@@ -62,7 +62,7 @@ using namespace boost;
 namespace
 {
 
-typedef std::map<std::string, NodeGadget::NodeGadgetCreator> TypeCreatorMap;
+using TypeCreatorMap = std::map<std::string, NodeGadget::NodeGadgetCreator>;
 TypeCreatorMap &typeCreators()
 {
 	// We tactically "leak" this map. NodeGadgetCreators are
@@ -73,7 +73,7 @@ TypeCreatorMap &typeCreators()
 	return *c;
 }
 
-typedef std::map<IECore::TypeId, NodeGadget::NodeGadgetCreator> NodeCreatorMap;
+using NodeCreatorMap = std::map<IECore::TypeId, NodeGadget::NodeGadgetCreator>;
 NodeCreatorMap &nodeCreators()
 {
 	// See `typeCreators()` for note on "leak".

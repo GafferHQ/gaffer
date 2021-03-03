@@ -60,7 +60,7 @@ using namespace GafferImage;
 void GafferImageModule::bindImageProcessor()
 {
 
-	typedef ComputeNodeWrapper<ImageProcessor> ImageProcessorWrapper;
+	using ImageProcessorWrapper = ComputeNodeWrapper<ImageProcessor>;
 	GafferBindings::DependencyNodeClass<ImageProcessor, ImageProcessorWrapper>()
 		.def( init<const std::string &, size_t, size_t>(
 				(

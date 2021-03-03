@@ -61,7 +61,7 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 
 	public :
 
-		typedef Format ValueType;
+		using ValueType = Format;
 
 		GAFFER_PLUG_DECLARE_TYPE( GafferImage::FormatPlug, FormatPlugTypeId, Gaffer::ValuePlug );
 
