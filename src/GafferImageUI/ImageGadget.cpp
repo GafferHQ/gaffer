@@ -194,7 +194,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 			}
 		}
 
-		~TileShader()
+		~TileShader() override
 		{
 			if( m_lut3dTextureID )
 			{

@@ -342,7 +342,7 @@ class TaskMutex : boost::noncopyable
 					observe( true );
 				}
 
-				~ArenaObserver()
+				~ArenaObserver() override
 				{
 					observe( false );
 				}
@@ -386,7 +386,7 @@ class TaskMutex : boost::noncopyable
 			}
 
 			// Work around https://bugs.llvm.org/show_bug.cgi?id=32978
-			~ExecutionState() noexcept( true )
+			~ExecutionState() noexcept( true ) override
 			{
 			}
 
