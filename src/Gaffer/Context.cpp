@@ -176,6 +176,10 @@ Context::Context( const Context &other, bool omitCanceller )
 
 Context::~Context()
 {
+	#ifndef NDEBUG
+	validateHashes();
+	#endif // NDEBUG
+
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
 	{
 		if( it->second.ownership != Borrowed )
@@ -228,7 +232,13 @@ void Context::removeMatching( const StringAlgo::MatchPattern &pattern )
 
 void Context::changed( const IECore::InternedString &name )
 {
-	m_hashValid = false;
+	Map::iterator it = m_map.find( name );
+	if( it != m_map.end() )
+	{
+		m_hashValid = false;
+		it->second.updateHash( name );
+	}
+
 	if( m_changedSignal )
 	{
 		(*m_changedSignal)( this, name );
@@ -295,22 +305,14 @@ IECore::MurmurHash Context::hash() const
 		return m_hash;
 	}
 
-	m_hash = IECore::MurmurHash();
+	uint64_t sumH1 = 0, sumH2 = 0;
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
 	{
-		/// \todo Perhaps at some point the UI should use a different container for
-		/// these "not computationally important" values, so we wouldn't have to skip
-		/// them here.
-		// Using a hardcoded comparison of the first three characters because
-		// it's quicker than `string::compare( 0, 3, "ui:" )`.
-		const std::string &name = it->first.string();
-		if(	name.size() > 2 && name[0] == 'u' && name[1] == 'i' && name[2] == ':' )
-		{
-			continue;
-		}
-		m_hash.append( (uint64_t)&name );
-		it->second.data->hash( m_hash );
+		sumH1 += it->second.hash.h1();
+		sumH2 += it->second.hash.h2();
 	}
+
+	m_hash = MurmurHash( sumH1, sumH2 );
 	m_hashValid = true;
 	return m_hash;
 }
@@ -476,4 +478,27 @@ const std::string &Context::SubstitutionProvider::variable( const boost::string_
 
 	m_formattedString.clear();
 	return m_formattedString;
+}
+
+void Context::validateHashes()
+{
+	for( Map::iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+	{
+		IECore::MurmurHash prevHash = it->second.hash;
+		it->second.updateHash( it->first );
+
+		if( prevHash != it->second.hash )
+		{
+			throw IECore::Exception( "Corrupt hash for context entry: " + it->first.string() );
+		}
+	}
+
+	if( m_hashValid )
+	{
+		IECore::MurmurHash prevTotal = m_hash;
+		if( prevTotal != hash() )
+		{
+			throw IECore::Exception( "Corrupt total hash for context" );
+		}
+	}
 }
