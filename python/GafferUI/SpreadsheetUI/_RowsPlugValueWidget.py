@@ -98,6 +98,23 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+			with GafferUI.ListContainer(
+				parenting = {
+					"index" : ( 2, 1 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Top )
+				},
+			) :
+
+				GafferUI.Spacer( imath.V2i( 1, 4 ), maximumSize = imath.V2i( 1, 4 ) )
+
+				addColumnButton = GafferUI.MenuButton(
+					image="plus.png", hasFrame=False, toolTip = "Click to add column, or drop plug to connect",
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addColumnMenuDefinition ) )
+				)
+				addColumnButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragEnter ), scoped = False )
+				addColumnButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragLeave ), scoped = False )
+				addColumnButton.dropSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDrop ), scoped = False )
+
 			self.__rowNamesTable = _PlugTableView(
 				selectionModel, _PlugTableView.Mode.RowNames,
 				parenting = {
@@ -116,6 +133,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.ListContainer.Orientation.Vertical, [ self.__cellsTable, self.__rowNamesTable ],
 				parenting = {
 					"index" : ( 2, 2 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.None_ )
 				}
 			)
 
@@ -148,6 +166,12 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 						addRowButton.setVisible( False )
 						break
 
+			# Because dragging plugs to the add button involves making
+			# an output connection from the spreadsheet, it doesn't make
+			# sense to allow it on promoted plugs.
+			if not isinstance( plug.node(), Gaffer.Spreadsheet ) :
+				addColumnButton.setVisible( False )
+
 			self.__statusLabel = GafferUI.Label(
 				"",
 				parenting = {
@@ -160,7 +184,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# otherwise large status labels can force cells off the screen.
 			self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
-		for widget in [ addRowButton ] :
+		for widget in [ addRowButton, addColumnButton ] :
 			widget.enterSignal().connect( Gaffer.WeakMethod( self.__enterToolTippedWidget ), scoped = False )
 			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__leaveToolTippedWidget ), scoped = False )
 
@@ -240,6 +264,73 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			for s in strings :
 				self.getPlug().addRow()["name"].setValue( s )
 
+		return True
+
+	def __addColumnMenuDefinition( self ) :
+
+		menuDefinition = IECore.MenuDefinition()
+
+		## \todo Centralise a standard mechanism for building plug
+		# creation menus. We have similar code in UserPlugs, CompoundDataPlugValueWidget,
+		# UIEditor, ShaderTweaksUI etc.
+		for label, plugType in [
+			( "Bool", Gaffer.BoolPlug ),
+			( "Int", Gaffer.IntPlug ),
+			( "Float", Gaffer.FloatPlug ),
+			( "NumericDivider", None ),
+			( "String", Gaffer.StringPlug ),
+			( "StringDivider", None ),
+			( "V2i", Gaffer.V2iPlug ),
+			( "V3i", Gaffer.V3iPlug ),
+			( "V2f", Gaffer.V2fPlug ),
+			( "V3f", Gaffer.V3fPlug ),
+			( "VectorDivider", None ),
+			( "Color3f", Gaffer.Color3fPlug ),
+			( "Color4f", Gaffer.Color4fPlug ),
+		] :
+
+			if plugType is None :
+				menuDefinition.append( label, { "divider" : True } )
+			else :
+				menuDefinition.append(
+					label, { "command" : functools.partial( Gaffer.WeakMethod( self.__addColumn ), plugType = plugType ), "active" : True }
+				)
+
+		return menuDefinition
+
+	def __addColumn( self, menu, plugType ) :
+
+		d = GafferUI.TextInputDialogue( initialText = "column", title = "Enter name", confirmLabel = "Add Column" )
+		name = d.waitForText( parentWindow = menu.ancestor( GafferUI.Window ) )
+		if not name :
+			return
+
+		plug = plugType( name )
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			columnIndex = self.getPlug().addColumn( plug )
+			if self.__sectionChooser.currentSection() :
+				self.__sectionChooser.setSection(
+					self.getPlug().defaultRow()["cells"][columnIndex],
+					self.__sectionChooser.currentSection()
+				)
+
+	def __addColumnButtonDragEnter( self, addButton, event ) :
+
+		if isinstance( event.data, Gaffer.ValuePlug ) and event.data.getInput() is None :
+			addButton.setHighlighted( True )
+			return True
+
+		return False
+
+	def __addColumnButtonDragLeave( self, addButton, event ) :
+
+		addButton.setHighlighted( False )
+		return True
+
+	def __addColumnButtonDrop( self, addButton, event ) :
+
+		addButton.setHighlighted( False )
+		_Algo.addToSpreadsheet( event.data, self.getPlug().node(), self.__sectionChooser.currentSection() )
 		return True
 
 	def __enterToolTippedWidget( self, widget ) :
