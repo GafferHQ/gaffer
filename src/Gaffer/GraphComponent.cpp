@@ -486,10 +486,9 @@ void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 	// index for a particular child.
 
 	unordered_map<const GraphComponent *, size_t> indexMap;
-	size_t index = 0;
-	for( const auto &c : m_children )
+	for( size_t index = 0; index < m_children.size(); ++index )
 	{
-		indexMap[c.get()] = index++;
+		indexMap[m_children[index].get()] = index;
 	}
 
 	// Build list of indices corresponding to `newOrder`, validating
