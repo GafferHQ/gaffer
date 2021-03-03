@@ -145,8 +145,8 @@ class GAFFER_API ScriptNode : public Node
 		void cut( Node *parent = nullptr, const Set *filter = nullptr );
 		/// Pastes the contents of the global clipboard into the script below
 		/// the specified parent. If parent is unspecified then it defaults
-		/// to the script itself. The continueOnError argument behaves as
-		/// for `execute()`.
+		/// to the script itself. Cancellation and `continueOnError` behave
+		/// as for `execute()`.
 		/// \undoable
 		void paste( Node *parent = nullptr, bool continueOnError = false );
 		/// Removes Nodes from the parent node, making sure they are
@@ -163,9 +163,15 @@ class GAFFER_API ScriptNode : public Node
 
 		//! @name Serialisation and execution
 		///
-		/// Scripts may be serialised into a string form, which will rebuild
-		/// the node network when executed. This process is used for both the
-		/// saving and loading of scripts and for the cut and paste mechanism.
+		/// Scripts may be serialised into a string form, which will rebuild the
+		/// node network when executed. This process is used for both the saving
+		/// and loading of scripts and for the cut and paste mechanism.
+		///
+		/// > Note : Cancellation is supported for both serialisation and
+		/// > execution via the usual mechanism of scoping a context containing
+		/// > an `IECore::Canceller`. If `continueOnError = True` for execution,
+		/// > cancellation is more responsive but leaves the script in an
+		/// > undefined state.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// Returns a string which when executed will recreate the children
@@ -202,10 +208,11 @@ class GAFFER_API ScriptNode : public Node
 		BoolPlug *unsavedChangesPlug();
 		const BoolPlug *unsavedChangesPlug() const;
 		/// Loads the script specified in the filename plug.
-		/// See execute() for a description of the continueOnError argument
-		/// and the return value.
+		/// See execution section for a description of cancellation,
+		/// the `continueOnError` argument and the return value.
 		bool load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
+		/// See serialisation section for a description of cancellation.
 		void save() const;
 		/// Imports the nodes from the specified script, adding them to
 		/// the contents of this script. See `execute()` for a description

@@ -146,7 +146,7 @@ Serialisation::Serialisation( const Gaffer::GraphComponent *parent, const std::s
 		m_protectParentNamespace( Context::current()->get<bool>( "serialiser:protectParentNamespace", true ) )
 {
 	IECorePython::ScopedGILLock gilLock;
-	walk( parent, parentName, acquireSerialiser( parent ) );
+	walk( parent, parentName, acquireSerialiser( parent ), Context::current()->canceller() );
 
 	if( Context::current()->get<bool>( "serialiser:includeParentMetadata", false ) )
 	{
@@ -278,10 +278,12 @@ std::string Serialisation::classPath( const boost::python::object &object )
 	return result;
 }
 
-void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser )
+void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser, const IECore::Canceller *canceller )
 {
 	for( GraphComponent::ChildIterator it = parent->children().begin(), eIt = parent->children().end(); it != eIt; it++ )
 	{
+		IECore::Canceller::check( canceller );
+
 		const GraphComponent *child = it->get();
 		if( parent == m_parent && m_filter && !m_filter->contains( child ) )
 		{
@@ -335,7 +337,7 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		m_connectionScript += childSerialiser->postHierarchy( child, childIdentifier, *this );
 		m_postScript += childSerialiser->postScript( child, childIdentifier, *this );
 
-		walk( child, childIdentifier, childSerialiser );
+		walk( child, childIdentifier, childSerialiser, canceller );
 	}
 }
 

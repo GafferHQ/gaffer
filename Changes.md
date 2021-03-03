@@ -88,6 +88,21 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
 
+0.59.x.x (relative to 0.59.4.0)
+========
+
+Improvements
+------------
+
+- FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
+
+API
+---
+
+- BackgroundTaskDialogue : Added a new modal dialogue to assist in running tasks in the background.
+- EventLoop : Added `BlockedUIThreadExecution` context manager.
+- ScriptNode : Added support for cancellation of execution and serialisation.
+
 0.59.4.0 (relative to 0.59.3.0)
 ========
 

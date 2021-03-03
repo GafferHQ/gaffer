@@ -43,6 +43,7 @@
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Set.h"
 
+#include "IECore/Canceller.h"
 #include "IECore/Object.h"
 
 namespace GafferBindings
@@ -53,6 +54,8 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 	public :
 
+		/// Supports cancellation via the usual mechanism of scoping a Context
+		/// containing an `IECore::Canceller`.
 		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = nullptr );
 
 		/// Returns the parent passed to the constructor.
@@ -168,7 +171,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 
 		std::set<std::string> m_modules;
 
-		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser );
+		void walk( const Gaffer::GraphComponent *parent, const std::string &parentIdentifier, const Serialiser *parentSerialiser, const IECore::Canceller *canceller );
 
 		typedef std::map<IECore::TypeId, SerialiserPtr> SerialiserMap;
 		static SerialiserMap &serialiserMap();

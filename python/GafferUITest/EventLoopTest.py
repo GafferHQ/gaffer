@@ -195,6 +195,35 @@ class EventLoopTest( GafferUITest.TestCase ) :
 		self.assertEqual( r, 10 )
 		self.assertEqual( self.__executed, True )
 
+	def testBlockedUIThreadExecution( self ) :
+
+		callsToMake = 10000
+		self.__uiThreadCallCount = 0
+
+		def f() :
+
+			assert( QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread() )
+			self.__uiThreadCallCount += 1
+
+		def t() :
+
+			for i in range( 0, callsToMake ) :
+				GafferUI.EventLoop.executeOnUIThread( f )
+
+			GafferUI.EventLoop.mainEventLoop().stop()
+
+		thread = threading.Thread( target = t )
+		thread.start() # Start now, so we may have events queued even before we try to block them
+
+		with GafferUI.EventLoop.BlockedUIThreadExecution() :
+			GafferUI.EventLoop.mainEventLoop().start()
+			thread.join()
+
+		self.assertEqual( self.__uiThreadCallCount, 0 )
+
+		self.waitForIdle()
+		self.assertEqual( self.__uiThreadCallCount, callsToMake )
+
 	def testAddIdleCallbackFromIdleCallback( self ) :
 
 		self.__runOnceCalls = 0
