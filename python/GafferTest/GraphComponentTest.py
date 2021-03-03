@@ -1042,6 +1042,13 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		script["node"]["p"]["c3"] = c3
 		script["node"]["p"]["c4"] = c4
 
+		mirror = [ c.getName() for c in script["node"]["p"] ]
+		def childrenReordered( parent, oldIndices ) :
+			# Demonstrates how you could maintain a parallel data structure
+			# to keep the same order. For example, a list of widgets in the UI.
+			mirror[:] = [ mirror[i] for i in oldIndices ]
+		script["node"]["p"].childrenReorderedSignal().connect( childrenReordered, scoped = False )
+
 		cs = GafferTest.CapturingSlot( p.childrenReorderedSignal() )
 		with Gaffer.UndoScope( script ) :
 			p.reorderChildren( [ c4, c3, c1, c2 ] )
@@ -1049,21 +1056,25 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( p.children(), ( c4, c3, c1, c2 ) )
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( cs[-1], ( p, [ 3, 2, 0, 1 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
 
 		script.undo()
 		self.assertEqual( p.children(), ( c1, c2, c3, c4 ) )
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( cs[-1], ( p, [ 2, 3, 1, 0 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
 
 		script.redo()
 		self.assertEqual( p.children(), ( c4, c3, c1, c2 ) )
 		self.assertEqual( len( cs ), 3 )
 		self.assertEqual( cs[-1], ( p, [ 3, 2, 0, 1 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
 
 		script.undo()
 		self.assertEqual( p.children(), ( c1, c2, c3, c4 ) )
 		self.assertEqual( len( cs ), 4 )
 		self.assertEqual( cs[-1], ( p, [ 2, 3, 1, 0 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
 
 	def testReorderChildrenArgumentChecks( self ) :
 
