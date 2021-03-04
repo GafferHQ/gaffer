@@ -827,7 +827,7 @@ Spreadsheet::Spreadsheet( const std::string &name )
 	addChild( new RowsPlug( "rows" ) );
 	addChild( new ValuePlug( "out", Plug::Out ) );
 	addChild( new StringVectorDataPlug( "activeRowNames", Plug::Out, new IECore::StringVectorData ) );
-	addChild( new ObjectVectorPlug( "resolvedRows", Plug::Out, new IECore::ObjectVector() ) );
+	addChild( new CompoundObjectPlug( "resolvedRows", Plug::Out, new IECore::CompoundObject() ) );
 	addChild( new ObjectPlug( "__rowsMap", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new IntPlug( "__rowIndex", Plug::Out ) );
 }
@@ -886,14 +886,14 @@ const StringVectorDataPlug *Spreadsheet::activeRowNamesPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
 }
 
-ObjectVectorPlug *Spreadsheet::resolvedRowsPlug()
+CompoundObjectPlug *Spreadsheet::resolvedRowsPlug()
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 5 );
 }
 
-const ObjectVectorPlug *Spreadsheet::resolvedRowsPlug() const
+const CompoundObjectPlug *Spreadsheet::resolvedRowsPlug() const
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 5 );
 }
 
 ObjectPlug *Spreadsheet::rowsMapPlug()
@@ -1065,17 +1065,23 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( output == resolvedRowsPlug() )
 	{
-		ObjectVectorPtr result = new ObjectVector;
 		CompoundObjectPtr defaults = new CompoundObject;
 		for( const auto &cellPlug : CellPlug::Range( *rowsPlug()->defaultRow()->cellsPlug() ) )
 		{
 			defaults->members()[cellPlug->getName()] = PlugAlgo::extractDataFromPlug( cellPlug->valuePlug() );
 		}
 
+		CompoundObjectPtr result = new CompoundObject;
 		for( size_t i = 1, s = rowsPlug()->children().size(); i < s; ++i )
 		{
 			const RowPlug *rowPlug = rowsPlug()->getChild<RowPlug>( i );
 			if( !rowPlug->enabledPlug()->getValue() )
+			{
+				continue;
+			}
+
+			const string name = rowPlug->namePlug()->getValue();
+			if( result->members().count( name ) )
 			{
 				continue;
 			}
@@ -1093,19 +1099,9 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 				}
 			}
 
-			if( !defaults )
-			{
-				defaults = cells;
-			}
-			else
-			{
-				CompoundObjectPtr row = new CompoundObject;
-				row->members()["name"] = new StringData( rowPlug->namePlug()->getValue() );
-				row->members()["cells"] = cells;
-				result->members().push_back( row );
-			}
+			result->members()[name] = cells;
 		}
-		static_cast<ObjectPlug *>( output )->setValue( result );
+		static_cast<CompoundObjectPlug *>( output )->setValue( result );
 	}
 
 	ComputeNode::compute( output, context );

@@ -191,11 +191,11 @@ Gaffer.Metadata.registerNode(
 			values are formatted as follows :
 
 			```
-			[
-			    { "name" : "row1Name", "cells" : { "columnName" : columnValue, ... } },
-			    { "name" : "row2Name", "cells" : { "columnName" : columnValue, ... } },
+			{
+			    "row1Name" : { "columnName" : columnValue, ... },
+			    "row2Name" : { "columnName" : columnValue, ... },
 			    ...
-			]
+			}
 			```
 
 			> Note : The output is completely independent of the value of
