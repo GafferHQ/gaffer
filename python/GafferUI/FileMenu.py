@@ -257,6 +257,7 @@ def saveAs( menu ) :
 
 	if not isinstance( result, Exception ) :
 		script["fileName"].setValue( path )
+		script["unsavedChanges"].setValue( False )
 		application = script.ancestor( Gaffer.ApplicationRoot )
 		addRecentFile( application, path )
 
