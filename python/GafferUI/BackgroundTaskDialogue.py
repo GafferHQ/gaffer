@@ -93,7 +93,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 
 	## Enters a modal state and waits for the result of calling `ParallelAlgo.callOnBackgroundThread()`.
 	# Any errors which occur while running `function` are reported within the dialogue before exiting.
-	def waitForBackgroundTask( self, subject, function, parentWindow = None ) :
+	def waitForBackgroundTask( self, function, parentWindow = None ) :
 
 		# Put UI in "busy" mode.
 
@@ -109,7 +109,7 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 		# Queue up an event that will launch the background task
 		# as soon as we've entered our modal state.
 
-		QtCore.QTimer.singleShot( 1, functools.partial( self.__launchBackgroundTask, subject, function ) )
+		QtCore.QTimer.singleShot( 1, functools.partial( self.__launchBackgroundTask, function ) )
 
 		# Enter modal state. This will return when the background task completes
 		# and calls `setModal( False )`. We block UI thread execution while our
@@ -155,11 +155,11 @@ class BackgroundTaskDialogue( GafferUI.Dialogue ) :
 
 		return self.__backgroundTask is None
 
-	def __launchBackgroundTask( self, subject, function ) :
+	def __launchBackgroundTask( self, function ) :
 
 		del self.__messageHandler.messages[:]
 		self.__backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
-			subject, functools.partial(
+			None, functools.partial(
 				self.__backgroundFunction, function = function
 			)
 		)
