@@ -53,7 +53,7 @@ class GAFFER_API Monitor : public IECore::RefCounted
 
 	public :
 
-		virtual ~Monitor();
+		~Monitor() override;
 
 		IE_CORE_DECLAREMEMBERPTR( Monitor )
 

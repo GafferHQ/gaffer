@@ -16,7 +16,7 @@ import subprocess
 # Make SCons tell us everything it would do to build Gaffer
 
 subprocess.check_call( [ "scons", "--clean" ] )
-sconsOutput = subprocess.check_output( [ "scons", "build", "--dry-run", "--no-cache" ] )
+sconsOutput = subprocess.check_output( [ "scons", "build", "--dry-run", "--no-cache" ], universal_newlines = True )
 
 # Write that into a "compile_commands.json" file
 
@@ -31,7 +31,7 @@ for line in sconsOutput.split( "\n" ) :
 	file = line.split()[-1]
 	data.append(
 		{
-			"directory" : "/Users/john/dev/gaffer",
+			"directory" : os.getcwd(),
 			"command" : line,
 			"file" : file,
 		}

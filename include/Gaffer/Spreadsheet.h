@@ -76,7 +76,7 @@ class GAFFER_API Spreadsheet : public ComputeNode
 			public :
 
 				RowsPlug( const std::string &name = defaultName<RowsPlug>(), Direction direction = In, unsigned flags = Default );
-				virtual ~RowsPlug();
+				~RowsPlug() override;
 
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Spreadsheet::RowsPlug, Gaffer::SpreadsheetRowsPlugTypeId, Gaffer::ValuePlug );
 

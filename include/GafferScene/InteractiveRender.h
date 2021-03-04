@@ -94,7 +94,7 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
@@ -104,12 +104,12 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 		// loading of the module which registers the required renderer type.
 		InteractiveRender( const IECore::InternedString &rendererType, const std::string &name );
 
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 	private :
 
