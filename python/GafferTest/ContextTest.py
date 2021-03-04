@@ -151,6 +151,59 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
 		self.assertIsInstance( c["v3f"], imath.V3f )
 
+	def testSwitchTypes( self ) :
+
+		c = Gaffer.Context()
+
+		c["x"] = 1
+		self.assertEqual( c["x"], 1 )
+		self.assertEqual( c.get( "x" ), 1 )
+		c.set( "x", 2 )
+		self.assertEqual( c["x"], 2 )
+		self.assertIsInstance( c["x"], int )
+
+		c["x"] = 1.0
+		self.assertEqual( c["x"], 1.0 )
+		self.assertEqual( c.get( "x" ), 1.0 )
+		c.set( "x", 2.0 )
+		self.assertEqual( c["x"], 2.0 )
+		self.assertIsInstance( c["x"], float )
+
+		c["x"] = "hi"
+		self.assertEqual( c["x"], "hi" )
+		self.assertEqual( c.get( "x" ), "hi" )
+		c.set( "x", "bye" )
+		self.assertEqual( c["x"], "bye" )
+		self.assertIsInstance( c["x"], str )
+
+		c["x"] = imath.V2i( 1, 2 )
+		self.assertEqual( c["x"], imath.V2i( 1, 2 ) )
+		self.assertEqual( c.get( "x" ), imath.V2i( 1, 2 ) )
+		c.set( "x", imath.V2i( 1, 2 ) )
+		self.assertEqual( c["x"], imath.V2i( 1, 2 ) )
+		self.assertIsInstance( c["x"], imath.V2i )
+
+		c["x"] = imath.V3i( 1, 2, 3 )
+		self.assertEqual( c["x"], imath.V3i( 1, 2, 3 ) )
+		self.assertEqual( c.get( "x" ), imath.V3i( 1, 2, 3 ) )
+		c.set( "x", imath.V3i( 1, 2, 3 ) )
+		self.assertEqual( c["x"], imath.V3i( 1, 2, 3 ) )
+		self.assertIsInstance( c["x"], imath.V3i )
+
+		c["x"] = imath.V2f( 1, 2 )
+		self.assertEqual( c["x"], imath.V2f( 1, 2 ) )
+		self.assertEqual( c.get( "x" ), imath.V2f( 1, 2 ) )
+		c.set( "x", imath.V2f( 1, 2 ) )
+		self.assertEqual( c["x"], imath.V2f( 1, 2 ) )
+		self.assertIsInstance( c["x"], imath.V2f )
+
+		c["x"] = imath.V3f( 1, 2, 3 )
+		self.assertEqual( c["x"], imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( c.get( "x" ), imath.V3f( 1, 2, 3 ) )
+		c.set( "x", imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( c["x"], imath.V3f( 1, 2, 3 ) )
+		self.assertIsInstance( c["x"], imath.V3f )
+
 	def testCopying( self ) :
 
 		c = Gaffer.Context()
@@ -372,6 +425,10 @@ class ContextTest( GafferTest.TestCase ) :
 		c.get( "test", _copy=False ).append( 10 )
 		self.assertEqual( c["test"], IECore.IntVectorData( [ 1, 2, 10 ] ) )
 
+		# Since we're doing an evil thing that should never be done, flag it before destruct
+		# so it doesn't get flagged as a corrupt context when the validator runs in debug mode
+		c.changed( "test" )
+
 	def testGetWithDefaultAndCopyArgs( self ) :
 
 		c = Gaffer.Context()
@@ -415,6 +472,10 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
 		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r )
 
+		# Tell c2 it's been invalidated, or else it could be flagged as a corrupt context when the validator
+		# runs in debug mode
+		c2.changed( "testInt" )
+
 	def testCopyWithBorrowedOwnership( self ) :
 
 		c1 = Gaffer.Context()
@@ -442,6 +503,10 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertTrue( c2.get( "testIntVector", _copy=False ).isSame( c1.get( "testIntVector", _copy=False ) ) )
 		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r )
 
+		# Tell c2 it's been invalidated, or else it could be flagged as a corrupt context when the validator
+		# runs in debug mode
+		c2.changed( "testInt" )
+
 		# make sure we delete c2 before we delete c1
 		del c2
 
@@ -465,6 +530,9 @@ class ContextTest( GafferTest.TestCase ) :
 
 		self.assertEqual( c2["testInt"], 20 )
 		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 20 ] ) )
+
+		# c2 must be destroyed first, since it depends on c1
+		del c2
 
 	def testSetOnSharedContextsDoesntAffectOriginal( self ) :
 
@@ -540,6 +608,19 @@ class ContextTest( GafferTest.TestCase ) :
 
 		c["ui:test"] = 1
 		self.assertEqual( h, c.hash() )
+
+		del c["ui:test"]
+		self.assertEqual( c.names(), Gaffer.Context().names() )
+		self.assertEqual( h, c.hash() )
+
+		c["ui:test"] = 1
+		c["ui:test2"] = "foo"
+		self.assertEqual( h, c.hash() )
+
+		c.removeMatching( "ui:test*" )
+		self.assertEqual( c.names(), Gaffer.Context().names() )
+		self.assertEqual( h, c.hash() )
+
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testManySubstitutions( self ) :
