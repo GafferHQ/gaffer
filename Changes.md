@@ -12,7 +12,9 @@ Improvements
   - Fixed framing of nodes not currently in the GraphEditor.
   - Removed framing of _plugs_ dragged to the GraphEditor. This was unintuitive and interacted poorly with the dragging of plugs to make
     connections. The NodeEditor's "Node Name" label can be dragged instead to locate a node from the NodeEditor.
-- SceneInspector : The full path to nested nodes is now shown in history tracebacks.
+- SceneInspector : Improved history view :
+  - Added the full path to nodes so that nodes nested in Boxes can be identified.
+  - Fixed gap in between sections.
 
 Fixes
 -----
