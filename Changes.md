@@ -14,6 +14,7 @@ Improvements
     connections. The NodeEditor's "Node Name" label can be dragged instead to locate a node from the NodeEditor.
 - SceneInspector : Improved history view :
   - Added the full path to nodes so that nodes nested in Boxes can be identified.
+  - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
 
 Fixes
