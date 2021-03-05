@@ -8,6 +8,7 @@ Improvements
   parent location to nodes upstream of the `children` plug. This allows the children
   to be varied procedurally according to what they are parented to.
 - Outputs : Reduced the time taken to show the NodeEditor by around 90%.
+- NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
 
 API
 ---
