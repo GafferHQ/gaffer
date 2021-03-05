@@ -72,8 +72,9 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__gadgetWidget.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 		self.__gadgetWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 		self.__gadgetWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
-		self.__gadgetWidget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.__gadgetWidget.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ), scoped = False )
 
 		self.__nodeMenu = None
@@ -381,7 +382,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return False
 
-	def __frame( self, nodes, extend = False ) :
+	def __frame( self, nodes, extend = False, at = None ) :
 
 		graphGadget = self.graphGadget()
 
@@ -428,6 +429,12 @@ class GraphEditor( GafferUI.Editor ) :
 			bound.setMin( boundCenter - newBoundSize / 2.0 )
 			bound.setMax( boundCenter + newBoundSize / 2.0 )
 
+		if at is not None :
+			viewport = self.graphGadgetWidget().getViewportGadget()
+			offset = viewport.rasterToGadgetSpace( imath.V2f( self.bound().size() / 2 ), graphGadget ).p0 - viewport.rasterToGadgetSpace( at, graphGadget ).p0
+			bound.setMin( bound.min() + offset )
+			bound.setMax( bound.max() + offset )
+
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
 	def __buttonDoubleClick( self, widget, event ) :
@@ -442,9 +449,16 @@ class GraphEditor( GafferUI.Editor ) :
 			return False
 
 		if self.__dropNodes( event.data ) :
+			self.__dragEnterPointer = GafferUI.Pointer.getCurrent()
+			GafferUI.Pointer.setCurrent( "target" )
 			return True
 
 		return False
+
+	def __dragLeave( self, widget, event ) :
+
+		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+		return True
 
 	def __drop( self, widget, event ) :
 
@@ -453,7 +467,8 @@ class GraphEditor( GafferUI.Editor ) :
 
 		dropNodes = self.__dropNodes( event.data )
 		if dropNodes :
-			self.__frame( dropNodes )
+			self.graphGadget().setRoot( dropNodes[0].parent() )
+			self.__frame( dropNodes, at = imath.V2f( event.line.p0.x, event.line.p0.y ) )
 			return True
 
 		return False
@@ -462,10 +477,11 @@ class GraphEditor( GafferUI.Editor ) :
 
 		if isinstance( dragData, Gaffer.Node ) :
 			return [ dragData ]
-		elif isinstance( dragData, Gaffer.Plug ) :
-			return [ dragData.node() ]
 		elif isinstance( dragData, Gaffer.Set ) :
-			return [ x for x in dragData if isinstance( x, Gaffer.Node ) ]
+			nodes = [ x for x in dragData if isinstance( x, Gaffer.Node ) ]
+			if len( set( n.parent() for n in nodes ) ) == 1 :
+				# Can only frame nodes if they all share the same parent.
+				return nodes
 
 		return []
 
