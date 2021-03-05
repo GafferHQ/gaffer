@@ -221,7 +221,7 @@ class EventLoopTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( self.__uiThreadCallCount, 0 )
 
-		self.waitForIdle()
+		self.waitForIdle( 1000 )
 		self.assertEqual( self.__uiThreadCallCount, callsToMake )
 
 	def testAddIdleCallbackFromIdleCallback( self ) :

@@ -120,7 +120,7 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 	script["fileName"].setValue( recoveryFileName or fileName )
 
 	dialogue = GafferUI.BackgroundTaskDialogue( "Loading" )
-	result = dialogue.waitForBackgroundTask( None, functools.partial( script.load, continueOnError = True, ), dialogueParentWindow )
+	result = dialogue.waitForBackgroundTask( functools.partial( script.load, continueOnError = True, ), dialogueParentWindow )
 	if isinstance( result, IECore.Cancelled ) :
 		return
 
@@ -230,7 +230,7 @@ def save( menu ) :
 	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
 		dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
-		dialogue.waitForBackgroundTask( script["fileName"], script.save, parentWindow = scriptWindow )
+		dialogue.waitForBackgroundTask( script.save, parentWindow = scriptWindow )
 	else :
 		saveAs( menu )
 
@@ -253,10 +253,11 @@ def saveAs( menu ) :
 		path += ".gfr"
 
 	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
-	result = dialogue.waitForBackgroundTask( script["fileName"], functools.partial( script.serialiseToFile, path ), parentWindow = scriptWindow )
+	result = dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, path ), parentWindow = scriptWindow )
 
 	if not isinstance( result, Exception ) :
 		script["fileName"].setValue( path )
+		script["unsavedChanges"].setValue( False )
 		application = script.ancestor( Gaffer.ApplicationRoot )
 		addRecentFile( application, path )
 
@@ -319,7 +320,7 @@ def exportSelection( menu ) :
 		path += ".gfr"
 
 	dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
-	dialogue.waitForBackgroundTask( script["fileName"], functools.partial( script.serialiseToFile, path, parent, script.selection() ), parentWindow = scriptWindow )
+	dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, path, parent, script.selection() ), parentWindow = scriptWindow )
 
 ## A function suitable as the command for a File/Import File... menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.
