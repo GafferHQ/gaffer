@@ -44,6 +44,7 @@
 
 #include "boost/lexical_cast.hpp"
 #include "tbb/parallel_for.h"
+#include <unordered_set>
 
 using namespace std;
 using namespace boost;
@@ -206,9 +207,89 @@ void GafferTest::testEditableScope()
 
 }
 
+// Create the number of contexts specified, and return counts for how many collisions there are
+// in each of the four 32 bit sections of the context hash.  MurmurHash performs good mixing, so
+// the four sections should be independent, and as long as collisions within each section occur only
+// at the expected rate, the chance of a full collision across all 4 should be infinitesimal
+// ( we don't want to check for collisions in the whole 128 bit hash, since it would take years
+// for one to occur randomly )
+// "mode" switches betwen 4 modes for creating contexts:
+//   0 :  1 entry with a single increment int
+//   1 :  40 fixed strings, plus a single incrementing int
+//   2 :  20 random floats
+//   3 :  an even mixture of the previous 3 modes
+// "seed" can be used to perform different runs to get an average number.
+// The goal is that regardless of how we create the contexts, they are all unique, and should therefore
+// have an identical chance of collisions if our hashing performs ideally.
+std::tuple<int,int,int,int> GafferTest::countContextHash32Collisions( int contexts, int mode, int seed )
+{
+	std::unordered_set<uint32_t> used[4];
+
+	InternedString a( "a" );
+	InternedString numberNames[40];
+	for( int i = 0; i < 40; i++ )
+	{
+		numberNames[i] = InternedString( i );
+	}
+
+	unsigned int rand_seed = seed;
+	int collisions[4] = {0,0,0,0};
+	for( int i = 0; i < contexts; i++ )
+	{
+		int curMode = mode;
+		int elementSeed = seed * contexts + i;
+		if( curMode == 3 )
+		{
+			curMode = i % 3;
+			elementSeed = seed * contexts + i / 3;
+		}
+
+		Context c;
+		if( curMode == 0 )
+		{
+			c.set( a, elementSeed );
+		}
+		else if( curMode == 1 )
+		{
+			for( int j = 0; j < 40; j++ )
+			{
+				c.set( numberNames[j], j );
+			}
+			c.set( a, elementSeed );
+		}
+		else if( curMode == 2 )
+		{
+			for( int j = 0; j < 20; j++ )
+			{
+				c.set( numberNames[j], rand_r( &rand_seed ) );
+			}
+		}
+
+		if( !used[0].insert( (uint32_t)( c.hash().h1() ) ).second )
+		{
+			collisions[0]++;
+		}
+		if( !used[1].insert( (uint32_t)( c.hash().h1() >> 32 ) ).second )
+		{
+			collisions[1]++;
+		}
+		if( !used[2].insert( (uint32_t)( c.hash().h2() ) ).second )
+		{
+			collisions[2]++;
+		}
+		if( !used[3].insert( (uint32_t)( c.hash().h2() >> 32 ) ).second )
+		{
+			collisions[3]++;
+		}
+	}
+
+	return std::make_tuple( collisions[0], collisions[1], collisions[2], collisions[3] );
+}
+
 void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool startInitialized )
 {
-	// We usually deal with contexts that already have some base stuff in them
+	// We usually deal with contexts that already have some stuff in them, so adding some entries
+	// to the context makes this test more realistic
 	ContextPtr baseContext = new Context();
 	for( int i = 0; i < numEntries; i++ )
 	{
@@ -227,8 +308,6 @@ void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool
 
 	tbb::parallel_for( tbb::blocked_range<size_t>( 0, 10000000 ), [&threadState, &varyingVarName]( const tbb::blocked_range<size_t> &r )
 		{
-			// As part of the setCollaborate plug machinery, we put the parentPath in the context.
-			// Need to remove it before evaluating the prototype sets
 			for( size_t i = r.begin(); i != r.end(); ++i )
 			{
 				Context::EditableScope scope( threadState );
