@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
+- NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
 
 API
 ---

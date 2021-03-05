@@ -58,7 +58,9 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth=8, spacing=4 ) as self.__header :
 
-				GafferUI.Label( "<h4>Node Name</h4>" )
+				# NameLabel with a fixed formatter, to be used as a drag source.
+				self.__nameLabel = GafferUI.NameLabel( None, formatter = lambda graphComponents : "<h4>Node Name</h4>" )
+				# NameWidget to allow editing of the name.
 				self.__nameWidget = GafferUI.NameWidget( None )
 
 				with GafferUI.ListContainer(
@@ -141,6 +143,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		node = self._lastAddedNode()
 		if node is None :
+			self.__nameLabel.setGraphComponent( None )
 			self.__nameWidget.setGraphComponent( None )
 			self.__nodeUI = None
 			# Spacer is necessary to allow bookmark shortcuts to work in an
@@ -149,6 +152,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			self.__header.setVisible( False )
 			return
 
+		self.__nameLabel.setGraphComponent( node )
 		self.__nameWidget.setGraphComponent( node )
 		self.__typeLabel.setText( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 
