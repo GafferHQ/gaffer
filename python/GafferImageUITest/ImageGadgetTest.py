@@ -40,6 +40,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 import GafferImage
@@ -109,6 +110,22 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 
 		del g, w
 		del s
+
+	def testStateChangedSignal( self ) :
+
+		image = GafferImage.Constant()
+		gadget = GafferImageUI.ImageGadget()
+		gadget.setImage( image["out"] )
+		self.assertNotEqual( gadget.state(), gadget.State.Paused )
+
+		cs = GafferTest.CapturingSlot( gadget.stateChangedSignal() )
+		gadget.setPaused( True )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( gadget.state(), gadget.State.Paused )
+
+		gadget.setPaused( False )
+		self.assertEqual( len( cs ), 2 )
+		self.assertNotEqual( gadget.state(), gadget.State.Paused )
 
 if __name__ == "__main__":
 	unittest.main()

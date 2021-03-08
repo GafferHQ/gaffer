@@ -27,6 +27,8 @@ Fixes
   updates from interactive renders.
 - Prune : Fixed bounds computation in the case that the filter claims to match descendants that don't
   exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
+- ImageGadget : Fixed bug which prevented `stateChangedSignal()` from being emitted when
+  `setPaused( false )` was called.
 
 API
 ---
