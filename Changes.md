@@ -3,6 +3,11 @@
 
 > Note : This version is built against Arnold 6.2.0.1, and is not compatible with earlier Arnold versions.
 
+Features
+--------
+
+- Spreadsheet : Added drag and drop reordering of rows.
+
 Improvements
 ------------
 
@@ -29,6 +34,7 @@ Fixes
 API
 ---
 
+- GraphComponent : Added `reorderChildren()` and `childrenReorderedSignal()` methods.
 - Serialisation : Added `addModule()` method, for adding imports to the serialisation.
 - Slider :
   - Added optional value snapping for drag and button press operations. This is controlled via the `setSnapIncrement()` and `getSnapIncrement()` methods.

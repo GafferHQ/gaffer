@@ -481,5 +481,24 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			IECore.CompoundObject( { "test" : IECore.IntData( 10 ) } )
 		)
 
+	def testPlugReordering( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["attributes"].addChild(
+			Gaffer.NameValuePlug( "test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		attributes["attributes"].addChild(
+			Gaffer.NameValuePlug( "test", 20, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		self.assertEqual( attributes["out"].attributes( "/sphere" )["test"].value, 20 )
+
+		attributes["attributes"].reorderChildren( reversed( attributes["attributes"].children() ) )
+		self.assertEqual( attributes["out"].attributes( "/sphere" )["test"].value, 10 )
+
 if __name__ == "__main__":
 	unittest.main()

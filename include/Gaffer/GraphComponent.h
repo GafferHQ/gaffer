@@ -38,6 +38,7 @@
 #ifndef GAFFER_GRAPHCOMPONENT_H
 #define GAFFER_GRAPHCOMPONENT_H
 
+#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
 
@@ -88,8 +89,9 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
-		typedef boost::signal<void (GraphComponent *)> UnarySignal;
-		typedef boost::signal<void (GraphComponent *, GraphComponent *)> BinarySignal;
+		using UnarySignal = boost::signal<void (GraphComponent *)>;
+		using BinarySignal = boost::signal<void (GraphComponent *, GraphComponent *)>;
+		using ChildrenReorderedSignal = boost::signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), CatchingSignalCombiner<void>>;
 
 		/// @name Naming
 		/// All GraphComponents have a name, which must be unique among
@@ -127,8 +129,8 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// The datatype used internally to store children.
-		typedef std::vector<GraphComponentPtr> ChildContainer;
-		typedef ChildContainer::const_iterator ChildIterator;
+		using ChildContainer = std::vector<GraphComponentPtr>;
+		using ChildIterator = ChildContainer::const_iterator;
 		/// Components can accept or reject potential children by implementing this
 		/// call. By default all children are accepted.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
@@ -154,9 +156,6 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// \todo Do we need acceptsRemoval()?
 		/// \undoable
 		void removeChild( GraphComponentPtr child );
-		/// Removes all the children.
-		/// \undoable
-		void clearChildren();
 		/// Get an immediate child by name, performing a runTimeCast to T.
 		template<typename T=GraphComponent>
 		T *getChild( const IECore::InternedString &name );
@@ -174,6 +173,12 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
+		/// Reorders the existing children.
+		/// \undoable
+		void reorderChildren( const ChildContainer &newOrder );
+		/// Removes all the children.
+		/// \undoable
+		void clearChildren();
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
 		template<typename T=GraphComponent>
@@ -221,6 +226,10 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// of a child being removed from the destructor of the parent, oldParent
 		/// will be null as it is no longer available.
 		BinarySignal &parentChangedSignal();
+		/// A signal emitted when children have been reordered. The original indices
+		/// corresponding to each child are passed, to facilitate reordering of any
+		/// mirrored data structures or UI.
+		ChildrenReorderedSignal &childrenReorderedSignal();
 		//@}
 
 	protected :
@@ -258,6 +267,11 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// to maintain a consistent state even if badly behaved observers are
 		/// connected to the signal.
 		virtual void parentChanged( Gaffer::GraphComponent *oldParent );
+		// Called by `reorderChildren()` immediately before `childrenReorderedSignal()`
+		// is emitted. This provides an opportunity to respond to reordering before
+		// outside observers are notified. Implementations should call the base class
+		// implementation before doing their own work.
+		virtual void childrenReordered( const std::vector<size_t> &oldIndices );
 
 		/// It is common for derived classes to provide accessors for
 		/// constant-time access to specific children, as this can be

@@ -1025,5 +1025,72 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			[ g["c1"], g["c2"], g["c2"]["gc1"], g["c3"], g["c3"]["gc2"], g["c3"]["gc3"] ],
 		)
 
+	def testReorderChildren( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		p = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		c1 = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		c2 = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		c3 = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		c4 = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["node"] = Gaffer.Node()
+		script["node"]["p"] = p
+		script["node"]["p"]["c1"] = c1
+		script["node"]["p"]["c2"] = c2
+		script["node"]["p"]["c3"] = c3
+		script["node"]["p"]["c4"] = c4
+
+		mirror = [ c.getName() for c in script["node"]["p"] ]
+		def childrenReordered( parent, oldIndices ) :
+			# Demonstrates how you could maintain a parallel data structure
+			# to keep the same order. For example, a list of widgets in the UI.
+			mirror[:] = [ mirror[i] for i in oldIndices ]
+		script["node"]["p"].childrenReorderedSignal().connect( childrenReordered, scoped = False )
+
+		cs = GafferTest.CapturingSlot( p.childrenReorderedSignal() )
+		with Gaffer.UndoScope( script ) :
+			p.reorderChildren( [ c4, c3, c1, c2 ] )
+
+		self.assertEqual( p.children(), ( c4, c3, c1, c2 ) )
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[-1], ( p, [ 3, 2, 0, 1 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
+
+		script.undo()
+		self.assertEqual( p.children(), ( c1, c2, c3, c4 ) )
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( cs[-1], ( p, [ 2, 3, 1, 0 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
+
+		script.redo()
+		self.assertEqual( p.children(), ( c4, c3, c1, c2 ) )
+		self.assertEqual( len( cs ), 3 )
+		self.assertEqual( cs[-1], ( p, [ 3, 2, 0, 1 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
+
+		script.undo()
+		self.assertEqual( p.children(), ( c1, c2, c3, c4 ) )
+		self.assertEqual( len( cs ), 4 )
+		self.assertEqual( cs[-1], ( p, [ 2, 3, 1, 0 ] ) )
+		self.assertEqual( mirror, [ c.getName() for c in script["node"]["p"] ] )
+
+	def testReorderChildrenArgumentChecks( self ) :
+
+		p = Gaffer.Plug( "p" )
+		p["c1"] = c1 = Gaffer.Plug()
+		p["c2"] = c2 = Gaffer.Plug()
+		p["c3"] = c3 = Gaffer.Plug()
+
+		with six.assertRaisesRegex( self, Exception, r"Wrong number of children specified \(2 but should be 3\)" ) :
+			p.reorderChildren( [ c1, c2 ] )
+
+		with six.assertRaisesRegex( self, Exception, r"Wrong number of children specified \(4 but should be 3\)" ) :
+			p.reorderChildren( [ c1, c2, c3, c1 ] )
+
+		with six.assertRaisesRegex( self, Exception, 'Child "c2" is in more than one position' ) :
+			p.reorderChildren( [ c1, c2, c2 ] )
+
 if __name__ == "__main__":
 	unittest.main()

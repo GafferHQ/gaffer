@@ -70,7 +70,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		tableView = _NavigableTable()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
-		self.__mode = mode;
+		self.__mode = mode
 		self.__setupModels( selectionModel )
 
 		# Headers and column sizing
@@ -87,16 +87,22 @@ class _PlugTableView( GafferUI.Widget ) :
 		if mode in ( self.Mode.Cells, self.Mode.Defaults ) :
 
 			self.__applyColumnWidthMetadata()
-			self.__applySectionOrderMetadata()
+			self.__applyColumnOrderMetadata()
 
 			tableView.horizontalHeader().setSectionsMovable( True )
-			tableView.horizontalHeader().sectionResized.connect( Gaffer.WeakMethod( self.__sectionResized ) )
-			tableView.horizontalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__sectionMoved ) )
+			tableView.horizontalHeader().sectionResized.connect( Gaffer.WeakMethod( self.__columnResized ) )
+			tableView.horizontalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__columnMoved ) )
 
-			self.__ignoreSectionResized = False
-			self.__callingMoveSection = False
+			self.__ignoreColumnResized = False
+			self.__ignoreColumnMoved = False
 
 		else : # RowNames mode
+
+			if self.__canReorderRows() :
+				tableView.verticalHeader().setVisible( True )
+				tableView.verticalHeader().setSectionsMovable( True )
+				tableView.verticalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__rowMoved ) )
+				self.__ignoreRowMoved = False
 
 			tableView.horizontalHeader().resizeSection( 1, 22 )
 			self.__applyRowNamesWidth()
@@ -224,9 +230,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		selectionProxy = _ProxySelectionModel( viewProxy, selectionModel, tableView )
 		tableView.setSelectionModel( selectionProxy )
 
-	def __sectionMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
+	def __columnMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
 
-		if self.__callingMoveSection :
+		if self.__ignoreColumnMoved :
 			return
 
 		model = self._qtWidget().model()
@@ -238,9 +244,9 @@ class _PlugTableView( GafferUI.Widget ) :
 					plug = model.plugForIndex( model.index( 0, logicalIndex ) )
 					Gaffer.Metadata.registerValue( plug, "spreadsheet:columnIndex", header.visualIndex( logicalIndex ) )
 
-	def __sectionResized( self, logicalIndex, oldSize, newSize ) :
+	def __columnResized( self, logicalIndex, oldSize, newSize ) :
 
-		if self.__ignoreSectionResized :
+		if self.__ignoreColumnResized :
 			return
 
 		model = self._qtWidget().model()
@@ -264,7 +270,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		try :
 
-			self.__ignoreSectionResized = True
+			self.__ignoreColumnResized = True
 
 			for index, plug in indicesAndPlugs :
 
@@ -276,9 +282,9 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		finally :
 
-			self.__ignoreSectionResized = False
+			self.__ignoreColumnResized = False
 
-	def __applySectionOrderMetadata( self ) :
+	def __applyColumnOrderMetadata( self ) :
 
 		if self.__mode == self.Mode.RowNames :
 			return
@@ -287,9 +293,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		header = self._qtWidget().horizontalHeader()
 		for index, plug in enumerate( rowsPlug.defaultRow()["cells"] ) :
 			visualIndex = Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" )
-			self.__callingMoveSection = True
+			self.__ignoreColumnMoved = True
 			header.moveSection( header.visualIndex( index ), visualIndex if visualIndex is not None else index )
-			self.__callingMoveSection = False
+			self.__ignoreColumnMoved = False
 
 	def __applyColumnVisibility( self ) :
 
@@ -299,7 +305,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		# Changing column visibility seems to cause the
 		# `sectionResized()` signal to be emitted unnecessarily,
 		# so we suppress the slot we've attached to it.
-		self.__ignoreSectionResized = True
+		self.__ignoreColumnResized = True
 		try :
 			rowsPlug = self._qtWidget().model().rowsPlug()
 			for i, plug in enumerate( rowsPlug.defaultRow()["cells"].children() ) :
@@ -312,7 +318,53 @@ class _PlugTableView( GafferUI.Widget ) :
 				else :
 					self._qtWidget().hideColumn( i )
 		finally :
-			self.__ignoreSectionResized = False
+			self.__ignoreColumnResized = False
+
+	def __canReorderRows( self ) :
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		if Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
+			return False
+
+		if isinstance( rowsPlug.node(), Gaffer.Reference ) :
+			reference = rowsPlug.node()
+			# Default row (`[0]`) is irrelevant because it is always
+			# referenced and we won't try to reorder it anyway.
+			for row in rowsPlug.children()[1:] :
+				if not reference.isChildEdit( row ) :
+					return False
+
+		return True
+
+	def __rowMoved( self, logicalIndex, oldVisualIndex, newVisualIndex ) :
+
+		if self.__ignoreRowMoved :
+			return
+
+		# Qt implements row moves as a visual transform on top of the model.
+		# We want to implement them as edits to the order of the underlying
+		# RowPlugs. So we translate the change in visual transform to a call to
+		# `reorderChildren()`, and then reset the visual transform.
+
+		assert( oldVisualIndex == logicalIndex ) # Otherwise a previous visual transform reset failed
+
+		# Reorder rows
+
+		rowsPlug = self._qtWidget().model().rowsPlug()
+		rows = list( rowsPlug.children() )
+		header = self._qtWidget().verticalHeader()
+		assert( len( rows ) == header.count() + 1 ) # Header doesn't know about the default row
+		rows = [ rows[0] ] + [ rows[header.logicalIndex(i)+1] for i in range( 0, header.count() ) ]
+
+		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+			rowsPlug.reorderChildren( rows )
+
+		# Reset visual transform
+
+		self.__ignoreRowMoved = True
+		for i in range( min( oldVisualIndex, newVisualIndex ), max( oldVisualIndex, newVisualIndex ) + 1 ) :
+			header.moveSection( header.visualIndex( i ), i )
+		self.__ignoreRowMoved = False
 
 	def __applyRowNamesWidth( self ) :
 
@@ -323,9 +375,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		self._qtWidget().horizontalHeader().resizeSection( 0, width )
 
 	@GafferUI.LazyMethod()
-	def __applySectionOrderLazily( self ) :
+	def __applyColumnOrderLazily( self ) :
 
-		self.__applySectionOrderMetadata()
+		self.__applyColumnOrderMetadata()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
@@ -352,7 +404,7 @@ class _PlugTableView( GafferUI.Widget ) :
 				# Typically we get a flurry of edits to columnIndex at once,
 				# so we use a lazy method to update the order once everything
 				# has been done.
-				self.__applySectionOrderLazily()
+				self.__applyColumnOrderLazily()
 
 			elif key == "spreadsheet:section" :
 

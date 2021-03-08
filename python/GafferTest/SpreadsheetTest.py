@@ -881,6 +881,29 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( s["s"]["rows"].defaultHash(), s2["s"]["rows"].defaultHash() )
 		self.assertEqual( s["s"]["rows"].hash(), s2["s"]["rows"].hash() )
 
+	def testReorderRows( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.IntPlug( "c1", defaultValue = 10 ) )
+		spreadsheet["selector"].setValue( "test" )
+
+		# Two rows with the same name. The first one should win.
+
+		spreadsheet["rows"].addRows( 2 )
+		spreadsheet["rows"][1]["name"].setValue( "test" )
+		spreadsheet["rows"][1]["cells"]["c1"]["value"].setValue( 20 )
+		spreadsheet["rows"][2]["name"].setValue( "test" )
+		spreadsheet["rows"][2]["cells"]["c1"]["value"].setValue( 30 )
+
+		self.assertEqual( spreadsheet["out"]["c1"].getValue(), 20 )
+		self.assertEqual( spreadsheet["rows"].row( "test" ), spreadsheet["rows"][1] )
+
+		# And if you reorder them, the (new) first one should still win.
+
+		spreadsheet["rows"].reorderChildren( [ spreadsheet["rows"][0], spreadsheet["rows"][2], spreadsheet["rows"][1] ] )
+		self.assertEqual( spreadsheet["out"]["c1"].getValue(), 30 )
+		self.assertEqual( spreadsheet["rows"].row( "test" ), spreadsheet["rows"][1] )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testAddRowPerformance( self ) :
 
