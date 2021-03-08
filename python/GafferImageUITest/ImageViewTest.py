@@ -85,5 +85,11 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		view["exposure"].setValue( 1 )
 		view["gamma"].setValue( 0.5 )
 
+	def testImageGadget( self ) :
+
+		view = GafferImageUI.ImageView()
+		self.assertIsInstance( view.imageGadget(), GafferImageUI.ImageGadget )
+		self.assertTrue( view.viewportGadget().isAncestorOf( view.imageGadget() ) )
+
 if __name__ == "__main__":
 	unittest.main()

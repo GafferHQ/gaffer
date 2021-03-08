@@ -499,6 +499,16 @@ const Gaffer::BoolPlug *ImageView::lutGPUPlug() const
 	return getChild<BoolPlug>( "lutGPU" );
 }
 
+ImageGadget *ImageView::imageGadget()
+{
+	return m_imageGadget.get();
+}
+
+const ImageGadget *ImageView::imageGadget() const
+{
+	return m_imageGadget.get();
+}
+
 void ImageView::setContext( Gaffer::ContextPtr context )
 {
 	View::setContext( context );

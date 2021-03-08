@@ -38,6 +38,7 @@ API
 - ScriptNode : Added support for cancellation of execution and serialisation.
 - ValuePlug : Improved warning emitted if cached value has unexpected type.
 - SceneAlgo : Added `linkedLights()` and `linkedObjects()` functions.
+- ImageView : Added `imageGadget()` accessor.
 
 0.59.4.0 (relative to 0.59.3.0)
 ========
