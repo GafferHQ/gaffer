@@ -1533,6 +1533,16 @@ _styleSheet = string.Template(
 
 	/* SceneInspector */
 
+	*[gafferClass="GafferSceneUI.SceneInspector.Row"] > QFrame
+	{
+		/* Needed to avoid unwanted gaps between sections in the
+		 * HistorySection and InheritanceSection.
+		 */
+		padding: 0px;
+	}
+
+	/* SceneViewInspector */
+
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame
 	{
 		margin-right: 1px;

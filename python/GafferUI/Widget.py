@@ -1243,18 +1243,16 @@ class _EventFilter( QtCore.QObject ) :
 
 		candidateWidget = Widget.widgetAt( imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() ) )
 
-		if candidateWidget is self.__dragDropEvent.destinationWidget :
-			return
-
 		newDestinationWidget = None
-		if candidateWidget is not None :
-			while candidateWidget is not None :
-				if candidateWidget._dragEnterSignal is not None :
-					self.__dragDropEvent.line = self.__widgetSpaceLine( qEvent, candidateWidget )
-					if candidateWidget._dragEnterSignal( candidateWidget, self.__dragDropEvent ) :
-						newDestinationWidget = candidateWidget
-						break
-				candidateWidget = candidateWidget.parent()
+		while candidateWidget is not None :
+			if candidateWidget is self.__dragDropEvent.destinationWidget :
+				return
+			if candidateWidget._dragEnterSignal is not None :
+				self.__dragDropEvent.line = self.__widgetSpaceLine( qEvent, candidateWidget )
+				if candidateWidget._dragEnterSignal( candidateWidget, self.__dragDropEvent ) :
+					newDestinationWidget = candidateWidget
+					break
+			candidateWidget = candidateWidget.parent()
 
 		if newDestinationWidget is None :
 			if self.__dragDropEvent.destinationWidget is self.__dragDropEvent.sourceWidget :

@@ -1509,7 +1509,19 @@ class _HistorySection( Section ) :
 						_Rail( _Rail.Type.Middle )
 
 				if i == 0 or i == ( len( history ) - 1 ) or history[i-1].value != history[i].value :
-					GafferUI.NameLabel( history[i].target.scene.node(), formatter = lambda l : ".".join( x.getName() for x in l ) )
+					GafferUI.NameLabel(
+						history[i].target.scene.node(),
+						formatter = lambda l : ".".join( x.getName() for x in l ),
+						numComponents = self.__distance( history[i].target.scene.node().scriptNode(), history[i].target.scene.node() )
+					)
+					editButton = GafferUI.Button( image = "editOn.png", hasFrame = False )
+					if not Gaffer.MetadataAlgo.readOnly( history[i].target.scene.node() ) :
+						editButton.clickedSignal().connect(
+							functools.partial( _HistorySection.__editClicked, node = history[i].target.scene.node() ),
+							scoped = False
+						)
+					else :
+						editButton.setEnabled( False )
 				else :
 					GafferUI.Label( "..." )
 
@@ -1547,6 +1559,23 @@ class _HistorySection( Section ) :
 			return SceneInspector.Target( sourceScene, target.path )
 
 		return None
+
+	@staticmethod
+	def __editClicked( button, node ) :
+
+		GafferUI.NodeEditor.acquire( node, floating = True )
+		return True
+
+	@staticmethod
+	## \todo This might make sense as part of a future GraphComponentAlgo.
+	def __distance( ancestor, descendant ) :
+
+		result = 0
+		while descendant is not None and descendant != ancestor :
+			result += 1
+			descendant = descendant.parent()
+
+		return result
 
 SceneInspector.HistorySection = _HistorySection ## REMOVE ME!!
 
