@@ -42,6 +42,8 @@
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
 
+#include "GafferImageUI/ImageGadget.h"
+
 #include "GafferImage/Display.h"
 
 #include "Gaffer/Context.h"
@@ -161,7 +163,7 @@ ShaderView::ShaderView( const std::string &name )
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
 	Display::driverCreatedSignal().connect( boost::bind( &ShaderView::driverCreated, this, ::_1, ::_2 ) );
-
+	imageGadget()->stateChangedSignal().connect( boost::bind( &ShaderView::imageGadgetStateChanged, this ) );
 }
 
 ShaderView::~ShaderView()
@@ -336,7 +338,7 @@ void ShaderView::updateRendererState()
 	}
 
 	m_renderer->statePlug()->setValue(
-		viewportGadget()->visible() ? InteractiveRender::Running : InteractiveRender::Stopped
+		( viewportGadget()->visible() && imageGadget()->state() != GafferImageUI::ImageGadget::Paused ) ? InteractiveRender::Running : InteractiveRender::Stopped
 	);
 }
 
@@ -423,6 +425,11 @@ void ShaderView::preRender()
 
 	viewportGadget()->frame( Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( resolution.x, resolution.y, 0.0f ) ) );
 	m_framed = true;
+}
+
+void ShaderView::imageGadgetStateChanged()
+{
+	updateRendererState();
 }
 
 void ShaderView::registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator )

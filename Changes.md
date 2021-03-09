@@ -29,6 +29,7 @@ Fixes
   exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
 - ImageGadget : Fixed bug which prevented `stateChangedSignal()` from being emitted when
   `setPaused( false )` was called.
+- ShaderView : Pausing the viewer now stops the renderer.
 
 API
 ---
