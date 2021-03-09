@@ -29,6 +29,8 @@ Fixes
   exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
 - ImageGadget : Fixed bug which prevented `stateChangedSignal()` from being emitted when
   `setPaused( false )` was called.
+- InteractiveRender : Fixed error handling during render startup. Errors are now shown in the render
+  log and the terminal output.
 - ShaderView : Pausing the viewer now stops the renderer.
 
 API
