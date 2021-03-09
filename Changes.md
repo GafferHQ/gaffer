@@ -7,6 +7,11 @@ Improvements
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
 - MapProjection : Added `position` plug to allow a custom position to be used for the projection.
 
+Fixes
+-----
+
+- Instancer : Fixed crash evaluating `variations` when there are no prototypes.
+
 API
 ---
 
