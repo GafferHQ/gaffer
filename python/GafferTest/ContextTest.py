@@ -65,33 +65,38 @@ class ContextTest( GafferTest.TestCase ) :
 		def f( context, name ) :
 
 			self.assertTrue( context.isSame( c ) )
-			changes.append( ( name, context.get( name, None ) ) )
+			changes.append( ( name, context.get( name, None ), context.hash() ) )
 
 		cn = c.changedSignal().connect( f )
 
 		c["a"] = 2
-		self.assertEqual( changes, [ ( "a", 2 ) ] )
+		hash1 = c.hash()
+		self.assertEqual( changes, [ ( "a", 2, hash1 ) ] )
 
 		c["a"] = 3
-		self.assertEqual( changes, [ ( "a", 2 ), ( "a", 3 ) ] )
+		hash2 = c.hash()
+		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ) ] )
 
 		c["b"] = 1
-		self.assertEqual( changes, [ ( "a", 2 ), ( "a", 3 ), ( "b", 1 ) ] )
+		hash3 = c.hash()
+		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ) ] )
 
 		# when an assignment makes no actual change, the signal should not
 		# be triggered again.
 		c["b"] = 1
-		self.assertEqual( changes, [ ( "a", 2 ), ( "a", 3 ), ( "b", 1 ) ] )
+		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ) ] )
 
 		# Removing variables should also trigger the changed signal.
 
 		del changes[:]
 
 		c.remove( "a" )
-		self.assertEqual( changes, [ ( "a", None ) ] )
+		hash4 = c.hash()
+		self.assertEqual( changes, [ ( "a", None, hash4 ) ] )
 
 		del c["b"]
-		self.assertEqual( changes, [ ( "a", None ), ( "b", None ) ] )
+		hash5 = c.hash()
+		self.assertEqual( changes, [ ( "a", None, hash4 ), ( "b", None, hash5 ) ] )
 
 	def testTypes( self ) :
 
