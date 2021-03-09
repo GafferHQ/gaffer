@@ -148,9 +148,9 @@ void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
 	if( needUpdate )
 	{
 		// We modified the expanded paths in place to avoid unecessary copying,
-		// so the context doesn't know they've changed. So we emit the changed
-		// signal ourselves
-		context->changedSignal()( context, g_expandedPathsName );
+		// so the context doesn't know they've changed. So we must let it know
+		// about the change
+		context->changed( g_expandedPathsName );
 	}
 }
 
@@ -177,9 +177,9 @@ IECore::PathMatcher expandDescendants( Context *context, const IECore::PathMatch
 	if( needUpdate )
 	{
 		// We modified the expanded paths in place to avoid unecessary copying,
-		// so the context doesn't know they've changed. So we emit the changed
-		// signal ourselves
-		context->changedSignal()( context, g_expandedPathsName );
+		// so the context doesn't know they've changed. So we must let it know
+		// about the change
+		context->changed( g_expandedPathsName );
 	}
 
 	return leafPaths;
