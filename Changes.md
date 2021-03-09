@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
+- MapProjection : Added `position` plug to allow a custom position to be used for the projection.
 
 API
 ---

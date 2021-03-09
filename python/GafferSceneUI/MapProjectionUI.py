@@ -71,6 +71,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"position" : [
+
+			"description",
+			"""
+			The primitive variable that provides the position to be
+			used in the projection.
+			""",
+
+		],
+
 		"uvSet" : [
 
 			"description",
