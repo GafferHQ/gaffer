@@ -42,11 +42,13 @@ namespace Gaffer
 template<typename T>
 boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	boost::intrusive_ptr<const T> result = IECore::runTimeCast<const T>( getValueInternal( precomputedHash ) );
+	IECore::ConstObjectPtr value = getValueInternal( precomputedHash );
+	boost::intrusive_ptr<const T> result = IECore::runTimeCast<const T>( value );
 	if( !result )
 	{
 		throw IECore::Exception( boost::str(
-			boost::format( "%1% : getValueInternal() didn't return expected type - is the hash being computed correctly?" ) % fullName()
+			boost::format( "%1% : getValueInternal() didn't return expected type (wanted %2% but got %3%). Is the hash being computed correctly?" )
+				% fullName() % T::staticTypeName() % value->typeName()
 		) );
 	}
 	return result;

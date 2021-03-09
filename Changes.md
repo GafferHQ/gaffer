@@ -112,6 +112,7 @@ Improvements
   - Added the full path to nodes so that nodes nested in Boxes can be identified.
   - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
+- MapProjection : Added `position` plug to allow a custom position to be used for the projection.
 
 Fixes
 -----
@@ -124,6 +125,7 @@ API
 - BackgroundTaskDialogue : Added a new modal dialogue to assist in running tasks in the background.
 - EventLoop : Added `BlockedUIThreadExecution` context manager.
 - ScriptNode : Added support for cancellation of execution and serialisation.
+- ValuePlug : Improved warning emitted if cached value has unexpected type.
 
 0.59.4.0 (relative to 0.59.3.0)
 ========

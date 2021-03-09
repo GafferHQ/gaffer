@@ -63,6 +63,9 @@ class GAFFERSCENE_API MapProjection : public ObjectProcessor
 		Gaffer::StringPlug *cameraPlug();
 		const Gaffer::StringPlug *cameraPlug() const;
 
+		Gaffer::StringPlug *positionPlug();
+		const Gaffer::StringPlug *positionPlug() const;
+
 		Gaffer::StringPlug *uvSetPlug();
 		const Gaffer::StringPlug *uvSetPlug() const;
 
