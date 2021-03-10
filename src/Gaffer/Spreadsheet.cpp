@@ -36,6 +36,7 @@
 
 #include "Gaffer/Spreadsheet.h"
 
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/NullObject.h"
@@ -826,6 +827,7 @@ Spreadsheet::Spreadsheet( const std::string &name )
 	addChild( new RowsPlug( "rows" ) );
 	addChild( new ValuePlug( "out", Plug::Out ) );
 	addChild( new StringVectorDataPlug( "activeRowNames", Plug::Out, new IECore::StringVectorData ) );
+	addChild( new CompoundObjectPlug( "resolvedRows", Plug::Out, new IECore::CompoundObject() ) );
 	addChild( new ObjectPlug( "__rowsMap", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new IntPlug( "__rowIndex", Plug::Out ) );
 }
@@ -884,24 +886,34 @@ const StringVectorDataPlug *Spreadsheet::activeRowNamesPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
 }
 
+CompoundObjectPlug *Spreadsheet::resolvedRowsPlug()
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 5 );
+}
+
+const CompoundObjectPlug *Spreadsheet::resolvedRowsPlug() const
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 5 );
+}
+
 ObjectPlug *Spreadsheet::rowsMapPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 const ObjectPlug *Spreadsheet::rowsMapPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
 }
 
 IntPlug *Spreadsheet::rowIndexPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
 }
 
 const IntPlug *Spreadsheet::rowIndexPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+	return getChild<IntPlug>( g_firstPlugIndex + 7 );
 }
 
 void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
@@ -958,6 +970,11 @@ void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsConta
 	{
 		outputs.push_back( activeRowNamesPlug() );
 	}
+
+	if( rowsPlug()->isAncestorOf( input ) )
+	{
+		outputs.push_back( resolvedRowsPlug() );
+	}
 }
 
 Plug *Spreadsheet::correspondingInput( const Plug *output )
@@ -1004,6 +1021,11 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 		rowsMapPlug()->hash( h );
 		return;
 	}
+	else if( output == resolvedRowsPlug() )
+	{
+		ComputeNode::hash( output, context, h );
+		rowsPlug()->hash( h );
+	}
 
 	ComputeNode::hash( output, context, h );
 }
@@ -1040,6 +1062,46 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 		ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
 		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->activeRowNames() );
 		return;
+	}
+	else if( output == resolvedRowsPlug() )
+	{
+		CompoundObjectPtr defaults = new CompoundObject;
+		for( const auto &cellPlug : CellPlug::Range( *rowsPlug()->defaultRow()->cellsPlug() ) )
+		{
+			defaults->members()[cellPlug->getName()] = PlugAlgo::extractDataFromPlug( cellPlug->valuePlug() );
+		}
+
+		CompoundObjectPtr result = new CompoundObject;
+		for( size_t i = 1, s = rowsPlug()->children().size(); i < s; ++i )
+		{
+			const RowPlug *rowPlug = rowsPlug()->getChild<RowPlug>( i );
+			if( !rowPlug->enabledPlug()->getValue() )
+			{
+				continue;
+			}
+
+			const string name = rowPlug->namePlug()->getValue();
+			if( result->members().count( name ) )
+			{
+				continue;
+			}
+
+			CompoundObjectPtr cells = new CompoundObject;
+			for( const auto &cellPlug : CellPlug::Range( *rowPlug->cellsPlug() ) )
+			{
+				if( cellPlug->enabledPlug()->getValue() )
+				{
+					cells->members()[cellPlug->getName()] = PlugAlgo::extractDataFromPlug( cellPlug->valuePlug() );
+				}
+				else
+				{
+					cells->members()[cellPlug->getName()] = defaults->members().at( cellPlug->getName() );
+				}
+			}
+
+			result->members()[name] = cells;
+		}
+		static_cast<CompoundObjectPlug *>( output )->setValue( result );
 	}
 
 	ComputeNode::compute( output, context );

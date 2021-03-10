@@ -58,6 +58,9 @@ class GAFFERSCENE_API Options : public GlobalsProcessor
 		Gaffer::CompoundDataPlug *optionsPlug();
 		const Gaffer::CompoundDataPlug *optionsPlug() const;
 
+		Gaffer::CompoundObjectPlug *extraOptionsPlug();
+		const Gaffer::CompoundObjectPlug *extraOptionsPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

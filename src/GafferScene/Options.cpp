@@ -50,6 +50,7 @@ Options::Options( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "options" ) );
+	addChild( new CompoundObjectPlug( "extraOptions", Plug::In, new IECore::CompoundObject ) );
 }
 
 Options::~Options()
@@ -66,11 +67,24 @@ const Gaffer::CompoundDataPlug *Options::optionsPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
+Gaffer::CompoundObjectPlug *Options::extraOptionsPlug()
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::CompoundObjectPlug *Options::extraOptionsPlug() const
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 1 );
+}
+
 void Options::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 
-	if( optionsPlug()->isAncestorOf( input ) )
+	if(
+		optionsPlug()->isAncestorOf( input ) ||
+		input == extraOptionsPlug()
+	)
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
@@ -79,13 +93,15 @@ void Options::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 void Options::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	optionsPlug()->hash( h );
+	extraOptionsPlug()->hash( h );
 	hashPrefix( context, h );
 }
 
 IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
 	const CompoundDataPlug *p = optionsPlug();
-	if( !p->children().size() )
+	IECore::ConstCompoundObjectPtr extraOptions = extraOptionsPlug()->getValue();
+	if( !p->children().size() && extraOptions->members().empty() )
 	{
 		return inputGlobals;
 	}
@@ -107,6 +123,10 @@ IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::C
 		{
 			result->members()[prefix + name] = d;
 		}
+	}
+	for( const auto &e : extraOptions->members() )
+	{
+		result->members()[prefix + e.first.string()] = e.second;
 	}
 
 	return result;

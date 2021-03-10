@@ -6,6 +6,14 @@ Improvements
 
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
 - MapProjection : Added `position` plug to allow a custom position to be used for the projection.
+- Spreadsheet :
+  - Added `resolvedRows` output plug, containing the resolved cell values
+    for all active rows. This allows expressions to work with all the data in the spreadsheet,
+    independently of the `selector` mechanism.
+  - Added <kbd>+</kbd> button for adding new columns directly. Existing plugs may be dragged on
+    to it and new plugs can be created from a popup menu.
+- CustomOptions : Added `extraOptions` plug to facilitate the creation of dynamic numbers of options
+  from a single expression.
 
 API
 ---

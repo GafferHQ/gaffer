@@ -181,6 +181,32 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"resolvedRows" : [
+
+			"description",
+			"""
+			An output plug containing the resolved cell values for all active
+			rows, This can be used to drive expressions in situations where the
+			standard `out` plug is not useful, or would be awkward to use. The
+			values are formatted as follows :
+
+			```
+			{
+			    "row1Name" : { "columnName" : columnValue, ... },
+			    "row2Name" : { "columnName" : columnValue, ... },
+			    ...
+			}
+			```
+
+			> Note : The output is completely independent of the value of
+			> `selector`.
+			""",
+
+			"layout:section", "Advanced",
+			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget"
+
+		],
+
 	}
 
 )
