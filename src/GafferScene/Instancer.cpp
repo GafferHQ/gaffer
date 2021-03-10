@@ -437,7 +437,14 @@ class Instancer::EngineData : public Data
 
 		int prototypeIndex( size_t pointIndex ) const
 		{
-			return m_prototypeIndexRemap[ ( m_indices ? (*m_indices)[pointIndex] : 0 ) % m_numPrototypes ];
+			if( m_numPrototypes )
+			{
+				return m_prototypeIndexRemap[ ( m_indices ? (*m_indices)[pointIndex] : 0 ) % m_numPrototypes ];
+			}
+			else
+			{
+				return -1;
+			}
 		}
 
 		const ScenePlug::ScenePath &prototypeRoot( const InternedString &name ) const

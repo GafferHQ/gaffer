@@ -2231,6 +2231,19 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			with GafferTest.TestRunner.PerformanceScope() :
 				GafferSceneTest.traverseScene( isolate["out"] )
 
+	def testEmptyPrototypes( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+
+		self.assertEqual( instancer["variations"].getValue(), IECore.CompoundData( { "" : IECore.IntData( 0 ) } ) )
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfNoVariationsSingleEvaluate( self ):

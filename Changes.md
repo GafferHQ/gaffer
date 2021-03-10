@@ -15,6 +15,11 @@ Improvements
 - CustomOptions : Added `extraOptions` plug to facilitate the creation of dynamic numbers of options
   from a single expression.
 
+Fixes
+-----
+
+- Instancer : Fixed crash evaluating `variations` when there are no prototypes.
+
 API
 ---
 
