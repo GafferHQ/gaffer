@@ -155,19 +155,12 @@ fi
 # Get python set up properly
 ##########################################################################
 
-# Make sure PYTHONHOME is pointing to our internal python build.
-# We only do this if Gaffer has been built with an internal version
-# of python - otherwise we assume the existing environment is providing
-# the right value.
-
+# Unset PYTHONHOME to make sure our internal Python build is used in preference
+# to anything in the external environment. We only do this if Gaffer has been
+# built with an internal version of Python - otherwise we assume the existing
+# environment is providing the right value.
 if [[ -e $GAFFER_ROOT/bin/python ]] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		export PYTHONHOME="$GAFFER_ROOT"
-	else
-		export PYTHONHOME="$GAFFER_ROOT/lib/Python.framework/Versions/Current"
-	fi
-
+	unset PYTHONHOME
 fi
 
 # Get python module path set up
