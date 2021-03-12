@@ -85,7 +85,7 @@ def open( menu ) :
 	if not path :
 		return
 
-	__open( scriptWindow.scriptNode(), str( path ) )
+	openScript( scriptWindow.scriptNode(), str( path ) )
 
 ## Opens a script and adds it to the application, as if the user
 # had done so via the File Open dialogue.
@@ -137,7 +137,13 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 
 	return script
 
-def __open( currentScript, fileName ) :
+## Opens a script, adds it to the application, and closes the currentScript
+# if it was empty. as if the user had done so via the File Open dialogue.
+#
+# :param currentScript Gaffer.ScriptNode object associated with the current operation
+# :param fileName str with the file path to the script to open
+# :returns newly opened script or None
+def openScript( currentScript, fileName ) :
 
 	application = currentScript.ancestor( Gaffer.ApplicationRoot )
 	currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
@@ -159,6 +165,8 @@ def __open( currentScript, fileName ) :
 		# a menu parented to it).
 		GafferUI.WidgetAlgo.keepUntilIdle( currentWindow )
 
+	return script
+
 ## A function suitable as the submenu callable for a File/OpenRecent menu item. It must be invoked
 # from a menu which has a ScriptWindow in its ancestry.
 def openRecent( menu ) :
@@ -178,7 +186,7 @@ def openRecent( menu ) :
 				"/" + str( index ),
 				{
 					"label": os.path.basename( fileName ),
-					"command" : functools.partial( __open, currentScript, fileName ),
+					"command" : functools.partial( openScript, currentScript, fileName ),
 					"description" : fileName,
 					"active" : os.path.isfile( fileName )
 				}
