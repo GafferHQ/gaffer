@@ -354,6 +354,10 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 			return AiNode( nodeType, nodeName, parentNode );
 		};
 		convertWalk( shaderNetwork->getOutput(), shaderNetwork, name, nodeCreator, result, converted );
+		for( const auto &kv : shaderNetwork->outputShader()->blindData()->readable() )
+		{
+			ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
+		}
 	}
 	return result;
 }
