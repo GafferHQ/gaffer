@@ -182,6 +182,8 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	if( Accessor<T>().set( s, value ) )
 	{
 		m_hashValid = false;
+		s.updateHash( name );
+
 		if( m_changedSignal )
 		{
 			(*m_changedSignal)( this, name );
@@ -238,6 +240,26 @@ class Context::SubstitutionProvider : public IECore::StringAlgo::VariableProvide
 		mutable std::string m_formattedString;
 
 };
+
+void Context::Storage::updateHash( const IECore::InternedString &name )
+{
+	/// \todo Perhaps at some point the UI should use a different container for
+	/// these "not computationally important" values, so we wouldn't have to set
+	/// a zero value here so that it won't affect the total sum hash.
+	// Using a hardcoded comparison of the first three characters because
+	// it's quicker than `string::compare( 0, 3, "ui:" )`.
+	const std::string &nameStr = name.string();
+	if( nameStr.size() > 2 && nameStr[0] == 'u' && nameStr[1] == 'i' && nameStr[2] == ':' )
+	{
+		hash = IECore::MurmurHash( 0, 0 );
+	}
+	else
+	{
+		hash = data->Object::hash();
+		hash.append( (uint64_t)&nameStr );
+	}
+}
+
 
 } // namespace Gaffer
 

@@ -269,13 +269,19 @@ class GAFFER_API Context : public IECore::RefCounted
 		struct Storage
 		{
 			Storage() : data( nullptr ), ownership( Copied ) {}
+			inline void updateHash( const IECore::InternedString &name );
 			// We reference the data with a raw pointer to avoid the compulsory
 			// overhead of an intrusive pointer.
 			const IECore::Data *data;
 			// And use this ownership flag to tell us when we need to do explicit
 			// reference count management.
 			Ownership ownership;
+			// Hash value of this entry's data and name - these will be summed to produce
+			// a total hash for the context
+			IECore::MurmurHash hash;
 		};
+
+		void validateHashes();
 
 		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
 

@@ -62,6 +62,13 @@ static void testMetadataThreadingWrapper()
 	testMetadataThreading();
 }
 
+static boost::python::tuple countContextHash32CollisionsWrapper( int entries, int mode, int seed )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	auto result = countContextHash32Collisions( entries, mode, seed );
+	return boost::python::make_tuple( std::get<0>(result), std::get<1>(result), std::get<2>(result), std::get<3>(result) );
+}
+
 BOOST_PYTHON_MODULE( _GafferTest )
 {
 
@@ -83,6 +90,8 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
 	def( "testScopingNullContext", &testScopingNullContext );
 	def( "testEditableScope", &testEditableScope );
+	def( "countContextHash32Collisions", &countContextHash32CollisionsWrapper );
+	def( "testContextHashPerformance", &testContextHashPerformance );
 	def( "testComputeNodeThreading", &testComputeNodeThreading );
 	def( "testDownstreamIterator", &testDownstreamIterator );
 
