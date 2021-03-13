@@ -124,35 +124,34 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
 
-		template<typename T>
-		struct Accessor;
+		// Set a context entry with a generic data of an unknown type
+		void set( const IECore::InternedString &name, const IECore::Data *value );
 
-		/// Calling with simple types (e.g float) will automatically
-		/// create a TypedData<T> to store the value.
+		/// Setting with a specific type using this template is much faster.  Support a simple types like
+		/// TODO list types
 		// TODO - there has got to be a better way to specify the simple types that this works on,
-		// so that it doesn't match with Data* and beat out the overload below
+		// so that it doesn't match with Data* and beat out the overload above
 		template<typename T, typename boost::disable_if< boost::is_base_of<IECore::Data, typename boost::remove_pointer<T>::type >, int >::type = 0>
 		void set( const IECore::InternedString &name, const T &value );
 
-		void set( const IECore::InternedString &name, const IECore::Data *value );
+		// Get a context entry as a generic data without knowing it's type
+		IECore::ConstDataPtr get( const IECore::InternedString &name, bool throws = true ) const;
 
-		/// Can be used to retrieve simple types :
+		/// Can be used to retrieve simple types, much faster than the untyped version :
 		///		float f = context->get<float>( "myFloat" )
-		/// And also IECore::Data types :
-		///		const FloatData *f = context->get<FloatData>( "myFloat" )
 		template<typename T>
-		typename Accessor<T>::ResultType get( const IECore::InternedString &name ) const;
+		const T& get( const IECore::InternedString &name ) const;
+
 		/// As above but returns defaultValue when an entry is not found, rather than throwing
 		/// an Exception.
 		template<typename T>
-		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
+		const T& get( const IECore::InternedString &name, const T& defaultValue ) const;
 
 		/// For certain cases where we want to be speedy, return a pointer to the data, or nullptr if
 		/// if not found
 		template<typename T>
 		const T* getPointer( const IECore::InternedString &name ) const;
 
-		IECore::ConstDataPtr get( const IECore::InternedString &name, bool throws = true ) const;
 
 		/// Removes an entry from the context if it exists
 		void remove( const IECore::InternedString& name );
