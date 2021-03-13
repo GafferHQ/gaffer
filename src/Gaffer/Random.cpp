@@ -277,10 +277,11 @@ void Random::hashSeed( const Context *context, IECore::MurmurHash &h ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = nullptr;
+		IECore::ConstDataPtr contextData;
 		try
 		{
-			contextData = context->get<IECore::Data>( contextEntry );
+			// TODO - expose hash
+			contextData = context->get( contextEntry );
 		}
 		catch( ... )
 		{
@@ -298,10 +299,11 @@ unsigned long int Random::computeSeed( const Context *context ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = nullptr;
+		IECore::ConstDataPtr contextData;
 		try
 		{
-			contextData = context->get<IECore::Data>( contextEntry );
+			// TODO - expose hash
+			contextData = context->get( contextEntry );
 		}
 		catch( ... )
 		{
@@ -310,7 +312,7 @@ unsigned long int Random::computeSeed( const Context *context ) const
 		{
 			IECore::MurmurHash hash = contextData->Object::hash();
 			/// \todo It'd be nice if there was a way of getting the hash folded into an
-			/// int so we could avoid this jiggery pokery.
+			/// int so we could avoid this jiggery pokery. TODO : Can now use hash.h1()
 			std::string s = hash.toString();
 			seed += boost::hash<std::string>()( s );
 		}

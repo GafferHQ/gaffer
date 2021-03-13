@@ -85,7 +85,7 @@ struct DataTraits<Imath::Vec3<T> >
 
 } // namespace Detail
 
-template<typename T, typename Enabler>
+template<typename T>
 struct Context::Accessor
 {
 	typedef const T &ResultType;
@@ -138,6 +138,7 @@ struct Context::Accessor
 	}
 };
 
+/*
 template<typename T>
 struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::Data, typename boost::remove_pointer<T>::type > >::type>
 {
@@ -173,9 +174,9 @@ struct Context::Accessor<T, typename boost::enable_if<boost::is_base_of<IECore::
 		}
 		return static_cast<const T *>( data );
 	}
-};
+};*/
 
-template<typename T>
+template<typename T, typename boost::disable_if< boost::is_base_of<IECore::Data, typename boost::remove_pointer<T>::type >, int >::type>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
 	Storage &s = m_map[name];
@@ -214,6 +215,18 @@ typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedSt
 }
 
 template<typename T>
+const T* Context::getPointer( const IECore::InternedString &name ) const
+{
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
+	{
+		return nullptr;
+	}
+	return &Accessor<T>().get( it->second.data );
+}
+
+
+template<typename T, typename boost::disable_if< boost::is_base_of<IECore::Data, typename boost::remove_pointer<T>::type >, int >::type>
 void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
 {
 	m_context->set( name, value );

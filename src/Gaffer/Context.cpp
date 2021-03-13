@@ -191,6 +191,48 @@ Context::~Context()
 	delete m_changedSignal;
 }
 
+void Context::set( const IECore::InternedString &name, const IECore::Data *value )
+{
+	Storage &storage = m_map[name];
+
+	if( storage.data && storage.data->isEqualTo( value ) )
+	{
+		return;
+	}
+
+	if( storage.data && storage.ownership != Borrowed )
+	{
+		storage.data->removeRef();
+	}
+
+	IECore::DataPtr valueCopy = value->copy();
+	storage.data = valueCopy.get();
+	storage.data->addRef();
+	storage.ownership = Copied;
+
+	m_hashValid = false;
+	storage.updateHash( name );
+
+	if( m_changedSignal )
+	{
+		(*m_changedSignal)( this, name );
+	}
+}
+
+IECore::ConstDataPtr Context::get( const IECore::InternedString &name, bool throws ) const
+{
+	Map::const_iterator it = m_map.find( name );
+    if( it == m_map.end() )
+    {
+		if( throws )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
+		}
+        return nullptr;
+    }
+    return it->second.data;
+}
+
 void Context::remove( const IECore::InternedString &name )
 {
 	Map::iterator it = m_map.find( name );
@@ -382,6 +424,11 @@ Context::EditableScope::~EditableScope()
 {
 }
 
+void Context::EditableScope::set( const IECore::InternedString &name, const IECore::Data *value )
+{
+	m_context->set( name, value );
+}
+
 void Context::EditableScope::setFrame( float frame )
 {
 	m_context->setFrame( frame );
@@ -429,29 +476,30 @@ int Context::SubstitutionProvider::frame() const
 const std::string &Context::SubstitutionProvider::variable( const boost::string_view &name, bool &recurse ) const
 {
 	InternedString internedName( name );
-	const IECore::Data *d = m_context->get<IECore::Data>( internedName, nullptr );
+	IECore::ConstDataPtr d = m_context->get( internedName, false );
+	// TODO - avoid using the expensive version of this call here
 	if( d )
 	{
 		switch( d->typeId() )
 		{
 			case IECore::StringDataTypeId :
 				recurse = true;
-				return static_cast<const IECore::StringData *>( d )->readable();
+				return static_cast<const IECore::StringData *>( d.get() )->readable();
 			case IECore::FloatDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
-					static_cast<const IECore::FloatData *>( d )->readable()
+					static_cast<const IECore::FloatData *>( d.get() )->readable()
 				);
 				return m_formattedString;
 			case IECore::IntDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
-					static_cast<const IECore::IntData *>( d )->readable()
+					static_cast<const IECore::IntData *>( d.get() )->readable()
 				);
 				return m_formattedString;
 			case IECore::InternedStringVectorDataTypeId : {
 				// This is unashamedly tailored to the needs of GafferScene's `${scene:path}`
 				// variable. We could make this cleaner by adding a mechanism for registering custom
 				// formatters, but that would be overkill for this one use case.
-				const auto &v = static_cast<const IECore::InternedStringVectorData *>( d )->readable();
+				const auto &v = static_cast<const IECore::InternedStringVectorData *>( d.get() )->readable();
 				m_formattedString.clear();
 				if( v.empty() )
 				{

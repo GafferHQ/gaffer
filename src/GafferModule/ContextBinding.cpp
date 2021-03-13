@@ -78,6 +78,12 @@ void set( Context &c, const IECore::InternedString &name, const T &value )
 	c.set( name, value );
 }
 
+void setFromData( Context &c, const IECore::InternedString &name, const IECore::Data * value )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	c.set( name, value );
+}
+
 // In the C++ API, get() returns "const Data *". Because python has no idea of constness,
 // by default we return a copy from the bindings because we don't want the unwitting Python
 // scripter to accidentally modify the internals of a Context. We do however expose the
@@ -87,19 +93,19 @@ void set( Context &c, const IECore::InternedString &name, const T &value )
 // As a general rule, you should be wary of using this parameter.
 object get( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
 {
-	ConstDataPtr d = c.get<Data>( name, nullptr );
+	ConstDataPtr d = c.get( name, false );
 	return dataToPython( d.get(), copy, defaultValue );
 }
 
 object getItem( Context &c, const IECore::InternedString &name )
 {
-	ConstDataPtr d = c.get<Data>( name );
+	ConstDataPtr d = c.get( name );
 	return dataToPython( d.get(), /* copy = */ true );
 }
 
 bool contains( Context &c, const IECore::InternedString &name )
 {
-	return c.get<Data>( name, nullptr );
+	return bool( c.get( name, false ) );
 }
 
 void delItem( Context &context, const IECore::InternedString &name )
@@ -184,7 +190,7 @@ void GafferModule::bindContext()
 		.def( "set", &set<Imath::V2f> )
 		.def( "set", &set<Imath::V3f> )
 		.def( "set", &set<Imath::Color3f> )
-		.def( "set", &set<Data *> )
+		.def( "set", &setFromData )
 		.def( "__setitem__", &set<float> )
 		.def( "__setitem__", &set<int> )
 		.def( "__setitem__", &set<std::string> )
@@ -193,7 +199,7 @@ void GafferModule::bindContext()
 		.def( "__setitem__", &set<Imath::V2f> )
 		.def( "__setitem__", &set<Imath::V3f> )
 		.def( "__setitem__", &set<Imath::Color3f> )
-		.def( "__setitem__", &set<Data *> )
+		.def( "__setitem__", &setFromData )
 		.def( "get", &get, ( arg( "defaultValue" ) = object(), arg( "_copy" ) = true ) )
 		.def( "__getitem__", &getItem )
 		.def( "__contains__", &contains )

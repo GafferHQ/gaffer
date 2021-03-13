@@ -145,12 +145,10 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 	/// the scene then we would be able to use that in these situations and have a broader range
 	/// of filters. If we manage that, then we should go back to throwing an exception here if
 	/// the context doesn't contain a path. We should then do the same in the PathFilter.
-	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
-	if( pathData )
+	const ScenePlug::ScenePath *path = context->getPointer<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+	if( path )
 	{
-		const ScenePlug::ScenePath &path = pathData->readable();
-		h.append( &(path[0]), path.size() );
+		h.append( &((*path)[0]), path->size() );
 	}
 
 	Gaffer::Context::EditableScope expressionResultScope( context );

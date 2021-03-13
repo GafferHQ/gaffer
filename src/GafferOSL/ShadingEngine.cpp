@@ -311,7 +311,7 @@ class RenderState
 					make_pair(
 						ustring( name.c_str() ),
 						IECoreImage::OpenImageIOAlgo::DataView(
-							context->get<Data>( name.string(), nullptr ),
+							context->get( name.string(), false ).get(),  // TODO - is immediately destructing this temp data going to be OK?
 							/* createUStrings = */ true
 						)
 					)
@@ -1121,7 +1121,8 @@ void ShadingEngine::hash( IECore::MurmurHash &h ) const
 		}
 		for( const auto &name : m_contextVariablesNeeded )
 		{
-			const IECore::Data *d = context->get<IECore::Data>( name, nullptr );
+			// TODO - expose hash
+			IECore::ConstDataPtr d = context->get( name, false );
 			if( d )
 			{
 				d->hash( h );

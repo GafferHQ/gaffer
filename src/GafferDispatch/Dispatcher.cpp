@@ -658,7 +658,8 @@ class Dispatcher::Batcher
 				}
 
 				result.append( *it );
-				context->get<const IECore::Data>( *it )->hash( result );
+				// TODO - expose hash
+				context->get( *it )->hash( result );
 			}
 			return result;
 		}

@@ -71,20 +71,21 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 {
 	if( const ImagePlug *image = process->plug()->parent<ImagePlug>() )
 	{
+		// TODO - needs testing.  Is it OK that these are now type specific?
 		if( process->plug() == image->sampleOffsetsPlug() )
 		{
-			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
+			if( process->context()->getPointer<std::string>( ImagePlug::channelNameContextName ) )
 			{
 				warn( *process, ImagePlug::channelNameContextName );
 			}
 		}
 		else if( process->plug() != image->channelDataPlug() )
 		{
-			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
+			if( process->context()->getPointer<std::string>( ImagePlug::channelNameContextName ) )
 			{
 				warn( *process, ImagePlug::channelNameContextName );
 			}
-			if( process->context()->get<IECore::Data>( ImagePlug::tileOriginContextName, nullptr ) )
+			if( process->context()->getPointer<Imath::V2i>( ImagePlug::tileOriginContextName ) )
 			{
 				warn( *process, ImagePlug::tileOriginContextName );
 			}

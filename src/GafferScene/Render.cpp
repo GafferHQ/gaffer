@@ -69,9 +69,9 @@ struct RenderScope : public Context::EditableScope
 	RenderScope( const Context *context )
 		:	EditableScope( context ), m_sceneTranslationOnly( false )
 	{
-		if( auto d = context->get<BoolData>( g_sceneTranslationOnlyContextName, nullptr ) )
+		if( const bool *d = context->getPointer<bool>( g_sceneTranslationOnlyContextName ) )
 		{
-			m_sceneTranslationOnly = d->readable();
+			m_sceneTranslationOnly = *d;
 			// Don't leak variable upstream.
 			remove( g_sceneTranslationOnlyContextName );
 		}

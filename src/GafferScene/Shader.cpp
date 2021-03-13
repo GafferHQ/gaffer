@@ -767,9 +767,9 @@ void Shader::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	{
 		ComputeNode::hash( output, context, h );
 		const Plug *outputParameter = outPlug();
-		if( auto *name = context->get<IECore::StringData>( g_outputParameterContextName, nullptr ) )
+		if( const std::string *name = context->getPointer< std::string >( g_outputParameterContextName ) )
 		{
-			outputParameter = outputParameter->descendant<Plug>( name->readable() );
+			outputParameter = outputParameter->descendant<Plug>( *name );
 		}
 		attributesHash( outputParameter, h );
 		return;
@@ -793,9 +793,9 @@ void Shader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context 
 	if( output == outAttributesPlug() )
 	{
 		const Plug *outputParameter = outPlug();
-		if( auto *name = context->get<IECore::StringData>( g_outputParameterContextName, nullptr ) )
+		if( const std::string *name = context->getPointer< std::string >( g_outputParameterContextName ) )
 		{
-			outputParameter = outputParameter->descendant<Plug>( name->readable() );
+			outputParameter = outputParameter->descendant<Plug>( *name );
 		}
 		static_cast<CompoundObjectPlug *>( output )->setValue( attributes( outputParameter ) );
 		return;
