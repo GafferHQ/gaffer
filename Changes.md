@@ -19,6 +19,7 @@ Fixes
 -----
 
 - Instancer : Fixed crash evaluating `variations` when there are no prototypes.
+- ArnoldRender : Fixed rendering with `StandardOptions.sampleMotion` off. This now controls Arnold's `options.ignore_motion_blur` parameter, where previously it set the shutter duration to `0`.
 - EventLoop : Fixed rare failures in `executeOnUIThread()`. Symptoms included a failure to display
   updates from interactive renders.
 
