@@ -114,6 +114,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"volume_indirect",
 		"volume_albedo",
 		"light_groups",
+		"motionvector",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
@@ -122,18 +123,30 @@ with IECore.IgnoredExceptions( ImportError ) :
 		if data == "light_groups":
 			data = "RGBA_*"
 
+		if aov == "motionvector" :
+			parameters = {
+				"filter" : "closest"
+			}
+		else :
+			parameters = {}
+
+		interactiveParameters = parameters.copy()
+		interactiveParameters.update(
+			{
+				"driverType" : "ClientDisplayDriver",
+				"displayHost" : "localhost",
+				"displayPort" : "${image:catalogue:port}",
+				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			}
+		)
+
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Arnold/" + label,
 			IECoreScene.Output(
 				aov,
 				"ieDisplay",
 				"color " + data,
-				{
-					"driverType" : "ClientDisplayDriver",
-					"displayHost" : "localhost",
-					"displayPort" : "${image:catalogue:port}",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-				}
+				interactiveParameters
 			)
 		)
 
@@ -143,6 +156,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				"color " + data,
+				parameters,
 			)
 		)
 
