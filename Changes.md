@@ -19,6 +19,8 @@ Fixes
 -----
 
 - Instancer : Fixed crash evaluating `variations` when there are no prototypes.
+- EventLoop : Fixed rare failures in `executeOnUIThread()`. Symptoms included a failure to display
+  updates from interactive renders.
 
 API
 ---
