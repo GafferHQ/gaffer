@@ -881,6 +881,65 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( s["s"]["rows"].defaultHash(), s2["s"]["rows"].defaultHash() )
 		self.assertEqual( s["s"]["rows"].hash(), s2["s"]["rows"].hash() )
 
+	def testResolvedRows( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.IntPlug( "c1", defaultValue = 10 ) )
+		s["rows"].addColumn( Gaffer.StringPlug( "c2", defaultValue = "" ) )
+		s["rows"].addColumn( Gaffer.V2iPlug( "c3", defaultValue = imath.V2i( 0 ) ) )
+		s["rows"].addRows( 3 )
+		s["rows"][1]["name"].setValue( "row1" )
+		s["rows"][2]["name"].setValue( "row2" )
+		s["rows"][3]["name"].setValue( "row3" )
+
+		def assertExpectedValues( expected ) :
+
+			resolved = s["resolvedRows"].getValue()
+			self.assertIsInstance( resolved, IECore.CompoundObject )
+			self.assertEqual( len( resolved ), len( expected ) )
+
+			for name, expectedRow in expected.items() :
+				self.assertEqual( resolved[name]["c1"].value, expectedRow[0] )
+				self.assertEqual( resolved[name]["c2"].value, expectedRow[1] )
+				self.assertEqual( resolved[name]["c3"].value, expectedRow[2] )
+
+		assertExpectedValues( {
+			"row1" : [ 10, "", imath.V2i( 0 ) ],
+			"row2" : [ 10, "", imath.V2i( 0 ) ],
+			"row3" : [ 10, "", imath.V2i( 0 ) ],
+		} )
+
+		s["rows"][1]["cells"]["c1"]["value"].setValue( 20 )
+		s["rows"][2]["cells"]["c2"]["value"].setValue( "b" )
+		s["rows"][3]["cells"]["c3"]["value"].setValue( imath.V2i( 10 ) )
+
+		assertExpectedValues( {
+			"row1" : [ 20, "", imath.V2i( 0 ) ],
+			"row2" : [ 10, "b", imath.V2i( 0 ) ],
+			"row3" : [ 10, "", imath.V2i( 10 ) ],
+		} )
+
+		s["rows"][1]["cells"]["c1"]["enabled"].setValue( False )
+
+		assertExpectedValues( {
+			"row1" : [ 10, "", imath.V2i( 0 ) ],
+			"row2" : [ 10, "b", imath.V2i( 0 ) ],
+			"row3" : [ 10, "", imath.V2i( 10 ) ],
+		} )
+
+		s["rows"][3]["enabled"].setValue( False )
+
+		assertExpectedValues( {
+			"row1" : [ 10, "", imath.V2i( 0 ) ],
+			"row2" : [ 10, "b", imath.V2i( 0 ) ],
+		} )
+
+		s["rows"][2]["name"].setValue( "row1" )
+
+		assertExpectedValues( {
+			"row1" : [ 10, "", imath.V2i( 0 ) ],
+		} )
+
 	def testReorderRows( self ) :
 
 		spreadsheet = Gaffer.Spreadsheet()

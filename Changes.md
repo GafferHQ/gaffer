@@ -115,6 +115,21 @@ Improvements
   - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
 - MapProjection : Added `position` plug to allow a custom position to be used for the projection.
+- Spreadsheet :
+  - Added `resolvedRows` output plug, containing the resolved cell values
+    for all active rows. This allows expressions to work with all the data in the spreadsheet,
+    independently of the `selector` mechanism.
+  - Added <kbd>+</kbd> button for adding new columns directly. Existing plugs may be dragged on
+    to it and new plugs can be created from a popup menu.
+- CustomOptions : Added `extraOptions` plug to facilitate the creation of dynamic numbers of options
+  from a single expression.
+
+Fixes
+-----
+
+- Instancer : Fixed crash evaluating `variations` when there are no prototypes.
+- EventLoop : Fixed rare failures in `executeOnUIThread()`. Symptoms included a failure to display
+  updates from interactive renders.
 
 Fixes
 -----
