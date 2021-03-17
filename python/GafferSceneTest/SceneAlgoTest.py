@@ -1237,5 +1237,141 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		assertNoCanceller( history )
 
+	def testLinkingQueries( self ) :
+
+		# Everything linked to `defaultLights` via the default value for the attribute.
+
+		defaultLight = GafferSceneTest.TestLight()
+		defaultLight["name"].setValue( "defaultLight" )
+
+		nonDefaultLight = GafferSceneTest.TestLight()
+		nonDefaultLight["name"].setValue( "nonDefaultLight" )
+		nonDefaultLight["defaultLight"].setValue( False )
+		nonDefaultLight["sets"].setValue( "specialLights" )
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
+		group["in"][2].setInput( defaultLight["out"] )
+		group["in"][3].setInput( nonDefaultLight["out"] )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( group["out"], "/group/defaultLight" ),
+			IECore.PathMatcher( [ "/group", "/group/sphere", "/group/cube" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( group["out"], "/group/nonDefaultLight" ),
+			IECore.PathMatcher()
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( group["out"], IECore.PathMatcher( [ "/group/defaultLight", "/group/nonDefaultLight" ] ) ),
+			IECore.PathMatcher( [ "/group", "/group/sphere", "/group/cube" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( group["out"], "/group/cube" ),
+			IECore.PathMatcher( [ "/group/defaultLight" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( group["out"], "/group/sphere" ),
+			IECore.PathMatcher( [ "/group/defaultLight" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( group["out"], IECore.PathMatcher( [ "/group/sphere", "/group/cube" ] ) ),
+			IECore.PathMatcher( [ "/group/defaultLight" ] )
+		)
+
+		# Cube relinked only to `specialLights`.
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
+
+		standardAttributes = GafferScene.StandardAttributes()
+		standardAttributes["in"].setInput( group["out"] )
+		standardAttributes["filter"].setInput( cubeFilter["out"] )
+		standardAttributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		standardAttributes["attributes"]["linkedLights"]["value"].setValue( "specialLights" )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], "/group/defaultLight" ),
+			IECore.PathMatcher( [ "/group", "/group/sphere" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], "/group/nonDefaultLight" ),
+			IECore.PathMatcher( [ "/group/cube" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], IECore.PathMatcher( [ "/group/defaultLight", "/group/nonDefaultLight" ] ) ),
+			IECore.PathMatcher( [ "/group", "/group/sphere", "/group/cube" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], IECore.PathMatcher( [ "/group/defaultLight", "/group/nonDefaultLight" ] ) ),
+			IECore.PathMatcher( [ "/group", "/group/sphere", "/group/cube" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], "/group/cube" ),
+			IECore.PathMatcher( [ "/group/nonDefaultLight" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], "/group/sphere" ),
+			IECore.PathMatcher( [ "/group/defaultLight" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], IECore.PathMatcher( [ "/group/sphere", "/group/cube" ] ) ),
+			IECore.PathMatcher( [ "/group/defaultLight", "/group/nonDefaultLight" ] )
+		)
+
+		# Light removed from `specialLights` set.
+
+		nonDefaultLight["sets"].setValue( "" )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], "/group/defaultLight" ),
+			IECore.PathMatcher( [ "/group", "/group/sphere" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], "/group/nonDefaultLight" ),
+			IECore.PathMatcher()
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], "/group/cube" ),
+			IECore.PathMatcher()
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], "/group/sphere" ),
+			IECore.PathMatcher( [ "/group/defaultLight" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], IECore.PathMatcher( [ "/group/sphere", "/group/cube" ] ) ),
+			IECore.PathMatcher( [ "/group/defaultLight" ] )
+		)
+
+		# `/group/nonDefaultLight` treated as default again.
+
+		nonDefaultLight["defaultLight"].setValue( True )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], "/group/defaultLight" ),
+			IECore.PathMatcher( [ "/group", "/group/sphere" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedObjects( standardAttributes["out"], "/group/nonDefaultLight" ),
+			IECore.PathMatcher( [ "/group", "/group/sphere" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], "/group/cube" ),
+			IECore.PathMatcher()
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], "/group/sphere" ),
+			IECore.PathMatcher( [ "/group/defaultLight", "/group/nonDefaultLight" ] )
+		)
+		self.assertEqual(
+			GafferScene.SceneAlgo.linkedLights( standardAttributes["out"], IECore.PathMatcher( [ "/group/sphere", "/group/cube" ] ) ),
+			IECore.PathMatcher( [  "/group/defaultLight", "/group/nonDefaultLight" ] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
