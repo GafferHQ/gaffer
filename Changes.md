@@ -4,6 +4,8 @@
 Improvements
 ------------
 
+- Viewer : Added "Light Links" submenu with "Select Linked Lights" and "Select Linked Objects"
+  operations.
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
 - MapProjection : Added `position` plug to allow a custom position to be used for the projection.
 - Spreadsheet :
