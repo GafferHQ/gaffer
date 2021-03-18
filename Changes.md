@@ -21,6 +21,8 @@ Fixes
 - Instancer : Fixed crash evaluating `variations` when there are no prototypes.
 - EventLoop : Fixed rare failures in `executeOnUIThread()`. Symptoms included a failure to display
   updates from interactive renders.
+- Prune : Fixed bounds computation in the case that the filter claims to match descendants that don't
+  exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
 
 API
 ---
