@@ -179,10 +179,25 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The lights to be linked to this object. Accepts a
-			set expression or a space separated list of lights.
-			Use \"defaultLights\" to refer to all lights that
-			contribute to illumination by default.
+			The lights to be linked to this object. Accepts a set expression or
+			a space separated list of lights. Use \"defaultLights\" to refer to
+			all lights that contribute to illumination by default.
+
+			Examples
+			--------
+
+			All the default lights plus the lights in the `characterLights` set
+			:
+
+			`defaultLights | characterLights`
+
+			All the default lights, but without the lights in the `interiorLights`
+			set :
+
+			`defaultLights - interiorLights`
+
+			> Info : Lights can be added to sets either by using the `sets` plug
+			> on the light node itself, or by using a separate Set node.
 			""",
 
 			"layout:section", "Light Linking",
