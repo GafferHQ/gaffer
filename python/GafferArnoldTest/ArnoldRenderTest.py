@@ -386,6 +386,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 1 )
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1 )
 
+			self.assertEqual( arnold.AiNodeGetBool( arnold.AiUniverseGetOptions(), "ignore_motion_blur" ), False )
+
 		# Motion blur
 
 		s["options"]["options"]["transformBlur"]["value"].setValue( True )
@@ -432,6 +434,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 0.75 )
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1.25 )
+
+			self.assertEqual( arnold.AiNodeGetBool( arnold.AiUniverseGetOptions(), "ignore_motion_blur" ), False )
 
 		# Motion blur on, but sampleMotion off
 
@@ -480,7 +484,9 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( self.__m44f( planeMatrix ), self.__m44f( expectedPlaneMatrix ) )
 
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 0.75 )
-			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 0.75 )
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1.25 )
+
+			self.assertEqual( arnold.AiNodeGetBool( arnold.AiUniverseGetOptions(), "ignore_motion_blur" ), True )
 
 	def testResolution( self ) :
 
