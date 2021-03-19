@@ -4,6 +4,8 @@
 Improvements
 ------------
 
+- Viewer : Added "Light Links" submenu with "Select Linked Lights" and "Select Linked Objects"
+  operations.
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
 - MapProjection : Added `position` plug to allow a custom position to be used for the projection.
 - Spreadsheet :
@@ -33,6 +35,7 @@ API
 - EventLoop : Added `BlockedUIThreadExecution` context manager.
 - ScriptNode : Added support for cancellation of execution and serialisation.
 - ValuePlug : Improved warning emitted if cached value has unexpected type.
+- SceneAlgo : Added `linkedLights()` and `linkedObjects()` functions.
 
 0.59.4.0 (relative to 0.59.3.0)
 ========
