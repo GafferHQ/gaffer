@@ -1,7 +1,17 @@
+0.59.x.x (relative to 0.59.6.0)
+========
+
+Improvements
+------------
+
+- Parent : Added `parentVariable` plug, to create a context variable that passes the
+  parent location to nodes upstream of the `children` plug. This allows the children
+  to be varied procedurally according to what they are parented to.
+
 API
 ---
 
-- GafferUI.FileMenu: Added `dialogueParentWindow` argument to `addScript()`
+- GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
 
 0.59.6.0 (relative to 0.59.5.0)
 ========
