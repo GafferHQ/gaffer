@@ -219,11 +219,31 @@ class RendererServices : public OSL::RendererServices
 // OSLExpressionEngine
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
 typedef pair<string, string> Replacement;
 bool replacementGreater( const Replacement &lhs, const Replacement &rhs )
 {
 	return lhs.first.size() > rhs.first.size();
 }
+
+// Note : the content of `replacements` is modified by this function, in order
+// to avoid unnecessary reallocations.
+void replaceAll( std::string &s, vector<Replacement> &replacements )
+{
+	// Sort the replacements so that we'll replace the longest identifier first.
+	// Otherwise a shorter replacement can be used inadvertently if it is a prefix
+	// of a longer one.
+	sort( replacements.begin(), replacements.end(), replacementGreater );
+
+	for( const auto &r : replacements )
+	{
+		replace_all( s, r.first, r.second );
+	}
+}
+
+} // namespace
 
 class OSLExpressionEngine : public Gaffer::Expression::Engine
 {
@@ -508,17 +528,8 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				replacements.push_back( Replacement( identifier( node, *oldIt ), replacement ) );
 			}
 
-			// Sort the replacements so that we'll replace the longest identifier first.
-			// Otherwise a shorter replacement can be used inadvertently if it is a prefix
-			// of a longer one.
-			sort( replacements.begin(), replacements.end(), replacementGreater );
-
-			string result = expression;
-			for( vector<Replacement>::const_iterator it = replacements.begin(), eIt = replacements.end(); it != eIt; ++it )
-			{
-				replace_all( result, it->first, it->second );
-			}
-
+			std::string result = expression;
+			replaceAll( result, replacements );
 			return result;
 		}
 
@@ -716,6 +727,8 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			// but we want OSL just to see a flat list of parameters. So we must rename
 			// the parameters and the references to them.
 
+			vector<Replacement> replacements;
+
 			for( int i = 0, e = inPlugPaths.size(); i < e; ++i )
 			{
 				string parameter = inPlugPaths[i];
@@ -724,7 +737,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					parameter = "_" + parameter;
 				}
 				replace_all( parameter, ".", "_" );
-				replace_all( result, "parent." + inPlugPaths[i], parameter );
+				replacements.push_back( { "parent." + inPlugPaths[i], parameter } );
 				inParameters.push_back( ustring( parameter ) );
 			}
 
@@ -736,9 +749,11 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					parameter = "_" + parameter;
 				}
 				replace_all( parameter, ".", "_" );
-				replace_all( result, "parent." + outPlugPaths[i], parameter );
+				replacements.push_back( { "parent." + outPlugPaths[i], parameter } );
 				outParameters.push_back( ustring( parameter ) );
 			}
+
+			replaceAll( result, replacements );
 
 			// Now we can generate our unique shader name based on the source, and
 			// prepend it to the source.
