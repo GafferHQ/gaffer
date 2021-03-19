@@ -37,15 +37,12 @@
 import functools
 import six
 import imath
-import weakref
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -53,7 +50,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Applies modifications, also known as "tweaks," to camera
+	Applies modifications, also known as "tweaks" to camera
 	parameters or render options in the scene. Supports any number
 	of tweaks, and custom camera parameters. Tweaks to camera
 	parameters apply to every camera specified by the filter.
@@ -175,9 +172,6 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
-
-		# Create a temporary camera object just to read the default parameter values off of it
-		tempCam = GafferScene.Camera()
 
 		for category, name, defaultData in _parameterCategoriesAndDefaults:
 
