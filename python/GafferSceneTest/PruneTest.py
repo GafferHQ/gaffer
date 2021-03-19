@@ -380,5 +380,28 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		plane["name"].setValue( "youCantPruneMe" )
 		self.assertEqual( prune["out"].bound( "/" ), plane["out"].bound( "/" ) )
 
+	def testFalseDescendantMatches( self ) :
+
+		plane = GafferScene.Plane()
+		plane["transform"]["translate"]["x"].setValue( 10 )
+
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"]["x"].setValue( -10 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/group/.../plane" ] ) )
+
+		prune = GafferScene.Prune()
+		prune["in"].setInput( group["out"] )
+		prune["filter"].setInput( pathFilter["out"] )
+		prune["adjustBounds"].setValue( True )
+
+		self.assertEqual( prune["out"].childNames( "/group"), IECore.InternedStringVectorData( [ "sphere" ] ) )
+		self.assertEqual( prune["out"].bound( "/" ), sphere["out"].bound( "/" ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -23,6 +23,8 @@ Fixes
 - ArnoldRender : Fixed rendering with `StandardOptions.sampleMotion` off. This now controls Arnold's `options.ignore_motion_blur` parameter, where previously it set the shutter duration to `0`.
 - EventLoop : Fixed rare failures in `executeOnUIThread()`. Symptoms included a failure to display
   updates from interactive renders.
+- Prune : Fixed bounds computation in the case that the filter claims to match descendants that don't
+  exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
 
 API
 ---

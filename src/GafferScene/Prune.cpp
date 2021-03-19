@@ -117,7 +117,10 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	{
 		if( filterValue( context ) & IECore::PathMatcher::DescendantMatch )
 		{
-			h = outPlug()->childBoundsPlug()->hash();
+			FilteredSceneProcessor::hashBound( path, context, parent, h );
+			inPlug()->childNamesPlug()->hash( h );
+			outPlug()->childBoundsPlug()->hash( h );
+			inPlug()->boundPlug()->hash( h );
 			return;
 		}
 	}
@@ -132,7 +135,20 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 	{
 		if( filterValue( context ) & IECore::PathMatcher::DescendantMatch )
 		{
-			return outPlug()->childBoundsPlug()->getValue();
+			if( inPlug()->childNamesPlug()->getValue()->readable().size() )
+			{
+				return outPlug()->childBoundsPlug()->getValue();
+			}
+			else
+			{
+				// Filter claims there is a descendant match, but there can't be
+				// because we have no children. This can happen if a PathFilter
+				// contains `...` or a reference to a path that doesn't exist.
+				// Since we have no children, and we ourselves are not pruned
+				// (we can't be, because it is forbidden to compute a location
+				// that doesn't exist), we can pass through the input bound.
+				return inPlug()->boundPlug()->getValue();
+			}
 		}
 	}
 
