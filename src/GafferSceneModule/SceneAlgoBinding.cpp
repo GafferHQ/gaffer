@@ -226,6 +226,30 @@ ScenePlugPtr sourceSceneWrapper( GafferImage::ImagePlug &image )
 	return SceneAlgo::sourceScene( &image );
 }
 
+IECore::PathMatcher linkedObjectsWrapper1( const GafferScene::ScenePlug &scene, const ScenePlug::ScenePath &light )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::linkedObjects( &scene, light );
+}
+
+IECore::PathMatcher linkedObjectsWrapper2( const GafferScene::ScenePlug &scene, const IECore::PathMatcher &lights )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::linkedObjects( &scene, lights );
+}
+
+IECore::PathMatcher linkedLightsWrapper1( const GafferScene::ScenePlug &scene, const ScenePlug::ScenePath &object )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::linkedLights( &scene, object );
+}
+
+IECore::PathMatcher linkedLightsWrapper2( const GafferScene::ScenePlug &scene, const IECore::PathMatcher &objects )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::linkedLights( &scene, objects );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -292,6 +316,13 @@ void bindSceneAlgo()
 
 	def( "sourceSceneName", &sourceSceneNameWrapper );
 	def( "sourceScene", &sourceSceneWrapper );
+
+	// Light linking
+
+	def( "linkedObjects", &linkedObjectsWrapper1 );
+	def( "linkedObjects", &linkedObjectsWrapper2 );
+	def( "linkedLights", &linkedLightsWrapper1 );
+	def( "linkedLights", &linkedLightsWrapper2 );
 
 }
 

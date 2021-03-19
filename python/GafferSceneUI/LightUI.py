@@ -34,10 +34,15 @@
 #
 ##########################################################################
 
+import functools
+
+import IECore
+
 import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -186,3 +191,63 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+def appendViewContextMenuItems( viewer, view, menuDefinition ) :
+
+	if not isinstance( view, GafferSceneUI.SceneView ) :
+		return None
+
+	menuDefinition.append(
+		"/Light Links",
+		{
+			"subMenu" : functools.partial( __lightLinksSubMenu, view )
+		}
+	)
+
+def __lightLinksSubMenu( view ) :
+
+	result = IECore.MenuDefinition()
+
+	selectedObjects = view.viewportGadget().getPrimaryChild().getSelection()
+	if not selectedObjects.isEmpty() :
+		with view.getContext() :
+			selectedLights = view["in"].set( "__lights" ).value.intersection( selectedObjects )
+		selectedObjects.removePaths( selectedLights )
+	else :
+		selectedLights = selectedObjects
+
+	result.append(
+		"Select Linked Objects",
+		{
+			"command" : functools.partial(
+				__selectLinked, context = view.getContext(), title = "Selecting Linked Objects",
+				linkingQuery = functools.partial( GafferScene.SceneAlgo.linkedObjects, view["in"], selectedLights )
+			),
+			"active" : not selectedLights.isEmpty(),
+		}
+	)
+
+	result.append(
+		"Select Linked Lights",
+		{
+			"command" : functools.partial(
+				__selectLinked, context = view.getContext(), title = "Selecting Linked Lights",
+				linkingQuery = functools.partial( GafferScene.SceneAlgo.linkedLights, view["in"], selectedObjects )
+			),
+			"active" : not selectedObjects.isEmpty(),
+		}
+	)
+
+	return result
+
+def __selectLinked( menu, context, title, linkingQuery ) :
+
+	dialogue = GafferUI.BackgroundTaskDialogue( title )
+	with context :
+		result = dialogue.waitForBackgroundTask(
+			linkingQuery,
+			parentWindow = menu.ancestor( GafferUI.Window )
+		)
+
+	if not isinstance( result, Exception ) :
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )

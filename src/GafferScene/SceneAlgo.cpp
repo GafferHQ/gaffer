@@ -44,11 +44,13 @@
 #include "GafferScene/MergeScenes.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/SetAlgo.h"
 #include "GafferScene/ShaderTweaks.h"
 #include "GafferScene/ShuffleAttributes.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -64,6 +66,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/unordered_map.hpp"
 
+#include "tbb/concurrent_unordered_set.h"
 #include "tbb/parallel_for.h"
 #include "tbb/spin_mutex.h"
 #include "tbb/task.h"
@@ -796,6 +799,175 @@ ScenePlug *SceneAlgo::sourceScene( GafferImage::ImagePlug *image )
 	}
 
 	return scriptNode->descendant<ScenePlug>( path );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Light linking
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+static InternedString g_lights( "__lights" );
+static InternedString g_linkedLights( "linkedLights" );
+
+template<typename AttributesPredicate>
+struct AttributesFinder
+{
+
+	AttributesFinder( const AttributesPredicate &predicate, tbb::spin_mutex &resultMutex, IECore::PathMatcher &result )
+		:	m_predicate( predicate ), m_resultMutex( resultMutex ), m_result( result )
+	{
+	}
+
+	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+	{
+		bool inheritPredicateResult = false;
+		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+		if( path.empty() )
+		{
+			// Root
+			m_fullAttributes = attributes;
+		}
+		else
+		{
+			if( attributes->members().empty() )
+			{
+				inheritPredicateResult = true;
+			}
+			else
+			{
+				CompoundObjectPtr fullAttributes = new CompoundObject;
+				fullAttributes->members() = m_fullAttributes->members();
+				for( const auto &a : attributes->members() )
+				{
+					fullAttributes->members()[a.first] = a.second;
+				}
+				m_fullAttributes = fullAttributes;
+			}
+		}
+
+		if( !inheritPredicateResult )
+		{
+			m_predicateResult = m_predicate( m_fullAttributes.get() );
+		}
+		else
+		{
+			// `m_predicateResult` is inherited automatically because `parallelProcessLocations()`
+			// copy-constructs child functors from the parent.
+		}
+
+		if( m_predicateResult && !path.empty() )
+		{
+			/// \todo We could avoid this locking if we added a `functor.gatherChildren()`
+			/// phase to `parallelProcessLocations()` and built the result recursively.
+			tbb::spin_mutex::scoped_lock lock( m_resultMutex );
+			m_result.addPath( path );
+		}
+
+		return true;
+	}
+
+	private :
+
+		const AttributesPredicate &m_predicate;
+
+		ConstCompoundObjectPtr m_fullAttributes;
+		bool m_predicateResult;
+
+		tbb::spin_mutex &m_resultMutex;
+		IECore::PathMatcher &m_result;
+
+};
+
+/// \todo Perhaps this is worthy of inclusion in the public API?
+template<typename AttributesPredicate>
+IECore::PathMatcher findAttributes( const ScenePlug *scene, const AttributesPredicate &predicate )
+{
+	tbb::spin_mutex resultMutex;
+	IECore::PathMatcher result;
+	AttributesFinder<AttributesPredicate> attributesFinder( predicate, resultMutex, result );
+	parallelProcessLocations( scene, attributesFinder );
+	return result;
+}
+
+} // namespace
+
+IECore::PathMatcher GafferScene::SceneAlgo::linkedObjects( const ScenePlug *scene, const ScenePlug::ScenePath &light )
+{
+	PathMatcher lights;
+	lights.addPath( light );
+	return linkedObjects( scene, lights );
+}
+
+GAFFERSCENE_API IECore::PathMatcher GafferScene::SceneAlgo::linkedObjects( const ScenePlug *scene, const IECore::PathMatcher &lights )
+{
+	// We expect many locations to have the exact same expression for `linkedLights`,
+	// and evaluating the expression is fairly expensive. So we cache the results for
+	// sharing between locations. The cache only lives for the lifetime of this query.
+	using QueryCache = IECorePreview::LRUCache<std::string, bool, IECorePreview::LRUCachePolicy::TaskParallel>;
+	const Context *context = Context::current();
+	QueryCache queryCache(
+		[&lights, scene, context]( const std::string &setExpression, size_t &cost )
+		{
+			cost = 1;
+			Context::Scope scopedContext( context );
+			const IECore::PathMatcher linkedLights = SetAlgo::evaluateSetExpression( setExpression, scene );
+			for( PathMatcher::Iterator lightIt = lights.begin(), eIt = lights.end(); lightIt != eIt; ++lightIt )
+			{
+				if( linkedLights.match( *lightIt ) & PathMatcher::ExactMatch )
+				{
+					return true;
+				}
+			}
+			return false;
+		},
+		10000
+	);
+
+	IECore::PathMatcher result = findAttributes(
+		scene,
+		[&queryCache] ( const CompoundObject *fullAttributes ) {
+			auto *linkedLights = fullAttributes->member<StringData>( g_linkedLights );
+			return queryCache.get( linkedLights ? linkedLights->readable() : "defaultLights" );
+		}
+	);
+
+	result.removePaths( scene->set( g_lights )->readable() );
+	return result;
+}
+
+IECore::PathMatcher GafferScene::SceneAlgo::linkedLights( const ScenePlug *scene, const ScenePlug::ScenePath &object )
+{
+	IECore::ConstCompoundObjectPtr attributes = scene->fullAttributes( object );
+	auto *linkedLightsAttribute = attributes->member<StringData>( g_linkedLights );
+	const string linkedLights = linkedLightsAttribute ? linkedLightsAttribute->readable() : "defaultLights";
+	IECore::PathMatcher linkedPaths = SetAlgo::evaluateSetExpression( linkedLights, scene );
+	return linkedPaths.intersection( scene->set( g_lights )->readable() );
+}
+
+IECore::PathMatcher GafferScene::SceneAlgo::linkedLights( const ScenePlug *scene, const IECore::PathMatcher &objects )
+{
+	tbb::spin_mutex resultMutex;
+	IECore::PathMatcher result;
+	tbb::concurrent_unordered_set<std::string> processed;
+
+	auto functor = [&resultMutex, &result, &processed] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+		IECore::ConstCompoundObjectPtr attributes = scene->fullAttributes( path );
+		auto *linkedLightsAttribute = attributes->member<StringData>( g_linkedLights );
+		const string linkedLights = linkedLightsAttribute ? linkedLightsAttribute->readable() : "defaultLights";
+		if( processed.insert( linkedLights ).second )
+		{
+			ScenePlug::GlobalScope globalScope( Context::current() );
+			IECore::PathMatcher linkedPaths = SetAlgo::evaluateSetExpression( linkedLights, scene );
+			tbb::spin_mutex::scoped_lock resultLock( resultMutex );
+			result.addPaths( linkedPaths );
+		}
+		return true;
+	};
+
+	filteredParallelTraverse( scene, objects, functor );
+	return result.intersection( scene->set( g_lights )->readable() );
 }
 
 //////////////////////////////////////////////////////////////////////////

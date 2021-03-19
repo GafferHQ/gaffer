@@ -73,6 +73,7 @@ GafferUI.View.registerView( GafferScene.ScenePlug.staticTypeId(), __sceneView )
 
 def __viewContextMenu( viewer, view, menuDefinition ) :
 
+	GafferSceneUI.LightUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 	GafferSceneUI.SceneHistoryUI.appendViewContextMenuItems( viewer, view, menuDefinition )
 
 GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )

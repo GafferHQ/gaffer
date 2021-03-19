@@ -101,6 +101,8 @@ Build
 Improvements
 ------------
 
+- Viewer : Added "Light Links" submenu with "Select Linked Lights" and "Select Linked Objects"
+  operations.
 - FileMenu : File loading and saving no longer locks the UI, and can be cancelled.
 - NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
 - GraphEditor : Improved framing of nodes dragged and dropped onto the GraphEditor :
@@ -122,13 +124,17 @@ Improvements
     to it and new plugs can be created from a popup menu.
 - CustomOptions : Added `extraOptions` plug to facilitate the creation of dynamic numbers of options
   from a single expression.
+- Outputs : Added `motionvector` preset for Arnold.
 
 Fixes
 -----
 
 - Instancer : Fixed crash evaluating `variations` when there are no prototypes.
+- ArnoldRender : Fixed rendering with `StandardOptions.sampleMotion` off. This now controls Arnold's `options.ignore_motion_blur` parameter, where previously it set the shutter duration to `0`.
 - EventLoop : Fixed rare failures in `executeOnUIThread()`. Symptoms included a failure to display
   updates from interactive renders.
+- Prune : Fixed bounds computation in the case that the filter claims to match descendants that don't
+  exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
 
 Fixes
 -----
@@ -142,6 +148,7 @@ API
 - EventLoop : Added `BlockedUIThreadExecution` context manager.
 - ScriptNode : Added support for cancellation of execution and serialisation.
 - ValuePlug : Improved warning emitted if cached value has unexpected type.
+- SceneAlgo : Added `linkedLights()` and `linkedObjects()` functions.
 
 0.59.4.0 (relative to 0.59.3.0)
 ========

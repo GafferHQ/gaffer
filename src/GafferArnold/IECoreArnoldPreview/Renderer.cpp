@@ -281,6 +281,7 @@ const AtString g_fileNameArnoldString( "filename" );
 const AtString g_filtersArnoldString( "filters" );
 const AtString g_funcPtrArnoldString( "funcptr" );
 const AtString g_ginstanceArnoldString( "ginstance" );
+const AtString g_ignoreMotionBlurArnoldString( "ignore_motion_blur" );
 const AtString g_lightGroupArnoldString( "light_group" );
 const AtString g_shadowGroupArnoldString( "shadow_group" );
 const AtString g_linearArnoldString( "linear" );
@@ -3009,14 +3010,15 @@ class ArnoldGlobals
 			}
 			else if( name == g_sampleMotionOptionName )
 			{
-				if( value == nullptr )
+				bool sampleMotion = true;
+				if( value )
 				{
-					m_sampleMotion = boost::none;
+					if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+					{
+						sampleMotion = d->readable();
+					}
 				}
-				else if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
-				{
-					m_sampleMotion = d->readable();
-				}
+				AiNodeSetBool( options, g_ignoreMotionBlurArnoldString, !sampleMotion );
 				return;
 			}
 			else if( name == g_pluginSearchPathOptionName )
@@ -3510,16 +3512,8 @@ class ArnoldGlobals
 			AiNodeSetInt( options, g_regionMaxYArnoldString, resolution.y - renderRegion.min.y - 1 );
 
 			Imath::V2f shutter = cortexCamera->getShutter();
-			if( m_sampleMotion.get_value_or( true ) )
-			{
-				AiNodeSetFlt( arnoldCamera, g_shutterStartArnoldString, shutter[0] );
-				AiNodeSetFlt( arnoldCamera, g_shutterEndArnoldString, shutter[1] );
-			}
-			else
-			{
-				AiNodeSetFlt( arnoldCamera, g_shutterStartArnoldString, shutter[0] );
-				AiNodeSetFlt( arnoldCamera, g_shutterEndArnoldString, shutter[0] );
-			}
+			AiNodeSetFlt( arnoldCamera, g_shutterStartArnoldString, shutter[0] );
+			AiNodeSetFlt( arnoldCamera, g_shutterEndArnoldString, shutter[1] );
 		}
 
 		void updateCameraMeshes()
@@ -3633,7 +3627,6 @@ class ArnoldGlobals
 		boost::optional<int> m_aaSeed;
 		bool m_enableProgressiveRender;
 		boost::optional<int> m_progressiveMinAASamples;
-		boost::optional<bool> m_sampleMotion;
 		ShaderCache *m_shaderCache;
 
 		bool m_renderBegun;

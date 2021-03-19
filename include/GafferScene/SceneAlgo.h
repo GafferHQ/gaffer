@@ -241,6 +241,19 @@ GAFFERSCENE_API std::string sourceSceneName( const GafferImage::ImagePlug *image
 /// can't be found.
 GAFFERSCENE_API ScenePlug *sourceScene( GafferImage::ImagePlug *image );
 
+/// Light linking queries
+/// =====================
+
+/// Returns the paths to locations which are linked to the specified light.
+GAFFERSCENE_API IECore::PathMatcher linkedObjects( const ScenePlug *scene, const ScenePlug::ScenePath &light );
+/// Returns the paths to locations which are linked to at least one of the specified lights.
+GAFFERSCENE_API IECore::PathMatcher linkedObjects( const ScenePlug *scene, const IECore::PathMatcher &lights );
+
+/// Returns the paths to all lights which are linked to the specified object.
+GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const ScenePlug::ScenePath &object );
+/// Returns the paths to all lights which are linked to at least one of the specified objects.
+GAFFERSCENE_API IECore::PathMatcher linkedLights( const ScenePlug *scene, const IECore::PathMatcher &objects );
+
 /// Miscellaneous
 /// =============
 
