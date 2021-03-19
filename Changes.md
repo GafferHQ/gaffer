@@ -6,6 +6,7 @@ Fixes
 
 - FileMenu : Fixed thread-safety bug in file save operation.
 - TweaksPlugValueWidget : Fixed vertical alignment of `mode` widget.
+- CameraTweaks : Fixed UI metadata.
 
 0.59.5.0 (relative to 0.59.4.0)
 ========
