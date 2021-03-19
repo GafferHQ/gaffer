@@ -8,6 +8,11 @@ Fixes
 - TweaksPlugValueWidget : Fixed vertical alignment of `mode` widget.
 - CameraTweaks : Fixed UI metadata.
 
+API
+---
+
+- CameraTweaksUI : Added `registerTweak()` method.
+
 0.59.5.0 (relative to 0.59.4.0)
 ========
 
