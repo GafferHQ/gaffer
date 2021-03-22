@@ -55,14 +55,4 @@ buildDir=${1:-"build/gaffer-$gafferMilestoneVersion.$gafferMajorVersion.$gafferM
 
 # Get the prebuilt dependencies package and unpack it into the build directory
 
-dependenciesVersion="3.0.0"
-dependenciesVersionSuffix="a2"
-dependenciesPythonVersion="2"
-dependenciesFileName="gafferDependencies-$dependenciesVersion-Python$dependenciesPythonVersion-$platform.tar.gz"
-downloadURL="https://github.com/GafferHQ/dependencies/releases/download/$dependenciesVersion$dependenciesVersionSuffix/$dependenciesFileName"
-
-echo "Downloading dependencies \"$downloadURL\""
-curl -L $downloadURL > $dependenciesFileName
-
-mkdir -p $buildDir
-tar xf $dependenciesFileName -C $buildDir --strip-components=1
+.github/workflows/main/installDependencies.py --dependenciesDir "$buildDir"
