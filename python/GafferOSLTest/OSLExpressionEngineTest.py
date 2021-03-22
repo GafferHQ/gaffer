@@ -533,12 +533,14 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["user"]["ab"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["user"]["abc"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["abcd"] = Gaffer.V2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		expression = inspect.cleandoc(
 			"""
 			parent.n.user.ab = 1;
 			parent.n.user.a = 2;
 			parent.n.user.abc = 3;
+			parent.n.user.abcd.x = 4;
 			"""
 		)
 
@@ -550,6 +552,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( s["n"]["user"]["ab"].getValue(), 1 )
 		self.assertEqual( s["n"]["user"]["a"].getValue(), 2 )
 		self.assertEqual( s["n"]["user"]["abc"].getValue(), 3 )
+		self.assertEqual( s["n"]["user"]["abcd"]["x"].getValue(), 4 )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -559,6 +562,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( s2["n"]["user"]["ab"].getValue(), 1 )
 		self.assertEqual( s2["n"]["user"]["a"].getValue(), 2 )
 		self.assertEqual( s2["n"]["user"]["abc"].getValue(), 3 )
+		self.assertEqual( s2["n"]["user"]["abcd"]["x"].getValue(), 4 )
 
 	def testStringComparison( self ) :
 

@@ -4,6 +4,9 @@
 Fixes
 -----
 
+- Expression : Fixed OSL expression parsing bug triggered by plug names which were
+  prefixes of other plug names. This caused a very confusing `Syntax error: syntax error`
+  error.
 - ExtensionAlgo :
   - Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
   - Fixed bug which prevented the use of internal Expression nodes.
