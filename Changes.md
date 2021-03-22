@@ -19,6 +19,11 @@ API
 
 - CameraTweaksUI : Added `registerTweak()` method.
 
+Build
+-----
+
+- Cortex : Updated to version 10.1.5.0.
+
 0.59.5.0 (relative to 0.59.4.0)
 ========
 
