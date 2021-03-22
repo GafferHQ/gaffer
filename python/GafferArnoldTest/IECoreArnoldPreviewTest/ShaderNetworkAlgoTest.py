@@ -39,6 +39,8 @@ import unittest
 
 import arnold
 
+import imath
+
 import IECore
 import IECoreScene
 import IECoreArnold
@@ -183,6 +185,45 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 				ctypes.addressof( arnold.AiNodeGetLink( nodes[1], "Kd_color" ).contents ),
 				ctypes.addressof( nodes[0].contents )
 			)
+
+	def testBlindData( self ) :
+
+		flat = IECoreScene.Shader( "flat" )
+		flat.blindData().update( {
+				"user:testInt" : IECore.IntData( 1 ),
+				"user:testFloat" : IECore.FloatData( 2.5 ),
+				"user:testV3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+				"user:testColor3f" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ),
+				"user:testString" : IECore.StringData( "we're all doomed" ),
+		} )
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"noiseHandle" : IECoreScene.Shader( "noise" ),
+				"flatHandle" : flat,
+			},
+			connections = [
+				( ( "noiseHandle", "" ), ( "flatHandle", "color" ) ),
+			],
+			output = "flatHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, "test" )
+
+			self.assertEqual( len( nodes ), 2 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "noise" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[1] ) ), "flat" )
+
+			self.assertEqual( arnold.AiNodeGetName( nodes[0] ), "test:noiseHandle" )
+			self.assertEqual( arnold.AiNodeGetName( nodes[1] ), "test" )
+
+			self.assertEqual( arnold.AiNodeGetInt( nodes[1], "user:testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( nodes[1], "user:testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( nodes[1], "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( nodes[1], "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( nodes[1], "user:testString" ), "we're all doomed" )
 
 if __name__ == "__main__":
 	unittest.main()
