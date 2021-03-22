@@ -37,8 +37,12 @@
 import os
 import sys
 import argparse
-import urllib
 import hashlib
+
+if sys.version_info[0] < 3 :
+	from urllib import urlretrieve
+else :
+	from urllib.request import urlretrieve
 
 # Determine default archive URL.
 
@@ -74,7 +78,7 @@ args = parser.parse_args()
 # Download and unpack the archive.
 
 sys.stderr.write( "Downloading dependencies \"%s\"\n" % args.archiveURL )
-archiveFileName, headers = urllib.urlretrieve( args.archiveURL )
+archiveFileName, headers = urlretrieve( args.archiveURL )
 
 os.makedirs( args.dependenciesDir )
 os.system( "tar xf %s -C %s --strip-components=1" % ( archiveFileName, args.dependenciesDir ) )
