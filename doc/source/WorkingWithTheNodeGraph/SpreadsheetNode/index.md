@@ -144,7 +144,7 @@ If the compound plug has an enabled switch, the switch will be tied to the cell'
     :alt: Adding a tweak plug
 ```
 
-Right-click **any element** of the tweak plug, then select a spreadsheet from the _Add to Spreadsheet (Tweak)_ sub-menu.
+Right-click **any editable element** of the tweak plug, then select a spreadsheet from the _Add to Spreadsheet (Tweak)_ sub-menu.
 
 Once connected, the corresponding column will imitate the tweak plug's elements, including the enabled switch and the tweak mode.
 

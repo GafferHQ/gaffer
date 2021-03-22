@@ -240,7 +240,7 @@ __children["Text_Mouse"]["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath
 __children["Text_Mouse"]["transform"]["translate"].setValue( imath.V2f( 34, -10 ) )
 __children["Text_Mouse"]["__uiPosition"].setValue( imath.V2f( 19.9692574, 17.7932549 ) )
 __children["ImageTransform_Mouse"]["in"].setInput( __children["Text_Mouse"]["out"] )
-__children["ImageTransform_Mouse"]["transform"]["translate"].setValue( imath.V2f( 79, 273 ) )
+__children["ImageTransform_Mouse"]["transform"]["translate"].setValue( imath.V2f( 231, 273 ) )
 __children["ImageTransform_Mouse"]["__uiPosition"].setValue( imath.V2f( 19.9692574, 9.62919235 ) )
 __children["ImageReader_Menu"]["colorSpace"].setValue( 'linear' )
 __children["ImageReader_Menu"]["__uiPosition"].setValue( imath.V2f( 37.2813721, 12.4466572 ) )
