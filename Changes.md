@@ -95,7 +95,7 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
 
-0.59.x.x (relative to 0.59.4.0)
+0.59.5.0 (relative to 0.59.4.0)
 ========
 
 Improvements
@@ -135,6 +135,17 @@ Fixes
   updates from interactive renders.
 - Prune : Fixed bounds computation in the case that the filter claims to match descendants that don't
   exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
+- ImageGadget : Fixed bug which prevented `stateChangedSignal()` from being emitted when
+  `setPaused( false )` was called.
+- InteractiveRender : Fixed error handling during render startup. Errors are now shown in the render
+  log and the terminal output.
+- ShaderView : Pausing the viewer now stops the renderer.
+- Expression : Fixed OSL expression parsing bug triggered by plug names which were
+  prefixes of other plug names. This caused a very confusing `Syntax error: syntax error`
+  error.
+- ExtensionAlgo :
+  - Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+  - Fixed bug which prevented the use of internal Expression nodes.
 
 Fixes
 -----
@@ -149,6 +160,7 @@ API
 - ScriptNode : Added support for cancellation of execution and serialisation.
 - ValuePlug : Improved warning emitted if cached value has unexpected type.
 - SceneAlgo : Added `linkedLights()` and `linkedObjects()` functions.
+- ImageView : Added `imageGadget()` accessor.
 
 0.59.4.0 (relative to 0.59.3.0)
 ========
@@ -475,6 +487,19 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.5 (relative to 0.58.6.4)
+========
+
+Fixes
+-----
+
+- Expression : Fixed OSL expression parsing bug triggered by plug names which were
+  prefixes of other plug names. This caused a very confusing `Syntax error: syntax error`
+  error.
+- ExtensionAlgo :
+  - Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+  - Fixed bug which prevented the use of internal Expression nodes.
 
 0.58.6.4 (relative to 0.58.6.3)
 ========

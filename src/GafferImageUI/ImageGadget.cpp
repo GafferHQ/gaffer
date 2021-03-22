@@ -655,12 +655,12 @@ void ImageGadget::setPaused( bool paused )
 	if( m_paused )
 	{
 		m_tilesTask.reset();
-		stateChangedSignal()( this );
 	}
 	else if( m_dirtyFlags )
 	{
 		Gadget::dirty( DirtyType::Render );
 	}
+	stateChangedSignal()( this );
 }
 
 bool ImageGadget::getPaused() const

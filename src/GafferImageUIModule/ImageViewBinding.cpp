@@ -38,6 +38,7 @@
 
 #include "ImageViewBinding.h"
 
+#include "GafferImageUI/ImageGadget.h"
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferImage/ImageProcessor.h"
@@ -122,6 +123,7 @@ void GafferImageUIModule::bindImageView()
 
 	GafferBindings::NodeClass<ImageView, ImageViewWrapper>()
 		.def( init<const std::string &>() )
+		.def( "imageGadget", (ImageGadget *(ImageView::*)())&ImageView::imageGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_insertConverter", &ImageViewWrapper::insertConverter )
 		.def( "registerDisplayTransform", &registerDisplayTransform )
 		.staticmethod( "registerDisplayTransform" )
