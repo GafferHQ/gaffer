@@ -32,6 +32,12 @@ Fixes
 - InteractiveRender : Fixed error handling during render startup. Errors are now shown in the render
   log and the terminal output.
 - ShaderView : Pausing the viewer now stops the renderer.
+- Expression : Fixed OSL expression parsing bug triggered by plug names which were
+  prefixes of other plug names. This caused a very confusing `Syntax error: syntax error`
+  error.
+- ExtensionAlgo :
+  - Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+  - Fixed bug which prevented the use of internal Expression nodes.
 
 API
 ---
@@ -368,6 +374,19 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.5 (relative to 0.58.6.4)
+========
+
+Fixes
+-----
+
+- Expression : Fixed OSL expression parsing bug triggered by plug names which were
+  prefixes of other plug names. This caused a very confusing `Syntax error: syntax error`
+  error.
+- ExtensionAlgo :
+  - Fixed copy/paste of nodes exported by ExtensionAlgo (#3886).
+  - Fixed bug which prevented the use of internal Expression nodes.
 
 0.58.6.4 (relative to 0.58.6.3)
 ========

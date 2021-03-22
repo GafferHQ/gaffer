@@ -509,7 +509,7 @@ void Expression::plugSet( const Plug *plug )
 	}
 
 	const ScriptNode *script = scriptNode();
-	if( !script || !script->isExecuting() )
+	if( script && !script->isExecuting() )
 	{
 		IECore::msg( IECore::Msg::Warning, "Expression::plugSet", "Unexpected change to __engine plug. Should you be calling setExpression() instead?" );
 		return;
