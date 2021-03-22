@@ -230,7 +230,14 @@ def save( menu ) :
 	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
 		dialogue = GafferUI.BackgroundTaskDialogue( "Saving File" )
-		dialogue.waitForBackgroundTask( script.save, parentWindow = scriptWindow )
+		# Really we want to call `script.save()` here, but that would
+		# create an edit to the `unsavedChanges` plug from the background
+		# thread, which is problematic for any connected UIs on the main
+		# thread. So instead we use `serialiseToFile()` and manage
+		# `unsavedChanges` ourselves.
+		result = dialogue.waitForBackgroundTask( functools.partial( script.serialiseToFile, script["fileName"].getValue() ), parentWindow = scriptWindow )
+		if not isinstance( result, Exception ) :
+			script["unsavedChanges"].setValue( False )
 	else :
 		saveAs( menu )
 
