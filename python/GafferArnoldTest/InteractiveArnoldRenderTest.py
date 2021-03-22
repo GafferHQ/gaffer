@@ -97,11 +97,20 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["r2"] = self._createInteractiveRender( failOnError = False )
 		s["r2"]["in"].setInput( s["o"]["out"] )
 
-		errors = GafferTest.CapturingSlot( s["r2"].errorSignal() )
-		s["r2"]["state"].setValue( s["r"].State.Running )
+		try :
+			defaultHandler = IECore.MessageHandler.getDefaultHandler()
+			messageHandler = IECore.CapturingMessageHandler()
+			IECore.MessageHandler.setDefaultHandler( messageHandler )
+			s["r2"]["state"].setValue( s["r"].State.Running )
+		finally :
+			IECore.MessageHandler.setDefaultHandler( defaultHandler )
 
-		self.assertEqual( len( errors ), 1 )
-		self.assertTrue( "Arnold is already in use" in errors[0][2] )
+		messages = s["r2"]["messages"].getValue().value
+		self.assertEqual( len( messages ), 1 )
+		self.assertEqual( messages[0].message, "Arnold is already in use" )
+
+		self.assertEqual( len( messageHandler.messages ), 1 )
+		self.assertEqual( messageHandler.messages[0].message, "Arnold is already in use" )
 
 	def testEditSubdivisionAttributes( self ) :
 

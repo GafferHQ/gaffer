@@ -104,6 +104,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		void updateRendererState();
 		void updateScene();
 		void preRender();
+		void imageGadgetStateChanged();
 
 		void driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters );
 

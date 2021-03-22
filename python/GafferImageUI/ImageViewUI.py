@@ -634,7 +634,6 @@ class _StateWidget( GafferUI.Widget ) :
 	def __buttonClick( self, button ) :
 
 		self.__imageGadget.setPaused( not self.__imageGadget.getPaused() )
-		self.__update()
 
 	def __update( self ) :
 

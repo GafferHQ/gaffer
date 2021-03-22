@@ -27,6 +27,11 @@ Fixes
   updates from interactive renders.
 - Prune : Fixed bounds computation in the case that the filter claims to match descendants that don't
   exist. A common cause was the usage of `...` or a non-existent path in a PathFilter.
+- ImageGadget : Fixed bug which prevented `stateChangedSignal()` from being emitted when
+  `setPaused( false )` was called.
+- InteractiveRender : Fixed error handling during render startup. Errors are now shown in the render
+  log and the terminal output.
+- ShaderView : Pausing the viewer now stops the renderer.
 
 API
 ---
@@ -36,6 +41,7 @@ API
 - ScriptNode : Added support for cancellation of execution and serialisation.
 - ValuePlug : Improved warning emitted if cached value has unexpected type.
 - SceneAlgo : Added `linkedLights()` and `linkedObjects()` functions.
+- ImageView : Added `imageGadget()` accessor.
 
 0.59.4.0 (relative to 0.59.3.0)
 ========

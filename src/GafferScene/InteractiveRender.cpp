@@ -291,7 +291,7 @@ void InteractiveRender::plugSet( const Gaffer::Plug *plug )
 		}
 		catch( const std::exception &e )
 		{
-			errorSignal()( plug, plug, e.what() );
+			m_messageHandler->handle( IECore::MessageHandler::Error, "InteractiveRender", e.what() );
 		}
 	}
 }
