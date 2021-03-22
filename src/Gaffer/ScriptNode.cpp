@@ -728,6 +728,10 @@ bool ScriptNode::load( bool continueOnError)
 
 void ScriptNode::save() const
 {
+	// Caution : `FileMenu.save()` currently contains a duplicate of this code,
+	// so that `serialiseToFile()` can be done in a background task, and the
+	// plug edit can be made on the UI thread. If editing this function, make
+	// sure FileMenu stays in sync.
 	serialiseToFile( fileNamePlug()->getValue() );
 	UndoScope undoDisabled( const_cast<ScriptNode *>( this ), UndoScope::Disabled );
 	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
