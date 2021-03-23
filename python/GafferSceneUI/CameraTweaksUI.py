@@ -34,119 +34,130 @@
 #
 ##########################################################################
 
+import collections
 import functools
 import six
 import imath
-import weakref
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferSceneUI
 
-_parameterCategoriesAndDefaults = []
+Gaffer.Metadata.registerNode(
 
-def __populateMetadata():
-	global _parameterCategoriesAndDefaults
+	GafferScene.CameraTweaks,
 
-	plugMetadata = {
+	"description",
+	"""
+	Applies modifications, also known as "tweaks" to camera
+	parameters or render options in the scene. Supports any number
+	of tweaks, and custom camera parameters. Tweaks to camera
+	parameters apply to every camera specified by the filter.
 
-			"tweaks" : [
+	Tweaks apply to every camera specified by the filter.
 
-				"description",
-				"""
-				Add a camera tweak.
+	Can add new camera parameters or render options.
 
-				Arbitrary numbers of user defined tweaks may be
-				added as children of this plug via the user
-				interface, or via the CameraTweaks API in Python.
-				""",
+	Any existing parameters/options can be replaced or removed.
+	Numeric parameters/options can also be added to, subtracted
+	from, or multiplied.
 
-				"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-				"layout:customWidget:footer:widgetType", "GafferSceneUI.CameraTweaksUI._TweaksFooter",
-				"layout:customWidget:footer:index", -1,
+	Tweaks are applied in order, so if there is more than one tweak
+	to the same parameter/option, the first tweak will be applied
+	first, then the second, etc.
+	""",
 
-			],
-			"tweaks.*" : [
-				"tweakPlugValueWidget:allowRemove", True,
-			],
-		}
+	plugs = {
 
+		"tweaks" : [
+
+			"description",
+			"""
+			Add a camera tweak.
+
+			Arbitrary numbers of user defined tweaks may be
+			added as children of this plug via the user
+			interface, or via the CameraTweaks API in Python.
+			""",
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layout:customWidget:footer:widgetType", "GafferSceneUI.CameraTweaksUI._TweaksFooter",
+			"layout:customWidget:footer:index", -1,
+
+		],
+
+		"tweaks.*" : [
+
+			"tweakPlugValueWidget:allowRemove", True,
+
+		],
+
+	}
+
+)
+
+## Registers a function to create a tweak of a particular type.
+# This will appear as an item labelled `name` in the popup menu
+# used for adding tweaks.
+def registerTweak( name, tweakPlugCreator ) :
+
+	_registeredTweaks[name] = tweakPlugCreator
+
+_registeredTweaks = collections.OrderedDict()
+
+def __registerTweakMetadata( tweakName, childName, metadataName, value ) :
+
+	Gaffer.Metadata.registerValue( GafferScene.CameraTweaks.staticTypeId(), "tweaks.{}.{}".format( tweakName, childName ), metadataName, value )
+	# In case the same tweak is added twice, we register again for the same tweak with a numeric suffix.
+	Gaffer.Metadata.registerValue( GafferScene.CameraTweaks.staticTypeId(), "tweaks.{}[0-9].{}".format( tweakName, childName ), metadataName, value )
+
+def __registerCameraParameters() :
 
 	# Create a temporary camera object just to read the default parameter values off of it,
 	# and access the metadata
 	tempCam = GafferScene.Camera()
 
-	parameterCategories = [ ("Camera Parameters", i ) for i in ["projection","fieldOfView","apertureAspectRatio",
+	parameterCategories = [ ("Standard", i ) for i in ["projection","fieldOfView","apertureAspectRatio",
 			"aperture","focalLength","apertureOffset","fStop","focalLengthWorldScale","focusDistance",
 			"clippingPlanes" ] ] + [
-			("Render Overrides", i ) for i in [ "filmFit", "shutter", "resolution", "pixelAspectRatio",
+			("Render Override", i ) for i in [ "filmFit", "shutter", "resolution", "pixelAspectRatio",
 			"resolutionMultiplier", "overscan", "overscanLeft", "overscanRight", "overscanTop",
 			"overscanBottom", "cropWindow", "depthOfField" ] ]
 
 	for category, plugName in parameterCategories:
-		if category == "Render Overrides":
+		if category == "Render Override":
 			cameraPlug = tempCam["renderSettingOverrides"][plugName]["value"]
 		else:
 			cameraPlug = tempCam[plugName]
 
-		data = Gaffer.PlugAlgo.extractDataFromPlug( cameraPlug )
+		def creator( name, value ) :
 
-		_parameterCategoriesAndDefaults.append( ( category, plugName, data ) )
+			tweak = GafferScene.TweakPlug( name, value )
+			tweak.setName( name )
+			return tweak
 
-		plugMetadata["tweaks.tweak_%s*.name" % plugName] = [ "readOnly", True ]
+		registerTweak(
+			"{}/{}".format( category, IECore.CamelCase.toSpaced( plugName ) ),
+			functools.partial( creator, plugName, Gaffer.PlugAlgo.extractDataFromPlug( cameraPlug ) )
+		)
 
-		valueMetadata = []
+		__registerTweakMetadata( plugName, "name", "readOnly", True )
+
 		for metaName in Gaffer.Metadata.registeredValues( cameraPlug ):
 			metaValue = Gaffer.Metadata.value( cameraPlug, metaName )
-			if metaName != "layout:section" and not metaValue is None:
-				valueMetadata.append( metaName )
-				valueMetadata.append( metaValue )
+			if metaName != "layout:section" and metaValue is not None :
+				__registerTweakMetadata( plugName, "value", metaName, metaValue )
 
 		# The Camera node only offers a choice between "perspective" and "orthographic", since
 		# they are the two that make sense in the UI.  But if you're putting down a special
 		# tweak node, you might want to use a non-standard camera supported by your specific
 		# renderer backend ( eg. spherical_camera in Arnold )
 		if plugName == "projection":
-			valueMetadata.append( "presetsPlugValueWidget:allowCustom" )
-			valueMetadata.append( True )
+			__registerTweakMetadata( plugName, "value", "presetsPlugValueWidget:allowCustom", True )
 
-		plugMetadata["tweaks.tweak_%s*.value" % plugName] = valueMetadata
-
-
-
-	Gaffer.Metadata.registerNode(
-
-		GafferScene.CameraTweaks,
-
-		"description",
-		"""
-		Applies modifications, also known as "tweaks," to camera
-		parameters or render options in the scene. Supports any number
-		of tweaks, and custom camera parameters. Tweaks to camera
-		parameters apply to every camera specified by the filter.
-
-		Tweaks apply to every camera specified by the filter.
-
-		Can add new camera parameters or render options.
-
-		Any existing parameters/options can be replaced or removed.
-		Numeric parameters/options can also be added to, subtracted
-		from, or multiplied.
-
-		Tweaks are applied in order, so if there is more than one tweak
-		to the same parameter/option, the first tweak will be applied
-		first, then the second, etc.
-		""",
-
-		plugs = plugMetadata
-
-	)
-
-__populateMetadata()
+__registerCameraParameters()
 
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
@@ -176,15 +187,12 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		# Create a temporary camera object just to read the default parameter values off of it
-		tempCam = GafferScene.Camera()
-
-		for category, name, defaultData in _parameterCategoriesAndDefaults:
+		for name, creator in _registeredTweaks.items() :
 
 			result.append(
-				"/" + category + "/" + name,
+				"/" + name,
 				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), name, defaultData )
+					"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), creator )
 				}
 			)
 
@@ -206,26 +214,25 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		] :
 
 			if isinstance( item, six.string_types ) :
-				result.append( "/Custom Parameter/" + item, { "divider" : True } )
+				result.append( "/Custom/" + item, { "divider" : True } )
 			else :
+
+				def creator( plugType ) :
+					tweak = GafferScene.TweakPlug( "", plugType() )
+					tweak.setName( "tweak1" )
+					return tweak
+
 				result.append(
-					"/Custom Parameter/" + item.__name__.replace( "Plug", "" ),
+					"/Custom/" + item.__name__.replace( "Plug", "" ),
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), "", item ),
+						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), functools.partial( creator, item ) )
 					}
 				)
 
 		return result
 
-	def __addTweak( self, name, plugTypeOrValue ) :
+	def __addTweak( self, creator ) :
 
-		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = GafferScene.TweakPlug( name, plugTypeOrValue )
-		else :
-			plug = GafferScene.TweakPlug( name, plugTypeOrValue() )
-
-		plug.setName( name or "tweak1" )
-
+		plug = creator()
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
-
