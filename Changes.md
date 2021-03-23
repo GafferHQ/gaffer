@@ -1,10 +1,28 @@
 0.59.x.x (relative to 0.59.5.0)
 ========
 
+Improvements
+------------
+
+- CameraTweaks : Added support for Arnold's advanced camera parameters, including `shutter_curve`
+  and `aperture_blades`.
+
 Fixes
 -----
 
 - FileMenu : Fixed thread-safety bug in file save operation.
+- TweaksPlugValueWidget : Fixed vertical alignment of `mode` widget.
+- CameraTweaks : Fixed UI metadata.
+
+API
+---
+
+- CameraTweaksUI : Added `registerTweak()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.1.5.0.
 
 0.59.5.0 (relative to 0.59.4.0)
 ========

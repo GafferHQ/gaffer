@@ -481,10 +481,10 @@ script["CameraTweaks"]["tweaks"]["resolution"]["name"].setValue( 'resolution' )
 # Screengrab the Node Editor
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["CameraTweaks"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
-plugWidget = GafferUI.PlugValueWidget.acquire( script["CameraTweaks"]["tweaks"]["resolution"]["name"] )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = tempImagePathEditor )
 # Spawn the context menu
+plugWidget = GafferUI.PlugValueWidget.acquire( script["CameraTweaks"]["tweaks"]["resolution"]["value"] )
 contextMenuWidget = __spawnPlugContextMenu(
 	nodeEditor = nodeEditorWindow,
 	plugWidget = plugWidget
