@@ -174,6 +174,12 @@ void GafferScene::SceneAlgo::matchingPaths( const Gaffer::IntPlug *filterPlug, c
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f );
 }
 
+void GafferScene::SceneAlgo::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root, IECore::PathMatcher &paths )
+{
+	ThreadablePathAccumulator f( paths );
+	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f, root );
+}
+
 void GafferScene::SceneAlgo::matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	ThreadablePathAccumulator f( paths );
@@ -189,6 +195,13 @@ IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const GafferScene:
 {
 	ThreadablePathHashAccumulator f;
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f );
+	return IECore::MurmurHash( f.m_h1Accum, f.m_h2Accum );
+}
+
+IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root )
+{
+	ThreadablePathHashAccumulator f;
+	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f, root );
 	return IECore::MurmurHash( f.m_h1Accum, f.m_h2Accum );
 }
 

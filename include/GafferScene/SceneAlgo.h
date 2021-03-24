@@ -81,12 +81,14 @@ GAFFERSCENE_API void matchingPaths( const Filter *filter, const ScenePlug *scene
 /// As above, but specifying the filter as a plug - typically Filter::outPlug() or
 /// FilteredSceneProcessor::filterPlug() would be passed.
 GAFFERSCENE_API void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, IECore::PathMatcher &paths );
+GAFFERSCENE_API void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a PathMatcher.
 GAFFERSCENE_API void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 
 /// Matching above, but doing a fast hash of the matching paths instead of storing all paths
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const Filter *filter, const ScenePlug *scene );
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene );
+GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root );
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const IECore::PathMatcher &filter, const ScenePlug *scene );
 
 /// Parallel scene traversal
