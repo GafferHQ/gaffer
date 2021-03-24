@@ -54,6 +54,7 @@ FilterResults::FilterResults( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "scene" ) );
 	addChild( new FilterPlug( "filter" ) );
+	addChild( new StringPlug( "root" ) );
 	addChild( new PathMatcherDataPlug( "__internalOut", Gaffer::Plug::Out, new PathMatcherData ) );
 	addChild( new PathMatcherDataPlug( "out", Gaffer::Plug::Out, new PathMatcherData ) );
 	addChild( new StringVectorDataPlug( "outStrings", Gaffer::Plug::Out, new StringVectorData ) );
@@ -83,34 +84,44 @@ const FilterPlug *FilterResults::filterPlug() const
 	return getChild<FilterPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::StringPlug *FilterResults::rootPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *FilterResults::rootPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::PathMatcherDataPlug *FilterResults::internalOutPlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::PathMatcherDataPlug *FilterResults::internalOutPlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::PathMatcherDataPlug *FilterResults::outPlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::PathMatcherDataPlug *FilterResults::outPlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::StringVectorDataPlug *FilterResults::outStringsPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::StringVectorDataPlug *FilterResults::outStringsPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -124,6 +135,7 @@ void FilterResults::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 
 	if(
 		input == filterPlug() ||
+		input == rootPlug() ||
 		input == scenePlug()->childNamesPlug()
 	)
 	{
@@ -147,7 +159,9 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 
 	if( output == internalOutPlug() )
 	{
-		h.append( SceneAlgo::matchingPathsHash( filterPlug(), scenePlug() ) );
+		ScenePlug::ScenePath rootPath;
+		ScenePlug::stringToPath( rootPlug()->getValue(), rootPath );
+		h.append( SceneAlgo::matchingPathsHash( filterPlug(), scenePlug(), rootPath ) );
 	}
 	else if( output == outPlug() )
 	{
@@ -165,8 +179,10 @@ void FilterResults::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 {
 	if( output == internalOutPlug() )
 	{
+		ScenePlug::ScenePath rootPath;
+		ScenePlug::stringToPath( rootPlug()->getValue(), rootPath );
 		PathMatcherDataPtr data = new PathMatcherData;
-		SceneAlgo::matchingPaths( filterPlug(), scenePlug(), data->writable() );
+		SceneAlgo::matchingPaths( filterPlug(), scenePlug(), rootPath, data->writable() );
 		static_cast<PathMatcherDataPlug *>( output )->setValue( data );
 		return;
 	}

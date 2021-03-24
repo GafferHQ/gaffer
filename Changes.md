@@ -19,6 +19,7 @@ Improvements
   - Added the full path to nodes so that nodes nested in Boxes can be identified.
   - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
+- FilterResults : Added `root` plug. This can be used to limit the results to `root` and its descendants.
 
 Fixes
 -----
