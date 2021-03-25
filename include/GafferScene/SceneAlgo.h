@@ -126,6 +126,9 @@ void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFu
 /// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
 template <class ThreadableFunctor>
 void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f );
+/// As above, but starting the traversal at `root`.
+template <class ThreadableFunctor>
+void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
 
 /// Calls a functor on all paths in the scene that are matched by the filter.
 /// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
@@ -135,6 +138,9 @@ void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::Filter
 /// FilteredSceneProcessor::filterPlug() would be passed.
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f );
+/// As above, but starting the traversal at `root`.
+template <class ThreadableFunctor>
+void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
 /// As above, but using a PathMatcher as a filter.
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f );

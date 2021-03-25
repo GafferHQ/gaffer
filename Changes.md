@@ -28,6 +28,7 @@ Fixes
 API
 ---
 
+- SceneAlgo : Added overloads with `root` argument for `parallelTraverse()` and `filteredParallelTraverse()`.
 - GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
 
 0.59.6.0 (relative to 0.59.5.0)
