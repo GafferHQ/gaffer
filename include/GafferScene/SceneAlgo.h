@@ -76,18 +76,20 @@ namespace SceneAlgo
 /// whether directly or indirectly via an intermediate filter.
 GAFFERSCENE_API std::unordered_set<FilteredSceneProcessor *> filteredNodes( Filter *filter );
 
-/// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
+/// \deprecated
 GAFFERSCENE_API void matchingPaths( const Filter *filter, const ScenePlug *scene, IECore::PathMatcher &paths );
-/// As above, but specifying the filter as a plug - typically Filter::outPlug() or
-/// FilteredSceneProcessor::filterPlug() would be passed.
+/// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
 GAFFERSCENE_API void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, IECore::PathMatcher &paths );
+/// \todo Add default value for `root` and remove overload above.
 GAFFERSCENE_API void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a PathMatcher.
 GAFFERSCENE_API void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 
-/// Matching above, but doing a fast hash of the matching paths instead of storing all paths
+/// \deprecated
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const Filter *filter, const ScenePlug *scene );
+/// As for `matchingPaths()`, but doing a fast hash of the matching paths instead of storing them.
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene );
+/// \todo Add default value for `root` and remove overload above.
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const GafferScene::FilterPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root );
 GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const IECore::PathMatcher &filter, const ScenePlug *scene );
 
@@ -121,6 +123,7 @@ GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const IECore::PathMatcher 
 template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f );
 /// As above, but starting the traversal at the specified root.
+/// \todo Add default value for `root` and remove overload above.
 template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
 
@@ -129,6 +132,7 @@ void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFu
 template <class ThreadableFunctor>
 void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f );
 /// As above, but starting the traversal at `root`.
+/// \todo Add default value for `root` and remove overload above.
 template <class ThreadableFunctor>
 void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
 
@@ -141,6 +145,7 @@ void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::Filter
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f );
 /// As above, but starting the traversal at `root`.
+/// \todo Add default value for `root` and remove overload above.
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
 /// As above, but using a PathMatcher as a filter.
