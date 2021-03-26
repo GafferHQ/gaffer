@@ -103,6 +103,10 @@ class RowsMap : public IECore::Data
 				}
 
 				const std::string name = row->namePlug()->getValue();
+				if( name.empty() )
+				{
+					continue;
+				}
 				activeRowNames.push_back( name );
 
 				const bool hasWildcards = StringAlgo::hasWildcards( name );
@@ -1081,7 +1085,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 			}
 
 			const string name = rowPlug->namePlug()->getValue();
-			if( result->members().count( name ) )
+			if( name.empty() || result->members().count( name ) )
 			{
 				continue;
 			}

@@ -158,5 +158,42 @@ class NameSwitchTest( GafferTest.TestCase ) :
 		s["in"][1]["value"].setValue( 10 )
 		self.assertIn( s["out"], { x[0] for x in cs } )
 
+	def testUnnamedRowsNeverMatch( self ) :
+
+		s = Gaffer.NameSwitch()
+		s.setup( Gaffer.IntPlug() )
+
+		zero = Gaffer.IntPlug( defaultValue = 0 )
+		one = Gaffer.IntPlug( defaultValue = 1 )
+
+		s["in"].resize( 2 )
+		s["in"][0]["value"].setInput( zero )
+		s["in"][1]["name"].setValue( "" )
+		s["in"][1]["value"].setInput( one )
+
+		# Selector is "", but we shouldn't match it to the unnamed row because
+		# that is unintuitive. As a general rule in Gaffer, if something
+		# hasn't been given a name then it is treated as if it was disabled.
+		self.assertEqual( s["out"]["value"].getValue(), 0 )
+
+		# The same should apply even when the selector receives the empty value
+		# via a substitution.
+		s["selector"].setValue( "${selector}" )
+		with Gaffer.Context() as c :
+			self.assertEqual( s["out"]["value"].getValue(), 0 )
+			# If the variable exists but is empty, we _still_ don't want to
+			# match the empty row. The existence of the variable is not what we
+			# care about : the existence of the row is, and we treat unnamed
+			# rows as non-existent.
+			c["selector"] = ""
+			self.assertEqual( s["out"]["value"].getValue(), 0 )
+			# But by that logic, a row named '*' _should_ match the empty
+			# variable.
+			s["in"][1]["name"].setValue( "*" )
+			self.assertEqual( s["out"]["value"].getValue(), 1 )
+			# Even if the variable doesnt exist at all.
+			del c["selector"]
+			self.assertEqual( s["out"]["value"].getValue(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
