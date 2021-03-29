@@ -200,16 +200,7 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ), scoped = False )
 				self.__deleteButton.setVisible( False )
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing= 4 ) as self.__detailsColumn :
-
-				GafferUI.PlugWidget( self.__namePlug() )
-				GafferUI.PlugWidget( self.__fileNamePlug() )
-				GafferUI.PlugWidget( childPlug["type"] )
-				GafferUI.PlugWidget( childPlug["data"] )
-				GafferUI.CompoundDataPlugValueWidget( childPlug["parameters"] )
-
-				GafferUI.Divider( GafferUI.Divider.Orientation.Horizontal )
-
+			self.__detailsColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 			self.__detailsColumn.setVisible( False )
 
 			header.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
@@ -252,6 +243,18 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __collapseButtonClicked( self, button ) :
 
 		visible = not self.__detailsColumn.getVisible()
+
+		if visible and not len( self.__detailsColumn ) :
+			# Build details section the first time it is shown,
+			# to avoid excessive overhead in the initial UI build.
+			with self.__detailsColumn :
+				GafferUI.PlugWidget( self.__namePlug() )
+				GafferUI.PlugWidget( self.__fileNamePlug() )
+				GafferUI.PlugWidget( self.getPlug()["type"] )
+				GafferUI.PlugWidget( self.getPlug()["data"] )
+				GafferUI.CompoundDataPlugValueWidget( self.getPlug()["parameters"] )
+				GafferUI.Divider( GafferUI.Divider.Orientation.Horizontal )
+
 		self.__detailsColumn.setVisible( visible )
 		button.setImage( "collapsibleArrowDown.png" if visible else "collapsibleArrowRight.png" )
 

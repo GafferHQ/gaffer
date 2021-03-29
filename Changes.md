@@ -7,6 +7,7 @@ Improvements
 - Parent : Added `parentVariable` plug, to create a context variable that passes the
   parent location to nodes upstream of the `children` plug. This allows the children
   to be varied procedurally according to what they are parented to.
+- Outputs : Reduced the time taken to show the NodeEditor by around 90%.
 
 API
 ---
