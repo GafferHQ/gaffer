@@ -92,9 +92,9 @@ def open( menu ) :
 #
 # :param asNew When true, the scripts file name/dirty state will be reset
 #    upon load. Effectively creating an untitled copy.
-def addScript( application, fileName, asNew = False ) :
+def addScript( application, fileName, asNew = False, dialogueParentWindow = None ) :
 
-	return __addScript( application, fileName, asNew = asNew )
+	return __addScript( application, fileName, dialogueParentWindow = dialogueParentWindow, asNew = asNew )
 
 def __addScript( application, fileName, dialogueParentWindow = None, asNew = False ) :
 

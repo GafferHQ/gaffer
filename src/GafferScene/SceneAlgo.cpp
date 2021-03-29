@@ -887,7 +887,7 @@ IECore::PathMatcher findAttributes( const ScenePlug *scene, const AttributesPred
 	tbb::spin_mutex resultMutex;
 	IECore::PathMatcher result;
 	AttributesFinder<AttributesPredicate> attributesFinder( predicate, resultMutex, result );
-	parallelProcessLocations( scene, attributesFinder );
+	SceneAlgo::parallelProcessLocations( scene, attributesFinder );
 	return result;
 }
 

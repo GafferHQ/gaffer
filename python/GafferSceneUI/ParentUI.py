@@ -84,6 +84,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parentVariable" : [
+
+			"description",
+			"""
+			A context variable used to pass the location of the parent to the
+			upstream nodes connected into the `children` plug. This can be used
+			to procedurally vary the children at each different parent location.
+			""",
+
+		],
+
 	}
 
 )

@@ -57,6 +57,9 @@ class GAFFERSCENE_API Parent : public BranchCreator
 		Gaffer::ArrayPlug *childrenPlug();
 		const Gaffer::ArrayPlug *childrenPlug() const;
 
+		Gaffer::StringPlug *parentVariablePlug();
+		const Gaffer::StringPlug *parentVariablePlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
@@ -87,6 +90,7 @@ class GAFFERSCENE_API Parent : public BranchCreator
 		bool affectsBranchSetNames( const Gaffer::Plug *input ) const override;
 		void hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const override;
+		bool constantBranchSetNames() const override;
 
 		bool affectsBranchSet( const Gaffer::Plug *input ) const override;
 		void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -94,11 +98,15 @@ class GAFFERSCENE_API Parent : public BranchCreator
 
 	private :
 
+		class ParentScope;
+		class SourceScope;
+
 		Gaffer::ObjectPlug *mappingPlug();
 		const Gaffer::ObjectPlug *mappingPlug() const;
 
+		bool affectsParentScope( const Gaffer::Plug *input ) const;
+		bool affectsSourceScope( const Gaffer::Plug *input ) const;
 		bool isChildrenPlug( const Gaffer::Plug *input, const IECore::InternedString &scenePlugChildName ) const;
-		ScenePath sourcePath( const ScenePath &branchPath, const ScenePlug **source ) const;
 
 		static size_t g_firstPlugIndex;
 

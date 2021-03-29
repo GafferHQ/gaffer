@@ -528,5 +528,129 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 				[ "/b/sphere" ]
 			)
 
+	def testParentContextVariable( self ) :
+
+		# Parent a sphere at `/a` and a grid at `/b`.
+
+		sphere = GafferScene.Sphere()
+		sphere["transform"]["translate"]["x"].setValue( 1 )
+		sphere["sets"].setValue( "set1" )
+
+		grid = GafferScene.Grid()
+		grid["transform"]["translate"]["x"].setValue( 2 )
+
+		switch = Gaffer.NameSwitch()
+		switch.setup( sphere["out"] )
+		switch["selector"].setValue( "${parent}" )
+		switch["in"].resize( 3 )
+		switch["in"][1]["name"].setValue( "/a" )
+		switch["in"][1]["value"].setInput( sphere["out"] )
+		switch["in"][2]["name"].setValue( "/b" )
+		switch["in"][2]["value"].setInput( grid["out"] )
+
+		collect = GafferScene.CollectScenes()
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/a", "/b" ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( collect["out"] )
+		parent["children"][0].setInput( switch["out"]["value"] )
+		parent["filter"].setInput( filter["out"] )
+		parent["parentVariable"].setValue( "parent" )
+
+		# Check the scene is as we expect
+
+		self.assertSceneValid( parent["out"] )
+
+		self.assertEqual( parent["out"].childNames( "/a" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+		self.assertEqual( parent["out"].childNames( "/a/sphere" ), IECore.InternedStringVectorData() )
+		self.assertEqual( parent["out"].childNames( "/b" ), IECore.InternedStringVectorData( [ "grid" ] ) )
+		self.assertEqual( parent["out"].childNames( "/b/grid" ), IECore.InternedStringVectorData( [ "gridLines", "centerLines", "borderLines" ] ) )
+
+		self.assertScenesEqual(
+			sphere["out"],
+			parent["out"],
+			scenePlug2PathPrefix = "/a"
+		)
+
+		self.assertPathHashesEqual(
+			sphere["out"], "/sphere",
+			parent["out"], "/a/sphere",
+		)
+
+		self.assertScenesEqual(
+			grid["out"],
+			parent["out"],
+			scenePlug2PathPrefix = "/b",
+			# Don't want to check sets, because the grid has no sets.
+			checks = self.allSceneChecks - { "sets" }
+		)
+
+		for path in [ "/grid", "/grid/centerLines", "/grid/gridLines", "/grid/borderLines" ] :
+			self.assertPathHashesEqual(
+				grid["out"], path,
+				parent["out"], "/b" + path,
+			)
+
+		# Rename the parent variable. This should dirty all the output plugs and make the NameSwitch
+		# output an empty scene.
+
+		cs = GafferTest.CapturingSlot( parent.plugDirtiedSignal() )
+		parent["parentVariable"].setValue( "x" )
+
+		self.assertLessEqual( # Equivalent to `assertTrue( a.issubset( b ) )`, but with more informative errors
+			{ parent["out"][n] for n in [ "bound", "transform", "attributes", "object", "childNames", "set" ] },
+			{ x[0] for x in cs }
+		)
+
+		self.assertSceneValid( parent["out"] )
+		self.assertEqual( parent["out"].childNames( "/a" ), IECore.InternedStringVectorData() )
+		self.assertEqual( parent["out"].childNames( "/b" ), IECore.InternedStringVectorData() )
+
+	def testDifferentSetsPerParent( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "roundThings" )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "squareThings" )
+
+		switch = Gaffer.NameSwitch()
+		switch.setup( sphere["out"] )
+		switch["selector"].setValue( "${parent}" )
+		switch["in"].resize( 3 )
+		switch["in"][1]["name"].setValue( "/a" )
+		switch["in"][1]["value"].setInput( sphere["out"] )
+		switch["in"][2]["name"].setValue( "/b" )
+		switch["in"][2]["value"].setInput( cube["out"] )
+
+		collect = GafferScene.CollectScenes()
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/a", "/b" ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( collect["out"] )
+		parent["children"][0].setInput( switch["out"]["value"] )
+		parent["filter"].setInput( filter["out"] )
+		parent["parentVariable"].setValue( "parent" )
+
+		self.assertEqual( set( str( x ) for x in parent["out"].setNames() ), { "roundThings", "squareThings" } )
+		self.assertEqual( parent["out"].set( "roundThings" ).value, IECore.PathMatcher( [ "/a/sphere" ] ) )
+		self.assertEqual( parent["out"].set( "squareThings" ).value, IECore.PathMatcher( [ "/b/cube" ] ) )
+
+		cube["name"].setValue( "box" )
+		self.assertEqual( set( str( x ) for x in parent["out"].setNames() ), { "roundThings", "squareThings" } )
+		self.assertEqual( parent["out"].set( "roundThings" ).value, IECore.PathMatcher( [ "/a/sphere" ] ) )
+		self.assertEqual( parent["out"].set( "squareThings" ).value, IECore.PathMatcher( [ "/b/box" ] ) )
+
+		sphere["sets"].setValue( "balls" )
+		self.assertEqual( set( str( x ) for x in parent["out"].setNames() ), { "balls", "squareThings" } )
+		self.assertEqual( parent["out"].set( "balls" ).value, IECore.PathMatcher( [ "/a/sphere" ] ) )
+		self.assertEqual( parent["out"].set( "squareThings" ).value, IECore.PathMatcher( [ "/b/box" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
