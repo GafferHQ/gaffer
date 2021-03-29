@@ -8,6 +8,22 @@ Improvements
   parent location to nodes upstream of the `children` plug. This allows the children
   to be varied procedurally according to what they are parented to.
 - Outputs : Reduced the time taken to show the NodeEditor by around 90%.
+- NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
+- GraphEditor : Improved framing of nodes dragged and dropped onto the GraphEditor :
+  - Changed pointer to indicate that framing will take place.
+  - Nodes are framed directly under the pointer instead of at the centre of the widget.
+  - Fixed framing of nodes not currently in the GraphEditor.
+  - Removed framing of _plugs_ dragged to the GraphEditor. This was unintuitive and interacted poorly with the dragging of plugs to make
+    connections. The NodeEditor's "Node Name" label can be dragged instead to locate a node from the NodeEditor.
+- SceneInspector : Improved history view :
+  - Added the full path to nodes so that nodes nested in Boxes can be identified.
+  - Added edit button to open a NodeEditor for nodes in the history.
+  - Fixed gap in between sections.
+
+Fixes
+-----
+
+- Widget : Fixed drag handling bug that could cause `dragEnterSignal()` to be emitted again on a widget that had already accepted the drag.
 
 API
 ---
