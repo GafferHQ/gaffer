@@ -127,6 +127,11 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
+		/// Returns `enabledPlug()->getValue()` evaluated in a global context.
+		/// Disabling is handled automatically by the SceneNode and SceneProcessor
+		/// base classes, so there should be little need to call this.
+		bool enabled( const Gaffer::Context *context ) const;
+
 	private :
 
 		void plugInputChanged( Gaffer::Plug *plug );

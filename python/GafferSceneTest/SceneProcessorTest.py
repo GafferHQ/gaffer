@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 import imath
 
@@ -42,8 +43,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferSceneTest
 
-class SceneProcessorTest( GafferTest.TestCase ) :
+class SceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNumberOfInputs( self ) :
 
@@ -145,6 +147,46 @@ class SceneProcessorTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["processor"]["out"].attributes( "/plane" )["scene:visible"].value, False )
 		s2["processor"]["visibility"].setValue( True )
 		self.assertEqual( s2["processor"]["out"].attributes( "/plane" )["scene:visible"].value, True )
+
+	def testEnabledEvaluationUsesGlobalContext( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["plane"] = GafferScene.Plane()
+		script["processor"] = GafferScene.StandardAttributes()
+		script["processor"]["in"].setInput( script["plane"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			path = context.get("scene:path", None )
+			assert( path is None )
+			parent["processor"]["enabled"] = True
+			"""
+		) )
+
+		with Gaffer.ContextMonitor( script["expression"] ) as monitor :
+			self.assertSceneValid( script["processor"]["out"] )
+
+		self.assertEqual( monitor.combinedStatistics().numUniqueValues( "scene:path" ), 0 )
+
+	def testEnabledPlugTypeConversion( self ) :
+
+		plane = GafferScene.Plane()
+		string = GafferTest.StringInOutNode()
+
+		processor = GafferScene.StandardAttributes()
+		processor["in"].setInput( plane["out"] )
+		processor["attributes"]["doubleSided"]["enabled"].setValue( True )
+		processor["attributes"]["doubleSided"]["value"].setValue( True )
+		processor["enabled"].setInput( string["out"] )
+
+		string["in"].setValue( "" )
+		self.assertScenesEqual( processor["in"], processor["out"] )
+		self.assertSceneHashesEqual( processor["in"], processor["out"] )
+
+		string["in"].setValue( "x" )
+		self.assertNotEqual( processor["in"].attributes( "/plane" ), processor["out"].attributes( "/plane" ) )
+		self.assertNotEqual( processor["in"].attributesHash( "/plane" ), processor["out"].attributesHash( "/plane" ) )
 
 if __name__ == "__main__":
 	unittest.main()

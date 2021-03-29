@@ -139,7 +139,7 @@ void SceneNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	const ScenePlug *scenePlug = output->parent<ScenePlug>();
-	if( scenePlug && enabledPlug()->getValue() )
+	if( scenePlug && enabled( context ) )
 	{
 		// We don't call ComputeNode::hash() immediately here, because for subclasses which
 		// want to pass through a specific hash in the hash*() methods it's a waste of time (the
@@ -276,7 +276,7 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 	ScenePlug *scenePlug = output->parent<ScenePlug>();
 	if( scenePlug )
 	{
-		if( enabledPlug()->getValue() )
+		if( enabled( context ) )
 		{
 			if( output == scenePlug->boundPlug() )
 			{
@@ -444,6 +444,37 @@ Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, co
 {
 	ScenePlug::PathScope pathScope( Context::current(), path );
 	return out->childBoundsPlug()->getValue();
+}
+
+bool SceneNode::enabled( const Gaffer::Context *context ) const
+{
+	const BoolPlug *plug = enabledPlug();
+	const BoolPlug *sourcePlug = plug->source<BoolPlug>();
+	if( !sourcePlug || sourcePlug->direction() == Plug::Out )
+	{
+		// Value may be computed. We use a global scope
+		// for two reasons :
+		//
+		// - Because our implementation assumes the result
+		//   is constant across the scene, and allowing it to
+		//   vary could produce scenes which are not internally
+		//   consistent. FilteredSceneProcessor provides the
+		//   concept of varying enabled-ness via filters.
+		// - To reduce pressure on the hash cache.
+		//
+		// > Note : `sourcePlug` will be null if the source is
+		// > not a BoolPlug. In this case we call `getValue()`
+		// > on `plug` and it will perform the appropriate type
+		// > conversion.
+		ScenePlug::GlobalScope globalScope( context );
+		return sourcePlug ? sourcePlug->getValue() : plug->getValue();
+	}
+	else
+	{
+		// Value is not computed so context is irrelevant.
+		// Avoid overhead of context creation.
+		return sourcePlug->getValue();
+	}
 }
 
 void SceneNode::plugInputChanged( Gaffer::Plug *plug )

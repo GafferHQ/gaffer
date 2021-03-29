@@ -21,6 +21,7 @@ Improvements
   - Added support for sub-frame dragging with a <kbd>Ctrl</kbd> modifier, and fixed snapping of the frame indicator for regular drag operations.
   - The current frame is now drawn next to the playhead.
 - Increased image processing tile size from 64 pixels to 128 pixels. This reduces per-tile overhead on large images, dramatically increasing effective image performance in many cases.
+- SceneNode/SceneProcessor : Enforced that the value of the `enabled` plug may not be varied using the `scene:path` context variable. Attempts to do so could result in the generation of invalid scenes. Filters are the appropriate way to enable or disable a node on a per-location basis, and should be used instead. This change yielded a 5-10% performance improvement for a moderately complex scene.
 - OSLImage : Avoided some unnecessary computes and hashing when calculating channel names or passing through channel data unaltered.
 - Context : Optimized `hash()` method.
 
