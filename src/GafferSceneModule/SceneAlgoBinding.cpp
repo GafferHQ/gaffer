@@ -101,7 +101,14 @@ void matchingPathsWrapper2( const FilterPlug &filterPlug, const ScenePlug &scene
 	SceneAlgo::matchingPaths( &filterPlug, &scene, paths );
 }
 
-void matchingPathsWrapper3( const PathMatcher &filter, const ScenePlug &scene, PathMatcher &paths )
+void matchingPathsWrapper3( const FilterPlug &filterPlug, const ScenePlug &scene, const ScenePlug::ScenePath &root, PathMatcher &paths )
+{
+	// gil release in case the scene traversal dips back into python:
+	IECorePython::ScopedGILRelease r;
+	SceneAlgo::matchingPaths( &filterPlug, &scene, root, paths );
+}
+
+void matchingPathsWrapper4( const PathMatcher &filter, const ScenePlug &scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
@@ -268,6 +275,7 @@ void bindSceneAlgo()
 	def( "matchingPaths", &matchingPathsWrapper1 );
 	def( "matchingPaths", &matchingPathsWrapper2 );
 	def( "matchingPaths", &matchingPathsWrapper3 );
+	def( "matchingPaths", &matchingPathsWrapper4 );
 	def( "shutter", &shutterWrapper );
 	def( "setExists", &setExistsWrapper );
 	def(

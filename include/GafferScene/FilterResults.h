@@ -41,6 +41,7 @@
 #include "GafferScene/TypeIds.h"
 
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferScene
@@ -64,6 +65,9 @@ class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 
 		FilterPlug *filterPlug();
 		const FilterPlug *filterPlug() const;
+
+		Gaffer::StringPlug *rootPlug();
+		const Gaffer::StringPlug *rootPlug() const;
 
 		Gaffer::PathMatcherDataPlug *outPlug();
 		const Gaffer::PathMatcherDataPlug *outPlug() const;

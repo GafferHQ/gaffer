@@ -59,6 +59,17 @@ class TraverseTask : public tbb::task
 		{
 		}
 
+		TraverseTask(
+			const GafferScene::ScenePlug *scene,
+			const Gaffer::ThreadState &threadState,
+			const ScenePlug::ScenePath &path,
+			ThreadableFunctor &f
+		)
+			:	m_scene( scene ), m_threadState( threadState ), m_f( f ), m_path( path )
+		{
+		}
+
+
 		~TraverseTask() override
 		{
 		}
@@ -252,6 +263,14 @@ void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f
 }
 
 template <class ThreadableFunctor>
+void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+{
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
+	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), root, f );
+	tbb::task::spawn_root_and_wait( *task );
+}
+
+template <class ThreadableFunctor>
 void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const GafferScene::Filter *filter, ThreadableFunctor &f )
 {
 	filteredParallelTraverse( scene, filter->outPlug(), f );
@@ -262,6 +281,13 @@ void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const Gaffer
 {
 	Detail::ThreadableFilteredFunctor<ThreadableFunctor> ff( f, filterPlug );
 	parallelTraverse( scene, ff );
+}
+
+template <class ThreadableFunctor>
+void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::FilterPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+{
+	Detail::ThreadableFilteredFunctor<ThreadableFunctor> ff( f, filterPlug );
+	parallelTraverse( scene, ff, root );
 }
 
 template <class ThreadableFunctor>
