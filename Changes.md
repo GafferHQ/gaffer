@@ -19,6 +19,7 @@ Improvements
   - Added the full path to nodes so that nodes nested in Boxes can be identified.
   - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
+- FilterResults : Added `root` plug. This can be used to limit the results to `root` and its descendants.
 
 Fixes
 -----
@@ -28,6 +29,9 @@ Fixes
 API
 ---
 
+- SceneAlgo :
+  - Added overloads with `root` argument for `parallelTraverse()`, `filteredParallelTraverse()`, `matchingPaths()` and `matchingPathsHash()`.
+  - Deprecated `matchingPaths()` overloads taking `Filter *`. Pass a `Filter.out` plug instead.
 - GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
 
 0.59.6.0 (relative to 0.59.5.0)

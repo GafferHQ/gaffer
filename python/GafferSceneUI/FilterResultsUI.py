@@ -77,6 +77,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"root" : [
+
+			"description",
+			"""
+			Isolates the search to this location and its descendants.
+			""",
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"scenePathPlugValueWidget:scene", "scene",
+			"nodule:type", "",
+
+		],
+
 		"out" : [
 
 			"description",

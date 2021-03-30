@@ -194,6 +194,52 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		Gaffer.ValuePlug.clearCache()
 		script["filterResults2"]["out"].getValue( h )
 
+	def testRoot( self ) :
+
+		# /group
+		#    /group
+		#        /plane
+		#    /plane
+
+		plane = GafferScene.Plane()
+
+		innerGroup = GafferScene.Group()
+		innerGroup["in"][0].setInput( plane["out"] )
+
+		outerGroup = GafferScene.Group()
+		outerGroup["in"][0].setInput( innerGroup["out"] )
+		outerGroup["in"][1].setInput( plane["out"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		filterResults = GafferScene.FilterResults()
+		filterResults["scene"].setInput( outerGroup["out"] )
+		filterResults["filter"].setInput( filter["out"] )
+
+		self.assertEqual(
+			filterResults["out"].getValue().value,
+			IECore.PathMatcher( [
+				"/",
+				"/group",
+				"/group/group",
+				"/group/group/plane",
+				"/group/plane",
+			] )
+		)
+
+		hash = filterResults["out"].hash()
+
+		filterResults["root"].setValue( "/group/group" )
+		self.assertEqual(
+			filterResults["out"].getValue().value,
+			IECore.PathMatcher( [
+				"/group/group",
+				"/group/group/plane",
+			] )
+		)
+		self.assertNotEqual( filterResults["out"].hash(), hash )
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testHashPerf( self ):
