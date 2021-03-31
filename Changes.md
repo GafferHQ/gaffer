@@ -20,6 +20,7 @@ Improvements
   - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
 - FilterResults : Added `root` plug. This can be used to limit the results to `root` and its descendants.
+- CollectScenes : Added tab completion and a scene browser to the UI for the `sourceRoot` plug.
 
 Fixes
 -----
