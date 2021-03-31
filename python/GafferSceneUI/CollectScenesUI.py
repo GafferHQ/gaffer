@@ -101,7 +101,9 @@ Gaffer.Metadata.registerNode(
 			> Tip :
 			> By specifying a leaf location as the root, it is possible to
 			> collect single objects from the input scene.
-			"""
+			""",
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
 
 		],
 
