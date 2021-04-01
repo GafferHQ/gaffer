@@ -38,10 +38,14 @@
 
 #include "GafferImage/TypeIds.h"
 
+#include "Gaffer/Context.h"
+
 #include "IECore/TypedData.h"
 #include "IECore/TypedData.inl"
 
 using namespace Imath;
+
+Gaffer::Context::ContextTypeDescription<GafferImage::FormatData> formatDataTypeDescription;
 
 namespace IECore
 {

@@ -161,6 +161,13 @@ inline Imath::Box2i Format::toEXRSpace( const Imath::Box2i &internalSpace ) cons
 	);
 }
 
+inline void murmurHashAppend( IECore::MurmurHash &h, const GafferImage::Format &data )
+{
+	h.append( data.getDisplayWindow() );
+	h.append( data.getPixelAspect() );
+}
+
 } // namespace GafferImage
+
 
 #endif // GAFFERIMAGE_FORMAT_INL
