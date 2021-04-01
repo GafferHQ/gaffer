@@ -21,6 +21,9 @@ Improvements
   - Fixed gap in between sections.
 - FilterResults : Added `root` plug. This can be used to limit the results to `root` and its descendants.
 - CollectScenes : Added tab completion and a scene browser to the UI for the `sourceRoot` plug.
+- BackgroundTaskDialogue :
+  - Removed focus from "Cancel" button to make it harder to cancel accidentally.
+  - Added <kbd>Esc</kbd> cancellation shortcut.
 
 Fixes
 -----
