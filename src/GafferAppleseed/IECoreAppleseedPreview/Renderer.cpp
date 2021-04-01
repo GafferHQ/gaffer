@@ -93,8 +93,7 @@
 #include "boost/thread.hpp"
 
 #include "tbb/atomic.h"
-#include "tbb/concurrent_unordered_map.h"
-
+#include "tbb/concurrent_hash_map.h"
 
 namespace asf = foundation;
 namespace asr = renderer;
