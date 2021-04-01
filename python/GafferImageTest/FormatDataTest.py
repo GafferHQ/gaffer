@@ -99,5 +99,8 @@ class FormatDataTest( GafferImageTest.ImageTestCase ) :
 		c["f"] = d
 		self.assertEqual( c["f"], d )
 
+	def testEditableScopeForFormat( self ) :
+		GafferImageTest.testEditableScopeForFormat()
+
 if __name__ == "__main__":
 	unittest.main()
