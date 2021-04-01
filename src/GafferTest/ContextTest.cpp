@@ -41,6 +41,8 @@
 #include "Gaffer/Context.h"
 
 #include "IECore/Timer.h"
+#include "IECore/VectorTypedData.h"
+#include "IECore/PathMatcherData.h"
 
 #include "boost/lexical_cast.hpp"
 #include "tbb/parallel_for.h"
@@ -145,58 +147,41 @@ void GafferTest::testScopingNullContext()
 
 void GafferTest::testEditableScope()
 {
-	ContextPtr baseContext = new Context();
-	baseContext->set( "a", 10 );
-	baseContext->set( "b", 20 );
+	testEditableScopeTyped<IECore::IntData>( 10, 20 );
+	testEditableScopeTyped<IECore::FloatData>( 10.0, 20.0 );
+	testEditableScopeTyped<IECore::StringData>( std::string( "a" ), std::string( "b" ) );
+	testEditableScopeTyped<IECore::InternedStringData>( IECore::InternedString( "a" ), IECore::InternedString( "b" ) );
+	testEditableScopeTyped<IECore::FloatVectorData>( std::vector<float>{ 1, 2, 3, 4 }, std::vector<float>{ 5, 6, 7 } );
+	testEditableScopeTyped<IECore::StringVectorData>( std::vector<std::string>{ "a", "AA" }, std::vector<std::string>{ "bbbbbbb" } );
+	testEditableScopeTyped<IECore::InternedStringVectorData>( std::vector<IECore::InternedString>{ "a", "AA" }, std::vector<IECore::InternedString>{ "bbbbbbb" } );
 
-	const int *aData = baseContext->getIfExists<int>( "a" );
-	const int *bData = baseContext->getIfExists<int>( "b" );
-	{
-		// Scope an editable copy of the context
-		Context::EditableScope scope( baseContext.get() );
+	PathMatcher a;
+	a.addPath( "/a/y" );
+	a.addPath( "/b/y" );
+	a.addPath( "/c/y" );
+	PathMatcher b;
+	b.addPath( "/a/x" );
+	b.addPath( "/b/x" );
+	testEditableScopeTyped<IECore::PathMatcherData>( a, b );
 
-		const Context *currentContext = Context::current();
-		GAFFERTEST_ASSERT( currentContext != baseContext );
+	// Test specific calls for dealing with time
+	Gaffer::ContextPtr baseContext = new Gaffer::Context();
+	Gaffer::Context::EditableScope scope( baseContext.get() );
+	const Gaffer::Context *currentContext = Gaffer::Context::current();
 
-		// The editable copy should be identical to the original,
-		// and the original should be unchanged.
-		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "b" ) == 20 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 10 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "b" ) == 20 );
-		GAFFERTEST_ASSERT( currentContext->hash() == baseContext->hash() );
+	scope.setFrame( 5 );
+	GAFFERTEST_ASSERT( currentContext->getFrame() == 5 );
 
-		// The copy should even be referencing the exact same data
-		// as the original.
-		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "a" ) == aData );
-		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "b" ) == bData );
-		GAFFERTEST_ASSERT( currentContext->getIfExists<int>( "a" ) == aData );
-		GAFFERTEST_ASSERT( currentContext->getIfExists<int>( "b" ) == bData );
+	float framesPerSecond = 8;
+	scope.setFramesPerSecond( &framesPerSecond );
+	GAFFERTEST_ASSERT( currentContext->getFramesPerSecond() == 8 );
 
-		// Editing the copy shouldn't affect the original
-		int newC = 30;
-		scope.set( "c", &newC );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "c", -1 ) == -1 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "c" ) == 30 );
+	scope.setTime( 9 );
+	GAFFERTEST_ASSERT( currentContext->getFrame() == 72 );
 
-		// Even if we're editing a variable that exists in
-		// the original.
-		int newA = 40;
-		scope.set( "a", &newA );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 40 );
+	scope.setTime( 8.5 );
+	GAFFERTEST_ASSERT( currentContext->getFrame() == 68 );
 
-		// And we should be able to remove a variable from the
-		// copy without affecting the original too.
-		scope.remove( "b" );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "b" ) == 20 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "b", -1 ) == -1 );
-
-		// And none of the edits should have affected the original
-		// data at all.
-		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "a" ) == aData );
-		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "b" ) == bData );
-	}
 }
 
 // Create the number of contexts specified, and return counts for how many collisions there are
