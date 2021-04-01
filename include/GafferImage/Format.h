@@ -40,6 +40,7 @@
 #include "GafferImage/Export.h"
 
 #include "IECore/Export.h"
+#include "IECore/MurmurHash.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathBox.h"
@@ -129,6 +130,8 @@ class GAFFERIMAGE_API Format
 /// Outputs a numeric description of the format, omitting default information
 /// where possible. Note that this is unrelated to Format::name().
 GAFFERIMAGE_API std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
+
+inline void murmurHashAppend( IECore::MurmurHash &h, const GafferImage::Format &data );
 
 } // namespace GafferImage
 
