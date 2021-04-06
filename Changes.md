@@ -41,6 +41,7 @@ API
   - Added overloads with `root` argument for `parallelTraverse()`, `filteredParallelTraverse()`, `matchingPaths()` and `matchingPathsHash()`.
   - Deprecated `matchingPaths()` overloads taking `Filter *`. Pass a `Filter.out` plug instead.
   - Added Python bindings for `matchingPathsHash()`.
+- ScenePlug : Added support for `..` in `stringToPath()`.
 - GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
 
 0.59.6.0 (relative to 0.59.5.0)

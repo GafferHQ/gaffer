@@ -201,6 +201,10 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.ScenePlug.stringToPath( "//a//b//" ), IECore.InternedStringVectorData( [ "a", "b" ] ) )
 		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/foo/bar/" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
 		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/.." ), IECore.InternedStringVectorData( [ "foo" ] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/../.." ), IECore.InternedStringVectorData( [] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/../../.." ), IECore.InternedStringVectorData( [] ) )
+		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/../toto" ), IECore.InternedStringVectorData( [ "foo", "toto" ] ) )
 
 	def testPathToString( self ) :
 

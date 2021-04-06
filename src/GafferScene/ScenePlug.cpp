@@ -584,7 +584,31 @@ IECore::MurmurHash ScenePlug::childBoundsHash( const ScenePath &scenePath ) cons
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
 	path.clear();
-	IECore::StringAlgo::tokenize( s, '/', path );
+
+	size_t index = 0, size = s.size();
+	while( index < size )
+	{
+		const size_t prevIndex = index;
+		index = s.find( '/', index );
+		index = index == std::string::npos ? size : index;
+		if( index > prevIndex )
+		{
+			if( index == prevIndex + 2 && s[prevIndex] == '.' && s[prevIndex+1] == '.' )
+			{
+				// ".."
+				if( path.size() )
+				{
+					path.pop_back();
+				}
+			}
+			else
+			{
+				const IECore::InternedString name( s.c_str() + prevIndex, index - prevIndex );
+				path.push_back( name );
+			}
+		}
+		index++;
+	}
 }
 
 void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )
