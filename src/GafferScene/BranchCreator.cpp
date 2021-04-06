@@ -84,13 +84,9 @@ void mergeSetNames( const InternedStringVectorData *toAdd, vector<InternedString
 // BranchCreator
 //////////////////////////////////////////////////////////////////////////
 
-
 GAFFER_NODE_DEFINE_TYPE( BranchCreator );
 
 size_t BranchCreator::g_firstPlugIndex = 0;
-
-static InternedString g_childNamesKey( "__BranchCreatorChildNames" );
-static InternedString g_forwardMappingKey( "__BranchCreatorForwardMappings" );
 
 BranchCreator::BranchCreator( const std::string &name )
 	:	FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
