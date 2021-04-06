@@ -99,6 +99,7 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
 		/// @name Branch evaluation methods
 		/// These must be implemented by derived classes. The hashBranch*() methods must either :
@@ -178,17 +179,19 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 
 	private :
 
+		IE_CORE_FORWARDDECLARE( BranchesData );
+
 		/// Returns the path specified by `parentPlug()`, only if it is non-empty
 		/// and is valid within the input scene.
 		boost::optional<ScenePlug::ScenePath> parentPlugPath() const;
 
-		/// All the results from `filterPlug()`.
-		Gaffer::PathMatcherDataPlug *filteredPathsPlug();
-		const Gaffer::PathMatcherDataPlug *filteredPathsPlug() const;
-
-		/// All the parent locations at which we need to create a branch.
-		Gaffer::PathMatcherDataPlug *parentPathsPlug();
-		const Gaffer::PathMatcherDataPlug *parentPathsPlug() const;
+		/// BranchesData telling us what branches we need to make.
+		Gaffer::ObjectPlug *branchesPlug();
+		const Gaffer::ObjectPlug *branchesPlug() const;
+		/// Calls `branchesPlug()->getValue()` in a clean context and
+		/// returns the result. This must be used for all access to
+		/// `branchesPlug()`.
+		ConstBranchesDataPtr branches( const Gaffer::Context *context ) const;
 
 		/// Used to calculate the name remapping needed to prevent name clashes with
 		/// the existing scene. Must be evaluated in a context where "scene:path" is
