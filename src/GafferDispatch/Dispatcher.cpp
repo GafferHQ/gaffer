@@ -286,18 +286,7 @@ Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 
 void Dispatcher::setupPlugs( Plug *parentPlug )
 {
-	if ( const TaskNode *node = parentPlug->ancestor<const TaskNode>() )
-	{
-		/// \todo: this will always return true until we sort out issue #915.
-		/// But since requiresSequenceExecution() could feasibly return different
-		/// values in different contexts, perhaps the conditional is bogus
-		/// anyway, and if anything we should just grey out the plug in the UI?
-		if( !node->taskPlug()->requiresSequenceExecution() )
-		{
-			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
-		}
-	}
-
+	parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
 
 	const CreatorMap &m = creators();
