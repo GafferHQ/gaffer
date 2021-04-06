@@ -533,15 +533,16 @@ class Dispatcher::Batcher
 
 		TaskBatchPtr acquireBatch( const TaskNode::Task &task )
 		{
+			// Several plugs will be evaluated that may vary by context,
+			// so we need to be in the correct context for this task
+			// \todo should we be removing `frame` from the context?
+			Context::Scope scopedTaskContext( task.context() );
+
 			// See if we've previously visited this task, and therefore
 			// have placed it in a batch already, which we can return
 			// unchanged. The `taskHash` is used as the unique identity of
 			// the task.
-			MurmurHash taskHash;
-			{
-				Context::Scope scopedTaskContext( task.context() );
-				taskHash = task.plug()->hash();
-			}
+			MurmurHash taskHash = task.plug()->hash();
 			const bool taskIsNoOp = taskHash == IECore::MurmurHash();
 			if( taskIsNoOp )
 			{
@@ -611,10 +612,6 @@ class Dispatcher::Batcher
 			const BoolPlug *immediatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_immediatePlugName );
 			if( immediatePlug && immediatePlug->getValue() )
 			{
-				/// \todo Should we be scoping a context for this, to allow the plug to
-				/// have expressions on it? If so, should we be doing the same before
-				/// calling requiresSequenceExecution()? Or should we instead require that
-				/// they always be constant?
 				batch->blindData()->writable()[g_immediateBlindDataName] = g_trueBoolData;
 			}
 
