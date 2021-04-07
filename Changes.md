@@ -45,6 +45,7 @@ API
   - Added support for `..` in `stringToPath()`.
   - Added `stringToPath()` and `pathToString()` overloads that return a result rather than passing it by reference.
 - GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
+- Spreadsheet : Added support for per-plug `ui:spreadsheet:selectorValue` metadata. This defines the initial value for `selector` when the UI is used to create a spreadsheet for the plug.
 
 0.59.6.0 (relative to 0.59.5.0)
 ========
