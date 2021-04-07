@@ -13,6 +13,11 @@ Improvements
     when parenting lights to geometry.
 - Seeds : Added `destination` plug, to control where the points are placed in the scene
   relative to the meshes they are generated from.
+- Duplicate :
+  - Added `filter` input, allowing multiple objects to be duplicated at once.
+  - Added `destination` plug, to control where the copies are placed relative to the
+    original.
+  - Improved performance for large numbers of copies.
 - Outputs : Reduced the time taken to show the NodeEditor by around 90%.
 - NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
 - GraphEditor : Improved framing of nodes dragged and dropped onto the GraphEditor :

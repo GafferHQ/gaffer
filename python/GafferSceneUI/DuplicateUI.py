@@ -117,5 +117,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"destination" : [
+
+			"description",
+			"""
+			The location where the copies will be placed in the output scene.
+			The default value places them alongside the original.
+			""",
+
+		],
+
 	}
 )

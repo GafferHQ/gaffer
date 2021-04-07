@@ -40,12 +40,107 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "IECore/NullObject.h"
 #include "IECore/StringAlgo.h"
+
+#include <unordered_map>
 
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+class Duplicate::DuplicatesData : public IECore::Data
+{
+
+	public :
+
+		DuplicatesData( const Duplicate *node, const Context *context )
+		{
+			const ScenePath &source = context->get<ScenePath>( ScenePlug::scenePathContextName );
+
+			// The names of the duplicates are composed of a stem and possibly a
+			// numeric suffix.
+
+			std::string stem;
+			int suffix;
+
+			const std::string name = node->namePlug()->getValue();
+			const int copies = node->copiesPlug()->getValue();
+
+			if( name.size() )
+			{
+				const int nameSuffix = StringAlgo::numericSuffix( name, &stem );
+				suffix = copies == 1 ? nameSuffix : max( nameSuffix, 1 );
+			}
+			else
+			{
+				// No explicit name provided. Derive stem and suffix from source.
+				suffix = StringAlgo::numericSuffix( source.back(), 0, &stem );
+				suffix++;
+			}
+
+			// Generate names, and at the same time, the transforms associated with them.
+
+			m_names = new InternedStringVectorData;
+			std::vector<InternedString> &names = m_names->writable();
+			names.reserve( copies );
+
+			const Imath::M44f matrix = node->transformPlug()->matrix();
+
+			if( suffix == -1 )
+			{
+				assert( copies == 1 );
+				names.push_back( stem );
+				m_transforms[stem] = matrix;
+			}
+			else
+			{
+				Imath::M44f m = matrix;
+				for( int i = 0; i < copies; ++i )
+				{
+					InternedString name = stem + std::to_string( suffix++ );
+					names.push_back( name );
+					m_transforms[name] = m;
+					m = m * matrix;
+				}
+			}
+		}
+
+		static bool affectedBy( const Duplicate *node, const Plug *input )
+		{
+			return
+				input == node->copiesPlug() ||
+				input == node->namePlug() ||
+				node->transformPlug()->isAncestorOf( input )
+			;
+		}
+
+		static void hash( const Duplicate *node, const Context *context, IECore::MurmurHash &h )
+		{
+			node->copiesPlug()->hash( h );
+			node->namePlug()->hash( h );
+			const ScenePath &source = context->get<ScenePath>( ScenePlug::scenePathContextName );
+			h.append( source.back() );
+			node->transformPlug()->hash( h );
+		}
+
+		ConstInternedStringVectorDataPtr names() const
+		{
+			return m_names;
+		}
+
+		const Imath::M44f &transform( const IECore::InternedString &name ) const
+		{
+			return m_transforms.at( name );
+		}
+
+	private :
+
+		InternedStringVectorDataPtr m_names;
+		unordered_map<InternedString, Imath::M44f> m_transforms;
+
+};
 
 GAFFER_NODE_DEFINE_TYPE( Duplicate );
 
@@ -61,18 +156,13 @@ Duplicate::Duplicate( const std::string &name )
 	addChild( new IntPlug( "copies", Plug::In, 1, 0 ) );
 	addChild( new StringPlug( "name" ) );
 	addChild( new TransformPlug( "transform" ) );
-	addChild( new StringPlug( "__outParent", Plug::Out ) );
-	addChild( new InternedStringVectorDataPlug( "__outChildNames", Plug::Out, inPlug()->childNamesPlug()->defaultValue() ) );
+	addChild( new ObjectPlug( "__duplicates", Plug::Out, NullObject::defaultNullObject() ) );
 
-	parentPlug()->setInput( outParentPlug() );
+	parentPlug()->setInput( targetPlug() );
 	parentPlug()->setFlags( Plug::Serialisable, false );
 
-	// Make the filter plug private. We do want to support this one
-	// day, but the filter should be specifying the objects to duplicate,
-	// not the parent locations to duplicate them under. Until we implement
-	// that, its best not to allow folks to become dependent upon behaviour
-	// that will change.
-	filterPlug()->setName( "__filter" );
+	destinationPlug()->setValue( "${scene:path}/.." );
+	destinationPlug()->resetDefault();
 
 	// Since we don't introduce any new sets, but just duplicate parts
 	// of existing ones, we can save the BranchCreator base class some
@@ -124,43 +214,23 @@ const Gaffer::TransformPlug *Duplicate::transformPlug() const
 	return getChild<TransformPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::StringPlug *Duplicate::outParentPlug()
+Gaffer::ObjectPlug *Duplicate::duplicatesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::StringPlug *Duplicate::outParentPlug() const
+const Gaffer::ObjectPlug *Duplicate::duplicatesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
-}
-
-Gaffer::InternedStringVectorDataPlug *Duplicate::childNamesPlug()
-{
-	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 5 );
-}
-
-const Gaffer::InternedStringVectorDataPlug *Duplicate::childNamesPlug() const
-{
-	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 void Duplicate::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
 
-	if( input == targetPlug() )
+	if( DuplicatesData::affectedBy( this, input ) )
 	{
-		outputs.push_back( outParentPlug() );
-	}
-
-	if(
-		input == inPlug()->existsPlug() ||
-		input == targetPlug() ||
-		input == copiesPlug() ||
-		input == namePlug()
-	)
-	{
-		outputs.push_back( childNamesPlug() );
+		outputs.push_back( duplicatesPlug() );
 	}
 }
 
@@ -168,96 +238,17 @@ void Duplicate::hash( const ValuePlug *output, const Context *context, IECore::M
 {
 	BranchCreator::hash( output, context, h );
 
-	if( output == outParentPlug() )
+	if( output == duplicatesPlug() )
 	{
-		targetPlug()->hash( h );
-	}
-	else if( output == childNamesPlug() )
-	{
-		ScenePath target;
-		ScenePlug::stringToPath( targetPlug()->getValue(), target );
-		if( !inPlug()->exists( target ) )
-		{
-			h = childNamesPlug()->defaultValue()->Object::hash();
-			return;
-		}
-		h.append( target.data(), target.size() );
-		copiesPlug()->hash( h );
-		namePlug()->hash( h );
+		DuplicatesData::hash( this, context, h );
 	}
 }
 
 void Duplicate::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == outParentPlug() )
+	if( output == duplicatesPlug() )
 	{
-		ScenePath target;
-		ScenePlug::stringToPath( targetPlug()->getValue(), target );
-		string parent;
-		for( size_t i = 0; i < target.size(); ++i )
-		{
-			parent += "/";
-			if( i < target.size() - 1 )
-			{
-				parent += target[i];
-			}
-		}
-		static_cast<StringPlug *>( output )->setValue( parent );
-		return;
-	}
-	else if( output == childNamesPlug() )
-	{
-		// Get the path to our target, and check it exists.
-		ScenePath target;
-		ScenePlug::stringToPath( targetPlug()->getValue(), target );
-		if( !inPlug()->exists( target ) )
-		{
-			output->setToDefault();
-			return;
-		}
-
-		// go ahead and generate our childnames.
-		// these are composed of a stem and possibly
-		// a numeric suffix. we default to deriving
-		// these from the name of the target.
-
-		std::string stem;
-		int suffix = StringAlgo::numericSuffix( target.back(), 0, &stem );
-		suffix++;
-
-		const int copies = copiesPlug()->getValue();
-		const std::string name = namePlug()->getValue();
-
-		// if a name is provided explicitly, then
-		// it overrides the name and suffix derived
-		// from the target.
-		if( name.size() )
-		{
-			std::string nameStem;
-			const int nameSuffix = StringAlgo::numericSuffix( name, &nameStem );
-			stem = nameStem;
-			suffix = copies == 1 ? nameSuffix : max( nameSuffix, 1 );
-		}
-
-		InternedStringVectorDataPtr childNamesData = new InternedStringVectorData;
-		std::vector<InternedString> &childNames = childNamesData->writable();
-		childNames.reserve( copies );
-
-		if( suffix == -1 )
-		{
-			assert( copies == 1 );
-			childNames.push_back( stem );
-		}
-		else
-		{
-			boost::format formatter( "%s%d" );
-			for( int i = 0; i < copies; ++i )
-			{
-				childNames.push_back( boost::str( formatter % stem % suffix++ ) );
-			}
-		}
-
-		static_cast<InternedStringVectorDataPlug *>( output )->setValue( childNamesData );
+		static_cast<ObjectPlug *>( output )->setValue( new DuplicatesData( this, context ) );
 		return;
 	}
 
@@ -272,14 +263,14 @@ bool Duplicate::affectsBranchBound( const Gaffer::Plug *input ) const
 void Duplicate::hashBranchBound( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ScenePath source;
-	branchSource( branchPath, source );
+	branchSource( sourcePath, branchPath, source );
 	h = inPlug()->boundHash( source );
 }
 
 Imath::Box3f Duplicate::computeBranchBound( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ScenePath source;
-	branchSource( branchPath, source );
+	branchSource( sourcePath, branchPath, source );
 	return inPlug()->bound( source );
 }
 
@@ -287,47 +278,41 @@ bool Duplicate::affectsBranchTransform( const Gaffer::Plug *input ) const
 {
 	return
 		input == inPlug()->transformPlug() ||
-		transformPlug()->isAncestorOf( input ) ||
-		input == childNamesPlug()
+		input == duplicatesPlug()
 	;
 }
 
 void Duplicate::hashBranchTransform( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ScenePath source;
-	branchSource( branchPath, source );
 	if( branchPath.size() == 1 )
 	{
 		BranchCreator::hashBranchTransform( sourcePath, branchPath, context, h );
-		h.append( inPlug()->transformHash( source ) );
-		transformPlug()->hash( h );
-		childNamesPlug()->hash( h );
+		ScenePlug::PathScope s( context, sourcePath );
+		duplicatesPlug()->hash( h );
 		h.append( branchPath[0] );
 	}
 	else
 	{
+		ScenePath source;
+		branchSource( sourcePath, branchPath, source );
 		h = inPlug()->transformHash( source );
 	}
 }
 
 Imath::M44f Duplicate::computeBranchTransform( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	ScenePath source;
-	branchSource( branchPath, source );
-	Imath::M44f result = inPlug()->transform( source );
 	if( branchPath.size() == 1 )
 	{
-		const Imath::M44f matrix = transformPlug()->matrix();
-		ConstInternedStringVectorDataPtr childNamesData = childNamesPlug()->getValue();
-		const vector<InternedString> &childNames = childNamesData->readable();
-
-		size_t i = 0;
-		do
-		{
-			result = result * matrix;
-		} while( i < childNames.size() && branchPath[0] != childNames[i++] );
+		ScenePlug::PathScope s( context, sourcePath );
+		ConstDuplicatesDataPtr duplicates = static_pointer_cast<const DuplicatesData>( duplicatesPlug()->getValue() );
+		return duplicates->transform( branchPath[0] );
 	}
-	return result;
+	else
+	{
+		ScenePath source;
+		branchSource( sourcePath, branchPath, source );
+		return inPlug()->transform( source );
+	}
 }
 
 bool Duplicate::affectsBranchAttributes( const Gaffer::Plug *input ) const
@@ -338,14 +323,14 @@ bool Duplicate::affectsBranchAttributes( const Gaffer::Plug *input ) const
 void Duplicate::hashBranchAttributes( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ScenePath source;
-	branchSource( branchPath, source );
+	branchSource( sourcePath, branchPath, source );
 	h = inPlug()->attributesHash( source );
 }
 
 IECore::ConstCompoundObjectPtr Duplicate::computeBranchAttributes( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ScenePath source;
-	branchSource( branchPath, source );
+	branchSource( sourcePath, branchPath, source );
 	return inPlug()->attributes( source );
 }
 
@@ -357,32 +342,34 @@ bool Duplicate::affectsBranchObject( const Gaffer::Plug *input ) const
 void Duplicate::hashBranchObject( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ScenePath source;
-	branchSource( branchPath, source );
+	branchSource( sourcePath, branchPath, source );
 	h = inPlug()->objectHash( source );
 }
 
 IECore::ConstObjectPtr Duplicate::computeBranchObject( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
 	ScenePath source;
-	branchSource( branchPath, source );
+	branchSource( sourcePath, branchPath, source );
 	return inPlug()->object( source );
 }
 
 bool Duplicate::affectsBranchChildNames( const Gaffer::Plug *input ) const
 {
-	return input == inPlug()->childNamesPlug() || input == childNamesPlug();
+	return input == inPlug()->childNamesPlug() || input == duplicatesPlug();
 }
 
 void Duplicate::hashBranchChildNames( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( branchPath.size() == 0 )
 	{
-		h = childNamesPlug()->hash();
+		BranchCreator::hashBranchChildNames( sourcePath, branchPath, context, h );
+		ScenePlug::PathScope s( context, sourcePath );
+		duplicatesPlug()->hash( h );
 	}
 	else
 	{
 		ScenePath source;
-		branchSource( branchPath, source );
+		branchSource( sourcePath, branchPath, source );
 		h = inPlug()->childNamesHash( source );
 	}
 }
@@ -391,12 +378,14 @@ IECore::ConstInternedStringVectorDataPtr Duplicate::computeBranchChildNames( con
 {
 	if( branchPath.size() == 0 )
 	{
-		return childNamesPlug()->getValue();
+		ScenePlug::PathScope s( context, sourcePath );
+		ConstDuplicatesDataPtr duplicates = static_pointer_cast<const DuplicatesData>( duplicatesPlug()->getValue() );
+		return duplicates->names();
 	}
 	else
 	{
 		ScenePath source;
-		branchSource( branchPath, source );
+		branchSource( sourcePath, branchPath, source );
 		return inPlug()->childNames( source );
 	}
 }
@@ -422,16 +411,16 @@ bool Duplicate::affectsBranchSet( const Gaffer::Plug *input ) const
 {
 	return
 		input == inPlug()->setPlug() ||
-		input == targetPlug() ||
-		input == childNamesPlug()
+		input == duplicatesPlug()
 	;
 }
 
 void Duplicate::hashBranchSet( const ScenePath &sourcePath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	h.append( inPlug()->setHash( setName ) );
-	targetPlug()->hash( h );
-	childNamesPlug()->hash( h );
+	h.append( sourcePath.data(), sourcePath.size() );
+	ScenePlug::PathScope s( context, sourcePath );
+	duplicatesPlug()->hash( h );
 }
 
 IECore::ConstPathMatcherDataPtr Duplicate::computeBranchSet( const ScenePath &sourcePath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
@@ -443,30 +432,33 @@ IECore::ConstPathMatcherDataPtr Duplicate::computeBranchSet( const ScenePath &so
 		return outPlug()->setPlug()->defaultValue();
 	}
 
-	PathMatcher subTree = inputSet.subTree( targetPlug()->getValue() );
+	PathMatcher subTree = inputSet.subTree( sourcePath );
 	if( subTree.isEmpty() )
 	{
 		return outPlug()->setPlug()->defaultValue();
 	}
 
-	ConstInternedStringVectorDataPtr childNamesData = childNamesPlug()->getValue();
-	const vector<InternedString> &childNames = childNamesData->readable();
+	ConstDuplicatesDataPtr duplicates;
+	{
+		ScenePlug::PathScope s( context, sourcePath );
+		duplicates = static_pointer_cast<const DuplicatesData>( duplicatesPlug()->getValue() );
+	}
 
 	PathMatcherDataPtr resultData = new PathMatcherData;
 	PathMatcher &result = resultData->writable();
 	ScenePath prefix( 1 );
-	for( vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+	for( const auto &name : duplicates->names()->readable() )
 	{
-		prefix.back() = *it;
+		prefix.back() = name;
 		result.addPaths( subTree, prefix );
 	}
 
 	return resultData;
 }
 
-void Duplicate::branchSource( const ScenePath &branchPath, ScenePath &source ) const
+void Duplicate::branchSource( const ScenePath &sourcePath, const ScenePath &branchPath, ScenePath &source ) const
 {
 	assert( branchPath.size() );
-	ScenePlug::stringToPath( targetPlug()->getValue(), source );
+	source = sourcePath;
 	copy( ++branchPath.begin(), branchPath.end(), back_inserter( source ) );
 }
