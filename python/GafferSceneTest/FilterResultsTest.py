@@ -240,6 +240,19 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertNotEqual( filterResults["out"].hash(), hash )
 
+	def testRootMatchVsNoMatch( self ) :
+
+		plane = GafferScene.Plane()
+		pathFilter = GafferScene.PathFilter()
+
+		filterResults = GafferScene.FilterResults()
+		filterResults["scene"].setInput( plane["out"] )
+		filterResults["filter"].setInput( pathFilter["out"] )
+		self.assertEqual( filterResults["outStrings"].getValue(), IECore.StringVectorData() )
+
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+		self.assertEqual( filterResults["outStrings"].getValue(), IECore.StringVectorData( [ "/" ] ) )
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testHashPerf( self ):

@@ -29,6 +29,7 @@ Fixes
 -----
 
 - Widget : Fixed drag handling bug that could cause `dragEnterSignal()` to be emitted again on a widget that had already accepted the drag.
+- FilterResults : Fixed bug handling matches at the root location.
 
 API
 ---
