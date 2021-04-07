@@ -118,6 +118,10 @@ Improvements
   - Added edit button to open a NodeEditor for nodes in the history.
   - Fixed gap in between sections.
 - FilterResults : Added `root` plug. This can be used to limit the results to `root` and its descendants.
+- CollectScenes : Added tab completion and a scene browser to the UI for the `sourceRoot` plug.
+- BackgroundTaskDialogue :
+  - Removed focus from "Cancel" button to make it harder to cancel accidentally.
+  - Added <kbd>Esc</kbd> cancellation shortcut.
 
 Fixes
 -----
@@ -130,6 +134,7 @@ API
 - SceneAlgo :
   - Added overloads with `root` argument for `parallelTraverse()`, `filteredParallelTraverse()`, `matchingPaths()` and `matchingPathsHash()`.
   - Deprecated `matchingPaths()` overloads taking `Filter *`. Pass a `Filter.out` plug instead.
+  - Added Python bindings for `matchingPathsHash()`.
 - GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
 
 0.59.6.0 (relative to 0.59.5.0)
