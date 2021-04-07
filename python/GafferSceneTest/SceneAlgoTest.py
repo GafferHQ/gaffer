@@ -1378,5 +1378,42 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			IECore.PathMatcher( [  "/group/defaultLight", "/group/nonDefaultLight" ] )
 		)
 
+	def testMatchingPathsHash( self ) :
+
+		# /group
+		#    /sphere
+		#    /cube
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		filter1 = GafferScene.PathFilter()
+		filter1["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+		filter2 = GafferScene.PathFilter()
+		filter2["paths"].setValue( IECore.StringVectorData( [ "/*/*" ] ) )
+
+		filter3 = GafferScene.PathFilter()
+		filter3["paths"].setValue( IECore.StringVectorData( [ "/gro??" ] ) )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.matchingPathsHash( filter1["out"], group["out"] ),
+			GafferScene.SceneAlgo.matchingPathsHash( filter3["out"], group["out"] )
+		)
+
+		self.assertNotEqual(
+			GafferScene.SceneAlgo.matchingPathsHash( filter1["out"], group["out"] ),
+			GafferScene.SceneAlgo.matchingPathsHash( filter2["out"], group["out"] )
+		)
+
+		self.assertNotEqual(
+			GafferScene.SceneAlgo.matchingPathsHash( filter2["out"], group["out"] ),
+			GafferScene.SceneAlgo.matchingPathsHash( filter3["out"], group["out"] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
