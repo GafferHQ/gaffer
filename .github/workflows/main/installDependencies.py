@@ -38,6 +38,9 @@ import os
 import sys
 import argparse
 import hashlib
+import subprocess
+import glob
+import shutil
 
 if sys.version_info[0] < 3 :
 	from urllib import urlretrieve
@@ -46,7 +49,7 @@ else :
 
 # Determine default archive URL.
 
-platform = "osx" if sys.platform == "darwin" else "linux"
+platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" )
 defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/4.0.0/gafferDependencies-4.0.0-Python2-" + platform + ".tar.gz"
 
 # Parse command line arguments.
@@ -81,7 +84,21 @@ sys.stderr.write( "Downloading dependencies \"%s\"\n" % args.archiveURL )
 archiveFileName, headers = urlretrieve( args.archiveURL )
 
 os.makedirs( args.dependenciesDir )
-os.system( "tar xf %s -C %s --strip-components=1" % ( archiveFileName, args.dependenciesDir ) )
+if platform != "windows":
+	os.system( "tar xf %s -C %s --strip-components=1" % ( archiveFileName, args.dependenciesDir ) )
+else:
+	subprocess.check_output( "7z x %s -o%s -aoa -y" % ( archiveFileName, args.dependenciesDir ) )
+	# 7z (and zip extractors generally) don't have an equivalent of --strip-components=1
+	# Copy the files up one directory level to compensate
+	for p in glob.glob(
+		os.path.join(
+			args.dependenciesDir.replace( "/", "\\" ),
+			os.path.splitext( args.archiveURL.split( "/" )[-1] )[0],
+			"*"
+		)
+	):
+		shutil.move( p, args.dependenciesDir )
+
 
 # Tell the world
 

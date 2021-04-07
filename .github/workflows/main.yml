@@ -144,7 +144,7 @@ jobs:
       # below.
       run: |
         echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
-        ./.github/workflows/main/installDelight.sh
+        ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
 
     - name: Cache
@@ -174,7 +174,7 @@ jobs:
         for arnoldVersion in 6.2.0.1 7.0.0.0
         do
           # Install Arnold
-          ./.github/workflows/main/installArnold.sh $arnoldVersion
+          ./.github/workflows/main/installArnold.py --version $arnoldVersion
           export ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot/$arnoldVersion
           # Build Arnold extension
           scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions

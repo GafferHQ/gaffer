@@ -35,6 +35,11 @@
 ##########################################################################
 
 import os
+import sys
+import glob
+import subprocess
+
+platform = {"darwin" : "osx", "win32" : "windows"}.get(sys.platform, "linux")
 
 ENV_VARS_TO_IMPORT = "PATH"
 
@@ -46,6 +51,40 @@ DELIGHT_ROOT = os.environ["DELIGHT"]
 BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
 INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
 
-PACKAGE_FILE = "%s.tar.gz" % os.environ["GAFFER_BUILD_NAME"]
+PACKAGE_FILE = "{}.{}".format(
+    os.environ["GAFFER_BUILD_NAME"],
+    {"win32" : "zip"}.get( sys.platform, "tar.gz" )
+)
 
 SPHINX = os.environ["GAFFER_SPHINX"]
+
+if sys.platform == "win32" :
+
+    # It would be nice to get this from the command line, but I don't know of any way
+    # to do that. It will need to be changed when upgrading Visual Studio versions.
+    toolSetVersion = "141"
+
+    # Get the Boost version from the include directory.
+    # It is named "boost-<majorVersion>_<minorVersion>"
+    boostInclude = glob.glob( os.path.join( os.environ["GAFFER_BUILD_DIR"], "include", "boost-*" ) )
+    if len( boostInclude ) > 0 :
+        boostVersion = os.path.split( boostInclude[0] )[-1].split( '-' )[1]
+
+        # Get the Python version, as in SConstruct but without the '.' separating major from minor version
+        pythonVersion = subprocess.check_output(
+            [ "python", "-c", "import sys; print( '{}{}'.format( *sys.version_info[:2] ) )" ],
+            universal_newlines=True
+        ).strip()
+
+        BOOST_LIB_SUFFIX = "-vc" + toolSetVersion + "-mt-x64-" + boostVersion
+        BOOST_PYTHON_LIB_SUFFIX = pythonVersion + "-vc" + toolSetVersion + "-mt-x64-" + boostVersion
+        LOCATE_DEPENDENCY_SYSTEMPATH = [
+            os.path.join( os.environ["GAFFER_BUILD_DIR"], "include", "boost-" + boostVersion )
+        ]
+    
+    LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
+    LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
+    GLEW_LIB_SUFFIX = "32"
+    INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape.com"
+    WARNINGS_AS_ERRORS = False
+    APPLESEED_ROOT = None
