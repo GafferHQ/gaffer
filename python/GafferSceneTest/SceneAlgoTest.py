@@ -1415,5 +1415,14 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.SceneAlgo.matchingPathsHash( filter3["out"], group["out"] )
 		)
 
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+		emptyFilter = GafferScene.PathFilter()
+
+		self.assertNotEqual(
+			GafferScene.SceneAlgo.matchingPathsHash( rootFilter["out"], group["out"] ),
+			GafferScene.SceneAlgo.matchingPathsHash( emptyFilter["out"], group["out"] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

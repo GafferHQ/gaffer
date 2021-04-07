@@ -145,7 +145,14 @@ struct ThreadablePathHashAccumulator
 		// as good ( the only weakness I can see is that if you summed 2**64 identical hashes, they would
 		// cancel out, but I can't see that arising here ).
 		IECore::MurmurHash h;
-		h.append( &path.front(), path.size() );
+		if( path.size() )
+		{
+			h.append( path.data(), path.size() );
+		}
+		else
+		{
+			h.append( 0 );
+		}
 		m_h1Accum += h.h1();
 		m_h2Accum += h.h2();
 		return true;
