@@ -546,7 +546,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugDirtied( self, plug ) :
 
-		if not self.visible() or plug.direction() != plug.Direction.In :
+		if plug.direction() != plug.Direction.In :
 			return
 
 		self.__activationsDirty = True
