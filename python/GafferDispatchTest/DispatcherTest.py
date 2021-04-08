@@ -1830,5 +1830,56 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with six.assertRaisesRegex( self, RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
 			dispatcher.dispatch( [ s["taskList"] ] )
 
+	def testContextDrivingDispatcherPlugs( self ) :
+
+		# a  per-frame task with driven dispatcher plugs
+		# |
+		# v  creates context variables that drive dispatcher plugs on `a`
+		# |
+		# b  per-frame task with normal dispatcher plugs
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["a"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["a"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		s["cv"] = Gaffer.ContextVariables()
+		s["cv"].setup( s["a"]["task"] )
+		s["cv"]["in"].setInput( s["a"]["task"] )
+		s["cv"]["variables"].addChild( Gaffer.NameValuePlug( "test", 2 ) )
+
+		s["b"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["b"]["preTasks"][0].setInput( s["cv"]["out"] )
+		s["b"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-4" )
+
+		# batchSize
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent['a']['dispatcher']['batchSize'] = context.get( 'test', 1 )", "python" )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "a", "b", "b", "a", "a", "b", "b" ] )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 1, 2, 3, 4, 3, 4 ] )
+
+		# immediate
+		del log[:]
+		s["cv"]["variables"].addChild( Gaffer.NameValuePlug( "testBool", True ) )
+		s["e"].setExpression( "parent['a']['dispatcher']['immediate'] = context.get( 'testBool', False )", "python" )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "a", "a", "a", "b", "b", "b", "b" ] )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4, 1, 2, 3, 4 ] )
+
+		# requiresSequenceExecution
+		del log[:]
+		s["cv"]["variables"].addChild( Gaffer.NameValuePlug( "testBool", True ) )
+		s["e"].setExpression( "parent['a']['requiresSequenceExecution'] = context.get( 'testBool', False )", "python" )
+		dispatcher.dispatch( [ s["b"] ] )
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "b", "b", "b", "b" ] )
+		self.assertEqual( log[0].frames, [ 1, 2, 3, 4 ] )
+		self.assertEqual( [ l.context.getFrame() for l in log[1:] ], [ 1, 2, 3, 4 ] )
+
 if __name__ == "__main__":
 	unittest.main()

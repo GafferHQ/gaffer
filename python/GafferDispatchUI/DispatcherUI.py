@@ -134,12 +134,21 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"dispatcher" : (
+
+			"layout:activator:doesNotRequireSequenceExecution", lambda plug : not plug.node()["task"].requiresSequenceExecution(),
+
+		),
+
 		"dispatcher.batchSize" : (
 
 			"description",
 			"""
 			Maximum number of frames to batch together when dispatching tasks.
+			If the node requires sequence execution `batchSize` will be ignored.
 			""",
+
+			"layout:activator", "doesNotRequireSequenceExecution",
 
 		),
 
