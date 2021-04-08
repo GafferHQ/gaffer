@@ -51,6 +51,7 @@ GAFFERTEST_API void testScopingNullContext();
 GAFFERTEST_API void testEditableScope();
 GAFFERTEST_API std::tuple<int,int,int,int> countContextHash32Collisions( int contexts, int mode, int seed );
 GAFFERTEST_API void testContextHashPerformance( int numEntries, int entrySize, bool startInitialized );
+GAFFERTEST_API void testContextCopyPerformance( int numEntries, int entrySize );
 
 } // namespace GafferTest
 

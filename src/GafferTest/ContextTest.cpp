@@ -320,3 +320,26 @@ void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool
 	);
 
 }
+
+void GafferTest::testContextCopyPerformance( int numEntries, int entrySize )
+{
+	// We usually deal with contexts that already have some stuff in them, so adding some entries
+	// to the context makes this test more realistic
+	ContextPtr baseContext = new Context();
+	for( int i = 0; i < numEntries; i++ )
+	{
+		baseContext->set( InternedString( i ), std::string( entrySize, 'x') );
+	}
+
+	const InternedString varyingVarName = "varyVar";
+
+	tbb::parallel_for( tbb::blocked_range<int>( 0, 1000000 ), [&baseContext, &varyingVarName]( const tbb::blocked_range<int> &r )
+		{
+			for( int i = r.begin(); i != r.end(); ++i )
+			{
+				ContextPtr copy = new Context( *baseContext );
+			}
+		}
+	);
+
+}

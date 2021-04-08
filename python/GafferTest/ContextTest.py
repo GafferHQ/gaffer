@@ -848,5 +848,10 @@ class ContextTest( GafferTest.TestCase ) :
 
 		GafferTest.testContextHashPerformance( 10, 10, True )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testContextCopyPerformance( self ) :
+
+		GafferTest.testContextCopyPerformance( 10, 10 )
+
 if __name__ == "__main__":
 	unittest.main()
