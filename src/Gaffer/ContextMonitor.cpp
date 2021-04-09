@@ -82,8 +82,7 @@ ContextMonitor::Statistics & ContextMonitor::Statistics::operator += ( const Con
 	context->names( names );
 	for( vector<InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 	{
-		const Data *d = context->get<Data>( *it );
-		m_variables[*it][d->Object::hash()] += 1;
+		m_variables[*it][context->variableHash( *it )] += 1;
 	}
 	return *this;
 }

@@ -316,15 +316,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 
 		for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
 		{
-			const IECore::Data *d = context->get<IECore::Data>( *it, nullptr );
-			if( d )
-			{
-				d->hash( h );
-			}
-			else
-			{
-				h.append( 0 );
-			}
+			h.append( context->variableHash( *it ) );
 		}
 	}
 	else if( outPlug()->isAncestorOf( output ) )

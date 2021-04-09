@@ -277,18 +277,7 @@ void Random::hashSeed( const Context *context, IECore::MurmurHash &h ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = nullptr;
-		try
-		{
-			contextData = context->get<IECore::Data>( contextEntry );
-		}
-		catch( ... )
-		{
-		}
-		if( contextData )
-		{
-			contextData->hash( h );
-		}
+		h.append( context->variableHash( contextEntry ).h1() );
 	}
 }
 
@@ -298,14 +287,13 @@ unsigned long int Random::computeSeed( const Context *context ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = nullptr;
-		try
-		{
-			contextData = context->get<IECore::Data>( contextEntry );
-		}
-		catch( ... )
-		{
-		}
+		// \todo:  It is wasteful to call getAsData, allocating a fresh data here.
+		// We should be able to just use `seed += context->variableHash( contextEntry ).h1()`,
+		// however this would yield inconsistent hashes due to variableHash including the
+		// entry name as the address of an internal string.  If we come up with a way to do
+		// fast consistent hashes of InternedString ( ie. the proposal of storing a hash in
+		// the InternedString table ) then we should switch this to the less wasteful version
+		IECore::DataPtr contextData = context->getAsData( contextEntry, nullptr );
 		if( contextData )
 		{
 			IECore::MurmurHash hash = contextData->Object::hash();
