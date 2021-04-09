@@ -642,8 +642,7 @@ class Dispatcher::Batcher
 					continue;
 				}
 
-				result.append( *it );
-				context->get<const IECore::Data>( *it )->hash( result );
+				result.append( context->variableHash( *it ) );
 			}
 			return result;
 		}

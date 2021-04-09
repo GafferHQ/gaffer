@@ -1123,15 +1123,7 @@ void ShadingEngine::hash( IECore::MurmurHash &h ) const
 		}
 		for( const auto &name : m_contextVariablesNeeded )
 		{
-			const IECore::Data *d = context->get<IECore::Data>( name, nullptr );
-			if( d )
-			{
-				d->hash( h );
-			}
-			else
-			{
-				h.append( 0 );
-			}
+			h.append( context->variableHash( name ) );
 		}
 	}
 }
