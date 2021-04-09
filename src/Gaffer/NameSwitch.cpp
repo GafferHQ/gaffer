@@ -161,7 +161,8 @@ void NameSwitch::compute( ValuePlug *output, const Context *context ) const
 			{
 				continue;
 			}
-			if( StringAlgo::matchMultiple( selector, p->namePlug()->getValue() ) )
+			const string name = p->namePlug()->getValue();
+			if( !name.empty() && StringAlgo::matchMultiple( selector, name ) )
 			{
 				outIndex = i;
 				break;
