@@ -201,10 +201,9 @@ void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 
 void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
+	const ScenePlug::ScenePath *path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 
-	if( !pathData )
+	if( !path )
 	{
 		// This is a special case used by the Prune and Isolate nodes
 		// to request a hash representing the effects of the filter
@@ -229,8 +228,7 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 
 	// Standard case
 
-	const ScenePlug::ScenePath &path = pathData->readable();
-	h.append( path.data(), path.size() );
+	h.append( path->data(), path->size() );
 
 	if( m_pathMatcher )
 	{

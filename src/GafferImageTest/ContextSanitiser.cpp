@@ -73,18 +73,18 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 	{
 		if( process->plug() == image->sampleOffsetsPlug() )
 		{
-			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
+			if( process->context()->getIfExists<std::string>( ImagePlug::channelNameContextName ) )
 			{
 				warn( *process, ImagePlug::channelNameContextName );
 			}
 		}
 		else if( process->plug() != image->channelDataPlug() )
 		{
-			if( process->context()->get<IECore::Data>( ImagePlug::channelNameContextName, nullptr ) )
+			if( process->context()->getIfExists<std::string>( ImagePlug::channelNameContextName ) )
 			{
 				warn( *process, ImagePlug::channelNameContextName );
 			}
-			if( process->context()->get<IECore::Data>( ImagePlug::tileOriginContextName, nullptr ) )
+			if( process->context()->getIfExists<Imath::V2i>( ImagePlug::tileOriginContextName ) )
 			{
 				warn( *process, ImagePlug::tileOriginContextName );
 			}
