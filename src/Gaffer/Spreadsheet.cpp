@@ -283,9 +283,9 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 			{
 				// Special case for `scene:path`, which users will expect to use PathMatcher
 				// style matching rather than `StringAlgo::match()`.
-				if( auto path = context->get<InternedStringVectorData>( g_scenePath, nullptr ) )
+				if( auto path = context->getIfExists< std::vector<InternedString> >( g_scenePath ) )
 				{
-					m_selector = &path->readable();
+					m_selector = path;
 				}
 				else
 				{

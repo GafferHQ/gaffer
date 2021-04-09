@@ -1386,8 +1386,8 @@ ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *sc
 	context->names( names );
 	for( const auto &name : names )
 	{
-		// Output params are never mutated, so this is 'safe'...
-		DataPtr data = const_cast<Data*>( context->get<Data>( name ) );
+		DataPtr data = context->getAsData( name );
+
 		// The requires a round-trip through the renderer's native type system, as such, it requires
 		// bi-directional conversion in Cortex. Unsupported types result in a slew of warning messages
 		// in render output. As many facilities employ un-supported types in their contexts as standard,

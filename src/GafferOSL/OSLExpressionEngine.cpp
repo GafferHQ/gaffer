@@ -126,16 +126,18 @@ class RendererServices : public OSL::RendererServices
 				return false;
 			}
 
-			const Data *data = renderState->context->get<Data>( name.c_str(), nullptr );
+			// TODO - might be nice if there was some way to speed this up by directly querying the type matching
+			// the TypeDesc, instead of getting as a generic Data?
+			const DataPtr data = renderState->context->getAsData( name.c_str(), nullptr );
 			if( !data )
 			{
 				return false;
 			}
 
-			IECoreImage::OpenImageIOAlgo::DataView dataView( data, /* createUStrings = */ true );
+			IECoreImage::OpenImageIOAlgo::DataView dataView( data.get(), /* createUStrings = */ true );
 			if( !dataView.data )
 			{
-				if( auto b = runTimeCast<const BoolData>( data ) )
+				if( auto b = runTimeCast<BoolData>( data.get() ) )
 				{
 					// BoolData isn't supported by `DataView` because `OIIO::TypeDesc` doesn't
 					// have a boolean type. We could work around this in `DataView` by casting to

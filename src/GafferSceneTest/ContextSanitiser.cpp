@@ -81,14 +81,14 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 {
 	if( const ScenePlug *scene = process->plug()->parent<ScenePlug>() )
 	{
-		if( process->context()->get<IECore::Data>( FilterPlug::inputSceneContextName, nullptr ) )
+		if( process->context()->getIfExists<uint64_t>( FilterPlug::inputSceneContextName ) )
 		{
 			warn( *process, FilterPlug::inputSceneContextName );
 		}
 
 		if( process->plug() != scene->setPlug() )
 		{
-			if( process->context()->get<IECore::Data>( ScenePlug::setNameContextName, nullptr ) )
+			if( process->context()->getIfExists<InternedString>( ScenePlug::setNameContextName ) )
 			{
 				warn( *process, ScenePlug::setNameContextName );
 			}
@@ -107,7 +107,7 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 			process->plug()->getName() != g_sortedChildNames
 		)
 		{
-			if( process->context()->get<IECore::Data>( ScenePlug::scenePathContextName, nullptr ) )
+			if( process->context()->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
 			{
 				warn( *process, ScenePlug::scenePathContextName );
 			}
@@ -118,11 +118,11 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 	{
 		if( process->plug()->getName() == g_internalOut )
 		{
-			if( process->context()->get<IECore::Data>( ScenePlug::scenePathContextName, nullptr ) )
+			if( process->context()->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) )
 			{
 				warn( *process, ScenePlug::scenePathContextName );
 			}
-			if( process->context()->get<IECore::Data>( ScenePlug::setNameContextName, nullptr ) )
+			if( process->context()->getIfExists<InternedString>( ScenePlug::setNameContextName ) )
 			{
 				warn( *process, ScenePlug::setNameContextName );
 			}
