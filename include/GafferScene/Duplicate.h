@@ -54,6 +54,7 @@ class GAFFERSCENE_API Duplicate : public BranchCreator
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Duplicate, DuplicateTypeId, BranchCreator );
 
+		/// \deprecated Use a filter instead.
 		Gaffer::StringPlug *targetPlug();
 		const Gaffer::StringPlug *targetPlug() const;
 

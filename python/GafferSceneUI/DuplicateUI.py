@@ -55,6 +55,8 @@ Gaffer.Metadata.registerNode(
 	a transform applied to them.
 	""",
 
+	"layout:activator:targetInUse", lambda node : not node["target"].isSetToDefault(),
+
 	plugs = {
 
 		"parent" : [
@@ -75,9 +77,14 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The part of the scene to be duplicated.
+
+			> Caution : Deprecated. Please connect a filter instead.
 			""",
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			# We want people to use filters rather than the `target` plug. So
+			# hide it unless it is already being used.
+			"layout:visibilityActivator", "targetInUse",
 
 		],
 
