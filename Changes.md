@@ -130,6 +130,7 @@ Fixes
 - Widget : Fixed drag handling bug that could cause `dragEnterSignal()` to be emitted again on a widget that had already accepted the drag.
 - FilterResults : Fixed bug handling matches at the root location.
 - NodeEditor : Fixed activator and summary updates which were skipped if the layout was not visible when the node was edited.
+- Dispatcher : Fixed dispatching when `dispatcher.batchSize` or `dispatcher.immediate` are driven by context variables.
 
 API
 ---

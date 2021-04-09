@@ -286,18 +286,7 @@ Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 
 void Dispatcher::setupPlugs( Plug *parentPlug )
 {
-	if ( const TaskNode *node = parentPlug->ancestor<const TaskNode>() )
-	{
-		/// \todo: this will always return true until we sort out issue #915.
-		/// But since requiresSequenceExecution() could feasibly return different
-		/// values in different contexts, perhaps the conditional is bogus
-		/// anyway, and if anything we should just grey out the plug in the UI?
-		if( !node->taskPlug()->requiresSequenceExecution() )
-		{
-			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
-		}
-	}
-
+	parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
 
 	const CreatorMap &m = creators();
@@ -533,15 +522,16 @@ class Dispatcher::Batcher
 
 		TaskBatchPtr acquireBatch( const TaskNode::Task &task )
 		{
+			// Several plugs will be evaluated that may vary by context,
+			// so we need to be in the correct context for this task
+			// \todo should we be removing `frame` from the context?
+			Context::Scope scopedTaskContext( task.context() );
+
 			// See if we've previously visited this task, and therefore
 			// have placed it in a batch already, which we can return
 			// unchanged. The `taskHash` is used as the unique identity of
 			// the task.
-			MurmurHash taskHash;
-			{
-				Context::Scope scopedTaskContext( task.context() );
-				taskHash = task.plug()->hash();
-			}
+			MurmurHash taskHash = task.plug()->hash();
 			const bool taskIsNoOp = taskHash == IECore::MurmurHash();
 			if( taskIsNoOp )
 			{
@@ -611,10 +601,6 @@ class Dispatcher::Batcher
 			const BoolPlug *immediatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_immediatePlugName );
 			if( immediatePlug && immediatePlug->getValue() )
 			{
-				/// \todo Should we be scoping a context for this, to allow the plug to
-				/// have expressions on it? If so, should we be doing the same before
-				/// calling requiresSequenceExecution()? Or should we instead require that
-				/// they always be constant?
 				batch->blindData()->writable()[g_immediateBlindDataName] = g_trueBoolData;
 			}
 
