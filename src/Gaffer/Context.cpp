@@ -39,6 +39,7 @@
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
+#include "IECore/PathMatcherData.h"
 
 #include "boost/lexical_cast.hpp"
 
@@ -105,8 +106,94 @@ class Environment
 };
 
 Environment g_environment;
-
 } // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// TypeFunctionTable implementation
+//////////////////////////////////////////////////////////////////////////
+
+DataPtr Context::TypeFunctionTable::makeData( IECore::TypeId typeId, const void *raw )
+{
+	TypeFunctionTable &tf = theFunctionTable();
+	Map::const_iterator it = tf.m_map.find( typeId );
+	if( it == tf.m_map.end() )
+	{
+		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
+	}
+	return it->second.makeDataFunction( raw );
+}
+
+void Context::TypeFunctionTable::internalSet( IECore::TypeId typeId, Context &c, const InternedString &name, const Data *value, const IECore::MurmurHash *knownHash )
+{
+	TypeFunctionTable &tf = theFunctionTable();
+	Map::const_iterator it = tf.m_map.find( typeId );
+	if( it == tf.m_map.end() )
+	{
+		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
+	}
+	it->second.internalSetFunction( c, name, value, knownHash );
+}
+
+bool Context::TypeFunctionTable::typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB )
+{
+	TypeFunctionTable &tf = theFunctionTable();
+	Map::const_iterator it = tf.m_map.find( typeId );
+	if( it == tf.m_map.end() )
+	{
+		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
+	}
+	return it->second.typedEqualsFunction( rawA, rawB );
+}
+
+IECore::MurmurHash Context::TypeFunctionTable::entryHash( IECore::TypeId typeId, Storage &s, const IECore::InternedString &name )
+{
+	TypeFunctionTable &tf = theFunctionTable();
+	Map::const_iterator it = tf.m_map.find( typeId );
+	if( it == tf.m_map.end() )
+	{
+		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
+	}
+	return it->second.entryHashFunction( s, name );
+}
+
+Context::TypeFunctionTable &Context::TypeFunctionTable::theFunctionTable()
+{
+	static TypeFunctionTable *tf = new TypeFunctionTable();
+	return *tf;
+}
+
+// Core types and things which are actually used
+Context::ContextTypeDescription<FloatData> floatTypeDescription;
+Context::ContextTypeDescription<IntData> intTypeDescription;
+Context::ContextTypeDescription<BoolData> boolTypeDescription;
+Context::ContextTypeDescription<StringData> stringTypeDescription;
+Context::ContextTypeDescription<InternedStringData> internedStringTypeDescription;
+Context::ContextTypeDescription<V2iData> v2iTypeDescription;
+Context::ContextTypeDescription<V3iData> v3iTypeDescription;
+Context::ContextTypeDescription<V2fData> v2fTypeDescription;
+Context::ContextTypeDescription<V3fData> v3fTypeDescription;
+Context::ContextTypeDescription<Color3fData> color3fTypeDescription;
+Context::ContextTypeDescription<Color4fData> color4fTypeDescription;
+Context::ContextTypeDescription<Box2iData> box2iTypeDescription;
+
+Context::ContextTypeDescription<UInt64Data> uint64TypeDescription;
+Context::ContextTypeDescription<InternedStringVectorData> internedStringVectorTypeDescription;
+Context::ContextTypeDescription<PathMatcherData> pathMatcherTypeDescription;
+
+// Types which seem like obvious generalizations, or are used in the Context tests
+Context::ContextTypeDescription<Box2fData> box2fTypeDescription;
+Context::ContextTypeDescription<Box3iData> box3iTypeDescription;
+Context::ContextTypeDescription<Box3fData> box3fTypeDescription;
+Context::ContextTypeDescription<FloatVectorData> floatVectorTypeDescription;
+Context::ContextTypeDescription<IntVectorData> intVectorTypeDescription;
+Context::ContextTypeDescription<StringVectorData> stringVectorTypeDescription;
+Context::ContextTypeDescription<V2iVectorData> v2iVectorTypeDescription;
+Context::ContextTypeDescription<V3iVectorData> v3iVectorTypeDescription;
+Context::ContextTypeDescription<V2fVectorData> v2fVectorTypeDescription;
+Context::ContextTypeDescription<V3fVectorData> v3fVectorTypeDescription;
+Context::ContextTypeDescription<Color3fVectorData> color3fVectorTypeDescription;
+Context::ContextTypeDescription<Color4fVectorData> color4fVectorTypeDescription;
+
 
 //////////////////////////////////////////////////////////////////////////
 // Context implementation
@@ -122,41 +209,63 @@ Context::Context()
 	set( g_framesPerSecond, 24.0f );
 }
 
+Context::Context( const Context &other )
+	:	Context( other, Copied )
+{
+}
+
 Context::Context( const Context &other, Ownership ownership )
-	:	m_map( other.m_map ),
-		m_changedSignal( nullptr ),
+	:	m_changedSignal( nullptr ),
 		m_hash( other.m_hash ),
 		m_hashValid( other.m_hashValid ),
 		m_canceller( other.m_canceller )
 {
-	// We used the (shallow) Map copy constructor in our initialiser above
-	// because it offers a big performance win over iterating and inserting copies
-	// ourselves. Now we need to go in and tweak our copies based on the ownership.
-
-	for( Map::iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+	if( ownership == Borrowed )
 	{
-		it->second.ownership = ownership;
-		switch( ownership )
+		// Reserving one extra spot before we copy in the existing entries means that we will
+		// avoid doing this allocation twice in the common case where we set exactly one context
+		// variable.  Perhaps we should reserve two extra spots - though that is some extra memory
+		// to carry around in cases where we don't add any variables?
+		m_map.reserve( other.m_map.size() + 1 );
+		m_map = other.m_map;
+	}
+	else
+	{
+		for( auto &i : other.m_map )
 		{
-			case Copied :
+			// Copying a context without using Borrowed should be completely safe, even if
+			// the source context is destroyed, so we need to preserve the memory for the
+			// source context entries.  If they are in other.m_allocMap, we can just take
+			// smart pointer, since the alloc map entries are private and never change.
+			// Otherwise, we need to call getAsData to allocate a fresh Data that we will
+			// store
+			AllocMap::const_iterator allocIt = other.m_allocMap.find( i.first );
+			if( allocIt != other.m_allocMap.end() )
+			{
+				// Try setting with the Data stored in the other Context
+				internalSetAllocated( i.first, allocIt->second, &i.second.hash );
+
+				// Check if the other Context was actually the using a pointer
+				// to the value we just added
+				if( (m_map.end() - 1 )->second.value == i.second.value )
 				{
-					DataPtr valueCopy = it->second.data->copy();
-					it->second.data = valueCopy.get();
-					it->second.data->addRef();
-					break;
+					// Yep, it matches, we're good
+					continue;
 				}
-			case Shared :
-				it->second.data->addRef();
-				break;
-			case Borrowed :
-				// no need to do anything
-				break;
+
+				// The Data stored in other.m_allocMap wasn't actually used by other.m_map
+				// ( it was probably overwritten with a fast EditScope::set that doesn't touch
+				// m_allocMap ).  We need to allocate a new Data after all.
+			}
+
+			// getAsData allocates a fresh Data, so we can call the internal set that doesn't take a copy
+			internalSetAllocated( i.first, other.getAsData( i.first ), &i.second.hash );
 		}
 	}
 }
 
 Context::Context( const Context &other, const IECore::Canceller &canceller )
-	:	Context( other, Copied )
+	:	Context( other )
 {
 	if( m_canceller )
 	{
@@ -166,7 +275,7 @@ Context::Context( const Context &other, const IECore::Canceller &canceller )
 }
 
 Context::Context( const Context &other, bool omitCanceller )
-	:	Context( other, Copied )
+	:	Context( other )
 {
 	if( omitCanceller )
 	{
@@ -176,19 +285,51 @@ Context::Context( const Context &other, bool omitCanceller )
 
 Context::~Context()
 {
-	#ifndef NDEBUG
-	validateHashes();
-	#endif // NDEBUG
+	delete m_changedSignal;
+}
 
-	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+void Context::set( const IECore::InternedString &name, const IECore::Data *value )
+{
+	// The context interface should be safe, so we copy the value so that the client can't
+	// invalidate this context by changing it.  ( If you don't want to pay for this alloc,
+	// use EditableScope )
+	internalSetAllocated( name, value->copy() );
+}
+
+void Context::internalSetAllocated( const IECore::InternedString &name, const IECore::ConstDataPtr &value, const IECore::MurmurHash *knownHash )
+{
+	m_allocMap[name] = value;
+	TypeFunctionTable::internalSet( value->typeId(), *this, name, value.get(), knownHash );
+}
+
+IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
+{
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
 	{
-		if( it->second.ownership != Borrowed )
-		{
-			it->second.data->removeRef();
-		}
+		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
 	}
 
-	delete m_changedSignal;
+	#ifndef NDEBUG
+	validateVariableHash( it->second, name);
+	#endif // NDEBUG
+
+	return TypeFunctionTable::makeData( it->second.typeId, it->second.value );
+}
+
+IECore::DataPtr Context::getAsData( const IECore::InternedString &name, IECore::Data *defaultValue ) const
+{
+	Map::const_iterator it = m_map.find( name );
+	if( it == m_map.end() )
+	{
+		return defaultValue;
+	}
+
+	#ifndef NDEBUG
+	validateVariableHash( it->second, name);
+	#endif // NDEBUG
+
+	return TypeFunctionTable::makeData( it->second.typeId, it->second.value );
 }
 
 void Context::remove( const IECore::InternedString &name )
@@ -230,21 +371,6 @@ void Context::removeMatching( const StringAlgo::MatchPattern &pattern )
 	}
 }
 
-void Context::changed( const IECore::InternedString &name )
-{
-	Map::iterator it = m_map.find( name );
-	if( it != m_map.end() )
-	{
-		m_hashValid = false;
-		it->second.updateHash( name );
-	}
-
-	if( m_changedSignal )
-	{
-		(*m_changedSignal)( this, name );
-	}
-}
-
 void Context::names( std::vector<IECore::InternedString> &names ) const
 {
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
@@ -260,7 +386,8 @@ float Context::getFrame() const
 
 void Context::setFrame( float frame )
 {
-	set( g_frame, frame );
+	m_frame = frame;
+	internalSet( g_frame, &m_frame );
 }
 
 float Context::getFramesPerSecond() const
@@ -326,7 +453,11 @@ bool Context::operator == ( const Context &other ) const
 	Map::const_iterator otherIt = other.m_map.begin();
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it, ++otherIt )
 	{
-		if( it->first != otherIt->first || !( it->second.data->isEqualTo( otherIt->second.data ) ) )
+		if(
+			it->first != otherIt->first ||
+			it->second.typeId != otherIt->second.typeId ||
+			!TypeFunctionTable::typedEquals( it->second.typeId, it->second.value, otherIt->second.value )
+		)
 		{
 			return false;
 		}
@@ -382,11 +513,17 @@ Context::EditableScope::~EditableScope()
 {
 }
 
+void Context::EditableScope::setAllocated( const IECore::InternedString &name, const IECore::Data *value )
+{
+	m_context->set( name, value );
+}
+
 void Context::EditableScope::setFrame( float frame )
 {
 	m_context->setFrame( frame );
 }
 
+//DEPRECATED
 void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
 {
 	m_context->setFramesPerSecond( framesPerSecond );
@@ -395,6 +532,11 @@ void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
 void Context::EditableScope::setTime( float timeInSeconds )
 {
 	m_context->setTime( timeInSeconds );
+}
+
+void Context::EditableScope::setFramesPerSecond( const float *framesPerSecond )
+{
+	set( g_framesPerSecond, framesPerSecond );
 }
 
 void Context::EditableScope::remove( const IECore::InternedString &name )
@@ -429,29 +571,30 @@ int Context::SubstitutionProvider::frame() const
 const std::string &Context::SubstitutionProvider::variable( const boost::string_view &name, bool &recurse ) const
 {
 	InternedString internedName( name );
-	const IECore::Data *d = m_context->get<IECore::Data>( internedName, nullptr );
+	IECore::TypeId typeId;
+	const void* d = m_context->getPointerAndTypeId( internedName, typeId );
 	if( d )
 	{
-		switch( d->typeId() )
+		switch( typeId )
 		{
 			case IECore::StringDataTypeId :
 				recurse = true;
-				return static_cast<const IECore::StringData *>( d )->readable();
+				return *static_cast<const std::string*>( d );
 			case IECore::FloatDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
-					static_cast<const IECore::FloatData *>( d )->readable()
+					*static_cast<const float *>( d )
 				);
 				return m_formattedString;
 			case IECore::IntDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
-					static_cast<const IECore::IntData *>( d )->readable()
+					*static_cast<const int *>( d )
 				);
 				return m_formattedString;
 			case IECore::InternedStringVectorDataTypeId : {
 				// This is unashamedly tailored to the needs of GafferScene's `${scene:path}`
 				// variable. We could make this cleaner by adding a mechanism for registering custom
 				// formatters, but that would be overkill for this one use case.
-				const auto &v = static_cast<const IECore::InternedStringVectorData *>( d )->readable();
+				const auto &v = *static_cast<const std::vector<InternedString>* >( d );
 				m_formattedString.clear();
 				if( v.empty() )
 				{
@@ -480,25 +623,10 @@ const std::string &Context::SubstitutionProvider::variable( const boost::string_
 	return m_formattedString;
 }
 
-void Context::validateHashes()
+void Context::validateVariableHash( const Storage &s, const IECore::InternedString &name ) const
 {
-	for( Map::iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
+	if( s.hash != TypeFunctionTable::entryHash( s.typeId, const_cast<Storage&>( s ), name ) )
 	{
-		IECore::MurmurHash prevHash = it->second.hash;
-		it->second.updateHash( it->first );
-
-		if( prevHash != it->second.hash )
-		{
-			throw IECore::Exception( "Corrupt hash for context entry: " + it->first.string() );
-		}
-	}
-
-	if( m_hashValid )
-	{
-		IECore::MurmurHash prevTotal = m_hash;
-		if( prevTotal != hash() )
-		{
-			throw IECore::Exception( "Corrupt total hash for context" );
-		}
+		throw IECore::Exception( "Corrupt hash for context entry: " + name.string() );
 	}
 }
