@@ -37,13 +37,17 @@
 import os
 import sys
 import argparse
-import urllib
 import hashlib
+
+if sys.version_info[0] < 3 :
+	from urllib import urlretrieve
+else :
+	from urllib.request import urlretrieve
 
 # Determine default archive URL.
 
 platform = "osx" if sys.platform == "darwin" else "linux"
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/3.0.0a2/gafferDependencies-3.0.0-Python2-" + platform + ".tar.gz"
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a1/cortex-10.2.0.0-a1-" + platform + "-python2.tar.gz"
 
 # Parse command line arguments.
 
@@ -74,7 +78,7 @@ args = parser.parse_args()
 # Download and unpack the archive.
 
 sys.stderr.write( "Downloading dependencies \"%s\"\n" % args.archiveURL )
-archiveFileName, headers = urllib.urlretrieve( args.archiveURL )
+archiveFileName, headers = urlretrieve( args.archiveURL )
 
 os.makedirs( args.dependenciesDir )
 os.system( "tar xf %s -C %s --strip-components=1" % ( archiveFileName, args.dependenciesDir ) )
