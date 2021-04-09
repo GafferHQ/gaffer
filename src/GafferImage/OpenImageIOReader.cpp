@@ -728,10 +728,10 @@ FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode
 				}
 
 				// setup a context with the new frame
-				ContextPtr holdContext = new Context( *context, Context::Shared );
-				holdContext->setFrame( *fIt );
+				Context::EditableScope holdScope( context );
+				holdScope.setFrame( *fIt );
 
-				return retrieveFile( fileName, OpenImageIOReader::Error, node, holdContext.get() );
+				return retrieveFile( fileName, OpenImageIOReader::Error, node, holdScope.context() );
 			}
 
 			// if we got here, there was no suitable file sequence
