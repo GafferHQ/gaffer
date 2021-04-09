@@ -1356,6 +1356,8 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 		IECore::ConstCompoundDataPtr prototypeChildNames = this->prototypeChildNames( parentPath, context );
 
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+
 		for( const auto &prototypeName : engine->prototypeNames()->readable() )
 		{
 			const vector<InternedString> &childNames = prototypeChildNames->member<InternedStringVectorData>( prototypeName )->readable();
@@ -1378,7 +1380,8 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 						h1Accum += instanceH.h1();
 						h2Accum += instanceH.h2();
 					}
-				}
+				},
+				taskGroupContext
 			);
 
 			const ScenePlug::ScenePath &prototypeRoot = engine->prototypeRoot( prototypeName );
@@ -1637,6 +1640,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 		vector<InternedString> branchPath( { namePlug()->getValue() } );
 
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+
 		for( const auto &prototypeName : engine->prototypeNames()->readable() )
 		{
 			branchPath.resize( 2 );
@@ -1666,7 +1671,8 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 						branchPath.back() = childNames[i];
 						outputSet.addPaths( pointInstanceSet, branchPath );
 					}
-				}
+				},
+				taskGroupContext
 			);
 		}
 
