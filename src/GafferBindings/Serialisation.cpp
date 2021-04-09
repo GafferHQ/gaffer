@@ -223,6 +223,7 @@ std::string Serialisation::modulePath( const boost::python::object &o )
 	auto inserted = g_cache.insert( { o.ptr()->ob_type, std::string() } );
 	if( inserted.second )
 	{
+		Py_INCREF( o.ptr()->ob_type );
 		inserted.first->second = modulePathInternal( o );
 	}
 	return inserted.first->second;
