@@ -81,10 +81,9 @@ class ContextTest( GafferTest.TestCase ) :
 		hash3 = c.hash()
 		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ) ] )
 
-		# when an assignment makes no actual change, the signal should not
-		# be triggered again.
+		# Even an assignment that doesn't change anything does still trigger the signal
 		c["b"] = 1
-		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ) ] )
+		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ), ( "b", 1, hash3 ) ] )
 
 		# Removing variables should also trigger the changed signal.
 
@@ -105,51 +104,65 @@ class ContextTest( GafferTest.TestCase ) :
 		c["int"] = 1
 		self.assertEqual( c["int"], 1 )
 		self.assertEqual( c.get( "int" ), 1 )
+		compare = c.hash()
 		c.set( "int", 2 )
 		self.assertEqual( c["int"], 2 )
 		self.assertIsInstance( c["int"], int )
+		self.assertNotEqual( compare, c.hash() )
 
 		c["float"] = 1.0
 		self.assertEqual( c["float"], 1.0 )
 		self.assertEqual( c.get( "float" ), 1.0 )
+		compare = c.hash()
 		c.set( "float", 2.0 )
 		self.assertEqual( c["float"], 2.0 )
 		self.assertIsInstance( c["float"], float )
+		self.assertNotEqual( compare, c.hash() )
 
 		c["string"] = "hi"
 		self.assertEqual( c["string"], "hi" )
 		self.assertEqual( c.get( "string" ), "hi" )
+		compare = c.hash()
 		c.set( "string", "bye" )
 		self.assertEqual( c["string"], "bye" )
 		self.assertIsInstance( c["string"], str )
+		self.assertNotEqual( compare, c.hash() )
 
 		c["v2i"] = imath.V2i( 1, 2 )
 		self.assertEqual( c["v2i"], imath.V2i( 1, 2 ) )
 		self.assertEqual( c.get( "v2i" ), imath.V2i( 1, 2 ) )
-		c.set( "v2i", imath.V2i( 1, 2 ) )
-		self.assertEqual( c["v2i"], imath.V2i( 1, 2 ) )
+		compare = c.hash()
+		c.set( "v2i", imath.V2i( 3, 4 ) )
+		self.assertEqual( c["v2i"], imath.V2i( 3, 4 ) )
 		self.assertIsInstance( c["v2i"], imath.V2i )
+		self.assertNotEqual( compare, c.hash() )
 
 		c["v3i"] = imath.V3i( 1, 2, 3 )
 		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
 		self.assertEqual( c.get( "v3i" ), imath.V3i( 1, 2, 3 ) )
-		c.set( "v3i", imath.V3i( 1, 2, 3 ) )
-		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
+		compare = c.hash()
+		c.set( "v3i", imath.V3i( 4, 5, 6 ) )
+		self.assertEqual( c["v3i"], imath.V3i( 4, 5, 6 ) )
 		self.assertIsInstance( c["v3i"], imath.V3i )
+		self.assertNotEqual( compare, c.hash() )
 
 		c["v2f"] = imath.V2f( 1, 2 )
 		self.assertEqual( c["v2f"], imath.V2f( 1, 2 ) )
 		self.assertEqual( c.get( "v2f" ), imath.V2f( 1, 2 ) )
-		c.set( "v2f", imath.V2f( 1, 2 ) )
-		self.assertEqual( c["v2f"], imath.V2f( 1, 2 ) )
+		compare = c.hash()
+		c.set( "v2f", imath.V2f( 3, 4 ) )
+		self.assertEqual( c["v2f"], imath.V2f( 3, 4 ) )
 		self.assertIsInstance( c["v2f"], imath.V2f )
+		self.assertNotEqual( compare, c.hash() )
 
 		c["v3f"] = imath.V3f( 1, 2, 3 )
 		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
 		self.assertEqual( c.get( "v3f" ), imath.V3f( 1, 2, 3 ) )
-		c.set( "v3f", imath.V3f( 1, 2, 3 ) )
-		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
+		compare = c.hash()
+		c.set( "v3f", imath.V3f( 4, 5, 6 ) )
+		self.assertEqual( c["v3f"], imath.V3f( 4, 5, 6 ) )
 		self.assertIsInstance( c["v3f"], imath.V3f )
+		self.assertNotEqual( compare, c.hash() )
 
 	def testSwitchTypes( self ) :
 
@@ -208,13 +221,18 @@ class ContextTest( GafferTest.TestCase ) :
 
 		c = Gaffer.Context()
 		c["i"] = 10
+		c["testIntVector"] = IECore.IntVectorData( [ 10 ] )
 
 		c2 = Gaffer.Context( c )
 		self.assertEqual( c2["i"], 10 )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
 
 		c["i"] = 1
+		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
 		self.assertEqual( c["i"], 1 )
 		self.assertEqual( c2["i"], 10 )
+		self.assertEqual( c["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
+		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 20 ] ) )
 
 	def testEquality( self ) :
 
@@ -405,7 +423,7 @@ class ContextTest( GafferTest.TestCase ) :
 
 		GafferTest.testManyContexts()
 
-	def testGetWithAndWithoutCopying( self ) :
+	def testGetCopies( self ) :
 
 		c = Gaffer.Context()
 		c["test"] = IECore.IntVectorData( [ 1, 2 ] )
@@ -416,152 +434,13 @@ class ContextTest( GafferTest.TestCase ) :
 		c["test"].append( 10 )
 		self.assertEqual( c["test"], IECore.IntVectorData( [ 1, 2 ] ) )
 
-		# if we ask nicely, we can get a reference to the internal
-		# value without any copying.
-		self.assertTrue( c.get( "test", _copy=False ).isSame( c.get( "test", _copy=False ) ) )
-		# but then if we modify the returned value, we are changing the
-		# context itself too. this should be avoided - we're just doing it
-		# here to test that we are indeed referencing the internal value.
-		c.get( "test", _copy=False ).append( 10 )
-		self.assertEqual( c["test"], IECore.IntVectorData( [ 1, 2, 10 ] ) )
-
-		# Since we're doing an evil thing that should never be done, flag it before destruct
-		# so it doesn't get flagged as a corrupt context when the validator runs in debug mode
-		c.changed( "test" )
-
-	def testGetWithDefaultAndCopyArgs( self ) :
+	def testGetWithDefault( self ) :
 
 		c = Gaffer.Context()
 		c["test"] = IECore.IntVectorData( [ 1, 2 ] )
 
-		self.assertTrue( c.get( "test", 10, _copy=False ).isSame( c.get( "test", 20, _copy=False ) ) )
-		self.assertTrue( c.get( "test", defaultValue=10, _copy=False ).isSame( c.get( "test", defaultValue=20, _copy=False ) ) )
-
-	def testCopyWithSharedOwnership( self ) :
-
-		c1 = Gaffer.Context()
-
-		c1["testInt"] = 10
-		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
-
-		self.assertEqual( c1["testInt"], 10 )
-		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-		r = c1.get( "testIntVector", _copy=False ).refCount()
-
-		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Shared )
-
-		self.assertEqual( c2["testInt"], 10 )
-		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-		c1["testInt"] = 20
-		self.assertEqual( c1["testInt"], 20 )
-		# c2 has changed too! with slightly improved performance comes
-		# great responsibility!
-		self.assertEqual( c2["testInt"], 20 )
-
-		# both contexts reference the same object, but c2 at least owns
-		# a reference to its values, and can be used after c1 has been
-		# deleted.
-		self.assertTrue( c2.get( "testIntVector", _copy=False ).isSame( c1.get( "testIntVector", _copy=False ) ) )
-		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r + 1 )
-
-		del c1
-
-		self.assertEqual( c2["testInt"], 20 )
-		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r )
-
-		# Tell c2 it's been invalidated, or else it could be flagged as a corrupt context when the validator
-		# runs in debug mode
-		c2.changed( "testInt" )
-
-	def testCopyWithBorrowedOwnership( self ) :
-
-		c1 = Gaffer.Context()
-
-		c1["testInt"] = 10
-		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
-
-		self.assertEqual( c1["testInt"], 10 )
-		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-		r = c1.get( "testIntVector", _copy=False ).refCount()
-
-		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Borrowed )
-
-		self.assertEqual( c2["testInt"], 10 )
-		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-		c1["testInt"] = 20
-		self.assertEqual( c1["testInt"], 20 )
-		# c2 has changed too! with slightly improved performance comes
-		# great responsibility!
-		self.assertEqual( c2["testInt"], 20 )
-
-		# check that c2 doesn't own a reference
-		self.assertTrue( c2.get( "testIntVector", _copy=False ).isSame( c1.get( "testIntVector", _copy=False ) ) )
-		self.assertEqual( c2.get( "testIntVector", _copy=False ).refCount(), r )
-
-		# Tell c2 it's been invalidated, or else it could be flagged as a corrupt context when the validator
-		# runs in debug mode
-		c2.changed( "testInt" )
-
-		# make sure we delete c2 before we delete c1
-		del c2
-
-		# check that we're ok to access c1 after deleting c2
-		self.assertEqual( c1["testInt"], 20 )
-		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-	def testSetOnBorrowedContextsDoesntAffectOriginal( self ) :
-
-		c1 = Gaffer.Context()
-
-		c1["testInt"] = 10
-		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
-
-		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Borrowed )
-		c2["testInt"] = 20
-		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
-
-		self.assertEqual( c1["testInt"], 10 )
-		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-		self.assertEqual( c2["testInt"], 20 )
-		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 20 ] ) )
-
-		# c2 must be destroyed first, since it depends on c1
-		del c2
-
-	def testSetOnSharedContextsDoesntAffectOriginal( self ) :
-
-		c1 = Gaffer.Context()
-
-		c1["testInt"] = 10
-		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
-
-		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Shared )
-		c2["testInt"] = 20
-		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
-
-		self.assertEqual( c1["testInt"], 10 )
-		self.assertEqual( c1["testIntVector"], IECore.IntVectorData( [ 10 ] ) )
-
-		self.assertEqual( c2["testInt"], 20 )
-		self.assertEqual( c2["testIntVector"], IECore.IntVectorData( [ 20 ] ) )
-
-	def testSetOnSharedContextsReleasesReference( self ) :
-
-		c1 = Gaffer.Context()
-		c1["testIntVector"] = IECore.IntVectorData( [ 10 ] )
-
-		r = c1.get( "testIntVector", _copy=False ).refCount()
-
-		c2 = Gaffer.Context( c1, ownership = Gaffer.Context.Ownership.Shared )
-		c2["testIntVector"] = IECore.IntVectorData( [ 20 ] )
-
-		self.assertEqual( c1.get( "testIntVector", _copy=False ).refCount(), r )
+		self.assertEqual( c.get( "test", 10 ), IECore.IntVectorData( [ 1, 2 ] ) )
+		self.assertEqual( c.get( "testX", 10 ), 10 )
 
 	def testHash( self ) :
 
@@ -582,24 +461,6 @@ class ContextTest( GafferTest.TestCase ) :
 
 		c["test2"] = "test2" # no change
 		self.assertEqual( c.hash(), hashes[-1] )
-
-	def testChanged( self ) :
-
-		c = Gaffer.Context()
-		c["test"] = IECore.StringVectorData( [ "one" ] )
-		h = c.hash()
-
-		cs = GafferTest.CapturingSlot( c.changedSignal() )
-
-		d = c.get( "test", _copy = False ) # dangerous! the context won't know if we make changes
-		d.append( "two" )
-		self.assertEqual( c.get( "test" ), IECore.StringVectorData( [ "one", "two" ] ) )
-		self.assertEqual( len( cs ), 0 )
-
-		c.changed( "test" ) # let the context know what we've been up to
-		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0], ( c, "test" ) )
-		self.assertNotEqual( c.hash(), h )
 
 	def testHashIgnoresUIEntries( self ) :
 
@@ -769,6 +630,39 @@ class ContextTest( GafferTest.TestCase ) :
 
 		context3 = Gaffer.Context( context1, omitCanceller = False )
 		self.assertIsNotNone( context3.canceller() )
+
+	def testVariableHash( self ) :
+
+		context = Gaffer.Context()
+		context["foo"] = 1
+		context["bar"] = 1
+
+		self.assertEqual( context.variableHash( "doesntExist" ), IECore.MurmurHash() )
+
+		# Hash includes name, so the hash of different variables is different
+		self.assertNotEqual( context.variableHash( "foo" ), context.variableHash( "bar" ) )
+
+		initialHash = context.variableHash( "foo" )
+		context["foo"] = 2
+		self.assertNotEqual( context.variableHash( "foo" ), initialHash )
+
+		# Hashing should include the type, so different types of 32bit zeros should compare different
+		context["foo"] = 0
+		zeroHash1 = context.variableHash( "foo" )
+		context["foo"] = float(0)
+		zeroHash2 = context.variableHash( "foo" )
+		self.assertNotEqual( zeroHash1, zeroHash2 )
+
+		# Check the intial value again
+		context["foo"] = 1
+		self.assertEqual( context.variableHash( "foo" ), initialHash )
+
+		# With a single entry, the hash for the one variable is the same as the total hash of the context
+		context.remove("bar")
+		context.remove("framesPerSecond")
+		context.remove("frame")
+		self.assertEqual( context.variableHash( "foo" ), context.hash() )
+
 
 	@staticmethod
 	def collisionCountParallelHelper( seed, mode, countList ):

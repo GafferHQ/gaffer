@@ -75,10 +75,13 @@ void GafferTest::testManyContexts()
 	Timer t;
 	for( int i = 0; i < 1000000; ++i )
 	{
-		ContextPtr tmp = new Context( *base, Context::Borrowed );
-		tmp->set( keys[i%numKeys], i );
-		GAFFERTEST_ASSERT( tmp->get<int>( keys[i%numKeys] ) == i );
-		GAFFERTEST_ASSERT( tmp->hash() != baseHash );
+		// In order to efficiently manipulate a context, we need to create an EditableScope.
+		// ( On the other hand, using a Context directly copies new memory for the value to
+		// create a fully independent context, which is pretty slow ).
+		Context::EditableScope tmp( base.get() );
+		tmp.set( keys[i%numKeys], &i );
+		GAFFERTEST_ASSERT( tmp.context()->get<int>( keys[i%numKeys] ) == i );
+		GAFFERTEST_ASSERT( tmp.context()->hash() != baseHash );
 	}
 }
 
@@ -146,12 +149,8 @@ void GafferTest::testEditableScope()
 	baseContext->set( "a", 10 );
 	baseContext->set( "b", 20 );
 
-	const IntData *aData = baseContext->get<IntData>( "a" );
-	size_t aRefCount = aData->refCount();
-
-	const IntData *bData = baseContext->get<IntData>( "b" );
-	size_t bRefCount = bData->refCount();
-
+	const int *aData = baseContext->getIfExists<int>( "a" );
+	const int *bData = baseContext->getIfExists<int>( "b" );
 	{
 		// Scope an editable copy of the context
 		Context::EditableScope scope( baseContext.get() );
@@ -169,25 +168,21 @@ void GafferTest::testEditableScope()
 
 		// The copy should even be referencing the exact same data
 		// as the original.
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "a" ) == aData );
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "b" ) == bData );
-		GAFFERTEST_ASSERT( currentContext->get<Data>( "a" ) == aData );
-		GAFFERTEST_ASSERT( currentContext->get<Data>( "b" ) == bData );
-
-		// But it shouldn't have affected the reference counts, because
-		// we rely on the base context to maintain the lifetime for us
-		// as an optimisation.
-		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
-		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
+		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "a" ) == aData );
+		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "b" ) == bData );
+		GAFFERTEST_ASSERT( currentContext->getIfExists<int>( "a" ) == aData );
+		GAFFERTEST_ASSERT( currentContext->getIfExists<int>( "b" ) == bData );
 
 		// Editing the copy shouldn't affect the original
-		scope.set( "c", 30 );
+		int newC = 30;
+		scope.set( "c", &newC );
 		GAFFERTEST_ASSERT( baseContext->get<int>( "c", -1 ) == -1 );
 		GAFFERTEST_ASSERT( currentContext->get<int>( "c" ) == 30 );
 
 		// Even if we're editing a variable that exists in
 		// the original.
-		scope.set( "a", 40 );
+		int newA = 40;
+		scope.set( "a", &newA );
 		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
 		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 40 );
 
@@ -199,12 +194,9 @@ void GafferTest::testEditableScope()
 
 		// And none of the edits should have affected the original
 		// data at all.
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "a" ) == aData );
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "b" ) == bData );
-		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
-		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
+		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "a" ) == aData );
+		GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "b" ) == bData );
 	}
-
 }
 
 // Create the number of contexts specified, and return counts for how many collisions there are

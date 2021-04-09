@@ -78,28 +78,29 @@ void set( Context &c, const IECore::InternedString &name, const T &value )
 	c.set( name, value );
 }
 
-// In the C++ API, get() returns "const Data *". Because python has no idea of constness,
-// by default we return a copy from the bindings because we don't want the unwitting Python
-// scripter to accidentally modify the internals of a Context. We do however expose the
-// option to get the original object returned using an "_copy = False" keyword argument,
-// in the same way as we do for the TypedObjectPlug::getValue() binding. This is mainly of
-// use in the unit tests, but may also have the odd application where performance is critical.
-// As a general rule, you should be wary of using this parameter.
-object get( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
+void setFromData( Context &c, const IECore::InternedString &name, const IECore::Data * value )
 {
-	ConstDataPtr d = c.get<Data>( name, nullptr );
-	return dataToPython( d.get(), copy, defaultValue );
+	IECorePython::ScopedGILRelease gilRelease;
+	c.set( name, value );
+}
+
+// In the C++ API, the untemplated get() returns a freshly copied ConstDataPtr, so it is safe
+// to just pass to Python without copying again.
+object get( Context &c, const IECore::InternedString &name, object defaultValue )
+{
+	DataPtr d = c.getAsData( name, nullptr );
+	return dataToPython( d.get(), false, defaultValue );
 }
 
 object getItem( Context &c, const IECore::InternedString &name )
 {
-	ConstDataPtr d = c.get<Data>( name );
-	return dataToPython( d.get(), /* copy = */ true );
+	DataPtr d = c.getAsData( name );
+	return dataToPython( d.get(), /* copy = */ false );
 }
 
 bool contains( Context &c, const IECore::InternedString &name )
 {
-	return c.get<Data>( name, nullptr );
+	return bool( c.getAsData( name, nullptr ) );
 }
 
 void delItem( Context &context, const IECore::InternedString &name )
@@ -155,15 +156,9 @@ void GafferModule::bindContext()
 	IECorePython::RefCountedClass<Context, IECore::RefCounted> contextClass( "Context" );
 	scope s = contextClass;
 
-	enum_<Context::Ownership>( "Ownership" )
-		.value( "Copied", Context::Copied )
-		.value( "Shared", Context::Shared )
-		.value( "Borrowed", Context::Borrowed )
-	;
-
 	contextClass
 		.def( init<>() )
-		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
+		.def( init<const Context &>( ( arg( "other" ) ) ) )
 		.def(
 			init<const Context &, const IECore::Canceller &>( ( arg( "other" ), arg( "canceller" ) ) ) [
 				with_custodian_and_ward<1,3>()
@@ -184,7 +179,7 @@ void GafferModule::bindContext()
 		.def( "set", &set<Imath::V2f> )
 		.def( "set", &set<Imath::V3f> )
 		.def( "set", &set<Imath::Color3f> )
-		.def( "set", &set<Data *> )
+		.def( "set", &setFromData )
 		.def( "__setitem__", &set<float> )
 		.def( "__setitem__", &set<int> )
 		.def( "__setitem__", &set<std::string> )
@@ -193,18 +188,18 @@ void GafferModule::bindContext()
 		.def( "__setitem__", &set<Imath::V2f> )
 		.def( "__setitem__", &set<Imath::V3f> )
 		.def( "__setitem__", &set<Imath::Color3f> )
-		.def( "__setitem__", &set<Data *> )
-		.def( "get", &get, ( arg( "defaultValue" ) = object(), arg( "_copy" ) = true ) )
+		.def( "__setitem__", &setFromData )
+		.def( "get", &get, ( arg( "defaultValue" ) = object() ) )
 		.def( "__getitem__", &getItem )
 		.def( "__contains__", &contains )
 		.def( "remove", &delItem )
 		.def( "__delitem__", &delItem )
 		.def( "removeMatching", &removeMatching )
-		.def( "changed", &Context::changed )
 		.def( "names", &names )
 		.def( "keys", &names )
 		.def( "changedSignal", &Context::changedSignal, return_internal_reference<1>() )
 		.def( "hash", &Context::hash )
+		.def( "variableHash", &Context::variableHash )
 		.def( self == self )
 		.def( self != self )
 		.def( "substitute", &Context::substitute, ( arg( "input" ), arg( "substitutions" ) = IECore::StringAlgo::AllSubstitutions ) )
