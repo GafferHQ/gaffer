@@ -1,6 +1,11 @@
 0.59.x.x (relative to 0.59.7.0)
 ========
 
+Features
+--------
+
+- FilterQuery : Added a new node for querying the results of a filter at a specific location.
+
 Improvements
 ------------
 
