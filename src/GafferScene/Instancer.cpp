@@ -922,6 +922,10 @@ Instancer::Instancer( const std::string &name )
 	addChild( new ScenePlug( "__capsuleScene", Plug::Out ) );
 	addChild( new PathMatcherDataPlug( "__setCollaborate", Plug::Out, new IECore::PathMatcherData() ) );
 
+	// Hide `destination` plug until we resolve issues surrounding `processesRootObject()`.
+	// See `BranchCreator::computeObject()`.
+	destinationPlug()->setName( "__destination" );
+
 	capsuleScenePlug()->boundPlug()->setInput( outPlug()->boundPlug() );
 	capsuleScenePlug()->transformPlug()->setInput( outPlug()->transformPlug() );
 	capsuleScenePlug()->attributesPlug()->setInput( outPlug()->attributesPlug() );

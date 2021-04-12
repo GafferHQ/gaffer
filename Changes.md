@@ -4,9 +4,15 @@
 Improvements
 ------------
 
-- Parent : Added `parentVariable` plug, to create a context variable that passes the
-  parent location to nodes upstream of the `children` plug. This allows the children
-  to be varied procedurally according to what they are parented to.
+- Parent :
+  - Added `parentVariable` plug, to create a context variable that passes the
+    parent location to nodes upstream of the `children` plug. This allows the children
+    to be varied procedurally according to what they are parented to.
+  - Added `destination` plug, to allow children to be placed elsewhere in the scene
+    while still inheriting the transform of the "parent". This is particularly useful
+    when parenting lights to geometry.
+- Seeds : Added `destination` plug, to control where the points are placed in the scene
+  relative to the meshes they are generated from.
 - Outputs : Reduced the time taken to show the NodeEditor by around 90%.
 - NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
 - GraphEditor : Improved framing of nodes dragged and dropped onto the GraphEditor :

@@ -38,6 +38,8 @@
 
 #include "GafferScene/Capsule.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "IECore/NullObject.h"
 
 using namespace std;
@@ -143,6 +145,10 @@ size_t Unencapsulate::g_firstPlugIndex = 0;
 Unencapsulate::Unencapsulate( const std::string &name )
 	:	BranchCreator( name )
 {
+	// Hide `destination` plug until we resolve issues surrounding `processesRootObject()`.
+	// See `BranchCreator::computeObject()`. Or perhaps we would never want to allow a
+	// different destination anyway?
+	destinationPlug()->setName( "__destination" );
 	storeIndexOfNextChild( g_firstPlugIndex );
 }
 

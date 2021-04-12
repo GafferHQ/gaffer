@@ -72,5 +72,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"destination" : [
+
+			# Deliberately not documenting destination plug, so that
+			# it is given documentation more specific to each
+			# derived class.
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			"ui:spreadsheet:selectorValue", "${scene:path}",
+			"layout:index", -1,
+
+		],
+
 	}
 )

@@ -56,6 +56,27 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
+/// A base class to simplify the process of creating new branches in the scene
+/// hierarchy. The source data for each branch is specified by the input
+/// locations matched by the filter. By default, the branches are made
+/// underneath the source locations, but they can be relocated by using the
+/// `destination` plug. We use the following terminology :
+///
+/// - `sourcePath` : An input location matched by `filter`. Each source will create
+///   exactly one branch.
+/// - `destinationPath` : The location where branch will be created in the output scene.
+///   This is specified by `destinationPlug()`, and defaults to `sourcePath`. Multiple
+///   branches may have the same destination, but this is handled transparently and
+///   doesn't affect derived classes. In the case of branches at the same destination
+///   having identical names, numeric suffixes are appended automatically to uniquefy them.
+/// - `branchPath` : A path to a location within a branch, specified relative to `destinationPath`.
+///   The primary responsibility of derived classes is to generate data for `branchPath` from the
+///   information provided by `sourcePath`.
+///
+/// > Note : The unfortunately-named `parent` plug specifies a `sourcePath` to be used when
+/// > no filter is connected. It is a historical artifact from when BranchCreator didn't
+/// > support filtering. It remains for backwards compatibility and because it is useful for
+/// > simple uses in the Parent node.
 class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 {
 
@@ -67,6 +88,9 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 
 		Gaffer::StringPlug *parentPlug();
 		const Gaffer::StringPlug *parentPlug() const;
+
+		Gaffer::StringPlug *destinationPlug();
+		const Gaffer::StringPlug *destinationPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
@@ -127,9 +151,7 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		virtual IECore::ConstCompoundObjectPtr computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
 
 		virtual bool affectsBranchObject( const Gaffer::Plug *input ) const;
-		/// Called to determine if the parent object is affected. If true, hashBranchObject and computeBranchObject
-		/// will be called with an empty branchPath when the parentPath is an exact match. The default implementation
-		/// returns false as most BranchCreators should leave the parent object intact.
+		/// \deprecated
 		virtual bool processesRootObject() const;
 		virtual void hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstObjectPtr computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const = 0;
@@ -152,29 +174,31 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		virtual IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		//@}
 
-		// Computes the relevant parent and branch paths for computing the result
+		// Computes the relevant source and branch paths for computing the result
 		// at the specified path. Returns a PathMatcher::Result to describe where path is
-		// relative to the parent, as follows :
+		// relative to the branch destination, as follows :
 		//
 		// AncestorMatch
 		//
-		// The path is on a branch below the parent, parentPath and branchPath
-		// are filled in appropriately, and branchPath will not be empty.
+		// The path is on a branch below the destination, `sourcePath` and `branchPath`
+		// are filled in appropriately, and `branchPath` will not be empty.
 		//
 		// ExactMatch
 		//
-		// The path is at the parent exactly, parentPath will be filled
-		// in appropriately and branchPath will be empty.
+		// The path is at the branch destination exactly. Neither `sourcePath` nor `branchPath`
+		// will be filled in.
 		//
 		// DescendantMatch
 		//
-		// The path is above one or more parents. Neither parentPath nor branchPath
+		// The path is above one or more branch destinations. Neither `sourcePath` nor `branchPath`
 		// will be filled in.
 		//
 		// NoMatch
 		//
 		// The path is a direct pass through from the input - neither
-		// parentPath nor branchPath will be filled in.
+		// `sourcePath` nor `branchPath` will be filled in.
+		IECore::PathMatcher::Result sourceAndBranchPaths( const ScenePath &path, ScenePath &sourcePath, ScenePath &branchPath ) const;
+		/// \deprecated
 		IECore::PathMatcher::Result parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 	private :
@@ -193,19 +217,20 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		/// `branchesPlug()`.
 		ConstBranchesDataPtr branches( const Gaffer::Context *context ) const;
 
-		/// Used to calculate the name remapping needed to prevent name clashes with
-		/// the existing scene. Must be evaluated in a context where "scene:path" is
-		/// one of the parent paths.
+		/// Used to calculate the name remapping needed to prevent name clashes
+		/// with the existing scene. Must be evaluated in a context where
+		/// "scene:path" is one of the destination paths. This is mapping is
+		/// computed separately from `branchesPlug()` so that we can delay calls
+		/// to `hashBranch*()` and `computeBranch*()` till as late as possible.
 		Gaffer::ObjectPlug *mappingPlug();
 		const Gaffer::ObjectPlug *mappingPlug() const;
 
 		void hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstDataPtr computeMapping( const Gaffer::Context *context ) const;
 
-		// Returns the parent paths that should be used to compute a set. If these are empty,
-		// the input set will be passed through unchanged.
-		IECore::PathMatcher parentPathsForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const;
-		bool affectsParentPathsForSet( const Gaffer::Plug *input ) const;
+		// Returns `branches()` if it should be used to compute a set, otherwise `nullptr`.
+		ConstBranchesDataPtr branchesForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const;
+		bool affectsBranchesForSet( const Gaffer::Plug *input ) const;
 
 		static size_t g_firstPlugIndex;
 
