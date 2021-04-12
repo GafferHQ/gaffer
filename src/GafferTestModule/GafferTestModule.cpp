@@ -43,6 +43,7 @@
 #include "GafferTest/FilteredRecursiveChildIteratorTest.h"
 #include "GafferTest/MetadataTest.h"
 #include "GafferTest/MultiplyNode.h"
+#include "GafferTest/RandomTest.h"
 #include "GafferTest/RecursiveChildIteratorTest.h"
 
 #include "LRUCacheTest.h"
@@ -95,6 +96,7 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testContextCopyPerformance", &testContextCopyPerformance );
 	def( "testComputeNodeThreading", &testComputeNodeThreading );
 	def( "testDownstreamIterator", &testDownstreamIterator );
+	def( "testRandomPerf", &testRandomPerf );
 
 	bindTaskMutexTest();
 	bindLRUCacheTest();
