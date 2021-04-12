@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import six
+
 import IECore
 
 import Gaffer
@@ -47,16 +49,22 @@ class ContextSanitiserTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 		plane["sets"].setValue( "a" )
 
+		# A ContextSanitiser is automatically hooked up by SceneTestCase.setUp, so
+		# we don't need to explicitly set one up
 		with IECore.CapturingMessageHandler() as mh :
-			with GafferSceneTest.ContextSanitiser() :
-				with Gaffer.Context() as c :
+			with Gaffer.Context() as c :
 
-					c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
-					plane["out"]["globals"].getValue()
+				c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+				c["scene:setName"] = IECore.InternedStringData( "a" )
+				plane["out"]["globals"].getValue()
 
-					c["scene:setName"] = IECore.InternedStringData( "a" )
-					plane["out"]["set"].getValue()
+				plane["out"]["set"].getValue()
 
+				plane["out"]["object"].getValue()
+
+				c["scene:setName"] = IECore.IntData( 5 )
+
+				with six.assertRaisesRegex( self, IECore.Exception, 'Context entry is not of type "InternedStringData"' ) :
 					plane["out"]["object"].getValue()
 
 		for message in mh.messages :
@@ -66,11 +74,9 @@ class ContextSanitiserTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			[ m.message for m in mh.messages ],
 			[
-				"scene:path in context for Plane.out.globals computeNode:hash",
+				"scene:setName in context for Plane.out.globals computeNode:hash",
 				"scene:path in context for Plane.out.globals computeNode:hash",
 				"scene:path in context for Plane.out.set computeNode:hash",
-				"scene:path in context for Plane.out.set computeNode:hash",
-				"scene:setName in context for Plane.out.object computeNode:hash",
 				"scene:setName in context for Plane.out.object computeNode:hash",
 			]
 		)
