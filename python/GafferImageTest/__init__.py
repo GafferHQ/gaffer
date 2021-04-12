@@ -102,6 +102,7 @@ from .DeepStateTest import DeepStateTest
 from .EmptyTest import EmptyTest
 from .DeepHoldoutTest import DeepHoldoutTest
 from .DeepRecolorTest import DeepRecolorTest
+from .ContextSanitiserTest import ContextSanitiserTest
 
 if __name__ == "__main__":
 	import unittest
