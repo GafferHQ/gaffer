@@ -166,5 +166,10 @@ class RandomTest( GafferTest.TestCase ) :
 		self.assertEqual( c3, c4 )
 		self.assertEqual( c3, c2 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testRandomPerf( self ) :
+
+		GafferTest.testRandomPerf()
+
 if __name__ == "__main__":
 	unittest.main()
