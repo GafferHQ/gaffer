@@ -156,6 +156,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 	def testEmptyParent( self ) :
 
 		c = GafferScene.Cube()
+		c["sets"].setValue( "A" )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( c["out"] )
