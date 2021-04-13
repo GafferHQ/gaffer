@@ -200,5 +200,21 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 		self.assertIsInstance( s2["c"]["in"], Gaffer.IntPlug )
 		self.assertIsInstance( s2["c"]["out"], Gaffer.IntPlug )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testPerformance( self ):
+		c = Gaffer.ContextVariables()
+		c.setup( Gaffer.IntPlug() )
+		for i in range( 10 ):
+			c["variables"].addChild( Gaffer.NameValuePlug( "a%i"%i, IECore.StringData( "A" * 100 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		c["variables"].addChild( Gaffer.NameValuePlug( "intName", IECore.IntData( 100 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		# This would be a bit more representative if our source node was actually affected by the context variables,
+		# but without access to OSL in this test we don't have any efficient way to read context variables handy,
+		# and we're mostly just interested in the amount of overhead anyway
+		n = GafferTest.MultiplyNode()
+		c["in"].setInput( n["product"] )
+
+		GafferTest.parallelGetValue( c["out"], 1000000, "iter" )
+
 if __name__ == "__main__":
 	unittest.main()
