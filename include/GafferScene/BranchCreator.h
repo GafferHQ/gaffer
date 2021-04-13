@@ -174,30 +174,6 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		virtual IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &sourcePath, const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		//@}
 
-		// Computes the relevant source and branch paths for computing the result
-		// at the specified path. Returns a PathMatcher::Result to describe where path is
-		// relative to the branch destination, as follows :
-		//
-		// AncestorMatch
-		//
-		// The path is on a branch below the destination, `sourcePath` and `branchPath`
-		// are filled in appropriately, and `branchPath` will not be empty.
-		//
-		// ExactMatch
-		//
-		// The path is at the branch destination exactly. Neither `sourcePath` nor `branchPath`
-		// will be filled in.
-		//
-		// DescendantMatch
-		//
-		// The path is above one or more branch destinations. Neither `sourcePath` nor `branchPath`
-		// will be filled in.
-		//
-		// NoMatch
-		//
-		// The path is a direct pass through from the input - neither
-		// `sourcePath` nor `branchPath` will be filled in.
-		IECore::PathMatcher::Result sourceAndBranchPaths( const ScenePath &path, ScenePath &sourcePath, ScenePath &branchPath ) const;
 		/// \deprecated
 		IECore::PathMatcher::Result parentAndBranchPaths( const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
@@ -231,6 +207,31 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 		// Returns `branches()` if it should be used to compute a set, otherwise `nullptr`.
 		ConstBranchesDataPtr branchesForSet( const IECore::InternedString &setName, const Gaffer::Context *context ) const;
 		bool affectsBranchesForSet( const Gaffer::Plug *input ) const;
+
+		// Classification that determines how locations are
+		// processed.
+		enum LocationType
+		{
+			// On a branch, delegated to the `computeBranch*()` methods.
+			Branch,
+			// Destination which forms the root for a branch. Several
+			// source locations may map to the same destination.
+			Destination,
+			// As above, but the location does not exist in the input scene.
+			NewDestination,
+			// Ancestor of a Destination location.
+			Ancestor,
+			// As above, but the location does not exist in the input scene.
+			NewAncestor,
+			// Location is unrelated to any branches, and is a direct pass
+			// through of the input scene.
+			PassThrough
+		};
+
+		// Returns the classification for `path`. If `Branch`, fills in `sourcePath`
+		// and `branchPath`. If `newChildNames` is passed, then it will be assigned
+		// the names of any `NewDestination/NewAncestor` children at this location.
+		LocationType sourceAndBranchPaths( const ScenePath &path, ScenePath &sourcePath, ScenePath &branchPath, IECore::ConstInternedStringVectorDataPtr *newChildNames = nullptr ) const;
 
 		static size_t g_firstPlugIndex;
 

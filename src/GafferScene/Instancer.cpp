@@ -2020,7 +2020,7 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 		// when branchPath.size() != 2, we are able to just use all the logic from
 		// BranchCreator, without exposing any new API surface
 		ScenePath sourcePath, branchPath;
-		sourceAndBranchPaths( path, sourcePath, branchPath );
+		parentAndBranchPaths( path, sourcePath, branchPath );
 		if( branchPath.size() == 2 )
 		{
 			BranchCreator::hashBranchObject( sourcePath, branchPath, context, h );

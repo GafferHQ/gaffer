@@ -36,6 +36,7 @@
 
 import os.path
 import inspect
+import six
 
 import imath
 
@@ -756,6 +757,124 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( script["parent"]["out"].fullTransform( "/group/cube" ), script["parent"]["in"].fullTransform( "/group/sphere1" ) )
 		self.assertEqual( script["parent"]["out"].fullTransform( "/group/cube1" ), script["parent"]["in"].fullTransform( "/group/sphere2" ) )
+
+	def testCreateNewDestination( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "A" )
+		sphere["transform"]["translate"]["x"].setValue( 1 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out" ])
+		group["transform"]["translate"]["y"].setValue( 2 )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "A" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( cube["out"] )
+		parent["parent"].setValue( "/group/sphere" )
+		parent["destination"].setValue( "/group/parented/things" )
+
+		self.assertSceneValid( parent["out"] )
+
+		self.assertEqual( parent["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group" ] ) )
+		self.assertEqual( parent["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "sphere", "parented" ] ) )
+		self.assertEqual( parent["out"].childNames( "/group/sphere" ), IECore.InternedStringVectorData() )
+		self.assertEqual( parent["out"].childNames( "/group/parented" ), IECore.InternedStringVectorData( [ "things" ] ) )
+		self.assertEqual( parent["out"].childNames( "/group/parented/things" ), IECore.InternedStringVectorData( [ "cube" ] ) )
+		self.assertEqual( parent["out"].childNames( "/group/parented/things/cube" ), IECore.InternedStringVectorData() )
+
+		self.assertPathHashesEqual( parent["out"], "/group", parent["in"], "/group", checks = self.allPathChecks - { "bound", "childNames" } )
+
+		self.assertPathsEqual(
+			parent["out"], "/group/parented/things/cube", cube["out"], "/cube",
+			checks = self.allPathChecks - { "transform" }
+		)
+		self.assertEqual(
+			parent["out"].fullTransform( "/group/parented/things/cube" ),
+			parent["out"].fullTransform( "/group/sphere" )
+		)
+
+		self.assertEqual( parent["out"].set( "A" ).value, IECore.PathMatcher( [ "/group/sphere", "/group/parented/things/cube" ] ) )
+
+	def testNonPreExistingNestedDestination( self ) :
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/*" ] ) )
+
+		plane = GafferScene.Plane()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( plane["out"] )
+		parent["filter"].setInput( filter["out"] )
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setValue( "${scene:path}" )
+		spreadsheet["rows"].addColumn( parent["destination"] )
+		parent["destination"].setInput( spreadsheet["out"]["destination" ] )
+		spreadsheet["rows"].addRows( 2 )
+		spreadsheet["rows"][1]["name"].setValue( "/group/sphere" )
+		spreadsheet["rows"][1]["cells"]["destination"]["value"].setValue( "/newOuterGroup" )
+		spreadsheet["rows"][2]["name"].setValue( "/group/cube" )
+		spreadsheet["rows"][2]["cells"]["destination"]["value"].setValue( "/newOuterGroup/newInnerGroup" )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, 'Destination "/newOuterGroup" contains a nested destination' ) :
+			parent["out"].childNames( "/newOuterGroup" )
+
+		# Swap order, so they are likely visited the other way round when building the branches tree.
+		spreadsheet["rows"][1]["cells"]["destination"]["value"].setValue( "/newOuterGroup/newInnerGroup" )
+		spreadsheet["rows"][2]["cells"]["destination"]["value"].setValue( "/newOuterGroup" )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, 'Destination "/newOuterGroup" contains a nested destination' ) :
+			parent["out"].childNames( "/newOuterGroup" )
+
+	def testMultipleNewDestinationsBelowOneParent( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["cube"] = GafferScene.Cube()
+		script["sphere"] = GafferScene.Sphere()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group"]["in"][1].setInput( script["cube"]["out"] )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube", "/group/sphere" ] ) )
+
+		script["plane"] = GafferScene.Plane()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["group"]["out"] )
+		script["parent"]["filter"].setInput( script["filter"]["out"] )
+		script["parent"]["children"][0].setInput( script["plane"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			path = context["scene:path"]
+			if path[-1] == "sphere" :
+				parent["parent"]["destination"] = "/group/childrenOfRoundThings"
+			else :
+				parent["parent"]["destination"] = "/group/childrenOfSquareThings"
+			"""
+		) )
+
+		self.assertSceneValid( script["parent"]["out"] )
+
+		# We expect alphabetical ordering for the new names.
+		self.assertEqual(
+			script["parent"]["out"].childNames( "/group" ),
+			IECore.InternedStringVectorData( [ "sphere", "cube", "childrenOfRoundThings", "childrenOfSquareThings" ] )
+		)
 
 if __name__ == "__main__":
 	unittest.main()
