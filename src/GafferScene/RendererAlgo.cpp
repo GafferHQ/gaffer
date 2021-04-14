@@ -397,7 +397,7 @@ struct RenderSets::Updater
 				potentialChange = LightsSetChanged;
 			}
 
-			setScope.setSetName( n );
+			setScope.setSetName( &n );
 			const IECore::MurmurHash &hash = m_scene->setPlug()->hash();
 			if( s->hash != hash )
 			{

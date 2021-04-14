@@ -290,7 +290,8 @@ void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *con
 			if( !dataWindow.isEmpty() )
 			{
 				ImagePlug::ChannelDataScope channelDataScope( context );
-				channelDataScope.setTileOrigin( ImagePlug::tileOrigin( dataWindow.min ) );
+				Imath::V2i dataTileOrigin = ImagePlug::tileOrigin( dataWindow.min );
+				channelDataScope.setTileOrigin( &dataTileOrigin );
 				shadingPlug()->hash( h );
 			}
 		}
@@ -347,7 +348,8 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 			if( !dataWindow.isEmpty() )
 			{
 				ImagePlug::ChannelDataScope channelDataScope( context );
-				channelDataScope.setTileOrigin( ImagePlug::tileOrigin( dataWindow.min ) );
+				Imath::V2i dataTileOrigin = ImagePlug::tileOrigin( dataWindow.min );
+				channelDataScope.setTileOrigin( &dataTileOrigin );
 
 				ConstCompoundDataPtr shading = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
 				for( CompoundDataMap::const_iterator it = shading->readable().begin(), eIt = shading->readable().end(); it != eIt; ++it )
@@ -426,7 +428,7 @@ void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 		if( std::binary_search( affectedChannels->readable().begin(), affectedChannels->readable().end(), channelName ) )
 		{
 			// Channel is affected, include shading hash
-			c.set( ImagePlug::tileOriginContextName, tileOrigin );
+			c.set( ImagePlug::tileOriginContextName, &tileOrigin );
 			shadingPlug()->hash( h );
 			h.append( channelName );
 			return;
@@ -449,7 +451,7 @@ IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string 
 		if( std::binary_search( affectedChannels->readable().begin(), affectedChannels->readable().end(), channelName ) )
 		{
 			// Channel is affected, evaluate shading
-			c.set( ImagePlug::tileOriginContextName, tileOrigin );
+			c.set( ImagePlug::tileOriginContextName, &tileOrigin );
 
 			ConstCompoundDataPtr shadedPoints = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
 			ConstFloatVectorDataPtr result = shadedPoints->member<FloatVectorData>( channelName );
@@ -521,7 +523,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 		{
 			if( shadingEngine->needsAttribute( channelName ) )
 			{
-				c.setChannelName( channelName );
+				c.setChannelName( &channelName );
 				defaultedInPlug()->channelDataPlug()->hash( h );
 			}
 		}
@@ -570,7 +572,7 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 		{
 			if( shadingEngine->needsAttribute( channelName ) )
 			{
-				c.setChannelName( channelName );
+				c.setChannelName( &channelName );
 				shadingPoints->writable()[channelName] = boost::const_pointer_cast<FloatVectorData>(
 					defaultedInPlug()->channelDataPlug()->getValue()
 				);

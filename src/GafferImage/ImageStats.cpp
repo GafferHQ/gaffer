@@ -290,7 +290,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 		h.append( statIndex );
 
 		ImagePlug::ChannelDataScope s( context );
-		s.setChannelName( channelName );
+		s.setChannelName( &channelName );
 		allStatsPlug()->hash( h );
 		return;
 	}
@@ -366,7 +366,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		int statIndex = ( parent == averagePlug() ) ? 2 : ( parent == maxPlug() );
 
 		ImagePlug::ChannelDataScope s( context );
-		s.setChannelName( channelName );
+		s.setChannelName( &channelName );
 		Imath::V3d stats = boost::static_pointer_cast<const IECore::V3dData>( allStatsPlug()->getValue() )->readable();
 		static_cast<FloatPlug *>( output )->setValue( stats[ statIndex ] );
 		return;

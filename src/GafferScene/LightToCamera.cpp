@@ -460,7 +460,7 @@ IECore::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::Interne
 	/// work for us.
 	for( PathMatcher::Iterator pIt = lightSet.begin(), peIt = lightSet.end(); pIt != peIt; ++pIt )
 	{
-		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
+		sceneScope.set( ScenePlug::scenePathContextName, &(*pIt) );
 		const int m = filterPlug()->getValue();
 		if( m & IECore::PathMatcher::ExactMatch )
 		{

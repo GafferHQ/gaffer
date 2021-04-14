@@ -90,7 +90,7 @@ ScenePlug::ScenePath closestExistingPath( const ScenePlug *scene, const ScenePlu
 	ScenePlug::PathScope scope( Context::current() );
 	while( result.size() )
 	{
-		scope.setPath( result );
+		scope.setPath( &result );
 		if( scene->existsPlug()->getValue() )
 		{
 			return result;
@@ -159,7 +159,7 @@ class BranchCreator::BranchesData : public IECore::Data
 				const auto parent = branchCreator->parentPlugPath();
 				if( parent )
 				{
-					ScenePlug::PathScope pathScope( context, *parent );
+					ScenePlug::PathScope pathScope( context, &*parent );
 					addBranch( branchCreator, *parent );
 				}
 			}
@@ -226,7 +226,7 @@ class BranchCreator::BranchesData : public IECore::Data
 				const auto parent = branchCreator->parentPlugPath();
 				if( parent )
 				{
-					ScenePlug::PathScope pathScope( context, *parent );
+					ScenePlug::PathScope pathScope( context, &*parent );
 					hashBranch( branchCreator, *parent, h );
 				}
 			}
@@ -947,7 +947,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 				hashBranchSet( sourcePath, setName, context, branchSetHash );
 				h.append( branchSetHash );
 			}
-			ScenePlug::PathScope pathScope( context,destination );
+			ScenePlug::PathScope pathScope( context, &destination );
 			mappingPlug()->hash( h );
 			h.append( destination.data(), destination.size() );
 		}
@@ -975,7 +975,7 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 			{
 				branchSets.push_back( computeBranchSet( sourcePath, setName, context ) );
 			}
-			ScenePlug::PathScope pathScope( context, destination );
+			ScenePlug::PathScope pathScope( context, &destination );
 			Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 			outputSet.addPaths( mapping->set( branchSets ), destination );
 		}
@@ -1195,7 +1195,7 @@ BranchCreator::LocationType BranchCreator::sourceAndBranchPaths( const ScenePath
 			Private::ConstChildNamesMapPtr mapping;
 			{
 				const ScenePath destinationPath( path.begin(), path.begin() + location->depth );
-				ScenePlug::PathScope pathScope( Context::current(), destinationPath );
+				ScenePlug::PathScope pathScope( Context::current(), &destinationPath );
 				mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 			}
 

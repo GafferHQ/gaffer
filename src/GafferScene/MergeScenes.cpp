@@ -313,7 +313,7 @@ void MergeScenes::hashActiveInputs( const Gaffer::Context *context, IECore::Murm
 		InputMask parentActiveInputs;
 		{
 			ScenePath parentPath = scenePath; parentPath.pop_back();
-			ScenePlug::PathScope parentScope( context, parentPath );
+			ScenePlug::PathScope parentScope( context, &parentPath );
 			parentActiveInputs = activeInputsPlug()->getValue();
 		}
 
@@ -355,7 +355,7 @@ int MergeScenes::computeActiveInputs( const Gaffer::Context *context ) const
 		InputMask parentActiveInputs;
 		{
 			ScenePath parentPath = scenePath; parentPath.pop_back();
-			ScenePlug::PathScope parentScope( context, parentPath );
+			ScenePlug::PathScope parentScope( context, &parentPath );
 			parentActiveInputs = activeInputsPlug()->getValue();
 		}
 
@@ -413,7 +413,7 @@ void MergeScenes::hashMergedDescendantsBound( const Gaffer::Context *context, IE
 	for( const auto &childName : childNamesData->readable() )
 	{
 		childPath.back() = childName;
-		childScope.setPath( childPath );
+		childScope.setPath( &childPath );
 		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
 		if( childActiveInputs.count() == 1 && childActiveInputs[firstActiveIndex] )
 		{
@@ -461,7 +461,7 @@ const Imath::Box3f MergeScenes::computeMergedDescendantsBound( const Gaffer::Con
 	for( const auto &childName : childNamesData->readable() )
 	{
 		childPath.back() = childName;
-		childScope.setPath( childPath );
+		childScope.setPath( &childPath );
 		const InputMask childActiveInputs( activeInputsPlug()->getValue() );
 		if( childActiveInputs.count() == 1 && childActiveInputs[firstActiveIndex] )
 		{

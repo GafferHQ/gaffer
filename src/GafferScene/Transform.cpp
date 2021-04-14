@@ -206,7 +206,7 @@ Imath::M44f Transform::relativeParentTransform( const ScenePath &path, const Gaf
 	while( ancestorPath.size() ) // Root transform is always identity so can be ignored
 	{
 		ancestorPath.pop_back();
-		pathScope.setPath( ancestorPath );
+		pathScope.setPath( &ancestorPath );
 		if( filterValue( pathScope.context() ) & IECore::PathMatcher::ExactMatch )
 		{
 			matchingAncestorFound = true;
@@ -228,7 +228,7 @@ IECore::MurmurHash Transform::relativeParentTransformHash( const ScenePath &path
 	while( ancestorPath.size() ) // Root transform is always identity so can be ignored
 	{
 		ancestorPath.pop_back();
-		pathScope.setPath( ancestorPath );
+		pathScope.setPath( &ancestorPath );
 		if( filterValue( pathScope.context() ) & IECore::PathMatcher::ExactMatch )
 		{
 			result.append( true );

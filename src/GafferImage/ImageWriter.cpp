@@ -1535,7 +1535,8 @@ void ImageWriter::execute() const
 	// `colorSpaceNode()`.
 
 	Context::EditableScope colorSpaceScope( Context::current() );
-	colorSpaceScope.set( "__imageWriter:colorSpace", colorSpace() );
+	std::string colorSpaceStr = colorSpace();
+	colorSpaceScope.set( "__imageWriter:colorSpace", &colorSpaceStr );
 
 	// Create an OIIO::ImageOutput
 

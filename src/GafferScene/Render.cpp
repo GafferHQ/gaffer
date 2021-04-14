@@ -244,7 +244,7 @@ void Render::execute() const
 		return;
 	}
 
-	renderScope.set( g_rendererContextName, rendererType );
+	renderScope.set( g_rendererContextName, &rendererType );
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();

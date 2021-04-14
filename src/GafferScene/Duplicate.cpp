@@ -287,7 +287,7 @@ void Duplicate::hashBranchTransform( const ScenePath &sourcePath, const ScenePat
 	if( branchPath.size() == 1 )
 	{
 		BranchCreator::hashBranchTransform( sourcePath, branchPath, context, h );
-		ScenePlug::PathScope s( context, sourcePath );
+		ScenePlug::PathScope s( context, &sourcePath );
 		duplicatesPlug()->hash( h );
 		h.append( branchPath[0] );
 	}
@@ -303,7 +303,7 @@ Imath::M44f Duplicate::computeBranchTransform( const ScenePath &sourcePath, cons
 {
 	if( branchPath.size() == 1 )
 	{
-		ScenePlug::PathScope s( context, sourcePath );
+		ScenePlug::PathScope s( context, &sourcePath );
 		ConstDuplicatesDataPtr duplicates = static_pointer_cast<const DuplicatesData>( duplicatesPlug()->getValue() );
 		return duplicates->transform( branchPath[0] );
 	}
@@ -363,7 +363,7 @@ void Duplicate::hashBranchChildNames( const ScenePath &sourcePath, const ScenePa
 	if( branchPath.size() == 0 )
 	{
 		BranchCreator::hashBranchChildNames( sourcePath, branchPath, context, h );
-		ScenePlug::PathScope s( context, sourcePath );
+		ScenePlug::PathScope s( context, &sourcePath );
 		duplicatesPlug()->hash( h );
 	}
 	else
@@ -378,7 +378,7 @@ IECore::ConstInternedStringVectorDataPtr Duplicate::computeBranchChildNames( con
 {
 	if( branchPath.size() == 0 )
 	{
-		ScenePlug::PathScope s( context, sourcePath );
+		ScenePlug::PathScope s( context, &sourcePath );
 		ConstDuplicatesDataPtr duplicates = static_pointer_cast<const DuplicatesData>( duplicatesPlug()->getValue() );
 		return duplicates->names();
 	}
@@ -419,7 +419,7 @@ void Duplicate::hashBranchSet( const ScenePath &sourcePath, const IECore::Intern
 {
 	h.append( inPlug()->setHash( setName ) );
 	h.append( sourcePath.data(), sourcePath.size() );
-	ScenePlug::PathScope s( context, sourcePath );
+	ScenePlug::PathScope s( context, &sourcePath );
 	duplicatesPlug()->hash( h );
 }
 
@@ -440,7 +440,7 @@ IECore::ConstPathMatcherDataPtr Duplicate::computeBranchSet( const ScenePath &so
 
 	ConstDuplicatesDataPtr duplicates;
 	{
-		ScenePlug::PathScope s( context, sourcePath );
+		ScenePlug::PathScope s( context, &sourcePath );
 		duplicates = static_pointer_cast<const DuplicatesData>( duplicatesPlug()->getValue() );
 	}
 

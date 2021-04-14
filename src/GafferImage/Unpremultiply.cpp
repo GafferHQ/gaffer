@@ -92,7 +92,7 @@ void Unpremultiply::hashChannelData( const GafferImage::ImagePlug *output, const
 	inPlug()->channelDataPlug()->hash( h );
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
-	channelDataScope.setChannelName( alphaChannel );
+	channelDataScope.setChannelName( &alphaChannel );
 
 	inPlug()->channelDataPlug()->hash( h );
 }
@@ -121,7 +121,7 @@ void Unpremultiply::processChannelData( const Gaffer::Context *context, const Im
 	}
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
-	channelDataScope.setChannelName( alphaChannel );
+	channelDataScope.setChannelName( &alphaChannel );
 
 	ConstFloatVectorDataPtr aData = inPlug()->channelDataPlug()->getValue();
 	const std::vector<float> &a = aData->readable();

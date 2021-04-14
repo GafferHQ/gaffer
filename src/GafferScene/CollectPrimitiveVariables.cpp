@@ -141,7 +141,7 @@ void CollectPrimitiveVariables::hashProcessedObject( const ScenePath &path, cons
 	InternedString suffixContextVariableName( suffixContextVariablePlug()->getValue() );
 	for( const std::string & suffix : suffixesData->readable() )
 	{
-		scope.set( suffixContextVariableName, suffix );
+		scope.set( suffixContextVariableName, &suffix );
 		IECore::MurmurHash curHash = inPlug()->objectPlug()->hash();
 		if( curHash != inputHash )
 		{
@@ -180,7 +180,7 @@ IECore::ConstObjectPtr CollectPrimitiveVariables::computeProcessedObject( const 
 	InternedString suffixContextVariableName( suffixContextVariablePlug()->getValue() );
 	for( unsigned int i = 0; i < suffixes.size(); i++ )
 	{
-		scope.set( suffixContextVariableName, suffixes[i] );
+		scope.set( suffixContextVariableName, &suffixes[i] );
 		IECore::MurmurHash collectObjectHash = inPlug()->objectPlug()->hash();
 		if( collectObjectHash == inputHash )
 		{

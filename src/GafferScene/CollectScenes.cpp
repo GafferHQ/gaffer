@@ -185,7 +185,7 @@ class CollectScenes::SourceScope : public Context::EditableScope
 		{
 		}
 
-		void setRoot( const std::string &root )
+		void setRoot( const std::string *root )
 		{
 			set( m_rootVariable, root );
 		}
@@ -210,18 +210,17 @@ class CollectScenes::SourcePathScope : public SourceScope
 			m_rootTreeLocation = m_rootTree->locationOrAncestor( downstreamPath );
 			if( m_rootTreeLocation->isRoot() )
 			{
-				setRoot( m_rootTreeLocation->rootVariableValue );
-				ScenePlug::ScenePath upstreamPath;
+				setRoot( &m_rootTreeLocation->rootVariableValue );
 				// We evaluate the sourceRootPlug _after_ setting the root name,
 				// so that users can use the root name in expressions and
 				// substitutions.
-				ScenePlug::stringToPath( collectScenes->sourceRootPlug()->getValue(), upstreamPath );
-				upstreamPath.insert( upstreamPath.end(), downstreamPath.begin() + m_rootTreeLocation->depth, downstreamPath.end() );
-				set( ScenePlug::scenePathContextName, upstreamPath );
+				ScenePlug::stringToPath( collectScenes->sourceRootPlug()->getValue(), m_upstreamPath );
+				m_upstreamPath.insert( m_upstreamPath.end(), downstreamPath.begin() + m_rootTreeLocation->depth, downstreamPath.end() );
+				set( ScenePlug::scenePathContextName, &m_upstreamPath );
 			}
 			else
 			{
-				set( ScenePlug::scenePathContextName, downstreamPath );
+				set( ScenePlug::scenePathContextName, &downstreamPath );
 			}
 		}
 
@@ -241,6 +240,7 @@ class CollectScenes::SourcePathScope : public SourceScope
 
 	private :
 
+		ScenePlug::ScenePath m_upstreamPath;
 		ConstRootTreePtr m_rootTree;
 		const RootTree::Location *m_rootTreeLocation;
 
@@ -579,13 +579,13 @@ void CollectScenes::hashGlobals( const Gaffer::Context *context, const ScenePlug
 		SceneProcessor::hashGlobals( context, parent, h );
 		for( const auto &root : rootTree->roots() )
 		{
-			sourceScope.setRoot( root );
+			sourceScope.setRoot( &root );
 			inPlug()->globalsPlug()->hash( h );
 		}
 	}
 	else
 	{
-		sourceScope.setRoot( rootTree->roots()[0] );
+		sourceScope.setRoot( &rootTree->roots()[0] );
 		h = inPlug()->globalsPlug()->hash();
 	}
 }
@@ -605,7 +605,7 @@ IECore::ConstCompoundObjectPtr CollectScenes::computeGlobals( const Gaffer::Cont
 		CompoundObjectPtr result = new CompoundObject;
 		for( const auto &root : rootTree->roots() )
 		{
-			sourceScope.setRoot( root );
+			sourceScope.setRoot( &root );
 			ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 			for( const auto &m : globals->members() )
 			{
@@ -616,7 +616,7 @@ IECore::ConstCompoundObjectPtr CollectScenes::computeGlobals( const Gaffer::Cont
 	}
 	else
 	{
-		sourceScope.setRoot( rootTree->roots()[0] );
+		sourceScope.setRoot( &rootTree->roots()[0] );
 		return inPlug()->globalsPlug()->getValue();
 	}
 }
@@ -631,7 +631,7 @@ void CollectScenes::hashSetNames( const Gaffer::Context *context, const ScenePlu
 	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
 	for( const auto &root : rootTree->roots() )
 	{
-		sourceScope.setRoot( root );
+		sourceScope.setRoot( &root );
 		inSetNamesPlug->hash( h );
 	}
 }
@@ -648,7 +648,7 @@ IECore::ConstInternedStringVectorDataPtr CollectScenes::computeSetNames( const G
 	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
 	for( const auto &root : rootTree->roots() )
 	{
-		sourceScope.setRoot( root );
+		sourceScope.setRoot( &root );
 		ConstInternedStringVectorDataPtr inSetNamesData = inSetNamesPlug->getValue();
 		for( const auto &setName : inSetNamesData->readable() )
 		{
@@ -678,7 +678,7 @@ void CollectScenes::hashSet( const IECore::InternedString &setName, const Gaffer
 	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
 	for( const auto &root : rootTree->roots() )
 	{
-		sourceScope.setRoot( root );
+		sourceScope.setRoot( &root );
 		inSetPlug->hash( h );
 		sourceRootPlug->hash( h );
 		h.append( root );
@@ -703,7 +703,7 @@ IECore::ConstPathMatcherDataPtr CollectScenes::computeSet( const IECore::Interne
 	ScenePlug::ScenePath prefix;
 	for( const auto &root : rootTree->roots() )
 	{
-		sourceScope.setRoot( root );
+		sourceScope.setRoot( &root );
 		ConstPathMatcherDataPtr inSetData = inSetPlug->getValue();
 		const PathMatcher &inSet = inSetData->readable();
 		if( !inSet.isEmpty() )

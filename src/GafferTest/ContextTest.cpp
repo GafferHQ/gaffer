@@ -298,12 +298,12 @@ void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool
 
 	const ThreadState &threadState = ThreadState::current();
 
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, 10000000 ), [&threadState, &varyingVarName]( const tbb::blocked_range<size_t> &r )
+	tbb::parallel_for( tbb::blocked_range<int>( 0, 10000000 ), [&threadState, &varyingVarName]( const tbb::blocked_range<int> &r )
 		{
-			for( size_t i = r.begin(); i != r.end(); ++i )
+			for( int i = r.begin(); i != r.end(); ++i )
 			{
 				Context::EditableScope scope( threadState );
-				scope.set( varyingVarName, (int)i );
+				scope.set( varyingVarName, &i );
 
 				// This call is relied on by ValuePlug's HashCacheKey, so it is crucial that it be fast
 				scope.context()->hash();
