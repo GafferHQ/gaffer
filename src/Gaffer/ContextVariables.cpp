@@ -91,13 +91,13 @@ void ContextVariables::processContext( Context::EditableScope &context ) const
 		IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
 		if( data )
 		{
-			context.set( name, data.get() );
+			context.setAllocated( name, data.get() );
 		}
 	}
 	IECore::ConstCompoundDataPtr extraVariablesData = extraVariablesPlug()->getValue();
 	const IECore::CompoundDataMap &extraVariables = extraVariablesData->readable();
 	for( IECore::CompoundDataMap::const_iterator it = extraVariables.begin(), eIt = extraVariables.end(); it != eIt; ++it )
 	{
-		context.set( it->first, it->second.get() );
+		context.setAllocated( it->first, it->second.get() );
 	}
 }
