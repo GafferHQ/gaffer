@@ -164,5 +164,7 @@ unsigned FilterPlug::match( const ScenePlug *scene ) const
 FilterPlug::SceneScope::SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug )
 	:	EditableScope( context )
 {
-	set( inputSceneContextName, (uint64_t)scenePlug );
+	m_scenePlug = scenePlug;
+	set<uint64_t>( inputSceneContextName, (uint64_t*)&m_scenePlug );
 }
+

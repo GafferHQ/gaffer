@@ -197,7 +197,7 @@ void Loop::hash( const ValuePlug *output, const Context *context, IECore::Murmur
 		Context::EditableScope tmpContext( context );
 		if( index >= 0 )
 		{
-			tmpContext.set<int>( indexVariable, index );
+			tmpContext.set( indexVariable, &index );
 		}
 		else
 		{
@@ -219,7 +219,7 @@ void Loop::compute( ValuePlug *output, const Context *context ) const
 		Context::EditableScope tmpContext( context );
 		if( index >= 0 )
 		{
-			tmpContext.set<int>( indexVariable, index );
+			tmpContext.set( indexVariable, &index );
 		}
 		else
 		{

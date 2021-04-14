@@ -137,6 +137,13 @@ std::vector<std::string> GafferImage::ImageAlgo::layerNames( const std::vector<s
 	return result;
 }
 
+const std::string GafferImage::ImageAlgo::channelNameA( "A" );
+const std::string GafferImage::ImageAlgo::channelNameR( "R" );
+const std::string GafferImage::ImageAlgo::channelNameG( "G" );
+const std::string GafferImage::ImageAlgo::channelNameB( "B" );
+const std::string GafferImage::ImageAlgo::channelNameZ( "Z" );
+const std::string GafferImage::ImageAlgo::channelNameZBack( "ZBack" );
+
 IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug )
 {
 	if( imagePlug->deepPlug()->getValue() )
@@ -292,7 +299,7 @@ IECore::ConstCompoundObjectPtr GafferImage::ImageAlgo::tiles( const ImagePlug *i
 			ImagePlug::ChannelDataScope channelDataScope( Gaffer::Context::current() );
 			for( unsigned int i = 0; i < channelNames.size(); i++ )
 			{
-				channelDataScope.setChannelName( channelNames[i] );
+				channelDataScope.setChannelName( &channelNames[i] );
 				channelDataResults[i]->members()[tileI] = const_cast<IECore::FloatVectorData*>(
 					imageP->channelDataPlug()->getValue().get()
 				);

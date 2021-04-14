@@ -184,7 +184,7 @@ struct AccessPrototypeContextVariable
 	{
 		T raw = PrimitiveVariable::IndexedView<T>( *v.primVar )[index];
 		T value = quantize( raw, v.quantize );
-		scope.set( v.name, value );
+		scope.setAllocated( v.name, value );
 	}
 
 	void operator()( const TypedData<vector<float>> *data, const PrototypeContextVariable &v, int index, Context::EditableScope &scope )
@@ -194,11 +194,11 @@ struct AccessPrototypeContextVariable
 
 		if( v.offsetMode )
 		{
-			scope.set( v.name, value + scope.context()->get<float>( v.name ) );
+			scope.setAllocated( v.name, value + scope.context()->get<float>( v.name ) );
 		}
 		else
 		{
-			scope.set( v.name, value );
+			scope.setAllocated( v.name, value );
 		}
 	}
 
@@ -209,11 +209,11 @@ struct AccessPrototypeContextVariable
 
 		if( v.offsetMode )
 		{
-			scope.set( v.name, float(value) + scope.context()->get<float>( v.name ) );
+			scope.setAllocated( v.name, float(value) + scope.context()->get<float>( v.name ) );
 		}
 		else
 		{
-			scope.set( v.name, value );
+			scope.setAllocated( v.name, value );
 		}
 	}
 
@@ -447,9 +447,11 @@ class Instancer::EngineData : public Data
 			}
 		}
 
-		const ScenePlug::ScenePath &prototypeRoot( const InternedString &name ) const
+		// Return a pointer since this is for internal use only, and it helps communicate that we
+		// are responsible for holding the storage for this scene path when it gets put in the context
+		const ScenePlug::ScenePath *prototypeRoot( const InternedString &name ) const
 		{
-			return runTimeCast<const InternedStringVectorData>( m_roots[m_names->input( name ).index] )->readable();
+			return &( m_roots[m_names->input( name ).index]->readable() );
 		}
 
 		const InternedStringVectorData *prototypeNames() const
@@ -565,7 +567,7 @@ class Instancer::EngineData : public Data
 
 				if( v.seedMode )
 				{
-					scope.set( v.name, seedForPoint( index, v.primVar, v.numSeeds, v.seedScramble ) );
+					scope.setAllocated( v.name, seedForPoint( index, v.primVar, v.numSeeds, v.seedScramble ) );
 					continue;
 				}
 
@@ -1384,9 +1386,9 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 				taskGroupContext
 			);
 
-			const ScenePlug::ScenePath &prototypeRoot = engine->prototypeRoot( prototypeName );
+			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName );
 			h.append( prototypeName );
-			h.append( &prototypeRoot[0], prototypeRoot.size() );
+			h.append( &(*prototypeRoot)[0], prototypeRoot->size() );
 			h.append( IECore::MurmurHash( h1Accum, h2Accum ) );
 		}
 	}
@@ -1646,7 +1648,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 		{
 			branchPath.resize( 2 );
 			branchPath.back() = prototypeName;
-			const ScenePlug::ScenePath &prototypeRoot = engine->prototypeRoot( prototypeName );
+			const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( prototypeName );
 
 			const vector<InternedString> &childNames = prototypeChildNames->member<InternedStringVectorData>( prototypeName )->readable();
 
@@ -1665,7 +1667,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 						const size_t pointIndex = engine->pointIndex( childNames[i] );
 						engine->setPrototypeContextVariables( pointIndex, scope );
 						ConstPathMatcherDataPtr instanceSet = prototypesPlug()->setPlug()->getValue();
-						PathMatcher pointInstanceSet = instanceSet->readable().subTree( prototypeRoot );
+						PathMatcher pointInstanceSet = instanceSet->readable().subTree( *prototypeRoot );
 
 						tbb::spin_mutex::scoped_lock lock( instanceMutex );
 						branchPath.back() = childNames[i];
@@ -1744,7 +1746,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		h.append( branchPath.back() );
 
 		{
-			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+			PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 			prototypesPlug()->transformPlug()->hash( h );
 			prototypesPlug()->boundPlug()->hash( h );
 		}
@@ -1752,7 +1754,7 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		h = prototypesPlug()->boundPlug()->hash();
 	}
 }
@@ -1785,7 +1787,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 		M44f childTransform;
 		Box3f childBound;
 		{
-			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+			PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 			childTransform = prototypesPlug()->transformPlug()->getValue();
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
@@ -1821,7 +1823,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		return prototypesPlug()->boundPlug()->getValue();
 	}
 }
@@ -1846,7 +1848,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 		// "/instances/<prototypeName>/<id>"
 		BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
 		{
-			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+			PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 			prototypesPlug()->transformPlug()->hash( h );
 		}
 		engineHash( parentPath, context, h );
@@ -1855,7 +1857,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		h = prototypesPlug()->transformPlug()->hash();
 	}
 }
@@ -1872,7 +1874,7 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 		// "/instances/<prototypeName>/<id>"
 		M44f result;
 		{
-			PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+			PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 			result = prototypesPlug()->transformPlug()->getValue();
 		}
 		ConstEngineDataPtr e = engine( parentPath, context );
@@ -1883,7 +1885,7 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		return prototypesPlug()->transformPlug()->getValue();
 	}
 }
@@ -1906,7 +1908,7 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 	else if( branchPath.size() == 2 )
 	{
 		// "/instances/<prototypeName>"
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		h = prototypesPlug()->attributesPlug()->hash();
 	}
 	else if( branchPath.size() == 3 )
@@ -1924,7 +1926,7 @@ void Instancer::hashBranchAttributes( const ScenePath &parentPath, const ScenePa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		h = prototypesPlug()->attributesPlug()->hash();
 	}
 }
@@ -1939,7 +1941,7 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	else if( branchPath.size() == 2 )
 	{
 		// "/instances/<prototypeName>"
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		return prototypesPlug()->attributesPlug()->getValue();
 	}
 	else if( branchPath.size() == 3 )
@@ -1958,7 +1960,7 @@ IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		return prototypesPlug()->attributesPlug()->getValue();
 	}
 }
@@ -1986,7 +1988,7 @@ void Instancer::hashBranchObject( const ScenePath &parentPath, const ScenePath &
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		h = prototypesPlug()->objectPlug()->hash();
 	}
 }
@@ -2001,7 +2003,7 @@ IECore::ConstObjectPtr Instancer::computeBranchObject( const ScenePath &parentPa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/...
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		return prototypesPlug()->objectPlug()->getValue();
 	}
 }
@@ -2093,7 +2095,7 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		h = prototypesPlug()->childNamesPlug()->hash();
 	}
 }
@@ -2126,7 +2128,7 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	else
 	{
 		// "/instances/<prototypeName>/<id>/..."
-		PrototypeScope scope( enginePlug(), context, parentPath, branchPath );
+		PrototypeScope scope( enginePlug(), context, &parentPath, &branchPath );
 		return prototypesPlug()->childNamesPlug()->getValue();
 	}
 }
@@ -2215,7 +2217,7 @@ void Instancer::hashBranchSet( const ScenePath &parentPath, const IECore::Intern
 	if( hasContextVariables )
 	{
 		Context::EditableScope scope( context );
-		scope.set( ScenePlug::scenePathContextName, parentPath );
+		scope.set( ScenePlug::scenePathContextName, &parentPath );
 		setCollaboratePlug()->hash( h );
 	}
 	else
@@ -2238,7 +2240,7 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &pa
 		// The setCollaborate plug does all the heavy work.  It is evaluated with the parentPath in the
 		// context's scenePath, and it returns a PathMatcher for the set contents of one branch.
 		Context::EditableScope scope( context );
-		scope.set( ScenePlug::scenePathContextName, parentPath );
+		scope.set( ScenePlug::scenePathContextName, &parentPath );
 		return setCollaboratePlug()->getValue();
 	}
 
@@ -2255,7 +2257,7 @@ IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &pa
 		branchPath.resize( 2 );
 		branchPath.back() = prototypeName;
 
-		PathMatcher instanceSet = inputSet->readable().subTree( engine->prototypeRoot( prototypeName ) );
+		PathMatcher instanceSet = inputSet->readable().subTree( *engine->prototypeRoot( prototypeName ) );
 
 		const vector<InternedString> &childNames = prototypeChildNames->member<InternedStringVectorData>( prototypeName )->readable();
 
@@ -2293,49 +2295,49 @@ IECore::ConstPathMatcherDataPtr Instancer::computeSet( const IECore::InternedStr
 
 Instancer::ConstEngineDataPtr Instancer::engine( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
-	ScenePlug::PathScope scope( context, parentPath );
+	ScenePlug::PathScope scope( context, &parentPath );
 	return boost::static_pointer_cast<const EngineData>( enginePlug()->getValue() );
 }
 
 void Instancer::engineHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ScenePlug::PathScope scope( context, parentPath );
+	ScenePlug::PathScope scope( context, &parentPath );
 	enginePlug()->hash( h );
 }
 
 IECore::ConstCompoundDataPtr Instancer::prototypeChildNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
-	ScenePlug::PathScope scope( context, parentPath );
+	ScenePlug::PathScope scope( context, &parentPath );
 	return prototypeChildNamesPlug()->getValue();
 }
 
 void Instancer::prototypeChildNamesHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ScenePlug::PathScope scope( context, parentPath );
+	ScenePlug::PathScope scope( context, &parentPath );
 	prototypeChildNamesPlug()->hash( h );
 }
 
-Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath &parentPath, const ScenePath &branchPath )
+Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath *parentPath, const ScenePath *branchPath )
 	:	Gaffer::Context::EditableScope( context )
 {
-	assert( branchPath.size() >= 2 );
+	assert( branchPath->size() >= 2 );
 
 	set( ScenePlug::scenePathContextName, parentPath );
 	ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
-	const ScenePlug::ScenePath &prototypeRoot = engine->prototypeRoot( branchPath[1] );
+	const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( (*branchPath)[1] );
 
-	if( branchPath.size() >= 3 && engine->hasContextVariables() )
+	if( branchPath->size() >= 3 && engine->hasContextVariables() )
 	{
-		const size_t pointIndex = engine->pointIndex( branchPath[2] );
+		const size_t pointIndex = engine->pointIndex( (*branchPath)[2] );
 		engine->setPrototypeContextVariables( pointIndex, *this );
 	}
 
-	if( branchPath.size() > 3 )
+	if( branchPath->size() > 3 )
 	{
-		ScenePlug::ScenePath prototypePath( prototypeRoot );
-		prototypePath.reserve( prototypeRoot.size() + branchPath.size() - 3 );
-		prototypePath.insert( prototypePath.end(), branchPath.begin() + 3, branchPath.end() );
-		set( ScenePlug::scenePathContextName, prototypePath );
+		m_prototypePath = *prototypeRoot;
+		m_prototypePath.reserve( prototypeRoot->size() + branchPath->size() - 3 );
+		m_prototypePath.insert( m_prototypePath.end(), branchPath->begin() + 3, branchPath->end() );
+		set( ScenePlug::scenePathContextName, &m_prototypePath );
 	}
 	else
 	{

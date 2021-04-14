@@ -921,7 +921,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 			// Set up a context to compute the scene at the right
 			// location.
 
-			ScenePlug::PathScope pathScope( m_threadState, m_scenePath );
+			ScenePlug::PathScope pathScope( m_threadState, &m_scenePath );
 
 			// Update the scene graph at this location.
 
@@ -1252,7 +1252,7 @@ void RenderController::update( const ProgressCallback &callback )
 	m_updateRequested = false;
 
 	Context::EditableScope scopedContext( m_context.get() );
-	scopedContext.set( "scene:renderer", m_renderer->name().string() );
+	scopedContext.set( "scene:renderer", &m_renderer->name().string() );
 
 	updateInternal( callback );
 }
@@ -1268,7 +1268,7 @@ std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( co
 	cancelBackgroundTask();
 
 	Context::EditableScope scopedContext( m_context.get() );
-	scopedContext.set( "scene:renderer", m_renderer->name().string() );
+	scopedContext.set( "scene:renderer", &m_renderer->name().string() );
 
 	m_backgroundTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
@@ -1293,7 +1293,7 @@ void RenderController::updateMatchingPaths( const IECore::PathMatcher &pathsToUp
 	}
 
 	Context::EditableScope scopedContext( m_context.get() );
-	scopedContext.set( "scene:renderer", m_renderer->name().string() );
+	scopedContext.set( "scene:renderer", &m_renderer->name().string() );
 
 	updateInternal( callback, &pathsToUpdate );
 }

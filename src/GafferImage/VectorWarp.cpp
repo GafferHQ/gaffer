@@ -215,21 +215,21 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
 
-	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameR ) )
 	{
-		channelDataScope.setChannelName( "R" );
+		channelDataScope.setChannelName( &ImageAlgo::channelNameR );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
-	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameG ) )
 	{
-		channelDataScope.setChannelName( "G" );
+		channelDataScope.setChannelName( &ImageAlgo::channelNameG );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
-	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
 	{
-		channelDataScope.setChannelName( "A" );
+		channelDataScope.setChannelName( &ImageAlgo::channelNameA );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
@@ -256,23 +256,23 @@ const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, con
 	ImagePlug::ChannelDataScope channelDataScope( context );
 
 	ConstFloatVectorDataPtr xData = ImagePlug::blackTile();
-	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameR ) )
 	{
-		channelDataScope.setChannelName( "R" );
+		channelDataScope.setChannelName( &ImageAlgo::channelNameR );
 		xData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr yData = ImagePlug::blackTile();
-	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameG ) )
 	{
-		channelDataScope.setChannelName( "G" );
+		channelDataScope.setChannelName( &ImageAlgo::channelNameG );
 		yData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
-	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
 	{
-		channelDataScope.setChannelName( "A" );
+		channelDataScope.setChannelName( &ImageAlgo::channelNameA );
 		aData = vectorPlug()->channelDataPlug()->getValue();
 	}
 

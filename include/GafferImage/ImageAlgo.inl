@@ -283,7 +283,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, co
 			[ imagePlug, &functor, &threadState ] ( const Imath::V2i &tileOrigin ) {
 
 				ImagePlug::ChannelDataScope channelDataScope( threadState );
-				channelDataScope.setTileOrigin( tileOrigin );
+				channelDataScope.setTileOrigin( &tileOrigin );
 				functor( imagePlug, tileOrigin );
 
 			}
@@ -322,7 +322,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 
 		for( const std::string &c : channelNames )
 		{
-			channelDataScope.setChannelName( c );
+			channelDataScope.setChannelName( &c );
 			functor( imagePlug, c, tileOrigin );
 		}
 	};
@@ -364,7 +364,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 			[ imagePlug, &tileFunctor, &threadState ] ( const Imath::V2i &tileOrigin ) {
 
 				ImagePlug::ChannelDataScope channelDataScope( threadState );
-				channelDataScope.setTileOrigin( tileOrigin );
+				channelDataScope.setTileOrigin( &tileOrigin );
 
 				return TileFilterResult(
 					tileOrigin, tileFunctor( imagePlug, tileOrigin )
@@ -380,7 +380,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 			[ imagePlug, &gatherFunctor, &threadState ] ( const TileFilterResult &input ) {
 
 				ImagePlug::ChannelDataScope channelDataScope( threadState );
-				channelDataScope.setTileOrigin( input.first );
+				channelDataScope.setTileOrigin( &input.first );
 
 				gatherFunctor( imagePlug, input.first, input.second );
 
@@ -413,7 +413,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 		ImagePlug::ChannelDataScope channelDataScope( Gaffer::Context::current() );
 		for( unsigned int i = 0; i < channelNames.size(); i++ )
 		{
-			channelDataScope.setChannelName( channelNames[i] );
+			channelDataScope.setChannelName( &channelNames[i] );
 			result[i] = tileFunctor( imagePlug, channelNames[i], tileOrigin );
 		}
 

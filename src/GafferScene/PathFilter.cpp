@@ -283,7 +283,8 @@ void PathFilter::hashRootSizes( const Gaffer::Context *context, IECore::MurmurHa
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	if( path.size() )
 	{
-		ScenePlug::PathScope parentScope( context, ScenePlug::ScenePath( path.begin(), path.begin() + path.size() - 1 ) );
+		ScenePlug::ScenePath parentPath( path.begin(), path.begin() + path.size() - 1 );
+		ScenePlug::PathScope parentScope( context, &parentPath );
 		rootSizesPlug()->hash( h );
 	}
 	rootsPlug()->hash( h );
@@ -299,7 +300,8 @@ ConstIntVectorDataPtr PathFilter::computeRootSizes( const Gaffer::Context *conte
 	ConstIntVectorDataPtr parentRootSizes;
 	if( path.size() )
 	{
-		ScenePlug::PathScope parentScope( context, ScenePlug::ScenePath( path.begin(), path.begin() + path.size() - 1 ) );
+		ScenePlug::ScenePath parentPath( path.begin(), path.begin() + path.size() - 1 );
+		ScenePlug::PathScope parentScope( context, &parentPath );
 		parentRootSizes = rootSizesPlug()->getValue();
 		// If the parent has no descendant roots, then we already have
 		// all the roots we need.

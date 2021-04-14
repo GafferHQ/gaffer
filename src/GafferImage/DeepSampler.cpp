@@ -125,13 +125,13 @@ void DeepSampler::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 			V2i tileOrigin = ImagePlug::tileOrigin( pixel );
 
 			ImagePlug::ChannelDataScope channelScope( context );
-			channelScope.setTileOrigin( tileOrigin );
+			channelScope.setTileOrigin( &tileOrigin );
 
 			imagePlug()->sampleOffsetsPlug()->hash( h );
 
 			for( const auto &i : channelNames->readable() )
 			{
-				channelScope.setChannelName( i );
+				channelScope.setChannelName( &i );
 				imagePlug()->channelDataPlug()->hash( h );
 			}
 		}
@@ -154,7 +154,7 @@ void DeepSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 
 
 			ImagePlug::ChannelDataScope channelScope( context );
-			channelScope.setTileOrigin( tileOrigin );
+			channelScope.setTileOrigin( &tileOrigin );
 			ConstIntVectorDataPtr sampleOffsetsData = imagePlug()->sampleOffsetsPlug()->getValue();
 
 			int pixelIndex = ImagePlug::pixelIndex( pixel, tileOrigin );
@@ -166,7 +166,7 @@ void DeepSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 			{
 				for( const auto &i : channelNames->readable() )
 				{
-					channelScope.setChannelName( i );
+					channelScope.setChannelName( &i );
 					ConstFloatVectorDataPtr channelData = imagePlug()->channelDataPlug()->getValue();
 
 					FloatVectorDataPtr pixelChannelData = new FloatVectorData();

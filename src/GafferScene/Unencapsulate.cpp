@@ -80,13 +80,14 @@ class CapsuleScope : boost::noncopyable
 			if( m_capsule )
 			{
 				m_scope.emplace( m_capsule->context() );
-				m_scope->set( ScenePlug::scenePathContextName, concatScenePath( m_capsule->root(), branchPath ) );
+				m_capsulePath = concatScenePath( m_capsule->root(), branchPath );
+				m_scope->set( ScenePlug::scenePathContextName, &m_capsulePath );
 			}
 		}
 
 		CapsuleScope(
 			const Gaffer::Context *context, const ScenePlug *inPlug,
-			const ScenePlug::ScenePath &parentPath, const InternedString &setName
+			const ScenePlug::ScenePath &parentPath, const InternedString *setName
 		) : CapsuleScope( context, inPlug, parentPath )
 		{
 			if( m_capsule )
@@ -131,6 +132,7 @@ class CapsuleScope : boost::noncopyable
 		boost::optional<Context::EditableScope> m_scope;
 		IECore::ConstObjectPtr m_object;
 		const Capsule* m_capsule;
+		ScenePlug::ScenePath m_capsulePath;
 
 };
 
@@ -290,7 +292,7 @@ bool Unencapsulate::affectsBranchSet( const Gaffer::Plug *input ) const
 
 void Unencapsulate::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	CapsuleScope cs( context, inPlug(), parentPath, setName );
+	CapsuleScope cs( context, inPlug(), parentPath, &setName );
 	if( !cs.scene( false ) )
 	{
 		h = outPlug()->setPlug()->defaultValue()->Object::hash();
@@ -304,7 +306,7 @@ void Unencapsulate::hashBranchSet( const ScenePath &parentPath, const IECore::In
 
 IECore::ConstPathMatcherDataPtr Unencapsulate::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
-	CapsuleScope cs( context, inPlug(), parentPath, setName );
+	CapsuleScope cs( context, inPlug(), parentPath, &setName );
 	if( !cs.scene( false ) )
 	{
 		return outPlug()->setPlug()->defaultValue();

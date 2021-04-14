@@ -1180,7 +1180,7 @@ IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Ima
 		std::string channelName(""); // TODO - should have better interface for selecting sampleOffsets
 		file->findTile( channelName, tileOrigin, tileBatchIndex, subIndex );
 
-		c.set( g_tileBatchIndexContextName, tileBatchIndex );
+		c.set( g_tileBatchIndexContextName, &tileBatchIndex );
 
 		ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 
@@ -1229,7 +1229,7 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	int subIndex;
 	file->findTile( channelName, tileOrigin, tileBatchIndex, subIndex );
 
-	c.set( g_tileBatchIndexContextName, tileBatchIndex );
+	c.set( g_tileBatchIndexContextName, &tileBatchIndex );
 
 	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 	ConstObjectPtr curTileChannel;

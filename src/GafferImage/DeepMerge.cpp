@@ -393,8 +393,8 @@ IECore::ConstFloatVectorDataPtr DeepMerge::computeChannelData( const std::string
 	}
 
 	// In a per-tile and per-channel context, get a ptr to the channel data of each input
-	reusedScope.setTileOrigin( tileOrigin );
-	reusedScope.setChannelName( channelName );
+	reusedScope.setTileOrigin( &tileOrigin );
+	reusedScope.setChannelName( &channelName );
 	std::vector< ConstFloatVectorDataPtr > channelDatas( numInputs );
 	std::vector< const float* > channelPtrs( numInputs, nullptr );
 	for( int j = 0; j < numInputs; j++ )
@@ -410,9 +410,9 @@ IECore::ConstFloatVectorDataPtr DeepMerge::computeChannelData( const std::string
 		{
 			// Special case to copy Z to ZBack when combining images where some have ZBack
 			// and some don't
-			reusedScope.setChannelName( "Z" );
+			reusedScope.setChannelName( &ImageAlgo::channelNameZ );
 			channelDatas[j] = inP->channelDataPlug()->getValue();
-			reusedScope.setChannelName( channelName );
+			reusedScope.setChannelName( &channelName );
 		}
 		else
 		{

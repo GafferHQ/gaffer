@@ -236,7 +236,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		struct PrototypeScope : public Gaffer::Context::EditableScope
 		{
-			PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath &parentPath, const ScenePath &branchPath );
+			PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath *parentPath, const ScenePath *branchPath );
+		private:
+			ScenePlug::ScenePath m_prototypePath;
 		};
 
 		static size_t g_firstPlugIndex;

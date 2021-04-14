@@ -266,7 +266,7 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 			const unsigned m = setsToKeep.match( childPath );
 			if( m == IECore::PathMatcher::NoMatch )
 			{
-				sceneScope.set( ScenePlug::scenePathContextName, childPath );
+				sceneScope.set( ScenePlug::scenePathContextName, &childPath );
 				filterPlug()->hash( h );
 			}
 			else
@@ -305,7 +305,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 			unsigned m = setsToKeep.match( childPath );
 			if( m == IECore::PathMatcher::NoMatch )
 			{
-				sceneScope.set( ScenePlug::scenePathContextName, childPath );
+				sceneScope.set( ScenePlug::scenePathContextName, &childPath );
 				m |= filterPlug()->getValue();
 			}
 			if( m != IECore::PathMatcher::NoMatch )
@@ -396,7 +396,7 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
-		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
+		sceneScope.set( ScenePlug::scenePathContextName, &(*pIt) );
 		const int m = filterPlug()->getValue() | setsToKeep.match( *pIt );
 		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{

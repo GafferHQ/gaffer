@@ -342,7 +342,7 @@ void RankFilter::hashChannelData( const GafferImage::ImagePlug *parent, const Ga
 	if( masterChannel != "" )
 	{
 		ImagePlug::ChannelDataScope pixelOffsetsScope( context );
-		pixelOffsetsScope.setChannelName( masterChannel );
+		pixelOffsetsScope.setChannelName( &masterChannel );
 
 		pixelOffsetsPlug()->hash( h );
 	}
@@ -377,7 +377,7 @@ IECore::ConstFloatVectorDataPtr RankFilter::computeChannelData( const std::strin
 		ConstV2iVectorDataPtr pixelOffsets;
 		{
 			ImagePlug::ChannelDataScope pixelOffsetsScope( context );
-			pixelOffsetsScope.setChannelName( masterChannel );
+			pixelOffsetsScope.setChannelName( &masterChannel );
 
 			pixelOffsets = pixelOffsetsPlug()->getValue();
 		}

@@ -178,7 +178,7 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; ++it )
 		{
 			childPath[path.size()] = *it;
-			sceneScope.set( ScenePlug::scenePathContextName, childPath );
+			sceneScope.set( ScenePlug::scenePathContextName, &childPath );
 			filterPlug()->hash( h );
 		}
 	}
@@ -213,7 +213,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; ++it )
 		{
 			childPath[path.size()] = *it;
-			sceneScope.set( ScenePlug::scenePathContextName, childPath );
+			sceneScope.set( ScenePlug::scenePathContextName, &childPath );
 			if( !(filterPlug()->getValue() & IECore::PathMatcher::ExactMatch) )
 			{
 				outputChildNames.push_back( *it );
@@ -268,7 +268,7 @@ IECore::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedString 
 
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
-		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
+		sceneScope.set( ScenePlug::scenePathContextName, &(*pIt) );
 		const int m = filterPlug()->getValue();
 		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{

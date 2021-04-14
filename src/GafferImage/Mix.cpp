@@ -307,7 +307,7 @@ void Mix::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::C
 		maskPlug()->deepPlug()->hash( h );
 
 		// The sample offsets need to be accessed in a context with tileOrigin, but without the channel name
-		c.setTileOrigin( tileOrigin );
+		c.setTileOrigin( &tileOrigin );
 		outPlug()->sampleOffsetsPlug()->hash( h );
 		maskPlug()->sampleOffsetsPlug()->hash( h );
 	}
@@ -388,7 +388,7 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 		}
 
 		// The sample offsets need to be accessed in a context with tileOrigin, but without the channel name
-		c.setTileOrigin( tileOrigin );
+		c.setTileOrigin( &tileOrigin );
 
 		if( deep )
 		{

@@ -580,8 +580,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 	{
 		const ScenePlug::ScenePath &parentPath = *it;
 		{
-			ScenePlug::PathScope pathScope( context, parentPath );
-			pathScope.setPath( parentPath );
+			ScenePlug::PathScope pathScope( context, &parentPath );
 			mappingPlug()->hash( h );
 		}
 		MurmurHash branchSetHash;
@@ -617,7 +616,7 @@ IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::Interne
 
 		Private::ConstChildNamesMapPtr mapping;
 		{
-			ScenePlug::PathScope pathScope( context, parentPath );
+			ScenePlug::PathScope pathScope( context, &parentPath );
 			mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 		}
 
@@ -802,7 +801,7 @@ IECore::PathMatcher::Result BranchCreator::parentAndBranchPaths( const ScenePath
 
 		Private::ConstChildNamesMapPtr mapping;
 		{
-			ScenePlug::PathScope pathScope( Context::current(), parentPath );
+			ScenePlug::PathScope pathScope( Context::current(), &parentPath );
 			mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 		}
 
