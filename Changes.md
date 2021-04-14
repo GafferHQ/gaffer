@@ -25,6 +25,7 @@ Improvements
 - OSLImage : Avoided some unnecessary computes and hashing when calculating channel names or passing through channel data unaltered.
 - Context : Optimized `hash()` method, and reduced overhead in `EditableScope`.
 - NameSwitch/Spreadsheet : Rows with an empty name are now treated as if they were disabled. See Breaking Changes for further details.
+- ContextVariables : Improved performance by around 50%.
 
 Fixes
 -----
@@ -98,6 +99,7 @@ Breaking Changes
 - ScriptNode : Added private member data.
 - Expression : Changed the Python expression cache policy to `Standard`. This executes expressions behind a lock, and can cause hangs if buggy upstream nodes perform TBB tasks without an appropriate `TaskIsolation` or `TaskCollaboration` policy. In this case, the `GAFFER_PYTHONEXPRESSION_CACHEPOLICY` environment variable may be set to `Legacy` or `TaskIsolation` while the bugs are fixed.
 - Node : Removed `plugFlagsChangedSignal()`. We aim to phase flags out completely in future, and none of the current flags are expected to be changed after construction.
+- ContextProcessor : Added `storage` argument to `processContext()` method.
 
 Build
 -----

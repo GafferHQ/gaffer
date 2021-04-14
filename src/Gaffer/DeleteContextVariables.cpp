@@ -72,7 +72,7 @@ bool DeleteContextVariables::affectsContext( const Plug *input ) const
 	return input == variablesPlug();
 }
 
-void DeleteContextVariables::processContext( Context::EditableScope &context ) const
+void DeleteContextVariables::processContext( Context::EditableScope &context, IECore::ConstRefCountedPtr &storage ) const
 {
 	context.removeMatching( variablesPlug()->getValue() );
 }
