@@ -98,4 +98,3 @@ class _PlugTableDelegate( QtWidgets.QStyledItemDelegate ) :
 			return False
 		else :
 			return super( _PlugTableDelegate, self ).editorEvent( event, model, option, index )
-

@@ -472,4 +472,3 @@ void ShaderView::driverCreated( IECoreImage::DisplayDriver *driver, const IECore
 		}
 	}
 }
-

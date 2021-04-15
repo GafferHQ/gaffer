@@ -105,7 +105,7 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 			return reinterpret_cast<pointer>( BaseIterator::operator->() );
 		}
 
-    	FilteredChildIterator &operator++()
+		FilteredChildIterator &operator++()
 		{
 			BaseIterator::operator++();
 			return *this;

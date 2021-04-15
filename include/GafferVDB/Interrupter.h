@@ -47,8 +47,8 @@ class Interrupter {
 	public:
 
 		Interrupter(const IECore::Canceller *canceller)
-		: m_canceller(canceller),
-		  m_interrupted(false)
+		:	m_canceller(canceller),
+			m_interrupted(false)
 		{
 		}
 
@@ -89,4 +89,3 @@ class Interrupter {
 } // namespace GafferVDB
 
 #endif // GAFFERVDB_INTERRUPTER_H
-

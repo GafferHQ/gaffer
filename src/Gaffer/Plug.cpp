@@ -119,7 +119,7 @@ Plug::~Plug()
 	setInputInternal( nullptr, false );
 	for( OutputContainer::iterator it=m_outputs.begin(); it!=m_outputs.end(); )
 	{
-	 	// get the next iterator now, as the call to setInputInternal invalidates
+		// get the next iterator now, as the call to setInputInternal invalidates
 		// the current iterator.
 		OutputContainer::iterator next = it; next++;
 		(*it)->setInputInternal( nullptr, true );

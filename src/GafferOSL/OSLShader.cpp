@@ -136,8 +136,8 @@ ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 typedef boost::container::flat_set<IECore::InternedString> ShaderTypeSet;
 ShaderTypeSet &compatibleShaders()
 {
-    static ShaderTypeSet g_compatibleShaders;
-    return g_compatibleShaders;
+	static ShaderTypeSet g_compatibleShaders;
+	return g_compatibleShaders;
 }
 
 } // namespace
@@ -1281,4 +1281,3 @@ bool OSLShader::registerCompatibleShader( const IECore::InternedString shaderTyp
 	ShaderTypeSet &cs = compatibleShaders();
 	return cs.insert( shaderType ).second;
 }
-

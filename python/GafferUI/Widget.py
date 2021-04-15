@@ -234,21 +234,21 @@ class Widget( Gaffer.Trackable ) :
 	# parent Widgets.
 	def getVisible( self ) :
 
- 		# I'm very reluctant to have an explicit visibility field on Widget like this,
- 		# as you'd think that would be duplicating the real information Qt holds inside
- 		# QWidget. But Qt shows and hides things behind your back when parenting widgets,
- 		# so there's no real way of knowing whether the Qt visibility is a result of
- 		# your explicit actions or of Qt's implicit actions. Qt does have a flag
- 		# WA_WState_ExplicitShowHide which appears to record whether or not the current
- 		# visibility was requested explicitly, but in the case that that is false,
- 		# I can't see a way of determining what the explicit visibility should be
- 		# without tracking it separately. The only time our idea of visibility should
- 		# differ from Qt's is if we're a parentless widget, so at least most of the time
- 		# the assertion covers our asses a bit.
- 		if self.__qtWidget.parent() or isinstance( self, GafferUI.Window ) :
- 			assert( self.__visible == ( not self.__qtWidget.isHidden() ) )
+		# I'm very reluctant to have an explicit visibility field on Widget like this,
+		# as you'd think that would be duplicating the real information Qt holds inside
+		# QWidget. But Qt shows and hides things behind your back when parenting widgets,
+		# so there's no real way of knowing whether the Qt visibility is a result of
+		# your explicit actions or of Qt's implicit actions. Qt does have a flag
+		# WA_WState_ExplicitShowHide which appears to record whether or not the current
+		# visibility was requested explicitly, but in the case that that is false,
+		# I can't see a way of determining what the explicit visibility should be
+		# without tracking it separately. The only time our idea of visibility should
+		# differ from Qt's is if we're a parentless widget, so at least most of the time
+		# the assertion covers our asses a bit.
+		if self.__qtWidget.parent() or isinstance( self, GafferUI.Window ) :
+			assert( self.__visible == ( not self.__qtWidget.isHidden() ) )
 
- 		return self.__visible
+		return self.__visible
 
 	## Returns True if this Widget and all its parents up to the specified
 	# ancestor are visible.

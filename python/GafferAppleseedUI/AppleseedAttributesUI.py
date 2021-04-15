@@ -67,7 +67,7 @@ def __shadingSummary( plug ) :
 		info.append( "Shading Samples %d" % plug["shadingSamples"]["value"].getValue() )
 
 	if plug["mediumPriority"]["enabled"].getValue() :
- 		info.append( "Medium Priority %d" % plug["mediumPriority"]["value"].getValue() )
+		info.append( "Medium Priority %d" % plug["mediumPriority"]["value"].getValue() )
 
 	if plug["doubleSided"]["enabled"].getValue() :
 		info.append( "Double Sided %d" % plug["doubleSided"]["value"].getValue() )

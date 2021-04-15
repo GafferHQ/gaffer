@@ -237,4 +237,3 @@ def __plugMetadata( box ) :
 		return "plugs = {\n\n" + __indent( "\n".join( items ), 1 ) + "\n}\n"
 	else :
 		return ""
-

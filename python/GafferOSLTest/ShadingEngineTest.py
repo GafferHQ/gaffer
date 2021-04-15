@@ -487,7 +487,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 					"n" : IECore.V3fData( imath.V3f( 13, 14, 15 ), IECore.GeometricData.Interpretation.Normal ),
 					"noInterp" : imath.V3f( 16, 17, 18 ),
 
-				 } )
+				} )
 			},
 			output = "output"
 		) )

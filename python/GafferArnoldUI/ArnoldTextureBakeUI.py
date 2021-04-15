@@ -167,7 +167,6 @@ Gaffer.Metadata.registerNode(
 			"divider", True,
 		],
 
-
 		"applyMedianFilter" : [
 			"description",
 			"""
@@ -182,7 +181,6 @@ Gaffer.Metadata.registerNode(
 			""",
 			"layout:activator", "medianActivator",
 		],
-
 
 	}
 

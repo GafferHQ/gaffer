@@ -138,7 +138,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 			[(i, {'/group/plane': {'attributeA': IECore.StringData( 'test' ), 'attributeC': IECore.StringData( 'inherited' )}}) for i in [ "1002", "1003", "1012", "1013" ]] +
 			[("1027", {'/group/plane1': {'attributeA': IECore.StringData( 'baz' ), 'attributeB': IECore.IntData( 12 ), 'attributeC': IECore.StringData( 'inherited' )}})] +
 			[(i, {'/group/plane2': {'attributeC': IECore.StringData( 'inherited' )}}) for i in ["1038", "1039", "1048", "1049"]]
- ) )
+		) )
 
 		# Switch back to default uv set so that everything lands on top of each other
 		udimQuery["uvSet"].setValue( 'uv' )

@@ -174,4 +174,3 @@ void NameSwitch::compute( ValuePlug *output, const Context *context ) const
 
 	Switch::compute( output, context );
 }
-

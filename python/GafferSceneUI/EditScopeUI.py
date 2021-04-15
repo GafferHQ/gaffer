@@ -101,4 +101,3 @@ def __pruningKeyPress( viewer, event ) :
 			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
 
 	return True
-

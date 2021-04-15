@@ -55,21 +55,21 @@ FormatMap &formatMap()
 
 std::ostream &GafferImage::operator << ( std::ostream &os, GafferImage::Format const &format )
 {
-    if( format.getDisplayWindow().min == Imath::V2i( 0 ) )
-    {
+	if( format.getDisplayWindow().min == Imath::V2i( 0 ) )
+	{
 		os << format.getDisplayWindow().max.x << "x" << format.getDisplayWindow().max.y;
-    }
-    else
-    {
+	}
+	else
+	{
 		os << format.getDisplayWindow().min << " - " << format.getDisplayWindow().max;
-    }
+	}
 
-    if( format.getPixelAspect() != 1.0 )
-    {
+	if( format.getPixelAspect() != 1.0 )
+	{
 		os << ", " << format.getPixelAspect();
-    }
+	}
 
-    return os;
+	return os;
 }
 
 void Format::registerFormat( const std::string &name, const Format &format )

@@ -63,4 +63,3 @@ std::string ArnoldBackground::computeOptionName( const Gaffer::Context *context 
 {
 	return "ai:background";
 }
-

@@ -49,4 +49,3 @@ Gaffer.Metadata.registerNode(
 	"icon", "boxInNode.png",
 
 )
-

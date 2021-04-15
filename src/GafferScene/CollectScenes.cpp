@@ -723,4 +723,3 @@ IECore::ConstPathMatcherDataPtr CollectScenes::computeSet( const IECore::Interne
 
 	return setData;
 }
-

@@ -1761,4 +1761,3 @@ class _PinningWidget( _Frame ) :
 		cls.__drivenEditorGroupMapping[ weakref.ref( editor ) ] =  index
 		e.__lastIndexUsed = index
 		return index
-

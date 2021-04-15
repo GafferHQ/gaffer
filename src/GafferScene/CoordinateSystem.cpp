@@ -72,4 +72,3 @@ IECore::ConstInternedStringVectorDataPtr CoordinateSystem::computeStandardSetNam
 	result->writable().push_back( g_coordinateSystemsSetName );
 	return result;
 }
-

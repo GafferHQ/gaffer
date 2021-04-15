@@ -82,4 +82,3 @@ void GafferSceneUIModule::bindSourceSet()
 		.def( "getNodeSet", &SourceSet::getNodeSet, return_value_policy<CastToIntrusivePtr>() )
 	;
 }
-

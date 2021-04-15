@@ -155,7 +155,7 @@ void computeGrid( const ViewportGadget *viewportGadget, float fps, AxisDefinitio
 		pxPerUnit.x *= 5;
 
 		// If there's not enough space for this zoom level, try using every 10th frame.
- 		while( pxPerUnit.x < labelMinSize.x && pxPerUnit.x != 0 )
+		while( pxPerUnit.x < labelMinSize.x && pxPerUnit.x != 0 )
 		{
 			xStride *= 10;
 			pxPerUnit.x *= 10;
@@ -639,7 +639,7 @@ void AnimationGadget::frame()
 			const Animation::CurvePlug *curvePlug = IECore::runTimeCast<const Animation::CurvePlug>( &runtimeTyped );
 
 			for( const auto &key : *curvePlug )
- 			{
+			{
 				b.extendBy( V3f( key.getTime(), key.getValue(), 0 ) );
 			}
 		}
@@ -652,7 +652,7 @@ void AnimationGadget::frame()
 			const Animation::CurvePlug *curvePlug = IECore::runTimeCast<const Animation::CurvePlug>( &runtimeTyped );
 
 			for( const auto &key : *curvePlug )
- 			{
+			{
 				b.extendBy( V3f( key.getTime(), key.getValue(), 0 ) );
 			}
 		}

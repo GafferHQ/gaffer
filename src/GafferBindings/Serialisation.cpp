@@ -542,4 +542,3 @@ bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphCompo
 {
 	return false;
 }
-

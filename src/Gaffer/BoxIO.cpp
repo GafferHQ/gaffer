@@ -487,8 +487,9 @@ void BoxIO::promotedPlugParentChanged( GraphComponent *graphComponent )
 	// ourselves too.
 	if( const ScriptNode *script = scriptNode() )
 	{
-		if( script->currentActionStage() == Action::Undo ||
-		    script->currentActionStage() == Action::Redo
+		if(
+			script->currentActionStage() == Action::Undo ||
+			script->currentActionStage() == Action::Redo
 		)
 		{
 			// We don't need to do anything during undo/redo

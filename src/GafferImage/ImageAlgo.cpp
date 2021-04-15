@@ -340,6 +340,3 @@ void GafferImage::ImageAlgo::throwIfSampleOffsetsMismatch( const IECore::IntVect
 		}
 	}
 }
-
-
-

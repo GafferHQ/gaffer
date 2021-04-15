@@ -86,4 +86,3 @@ IE_CORE_DECLAREPTR( DeletePoints )
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_DELETEPOINTS_H
-

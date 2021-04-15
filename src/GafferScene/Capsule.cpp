@@ -230,4 +230,3 @@ void Capsule::throwIfNoScene() const
 		throw IECore::Exception( "Source scene plug no longer valid." );
 	}
 }
-

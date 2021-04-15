@@ -169,4 +169,3 @@ Imath::Box3f DeleteObject::computeBound( const ScenePath &path, const Gaffer::Co
 
 	return inPlug()->boundPlug()->getValue();
 }
-

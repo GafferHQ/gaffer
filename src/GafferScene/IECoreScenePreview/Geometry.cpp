@@ -154,4 +154,3 @@ void Geometry::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) con
 	accumulator.accumulate( sizeof( m_bound ) );
 	accumulator.accumulate( m_parameters.get() );
 }
-

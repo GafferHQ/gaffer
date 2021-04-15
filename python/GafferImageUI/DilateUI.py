@@ -55,4 +55,3 @@ Gaffer.Metadata.registerNode(
 	""",
 
 )
-

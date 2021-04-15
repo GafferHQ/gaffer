@@ -114,8 +114,8 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 						"children" : {
 							"ball" : {
 								"attributes" : {
-									 "b" : IECore.StringData( "bOverride" ),
-									 "c" : IECore.StringData( "c" ),
+									"b" : IECore.StringData( "bOverride" ),
+									"c" : IECore.StringData( "c" ),
 								 },
 							}
 						}

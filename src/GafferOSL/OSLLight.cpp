@@ -268,4 +268,3 @@ IECoreScene::ConstShaderNetworkPtr OSLLight::computeLight( const Gaffer::Context
 	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
 	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "osl:light" );
 }
-

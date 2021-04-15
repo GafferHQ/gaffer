@@ -265,9 +265,8 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	context->set( g_scriptFileNameContextEntry, scriptFileName.string() );
 }
 
-/*
- * Static functions
- */
+// Static functions
+// ================
 
 Dispatcher::PreDispatchSignal &Dispatcher::preDispatchSignal()
 {

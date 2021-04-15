@@ -76,5 +76,3 @@ Imath::V2f FilterAlgo::derivativesToAxisAligned( const Imath::V2f &p, const Imat
 }
 
 }
-
-

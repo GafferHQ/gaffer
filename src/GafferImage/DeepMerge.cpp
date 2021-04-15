@@ -477,4 +477,3 @@ bool DeepMerge::computeDeep( const Gaffer::Context *context, const ImagePlug *pa
 {
 	return true;
 }
-

@@ -129,4 +129,3 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( IECore.StringVectorData( value ) )
-

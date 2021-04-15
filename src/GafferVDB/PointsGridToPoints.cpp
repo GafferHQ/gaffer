@@ -555,6 +555,3 @@ IECore::ConstObjectPtr PointsGridToPoints::computeProcessedObject( const ScenePa
 
 	return points;
 }
-
-
-

@@ -354,4 +354,3 @@ IECore::ConstIntVectorDataPtr DeepHoldout::computeSampleOffsets( const Imath::V2
 {
 	return ImagePlug::flatTileSampleOffsets();
 }
-

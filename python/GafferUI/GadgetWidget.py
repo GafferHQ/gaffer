@@ -319,7 +319,7 @@ class _EventFilter( QtCore.QObject ) :
 					imath.V3f( qEvent.x(), qEvent.y(), 1 ),
 					imath.V3f( qEvent.x(), qEvent.y(), 0 )
 				)
-			 )
+			)
 
 			if not toolTip :
 				return False

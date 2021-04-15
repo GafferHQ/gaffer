@@ -119,8 +119,8 @@ class PathWidget( GafferUI.TextWidget ) :
 		elif event.key == "Down" :
 
 			if event.modifiers & GafferUI.ModifiableEvent.Modifiers.Shift :
-				 # select all!
-				 self.setSelection( None, None )
+				# select all!
+				self.setSelection( None, None )
 			else :
 				text = self.getText()
 				position = self.getCursorPosition()

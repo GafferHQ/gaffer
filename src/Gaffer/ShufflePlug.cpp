@@ -199,4 +199,3 @@ Gaffer::PlugPtr ShufflesPlug::createCounterpart( const std::string &name, Direct
 	}
 	return result;
 }
-
