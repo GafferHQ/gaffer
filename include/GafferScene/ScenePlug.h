@@ -261,7 +261,9 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 		/// \todo Many of the places we use this, it would be preferable if the source data was already
 		/// a path. Perhaps a ScenePathPlug could take care of this for us?
 		static void stringToPath( const std::string &s, ScenePlug::ScenePath &path );
+		static ScenePath stringToPath( const std::string &s );
 		static void pathToString( const ScenePlug::ScenePath &path, std::string &s );
+		static std::string pathToString( const ScenePlug::ScenePath &path );
 
 		/// Deprecated methods
 		/// ==================

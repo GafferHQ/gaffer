@@ -611,6 +611,13 @@ void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 	}
 }
 
+ScenePlug::ScenePath ScenePlug::stringToPath( const std::string &s )
+{
+	ScenePath result;
+	stringToPath( s, result );
+	return result;
+}
+
 void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )
 {
 	if( !path.size() )
@@ -625,6 +632,13 @@ void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )
 			s += "/" + it->string();
 		}
 	}
+}
+
+std::string ScenePlug::pathToString( const ScenePlug::ScenePath &path )
+{
+	std::string result;
+	pathToString( path, result );
+	return result;
 }
 
 std::ostream &operator << ( std::ostream &o, const ScenePlug::ScenePath &path )
