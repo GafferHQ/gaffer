@@ -331,7 +331,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		{
 		public:
 			static IECore::DataPtr makeData( IECore::TypeId typeId, const void *raw );
-			static inline void internalSetData( IECore::TypeId typeId, Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash = nullptr );
+			static inline void internalSetData( IECore::TypeId typeId, Context &c, const IECore::InternedString &name, const IECore::ConstDataPtr &value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash = nullptr );
 			static inline bool typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB );
 			static inline IECore::MurmurHash entryHash( IECore::TypeId typeId, Storage &s, const IECore::InternedString &name );
 
@@ -345,7 +345,7 @@ class GAFFER_API Context : public IECore::RefCounted
 			static IECore::DataPtr makeDataTemplate( const void *raw );
 
 			template<typename T>
-			static void internalSetDataTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash );
+			static void internalSetDataTemplate( Context &c, const IECore::InternedString &name, const IECore::ConstDataPtr &value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash );
 
 			template<typename T>
 			static bool typedEqualsTemplate( const void *rawA, const void *rawB );
@@ -357,7 +357,7 @@ class GAFFER_API Context : public IECore::RefCounted
 			struct FunctionTableEntry
 			{
 				IECore::DataPtr (*makeDataFunction)( const void *raw );
-				void (*internalSetDataFunction)( Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash );
+				void (*internalSetDataFunction)( Context &c, const IECore::InternedString &name, const IECore::ConstDataPtr &value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash );
 				bool (*typedEqualsFunction)( const void *rawA, const void *rawB );
 				IECore::MurmurHash (*entryHashFunction)( Storage &s, const IECore::InternedString &name );
 			};

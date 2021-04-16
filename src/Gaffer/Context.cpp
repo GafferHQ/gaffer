@@ -123,7 +123,7 @@ DataPtr Context::TypeFunctionTable::makeData( IECore::TypeId typeId, const void 
 	return it->second.makeDataFunction( raw );
 }
 
-void Context::TypeFunctionTable::internalSetData( IECore::TypeId typeId, Context &c, const InternedString &name, const Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash )
+void Context::TypeFunctionTable::internalSetData( IECore::TypeId typeId, Context &c, const InternedString &name, const ConstDataPtr &value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash )
 {
 	TypeFunctionTable &tf = theFunctionTable();
 	TypeMap::const_iterator it = tf.m_typeMap.find( typeId );
@@ -243,7 +243,7 @@ Context::Context( const Context &other, Ownership ownership )
 			if( allocIt != other.m_allocMap.end() )
 			{
 				// Try setting with the Data stored in the other Context
-				TypeFunctionTable::internalSetData( allocIt->second->typeId(), *this, i.first, allocIt->second.get(), m_allocMap, false, &i.second.hash );
+				TypeFunctionTable::internalSetData( allocIt->second->typeId(), *this, i.first, allocIt->second, m_allocMap, false, &i.second.hash );
 
 				// Check if the other Context was actually the using a pointer
 				// to the value we just added
@@ -259,8 +259,7 @@ Context::Context( const Context &other, Ownership ownership )
 			}
 
 			// getAsData allocates a fresh Data, so we don't need to copy
-			DataPtr newData = other.getAsData( i.first );
-			TypeFunctionTable::internalSetData( newData->typeId(), *this, i.first, newData.get(), m_allocMap, false, &i.second.hash );
+			TypeFunctionTable::internalSetData( i.second.typeId, *this, i.first, other.getAsData( i.first ), m_allocMap, false, &i.second.hash );
 		}
 	}
 }
@@ -294,7 +293,8 @@ void Context::set( const IECore::InternedString &name, const IECore::Data *value
 	// The context interface should be safe, so we copy the value so that the client can't
 	// invalidate this context by changing it.  ( If you don't want to pay for this copy,
 	// use EditableScope )
-	TypeFunctionTable::internalSetData( value->typeId(), *this, name, value, m_allocMap, true );
+	ConstDataPtr valueSmart( value );
+	TypeFunctionTable::internalSetData( value->typeId(), *this, name, valueSmart, m_allocMap, true );
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const

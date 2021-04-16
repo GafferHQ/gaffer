@@ -286,11 +286,11 @@ IECore::DataPtr Context::TypeFunctionTable::makeDataTemplate( const void *raw )
 }
 
 template<typename T>
-void Context::TypeFunctionTable::internalSetDataTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash )
+void Context::TypeFunctionTable::internalSetDataTemplate( Context &c, const IECore::InternedString &name, const IECore::ConstDataPtr &value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash )
 {
 	std::pair<Map::iterator, bool> insert = c.m_map.try_emplace( name );
 	const Storage &storage = insert.first->second;
-	if( !insert.second && storage.typeId == T::staticTypeId() && *((const typename T::ValueType*)storage.value) == ((const T*)value)->readable() )
+	if( !insert.second && storage.typeId == T::staticTypeId() && *((const typename T::ValueType*)storage.value) == ((const T*)value.get())->readable() )
 	{
 		// Already set to the value we want, we can skip
 		return;
@@ -298,17 +298,16 @@ void Context::TypeFunctionTable::internalSetDataTemplate( Context &c, const IECo
 
 	// Allocate a new typed Data, store it in m_allocMap so that it won't be deallocated,
 	// and call internalSet to reference it in the main m_map
-	IECore::ConstDataPtr d;
+	const IECore::Data *d;
 	if( copy )
 	{
-		d = value->copy();
+		d = allocMap.insert_or_assign( name, value->copy() ).first->second.get();
 	}
 	else
 	{
-		d = value;
+		d = allocMap.insert_or_assign( name, value ).first->second.get();
 	}
-	allocMap[name] = d;
-	c.internalSet( insert.first, &((T*)d.get())->readable(), knownHash );
+	c.internalSet( insert.first, &((T*)d)->readable(), knownHash );
 }
 
 template<typename T>
