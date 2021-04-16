@@ -115,30 +115,30 @@ Environment g_environment;
 DataPtr Context::TypeFunctionTable::makeData( IECore::TypeId typeId, const void *raw )
 {
 	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
+	TypeMap::const_iterator it = tf.m_typeMap.find( typeId );
+	if( it == tf.m_typeMap.end() )
 	{
 		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
 	}
 	return it->second.makeDataFunction( raw );
 }
 
-void Context::TypeFunctionTable::internalSet( IECore::TypeId typeId, Context &c, const InternedString &name, const Data *value, const IECore::MurmurHash *knownHash )
+void Context::TypeFunctionTable::internalSetData( IECore::TypeId typeId, Context &c, const InternedString &name, const Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash )
 {
 	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
+	TypeMap::const_iterator it = tf.m_typeMap.find( typeId );
+	if( it == tf.m_typeMap.end() )
 	{
 		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
 	}
-	it->second.internalSetFunction( c, name, value, knownHash );
+	it->second.internalSetDataFunction( c, name, value, allocMap, copy, knownHash );
 }
 
 bool Context::TypeFunctionTable::typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB )
 {
 	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
+	TypeMap::const_iterator it = tf.m_typeMap.find( typeId );
+	if( it == tf.m_typeMap.end() )
 	{
 		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
 	}
@@ -148,8 +148,8 @@ bool Context::TypeFunctionTable::typedEquals( IECore::TypeId typeId, const void 
 IECore::MurmurHash Context::TypeFunctionTable::entryHash( IECore::TypeId typeId, Storage &s, const IECore::InternedString &name )
 {
 	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
+	TypeMap::const_iterator it = tf.m_typeMap.find( typeId );
+	if( it == tf.m_typeMap.end() )
 	{
 		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
 	}
@@ -243,7 +243,7 @@ Context::Context( const Context &other, Ownership ownership )
 			if( allocIt != other.m_allocMap.end() )
 			{
 				// Try setting with the Data stored in the other Context
-				internalSetAllocated( i.first, allocIt->second, &i.second.hash );
+				TypeFunctionTable::internalSetData( allocIt->second->typeId(), *this, i.first, allocIt->second.get(), m_allocMap, false, &i.second.hash );
 
 				// Check if the other Context was actually the using a pointer
 				// to the value we just added
@@ -258,8 +258,9 @@ Context::Context( const Context &other, Ownership ownership )
 				// m_allocMap ).  We need to allocate a new Data after all.
 			}
 
-			// getAsData allocates a fresh Data, so we can call the internal set that doesn't take a copy
-			internalSetAllocated( i.first, other.getAsData( i.first ), &i.second.hash );
+			// getAsData allocates a fresh Data, so we don't need to copy
+			DataPtr newData = other.getAsData( i.first );
+			TypeFunctionTable::internalSetData( newData->typeId(), *this, i.first, newData.get(), m_allocMap, false, &i.second.hash );
 		}
 	}
 }
@@ -291,15 +292,9 @@ Context::~Context()
 void Context::set( const IECore::InternedString &name, const IECore::Data *value )
 {
 	// The context interface should be safe, so we copy the value so that the client can't
-	// invalidate this context by changing it.  ( If you don't want to pay for this alloc,
+	// invalidate this context by changing it.  ( If you don't want to pay for this copy,
 	// use EditableScope )
-	internalSetAllocated( name, value->copy() );
-}
-
-void Context::internalSetAllocated( const IECore::InternedString &name, const IECore::ConstDataPtr &value, const IECore::MurmurHash *knownHash )
-{
-	m_allocMap[name] = value;
-	TypeFunctionTable::internalSet( value->typeId(), *this, name, value.get(), knownHash );
+	TypeFunctionTable::internalSetData( value->typeId(), *this, name, value, m_allocMap, true );
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
@@ -386,8 +381,16 @@ float Context::getFrame() const
 
 void Context::setFrame( float frame )
 {
+	std::pair<Map::iterator, bool> insert = m_map.try_emplace( g_frame );
+	const Storage &storage = insert.first->second;
+	if( !insert.second && storage.typeId == FloatData::staticTypeId() && *((float*)storage.value) == frame )
+	{
+		// Already set to the value we want, we can skip
+		return;
+	}
+
 	m_frame = frame;
-	internalSet( g_frame, &m_frame );
+	internalSet( insert.first, &m_frame );
 }
 
 float Context::getFramesPerSecond() const

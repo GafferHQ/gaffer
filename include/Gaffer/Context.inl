@@ -88,20 +88,29 @@ struct DataTraits<Imath::Vec3<T> >
 template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
 void Context::set( const IECore::InternedString &name, const T &value )
 {
+	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
+	std::pair<Map::iterator, bool> insert = m_map.try_emplace( name );
+	const Storage &storage = insert.first->second;
+	if( !insert.second && storage.typeId == DataType::staticTypeId() && *((const T*)storage.value) == value )
+	{
+		// Already set to the value we want, we can skip
+		return;
+	}
+
 	// Allocate a new typed Data, store it in m_allocMap so that it won't be deallocated,
 	// and call internalSet to reference it in the main m_map
-	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
 	typename DataType::Ptr d = new DataType( value );
 	m_allocMap[name] = d;
-	internalSet( name, &d->readable(), nullptr );
+
+	internalSet( insert.first, &d->readable(), nullptr );
 }
 
 template<typename T>
-void Context::internalSet( const IECore::InternedString &name, const T *value, const IECore::MurmurHash *knownHash )
+void Context::internalSet( Map::iterator it, const T *value, const IECore::MurmurHash *knownHash )
 {
 	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
 
-	Storage &storage = m_map[name];
+	Storage &storage = it->second;
 	storage.value = value;
 	storage.typeId = DataType::staticTypeId();
 
@@ -112,12 +121,12 @@ void Context::internalSet( const IECore::InternedString &name, const T *value, c
 	}
 	else
 	{
-		storage.hash = storage.entryHash<T>( name );
+		storage.hash = storage.entryHash<T>( it->first );
 	}
 
 	if( m_changedSignal )
 	{
-		(*m_changedSignal)( this, name );
+		(*m_changedSignal)( this, it->first );
 	}
 }
 
@@ -209,7 +218,7 @@ const T* Context::getIfExists( const IECore::InternedString &name ) const
 template<typename T>
 void Context::EditableScope::set( const IECore::InternedString &name, const T *value )
 {
-	m_context->internalSet( name, value );
+	m_context->internalSet( ((std::pair<Map::iterator,bool>)m_context->m_map.try_emplace( name )).first, value );
 }
 
 // DEPRECATED
@@ -277,9 +286,29 @@ IECore::DataPtr Context::TypeFunctionTable::makeDataTemplate( const void *raw )
 }
 
 template<typename T>
-void Context::TypeFunctionTable::internalSetTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash )
+void Context::TypeFunctionTable::internalSetDataTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash )
 {
-	c.internalSet( name, &((const T*)value)->readable(), knownHash );
+	std::pair<Map::iterator, bool> insert = c.m_map.try_emplace( name );
+	const Storage &storage = insert.first->second;
+	if( !insert.second && storage.typeId == T::staticTypeId() && *((const typename T::ValueType*)storage.value) == ((const T*)value)->readable() )
+	{
+		// Already set to the value we want, we can skip
+		return;
+	}
+
+	// Allocate a new typed Data, store it in m_allocMap so that it won't be deallocated,
+	// and call internalSet to reference it in the main m_map
+	IECore::ConstDataPtr d;
+	if( copy )
+	{
+		d = value->copy();
+	}
+	else
+	{
+		d = value;
+	}
+	allocMap[name] = d;
+	c.internalSet( insert.first, &((T*)d.get())->readable(), knownHash );
 }
 
 template<typename T>
@@ -297,9 +326,9 @@ IECore::MurmurHash Context::TypeFunctionTable::entryHashTemplate( Storage &s, co
 template< typename T >
 void Context::TypeFunctionTable::registerType()
 {
-	FunctionTableEntry &e = theFunctionTable().m_map[T::staticTypeId()];
+	FunctionTableEntry &e = theFunctionTable().m_typeMap[T::staticTypeId()];
 	e.makeDataFunction = makeDataTemplate<T>;
-	e.internalSetFunction = internalSetTemplate<T>;
+	e.internalSetDataFunction = internalSetDataTemplate<T>;
 	e.typedEqualsFunction = typedEqualsTemplate<T>;
 	e.entryHashFunction = entryHashTemplate<T>;
 }

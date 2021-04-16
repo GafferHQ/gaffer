@@ -295,17 +295,6 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		Context( const Context &other, Ownership ownership );
 
-		/// Set a context entry from a pointer to a typed value
-		/// This internal call does not deal with keeping alive the memory pointed to.
-		/// It is called from internalSetAllocated() which is used for safe sets from
-		/// the public Context API, and also directly from EditableScope::set which directly
-		/// allows fast sets when the caller handles keeping the memory
-		template<typename T>
-		inline void internalSet( const IECore::InternedString &name, const T *value, const IECore::MurmurHash *knownHash = nullptr );
-
-		// Unlike the externally visible calls, this does not copy the value, so it is appropriate to call
-		// from the public set<T>( const T& ), after allocating a fresh TypedData<T>
-		void internalSetAllocated( const IECore::InternedString &name, const IECore::ConstDataPtr &value, const IECore::MurmurHash *knownHash = nullptr );
 
 		// Special signature used just by Context::SubstitutionProvider, which dynamically deals with different
 		// types, but also needs to run fast, so shouldn't allocate Data
@@ -325,13 +314,24 @@ class GAFFER_API Context : public IECore::RefCounted
 			IECore::MurmurHash hash;
 		};
 
+		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
+		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr > AllocMap;
+
+		/// Set a context entry from a pointer to a typed value
+		/// This internal call does not deal with keeping alive the memory pointed to.
+		/// It is called from the safe sets from the public Context API after allocating a copy,
+		/// and also directly from EditableScope::set which directly
+		/// allows fast sets when the caller handles keeping the memory
+		template<typename T>
+		inline void internalSet( Map::iterator it, const T *value, const IECore::MurmurHash *knownHash = nullptr );
+
 		void validateVariableHash( const Storage &s, const IECore::InternedString &name ) const;
 
 		class TypeFunctionTable
 		{
 		public:
 			static IECore::DataPtr makeData( IECore::TypeId typeId, const void *raw );
-			static inline void internalSet( IECore::TypeId typeId, Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash = nullptr );
+			static inline void internalSetData( IECore::TypeId typeId, Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash = nullptr );
 			static inline bool typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB );
 			static inline IECore::MurmurHash entryHash( IECore::TypeId typeId, Storage &s, const IECore::InternedString &name );
 
@@ -345,7 +345,7 @@ class GAFFER_API Context : public IECore::RefCounted
 			static IECore::DataPtr makeDataTemplate( const void *raw );
 
 			template<typename T>
-			static void internalSetTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash );
+			static void internalSetDataTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash );
 
 			template<typename T>
 			static bool typedEqualsTemplate( const void *rawA, const void *rawB );
@@ -357,16 +357,14 @@ class GAFFER_API Context : public IECore::RefCounted
 			struct FunctionTableEntry
 			{
 				IECore::DataPtr (*makeDataFunction)( const void *raw );
-				void (*internalSetFunction)( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash );
+				void (*internalSetDataFunction)( Context &c, const IECore::InternedString &name, const IECore::Data *value, AllocMap &allocMap, bool copy, const IECore::MurmurHash *knownHash );
 				bool (*typedEqualsFunction)( const void *rawA, const void *rawB );
 				IECore::MurmurHash (*entryHashFunction)( Storage &s, const IECore::InternedString &name );
 			};
 
-			using Map = boost::container::flat_map<IECore::TypeId, FunctionTableEntry >;
-			Map m_map;
+			using TypeMap = boost::container::flat_map<IECore::TypeId, FunctionTableEntry >;
+			TypeMap m_typeMap;
 		};
-
-		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
 
 		Map m_map;
 		ChangedSignal *m_changedSignal;
@@ -383,7 +381,6 @@ class GAFFER_API Context : public IECore::RefCounted
 		// alive at least as long as the m_map used for actual accesses is using it, though it may
 		// hold data longer than it is actually in use.  ( ie. a fast pointer based set through
 		// EditableScope could overwrite an entry without updating m_allocMap )
-		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr > AllocMap;
 		AllocMap m_allocMap;
 };
 
