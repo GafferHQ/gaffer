@@ -156,10 +156,8 @@ void SceneNode::hash( const ValuePlug *output, const Context *context, IECore::M
 			const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
 			if( scenePath.empty() )
 			{
-				// the result of compute() will actually be different if we're at the root, so
-				// we hash an identity M44fData:
-				h.append( IECore::M44fData::staticTypeId() );
-				h.append( Imath::M44f() );
+				// Scene root must have identity transform
+				h = output->defaultHash();
 			}
 			else
 			{
@@ -288,12 +286,17 @@ void SceneNode::compute( ValuePlug *output, const Context *context ) const
 			else if( output == scenePlug->transformPlug() )
 			{
 				const ScenePath &scenePath = context->get<ScenePath>( ScenePlug::scenePathContextName );
-				M44f transform;
-				if( scenePath.size() ) // scene root must have identity transform
+				if( scenePath.empty() )
 				{
-					transform = computeTransform( scenePath, context, scenePlug );
+					// Scene root must have identity transform
+					output->setToDefault();
 				}
-				static_cast<M44fPlug *>( output )->setValue( transform );
+				else
+				{
+					static_cast<M44fPlug *>( output )->setValue(
+						computeTransform( scenePath, context, scenePlug )
+					);
+				}
 			}
 			else if( output == scenePlug->attributesPlug() )
 			{
