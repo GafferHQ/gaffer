@@ -85,6 +85,49 @@ struct DataTraits<Imath::Vec3<T> >
 
 } // namespace Detail
 
+template<typename T>
+Context::Value::Value( const IECore::InternedString &name, const T *value )
+	:	m_typeId( Detail::DataTraits<T>::DataType::staticTypeId() ),
+		m_value( value )
+{
+	const std::string &nameStr = name.string();
+	if( nameStr.size() > 2 && nameStr[0] == 'u' && nameStr[1] == 'i' && nameStr[2] == ':' )
+	{
+		m_hash = IECore::MurmurHash( 0, 0 );
+	}
+	else
+	{
+		m_hash.append( *value );
+		m_hash.append( m_typeId );
+		m_hash.append( (uint64_t)&nameStr );
+	}
+}
+
+template<typename T>
+void Context::Value::registerType()
+{
+	using ValueType = typename T::ValueType;
+	TypeFunctions &functions = typeMap()[T::staticTypeId()];
+	functions.makeData = []( const Value &value, const void **dataValue ) -> IECore::DataPtr {
+		typename T::Ptr result = new T( *static_cast<const ValueType *>( value.value() ) );
+		if( dataValue )
+		{
+			*dataValue = &result->readable();
+		}
+		return result;
+	};
+	functions.isEqual = [] ( const Value &a, const Value &b ) {
+		// Type of both `a` and `b` has been checked already in `operator ==`.
+		return (*static_cast<const ValueType *>( a.value() )) == (*static_cast<const ValueType *>( b.value() ));
+	};
+	functions.constructor = [] ( const IECore::InternedString &name, const IECore::Data *data ) {
+		return Value( name, &static_cast<const T *>( data )->readable() );
+	};
+	functions.value = [] ( const IECore::Data *data ) -> const void * {
+		return &static_cast<const T *>( data )->readable();
+	};
+}
+
 template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
 void Context::set( const IECore::InternedString &name, const T &value )
 {
@@ -93,27 +136,13 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
 	typename DataType::Ptr d = new DataType( value );
 	m_allocMap[name] = d;
-	internalSet( name, &d->readable(), nullptr );
+	internalSet( name, Value( name, &d->readable() ) );
 }
 
-template<typename T>
-void Context::internalSet( const IECore::InternedString &name, const T *value, const IECore::MurmurHash *knownHash )
+void Context::internalSet( const IECore::InternedString &name, const Value &value )
 {
-	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-
-	Storage &storage = m_map[name];
-	storage.value = value;
-	storage.typeId = DataType::staticTypeId();
-
+	m_map.insert_or_assign( name, value );
 	m_hashValid = false;
-	if( knownHash )
-	{
-		storage.hash = *knownHash;
-	}
-	else
-	{
-		storage.hash = storage.entryHash<T>( name );
-	}
 
 	if( m_changedSignal )
 	{
@@ -129,8 +158,8 @@ inline const void* Context::getPointerAndTypeId( const IECore::InternedString &n
 		return nullptr;
 	}
 
-	typeId = it->second.typeId;
-	return it->second.value;
+	typeId = it->second.typeId();
+	return it->second.value();
 }
 
 template<typename T>
@@ -143,12 +172,12 @@ const T& Context::get( const IECore::InternedString &name ) const
 	}
 
 	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-	if( it->second.typeId != DataType::staticTypeId() )
+	if( it->second.typeId() != DataType::staticTypeId() )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
 	}
 
-	return *((const T*)it->second.value );
+	return *static_cast<const T *>( it->second.value() );
 }
 
 template<typename T>
@@ -161,12 +190,12 @@ const T &Context::get( const IECore::InternedString &name, const T &defaultValue
 	}
 
 	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-	if( it->second.typeId != DataType::staticTypeId() )
+	if( it->second.typeId() != DataType::staticTypeId() )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
 	}
 
-	return *((const T*)it->second.value );
+	return *static_cast<const T *>( it->second.value() );
 }
 
 inline IECore::MurmurHash Context::variableHash( const IECore::InternedString &name ) const
@@ -176,7 +205,7 @@ inline IECore::MurmurHash Context::variableHash( const IECore::InternedString &n
 	{
 		return IECore::MurmurHash();
 	}
-	return it->second.hash;
+	return it->second.hash();
 }
 
 template<typename T>
@@ -189,11 +218,11 @@ const T* Context::getIfExists( const IECore::InternedString &name ) const
 	}
 
 	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-	if( it->second.typeId != DataType::staticTypeId() )
+	if( it->second.typeId() != DataType::staticTypeId() )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
 	}
-	return (const T*)it->second.value;
+	return static_cast<const T *>( it->second.value() );
 }
 
 
@@ -201,7 +230,7 @@ const T* Context::getIfExists( const IECore::InternedString &name ) const
 template<typename T>
 void Context::EditableScope::set( const IECore::InternedString &name, const T *value )
 {
-	m_context->internalSet( name, value );
+	m_context->internalSet( name, Value( name, value ) );
 }
 
 // DEPRECATED
@@ -240,59 +269,9 @@ class Context::SubstitutionProvider : public IECore::StringAlgo::VariableProvide
 };
 
 template< typename T >
-IECore::MurmurHash Context::Storage::entryHash( const IECore::InternedString &name )
-{
-	/// \todo Perhaps at some point the UI should use a different container for
-	/// these "not computationally important" values, so we wouldn't have to set
-	/// a zero value here so that it won't affect the total sum hash.
-	// Using a hardcoded comparison of the first three characters because
-	// it's quicker than `string::compare( 0, 3, "ui:" )`.
-	const std::string &nameStr = name.string();
-	if( nameStr.size() > 2 && nameStr[0] == 'u' && nameStr[1] == 'i' && nameStr[2] == ':' )
-	{
-		return IECore::MurmurHash( 0, 0 );
-	}
-	else
-	{
-		IECore::MurmurHash h;
-		h.append( *((T*)value) );
-		h.append( typeId );
-		h.append( (uint64_t)&nameStr );
-		return h;
-	}
-}
-
-template<typename T>
-IECore::DataPtr Context::TypeFunctionTable::makeDataTemplate( const void *raw )
-{
-	return new T( *((typename T::ValueType*)raw ) );
-}
-
-template<typename T>
-void Context::TypeFunctionTable::internalSetTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash )
-{
-	c.internalSet( name, &((const T*)value)->readable(), knownHash );
-}
-
-template<typename T>
-bool Context::TypeFunctionTable::typedEqualsTemplate( const void *rawA, const void *rawB )
-{
-	return *( (typename T::ValueType*)rawA ) == *( (typename T::ValueType*)rawB );
-}
-
-template< typename T >
-void Context::TypeFunctionTable::registerType()
-{
-	FunctionTableEntry &e = theFunctionTable().m_map[T::staticTypeId()];
-	e.makeDataFunction = makeDataTemplate<T>;
-	e.internalSetFunction = internalSetTemplate<T>;
-	e.typedEqualsFunction = typedEqualsTemplate<T>;
-}
-
-template< typename T >
 Context::ContextTypeDescription<T>::ContextTypeDescription()
 {
-	Context::TypeFunctionTable::registerType<T>();
+	Context::Value::registerType<T>();
 }
 
 } // namespace Gaffer

@@ -109,46 +109,70 @@ Environment g_environment;
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// TypeFunctionTable implementation
+// Context::Value implementation
 //////////////////////////////////////////////////////////////////////////
 
-DataPtr Context::TypeFunctionTable::makeData( IECore::TypeId typeId, const void *raw )
+Context::Value::Value( const IECore::InternedString &name, const IECore::Data *value )
+	:	Value( typeFunctions( value->typeId() ).constructor( name, value ) )
 {
-	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
-	{
-		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
-	}
-	return it->second.makeDataFunction( raw );
 }
 
-void Context::TypeFunctionTable::internalSet( IECore::TypeId typeId, Context &c, const InternedString &name, const Data *value, const IECore::MurmurHash *knownHash )
+Context::Value::Value( IECore::TypeId typeId, const void *value, const IECore::MurmurHash &hash )
+	:	m_typeId( typeId ), m_value( value ), m_hash( hash )
 {
-	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
-	{
-		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
-	}
-	it->second.internalSetFunction( c, name, value, knownHash );
 }
 
-bool Context::TypeFunctionTable::typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB )
+bool Context::Value::operator == ( const Value &rhs ) const
 {
-	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
+	if( m_typeId != rhs.m_typeId )
 	{
-		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
+		return false;
 	}
-	return it->second.typedEqualsFunction( rawA, rawB );
+	if( m_value == rhs.m_value )
+	{
+		return true;
+	}
+	return typeFunctions( m_typeId ).isEqual( *this, rhs );
 }
 
-Context::TypeFunctionTable &Context::TypeFunctionTable::theFunctionTable()
+bool Context::Value::references( const IECore::Data *value ) const
 {
-	static TypeFunctionTable *tf = new TypeFunctionTable();
-	return *tf;
+	if( m_typeId != value->typeId() )
+	{
+		return false;
+	}
+	return typeFunctions( m_typeId ).value( value ) == m_value;
+}
+
+IECore::DataPtr Context::Value::makeData() const
+{
+	return typeFunctions( m_typeId ).makeData( *this, nullptr );
+}
+
+Context::Value Context::Value::copy( IECore::ConstDataPtr &owner ) const
+{
+	const void *v;
+	owner = typeFunctions( m_typeId ).makeData( *this, &v );
+	return Value( m_typeId, v, m_hash );
+}
+
+Context::Value::TypeMap &Context::Value::typeMap()
+{
+	static TypeMap m_map;
+	return m_map;
+}
+
+const Context::Value::TypeFunctions &Context::Value::typeFunctions( IECore::TypeId typeId )
+{
+	const TypeMap &m = typeMap();
+	auto it = m.find( typeId );
+	if( it == m.end() )
+	{
+		throw IECore::Exception(
+			"Context does not support type " + std::string( RunTimeTyped::typeNameFromTypeId( typeId ) )
+		);
+	}
+	return it->second;
 }
 
 // Core types and things which are actually used
@@ -164,7 +188,6 @@ Context::ContextTypeDescription<V3fData> v3fTypeDescription;
 Context::ContextTypeDescription<Color3fData> color3fTypeDescription;
 Context::ContextTypeDescription<Color4fData> color4fTypeDescription;
 Context::ContextTypeDescription<Box2iData> box2iTypeDescription;
-
 Context::ContextTypeDescription<UInt64Data> uint64TypeDescription;
 Context::ContextTypeDescription<InternedStringVectorData> internedStringVectorTypeDescription;
 Context::ContextTypeDescription<PathMatcherData> pathMatcherTypeDescription;
@@ -182,7 +205,6 @@ Context::ContextTypeDescription<V2fVectorData> v2fVectorTypeDescription;
 Context::ContextTypeDescription<V3fVectorData> v3fVectorTypeDescription;
 Context::ContextTypeDescription<Color3fVectorData> color3fVectorTypeDescription;
 Context::ContextTypeDescription<Color4fVectorData> color4fVectorTypeDescription;
-
 
 //////////////////////////////////////////////////////////////////////////
 // Context implementation
@@ -220,35 +242,27 @@ Context::Context( const Context &other, Ownership ownership )
 	}
 	else
 	{
+		// We need ownership of the stored values so that we remain valid even
+		// if the source context is destroyed.
 		for( auto &i : other.m_map )
 		{
-			// Copying a context without using Borrowed should be completely safe, even if
-			// the source context is destroyed, so we need to preserve the memory for the
-			// source context entries.  If they are in other.m_allocMap, we can just take
-			// smart pointer, since the alloc map entries are private and never change.
-			// Otherwise, we need to call getAsData to allocate a fresh Data that we will
-			// store
-			AllocMap::const_iterator allocIt = other.m_allocMap.find( i.first );
-			if( allocIt != other.m_allocMap.end() )
+			auto allocIt = other.m_allocMap.find( i.first );
+			if(
+				allocIt != other.m_allocMap.end() &&
+				i.second.references( allocIt->second.get() )
+			)
 			{
-				// Try setting with the Data stored in the other Context
-				internalSetAllocated( i.first, allocIt->second, &i.second.hash );
-
-				// Check if the other Context was actually the using a pointer
-				// to the value we just added
-				if( (m_map.end() - 1 )->second.value == i.second.value )
-				{
-					// Yep, it matches, we're good
-					continue;
-				}
-
-				// The Data stored in other.m_allocMap wasn't actually used by other.m_map
-				// ( it was probably overwritten with a fast EditScope::set that doesn't touch
-				// m_allocMap ).  We need to allocate a new Data after all.
+				// The value is already owned by `other`, and is immutable, so we
+				// can just add our own reference to it to share ownership
+				// and then call `internalSet()`.
+				m_allocMap[i.first] = allocIt->second;
+				internalSet( i.first, i.second );
 			}
-
-			// getAsData allocates a fresh Data, so we can call the internal set that doesn't take a copy
-			internalSetAllocated( i.first, other.getAsData( i.first ), &i.second.hash );
+			else
+			{
+				// Data not owned by `other`. Take a copy that we own, and call `internalSet()`.
+				internalSet( i.first, i.second.copy( m_allocMap[i.first] ) );
+			}
 		}
 	}
 }
@@ -279,16 +293,10 @@ Context::~Context()
 
 void Context::set( const IECore::InternedString &name, const IECore::Data *value )
 {
-	// The context interface should be safe, so we copy the value so that the client can't
-	// invalidate this context by changing it.  ( If you don't want to pay for this alloc,
-	// use EditableScope )
-	internalSetAllocated( name, value->copy() );
-}
-
-void Context::internalSetAllocated( const IECore::InternedString &name, const IECore::ConstDataPtr &value, const IECore::MurmurHash *knownHash )
-{
-	m_allocMap[name] = value;
-	TypeFunctionTable::internalSet( value->typeId(), *this, name, value.get(), knownHash );
+	// We copy the value so that the client can't invalidate this context by changing it.
+	ConstDataPtr copy = value->copy();
+	m_allocMap[name] = copy;
+	internalSet( name, Value( name, copy.get() ) );
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
@@ -299,7 +307,7 @@ IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
 		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
 	}
 
-	return TypeFunctionTable::makeData( it->second.typeId, it->second.value );
+	return it->second.makeData();
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name, IECore::Data *defaultValue ) const
@@ -310,7 +318,7 @@ IECore::DataPtr Context::getAsData( const IECore::InternedString &name, IECore::
 		return defaultValue;
 	}
 
-	return TypeFunctionTable::makeData( it->second.typeId, it->second.value );
+	return it->second.makeData();
 }
 
 void Context::remove( const IECore::InternedString &name )
@@ -368,7 +376,7 @@ float Context::getFrame() const
 void Context::setFrame( float frame )
 {
 	m_frame = frame;
-	internalSet( g_frame, &m_frame );
+	internalSet( g_frame, Value( g_frame, &m_frame ) );
 }
 
 float Context::getFramesPerSecond() const
@@ -416,8 +424,8 @@ IECore::MurmurHash Context::hash() const
 	uint64_t sumH1 = 0, sumH2 = 0;
 	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
 	{
-		sumH1 += it->second.hash.h1();
-		sumH2 += it->second.hash.h2();
+		sumH1 += it->second.hash().h1();
+		sumH2 += it->second.hash().h2();
 	}
 
 	m_hash = MurmurHash( sumH1, sumH2 );
@@ -427,24 +435,7 @@ IECore::MurmurHash Context::hash() const
 
 bool Context::operator == ( const Context &other ) const
 {
-	if( m_map.size() != other.m_map.size() )
-	{
-		return false;
-	}
-	Map::const_iterator otherIt = other.m_map.begin();
-	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it, ++otherIt )
-	{
-		if(
-			it->first != otherIt->first ||
-			it->second.typeId != otherIt->second.typeId ||
-			!TypeFunctionTable::typedEquals( it->second.typeId, it->second.value, otherIt->second.value )
-		)
-		{
-			return false;
-		}
-	}
-
-	return true;
+	return m_map == other.m_map;
 }
 
 bool Context::operator != ( const Context &other ) const

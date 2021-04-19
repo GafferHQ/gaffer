@@ -295,70 +295,63 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		Context( const Context &other, Ownership ownership );
 
-		/// Set a context entry from a pointer to a typed value
-		/// This internal call does not deal with keeping alive the memory pointed to.
-		/// It is called from internalSetAllocated() which is used for safe sets from
-		/// the public Context API, and also directly from EditableScope::set which directly
-		/// allows fast sets when the caller handles keeping the memory
-		template<typename T>
-		inline void internalSet( const IECore::InternedString &name, const T *value, const IECore::MurmurHash *knownHash = nullptr );
-
-		// Unlike the externally visible calls, this does not copy the value, so it is appropriate to call
-		// from the public set<T>( const T& ), after allocating a fresh TypedData<T>
-		void internalSetAllocated( const IECore::InternedString &name, const IECore::ConstDataPtr &value, const IECore::MurmurHash *knownHash = nullptr );
-
 		// Special signature used just by Context::SubstitutionProvider, which dynamically deals with different
 		// types, but also needs to run fast, so shouldn't allocate Data
 		inline const void* getPointerAndTypeId( const IECore::InternedString &name, IECore::TypeId &typeId ) const;
 
-		// Storage for each entry.
-		struct Storage
+		// Type used for the value of a variable.
+		struct Value
 		{
-			template< typename T >
-			inline IECore::MurmurHash entryHash( const IECore::InternedString &name );
 
-			IECore::TypeId typeId;
-			const void *value;
+			template<typename T>
+			Value( const IECore::InternedString &name, const T *value );
+			Value( const IECore::InternedString &name, const IECore::Data *value );
+			Value( const Value &other ) = default;
 
-			// Hash value of this entry's value and name - these will be summed to produce
-			// a total hash for the context
-			IECore::MurmurHash hash;
-		};
+			Value &operator = ( const Value &other ) = default;
 
-		class TypeFunctionTable
-		{
-		public:
-			static IECore::DataPtr makeData( IECore::TypeId typeId, const void *raw );
-			static inline void internalSet( IECore::TypeId typeId, Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash = nullptr );
-			static inline bool typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB );
+			IECore::TypeId typeId() const { return m_typeId; }
+			const void *value() const { return m_value; }
+			// Note : This includes the hash of the name passed
+			// to the constructor.
+			const IECore::MurmurHash &hash() const { return m_hash; }
+
+			bool operator == ( const Value &rhs ) const;
+			bool references( const IECore::Data *value ) const;
+
+			IECore::DataPtr makeData() const;
+			Value copy( IECore::ConstDataPtr &owner ) const;
 
 			template<typename T>
 			static void registerType();
 
-		private:
-			static TypeFunctionTable &theFunctionTable();
+			private :
 
-			template<typename T>
-			static IECore::DataPtr makeDataTemplate( const void *raw );
+				Value( IECore::TypeId typeId, const void *value, const IECore::MurmurHash &hash );
 
-			template<typename T>
-			static void internalSetTemplate( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash );
+				IECore::TypeId m_typeId;
+				const void *m_value;
+				IECore::MurmurHash m_hash;
 
-			template<typename T>
-			static bool typedEqualsTemplate( const void *rawA, const void *rawB );
+				struct TypeFunctions
+				{
+					IECore::DataPtr (*makeData)( const Value &value, const void **dataValue );
+					bool (*isEqual)( const Value &a, const Value &b );
+					Value (*constructor)( const IECore::InternedString &name, const IECore::Data *data );
+					const void *(*value)( const IECore::Data *data );
+				};
 
-			struct FunctionTableEntry
-			{
-				IECore::DataPtr (*makeDataFunction)( const void *raw );
-				void (*internalSetFunction)( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash );
-				bool (*typedEqualsFunction)( const void *rawA, const void *rawB );
-			};
+				using TypeMap = boost::container::flat_map<IECore::TypeId, TypeFunctions>;
+				static TypeMap &typeMap();
+				static const TypeFunctions &typeFunctions( IECore::TypeId typeId );
 
-			using Map = boost::container::flat_map<IECore::TypeId, FunctionTableEntry >;
-			Map m_map;
 		};
 
-		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
+		// Sets a variable and emits `changedSignal()` as appropriate. Does not
+		// manage ownership in any way.
+		inline void internalSet( const IECore::InternedString &name, const Value &value );
+
+		typedef boost::container::flat_map<IECore::InternedString, Value> Map;
 
 		Map m_map;
 		ChangedSignal *m_changedSignal;
