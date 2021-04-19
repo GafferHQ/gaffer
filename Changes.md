@@ -32,6 +32,7 @@ Fixes
 - FilterResults : Fixed bug handling matches at the root location.
 - NodeEditor : Fixed activator and summary updates which were skipped if the layout was not visible when the node was edited.
 - Dispatcher : Fixed dispatching when `dispatcher.batchSize` or `dispatcher.immediate` are driven by context variables.
+- SceneNode : Fixed bug hashing the transform for the root location.
 
 API
 ---
