@@ -325,15 +325,12 @@ class GAFFER_API Context : public IECore::RefCounted
 			IECore::MurmurHash hash;
 		};
 
-		void validateVariableHash( const Storage &s, const IECore::InternedString &name ) const;
-
 		class TypeFunctionTable
 		{
 		public:
 			static IECore::DataPtr makeData( IECore::TypeId typeId, const void *raw );
 			static inline void internalSet( IECore::TypeId typeId, Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash = nullptr );
 			static inline bool typedEquals( IECore::TypeId typeId, const void *rawA, const void *rawB );
-			static inline IECore::MurmurHash entryHash( IECore::TypeId typeId, Storage &s, const IECore::InternedString &name );
 
 			template<typename T>
 			static void registerType();
@@ -350,16 +347,11 @@ class GAFFER_API Context : public IECore::RefCounted
 			template<typename T>
 			static bool typedEqualsTemplate( const void *rawA, const void *rawB );
 
-			template<typename T>
-			static IECore::MurmurHash entryHashTemplate( Storage &s, const IECore::InternedString &name );
-
-
 			struct FunctionTableEntry
 			{
 				IECore::DataPtr (*makeDataFunction)( const void *raw );
 				void (*internalSetFunction)( Context &c, const IECore::InternedString &name, const IECore::Data *value, const IECore::MurmurHash *knownHash );
 				bool (*typedEqualsFunction)( const void *rawA, const void *rawB );
-				IECore::MurmurHash (*entryHashFunction)( Storage &s, const IECore::InternedString &name );
 			};
 
 			using Map = boost::container::flat_map<IECore::TypeId, FunctionTableEntry >;

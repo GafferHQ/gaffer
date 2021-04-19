@@ -148,10 +148,6 @@ const T& Context::get( const IECore::InternedString &name ) const
 		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
 	}
 
-	#ifndef NDEBUG
-	validateVariableHash( it->second, name);
-	#endif // NDEBUG
-
 	return *((const T*)it->second.value );
 }
 
@@ -169,10 +165,6 @@ const T &Context::get( const IECore::InternedString &name, const T &defaultValue
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
 	}
-
-	#ifndef NDEBUG
-	validateVariableHash( it->second, name);
-	#endif // NDEBUG
 
 	return *((const T*)it->second.value );
 }
@@ -288,12 +280,6 @@ bool Context::TypeFunctionTable::typedEqualsTemplate( const void *rawA, const vo
 	return *( (typename T::ValueType*)rawA ) == *( (typename T::ValueType*)rawB );
 }
 
-template<typename T>
-IECore::MurmurHash Context::TypeFunctionTable::entryHashTemplate( Storage &s, const IECore::InternedString &name )
-{
-	return s.entryHash<typename T::ValueType>( name );
-}
-
 template< typename T >
 void Context::TypeFunctionTable::registerType()
 {
@@ -301,7 +287,6 @@ void Context::TypeFunctionTable::registerType()
 	e.makeDataFunction = makeDataTemplate<T>;
 	e.internalSetFunction = internalSetTemplate<T>;
 	e.typedEqualsFunction = typedEqualsTemplate<T>;
-	e.entryHashFunction = entryHashTemplate<T>;
 }
 
 template< typename T >

@@ -145,17 +145,6 @@ bool Context::TypeFunctionTable::typedEquals( IECore::TypeId typeId, const void 
 	return it->second.typedEqualsFunction( rawA, rawB );
 }
 
-IECore::MurmurHash Context::TypeFunctionTable::entryHash( IECore::TypeId typeId, Storage &s, const IECore::InternedString &name )
-{
-	TypeFunctionTable &tf = theFunctionTable();
-	Map::const_iterator it = tf.m_map.find( typeId );
-	if( it == tf.m_map.end() )
-	{
-		throw IECore::Exception( "Context does not support typeId: " + std::to_string( typeId ) );
-	}
-	return it->second.entryHashFunction( s, name );
-}
-
 Context::TypeFunctionTable &Context::TypeFunctionTable::theFunctionTable()
 {
 	static TypeFunctionTable *tf = new TypeFunctionTable();
@@ -310,10 +299,6 @@ IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
 		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
 	}
 
-	#ifndef NDEBUG
-	validateVariableHash( it->second, name);
-	#endif // NDEBUG
-
 	return TypeFunctionTable::makeData( it->second.typeId, it->second.value );
 }
 
@@ -324,10 +309,6 @@ IECore::DataPtr Context::getAsData( const IECore::InternedString &name, IECore::
 	{
 		return defaultValue;
 	}
-
-	#ifndef NDEBUG
-	validateVariableHash( it->second, name);
-	#endif // NDEBUG
 
 	return TypeFunctionTable::makeData( it->second.typeId, it->second.value );
 }
@@ -621,12 +602,4 @@ const std::string &Context::SubstitutionProvider::variable( const boost::string_
 
 	m_formattedString.clear();
 	return m_formattedString;
-}
-
-void Context::validateVariableHash( const Storage &s, const IECore::InternedString &name ) const
-{
-	if( s.hash != TypeFunctionTable::entryHash( s.typeId, const_cast<Storage&>( s ), name ) )
-	{
-		throw IECore::Exception( "Corrupt hash for context entry: " + name.string() );
-	}
 }
