@@ -295,10 +295,6 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		Context( const Context &other, Ownership ownership );
 
-		// Special signature used just by Context::SubstitutionProvider, which dynamically deals with different
-		// types, but also needs to run fast, so shouldn't allocate Data
-		inline const void* getPointerAndTypeId( const IECore::InternedString &name, IECore::TypeId &typeId ) const;
-
 		// Type used for the value of a variable.
 		struct Value
 		{
@@ -310,8 +306,10 @@ class GAFFER_API Context : public IECore::RefCounted
 
 			Value &operator = ( const Value &other ) = default;
 
+			template<typename T>
+			inline const T &value() const;
 			IECore::TypeId typeId() const { return m_typeId; }
-			const void *value() const { return m_value; }
+			const void *rawValue() const { return m_value; }
 			// Note : This includes the hash of the name passed
 			// to the constructor.
 			const IECore::MurmurHash &hash() const { return m_hash; }
@@ -350,6 +348,10 @@ class GAFFER_API Context : public IECore::RefCounted
 		// Sets a variable and emits `changedSignal()` as appropriate. Does not
 		// manage ownership in any way.
 		inline void internalSet( const IECore::InternedString &name, const Value &value );
+		// Throws if variable doesn't exist.
+		inline const Value &internalGet( const IECore::InternedString &name ) const;
+		// Returns nullptr if variable doesn't exist.
+		inline const Value *internalGetIfExists( const IECore::InternedString &name ) const;
 
 		typedef boost::container::flat_map<IECore::InternedString, Value> Map;
 

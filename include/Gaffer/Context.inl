@@ -104,12 +104,23 @@ Context::Value::Value( const IECore::InternedString &name, const T *value )
 }
 
 template<typename T>
+inline const T &Context::Value::value() const
+{
+	using DataType = typename Gaffer::Detail::DataTraits<T>::DataType;
+	if( m_typeId == DataType::staticTypeId() )
+	{
+		return *static_cast<const T *>( m_value );
+	}
+	throw IECore::Exception( boost::str( boost::format( "Context variable is not of type \"%s\"" ) % DataType::staticTypeName() ) );
+}
+
+template<typename T>
 void Context::Value::registerType()
 {
 	using ValueType = typename T::ValueType;
 	TypeFunctions &functions = typeMap()[T::staticTypeId()];
 	functions.makeData = []( const Value &value, const void **dataValue ) -> IECore::DataPtr {
-		typename T::Ptr result = new T( *static_cast<const ValueType *>( value.value() ) );
+		typename T::Ptr result = new T( *static_cast<const ValueType *>( value.rawValue() ) );
 		if( dataValue )
 		{
 			*dataValue = &result->readable();
@@ -118,7 +129,7 @@ void Context::Value::registerType()
 	};
 	functions.isEqual = [] ( const Value &a, const Value &b ) {
 		// Type of both `a` and `b` has been checked already in `operator ==`.
-		return (*static_cast<const ValueType *>( a.value() )) == (*static_cast<const ValueType *>( b.value() ));
+		return (*static_cast<const ValueType *>( a.rawValue() )) == (*static_cast<const ValueType *>( b.rawValue() ));
 	};
 	functions.constructor = [] ( const IECore::InternedString &name, const IECore::Data *data ) {
 		return Value( name, &static_cast<const T *>( data )->readable() );
@@ -150,82 +161,56 @@ void Context::internalSet( const IECore::InternedString &name, const Value &valu
 	}
 }
 
-inline const void* Context::getPointerAndTypeId( const IECore::InternedString &name, IECore::TypeId &typeId ) const
+inline const Context::Value &Context::internalGet( const IECore::InternedString &name ) const
+{
+	const Value *result = internalGetIfExists( name );
+	if( !result )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Context has no variable named \"%s\"" ) % name.value() ) );
+	}
+	return *result;
+}
+
+inline const Context::Value *Context::internalGetIfExists( const IECore::InternedString &name ) const
 {
 	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
-	{
-		return nullptr;
-	}
-
-	typeId = it->second.typeId();
-	return it->second.value();
+	return it != m_map.end() ? &it->second : nullptr;
 }
 
 template<typename T>
-const T& Context::get( const IECore::InternedString &name ) const
+const T &Context::get( const IECore::InternedString &name ) const
 {
-	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
-	}
-
-	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-	if( it->second.typeId() != DataType::staticTypeId() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
-	}
-
-	return *static_cast<const T *>( it->second.value() );
+	return internalGet( name ).value<T>();
 }
 
 template<typename T>
 const T &Context::get( const IECore::InternedString &name, const T &defaultValue ) const
 {
-	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
+	if( const Value *value = internalGetIfExists( name ) )
 	{
-		return defaultValue;
+		return internalGet( name ).value<T>();
 	}
-
-	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-	if( it->second.typeId() != DataType::staticTypeId() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
-	}
-
-	return *static_cast<const T *>( it->second.value() );
+	return defaultValue;
 }
 
 inline IECore::MurmurHash Context::variableHash( const IECore::InternedString &name ) const
 {
-	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
+	if( const Value *value = internalGetIfExists( name ) )
 	{
-		return IECore::MurmurHash();
+		return value->hash();
 	}
-	return it->second.hash();
+	return IECore::MurmurHash();
 }
 
 template<typename T>
-const T* Context::getIfExists( const IECore::InternedString &name ) const
+const T *Context::getIfExists( const IECore::InternedString &name ) const
 {
-	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
+	if( const Value *value = internalGetIfExists( name ) )
 	{
-		return nullptr;
+		return &value->value<T>();
 	}
-
-	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
-	if( it->second.typeId() != DataType::staticTypeId() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
-	}
-	return static_cast<const T *>( it->second.value() );
+	return nullptr;
 }
-
-
 
 template<typename T>
 void Context::EditableScope::set( const IECore::InternedString &name, const T *value )

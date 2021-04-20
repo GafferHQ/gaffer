@@ -301,24 +301,16 @@ void Context::set( const IECore::InternedString &name, const IECore::Data *value
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
 {
-	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
-	{
-		throw IECore::Exception( boost::str( boost::format( "Context has no entry named \"%s\"" ) % name.value() ) );
-	}
-
-	return it->second.makeData();
+	return internalGet( name ).makeData();
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name, IECore::Data *defaultValue ) const
 {
-	Map::const_iterator it = m_map.find( name );
-	if( it == m_map.end() )
+	if( const Value *value = internalGetIfExists( name ) )
 	{
-		return defaultValue;
+		return value->makeData();
 	}
-
-	return it->second.makeData();
+	return nullptr;
 }
 
 void Context::remove( const IECore::InternedString &name )
@@ -543,30 +535,28 @@ int Context::SubstitutionProvider::frame() const
 const std::string &Context::SubstitutionProvider::variable( const boost::string_view &name, bool &recurse ) const
 {
 	InternedString internedName( name );
-	IECore::TypeId typeId;
-	const void* d = m_context->getPointerAndTypeId( internedName, typeId );
-	if( d )
+	if( const Value *value = m_context->internalGetIfExists( internedName ) )
 	{
-		switch( typeId )
+		switch( value->typeId() )
 		{
 			case IECore::StringDataTypeId :
 				recurse = true;
-				return *static_cast<const std::string*>( d );
+				return *static_cast<const std::string*>( value->rawValue() );
 			case IECore::FloatDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
-					*static_cast<const float *>( d )
+					*static_cast<const float *>( value->rawValue() )
 				);
 				return m_formattedString;
 			case IECore::IntDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
-					*static_cast<const int *>( d )
+					*static_cast<const int *>( value->rawValue() )
 				);
 				return m_formattedString;
 			case IECore::InternedStringVectorDataTypeId : {
 				// This is unashamedly tailored to the needs of GafferScene's `${scene:path}`
 				// variable. We could make this cleaner by adding a mechanism for registering custom
 				// formatters, but that would be overkill for this one use case.
-				const auto &v = *static_cast<const std::vector<InternedString>* >( d );
+				const auto &v = *static_cast<const std::vector<InternedString>* >( value->rawValue() );
 				m_formattedString.clear();
 				if( v.empty() )
 				{
