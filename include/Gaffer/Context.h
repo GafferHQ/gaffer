@@ -273,10 +273,12 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// Returns the current context for the calling thread.
 		static const Context *current();
 
-		template< typename T >
-		struct ContextTypeDescription
+		/// Used to register a data type for use in variable values.
+		/// See `GafferImage::FormatData` for an example.
+		template<typename T>
+		struct TypeDescription
 		{
-			ContextTypeDescription();
+			TypeDescription();
 		};
 
 	private :

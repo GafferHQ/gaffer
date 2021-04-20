@@ -254,7 +254,7 @@ class Context::SubstitutionProvider : public IECore::StringAlgo::VariableProvide
 };
 
 template< typename T >
-Context::ContextTypeDescription<T>::ContextTypeDescription()
+Context::TypeDescription<T>::TypeDescription()
 {
 	Context::Value::registerType<T>();
 }

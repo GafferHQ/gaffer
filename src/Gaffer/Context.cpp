@@ -175,36 +175,42 @@ const Context::Value::TypeFunctions &Context::Value::typeFunctions( IECore::Type
 	return it->second;
 }
 
-// Core types and things which are actually used
-Context::ContextTypeDescription<FloatData> floatTypeDescription;
-Context::ContextTypeDescription<IntData> intTypeDescription;
-Context::ContextTypeDescription<BoolData> boolTypeDescription;
-Context::ContextTypeDescription<StringData> stringTypeDescription;
-Context::ContextTypeDescription<InternedStringData> internedStringTypeDescription;
-Context::ContextTypeDescription<V2iData> v2iTypeDescription;
-Context::ContextTypeDescription<V3iData> v3iTypeDescription;
-Context::ContextTypeDescription<V2fData> v2fTypeDescription;
-Context::ContextTypeDescription<V3fData> v3fTypeDescription;
-Context::ContextTypeDescription<Color3fData> color3fTypeDescription;
-Context::ContextTypeDescription<Color4fData> color4fTypeDescription;
-Context::ContextTypeDescription<Box2iData> box2iTypeDescription;
-Context::ContextTypeDescription<UInt64Data> uint64TypeDescription;
-Context::ContextTypeDescription<InternedStringVectorData> internedStringVectorTypeDescription;
-Context::ContextTypeDescription<PathMatcherData> pathMatcherTypeDescription;
+//////////////////////////////////////////////////////////////////////////
+// Type registrations
+//////////////////////////////////////////////////////////////////////////
 
-// Types which seem like obvious generalizations, or are used in the Context tests
-Context::ContextTypeDescription<Box2fData> box2fTypeDescription;
-Context::ContextTypeDescription<Box3iData> box3iTypeDescription;
-Context::ContextTypeDescription<Box3fData> box3fTypeDescription;
-Context::ContextTypeDescription<FloatVectorData> floatVectorTypeDescription;
-Context::ContextTypeDescription<IntVectorData> intVectorTypeDescription;
-Context::ContextTypeDescription<StringVectorData> stringVectorTypeDescription;
-Context::ContextTypeDescription<V2iVectorData> v2iVectorTypeDescription;
-Context::ContextTypeDescription<V3iVectorData> v3iVectorTypeDescription;
-Context::ContextTypeDescription<V2fVectorData> v2fVectorTypeDescription;
-Context::ContextTypeDescription<V3fVectorData> v3fVectorTypeDescription;
-Context::ContextTypeDescription<Color3fVectorData> color3fVectorTypeDescription;
-Context::ContextTypeDescription<Color4fVectorData> color4fVectorTypeDescription;
+namespace
+{
+
+Context::TypeDescription<FloatData> g_floatTypeDescription;
+Context::TypeDescription<IntData> g_intTypeDescription;
+Context::TypeDescription<BoolData> g_boolTypeDescription;
+Context::TypeDescription<StringData> g_stringTypeDescription;
+Context::TypeDescription<InternedStringData> g_internedStringTypeDescription;
+Context::TypeDescription<V2iData> g_v2iTypeDescription;
+Context::TypeDescription<V3iData> g_v3iTypeDescription;
+Context::TypeDescription<V2fData> g_v2fTypeDescription;
+Context::TypeDescription<V3fData> g_v3fTypeDescription;
+Context::TypeDescription<Color3fData> g_color3fTypeDescription;
+Context::TypeDescription<Color4fData> g_color4fTypeDescription;
+Context::TypeDescription<Box2iData> g_box2iTypeDescription;
+Context::TypeDescription<UInt64Data> g_uint64TypeDescription;
+Context::TypeDescription<InternedStringVectorData> g_internedStringVectorTypeDescription;
+Context::TypeDescription<PathMatcherData> g_pathMatcherTypeDescription;
+Context::TypeDescription<Box2fData> g_box2fTypeDescription;
+Context::TypeDescription<Box3iData> g_box3iTypeDescription;
+Context::TypeDescription<Box3fData> g_box3fTypeDescription;
+Context::TypeDescription<FloatVectorData> g_floatVectorTypeDescription;
+Context::TypeDescription<IntVectorData> g_intVectorTypeDescription;
+Context::TypeDescription<StringVectorData> g_stringVectorTypeDescription;
+Context::TypeDescription<V2iVectorData> g_v2iVectorTypeDescription;
+Context::TypeDescription<V3iVectorData> g_v3iVectorTypeDescription;
+Context::TypeDescription<V2fVectorData> g_v2fVectorTypeDescription;
+Context::TypeDescription<V3fVectorData> g_v3fVectorTypeDescription;
+Context::TypeDescription<Color3fVectorData> g_color3fVectorTypeDescription;
+Context::TypeDescription<Color4fVectorData> g_color4fVectorTypeDescription;
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Context implementation

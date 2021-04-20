@@ -45,7 +45,12 @@
 
 using namespace Imath;
 
-Gaffer::Context::ContextTypeDescription<GafferImage::FormatData> formatDataTypeDescription;
+namespace
+{
+
+Gaffer::Context::TypeDescription<GafferImage::FormatData> g_formatDataTypeDescription;
+
+} // namespace
 
 namespace IECore
 {
