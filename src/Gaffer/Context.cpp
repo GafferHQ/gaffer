@@ -477,3 +477,33 @@ const std::string &Context::SubstitutionProvider::variable( const boost::string_
 	m_formattedString.clear();
 	return m_formattedString;
 }
+
+// Forward compatibility with Gaffer 0.60
+void Context::EditableScope::setAllocated( const IECore::InternedString &name, const IECore::Data *value )
+{
+	set( name, value );
+}
+
+void Context::EditableScope::setFramesPerSecond( const float *framesPerSecond )
+{
+	setFramesPerSecond( *framesPerSecond );
+}
+
+IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
+{
+	const IECore::Data* result = get<Data>( name );
+	return result->copy();
+}
+
+IECore::DataPtr Context::getAsData( const IECore::InternedString &name, const IECore::DataPtr &defaultValue ) const
+{
+	const IECore::Data* result = get<Data>( name, defaultValue.get() );
+	if( result )
+	{
+		return result->copy();
+	}
+	else
+	{
+		return nullptr;
+	}
+}

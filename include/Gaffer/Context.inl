@@ -212,7 +212,8 @@ typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedSt
 }
 
 template<typename T>
-void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
+typename std::enable_if<std::is_base_of<IECore::Data, typename std::remove_pointer<T>::type >::value || !std::is_pointer<T>::value>::type
+Context::EditableScope::set( const IECore::InternedString &name, const T &value )
 {
 	m_context->set( name, value );
 }
@@ -238,6 +239,34 @@ class Context::SubstitutionProvider : public IECore::StringAlgo::VariableProvide
 		mutable std::string m_formattedString;
 
 };
+
+// Forward compatibility with Gaffer 0.60
+template<typename T, typename Enabler >
+void Context::EditableScope::set( const IECore::InternedString &name, const T *value )
+{
+	set( name, *value );
+}
+
+template<typename T, typename Enabler >
+void Context::EditableScope::setAllocated( const IECore::InternedString &name, const T &value )
+{
+	set( name, value );
+}
+
+template<typename T>
+const T *Context::getIfExists( const IECore::InternedString &name ) const
+{
+	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
+	const DataType* result = get<DataType>( name, nullptr );
+	if( result )
+	{
+		return &result->readable();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
 
 } // namespace Gaffer
 

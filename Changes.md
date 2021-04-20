@@ -1,3 +1,14 @@
+0.59.x.x (relative to 0.59.7.0)
+========
+
+API
+---
+
+- Context : Added forwards compatibility for methods added to provide enhanced
+  performance in Gaffer 0.60. This allows the same code to be compiled for both
+  Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
+  from improved performance).
+
 0.59.7.0 (relative to 0.59.6.0)
 ========
 

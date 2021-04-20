@@ -373,6 +373,37 @@ void ScenePlug::SetScope::setSetName( const IECore::InternedString &setName )
 	set( setNameContextName, setName );
 }
 
+/// Forward compatibility for Gaffer 0.60
+ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath *scenePath )
+	: PathScope( context, *scenePath )
+{
+}
+
+ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const ScenePath *scenePath )
+	: PathScope( threadState, *scenePath )
+{
+}
+
+void ScenePlug::PathScope::setPath( const ScenePath *scenePath )
+{
+	setPath( *scenePath );
+}
+
+ScenePlug::SetScope::SetScope( const Gaffer::Context *context, const IECore::InternedString *setName )
+	: SetScope( context, *setName )
+{
+}
+
+ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString *setName )
+	: SetScope( threadState, *setName )
+{
+}
+
+void ScenePlug::SetScope::setSetName( const IECore::InternedString *setName )
+{
+	setSetName( *setName );
+}
+
 ScenePlug::GlobalScope::GlobalScope( const Gaffer::Context *context )
 	:	EditableScope( context )
 {

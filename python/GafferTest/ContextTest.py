@@ -684,5 +684,9 @@ class ContextTest( GafferTest.TestCase ) :
 		context3 = Gaffer.Context( context1, omitCanceller = False )
 		self.assertIsNotNone( context3.canceller() )
 
+	def testNewContextAPIBasics( self ) :
+
+		GafferTest.testNewContextAPIBasics()
+
 if __name__ == "__main__":
 	unittest.main()
