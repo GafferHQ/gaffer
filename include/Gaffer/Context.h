@@ -52,9 +52,9 @@
 namespace Gaffer
 {
 
-/// This class provides a dictionary of IECore::Data objects to define the context in which a
-/// computation is performed. The most basic entry common to all Contexts is the frame number,
-/// but a context may also hold entirely arbitrary entries useful to specific types of
+/// This class provides a dictionary of variables to define the context in which a
+/// computation is performed. The most basic variable common to all Contexts is the frame number,
+/// but a context may also hold entirely arbitrary variables useful to specific types of
 /// computation.
 ///
 /// Contexts are made current using the nested Scope class - any computation triggered by
@@ -94,49 +94,43 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
 
-		/// Set a context entry with a typed value.
-		/// ( This takes a copy so that the value can be safely changed afterwards )
+		/// Sets a variable to the specified value. A copy is taken so that
+		/// subsequent changes to `value` do not affect the context.
 		template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
 		void set( const IECore::InternedString &name, const T &value );
-
-		/// Set a context entry with a generic Data *, which could be of any supported type.
-		/// ( This takes a copy so that the value can be safely changed afterwards )
+		/// As above, but providing the value as a `Data *`.
 		void set( const IECore::InternedString &name, const IECore::Data *value );
 
-		/// Can be used to retrieve simple types, and is very fast :
-		///		float f = context->get<float>( "myFloat" )
+		/// Returns a reference to the value of a variable, throwing if it doesn't exist or
+		/// has the wrong type : `float f = context->get<float>( "myFloat" )`.
 		template<typename T>
-		const T& get( const IECore::InternedString &name ) const;
-
-		/// As above but returns defaultValue when an entry is not found, rather than throwing
-		/// an Exception.  Note that if you pass in a temporary as the defaultValue, you must
-		/// copy the return value, rather than storing it as a reference ( if you stored it
-		/// as a reference, you would be storing a refernce to the temporary you passed in ).
+		const T &get( const IECore::InternedString &name ) const;
+		/// As above, but returns `defaultValue` if the variable doesn't exist.
+		/// Note that if you pass in a temporary as the `defaultValue`, you must
+		/// copy the return value (if you stored it as a reference, you would be
+		/// referencing the temporary after it was destroyed).
 		template<typename T>
-		const T& get( const IECore::InternedString &name, const T& defaultValue ) const;
-
+		const T &get( const IECore::InternedString &name, const T& defaultValue ) const;
 		/// Returns a pointer to the value for the variable if it exists and has
 		/// the requested type. Returns `nullptr` if the variable doesn't exist,
-		/// and throws if if exists but has the wrong type.  Equally fast to the get() above.
+		/// and throws if it exists but has the wrong type.
 		template<typename T>
-		const T* getIfExists( const IECore::InternedString &name ) const;
+		const T *getIfExists( const IECore::InternedString &name ) const;
 
-		/// Use when you need a Data ptr, and don't know the type of the value you are getting
-		/// This allocates a new Data, and is much slower than the typed versions of get() above.
+		/// Returns a copy of the variable if it exists, throwing if it doesn't. This
+		/// can be used when the type of the variable is unknown, but it is much more
+		/// expensive than the `get()` methods above because it allocates memory.
 		IECore::DataPtr getAsData( const IECore::InternedString &name ) const;
-
-		/// As above but returns defaultValue when an entry is not found, rather than throwing
-		/// an Exception.
+		/// As above but returns `defaultValue` if the variable does not exist.
 		IECore::DataPtr getAsData( const IECore::InternedString &name, IECore::Data *defaultValue ) const;
 
-		/// Removes an entry from the context if it exists
-		void remove( const IECore::InternedString& name );
-
-		/// Removes any entries whose names match the space separated patterns
+		/// Removes a variable from the context, if it exists.
+		void remove( const IECore::InternedString &name );
+		/// Removes any variables whose names match the space separated patterns
 		/// provided. Matching is performed using `StringAlgo::matchMultiple()`.
 		void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
 
-		/// Fills the specified vector with the names of all items in the Context.
+		/// Fills the specified vector with the names of all variables in the Context.
 		void names( std::vector<IECore::InternedString> &names ) const;
 
 		/// @name Time
@@ -230,11 +224,11 @@ class GAFFER_API Context : public IECore::RefCounted
 				EditableScope( const ThreadState &threadState );
 				~EditableScope();
 
-				/// Set a context entry with a pointer to a typed value.  It is the caller's
-				/// responsibility to ensure that the memory pointed to stays valid for the
-				/// lifetime of the EditableScope.  This is much faster than allocating new memory
-				/// inside a Context, and should be used anywhere where putting a value in a
-				/// context is performance critical
+				/// Sets a variable with a pointer to a typed value. It is the
+				/// caller's responsibility to ensure that the pointer remains
+				/// valid for the lifetime of the EditableScope. This is much
+				/// faster than `Context::set()` because it doesn't allocating
+				/// memory, and should be used in all performance-critical code.
 				template<typename T>
 				void set( const IECore::InternedString &name, const T *value );
 
@@ -242,16 +236,16 @@ class GAFFER_API Context : public IECore::RefCounted
 				[[deprecated("Use faster pointer version, or use the more explicit setAllocated if you actually need to allocate ")]]
 				void set( const IECore::InternedString &name, const T &value );
 
-				/// Set a context entry with newly allocated Data, taken as a copy of a typed value
+				/// Sets a variable from a copy of `value`. This is more expensive than the
+				/// pointer version above, and should be avoided where possible.
 				template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
 				void setAllocated( const IECore::InternedString &name, const T &value );
-
-				/// Set a context entry with newly allocated Data, taken as a copy of a generic Data *
-				/// of any supported type
+				/// As above, but providing the value as a `Data *`.
 				void setAllocated( const IECore::InternedString &name, const IECore::Data *value );
 
-				/// These fast even though they don't take a pointer, because the Context has a special
-				/// internal storage just for the frame
+				/// These are fast even though they don't take a pointer,
+				/// because the Context has dedicated internal storage for
+				/// the frame.
 				void setFrame( float frame );
 				void setTime( float timeInSeconds );
 
@@ -282,7 +276,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		};
 
 	private :
-		/// The public copy constructor for Context duplicates all entry storage
+		/// The public copy constructor for Context duplicates all variable storage
 		/// to make it completely independent of the Context it was copied from.  This
 		/// is slow, so when creating an EditableScope, we just take the pointers from the
 		/// source context, which is valid because the EditableScope never outlives its
@@ -371,9 +365,10 @@ class GAFFER_API Context : public IECore::RefCounted
 		// The alloc map holds a smart pointer to data that we allocate.  It must keep the entries
 		// alive at least as long as the m_map used for actual accesses is using it, though it may
 		// hold data longer than it is actually in use.  ( ie. a fast pointer based set through
-		// EditableScope could overwrite an entry without updating m_allocMap )
+		// EditableScope could overwrite a variable without updating m_allocMap )
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr > AllocMap;
 		AllocMap m_allocMap;
+
 };
 
 IE_CORE_DECLAREPTR( Context );

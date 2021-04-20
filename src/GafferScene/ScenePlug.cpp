@@ -316,7 +316,6 @@ ScenePlug::PathScope::PathScope( const Gaffer::Context *context )
 	remove( ScenePlug::setNameContextName );
 }
 
-// DEPRECATED
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath &scenePath )
 	:	PathScope( context )
 {
@@ -334,7 +333,6 @@ ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState )
 {
 }
 
-// DEPRECATED
 ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const ScenePath &scenePath )
 	:	EditableScope( threadState )
 {
@@ -347,7 +345,6 @@ ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const S
 	setPath( scenePath );
 }
 
-// DEPRECATED
 void ScenePlug::PathScope::setPath( const ScenePath &scenePath )
 {
 	setAllocated( scenePathContextName, scenePath );
@@ -365,7 +362,6 @@ ScenePlug::SetScope::SetScope( const Gaffer::Context *context )
 	remove( ScenePlug::scenePathContextName );
 }
 
-// DEPRECATED
 ScenePlug::SetScope::SetScope( const Gaffer::Context *context, const IECore::InternedString &setName )
 	:	EditableScope( context )
 {
@@ -389,7 +385,6 @@ ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState )
 	remove( ScenePlug::scenePathContextName );
 }
 
-// DEPRECATED
 ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString &setName )
 	:	EditableScope( threadState )
 {
@@ -406,7 +401,6 @@ ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IEC
 	setSetName( setName );
 }
 
-// DEPRECATED
 void ScenePlug::SetScope::setSetName( const IECore::InternedString &setName )
 {
 	setAllocated( setNameContextName, setName );

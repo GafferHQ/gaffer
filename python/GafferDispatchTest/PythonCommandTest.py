@@ -278,7 +278,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s["n"]["command"].setValue( "\n".join( commandLines ) )
 
 		d = self.__dispatcher( frameRange = "1-5" )
-		six.assertRaisesRegex( self, Exception, "Context has no entry named \"frame\"", d.dispatch, [ s[ "n" ] ] )
+		six.assertRaisesRegex( self, Exception, "Context has no variable named \"frame\"", d.dispatch, [ s[ "n" ] ] )
 
 		commandLines = inspect.cleandoc(
 			"""

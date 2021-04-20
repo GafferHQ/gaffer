@@ -218,7 +218,6 @@ void Context::EditableScope::set( const IECore::InternedString &name, const T *v
 	m_context->internalSet( name, Value( name, value ) );
 }
 
-// DEPRECATED
 template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
 void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
 {

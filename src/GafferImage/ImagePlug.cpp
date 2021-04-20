@@ -307,13 +307,11 @@ ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::ThreadState &thread
 {
 }
 
-// DEPRECATED
 void ImagePlug::ChannelDataScope::setTileOrigin( const V2i &tileOrigin )
 {
 	setAllocated( tileOriginContextName, tileOrigin );
 }
 
-// DEPRECATED
 void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName )
 {
 	setAllocated( channelNameContextName, channelName );

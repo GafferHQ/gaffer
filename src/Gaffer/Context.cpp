@@ -106,6 +106,7 @@ class Environment
 };
 
 Environment g_environment;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -239,9 +240,9 @@ Context::Context( const Context &other, Ownership ownership )
 {
 	if( ownership == Borrowed )
 	{
-		// Reserving one extra spot before we copy in the existing entries means that we will
+		// Reserving one extra spot before we copy in the existing variables means that we will
 		// avoid doing this allocation twice in the common case where we set exactly one context
-		// variable.  Perhaps we should reserve two extra spots - though that is some extra memory
+		// variable. Perhaps we should reserve two extra spots - though that is some extra memory
 		// to carry around in cases where we don't add any variables?
 		m_map.reserve( other.m_map.size() + 1 );
 		m_map = other.m_map;
@@ -493,7 +494,6 @@ void Context::EditableScope::setFrame( float frame )
 	m_context->setFrame( frame );
 }
 
-//DEPRECATED
 void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
 {
 	m_context->setFramesPerSecond( framesPerSecond );

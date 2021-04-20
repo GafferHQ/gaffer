@@ -56,9 +56,10 @@ using namespace GafferScene;
 
 namespace
 {
-	const ScenePlug::ScenePath g_root;
 
-}
+const ScenePlug::ScenePath g_root;
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Group );
 

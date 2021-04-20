@@ -63,7 +63,7 @@ class ContextSanitiserTest( GafferImageTest.ImageTestCase ) :
 
 				c["image:channelName"] = IECore.IntData( 5 )
 
-				with six.assertRaisesRegex( self, IECore.Exception, 'Context entry is not of type "StringData"' ) :
+				with six.assertRaisesRegex( self, IECore.Exception, 'Context variable is not of type "StringData"' ) :
 					constant["out"]["metadata"].getValue()
 
 		for message in mh.messages :

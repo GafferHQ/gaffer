@@ -50,8 +50,10 @@ using namespace GafferScene;
 
 namespace
 {
-	const ScenePlug::ScenePath g_root;
-}
+
+const ScenePlug::ScenePath g_root;
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Scope classes
