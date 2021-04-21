@@ -94,6 +94,7 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "countContextHash32Collisions", &countContextHash32CollisionsWrapper );
 	def( "testContextHashPerformance", &testContextHashPerformance );
 	def( "testContextCopyPerformance", &testContextCopyPerformance );
+	def( "testCopyEditableScope", &testCopyEditableScope );
 	def( "testComputeNodeThreading", &testComputeNodeThreading );
 	def( "testDownstreamIterator", &testDownstreamIterator );
 	def( "testRandomPerf", &testRandomPerf );

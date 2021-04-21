@@ -747,5 +747,9 @@ class ContextTest( GafferTest.TestCase ) :
 
 		GafferTest.testContextCopyPerformance( 10, 10 )
 
+	def testCopyEditableScope( self ) :
+
+		GafferTest.testCopyEditableScope()
+
 if __name__ == "__main__":
 	unittest.main()

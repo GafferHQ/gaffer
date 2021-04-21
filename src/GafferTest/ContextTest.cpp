@@ -320,3 +320,57 @@ void GafferTest::testContextCopyPerformance( int numEntries, int entrySize )
 	);
 
 }
+
+void GafferTest::testCopyEditableScope()
+{
+	ContextPtr copy;
+	{
+		ContextPtr context = new Context();
+		context->set( "a", 1 );
+		context->set( "b", 2 );
+		context->set( "c", 3 );
+
+		int ten = 10;
+		string cat = "cat";
+		Context::EditableScope scope( context.get() );
+		scope.set( "a", &ten );
+		scope.setAllocated( "b", 20 );
+		scope.set( "d", &ten );
+		scope.setAllocated( "e", 40 );
+		scope.set( "f", &cat );
+		copy = new Context( *scope.context() );
+	}
+
+	// Both the original context and the EditableScope have
+	// been destructed, but a deep copy should have been taken
+	// to preserve all values.
+
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "a" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "b" ), 20 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "c" ), 3 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "d" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "e" ), 40 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<string>( "f" ), "cat" );
+
+	// A second copy should be fairly cheap, just referencing
+	// the same data.
+
+	ContextPtr copy2 = new Context( *copy );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "a" ), &copy2->get<int>( "a" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "b" ), &copy2->get<int>( "b" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "c" ), &copy2->get<int>( "c" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "d" ), &copy2->get<int>( "d" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "e" ), &copy2->get<int>( "e" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<string>( "f" ), &copy2->get<string>( "f" ) );
+
+	// And the second copy should still be valid if the first
+	// one is destroyed.
+
+	copy = nullptr;
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "a" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "b" ), 20 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "c" ), 3 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "d" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "e" ), 40 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<string>( "f" ), "cat" );
+}
