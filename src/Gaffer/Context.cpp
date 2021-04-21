@@ -238,19 +238,21 @@ Context::Context( const Context &other, Ownership ownership )
 		m_hashValid( other.m_hashValid ),
 		m_canceller( other.m_canceller )
 {
+	// Reserving one extra spot before we copy in the existing variables means that we will
+	// avoid a second allocation in the common case where we set exactly one context
+	// variable. Perhaps we should reserve two extra spots - though that is some extra memory
+	// to carry around in cases where we don't add any variables?
+	m_map.reserve( other.m_map.size() + 1 );
+
 	if( ownership == Borrowed )
 	{
-		// Reserving one extra spot before we copy in the existing variables means that we will
-		// avoid doing this allocation twice in the common case where we set exactly one context
-		// variable. Perhaps we should reserve two extra spots - though that is some extra memory
-		// to carry around in cases where we don't add any variables?
-		m_map.reserve( other.m_map.size() + 1 );
 		m_map = other.m_map;
 	}
 	else
 	{
 		// We need ownership of the stored values so that we remain valid even
 		// if the source context is destroyed.
+		m_allocMap.reserve( other.m_map.size() + 1 );
 		for( auto &i : other.m_map )
 		{
 			auto allocIt = other.m_allocMap.find( i.first );
