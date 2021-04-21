@@ -85,6 +85,11 @@ struct DataTraits<Imath::Vec3<T> >
 
 } // namespace Detail
 
+Context::Value::Value()
+	:	m_typeId( IECore::InvalidTypeId ), m_value( nullptr )
+{
+}
+
 template<typename T>
 Context::Value::Value( const IECore::InternedString &name, const T *value )
 	:	m_typeId( Detail::DataTraits<T>::DataType::staticTypeId() ),
@@ -146,18 +151,40 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	// and call internalSet to reference it in the main m_map
 	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
 	typename DataType::Ptr d = new DataType( value );
-	m_allocMap[name] = d;
-	internalSet( name, Value( name, &d->readable() ) );
+	if( internalSet( name, Value( name, &d->readable() ) ) )
+	{
+		m_allocMap[name] = d;
+	}
 }
 
-void Context::internalSet( const IECore::InternedString &name, const Value &value )
+bool Context::internalSet( const IECore::InternedString &name, const Value &value )
 {
-	m_map.insert_or_assign( name, value );
-	m_hashValid = false;
-
-	if( m_changedSignal )
+	if( !m_changedSignal )
 	{
-		(*m_changedSignal)( this, name );
+		// Fast path, typically in an EditableScope, where we
+		// expect the value to have changed and don't want the
+		// expense of checking.
+		m_map[name] = value;
+		m_hashValid = false;
+		return true;
+	}
+	else
+	{
+		// Avoid emitting `changedSignal` if the value hasn't
+		// actually changed. We want to avoid expensive re-evaluations
+		// that might otherwise be triggered in the UI.
+		Value &v = m_map[name];
+		if( v != value )
+		{
+			v = value;
+			m_hashValid = false;
+			(*m_changedSignal)( this, name );
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
 

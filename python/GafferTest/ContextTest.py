@@ -81,9 +81,9 @@ class ContextTest( GafferTest.TestCase ) :
 		hash3 = c.hash()
 		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ) ] )
 
-		# Even an assignment that doesn't change anything does still trigger the signal
+		# Assigning the same value again should not trigger the change signal
 		c["b"] = 1
-		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ), ( "b", 1, hash3 ) ] )
+		self.assertEqual( changes, [ ( "a", 2, hash1 ), ( "a", 3, hash2 ), ( "b", 1, hash3 ) ] )
 
 		# Removing variables should also trigger the changed signal.
 

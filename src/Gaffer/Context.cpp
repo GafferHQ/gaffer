@@ -136,6 +136,11 @@ bool Context::Value::operator == ( const Value &rhs ) const
 	return typeFunctions( m_typeId ).isEqual( *this, rhs );
 }
 
+bool Context::Value::operator != ( const Value &rhs ) const
+{
+	return !(*this == rhs);
+}
+
 bool Context::Value::references( const IECore::Data *value ) const
 {
 	if( m_typeId != value->typeId() )
@@ -304,8 +309,10 @@ void Context::set( const IECore::InternedString &name, const IECore::Data *value
 {
 	// We copy the value so that the client can't invalidate this context by changing it.
 	ConstDataPtr copy = value->copy();
-	m_allocMap[name] = copy;
-	internalSet( name, Value( name, copy.get() ) );
+	if( internalSet( name, Value( name, copy.get() ) ) )
+	{
+		m_allocMap[name] = copy;
+	}
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const

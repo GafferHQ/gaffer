@@ -295,6 +295,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		struct Value
 		{
 
+			inline Value();
 			template<typename T>
 			Value( const IECore::InternedString &name, const T *value );
 			Value( const IECore::InternedString &name, const IECore::Data *value );
@@ -311,6 +312,7 @@ class GAFFER_API Context : public IECore::RefCounted
 			const IECore::MurmurHash &hash() const { return m_hash; }
 
 			bool operator == ( const Value &rhs ) const;
+			bool operator != ( const Value &rhs ) const;
 			bool references( const IECore::Data *value ) const;
 
 			IECore::DataPtr makeData() const;
@@ -342,8 +344,10 @@ class GAFFER_API Context : public IECore::RefCounted
 		};
 
 		// Sets a variable and emits `changedSignal()` as appropriate. Does not
-		// manage ownership in any way.
-		inline void internalSet( const IECore::InternedString &name, const Value &value );
+		// manage ownership in any way. Returns true if the value was assigned,
+		// and false if the value was not (due to it being equal to the
+		// previously stored value).
+		inline bool internalSet( const IECore::InternedString &name, const Value &value );
 		// Throws if variable doesn't exist.
 		inline const Value &internalGet( const IECore::InternedString &name ) const;
 		// Returns nullptr if variable doesn't exist.
