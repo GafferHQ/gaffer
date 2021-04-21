@@ -144,7 +144,7 @@ void Context::Value::registerType()
 	};
 }
 
-template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
+template<typename T, typename Enabler>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
 	// Allocate a new typed Data, store it in m_allocMap so that it won't be deallocated,
@@ -245,13 +245,13 @@ void Context::EditableScope::set( const IECore::InternedString &name, const T *v
 	m_context->internalSet( name, Value( name, value ) );
 }
 
-template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
+template<typename T, typename Enabler>
 void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
 {
 	m_context->set( name, value );
 }
 
-template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
+template<typename T, typename Enabler>
 void Context::EditableScope::setAllocated( const IECore::InternedString &name, const T &value )
 {
 	m_context->set( name, value );

@@ -96,7 +96,7 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		/// Sets a variable to the specified value. A copy is taken so that
 		/// subsequent changes to `value` do not affect the context.
-		template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
+		template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value>>
 		void set( const IECore::InternedString &name, const T &value );
 		/// As above, but providing the value as a `Data *`.
 		void set( const IECore::InternedString &name, const IECore::Data *value );
@@ -232,13 +232,13 @@ class GAFFER_API Context : public IECore::RefCounted
 				template<typename T>
 				void set( const IECore::InternedString &name, const T *value );
 
-				template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
+				template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value > >
 				[[deprecated("Use faster pointer version, or use the more explicit setAllocated if you actually need to allocate ")]]
 				void set( const IECore::InternedString &name, const T &value );
 
 				/// Sets a variable from a copy of `value`. This is more expensive than the
 				/// pointer version above, and should be avoided where possible.
-				template<typename T, typename = std::enable_if_t<!std::is_pointer<T>::value > >
+				template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value > >
 				void setAllocated( const IECore::InternedString &name, const T &value );
 				/// As above, but providing the value as a `Data *`.
 				void setAllocated( const IECore::InternedString &name, const IECore::Data *value );
