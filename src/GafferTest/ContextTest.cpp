@@ -308,9 +308,9 @@ void GafferTest::testContextCopyPerformance( int numEntries, int entrySize )
 		baseContext->set( InternedString( i ), std::string( entrySize, 'x') );
 	}
 
-	const InternedString varyingVarName = "varyVar";
-
-	tbb::parallel_for( tbb::blocked_range<int>( 0, 1000000 ), [&baseContext, &varyingVarName]( const tbb::blocked_range<int> &r )
+	tbb::parallel_for(
+		tbb::blocked_range<int>( 0, 1000000 ),
+		[&baseContext]( const tbb::blocked_range<int> &r )
 		{
 			for( int i = r.begin(); i != r.end(); ++i )
 			{
