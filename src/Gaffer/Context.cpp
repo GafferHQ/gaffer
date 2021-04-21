@@ -311,13 +311,13 @@ IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const
 	return internalGet( name ).makeData();
 }
 
-IECore::DataPtr Context::getAsData( const IECore::InternedString &name, IECore::Data *defaultValue ) const
+IECore::DataPtr Context::getAsData( const IECore::InternedString &name, const IECore::DataPtr &defaultValue ) const
 {
 	if( const Value *value = internalGetIfExists( name ) )
 	{
 		return value->makeData();
 	}
-	return nullptr;
+	return defaultValue;
 }
 
 void Context::remove( const IECore::InternedString &name )

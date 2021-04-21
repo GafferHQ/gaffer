@@ -122,7 +122,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		/// expensive than the `get()` methods above because it allocates memory.
 		IECore::DataPtr getAsData( const IECore::InternedString &name ) const;
 		/// As above but returns `defaultValue` if the variable does not exist.
-		IECore::DataPtr getAsData( const IECore::InternedString &name, IECore::Data *defaultValue ) const;
+		IECore::DataPtr getAsData( const IECore::InternedString &name, const IECore::DataPtr &defaultValue ) const;
 
 		/// Removes a variable from the context, if it exists.
 		void remove( const IECore::InternedString &name );
