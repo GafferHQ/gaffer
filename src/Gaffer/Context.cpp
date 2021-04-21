@@ -233,11 +233,11 @@ Context::Context()
 }
 
 Context::Context( const Context &other )
-	:	Context( other, Copied )
+	:	Context( other, CopyMode::Owning )
 {
 }
 
-Context::Context( const Context &other, Ownership ownership )
+Context::Context( const Context &other, CopyMode mode )
 	:	m_changedSignal( nullptr ),
 		m_hash( other.m_hash ),
 		m_hashValid( other.m_hashValid ),
@@ -249,7 +249,7 @@ Context::Context( const Context &other, Ownership ownership )
 	// to carry around in cases where we don't add any variables?
 	m_map.reserve( other.m_map.size() + 1 );
 
-	if( ownership == Borrowed )
+	if( mode == CopyMode::NonOwning )
 	{
 		m_map = other.m_map;
 	}
@@ -478,13 +478,13 @@ Context::Scope::~Scope()
 }
 
 Context::EditableScope::EditableScope( const Context *context )
-	:	m_context( new Context( *context, Borrowed ) )
+	:	m_context( new Context( *context, CopyMode::NonOwning ) )
 {
 	m_threadState->m_context = m_context.get();
 }
 
 Context::EditableScope::EditableScope( const ThreadState &threadState )
-	:	ThreadState::Scope( threadState ), m_context( new Context( *threadState.m_context, Borrowed ) )
+	:	ThreadState::Scope( threadState ), m_context( new Context( *threadState.m_context, CopyMode::NonOwning ) )
 {
 	m_threadState->m_context = m_context.get();
 }

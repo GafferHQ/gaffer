@@ -276,20 +276,20 @@ class GAFFER_API Context : public IECore::RefCounted
 		};
 
 	private :
-		/// The public copy constructor for Context duplicates all variable storage
-		/// to make it completely independent of the Context it was copied from.  This
-		/// is slow, so when creating an EditableScope, we just take the pointers from the
-		/// source context, which is valid because the EditableScope never outlives its
-		/// source context
-		enum Ownership
+
+		// Determines the operation of the private copy constructor.
+		enum class CopyMode
 		{
-			/// Copy all data
-			Copied,
-			/// The Context simply references values from an existing context
-			Borrowed
+			// Shares ownership with the source context where possible,
+			// allocating copies where necessary. Used by all public copy
+			// constructors.
+			Owning,
+			// References existing values without taking ownership, relying on
+			// the source context to outlive this one. Used by EditableScopes.
+			NonOwning
 		};
 
-		Context( const Context &other, Ownership ownership );
+		Context( const Context &other, CopyMode mode );
 
 		// Type used for the value of a variable.
 		struct Value
