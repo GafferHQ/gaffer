@@ -190,6 +190,7 @@ GAFFERTEST_API std::tuple<int,int,int,int> countContextHash32Collisions( int con
 GAFFERTEST_API void testContextHashPerformance( int numEntries, int entrySize, bool startInitialized );
 GAFFERTEST_API void testContextCopyPerformance( int numEntries, int entrySize );
 GAFFERTEST_API void testCopyEditableScope();
+GAFFERTEST_API void testContextHashValidation();
 
 } // namespace GafferTest
 

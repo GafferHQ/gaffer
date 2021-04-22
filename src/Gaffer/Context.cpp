@@ -162,6 +162,11 @@ Context::Value Context::Value::copy( IECore::ConstDataPtr &owner ) const
 	return Value( m_typeId, v, m_hash );
 }
 
+void Context::Value::validate( const IECore::InternedString &name ) const
+{
+	typeFunctions( m_typeId ).validate( name, *this );
+}
+
 Context::Value::TypeMap &Context::Value::typeMap()
 {
 	static TypeMap m_map;

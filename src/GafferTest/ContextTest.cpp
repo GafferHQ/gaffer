@@ -374,3 +374,29 @@ void GafferTest::testCopyEditableScope()
 	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "e" ), 40 );
 	GAFFERTEST_ASSERTEQUAL( copy2->get<string>( "f" ), "cat" );
 }
+
+void GafferTest::testContextHashValidation()
+{
+	ContextPtr context = new Context();
+	Context::EditableScope scope( context.get() );
+
+	// If we modify a value behind the back of
+	// the EditableScope, we want that to be detected
+	// in the next call to `get()`.
+
+	int value = 0;
+	scope.set( "value", &value );
+	value = 1; // Naughty!
+
+	std::string error = "";
+	try
+	{
+		scope.context()->get<int>( "value" );
+	}
+	catch( const std::exception &e )
+	{
+		error = e.what();
+	}
+
+	GAFFERTEST_ASSERTEQUAL( error, "Context variable \"value\" has an invalid hash" );
+}

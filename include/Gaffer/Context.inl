@@ -142,6 +142,15 @@ void Context::Value::registerType()
 	functions.value = [] ( const IECore::Data *data ) -> const void * {
 		return &static_cast<const T *>( data )->readable();
 	};
+	functions.validate = [] ( const IECore::InternedString &name, const Value &v ) {
+		const Value rehashed( name, static_cast<const ValueType *>( v.rawValue() ) );
+		if( v.hash() != rehashed.hash() )
+		{
+			throw IECore::Exception( boost::str(
+				boost::format( "Context variable \"%1%\" has an invalid hash" ) % name
+			) );
+		}
+	};
 }
 
 template<typename T, typename Enabler>
@@ -195,6 +204,11 @@ inline const Context::Value &Context::internalGet( const IECore::InternedString 
 	{
 		throw IECore::Exception( boost::str( boost::format( "Context has no variable named \"%s\"" ) % name.value() ) );
 	}
+
+#ifndef NDEBUG
+	result->validate( name );
+#endif
+
 	return *result;
 }
 

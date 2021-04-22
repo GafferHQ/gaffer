@@ -753,6 +753,11 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( cs, [ ( c, "frame" ) ] * 3 )
 		self.assertEqual( c.getFrame(), 30 )
 
+	@unittest.skipIf( not Gaffer.isDebug(), "Only valid for debug builds" )
+	def testHashValidation( self ) :
+
+		GafferTest.testContextHashValidation()
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextHashPerformance( self ) :
 

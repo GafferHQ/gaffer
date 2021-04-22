@@ -322,6 +322,11 @@ class GAFFER_API Context : public IECore::RefCounted
 			IECore::DataPtr makeData() const;
 			Value copy( IECore::ConstDataPtr &owner ) const;
 
+			// Throws if the `hash()` no longer corresponds to `value()`.
+			// This can occur if the pointee is modified after calling
+			// `EditableScope::set( name, const T * )`.
+			void validate( const IECore::InternedString &name ) const;
+
 			template<typename T>
 			static void registerType();
 
@@ -339,6 +344,7 @@ class GAFFER_API Context : public IECore::RefCounted
 					bool (*isEqual)( const Value &a, const Value &b );
 					Value (*constructor)( const IECore::InternedString &name, const IECore::Data *data );
 					const void *(*value)( const IECore::Data *data );
+					void (*validate)( const IECore::InternedString &name, const Value &v );
 				};
 
 				using TypeMap = boost::container::flat_map<IECore::TypeId, TypeFunctions>;
