@@ -117,7 +117,22 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-		]
+		],
+
+		"destination" : [
+
+			"description",
+			"""
+			The location where the points primitives will be placed in the output scene.
+			When the destination is evaluated, the `${scene:path}` variable holds
+			the location of the source mesh, so the default value parents the points
+			under the mesh.
+
+			> Tip : `${scene:path}/..` may be used to place the points alongside the
+			> source mesh.
+			""",
+
+		],
 
 	}
 

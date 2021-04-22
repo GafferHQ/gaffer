@@ -55,6 +55,8 @@ Gaffer.Metadata.registerNode(
 	a transform applied to them.
 	""",
 
+	"layout:activator:targetInUse", lambda node : not node["target"].isSetToDefault(),
+
 	plugs = {
 
 		"parent" : [
@@ -75,9 +77,14 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The part of the scene to be duplicated.
+
+			> Caution : Deprecated. Please connect a filter instead.
 			""",
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+			# We want people to use filters rather than the `target` plug. So
+			# hide it unless it is already being used.
+			"layout:visibilityActivator", "targetInUse",
 
 		],
 
@@ -113,6 +120,16 @@ Gaffer.Metadata.registerNode(
 			The transform to be applied to the copies. The transform
 			is applied iteratively, so the second copy is transformed
 			twice, the third copy is transformed three times and so on.
+			""",
+
+		],
+
+		"destination" : [
+
+			"description",
+			"""
+			The location where the copies will be placed in the output scene.
+			The default value places them alongside the original.
 			""",
 
 		],

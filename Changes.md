@@ -4,9 +4,21 @@
 Improvements
 ------------
 
-- Parent : Added `parentVariable` plug, to create a context variable that passes the
-  parent location to nodes upstream of the `children` plug. This allows the children
-  to be varied procedurally according to what they are parented to.
+- Parent :
+  - Added `parentVariable` plug, to create a context variable that passes the
+    parent location to nodes upstream of the `children` plug. This allows the children
+    to be varied procedurally according to what they are parented to.
+  - Added `destination` plug, to allow children to be placed elsewhere in the scene
+    while still inheriting the transform of the "parent". This is particularly useful
+    when parenting lights to geometry.
+- Seeds : Added `destination` plug, to control where the points are placed in the scene
+  relative to the meshes they are generated from.
+- Duplicate :
+  - Added `filter` input, allowing multiple objects to be duplicated at once.
+  - Added `destination` plug, to control where the copies are placed relative to the
+    original.
+  - Improved performance for large numbers of copies.
+  - Deprecated the `target` plug. Please use filters instead.
 - Outputs : Reduced the time taken to show the NodeEditor by around 90%.
 - NodeEditor : The "Node Name" label is now draggable. For instance, it can be dragged to the PythonEditor to get a reference to the node or to the GraphEditor to find the node in the graph.
 - GraphEditor : Improved framing of nodes dragged and dropped onto the GraphEditor :
@@ -41,7 +53,11 @@ API
   - Added overloads with `root` argument for `parallelTraverse()`, `filteredParallelTraverse()`, `matchingPaths()` and `matchingPathsHash()`.
   - Deprecated `matchingPaths()` overloads taking `Filter *`. Pass a `Filter.out` plug instead.
   - Added Python bindings for `matchingPathsHash()`.
+- ScenePlug :
+  - Added support for `..` in `stringToPath()`.
+  - Added `stringToPath()` and `pathToString()` overloads that return a result rather than passing it by reference.
 - GafferUI.FileMenu : Added `dialogueParentWindow` argument to `addScript()`.
+- Spreadsheet : Added support for per-plug `ui:spreadsheet:selectorValue` metadata. This defines the initial value for `selector` when the UI is used to create a spreadsheet for the plug.
 
 0.59.6.0 (relative to 0.59.5.0)
 ========

@@ -236,5 +236,83 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		prune["filter"].setInput( sphereFilter["out"] )
 		self.assertEqual( duplicate["out"].childNames( "/" ), IECore.InternedStringVectorData( [] ) )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testPerformance( self ) :
+
+		sphere = GafferScene.Sphere()
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["target"].setValue( "/sphere" )
+		duplicate["transform"]["translate"]["x"].setValue( 2 )
+		duplicate["copies"].setValue( 100000 )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferSceneTest.traverseScene( duplicate["out"] )
+
+	def testFilter( self ) :
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "boxes" )
+		sphere = GafferScene.Sphere()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( cube["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/group/*" ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( group["out"] )
+		duplicate["filter"].setInput( filter["out"] )
+
+		self.assertSceneValid( duplicate["out"] )
+
+		self.assertEqual(
+			duplicate["out"].childNames( "/group" ),
+			IECore.InternedStringVectorData( [
+				"cube", "sphere", "cube1", "sphere1",
+			] )
+		)
+
+		self.assertPathsEqual( duplicate["out"], "/group/cube", duplicate["in"], "/group/cube" )
+		self.assertPathsEqual( duplicate["out"], "/group/sphere", duplicate["in"], "/group/sphere" )
+		self.assertPathsEqual( duplicate["out"], "/group/cube1", duplicate["in"], "/group/cube" )
+		self.assertPathsEqual( duplicate["out"], "/group/sphere1", duplicate["in"], "/group/sphere" )
+
+		self.assertEqual(
+			duplicate["out"].set( "boxes" ).value,
+			IECore.PathMatcher( [ "/group/cube", "/group/cube1" ] )
+		)
+
+	def testExistingTransform( self ) :
+
+		cube = GafferScene.Cube()
+		cube["transform"]["translate"]["x"].setValue( 1 )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( cube["out"] )
+		duplicate["filter"].setInput( filter["out"] )
+		duplicate["transform"]["translate"]["x"].setValue( 2 )
+
+		self.assertSceneValid( duplicate["out"] )
+
+		self.assertEqual(
+			duplicate["out"].transform( "/cube1" ),
+			imath.M44f().translate( imath.V3f( 3, 0, 0 ) )
+		)
+
+		duplicate["transform"]["translate"]["x"].setValue( 4 )
+
+		self.assertSceneValid( duplicate["out"] )
+
+		self.assertEqual(
+			duplicate["out"].transform( "/cube1" ),
+			imath.M44f().translate( imath.V3f( 5, 0, 0 ) )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

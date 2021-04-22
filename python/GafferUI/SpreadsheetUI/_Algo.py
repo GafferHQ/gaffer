@@ -51,6 +51,8 @@ from ._SectionChooser import _SectionChooser
 def createSpreadsheet( plug ) :
 
 	spreadsheet = Gaffer.Spreadsheet()
+	spreadsheet["selector"].setValue( Gaffer.Metadata.value( plug,"ui:spreadsheet:selectorValue" ) or "" )
+
 	addColumn( spreadsheet, plug )
 	spreadsheet["rows"].addRow()
 
