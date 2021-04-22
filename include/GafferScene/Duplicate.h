@@ -54,6 +54,7 @@ class GAFFERSCENE_API Duplicate : public BranchCreator
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Duplicate, DuplicateTypeId, BranchCreator );
 
+		/// \deprecated Use a filter instead.
 		Gaffer::StringPlug *targetPlug();
 		const Gaffer::StringPlug *targetPlug() const;
 
@@ -74,50 +75,44 @@ class GAFFERSCENE_API Duplicate : public BranchCreator
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchBound( const Gaffer::Plug *input ) const override;
-		void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
+		void hashBranchBound( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		Imath::Box3f computeBranchBound( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchTransform( const Gaffer::Plug *input ) const override;
-		void hashBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		Imath::M44f computeBranchTransform( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
+		void hashBranchTransform( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		Imath::M44f computeBranchTransform( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchAttributes( const Gaffer::Plug *input ) const override;
-		void hashBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeBranchAttributes( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
+		void hashBranchAttributes( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeBranchAttributes( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchObject( const Gaffer::Plug *input ) const override;
-		void hashBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeBranchObject( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
+		void hashBranchObject( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeBranchObject( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchChildNames( const Gaffer::Plug *input ) const override;
-		void hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
+		void hashBranchChildNames( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstInternedStringVectorDataPtr computeBranchChildNames( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchSetNames( const Gaffer::Plug *input ) const override;
-		void hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const override;
+		void hashBranchSetNames( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstInternedStringVectorDataPtr computeBranchSetNames( const ScenePath &sourcePath, const Gaffer::Context *context ) const override;
 
 		bool affectsBranchSet( const Gaffer::Plug *input ) const override;
-		void hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const override;
+		void hashBranchSet( const ScenePath &sourcePath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstPathMatcherDataPtr computeBranchSet( const ScenePath &sourcePath, const IECore::InternedString &setName, const Gaffer::Context *context ) const override;
 
 	private :
 
-		// The BranchCreator::parentPlug() must be used to define the place where the duplicates
-		// are to be parented, but it's much more natural for the user to simply specify which object
-		// they want to duplicate, and expect that the duplicates will appear alongside the original.
-		// This output plug is used to compute the appropriate parent from the target, and is connected
-		// into BranchCreator::parentPlug() so that the user doesn't need to worry about it.
-		Gaffer::StringPlug *outParentPlug();
-		const Gaffer::StringPlug *outParentPlug() const;
+		IE_CORE_FORWARDDECLARE( DuplicatesData );
 
-		// We need the list of names of the duplicates in both computeBranchChildNames()
-		// and computeBranchTransform(), so we compute it on this intermediate plug so that
-		// the list is cached and the work is shared between the two methods.
-		Gaffer::InternedStringVectorDataPlug *childNamesPlug();
-		const Gaffer::InternedStringVectorDataPlug *childNamesPlug() const;
+		// Used to store the names and transforms for each copy. Must be
+		// evaluated in a context where `scene:path` is one of the source
+		// locations.
+		Gaffer::ObjectPlug *duplicatesPlug();
+		const Gaffer::ObjectPlug *duplicatesPlug() const;
 
-		void sourcePath( const ScenePath &branchPath, ScenePath &source ) const;
+		void branchSource( const ScenePath &sourcePath, const ScenePath &branchPath, ScenePath &source ) const;
 
 		static size_t g_firstPlugIndex;
 

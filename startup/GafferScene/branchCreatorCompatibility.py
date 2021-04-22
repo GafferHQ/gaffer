@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,55 +34,28 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
-import GafferUI
 import GafferScene
-import GafferSceneUI
 
-##########################################################################
-# Metadata
-##########################################################################
+_filterResults = GafferScene.FilterResults()
+_filteredPaths = Gaffer.PathMatcherDataPlug( "__filteredPaths", defaultValue = IECore.PathMatcherData() )
 
-Gaffer.Metadata.registerNode(
+def __branchCreatorGetItem( originalGetItem ) :
 
-	GafferScene.BranchCreator,
+	def getItem( self, key ) :
 
-	"description",
-	"""
-	Base class for nodes creating a new branch in the scene hierarchy.
-	""",
+		# In Gaffer 0.54, a connection between these internal implementation details was accidentally
+		# serialised into scripts. The implementation has since been replaced, but we need to provide
+		# proxies to keep the bogus serialisations loading quietly.
+		if key == "__filteredPaths" :
+			return _filteredPaths
+		elif key == "__filterResults" :
+			return _filterResults
 
-	"layout:activator:filterNotConnected", lambda node : node["filter"].getInput() is None,
-	"layout:activator:parentInUse", lambda node : node["parent"].getInput() is not None or node["parent"].getValue() != "",
+		return originalGetItem( self, key )
 
-	plugs = {
+	return getItem
 
-		"parent" : [
-
-			# Deliberately not documenting parent plug, so that
-			# it is given documentation more specific to each
-			# derived class.
-
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"layout:activator", "filterNotConnected",
-			# We'd prefer users to use the `filter` rather than the `parent` plug.
-			# Hide it if it isn't already being used (from a time before the introduction
-			# of the filter).
-			"layout:visibilityActivator", "parentInUse",
-
-		],
-
-		"destination" : [
-
-			# Deliberately not documenting destination plug, so that
-			# it is given documentation more specific to each
-			# derived class.
-
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"ui:spreadsheet:selectorValue", "${scene:path}",
-			"layout:index", -1,
-
-		],
-
-	}
-)
+GafferScene.BranchCreator.__getitem__ = __branchCreatorGetItem( GafferScene.BranchCreator.__getitem__ )
