@@ -141,13 +141,13 @@ bool Context::Value::operator != ( const Value &rhs ) const
 	return !(*this == rhs);
 }
 
-bool Context::Value::references( const IECore::Data *value ) const
+bool Context::Value::references( const IECore::Data *data ) const
 {
-	if( m_typeId != value->typeId() )
+	if( m_typeId != data->typeId() )
 	{
 		return false;
 	}
-	return typeFunctions( m_typeId ).value( value ) == m_value;
+	return typeFunctions( m_typeId ).valueFromData( data ) == m_value;
 }
 
 IECore::DataPtr Context::Value::makeData() const

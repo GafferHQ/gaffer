@@ -139,7 +139,7 @@ void Context::Value::registerType()
 	functions.constructor = [] ( const IECore::InternedString &name, const IECore::Data *data ) {
 		return Value( name, &static_cast<const T *>( data )->readable() );
 	};
-	functions.value = [] ( const IECore::Data *data ) -> const void * {
+	functions.valueFromData = [] ( const IECore::Data *data ) -> const void * {
 		return &static_cast<const T *>( data )->readable();
 	};
 	functions.validate = [] ( const IECore::InternedString &name, const Value &v ) {

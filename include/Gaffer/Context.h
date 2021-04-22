@@ -295,7 +295,12 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		Context( const Context &other, CopyMode mode );
 
-		// Type used for the value of a variable.
+		// Type used for the value of a variable. Can refer to any type `T` for
+		// which `IECore::TypedData<T>` is available and `registerType()` has
+		// been called. Values are stored as `const void *` pointing to `T`,
+		// along with the `IECore::TypeId` for `TypedData<T>`, which is used to
+		// validate type-safe access. Does not manage memory or ownership in any
+		// way : this is the responsibility of calling code.
 		struct Value
 		{
 
@@ -317,7 +322,7 @@ class GAFFER_API Context : public IECore::RefCounted
 
 			bool operator == ( const Value &rhs ) const;
 			bool operator != ( const Value &rhs ) const;
-			bool references( const IECore::Data *value ) const;
+			bool references( const IECore::Data *data ) const;
 
 			IECore::DataPtr makeData() const;
 			Value copy( IECore::ConstDataPtr &owner ) const;
@@ -343,7 +348,7 @@ class GAFFER_API Context : public IECore::RefCounted
 					IECore::DataPtr (*makeData)( const Value &value, const void **dataValue );
 					bool (*isEqual)( const Value &a, const Value &b );
 					Value (*constructor)( const IECore::InternedString &name, const IECore::Data *data );
-					const void *(*value)( const IECore::Data *data );
+					const void *(*valueFromData)( const IECore::Data *data );
 					void (*validate)( const IECore::InternedString &name, const Value &v );
 				};
 
