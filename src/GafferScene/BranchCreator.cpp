@@ -299,15 +299,15 @@ class BranchCreator::BranchesData : public IECore::Data
 		static void hashBranch( const BranchCreator *branchCreator, const ScenePlug::ScenePath &path, IECore::MurmurHash &h )
 		{
 			h.append( path.data(), path.size() );
-			h.append( path.size() );
+			h.append( (uint64_t)path.size() );
 
 			ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
 			h.append( destination.data(), destination.size() );
-			h.append( destination.size() );
+			h.append( (uint64_t)destination.size() );
 
 			const ScenePlug::ScenePath existing = closestExistingPath( branchCreator->inPlug(), destination );
 			h.append( existing.data(), existing.size() );
-			h.append( existing.size() );
+			h.append( (uint64_t)existing.size() );
 		}
 
 		void addBranch( const BranchCreator *branchCreator, const ScenePlug::ScenePath &path )
