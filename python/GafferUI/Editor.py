@@ -227,4 +227,3 @@ class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
 	def __leave( self, widget ) :
 
 		self._qtWidget().clearFocus()
-

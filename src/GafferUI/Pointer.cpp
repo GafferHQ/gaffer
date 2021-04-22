@@ -110,9 +110,10 @@ void Pointer::setCurrent( ConstPointerPtr pointer )
 	{
 		return;
 	}
-	if( pointer && g_current &&
-	    pointer->image()->isEqualTo( g_current->image() ) &&
-	    pointer->hotspot() == g_current->hotspot()
+	if(
+		pointer && g_current &&
+		pointer->image()->isEqualTo( g_current->image() ) &&
+		pointer->hotspot() == g_current->hotspot()
 	)
 	{
 		return;

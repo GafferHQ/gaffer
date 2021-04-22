@@ -155,8 +155,10 @@ bool Clamp::enabled() const
 		return false;
 	}
 
-	if( minEnabledPlug()->getValue() == false &&
-	    maxEnabledPlug()->getValue() == false )
+	if(
+		minEnabledPlug()->getValue() == false &&
+		maxEnabledPlug()->getValue() == false
+	)
 	{
 		return false;
 	}

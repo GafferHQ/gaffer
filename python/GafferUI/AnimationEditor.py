@@ -157,9 +157,11 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		]
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
-			bufferOptions = set(
-				[ GafferUI.GLWidget.BufferOptions.Depth,
-				  GafferUI.GLWidget.BufferOptions.Double, ] ), )
+			bufferOptions = {
+				GafferUI.GLWidget.BufferOptions.Depth,
+				GafferUI.GLWidget.BufferOptions.Double
+			}
+		)
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( self.__animationGadget )
 		self.__gadgetWidget.getViewportGadget().setVariableAspectZoom( True )

@@ -2676,7 +2676,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 						}
 					}
 					return;
-				 }
+				}
 
 				// general case.
 				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );

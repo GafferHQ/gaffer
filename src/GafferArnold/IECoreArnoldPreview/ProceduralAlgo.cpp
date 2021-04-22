@@ -78,4 +78,3 @@ AtNode *convert( const IECoreScene::ExternalProcedural *procedural, const std::s
 } // namespace ProceduralAlgo
 
 } // namespace IECoreArnoldPreview
-

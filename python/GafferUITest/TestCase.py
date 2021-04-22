@@ -150,4 +150,3 @@ class TestCase( GafferTest.TestCase ) :
 				result.append( w() )
 
 		return result
-

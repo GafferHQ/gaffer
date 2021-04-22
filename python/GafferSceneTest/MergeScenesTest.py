@@ -254,10 +254,10 @@ class MergeScenesTest( GafferSceneTest.SceneTestCase ) :
 		merge = GafferScene.MergeScenes()
 		self.assertScenesEqual( merge["in"][0], merge["out"] )
 		self.assertSceneHashesEqual(
-			 merge["in"][0], merge["out"],
-			 # Can't expect transform hash to be identical, because
-			 # `SceneNode::hashTransform()` isn't called for the root.
-			 checks = self.allSceneChecks - { "transform" }
+			merge["in"][0], merge["out"],
+			# Can't expect transform hash to be identical, because
+			# `SceneNode::hashTransform()` isn't called for the root.
+			checks = self.allSceneChecks - { "transform" }
 		)
 
 	def testNullObject( self ) :

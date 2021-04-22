@@ -704,4 +704,3 @@ void Warp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *cont
 {
 	FlatImageProcessor::hash( enginePlug(), context, h );
 }
-

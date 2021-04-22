@@ -131,7 +131,7 @@ class TestCase( unittest.TestCase ) :
 	def temporaryDirectory( self ) :
 
 		if self.__temporaryDirectory is None :
-			 self.__temporaryDirectory = tempfile.mkdtemp( prefix = "gafferTest" )
+			self.__temporaryDirectory = tempfile.mkdtemp( prefix = "gafferTest" )
 
 		return self.__temporaryDirectory
 

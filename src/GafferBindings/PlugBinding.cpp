@@ -297,4 +297,3 @@ std::string PlugSerialiser::repr( const Plug *plug, unsigned flagsMask )
 
 	return result;
 }
-

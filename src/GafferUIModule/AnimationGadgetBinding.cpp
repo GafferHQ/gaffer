@@ -84,4 +84,3 @@ void GafferUIModule::bindAnimationGadget()
 		;
 
 }
-

@@ -60,11 +60,11 @@ Gaffer.Metadata.registerNode(
 	```
 	{
 			"1001" : {
-				 "/mesh1" : { "bake:resolution", 512 },
-				 "/mesh2" : { "bake:resolution", 1024 },
+				"/mesh1" : { "bake:resolution", 512 },
+				"/mesh2" : { "bake:resolution", 1024 },
 			},
 			"1002" : {
-				 "/mesh1" : { "bake:resolution", 512 },
+				"/mesh1" : { "bake:resolution", 512 },
 			},
 	}
 	```

@@ -74,8 +74,10 @@ void Unpremultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 {
 	ChannelDataProcessor::affects( input, outputs );
 
-	if( input == inPlug()->channelDataPlug() ||
-	    input == alphaChannelPlug() )
+	if(
+		input == inPlug()->channelDataPlug() ||
+		input == alphaChannelPlug()
+	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}

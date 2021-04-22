@@ -54,4 +54,3 @@ OpenGLRender::OpenGLRender( const std::string &name )
 OpenGLRender::~OpenGLRender()
 {
 }
-

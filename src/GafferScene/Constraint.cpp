@@ -253,4 +253,3 @@ boost::optional<Constraint::Target> Constraint::target() const
 
 	return Target( { targetPath, targetScene } );
 }
-

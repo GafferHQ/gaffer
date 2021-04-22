@@ -388,4 +388,3 @@ IECore::ConstIntVectorDataPtr FlatToDeep::computeSampleOffsets( const Imath::V2i
 {
 	return ImagePlug::flatTileSampleOffsets();
 }
-

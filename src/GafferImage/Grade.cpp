@@ -200,14 +200,15 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	// Process the children of the compound plugs.
 	for( unsigned int i = 0; i < 4; ++i )
 	{
-		if( input == blackPointPlug()->getChild(i) ||
-				input == whitePointPlug()->getChild(i) ||
-				input == liftPlug()->getChild(i) ||
-				input == gainPlug()->getChild(i) ||
-				input == multiplyPlug()->getChild(i) ||
-				input == offsetPlug()->getChild(i) ||
-				input == gammaPlug()->getChild(i)
-		  )
+		if(
+			input == blackPointPlug()->getChild(i) ||
+			input == whitePointPlug()->getChild(i) ||
+			input == liftPlug()->getChild(i) ||
+			input == gainPlug()->getChild(i) ||
+			input == multiplyPlug()->getChild(i) ||
+			input == offsetPlug()->getChild(i) ||
+			input == gammaPlug()->getChild(i)
+		)
 		{
 			outputs.push_back( outPlug()->channelDataPlug() );
 			return;
@@ -215,10 +216,11 @@ void Grade::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 
 	// Process all other plugs.
-	if( input == inPlug()->channelDataPlug() ||
-			input == blackClampPlug() ||
-			input == whiteClampPlug()
-	  )
+	if(
+		input == inPlug()->channelDataPlug() ||
+		input == blackClampPlug() ||
+		input == whiteClampPlug()
+	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 		return;

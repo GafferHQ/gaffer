@@ -233,5 +233,3 @@ IECore::ConstObjectPtr CollectPrimitiveVariables::computeProcessedObject( const 
 
 	return result;
 }
-
-

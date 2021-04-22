@@ -1,0 +1,13 @@
+name: Whitespace check
+on: [ pull_request ]
+jobs:
+  check:
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        # So that we get the branch for `base_ref`.
+        fetch-depth: 0
+    - name: Check whitespace
+      run: |
+        git -c core.whitespace=indent-with-non-tab,tabwidth=1 diff --check refs/remotes/origin/${{ github.base_ref }} include src python

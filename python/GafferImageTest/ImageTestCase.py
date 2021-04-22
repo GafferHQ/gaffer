@@ -155,4 +155,3 @@ class ImageTestCase( GafferTest.TestCase ) :
 		deep = GafferImage.Empty()
 		node["in"].setInput( deep["out"] )
 		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )
-

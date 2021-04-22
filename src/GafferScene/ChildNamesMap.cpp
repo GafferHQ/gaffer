@@ -174,7 +174,7 @@ IECore::PathMatcher ChildNamesMap::set( const std::vector<IECore::ConstPathMatch
 				pIt.prune(); // We only want to visit the first level
 			}
 		}
-	 	inputIndex++;
+		inputIndex++;
 	}
 
 	return result;

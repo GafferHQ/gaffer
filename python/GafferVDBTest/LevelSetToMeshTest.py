@@ -117,4 +117,3 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
 		levelSetToMesh['adaptivity'].setValue(1.0)
 		self.assertTrue( 2800 <= len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) <= 3200 )
-

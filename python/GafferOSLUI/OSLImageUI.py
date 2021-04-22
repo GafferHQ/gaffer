@@ -193,7 +193,7 @@ Gaffer.Metadata.registerNode(
 
 	"layout:activator:defaultFormatActive", lambda node : not node["in"].getInput(),
 
- 	plugs = {
+	plugs = {
 		"defaultFormat" : [
 			"description",
 			"""
@@ -202,8 +202,8 @@ Gaffer.Metadata.registerNode(
 			"layout:activator", "defaultFormatActive",
 		],
 		"channels" : [
- 			"description",
- 			"""
+			"description",
+			"""
 			Define image channels to output by adding child plugs and connecting
 			corresponding OSL shaders.  You can drive RGB layers with a color,
 			or connect individual channels to a float.
@@ -228,7 +228,7 @@ Gaffer.Metadata.registerNode(
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
- 			"noduleLayout:section", "left",
+			"noduleLayout:section", "left",
 			"nodule:type", "GafferUI::CompoundNodule",
 			"nameValuePlugPlugValueWidget:ignoreNamePlug", lambda plug : isinstance( plug["value"], GafferOSL.ClosurePlug ),
 		],
@@ -249,7 +249,7 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:section", "left",
 			"noduleLayout:label", __channelLabelFromPlug,
 			"ui:visibleDimensions", lambda plug : 2 if hasattr( plug, "interpretation" ) and plug.interpretation() == IECore.GeometricData.Interpretation.UV else None,
- 		],
+		],
 	}
 
 )

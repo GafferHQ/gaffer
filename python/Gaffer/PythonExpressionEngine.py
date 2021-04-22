@@ -438,4 +438,3 @@ class _ContextProxy( object ) :
 			return getattr( self.__context, name )
 		else :
 			raise AttributeError( name )
-

@@ -477,4 +477,3 @@ IECore::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::Interne
 
 	return outputSetData;
 }
-

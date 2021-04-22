@@ -77,7 +77,7 @@ struct SlotCallRange
 		if( current == last )
 		{
 			PyErr_SetString( PyExc_StopIteration, "No more results" );
-        	throw_error_already_set();
+			throw_error_already_set();
 		}
 		else
 		{

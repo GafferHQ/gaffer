@@ -308,4 +308,3 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		defaultGrade["gamma"].setValue( imath.Color4f( 2, 2, 2, 1.0 ) )
 
 		self.assertImagesEqual( unpremultipliedGrade["out"], defaultGrade["out"] )
-

@@ -1191,5 +1191,3 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radiu
 
 	return group;
 }
-
-

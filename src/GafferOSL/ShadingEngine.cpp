@@ -82,7 +82,7 @@ using namespace GafferOSL;
 
 // keyword matrix parameter macro. reference: OSL/genclosure.h
 #define CLOSURE_MATRIX_KEYPARAM(st, fld, key) \
-    { TypeDesc::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
+	{ TypeDesc::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
 
 //////////////////////////////////////////////////////////////////////////
 // Conversion utilities
@@ -282,8 +282,10 @@ class RenderState
 			const Gaffer::Context *context
 		)
 		{
-			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
-				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
+			for(
+				CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
+				eIt = shadingPoints->readable().end(); it != eIt; ++it
+			)
 			{
 				UserData userData;
 				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get(), /* createUStrings = */ true );
@@ -883,7 +885,7 @@ void declareSpline( const InternedString &name, const Spline &spline, ShadingSys
 		basis = "linear";
 	}
 
-    OSLShader::prepareSplineCVsForOSL( positions, values, basis );
+	OSLShader::prepareSplineCVsForOSL( positions, values, basis );
 
 	TypeDesc positionsType = TypeDescFromType<typename Spline::XType>::typeDesc();
 	TypeDesc valuesType = TypeDescFromType<typename Spline::YType>::typeDesc();

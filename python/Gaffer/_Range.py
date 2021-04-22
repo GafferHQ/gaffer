@@ -94,4 +94,3 @@ Gaffer.Plug.OutputRange = classmethod( functools.partial( __plugRange, direction
 Gaffer.Plug.RecursiveRange = classmethod( __recursivePlugRange )
 Gaffer.Plug.RecursiveInputRange = classmethod( functools.partial( __recursivePlugRange, direction = Gaffer.Plug.Direction.In ) )
 Gaffer.Plug.RecursiveOutputRange = classmethod( functools.partial( __recursivePlugRange, direction = Gaffer.Plug.Direction.Out ) )
-

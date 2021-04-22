@@ -124,12 +124,13 @@ void SphereLevelSet::affects( const Plug *input, AffectedPlugsContainer &outputs
 {
 	ObjectSource::affects( input, outputs );
 
-	if( input == gridPlug() ||
+	if(
+		input == gridPlug() ||
 		input == radiusPlug() ||
 		input->parent() == centerPlug() ||
 		input == voxelSizePlug() ||
 		input == halfWidthPlug()
-	   )
+	)
 	{
 		outputs.push_back( sourcePlug() );
 	}
@@ -169,4 +170,3 @@ IECore::ConstObjectPtr SphereLevelSet::computeSource( const Context *context ) c
 	return newVDBObject;
 
 }
-

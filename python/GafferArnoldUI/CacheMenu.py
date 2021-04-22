@@ -56,4 +56,3 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 				"command" : functools.partial( GafferArnold.InteractiveArnoldRender.flushCaches, flags ),
 			}
 		)
-

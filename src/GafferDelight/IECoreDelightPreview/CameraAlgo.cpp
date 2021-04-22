@@ -69,7 +69,7 @@ bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const cha
 	{
 		parameters.add( { "fov", &fov, NSITypeFloat, 0, 1, 0 } );
 		if( camera->getFStop() > 0.0f )
-        {
+		{
 			parameters.add( { "depthoffield.enable", &dofEnable, NSITypeInteger, 0, 1, 0 } );
 			parameters.add( { "depthoffield.fstop", &fStop, NSITypeDouble, 0, 1, 0 } );
 			parameters.add( { "depthoffield.focallength", &focalLength, NSITypeDouble, 0, 1, 0 } );

@@ -119,7 +119,7 @@ IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, 
 		return inputObject;
 	}
 
-    std::string meshType = meshTypePlug()->getValue();
+	std::string meshType = meshTypePlug()->getValue();
 	if( meshType == "" )
 	{
 		// unchanged

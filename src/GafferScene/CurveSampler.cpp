@@ -152,4 +152,3 @@ PrimitiveSampler::SamplingFunction CurveSampler::computeSamplingFunction( const 
 		);
 	};
 }
-

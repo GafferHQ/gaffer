@@ -222,4 +222,3 @@ void GafferModule::bindSet()
 	;
 
 }
-

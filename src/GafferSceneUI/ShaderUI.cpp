@@ -208,4 +208,3 @@ struct Registration
 Registration g_registration;
 
 } // namespace
-

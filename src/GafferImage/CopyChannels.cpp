@@ -353,4 +353,3 @@ IECore::ConstFloatVectorDataPtr CopyChannels::computeChannelData( const std::str
 		return ImagePlug::blackTile();
 	}
 }
-

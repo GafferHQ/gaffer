@@ -766,7 +766,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			// prepend it to the source.
 
 			shaderName = "oslExpression" + MurmurHash().append( result ).toString();
- 			result = "#include \"GafferOSL/Expression.h\"\n\nshader " + shaderName + " " + result;
+			result = "#include \"GafferOSL/Expression.h\"\n\nshader " + shaderName + " " + result;
 
 			return result;
 		}

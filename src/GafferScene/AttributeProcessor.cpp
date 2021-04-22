@@ -121,4 +121,3 @@ IECore::ConstCompoundObjectPtr AttributeProcessor::computeAttributes( const Scen
 		return inPlug()->attributesPlug()->getValue();
 	}
 }
-

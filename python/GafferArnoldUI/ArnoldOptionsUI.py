@@ -1135,4 +1135,3 @@ for plugPrefix in ( "log", "console" ) :
 			}
 
 		)
-

@@ -588,4 +588,3 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 		return resultData;
 	}
 }
-

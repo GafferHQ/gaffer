@@ -125,7 +125,7 @@ class _PlugValueWidget( CompoundPlugValueWidget ) :
 
 	def _parameterLabelText( self, parameterHandler ) :
 
- 		return IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
+		return IECore.CamelCase.toSpaced( parameterHandler.plug().getName() )
 
 	def _parameterToolTip( self, parameterHandler ) :
 
