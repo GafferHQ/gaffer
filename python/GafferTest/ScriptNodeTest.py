@@ -1618,5 +1618,38 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 			with self.assertRaises( IECore.Cancelled ) :
 				s.serialise()
 
+	def testFrameChangeSignalling( self ) :
+
+		s = Gaffer.ScriptNode()
+		cs = GafferTest.CapturingSlot( s.context().changedSignal() )
+
+		s.context().setFrame( 10 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] )
+		self.assertEqual( s.context().getFrame(), 10 )
+
+		s.context().setFrame( 20 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 2 )
+		self.assertEqual( s.context().getFrame(), 20 )
+
+		s.context().setFrame( 30 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 3 )
+		self.assertEqual( s.context().getFrame(), 30 )
+
+		s.context().setFrame( 30 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 3 )
+		self.assertEqual( s.context().getFrame(), 30 )
+
+		s["frame"].setValue( 40 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 4 )
+		self.assertEqual( s.context().getFrame(), 40 )
+
+		s["frame"].setValue( 50 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 5 )
+		self.assertEqual( s.context().getFrame(), 50 )
+
+		s["frame"].setValue( 50 )
+		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 5 )
+		self.assertEqual( s.context().getFrame(), 50 )
+
 if __name__ == "__main__":
 	unittest.main()

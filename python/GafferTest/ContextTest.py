@@ -732,6 +732,27 @@ class ContextTest( GafferTest.TestCase ) :
 				self.assertLess( s[i], 1390.0 )
 				self.assertGreater( s[i], 1170.0 )
 
+	def testSetFrameSignalling( self ) :
+
+		c = Gaffer.Context()
+		cs = GafferTest.CapturingSlot( c.changedSignal() )
+
+		c.setFrame( 10 )
+		self.assertEqual( cs, [ ( c, "frame" ) ] )
+		self.assertEqual( c.getFrame(), 10 )
+
+		c.setFrame( 20 )
+		self.assertEqual( cs, [ ( c, "frame" ) ] * 2 )
+		self.assertEqual( c.getFrame(), 20 )
+
+		c.setFrame( 20 )
+		self.assertEqual( cs, [ ( c, "frame" ) ] * 2 )
+		self.assertEqual( c.getFrame(), 20 )
+
+		c.setFrame( 30 )
+		self.assertEqual( cs, [ ( c, "frame" ) ] * 3 )
+		self.assertEqual( c.getFrame(), 30 )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextHashPerformance( self ) :
 

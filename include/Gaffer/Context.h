@@ -244,7 +244,7 @@ class GAFFER_API Context : public IECore::RefCounted
 				void setAllocated( const IECore::InternedString &name, const IECore::Data *value );
 
 				/// These are fast even though they don't take a pointer,
-				/// because the Context has dedicated internal storage for
+				/// because the EditableScope has dedicated internal storage for
 				/// the frame.
 				void setFrame( float frame );
 				void setTime( float timeInSeconds );
@@ -261,6 +261,10 @@ class GAFFER_API Context : public IECore::RefCounted
 			private :
 
 				Ptr m_context;
+				// Provides storage for `setFrame()` and `setTime()` to use
+				// (There is no easy way to provide external storage for
+				// setTime, because it multiplies the input value).
+				float m_frameStorage;
 
 		};
 
@@ -360,11 +364,6 @@ class GAFFER_API Context : public IECore::RefCounted
 		mutable IECore::MurmurHash m_hash;
 		mutable bool m_hashValid;
 		const IECore::Canceller *m_canceller;
-
-		// Used to provide storage for the current frame if setFrame or setTime is called
-		// ( There is no easy way to provide external storage for setTime, because it multiplies
-		// the input value )
-		float m_frame;
 
 		// The alloc map holds a smart pointer to data that we allocate.  It must keep the entries
 		// alive at least as long as the m_map used for actual accesses is using it, though it may

@@ -383,8 +383,7 @@ float Context::getFrame() const
 
 void Context::setFrame( float frame )
 {
-	m_frame = frame;
-	internalSet( g_frame, Value( g_frame, &m_frame ) );
+	set<float>( g_frame, frame );
 }
 
 float Context::getFramesPerSecond() const
@@ -500,7 +499,8 @@ void Context::EditableScope::setAllocated( const IECore::InternedString &name, c
 
 void Context::EditableScope::setFrame( float frame )
 {
-	m_context->setFrame( frame );
+	m_frameStorage = frame;
+	set( g_frame, &m_frameStorage );
 }
 
 void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
@@ -510,7 +510,7 @@ void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
 
 void Context::EditableScope::setTime( float timeInSeconds )
 {
-	m_context->setTime( timeInSeconds );
+	setFrame( timeInSeconds * m_context->getFramesPerSecond() );
 }
 
 void Context::EditableScope::setFramesPerSecond( const float *framesPerSecond )
