@@ -292,4 +292,3 @@ IECore::DataPtr ArnoldLightVisualiser::surfaceTexture( const IECoreScene::Shader
 }
 
 }
-

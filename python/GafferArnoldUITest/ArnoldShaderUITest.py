@@ -184,7 +184,7 @@ root["SceneWriter"].execute()
 
 		# SolidAngle does not appear to have wrapped AiMetaDataGetRGBA in Python, so we don't
 		# support the RGBA case
-        #self.assertEqual( parms["missing_texture_color"].value, imath.Color4f( 12, 13, 14, 15 ) )
+		#self.assertEqual( parms["missing_texture_color"].value, imath.Color4f( 12, 13, 14, 15 ) )
 
 		self.assertEqual( parms["uvcoords"].value, imath.V2f( 12, 13 ) )
 		self.assertEqual( parms["filename"].value, "overrideUserDefault" )

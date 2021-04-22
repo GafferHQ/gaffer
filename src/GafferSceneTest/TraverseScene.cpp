@@ -116,4 +116,3 @@ boost::signals::connection GafferSceneTest::connectTraverseSceneToPreDispatchSig
 {
 	return GafferDispatch::Dispatcher::preDispatchSignal().connect( boost::bind( traverseOnPreDispatch, scene ) );
 }
-

@@ -86,4 +86,3 @@ IE_CORE_DECLAREPTR( DeleteCurves )
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_DELETECURVES_H
-

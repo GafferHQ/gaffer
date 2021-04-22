@@ -62,7 +62,7 @@ namespace
 
 bool internedStringCompare( InternedString a, InternedString b )
 {
-    return a.string() < b.string();
+	return a.string() < b.string();
 }
 
 typedef std::pair<StringAlgo::MatchPattern, ConstColor3fDataPtr> Override;

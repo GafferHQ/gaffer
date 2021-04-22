@@ -60,10 +60,6 @@ class GAFFERIMAGE_API Grade : public ChannelDataProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Grade, GradeTypeId, ChannelDataProcessor );
 
-        //! @name Plug Accessors
-        /// Returns a pointer to the node's plugs.
-        //////////////////////////////////////////////////////////////
-        //@{
 		Gaffer::Color4fPlug *blackPointPlug();
 		const Gaffer::Color4fPlug *blackPointPlug() const;
 		Gaffer::Color4fPlug *whitePointPlug();
@@ -82,7 +78,6 @@ class GAFFERIMAGE_API Grade : public ChannelDataProcessor
 		const Gaffer::BoolPlug *blackClampPlug() const;
 		Gaffer::BoolPlug *whiteClampPlug();
 		const Gaffer::BoolPlug *whiteClampPlug() const;
-        //@}
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

@@ -50,5 +50,5 @@ using namespace IECore;
 void GafferModule::bindProcessMessageHandler()
 {
 	RefCountedClass<Gaffer::ProcessMessageHandler, FilteredMessageHandler>( "ProcessMessageHandler" )
-	    .def(init<IECore::MessageHandlerPtr >() );
+		.def(init<IECore::MessageHandlerPtr >() );
 }

@@ -958,7 +958,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 
 	Image *image = static_cast<Image *>( graphComponent );
 	// This causes the image to disconnect from
- 	// the switch automatically.
+	// the switch automatically.
 	removeChild( imageNode( image ) );
 	// So now we go through and shuffle everything down
 	// to fill the hole in the switch inputs.

@@ -74,8 +74,9 @@ void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 {
 	ChannelDataProcessor::affects( input, outputs );
 
-	if( input == inPlug()->channelDataPlug() ||
-	    input == alphaChannelPlug() )
+	if(
+		input == inPlug()->channelDataPlug() ||
+		input == alphaChannelPlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}

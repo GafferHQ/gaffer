@@ -48,9 +48,9 @@ class HeaderPathPreview( GafferUI.DeferredPathPreview ) :
 		self.__pathListing = GafferUI.PathListingWidget(
 			Gaffer.DictPath( {}, "/" ),
 			columns = (
- 				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.defaultNameColumn,
 				GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" ),
- 			),
+			),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 		)
 

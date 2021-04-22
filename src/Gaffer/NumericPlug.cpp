@@ -85,9 +85,11 @@ bool NumericPlug<T>::acceptsInput( const Plug *input ) const
 	}
 	if( input )
 	{
-		return input->isInstanceOf( FloatPlug::staticTypeId() ) ||
-		       input->isInstanceOf( IntPlug::staticTypeId() ) ||
-		       input->isInstanceOf( BoolPlug::staticTypeId() );
+		return
+			input->isInstanceOf( FloatPlug::staticTypeId() ) ||
+			input->isInstanceOf( IntPlug::staticTypeId() ) ||
+			input->isInstanceOf( BoolPlug::staticTypeId() )
+		;
 	}
 	return true;
 }

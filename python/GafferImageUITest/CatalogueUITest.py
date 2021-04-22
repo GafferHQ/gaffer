@@ -165,4 +165,3 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

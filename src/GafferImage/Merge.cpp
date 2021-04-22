@@ -147,22 +147,22 @@ struct OpMax
 template< class Functor, typename... Args >
 typename Functor::ReturnType dispatchOperation( Merge::Operation op, Functor &&functor, Args&&... args )
 {
-    switch( op )
-    {
-        case Merge::Add : return functor.template operator()<OpAdd>( std::forward<Args>( args )... );
-        case Merge::Atop : return functor.template operator()<OpAtop>( std::forward<Args>( args )... );
-        case Merge::Divide : return functor.template operator()<OpDivide>( std::forward<Args>( args )... );
-        case Merge::In : return functor.template operator()<OpIn>( std::forward<Args>( args )... );
-        case Merge::Out : return functor.template operator()<OpOut>( std::forward<Args>( args )... );
-        case Merge::Mask : return functor.template operator()<OpMask>( std::forward<Args>( args )... );
-        case Merge::Matte : return functor.template operator()<OpMatte>( std::forward<Args>( args )... );
-        case Merge::Multiply : return functor.template operator()<OpMultiply>( std::forward<Args>( args )... );
-        case Merge::Over : return functor.template operator()<OpOver>( std::forward<Args>( args )... );
-        case Merge::Subtract : return functor.template operator()<OpSubtract>( std::forward<Args>( args )... );
-        case Merge::Difference : return functor.template operator()<OpDifference>( std::forward<Args>( args )... );
-        case Merge::Under : return functor.template operator()<OpUnder>( std::forward<Args>( args )... );
-        case Merge::Min : return functor.template operator()<OpMin>( std::forward<Args>( args )... );
-        case Merge::Max : return functor.template operator()<OpMax>( std::forward<Args>( args )... );
+	switch( op )
+	{
+		case Merge::Add : return functor.template operator()<OpAdd>( std::forward<Args>( args )... );
+		case Merge::Atop : return functor.template operator()<OpAtop>( std::forward<Args>( args )... );
+		case Merge::Divide : return functor.template operator()<OpDivide>( std::forward<Args>( args )... );
+		case Merge::In : return functor.template operator()<OpIn>( std::forward<Args>( args )... );
+		case Merge::Out : return functor.template operator()<OpOut>( std::forward<Args>( args )... );
+		case Merge::Mask : return functor.template operator()<OpMask>( std::forward<Args>( args )... );
+		case Merge::Matte : return functor.template operator()<OpMatte>( std::forward<Args>( args )... );
+		case Merge::Multiply : return functor.template operator()<OpMultiply>( std::forward<Args>( args )... );
+		case Merge::Over : return functor.template operator()<OpOver>( std::forward<Args>( args )... );
+		case Merge::Subtract : return functor.template operator()<OpSubtract>( std::forward<Args>( args )... );
+		case Merge::Difference : return functor.template operator()<OpDifference>( std::forward<Args>( args )... );
+		case Merge::Under : return functor.template operator()<OpUnder>( std::forward<Args>( args )... );
+		case Merge::Min : return functor.template operator()<OpMin>( std::forward<Args>( args )... );
+		case Merge::Max : return functor.template operator()<OpMax>( std::forward<Args>( args )... );
 		default:
 			throw InvalidArgumentException( boost::str( boost::format( "Invalid Merge Operation : %1%" ) % op ) );
 	}

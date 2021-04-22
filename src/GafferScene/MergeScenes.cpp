@@ -854,7 +854,7 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaf
 					{
 						if( std::find( merged->readable().begin(), merged->readable().end(), setName ) == merged->readable().end() )
 						{
-							 merged->writable().push_back( setName );
+							merged->writable().push_back( setName );
 						}
 					}
 			}

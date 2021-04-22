@@ -461,4 +461,3 @@ Gaffer.Metadata.registerNode(
 
 	}
 )
-

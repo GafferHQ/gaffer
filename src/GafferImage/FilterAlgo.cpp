@@ -73,8 +73,7 @@ class SmoothGaussian2D : public OIIO::Filter2D
 
 		float operator()( float x, float y ) const override
 		{
-			return gauss1d( x * m_radiusInverse.x ) *
-			       gauss1d( y * m_radiusInverse.y );
+			return gauss1d( x * m_radiusInverse.x ) * gauss1d( y * m_radiusInverse.y );
 		}
 
 		bool separable() const override
@@ -129,8 +128,7 @@ class FilterCubicSimple2D : public OIIO::Filter2D
 
 		float operator()( float x, float y ) const override
 		{
-			return cubicSimple( x * m_wrad_inv )
-				 * cubicSimple( y * m_hrad_inv );
+			return cubicSimple( x * m_wrad_inv ) * cubicSimple( y * m_hrad_inv );
 		}
 
 		bool separable() const override

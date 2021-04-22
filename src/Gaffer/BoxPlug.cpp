@@ -209,4 +209,3 @@ template class BoxPlug<Imath::Box2f>;
 template class BoxPlug<Imath::Box3f>;
 
 }
-

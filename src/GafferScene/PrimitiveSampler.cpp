@@ -398,4 +398,3 @@ bool PrimitiveSampler::affectsSamplingFunction( const Gaffer::Plug *input ) cons
 void PrimitiveSampler::hashSamplingFunction( IECore::MurmurHash &h ) const
 {
 }
-

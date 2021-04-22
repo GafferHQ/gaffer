@@ -86,4 +86,3 @@ IE_CORE_DECLAREPTR( DeleteFaces )
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_DELETEFACES_H
-

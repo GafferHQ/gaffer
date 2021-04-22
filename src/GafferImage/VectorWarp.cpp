@@ -309,4 +309,3 @@ bool VectorWarp::computeDeep( const Gaffer::Context *context, const ImagePlug *p
 	}
 	return false;
 }
-

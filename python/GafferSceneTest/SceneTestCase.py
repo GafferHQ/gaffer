@@ -157,14 +157,14 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 				self.assertTrue(
 					coordinateSystemSet.value.match( scenePath ) & IECore.PathMatcher.Result.ExactMatch,
 					scenePath + " in __coordinateSystems set"
-				 )
+				)
 
 			attributes = scenePlug.attributes( scenePath, _copy = False )
 			if any( [ n == "light" or n.endswith( ":light" ) for n in attributes.keys() ] ) :
 				self.assertTrue(
 					lightSet.value.match( scenePath ) & IECore.PathMatcher.Result.ExactMatch,
 					scenePath + " in __lights set"
-				 )
+				)
 
 			childNames = scenePlug.childNames( scenePath, _copy = False )
 			for childName in childNames :

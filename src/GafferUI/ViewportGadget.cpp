@@ -637,14 +637,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ViewportGadget );
 
 ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
-	: Gadget(),
-	  m_cameraController( new CameraController() ),
-	  m_cameraInMotion( false ),
-	  m_cameraEditable( true ),
-	  m_preciseMotionAllowed( true ),
-	  m_preciseMotionEnabled( false ),
-	  m_dragTracking( DragTracking::NoDragTracking ),
-	  m_variableAspectZoom( false )
+	:	Gadget(),
+		m_cameraController( new CameraController() ),
+		m_cameraInMotion( false ),
+		m_cameraEditable( true ),
+		m_preciseMotionAllowed( true ),
+		m_preciseMotionEnabled( false ),
+		m_dragTracking( DragTracking::NoDragTracking ),
+		m_variableAspectZoom( false )
 {
 
 	// Viewport visibility is managed by GadgetWidgets,

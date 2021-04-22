@@ -353,7 +353,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			ShadingSystem *s = shadingSystem();
 			OSL::ShadingContext *shadingContext = s->get_context( /* threadInfo */ nullptr );
 
-		    OSL::ShaderGlobals shaderGlobals;
+			OSL::ShaderGlobals shaderGlobals;
 			memset( (void *)&shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
 			if( m_needsTime )
@@ -759,7 +759,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			// prepend it to the source.
 
 			shaderName = "oslExpression" + MurmurHash().append( result ).toString();
- 			result = "#include \"GafferOSL/Expression.h\"\n\nshader " + shaderName + " " + result;
+			result = "#include \"GafferOSL/Expression.h\"\n\nshader " + shaderName + " " + result;
 
 			return result;
 		}

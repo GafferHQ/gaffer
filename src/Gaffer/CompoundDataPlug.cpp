@@ -190,4 +190,3 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parame
 
 	return PlugAlgo::extractDataFromPlug( valuePlug( parameterPlug ) );
 }
-

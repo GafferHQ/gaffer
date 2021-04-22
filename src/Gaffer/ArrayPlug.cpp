@@ -219,8 +219,9 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 
 	if( const ScriptNode *script = ancestor<ScriptNode>() )
 	{
-		if( script->currentActionStage() == Action::Undo ||
-		    script->currentActionStage() == Action::Redo
+		if(
+			script->currentActionStage() == Action::Undo ||
+			script->currentActionStage() == Action::Redo
 		)
 		{
 			// If we're currently in an undo or redo, we don't

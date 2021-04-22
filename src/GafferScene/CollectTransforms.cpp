@@ -348,5 +348,3 @@ IECore::ConstCompoundObjectPtr CollectTransforms::computeProcessedAttributes( co
 
 	return result;
 }
-
-

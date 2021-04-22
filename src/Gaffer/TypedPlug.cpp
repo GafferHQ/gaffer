@@ -62,10 +62,11 @@ bool BoolPlug::acceptsInput( const Plug *input ) const
 	}
 	if( input )
 	{
-		return input->isInstanceOf( staticTypeId() ) ||
-		       input->isInstanceOf( IntPlug::staticTypeId() ) ||
-		       input->isInstanceOf( FloatPlug::staticTypeId() ) ||
-		       input->isInstanceOf( StringPlug::staticTypeId() )
+		return
+			input->isInstanceOf( staticTypeId() ) ||
+			input->isInstanceOf( IntPlug::staticTypeId() ) ||
+			input->isInstanceOf( FloatPlug::staticTypeId() ) ||
+			input->isInstanceOf( StringPlug::staticTypeId() )
 		;
 	}
 	return true;

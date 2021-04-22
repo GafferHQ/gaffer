@@ -235,4 +235,3 @@ class _WindowTitleBehaviour :
 
 		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self.__script(), nodeTypeId, key, node ) :
 			self.__updateTitle()
-

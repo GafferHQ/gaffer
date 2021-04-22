@@ -100,4 +100,3 @@ PrimitiveSampler::SamplingFunction ClosestPointSampler::computeSamplingFunction(
 		return evaluator.closestPoint( positionView[index] * transform, &result );
 	};
 }
-

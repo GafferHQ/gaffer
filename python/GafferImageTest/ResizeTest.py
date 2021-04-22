@@ -182,11 +182,11 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 
 	def testFilterAffectsChannelData( self ) :
 
-		 r = GafferImage.Resize()
-		 cs = GafferTest.CapturingSlot( r.plugDirtiedSignal() )
-		 r["filter"].setValue( "gaussian" )
+		r = GafferImage.Resize()
+		cs = GafferTest.CapturingSlot( r.plugDirtiedSignal() )
+		r["filter"].setValue( "gaussian" )
 
-		 self.assertTrue( r["out"]["channelData"] in set( c[0] for c in cs ) )
+		self.assertTrue( r["out"]["channelData"] in set( c[0] for c in cs ) )
 
 	def testSamplerBoundsViolationCrash( self ) :
 

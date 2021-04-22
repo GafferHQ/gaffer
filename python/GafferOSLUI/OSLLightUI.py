@@ -180,4 +180,3 @@ for key in [
 	"noduleLayout:label",
 ] :
 	Gaffer.Metadata.registerValue( GafferOSL.OSLLight, "parameters.*", key, functools.partial( __parameterMetadata, key = key ) )
-

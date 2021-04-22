@@ -193,4 +193,3 @@ void StandardSet::parentChanged( GraphComponent *member )
 		remove( member );
 	}
 }
-

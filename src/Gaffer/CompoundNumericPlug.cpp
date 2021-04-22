@@ -295,4 +295,3 @@ template class CompoundNumericPlug<Imath::Color3f>;
 template class CompoundNumericPlug<Imath::Color4f>;
 
 }
-

@@ -63,4 +63,3 @@ std::string ArnoldAtmosphere::computeOptionName( const Gaffer::Context *context 
 {
 	return "ai:atmosphere";
 }
-

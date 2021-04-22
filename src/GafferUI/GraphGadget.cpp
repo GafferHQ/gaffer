@@ -1244,8 +1244,10 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		vector<V2f>::const_iterator pIt = upper_bound( snapPoints.begin(), snapPoints.end(), pOffset - V2f( snapThresh ), CompareV2fX() );
 		for( ; pIt != pEnd; pIt++ )
 		{
-			if( fabs( pOffset[1] - (*pIt)[1] ) < snapThresh &&
-			    fabs( pOffset[0] - (*pIt)[0] ) < snapThresh )
+			if(
+				fabs( pOffset[1] - (*pIt)[1] ) < snapThresh &&
+				fabs( pOffset[0] - (*pIt)[0] ) < snapThresh
+			)
 			{
 				pos = *pIt + m_dragStartPosition;
 				break;
@@ -1709,7 +1711,7 @@ void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 	if( Gaffer::V2fPlug *p = nodePositionPlug( node, /* createIfMissing = */ false ) )
 	{
 		const V2f t = p->getValue();
-	 	m.translate( V3f( t[0], t[1], 0 ) );
+		m.translate( V3f( t[0], t[1], 0 ) );
 	}
 
 	nodeGadget->setTransform( m );
