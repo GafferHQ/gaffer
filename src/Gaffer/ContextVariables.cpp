@@ -39,8 +39,22 @@
 #include "Gaffer/Context.h"
 
 #include "IECore/SimpleTypedData.h"
+#include "IECore/DataAlgo.h"
 
 using namespace Gaffer;
+
+namespace {
+
+struct SetFromReadable
+{
+	template< class T>
+	void operator()( const T *data, Gaffer::Context::EditableScope &scope, const IECore::InternedString &name )
+	{
+		scope.set( name, &data->readable() );
+	}
+};
+
+}
 
 GAFFER_NODE_DEFINE_TYPE( ContextVariables );
 
@@ -52,6 +66,7 @@ ContextVariables::ContextVariables( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "variables" ) );
 	addChild( new AtomicCompoundDataPlug( "extraVariables", Plug::In, new IECore::CompoundData ) );
+	addChild( new AtomicCompoundDataPlug( "__combinedVariables", Plug::Out, new IECore::CompoundData ) );
 }
 
 ContextVariables::~ContextVariables()
@@ -78,26 +93,74 @@ const AtomicCompoundDataPlug *ContextVariables::extraVariablesPlug() const
 	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 1 );
 }
 
-bool ContextVariables::affectsContext( const Plug *input ) const
+AtomicCompoundDataPlug *ContextVariables::combinedVariablesPlug()
 {
-	return variablesPlug()->isAncestorOf( input ) || input == extraVariablesPlug();
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
 }
 
-void ContextVariables::processContext( Context::EditableScope &context ) const
+const AtomicCompoundDataPlug *ContextVariables::combinedVariablesPlug() const
 {
-	std::string name;
-	for( NameValuePlugIterator it( variablesPlug() ); !it.done(); ++it )
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+}
+
+void ContextVariables::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+{
+	ContextProcessor::affects( input, outputs );
+
+	if( variablesPlug()->isAncestorOf( input ) || input == extraVariablesPlug() )
 	{
-		IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
-		if( data )
+		outputs.push_back( combinedVariablesPlug() );
+	}
+}
+
+
+bool ContextVariables::affectsContext( const Plug *input ) const
+{
+	return input == combinedVariablesPlug();
+}
+
+void ContextVariables::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+{
+	ContextProcessor::hash( output, context, h );
+
+	if( output == combinedVariablesPlug() )
+	{
+		variablesPlug()->hash( h );
+		extraVariablesPlug()->hash( h );
+	}
+}
+
+void ContextVariables::compute( ValuePlug *output, const Context *context ) const
+{
+	if( output == combinedVariablesPlug() )
+	{
+		IECore::CompoundDataPtr resultData = new IECore::CompoundData( extraVariablesPlug()->getValue()->readable() );
+		IECore::CompoundDataMap &result = resultData->writable();
+
+		std::string name;
+		for( NameValuePlugIterator it( variablesPlug() ); !it.done(); ++it )
 		{
-			context.setAllocated( name, data.get() );
+			IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
+			if( data )
+			{
+				result.insert( { IECore::InternedString( name ), data } );
+			}
 		}
+		static_cast<AtomicCompoundDataPlug *>( output )->setValue( resultData );
+		return;
 	}
-	IECore::ConstCompoundDataPtr extraVariablesData = extraVariablesPlug()->getValue();
-	const IECore::CompoundDataMap &extraVariables = extraVariablesData->readable();
-	for( IECore::CompoundDataMap::const_iterator it = extraVariables.begin(), eIt = extraVariables.end(); it != eIt; ++it )
+
+	return ContextProcessor::compute( output, context );
+}
+
+
+void ContextVariables::processContext( Context::EditableScope &context, IECore::ConstRefCountedPtr &storage ) const
+{
+	SetFromReadable setFromReadable;
+	IECore::ConstCompoundDataPtr combinedVariables = combinedVariablesPlug()->getValue();
+	for( const auto &variable : combinedVariables->readable() )
 	{
-		context.setAllocated( it->first, it->second.get() );
+		IECore::dispatch( variable.second.get(), setFromReadable, context, variable.first );
 	}
+	storage = combinedVariables;
 }

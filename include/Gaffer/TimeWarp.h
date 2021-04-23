@@ -62,7 +62,7 @@ class IECORE_EXPORT TimeWarp : public ContextProcessor
 	protected :
 
 		bool affectsContext( const Plug *input ) const override;
-		void processContext( Context::EditableScope &context ) const override;
+		void processContext( Context::EditableScope &context, IECore::ConstRefCountedPtr &storage ) const override;
 
 	private :
 

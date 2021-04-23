@@ -60,12 +60,21 @@ class IECORE_EXPORT ContextVariables : public ContextProcessor
 		AtomicCompoundDataPlug *extraVariablesPlug();
 		const AtomicCompoundDataPlug *extraVariablesPlug() const;
 
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
+
 	protected :
 
+		/// Implemented to compute combinedVariablesPlug
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
+
 		bool affectsContext( const Plug *input ) const override;
-		void processContext( Context::EditableScope &context ) const override;
+		void processContext( Context::EditableScope &context, IECore::ConstRefCountedPtr &storage ) const override;
 
 	private :
+
+		AtomicCompoundDataPlug *combinedVariablesPlug();
+		const AtomicCompoundDataPlug *combinedVariablesPlug() const;
 
 		static size_t g_firstPlugIndex;
 

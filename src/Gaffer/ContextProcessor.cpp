@@ -57,9 +57,13 @@ class ContextProcessor::ProcessedScope : public Context::EditableScope
 			ContextAlgo::GlobalScope globalScope( context, processor->inPlug() );
 			if( processor->enabledPlug()->getValue() )
 			{
-				processor->processContext( *this );
+				processor->processContext( *this, m_storage );
 			}
 		}
+
+	private :
+
+		IECore::ConstRefCountedPtr m_storage;
 
 };
 

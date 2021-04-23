@@ -42,7 +42,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage: gafferhq/build:1.2.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a1/cortex-10.2.0.0-a1-linux-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a2/cortex-10.2.0.0-a2-linux-python2.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -55,7 +55,7 @@ jobs:
             buildType: DEBUG
             publish: false
             containerImage: gafferhq/build:1.2.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a1/cortex-10.2.0.0-a1-linux-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a2/cortex-10.2.0.0-a2-linux-python2.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -66,7 +66,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage: gafferhq/build:1.2.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a1/cortex-10.2.0.0-a1-linux-python3.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a2/cortex-10.2.0.0-a2-linux-python3.tar.gz
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
@@ -75,7 +75,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage:
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a1/cortex-10.2.0.0-a1-macos-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a2/cortex-10.2.0.0-a2-macos-python2.tar.gz
             testRunner: bash -c
             sconsCacheMegabytes: 400
 

@@ -82,7 +82,7 @@ bool TimeWarp::affectsContext( const Plug *input ) const
 	return input == speedPlug() || input == offsetPlug();
 }
 
-void TimeWarp::processContext( Context::EditableScope &scope ) const
+void TimeWarp::processContext( Context::EditableScope &scope, IECore::ConstRefCountedPtr &storage ) const
 {
 	scope.setFrame(
 		scope.context()->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue()
