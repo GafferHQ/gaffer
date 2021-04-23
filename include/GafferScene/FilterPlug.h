@@ -100,6 +100,8 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 		struct SceneScope : public Gaffer::Context::EditableScope
 		{
 			SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug );
+			private :
+				const ScenePlug *m_scenePlug;
 		};
 
 };

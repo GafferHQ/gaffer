@@ -108,7 +108,7 @@ class ImageTransform::ChainingScope : boost::noncopyable
 	public :
 
 		ChainingScope( const Gaffer::Context *context, const ImageTransform *imageTransform )
-			:	m_chained( context->get<bool>( chainedContextName, false ) )
+			:	m_chained( context->get<bool>( chainedContextName, false ) ), m_true( true )
 		{
 			if( !m_chained )
 			{
@@ -117,7 +117,7 @@ class ImageTransform::ChainingScope : boost::noncopyable
 					// We're the bottom of a chain. Tell the upstream
 					// nodes they've been chained.
 					m_scope.emplace( context );
-					m_scope->set( chainedContextName, true );
+					m_scope->set( chainedContextName, &m_true );
 				}
 			}
 			else
@@ -156,6 +156,7 @@ class ImageTransform::ChainingScope : boost::noncopyable
 		// an EditableScope when we don't need one.
 		boost::optional<Context::EditableScope> m_scope;
 		bool m_chained;
+		bool m_true;
 
 };
 

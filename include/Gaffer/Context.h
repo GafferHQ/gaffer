@@ -52,9 +52,9 @@
 namespace Gaffer
 {
 
-/// This class provides a dictionary of IECore::Data objects to define the context in which a
-/// computation is performed. The most basic entry common to all Contexts is the frame number,
-/// but a context may also hold entirely arbitrary entries useful to specific types of
+/// This class provides a dictionary of variables to define the context in which a
+/// computation is performed. The most basic variable common to all Contexts is the frame number,
+/// but a context may also hold entirely arbitrary variables useful to specific types of
 /// computation.
 ///
 /// Contexts are made current using the nested Scope class - any computation triggered by
@@ -77,39 +77,10 @@ class GAFFER_API Context : public IECore::RefCounted
 
 	public :
 
-		/// Since there are costs associated with constructing,
-		/// copying and reference counting the Data values that make
-		/// up a Context, various ownership options are provided which
-		/// trade performance for additional constraints on client code.
-		enum Ownership
-		{
-			/// The Context takes its own copy of a value to be held
-			/// internally. This requires no additional constraints on the
-			/// part of client code, but has the worst performance.
-			Copied,
-			/// The Context shares the value with others, incrementing
-			/// the reference count to ensure it remains alive for as
-			/// long as the Context needs it. Because the Context
-			/// doesn't have sole ownership of the value, other code
-			/// could change the value without its knowledge. It is the
-			/// responsibility of client code to either ensure that this does
-			/// not happen, or to manually call Context::changed() as
-			/// necessary when it does. This avoids the overhead of copying
-			/// values when setting them.
-			Shared,
-			/// The Context simply references an existing value, and doesn't
-			/// even increment its reference count. In addition to the constraints
-			/// for shared ownership, it is also the responsibility
-			/// of client code to ensure that the value remains alive for the
-			/// lifetime of the Context. This is significantly faster than
-			/// either of the previous options.
-			Borrowed
-		};
 
 		Context();
-		/// Copy constructor. The ownership argument is deprecated - use
-		/// an EditableScope instead of Borrowed ownership.
-		Context( const Context &other, Ownership ownership = Copied );
+		/// Copy constructor
+		Context( const Context &other );
 		/// Copy constructor for creating a cancellable context.
 		/// The canceller is referenced, not copied, and must remain
 		/// alive for as long as the context is in use.
@@ -123,36 +94,43 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
 
-		template<typename T, typename Enabler=void>
-		struct Accessor;
-
-		/// Calling with simple types (e.g float) will automatically
-		/// create a TypedData<T> to store the value.
-		template<typename T>
+		/// Sets a variable to the specified value. A copy is taken so that
+		/// subsequent changes to `value` do not affect the context.
+		template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value>>
 		void set( const IECore::InternedString &name, const T &value );
-		/// Can be used to retrieve simple types :
-		///		float f = context->get<float>( "myFloat" )
-		/// And also IECore::Data types :
-		///		const FloatData *f = context->get<FloatData>( "myFloat" )
-		template<typename T>
-		typename Accessor<T>::ResultType get( const IECore::InternedString &name ) const;
-		/// As above but returns defaultValue when an entry is not found, rather than throwing
-		/// an Exception.
-		template<typename T>
-		typename Accessor<T>::ResultType get( const IECore::InternedString &name, typename Accessor<T>::ResultType defaultValue ) const;
+		/// As above, but providing the value as a `Data *`.
+		void set( const IECore::InternedString &name, const IECore::Data *value );
 
-		/// Removes an entry from the context if it exists
-		void remove( const IECore::InternedString& name );
+		/// Returns a reference to the value of a variable, throwing if it doesn't exist or
+		/// has the wrong type : `float f = context->get<float>( "myFloat" )`.
+		template<typename T>
+		const T &get( const IECore::InternedString &name ) const;
+		/// As above, but returns `defaultValue` if the variable doesn't exist.
+		/// Note that if you pass in a temporary as the `defaultValue`, you must
+		/// copy the return value (if you stored it as a reference, you would be
+		/// referencing the temporary after it was destroyed).
+		template<typename T>
+		const T &get( const IECore::InternedString &name, const T& defaultValue ) const;
+		/// Returns a pointer to the value for the variable if it exists and has
+		/// the requested type. Returns `nullptr` if the variable doesn't exist,
+		/// and throws if it exists but has the wrong type.
+		template<typename T>
+		const T *getIfExists( const IECore::InternedString &name ) const;
 
-		/// Removes any entries whose names match the space separated patterns
+		/// Returns a copy of the variable if it exists, throwing if it doesn't. This
+		/// can be used when the type of the variable is unknown, but it is much more
+		/// expensive than the `get()` methods above because it allocates memory.
+		IECore::DataPtr getAsData( const IECore::InternedString &name ) const;
+		/// As above but returns `defaultValue` if the variable does not exist.
+		IECore::DataPtr getAsData( const IECore::InternedString &name, const IECore::DataPtr &defaultValue ) const;
+
+		/// Removes a variable from the context, if it exists.
+		void remove( const IECore::InternedString &name );
+		/// Removes any variables whose names match the space separated patterns
 		/// provided. Matching is performed using `StringAlgo::matchMultiple()`.
 		void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
 
-		/// When a Shared or Borrowed value is changed behind the scenes, this method
-		/// must be called to notify the Context of the change.
-		void changed( const IECore::InternedString &name );
-
-		/// Fills the specified vector with the names of all items in the Context.
+		/// Fills the specified vector with the names of all variables in the Context.
 		void names( std::vector<IECore::InternedString> &names ) const;
 
 		/// @name Time
@@ -188,6 +166,10 @@ class GAFFER_API Context : public IECore::RefCounted
 		ChangedSignal &changedSignal();
 
 		IECore::MurmurHash hash() const;
+
+		/// Return the hash of a particular variable ( or a default MurmurHash() if not present )
+		/// Note that this hash includes the name of the variable
+		inline IECore::MurmurHash variableHash( const IECore::InternedString &name ) const;
 
 		bool operator == ( const Context &other ) const;
 		bool operator != ( const Context &other ) const;
@@ -242,12 +224,34 @@ class GAFFER_API Context : public IECore::RefCounted
 				EditableScope( const ThreadState &threadState );
 				~EditableScope();
 
+				/// Sets a variable with a pointer to a typed value. It is the
+				/// caller's responsibility to ensure that the pointer remains
+				/// valid for the lifetime of the EditableScope. This is much
+				/// faster than `Context::set()` because it doesn't allocating
+				/// memory, and should be used in all performance-critical code.
 				template<typename T>
+				void set( const IECore::InternedString &name, const T *value );
+
+				template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value > >
+				[[deprecated("Use faster pointer version, or use the more explicit setAllocated if you actually need to allocate ")]]
 				void set( const IECore::InternedString &name, const T &value );
 
+				/// Sets a variable from a copy of `value`. This is more expensive than the
+				/// pointer version above, and should be avoided where possible.
+				template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value > >
+				void setAllocated( const IECore::InternedString &name, const T &value );
+				/// As above, but providing the value as a `Data *`.
+				void setAllocated( const IECore::InternedString &name, const IECore::Data *value );
+
+				/// These are fast even though they don't take a pointer,
+				/// because the EditableScope has dedicated internal storage for
+				/// the frame.
 				void setFrame( float frame );
-				void setFramesPerSecond( float framesPerSecond );
 				void setTime( float timeInSeconds );
+
+				[[deprecated("Use faster pointer version")]]
+				void setFramesPerSecond( float framesPerSecond );
+				void setFramesPerSecond( const float *framesPerSecond );
 
 				void remove( const IECore::InternedString &name );
 				void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
@@ -257,39 +261,127 @@ class GAFFER_API Context : public IECore::RefCounted
 			private :
 
 				Ptr m_context;
+				// Provides storage for `setFrame()` and `setTime()` to use
+				// (There is no easy way to provide external storage for
+				// setTime, because it multiplies the input value).
+				float m_frameStorage;
 
 		};
 
 		/// Returns the current context for the calling thread.
 		static const Context *current();
 
-	private :
-
-		// Storage for each entry.
-		struct Storage
+		/// Used to register a data type for use in variable values.
+		/// See `GafferImage::FormatData` for an example.
+		template<typename T>
+		struct TypeDescription
 		{
-			Storage() : data( nullptr ), ownership( Copied ) {}
-			inline void updateHash( const IECore::InternedString &name );
-			// We reference the data with a raw pointer to avoid the compulsory
-			// overhead of an intrusive pointer.
-			const IECore::Data *data;
-			// And use this ownership flag to tell us when we need to do explicit
-			// reference count management.
-			Ownership ownership;
-			// Hash value of this entry's data and name - these will be summed to produce
-			// a total hash for the context
-			IECore::MurmurHash hash;
+			TypeDescription();
 		};
 
-		void validateHashes();
+	private :
 
-		typedef boost::container::flat_map<IECore::InternedString, Storage> Map;
+		// Determines the operation of the private copy constructor.
+		enum class CopyMode
+		{
+			// Shares ownership with the source context where possible,
+			// allocating copies where necessary. Used by all public copy
+			// constructors.
+			Owning,
+			// References existing values without taking ownership, relying on
+			// the source context to outlive this one. Used by EditableScopes.
+			NonOwning
+		};
+
+		Context( const Context &other, CopyMode mode );
+
+		// Type used for the value of a variable. Can refer to any type `T` for
+		// which `IECore::TypedData<T>` is available and `registerType()` has
+		// been called. Values are stored as `const void *` pointing to `T`,
+		// along with the `IECore::TypeId` for `TypedData<T>`, which is used to
+		// validate type-safe access. Does not manage memory or ownership in any
+		// way : this is the responsibility of calling code.
+		struct Value
+		{
+
+			inline Value();
+			template<typename T>
+			Value( const IECore::InternedString &name, const T *value );
+			Value( const IECore::InternedString &name, const IECore::Data *value );
+			Value( const Value &other ) = default;
+
+			Value &operator = ( const Value &other ) = default;
+
+			template<typename T>
+			inline const T &value() const;
+			IECore::TypeId typeId() const { return m_typeId; }
+			const void *rawValue() const { return m_value; }
+			// Note : This includes the hash of the name passed
+			// to the constructor.
+			const IECore::MurmurHash &hash() const { return m_hash; }
+
+			bool operator == ( const Value &rhs ) const;
+			bool operator != ( const Value &rhs ) const;
+			bool references( const IECore::Data *data ) const;
+
+			IECore::DataPtr makeData() const;
+			Value copy( IECore::ConstDataPtr &owner ) const;
+
+			// Throws if the `hash()` no longer corresponds to `value()`.
+			// This can occur if the pointee is modified after calling
+			// `EditableScope::set( name, const T * )`.
+			void validate( const IECore::InternedString &name ) const;
+
+			template<typename T>
+			static void registerType();
+
+			private :
+
+				Value( IECore::TypeId typeId, const void *value, const IECore::MurmurHash &hash );
+
+				IECore::TypeId m_typeId;
+				const void *m_value;
+				IECore::MurmurHash m_hash;
+
+				struct TypeFunctions
+				{
+					IECore::DataPtr (*makeData)( const Value &value, const void **dataValue );
+					bool (*isEqual)( const Value &a, const Value &b );
+					Value (*constructor)( const IECore::InternedString &name, const IECore::Data *data );
+					const void *(*valueFromData)( const IECore::Data *data );
+					void (*validate)( const IECore::InternedString &name, const Value &v );
+				};
+
+				using TypeMap = boost::container::flat_map<IECore::TypeId, TypeFunctions>;
+				static TypeMap &typeMap();
+				static const TypeFunctions &typeFunctions( IECore::TypeId typeId );
+
+		};
+
+		// Sets a variable and emits `changedSignal()` as appropriate. Does not
+		// manage ownership in any way. Returns true if the value was assigned,
+		// and false if the value was not (due to it being equal to the
+		// previously stored value).
+		inline bool internalSet( const IECore::InternedString &name, const Value &value );
+		// Throws if variable doesn't exist.
+		inline const Value &internalGet( const IECore::InternedString &name ) const;
+		// Returns nullptr if variable doesn't exist.
+		inline const Value *internalGetIfExists( const IECore::InternedString &name ) const;
+
+		typedef boost::container::flat_map<IECore::InternedString, Value> Map;
 
 		Map m_map;
 		ChangedSignal *m_changedSignal;
 		mutable IECore::MurmurHash m_hash;
 		mutable bool m_hashValid;
 		const IECore::Canceller *m_canceller;
+
+		// The alloc map holds a smart pointer to data that we allocate.  It must keep the entries
+		// alive at least as long as the m_map used for actual accesses is using it, though it may
+		// hold data longer than it is actually in use.  ( ie. a fast pointer based set through
+		// EditableScope could overwrite a variable without updating m_allocMap )
+		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr > AllocMap;
+		AllocMap m_allocMap;
 
 };
 

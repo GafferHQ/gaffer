@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2021, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +34,8 @@
 #
 ##########################################################################
 
-import unittest
 import imath
+import six
 
 import IECore
 
@@ -43,64 +43,41 @@ import Gaffer
 import GafferImage
 import GafferImageTest
 
-class FormatDataTest( GafferImageTest.ImageTestCase ) :
+class ContextSanitiserTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
-		f1 = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 0.5 )
-		f2 = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 1 )
+		constant = GafferImage.Constant()
 
-		fd1a = GafferImage.FormatData( f1 )
-		fd1b = GafferImage.FormatData( f1 )
-		fd2 = GafferImage.FormatData( f2 )
+		# A ContextSanitiser is automatically hooked up by ImageTestCase.setUp, so
+		# we don't need to explicitly set one up
+		with IECore.CapturingMessageHandler() as mh :
+			with Gaffer.Context() as c :
 
-		self.assertEqual( fd1a.value, f1 )
-		self.assertEqual( fd1b.value, f1 )
-		self.assertEqual( fd2.value, f2 )
+				c["image:channelName"] = IECore.StringData( "R" )
+				c["image:tileOrigin"] = IECore.V2iData( imath.V2i( 0, 0 ) )
 
-		self.assertEqual( fd1a, fd1b )
-		self.assertNotEqual( fd1a, fd2 )
+				constant["out"]["metadata"].getValue()
+				constant["out"]["sampleOffsets"].getValue()
+				constant["out"]["channelData"].getValue()
 
-		self.assertEqual( fd1a.hash(), fd1b.hash() )
-		self.assertNotEqual( fd1a.hash(), fd2.hash() )
+				c["image:channelName"] = IECore.IntData( 5 )
 
-		fd2c = fd2.copy()
-		self.assertEqual( fd2c, fd2 )
-		self.assertEqual( fd2c.hash(), fd2.hash() )
+				with six.assertRaisesRegex( self, IECore.Exception, 'Context variable is not of type "StringData"' ) :
+					constant["out"]["metadata"].getValue()
 
-	def testSerialisation( self ) :
+		for message in mh.messages :
+			self.assertEqual( message.level, mh.Level.Warning )
+			self.assertEqual( message.context, "ContextSanitiser" )
 
-		f = GafferImage.Format( imath.Box2i( imath.V2i( 10, 20 ), imath.V2i( 200, 100 ) ), 0.5 )
-		fd = GafferImage.FormatData( f )
-
-		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
-
-		fd.save( m, "f" )
-
-		m2 = IECore.MemoryIndexedIO( m.buffer(), [], IECore.IndexedIO.OpenMode.Read )
-		fd2 = IECore.Object.load( m2, "f" )
-
-		self.assertEqual( fd2, fd )
-		self.assertEqual( fd2.value, f )
-
-	def testAutoConstructFromFormat( self ) :
-
-		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 0.5 )
-
-		d = IECore.CompoundData()
-		d["f"] = f
-		self.assertEqual( d["f"], GafferImage.FormatData( f ) )
-
-	def testStoreInContext( self ) :
-
-		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 0.5 )
-		d = GafferImage.FormatData( f )
-		c = Gaffer.Context()
-		c["f"] = d
-		self.assertEqual( c["f"], d )
-
-	def testEditableScopeForFormat( self ) :
-		GafferImageTest.testEditableScopeForFormat()
+		self.assertEqual(
+			[ m.message for m in mh.messages ],
+			[
+				'image:channelName in context for Constant.out.metadata computeNode:hash',
+				'image:tileOrigin in context for Constant.out.metadata computeNode:hash',
+				'image:channelName in context for Constant.out.sampleOffsets computeNode:compute'
+			]
+		)
 
 if __name__ == "__main__":
 	unittest.main()

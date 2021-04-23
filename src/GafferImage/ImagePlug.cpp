@@ -309,10 +309,20 @@ ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::ThreadState &thread
 
 void ImagePlug::ChannelDataScope::setTileOrigin( const V2i &tileOrigin )
 {
-	set( tileOriginContextName, tileOrigin );
+	setAllocated( tileOriginContextName, tileOrigin );
 }
 
 void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName )
+{
+	setAllocated( channelNameContextName, channelName );
+}
+
+void ImagePlug::ChannelDataScope::setTileOrigin( const V2i *tileOrigin )
+{
+	set( tileOriginContextName, tileOrigin );
+}
+
+void ImagePlug::ChannelDataScope::setChannelName( const std::string *channelName )
 {
 	set( channelNameContextName, channelName );
 }
@@ -320,8 +330,8 @@ void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
-	channelDataScope.setChannelName( channelName );
-	channelDataScope.setTileOrigin( tile );
+	channelDataScope.setChannelName( &channelName );
+	channelDataScope.setTileOrigin( &tile );
 
 	return channelDataPlug()->getValue();
 }
@@ -329,8 +339,8 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
-	channelDataScope.setChannelName( channelName );
-	channelDataScope.setTileOrigin( tile );
+	channelDataScope.setChannelName( &channelName );
+	channelDataScope.setTileOrigin( &tile );
 	return channelDataPlug()->hash();
 }
 
@@ -397,13 +407,13 @@ IECore::MurmurHash ImagePlug::deepHash() const
 IECore::ConstIntVectorDataPtr ImagePlug::sampleOffsets( const Imath::V2i &tile ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
-	channelDataScope.setTileOrigin( tile );
+	channelDataScope.setTileOrigin( &tile );
 	return sampleOffsetsPlug()->getValue();
 }
 
 IECore::MurmurHash ImagePlug::sampleOffsetsHash( const Imath::V2i &tile ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
-	channelDataScope.setTileOrigin( tile );
+	channelDataScope.setTileOrigin( &tile );
 	return sampleOffsetsPlug()->hash();
 }

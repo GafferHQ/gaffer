@@ -319,6 +319,12 @@ ScenePlug::PathScope::PathScope( const Gaffer::Context *context )
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath &scenePath )
 	:	PathScope( context )
 {
+	setAllocated( scenePathContextName, scenePath );
+}
+
+ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath *scenePath )
+	:	PathScope( context )
+{
 	setPath( scenePath );
 }
 
@@ -330,10 +336,21 @@ ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState )
 ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const ScenePath &scenePath )
 	:	EditableScope( threadState )
 {
+	setAllocated( scenePathContextName, scenePath );
+}
+
+ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const ScenePath *scenePath )
+	:	EditableScope( threadState )
+{
 	setPath( scenePath );
 }
 
 void ScenePlug::PathScope::setPath( const ScenePath &scenePath )
+{
+	setAllocated( scenePathContextName, scenePath );
+}
+
+void ScenePlug::PathScope::setPath( const ScenePath *scenePath )
 {
 	set( scenePathContextName, scenePath );
 }
@@ -346,6 +363,14 @@ ScenePlug::SetScope::SetScope( const Gaffer::Context *context )
 }
 
 ScenePlug::SetScope::SetScope( const Gaffer::Context *context, const IECore::InternedString &setName )
+	:	EditableScope( context )
+{
+	remove( Filter::inputSceneContextName );
+	remove( ScenePlug::scenePathContextName );
+	setAllocated( setNameContextName, setName );
+}
+
+ScenePlug::SetScope::SetScope( const Gaffer::Context *context, const IECore::InternedString *setName )
 	:	EditableScope( context )
 {
 	remove( Filter::inputSceneContextName );
@@ -365,10 +390,23 @@ ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IEC
 {
 	remove( Filter::inputSceneContextName );
 	remove( ScenePlug::scenePathContextName );
+	setAllocated( setNameContextName, setName );
+}
+
+ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString *setName )
+	:	EditableScope( threadState )
+{
+	remove( Filter::inputSceneContextName );
+	remove( ScenePlug::scenePathContextName );
 	setSetName( setName );
 }
 
 void ScenePlug::SetScope::setSetName( const IECore::InternedString &setName )
+{
+	setAllocated( setNameContextName, setName );
+}
+
+void ScenePlug::SetScope::setSetName( const IECore::InternedString *setName )
 {
 	set( setNameContextName, setName );
 }
@@ -396,19 +434,19 @@ bool ScenePlug::exists() const
 
 bool ScenePlug::exists( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return existsPlug()->getValue();
 }
 
 Imath::Box3f ScenePlug::bound( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return boundPlug()->getValue();
 }
 
 Imath::M44f ScenePlug::transform( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return transformPlug()->getValue();
 }
 
@@ -420,7 +458,7 @@ Imath::M44f ScenePlug::fullTransform( const ScenePath &scenePath ) const
 	ScenePath path( scenePath );
 	while( path.size() )
 	{
-		pathScope.setPath( path );
+		pathScope.setPath( &path );
 		result = result * transformPlug()->getValue();
 		path.pop_back();
 	}
@@ -430,7 +468,7 @@ Imath::M44f ScenePlug::fullTransform( const ScenePath &scenePath ) const
 
 IECore::ConstCompoundObjectPtr ScenePlug::attributes( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return attributesPlug()->getValue();
 }
 
@@ -443,7 +481,7 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath 
 	ScenePath path( scenePath );
 	while( path.size() )
 	{
-		pathScope.setPath( path );
+		pathScope.setPath( &path );
 		IECore::ConstCompoundObjectPtr a = attributesPlug()->getValue();
 		const IECore::CompoundObject::ObjectMap &aMembers = a->members();
 		for( IECore::CompoundObject::ObjectMap::const_iterator it = aMembers.begin(), eIt = aMembers.end(); it != eIt; it++ )
@@ -461,13 +499,13 @@ IECore::CompoundObjectPtr ScenePlug::fullAttributes( const ScenePath &scenePath 
 
 IECore::ConstObjectPtr ScenePlug::object( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return objectPlug()->getValue();
 }
 
 IECore::ConstInternedStringVectorDataPtr ScenePlug::childNames( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return childNamesPlug()->getValue();
 }
 
@@ -485,19 +523,19 @@ IECore::ConstInternedStringVectorDataPtr ScenePlug::setNames() const
 
 IECore::ConstPathMatcherDataPtr ScenePlug::set( const IECore::InternedString &setName ) const
 {
-	SetScope scope( Context::current(), setName );
+	SetScope scope( Context::current(), &setName );
 	return setPlug()->getValue();
 }
 
 IECore::MurmurHash ScenePlug::boundHash( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return boundPlug()->hash();
 }
 
 IECore::MurmurHash ScenePlug::transformHash( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return transformPlug()->hash();
 }
 
@@ -509,7 +547,7 @@ IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) co
 	ScenePath path( scenePath );
 	while( path.size() )
 	{
-		pathScope.setPath( path );
+		pathScope.setPath( &path );
 		transformPlug()->hash( result );
 		path.pop_back();
 	}
@@ -519,7 +557,7 @@ IECore::MurmurHash ScenePlug::fullTransformHash( const ScenePath &scenePath ) co
 
 IECore::MurmurHash ScenePlug::attributesHash( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return attributesPlug()->hash();
 }
 
@@ -531,7 +569,7 @@ IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) c
 	ScenePath path( scenePath );
 	while( path.size() )
 	{
-		pathScope.setPath( path );
+		pathScope.setPath( &path );
 		attributesPlug()->hash( result );
 		path.pop_back();
 	}
@@ -541,13 +579,13 @@ IECore::MurmurHash ScenePlug::fullAttributesHash( const ScenePath &scenePath ) c
 
 IECore::MurmurHash ScenePlug::objectHash( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return objectPlug()->hash();
 }
 
 IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return childNamesPlug()->hash();
 }
 
@@ -565,19 +603,19 @@ IECore::MurmurHash ScenePlug::setNamesHash() const
 
 IECore::MurmurHash ScenePlug::setHash( const IECore::InternedString &setName ) const
 {
-	SetScope scope( Context::current(), setName );
+	SetScope scope( Context::current(), &setName );
 	return setPlug()->hash();
 }
 
 Imath::Box3f ScenePlug::childBounds( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return childBoundsPlug()->getValue();
 }
 
 IECore::MurmurHash ScenePlug::childBoundsHash( const ScenePath &scenePath ) const
 {
-	PathScope scope( Context::current(), scenePath );
+	PathScope scope( Context::current(), &scenePath );
 	return childBoundsPlug()->hash();
 }
 

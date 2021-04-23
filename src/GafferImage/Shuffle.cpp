@@ -197,7 +197,7 @@ void Shuffle::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffe
 		}
 		else
 		{
-			channelDataScope.setTileOrigin( tileOrigin );
+			channelDataScope.setTileOrigin( &tileOrigin );
 			inPlug()->sampleOffsetsPlug()->hash( h );
 			h.append( c == "__white" );
 		}
@@ -205,7 +205,7 @@ void Shuffle::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffe
 	else
 	{
 		ImagePlug::ChannelDataScope channelDataScope( context );
-		channelDataScope.setChannelName( c );
+		channelDataScope.setChannelName( &c );
 		h = inPlug()->channelDataPlug()->hash();
 	}
 }
@@ -227,7 +227,7 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 		}
 		else
 		{
-			channelDataScope.setTileOrigin( tileOrigin );
+			channelDataScope.setTileOrigin( &tileOrigin );
 			ConstIntVectorDataPtr sampleOffsets = inPlug()->sampleOffsetsPlug()->getValue();
 
 			FloatVectorDataPtr result = new FloatVectorData();
@@ -242,7 +242,7 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 	else
 	{
 		ImagePlug::ChannelDataScope channelDataScope( context );
-		channelDataScope.setChannelName( c );
+		channelDataScope.setChannelName( &c );
 		return inPlug()->channelDataPlug()->getValue();
 	}
 }

@@ -85,7 +85,7 @@ void parallelGetValueWithVar( const IntPlug *plug, int iterations, const IECore:
 			Context::EditableScope scope( threadState );
 			for( int i = r.begin(); i < r.end(); ++i )
 			{
-				scope.set( iterationVar, i );
+				scope.set( iterationVar, &i );
 				plug->getValue();
 			}
 		}

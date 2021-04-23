@@ -146,9 +146,9 @@ class HierarchyViewFilter : public Gaffer::PathFilter
 			m_context->names( names );
 			for( vector<InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 			{
-				const Data *newValue = m_context->get<Data>( *it );
-				const Data *oldValue = oldContext->get<Data>( *it, nullptr );
-				if( !oldValue || !newValue->isEqualTo( oldValue ) )
+				IECore::DataPtr newValue = m_context->getAsData( *it );
+				IECore::DataPtr oldValue = oldContext->getAsData( *it, nullptr );
+				if( !oldValue || !newValue->isEqualTo( oldValue.get() ) )
 				{
 					contextChanged( *it );
 				}
@@ -159,7 +159,7 @@ class HierarchyViewFilter : public Gaffer::PathFilter
 			oldContext->names( names );
 			for( vector<InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 			{
-				if( !m_context->get<Data>( *it, nullptr ) )
+				if( !m_context->getAsData( *it, nullptr ) )
 				{
 					contextChanged( *it );
 				}

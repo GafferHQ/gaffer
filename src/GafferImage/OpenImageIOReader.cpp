@@ -728,10 +728,10 @@ FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode
 				}
 
 				// setup a context with the new frame
-				ContextPtr holdContext = new Context( *context, Context::Shared );
-				holdContext->setFrame( *fIt );
+				Context::EditableScope holdScope( context );
+				holdScope.setFrame( *fIt );
 
-				return retrieveFile( fileName, OpenImageIOReader::Error, node, holdContext.get() );
+				return retrieveFile( fileName, OpenImageIOReader::Error, node, holdScope.context() );
 			}
 
 			// if we got here, there was no suitable file sequence
@@ -1180,7 +1180,7 @@ IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Ima
 		std::string channelName(""); // TODO - should have better interface for selecting sampleOffsets
 		file->findTile( channelName, tileOrigin, tileBatchIndex, subIndex );
 
-		c.set( g_tileBatchIndexContextName, tileBatchIndex );
+		c.set( g_tileBatchIndexContextName, &tileBatchIndex );
 
 		ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 
@@ -1229,7 +1229,7 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	int subIndex;
 	file->findTile( channelName, tileOrigin, tileBatchIndex, subIndex );
 
-	c.set( g_tileBatchIndexContextName, tileBatchIndex );
+	c.set( g_tileBatchIndexContextName, &tileBatchIndex );
 
 	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 	ConstObjectPtr curTileChannel;

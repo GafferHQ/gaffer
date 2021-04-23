@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2020, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,64 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/FormatData.h"
+#ifndef GAFFERTEST_RANDOMTEST_H
+#define GAFFERTEST_RANDOMTEST_H
 
-#include "GafferImage/TypeIds.h"
+#include "GafferTest/Export.h"
 
-#include "Gaffer/Context.h"
-
-#include "IECore/TypedData.h"
-#include "IECore/TypedData.inl"
-
-using namespace Imath;
-
-namespace
+namespace GafferTest
 {
 
-Gaffer::Context::TypeDescription<GafferImage::FormatData> g_formatDataTypeDescription;
+GAFFERTEST_API void testRandomPerf();
 
-} // namespace
+} // namespace GafferTest
 
-namespace IECore
-{
-
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatData, GafferImage::FormatDataTypeId )
-
-template<>
-void FormatData::save( SaveContext *context ) const
-{
-	Data::save( context );
-
-	IndexedIO *container = context->rawContainer();
-	container->write( "displayWindow", (const int*)&(readable().getDisplayWindow()), 4 );
-	container->write( "pixelAspect", readable().getPixelAspect() );
-}
-
-template<>
-void FormatData::load( LoadContextPtr context )
-{
-	Data::load( context );
-
-	const IndexedIO *container = context->rawContainer();
-
-	Box2i displayWindow;
-	int *displayWindowPtr = (int *)&displayWindow;
-	container->read( "displayWindow", displayWindowPtr, 4 );
-	writable().setDisplayWindow( displayWindow );
-
-	double pixelAspect = 1.0;
-	container->read( "pixelAspect", pixelAspect );
-	writable().setPixelAspect( pixelAspect );
-}
-
-template<>
-void SimpleDataHolder<GafferImage::Format>::hash( MurmurHash &h ) const
-{
-	const GafferImage::Format &f = readable();
-	h.append( f.getDisplayWindow() );
-	h.append( f.getPixelAspect() );
-}
-
-template class TypedData<GafferImage::Format>;
-
-} // namespace IECore
+#endif // GAFFERTEST_RANDOMTEST_H

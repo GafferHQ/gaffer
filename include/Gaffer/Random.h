@@ -96,6 +96,8 @@ class GAFFER_API Random : public ComputeNode
 
 };
 
+IE_CORE_DECLAREPTR( Random )
+
 } // namespace Gaffer
 
 #endif // GAFFER_RANDOM_H

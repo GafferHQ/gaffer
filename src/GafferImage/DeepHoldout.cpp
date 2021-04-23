@@ -51,6 +51,12 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
+namespace
+{
+	std::string g_premultipliedAverageZName( "__premultipliedAverageZ" );
+	std::string g_holdoutAlphaName( "__holdoutAlpha" );
+}
+
 GAFFER_NODE_DEFINE_TYPE( DeepHoldout );
 
 size_t DeepHoldout::g_firstPlugIndex = 0;
@@ -168,8 +174,8 @@ IECore::ConstStringVectorDataPtr DeepHoldout::computeChannelNames( const Gaffer:
 		StringVectorDataPtr resultData = inChannelNamesData->copy();
 		std::vector<string> &result = resultData->writable();
 		result.reserve( result.size() + 2 );
-		result.push_back( "__premultipliedAverageZ" );
-		result.push_back( "__holdoutAlpha" );
+		result.push_back( g_premultipliedAverageZName );
+		result.push_back( g_holdoutAlphaName );
 		return resultData;
 	}
 	else
@@ -195,30 +201,30 @@ void DeepHoldout::hashChannelData( const GafferImage::ImagePlug *output, const G
 	if( output == intermediateInPlug() )
 	{
 		const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-		if( channelName == "__premultipliedAverageZ" )
+		if( channelName == g_premultipliedAverageZName )
 		{
 			ImageProcessor::hashChannelData( output, context, h );
 
 			ImagePlug::ChannelDataScope channelScope( context );
-			channelScope.setChannelName( "Z" );
+			channelScope.setChannelName( &ImageAlgo::channelNameZ );
 			inPlug()->channelDataPlug()->hash( h );
 
 			ConstStringVectorDataPtr channelNames = inPlug()->channelNames();
-			if( ImageAlgo::channelExists( channelNames->readable(), "ZBack" ) )
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameZBack ) )
 			{
-				channelScope.setChannelName( "ZBack" );
+				channelScope.setChannelName( &ImageAlgo::channelNameZBack );
 				inPlug()->channelDataPlug()->hash( h );
 			}
-			if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
 			{
-				channelScope.setChannelName( "A" );
+				channelScope.setChannelName( &ImageAlgo::channelNameA );
 				inPlug()->channelDataPlug()->hash( h );
 			}
 		}
-		else if( channelName == "__holdoutAlpha" )
+		else if( channelName == g_holdoutAlphaName )
 		{
 			ImagePlug::ChannelDataScope channelScope( context );
-			channelScope.setChannelName( "A" );
+			channelScope.setChannelName( &ImageAlgo::channelNameA );
 			return inPlug()->channelDataPlug()->hash( h );
 		}
 		else
@@ -229,7 +235,7 @@ void DeepHoldout::hashChannelData( const GafferImage::ImagePlug *output, const G
 	else
 	{
 		const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-		if( !( channelName == "A" || channelName == "Z" ) )
+		if( !( channelName == ImageAlgo::channelNameA || channelName == ImageAlgo::channelNameZ ) )
 		{
 			h = flattenedPlug()->channelDataPlug()->hash();
 			return;
@@ -238,16 +244,16 @@ void DeepHoldout::hashChannelData( const GafferImage::ImagePlug *output, const G
 		ImageProcessor::hashChannelData( output, context, h );
 
 		ImagePlug::ChannelDataScope channelScope( context );
-		if( channelName == "A" )
+		if( channelName == ImageAlgo::channelNameA )
 		{
-			channelScope.setChannelName( "__holdoutAlpha" );
+			channelScope.setChannelName( &g_holdoutAlphaName );
 			flattenedPlug()->channelDataPlug()->hash( h );
 		}
-		else if( channelName == "Z" )
+		else if( channelName == ImageAlgo::channelNameZ )
 		{
-			channelScope.setChannelName( "A" );
+			channelScope.setChannelName( &ImageAlgo::channelNameA );
 			outPlug()->channelDataPlug()->hash( h );
-			channelScope.setChannelName( "__premultipliedAverageZ" );
+			channelScope.setChannelName( &g_premultipliedAverageZName );
 			flattenedPlug()->channelDataPlug()->hash( h );
 		}
 	}
@@ -258,19 +264,19 @@ IECore::ConstFloatVectorDataPtr DeepHoldout::computeChannelData( const std::stri
 	if( parent == intermediateInPlug() )
 	{
 		const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-		if( channelName == "__premultipliedAverageZ" )
+		if( channelName == g_premultipliedAverageZName )
 		{
 			ImagePlug::ChannelDataScope channelScope( context );
-			channelScope.setChannelName( "Z" );
+			channelScope.setChannelName( &ImageAlgo::channelNameZ );
 
 			FloatVectorDataPtr resultData = inPlug()->channelDataPlug()->getValue()->copy();
 			std::vector<float> &result = resultData->writable();
 
 			ConstStringVectorDataPtr channelNames = inPlug()->channelNames();
-			if( ImageAlgo::channelExists( channelNames->readable(), "ZBack" ) )
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameZBack ) )
 			{
 				// If we have a ZBack channel, find the average depth of each sample
-				channelScope.setChannelName( "ZBack" );
+				channelScope.setChannelName( &ImageAlgo::channelNameZBack );
 				ConstFloatVectorDataPtr zBackData = inPlug()->channelDataPlug()->getValue();
 				const std::vector<float> &zBack = zBackData->readable();
 				for( unsigned int i = 0; i < result.size(); i++ )
@@ -278,9 +284,9 @@ IECore::ConstFloatVectorDataPtr DeepHoldout::computeChannelData( const std::stri
 					result[i] = result[i] * 0.5f + zBack[i] * 0.5f;
 				}
 			}
-			if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
 			{
-				channelScope.setChannelName( "A" );
+				channelScope.setChannelName( &ImageAlgo::channelNameA );
 				ConstFloatVectorDataPtr alphaData = inPlug()->channelDataPlug()->getValue();
 				const std::vector<float> &alpha = alphaData->readable();
 				for( unsigned int i = 0; i < result.size(); i++ )
@@ -290,10 +296,10 @@ IECore::ConstFloatVectorDataPtr DeepHoldout::computeChannelData( const std::stri
 			}
 			return resultData;
 		}
-		else if( channelName == "__holdoutAlpha" )
+		else if( channelName == g_holdoutAlphaName )
 		{
 			ImagePlug::ChannelDataScope channelScope( context );
-			channelScope.setChannelName( "A" );
+			channelScope.setChannelName( &ImageAlgo::channelNameA );
 			return inPlug()->channelDataPlug()->getValue();
 		}
 		else
@@ -303,29 +309,29 @@ IECore::ConstFloatVectorDataPtr DeepHoldout::computeChannelData( const std::stri
 	}
 	else
 	{
-		if( !( channelName == "A" || channelName == "Z" ) )
+		if( !( channelName == ImageAlgo::channelNameA || channelName == ImageAlgo::channelNameZ ) )
 		{
 			return flattenedPlug()->channelDataPlug()->getValue();
 		}
 
 		ImagePlug::ChannelDataScope channelScope( context );
 
-		if( channelName == "A" )
+		if( channelName == ImageAlgo::channelNameA )
 		{
-			channelScope.setChannelName( "__holdoutAlpha" );
+			channelScope.setChannelName( &g_holdoutAlphaName );
 			return flattenedPlug()->channelDataPlug()->getValue();
 		}
 
-		channelScope.setChannelName( "__premultipliedAverageZ" );
+		channelScope.setChannelName( &g_premultipliedAverageZName );
 		FloatVectorDataPtr resultData = flattenedPlug()->channelDataPlug()->getValue()->copy();
 		std::vector<float> &result = resultData->writable();
 
 		ConstStringVectorDataPtr channelNames = inPlug()->channelNames();
-		if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
+		if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
 		{
 			// For consistency with other uses of Z, once we've got a properly filtered and merged Z,
 			// we can unpremult it again
-			channelScope.setChannelName( "A" );
+			channelScope.setChannelName( &ImageAlgo::channelNameA );
 			ConstFloatVectorDataPtr alphaData = outPlug()->channelDataPlug()->getValue();
 			const std::vector<float> &alpha = alphaData->readable();
 			for( unsigned int i = 0; i < result.size(); i++ )

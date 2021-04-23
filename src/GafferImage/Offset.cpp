@@ -149,7 +149,8 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	if( offset.x % ImagePlug::tileSize() == 0 && offset.y % ImagePlug::tileSize() == 0 )
 	{
-		offsetScope.setTileOrigin( tileOrigin - offset );
+		V2i offsetOrigin = tileOrigin - offset;
+		offsetScope.setTileOrigin( &offsetOrigin );
 		h = inPlug()->channelDataPlug()->hash();
 	}
 	else
@@ -173,7 +174,7 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 		{
 			for( inTileOrigin.x = ImagePlug::tileOrigin( inBound.min ).x; inTileOrigin.x < inBound.max.x; inTileOrigin.x += ImagePlug::tileSize() )
 			{
-				offsetScope.setTileOrigin( inTileOrigin );
+				offsetScope.setTileOrigin( &inTileOrigin );
 				inPlug()->channelDataPlug()->hash( h );
 			}
 		}
@@ -183,7 +184,7 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 		// For performance reasons, instead of including hashing sampleOffsets for every input tile, we
 		// just include the output sample offsets, which already depends on the input sample offsets and
 		// the deep plug
-		offsetScope.setTileOrigin( tileOrigin );
+		offsetScope.setTileOrigin( &tileOrigin );
 		offsetScope.remove( ImagePlug::channelNameContextName );
 		outPlug()->sampleOffsetsPlug()->hash( h );
 	}
@@ -196,7 +197,8 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 	const V2i offset = offsetPlug()->getValue();
 	if( offset.x % ImagePlug::tileSize() == 0 && offset.y % ImagePlug::tileSize() == 0 )
 	{
-		offsetScope.setTileOrigin( tileOrigin - offset );
+		V2i offsetOrigin = tileOrigin - offset;
+		offsetScope.setTileOrigin( &offsetOrigin );
 		return inPlug()->channelDataPlug()->getValue();
 	}
 
@@ -219,7 +221,7 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 	{
 		offsetScope.remove( ImagePlug::channelNameContextName );
 		outSampleOffsetsData = outPlug()->sampleOffsetsPlug()->getValue();
-		offsetScope.setChannelName( channelName );
+		offsetScope.setChannelName( &channelName );
 		outData->writable().resize( outSampleOffsetsData->readable().back() );
 	}
 
@@ -230,7 +232,7 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 	{
 		for( inTileOrigin.x = ImagePlug::tileOrigin( inBound.min ).x; inTileOrigin.x < inBound.max.x; inTileOrigin.x += ImagePlug::tileSize() )
 		{
-			offsetScope.setTileOrigin( inTileOrigin );
+			offsetScope.setTileOrigin( &inTileOrigin );
 			ConstFloatVectorDataPtr inData = inPlug()->channelDataPlug()->getValue();
 			const float *in = &inData->readable().front();
 
@@ -260,7 +262,7 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 			{
 				offsetScope.remove( ImagePlug::channelNameContextName );
 				ConstIntVectorDataPtr inSampleOffsetsData = inPlug()->sampleOffsetsPlug()->getValue();
-				offsetScope.setChannelName( channelName );
+				offsetScope.setChannelName( &channelName );
 				const std::vector<int> &inSampleOffsets = inSampleOffsetsData->readable();
 				const std::vector<int> &outSampleOffsets = outSampleOffsetsData->readable();
 				for( V2i inScanlineOrigin = inRegion.min; inScanlineOrigin.y < inRegion.max.y; inScanlineOrigin.y++ )
@@ -302,7 +304,8 @@ void Offset::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaff
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	if( offset.x % ImagePlug::tileSize() == 0 && offset.y % ImagePlug::tileSize() == 0 )
 	{
-		offsetScope.setTileOrigin( tileOrigin - offset );
+		V2i offsetOrigin = tileOrigin - offset;
+		offsetScope.setTileOrigin( &offsetOrigin );
 		h = inPlug()->sampleOffsetsPlug()->hash();
 	}
 	else
@@ -328,7 +331,7 @@ void Offset::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaff
 		{
 			for( inTileOrigin.x = ImagePlug::tileOrigin( inBound.min ).x; inTileOrigin.x < inBound.max.x; inTileOrigin.x += ImagePlug::tileSize() )
 			{
-				offsetScope.setTileOrigin( inTileOrigin );
+				offsetScope.setTileOrigin( &inTileOrigin );
 				inPlug()->sampleOffsetsPlug()->hash( h );
 			}
 		}
@@ -349,7 +352,8 @@ IECore::ConstIntVectorDataPtr Offset::computeSampleOffsets( const Imath::V2i &ti
 	const V2i offset = offsetPlug()->getValue();
 	if( ( offset.x % ImagePlug::tileSize() == 0 && offset.y % ImagePlug::tileSize() == 0 ) )
 	{
-		offsetScope.setTileOrigin( tileOrigin - offset );
+		V2i offsetOrigin = tileOrigin - offset;
+		offsetScope.setTileOrigin( &offsetOrigin );
 		return inPlug()->sampleOffsetsPlug()->getValue();
 	}
 
@@ -370,7 +374,7 @@ IECore::ConstIntVectorDataPtr Offset::computeSampleOffsets( const Imath::V2i &ti
 	{
 		for( inTileOrigin.x = ImagePlug::tileOrigin( inBound.min ).x; inTileOrigin.x < inBound.max.x; inTileOrigin.x += ImagePlug::tileSize() )
 		{
-			offsetScope.setTileOrigin( inTileOrigin );
+			offsetScope.setTileOrigin( &inTileOrigin );
 			ConstIntVectorDataPtr inData = inPlug()->sampleOffsetsPlug()->getValue();
 			const std::vector<int> &in = inData->readable();
 

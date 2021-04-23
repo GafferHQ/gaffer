@@ -217,7 +217,7 @@ IECore::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedS
 
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
-		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
+		sceneScope.set( ScenePlug::scenePathContextName, &(*pIt) );
 		const int m = filterPlug()->getValue();
 		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{

@@ -183,7 +183,7 @@ void CollectTransforms::hash( const Gaffer::ValuePlug *output, const Gaffer::Con
 		InternedString attributeContextVariableName( attributeContextVariablePlug()->getValue() );
 		for( const std::string &name : names )
 		{
-			scope.set( attributeContextVariableName, name );
+			scope.set( attributeContextVariableName, &name );
 			IECore::MurmurHash collectedHash;
 			if( worldMatrix )
 			{
@@ -254,7 +254,7 @@ void CollectTransforms::compute( Gaffer::ValuePlug *output, const Gaffer::Contex
 		InternedString attributeContextVariableName( attributeContextVariablePlug()->getValue() );
 		for( const std::string &name : names )
 		{
-			scope.set( attributeContextVariableName, name );
+			scope.set( attributeContextVariableName, &name );
 			if( worldMatrix )
 			{
 				IECore::MurmurHash collectedTransformHash = inPlug()->fullTransformHash( scenePath );

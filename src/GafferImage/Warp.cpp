@@ -67,7 +67,7 @@ namespace
 	{
 		if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
 		{
-			tileScope.setTileOrigin( tileOrigin );
+			tileScope.setTileOrigin( &tileOrigin );
 			plug->hash( h );
 		}
 	}
@@ -76,7 +76,7 @@ namespace
 	{
 		if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
 		{
-			tileScope.setTileOrigin( tileOrigin );
+			tileScope.setTileOrigin( &tileOrigin );
 			return plug->getValue();
 		}
 		else

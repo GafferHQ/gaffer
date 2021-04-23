@@ -153,7 +153,7 @@ void CopyAttributes::hashAttributes( const ScenePath &path, const Gaffer::Contex
 	{
 		ScenePlug::ScenePath sourceLocationPath;
 		ScenePlug::stringToPath( sourceLocation, sourceLocationPath );
-		ScenePlug::PathScope pathScope( context, sourceLocationPath );
+		ScenePlug::PathScope pathScope( context, &sourceLocationPath );
 		if( sourcePlug()->exists() )
 		{
 			sourcePlug()->attributesPlug()->hash( h );
@@ -190,7 +190,7 @@ IECore::ConstCompoundObjectPtr CopyAttributes::computeAttributes( const ScenePat
 	{
 		ScenePlug::ScenePath sourceLocationPath;
 		ScenePlug::stringToPath( sourceLocation, sourceLocationPath );
-		ScenePlug::PathScope pathScope( context, sourceLocationPath );
+		ScenePlug::PathScope pathScope( context, &sourceLocationPath );
 		if( sourcePlug()->exists() )
 		{
 			sourceAttributes = sourcePlug()->attributesPlug()->getValue();

@@ -54,6 +54,13 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+namespace
+{
+
+const ScenePlug::ScenePath g_root;
+
+} // namespace
+
 GAFFER_NODE_DEFINE_TYPE( Group );
 
 size_t Group::g_firstPlugIndex = 0;
@@ -161,7 +168,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 
 	if( output == mappingPlug() )
 	{
-		ScenePlug::PathScope scope( context, ScenePath() );
+		ScenePlug::PathScope scope( context, &g_root );
 		for( const auto &p : ScenePlug::Range( *inPlugs() ) )
 		{
 			p->childNamesPlug()->hash( h );
@@ -174,7 +181,7 @@ void Group::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context )
 	if( output == mappingPlug() )
 	{
 		vector<ConstInternedStringVectorDataPtr> inputChildNames; inputChildNames.reserve( inPlugs()->children().size() );
-		ScenePlug::PathScope scope( context, ScenePath() );
+		ScenePlug::PathScope scope( context, &g_root );
 		for( const auto &p : ScenePlug::Range( *inPlugs() ) )
 		{
 			inputChildNames.push_back( p->childNamesPlug()->getValue() );
@@ -200,7 +207,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	else if( path.size() == 1 ) // "/group"
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
-		ScenePlug::PathScope scope( context, ScenePath() );
+		ScenePlug::PathScope scope( context, &g_root );
 		for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 		{
 			(*it)->boundPlug()->hash( h );

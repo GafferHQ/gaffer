@@ -117,7 +117,7 @@ IECore::ConstFloatVectorDataPtr DeepSampleCounts::computeChannelData( const std:
 		return ImagePlug::whiteTile();
 	}
 
-	scope.setTileOrigin( tileOrigin );
+	scope.setTileOrigin( &tileOrigin );
 	ConstIntVectorDataPtr sampleOffsetsData = inPlug()->sampleOffsetsPlug()->getValue();
 
 	FloatVectorDataPtr resultData = new FloatVectorData();

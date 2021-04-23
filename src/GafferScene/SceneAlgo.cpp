@@ -319,7 +319,7 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 			ScenePlug::SetScope setScope( threadState );
 			for( size_t i=r.begin(); i!=r.end(); ++i )
 			{
-				setScope.setSetName( setNames[i] );
+				setScope.setSetName( &setNames[i] );
 				setsVector[i] = scene->setPlug()->getValue();
 			}
 
@@ -431,7 +431,7 @@ class CapturingMonitor : public Monitor
 
 IE_CORE_DECLAREPTR( CapturingMonitor )
 
-uint64_t g_historyID = 0;
+std::atomic<uint64_t> g_historyID( 0 );
 
 SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedString scenePlugChildName, SceneAlgo::History *parent )
 {
@@ -446,7 +446,7 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 		ScenePlug *scene = plug->parent<ScenePlug>();
 		if( scene && plug == scene->getChild( scenePlugChildName ) )
 		{
-			ContextPtr cleanContext = new Context( *process->context, Context::Copied );
+			ContextPtr cleanContext = new Context( *process->context );
 			cleanContext->remove( SceneAlgo::historyIDContextName() );
 			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, cleanContext );
 			if( !result )
@@ -669,9 +669,10 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 
 	CapturingMonitorPtr monitor = new CapturingMonitor;
 	{
-		ScenePlug::PathScope pathScope( Context::current(), path );
+		ScenePlug::PathScope pathScope( Context::current(), &path );
+		uint64_t historyID = g_historyID++;
 		// Trick to bypass the hash cache and get a full upstream evaluation.
-		pathScope.set( historyIDContextName(), g_historyID++ );
+		pathScope.set( historyIDContextName(), &historyID );
 		Monitor::Scope monitorScope( monitor );
 		scenePlugChild->hash();
 	}
@@ -1007,7 +1008,7 @@ bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::S
 	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
 	{
 		p.push_back( *it );
-		pathScope.setPath( p );
+		pathScope.setPath( &p );
 
 		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
 		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );

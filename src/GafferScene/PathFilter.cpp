@@ -201,10 +201,9 @@ void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 
 void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
+	const ScenePlug::ScenePath *path = context->getIfExists<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 
-	if( !pathData )
+	if( !path )
 	{
 		// This is a special case used by the Prune and Isolate nodes
 		// to request a hash representing the effects of the filter
@@ -229,8 +228,7 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 
 	// Standard case
 
-	const ScenePlug::ScenePath &path = pathData->readable();
-	h.append( path.data(), path.size() );
+	h.append( path->data(), path->size() );
 
 	if( m_pathMatcher )
 	{
@@ -285,7 +283,8 @@ void PathFilter::hashRootSizes( const Gaffer::Context *context, IECore::MurmurHa
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 	if( path.size() )
 	{
-		ScenePlug::PathScope parentScope( context, ScenePlug::ScenePath( path.begin(), path.begin() + path.size() - 1 ) );
+		ScenePlug::ScenePath parentPath( path.begin(), path.begin() + path.size() - 1 );
+		ScenePlug::PathScope parentScope( context, &parentPath );
 		rootSizesPlug()->hash( h );
 	}
 	rootsPlug()->hash( h );
@@ -301,7 +300,8 @@ ConstIntVectorDataPtr PathFilter::computeRootSizes( const Gaffer::Context *conte
 	ConstIntVectorDataPtr parentRootSizes;
 	if( path.size() )
 	{
-		ScenePlug::PathScope parentScope( context, ScenePlug::ScenePath( path.begin(), path.begin() + path.size() - 1 ) );
+		ScenePlug::ScenePath parentPath( path.begin(), path.begin() + path.size() - 1 );
+		ScenePlug::PathScope parentScope( context, &parentPath );
 		parentRootSizes = rootSizesPlug()->getValue();
 		// If the parent has no descendant roots, then we already have
 		// all the roots we need.

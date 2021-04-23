@@ -41,6 +41,8 @@
 #include "Gaffer/Context.h"
 
 #include "IECore/Timer.h"
+#include "IECore/VectorTypedData.h"
+#include "IECore/PathMatcherData.h"
 
 #include "boost/lexical_cast.hpp"
 #include "tbb/parallel_for.h"
@@ -75,10 +77,13 @@ void GafferTest::testManyContexts()
 	Timer t;
 	for( int i = 0; i < 1000000; ++i )
 	{
-		ContextPtr tmp = new Context( *base, Context::Borrowed );
-		tmp->set( keys[i%numKeys], i );
-		GAFFERTEST_ASSERT( tmp->get<int>( keys[i%numKeys] ) == i );
-		GAFFERTEST_ASSERT( tmp->hash() != baseHash );
+		// In order to efficiently manipulate a context, we need to create an EditableScope.
+		// ( On the other hand, using a Context directly copies new memory for the value to
+		// create a fully independent context, which is pretty slow ).
+		Context::EditableScope tmp( base.get() );
+		tmp.set( keys[i%numKeys], &i );
+		GAFFERTEST_ASSERT( tmp.context()->get<int>( keys[i%numKeys] ) == i );
+		GAFFERTEST_ASSERT( tmp.context()->hash() != baseHash );
 	}
 }
 
@@ -142,68 +147,40 @@ void GafferTest::testScopingNullContext()
 
 void GafferTest::testEditableScope()
 {
-	ContextPtr baseContext = new Context();
-	baseContext->set( "a", 10 );
-	baseContext->set( "b", 20 );
+	testEditableScopeTyped<IECore::IntData>( 10, 20 );
+	testEditableScopeTyped<IECore::FloatData>( 10.0, 20.0 );
+	testEditableScopeTyped<IECore::StringData>( std::string( "a" ), std::string( "b" ) );
+	testEditableScopeTyped<IECore::InternedStringData>( IECore::InternedString( "a" ), IECore::InternedString( "b" ) );
+	testEditableScopeTyped<IECore::FloatVectorData>( std::vector<float>{ 1, 2, 3, 4 }, std::vector<float>{ 5, 6, 7 } );
+	testEditableScopeTyped<IECore::StringVectorData>( std::vector<std::string>{ "a", "AA" }, std::vector<std::string>{ "bbbbbbb" } );
+	testEditableScopeTyped<IECore::InternedStringVectorData>( std::vector<IECore::InternedString>{ "a", "AA" }, std::vector<IECore::InternedString>{ "bbbbbbb" } );
 
-	const IntData *aData = baseContext->get<IntData>( "a" );
-	size_t aRefCount = aData->refCount();
+	PathMatcher a;
+	a.addPath( "/a/y" );
+	a.addPath( "/b/y" );
+	a.addPath( "/c/y" );
+	PathMatcher b;
+	b.addPath( "/a/x" );
+	b.addPath( "/b/x" );
+	testEditableScopeTyped<IECore::PathMatcherData>( a, b );
 
-	const IntData *bData = baseContext->get<IntData>( "b" );
-	size_t bRefCount = bData->refCount();
+	// Test specific calls for dealing with time
+	Gaffer::ContextPtr baseContext = new Gaffer::Context();
+	Gaffer::Context::EditableScope scope( baseContext.get() );
+	const Gaffer::Context *currentContext = Gaffer::Context::current();
 
-	{
-		// Scope an editable copy of the context
-		Context::EditableScope scope( baseContext.get() );
+	scope.setFrame( 5 );
+	GAFFERTEST_ASSERT( currentContext->getFrame() == 5 );
 
-		const Context *currentContext = Context::current();
-		GAFFERTEST_ASSERT( currentContext != baseContext );
+	float framesPerSecond = 8;
+	scope.setFramesPerSecond( &framesPerSecond );
+	GAFFERTEST_ASSERT( currentContext->getFramesPerSecond() == 8 );
 
-		// The editable copy should be identical to the original,
-		// and the original should be unchanged.
-		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "b" ) == 20 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 10 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "b" ) == 20 );
-		GAFFERTEST_ASSERT( currentContext->hash() == baseContext->hash() );
+	scope.setTime( 9 );
+	GAFFERTEST_ASSERT( currentContext->getFrame() == 72 );
 
-		// The copy should even be referencing the exact same data
-		// as the original.
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "a" ) == aData );
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "b" ) == bData );
-		GAFFERTEST_ASSERT( currentContext->get<Data>( "a" ) == aData );
-		GAFFERTEST_ASSERT( currentContext->get<Data>( "b" ) == bData );
-
-		// But it shouldn't have affected the reference counts, because
-		// we rely on the base context to maintain the lifetime for us
-		// as an optimisation.
-		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
-		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
-
-		// Editing the copy shouldn't affect the original
-		scope.set( "c", 30 );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "c", -1 ) == -1 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "c" ) == 30 );
-
-		// Even if we're editing a variable that exists in
-		// the original.
-		scope.set( "a", 40 );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 40 );
-
-		// And we should be able to remove a variable from the
-		// copy without affecting the original too.
-		scope.remove( "b" );
-		GAFFERTEST_ASSERT( baseContext->get<int>( "b" ) == 20 );
-		GAFFERTEST_ASSERT( currentContext->get<int>( "b", -1 ) == -1 );
-
-		// And none of the edits should have affected the original
-		// data at all.
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "a" ) == aData );
-		GAFFERTEST_ASSERT( baseContext->get<Data>( "b" ) == bData );
-		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
-		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
-	}
+	scope.setTime( 8.5 );
+	GAFFERTEST_ASSERT( currentContext->getFrame() == 68 );
 
 }
 
@@ -306,12 +283,12 @@ void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool
 
 	const ThreadState &threadState = ThreadState::current();
 
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, 10000000 ), [&threadState, &varyingVarName]( const tbb::blocked_range<size_t> &r )
+	tbb::parallel_for( tbb::blocked_range<int>( 0, 10000000 ), [&threadState, &varyingVarName]( const tbb::blocked_range<int> &r )
 		{
-			for( size_t i = r.begin(); i != r.end(); ++i )
+			for( int i = r.begin(); i != r.end(); ++i )
 			{
 				Context::EditableScope scope( threadState );
-				scope.set( varyingVarName, (int)i );
+				scope.set( varyingVarName, &i );
 
 				// This call is relied on by ValuePlug's HashCacheKey, so it is crucial that it be fast
 				scope.context()->hash();
@@ -319,4 +296,107 @@ void GafferTest::testContextHashPerformance( int numEntries, int entrySize, bool
 		}
 	);
 
+}
+
+void GafferTest::testContextCopyPerformance( int numEntries, int entrySize )
+{
+	// We usually deal with contexts that already have some stuff in them, so adding some entries
+	// to the context makes this test more realistic
+	ContextPtr baseContext = new Context();
+	for( int i = 0; i < numEntries; i++ )
+	{
+		baseContext->set( InternedString( i ), std::string( entrySize, 'x') );
+	}
+
+	tbb::parallel_for(
+		tbb::blocked_range<int>( 0, 1000000 ),
+		[&baseContext]( const tbb::blocked_range<int> &r )
+		{
+			for( int i = r.begin(); i != r.end(); ++i )
+			{
+				ContextPtr copy = new Context( *baseContext );
+			}
+		}
+	);
+
+}
+
+void GafferTest::testCopyEditableScope()
+{
+	ContextPtr copy;
+	{
+		ContextPtr context = new Context();
+		context->set( "a", 1 );
+		context->set( "b", 2 );
+		context->set( "c", 3 );
+
+		int ten = 10;
+		string cat = "cat";
+		Context::EditableScope scope( context.get() );
+		scope.set( "a", &ten );
+		scope.setAllocated( "b", 20 );
+		scope.set( "d", &ten );
+		scope.setAllocated( "e", 40 );
+		scope.set( "f", &cat );
+		copy = new Context( *scope.context() );
+	}
+
+	// Both the original context and the EditableScope have
+	// been destructed, but a deep copy should have been taken
+	// to preserve all values.
+
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "a" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "b" ), 20 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "c" ), 3 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "d" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<int>( "e" ), 40 );
+	GAFFERTEST_ASSERTEQUAL( copy->get<string>( "f" ), "cat" );
+
+	// A second copy should be fairly cheap, just referencing
+	// the same data.
+
+	ContextPtr copy2 = new Context( *copy );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "a" ), &copy2->get<int>( "a" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "b" ), &copy2->get<int>( "b" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "c" ), &copy2->get<int>( "c" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "d" ), &copy2->get<int>( "d" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "e" ), &copy2->get<int>( "e" ) );
+	GAFFERTEST_ASSERTEQUAL( &copy->get<string>( "f" ), &copy2->get<string>( "f" ) );
+
+	// And the second copy should still be valid if the first
+	// one is destroyed.
+
+	copy = nullptr;
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "a" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "b" ), 20 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "c" ), 3 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "d" ), 10 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<int>( "e" ), 40 );
+	GAFFERTEST_ASSERTEQUAL( copy2->get<string>( "f" ), "cat" );
+}
+
+void GafferTest::testContextHashValidation()
+{
+	ContextPtr context = new Context();
+	Context::EditableScope scope( context.get() );
+
+	// If we modify a value behind the back of
+	// the EditableScope, we want that to be detected
+	// in the next call to `get()`.
+
+	int value = 0;
+	scope.set( "value", &value );
+	value = 1; // Naughty!
+
+	std::string error = "";
+	try
+	{
+		scope.context()->get<int>( "value" );
+	}
+	catch( const std::exception &e )
+	{
+		error = e.what();
+	}
+
+	GAFFERTEST_ASSERTEQUAL( error, "Context variable \"value\" has an invalid hash" );
 }

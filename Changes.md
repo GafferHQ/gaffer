@@ -23,7 +23,7 @@ Improvements
 - Increased image processing tile size from 64 pixels to 128 pixels. This reduces per-tile overhead on large images, dramatically increasing effective image performance in many cases.
 - SceneNode/SceneProcessor : Enforced that the value of the `enabled` plug may not be varied using the `scene:path` context variable. Attempts to do so could result in the generation of invalid scenes. Filters are the appropriate way to enable or disable a node on a per-location basis, and should be used instead. This change yielded a 5-10% performance improvement for a moderately complex scene.
 - OSLImage : Avoided some unnecessary computes and hashing when calculating channel names or passing through channel data unaltered.
-- Context : Optimized `hash()` method.
+- Context : Optimized `hash()` method, and reduced overhead in `EditableScope`.
 - NameSwitch/Spreadsheet : Rows with an empty name are now treated as if they were disabled. See Breaking Changes for further details.
 
 Fixes
@@ -37,17 +37,30 @@ Fixes
 API
 ---
 
+- Context :
+  - Refactored to allow EditableScope to avoid memory allocation where possible.
+	- Added fast non-allocating `EditableScope::set( name, const T * )` overload. This should be used in preference to the old `set( name const T & )` method.
+  - Added `EditableScope::setAllocated()` method to replace the old `set()` method in the rare circumstance where allocation is required.
+	- Added `variableHash()` method, which returns the hash for an individual variable.
+	- Added `getIfExists()` method, which returns `nullptr` if a variable doesn't exist.
+  - Added `getAsData()` method, which returns a copy of a variable as `IECore::Data`.
+  - Added `TypeDescription` registration class, which must be used to register any custom data types used in context variables.
 - GraphComponent : Added `reorderChildren()` and `childrenReorderedSignal()` methods.
 - Serialisation : Added `addModule()` method, for adding imports to the serialisation.
 - Slider :
   - Added optional value snapping for drag and button press operations. This is controlled via the `setSnapIncrement()` and `getSnapIncrement()` methods.
   - Added `setHoverPositionVisible()` and `getHoverPositionVisible()` accessors to control an optional position indicator drawn under the pointer.
 - Expression : Added `Engine::executeCachePolicy()` method which must be implemented by subclasses.
+- ImageAlgo : Added constants for the default channel names - `channelNameR` etc.
 
 Breaking Changes
 ----------------
 
 - NameSwitch/Spreadsheet : Rows with an empty name are now treated as if they were disabled. Previously they would cause confusion by being matched against empty selectors. Use the default row for empty selectors instead, or alternatively use a catch-all `*` row.
+- Context :
+  - Removed `Ownership` enum. The copy constructor now always performs a full copy.
+  - Removed `changed()` method.
+	- Removed `_copy` argument from `get()` Python binding.
 - Slider/NumericSlider :
   - Refactored Slider to provide all the functionality of NumericSlider, and removed NumericSlider.
   - Renamed initial constructor argument from `value` to `values`.

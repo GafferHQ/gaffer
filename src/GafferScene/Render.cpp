@@ -69,9 +69,9 @@ struct RenderScope : public Context::EditableScope
 	RenderScope( const Context *context )
 		:	EditableScope( context ), m_sceneTranslationOnly( false )
 	{
-		if( auto d = context->get<BoolData>( g_sceneTranslationOnlyContextName, nullptr ) )
+		if( const bool *d = context->getIfExists<bool>( g_sceneTranslationOnlyContextName ) )
 		{
-			m_sceneTranslationOnly = d->readable();
+			m_sceneTranslationOnly = *d;
 			// Don't leak variable upstream.
 			remove( g_sceneTranslationOnlyContextName );
 		}
@@ -244,7 +244,7 @@ void Render::execute() const
 		return;
 	}
 
-	renderScope.set( g_rendererContextName, rendererType );
+	renderScope.set( g_rendererContextName, &rendererType );
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();

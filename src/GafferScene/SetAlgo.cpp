@@ -239,7 +239,7 @@ struct AstEvaluator
 					continue;
 				}
 
-				setScope.setSetName( setName );
+				setScope.setSetName( &setName );
 				ConstPathMatcherDataPtr setData = m_scene->setPlug()->getValue();
 				result.addPaths( setData->readable() );
 			}
@@ -358,7 +358,7 @@ struct AstHasher
 					continue;
 				}
 
-				setScope.setSetName( setName );
+				setScope.setSetName( &setName );
 				m_hash.append( m_scene->setPlug()->hash() );
 			}
 		}

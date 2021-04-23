@@ -309,13 +309,14 @@ class RenderState
 
 			for( const auto &name : contextVariablesNeeded )
 			{
+				DataPtr contextEntryData = context->getAsData( name.string(), nullptr );
 				m_contextVariables.insert(
 					make_pair(
 						ustring( name.c_str() ),
-						IECoreImage::OpenImageIOAlgo::DataView(
-							context->get<Data>( name.string(), nullptr ),
-							/* createUStrings = */ true
-						)
+						ContextData{
+							IECoreImage::OpenImageIOAlgo::DataView( contextEntryData.get(), /* createUStrings = */ true ),
+							contextEntryData
+						}
 					)
 				);
 			}
@@ -329,7 +330,7 @@ class RenderState
 				return false;
 			}
 
-			return ShadingSystem::convert_value( value, type, it->second.data, it->second.type );
+			return ShadingSystem::convert_value( value, type, it->second.dataView.data, it->second.dataView.type );
 		}
 
 		bool userData( size_t pointIndex, ustring name, TypeDesc type, void *value ) const
@@ -395,8 +396,14 @@ class RenderState
 			size_t numValues;
 		};
 
+		struct ContextData
+		{
+			IECoreImage::OpenImageIOAlgo::DataView dataView;
+			ConstDataPtr dataStorage;
+		};
+
 		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
-		container::flat_map<ustring, IECoreImage::OpenImageIOAlgo::DataView, OIIO::ustringPtrIsLess> m_contextVariables;
+		container::flat_map<ustring, ContextData, OIIO::ustringPtrIsLess> m_contextVariables;
 
 };
 
@@ -1123,15 +1130,7 @@ void ShadingEngine::hash( IECore::MurmurHash &h ) const
 		}
 		for( const auto &name : m_contextVariablesNeeded )
 		{
-			const IECore::Data *d = context->get<IECore::Data>( name, nullptr );
-			if( d )
-			{
-				d->hash( h );
-			}
-			else
-			{
-				h.append( 0 );
-			}
+			h.append( context->variableHash( name ) );
 		}
 	}
 }

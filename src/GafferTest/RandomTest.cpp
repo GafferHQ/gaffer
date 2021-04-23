@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2021, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,64 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/FormatData.h"
+#include "GafferTest/RandomTest.h"
 
-#include "GafferImage/TypeIds.h"
+#include "GafferTest/Assert.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Random.h"
+#include "Gaffer/StringPlug.h"
 
-#include "IECore/TypedData.h"
-#include "IECore/TypedData.inl"
+using namespace std;
+using namespace boost;
+using namespace IECore;
+using namespace Gaffer;
 
-using namespace Imath;
-
-namespace
+void GafferTest::testRandomPerf()
 {
+	ContextPtr base = new Context();
+	InternedString varName = "varName";
 
-Gaffer::Context::TypeDescription<GafferImage::FormatData> g_formatDataTypeDescription;
+	Gaffer::RandomPtr random = new Gaffer::Random();
+	random->contextEntryPlug()->setValue( varName.string() );
 
-} // namespace
-
-namespace IECore
-{
-
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatData, GafferImage::FormatDataTypeId )
-
-template<>
-void FormatData::save( SaveContext *context ) const
-{
-	Data::save( context );
-
-	IndexedIO *container = context->rawContainer();
-	container->write( "displayWindow", (const int*)&(readable().getDisplayWindow()), 4 );
-	container->write( "pixelAspect", readable().getPixelAspect() );
+	Context::EditableScope scope( base.get() );
+	for( int i = 0; i < 100000; ++i )
+	{
+		scope.set( varName, &i );
+		random->outColorPlug()->getValue();
+	}
 }
-
-template<>
-void FormatData::load( LoadContextPtr context )
-{
-	Data::load( context );
-
-	const IndexedIO *container = context->rawContainer();
-
-	Box2i displayWindow;
-	int *displayWindowPtr = (int *)&displayWindow;
-	container->read( "displayWindow", displayWindowPtr, 4 );
-	writable().setDisplayWindow( displayWindow );
-
-	double pixelAspect = 1.0;
-	container->read( "pixelAspect", pixelAspect );
-	writable().setPixelAspect( pixelAspect );
-}
-
-template<>
-void SimpleDataHolder<GafferImage::Format>::hash( MurmurHash &h ) const
-{
-	const GafferImage::Format &f = readable();
-	h.append( f.getDisplayWindow() );
-	h.append( f.getPixelAspect() );
-}
-
-template class TypedData<GafferImage::Format>;
-
-} // namespace IECore

@@ -228,8 +228,8 @@ void FlatToDeep::hashChannelData( const GafferImage::ImagePlug *output, const Ga
 				) );
 			}
 
-			reusedScope.setTileOrigin( tileOrigin );
-			reusedScope.setChannelName( zChannel );
+			reusedScope.setTileOrigin( &tileOrigin );
+			reusedScope.setChannelName( &zChannel );
 			h = inPlug()->channelDataPlug()->hash();
 		}
 	}
@@ -256,16 +256,16 @@ void FlatToDeep::hashChannelData( const GafferImage::ImagePlug *output, const Ga
 						+ zBackChannel + "\" found."
 					) );
 				}
-				reusedScope.setTileOrigin( tileOrigin );
-				reusedScope.setChannelName( zBackChannel );
+				reusedScope.setTileOrigin( &tileOrigin );
+				reusedScope.setChannelName( &zBackChannel );
 				h = inPlug()->channelDataPlug()->hash();
 			}
 			else
 			{
 				thicknessPlug()->hash( h );
 
-				reusedScope.setTileOrigin( tileOrigin );
-				reusedScope.setChannelName( zChannel );
+				reusedScope.setTileOrigin( &tileOrigin );
+				reusedScope.setChannelName( &zChannel );
 				outPlug()->channelDataPlug()->hash(h);
 			}
 		}
@@ -311,8 +311,8 @@ IECore::ConstFloatVectorDataPtr FlatToDeep::computeChannelData( const std::strin
 				) );
 			}
 
-			reusedScope.setTileOrigin( tileOrigin );
-			reusedScope.setChannelName( zChannel );
+			reusedScope.setTileOrigin( &tileOrigin );
+			reusedScope.setChannelName( &zChannel );
 			return inPlug()->channelDataPlug()->getValue();
 		}
 	}
@@ -346,8 +346,8 @@ IECore::ConstFloatVectorDataPtr FlatToDeep::computeChannelData( const std::strin
 					) );
 				}
 
-				reusedScope.setTileOrigin( tileOrigin );
-				reusedScope.setChannelName( zBackChannel );
+				reusedScope.setTileOrigin( &tileOrigin );
+				reusedScope.setChannelName( &zBackChannel );
 				return inPlug()->channelDataPlug()->getValue();
 			}
 			else
@@ -355,8 +355,8 @@ IECore::ConstFloatVectorDataPtr FlatToDeep::computeChannelData( const std::strin
 				// Compute ZBack by combining incoming Z with thickness
 				float thickness = thicknessPlug()->getValue();
 
-				reusedScope.setTileOrigin( tileOrigin );
-				reusedScope.setChannelName( zChannel );
+				reusedScope.setTileOrigin( &tileOrigin );
+				reusedScope.setChannelName( &zChannel );
 				FloatVectorDataPtr resultData = outPlug()->channelDataPlug()->getValue()->copy();
 				vector<float> &result = resultData->writable();
 				for( float &i : result )

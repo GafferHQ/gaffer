@@ -128,8 +128,8 @@ void DeepRecolor::hashChannelData( const GafferImage::ImagePlug *output, const G
 		!ImageAlgo::channelExists( colorSourceChannelNames->readable(), channelName )
 	)
 	{
-		reusedScope.setTileOrigin( tileOrigin );
-		reusedScope.setChannelName( channelName );
+		reusedScope.setTileOrigin( &tileOrigin );
+		reusedScope.setChannelName( &channelName );
 		h = inPlug()->channelDataPlug()->hash();
 		return;
 	}
@@ -142,11 +142,11 @@ void DeepRecolor::hashChannelData( const GafferImage::ImagePlug *output, const G
 	const Imath::Box2i colorSourceDataWindow = colorSourcePlug()->dataWindowPlug()->getValue();
 	ConstStringVectorDataPtr inChannelNames = inPlug()->channelNamesPlug()->getValue();
 
-	reusedScope.setTileOrigin( tileOrigin );
+	reusedScope.setTileOrigin( &tileOrigin );
 	inPlug()->sampleOffsetsPlug()->hash( h );
 
-	reusedScope.setChannelName( "A" );
-	if( ImageAlgo::channelExists( inChannelNames->readable(), "A" ) )
+	reusedScope.setChannelName( &ImageAlgo::channelNameA );
+	if( ImageAlgo::channelExists( inChannelNames->readable(), ImageAlgo::channelNameA ) )
 	{
 		inPlug()->channelDataPlug()->hash( h );
 	}
@@ -155,7 +155,7 @@ void DeepRecolor::hashChannelData( const GafferImage::ImagePlug *output, const G
 		h.append( true );
 	}
 
-	if( ImageAlgo::channelExists( colorSourceChannelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( colorSourceChannelNames->readable(), ImageAlgo::channelNameA ) )
 	{
 		colorSourcePlug()->channelDataPlug()->hash( h );
 	}
@@ -164,7 +164,7 @@ void DeepRecolor::hashChannelData( const GafferImage::ImagePlug *output, const G
 		h.append( true );
 	}
 
-	reusedScope.setChannelName( channelName );
+	reusedScope.setChannelName( &channelName );
 
 	colorSourcePlug()->channelDataPlug()->hash( h );
 
@@ -189,8 +189,8 @@ IECore::ConstFloatVectorDataPtr DeepRecolor::computeChannelData( const std::stri
 		!ImageAlgo::channelExists( colorSourceChannelNames->readable(), channelName )
 	)
 	{
-		reusedScope.setTileOrigin( tileOrigin );
-		reusedScope.setChannelName( channelName );
+		reusedScope.setTileOrigin( &tileOrigin );
+		reusedScope.setChannelName( &channelName );
 		return inPlug()->channelDataPlug()->getValue();
 	}
 
@@ -202,7 +202,7 @@ IECore::ConstFloatVectorDataPtr DeepRecolor::computeChannelData( const std::stri
 	const Imath::Box2i colorSourceDataWindow = colorSourcePlug()->dataWindowPlug()->getValue();
 	ConstStringVectorDataPtr inChannelNames = inPlug()->channelNamesPlug()->getValue();
 
-	reusedScope.setTileOrigin( tileOrigin );
+	reusedScope.setTileOrigin( &tileOrigin );
 	ConstIntVectorDataPtr sampleOffsetsData = inPlug()->sampleOffsetsPlug()->getValue();
 	const std::vector<int> &sampleOffsets = sampleOffsetsData->readable();
 
@@ -220,11 +220,11 @@ IECore::ConstFloatVectorDataPtr DeepRecolor::computeChannelData( const std::stri
 		return resultData;
 	}
 
-	reusedScope.setChannelName( "A" );
+	reusedScope.setChannelName( &ImageAlgo::channelNameA );
 	ConstFloatVectorDataPtr deepAlphaData;
-	if( ImageAlgo::channelExists( inChannelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( inChannelNames->readable(), ImageAlgo::channelNameA ) )
 	{
-		if( useColorSourceAlpha && channelName != "A" )
+		if( useColorSourceAlpha && channelName != ImageAlgo::channelNameA )
 		{
 			deepAlphaData = outPlug()->channelDataPlug()->getValue();
 		}
@@ -239,7 +239,7 @@ IECore::ConstFloatVectorDataPtr DeepRecolor::computeChannelData( const std::stri
 	}
 
 	ConstFloatVectorDataPtr colorSourceAlphaData;
-	if( ImageAlgo::channelExists( colorSourceChannelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( colorSourceChannelNames->readable(), ImageAlgo::channelNameA ) )
 	{
 		colorSourceAlphaData = colorSourcePlug()->channelDataPlug()->getValue();
 	}
@@ -332,7 +332,7 @@ IECore::ConstFloatVectorDataPtr DeepRecolor::computeChannelData( const std::stri
 	}
 	else
 	{
-		reusedScope.setChannelName( channelName );
+		reusedScope.setChannelName( &channelName );
 
 		ConstFloatVectorDataPtr colorSourceChannelData = colorSourcePlug()->channelDataPlug()->getValue();
 		const std::vector<float> &colorSourceChannel = colorSourceChannelData->readable();

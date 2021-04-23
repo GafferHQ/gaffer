@@ -439,13 +439,13 @@ Gaffer::ValuePlug::CachePolicy SceneNode::computeCachePolicy( const Gaffer::Valu
 
 IECore::MurmurHash SceneNode::hashOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNamesData ) const
 {
-	ScenePlug::PathScope pathScope( Context::current(), path );
+	ScenePlug::PathScope pathScope( Context::current(), &path );
 	return out->childBoundsPlug()->hash();
 }
 
 Imath::Box3f SceneNode::unionOfTransformedChildBounds( const ScenePath &path, const ScenePlug *out, const IECore::InternedStringVectorData *childNamesData ) const
 {
-	ScenePlug::PathScope pathScope( Context::current(), path );
+	ScenePlug::PathScope pathScope( Context::current(), &path );
 	return out->childBoundsPlug()->getValue();
 }
 
@@ -520,8 +520,9 @@ void SceneNode::hashExists( const Gaffer::Context *context, const ScenePlug *par
 		return;
 	}
 
-	ScenePath parentPath( scenePath ); parentPath.pop_back();
-	ScenePlug::PathScope parentScope( context, parentPath );
+	ScenePath parentPath( scenePath );
+	parentPath.pop_back();
+	ScenePlug::PathScope parentScope( context, &parentPath );
 	if( !parent->existsPlug()->getValue() )
 	{
 		h.append( false );
@@ -541,8 +542,9 @@ bool SceneNode::computeExists( const Gaffer::Context *context, const ScenePlug *
 		return true;
 	}
 
-	ScenePath parentPath( scenePath ); parentPath.pop_back();
-	ScenePlug::PathScope parentScope( context, parentPath );
+	ScenePath parentPath( scenePath );
+	parentPath.pop_back();
+	ScenePlug::PathScope parentScope( context, &parentPath );
 	if( !parent->existsPlug()->getValue() )
 	{
 		// If `parentPath` doesn't exist, then neither can `scenePath`
@@ -604,7 +606,7 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 			for( size_t i = range.begin(); i != range.end(); ++i )
 			{
 				childPath.back() = childNames[i];
-				pathScope.setPath( childPath );
+				pathScope.setPath( &childPath );
 				parent->boundPlug()->hash( result );
 				parent->transformPlug()->hash( result );
 			}
@@ -650,7 +652,7 @@ Imath::Box3f SceneNode::computeChildBounds( const Gaffer::Context *context, cons
 			for( size_t i = range.begin(); i != range.end(); ++i )
 			{
 				childPath.back() = childNames[i];
-				pathScope.setPath( childPath );
+				pathScope.setPath( &childPath );
 				Box3f childBound = parent->boundPlug()->getValue();
 				childBound = transform( childBound, parent->transformPlug()->getValue() );
 				result.extendBy( childBound );

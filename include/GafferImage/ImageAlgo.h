@@ -102,6 +102,18 @@ inline bool channelExists( const ImagePlug *image, const std::string &channelNam
 /// Returns true if the specified channel exists in channelNames
 inline bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
 
+/// Default channel names
+/// ==============================
+///
+/// You can just use your own strings, but it can be convenient to use these
+
+GAFFERIMAGE_API extern const std::string channelNameA;
+GAFFERIMAGE_API extern const std::string channelNameR;
+GAFFERIMAGE_API extern const std::string channelNameG;
+GAFFERIMAGE_API extern const std::string channelNameB;
+GAFFERIMAGE_API extern const std::string channelNameZ;
+GAFFERIMAGE_API extern const std::string channelNameZBack;
+
 /// Parallel processing functions
 /// ==============================
 ///

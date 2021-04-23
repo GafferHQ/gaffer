@@ -1073,7 +1073,7 @@ void ImageGadget::updateTiles()
 		ImagePlug::ChannelDataScope channelScope( Context::current() );
 		for( auto &channelName : channelsToCompute )
 		{
-			channelScope.setChannelName( channelName );
+			channelScope.setChannelName( &channelName );
 			Tile &tile = m_tiles[TileIndex(tileOrigin, channelName)];
 			updates.push_back( tile.computeUpdate( image ) );
 		}

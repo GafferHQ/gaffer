@@ -76,7 +76,7 @@ class TraverseTask : public tbb::task
 
 		task *execute() override
 		{
-			ScenePlug::PathScope pathScope( m_threadState, m_path );
+			ScenePlug::PathScope pathScope( m_threadState, &m_path );
 
 			if( m_f( m_scene, m_path ) )
 			{
@@ -140,7 +140,7 @@ class LocationTask : public tbb::task
 
 		task *execute() override
 		{
-			ScenePlug::PathScope pathScope( m_threadState, m_path );
+			ScenePlug::PathScope pathScope( m_threadState, &m_path );
 
 			if( !m_f( m_scene, m_path ) )
 			{

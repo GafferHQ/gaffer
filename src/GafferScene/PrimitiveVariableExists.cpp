@@ -108,7 +108,7 @@ void PrimitiveVariableExists::hash( const ValuePlug *output, const Context *cont
 	ComputeNode::hash( output, context, h );
 	if( output == outPlug() )
 	{
-		if( context->get<InternedStringVectorData>( ScenePlug::scenePathContextName, nullptr ) )
+		if( context->getIfExists< ScenePlug::ScenePath >( ScenePlug::scenePathContextName ) )
 		{
 			h.append( primitiveVariablePlug()->hash() );
 			h.append( inPlug()->objectPlug()->hash() );
@@ -125,7 +125,7 @@ void PrimitiveVariableExists::compute( ValuePlug *output, const Context *context
 	if( output == outPlug() )
 	{
 		bool exists = false;
-		if( context->get<InternedStringVectorData>( ScenePlug::scenePathContextName, nullptr ) )
+		if( context->getIfExists< ScenePlug::ScenePath >( ScenePlug::scenePathContextName ) )
 		{
 			ConstObjectPtr inObject = inPlug()->objectPlug()->getValue();
 
