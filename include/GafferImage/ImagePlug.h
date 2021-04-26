@@ -145,6 +145,10 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 			ChannelDataScope( const Gaffer::ThreadState &threadState );
 			void setTileOrigin( const Imath::V2i &tileOrigin );
 			void setChannelName( const std::string &channelName );
+
+			/// Forward compatibility with Gaffer 0.60
+			void setTileOrigin( const Imath::V2i *tileOrigin );
+			void setChannelName( const std::string *channelName );
 		};
 		//@}
 

@@ -317,6 +317,17 @@ void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName
 	set( channelNameContextName, channelName );
 }
 
+/// Forward compatibility with Gaffer 0.60
+void ImagePlug::ChannelDataScope::setTileOrigin( const Imath::V2i *tileOrigin )
+{
+	setTileOrigin( *tileOrigin );
+}
+
+void ImagePlug::ChannelDataScope::setChannelName( const std::string *channelName )
+{
+	setChannelName( *channelName );
+}
+
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );

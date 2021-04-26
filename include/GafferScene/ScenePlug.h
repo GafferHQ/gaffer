@@ -165,6 +165,11 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 			PathScope( const Gaffer::ThreadState &threadState, const ScenePath &scenePath );
 
 			void setPath( const ScenePath &scenePath );
+
+			/// Forward compatibility with Gaffer 0.60
+			PathScope( const Gaffer::Context *context, const ScenePath *scenePath );
+			PathScope( const Gaffer::ThreadState &threadState, const ScenePath *scenePath );
+			void setPath( const ScenePath *scenePath );
 		};
 
 		/// Utility class to scope a temporary copy of a context,
@@ -181,6 +186,11 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 			SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString &setName );
 
 			void setSetName( const IECore::InternedString &setName );
+
+			/// Forward compatibility with Gaffer 0.60
+			SetScope( const Gaffer::Context *context, const IECore::InternedString *setName );
+			SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString *setName );
+			void setSetName( const IECore::InternedString *setName );
 		};
 
 		/// Utility class to scope a temporary copy of a context,

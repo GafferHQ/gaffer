@@ -243,7 +243,8 @@ class GAFFER_API Context : public IECore::RefCounted
 				~EditableScope();
 
 				template<typename T>
-				void set( const IECore::InternedString &name, const T &value );
+				typename std::enable_if<std::is_base_of<IECore::Data, typename std::remove_pointer<T>::type >::value || !std::is_pointer<T>::value>::type
+				set( const IECore::InternedString &name, const T &value );
 
 				void setFrame( float frame );
 				void setFramesPerSecond( float framesPerSecond );
@@ -254,6 +255,15 @@ class GAFFER_API Context : public IECore::RefCounted
 
 				const Context *context() const { return m_context.get(); }
 
+				/// Forward compatibility with Gaffer 0.60 - this allows projects that have been adapted to
+				/// the new API to still compile on Gaffer 0.59.
+				template<typename T, typename Enabler = typename std::enable_if< !std::is_base_of<IECore::Data,T>::value >::type >
+				void set( const IECore::InternedString &name, const T *value );
+				template<typename T, typename Enabler = typename std::enable_if< !std::is_pointer<T>::value >::type >
+				void setAllocated( const IECore::InternedString &name, const T &value );
+				void setAllocated( const IECore::InternedString &name, const IECore::Data *value );
+				void setFramesPerSecond( const float *framesPerSecond );
+
 			private :
 
 				Ptr m_context;
@@ -262,6 +272,13 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		/// Returns the current context for the calling thread.
 		static const Context *current();
+
+		/// Forward compatibility with Gaffer 0.60 - this allows projects that have been adapted to
+		/// the new API to still compile on Gaffer 0.59.
+		template<typename T>
+		const T *getIfExists( const IECore::InternedString &name ) const;
+		IECore::DataPtr getAsData( const IECore::InternedString &name ) const;
+		IECore::DataPtr getAsData( const IECore::InternedString &name, const IECore::DataPtr &defaultValue ) const;
 
 	private :
 

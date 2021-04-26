@@ -204,3 +204,45 @@ void GafferTest::testEditableScope()
 	}
 
 }
+
+void GafferTest::testNewContextAPIBasics()
+{
+
+	// These are not a very complete tests ( more complete tests are added in Gaffer 0.60
+	// for the actual new code ). But this confirms that the Gaffer 0.59 forward
+	// compatibility shims all compile and call through to the correct functions.
+	ContextPtr baseContext = new Context();
+	GAFFERTEST_ASSERT( baseContext->getIfExists<int>( "a" ) == nullptr );
+	GAFFERTEST_ASSERT( baseContext->getAsData( "a", nullptr ) == nullptr );
+	GAFFERTEST_ASSERT( ((IntData*)baseContext->getAsData( "a", new IntData( 5 ) ).get())->readable() == 5 );
+	try
+	{
+		baseContext->getAsData( "a" );
+		GAFFERTEST_ASSERT( false );
+	}
+	catch( IECore::Exception &e )
+	{
+		// We correctly threw an exception
+	}
+
+	baseContext->set( "a", 10 );
+	GAFFERTEST_ASSERT( *baseContext->getIfExists<int>( "a" ) == 10 );
+	GAFFERTEST_ASSERT( ((IntData*)baseContext->getAsData( "a", nullptr ).get())->readable() == 10 );
+	GAFFERTEST_ASSERT( ((IntData*)baseContext->getAsData( "a", new IntData( 5 ) ).get())->readable() == 10 );
+	GAFFERTEST_ASSERT( ((IntData*)baseContext->getAsData( "a" ).get())->readable() == 10 );
+
+	Context::EditableScope scope( baseContext.get() );
+
+	int q = 15;
+	scope.set( "b", &q );
+	GAFFERTEST_ASSERT( scope.context()->get<int>( "b" ) == 15 );
+	scope.setAllocated( "b", 20 );
+	GAFFERTEST_ASSERT( scope.context()->get<int>( "b" ) == 20 );
+	IntDataPtr intData = new IntData( 25 );
+	scope.setAllocated( "b", intData.get() );
+	GAFFERTEST_ASSERT( scope.context()->get<int>( "b" ) == 25 );
+
+	float fps = 42.0f;
+	scope.setFramesPerSecond( &fps );
+	GAFFERTEST_ASSERT( scope.context()->getFramesPerSecond() == 42.0f );
+}
