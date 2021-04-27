@@ -44,6 +44,7 @@
 #include "GafferImage/ImageProcessor.h"
 
 #include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace std;
 using namespace boost::python;
@@ -121,7 +122,7 @@ ImageProcessorPtr createDisplayTransform( const std::string &name )
 void GafferImageUIModule::bindImageView()
 {
 
-	GafferBindings::NodeClass<ImageView, ImageViewWrapper>()
+	scope s = GafferBindings::NodeClass<ImageView, ImageViewWrapper>()
 		.def( init<const std::string &>() )
 		.def( "imageGadget", (ImageGadget *(ImageView::*)())&ImageView::imageGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_insertConverter", &ImageViewWrapper::insertConverter )
@@ -131,6 +132,23 @@ void GafferImageUIModule::bindImageView()
 		.staticmethod( "registeredDisplayTransforms" )
 		.def( "createDisplayTransform", &createDisplayTransform )
 		.staticmethod( "createDisplayTransform" )
+	;
+
+	scope ci = GafferBindings::PlugClass<ImageView::ColorInspectorPlug>()
+		.def( init<const char *, Plug::Direction, unsigned>(
+				(
+					boost::python::arg_( "name" )=GraphComponent::defaultName<ImageView::ColorInspectorPlug>(),
+					boost::python::arg_( "direction" )=Plug::In,
+					boost::python::arg_( "flags" )=Plug::Default
+				)
+			)
+		)
+	;
+
+	enum_<ImageView::ColorInspectorPlug::Mode>( "Mode" )
+		.value( "Cursor", ImageView::ColorInspectorPlug::Mode::Cursor )
+		.value( "Pixel", ImageView::ColorInspectorPlug::Mode::Pixel )
+		.value( "Area", ImageView::ColorInspectorPlug::Mode::Area )
 	;
 
 }
