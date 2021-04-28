@@ -121,36 +121,19 @@ GAFFERSCENE_API IECore::MurmurHash matchingPathsHash( const IECore::PathMatcher 
 /// };
 /// ```
 template <class ThreadableFunctor>
-void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f );
-/// As above, but starting the traversal at the specified root.
-/// \todo Add default value for `root` and remove overload above.
-template <class ThreadableFunctor>
-void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Calls a functor on all paths in the scene
 /// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
 template <class ThreadableFunctor>
-void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f );
-/// As above, but starting the traversal at `root`.
-/// \todo Add default value for `root` and remove overload above.
-template <class ThreadableFunctor>
-void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
+void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Calls a functor on all paths in the scene that are matched by the filter.
-/// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::Filter *filter, ThreadableFunctor &f );
-/// As above, but specifying the filter as a plug - typically Filter::outPlug() or
-/// FilteredSceneProcessor::filterPlug() would be passed.
-template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterPlug, ThreadableFunctor &f );
-/// As above, but starting the traversal at `root`.
-/// \todo Add default value for `root` and remove overload above.
-template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
+void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 /// As above, but using a PathMatcher as a filter.
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f );
+void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Globals
 /// =======

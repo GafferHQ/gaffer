@@ -241,24 +241,10 @@ namespace SceneAlgo
 {
 
 template <class ThreadableFunctor>
-void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
-{
-	return parallelProcessLocations( scene, f, ScenePlug::ScenePath() );
-}
-
-template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
 	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), root, f );
-	tbb::task::spawn_root_and_wait( *task );
-}
-
-template <class ThreadableFunctor>
-void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
-{
-	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
-	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 
@@ -271,19 +257,6 @@ void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const Scene
 }
 
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const GafferScene::Filter *filter, ThreadableFunctor &f )
-{
-	filteredParallelTraverse( scene, filter->outPlug(), f );
-}
-
-template <class ThreadableFunctor>
-void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const GafferScene::FilterPlug *filterPlug, ThreadableFunctor &f )
-{
-	Detail::ThreadableFilteredFunctor<ThreadableFunctor> ff( f, filterPlug );
-	parallelTraverse( scene, ff );
-}
-
-template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::FilterPlug *filterPlug, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
 	Detail::ThreadableFilteredFunctor<ThreadableFunctor> ff( f, filterPlug );
@@ -291,10 +264,10 @@ void filteredParallelTraverse( const ScenePlug *scene, const GafferScene::Filter
 }
 
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f )
+void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
-	parallelTraverse( scene, ff );
+	parallelTraverse( scene, ff, root );
 }
 
 } // namespace SceneAlgo

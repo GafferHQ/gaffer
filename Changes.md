@@ -53,6 +53,7 @@ API
   - Added `setHoverPositionVisible()` and `getHoverPositionVisible()` accessors to control an optional position indicator drawn under the pointer.
 - Expression : Added `Engine::executeCachePolicy()` method which must be implemented by subclasses.
 - ImageAlgo : Added constants for the default channel names - `channelNameR` etc.
+- SceneAlgo : Added optional `root` argument to `filteredParallelTraverse( scene, pathMatcher )`.
 
 Breaking Changes
 ----------------
@@ -71,7 +72,9 @@ Breaking Changes
   - Removed `setPositionIncrement()/getPositionIncrement()` from `Slider`. Use `setIncrement()/getIncrement()` instead.
   - Replaced `_drawPosition()` method with `_drawValue()`.
 - StandardOptions : Removed `cameraBlur` plug. This never functioned as advertised, as the regular `transformBlur` and `deformationBlur` blur settings were applied to cameras instead. As before, a StandardAttributes node may be used to customise blur for individual cameras.
-- SceneAlgo : Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
+- SceneAlgo :
+  - Changed signature of the following methods to use `GafferScene::FilterPlug` : `matchingPaths`, `filteredParallelTraverse`, `Detail::ThreadableFilteredFunctor`.
+  - Removed `filteredParallelTraverse()` overload which accepted a `Filter *`. Pass `filter->outPlug()` instead.
 - DeleteFaces / DeletePoints / DeleteCurves : The PrimitiveVariable name is now taken verbatim, rather than stripping whitespace.
 - Serialisation :
   - Disabled copy construction.
