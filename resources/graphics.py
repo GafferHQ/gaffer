@@ -235,7 +235,16 @@
 				'viewPaused'
 			]
 
-		}
+		},
+
+		"tabIcons" : {
+
+			"ids" : [
+				"tabScrollMenu",
+				"deleteSmall",
+			],
+
+		},
 
 	},
 
@@ -249,7 +258,6 @@
 		'debugNotification',
 		'debugSmall',
 		'delete',
-		'deleteSmall',
 		'duplicate',
 		'editScopeNode',
 		'editScopeProcessorNode',

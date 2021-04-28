@@ -1,6 +1,12 @@
 0.59.x.x (relative to 0.59.7.0)
 ========
 
+Improvements
+------------
+
+- TabbedContainer : Added menu button to allow selection of tabs that are not
+  visible due to a lack of horizontal space.
+
 API
 ---
 

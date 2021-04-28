@@ -643,6 +643,15 @@ _styleSheet = string.Template(
 		border-bottom-color: $brightColor;
 	}
 
+	QTabWidget[gafferClasses~="GafferUI.TabbedContainer"] > QTabBar::scroller {
+		/* Hide scroll buttons - see TabbedContainer.__init__ for motivation */
+		width: 0px;
+	}
+
+	QTabBar::tear {
+		image: none;
+	}
+
 	/*
 	TabBars not inside a QTabWidget. Currently these are only used by
 	SpreadsheetUI.
@@ -691,10 +700,6 @@ _styleSheet = string.Template(
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::scroller {
 		width: 40px;
-	}
-
-	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"]::tear {
-		image: none;
 	}
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton {
