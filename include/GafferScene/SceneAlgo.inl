@@ -44,80 +44,6 @@ namespace GafferScene
 namespace Detail
 {
 
-template <class ThreadableFunctor>
-class TraverseTask : public tbb::task
-{
-
-	public :
-
-		TraverseTask(
-			const GafferScene::ScenePlug *scene,
-			const Gaffer::ThreadState &threadState,
-			ThreadableFunctor &f
-		)
-			:	m_scene( scene ), m_threadState( threadState ), m_f( f )
-		{
-		}
-
-		TraverseTask(
-			const GafferScene::ScenePlug *scene,
-			const Gaffer::ThreadState &threadState,
-			const ScenePlug::ScenePath &path,
-			ThreadableFunctor &f
-		)
-			:	m_scene( scene ), m_threadState( threadState ), m_f( f ), m_path( path )
-		{
-		}
-
-
-		~TraverseTask() override
-		{
-		}
-
-		task *execute() override
-		{
-			ScenePlug::PathScope pathScope( m_threadState, &m_path );
-
-			if( m_f( m_scene, m_path ) )
-			{
-				IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
-				const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
-
-				set_ref_count( 1 + childNames.size() );
-
-				ScenePlug::ScenePath childPath = m_path;
-				childPath.push_back( IECore::InternedString() ); // space for the child name
-				for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; it++ )
-				{
-					childPath[m_path.size()] = *it;
-					TraverseTask *t = new( allocate_child() ) TraverseTask( *this, childPath );
-					spawn( *t );
-				}
-				wait_for_all();
-			}
-
-			return nullptr;
-		}
-
-	protected :
-
-		TraverseTask( const TraverseTask &other, const ScenePlug::ScenePath &path )
-			:	m_scene( other.m_scene ),
-			m_threadState( other.m_threadState ),
-			m_f( other.m_f ),
-			m_path( path )
-		{
-		}
-
-	private :
-
-		const GafferScene::ScenePlug *m_scene;
-		const Gaffer::ThreadState &m_threadState;
-		ThreadableFunctor &m_f;
-		GafferScene::ScenePlug::ScenePath m_path;
-
-};
-
 template<typename ThreadableFunctor>
 class LocationTask : public tbb::task
 {
@@ -251,9 +177,13 @@ void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFu
 template <class ThreadableFunctor>
 void parallelTraverse( const ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
-	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
-	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), root, f );
-	tbb::task::spawn_root_and_wait( *task );
+	// `parallelProcessLocations()` takes a copy of the functor at each location, whereas
+	// `parallelTraverse()` is intended to use the same functor for all locations. Wrap the
+	// functor in a cheap-to-copy lambda, so that the functor itself won't be copied.
+	auto reference = [&f] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+		return f( scene, path );
+	};
+	parallelProcessLocations( scene, reference, root );
 }
 
 template <class ThreadableFunctor>
