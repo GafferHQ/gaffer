@@ -36,7 +36,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "tbb/task.h"
+#include "tbb/parallel_for.h"
 
 namespace GafferScene
 {
@@ -45,66 +45,46 @@ namespace Detail
 {
 
 template<typename ThreadableFunctor>
-class LocationTask : public tbb::task
+void parallelProcessLocationsWalk( const GafferScene::ScenePlug *scene, const Gaffer::ThreadState &threadState, const ScenePlug::ScenePath &path, ThreadableFunctor &f, tbb::task_group_context &taskGroupContext )
 {
+	ScenePlug::PathScope pathScope( threadState, &path );
 
-	public :
+	if( !f( scene, path ) )
+	{
+		return;
+	}
 
-		LocationTask(
-			const GafferScene::ScenePlug *scene,
-			const Gaffer::ThreadState &threadState,
-			const ScenePlug::ScenePath &path,
-			ThreadableFunctor &f
-		)
-			:	m_scene( scene ), m_threadState( threadState ), m_path( path ), m_f( f )
+	IECore::ConstInternedStringVectorDataPtr childNamesData = scene->childNamesPlug()->getValue();
+	const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+	if( childNames.empty() )
+	{
+		return;
+	}
+
+	using ChildNameRange = tbb::blocked_range<std::vector<IECore::InternedString>::const_iterator>;
+	const ChildNameRange loopRange( childNames.begin(), childNames.end() );
+
+	auto loopBody = [&] ( const ChildNameRange &range ) {
+		ScenePlug::ScenePath childPath = path;
+		childPath.push_back( IECore::InternedString() ); // Space for the child name
+		for( auto &childName : range )
 		{
+			ThreadableFunctor childFunctor( f );
+			childPath.back() = childName;
+			parallelProcessLocationsWalk( scene, threadState, childPath, childFunctor, taskGroupContext );
 		}
+	};
 
-		~LocationTask() override
-		{
-		}
-
-		task *execute() override
-		{
-			ScenePlug::PathScope pathScope( m_threadState, &m_path );
-
-			if( !m_f( m_scene, m_path ) )
-			{
-				return nullptr;
-			}
-
-			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
-			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
-			if( childNames.empty() )
-			{
-				return nullptr;
-			}
-
-			std::vector<ThreadableFunctor> childFunctors( childNames.size(), m_f );
-
-			set_ref_count( 1 + childNames.size() );
-
-			ScenePlug::ScenePath childPath = m_path;
-			childPath.push_back( IECore::InternedString() ); // space for the child name
-			for( size_t i = 0, e = childNames.size(); i < e; ++i )
-			{
-				childPath.back() = childNames[i];
-				LocationTask *t = new( allocate_child() ) LocationTask( m_scene, m_threadState, childPath, childFunctors[i] );
-				spawn( *t );
-			}
-			wait_for_all();
-
-			return nullptr;
-		}
-
-	private :
-
-		const GafferScene::ScenePlug *m_scene;
-		const Gaffer::ThreadState &m_threadState;
-		const GafferScene::ScenePlug::ScenePath m_path;
-		ThreadableFunctor &m_f;
-
-};
+	if( childNames.size() > 1 )
+	{
+		tbb::parallel_for( loopRange, loopBody, taskGroupContext );
+	}
+	else
+	{
+		// Serial execution
+		loopBody( loopRange );
+	}
+}
 
 template <class ThreadableFunctor>
 struct ThreadableFilteredFunctor
@@ -170,8 +150,7 @@ template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
 {
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated ); // Prevents outer tasks silently cancelling our tasks
-	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root( taskGroupContext ) ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::ThreadState::current(), root, f );
-	tbb::task::spawn_root_and_wait( *task );
+	Detail::parallelProcessLocationsWalk( scene, Gaffer::ThreadState::current(), root, f, taskGroupContext );
 }
 
 template <class ThreadableFunctor>

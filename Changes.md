@@ -26,6 +26,7 @@ Improvements
 - Context : Optimized `hash()` method, and reduced overhead in `EditableScope`.
 - NameSwitch/Spreadsheet : Rows with an empty name are now treated as if they were disabled. See Breaking Changes for further details.
 - ContextVariables : Improved performance by around 50%.
+- SceneAlgo : Reduced threading overhead for `parallelProcessLocations()`, `parallelTraverse()` and `filteredParallelTraverse()`. This is particularly noticeable when visiting locations with many children.
 
 Fixes
 -----
