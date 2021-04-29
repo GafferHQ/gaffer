@@ -67,6 +67,7 @@
 #include "boost/unordered_map.hpp"
 
 #include "tbb/concurrent_unordered_set.h"
+#include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
 #include "tbb/spin_mutex.h"
 #include "tbb/task.h"
@@ -116,17 +117,27 @@ void filteredNodesWalk( Plug *filterPlug, std::unordered_set<FilteredSceneProces
 
 struct ThreadablePathAccumulator
 {
-	ThreadablePathAccumulator( PathMatcher &result): m_result( result ){}
 
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
-		tbb::spin_mutex::scoped_lock lock( m_mutex );
-		m_result.addPath( path );
+		m_threadResults.local().addPath( path );
 		return true;
 	}
 
-	tbb::spin_mutex m_mutex;
-	PathMatcher &m_result;
+	IECore::PathMatcher result()
+	{
+		return m_threadResults.combine(
+			[] ( const PathMatcher &a, const PathMatcher &b ) {
+				PathMatcher c = a;
+				c.addPaths( b );
+				return c;
+			}
+		);
+	}
+
+	private :
+
+		tbb::enumerable_thread_specific<PathMatcher> m_threadResults;
 
 };
 
@@ -177,20 +188,23 @@ void GafferScene::SceneAlgo::matchingPaths( const Filter *filter, const ScenePlu
 
 void GafferScene::SceneAlgo::matchingPaths( const FilterPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
-	ThreadablePathAccumulator f( paths );
+	ThreadablePathAccumulator f;
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f );
+	paths = f.result();
 }
 
 void GafferScene::SceneAlgo::matchingPaths( const FilterPlug *filterPlug, const ScenePlug *scene, const ScenePlug::ScenePath &root, IECore::PathMatcher &paths )
 {
-	ThreadablePathAccumulator f( paths );
+	ThreadablePathAccumulator f;
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f, root );
+	paths = f.result();
 }
 
 void GafferScene::SceneAlgo::matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
 {
-	ThreadablePathAccumulator f( paths );
+	ThreadablePathAccumulator f;
 	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filter, f );
+	paths = f.result();
 }
 
 IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const Filter *filter, const ScenePlug *scene )
