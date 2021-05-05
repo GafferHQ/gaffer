@@ -2438,12 +2438,12 @@
        inkscape:label="hr1"
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
-       d="M -6,2277 H 743.99999"
+       d="M -6,2357 H 743.99999"
        style="fill:none;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <flowRoot
        id="flowRoot1990"
        inkscape:label="docTitle"
-       transform="matrix(1,0,0,1.0000138,288.10156,1265.8474)"
+       transform="matrix(1,0,0,1.0000138,288.10156,1345.8474)"
        style="font-style:normal;font-weight:normal;font-size:24px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:1.00000381"
        xml:space="preserve"><flowRegion
          id="flowRegion1986"
@@ -2455,8 +2455,7 @@
            height="54.25"
            width="343.75" /></flowRegion><flowPara
          id="flowPara1988"
-         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381">Tab icons</flowPara></flowRoot>
-    <flowRoot
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381">Tab icons</flowPara></flowRoot>    <flowRoot
        id="flowRoot2018-3"
        inkscape:label="docTitle"
        transform="matrix(1,0,0,0.99999439,288.10155,1282.8674)"
@@ -3434,7 +3433,7 @@
        width="17"
        height="19"
        x="15"
-       y="2286"
+       y="2366"
        inkscape:label="tabScrollMenu" />
   </g>
   <g
@@ -5426,7 +5425,7 @@
     </g>
     <g
        id="g3196"
-       transform="matrix(0.49818887,-0.49818887,0.49818887,0.49818887,-304.25236,2447.1932)"
+       transform="matrix(0.49818887,-0.49818887,0.49818887,0.49818887,-304.25236,2527.1932)"
        inkscape:label="deleteSmall">
       <path
          inkscape:connector-curvature="0"
@@ -7901,7 +7900,7 @@
     <g
        id="g2047"
        inkscape:label="tabScrollMenu"
-       transform="translate(12,-28)">
+       transform="translate(12,52)">
       <rect
          y="2370.8623"
          x="6.5"
