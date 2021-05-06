@@ -429,13 +429,20 @@ class GraphEditor( GafferUI.Editor ) :
 			bound.setMin( boundCenter - newBoundSize / 2.0 )
 			bound.setMax( boundCenter + newBoundSize / 2.0 )
 
+		self.__gadgetWidget.getViewportGadget().frame( bound )
+
 		if at is not None :
+			# Offset the bound and reframe so that the centre of the bound moves
+			# to `at`, which is specified in raster space. We have to do this
+			# _after_ the initial call to `frame()` because
+			# `rasterToGadgetSpace()` is affected by the zoom calculated by
+			# `frame()`. Because we are not changing the size of the bound, the
+			# second call to `frame()` will use the same zoom.
 			viewport = self.graphGadgetWidget().getViewportGadget()
 			offset = viewport.rasterToGadgetSpace( imath.V2f( self.bound().size() / 2 ), graphGadget ).p0 - viewport.rasterToGadgetSpace( at, graphGadget ).p0
 			bound.setMin( bound.min() + offset )
 			bound.setMax( bound.max() + offset )
-
-		self.__gadgetWidget.getViewportGadget().frame( bound )
+			self.__gadgetWidget.getViewportGadget().frame( bound )
 
 	def __buttonDoubleClick( self, widget, event ) :
 

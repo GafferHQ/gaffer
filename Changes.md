@@ -11,6 +11,8 @@ Fixes
 -----
 
 - PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
+- GraphEditor : Fixed framing of nodes dropped into the editor. This was incorrect when the editor was
+  not at the default zoom.
 
 API
 ---
