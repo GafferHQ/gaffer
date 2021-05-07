@@ -105,6 +105,11 @@ IECoreGL::Texture *numericBookmarkTexture()
 	return numericBookmarkTexture.get();
 }
 
+float luminance( const Color3f &c )
+{
+	return c.dot( V3f( 0.2126, 0.7152, 0.0722 ) );
+}
+
 float g_offset = 0.5;
 float g_borderWidth = 0.5;
 float g_spacing = 0.25;
@@ -226,6 +231,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			glPushMatrix();
 			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y - g_borderWidth ) );
 
+			const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
 			const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
 			float previousHeight = 0;
 			for( const auto &a : annotations.standardAnnotations )
@@ -251,7 +257,10 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 					g_borderWidth, Style::NormalState,
 					&a.color()
 				);
-				style->renderText( Style::BodyText, a.text(), Style::NormalState, &midGrey );
+				style->renderText(
+					Style::BodyText, a.text(), Style::NormalState,
+					luminance( a.color() ) > 0.4 ? &darkGrey : &midGrey
+				);
 				previousHeight = textBounds.size().y + g_borderWidth * 2;
 			}
 			glPopMatrix();
