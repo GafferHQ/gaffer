@@ -157,7 +157,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		return;
 	}
 
-	vector<InternedString> registeredValues;
+	vector<string> names;
 	for( auto &ga : m_annotations )
 	{
 		const Node *node = ga.first->node();
@@ -181,22 +181,15 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			}
 
 			annotations.standardAnnotations.clear();
-			registeredValues.clear();
-			Metadata::registeredValues( node, registeredValues );
-			for( const auto &key : registeredValues )
+			names.clear();
+			MetadataAlgo::annotations( node, names );
+			for( const auto &name : names )
 			{
-				if( boost::starts_with( key.string(), "annotation:" ) && boost::ends_with( key.string(), ":text" ) )
-				{
-					if( auto text = Metadata::value<StringData>( node, key ) )
-					{
-						const string prefix = key.string().substr( 0, key.string().size() - 4 );
-						annotations.standardAnnotations.push_back(
-							{ text, Metadata::value<Color3fData>( node, prefix + "color" ) }
-						);
-						annotations.renderable = true;
-					}
-				}
+				annotations.standardAnnotations.push_back(
+					MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
+				);
 			}
+			annotations.renderable |= (bool)annotations.standardAnnotations.size();
 
 			annotations.dirty = false;
 		}
@@ -234,11 +227,10 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y - g_borderWidth ) );
 
 			const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
-			const Color3f darkGrey( 0.05 );
 			float previousHeight = 0;
 			for( const auto &a : annotations.standardAnnotations )
 			{
-				Box3f textBounds = style->textBound( Style::BodyText, a.text->readable() );
+				Box3f textBounds = style->textBound( Style::BodyText, a.text() );
 
 				float yOffset;
 				if( &a == &annotations.standardAnnotations.front() )
@@ -257,9 +249,9 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 				style->renderNodeFrame(
 					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, textBounds.max.y ) ),
 					g_borderWidth, Style::NormalState,
-					a.color ? &(a.color->readable()) : &darkGrey
+					&a.color()
 				);
-				style->renderText( Style::BodyText, a.text->readable(), Style::NormalState, &midGrey );
+				style->renderText( Style::BodyText, a.text(), Style::NormalState, &midGrey );
 				previousHeight = textBounds.size().y + g_borderWidth * 2;
 			}
 			glPopMatrix();
