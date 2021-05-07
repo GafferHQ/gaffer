@@ -5,6 +5,8 @@ Features
 --------
 
 - FilterQuery : Added a new node for querying the results of a filter at a specific location.
+- GraphEditor : Added "Annotate..." item to the node context menu. This can be configured with
+  multiple annotation templates using the `MetadataAlgo` API.
 
 Improvements
 ------------
