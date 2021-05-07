@@ -44,6 +44,8 @@
 
 #include "IECore/Object.h"
 
+#include <list>
+
 namespace Gaffer
 {
 
