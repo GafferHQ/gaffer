@@ -27,6 +27,7 @@ API
   Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
   from improved performance).
 - MetadataAlgo : Added functions for managing annotations on nodes.
+- MonitorAlgo : Added `persistent` argument to `annotate()` functions.
 
 0.59.7.0 (relative to 0.59.6.0)
 ========
