@@ -26,6 +26,7 @@ API
   performance in Gaffer 0.60. This allows the same code to be compiled for both
   Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
   from improved performance).
+- MetadataAlgo : Added functions for managing annotations on nodes.
 
 0.59.7.0 (relative to 0.59.6.0)
 ========

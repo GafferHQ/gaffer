@@ -40,8 +40,11 @@
 #include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
 
+#include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeIds.h"
+
+#include "OpenEXR/ImathColor.h"
 
 #include <vector>
 
@@ -134,6 +137,54 @@ GAFFER_API Node *getNumericBookmark( ScriptNode *script, int bookmark );
 /// Returns 0 if the node isn't assigned, the bookmark otherwise.
 GAFFER_API int numericBookmark( const Node *node );
 GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey );
+
+/// Annotations
+/// ===========
+///
+/// Annotations define arbitrary text to be displayed in a coloured area
+/// next to a node. Each node can have arbitrary numbers of annotations,
+/// with different annotations being distinguished by their `name`.
+/// Templates can be used to define defaults for standard annotation types.
+
+struct GAFFER_API Annotation
+{
+
+	Annotation() = default;
+	Annotation( const std::string &text );
+	Annotation( const std::string &text, const Imath::Color3f &color );
+	Annotation( const IECore::ConstStringDataPtr &text, const IECore::ConstColor3fDataPtr &color = nullptr );
+	Annotation( const Annotation &other ) = default;
+	Annotation( Annotation &&other ) = default;
+
+	operator bool() const { return textData.get(); }
+
+	bool operator == ( const Annotation &rhs );
+	bool operator != ( const Annotation &rhs ) { return !(*this == rhs); };
+
+	IECore::ConstStringDataPtr textData;
+	IECore::ConstColor3fDataPtr colorData;
+
+	const std::string &text() const { return textData ? textData->readable() : g_defaultText; }
+	const Imath::Color3f &color() const { return colorData ? colorData->readable() : g_defaultColor; }
+
+	private :
+
+		static std::string g_defaultText;
+		static Imath::Color3f g_defaultColor;
+
+};
+
+GAFFER_API void addAnnotation( Node *node, const std::string &name, const Annotation &annotation, bool persistent = true );
+GAFFER_API Annotation getAnnotation( const Node *node, const std::string &name, bool inheritTemplate = false );
+GAFFER_API void removeAnnotation( Node *node, const std::string &name );
+GAFFER_API void annotations( const Node *node, std::vector<std::string> &names );
+
+GAFFER_API void addAnnotationTemplate( const std::string &name, const Annotation &annotation );
+GAFFER_API Annotation getAnnotationTemplate( const std::string &name );
+GAFFER_API void removeAnnotationTemplate( const std::string &name );
+GAFFER_API void annotationTemplates( std::vector<std::string> &names );
+
+GAFFER_API bool annotationsAffectedByChange( const IECore::InternedString &changedKey );
 
 /// Change queries
 /// ==============
