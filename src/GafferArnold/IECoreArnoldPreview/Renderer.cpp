@@ -204,29 +204,6 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 	}
 }
 
-bool aiVersionLessThan( int arch, int major, int minor, int patch )
-{
-	// The Arnold API has an `AiCheckAPIVersion()` function that sounds
-	// like exactly what we need, but it doesn't support comparing for
-	// patch versions. Instead we're forced to parse the version string
-	// ourselves.
-
-	const char *arnoldVersionString = AiGetVersion( nullptr, nullptr, nullptr, nullptr );
-	int arnoldVersion[4];
-	for( int i = 0; i < 4; ++i )
-	{
-		arnoldVersion[i] = strtol( arnoldVersionString, const_cast<char **>( &arnoldVersionString ), 10 );
-		++arnoldVersionString;
-	}
-
-	auto version = { arch, major, minor, patch };
-
-	return std::lexicographical_compare(
-		begin( arnoldVersion ), end( arnoldVersion ),
-		version.begin(), version.end()
-	);
-}
-
 void substituteShaderIfNecessary( IECoreScene::ConstShaderNetworkPtr &shaderNetwork, const IECore::CompoundObject *attributes )
 {
 	if( !shaderNetwork )
@@ -1796,7 +1773,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !canInstance( object, arnoldAttributes ) )
+			if( !arnoldAttributes->canInstanceGeometry( object ) )
 			{
 				return Instance( convert( object, arnoldAttributes, nodeName ) );
 			}
@@ -1829,7 +1806,7 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !canInstance( samples.front(), arnoldAttributes ) )
+			if( !arnoldAttributes->canInstanceGeometry( samples.front() ) )
 			{
 				return Instance( convert( samples, times, arnoldAttributes, nodeName ) );
 			}
@@ -1898,22 +1875,6 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 	private :
-
-		bool canInstance( const IECore::Object *object, const ArnoldAttributes *attributes ) const
-		{
-			if( IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) && m_nodeDeleter == AiNodeDestroy )
-			{
-				if( aiVersionLessThan( 5, 0, 1, 4 ) )
-				{
-					// Work around Arnold bug whereby deleting an instanced procedural
-					// can lead to crashes. This unfortunately means that we don't get
-					// to do instancing of procedurals during interactive renders, but
-					// we can at least do it during batch renders.
-					return false;
-				}
-			}
-			return attributes->canInstanceGeometry( object );
-		}
 
 		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes, const std::string &nodeName )
 		{
