@@ -1085,7 +1085,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# For compatibility with Arnold, we hack an output closure
 		# parameter onto our Constant shader, but we don't want that
 		# to affect the way we represent the output plug in Gaffer.
-		shader = GafferOSL.OSLShader( "globals" )
+		shader = GafferOSL.OSLShader()
 		shader.loadShader( "Surface/Constant" )
 		self.assertEqual( len( shader["out"].children() ), 0 )
 
