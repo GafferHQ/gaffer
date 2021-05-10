@@ -783,7 +783,7 @@ Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 		if( existingPlug )
 		{
 			// Transfer old plugs onto the replacement.
-			for( PlugIterator it( existingPlug ); !it.done(); ++it )
+			for( Plug::Iterator it( existingPlug ); !it.done(); ++it )
 			{
 				result->addChild( *it );
 			}
@@ -1055,7 +1055,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 			// We had an out plug but it was the wrong type (we used
 			// to use a CompoundPlug before that was deprecated). Move
 			// over any existing child plugs onto our replacement.
-			for( PlugIterator it( existingOut ); !it.done(); ++it )
+			for( Plug::Iterator it( existingOut ); !it.done(); ++it )
 			{
 				outPlug->addChild( *it );
 			}

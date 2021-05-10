@@ -139,7 +139,9 @@ class GAFFERUI_API ConnectionGadget : public ConnectionCreator
 
 };
 
+[[deprecated("Use `ConnectionGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ConnectionGadget> > ConnectionGadgetIterator;
+[[deprecated("Use `ConnectionGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ConnectionGadget> > RecursiveConnectionGadgetIterator;
 
 } // namespace GafferUI

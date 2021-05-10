@@ -148,7 +148,7 @@ void Mix::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Co
 
 	ImageProcessor::hashDataWindow( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->dataWindowPlug()->hash( h );
 	}
@@ -167,7 +167,7 @@ Imath::Box2i Mix::computeDataWindow( const Gaffer::Context *context, const Image
 	}
 
 	Imath::Box2i dataWindow;
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
 		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
@@ -192,7 +192,7 @@ void Mix::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::
 
 	ImageProcessor::hashChannelNames( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -216,7 +216,7 @@ IECore::ConstStringVectorDataPtr Mix::computeChannelNames( const Gaffer::Context
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{

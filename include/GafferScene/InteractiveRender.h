@@ -143,7 +143,9 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 IE_CORE_DECLAREPTR( InteractiveRender );
 
+[[deprecated("Use `InteractiveRender::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<InteractiveRender> > InteractiveRenderIterator;
+[[deprecated("Use `InteractiveRender::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<InteractiveRender> > RecursiveInteractiveRenderIterator;
 
 } // namespace GafferScene

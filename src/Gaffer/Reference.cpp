@@ -134,7 +134,7 @@ void transferOutputs( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug )
 
 	// Recurse
 
-	for( PlugIterator it( srcPlug ); !it.done(); ++it )
+	for( Plug::Iterator it( srcPlug ); !it.done(); ++it )
 	{
 		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
 		{
@@ -378,7 +378,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 
 			// Recurse
 
-			for( PlugIterator it( srcPlug ); !it.done(); ++it )
+			for( Plug::Iterator it( srcPlug ); !it.done(); ++it )
 			{
 				if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
 				{
@@ -485,7 +485,7 @@ void Reference::loadInternal( const std::string &fileName )
 	// incoming plugs don't get renamed.
 
 	std::map<std::string, Plug *> previousPlugs;
-	for( PlugIterator it( this ); !it.done(); ++it )
+	for( Plug::Iterator it( this ); !it.done(); ++it )
 	{
 		Plug *plug = it->get();
 		if( isReferencePlug( plug ) )
@@ -498,7 +498,7 @@ void Reference::loadInternal( const std::string &fileName )
 	// We don't export user plugs to references, but old versions of
 	// Gaffer did, so as above, we must get them out of the way during
 	// the load.
-	for( PlugIterator it( userPlug() ); !it.done(); ++it )
+	for( Plug::Iterator it( userPlug() ); !it.done(); ++it )
 	{
 		Plug *plug = it->get();
 		if( isReferencePlug( plug ) )
@@ -569,7 +569,7 @@ void Reference::loadInternal( const std::string &fileName )
 				continue;
 			}
 
-			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+			for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 			{
 				(*it)->setFlags( Plug::Dynamic, false );
 			}

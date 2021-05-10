@@ -103,7 +103,9 @@ class GAFFERUI_API LinearContainer : public ContainerGadget
 
 IE_CORE_DECLAREPTR( LinearContainer );
 
+[[deprecated("Use `LinearContainer::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<LinearContainer> > LinearContainerIterator;
+[[deprecated("Use `LinearContainer::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<LinearContainer> > RecursiveLinearContainerIterator;
 
 } // namespace GafferUI

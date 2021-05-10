@@ -108,6 +108,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 		};
 
+		[[deprecated("Use `Image::Iterator` instead")]]
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, Image> > ImageIterator;
 
 		Gaffer::Plug *imagesPlug();

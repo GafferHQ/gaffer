@@ -89,7 +89,7 @@ void FlatImageProcessor::hashDeep( const GafferImage::ImagePlug *parent, const G
 	ImageProcessor::hashDeep( parent, context, h );
 	if( inPlugs() )
 	{
-		for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+		for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 		{
 			// We ignore unconnected inputs when determining the hash - this is the correct
 			// behaviour for merge, and hopefully any other deep nodes that use inPlugs()
@@ -112,7 +112,7 @@ bool FlatImageProcessor::computeDeep( const Gaffer::Context *context, const Imag
 	const ImagePlug *badInput = nullptr;
 	if( inPlugs() )
 	{
-		for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+		for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 		{
 			if( (*it)->deepPlug()->getValue() )
 			{

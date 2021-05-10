@@ -426,7 +426,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<con
 
 size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
 {
-	for( Gaffer::RecursivePlugIterator it( node ); !it.done(); ++it )
+	for( Gaffer::Plug::RecursiveIterator it( node ); !it.done(); ++it )
 	{
 		this->connectionGadgets( it->get(), connections, excludedNodes );
 	}
@@ -436,7 +436,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<Con
 
 size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
 {
-	for( Gaffer::RecursivePlugIterator it( node ); !it.done(); ++it )
+	for( Gaffer::Plug::RecursiveIterator it( node ); !it.done(); ++it )
 	{
 		this->connectionGadgets( it->get(), connections, excludedNodes );
 	}
@@ -527,7 +527,7 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 		return;
 	}
 
-	for( Gaffer::RecursivePlugIterator it( gadget->node() ); !it.done(); ++it )
+	for( Gaffer::Plug::RecursiveIterator it( gadget->node() ); !it.done(); ++it )
 	{
 		Gaffer::Plug *plug = it->get();
 		if( ( direction != Gaffer::Plug::Invalid ) && ( plug->direction() != direction ) )
@@ -967,7 +967,7 @@ void GraphGadget::plugSet( Gaffer::Plug *plug )
 void GraphGadget::noduleAdded( Nodule *nodule )
 {
 	addConnectionGadgets( nodule );
-	for( RecursiveNoduleIterator it( nodule ); !it.done(); ++it )
+	for( Nodule::RecursiveIterator it( nodule ); !it.done(); ++it )
 	{
 		addConnectionGadgets( it->get() );
 	}
@@ -976,7 +976,7 @@ void GraphGadget::noduleAdded( Nodule *nodule )
 void GraphGadget::noduleRemoved( Nodule *nodule )
 {
 	removeConnectionGadgets( nodule );
-	for( RecursiveNoduleIterator it( nodule ); !it.done(); ++it )
+	for( Nodule::RecursiveIterator it( nodule ); !it.done(); ++it )
 	{
 		removeConnectionGadgets( it->get() );
 	}
@@ -1311,7 +1311,7 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 	// and if so, stash what we need into our m_dragReconnect member
 	// variables for use in dragEnd.
 
-	for( Gaffer::RecursiveOutputPlugIterator it( node ); !it.done(); ++it )
+	for( Gaffer::Plug::RecursiveOutputIterator it( node ); !it.done(); ++it )
 	{
 		// See if the output has a corresponding input, and that
 		// the resulting in/out plug pair can be inserted into the
@@ -1619,7 +1619,7 @@ void GraphGadget::updateGraph()
 	}
 
 	// now make sure we have gadgets for all the nodes we're meant to display
-	for( Gaffer::NodeIterator it( m_root.get() ); !it.done(); ++it )
+	for( Gaffer::Node::Iterator it( m_root.get() ); !it.done(); ++it )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1719,7 +1719,7 @@ void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 
 void GraphGadget::addConnectionGadgets( NodeGadget *nodeGadget )
 {
-	for( RecursiveNoduleIterator it( nodeGadget ); !it.done(); ++it )
+	for( Nodule::RecursiveIterator it( nodeGadget ); !it.done(); ++it )
 	{
 		addConnectionGadgets( it->get() );
 	}
@@ -1784,7 +1784,7 @@ void GraphGadget::addConnectionGadget( Nodule *dstNodule )
 
 void GraphGadget::removeConnectionGadgets( const NodeGadget *nodeGadget )
 {
-	for( RecursiveNoduleIterator it( nodeGadget ); !it.done(); ++it )
+	for( Nodule::RecursiveIterator it( nodeGadget ); !it.done(); ++it )
 	{
 		removeConnectionGadgets( it->get() );
 	}

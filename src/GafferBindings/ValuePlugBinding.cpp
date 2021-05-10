@@ -79,7 +79,7 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const std::st
 
 	string childSerialisations;
 	bool canCondenseChildren = true;
-	for( ValuePlugIterator childIt( plug ); !childIt.done(); ++childIt )
+	for( ValuePlug::Iterator childIt( plug ); !childIt.done(); ++childIt )
 	{
 		const std::string childIdentifier = serialisation.childIdentifier( identifier, childIt.base() );
 		childSerialisations += valueSerialisationWalk( childIt->get(), childIdentifier, serialisation, canCondenseChildren );

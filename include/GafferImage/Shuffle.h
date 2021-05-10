@@ -88,6 +88,7 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 
 		IE_CORE_DECLAREPTR( ChannelPlug )
 
+		[[deprecated("Use `ChannelPlug::Iterator` instead")]]
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ChannelPlug> > ChannelPlugIterator;
 
 		Gaffer::ValuePlug *channelsPlug();

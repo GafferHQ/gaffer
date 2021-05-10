@@ -196,7 +196,9 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 };
 
+[[deprecated("Use `SceneGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<SceneGadget> > SceneGadgetIterator;
+[[deprecated("Use `SceneGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<SceneGadget> > RecursiveSceneGadgetIterator;
 
 } // namespace GafferUI

@@ -248,7 +248,7 @@ void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
 {
 	bookmarks.clear();
 
-	for( NodeIterator it( node ); !it.done(); ++it )
+	for( Node::Iterator it( node ); !it.done(); ++it )
 	{
 		if( getBookmarked( it->get() ) )
 		{
@@ -404,7 +404,7 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 		return parent == changedNode->parent();
 	}
 
-	for( NodeIterator it( parent ); !it.done(); ++it )
+	for( Node::Iterator it( parent ); !it.done(); ++it )
 	{
 		if( (*it)->isInstanceOf( changedNodeTypeId ) )
 		{

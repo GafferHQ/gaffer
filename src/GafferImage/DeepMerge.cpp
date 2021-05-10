@@ -131,7 +131,7 @@ void DeepMerge::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -261,7 +261,7 @@ void DeepMerge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaff
 {
 	ImageProcessor::hashDataWindow( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->dataWindowPlug()->hash( h );
 	}
@@ -270,7 +270,7 @@ void DeepMerge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaff
 Imath::Box2i DeepMerge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i dataWindow;
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
 		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
@@ -283,7 +283,7 @@ void DeepMerge::hashChannelNames( const GafferImage::ImagePlug *output, const Ga
 {
 	ImageProcessor::hashChannelNames( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -297,7 +297,7 @@ IECore::ConstStringVectorDataPtr DeepMerge::computeChannelNames( const Gaffer::C
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -337,7 +337,7 @@ void DeepMerge::hashChannelData( const GafferImage::ImagePlug *output, const Gaf
 	}
 
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
 		{

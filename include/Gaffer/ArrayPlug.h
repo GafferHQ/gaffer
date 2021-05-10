@@ -105,12 +105,17 @@ class GAFFER_API ArrayPlug : public Plug
 
 IE_CORE_DECLAREPTR( ArrayPlug );
 
-/// \deprecated Use ArrayPlug::Iterator etc instead
+[[deprecated("Use `ArrayPlug::Iterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ArrayPlug> > ArrayPlugIterator;
+[[deprecated("Use `ArrayPlug::InputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ArrayPlug> > InputArrayPlugIterator;
+[[deprecated("Use `ArrayPlug::OutputIterator` instead")]]
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, ArrayPlug> > OutputArrayPlugIterator;
+[[deprecated("Use `ArrayPlug::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ArrayPlug>, PlugPredicate<> > RecursiveArrayPlugIterator;
+[[deprecated("Use `ArrayPlug::RecursiveInputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ArrayPlug>, PlugPredicate<> > RecursiveInputArrayPlugIterator;
+[[deprecated("Use `ArrayPlug::RecursiveOutputIterator` instead")]]
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ArrayPlug>, PlugPredicate<> > RecursiveOutputArrayPlugIterator;
 
 } // namespace Gaffer

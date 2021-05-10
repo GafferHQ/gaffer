@@ -193,7 +193,7 @@ bool ShufflesPlug::acceptsInput( const Plug *input ) const
 Gaffer::PlugPtr ShufflesPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new ShufflesPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); !it.done(); ++it )
+	for( Plug::Iterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}

@@ -121,7 +121,7 @@ class TweakPlugAdder : public PlugAdder
 		{
 			vector<Plug *> result;
 
-			for( TweakPlugIterator it( m_plugsParent.get() ); !it.done(); ++it )
+			for( TweakPlug::Iterator it( m_plugsParent.get() ); !it.done(); ++it )
 			{
 				TweakPlug *tweakPlug = it->get();
 				if( input )

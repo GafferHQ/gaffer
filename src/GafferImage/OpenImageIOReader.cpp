@@ -879,7 +879,7 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 
 	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
+		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

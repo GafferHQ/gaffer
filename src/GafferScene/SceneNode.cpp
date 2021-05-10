@@ -97,7 +97,7 @@ void SceneNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 
 	if( input == enabledPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
+		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
 			if( (*it)->getInput() )
 			{

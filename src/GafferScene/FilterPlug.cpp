@@ -147,7 +147,7 @@ void FilterPlug::sceneAffects( const Gaffer::Plug *scenePlugChild, Gaffer::Depen
 		{
 			// Switch with context-varying input. Any input branch could be
 			// relevant.
-			for( InputFilterPlugIterator it( switchNode->inPlugs() ); !it.done(); ++it )
+			for( FilterPlug::InputIterator it( switchNode->inPlugs() ); !it.done(); ++it )
 			{
 				(*it)->sceneAffects( scenePlugChild, outputs );
 			}

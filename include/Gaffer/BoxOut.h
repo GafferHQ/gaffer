@@ -71,8 +71,9 @@ class GAFFER_API BoxOut : public BoxIO
 
 IE_CORE_DECLAREPTR( BoxOut )
 
-/// \deprecated Use BoxOut::Iterator etc instead.
+[[deprecated("Use `BoxOut::Iterator` instead")]]
 typedef FilteredChildIterator<TypePredicate<BoxOut> > BoxOutIterator;
+[[deprecated("Use `BoxOut::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<TypePredicate<BoxOut> > RecursiveBoxOutIterator;
 
 } // namespace Gaffer

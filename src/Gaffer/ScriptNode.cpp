@@ -622,7 +622,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
 			if( reconnect && dependencyNode )
 			{
-				for( RecursiveOutputPlugIterator it( node ); !it.done(); ++it )
+				for( Plug::RecursiveOutputIterator it( node ); !it.done(); ++it )
 				{
 					Plug *inPlug = nullptr;
 					try
@@ -746,7 +746,7 @@ bool ScriptNode::importFile( const std::string &fileName, Node *parent, bool con
 	bool result = script->load( continueOnError );
 
 	StandardSetPtr nodeSet = new StandardSet();
-	nodeSet->add( NodeIterator( script.get() ), NodeIterator( script->children().end(), script->children().end() ) );
+	nodeSet->add( Node::Iterator( script.get() ), Node::Iterator( script->children().end(), script->children().end() ) );
 	const std::string nodeSerialisation = script->serialise( script.get(), nodeSet.get() );
 
 	result |= execute( nodeSerialisation, parent, continueOnError );

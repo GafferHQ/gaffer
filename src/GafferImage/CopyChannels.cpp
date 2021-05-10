@@ -163,7 +163,7 @@ void CopyChannels::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 
 	if( output == mappingPlug() )
 	{
-		for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+		for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 		{
 			if( !(*it)->getInput() )
 			{
@@ -186,7 +186,7 @@ void CopyChannels::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		result->members()["__channelNames"] = channelNamesData;
 		vector<string> &channelNames = channelNamesData->writable();
 		size_t i = 0;
-		for( ImagePlugIterator it( inPlugs() ); !it.done(); ++i, ++it )
+		for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++i, ++it )
 		{
 			/// \todo We need this check because an unconnected input
 			/// has a default channelNames value of [ "R", "G", "B" ],
@@ -223,7 +223,7 @@ void CopyChannels::hashDataWindow( const GafferImage::ImagePlug *output, const G
 {
 	FlatImageProcessor::hashDataWindow( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->dataWindowPlug()->hash( h );
 	}
@@ -232,7 +232,7 @@ void CopyChannels::hashDataWindow( const GafferImage::ImagePlug *output, const G
 Imath::Box2i CopyChannels::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i dataWindow;
-	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
+	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
 		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
 	}

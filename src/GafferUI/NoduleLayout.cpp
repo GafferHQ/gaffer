@@ -561,7 +561,7 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 
 	// Add any plugs which should be visible
 
-	for( PlugIterator plugIt( m_parent.get() ); !plugIt.done(); ++plugIt )
+	for( Plug::Iterator plugIt( m_parent.get() ); !plugIt.done(); ++plugIt )
 	{
 		Plug *plug = plugIt->get();
 		if( boost::starts_with( plug->getName().string(), "__" ) )

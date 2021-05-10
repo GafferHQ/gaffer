@@ -90,7 +90,7 @@ class ScopedAssignment : boost::noncopyable
 
 bool allDescendantInputsAreNull( const Plug *plug )
 {
-	for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+	for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 	{
 		if( (*it)->getInput() )
 		{
@@ -355,7 +355,7 @@ bool Plug::acceptsInputInternal( const Plug *input ) const
 	{
 		return false;
 	}
-	for( PlugIterator it1( this ), it2( input ); !it1.done(); ++it1, ++it2 )
+	for( Plug::Iterator it1( this ), it2( input ); !it1.done(); ++it1, ++it2 )
 	{
 		if( !( *it1 )->acceptsInput( it2->get() ) )
 		{
@@ -417,14 +417,14 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 	{
 		if( !input )
 		{
-			for( PlugIterator it( this ); !it.done(); ++it )
+			for( Plug::Iterator it( this ); !it.done(); ++it )
 			{
 				(*it)->setInput( nullptr, /* setChildInputs = */ true, /* updateParentInput = */ false );
 			}
 		}
 		else
 		{
-			for( PlugIterator it1( this ), it2( input.get() ); !it1.done(); ++it1, ++it2 )
+			for( Plug::Iterator it1( this ), it2( input.get() ); !it1.done(); ++it1, ++it2 )
 			{
 				(*it1)->setInput( *it2, /* setChildInputs = */ true, /* updateParentInput = */ false );
 			}
@@ -549,7 +549,7 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 		return;
 	}
 
-	for( PlugIterator it1( this ), it2( candidateInput ); !it1.done(); ++it1, ++it2 )
+	for( Plug::Iterator it1( this ), it2( candidateInput ); !it1.done(); ++it1, ++it2 )
 	{
 		if( (*it1)->getInput() != it2->get() )
 		{
@@ -578,7 +578,7 @@ const Plug::OutputContainer &Plug::outputs() const
 PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new Plug( name, direction, getFlags() );
-	for( PlugIterator it( this ); !it.done(); ++it )
+	for( Plug::Iterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}
@@ -733,7 +733,7 @@ void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )
 	// find them, propagating dirtiness at the leaves.
 	if( plugToDirty->children().size() )
 	{
-		for( PlugIterator it( plugToDirty ); !it.done(); ++it )
+		for( Plug::Iterator it( plugToDirty ); !it.done(); ++it )
 		{
 			propagateDirtinessForParentChange( it->get() );
 		}

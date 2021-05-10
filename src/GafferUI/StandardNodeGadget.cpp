@@ -621,7 +621,7 @@ void StandardNodeGadget::enter( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
+		for( StandardNodule::RecursiveIterator it( gadget  ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( true );
 		}
@@ -632,7 +632,7 @@ void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
+		for( StandardNodule::RecursiveIterator it( gadget  ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( false );
 		}
@@ -646,7 +646,7 @@ bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event
 	{
 		// Display the labels for all the compatible nodules so the
 		// user can see their options.
-		for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+		for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( canConnect( event, it->get() ) );
 		}
@@ -690,7 +690,7 @@ bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event
 	if( m_dragDestination != event.destinationGadget )
 	{
 		m_dragDestination->setHighlighted( false );
-		for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+		for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( false );
 		}
@@ -710,7 +710,7 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	connect( event, m_dragDestination );
 
 	m_dragDestination->setHighlighted( false );
-	for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+	for( StandardNodule::RecursiveIterator it( this ); !it.done(); ++it )
 	{
 		(*it)->setLabelVisible( false );
 	}
@@ -729,7 +729,7 @@ ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEve
 	ConnectionCreator *result = nullptr;
 	float maxDist = Imath::limits<float>::max();
 
-	for( RecursiveConnectionCreatorIterator it( this ); !it.done(); it++ )
+	for( ConnectionCreator::RecursiveIterator it( this ); !it.done(); it++ )
 	{
 		if( !(*it)->getVisible() )
 		{

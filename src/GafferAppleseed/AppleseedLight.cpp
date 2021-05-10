@@ -107,7 +107,7 @@ void AppleseedLight::loadShader( const std::string &shaderName )
 
 void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
+	for( ValuePlug::Iterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		(*it)->hash( h );
 	}
@@ -117,7 +117,7 @@ void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 IECoreScene::ConstShaderNetworkPtr AppleseedLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( modelPlug()->getValue(), "as:light" );
-	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
+	for( ValuePlug::InputIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		shader->parameters()[(*it)->getName()] = PlugAlgo::extractDataFromPlug( it->get() );
 	}

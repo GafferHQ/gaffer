@@ -465,7 +465,7 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 		return;
 	}
 
-	for( RecursiveStandardNoduleIterator it( nodeGadget ); !it.done(); ++it )
+	for( StandardNodule::RecursiveIterator it( nodeGadget ); !it.done(); ++it )
 	{
 		if( creator->canCreateConnection( it->get()->plug() ) )
 		{

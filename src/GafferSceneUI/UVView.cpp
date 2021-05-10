@@ -885,7 +885,7 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 
 	// Hide any texture gadgets we don't need this time round.
 
-	for( GadgetIterator it( textureGadgets() ); !it.done(); ++it )
+	for( Gadget::Iterator it( textureGadgets() ); !it.done(); ++it )
 	{
 		if( !textures->member<Data>( (*it)->getName().c_str() + gadgetNamePrefix.size() ) )
 		{

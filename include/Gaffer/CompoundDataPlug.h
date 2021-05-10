@@ -90,12 +90,18 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 
 IE_CORE_DECLAREPTR( CompoundDataPlug );
 
+[[deprecated("Use `CompoundDataPlug::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, CompoundDataPlug> > CompoundDataPlugIterator;
+[[deprecated("Use `CompoundDataPlug::InputIterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, CompoundDataPlug> > InputCompoundDataPlugIterator;
+[[deprecated("Use `CompoundDataPlug::OutputIterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug> > OutputCompoundDataPlugIterator;
 
+[[deprecated("Use `CompoundDataPlug::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, CompoundDataPlug>, PlugPredicate<> > RecursiveCompoundDataPlugIterator;
+[[deprecated("Use `CompoundDataPlug::RecursiveInputIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, CompoundDataPlug>, PlugPredicate<> > RecursiveInputCompoundDataPlugIterator;
+[[deprecated("Use `CompoundDataPlug::RecursiveOutputIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, CompoundDataPlug>, PlugPredicate<> > RecursiveOutputCompoundDataPlugIterator;
 
 } // namespace Gaffer

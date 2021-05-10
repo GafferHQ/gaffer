@@ -59,7 +59,7 @@ IECore::MurmurHash ParameterHandler::hash() const
 {
 	IECore::MurmurHash result;
 	const Gaffer::Plug *p = plug();
-	for( Gaffer::RecursiveValuePlugIterator it( p ); !it.done(); ++it )
+	for( Gaffer::ValuePlug::RecursiveIterator it( p ); !it.done(); ++it )
 	{
 		result.append( (*it)->relativeName( p ) );
 		(*it)->hash( result );

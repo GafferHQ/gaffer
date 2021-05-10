@@ -110,7 +110,9 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 
 };
 
+[[deprecated("Use `Nodule::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Nodule> > NoduleIterator;
+[[deprecated("Use `Nodule::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Nodule> > RecursiveNoduleIterator;
 
 IE_CORE_DECLAREPTR( Nodule );

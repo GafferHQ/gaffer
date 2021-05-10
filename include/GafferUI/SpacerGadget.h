@@ -72,7 +72,9 @@ class GAFFERUI_API SpacerGadget : public Gadget
 
 IE_CORE_DECLAREPTR( SpacerGadget )
 
+[[deprecated("Use `SpacerGadget::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<SpacerGadget> > SpacerGadgetIterator;
+[[deprecated("Use `SpacerGadget::RecursiveIterator` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<SpacerGadget> > RecursiveSpacerGadgetIterator;
 
 } // namespace GafferUI

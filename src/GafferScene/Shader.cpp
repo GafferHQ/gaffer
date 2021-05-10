@@ -353,7 +353,7 @@ class Shader::NetworkBuilder
 			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
 				// Compound parameter - recurse
-				for( InputPlugIterator it( parameter ); !it.done(); ++it )
+				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
 					hashParameterWalk( it->get(), h );
 				}
@@ -361,7 +361,7 @@ class Shader::NetworkBuilder
 			else if( const Gaffer::ArrayPlug *arrayParameter = IECore::runTimeCast<const Gaffer::ArrayPlug>( parameter ) )
 			{
 				// Array parameter
-				for( InputPlugIterator it( arrayParameter ); !it.done(); ++it )
+				for( Plug::InputIterator it( arrayParameter ); !it.done(); ++it )
 				{
 					hashParameter( it->get(), h );
 				}
@@ -378,7 +378,7 @@ class Shader::NetworkBuilder
 			if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 			{
 				// Compound parameter - recurse
-				for( InputPlugIterator it( parameter ); !it.done(); ++it )
+				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
 					IECore::InternedString childParameterName;
 					if( parameterName.string().size() )
@@ -396,7 +396,7 @@ class Shader::NetworkBuilder
 			else if( const Gaffer::ArrayPlug *array = IECore::runTimeCast<const Gaffer::ArrayPlug>( parameter ) )
 			{
 				int i = 0;
-				for( InputPlugIterator it( array ); !it.done(); ++it, ++i )
+				for( Plug::InputIterator it( array ); !it.done(); ++it, ++i )
 				{
 					IECore::InternedString childParameterName = parameterName.string() + "[" + std::to_string( i ) + "]";
 					addParameter( it->get(), childParameterName, shader, connections );
@@ -471,7 +471,7 @@ class Shader::NetworkBuilder
 			{
 				return;
 			}
-			for( InputPlugIterator it( parameter ); !it.done(); ++it )
+			for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 			{
 				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
 				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
@@ -493,7 +493,7 @@ class Shader::NetworkBuilder
 			{
 				return;
 			}
-			for( InputPlugIterator it( parameter ); !it.done(); ++it )
+			for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 			{
 				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
 				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
@@ -727,7 +727,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		{
 			if( !out->children().empty() )
 			{
-				for( RecursivePlugIterator it( out ); !it.done(); it++ )
+				for( Plug::RecursiveIterator it( out ); !it.done(); it++ )
 				{
 					if( (*it)->children().empty() )
 					{

@@ -218,7 +218,9 @@ class GAFFERUI_API Handle : public Gadget
 
 IE_CORE_DECLAREPTR( Handle )
 
+[[deprecated("Use `Handle::Iterator` instead")]]
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Handle> > HandleIterator;
+[[deprecated("Use `Handle::Recursive` instead")]]
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Handle> > RecursiveHandleIterator;
 
 } // namespace GafferUI

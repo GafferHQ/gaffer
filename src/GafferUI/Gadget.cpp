@@ -198,7 +198,7 @@ void Gadget::setVisible( bool visible )
 
 void Gadget::emitDescendantVisibilityChanged()
 {
-	for( GadgetIterator it( this ); !it.done(); ++it )
+	for( Gadget::Iterator it( this ); !it.done(); ++it )
 	{
 		if( !(*it)->getVisible() )
 		{

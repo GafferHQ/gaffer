@@ -463,7 +463,7 @@ void OSLObject::updatePrimitiveVariables()
 
 	std::string code = "closure color out = 0;\n";
 
-	for( NameValuePlugIterator inputPlug( primitiveVariablesPlug() ); !inputPlug.done(); ++inputPlug )
+	for( NameValuePlug::Iterator inputPlug( primitiveVariablesPlug() ); !inputPlug.done(); ++inputPlug )
 	{
 		std::string prefix = "";
 		BoolPlug* enabledPlug = (*inputPlug)->enabledPlug();

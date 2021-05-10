@@ -91,8 +91,9 @@ class GAFFER_API ComputeNode : public DependencyNode
 
 };
 
-/// \deprecated Use ComputeNode::Iterator etc instead.
+[[deprecated("Use `ComputeNode::Iterator` instead")]]
 typedef FilteredChildIterator<TypePredicate<ComputeNode> > ComputeNodeIterator;
+[[deprecated("Use `ComputeNode::RecursiveIterator` instead")]]
 typedef FilteredRecursiveChildIterator<TypePredicate<ComputeNode> > RecursiveComputeNodeIterator;
 
 } // namespace Gaffer

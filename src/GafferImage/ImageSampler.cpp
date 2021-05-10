@@ -154,7 +154,7 @@ void ImageSampler::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 		input->parent<Plug>() == pixelPlug()
 	)
 	{
-		for( ValuePlugIterator componentIt( colorPlug() ); !componentIt.done(); ++componentIt )
+		for( ValuePlug::Iterator componentIt( colorPlug() ); !componentIt.done(); ++componentIt )
 		{
 			outputs.push_back( componentIt->get() );
 		}

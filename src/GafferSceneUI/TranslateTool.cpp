@@ -140,7 +140,7 @@ void TranslateTool::updateHandles( float rasterScale )
 	// of the target translation. For each handle, check to see
 	// if each of the plugs it effects are settable, and if not,
 	// disable the handle.
-	for( TranslateHandleIterator it( handles() ); !it.done(); ++it )
+	for( TranslateHandle::Iterator it( handles() ); !it.done(); ++it )
 	{
 		bool enabled = true;
 		for( const auto &s : selection() )

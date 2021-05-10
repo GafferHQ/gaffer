@@ -112,7 +112,7 @@ void FilterProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer
 	{
 		if( const ArrayPlug *arrayIn = this->inPlugs() )
 		{
-			for( InputFilterPlugIterator it( arrayIn ); !it.done(); ++it )
+			for( FilterPlug::InputIterator it( arrayIn ); !it.done(); ++it )
 			{
 				(*it)->sceneAffects( input, outputs );
 			}

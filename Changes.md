@@ -100,6 +100,7 @@ Breaking Changes
 - Expression : Changed the Python expression cache policy to `Standard`. This executes expressions behind a lock, and can cause hangs if buggy upstream nodes perform TBB tasks without an appropriate `TaskIsolation` or `TaskCollaboration` policy. In this case, the `GAFFER_PYTHONEXPRESSION_CACHEPOLICY` environment variable may be set to `Legacy` or `TaskIsolation` while the bugs are fixed.
 - Node : Removed `plugFlagsChangedSignal()`. We aim to phase flags out completely in future, and none of the current flags are expected to be changed after construction.
 - ContextProcessor : Added `storage` argument to `processContext()` method.
+- FilteredChildIterator/FilteredRecursiveChildIterator : Annotated all namespace-level typedefs with `[[deprecated]]`. These were already documented as deprecated in Gaffer 0.59.0.0, but their use will now trigger compiler warnings. Please use the class-level typedefs instead, for example `Plug::Iterator` in place of `PlugIterator`.
 
 Build
 -----

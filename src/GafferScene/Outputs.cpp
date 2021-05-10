@@ -188,7 +188,7 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 	result->members() = inputGlobals->members();
 
 	// add our outputs to the result
-	for( InputValuePlugIterator it( dsp ); !it.done(); ++it )
+	for( ValuePlug::InputIterator it( dsp ); !it.done(); ++it )
 	{
 		const ValuePlug *outputPlug = it->get();
 		if( outputPlug->getChild<BoolPlug>( "active" )->getValue() )
