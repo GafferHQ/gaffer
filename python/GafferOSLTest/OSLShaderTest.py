@@ -1080,5 +1080,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( shaderAssignment["out"].attributes( "/plane" ).keys(), [ "osl:surface" ] )
 
+	def testConstantOutPlug( self ) :
+
+		# For compatibility with Arnold, we hack an output closure
+		# parameter onto our Constant shader, but we don't want that
+		# to affect the way we represent the output plug in Gaffer.
+		shader = GafferOSL.OSLShader( "globals" )
+		shader.loadShader( "Surface/Constant" )
+		self.assertEqual( len( shader["out"].children() ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
