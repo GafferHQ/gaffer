@@ -688,5 +688,15 @@ class ContextTest( GafferTest.TestCase ) :
 
 		GafferTest.testNewContextAPIBasics()
 
+	def testSubstituteInternedString( self ) :
+
+		c = Gaffer.Context()
+		c["test"] = IECore.InternedStringData( "value" )
+		self.assertEqual( c.substitute( "${test}" ), "value" )
+
+		c["test1"] = IECore.InternedStringData( "${test2}" )
+		c["test2"] = IECore.InternedStringData( "recursion!" )
+		self.assertEqual( c.substitute( "${test1}" ), "recursion!" )
+
 if __name__ == "__main__":
 	unittest.main()
