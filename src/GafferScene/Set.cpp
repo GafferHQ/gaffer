@@ -284,7 +284,7 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 {
 	ConstInternedStringVectorDataPtr inNamesData = inPlug()->setNamesPlug()->getValue();
 
-	const std::string &names = namePlug()->getValue();
+	const std::string names = namePlug()->getValue();
 	if( !names.size() )
 	{
 		return inNamesData;
@@ -295,42 +295,43 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 		return inNamesData;
 	}
 
-	vector<InternedString> tokenizedNames;
-	StringAlgo::tokenize( names, ' ', tokenizedNames );
-
-	// specific logic if we have only one item, to avoid the more complex logic of adding two lists together
-	if( tokenizedNames.size() == 1 ) {
-		const std::vector<InternedString> &inNames = inNamesData->readable();
-		if( std::find( inNames.begin(), inNames.end(), tokenizedNames[0] ) != inNames.end() )
+	// Fast path for the common case of a single name.
+	const std::vector<InternedString> &inNames = inNamesData->readable();
+	if( names.find( ' ' ) == string::npos )
+	{
+		if( StringAlgo::hasWildcards( names ) || find( inNames.begin(), inNames.end(), names ) != inNames.end() )
 		{
 			return inNamesData;
 		}
-
 		InternedStringVectorDataPtr resultData = inNamesData->copy();
-		resultData->writable().push_back( tokenizedNames[0] );
+		resultData->writable().push_back( names );
 		return resultData;
 	}
 
-	// inserting the new names into the vector
-	// while making sure we don't have duplicates
-	InternedStringVectorDataPtr resultData = inNamesData->copy();
+	// Slow path. Merge names ignoring duplicates and wildcards.
 
+	vector<InternedString> tokenizedNames;
+	StringAlgo::tokenize( names, ' ', tokenizedNames );
+
+	InternedStringVectorDataPtr resultData = inNamesData->copy();
 	std::vector<InternedString> &result = resultData->writable();
 	result.reserve( result.size() + tokenizedNames.size() );
-	std::copy( tokenizedNames.begin(), tokenizedNames.end(), std::back_inserter( result ) );
+	std::copy_if(
+		tokenizedNames.begin(), tokenizedNames.end(), std::back_inserter( result ),
+		[] ( const InternedString &s ) {
+			return !StringAlgo::hasWildcards( s.string() );
+		}
+	);
+
 	std::sort( result.begin(), result.end() );
-	std::vector<InternedString>::iterator it;
-	it = std::unique( result.begin(), result.end() );
-	result.resize( std::distance( result.begin(), it ) );
+	result.erase( std::unique( result.begin(), result.end() ), result.end() );
 
 	return resultData;
 }
 
 void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	const std::string allSets = " " + namePlug()->getValue() + " ";
-	const std::string setNameToFind = " " + setName.string() + " ";
-	if( allSets.find( setNameToFind ) == std::string::npos )
+	if( !StringAlgo::matchMultiple( setName.string(), namePlug()->getValue() ) )
 	{
 		h = inPlug()->setPlug()->hash();
 		return;
@@ -346,9 +347,7 @@ void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context 
 
 IECore::ConstPathMatcherDataPtr Set::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	const std::string allSets = " " + namePlug()->getValue() + " ";
-	const std::string setNameToFind = " " + setName.string() + " ";
-	if( allSets.find( setNameToFind ) == std::string::npos )
+	if( !StringAlgo::matchMultiple( setName.string(), namePlug()->getValue() ) )
 	{
 		return inPlug()->setPlug()->getValue();
 	}
