@@ -245,6 +245,7 @@
 			],
 
 		},
+
 		"colorInspectorIcons" : {
 
 			"options" : {
@@ -259,7 +260,21 @@
 				'sourcePixel'
 			]
 
-		}
+		},
+
+		"graphEditor" : {
+
+			"options" : {
+				"requiredWidth" : 25,
+				"requiredHeight" : 25,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"annotations",
+			],
+
+		},
 
 	},
 

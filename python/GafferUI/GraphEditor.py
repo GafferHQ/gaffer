@@ -77,6 +77,24 @@ class GraphEditor( GafferUI.Editor ) :
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ), scoped = False )
 
+		with GafferUI.ListContainer( borderWidth = 8, spacing = 0 ) as overlay :
+			with GafferUI.ListContainer(
+				GafferUI.ListContainer.Orientation.Horizontal,
+				parenting = {
+					"verticalAlignment" : GafferUI.VerticalAlignment.Top,
+				}
+			) :
+				GafferUI.Spacer( imath.V2i( 1 ) )
+				GafferUI.MenuButton(
+					image = "annotations.png", hasFrame = False,
+					menu = GafferUI.Menu(
+						Gaffer.WeakMethod( self.__annotationsMenu ),
+						title = "Annotations"
+					)
+				)
+
+		self.__gadgetWidget.addOverlay( overlay )
+
 		self.__nodeMenu = None
 
 	## Returns the internal GadgetWidget holding the GraphGadget.
@@ -570,6 +588,86 @@ class GraphEditor( GafferUI.Editor ) :
 		# layout has gone off screen.
 
 		self.frame( nodes, extend = True )
+
+	def __annotationsMenu( self ) :
+
+		graphGadget = self.graphGadget()
+		annotationsGadget = graphGadget["__annotations"]
+
+		annotations = Gaffer.MetadataAlgo.annotationTemplates() + [ "user", annotationsGadget.untemplatedAnnotations ]
+		visiblePattern = annotationsGadget.getVisibleAnnotations()
+		visibleAnnotations = { a for a in annotations if IECore.StringAlgo.matchMultiple( a, visiblePattern ) }
+
+		result = IECore.MenuDefinition()
+
+		result.append(
+			"All",
+			{
+				"checkBox" : len( visibleAnnotations ) == len( annotations ),
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setVisibleAnnotations ), annotations = { "*" } )
+			}
+		)
+
+		result.append(
+			"None",
+			{
+				"checkBox" : len( visibleAnnotations ) == 0,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setVisibleAnnotations ), annotations = set() )
+			}
+		)
+
+		result.append( "__annotationsDivider__", { "divider" : True } )
+
+		def appendMenuItem( annotation, label = None ) :
+
+			if label is None :
+				# Support snake_case and CamelCase for conversion of name to label,
+				# since not all extensions use the Gaffer convention.
+				labelParts = annotation.split( ":" )
+				label = "/".join(
+					( " ".join( x.title() for x in p.split( "_" ) ) )
+					if "_" in p
+					else IECore.CamelCase.toSpaced( p )
+					for p in labelParts
+				)
+
+			if annotation in visibleAnnotations :
+				toggled = visibleAnnotations - { annotation }
+			else :
+				toggled = visibleAnnotations | { annotation }
+
+			result.append(
+				"/" + label,
+				{
+					"checkBox" : annotation in visibleAnnotations,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setVisibleAnnotations ), annotations = toggled )
+				}
+			)
+
+		userAnnotations = set( Gaffer.MetadataAlgo.annotationTemplates( userOnly = True ) )
+		for annotation in sorted( userAnnotations ) :
+			appendMenuItem( annotation )
+
+		if len( userAnnotations ) :
+			result.append( "__userDivider__", { "divider" : True } )
+		appendMenuItem( "user" )
+
+		result.append( "__nonUserDivider__", { "divider" : True } )
+
+		for annotation in sorted( Gaffer.MetadataAlgo.annotationTemplates() ) :
+			if annotation not in userAnnotations :
+				appendMenuItem( annotation )
+
+		result.append( "__otherDivider__", { "divider" : True } )
+		appendMenuItem( annotationsGadget.untemplatedAnnotations, label = "Other" )
+
+		return result
+
+	def __setVisibleAnnotations( self, unused, annotations ) :
+
+		annotationsGadget = self.graphGadget()["__annotations"]
+		pattern = " ".join( a.replace( " ", r"\ " ) for a in annotations )
+		annotationsGadget.setVisibleAnnotations( pattern )
 
 	@classmethod
 	def __getNodeInputConnectionsVisible( cls, graphGadget, node ) :
