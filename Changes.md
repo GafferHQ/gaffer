@@ -15,6 +15,7 @@ Features
 Improvements
 ------------
 
+- Set : Added `setVariable` plug to allow the input filter to be varied depending on the set name.
 - TabbedContainer : Added menu button to allow selection of tabs that are not
   visible due to a lack of horizontal space.
 
