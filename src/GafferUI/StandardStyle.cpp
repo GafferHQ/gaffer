@@ -506,6 +506,11 @@ V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, c
 	return p + v * t;
 }
 
+float luminance( const Color3f &c )
+{
+	return c.dot( V3f( 0.2126, 0.7152, 0.0722 ) );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -841,6 +846,38 @@ Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const I
 		return straightSegmentCenter + alongSegment * straightSegmentDir;
 	}
 
+}
+
+Imath::V2f StandardStyle::renderAnnotation( const Imath::V2f &origin, const std::string &text, State state, const Imath::Color3f *userColor ) const
+{
+	const float borderWidth = 0.5;
+	const float spacing = 0.25;
+	const Color3f defaultColor( 0.05 );
+	const Box3f characterBound = this->characterBound( BodyText );
+
+	glPushMatrix();
+
+		IECoreGL::glTranslate( origin + V2f( borderWidth, -borderWidth - characterBound.max.y ) );
+
+		const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
+		const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
+
+		Box3f textBounds = textBound( BodyText, text );
+
+		renderNodeFrame(
+			Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, characterBound.max.y ) ),
+			borderWidth, state, userColor
+		);
+
+		const Color3f &color = userColor ? *userColor : defaultColor;
+		renderText(
+			Style::BodyText, text, Style::NormalState,
+			luminance( color ) > 0.4 ? &darkGrey : &midGrey
+		);
+
+	glPopMatrix();
+
+	return origin - V2f( 0, characterBound.max.y - textBounds.min.y + borderWidth * 2 + spacing );
 }
 
 void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
