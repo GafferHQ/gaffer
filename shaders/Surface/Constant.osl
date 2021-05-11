@@ -36,8 +36,13 @@
 
 surface Constant
 (
-	color Cs = 1
+	color Cs = 1,
+	// Arnold doesn't support assignment to `Ci`, even though that's the
+	// standard way to provide the final shading result in OSL. So we mirror
+	// `Ci` into an output closure that Arnold _will_ render.
+	output closure color out = 0
 )
 {
 	Ci = Cs * emission();
+	out = Ci;
 }

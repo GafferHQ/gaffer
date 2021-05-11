@@ -39,5 +39,5 @@ surface uvTextureMap
 	string fileName = "catmull-rom",
 )
 {
-	Ci = emission() * texture( fileName, u, v );
+	Ci = emission() * (color)texture( fileName, u, v );
 }
