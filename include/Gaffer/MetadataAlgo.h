@@ -145,6 +145,10 @@ GAFFER_API bool numericBookmarkAffectedByChange( const IECore::InternedString &c
 /// next to a node. Each node can have arbitrary numbers of annotations,
 /// with different annotations being distinguished by their `name`.
 /// Templates can be used to define defaults for standard annotation types.
+/// The text from the template is used as a default when first creating
+/// an annotation via the UI, and the colour from the template provides
+/// the default colour if one is not specified explicitly by an annotation
+/// itself.
 
 struct GAFFER_API Annotation
 {
