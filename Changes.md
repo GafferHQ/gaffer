@@ -4,6 +4,10 @@
 Features
 --------
 
+- Viewer : Added multiple color inspectors. <kbd>Ctrl</kbd>+click on an image
+  to create a pixel inspector, or <kbd>Ctrl</kbd>+drag to create an area
+  inspector. The image footer now shows the results from all your inspectors,
+  and allows you to add or delete them.
 - FilterQuery : Added a new node for querying the results of a filter at a specific location.
 
 Improvements
@@ -11,10 +15,6 @@ Improvements
 
 - TabbedContainer : Added menu button to allow selection of tabs that are not
   visible due to a lack of horizontal space.
-- ImageView : Added multiple color inspectors.  Ctrl-click on an image to create
-  a pixel inspector, or Ctrl-drag to create an area inspector.  The image Viewer
-  footer now shows the results from all your inspectors, and allows you to add or
-  delete them.
 
 Fixes
 -----
