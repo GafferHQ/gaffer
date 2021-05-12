@@ -110,6 +110,37 @@ float luminance( const Color3f &c )
 	return c.dot( V3f( 0.2126, 0.7152, 0.0722 ) );
 }
 
+string wrap( const std::string &text, size_t maxLineLength )
+{
+	string result;
+
+	using Tokenizer = boost::tokenizer<boost::char_separator<char>>;
+	boost::char_separator<char> separator( "", " \n" );
+	Tokenizer tokenizer( text, separator );
+
+	size_t lineLength = 0;
+	for( const auto &s : tokenizer )
+	{
+		if( s == "\n" )
+		{
+			result += s;
+			lineLength = 0;
+		}
+		else if( lineLength == 0 || lineLength + s.size() < maxLineLength )
+		{
+			result += s;
+			lineLength += s.size();
+		}
+		else
+		{
+			result += "\n" + s;
+			lineLength = s.size();
+		}
+	}
+
+	return result;
+}
+
 float g_offset = 0.5;
 float g_borderWidth = 0.5;
 float g_spacing = 0.25;
@@ -192,6 +223,12 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			{
 				annotations.standardAnnotations.push_back(
 					MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
+				);
+				// Word wrap. It might be preferable to do this during
+				// rendering, but we have no way of querying the extent of
+				// `Style::renderWrappedText()`.
+				annotations.standardAnnotations.back().textData = new StringData(
+					wrap( annotations.standardAnnotations.back().text(), 60 )
 				);
 			}
 			annotations.renderable |= (bool)annotations.standardAnnotations.size();
