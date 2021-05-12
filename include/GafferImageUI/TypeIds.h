@@ -45,6 +45,10 @@ enum TypeId
 	ImageViewTypeId = 110850,
 	ImageGadgetTypeId = 110851,
 	V2fContextVariableTypeId = 110852,
+	Box2iContextVariableTypeId = 110853,
+	ColorInspectorPlugTypeId = 110854,
+	Box2iGadgetTypeId = 110855,
+	V2iGadgetTypeId = 110856,
 
 	LastTypeId = 110899
 };

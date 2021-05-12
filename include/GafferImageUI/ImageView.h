@@ -43,6 +43,8 @@
 
 #include "GafferUI/View.h"
 
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -114,6 +116,33 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
 		static void registeredDisplayTransforms( std::vector<std::string> &names );
 		static GafferImage::ImageProcessorPtr createDisplayTransform( const std::string &name );
+
+		class ColorInspectorPlug : public Gaffer::ValuePlug
+		{
+			public :
+				enum class Mode
+				{
+					Cursor,
+					Pixel,
+					Area
+				};
+
+				GAFFER_PLUG_DECLARE_TYPE( ColorInspectorPlug, ColorInspectorPlugTypeId, Gaffer::ValuePlug );
+
+				ColorInspectorPlug( const std::string &name = defaultName<ColorInspectorPlug>(), Direction direction=In, unsigned flags=Default );
+
+				Gaffer::IntPlug *modePlug();
+				const Gaffer::IntPlug *modePlug() const;
+
+				Gaffer::V2iPlug *pixelPlug();
+				const Gaffer::V2iPlug *pixelPlug() const;
+
+				Gaffer::Box2iPlug *areaPlug();
+				const Gaffer::Box2iPlug *areaPlug() const;
+
+				bool acceptsChild( const GraphComponent *potentialChild ) const override;
+				Gaffer::PlugPtr createCounterpart( const std::string &name, Plug::Direction direction ) const override;
+		};
 
 	protected :
 
