@@ -1714,6 +1714,32 @@ class Instance
 
 	public :
 
+		AtNode *node()
+		{
+			return m_ginstance.get() ? m_ginstance.get() : m_node.get();
+		}
+
+		void nodesCreated( vector<AtNode *> &nodes ) const
+		{
+			if( m_ginstance )
+			{
+				nodes.push_back( m_ginstance.get() );
+			}
+			else
+			{
+				// Technically the node was created in `InstanceCache.get()`
+				// rather than by us directly, but we are the sole owner and
+				// this is the most natural place to report the creation.
+				nodes.push_back( m_node.get() );
+			}
+		}
+
+	private :
+
+		// Constructors are private as they are only intended for use in
+		// `InstanceCache::get()`. See comment in `nodesCreated()`.
+		friend class InstanceCache;
+
 		// Non-instanced
 		Instance( const SharedAtNodePtr &node )
 			:	m_node( node )
@@ -1734,21 +1760,6 @@ class Instance
 				AiNodeSetPtr( m_ginstance.get(), g_nodeArnoldString, m_node.get() );
 			}
 		}
-
-		AtNode *node()
-		{
-			return m_ginstance.get() ? m_ginstance.get() : m_node.get();
-		}
-
-		void nodesCreated( vector<AtNode *> &nodes ) const
-		{
-			if( m_ginstance )
-			{
-				nodes.push_back( m_ginstance.get() );
-			}
-		}
-
-	private :
 
 		SharedAtNodePtr m_node;
 		SharedAtNodePtr m_ginstance;

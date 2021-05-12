@@ -159,6 +159,7 @@ enum TypeId
 	UnencapsulateTypeId = 110614,
 	MotionPathTypeId = 110615,
 	InstancerContextVariablePlugTypeId = 110616,
+	FilterQueryTypeId = 110617,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

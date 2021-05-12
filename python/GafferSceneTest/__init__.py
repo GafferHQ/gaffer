@@ -152,6 +152,7 @@ from .CurveSamplerTest import CurveSamplerTest
 from .DeleteSetsTest import DeleteSetsTest
 from .UnencapsulateTest import UnencapsulateTest
 from .MotionPathTest import MotionPathTest
+from .FilterQueryTest import FilterQueryTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

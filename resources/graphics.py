@@ -235,6 +235,30 @@
 				'viewPaused'
 			]
 
+		},
+
+		"tabIcons" : {
+
+			"ids" : [
+				"tabScrollMenu",
+				"deleteSmall",
+			],
+
+		},
+		"colorInspectorIcons" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'sourceCursor',
+				'sourceArea',
+				'sourcePixel'
+			]
+
 		}
 
 	},
@@ -249,7 +273,6 @@
 		'debugNotification',
 		'debugSmall',
 		'delete',
-		'deleteSmall',
 		'duplicate',
 		'editScopeNode',
 		'editScopeProcessorNode',

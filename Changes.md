@@ -115,6 +115,43 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
+0.59.x.x (relative to 0.59.7.0)
+========
+
+Features
+--------
+
+- Viewer : Added multiple color inspectors. <kbd>Ctrl</kbd>+click on an image
+  to create a pixel inspector, or <kbd>Ctrl</kbd>+drag to create an area
+  inspector. The image footer now shows the results from all your inspectors,
+  and allows you to add or delete them.
+- FilterQuery : Added a new node for querying the results of a filter at a specific location.
+
+Improvements
+------------
+
+- TabbedContainer : Added menu button to allow selection of tabs that are not
+  visible due to a lack of horizontal space.
+
+Fixes
+-----
+
+- Arnold : Fixed rendering of encapsulated objects for which automatic instancing
+  is not possible. Examples include curves with non-zero `ai:curves:min_pixel_width`
+  and meshes with non-zero `ai:polymesh:subdiv_adaptive_error`.
+- PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
+- GraphEditor : Fixed framing of nodes dropped into the editor. This was incorrect when the editor was
+  not at the default zoom.
+- OSL Constant : Fixed usage as a surface shader in Arnold.
+
+API
+---
+
+- Context : Added forwards compatibility for methods added to provide enhanced
+  performance in Gaffer 0.60. This allows the same code to be compiled for both
+  Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
+  from improved performance).
+
 0.59.7.0 (relative to 0.59.6.0)
 ========
 
@@ -578,6 +615,16 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.x (relative to 0.58.6.5)
+========
+
+Fixes
+-----
+
+- Arnold : Fixed rendering of encapsulated objects for which automatic instancing
+  is not possible. Examples include curves with non-zero `ai:curves:min_pixel_width`
+  and meshes with non-zero `ai:polymesh:subdiv_adaptive_error`.
 
 0.58.6.5 (relative to 0.58.6.4)
 ========

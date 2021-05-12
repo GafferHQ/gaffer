@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,84 +34,77 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGESTATS_H
-#define GAFFERIMAGE_IMAGESTATS_H
+#ifndef GAFFERSCENE_FILTERQUERY_H
+#define GAFFERSCENE_FILTERQUERY_H
 
-#include "GafferImage/ImagePlug.h"
-#include "GafferImage/DeepState.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/TypeIds.h"
 
-#include "Gaffer/BoxPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
-namespace GafferImage
+namespace GafferScene
 {
 
-/// \todo Add an areaSource plug with the same semantics
-/// that the Crop node has.
-class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
+IE_CORE_FORWARDDECLARE( ScenePlug )
+IE_CORE_FORWARDDECLARE( FilterPlug )
+
+class GAFFERSCENE_API FilterQuery : public Gaffer::ComputeNode
 {
 
 	public :
 
-		ImageStats( const std::string &name=defaultName<ImageStats>() );
-		~ImageStats() override;
+		FilterQuery( const std::string &name=defaultName<FilterQuery>() );
+		~FilterQuery() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::FilterQuery, FilterQueryTypeId, ComputeNode );
+
+		ScenePlug *scenePlug();
+		const ScenePlug *scenePlug() const;
+
+		FilterPlug *filterPlug();
+		const FilterPlug *filterPlug() const;
+
+		Gaffer::StringPlug *locationPlug();
+		const Gaffer::StringPlug *locationPlug() const;
+
+		Gaffer::BoolPlug *exactMatchPlug();
+		const Gaffer::BoolPlug *exactMatchPlug() const;
+
+		Gaffer::BoolPlug *descendantMatchPlug();
+		const Gaffer::BoolPlug *descendantMatchPlug() const;
+
+		Gaffer::BoolPlug *ancestorMatchPlug();
+		const Gaffer::BoolPlug *ancestorMatchPlug() const;
+
+		Gaffer::StringPlug *closestAncestorPlug();
+		const Gaffer::StringPlug *closestAncestorPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
-		GafferImage::ImagePlug *inPlug();
-		const GafferImage::ImagePlug *inPlug() const;
-
-		Gaffer::StringVectorDataPlug *channelsPlug();
-		const Gaffer::StringVectorDataPlug *channelsPlug() const;
-
-		Gaffer::Box2iPlug *areaPlug();
-		const Gaffer::Box2iPlug *areaPlug() const;
-
-		Gaffer::Color4fPlug *averagePlug();
-		const Gaffer::Color4fPlug *averagePlug() const;
-
-		Gaffer::Color4fPlug *minPlug();
-		const Gaffer::Color4fPlug *minPlug() const;
-
-		Gaffer::Color4fPlug *maxPlug();
-		const Gaffer::Color4fPlug *maxPlug() const;
-
 	protected :
+
+		Gaffer::IntPlug *matchPlug();
+		const Gaffer::IntPlug *matchPlug() const;
+
+		// Used in the computation of `ancestorMatchPlug()`. This uses
+		// `${scene:path}` rather than `locationPlug()` so can be used in
+		// recursive computes to inherit results from ancestor contexts.
+		Gaffer::StringPlug *closestAncestorInternalPlug();
+		const Gaffer::StringPlug *closestAncestorInternalPlug() const;
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
-		Gaffer::ValuePlug::CachePolicy hashCachePolicy( const Gaffer::ValuePlug *output ) const override;
-
-
-	private :
-
-		// Stats for individual tiles
-		Gaffer::ObjectPlug *tileStatsPlug();
-		const Gaffer::ObjectPlug *tileStatsPlug() const;
-
-		// Combined stats, before they get broken out into 3 seperate plugs
-		Gaffer::ObjectPlug *allStatsPlug();
-		const Gaffer::ObjectPlug *allStatsPlug() const;
-
-		// Input plug to receive the flattened image from the internal
-		// DeepState plug.
-		ImagePlug *flattenedInPlug();
-		const ImagePlug *flattenedInPlug() const;
-
-		// The internal DeepState node.
-		GafferImage::DeepState *deepState();
-		const GafferImage::DeepState *deepState() const;
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( ImageStats );
+IE_CORE_DECLAREPTR( FilterQuery )
 
-} // namespace GafferImage
+} // namespace GafferScene
 
-#endif // GAFFERIMAGE_IMAGESTATS_H
+#endif // GAFFERSCENE_FILTERQUERY_H
