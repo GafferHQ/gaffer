@@ -19,6 +19,9 @@ Improvements
 Fixes
 -----
 
+- Arnold : Fixed rendering of encapsulated objects for which automatic instancing
+  is not possible. Examples include curves with non-zero `ai:curves:min_pixel_width`
+  and meshes with non-zero `ai:polymesh:subdiv_adaptive_error`.
 - PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
 - GraphEditor : Fixed framing of nodes dropped into the editor. This was incorrect when the editor was
   not at the default zoom.
@@ -495,6 +498,16 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.x (relative to 0.58.6.5)
+========
+
+Fixes
+-----
+
+- Arnold : Fixed rendering of encapsulated objects for which automatic instancing
+  is not possible. Examples include curves with non-zero `ai:curves:min_pixel_width`
+  and meshes with non-zero `ai:polymesh:subdiv_adaptive_error`.
 
 0.58.6.5 (relative to 0.58.6.4)
 ========

@@ -2591,6 +2591,78 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:a" ) )
 			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:b" ) )
 
+	def testProceduralWithCurves( self ) :
+
+		class CurvesProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
+
+			def __init__( self, minPixelWidth ) :
+
+				GafferScene.Private.IECoreScenePreview.Procedural.__init__( self )
+
+				self.__minPixelWidth = minPixelWidth
+
+			def render( self, renderer ) :
+
+				curves = IECoreScene.CurvesPrimitive(
+					IECore.IntVectorData( [ 4 ] ),
+					IECore.CubicBasisf.catmullRom(),
+					False,
+					IECore.V3fVectorData( [
+						imath.V3f( 0, -1, 0 ),
+						imath.V3f( 0, -1, 0 ),
+						imath.V3f( 0, 1, 0 ),
+						imath.V3f( 0, 1, 0 ),
+					] )
+				)
+
+				renderer.object(
+					"/curves",
+					curves,
+					renderer.attributes( IECore.CompoundObject( {
+						"ai:curves:min_pixel_width" : IECore.FloatData( self.__minPixelWidth )
+					} ) ),
+				)
+
+		IECore.registerRunTimeTyped( CurvesProcedural )
+
+		# We repeat the test with and without a min pixel width.
+		# This exercises the instanced and non-instanced code paths
+		# in the procedural renderer backend.
+		for minPixelWidth in ( 0.0, 1.0 ) :
+
+			renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+				"Arnold",
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+			)
+
+			renderer.object(
+				"/procedural",
+				CurvesProcedural( minPixelWidth ),
+				renderer.attributes( IECore.CompoundObject() )
+			).transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
+
+			outputFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+			renderer.output(
+				"test",
+				IECoreScene.Output(
+					outputFileName,
+					"exr",
+					"rgba",
+					{
+					}
+				)
+			)
+
+			renderer.render()
+			del renderer
+
+			# We should find the curves visible in the centre pixel.
+			image = IECoreImage.ImageReader( outputFileName ).read()
+			dimensions = image.dataWindow.size() + imath.V2i( 1 )
+			centreIndex = dimensions.x * int( dimensions.y * 0.5 ) + int( dimensions.x * 0.5 )
+			color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
+			self.assertEqual( color, imath.Color3f( 1 ) )
+
 	@staticmethod
 	def __aovShaders() :
 
