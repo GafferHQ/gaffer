@@ -228,32 +228,41 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 		if( annotations.standardAnnotations.size() )
 		{
+			// Baseline for `characterBound` and `textBound` is at `y == 0`.
+			const Box3f characterBound = style->characterBound( Style::BodyText );
+
 			glPushMatrix();
-			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y - g_borderWidth ) );
+			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y ) );
 
 			const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
 			const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
 			float previousHeight = 0;
 			for( const auto &a : annotations.standardAnnotations )
 			{
-				Box3f textBounds = style->textBound( Style::BodyText, a.text() );
-
-				float yOffset;
-				if( &a == &annotations.standardAnnotations.front() )
+				// Translate down to put the text baseline where we want it.
+				float yOffset = g_borderWidth + characterBound.max.y;
+				if( &a != &annotations.standardAnnotations.front() )
 				{
-					yOffset = -style->characterBound( Style::BodyText ).max.y;
+					yOffset += previousHeight + g_borderWidth + g_spacing;
 				}
-				else
-				{
-					yOffset = -previousHeight -g_spacing;
-				}
+				IECoreGL::glTranslate( V2f( 0, -yOffset ) );
 
-				IECoreGL::glTranslate( V2f( 0, yOffset ) );
+				// Draw frame and text. `textBounds` is not ideal for use as a
+				// frame, as it provides an exact bound that changes in `y`
+				// depending on the existence of ascenders and/or descenders.
+				// We work around this by using `characterBound.max.y` for our
+				// `max`, but without reverse engineering the line spacing etc in
+				// `style`, we can't do much about `min`.
+				/// \todo We're using similar workarounds in TextGadget, so we
+				/// should probably improve `Style` and `IECoreScene::Font`
+				/// instead.
+				const Box3f textBounds = style->textBound( Style::BodyText, a.text() );
+
 				/// \todo We're using `renderNodeFrame()` because it's the only way we can specify a colour,
 				/// but really we want `renderFrame()` to provide that option. Or we could consider having
 				/// explicit annotation rendering methods in the Style class.
 				style->renderNodeFrame(
-					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, textBounds.max.y ) ),
+					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, characterBound.max.y ) ),
 					g_borderWidth, Style::NormalState,
 					&a.color()
 				);
@@ -261,7 +270,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 					Style::BodyText, a.text(), Style::NormalState,
 					luminance( a.color() ) > 0.4 ? &darkGrey : &midGrey
 				);
-				previousHeight = textBounds.size().y + g_borderWidth * 2;
+				previousHeight = -textBounds.min.y;
 			}
 			glPopMatrix();
 		}
