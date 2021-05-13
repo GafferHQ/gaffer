@@ -42,6 +42,7 @@ import six
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 import GafferScene
 import GafferSceneTest
@@ -1423,6 +1424,35 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.SceneAlgo.matchingPathsHash( rootFilter["out"], group["out"] ),
 			GafferScene.SceneAlgo.matchingPathsHash( emptyFilter["out"], group["out"] )
 		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testMatchingPathsHashPerformance( self ) :
+
+		# Trick to make an infinitely recursive scene. This high-depth but
+		# low-branching-factor scene is in deliberate contrast to the
+		# lots-of-children-at-one-location scene used in
+		# `FilterResultsTest.testHashPerformance()`. We need good parallel
+		# performance for both topologies.
+		scene = GafferScene.ScenePlug()
+		scene["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+		# We use a PathMatcher to limit the search recursion, matching
+		# every item 22 deep, but no other.
+		pathMatcher = IECore.PathMatcher( [ "/*" * 22 ] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferScene.SceneAlgo.matchingPathsHash( pathMatcher, scene )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testMatchingPathsPerformance( self ) :
+
+		# See comments in `testMatchingPathsHashPerformance()`.
+		scene = GafferScene.ScenePlug()
+		scene["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+		pathMatcher = IECore.PathMatcher( [ "/*" * 21 ] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			result = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
 
 if __name__ == "__main__":
 	unittest.main()
