@@ -605,6 +605,112 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertTrue( Gaffer.MetadataAlgo.childAffectedByChange( n["p"], Gaffer.V3fPlug, changedPlugPath = "[xyz]", changedPlug = None ) )
 		self.assertFalse( Gaffer.MetadataAlgo.childAffectedByChange( n["p"], Gaffer.V3fPlug, changedPlugPath = "x.c", changedPlug = None ) )
 
+	def testAnnotations( self ) :
+
+		n = Gaffer.Node()
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n ), [] )
+		self.assertIsNone( Gaffer.MetadataAlgo.getAnnotation( n, "test" ) )
+
+		cs = GafferTest.CapturingSlot( Gaffer.Metadata.nodeValueChangedSignal( n ) )
+		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( "Hello world", imath.Color3f( 1, 0, 0 ) ) )
+		self.assertTrue( len( cs ) )
+		for x in cs :
+			self.assertTrue( Gaffer.MetadataAlgo.annotationsAffectedByChange( x[1] ) )
+
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n ), [ "test" ] )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
+			Gaffer.MetadataAlgo.Annotation( "Hello world", imath.Color3f( 1, 0, 0 ) )
+		)
+
+		del cs[:]
+		Gaffer.MetadataAlgo.addAnnotation( n, "test2", Gaffer.MetadataAlgo.Annotation( "abc", imath.Color3f( 0, 1, 0 ) ) )
+		self.assertTrue( len( cs ) )
+		for x in cs :
+			self.assertTrue( Gaffer.MetadataAlgo.annotationsAffectedByChange( x[1] ) )
+
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n ), [ "test", "test2" ] )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test2" ),
+			Gaffer.MetadataAlgo.Annotation( "abc", imath.Color3f( 0, 1, 0 ) )
+		)
+
+		del cs[:]
+		Gaffer.MetadataAlgo.removeAnnotation( n, "test" )
+		self.assertTrue( len( cs ) )
+		for x in cs :
+			self.assertTrue( Gaffer.MetadataAlgo.annotationsAffectedByChange( x[1] ) )
+
+		self.assertEqual( Gaffer.MetadataAlgo.annotations( n ), [ "test2" ] )
+		self.assertIsNone( Gaffer.MetadataAlgo.getAnnotation( n, "test" ) )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test2" ),
+			Gaffer.MetadataAlgo.Annotation( "abc", imath.Color3f( 0, 1, 0 ) )
+		)
+
+	def testAnnotationWithoutColor( self ) :
+
+		n = Gaffer.Node()
+		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "abc" ) )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 1 )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
+			Gaffer.MetadataAlgo.Annotation( text = "abc" )
+		)
+
+		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "xyz", color = imath.Color3f( 1 ) ) )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 2 )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
+			Gaffer.MetadataAlgo.Annotation( text = "xyz", color = imath.Color3f( 1 ) )
+		)
+
+		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "abc" ) )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 1 )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
+			Gaffer.MetadataAlgo.Annotation( text = "abc" )
+		)
+
+	def testAnnotationToBool( self ) :
+
+		self.assertFalse( Gaffer.MetadataAlgo.Annotation() )
+		self.assertTrue( Gaffer.MetadataAlgo.Annotation( "test" ) )
+
+	def testAnnotationTemplates( self ) :
+
+		self.assertIsNone( Gaffer.MetadataAlgo.getAnnotationTemplate( "test" ) )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [] )
+
+		a = Gaffer.MetadataAlgo.Annotation( "", imath.Color3f( 1, 0, 0 ) )
+		Gaffer.MetadataAlgo.addAnnotationTemplate( "test", a )
+		self.assertEqual( Gaffer.MetadataAlgo.getAnnotationTemplate( "test" ), a )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [ "test" ] )
+
+		n = Gaffer.Node()
+		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( "hi" ) )
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
+			Gaffer.MetadataAlgo.Annotation( "hi" ),
+		)
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test", inheritTemplate = True ),
+			Gaffer.MetadataAlgo.Annotation( "hi", imath.Color3f( 1, 0, 0 ) ),
+		)
+
+		Gaffer.MetadataAlgo.removeAnnotationTemplate( "test" )
+		self.assertIsNone( Gaffer.MetadataAlgo.getAnnotationTemplate( "test" ) )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [] )
+
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
+			Gaffer.MetadataAlgo.Annotation( "hi" ),
+		)
+		self.assertEqual(
+			Gaffer.MetadataAlgo.getAnnotation( n, "test", inheritTemplate = True ),
+			Gaffer.MetadataAlgo.Annotation( "hi" ),
+		)
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :

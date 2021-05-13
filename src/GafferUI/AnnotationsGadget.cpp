@@ -105,6 +105,42 @@ IECoreGL::Texture *numericBookmarkTexture()
 	return numericBookmarkTexture.get();
 }
 
+float luminance( const Color3f &c )
+{
+	return c.dot( V3f( 0.2126, 0.7152, 0.0722 ) );
+}
+
+string wrap( const std::string &text, size_t maxLineLength )
+{
+	string result;
+
+	using Tokenizer = boost::tokenizer<boost::char_separator<char>>;
+	boost::char_separator<char> separator( "", " \n" );
+	Tokenizer tokenizer( text, separator );
+
+	size_t lineLength = 0;
+	for( const auto &s : tokenizer )
+	{
+		if( s == "\n" )
+		{
+			result += s;
+			lineLength = 0;
+		}
+		else if( lineLength == 0 || lineLength + s.size() < maxLineLength )
+		{
+			result += s;
+			lineLength += s.size();
+		}
+		else
+		{
+			result += "\n" + s;
+			lineLength = s.size();
+		}
+	}
+
+	return result;
+}
+
 float g_offset = 0.5;
 float g_borderWidth = 0.5;
 float g_spacing = 0.25;
@@ -157,7 +193,7 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		return;
 	}
 
-	vector<InternedString> registeredValues;
+	vector<string> names;
 	for( auto &ga : m_annotations )
 	{
 		const Node *node = ga.first->node();
@@ -181,22 +217,21 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			}
 
 			annotations.standardAnnotations.clear();
-			registeredValues.clear();
-			Metadata::registeredValues( node, registeredValues );
-			for( const auto &key : registeredValues )
+			names.clear();
+			MetadataAlgo::annotations( node, names );
+			for( const auto &name : names )
 			{
-				if( boost::starts_with( key.string(), "annotation:" ) && boost::ends_with( key.string(), ":text" ) )
-				{
-					if( auto text = Metadata::value<StringData>( node, key ) )
-					{
-						const string prefix = key.string().substr( 0, key.string().size() - 4 );
-						annotations.standardAnnotations.push_back(
-							{ text, Metadata::value<Color3fData>( node, prefix + "color" ) }
-						);
-						annotations.renderable = true;
-					}
-				}
+				annotations.standardAnnotations.push_back(
+					MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
+				);
+				// Word wrap. It might be preferable to do this during
+				// rendering, but we have no way of querying the extent of
+				// `Style::renderWrappedText()`.
+				annotations.standardAnnotations.back().textData = new StringData(
+					wrap( annotations.standardAnnotations.back().text(), 60 )
+				);
 			}
+			annotations.renderable |= (bool)annotations.standardAnnotations.size();
 
 			annotations.dirty = false;
 		}
@@ -230,37 +265,49 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 		if( annotations.standardAnnotations.size() )
 		{
-			glPushMatrix();
-			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y - g_borderWidth ) );
+			// Baseline for `characterBound` and `textBound` is at `y == 0`.
+			const Box3f characterBound = style->characterBound( Style::BodyText );
 
+			glPushMatrix();
+			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y ) );
+
+			const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
 			const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
-			const Color3f darkGrey( 0.05 );
 			float previousHeight = 0;
 			for( const auto &a : annotations.standardAnnotations )
 			{
-				Box3f textBounds = style->textBound( Style::BodyText, a.text->readable() );
-
-				float yOffset;
-				if( &a == &annotations.standardAnnotations.front() )
+				// Translate down to put the text baseline where we want it.
+				float yOffset = g_borderWidth + characterBound.max.y;
+				if( &a != &annotations.standardAnnotations.front() )
 				{
-					yOffset = -style->characterBound( Style::BodyText ).max.y;
+					yOffset += previousHeight + g_borderWidth + g_spacing;
 				}
-				else
-				{
-					yOffset = -previousHeight -g_spacing;
-				}
+				IECoreGL::glTranslate( V2f( 0, -yOffset ) );
 
-				IECoreGL::glTranslate( V2f( 0, yOffset ) );
+				// Draw frame and text. `textBounds` is not ideal for use as a
+				// frame, as it provides an exact bound that changes in `y`
+				// depending on the existence of ascenders and/or descenders.
+				// We work around this by using `characterBound.max.y` for our
+				// `max`, but without reverse engineering the line spacing etc in
+				// `style`, we can't do much about `min`.
+				/// \todo We're using similar workarounds in TextGadget, so we
+				/// should probably improve `Style` and `IECoreScene::Font`
+				/// instead.
+				const Box3f textBounds = style->textBound( Style::BodyText, a.text() );
+
 				/// \todo We're using `renderNodeFrame()` because it's the only way we can specify a colour,
 				/// but really we want `renderFrame()` to provide that option. Or we could consider having
 				/// explicit annotation rendering methods in the Style class.
 				style->renderNodeFrame(
-					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, textBounds.max.y ) ),
+					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, characterBound.max.y ) ),
 					g_borderWidth, Style::NormalState,
-					a.color ? &(a.color->readable()) : &darkGrey
+					&a.color()
 				);
-				style->renderText( Style::BodyText, a.text->readable(), Style::NormalState, &midGrey );
-				previousHeight = textBounds.size().y + g_borderWidth * 2;
+				style->renderText(
+					Style::BodyText, a.text(), Style::NormalState,
+					luminance( a.color() ) > 0.4 ? &darkGrey : &midGrey
+				);
+				previousHeight = -textBounds.min.y;
 			}
 			glPopMatrix();
 		}

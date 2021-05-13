@@ -9,6 +9,8 @@ Features
   inspector. The image footer now shows the results from all your inspectors,
   and allows you to add or delete them.
 - FilterQuery : Added a new node for querying the results of a filter at a specific location.
+- GraphEditor : Added "Annotate..." item to the node context menu. This can be configured with
+  multiple annotation templates using the `MetadataAlgo` API.
 
 Improvements
 ------------
@@ -34,6 +36,8 @@ API
   performance in Gaffer 0.60. This allows the same code to be compiled for both
   Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
   from improved performance).
+- MetadataAlgo : Added functions for managing annotations on nodes.
+- MonitorAlgo : Added `persistent` argument to `annotate()` functions.
 
 0.59.7.0 (relative to 0.59.6.0)
 ========

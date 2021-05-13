@@ -45,7 +45,8 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include <boost/regex.hpp>
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/regex.hpp"
 
 using namespace std;
 using namespace IECore;
@@ -59,6 +60,8 @@ InternedString g_bookmarkedName( "bookmarked" );
 InternedString g_numericBookmarkBaseName( "numericBookmark" );
 IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
 IECore::InternedString g_noduleColorKey( "nodule:color" );
+const std::string g_annotationPrefix( "annotation:" );
+const InternedString g_annotations( "annotations" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -324,6 +327,170 @@ bool numericBookmarkAffectedByChange( const IECore::InternedString &changedKey )
 	return boost::regex_match( changedKey.string(), expr );
 }
 
+// Annotations
+// ===========
+
+Imath::Color3f Annotation::g_defaultColor( 0.05 );
+std::string Annotation::g_defaultText;
+
+Annotation::Annotation( const std::string &text )
+	:	textData( new StringData( text ) ), colorData( nullptr )
+{
+}
+
+Annotation::Annotation( const std::string &text, const Imath::Color3f &color )
+	:	textData( new StringData( text ) ), colorData( new Color3fData( color ) )
+{
+}
+
+Annotation::Annotation( const IECore::ConstStringDataPtr &text, const IECore::ConstColor3fDataPtr &color )
+	:	textData( text ), colorData( color )
+{
+}
+
+bool Annotation::operator == ( const Annotation &rhs )
+{
+	auto dataEqual = [] ( const Data *a, const Data *b ) {
+		if( a )
+		{
+			return b && b->isEqualTo( a );
+		}
+		else
+		{
+			return !b;
+		}
+	};
+
+	return
+		dataEqual( textData.get(), rhs.textData.get() ) &&
+		dataEqual( colorData.get(), rhs.colorData.get() )
+	;
+}
+
+void addAnnotation( Node *node, const std::string &name, const Annotation &annotation, bool persistent )
+{
+	const string prefix = g_annotationPrefix + name + ":";
+	if( annotation.textData )
+	{
+		Metadata::registerValue( node, prefix + "text", annotation.textData, persistent );
+	}
+	else
+	{
+		throw IECore::Exception( "Annotation must have text" );
+	}
+
+	if( annotation.colorData )
+	{
+		Metadata::registerValue( node, prefix + "color", annotation.colorData, persistent );
+	}
+	else
+	{
+		Metadata::deregisterValue( node, prefix + "color" );
+	}
+}
+
+Annotation getAnnotation( const Node *node, const std::string &name, bool inheritTemplate )
+{
+	const string prefix = g_annotationPrefix + name + ":";
+	auto text = Metadata::value<StringData>( node, prefix + "text" );
+	if( !text )
+	{
+		return Annotation();
+	}
+
+	Annotation result( text, Metadata::value<Color3fData>( node, prefix + "color" ) );
+	if( !result.colorData && inheritTemplate  )
+	{
+		result.colorData = Metadata::value<Color3fData>( g_annotations, name + ":color" );
+	}
+	return result;
+}
+
+void removeAnnotation( Node *node, const std::string &name )
+{
+	const string prefix = g_annotationPrefix + name + ":";
+	vector<InternedString> keys;
+	Metadata::registeredValues( node, keys );
+
+	for( const auto &key : keys )
+	{
+		if( boost::starts_with( key.string(), prefix ) )
+		{
+			Metadata::deregisterValue( node, key );
+		}
+	}
+}
+
+void annotations( const Node *node, std::vector<std::string> &names )
+{
+	vector<InternedString> keys;
+	Metadata::registeredValues( node, keys );
+
+	for( const auto &key : keys )
+	{
+		if( boost::starts_with( key.string(), g_annotationPrefix ) && boost::ends_with( key.string(), ":text" ) )
+		{
+			names.push_back( key.string().substr( g_annotationPrefix.size(), key.string().size() - g_annotationPrefix.size() - 5 ) );
+		}
+	}
+}
+
+void addAnnotationTemplate( const std::string &name, const Annotation &annotation )
+{
+	if( annotation.textData )
+	{
+		Metadata::registerValue( g_annotations, name + ":text", annotation.textData );
+	}
+	else
+	{
+		Metadata::deregisterValue( g_annotations, name + ":text" );
+	}
+
+	if( annotation.colorData )
+	{
+		Metadata::registerValue( g_annotations, name + ":color", annotation.colorData );
+	}
+	else
+	{
+		Metadata::deregisterValue( g_annotations, name + ":color" );
+	}
+}
+
+Annotation getAnnotationTemplate( const std::string &name )
+{
+	return Annotation(
+		Metadata::value<StringData>( g_annotations, name + ":text" ),
+		Metadata::value<Color3fData>( g_annotations, name + ":color" )
+	);
+}
+
+void removeAnnotationTemplate( const std::string &name )
+{
+	Metadata::deregisterValue( g_annotations, name + ":text" );
+	Metadata::deregisterValue( g_annotations, name + ":color" );
+}
+
+void annotationTemplates( std::vector<std::string> &names )
+{
+	vector<InternedString> keys;
+	Metadata::registeredValues( g_annotations, keys );
+	for( const auto &key : keys )
+	{
+		if( boost::ends_with( key.string(), ":text" ) )
+		{
+			names.push_back( key.string().substr( 0, key.string().size() - 5 ) );
+		}
+	}
+}
+
+bool annotationsAffectedByChange( const IECore::InternedString &changedKey )
+{
+	return boost::starts_with( changedKey.c_str(), g_annotationPrefix );
+}
+
+// Change queries
+// ==============
+
 bool affectedByChange( const Plug *plug, IECore::TypeId changedTypeId, const IECore::StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
@@ -475,6 +642,9 @@ bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const
 
 	return node->isInstanceOf( changedNodeTypeId );
 }
+
+// Copying
+// =======
 
 void copy( const GraphComponent *from, GraphComponent *to, bool persistent )
 {
