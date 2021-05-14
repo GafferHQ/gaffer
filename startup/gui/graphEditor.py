@@ -100,6 +100,7 @@ def __nodeContextMenu( graphEditor, node, menuDefinition ) :
 	GafferDispatchUI.DispatcherUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphEditor.appendContentsMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.UIEditor.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
+	GafferUI.AnnotationsUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition )
 

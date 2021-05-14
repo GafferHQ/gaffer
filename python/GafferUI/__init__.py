@@ -270,6 +270,7 @@ from .NameValuePlugValueWidget import NameValuePlugValueWidget
 from .ShufflePlugValueWidget import ShufflePlugValueWidget
 from .ShufflePlugValueWidget import ShufflesPlugValueWidget
 from .BackgroundTaskDialogue import BackgroundTaskDialogue
+from . import AnnotationsUI
 
 # and then specific node uis
 

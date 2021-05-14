@@ -562,6 +562,9 @@ const std::string &Context::SubstitutionProvider::variable( const boost::string_
 			case IECore::StringDataTypeId :
 				recurse = true;
 				return *static_cast<const std::string*>( value->rawValue() );
+			case IECore::InternedStringDataTypeId :
+				recurse = true;
+				return *static_cast<const IECore::InternedString *>( value->rawValue() );
 			case IECore::FloatDataTypeId :
 				m_formattedString = boost::lexical_cast<std::string>(
 					*static_cast<const float *>( value->rawValue() )

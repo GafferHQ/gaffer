@@ -70,8 +70,16 @@ enum PerformanceMetric
 GAFFER_API std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric = 50 );
 GAFFER_API std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines = 50 );
 
+GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor, bool persistent );
+/// \todo Remove, and default `persistent = true` above.
 GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor );
+
+GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric, bool persistent );
+/// \todo Remove, and default `persistent = true` above.
 GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric );
+
+GAFFER_API void annotate( Node &root, const ContextMonitor &monitor, bool persistent );
+/// \todo Remove, and default `persistent = true` above.
 GAFFER_API void annotate( Node &root, const ContextMonitor &monitor );
 
 } // namespace MonitorAlgo

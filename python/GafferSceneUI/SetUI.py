@@ -120,6 +120,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"setVariable" : [
+
+			"description",
+			"""
+			A context variable created to pass the name of the set
+			being processed to the nodes connected to the `filter`
+			plug. This can be used to vary the filter for each set.
+			""",
+
+		],
+
 		"paths" : [
 
 			"description",

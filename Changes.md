@@ -120,7 +120,7 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
-0.59.x.x (relative to 0.59.7.0)
+0.59.8.0 (relative to 0.59.7.0)
 ========
 
 Features
@@ -131,10 +131,13 @@ Features
   inspector. The image footer now shows the results from all your inspectors,
   and allows you to add or delete them.
 - FilterQuery : Added a new node for querying the results of a filter at a specific location.
+- GraphEditor : Added "Annotate..." item to the node context menu. This can be configured with
+  multiple annotation templates using the `MetadataAlgo` API.
 
 Improvements
 ------------
 
+- Set : Added `setVariable` plug to allow the input filter to be varied depending on the set name.
 - TabbedContainer : Added menu button to allow selection of tabs that are not
   visible due to a lack of horizontal space.
 
@@ -152,10 +155,14 @@ Fixes
 API
 ---
 
-- Context : Added forwards compatibility for methods added to provide enhanced
-  performance in Gaffer 0.60. This allows the same code to be compiled for both
-  Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
-  from improved performance).
+- Context :
+  - Added forwards compatibility for methods added to provide enhanced
+    performance in Gaffer 0.60. This allows the same code to be compiled for
+    both Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build
+    benefiting from improved performance).
+  - Added support for `IECore::InternedString` variables in `substitute()`.
+- MetadataAlgo : Added functions for managing annotations on nodes.
+- MonitorAlgo : Added `persistent` argument to `annotate()` functions.
 
 0.59.7.0 (relative to 0.59.6.0)
 ========
@@ -621,7 +628,7 @@ Build
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
 
-0.58.6.x (relative to 0.58.6.5)
+0.58.6.6 (relative to 0.58.6.5)
 ========
 
 Fixes
