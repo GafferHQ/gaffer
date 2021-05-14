@@ -15,6 +15,7 @@ Features
 Improvements
 ------------
 
+- Set : Added `setVariable` plug to allow the input filter to be varied depending on the set name.
 - TabbedContainer : Added menu button to allow selection of tabs that are not
   visible due to a lack of horizontal space.
 
@@ -32,10 +33,12 @@ Fixes
 API
 ---
 
-- Context : Added forwards compatibility for methods added to provide enhanced
-  performance in Gaffer 0.60. This allows the same code to be compiled for both
-  Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build benefiting
-  from improved performance).
+- Context :
+  - Added forwards compatibility for methods added to provide enhanced
+    performance in Gaffer 0.60. This allows the same code to be compiled for
+    both Gaffer 0.60 and Gaffer 0.59 (but with only the Gaffer 0.60 build
+    benefiting from improved performance).
+  - Added support for `IECore::InternedString` variables in `substitute()`.
 - MetadataAlgo : Added functions for managing annotations on nodes.
 - MonitorAlgo : Added `persistent` argument to `annotate()` functions.
 

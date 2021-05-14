@@ -38,6 +38,7 @@
 
 #include "GafferScene/FilterResults.h"
 
+#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/StringAlgo.h"
@@ -47,7 +48,41 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-static InternedString g_ellipsis( "..." );
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct PathMatcherScope : public ScenePlug::GlobalScope
+{
+
+	PathMatcherScope( const Context *context, const string &setVariable, const InternedString &setName )
+		:	ScenePlug::GlobalScope( context ), m_setName( setName )
+	{
+		if( !setVariable.empty() )
+		{
+			// Storing as `string` rather than `InternedString` to
+			// avoid confusion when referring to the variable in
+			// upstream expressions.
+			set( setVariable, &m_setName.string() );
+		}
+	}
+
+	private :
+
+		const InternedString m_setName;
+
+};
+
+InternedString g_ellipsis( "..." );
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Set implementation
+//////////////////////////////////////////////////////////////////////////
 
 GAFFER_NODE_DEFINE_TYPE( Set );
 
@@ -59,15 +94,26 @@ Set::Set( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Gaffer::IntPlug( "mode", Gaffer::Plug::In, Create, Create, Remove ) );
 	addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, "set" ) );
+	addChild( new Gaffer::StringPlug( "setVariable" ) );
 	addChild( new Gaffer::StringVectorDataPlug( "paths", Gaffer::Plug::In, new StringVectorData ) );
 
 	addChild( new PathMatcherDataPlug( "__filterResults", Gaffer::Plug::In, new PathMatcherData, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new PathMatcherDataPlug( "__pathMatcher", Gaffer::Plug::Out, new PathMatcherData ) );
 
+	// Internal nodes to drive `filterResultsPlug()`, without leaking `setVariable` to
+	// the upstream scene.
+
+	Gaffer::DeleteContextVariablesPtr deleteContextVariables = new Gaffer::DeleteContextVariables( "__DeleteContextVariables" );
+	deleteContextVariables->setup( inPlug() );
+	deleteContextVariables->inPlug()->setInput( inPlug() );
+	deleteContextVariables->enabledPlug()->setInput( setVariablePlug() );
+	deleteContextVariables->variablesPlug()->setInput( setVariablePlug() );
+	addChild( deleteContextVariables );
+
 	FilterResultsPtr filterResults = new FilterResults( "__FilterResults" );
 	addChild( filterResults );
 
-	filterResults->scenePlug()->setInput( inPlug() );
+	filterResults->scenePlug()->setInput( deleteContextVariables->outPlug() );
 	filterResults->filterPlug()->setInput( filterPlug() );
 	filterResultsPlug()->setInput( filterResults->outPlug() );
 
@@ -104,34 +150,44 @@ const Gaffer::StringPlug *Set::namePlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::StringPlug *Set::setVariablePlug()
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *Set::setVariablePlug() const
+{
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::StringVectorDataPlug *Set::pathsPlug()
 {
-	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::StringVectorDataPlug *Set::pathsPlug() const
 {
-	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::PathMatcherDataPlug *Set::filterResultsPlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::PathMatcherDataPlug *Set::filterResultsPlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::PathMatcherDataPlug *Set::pathMatcherPlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::PathMatcherDataPlug *Set::pathMatcherPlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 5 );
 }
 
 void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -149,6 +205,7 @@ void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) 
 
 	if(
 		input == namePlug() ||
+		input == setVariablePlug() ||
 		input == inPlug()->setPlug() ||
 		input == modePlug() ||
 		input == pathMatcherPlug()
@@ -282,7 +339,7 @@ void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context 
 	FilteredSceneProcessor::hashSet( setName, context, parent, h );
 	inPlug()->setPlug()->hash( h );
 
-	ScenePlug::GlobalScope globalScope( context );
+	PathMatcherScope scope( context, setVariablePlug()->getValue(), setName );
 	modePlug()->hash( h );
 	pathMatcherPlug()->hash( h );
 }
@@ -299,7 +356,7 @@ IECore::ConstPathMatcherDataPtr Set::computeSet( const IECore::InternedString &s
 	Mode mode;
 	ConstPathMatcherDataPtr pathMatcher;
 	{
-		ScenePlug::GlobalScope globalScope( context );
+		PathMatcherScope scope( context, setVariablePlug()->getValue(), setName );
 		mode = static_cast<Mode>( modePlug()->getValue() );
 		pathMatcher = pathMatcherPlug()->getValue();
 	}
