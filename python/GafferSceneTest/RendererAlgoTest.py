@@ -105,10 +105,9 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
-			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( sphere["out"], 1, imath.V2f( 0.75, 1.25 ) )
+			samples = GafferScene.RendererAlgo.objectSamples( sphere["out"]["object"], [ 0.75, 1.25 ] )
 
 		self.assertEqual( [ s.radius() for s in samples ], [ 0.75, 1.25 ] )
-		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
 
 	def testNonInterpolableObjectSamples( self ) :
 
@@ -120,11 +119,10 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "procedural" ] )
-			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( procedural["out"], 1, imath.V2f( 0.75, 1.25 ) )
+			samples = GafferScene.RendererAlgo.objectSamples( procedural["out"]["object"], [ 0.75, 1.25 ] )
 
 		self.assertEqual( len( samples ), 1 )
 		self.assertEqual( samples[0].parameters()["frame"].value, 1.0 )
-		self.assertEqual( sampleTimes, [] )
 
 	def testObjectSamplesForCameras( self ) :
 
@@ -135,9 +133,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
-			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( camera["out"], 1, imath.V2f( 0.75, 1.25 ) )
+			samples = GafferScene.RendererAlgo.objectSamples( camera["out"]["object"], [ 0.75, 1.25 ] )
 
-		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
 		self.assertEqual( [ s.parameters()["focalLength"].value for s in samples ], [ 0.75, 1.25 ] )
 
 	def testOutputCameras( self ) :

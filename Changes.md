@@ -1,6 +1,11 @@
 0.60.0.0bx
 ==========
 
+Features
+--------
+
+- InteractiveRender : Added support for motion blur.
+
 Improvements
 ------------
 

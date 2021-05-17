@@ -75,26 +75,18 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
-// Internal utilities
+// RendererAlgo implementation
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
-void motionTimes( size_t segments, const V2f &shutter, std::vector<float> &times )
-{
-	times.reserve( segments + 1 );
-	for( size_t i = 0; i<segments + 1; ++i )
-	{
-		times.push_back( lerp( shutter[0], shutter[1], (float)i / (float)segments ) );
-	}
-}
+static InternedString g_transformBlurAttributeName( "gaffer:transformBlur" );
+static InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegments" );
+static InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
+static InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
 
 } // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// RendererAlgo implementation
-//////////////////////////////////////////////////////////////////////////
 
 namespace GafferScene
 {
@@ -119,28 +111,134 @@ void createOutputDirectories( const IECore::CompoundObject *globals )
 	}
 }
 
-void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::vector<float> &sampleTimes )
+bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, const InternedString &attributeName, const InternedString &segmentsAttributeName, std::vector<float> &times )
 {
-	// Static case
-
-	if( !segments )
+	unsigned int segments = 0;
+	if( motionBlur )
 	{
-		samples.push_back( scene->transformPlug()->getValue() );
-		return;
+		const BoolData *enabled = attributes->member<BoolData>( attributeName );
+		if( !enabled || enabled->readable() ) // Default enabled if not found
+		{
+			const IntData *d = attributes->member<IntData>( segmentsAttributeName );
+			segments = d ? std::max( 0, d->readable() ) : 1;
+		}
+	}
+
+	bool changed = false;
+	if( segments == 0 )
+	{
+		changed = times.size() != 0;
+		times.clear();
+		return changed;
+	}
+
+	if( times.size() != segments + 1 )
+	{
+		changed = true;
+		times.resize( segments + 1 );
+	}
+	for( size_t i = 0; i < segments + 1; ++i )
+	{
+		float t = lerp( shutter[0], shutter[1], (float)i / (float)segments );
+		if( times[i] != t )
+		{
+			changed = true;
+			times[i] = t;
+		}
+	}
+	return changed;
+}
+
+bool transformMotionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, std::vector<float> &times )
+{
+	return motionTimes( motionBlur, shutter, attributes, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName, times );
+}
+
+bool deformationMotionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, std::vector<float> &times )
+{
+	return motionTimes( motionBlur, shutter, attributes, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName, times );
+}
+
+bool transformSamples( const M44fPlug *transformPlug, const std::vector<float> &sampleTimes, std::vector<Imath::M44f> &samples, IECore::MurmurHash *hash )
+{
+	std::vector< IECore::MurmurHash > sampleHashes;
+	if( !sampleTimes.size() )
+	{
+		sampleHashes.push_back( transformPlug->hash() );
+	}
+	else
+	{
+		Context::EditableScope timeContext( Context::current() );
+
+		bool moving = false;
+		sampleHashes.reserve( sampleTimes.size() );
+		for( const float sampleTime : sampleTimes )
+		{
+			timeContext.setFrame( sampleTime );
+			IECore::MurmurHash h = transformPlug->hash();
+			if( !moving && !sampleHashes.empty() && h != sampleHashes.front() )
+			{
+				moving = true;
+			}
+			sampleHashes.push_back( h );
+		}
+
+		if( !moving )
+		{
+			sampleHashes.resize( 1 );
+		}
+	}
+
+	if( hash )
+	{
+		IECore::MurmurHash combinedHash;
+		if( sampleHashes.size() == 1 )
+		{
+			combinedHash = sampleHashes[0];
+		}
+		else
+		{
+			for( const IECore::MurmurHash &h : sampleHashes )
+			{
+				combinedHash.append( h );
+			}
+		}
+
+		if( combinedHash == *hash )
+		{
+			return false;
+		}
+		else
+		{
+			*hash = combinedHash;
+		}
+	}
+
+	samples.clear();
+	if( !sampleTimes.size() )
+	{
+		// No shutter to sample over
+		samples.push_back( transformPlug->getValue( &sampleHashes[0]) );
+		return true;
+	}
+
+	Context::EditableScope timeContext( Context::current() );
+	if( sampleHashes.size() == 1 )
+	{
+		// We have a shutter, but all the samples hash the same, so just evaluate one
+		timeContext.setFrame( sampleTimes[0] );
+		samples.push_back( transformPlug->getValue( &sampleHashes[0]) );
+		return true;
 	}
 
 	// Motion case
-
-	motionTimes( segments, shutter, sampleTimes );
-
-	Context::EditableScope timeContext( Context::current() );
-
 	bool moving = false;
 	samples.reserve( sampleTimes.size() );
-	for( const float sampleTime : sampleTimes )
+	for( size_t i = 0; i < sampleTimes.size(); i++ )
 	{
-		timeContext.setFrame( sampleTime );
-		const M44f m = scene->transformPlug()->getValue();
+		timeContext.setFrame( sampleTimes[i] );
+		M44f m;
+		m = transformPlug->getValue( &sampleHashes[i] );
 		if( !moving && !samples.empty() && m != samples.front() )
 		{
 			moving = true;
@@ -151,20 +249,85 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 	if( !moving )
 	{
 		samples.resize( 1 );
-		sampleTimes.clear();
 	}
+	return true;
 }
 
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECore::ConstObjectPtr> &samples, std::vector<float> &sampleTimes )
+bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash )
 {
-	samples.clear();
-	sampleTimes.clear();
+	std::vector< IECore::MurmurHash > sampleHashes;
+	if( !sampleTimes.size() )
+	{
+		sampleHashes.push_back( objectPlug->hash() );
+	}
+	else
+	{
+		const Context *frameContext = Context::current();
+		Context::EditableScope timeContext( frameContext );
+
+		bool moving = false;
+		sampleHashes.reserve( sampleTimes.size() );
+		for( const float sampleTime : sampleTimes )
+		{
+			timeContext.setFrame( sampleTime );
+
+			const MurmurHash objectHash = objectPlug->hash();
+			if( !moving && !sampleHashes.empty() && objectHash != sampleHashes.front() )
+			{
+				moving = true;
+			}
+			sampleHashes.push_back( objectHash );
+		}
+
+		if( !moving )
+		{
+			sampleHashes.resize( 1 );
+		}
+	}
+
+	if( hash )
+	{
+		IECore::MurmurHash combinedHash;
+		if( sampleHashes.size() == 1 )
+		{
+			combinedHash = sampleHashes[0];
+		}
+		else
+		{
+			for( const IECore::MurmurHash &h : sampleHashes )
+			{
+				combinedHash.append( h );
+			}
+		}
+
+		if( combinedHash == *hash )
+		{
+			return false;
+		}
+		else
+		{
+			*hash = combinedHash;
+		}
+	}
 
 	// Static case
-
-	if( !segments )
+	samples.clear();
+	if( sampleHashes.size() == 1 )
 	{
-		ConstObjectPtr object = scene->objectPlug()->getValue();
+		ConstObjectPtr object;
+		if( !sampleTimes.size() )
+		{
+			// No shutter, just hash on frame
+			object = objectPlug->getValue( &sampleHashes[0]);
+		}
+		else
+		{
+			// We have a shutter, but all the samples hash the same, so just evaluate one
+			Context::EditableScope timeContext( Context::current() );
+			timeContext.setFrame( sampleTimes[0] );
+			object = objectPlug->getValue( &sampleHashes[0]);
+		}
+
 		if(
 			runTimeCast<const VisibleRenderable>( object.get() ) ||
 			runTimeCast<const Camera>( object.get() )
@@ -172,39 +335,28 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 		{
 			samples.push_back( object.get() );
 		}
-		return;
+
+		return true;
 	}
 
 	// Motion case
 
-	motionTimes( segments, shutter, sampleTimes );
-
 	const Context *frameContext = Context::current();
 	Context::EditableScope timeContext( frameContext );
 
-	bool moving = false;
-	MurmurHash lastHash;
 	samples.reserve( sampleTimes.size() );
-	for( const float sampleTime : sampleTimes )
+	for( size_t i = 0; i < sampleTimes.size(); i++ )
 	{
-		timeContext.setFrame( sampleTime );
+		timeContext.setFrame( sampleTimes[i] );
 
-		const MurmurHash objectHash = scene->objectPlug()->hash();
-		ConstObjectPtr object = scene->objectPlug()->getValue( &objectHash );
+		ConstObjectPtr object = objectPlug->getValue( &sampleHashes[i] );
 
 		if(
 			runTimeCast<const Primitive>( object.get() ) ||
 			runTimeCast<const Camera>( object.get() )
 		)
 		{
-			// We can support multiple samples for these, so check to see
-			// if we actually have something moving.
-			if( !moving && !samples.empty() && objectHash != lastHash )
-			{
-				moving = true;
-			}
 			samples.push_back( object.get() );
-			lastHash = objectHash;
 		}
 		else if( runTimeCast<const VisibleRenderable>( object.get() ) )
 		{
@@ -213,8 +365,26 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 			// open time so that non-interpolable objects appear in the right
 			// position relative to non-blurred objects.
 			Context::Scope frameScope( frameContext );
-			objectSamples( scene, /* segments = */ 0, shutter, samples, sampleTimes );
-			return;
+			std::vector<float> tempTimes = {};
+
+			// This is a pretty weird case - we would have taken an earlier branch if the hashes
+			// had all matched, so it looks like this object is actual animated, despite not supporting
+			// animation.
+			// The most correct thing to do here is reset the hash, since we may not have included the
+			// on frame in the samples we hashed, and in theory, the on frame value could vary indepndently
+			// of shutter open and close.  This means that an animated non-animateable object will never have
+			// a matching hash, and will be updated every pass.  May be a performance hazard, but probably
+			// preferable to incorrect behaviour?  Just means people need to be careful to make sure their
+			// heavy crowd procedurals don't have a hash that changes during the shutter?
+			// ( I guess in theory we could check if the on frame time is in sampleTimes, but I don't want to
+			// add any more special cases to this weird corner ).
+			//
+			if( hash )
+			{
+				*hash = IECore::MurmurHash();
+			}
+
+			return objectSamples( objectPlug, tempTimes, samples );
 		}
 		else
 		{
@@ -223,12 +393,7 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 			break;
 		}
 	}
-
-	if( !moving )
-	{
-		samples.resize( std::min<size_t>( samples.size(), 1 ) );
-		sampleTimes.clear();
-	}
+	return true;
 }
 
 } // namespace RendererAlgo
@@ -842,10 +1007,6 @@ const InternedString g_shutterOptionName( "option:render:shutter" );
 
 static InternedString g_setsAttributeName( "sets" );
 static InternedString g_visibleAttributeName( "scene:visible" );
-static InternedString g_transformBlurAttributeName( "gaffer:transformBlur" );
-static InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegments" );
-static InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
-static InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
 
 IECore::InternedString optionName( const IECore::InternedString &globalsName )
 {
@@ -923,14 +1084,9 @@ struct LocationOutput
 			return m_renderer;
 		}
 
-		Imath::V2f shutter() const
+		void deformationMotionTimes( std::vector<float> &times )
 		{
-			return m_options.shutter;
-		}
-
-		size_t deformationSegments() const
-		{
-			return motionSegments( m_options.deformationBlur, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName );
+			RendererAlgo::deformationMotionTimes( m_options.deformationBlur, m_options.shutter, m_attributes.get(), times );
 		}
 
 		const IECore::CompoundObject *attributes() const
@@ -967,25 +1123,6 @@ struct LocationOutput
 
 	private :
 
-		size_t motionSegments( bool motionBlur, const InternedString &attributeName, const InternedString &segmentsAttributeName ) const
-		{
-			if( !motionBlur )
-			{
-				return 0;
-			}
-
-			if( const BoolData *d = m_attributes->member<BoolData>( attributeName ) )
-			{
-				if( !d->readable() )
-				{
-					return 0;
-				}
-			}
-
-			const IntData *d = m_attributes->member<IntData>( segmentsAttributeName );
-			return d ? d->readable() : 1;
-		}
-
 		void updateAttributes( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 		{
 			IECore::ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
@@ -1014,11 +1151,12 @@ struct LocationOutput
 
 		void updateTransform( const ScenePlug *scene )
 		{
-			const size_t segments = motionSegments( m_options.transformBlur, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName );
-			vector<M44f> samples; vector<float> sampleTimes;
-			RendererAlgo::transformSamples( scene, segments, m_options.shutter, samples, sampleTimes );
+			vector<float> sampleTimes;
+			RendererAlgo::transformMotionTimes( m_options.transformBlur, m_options.shutter, m_attributes.get(), sampleTimes );
+			vector<M44f> samples;
+			RendererAlgo::transformSamples( scene->transformPlug(), sampleTimes, samples );
 
-			if( sampleTimes.empty() )
+			if( samples.size() == 1 )
 			{
 				for( vector<M44f>::iterator it = m_transformSamples.begin(), eIt = m_transformSamples.end(); it != eIt; ++it )
 				{
@@ -1111,9 +1249,11 @@ struct CameraOutput : public LocationOutput
 		if( cameraMatch & IECore::PathMatcher::ExactMatch )
 		{
 			// Sample cameras and apply globals
+			vector<float> sampleTimes;
+			deformationMotionTimes( sampleTimes );
 
-			vector<ConstObjectPtr> samples; vector<float> sampleTimes;
-			RendererAlgo::objectSamples( scene, deformationSegments(), shutter(), samples, sampleTimes );
+			vector<ConstObjectPtr> samples;
+			RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 
 			vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
 			for( const auto &sample : samples )
@@ -1141,7 +1281,7 @@ struct CameraOutput : public LocationOutput
 			else
 			{
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
-				if( !sampleTimes.size() )
+				if( cameraSamples.size() == 1 )
 				{
 					objectInterface = renderer()->camera(
 						name( path ),
@@ -1293,8 +1433,11 @@ struct ObjectOutput : public LocationOutput
 			return true;
 		}
 
-		vector<ConstObjectPtr> samples; vector<float> sampleTimes;
-		RendererAlgo::objectSamples( scene, deformationSegments(), shutter(), samples, sampleTimes );
+		vector<float> sampleTimes;
+		deformationMotionTimes( sampleTimes );
+
+		vector<ConstObjectPtr> samples;
+		RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 		if( !samples.size() )
 		{
 			return true;

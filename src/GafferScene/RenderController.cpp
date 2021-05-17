@@ -44,6 +44,7 @@
 #include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
+#include "IECore/Interpolator.h"
 #include "IECore/NullObject.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -67,13 +68,17 @@ using namespace GafferScene::RendererAlgo;
 namespace
 {
 
-InternedString g_openGLRendererName( "OpenGL" );
+const InternedString g_openGLRendererName( "OpenGL" );
 
-InternedString g_cameraGlobalName( "option:render:camera" );
+// Copied from RendererAlgo.cpp
 
-InternedString g_visibleAttributeName( "scene:visible" );
-InternedString g_setsAttributeName( "sets" );
-InternedString g_rendererContextName( "scene:renderer" );
+const InternedString g_cameraGlobalName( "option:render:camera" );
+const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
+const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
+
+const InternedString g_visibleAttributeName( "scene:visible" );
+const InternedString g_setsAttributeName( "sets" );
+const InternedString g_rendererContextName( "scene:renderer" );
 
 bool visible( const CompoundObject *attributes )
 {
@@ -316,6 +321,23 @@ class RenderController::SceneGraph
 						m_changedComponents |= AttributesComponent;
 					}
 				}
+
+				// If attributes have changed, need to check if this has affected our motion sample times
+				if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & TransformBlurGlobalComponent ) )
+				{
+					if( RendererAlgo::transformMotionTimes( controller->m_motionBlurOptions.transformBlur, controller->m_motionBlurOptions.shutter, m_fullAttributes.get(), m_transformTimes ) )
+					{
+						m_dirtyComponents |= TransformComponent;
+					}
+				}
+
+				if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & DeformationBlurGlobalComponent ) )
+				{
+					if( RendererAlgo::deformationMotionTimes( controller->m_motionBlurOptions.deformationBlur, controller->m_motionBlurOptions.shutter, m_fullAttributes.get(), m_deformationTimes ) )
+					{
+						m_dirtyComponents |= ObjectComponent;
+					}
+				}
 			}
 
 			if( !::visible( m_fullAttributes.get() ) )
@@ -344,7 +366,7 @@ class RenderController::SceneGraph
 			const bool parentTransformChanged = m_parent && ( m_parent->m_changedComponents & TransformComponent );
 			if( ( m_dirtyComponents & TransformComponent ) || parentTransformChanged )
 			{
-				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged ) )
+				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged, controller->m_motionBlurOptions ) )
 				{
 					m_changedComponents |= TransformComponent;
 				}
@@ -354,7 +376,7 @@ class RenderController::SceneGraph
 
 			// Object
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -378,7 +400,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -391,7 +413,15 @@ class RenderController::SceneGraph
 				// the apply the transform.
 				if( m_changedComponents & ( ObjectComponent | TransformComponent ) )
 				{
-					m_objectInterface->transform( m_fullTransform );
+					assert( m_fullTransform.size() );
+					if( !m_transformTimesOutput )
+					{
+						m_objectInterface->transform( m_fullTransform[0] );
+					}
+					else
+					{
+						m_objectInterface->transform( m_fullTransform, *m_transformTimesOutput );
+					}
 				}
 
 				if( type == ObjectType && controller->m_lightLinks )
@@ -422,6 +452,7 @@ class RenderController::SceneGraph
 				m_changedComponents |= ExpansionComponent;
 			}
 
+			bool newBound = false;
 			if(
 				( m_changedComponents & ( ExpansionComponent | ChildNamesComponent ) ) ||
 				( m_dirtyComponents & BoundComponent )
@@ -451,7 +482,7 @@ class RenderController::SceneGraph
 					m_boundInterface = controller->m_renderer->object( boundName, boundCurves.get(), controller->m_boundAttributes.get() );
 					if( m_boundInterface )
 					{
-						m_boundInterface->transform( m_fullTransform );
+						newBound = true;
 					}
 				}
 				else
@@ -459,10 +490,19 @@ class RenderController::SceneGraph
 					m_boundInterface = nullptr;
 				}
 			}
-			else if( m_boundInterface && ( m_changedComponents & TransformComponent ) )
+
+			if( newBound || ( m_boundInterface && ( m_changedComponents & TransformComponent ) ) )
 			{
-				// Apply new transform to existing bounding box
-				m_boundInterface->transform( m_fullTransform );
+				// Apply transform to bounding box
+				assert( m_fullTransform.size() );
+				if( !m_transformTimesOutput )
+				{
+					m_boundInterface->transform( m_fullTransform[0] );
+				}
+				else
+				{
+					m_boundInterface->transform( m_fullTransform, *m_transformTimesOutput );
+				}
 			}
 
 			clean( ExpansionComponent | BoundComponent );
@@ -544,7 +584,6 @@ class RenderController::SceneGraph
 
 			m_attributesInterface = nullptr; // Will be updated lazily in attributesInterface()
 			m_attributesHash = attributesHash;
-
 			return true;
 		}
 
@@ -596,30 +635,54 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the transform changed.
-		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged )
+		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged, const MotionBlurOptions &motionBlurOptions  )
 		{
-			const IECore::MurmurHash transformHash = transformPlug->hash();
-			if( transformHash == m_transformHash && !parentTransformChanged )
+			if( parentTransformChanged )
+			{
+				// We don't store the local transform - if the parent has changed, wipe the hash
+				// to ensure that we recompute the local transform so we can redo the concatenation
+				m_transformHash = IECore::MurmurHash();
+			}
+
+			vector<M44f> samples;
+			if( !RendererAlgo::transformSamples( transformPlug, m_transformTimes, samples, &m_transformHash ) )
 			{
 				return false;
 			}
 
-			const M44f transform = transformPlug->getValue( &transformHash );
-			if( m_parent )
+			if( !m_parent )
 			{
-				m_fullTransform = transform * m_parent->m_fullTransform;
+				m_fullTransform = samples;
+				m_transformTimesOutput = samples.size() > 1 ? &m_transformTimes : nullptr;
 			}
 			else
 			{
-				m_fullTransform = transform;
-			}
+				m_fullTransform.clear();
+				if( samples.size() == 1 )
+				{
+					m_fullTransform.reserve( m_parent->m_fullTransform.size() );
+					for( const M44f& it : m_parent->m_fullTransform )
+					{
+						m_fullTransform.push_back( samples.front() * it );
+					}
+					m_transformTimesOutput = m_parent->m_transformTimesOutput;
+				}
+				else
+				{
+					m_transformTimesOutput = &m_transformTimes;
+					m_fullTransform.reserve( samples.size() );
 
-			m_transformHash = transformHash;
+					for( size_t i = 0; i < samples.size(); i++ )
+					{
+						m_fullTransform.push_back( samples[i] * m_parent->fullTransform( m_transformTimes[i] ) );
+					}
+				}
+			}
 			return true;
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks )
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks, const MotionBlurOptions &motionBlurOptions )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType )
@@ -628,17 +691,83 @@ class RenderController::SceneGraph
 				return hadObjectInterface;
 			}
 
-			const IECore::MurmurHash objectHash = objectPlug->hash();
-			if( objectHash == m_objectHash )
+			// Types that don't support motion blur
+			if( type == LightType || type == LightFilterType )
+			{
+				const IECore::MurmurHash objectHash = objectPlug->hash();
+				if( objectHash == m_objectHash )
+				{
+					return false;
+				}
+
+				IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
+				m_objectHash = objectHash;
+
+				const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
+				if( renderer->name() != g_openGLRendererName )
+				{
+					m_objectInterface = nullptr;
+				}
+
+				std::string name;
+				ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
+				if( type == LightType )
+				{
+					auto light = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+					if( light && lightLinks )
+					{
+						lightLinks->addLight( name, light );
+						m_objectInterface.assign(
+							light,
+							[name, lightLinks]() {
+								lightLinks->removeLight( name );
+							}
+						);
+					}
+					else
+					{
+						m_objectInterface = light;
+					}
+				}
+				else
+				{
+					auto lightFilter = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+					if( lightFilter && lightLinks )
+					{
+						lightLinks->addLightFilter( lightFilter, m_fullAttributes.get() );
+						m_objectInterface.assign(
+							lightFilter,
+							[lightFilter, lightLinks]() {
+								lightLinks->removeLightFilter( lightFilter );
+							}
+						);
+					}
+					else
+					{
+						m_objectInterface = lightFilter;
+					}
+				}
+
+				return true;
+
+			}
+
+			vector<ConstObjectPtr> samples;
+			if( !RendererAlgo::objectSamples( objectPlug, m_deformationTimes, samples, &m_objectHash ) )
 			{
 				return false;
 			}
 
-			IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
-			m_objectHash = objectHash;
+			bool isNull = true;
+			for( ConstObjectPtr &i : samples )
+			{
+				if( !runTimeCast<const IECore::NullObject>( i.get() ) )
+				{
+					isNull = false;
+				}
+			}
 
-			const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
-			if( (type != LightType && type != LightFilterType) && nullObject )
+			if( (type != LightType && type != LightFilterType) && isNull )
 			{
 				m_objectInterface = nullptr;
 				return hadObjectInterface;
@@ -670,56 +799,76 @@ class RenderController::SceneGraph
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
 			if( type == CameraType )
 			{
-				if( const IECoreScene::Camera *camera = runTimeCast<const IECoreScene::Camera>( object.get() ) )
+				vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
+				for( const auto &sample : samples )
 				{
-					IECoreScene::CameraPtr cameraCopy = camera->copy();
-					RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals, scene );
-					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
+					if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
+					{
+						IECoreScene::CameraPtr cameraSampleCopy = cameraSample->copy();
+						GafferScene::RendererAlgo::applyCameraGlobals( cameraSampleCopy.get(), globals, scene );
+						cameraSamples.push_back( cameraSampleCopy );
+					}
 				}
-				else
+
+				// Create ObjectInterface
+
+				if( !samples.size() || cameraSamples.size() != samples.size() )
 				{
-					m_objectInterface = nullptr;
-				}
-			}
-			else if( type == LightType )
-			{
-				auto light = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
-				if( light && lightLinks )
-				{
-					lightLinks->addLight( name, light );
-					m_objectInterface.assign(
-						light,
-						[name, lightLinks]() {
-							lightLinks->removeLight( name );
-						}
+					IECore::msg(
+						IECore::Msg::Warning,
+						"RenderController::updateObject",
+						boost::format( "Camera missing for location \"%1%\" at frame %2%" )
+							% name
+							% Context::current()->getFrame()
 					);
 				}
 				else
 				{
-					m_objectInterface = light;
-				}
-			}
-			else if( type == LightFilterType )
-			{
-				auto lightFilter = renderer->lightFilter( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
-				if( lightFilter && lightLinks )
-				{
-					lightLinks->addLightFilter( lightFilter, m_fullAttributes.get() );
-					m_objectInterface.assign(
-						lightFilter,
-						[lightFilter, lightLinks]() {
-							lightLinks->removeLightFilter( lightFilter );
+					if( cameraSamples.size() == 1 )
+					{
+						m_objectInterface = renderer->camera(
+							name,
+							cameraSamples[0].get(),
+							attributesInterface( renderer )
+						);
+					}
+					else
+					{
+						vector<const Camera *> rawCameraSamples; rawCameraSamples.reserve( cameraSamples.size() );
+						for( auto &c : cameraSamples )
+						{
+							rawCameraSamples.push_back( c.get() );
 						}
-					);
-				}
-				else
-				{
-					m_objectInterface = lightFilter;
+						m_objectInterface = renderer->camera(
+							name,
+							rawCameraSamples,
+							m_deformationTimes,
+							attributesInterface( renderer )
+						);
+					}
 				}
 			}
 			else
 			{
-				m_objectInterface = renderer->object( name, object.get(), attributesInterface( renderer ) );
+				if( !samples.size() )
+				{
+					return true;
+				}
+
+				if( samples.size() == 1 )
+				{
+					m_objectInterface = renderer->object( name, samples[0].get(), attributesInterface( renderer ) );
+				}
+				else
+				{
+					/// \todo Can we rejig things so this conversion isn't necessary?
+					vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
+					for( const auto &sample : samples )
+					{
+						objectsVector.push_back( sample.get() );
+					}
+					m_objectInterface = renderer->object( name, objectsVector, m_deformationTimes, attributesInterface( renderer ) );
+				}
 			}
 
 			return true;
@@ -823,12 +972,41 @@ class RenderController::SceneGraph
 			m_dirtyComponents &= ~components;
 		}
 
+		M44f fullTransform( float time ) const
+		{
+			if( m_fullTransform.empty() )
+			{
+				return M44f();
+			}
+			if( !m_transformTimesOutput )
+			{
+				return m_fullTransform[0];
+			}
+
+			vector<float>::const_iterator t1 = lower_bound( m_transformTimesOutput->begin(), m_transformTimesOutput->end(), time );
+			if( t1 == m_transformTimesOutput->begin() || *t1 == time )
+			{
+				return m_fullTransform[t1 - m_transformTimesOutput->begin()];
+			}
+			else
+			{
+				vector<float>::const_iterator t0 = t1 - 1;
+				const float l = lerpfactor( time, *t0, *t1 );
+				const M44f &s0 = m_fullTransform[t0 - m_transformTimesOutput->begin()];
+				const M44f &s1 = m_fullTransform[t1 - m_transformTimesOutput->begin()];
+				M44f result;
+				LinearInterpolator<M44f>()( s0, s1, l, result );
+				return result;
+			}
+		}
+
 		IECore::InternedString m_name;
 
 		const SceneGraph *m_parent;
 
 		IECore::MurmurHash m_objectHash;
 		ObjectInterfaceHandle m_objectInterface;
+		std::vector<float> m_deformationTimes;
 
 		IECore::MurmurHash m_attributesHash;
 		IECore::CompoundObjectPtr m_fullAttributes;
@@ -836,7 +1014,13 @@ class RenderController::SceneGraph
 		IECore::MurmurHash m_lightLinksHash;
 
 		IECore::MurmurHash m_transformHash;
-		Imath::M44f m_fullTransform;
+		std::vector<Imath::M44f> m_fullTransform;
+		std::vector<float> m_transformTimes;
+
+		// The m_transformTimes represents what times we sample the transform at.  The actual
+		// times we output at may differ due to the transform samples turning out to not vary,
+		// or inheriting parent samples
+		std::vector<float> *m_transformTimesOutput;
 
 		IECore::MurmurHash m_childNamesHash;
 		std::vector<std::unique_ptr<SceneGraph>> m_children;
@@ -1029,6 +1213,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_updateRequested( false ),
 		m_failedAttributeEdits( 0 ),
 		m_dirtyGlobalComponents( NoGlobalComponent ),
+		m_changedGlobalComponents( NoGlobalComponent ),
 		m_globals( new CompoundObject )
 {
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
@@ -1240,6 +1425,14 @@ void RenderController::dirtySceneGraphs( unsigned components )
 	{
 		sg->dirty( components );
 	}
+
+	if( components & SceneGraph::ObjectComponent )
+	{
+		// We don't track dirtiness of different SceneGraphs separately anyway,
+		// so just recheck if a camera has changed a shutter override whenever
+		// any object is dirtied
+		m_changedGlobalComponents |= CameraShutterGlobalComponent;
+	}
 }
 
 void RenderController::update( const ProgressCallback &callback )
@@ -1303,7 +1496,6 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 	try
 	{
 		// Update globals
-
 		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
@@ -1318,6 +1510,34 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
 			}
 			m_globals = globals;
+		}
+
+		// Update motion blur options
+		if( m_changedGlobalComponents & ( GlobalsGlobalComponent | CameraShutterGlobalComponent ) )
+		{
+			const BoolData *transformBlurData = m_globals->member<BoolData>( g_transformBlurOptionName );
+			bool transformBlur = transformBlurData ? transformBlurData->readable() : false;
+
+			const BoolData *deformationBlurData = m_globals->member<BoolData>( g_deformationBlurOptionName );
+			bool deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
+
+			V2f shutter = SceneAlgo::shutter( m_globals.get(), m_scene.get() );
+
+			if( shutter != m_motionBlurOptions.shutter || transformBlur != m_motionBlurOptions.transformBlur )
+			{
+				m_changedGlobalComponents |= TransformBlurGlobalComponent;
+			}
+			if( shutter != m_motionBlurOptions.shutter || deformationBlur != m_motionBlurOptions.deformationBlur )
+			{
+				m_changedGlobalComponents |= DeformationBlurGlobalComponent;
+			}
+			if( shutter != m_motionBlurOptions.shutter )
+			{
+				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
+			}
+			m_motionBlurOptions.transformBlur = transformBlur;
+			m_motionBlurOptions.deformationBlur = deformationBlur;
+			m_motionBlurOptions.shutter = shutter;
 		}
 
 		if( m_dirtyGlobalComponents & SetsGlobalComponent )

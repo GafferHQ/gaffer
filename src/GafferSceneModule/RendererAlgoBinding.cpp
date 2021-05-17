@@ -50,13 +50,12 @@ using namespace GafferScene;
 namespace
 {
 
-tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath::V2f &shutter, bool copy )
+list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, bool copy )
 {
 	std::vector<IECore::ConstObjectPtr> samples;
-	std::vector<float> sampleTimes;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		RendererAlgo::objectSamples( &scene, segments, shutter, samples, sampleTimes );
+		RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples );
 	}
 
 	list pythonSamples;
@@ -72,13 +71,7 @@ tuple objectSamplesWrapper( const ScenePlug &scene, size_t segments, const Imath
 		}
 	}
 
-	list pythonSampleTimes;
-	for( auto &s : sampleTimes )
-	{
-		pythonSampleTimes.append( s );
-	}
-
-	return make_tuple( pythonSamples, pythonSampleTimes );
+	return pythonSamples;
 }
 
 struct AdaptorWrapper
@@ -131,7 +124,7 @@ void bindRendererAlgo()
 	scope().attr( "RendererAlgo" ) = module;
 	scope moduleScope( module );
 
-	def( "objectSamples", &objectSamplesWrapper, ( arg( "scene" ), arg( "segments" ), arg( "shutter" ), arg( "_copy" ) = true ) );
+	def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "_copy" ) = true ) );
 
 	def( "registerAdaptor", &registerAdaptorWrapper );
 	def( "deregisterAdaptor", &RendererAlgo::deregisterAdaptor );
