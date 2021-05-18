@@ -352,7 +352,7 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 	if(
 		!MetadataAlgo::bookmarkedAffectedByChange( key ) &&
 		!MetadataAlgo::numericBookmarkAffectedByChange( key ) &&
-		!boost::starts_with( key.c_str(), "annotation:" )
+		!MetadataAlgo::annotationsAffectedByChange( key )
 	)
 	{
 		return;
