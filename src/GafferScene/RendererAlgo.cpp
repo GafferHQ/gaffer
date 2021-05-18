@@ -231,31 +231,6 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 	}
 }
 
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::vector<float> &sampleTimes )
-{
-	vector<ConstObjectPtr> oSamples;
-	vector<float> oSampleTimes;
-	objectSamples( scene, segments, shutter, oSamples, oSampleTimes );
-
-	samples.clear();
-	for( size_t i = 0; i < oSamples.size(); ++i )
-	{
-		if( auto ts = runTimeCast<const VisibleRenderable>( oSamples[i] ) )
-		{
-			samples.push_back( ts );
-			if( i < oSampleTimes.size() )
-			{
-				sampleTimes.push_back( oSampleTimes[i] );
-			}
-		}
-	}
-
-	if( samples.size() < 2 )
-	{
-		sampleTimes.clear();
-	}
-}
-
 } // namespace RendererAlgo
 
 } // namespace GafferScene
