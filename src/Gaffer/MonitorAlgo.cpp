@@ -206,7 +206,7 @@ struct HashesPerComputeMetric
 
 // Utility for invoking a templated functor with a particular metric.
 template<typename F>
-typename F::ResultType dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
+std::result_of_t<F(const HashCountMetric &)> dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
 {
 	switch( performanceMetric )
 	{
@@ -230,6 +230,39 @@ typename F::ResultType dispatchMetric( const F &f, MonitorAlgo::PerformanceMetri
 			return f( InvalidMetric() );
 	}
 }
+
+const std::string g_contextAnnotationName = "contextMonitor";
+
+struct AnnotationRegistrations
+{
+	AnnotationRegistrations()
+	{
+		for( int m = Gaffer::MonitorAlgo::First; m <= Gaffer::MonitorAlgo::Last; ++m )
+		{
+			// We don't really need the template values, but by registering a
+			// template we get included nicely in the UI for filtering
+			// annotations in the GraphEditor.
+			dispatchMetric(
+				[] ( auto metric ) {
+					MetadataAlgo::addAnnotationTemplate(
+						metric.annotation,
+						MetadataAlgo::Annotation( "" ),
+						/* user = */ false
+					);
+				},
+				static_cast<Gaffer::MonitorAlgo::PerformanceMetric>( m )
+			);
+		}
+
+		MetadataAlgo::addAnnotationTemplate(
+			g_contextAnnotationName,
+			MetadataAlgo::Annotation( "" ),
+			/* user = */ false
+		);
+	}
+};
+
+const AnnotationRegistrations g_annotationRegistrations;
 
 } // namespace
 
@@ -464,8 +497,6 @@ struct Annotate
 		}
 
 };
-
-const std::string g_contextAnnotationName = "annotation:contextMonitor";
 
 ContextMonitor::Statistics annotateContextWalk( Node &node, const ContextMonitor::StatisticsMap &statistics, bool persistent )
 {
