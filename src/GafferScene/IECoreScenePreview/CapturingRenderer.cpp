@@ -239,6 +239,16 @@ const std::vector<float> &CapturingRenderer::CapturedObject::capturedSampleTimes
 	return m_capturedSampleTimes;
 }
 
+const std::vector<Imath::M44f> &CapturingRenderer::CapturedObject::capturedTransforms() const
+{
+	return m_capturedTransforms;
+}
+
+const std::vector<float> &CapturingRenderer::CapturedObject::capturedTransformTimes() const
+{
+	return m_capturedTransformTimes;
+}
+
 const CapturingRenderer::CapturedAttributes *CapturingRenderer::CapturedObject::capturedAttributes() const
 {
 	return m_capturedAttributes.get();
@@ -273,13 +283,16 @@ int CapturingRenderer::CapturedObject::numLinkEdits( const IECore::InternedStrin
 void CapturingRenderer::CapturedObject::transform( const Imath::M44f &transform )
 {
 	m_renderer->checkPaused();
-	/// \todo Implement
+	m_capturedTransforms.clear();
+	m_capturedTransforms.push_back( transform );
+	m_capturedTransformTimes.clear();
 }
 
 void CapturingRenderer::CapturedObject::transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
 {
 	m_renderer->checkPaused();
-	/// \todo Implement
+	m_capturedTransforms = samples;
+	m_capturedTransformTimes = times;
 }
 
 bool CapturingRenderer::CapturedObject::attributes( const AttributesInterface *attributes )

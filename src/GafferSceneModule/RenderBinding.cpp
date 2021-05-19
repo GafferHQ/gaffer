@@ -272,6 +272,26 @@ list capturedObjectCapturedSampleTimes( const CapturingRenderer::CapturedObject 
 	return result;
 }
 
+list capturedObjectCapturedTransforms( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto s : o.capturedTransforms() )
+	{
+		result.append( s );
+	}
+	return result;
+}
+
+list capturedObjectCapturedTransformTimes( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto t : o.capturedTransformTimes() )
+	{
+		result.append( t );
+	}
+	return result;
+}
+
 CapturingRenderer::CapturedAttributesPtr capturedObjectCapturedAttributes( const CapturingRenderer::CapturedObject &o )
 {
 	return const_cast<CapturingRenderer::CapturedAttributes *>( o.capturedAttributes() );
@@ -418,6 +438,8 @@ void GafferSceneModule::bindRender()
 		IECorePython::RefCountedClass<CapturingRenderer::CapturedObject, Renderer::ObjectInterface>( "CapturedObject" )
 			.def( "capturedSamples", &capturedObjectCapturedSamples )
 			.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
+			.def( "capturedTransforms", &capturedObjectCapturedTransforms )
+			.def( "capturedTransformTimes", &capturedObjectCapturedTransformTimes )
 			.def( "capturedAttributes", &capturedObjectCapturedAttributes )
 			.def( "capturedLinks", &capturedObjectCapturedLinks )
 			.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
