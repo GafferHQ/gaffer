@@ -11,6 +11,13 @@ Improvements
 
 - Set : Added wildcard support to the `name` plug.
 
+API
+---
+
+- MetadataAlgo :
+  - Added optional `user` argument to `addAnnotationTemplate()`.
+  - Added optional `userOnly` argument to `annotationTemplates()`.
+
 Breaking Changes
 ----------------
 

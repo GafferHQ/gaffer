@@ -711,6 +711,20 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			Gaffer.MetadataAlgo.Annotation( "hi" ),
 		)
 
+	def testNonUserAnnotationTemplates( self ) :
+
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [] )
+
+		a = Gaffer.MetadataAlgo.Annotation( "", imath.Color3f( 1, 0, 0 ) )
+		Gaffer.MetadataAlgo.addAnnotationTemplate( "test", a, user = False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [ "test" ] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates( userOnly = True ), [] )
+
+		Gaffer.MetadataAlgo.addAnnotationTemplate( "test2", a, user = True )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [ "test", "test2" ] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates( userOnly = True ), [ "test2" ] )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, Gaffer.Box, GafferTest.AddNode ) :

@@ -54,7 +54,7 @@ def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
 			}
 		)
 
-	names = Gaffer.MetadataAlgo.annotationTemplates()
+	names = Gaffer.MetadataAlgo.annotationTemplates( userOnly = True )
 	if not names :
 		append( "/Annotate...", "user" )
 	else :

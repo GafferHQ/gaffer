@@ -435,7 +435,7 @@ void annotations( const Node *node, std::vector<std::string> &names )
 	}
 }
 
-void addAnnotationTemplate( const std::string &name, const Annotation &annotation )
+void addAnnotationTemplate( const std::string &name, const Annotation &annotation, bool user )
 {
 	if( annotation.textData )
 	{
@@ -454,6 +454,8 @@ void addAnnotationTemplate( const std::string &name, const Annotation &annotatio
 	{
 		Metadata::deregisterValue( g_annotations, name + ":color" );
 	}
+
+	Metadata::registerValue( g_annotations, name + ":user", new BoolData( user ) );
 }
 
 Annotation getAnnotationTemplate( const std::string &name )
@@ -470,7 +472,7 @@ void removeAnnotationTemplate( const std::string &name )
 	Metadata::deregisterValue( g_annotations, name + ":color" );
 }
 
-void annotationTemplates( std::vector<std::string> &names )
+void annotationTemplates( std::vector<std::string> &names, bool userOnly )
 {
 	vector<InternedString> keys;
 	Metadata::registeredValues( g_annotations, keys );
@@ -478,7 +480,16 @@ void annotationTemplates( std::vector<std::string> &names )
 	{
 		if( boost::ends_with( key.string(), ":text" ) )
 		{
-			names.push_back( key.string().substr( 0, key.string().size() - 5 ) );
+			const string name = key.string().substr( 0, key.string().size() - 5 );
+			if( userOnly )
+			{
+				auto user = Metadata::value<BoolData>( g_annotations, name + ":user" );
+				if( !user || !user->readable() )
+				{
+					continue;
+				}
+			}
+			names.push_back( name );
 		}
 	}
 }

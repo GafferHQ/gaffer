@@ -152,10 +152,10 @@ object getAnnotationTemplateWrapper( const std::string &name )
 	return a ? object( a ) : object();
 }
 
-list annotationTemplatesWrapper()
+list annotationTemplatesWrapper( bool userOnly )
 {
 	std::vector<std::string> names;
-	annotationTemplates( names );
+	annotationTemplates( names, userOnly );
 	list result;
 	for( const auto &n : names )
 	{
@@ -271,10 +271,10 @@ void GafferModule::bindMetadataAlgo()
 	def( "removeAnnotation", &removeAnnotationWrapper, ( arg( "node" ), arg( "name" ) ) );
 	def( "annotations", &annotationsWrapper, ( arg( "node" ) ) );
 
-	def( "addAnnotationTemplate", &addAnnotationTemplate, ( arg( "name" ), arg( "annotation" ) ) );
+	def( "addAnnotationTemplate", &addAnnotationTemplate, ( arg( "name" ), arg( "annotation" ), arg( "user" ) = true ) );
 	def( "getAnnotationTemplate", &getAnnotationTemplateWrapper, ( arg( "name" ) ) );
 	def( "removeAnnotationTemplate", &removeAnnotationTemplate, arg( "name" ) );
-	def( "annotationTemplates", &annotationTemplatesWrapper );
+	def( "annotationTemplates", &annotationTemplatesWrapper, arg( "userOnly" ) = false );
 
 	def( "annotationsAffectedByChange", &annotationsAffectedByChange, ( arg( "changedKey" ) ) );
 

@@ -183,10 +183,12 @@ GAFFER_API Annotation getAnnotation( const Node *node, const std::string &name, 
 GAFFER_API void removeAnnotation( Node *node, const std::string &name );
 GAFFER_API void annotations( const Node *node, std::vector<std::string> &names );
 
-GAFFER_API void addAnnotationTemplate( const std::string &name, const Annotation &annotation );
+/// Pass `user = false` for annotations not intended for creation directly by the user.
+GAFFER_API void addAnnotationTemplate( const std::string &name, const Annotation &annotation, bool user = true );
 GAFFER_API Annotation getAnnotationTemplate( const std::string &name );
 GAFFER_API void removeAnnotationTemplate( const std::string &name );
-GAFFER_API void annotationTemplates( std::vector<std::string> &names );
+/// Pass `userOnly = true` to omit templates registered with `user = false`.
+GAFFER_API void annotationTemplates( std::vector<std::string> &names, bool userOnly = false );
 
 GAFFER_API bool annotationsAffectedByChange( const IECore::InternedString &changedKey );
 
