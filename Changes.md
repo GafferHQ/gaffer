@@ -42,10 +42,10 @@ API
 
 - Context :
   - Refactored to allow EditableScope to avoid memory allocation where possible.
-	- Added fast non-allocating `EditableScope::set( name, const T * )` overload. This should be used in preference to the old `set( name const T & )` method.
+  - Added fast non-allocating `EditableScope::set( name, const T * )` overload. This should be used in preference to the old `set( name, const T & )` method.
   - Added `EditableScope::setAllocated()` method to replace the old `set()` method in the rare circumstance where allocation is required.
-	- Added `variableHash()` method, which returns the hash for an individual variable.
-	- Added `getIfExists()` method, which returns `nullptr` if a variable doesn't exist.
+  - Added `variableHash()` method, which returns the hash for an individual variable.
+  - Added `getIfExists()` method, which returns `nullptr` if a variable doesn't exist.
   - Added `getAsData()` method, which returns a copy of a variable as `IECore::Data`.
   - Added `TypeDescription` registration class, which must be used to register any custom data types used in context variables.
 - GraphComponent : Added `reorderChildren()` and `childrenReorderedSignal()` methods.
@@ -64,7 +64,7 @@ Breaking Changes
 - Context :
   - Removed `Ownership` enum. The copy constructor now always performs a full copy.
   - Removed `changed()` method.
-	- Removed `_copy` argument from `get()` Python binding.
+  - Removed `_copy` argument from `get()` Python binding.
 - Slider/NumericSlider :
   - Refactored Slider to provide all the functionality of NumericSlider, and removed NumericSlider.
   - Renamed initial constructor argument from `value` to `values`.
