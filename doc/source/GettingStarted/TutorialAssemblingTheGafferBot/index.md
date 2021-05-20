@@ -309,7 +309,7 @@ To make switching between viewing Gaffy's geometry and the render easier, you ca
 
 1. Select the InteractiveAppleseedRender node.
 
-2. From the editor focus menu ![](images/editorFocusMenuNodeSelectionLinked.png "The editor focus menu") at the top-right of the top panel, choose _Node Selection_ in the _Pin_ group. The menu's icon will change to the pinned icon (![](images/nodeSetStandardSet.png "highlighted pin")) to show it is now locked to a specific node, and the Viewer's title in the tab bar will now include _[InteractiveAppleseedRender]_ to help you keep track of which node(s) are pinned in which editors.
+2. From the editor focus menu ![](images/editorFocusMenuNodeSelectionLinked.png "The editor focus menu") at the top-right of the top panel, choose _Pin InteractiveAppleseedRender_. The menu's icon will change to the pinned icon (![](images/nodeSetStandardSet.png "highlighted pin")) to show it is now locked to a specific node, and the Viewer's title in the tab bar will now include _[InteractiveAppleseedRender]_ to help you keep track of which node(s) are pinned in which editors.
 
 ![](images/viewerPinnedMaster.png "The Viewer's tab bar and editor focus menu when pinned to a specific node")
 
@@ -394,7 +394,7 @@ For lights to take effect, they need to be combined with the main scene. For sim
     - Set the Sun Phi Angle plug to `100`.
     - Set the Luminance plug to `2.5`.
 
-4. Connect the node's out plug to the Group node's in3 plug.
+4. Connect the node's out plug to the Group node's in2 plug.
 
 ![](images/graphEditorEnvironmentLightNode.png "A new environment light node")
 
