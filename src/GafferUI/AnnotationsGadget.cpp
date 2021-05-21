@@ -145,8 +145,10 @@ float g_offset = 0.5;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AnnotationsGadget );
 
+const std::string AnnotationsGadget::untemplatedAnnotations = "__untemplated__";
+
 AnnotationsGadget::AnnotationsGadget()
-	:	Gadget( "AnnotationsGadget" ), m_dirty( true )
+	:	Gadget( "AnnotationsGadget" ), m_dirty( true ), m_visibleAnnotations( "*" )
 {
 	Metadata::nodeValueChangedSignal().connect(
 		boost::bind( &AnnotationsGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 )
@@ -155,6 +157,27 @@ AnnotationsGadget::AnnotationsGadget()
 
 AnnotationsGadget::~AnnotationsGadget()
 {
+}
+
+void AnnotationsGadget::setVisibleAnnotations( const IECore::StringAlgo::MatchPattern &patterns )
+{
+	if( patterns == m_visibleAnnotations )
+	{
+		return;
+	}
+
+	m_visibleAnnotations = patterns;
+	for( auto &a : m_annotations )
+	{
+		a.second.dirty = true;
+	}
+	m_dirty = true;
+	dirty( DirtyType::Render );
+}
+
+const IECore::StringAlgo::MatchPattern &AnnotationsGadget::getVisibleAnnotations() const
+{
+	return m_visibleAnnotations;
 }
 
 bool AnnotationsGadget::acceptsParent( const GraphComponent *potentialParent ) const
@@ -289,6 +312,11 @@ void AnnotationsGadget::update() const
 		return;
 	}
 
+	vector<string> templates;
+	MetadataAlgo::annotationTemplates( templates );
+	std::sort( templates.begin(), templates.end() );
+	const bool untemplatedVisible = StringAlgo::matchMultiple( untemplatedAnnotations, m_visibleAnnotations );
+
 	vector<string> names;
 	for( auto &ga : m_annotations )
 	{
@@ -319,6 +347,15 @@ void AnnotationsGadget::update() const
 		MetadataAlgo::annotations( node, names );
 		for( const auto &name : names )
 		{
+			if( !StringAlgo::matchMultiple( name, m_visibleAnnotations ) )
+			{
+				const bool templated = binary_search( templates.begin(), templates.end(), name ) || name == "user";
+				if( templated || !untemplatedVisible )
+				{
+					continue;
+				}
+			}
+
 			annotations.standardAnnotations.push_back(
 				MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
 			);

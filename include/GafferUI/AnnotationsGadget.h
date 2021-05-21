@@ -41,6 +41,8 @@
 
 #include "GafferUI/Gadget.h"
 
+#include "IECore/StringAlgo.h"
+
 #include <unordered_map>
 
 namespace Gaffer
@@ -65,6 +67,13 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		~AnnotationsGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AnnotationsGadget, AnnotationsGadgetTypeId, Gadget );
+
+		/// Special value that may be used with `setVisibleAnnotations()`, to match
+		/// all annotations not registered with `MetadataAlgo::registerAnnotationTemplate()`.
+		static const std::string untemplatedAnnotations;
+
+		void setVisibleAnnotations( const IECore::StringAlgo::MatchPattern &patterns );
+		const IECore::StringAlgo::MatchPattern &getVisibleAnnotations() const;
 
 		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 
@@ -103,6 +112,8 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		using AnnotationsContainer = std::unordered_map<const NodeGadget *, Annotations>;
 		mutable AnnotationsContainer m_annotations;
 		mutable bool m_dirty;
+
+		IECore::StringAlgo::MatchPattern m_visibleAnnotations;
 
 };
 
