@@ -592,29 +592,14 @@ void annotate( Node &root, const PerformanceMonitor &monitor, bool persistent )
 	}
 }
 
-void annotate( Node &root, const PerformanceMonitor &monitor )
-{
-	annotate( root, monitor, /* persistent = */ true );
-}
-
 void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric, bool persistent )
 {
 	dispatchMetric<Annotate>( Annotate( root, monitor.allStatistics(), persistent ), metric );
 }
 
-void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric )
-{
-	annotate( root, monitor, metric, /* persistent = */ true );
-}
-
 void annotate( Node &root, const ContextMonitor &monitor, bool persistent )
 {
 	annotateContextWalk( root, monitor.allStatistics(), persistent );
-}
-
-void annotate( Node &root, const ContextMonitor &monitor )
-{
-	annotate( root, monitor, /* persistent = */ true );
 }
 
 } // namespace MonitorAlgo

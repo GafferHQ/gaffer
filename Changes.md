@@ -22,6 +22,7 @@ Breaking Changes
 ----------------
 
 - RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
+- MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
 
 0.60.0.0b1
 ==========
