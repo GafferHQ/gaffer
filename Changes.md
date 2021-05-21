@@ -5,6 +5,7 @@ Features
 --------
 
 - InteractiveRender : Added support for motion blur.
+- Profiling : Added "Tools/Profiling" menu to annotate nodes with performance metrics.
 
 Improvements
 ------------
