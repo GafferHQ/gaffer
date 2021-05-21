@@ -146,7 +146,7 @@ float g_offset = 0.5;
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AnnotationsGadget );
 
 AnnotationsGadget::AnnotationsGadget()
-	:	Gadget( "AnnotationsGadget" )
+	:	Gadget( "AnnotationsGadget" ), m_dirty( true )
 {
 	Metadata::nodeValueChangedSignal().connect(
 		boost::bind( &AnnotationsGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 )
@@ -185,49 +185,12 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		return;
 	}
 
-	vector<string> names;
+	update();
+
 	for( auto &ga : m_annotations )
 	{
-		const Node *node = ga.first->node();
 		Annotations &annotations = ga.second;
-
-		if( annotations.dirty )
-		{
-			annotations.renderable = false;
-
-			annotations.bookmarked = Gaffer::MetadataAlgo::getBookmarked( node );
-			annotations.renderable |= annotations.bookmarked;
-
-			if( int bookmark = MetadataAlgo::numericBookmark( node ) )
-			{
-				annotations.numericBookmark = std::to_string( bookmark );
-				annotations.renderable = true;
-			}
-			else
-			{
-				annotations.numericBookmark = InternedString();
-			}
-
-			annotations.standardAnnotations.clear();
-			names.clear();
-			MetadataAlgo::annotations( node, names );
-			for( const auto &name : names )
-			{
-				annotations.standardAnnotations.push_back(
-					MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
-				);
-				// Word wrap. It might be preferable to do this during
-				// rendering, but we have no way of querying the extent of
-				// `Style::renderWrappedText()`.
-				annotations.standardAnnotations.back().textData = new StringData(
-					wrap( annotations.standardAnnotations.back().text(), 60 )
-				);
-			}
-			annotations.renderable |= (bool)annotations.standardAnnotations.size();
-
-			annotations.dirty = false;
-		}
-
+		assert( !annotations.dirty );
 		if( !annotations.renderable )
 		{
 			continue;
@@ -278,6 +241,7 @@ void AnnotationsGadget::graphGadgetChildAdded( GraphComponent *child )
 	if( NodeGadget *nodeGadget = runTimeCast<NodeGadget>( child ) )
 	{
 		m_annotations[nodeGadget] = Annotations();
+		m_dirty = true;
 	}
 }
 
@@ -286,6 +250,7 @@ void AnnotationsGadget::graphGadgetChildRemoved( const GraphComponent *child )
 	if( const NodeGadget *nodeGadget = runTimeCast<const NodeGadget>( child ) )
 	{
 		m_annotations.erase( nodeGadget );
+		m_dirty = true;
 	}
 }
 
@@ -312,6 +277,62 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 		auto it = m_annotations.find( gadget );
 		assert( it != m_annotations.end() );
 		it->second.dirty = true;
+		m_dirty = true;
 		dirty( DirtyType::Render );
 	}
+}
+
+void AnnotationsGadget::update() const
+{
+	if( !m_dirty )
+	{
+		return;
+	}
+
+	vector<string> names;
+	for( auto &ga : m_annotations )
+	{
+		const Node *node = ga.first->node();
+		Annotations &annotations = ga.second;
+		if( !annotations.dirty )
+		{
+			continue;
+		}
+
+		annotations.renderable = false;
+
+		annotations.bookmarked = Gaffer::MetadataAlgo::getBookmarked( node );
+		annotations.renderable |= annotations.bookmarked;
+
+		if( int bookmark = MetadataAlgo::numericBookmark( node ) )
+		{
+			annotations.numericBookmark = std::to_string( bookmark );
+			annotations.renderable = true;
+		}
+		else
+		{
+			annotations.numericBookmark = InternedString();
+		}
+
+		annotations.standardAnnotations.clear();
+		names.clear();
+		MetadataAlgo::annotations( node, names );
+		for( const auto &name : names )
+		{
+			annotations.standardAnnotations.push_back(
+				MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
+			);
+			// Word wrap. It might be preferable to do this during
+			// rendering, but we have no way of querying the extent of
+			// `Style::renderWrappedText()`.
+			annotations.standardAnnotations.back().textData = new StringData(
+				wrap( annotations.standardAnnotations.back().text(), 60 )
+			);
+		}
+		annotations.renderable |= (bool)annotations.standardAnnotations.size();
+
+		annotations.dirty = false;
+	}
+
+	m_dirty = false;
 }

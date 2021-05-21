@@ -86,6 +86,7 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 		void graphGadgetChildAdded( GraphComponent *child );
 		void graphGadgetChildRemoved( const GraphComponent *child );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
+		void update() const;
 
 		struct Annotations
 		{
@@ -101,6 +102,7 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 
 		using AnnotationsContainer = std::unordered_map<const NodeGadget *, Annotations>;
 		mutable AnnotationsContainer m_annotations;
+		mutable bool m_dirty;
 
 };
 
