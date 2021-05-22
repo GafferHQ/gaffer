@@ -4403,7 +4403,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			m_scene->film->cryptomatte_passes = cryptoPasses;
 
-			bool cryptoAsset, cryptoObject, cryptoMaterial = false;
+			bool cryptoAsset = false;
+			bool cryptoObject = false;
+			bool cryptoMaterial = false;
 
 			for( auto &coutput : m_outputs )
 			{
