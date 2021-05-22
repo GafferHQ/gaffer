@@ -41,7 +41,6 @@
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 
-#include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
@@ -74,42 +73,10 @@ list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vect
 	return pythonSamples;
 }
 
-struct AdaptorWrapper
-{
-
-	AdaptorWrapper( object pythonAdaptor )
-		:	m_pythonAdaptor( pythonAdaptor )
-	{
-	}
-
-	SceneProcessorPtr operator()()
-	{
-		IECorePython::ScopedGILLock gilLock;
-		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
-		return result;
-	}
-
-	private :
-
-		object m_pythonAdaptor;
-
-};
-
-void registerAdaptorWrapper( const std::string &name, object adaptor )
-{
-	RendererAlgo::registerAdaptor( name, AdaptorWrapper( adaptor ) );
-}
-
 void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
-}
-
-void applyCameraGlobalsWrapper( IECoreScene::Camera &camera, const IECore::CompoundObject &globals, const ScenePlug &scene )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	RendererAlgo::applyCameraGlobals( &camera, &globals, &scene );
 }
 
 } // namespace
@@ -126,17 +93,11 @@ void bindRendererAlgo()
 
 	def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "_copy" ) = true ) );
 
-	def( "registerAdaptor", &registerAdaptorWrapper );
-	def( "deregisterAdaptor", &RendererAlgo::deregisterAdaptor );
-	def( "createAdaptors", &RendererAlgo::createAdaptors );
-
 	class_<RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
 		.def( init<const ScenePlug *>() )
 	;
 
 	def( "outputCameras", &outputCamerasWrapper );
-
-	def( "applyCameraGlobals", &applyCameraGlobalsWrapper );
 
 }
 

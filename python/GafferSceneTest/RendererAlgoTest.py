@@ -92,7 +92,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-		self.assertEqual( mh.messages[0].context, "RendererAlgo::createAdaptors" )
+		self.assertEqual( mh.messages[0].context, "SceneAlgo::createRenderAdaptors" )
 		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
 
 	def testObjectSamples( self ) :

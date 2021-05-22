@@ -44,7 +44,6 @@
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/PathFilter.h"
-#include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SetFilter.h"
 #include "GafferScene/StandardOptions.h"
@@ -1309,13 +1308,13 @@ class SceneView::Camera : public boost::signals::trackable
 					cameraTransform = scenePlug()->fullTransform( cameraPath );
 
 					IECoreScene::CameraPtr camera = constCamera->copy();
-					RendererAlgo::applyCameraGlobals( camera.get(), globals.get(), scenePlug() );
+					SceneAlgo::applyCameraGlobals( camera.get(), globals.get(), scenePlug() );
 					m_lookThroughCamera = camera;
 				}
 				else
 				{
 					CameraPtr defaultCamera = new IECoreScene::Camera;
-					RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals.get(), scenePlug() );
+					SceneAlgo::applyCameraGlobals( defaultCamera.get(), globals.get(), scenePlug() );
 					m_lookThroughCamera = defaultCamera;
 				}
 			}
@@ -1608,7 +1607,7 @@ SceneView::SceneView( const std::string &name )
 
 	// add in any render adaptors that might have been registered
 
-	SceneProcessorPtr adaptors = RendererAlgo::createAdaptors();
+	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	preprocessor->addChild( adaptors );
 	adaptors->inPlug()->setInput( deleteObject->outPlug() );
 

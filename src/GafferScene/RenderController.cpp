@@ -94,8 +94,8 @@ bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *
 	}
 	CameraPtr camera1 = new Camera;
 	CameraPtr camera2 = new Camera;
-	RendererAlgo::applyCameraGlobals( camera1.get(), globals, scene );
-	RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals, scene );
+	SceneAlgo::applyCameraGlobals( camera1.get(), globals, scene );
+	SceneAlgo::applyCameraGlobals( camera2.get(), previousGlobals, scene );
 
 	return *camera1 != *camera2;
 }
@@ -805,7 +805,7 @@ class RenderController::SceneGraph
 					if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
 					{
 						IECoreScene::CameraPtr cameraSampleCopy = cameraSample->copy();
-						GafferScene::RendererAlgo::applyCameraGlobals( cameraSampleCopy.get(), globals, scene );
+						SceneAlgo::applyCameraGlobals( cameraSampleCopy.get(), globals, scene );
 						cameraSamples.push_back( cameraSampleCopy );
 					}
 				}
@@ -1651,7 +1651,7 @@ void RenderController::updateDefaultCamera()
 	}
 
 	CameraPtr defaultCamera = new IECoreScene::Camera;
-	RendererAlgo::applyCameraGlobals( defaultCamera.get(), m_globals.get(), m_scene.get() );
+	SceneAlgo::applyCameraGlobals( defaultCamera.get(), m_globals.get(), m_scene.get() );
 	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( m_scene->attributesPlug()->defaultValue() );
 	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );

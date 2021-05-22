@@ -41,7 +41,6 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "IECoreScene/Camera.h"
 #include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/CompoundObject.h"
@@ -83,17 +82,6 @@ GAFFERSCENE_API bool transformSamples( const Gaffer::M44fPlug *transformPlug, co
 /// hash behave the same as for the transformSamples() method. Multiple samples will only be generated for
 /// Primitives and Cameras, since other object types cannot be interpolated anyway.
 GAFFERSCENE_API bool objectSamples( const Gaffer::ObjectPlug *objectPlug, const std::vector<float> &sampleTimes, std::vector<IECore::ConstObjectPtr> &samples, IECore::MurmurHash *hash = nullptr );
-
-/// Function to return a SceneProcessor used to adapt the
-/// scene for rendering.
-typedef std::function<SceneProcessorPtr ()> Adaptor;
-/// Registers an adaptor.
-GAFFERSCENE_API void registerAdaptor( const std::string &name, Adaptor adaptor );
-/// Removes a previously registered adaptor.
-GAFFERSCENE_API void deregisterAdaptor( const std::string &name );
-/// Returns a SceneProcessor that will apply all the currently
-/// registered adaptors.
-GAFFERSCENE_API SceneProcessorPtr createAdaptors();
 
 GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
@@ -269,9 +257,6 @@ GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const IECore::Compou
 GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
 GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
-
-/// Applies the resolution, aspect ratio etc from the globals to the camera.
-GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene );
 
 } // namespace RendererAlgo
 

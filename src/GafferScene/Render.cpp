@@ -38,6 +38,7 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneProcessor.h"
@@ -112,7 +113,7 @@ Render::Render( const IECore::InternedString &rendererType, const std::string &n
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
-	SceneProcessorPtr adaptors = GafferScene::RendererAlgo::createAdaptors();
+	SceneProcessorPtr adaptors = GafferScene::SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );

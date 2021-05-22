@@ -168,7 +168,7 @@ InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType
 	// Incremented when new messages are received, triggering a dirty signal for the output plug.
 	addChild( new IntPlug( "__messageUpdateCount", Plug::In, 0, 0, Imath::limits<int>::max(), Plug::Default & ~Plug::Serialisable ) );
 
-	SceneProcessorPtr adaptors = RendererAlgo::createAdaptors();
+	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );

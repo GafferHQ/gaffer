@@ -1061,3 +1061,161 @@ Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
 		return Imath::Box3f();
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Render Adaptor Registry
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+typedef boost::container::flat_map<string, SceneAlgo::RenderAdaptor> RenderAdaptors;
+
+RenderAdaptors &renderAdaptors()
+{
+	static RenderAdaptors a;
+	return a;
+}
+
+}
+
+void GafferScene::SceneAlgo::registerRenderAdaptor( const std::string &name, SceneAlgo::RenderAdaptor adaptor )
+{
+	renderAdaptors()[name] = adaptor;
+}
+
+void GafferScene::SceneAlgo::deregisterRenderAdaptor( const std::string &name )
+{
+	renderAdaptors().erase( name );
+}
+
+SceneProcessorPtr GafferScene::SceneAlgo::createRenderAdaptors()
+{
+	SceneProcessorPtr result = new SceneProcessor;
+
+	ScenePlug *in = result->inPlug();
+
+	const RenderAdaptors &a = renderAdaptors();
+	for( RenderAdaptors::const_iterator it = a.begin(), eIt = a.end(); it != eIt; ++it )
+	{
+		SceneProcessorPtr adaptor = it->second();
+		if( adaptor )
+		{
+			result->addChild( adaptor );
+			adaptor->inPlug()->setInput( in );
+			in = adaptor->outPlug();
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "SceneAlgo::createRenderAdaptors",
+				boost::format( "Adaptor \"%1%\" returned null" ) % it->first
+			);
+		}
+	}
+
+	result->outPlug()->setInput( in );
+	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Apply Camera Globals
+//////////////////////////////////////////////////////////////////////////
+
+void GafferScene::SceneAlgo::applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene )
+{
+	// Set any camera-relevant render globals that haven't been overridden on the camera
+	const IntData *filmFitData = globals->member<IntData>( "option:render:filmFit" );
+	if( !camera->hasFilmFit() && filmFitData )
+	{
+		camera->setFilmFit( (IECoreScene::Camera::FilmFit)filmFitData->readable() );
+	}
+
+	const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" );
+	if( !camera->hasResolution() && resolutionData )
+	{
+		camera->setResolution( resolutionData->readable() );
+	}
+
+	const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" );
+	if( !camera->hasResolutionMultiplier() && resolutionMultiplierData )
+	{
+		camera->setResolutionMultiplier( resolutionMultiplierData->readable() );
+	}
+
+	const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
+	if( !camera->hasPixelAspectRatio() && pixelAspectRatioData )
+	{
+		camera->setPixelAspectRatio( pixelAspectRatioData->readable() );
+	}
+
+	const BoolData *overscanData = globals->member<BoolData>( "option:render:overscan" );
+	bool overscan = overscanData && overscanData->readable();
+	if( camera->hasOverscan() ) overscan = camera->getOverscan();
+	if( overscan )
+	{
+		if( !camera->hasOverscan() )
+		{
+			camera->setOverscan( true );
+		}
+		const FloatData *overscanLeftData = globals->member<FloatData>( "option:render:overscanLeft" );
+		if( !camera->hasOverscanLeft() && overscanLeftData )
+		{
+			camera->setOverscanLeft( overscanLeftData->readable() );
+		}
+		const FloatData *overscanRightData = globals->member<FloatData>( "option:render:overscanRight" );
+		if( !camera->hasOverscanRight() && overscanRightData )
+		{
+			camera->setOverscanRight( overscanRightData->readable() );
+		}
+		const FloatData *overscanTopData = globals->member<FloatData>( "option:render:overscanTop" );
+		if( !camera->hasOverscanTop() && overscanTopData )
+		{
+			camera->setOverscanTop( overscanTopData->readable() );
+		}
+		const FloatData *overscanBottomData = globals->member<FloatData>( "option:render:overscanBottom" );
+		if( !camera->hasOverscanBottom() && overscanBottomData )
+		{
+			camera->setOverscanBottom( overscanBottomData->readable() );
+		}
+	}
+
+	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
+	if( !camera->hasCropWindow() && cropWindowData )
+	{
+		camera->setCropWindow( cropWindowData->readable() );
+	}
+
+	const BoolData *depthOfFieldData = globals->member<BoolData>( "option:render:depthOfField" );
+	/*if( !camera->hasDepthOfField() && depthOfFieldData )
+	{
+		camera->setDepthOfField( depthOfFieldData->readable() );
+	}*/
+	// \todo - switch to the form above once we have officially added the depthOfField parameter to Cortex.
+	// The plan then would be that the renderer backends should respect camera->getDepthOfField.
+	// For the moment we bake into fStop instead
+	bool depthOfField = false;
+	if( depthOfFieldData )
+	{
+		// First set from render globals
+		depthOfField = depthOfFieldData->readable();
+	}
+	if( const BoolData *d = camera->parametersData()->member<BoolData>( "depthOfField" ) )
+	{
+		// Override based on camera setting
+		depthOfField = d->readable();
+	}
+	if( !depthOfField )
+	{
+		// If there is no depth of field, bake that into the fStop
+		camera->setFStop( 0.0f );
+	}
+
+	// Bake the shutter from the globals into the camera before passing it to the renderer backend
+	//
+	// Before this bake, the shutter is an optional render setting override, with the shutter start
+	// and end relative to the current frame.  After baking, the shutter is currently an absolute
+	// shutter, with the frame added on.  Feels like it might be more consistent if we switched to
+	// always storing a relative shutter in camera->setShutter()
+	camera->setShutter( SceneAlgo::shutter( globals, scene ) );
+}

@@ -36,6 +36,14 @@
 
 import GafferScene
 
-# Backwards compatibility for old bindings which were not namespaced correctly.
-for n in ( "registerAdaptor", "deregisterAdaptor", "createAdaptors" ) :
-	setattr( GafferScene, n, getattr( GafferScene.RendererAlgo, n ) )
+# Backwards compatibility for old bindings which were not namespaced correctly,
+# or in RendererAlgo instead of SceneAlgo
+for newName, oldName in (
+		( "registerRenderAdaptor", "registerAdaptor" ),
+		( "deregisterRenderAdaptor", "deregisterAdaptor" ),
+		( "createRenderAdaptors", "createAdaptors" )
+	) :
+	setattr( GafferScene.RendererAlgo, oldName, getattr( GafferScene.SceneAlgo, newName ) )
+	setattr( GafferScene, oldName, getattr( GafferScene.SceneAlgo, newName ) )
+
+setattr( GafferScene.RendererAlgo, "applyCameraGlobals", GafferScene.SceneAlgo.applyCameraGlobals )
