@@ -78,6 +78,14 @@ def __volumeSummary( plug ) :
 
 	return ", ".join( info )
 
+def __objectSummary( plug ) :
+
+	info = []
+	if plug["assetName"]["enabled"].getValue() :
+		info.append( IECore.CamelCase.toSpaced( "assetName" ) + ( " On" if plug["assetName"]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesAttributes,
@@ -97,6 +105,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Volume:summary", __volumeSummary,
+			"layout:section:Object:summary", __objectSummary,
 
 		],
 
@@ -323,6 +332,17 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Volume",
+
+		],
+
+		"attributes.assetName" : [
+
+			"description",
+			"""
+			Asset name for cryptomatte.
+			""",
+
+			"layout:section", "Object",
 
 		],
 
