@@ -73,7 +73,7 @@ if moduleSearchPath.find( "GafferCycles" ) :
 		nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
 		nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
 
-	except Exception, m :
+	except Exception as m :
 
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Cycles module - \"%s\".\n %s" % ( m, stacktrace ) )

@@ -36,14 +36,14 @@
 
 __import__( "GafferSceneUI" )
 
-import CyclesAttributesUI
-import CyclesLightUI
-import CyclesMeshLightUI
-import CyclesOptionsUI
-import CyclesRenderUI
-import CyclesShaderBallUI
-import CyclesShaderUI
-import InteractiveCyclesRenderUI
-import ShaderMenu
+from . import CyclesAttributesUI
+from . import CyclesLightUI
+from . import CyclesMeshLightUI
+from . import CyclesOptionsUI
+from . import CyclesRenderUI
+from . import CyclesShaderBallUI
+from . import CyclesShaderUI
+from . import InteractiveCyclesRenderUI
+from . import ShaderMenu
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCyclesUI" )

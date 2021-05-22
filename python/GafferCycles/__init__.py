@@ -36,7 +36,7 @@
 
 __import__( "GafferScene" )
 
-from _GafferCycles import *
-from CyclesShaderBall import CyclesShaderBall
+from . _GafferCycles import *
+from . CyclesShaderBall import CyclesShaderBall
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCycles" )
