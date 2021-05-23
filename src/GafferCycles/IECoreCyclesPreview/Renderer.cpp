@@ -1214,11 +1214,11 @@ IECore::InternedString g_transmissionVisibilityAttributeName( "ccl:visibility:tr
 IECore::InternedString g_shadowVisibilityAttributeName( "ccl:visibility:shadow" );
 IECore::InternedString g_scatterVisibilityAttributeName( "ccl:visibility:scatter" );
 
-IECore::InternedString g_setsAttributeName( "sets" );
-IECore::InternedString g_cryptomatteAssetAttributeName( "asset:" );
+// Cryptomatte asset
+IECore::InternedString g_cryptomatteAssetAttributeName( "ccl:asset_name" );
 
 // Light-group
-IECore::InternedString g_lightGroupAttributeName( "ccl:light_group" );
+IECore::InternedString g_lightGroupAttributeName( "ccl:lightgroup" );
 
 // Volume
 IECore::InternedString g_volumeClippingAttributeName( "ccl:volume_clipping" );
@@ -1243,7 +1243,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_dupliUV( V2f( 0.0f) ),
 				m_particle( attributes ), 
 				m_volume( attributes ), 
-				m_lightGroup( -1 ),
+				m_lightGroup( "" ),
+				m_assetName( "" ),
 				m_shaderCache( shaderCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
@@ -1261,9 +1262,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
 			m_dupliGenerated = attributeValue<V3f>( g_dupliGeneratedAttributeName, attributes, m_dupliGenerated );
 			m_dupliUV = attributeValue<V2f>( g_dupliUVAttributeName, attributes, m_dupliUV );
-			m_lightGroup = attributeValue<int>( g_lightGroupAttributeName, attributes, m_lightGroup );
-
-			m_sets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
+			m_lightGroup = attributeValue<std::string>( g_lightGroupAttributeName, attributes, m_lightGroup );
+			m_assetName = attributeValue<std::string>( g_cryptomatteAssetAttributeName, attributes, m_assetName );
 
 			// Surface shader
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
@@ -1364,6 +1364,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->color = SocketAlgo::setColor( m_color );
 			object->dupli_generated = SocketAlgo::setVector( m_dupliGenerated );
 			object->dupli_uv = SocketAlgo::setVector( m_dupliUV );
+			object->asset_name = m_assetName;
 
 			if( object->geometry )
 			{
@@ -1411,29 +1412,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( !m_volume.apply( object ) )
 				return false;
 
-			// Cryptomatte asset name
-			if( m_sets && m_sets->readable().size() )
-			{
-				const vector<IECore::InternedString> &v = m_sets->readable();
-				for( auto const& name : v )
-				{
-					if( boost::starts_with( name.string(), g_cryptomatteAssetAttributeName.string() ) )
-					{
-						object->asset_name = ccl::ustring( name.c_str() + 6 );
-						break;
-					}
-				}
-			}
-
 #ifdef WITH_CYCLES_LIGHTGROUPS
-			if( ( m_lightGroup > 0 ) && ( m_lightGroup <= 32 ) )
-			{
-				object->lightgroups = (1 << ( m_lightGroup - 1 ) );
-			}
-			else
-			{
-				object->lightgroups = 0;
-			}
+			object->lightgroup = m_lightGroup;
 #endif
 
 			return true;
@@ -1461,25 +1441,13 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->strength = clight->strength;
 				light->angle = clight->angle;
 #ifdef WITH_CYCLES_LIGHTGROUPS
-				light->lightgroups = clight->lightgroups;
+				light->lightgroup = clight->lightgroup;
 #endif
 			}
 			if( m_shader )
 			{
 				light->shader = m_shader.get();
 			}
-
-#ifdef WITH_CYCLES_LIGHTGROUPS
-			// Override light-group if there is a ccl:lightGroup assigned
-			if( ( m_lightGroup > 0 ) && ( m_lightGroup <= 32 ) )
-			{
-				light->lightgroups = (1 << ( m_lightGroup - 1 ) );
-			}
-			else if( m_lightGroup == 0 )
-			{
-				light->lightgroups = 0;
-			}
-#endif
 
 			return true;
 		}
@@ -1744,13 +1712,13 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		float m_shadowTerminatorOffset;
 		int m_maxLevel;
 		float m_dicingRate;
-		IECore::ConstInternedStringVectorDataPtr m_sets;
 		Color3f m_color;
 		V3f m_dupliGenerated;
 		V2f m_dupliUV;
 		Particle m_particle;
 		Volume m_volume;
-		int m_lightGroup;
+		InternedString m_assetName;
+		InternedString m_lightGroup;
 		// Need to assign shaders in a deferred manner
 		ShaderCache *m_shaderCache;
 
@@ -2830,7 +2798,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
 			Imath::M44f matrix;
 
-			if( m_camera->motion_position == ccl::Camera::MOTION_POSITION_START )
+			if( m_camera->motion_position == ccl::MOTION_POSITION_START )
 			{
 				matrix = samples.front();
 				matrix.scale( scale );
@@ -2847,7 +2815,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 					camera->motion[2] = SocketAlgo::setTransform( matrix );
 				}
 			}
-			else if( m_camera->motion_position == ccl::Camera::MOTION_POSITION_END )
+			else if( m_camera->motion_position == ccl::MOTION_POSITION_END )
 			{
 				matrix = samples.back();
 				matrix.scale( scale );
@@ -3950,11 +3918,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			int frameIdx = -1;
-			if( m_scene->camera->motion_position == ccl::Camera::MOTION_POSITION_START )
+			if( m_scene->camera->motion_position == ccl::MOTION_POSITION_START )
 			{
 				frameIdx = 0;
 			}
-			else if( m_scene->camera->motion_position == ccl::Camera::MOTION_POSITION_END )
+			else if( m_scene->camera->motion_position == ccl::MOTION_POSITION_END )
 			{
 				frameIdx = times.size()-1;
 			}
@@ -4242,9 +4210,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					background->shader = light->shader;
 					lightBackground = true;
-#ifdef WITH_CYCLES_LIGHTGROUPS
-					integrator->background_lightgroups = light->lightgroups;
-#endif
 					break;
 				}
 			}
@@ -4443,7 +4408,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #ifdef WITH_CYCLES_LIGHTGROUPS
 				else if( coutput.second->m_passType == ccl::PASS_LIGHTGROUP )
 				{
-					int num = coutput.second->m_images.size();
+					int num = coutput.second->m_instances;
 					for( int i = 1; i <= num; ++i )
 					{
 						string fullName = ( boost::format( "%s%02i" ) % coutput.second->m_data % i ).str();

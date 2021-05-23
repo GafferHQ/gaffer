@@ -253,15 +253,10 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 				// For the UI
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 			}
-			else if( parameterName == "lightgroups" )
+			else if( parameterName == "lightGroup" )
 			{
-				// LightGroups are stored in a 32-bit bitmask (32 lightGroups max)
-				int lightGroup = static_cast<const IntPlug *>( valuePlug )->getValue();
-				if( ( lightGroup > 0 ) && ( lightGroup <= 32 ) )
-					lightShader->parameters()[parameterName] = new IntData( 1 << ( lightGroup - 1 ) );
-				else
-					lightShader->parameters()[parameterName] = new IntData( 0 );
-				
+				std::string lightGroup = static_cast<const StringPlug *>( valuePlug )->getValue();
+				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 			}
 			else
 			{

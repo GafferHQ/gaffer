@@ -69,7 +69,7 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "Cs", new IECore::Color3fData( Imath::Color3f( 0.0f ) ), false, "color" ) );
 
 	// Light-Group
-	attributes->addChild( new Gaffer::NameValuePlug( "ccl:light_group", new IECore::IntData( -1 ), false, "lightGroup" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:lightgroup", new IECore::StringData( "" ), false, "lightGroup" ) );
 
 	// Volume
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:volume_clipping", new IECore::FloatData( 0.001f ), false, "volumeClipping" ) );
@@ -80,6 +80,8 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dupli_generated", new IECore::V3fData( Imath::V3f( 0.0f ) ), false, "dupliGenerated" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dupli_uv", new IECore::V2fData( Imath::V2f( 0.0f ) ), false, "dupliUV" ) );
 
+	// Asset name for cryptomatte
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:asset_name", new IECore::StringData( "" ), false, "assetName" ) );
 }
 
 CyclesAttributes::~CyclesAttributes()

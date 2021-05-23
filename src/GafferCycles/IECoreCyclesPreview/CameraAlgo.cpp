@@ -42,6 +42,7 @@
 
 // Cycles
 #include "render/camera.h"
+#include "kernel/kernel_types.h"
 
 using namespace std;
 using namespace Imath;
@@ -116,15 +117,15 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	ccam->shuttertime = abs(shutter.x) + abs(shutter.y);
 	if( (shutter.x == 0.0) && (shutter.y > shutter.x) )
 	{
-		ccam->motion_position = ccl::Camera::MOTION_POSITION_START;
+		ccam->motion_position = ccl::MOTION_POSITION_START;
 	}
 	else if( (shutter.x < shutter.y) && (shutter.y == 0.0) )
 	{
-		ccam->motion_position = ccl::Camera::MOTION_POSITION_END;
+		ccam->motion_position = ccl::MOTION_POSITION_END;
 	}
 	else
 	{
-		ccam->motion_position = ccl::Camera::MOTION_POSITION_CENTER;
+		ccam->motion_position = ccl::MOTION_POSITION_CENTER;
 	}
 
 	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )

@@ -70,9 +70,9 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 		{
 		}
 
-		bool load_metadata( ccl::ImageMetaData &metadata ) override
+		bool load_metadata(const ccl::ImageDeviceFeatures &features, ccl::ImageMetaData &metadata) override
 		{
-			return ccl::VDBImageLoader::load_metadata( metadata );
+			return ccl::VDBImageLoader::load_metadata( features, metadata );
 		}
 
 		bool load_pixels( const ccl::ImageMetaData &metadata,
