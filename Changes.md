@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.0.0)
+========
+
+Improvements
+------------
+
+- Process : Added warning messages for processes which don't respond promptly to cancellation.
+
 0.60.0.0
 ========
 
