@@ -131,6 +131,8 @@ class GAFFERUI_API StandardStyle : public Style
 		void renderConnectionInternal( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const;
 		static unsigned int connectionDisplayList();
 
+		void renderFrameInternal( const Imath::Box2f &contents, float padding, float borderWidth, const Imath::Color3f &userColor ) const;
+
 		static IECoreGL::Shader *shader();
 		static int g_borderParameter;
 		static int g_borderRadiusParameter;

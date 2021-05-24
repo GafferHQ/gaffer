@@ -685,35 +685,7 @@ void StandardStyle::renderFrame( const Imath::Box2f &frame, float borderWidth, S
 
 void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state, const Imath::Color3f *userColor ) const
 {
-
-	Box2f b = contents;
-	V2f bw( borderWidth );
-	b.min -= bw;
-	b.max += bw;
-
-	V2f cornerSizes = bw / b.size();
-	glUniform1i( g_isCurveParameter, 0 );
-	glUniform1i( g_borderParameter, 1 );
-	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
-	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
-	glUniform1i( g_textureTypeParameter, 0 );
-
-	glColor( colorForState( RaisedColor, state, userColor ) );
-
-	glBegin( GL_QUADS );
-
-		glTexCoord2f( 0, 0 );
-		glVertex2f( b.min.x, b.min.y );
-		glTexCoord2f( 0, 1 );
-		glVertex2f( b.min.x, b.max.y );
-		glTexCoord2f( 1, 1 );
-		glVertex2f( b.max.x, b.max.y );
-		glTexCoord2f( 1, 0 );
-		glVertex2f( b.max.x, b.min.y );
-
-	glEnd();
-
+	renderFrameInternal( contents, borderWidth, 0.15f / borderWidth, colorForState( RaisedColor, state, userColor ) );
 }
 
 void StandardStyle::renderNodule( float radius, State state, const Imath::Color3f *userColor ) const
@@ -850,23 +822,24 @@ Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const I
 
 Imath::V2f StandardStyle::renderAnnotation( const Imath::V2f &origin, const std::string &text, State state, const Imath::Color3f *userColor ) const
 {
-	const float borderWidth = 0.5;
+	const float padding = 0.5;
+	const float borderWidth = 0.1;
 	const float spacing = 0.25;
 	const Color3f defaultColor( 0.05 );
 	const Box3f characterBound = this->characterBound( BodyText );
 
 	glPushMatrix();
 
-		IECoreGL::glTranslate( origin + V2f( borderWidth, -borderWidth - characterBound.max.y ) );
+		IECoreGL::glTranslate( origin + V2f( padding, -padding - characterBound.max.y ) );
 
 		const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
 		const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
 
 		Box3f textBounds = textBound( BodyText, text );
 
-		renderNodeFrame(
+		renderFrameInternal(
 			Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, characterBound.max.y ) ),
-			borderWidth, state, userColor
+			padding, borderWidth, colorForState( RaisedColor, state, userColor )
 		);
 
 		const Color3f &color = userColor ? *userColor : defaultColor;
@@ -877,7 +850,7 @@ Imath::V2f StandardStyle::renderAnnotation( const Imath::V2f &origin, const std:
 
 	glPopMatrix();
 
-	return origin - V2f( 0, characterBound.max.y - textBounds.min.y + borderWidth * 2 + spacing );
+	return origin - V2f( 0, characterBound.max.y - textBounds.min.y + padding * 2 + spacing );
 }
 
 void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
@@ -1237,6 +1210,37 @@ unsigned int StandardStyle::connectionDisplayList()
 		g_initialised = true;
 	}
 	return g_list;
+}
+
+void StandardStyle::renderFrameInternal( const Imath::Box2f &contents, float padding, float borderWidth, const Imath::Color3f &userColor ) const
+{
+	Box2f b = contents;
+	V2f p( padding );
+	b.min -= p;
+	b.max += p;
+
+	V2f cornerSizes = p / b.size();
+	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_borderParameter, 1 );
+	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
+	glUniform1f( g_borderWidthParameter, borderWidth );
+	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+
+	glColor( userColor );
+
+	glBegin( GL_QUADS );
+
+		glTexCoord2f( 0, 0 );
+		glVertex2f( b.min.x, b.min.y );
+		glTexCoord2f( 0, 1 );
+		glVertex2f( b.min.x, b.max.y );
+		glTexCoord2f( 1, 1 );
+		glVertex2f( b.max.x, b.max.y );
+		glTexCoord2f( 1, 0 );
+		glVertex2f( b.max.x, b.min.y );
+
+	glEnd();
 }
 
 Imath::Color3f StandardStyle::colorForState( Color c, State s, const Imath::Color3f *userColor ) const
