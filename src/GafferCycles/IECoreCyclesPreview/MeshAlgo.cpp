@@ -75,13 +75,25 @@ struct MikkUserData {
 																		  mesh->attributes;
 
 		ccl::Attribute *attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
-		if( !attr_vN )
+		ccl::Attribute* attr_cN = attributes.find( ccl::ATTR_STD_CORNER_NORMAL );
+		if( !attr_vN && !attr_cN )
 		{
 			mesh->add_face_normals();
 			mesh->add_vertex_normals();
 			attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
 		}
-		vertex_normal = attr_vN->data_float3();
+
+		// This preference depends on what Cycles does inside the hood.
+		// Works for now, but there should be a more clear way of knowing
+		// which normals are used for rendering.
+		if (attr_cN)
+		{
+			corner_normal = attr_cN->data_float3();
+		}
+		else
+		{
+			vertex_normal = attr_vN->data_float3();
+		}
 
 		ccl::Attribute *attr_uv = attributes.find( ccl::ustring( layer_name ) );
 		if( attr_uv != NULL )
@@ -93,6 +105,7 @@ struct MikkUserData {
 	ccl::Mesh *mesh;
 	int num_faces;
 
+	ccl::float3* corner_normal;
 	ccl::float3 *vertex_normal;
 	ccl::float2 *texface;
 
@@ -199,7 +212,11 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 	if( mesh->subd_faces.size() )
 	{
 		const ccl::Mesh::SubdFace &face = mesh->subd_faces[face_num];
-		if( face.smooth )
+		if (userdata->corner_normal)
+		{
+			vN = userdata->corner_normal[face.start_corner + vert_num];
+		}
+		else if( face.smooth )
 		{
 			const int vertex_index = mikk_vertex_index( mesh, face_num, vert_num );
 			vN = userdata->vertex_normal[vertex_index];
@@ -211,6 +228,10 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 	}
 	else
 	{
+		if (userdata->corner_normal)
+		{
+			vN = userdata->corner_normal[face_num * 3 + vert_num];
+		}
 		if( mesh->smooth[face_num] )
 		{
 			const int vertex_index = mikk_vertex_index( mesh, face_num, vert_num );
@@ -250,7 +271,14 @@ static void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool
 	ccl::Attribute *attr;
 	ccl::ustring name;
 
-	name = ccl::ustring( ( string( layer_name ) + ".tangent" ).c_str() );
+	if (layer_name != NULL)
+	{
+		name = ccl::ustring( ( std::string( layer_name ) + ".tangent" ).c_str() );
+	}
+	else
+	{
+		name = ccl::ustring( "orco.tangent" );
+	}
 
 	if( active_render )
 	{
@@ -266,7 +294,16 @@ static void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool
 	if( need_sign )
 	{
 		ccl::Attribute *attr_sign;
-		ccl::ustring name_sign = ccl::ustring( ( string( layer_name ) + ".tangent_sign" ).c_str() );
+		ccl::ustring name_sign;
+
+		if (layer_name != NULL)
+		{
+			name_sign = ccl::ustring( ( std::string( layer_name ) + ".tangent_sign" ).c_str() );
+		}
+		else
+		{
+			name_sign = ccl::ustring( "orco.tangent_sign" );
+		}
 
 		if( active_render )
 		{
@@ -334,12 +371,6 @@ const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVa
 		return nullptr;
 	}
 
-	if( thisInterpolation != PrimitiveVariable::Varying && thisInterpolation != PrimitiveVariable::Vertex ) //&& thisInterpolation != PrimitiveVariable::FaceVarying )
-	{
-		msg( Msg::Warning, "MeshAlgo", "Variable \"N\" has unsupported interpolation type - not generating normals." );
-		return nullptr;
-	}
-
 	interpolation = thisInterpolation;
 	return n;
 }
@@ -378,38 +409,112 @@ const IntVectorData *getFaceset( const IECoreScene::MeshPrimitive *mesh )
 	return f;
 }
 
+ccl::AttributeStandard normalAttributeStandard( PrimitiveVariable::Interpolation &interpolation )
+{
+	if( interpolation == PrimitiveVariable::Uniform || interpolation == PrimitiveVariable::FaceVarying )
+	{
+		return ccl::ATTR_STD_CORNER_NORMAL;
+	}
+	else
+	{
+		return ccl::ATTR_STD_VERTEX_NORMAL;
+	}
+}
+
 void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *normalData, ccl::Attribute *attr, PrimitiveVariable::Interpolation interpolation )
 {
 	const size_t numFaces = mesh->numFaces();
 	const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 	const vector<Imath::V3f> &normals = normalData->readable();
+	const IECore::IntVectorData* nIndices = mesh->variables.find( "N" )->second.indices.get();
 	ccl::float3 *cdata = attr->data_float3();
 	size_t vertex = 0;
-	if( interpolation == PrimitiveVariable::Uniform )
+
+	if( !nIndices )
 	{
-		for( size_t i = 0; i < numFaces; ++i )
+		if( interpolation == PrimitiveVariable::Constant )
 		{
-			*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
-		}
-	}
-	else if( interpolation == PrimitiveVariable::FaceVarying )
-	{
-		const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
-		for( size_t i = 0; i < numFaces; ++i )
-		{
-			for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+			for( size_t i = 0; i < normals.size(); ++i )
 			{
-				*(cdata++) = ccl::make_float3( normals[vertex].x, normals[vertex].y, normals[vertex].z );
+				*(cdata++) = ccl::make_float3( normals[0].x, normals[0].y, normals[0].z );
+			}
+		}
+		else if( interpolation == PrimitiveVariable::Uniform )
+		{
+			for( size_t i = 0; i < numFaces; ++i )
+			{
+				for( size_t j = 0; j < vertsPerFace[i]; ++j )
+				{
+					*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
+				}
+			}
+		}
+		else if( interpolation == PrimitiveVariable::FaceVarying )
+		{
+			for( size_t i = 0; i < numFaces; ++i )
+			{
+				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				{
+					*(cdata++) = ccl::make_float3( normals[vertex].x, normals[vertex].y, normals[vertex].z );
+				}
+			}
+		}
+		else // per-vertex
+		{
+			for( size_t i = 0; i < normals.size(); ++i )
+			{
+				*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
 			}
 		}
 	}
 	else
 	{
-		for( size_t i = 0; i < normals.size(); ++i )
+		const vector<int> indices = nIndices->readable();
+
+		size_t numVerts = 0;
+		for( auto vert : vertsPerFace )
 		{
-			*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
+			numVerts += vert;
+		}
+
+		if( ( indices.size() < numVerts ) && interpolation != PrimitiveVariable::Vertex )
+		{
+			msg(
+				Msg::Warning, "IECoreCycles::MeshAlgo::convertN",
+				boost::format( "Normal has an invalid index size \"%d\" to vertex size \"%d\"." ) % indices.size() % numVerts
+			);
+			return;
+		}
+
+		if( interpolation == PrimitiveVariable::Uniform )
+		{
+			for( size_t i = 0; i < numFaces; ++i )
+			{
+				for( size_t j = 0; j < vertsPerFace[i]; ++j )
+				{
+					*(cdata++) = ccl::make_float3( normals[indices[i]].x, normals[indices[i]].y, normals[indices[i]].z );
+				}
+			}
+		}
+		else if( interpolation == PrimitiveVariable::FaceVarying )
+		{
+			for( size_t i = 0; i < numFaces; ++i )
+			{
+				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				{
+					*(cdata++) = ccl::make_float3( normals[indices[vertex]].x, normals[indices[vertex]].y, normals[indices[vertex]].z );
+				}
+			}
+		}
+		else // per-vertex
+		{
+			for( size_t i = 0; i < normals.size(); ++i )
+			{
+				*(cdata++) = ccl::make_float3( normals[indices[i]].x, normals[indices[i]].y, normals[indices[i]].z );
+			}
 		}
 	}
+	
 }
 
 void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs, bool defaultUV )//, ccl::Mesh *cmesh )
@@ -685,7 +790,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	{
 		if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
 		{
-			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+			ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
 			convertN( mesh, normals, attr_N, nInterpolation );
 		}
 	}
@@ -693,7 +798,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	{
 		if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
 		{
-			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+			ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
 			convertN( trimesh.get(), normals, attr_N, nInterpolation );
 		}
 		else
@@ -704,7 +809,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			normalOp->operate();
 			if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
 			{
-				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL );
 				convertN( trimesh.get(), normals, attr_N, PrimitiveVariable::Vertex );
 			}
 		}
@@ -713,7 +818,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	{
 		if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
 		{
-			ccl::Attribute *attr_N = attributes.add( nInterpolation == PrimitiveVariable::Uniform ? ccl::ATTR_STD_FACE_NORMAL : ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+			ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
 			convertN( mesh, normals, attr_N, nInterpolation );
 		}
 		else if( mesh->interpolation() != "catmullClark" )
@@ -725,7 +830,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			normalOp->operate();
 			if( const V3fVectorData *normals = normal( normalmesh.get(), nInterpolation ) )
 			{
-				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring("N") );
+				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL);
 				convertN( normalmesh.get(), normals, attr_N, PrimitiveVariable::Vertex );
 			}
 		}
