@@ -1509,12 +1509,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			if( const IECoreScene::PointsPrimitive *points = IECore::runTimeCast<const IECoreScene::PointsPrimitive>( object ) )
-			{
-				// Need to revisit this one
-				return false;
-			}
-
 			return true;
 		}
 
@@ -1973,22 +1967,6 @@ class InstanceCache : public IECore::RefCounted
 
 			ccl::Object *cobject = nullptr;
 
-			if( const IECoreScene::PointsPrimitive *points = IECore::runTimeCast<const IECoreScene::PointsPrimitive>( object ) )
-			{
-				// Hard-coded sphere for now!
-				MeshPrimitivePtr sphere = MeshPrimitive::createSphere( 1.0f, -1.0f, 1.0f, 360.0f, V2i( 12, 24 ) );
-				cobject = ObjectAlgo::convert( sphere.get(), nodeName );
-				SharedCParticleSystemPtr cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( points ) );
-				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-				SharedCGeometryPtr cgeomPtr = SharedCGeometryPtr( cobject->geometry );
-				cobject->particle_system = cpsysPtr.get();
-
-				m_objects.push_back( cobjectPtr );
-				m_uniqueGeometry.push_back( cgeomPtr );
-
-				return Instance( cobjectPtr, cgeomPtr, cpsysPtr );
-			}
-
 			IECore::MurmurHash hash = object->hash();
 			cyclesAttributes->hashGeometry( object, hash );
 
@@ -2083,21 +2061,6 @@ class InstanceCache : public IECore::RefCounted
 				hash.append( *it );
 			}
 			cyclesAttributes->hashGeometry( samples.front(), hash );
-
-			if( const IECoreScene::PointsPrimitive *points = IECore::runTimeCast<const IECoreScene::PointsPrimitive>( samples.front() ) )
-			{
-				MeshPrimitivePtr sphere = MeshPrimitive::createSphere( 1.0f, -1.0f, 1.0f, 360.0f, V2i( 12, 24 ) );
-				cobject = ObjectAlgo::convert( sphere.get(), nodeName );
-				SharedCParticleSystemPtr cpsysPtr = SharedCParticleSystemPtr( m_particleSystemsCache->get( points ) );
-				SharedCObjectPtr cobjectPtr = SharedCObjectPtr( cobject );
-				SharedCGeometryPtr cgeomPtr = SharedCGeometryPtr( cobject->geometry );
-				cobject->particle_system = cpsysPtr.get();
-
-				m_objects.push_back( cobjectPtr );
-				m_uniqueGeometry.push_back( cgeomPtr );
-
-				return Instance( cobjectPtr, cgeomPtr, cpsysPtr );
-			}
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
@@ -3896,7 +3859,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			if( ( object->typeId() == IECoreScene::Camera::staticTypeId() ) || ( object->typeId() == IECoreScene::PointsPrimitive::staticTypeId() ) ) // temporary for PointsPrimitive
+			if( object->typeId() == IECoreScene::Camera::staticTypeId() )
 			{
 				return nullptr;
 			}
@@ -3912,7 +3875,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			if( ( samples.front()->typeId() == IECoreScene::Camera::staticTypeId() ) || ( samples.front()->typeId() == IECoreScene::PointsPrimitive::staticTypeId() ) ) // temporary for PointsPrimitive
+			if( samples.front()->typeId() == IECoreScene::Camera::staticTypeId() )
 			{
 				return nullptr;
 			}
