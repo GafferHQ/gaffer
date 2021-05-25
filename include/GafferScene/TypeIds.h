@@ -160,7 +160,7 @@ enum TypeId
 	MotionPathTypeId = 110615,
 	InstancerContextVariablePlugTypeId = 110616,
 	FilterQueryTypeId = 110617,
-
+	TransformQueryTypeId = 110618,
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
 

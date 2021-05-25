@@ -344,6 +344,7 @@ nodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searc
 nodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
 nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = "OpenGLRender" )
 nodeMenu.append( "/Scene/Utility/Filter Query", GafferScene.FilterQuery, searchText = "FilterQuery" )
+nodeMenu.append( "/Scene/Utility/Transform Query", GafferScene.TransformQuery, searchText = "TransformQuery" )
 
 # Image nodes
 
