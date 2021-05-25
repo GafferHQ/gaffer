@@ -183,6 +183,11 @@ ccl::ShaderNode *getShaderNode( const std::string &name )
 	MAP_NODE( "displacement", ccl::DisplacementNode() );
 	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode() );
 	MAP_NODE( "aov_output", ccl::OutputAOVNode() );
+#if WITH_CYCLES_SDF
+	MAP_NODE( "sdf_primitives", ccl::SdfPrimitivesNode() );
+	MAP_NODE( "sdf_texture_ops", ccl::SdfOpsNode() );
+	MAP_NODE( "sdf_mod", ccl::SdfModNode() );
+#endif
 #undef MAP_NODE
 	return nullptr;
 }
