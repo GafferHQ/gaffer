@@ -1621,11 +1621,23 @@ SceneView::SceneView( const std::string &name )
 	preprocessor->addChild( m_drawingMode->preprocessor() );
 	m_drawingMode->preprocessor()->inPlug()->setInput( m_shadingMode->preprocessor()->outPlug() );
 
+
+	// remove motion blur, because the opengl renderer doesn't support it.
+
+	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
+
+	preprocessor->addChild( standardOptions );
+	standardOptions->inPlug()->setInput( m_drawingMode->preprocessor()->outPlug() );
+
 	// make the output for the preprocessor
 
 	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
-	preprocessorOutput->setInput( m_drawingMode->preprocessor()->outPlug() );
+	preprocessorOutput->setInput( standardOptions->outPlug() );
 
 	setPreprocessor( preprocessor );
 
