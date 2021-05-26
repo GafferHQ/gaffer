@@ -1,3 +1,14 @@
+0.59.x.x (relative to 0.59.8.0)
+========
+
+Fixes
+-----
+
+Documentation
+-------------
+
+- Fixed code samples in "Tutorials : Querying a Scene".
+
 0.59.8.0 (relative to 0.59.7.0)
 ========
 
