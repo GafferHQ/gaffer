@@ -70,7 +70,6 @@
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
 #include "tbb/spin_mutex.h"
-#include "tbb/task.h"
 
 using namespace std;
 using namespace Imath;

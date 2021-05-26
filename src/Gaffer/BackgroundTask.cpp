@@ -46,7 +46,7 @@
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index_container.hpp"
 
-#include "tbb/task.h"
+#include "tbb/task_arena.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -57,29 +57,6 @@ using namespace Gaffer;
 
 namespace
 {
-
-class FunctionTask : public tbb::task
-{
-	public :
-
-		typedef std::function<void ()> Function;
-
-		FunctionTask( const Function &f )
-			: m_f( f )
-		{
-		}
-
-		tbb::task *execute() override
-		{
-			m_f();
-			return nullptr;
-		}
-
-	private :
-
-		Function m_f;
-
-};
 
 const ScriptNode *scriptNode( const GraphComponent *subject )
 {
@@ -164,9 +141,9 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 {
 	activeTasks().insert( ActiveTask{ this, scriptNode( subject ) } );
 
-	auto taskData = m_taskData;
-	tbb::task *functionTask = new( tbb::task::allocate_root() ) FunctionTask(
-		[taskData] {
+	// Enqueue task into current arena.
+	tbb::task_arena( tbb::task_arena::attach() ).enqueue(
+		[taskData = m_taskData] {
 
 			// Early out if we were cancelled before the task
 			// even started.
@@ -221,7 +198,6 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 			taskData->conditionVariable.notify_one();
 		}
 	);
-	tbb::task::enqueue( *functionTask );
 }
 
 BackgroundTask::~BackgroundTask()
