@@ -35,6 +35,11 @@
 ##########################################################################
 
 import GafferScene
+import types
+
+# RendererAlgo is now private, and does not directly expose anything to Python.
+# Create a dummy module to contain our compability shims
+GafferScene.RendererAlgo = types.ModuleType( "RendererAlgo" )
 
 # Backwards compatibility for old bindings which were not namespaced correctly,
 # or in RendererAlgo instead of SceneAlgo

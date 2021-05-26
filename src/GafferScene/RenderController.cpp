@@ -59,7 +59,7 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
-using namespace GafferScene::RendererAlgo;
+using namespace GafferScene::Private::RendererAlgo;
 
 //////////////////////////////////////////////////////////////////////////
 // Private utilities
@@ -325,7 +325,7 @@ class RenderController::SceneGraph
 				// If attributes have changed, need to check if this has affected our motion sample times
 				if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & TransformBlurGlobalComponent ) )
 				{
-					if( RendererAlgo::transformMotionTimes( controller->m_motionBlurOptions.transformBlur, controller->m_motionBlurOptions.shutter, m_fullAttributes.get(), m_transformTimes ) )
+					if( Private::RendererAlgo::transformMotionTimes( controller->m_motionBlurOptions.transformBlur, controller->m_motionBlurOptions.shutter, m_fullAttributes.get(), m_transformTimes ) )
 					{
 						m_dirtyComponents |= TransformComponent;
 					}
@@ -333,7 +333,7 @@ class RenderController::SceneGraph
 
 				if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & DeformationBlurGlobalComponent ) )
 				{
-					if( RendererAlgo::deformationMotionTimes( controller->m_motionBlurOptions.deformationBlur, controller->m_motionBlurOptions.shutter, m_fullAttributes.get(), m_deformationTimes ) )
+					if( Private::RendererAlgo::deformationMotionTimes( controller->m_motionBlurOptions.deformationBlur, controller->m_motionBlurOptions.shutter, m_fullAttributes.get(), m_deformationTimes ) )
 					{
 						m_dirtyComponents |= ObjectComponent;
 					}
@@ -616,7 +616,7 @@ class RenderController::SceneGraph
 			return true;
 		}
 
-		bool updateRenderSets( const ScenePlug::ScenePath &path, const RendererAlgo::RenderSets &renderSets )
+		bool updateRenderSets( const ScenePlug::ScenePath &path, const Private::RendererAlgo::RenderSets &renderSets )
 		{
 			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
 				renderSets.setsAttribute( path )
@@ -645,7 +645,7 @@ class RenderController::SceneGraph
 			}
 
 			vector<M44f> samples;
-			if( !RendererAlgo::transformSamples( transformPlug, m_transformTimes, samples, &m_transformHash ) )
+			if( !Private::RendererAlgo::transformSamples( transformPlug, m_transformTimes, samples, &m_transformHash ) )
 			{
 				return false;
 			}
@@ -753,7 +753,7 @@ class RenderController::SceneGraph
 			}
 
 			vector<ConstObjectPtr> samples;
-			if( !RendererAlgo::objectSamples( objectPlug, m_deformationTimes, samples, &m_objectHash ) )
+			if( !Private::RendererAlgo::objectSamples( objectPlug, m_deformationTimes, samples, &m_objectHash ) )
 			{
 				return false;
 			}
@@ -1499,8 +1499,8 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
-			RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
-			RendererAlgo::outputOutputs( m_scene.get(), globals.get(), m_globals.get(), m_renderer.get() );
+			Private::RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
+			Private::RendererAlgo::outputOutputs( m_scene.get(), globals.get(), m_globals.get(), m_renderer.get() );
 			if( !m_globals || *m_globals != *globals )
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;
@@ -1542,7 +1542,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 
 		if( m_dirtyGlobalComponents & SetsGlobalComponent )
 		{
-			if( m_renderSets.update( m_scene.get() ) & RendererAlgo::RenderSets::RenderSetsChanged )
+			if( m_renderSets.update( m_scene.get() ) & Private::RendererAlgo::RenderSets::RenderSetsChanged )
 			{
 				m_changedGlobalComponents |= RenderSetsGlobalComponent;
 			}

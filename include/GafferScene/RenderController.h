@@ -38,7 +38,7 @@
 #define GAFFERSCENE_RENDERCONTROLLER_H
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/Private/RendererAlgo.h"
 
 #include "Gaffer/BackgroundTask.h"
 
@@ -142,8 +142,8 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		unsigned m_changedGlobalComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
 		MotionBlurOptions m_motionBlurOptions;
-		RendererAlgo::RenderSets m_renderSets;
-		std::unique_ptr<RendererAlgo::LightLinks> m_lightLinks;
+		Private::RendererAlgo::RenderSets m_renderSets;
+		std::unique_ptr<Private::RendererAlgo::LightLinks> m_lightLinks;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_boundAttributes;
 

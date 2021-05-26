@@ -58,6 +58,9 @@ namespace GafferScene
 
 IE_CORE_FORWARDDECLARE( SceneProcessor )
 
+namespace Private
+{
+
 namespace RendererAlgo
 {
 
@@ -259,6 +262,8 @@ GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::Compoun
 GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 } // namespace RendererAlgo
+
+} // namespace Private
 
 } // namespace GafferScene
 

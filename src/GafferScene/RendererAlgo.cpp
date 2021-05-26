@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/Private/RendererAlgo.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/SceneAlgo.h"
@@ -89,6 +89,9 @@ static InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformatio
 } // namespace
 
 namespace GafferScene
+{
+
+namespace Private
 {
 
 namespace RendererAlgo
@@ -398,6 +401,8 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 
 } // namespace RendererAlgo
 
+} // namespace Private
+
 } // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
@@ -416,6 +421,9 @@ ConstInternedStringVectorDataPtr g_emptySetsAttribute = new InternedStringVector
 } // namespace
 
 namespace GafferScene
+{
+
+namespace Private
 {
 
 namespace RendererAlgo
@@ -601,6 +609,8 @@ ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IE
 
 } // namespace RendererAlgo
 
+} // namespace Private
+
 } // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
@@ -620,6 +630,9 @@ IECore::InternedString g_lightFilters( "lightFilters" );
 } // namespace
 
 namespace GafferScene
+{
+
+namespace Private
 {
 
 namespace RendererAlgo
@@ -921,6 +934,8 @@ void LightLinks::outputLightFilterLinks( const std::string &lightName, IECoreSce
 
 } // namespace RendererAlgo
 
+} // namespace Private
+
 } // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
@@ -956,7 +971,7 @@ IECore::InternedString optionName( const IECore::InternedString &globalsName )
 struct LocationOutput
 {
 
-	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
 		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets ), m_root( root )
 	{
 		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
@@ -1019,7 +1034,7 @@ struct LocationOutput
 
 		void deformationMotionTimes( std::vector<float> &times )
 		{
-			RendererAlgo::deformationMotionTimes( m_options.deformationBlur, m_options.shutter, m_attributes.get(), times );
+			GafferScene::Private::RendererAlgo::deformationMotionTimes( m_options.deformationBlur, m_options.shutter, m_attributes.get(), times );
 		}
 
 		const IECore::CompoundObject *attributes() const
@@ -1085,9 +1100,9 @@ struct LocationOutput
 		void updateTransform( const ScenePlug *scene )
 		{
 			vector<float> sampleTimes;
-			RendererAlgo::transformMotionTimes( m_options.transformBlur, m_options.shutter, m_attributes.get(), sampleTimes );
+			GafferScene::Private::RendererAlgo::transformMotionTimes( m_options.transformBlur, m_options.shutter, m_attributes.get(), sampleTimes );
 			vector<M44f> samples;
-			RendererAlgo::transformSamples( scene->transformPlug(), sampleTimes, samples );
+			GafferScene::Private::RendererAlgo::transformSamples( scene->transformPlug(), sampleTimes, samples );
 
 			if( samples.size() == 1 )
 			{
@@ -1155,7 +1170,7 @@ struct LocationOutput
 
 		Options m_options;
 		IECore::ConstCompoundObjectPtr m_attributes;
-		const GafferScene::RendererAlgo::RenderSets &m_renderSets;
+		const GafferScene::Private::RendererAlgo::RenderSets &m_renderSets;
 		const ScenePlug::ScenePath &m_root;
 
 		std::vector<M44f> m_transformSamples;
@@ -1166,7 +1181,7 @@ struct LocationOutput
 struct CameraOutput : public LocationOutput
 {
 
-	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
 		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
 	{
 	}
@@ -1186,7 +1201,7 @@ struct CameraOutput : public LocationOutput
 			deformationMotionTimes( sampleTimes );
 
 			vector<ConstObjectPtr> samples;
-			RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
+			GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 
 			vector<ConstCameraPtr> cameraSamples; cameraSamples.reserve( samples.size() );
 			for( const auto &sample : samples )
@@ -1257,7 +1272,7 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, GafferScene::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
 		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightSet( renderSets.lightsSet() ), m_lightLinks( lightLinks )
 	{
 	}
@@ -1296,14 +1311,14 @@ struct LightOutput : public LocationOutput
 	}
 
 	const PathMatcher &m_lightSet;
-	GafferScene::RendererAlgo::LightLinks *m_lightLinks;
+	GafferScene::Private::RendererAlgo::LightLinks *m_lightLinks;
 
 };
 
 struct LightFiltersOutput : public LocationOutput
 {
 
-	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, GafferScene::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
 		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
 	{
 	}
@@ -1342,14 +1357,14 @@ struct LightFiltersOutput : public LocationOutput
 	private :
 
 		const PathMatcher &m_lightFiltersSet;
-		GafferScene::RendererAlgo::LightLinks *m_lightLinks;
+		GafferScene::Private::RendererAlgo::LightLinks *m_lightLinks;
 
 };
 
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::RendererAlgo::RenderSets &renderSets, const GafferScene::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
 		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
 	{
 	}
@@ -1370,7 +1385,7 @@ struct ObjectOutput : public LocationOutput
 		deformationMotionTimes( sampleTimes );
 
 		vector<ConstObjectPtr> samples;
-		RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
+		GafferScene::Private::RendererAlgo::objectSamples( scene->objectPlug(), sampleTimes, samples );
 		if( !samples.size() )
 		{
 			return true;
@@ -1408,7 +1423,7 @@ struct ObjectOutput : public LocationOutput
 	const PathMatcher &m_cameraSet;
 	const PathMatcher &m_lightSet;
 	const PathMatcher &m_lightFiltersSet;
-	const RendererAlgo::LightLinks *m_lightLinks;
+	const GafferScene::Private::RendererAlgo::LightLinks *m_lightLinks;
 
 };
 
@@ -1470,6 +1485,9 @@ ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *sc
 } // namespace
 
 namespace GafferScene
+{
+
+namespace Private
 {
 
 namespace RendererAlgo
@@ -1654,5 +1672,7 @@ void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *global
 }
 
 } // namespace RendererAlgo
+
+} // namespace Private
 
 } // namespace GafferScene
