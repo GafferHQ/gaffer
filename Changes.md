@@ -1,9 +1,6 @@
 0.59.x.x (relative to 0.59.8.0)
 ========
 
-Fixes
------
-
 Documentation
 -------------
 
