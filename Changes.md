@@ -1,3 +1,11 @@
+0.60.0.0bx
+==========
+
+Improvements
+------------
+
+- Set : Added wildcard support to the `name` plug.
+
 0.60.0.0b1
 ==========
 
@@ -137,9 +145,7 @@ Features
 Improvements
 ------------
 
-- Set :
-  - Added `setVariable` plug to allow the input filter to be varied depending on the set name.
-  - Added wildcard support to the `name` plug.
+- Set : Added `setVariable` plug to allow the input filter to be varied depending on the set name.
 - TabbedContainer : Added menu button to allow selection of tabs that are not
   visible due to a lack of horizontal space.
 
