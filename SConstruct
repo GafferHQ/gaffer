@@ -398,7 +398,12 @@ elif env["PLATFORM"] == "posix" :
 
 	if "g++" in os.path.basename( env["CXX"] ) :
 
+		# Get GCC version.
 		gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"] ).decode().strip()
+		if "." not in gccVersion :
+			# GCC 7 onwards requires `-dumpfullversion` to get minor/patch, but this
+			# flag does not exist on earlier GCCs, where minor/patch was provided by `-dumpversion`.
+			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"] ).decode().strip()
 		gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
 
 		# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
@@ -420,6 +425,9 @@ elif env["PLATFORM"] == "posix" :
 
 		if gccVersion >= [ 5, 1 ] :
 			env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
+
+		if gccVersion >= [ 9, 2 ] :
+			env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
 
 	env["GAFFER_PLATFORM"] = "linux"
 
