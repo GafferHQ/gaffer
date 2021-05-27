@@ -138,6 +138,19 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
+0.59.x.x (relative to 0.59.8.0)
+========
+
+Features
+--------
+
+- TransformQuery : Added a new node to query the transform for a scene location.
+
+Documentation
+-------------
+
+- Fixed code samples in "Tutorials : Querying a Scene".
+
 0.59.8.0 (relative to 0.59.7.0)
 ========
 
