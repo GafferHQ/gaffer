@@ -35,7 +35,20 @@
 ##########################################################################
 
 import GafferScene
+import types
 
-# Backwards compatibility for old bindings which were not namespaced correctly.
-for n in ( "registerAdaptor", "deregisterAdaptor", "createAdaptors" ) :
-	setattr( GafferScene, n, getattr( GafferScene.RendererAlgo, n ) )
+# RendererAlgo is now private, and does not directly expose anything to Python.
+# Create a dummy module to contain our compability shims
+GafferScene.RendererAlgo = types.ModuleType( "RendererAlgo" )
+
+# Backwards compatibility for old bindings which were not namespaced correctly,
+# or in RendererAlgo instead of SceneAlgo
+for newName, oldName in (
+		( "registerRenderAdaptor", "registerAdaptor" ),
+		( "deregisterRenderAdaptor", "deregisterAdaptor" ),
+		( "createRenderAdaptors", "createAdaptors" )
+	) :
+	setattr( GafferScene.RendererAlgo, oldName, getattr( GafferScene.SceneAlgo, newName ) )
+	setattr( GafferScene, oldName, getattr( GafferScene.SceneAlgo, newName ) )
+
+setattr( GafferScene.RendererAlgo, "applyCameraGlobals", GafferScene.SceneAlgo.applyCameraGlobals )

@@ -44,6 +44,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/Render.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
@@ -272,6 +273,26 @@ list capturedObjectCapturedSampleTimes( const CapturingRenderer::CapturedObject 
 	return result;
 }
 
+list capturedObjectCapturedTransforms( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto s : o.capturedTransforms() )
+	{
+		result.append( s );
+	}
+	return result;
+}
+
+list capturedObjectCapturedTransformTimes( const CapturingRenderer::CapturedObject &o )
+{
+	list result;
+	for( auto t : o.capturedTransformTimes() )
+	{
+		result.append( t );
+	}
+	return result;
+}
+
 CapturingRenderer::CapturedAttributesPtr capturedObjectCapturedAttributes( const CapturingRenderer::CapturedObject &o )
 {
 	return const_cast<CapturingRenderer::CapturedAttributes *>( o.capturedAttributes() );
@@ -295,6 +316,37 @@ object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, 
 		return object();
 	}
 }
+
+list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, bool copy )
+{
+	std::vector<IECore::ConstObjectPtr> samples;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples );
+	}
+
+	list pythonSamples;
+	for( auto &s : samples )
+	{
+		if( copy )
+		{
+			pythonSamples.append( s->copy() );
+		}
+		else
+		{
+			pythonSamples.append( boost::const_pointer_cast<IECore::Object>( s ) );
+		}
+	}
+
+	return pythonSamples;
+}
+
+void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	Private::RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
+}
+
 
 } // namespace
 
@@ -326,6 +378,21 @@ void GafferSceneModule::bindRender()
 	{
 		object privateModule( borrowed( PyImport_AddModule( "GafferScene.Private" ) ) );
 		scope().attr( "Private" ) = privateModule;
+
+		{
+			object rendererAlgoModule( borrowed( PyImport_AddModule( "GafferScene.Private.RendererAlgo" ) ) );
+			scope().attr( "Private" ).attr( "RendererAlgo" ) = rendererAlgoModule;
+
+			scope rendererAlgomoduleScope( rendererAlgoModule );
+
+			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "_copy" ) = true ) );
+
+			class_<Private::RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
+				.def( init<const ScenePlug *>() )
+			;
+
+			def( "outputCameras", &outputCamerasWrapper );
+		}
 
 		object ieCoreScenePreviewModule( borrowed( PyImport_AddModule( "GafferScene.Private.IECoreScenePreview" ) ) );
 		scope().attr( "Private" ).attr( "IECoreScenePreview" ) = ieCoreScenePreviewModule;
@@ -418,12 +485,13 @@ void GafferSceneModule::bindRender()
 		IECorePython::RefCountedClass<CapturingRenderer::CapturedObject, Renderer::ObjectInterface>( "CapturedObject" )
 			.def( "capturedSamples", &capturedObjectCapturedSamples )
 			.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
+			.def( "capturedTransforms", &capturedObjectCapturedTransforms )
+			.def( "capturedTransformTimes", &capturedObjectCapturedTransformTimes )
 			.def( "capturedAttributes", &capturedObjectCapturedAttributes )
 			.def( "capturedLinks", &capturedObjectCapturedLinks )
 			.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
 			.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )
 		;
-
 	}
 
 	TaskNodeClass<OpenGLRender>();

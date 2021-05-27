@@ -1,10 +1,20 @@
 0.60.0.0bx
 ==========
 
+Features
+--------
+
+- InteractiveRender : Added support for motion blur.
+
 Improvements
 ------------
 
 - Set : Added wildcard support to the `name` plug.
+
+Breaking Changes
+----------------
+
+- RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
 
 0.60.0.0b1
 ==========

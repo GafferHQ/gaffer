@@ -47,54 +47,6 @@ import GafferSceneTest
 
 class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
-	def test( self ) :
-
-		sphere = GafferScene.Sphere()
-
-		defaultAdaptors = GafferScene.RendererAlgo.createAdaptors()
-		defaultAdaptors["in"].setInput( sphere["out"] )
-
-		def a() :
-
-			r = GafferScene.StandardAttributes()
-			r["attributes"]["doubleSided"]["enabled"].setValue( True )
-			r["attributes"]["doubleSided"]["value"].setValue( False )
-
-			return r
-
-		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
-
-		testAdaptors = GafferScene.RendererAlgo.createAdaptors()
-		testAdaptors["in"].setInput( sphere["out"] )
-
-		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
-		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
-		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
-
-		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
-
-		defaultAdaptors2 = GafferScene.RendererAlgo.createAdaptors()
-		defaultAdaptors2["in"].setInput( sphere["out"] )
-
-		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
-
-	def testNullAdaptor( self ) :
-
-		def a() :
-
-			return None
-
-		GafferScene.RendererAlgo.registerAdaptor( "Test", a )
-
-		with IECore.CapturingMessageHandler() as mh :
-			GafferScene.RendererAlgo.createAdaptors()
-
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-		self.assertEqual( mh.messages[0].context, "RendererAlgo::createAdaptors" )
-		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
-
 	def testObjectSamples( self ) :
 
 		frame = GafferTest.FrameNode()
@@ -105,10 +57,9 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
-			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( sphere["out"], 1, imath.V2f( 0.75, 1.25 ) )
+			samples = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 0.75, 1.25 ] )
 
 		self.assertEqual( [ s.radius() for s in samples ], [ 0.75, 1.25 ] )
-		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
 
 	def testNonInterpolableObjectSamples( self ) :
 
@@ -120,11 +71,10 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "procedural" ] )
-			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( procedural["out"], 1, imath.V2f( 0.75, 1.25 ) )
+			samples = GafferScene.Private.RendererAlgo.objectSamples( procedural["out"]["object"], [ 0.75, 1.25 ] )
 
 		self.assertEqual( len( samples ), 1 )
 		self.assertEqual( samples[0].parameters()["frame"].value, 1.0 )
-		self.assertEqual( sampleTimes, [] )
 
 	def testObjectSamplesForCameras( self ) :
 
@@ -135,9 +85,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
-			samples, sampleTimes = GafferScene.RendererAlgo.objectSamples( camera["out"], 1, imath.V2f( 0.75, 1.25 ) )
+			samples = GafferScene.Private.RendererAlgo.objectSamples( camera["out"]["object"], [ 0.75, 1.25 ] )
 
-		self.assertEqual( sampleTimes, [ 0.75, 1.25 ] )
 		self.assertEqual( [ s.parameters()["focalLength"].value for s in samples ], [ 0.75, 1.25 ] )
 
 	def testOutputCameras( self ) :
@@ -150,7 +99,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		options = GafferScene.StandardOptions()
 		options["in"].setInput( camera["out"] )
 
-		renderSets = GafferScene.RendererAlgo.RenderSets( options["out"] )
+		renderSets = GafferScene.Private.RendererAlgo.RenderSets( options["out"] )
 
 		def expectedCamera( frame ) :
 
@@ -158,7 +107,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				c.setFrame( frame )
 				camera = options["out"].object( "/camera" )
 
-			GafferScene.RendererAlgo.applyCameraGlobals( camera, sceneGlobals, options["out"] )
+			GafferScene.SceneAlgo.applyCameraGlobals( camera, sceneGlobals, options["out"] )
 			return camera
 
 		# Non-animated case
@@ -167,7 +116,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 		sceneGlobals = options["out"].globals()
-		GafferScene.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+		GafferScene.Private.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
 
 		capturedCamera = renderer.capturedObject( "/camera" )
 
@@ -183,16 +132,11 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 		sceneGlobals = options["out"].globals()
-		GafferScene.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+		GafferScene.Private.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
 
 		capturedCamera = renderer.capturedObject( "/camera" )
 		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 0.75 ), expectedCamera( 1.25 ) ] )
 		self.assertEqual( capturedCamera.capturedSampleTimes(), [ 0.75, 1.25 ] )
-
-	def tearDown( self ) :
-
-		GafferSceneTest.SceneTestCase.tearDown( self )
-		GafferScene.RendererAlgo.deregisterAdaptor( "Test" )
 
 if __name__ == "__main__":
 	unittest.main()

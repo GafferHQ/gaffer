@@ -39,8 +39,6 @@
 #include "GafferOSL/ClosurePlug.h"
 #include "GafferOSL/ShadingEngine.h"
 
-#include "GafferScene/RendererAlgo.h"
-
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"

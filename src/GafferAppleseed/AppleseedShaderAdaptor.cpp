@@ -36,7 +36,6 @@
 
 #include "GafferAppleseed/AppleseedShaderAdaptor.h"
 
-#include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 
 #include "Gaffer/Context.h"

@@ -44,6 +44,8 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "IECoreScene/Camera.h"
+
 #include "IECore/Export.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
@@ -61,6 +63,8 @@ IE_CORE_FORWARDDECLARE( CompoundData )
 
 namespace GafferScene
 {
+
+IE_CORE_FORWARDDECLARE( SceneProcessor )
 
 class SceneProcessor;
 class FilteredSceneProcessor;
@@ -266,6 +270,26 @@ GAFFERSCENE_API bool visible( const ScenePlug *scene, const ScenePlug::ScenePath
 /// this is provided by the VisibleRenderable::bound() method, but
 /// for other object types we must return a synthetic bound.
 GAFFERSCENE_API Imath::Box3f bound( const IECore::Object *object );
+
+/// Render Adaptors
+/// ===============
+
+/// Function to return a SceneProcessor used to adapt the
+/// scene for rendering.
+typedef std::function<SceneProcessorPtr ()> RenderAdaptor;
+/// Registers an adaptor.
+GAFFERSCENE_API void registerRenderAdaptor( const std::string &name, RenderAdaptor adaptor );
+/// Removes a previously registered adaptor.
+GAFFERSCENE_API void deregisterRenderAdaptor( const std::string &name );
+/// Returns a SceneProcessor that will apply all the currently
+/// registered adaptors.
+GAFFERSCENE_API SceneProcessorPtr createRenderAdaptors();
+
+/// Apply Camera Globals
+/// ====================
+
+/// Applies the resolution, aspect ratio etc from the globals to the camera.
+GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals, const ScenePlug *scene );
 
 } // namespace SceneAlgo
 

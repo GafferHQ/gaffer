@@ -527,5 +527,214 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.setMinimumExpansionDepth( 10 )
 		controller.update()
 
+	def testBlur( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+		sphereAttributes = GafferScene.StandardAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( sphereFilter["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphereAttributes["out"] )
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		groupAttributes = GafferScene.StandardAttributes()
+		groupAttributes["in"].setInput( group["out"] )
+		groupAttributes["filter"].setInput( groupFilter["out"] )
+
+		options = GafferScene.StandardOptions()
+		options["in"].setInput( groupAttributes["out"] )
+
+		# Animated source for testing
+		frame = GafferTest.FrameNode()
+
+		# Source that isn't animated, but has an animated hash
+		dummyFrame = Gaffer.Node()
+		dummyFrame["output"] = Gaffer.FloatPlug()
+		dummyFrame["expression"] = Gaffer.Expression()
+		dummyFrame["expression"].setExpression( 'parent["output"] = context.getFrame() * 0 + 3' )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( options["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+		controller.update()
+
+		def assertMotionSamples( expectedSamples, deform ) :
+
+			capturedSphere = renderer.capturedObject( "/group/sphere" )
+			self.assertIsNotNone( capturedSphere )
+
+			if deform:
+				samples = [ i.radius() for i in capturedSphere.capturedSamples() ]
+				times = capturedSphere.capturedSampleTimes()
+			else:
+				samples = [ i.translation().x for i in capturedSphere.capturedTransforms() ]
+				times = capturedSphere.capturedTransformTimes()
+
+			self.assertEqual( len( samples ), len( expectedSamples ) )
+			for (i,j) in zip( samples, expectedSamples ):
+				self.assertAlmostEqual( i, j, places = 6 )
+
+			if len( expectedSamples ) > 1 :
+				self.assertEqual( len( times ), len( expectedSamples ) )
+				for (i,j) in zip( times, expectedSamples ):
+					self.assertAlmostEqual( i, j, places = 6 )
+			else :
+				self.assertEqual( times, [] )
+
+		# INITIAL TRANSFORM TESTS
+
+		assertMotionSamples( [ 0 ], False )
+		sphere["transform"]["translate"]["x"].setValue( 2 )
+		controller.update()
+		assertMotionSamples( [ 2 ], False )
+
+		# Hook up animated value, but blur not turned on yet
+		sphere["transform"]["translate"]["x"].setInput( frame["output"] )
+		controller.update()
+		assertMotionSamples( [ 1 ], False )
+
+		# Test blur.
+		options['options']['transformBlur']["enabled"].setValue( True )
+		options['options']['transformBlur']["value"].setValue( True )
+		controller.update()
+		assertMotionSamples( [ 0.75, 1.25 ], False )
+
+		# Test blur on but no movement
+		sphere["transform"]["translate"]["x"].setInput( None )
+		controller.update()
+		assertMotionSamples( [ 2 ], False )
+
+		# We get a single sample out even if the transform hash is changing but the transform isn't
+		sphere["transform"]["translate"]["x"].setInput( dummyFrame["output"] )
+		controller.update()
+		assertMotionSamples( [ 3 ], False )
+
+		# INITIAL DEFORMATION TESTS
+		# Test non-blurred updates.
+
+		assertMotionSamples( [ 1 ], True )
+		sphere["radius"].setValue( 2 )
+		controller.update()
+		assertMotionSamples( [ 2 ], True )
+
+		# Hook up animated value, but blur not turned on yet
+		sphere["radius"].setInput( frame["output"] )
+		controller.update()
+		assertMotionSamples( [ 1 ], True )
+
+		# Test deformation blur.
+		options['options']['deformationBlur']["enabled"].setValue( True )
+		options['options']['deformationBlur']["value"].setValue( True )
+		controller.update()
+		assertMotionSamples( [ 0.75, 1.25 ], True )
+
+		# Test deformation blur on but no deformation
+		sphere["radius"].setInput( None )
+		controller.update()
+		assertMotionSamples( [ 2 ], True )
+
+
+		# Test shutter
+		sphere["transform"]["translate"]["x"].setInput( frame["output"] )
+		sphere["radius"].setInput( frame["output"] )
+		options['options']['shutter']["enabled"].setValue( True )
+		options['options']['shutter']["value"].setValue( imath.V2f( -0.7, 0.4 ) )
+		controller.update()
+		assertMotionSamples( [ 0.3, 1.4 ], False )
+		assertMotionSamples( [ 0.3, 1.4 ], True )
+
+		# Test with camera shutter
+		camera = GafferScene.Camera()
+		group["in"][1].setInput( camera["out"] )
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/group/camera" ).capturedSamples()[0].getShutter(), imath.V2f( 0.3, 1.4 ) )
+
+		options['options']['renderCamera']["enabled"].setValue( True )
+		options['options']['renderCamera']["value"].setValue( "/group/camera" )
+		controller.update()
+		assertMotionSamples( [ 0.3, 1.4 ], False )
+		assertMotionSamples( [ 0.3, 1.4 ], True )
+		camera['renderSettingOverrides']['shutter']["enabled"].setValue( True )
+		camera['renderSettingOverrides']['shutter']["value"].setValue( imath.V2f( -0.5, 0.5 ) )
+		controller.update()
+		assertMotionSamples( [ 0.5, 1.5 ], False )
+		assertMotionSamples( [ 0.5, 1.5 ], True )
+		self.assertEqual( renderer.capturedObject( "/group/camera" ).capturedSamples()[0].getShutter(), imath.V2f( 0.5, 1.5 ) )
+
+		# Test attribute controls
+		camera['renderSettingOverrides']['shutter']["enabled"].setValue( False )
+		options['options']['shutter']["value"].setValue( imath.V2f( -0.4, 0.4 ) )
+		controller.update()
+		assertMotionSamples( [ 0.6, 1.4 ], False )
+		assertMotionSamples( [ 0.6, 1.4 ], True )
+
+		groupAttributes['attributes']['transformBlur']["enabled"].setValue( True )
+		groupAttributes['attributes']['transformBlur']["value"].setValue( False )
+		controller.update()
+		assertMotionSamples( [ 1 ], False )
+		sphereAttributes['attributes']['transformBlur']["enabled"].setValue( True )
+		controller.update()
+		assertMotionSamples( [ 0.6, 1.4 ], False )
+
+		groupAttributes['attributes']['deformationBlur']["enabled"].setValue( True )
+		groupAttributes['attributes']['deformationBlur']["value"].setValue( False )
+		controller.update()
+		assertMotionSamples( [ 1 ], True )
+		sphereAttributes['attributes']['deformationBlur']["enabled"].setValue( True )
+		controller.update()
+		assertMotionSamples( [ 0.6, 1.4 ], True )
+
+		groupAttributes['attributes']['transformBlurSegments']["enabled"].setValue( True )
+		groupAttributes['attributes']['transformBlurSegments']["value"].setValue( 4 )
+		groupAttributes['attributes']['deformationBlurSegments']["enabled"].setValue( True )
+		groupAttributes['attributes']['deformationBlurSegments']["value"].setValue( 2 )
+		controller.update()
+		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], False )
+		assertMotionSamples( [ 0.6, 1.0, 1.4 ], True )
+
+		sphereAttributes['attributes']['transformBlurSegments']["enabled"].setValue( True )
+		sphereAttributes['attributes']['transformBlurSegments']["value"].setValue( 2 )
+		sphereAttributes['attributes']['deformationBlurSegments']["enabled"].setValue( True )
+		sphereAttributes['attributes']['deformationBlurSegments']["value"].setValue( 4 )
+		controller.update()
+		assertMotionSamples( [ 0.6, 1.0, 1.4 ], False )
+		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], True )
+
+		groupAttributes['attributes']['transformBlur']["value"].setValue( True )
+		groupAttributes['attributes']['deformationBlur']["value"].setValue( True )
+		sphereAttributes['attributes']['transformBlur']["value"].setValue( False )
+		sphereAttributes['attributes']['deformationBlur']["value"].setValue( False )
+		controller.update()
+		assertMotionSamples( [ 1.0 ], False )
+		assertMotionSamples( [ 1.0 ], True )
+
+		# Apply transformation to group instead of sphere, giving the same results
+		sphere["transform"]["translate"]["x"].setInput( None )
+		sphere["transform"]["translate"]["x"].setValue( 0 )
+		group["transform"]["translate"]["x"].setInput( frame["output"] )
+
+		groupAttributes['attributes']['transformBlur']["value"].setValue( True )
+		sphereAttributes['attributes']['transformBlur']["value"].setValue( False )
+		sphereAttributes['attributes']['transformBlurSegments']["enabled"].setValue( False )
+		controller.update()
+		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], False )
+
+		# Override transform segments on sphere
+		sphereAttributes['attributes']['transformBlur']["value"].setValue( True )
+		sphereAttributes['attributes']['transformBlurSegments']["enabled"].setValue( True )
+		sphereAttributes['attributes']['transformBlurSegments']["value"].setValue( 1 )
+		controller.update()
+		# Very counter-intuitively, this does nothing, because the sphere is not moving
+		assertMotionSamples( [ 0.6, 0.8, 1.0, 1.2, 1.4 ], False )
+
+		# But then if the sphere moves, the sample count does take affect
+		sphere["transform"]["translate"]["y"].setInput( frame["output"] )
+		controller.update()
+		assertMotionSamples( [ 0.6, 1.4 ], False )
+
 if __name__ == "__main__":
 	unittest.main()

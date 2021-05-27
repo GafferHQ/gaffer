@@ -44,7 +44,6 @@
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/PathFilter.h"
-#include "GafferScene/RendererAlgo.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SetFilter.h"
 #include "GafferScene/StandardOptions.h"
@@ -1309,13 +1308,13 @@ class SceneView::Camera : public boost::signals::trackable
 					cameraTransform = scenePlug()->fullTransform( cameraPath );
 
 					IECoreScene::CameraPtr camera = constCamera->copy();
-					RendererAlgo::applyCameraGlobals( camera.get(), globals.get(), scenePlug() );
+					SceneAlgo::applyCameraGlobals( camera.get(), globals.get(), scenePlug() );
 					m_lookThroughCamera = camera;
 				}
 				else
 				{
 					CameraPtr defaultCamera = new IECoreScene::Camera;
-					RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals.get(), scenePlug() );
+					SceneAlgo::applyCameraGlobals( defaultCamera.get(), globals.get(), scenePlug() );
 					m_lookThroughCamera = defaultCamera;
 				}
 			}
@@ -1608,7 +1607,7 @@ SceneView::SceneView( const std::string &name )
 
 	// add in any render adaptors that might have been registered
 
-	SceneProcessorPtr adaptors = RendererAlgo::createAdaptors();
+	SceneProcessorPtr adaptors = SceneAlgo::createRenderAdaptors();
 	preprocessor->addChild( adaptors );
 	adaptors->inPlug()->setInput( deleteObject->outPlug() );
 
@@ -1622,11 +1621,23 @@ SceneView::SceneView( const std::string &name )
 	preprocessor->addChild( m_drawingMode->preprocessor() );
 	m_drawingMode->preprocessor()->inPlug()->setInput( m_shadingMode->preprocessor()->outPlug() );
 
+
+	// remove motion blur, because the opengl renderer doesn't support it.
+
+	StandardOptionsPtr standardOptions = new StandardOptions( "disableBlur" );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->enabledPlug()->setValue( true );
+	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
+
+	preprocessor->addChild( standardOptions );
+	standardOptions->inPlug()->setInput( m_drawingMode->preprocessor()->outPlug() );
+
 	// make the output for the preprocessor
 
 	ScenePlugPtr preprocessorOutput = new ScenePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
-	preprocessorOutput->setInput( m_drawingMode->preprocessor()->outPlug() );
+	preprocessorOutput->setInput( standardOptions->outPlug() );
 
 	setPreprocessor( preprocessor );
 

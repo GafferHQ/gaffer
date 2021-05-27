@@ -1454,5 +1454,59 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			result = IECore.PathMatcher()
 			GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
 
+	def testRenderAdaptors( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		defaultAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+		defaultAdaptors["in"].setInput( sphere["out"] )
+
+		def a() :
+
+			r = GafferScene.StandardAttributes()
+			r["attributes"]["doubleSided"]["enabled"].setValue( True )
+			r["attributes"]["doubleSided"]["value"].setValue( False )
+
+			return r
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", a )
+
+		testAdaptors = GafferScene.SceneAlgo.createRenderAdaptors()
+		testAdaptors["in"].setInput( sphere["out"] )
+
+		self.assertFalse( "doubleSided" in sphere["out"].attributes( "/sphere" ) )
+		self.assertTrue( "doubleSided" in testAdaptors["out"].attributes( "/sphere" ) )
+		self.assertEqual( testAdaptors["out"].attributes( "/sphere" )["doubleSided"].value, False )
+
+		GafferScene.SceneAlgo.deregisterRenderAdaptor( "Test" )
+
+		defaultAdaptors2 = GafferScene.SceneAlgo.createRenderAdaptors()
+		defaultAdaptors2["in"].setInput( sphere["out"] )
+
+		self.assertScenesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
+		self.assertSceneHashesEqual( defaultAdaptors["out"], defaultAdaptors2["out"] )
+
+	def testNullAdaptor( self ) :
+
+		def a() :
+
+			return None
+
+		GafferScene.SceneAlgo.registerRenderAdaptor( "Test", a )
+
+		with IECore.CapturingMessageHandler() as mh :
+			GafferScene.SceneAlgo.createRenderAdaptors()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "SceneAlgo::createRenderAdaptors" )
+		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
+
+	def tearDown( self ) :
+
+		GafferSceneTest.SceneTestCase.tearDown( self )
+		GafferScene.SceneAlgo.deregisterRenderAdaptor( "Test" )
+
+
 if __name__ == "__main__":
 	unittest.main()

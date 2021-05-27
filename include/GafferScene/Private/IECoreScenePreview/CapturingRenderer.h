@@ -107,6 +107,9 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 				const std::vector<IECore::ConstObjectPtr> &capturedSamples() const;
 				const std::vector<float> &capturedSampleTimes() const;
 
+				const std::vector<Imath::M44f> &capturedTransforms() const;
+				const std::vector<float> &capturedTransformTimes() const;
+
 				const CapturedAttributes *capturedAttributes() const;
 				const ObjectSet *capturedLinks( const IECore::InternedString &type ) const;
 
@@ -131,6 +134,8 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 				const std::string m_name;
 				const std::vector<IECore::ConstObjectPtr> m_capturedSamples;
 				const std::vector<float> m_capturedSampleTimes;
+				std::vector<Imath::M44f> m_capturedTransforms;
+				std::vector<float> m_capturedTransformTimes;
 				ConstCapturedAttributesPtr m_capturedAttributes;
 				int m_numAttributeEdits;
 				std::unordered_map<IECore::InternedString, std::pair<ConstObjectSetPtr, int>> m_capturedLinks;

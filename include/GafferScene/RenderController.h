@@ -38,7 +38,7 @@
 #define GAFFERSCENE_RENDERCONTROLLER_H
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/Private/RendererAlgo.h"
 
 #include "Gaffer/BackgroundTask.h"
 
@@ -96,7 +96,17 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 			SetsGlobalComponent = 2,
 			RenderSetsGlobalComponent = 4,
 			CameraOptionsGlobalComponent = 8,
-			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent
+			TransformBlurGlobalComponent = 16,
+			DeformationBlurGlobalComponent = 32,
+			CameraShutterGlobalComponent = 64,
+			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent
+		};
+
+		struct MotionBlurOptions
+		{
+			bool transformBlur = false;
+			bool deformationBlur = false;
+			Imath::V2f shutter = Imath::V2f( 0 );
 		};
 
 		void plugDirtied( const Gaffer::Plug *plug );
@@ -131,8 +141,9 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		unsigned m_dirtyGlobalComponents;
 		unsigned m_changedGlobalComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
-		RendererAlgo::RenderSets m_renderSets;
-		std::unique_ptr<RendererAlgo::LightLinks> m_lightLinks;
+		MotionBlurOptions m_motionBlurOptions;
+		Private::RendererAlgo::RenderSets m_renderSets;
+		std::unique_ptr<Private::RendererAlgo::LightLinks> m_lightLinks;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_boundAttributes;
 

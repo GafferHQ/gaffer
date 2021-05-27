@@ -48,6 +48,7 @@
 #include "IECoreScene/Camera.h"
 
 #include "IECorePython/RefCountedBinding.h"
+#include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "boost/python/suite/indexing/container_utils.hpp"
@@ -269,6 +270,38 @@ IECore::PathMatcher linkedLightsWrapper2( const GafferScene::ScenePlug &scene, c
 	return SceneAlgo::linkedLights( &scene, objects );
 }
 
+struct RenderAdaptorWrapper
+{
+
+	RenderAdaptorWrapper( object pythonAdaptor )
+		:   m_pythonAdaptor( pythonAdaptor )
+	{
+	}
+
+	SceneProcessorPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
+		return result;
+	}
+
+	private :
+
+		object m_pythonAdaptor;
+
+};
+
+void registerRenderAdaptorWrapper( const std::string &name, object adaptor )
+{
+	SceneAlgo::registerRenderAdaptor( name, RenderAdaptorWrapper( adaptor ) );
+}
+
+void applyCameraGlobalsWrapper( IECoreScene::Camera &camera, const IECore::CompoundObject &globals, const ScenePlug &scene )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	SceneAlgo::applyCameraGlobals( &camera, &globals, &scene );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -345,6 +378,16 @@ void bindSceneAlgo()
 	def( "linkedObjects", &linkedObjectsWrapper2 );
 	def( "linkedLights", &linkedLightsWrapper1 );
 	def( "linkedLights", &linkedLightsWrapper2 );
+
+	// Render adaptors
+
+	def( "registerRenderAdaptor", &registerRenderAdaptorWrapper );
+	def( "deregisterRenderAdaptor", &SceneAlgo::deregisterRenderAdaptor );
+	def( "createRenderAdaptors", &SceneAlgo::createRenderAdaptors );
+
+	// Camera globals
+
+	def( "applyCameraGlobals", &applyCameraGlobalsWrapper );
 
 }
 

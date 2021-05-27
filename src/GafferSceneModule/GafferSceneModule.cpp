@@ -53,7 +53,6 @@
 #include "PrimitivesBinding.h"
 #include "RenderBinding.h"
 #include "RenderControllerBinding.h"
-#include "RendererAlgoBinding.h"
 #include "SceneAlgoBinding.h"
 #include "ScenePathBinding.h"
 #include "SetAlgoBinding.h"
@@ -73,7 +72,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindOptions();
 	bindAttributes();
 	bindSceneAlgo();
-	bindRendererAlgo();
 	bindSetAlgo();
 	bindPrimitives();
 	bindScenePath();
