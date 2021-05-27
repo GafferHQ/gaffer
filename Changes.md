@@ -12,6 +12,7 @@ Improvements
 
 - Set : Added wildcard support to the `name` plug.
 - GraphEditor : Added tool menu with options to control visibility of annotations.
+- SceneReader : Added support for cancellation of set loading.
 
 API
 ---
