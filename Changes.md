@@ -6,6 +6,11 @@ Documentation
 
 - Fixed code samples in "Tutorials : Querying a Scene".
 
+Features
+--------
+
+- TransformQuery : Added a new node to query the transform for a scene location.
+
 0.59.8.0 (relative to 0.59.7.0)
 ========
 
