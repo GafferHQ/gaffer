@@ -20,6 +20,7 @@ API
   - Added optional `user` argument to `addAnnotationTemplate()`.
   - Added optional `userOnly` argument to `annotationTemplates()`.
 - AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
+- MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
 
 Breaking Changes
 ----------------

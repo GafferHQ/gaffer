@@ -91,5 +91,12 @@ class MonitorAlgoTest( GafferTest.TestCase ) :
 			"Hashes per compute : 1.5"
 		)
 
+		Gaffer.MonitorAlgo.removePerformanceAnnotations( s )
+		for node in Gaffer.Node.RecursiveRange( s ) :
+			self.assertEqual(
+				Gaffer.Metadata.registeredValues( node, instanceOnly = True ),
+				[]
+			)
+
 if __name__ == "__main__":
 	unittest.main()

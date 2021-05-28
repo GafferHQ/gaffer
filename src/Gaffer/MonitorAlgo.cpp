@@ -633,6 +633,33 @@ void annotate( Node &root, const ContextMonitor &monitor, bool persistent )
 	annotateContextWalk( root, monitor.allStatistics(), persistent );
 }
 
+void removePerformanceAnnotations( Node &root )
+{
+	for( int m = Gaffer::MonitorAlgo::First; m <= Gaffer::MonitorAlgo::Last; ++m )
+	{
+		dispatchMetric(
+			[&root] ( auto metric ) {
+				MetadataAlgo::removeAnnotation( &root, metric.annotation );
+			},
+			static_cast<Gaffer::MonitorAlgo::PerformanceMetric>( m )
+		);
+	}
+
+	for( const auto &node : Node::Range( root ) )
+	{
+		removePerformanceAnnotations( *node );
+	}
+}
+
+void removeContextAnnotations( Node &root )
+{
+	MetadataAlgo::removeAnnotation( &root, g_contextAnnotationName );
+	for( const auto &node : Node::Range( root ) )
+	{
+		removeContextAnnotations( *node );
+	}
+}
+
 } // namespace MonitorAlgo
 
 } // namespace Gaffer

@@ -74,6 +74,9 @@ GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor, bool pe
 GAFFER_API void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric, bool persistent = true );
 GAFFER_API void annotate( Node &root, const ContextMonitor &monitor, bool persistent = true );
 
+GAFFER_API void removePerformanceAnnotations( Node &root );
+GAFFER_API void removeContextAnnotations( Node &root );
+
 } // namespace MonitorAlgo
 
 } // namespace Gaffer
