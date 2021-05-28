@@ -5,6 +5,8 @@
 *.swp
 *.so
 *.tmp
+*.desktop
+*.code-workspace
 .gafferBackups
 .idea
 .sconf_temp
