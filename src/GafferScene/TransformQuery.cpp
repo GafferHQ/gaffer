@@ -93,14 +93,14 @@ TransformQuery::TransformQuery( std::string const& name )
 	addChild( new ScenePlug( "scene" ) );
 	addChild( new Gaffer::StringPlug( "location" ) );
 	addChild( new Gaffer::IntPlug( "space", Gaffer::Plug::In,
-		static_cast< int >( Space::Local ),
+		static_cast< int >( Space::World ),
 		0, static_cast< int >( Space::Relative ) ) );
 	addChild( new Gaffer::StringPlug( "relativeLocation" ) );
 	addChild( new Gaffer::BoolPlug( "invert" ) );
-	addChild( new Gaffer::M44fPlug( "outMatrix", Gaffer::Plug::Out ) );
-	addChild( new Gaffer::V3fPlug( "outTranslate", Gaffer::Plug::Out ) );
-	addChild( new Gaffer::V3fPlug( "outRotate", Gaffer::Plug::Out ) );
-	addChild( new Gaffer::V3fPlug( "outScale", Gaffer::Plug::Out ) );
+	addChild( new Gaffer::M44fPlug( "matrix", Gaffer::Plug::Out ) );
+	addChild( new Gaffer::V3fPlug( "translate", Gaffer::Plug::Out ) );
+	addChild( new Gaffer::V3fPlug( "rotate", Gaffer::Plug::Out ) );
+	addChild( new Gaffer::V3fPlug( "scale", Gaffer::Plug::Out ) );
 }
 
 TransformQuery::~TransformQuery()
@@ -161,46 +161,46 @@ Gaffer::BoolPlug const* TransformQuery::invertPlug() const
 	return getChild< Gaffer::BoolPlug >( g_firstPlugIndex + 4 );
 }
 
-Gaffer::M44fPlug* TransformQuery::outMatrixPlug()
+Gaffer::M44fPlug* TransformQuery::matrixPlug()
 {
 	return const_cast< Gaffer::M44fPlug* >(
-		static_cast< TransformQuery const* >( this )->outMatrixPlug() );
+		static_cast< TransformQuery const* >( this )->matrixPlug() );
 }
 
-Gaffer::M44fPlug const* TransformQuery::outMatrixPlug() const
+Gaffer::M44fPlug const* TransformQuery::matrixPlug() const
 {
 	return getChild< Gaffer::M44fPlug >( g_firstPlugIndex + 5 );
 }
 
-Gaffer::V3fPlug* TransformQuery::outTranslatePlug()
+Gaffer::V3fPlug* TransformQuery::translatePlug()
 {
 	return const_cast< Gaffer::V3fPlug* >(
-		static_cast< TransformQuery const* >( this )->outTranslatePlug() );
+		static_cast< TransformQuery const* >( this )->translatePlug() );
 }
 
-Gaffer::V3fPlug const* TransformQuery::outTranslatePlug() const
+Gaffer::V3fPlug const* TransformQuery::translatePlug() const
 {
 	return getChild< Gaffer::V3fPlug >( g_firstPlugIndex + 6 );
 }
 
-Gaffer::V3fPlug* TransformQuery::outRotatePlug()
+Gaffer::V3fPlug* TransformQuery::rotatePlug()
 {
 	return const_cast< Gaffer::V3fPlug* >(
-		static_cast< TransformQuery const* >( this )->outRotatePlug() );
+		static_cast< TransformQuery const* >( this )->rotatePlug() );
 }
 
-Gaffer::V3fPlug const* TransformQuery::outRotatePlug() const
+Gaffer::V3fPlug const* TransformQuery::rotatePlug() const
 {
 	return getChild< Gaffer::V3fPlug >( g_firstPlugIndex + 7 );
 }
 
-Gaffer::V3fPlug* TransformQuery::outScalePlug()
+Gaffer::V3fPlug* TransformQuery::scalePlug()
 {
 	return const_cast< Gaffer::V3fPlug* >(
-		static_cast< TransformQuery const* >( this )->outScalePlug() );
+		static_cast< TransformQuery const* >( this )->scalePlug() );
 }
 
-Gaffer::V3fPlug const* TransformQuery::outScalePlug() const
+Gaffer::V3fPlug const* TransformQuery::scalePlug() const
 {
 	return getChild< Gaffer::V3fPlug >( g_firstPlugIndex + 8 );
 }
@@ -209,17 +209,17 @@ void TransformQuery::affects( Gaffer::Plug const* const input, AffectedPlugsCont
 {
 	ComputeNode::affects( input, outputs );
 
-	if( input == outMatrixPlug() )
+	if( input == matrixPlug() )
 	{
-		outputs.push_back( outTranslatePlug()->getChild( 0 ) );
-		outputs.push_back( outTranslatePlug()->getChild( 1 ) );
-		outputs.push_back( outTranslatePlug()->getChild( 2 ) );
-		outputs.push_back( outRotatePlug()->getChild( 0 ) );
-		outputs.push_back( outRotatePlug()->getChild( 1 ) );
-		outputs.push_back( outRotatePlug()->getChild( 2 ) );
-		outputs.push_back( outScalePlug()->getChild( 0 ) );
-		outputs.push_back( outScalePlug()->getChild( 1 ) );
-		outputs.push_back( outScalePlug()->getChild( 2 ) );
+		outputs.push_back( translatePlug()->getChild( 0 ) );
+		outputs.push_back( translatePlug()->getChild( 1 ) );
+		outputs.push_back( translatePlug()->getChild( 2 ) );
+		outputs.push_back( rotatePlug()->getChild( 0 ) );
+		outputs.push_back( rotatePlug()->getChild( 1 ) );
+		outputs.push_back( rotatePlug()->getChild( 2 ) );
+		outputs.push_back( scalePlug()->getChild( 0 ) );
+		outputs.push_back( scalePlug()->getChild( 1 ) );
+		outputs.push_back( scalePlug()->getChild( 2 ) );
 	}
 	else if(
 		( input == spacePlug() ) ||
@@ -229,7 +229,7 @@ void TransformQuery::affects( Gaffer::Plug const* const input, AffectedPlugsCont
 		( input == scenePlug()->existsPlug() ) ||
 		( input == scenePlug()->transformPlug() ) )
 	{
-		outputs.push_back( outMatrixPlug() );
+		outputs.push_back( matrixPlug() );
 	}
 }
 
@@ -237,7 +237,7 @@ void TransformQuery::hash( Gaffer::ValuePlug const* const output, Gaffer::Contex
 {
 	ComputeNode::hash( output, context, h );
 
-	if( output == outMatrixPlug() )
+	if( output == matrixPlug() )
 	{
 		std::string const loc = locationPlug()->getValue();
 		if( ! loc.empty() )
@@ -302,24 +302,19 @@ void TransformQuery::hash( Gaffer::ValuePlug const* const output, Gaffer::Contex
 	{
 		Gaffer::GraphComponent const* const parent = output->parent();
 
-		if( parent == outTranslatePlug() )
+		if(
+			( parent == translatePlug() ) ||
+			( parent == rotatePlug() ) ||
+			( parent == scalePlug() ) )
 		{
-			outMatrixPlug()->hash( h );
-		}
-		else if( parent == outRotatePlug() )
-		{
-			outMatrixPlug()->hash( h );
-		}
-		else if( parent == outScalePlug() )
-		{
-			outMatrixPlug()->hash( h );
+			matrixPlug()->hash( h );
 		}
 	}
 }
 
 void TransformQuery::compute( Gaffer::ValuePlug* const output, Gaffer::Context const* const context ) const
 {
-	if( output == outMatrixPlug() )
+	if( output == matrixPlug() )
 	{
 		Imath::M44f m;
 
@@ -373,27 +368,27 @@ void TransformQuery::compute( Gaffer::ValuePlug* const output, Gaffer::Context c
 	{
 		Gaffer::GraphComponent* const parent = output->parent();
 
-		if( parent == outTranslatePlug() )
+		if( parent == translatePlug() )
 		{
-			Imath::M44f const m = outMatrixPlug()->getValue();
+			Imath::M44f const m = matrixPlug()->getValue();
 			setV3fPlugComponentValue(
 				*( IECore::assertedStaticCast< Gaffer::V3fPlug >( parent ) ),
 				*( IECore::assertedStaticCast< Gaffer::NumericPlug< float > >( output ) ), m.translation() );
 		}
-		else if( parent == outRotatePlug() )
+		else if( parent == rotatePlug() )
 		{
 			Imath::Eulerf::Order order = Imath::Eulerf::XYZ;
-			Imath::M44f const m = Imath::sansScalingAndShear( outMatrixPlug()->getValue() );
+			Imath::M44f const m = Imath::sansScalingAndShear( matrixPlug()->getValue() );
 			Imath::Eulerf euler( m, order );
 			euler *= static_cast< float >( 180.0 / M_PI );
 			setV3fPlugComponentValue(
 				*( IECore::assertedStaticCast< Gaffer::V3fPlug >( parent ) ),
 				*( IECore::assertedStaticCast< Gaffer::NumericPlug< float > >( output ) ), euler );
 		}
-		else if( parent == outScalePlug() )
+		else if( parent == scalePlug() )
 		{
 			Imath::V3f scale( 0.f );
-			Imath::M44f const m = outMatrixPlug()->getValue();
+			Imath::M44f const m = matrixPlug()->getValue();
 			Imath::extractScaling( m, scale );
 			setV3fPlugComponentValue(
 				*( IECore::assertedStaticCast< Gaffer::V3fPlug >( parent ) ),

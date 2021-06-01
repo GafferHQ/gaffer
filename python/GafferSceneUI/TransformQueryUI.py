@@ -121,7 +121,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"outMatrix" : [
+		"matrix" : [
 
 			"description",
 			"""
@@ -132,7 +132,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"outTranslate" : [
+		"translate" : [
 			"description",
 			"""
 			Translation component of requested transform.
@@ -141,7 +141,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Settings.Outputs"
 		],
 
-		"outRotate" : [
+		"rotate" : [
 			"description",
 			"""
 			Rotation component of requested transform (degrees).
@@ -150,7 +150,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Settings.Outputs"
 		],
 
-		"outScale" : [
+		"scale" : [
 			"description",
 			"""
 			Scaling component of requested transform.

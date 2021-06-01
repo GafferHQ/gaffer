@@ -75,14 +75,14 @@ struct GAFFERSCENE_API TransformQuery : Gaffer::ComputeNode
 	Gaffer::StringPlug const* relativeLocationPlug() const;
 	Gaffer::BoolPlug* invertPlug();
 	Gaffer::BoolPlug const* invertPlug() const;
-	Gaffer::M44fPlug* outMatrixPlug();
-	Gaffer::M44fPlug const* outMatrixPlug() const;
-	Gaffer::V3fPlug* outTranslatePlug();
-	Gaffer::V3fPlug const* outTranslatePlug() const;
-	Gaffer::V3fPlug* outRotatePlug();
-	Gaffer::V3fPlug const* outRotatePlug() const;
-	Gaffer::V3fPlug* outScalePlug();
-	Gaffer::V3fPlug const* outScalePlug() const;
+	Gaffer::M44fPlug* matrixPlug();
+	Gaffer::M44fPlug const* matrixPlug() const;
+	Gaffer::V3fPlug* translatePlug();
+	Gaffer::V3fPlug const* translatePlug() const;
+	Gaffer::V3fPlug* rotatePlug();
+	Gaffer::V3fPlug const* rotatePlug() const;
+	Gaffer::V3fPlug* scalePlug();
+	Gaffer::V3fPlug const* scalePlug() const;
 
 	void affects( Gaffer::Plug const* input, AffectedPlugsContainer& outputs ) const override;
 
