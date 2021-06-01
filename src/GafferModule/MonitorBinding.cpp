@@ -140,6 +140,18 @@ void annotateWrapper3( Node &root, const ContextMonitor &monitor, bool persisten
 	MonitorAlgo::annotate( root, monitor, persistent );
 }
 
+void removePerformanceAnnotationsWrapper( Node &root )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	MonitorAlgo::removePerformanceAnnotations( root );
+}
+
+void removeContextAnnotationsWrapper( Node &root )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	MonitorAlgo::removeContextAnnotations( root );
+}
+
 } // namespace
 
 void GafferModule::bindMonitor()
@@ -198,6 +210,9 @@ void GafferModule::bindMonitor()
 			&annotateWrapper3,
 			( arg( "node" ), arg( "monitor" ), arg( "persistent" ) = true )
 		);
+
+		def( "removePerformanceAnnotations", &removePerformanceAnnotationsWrapper, arg( "root" ) );
+		def( "removeContextAnnotations", &removeContextAnnotationsWrapper, arg( "root" ) );
 	}
 
 	{

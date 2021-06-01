@@ -5,16 +5,28 @@ Features
 --------
 
 - InteractiveRender : Added support for motion blur.
+- Profiling : Added "Tools/Profiling" menu to annotate nodes with performance metrics.
 
 Improvements
 ------------
 
 - Set : Added wildcard support to the `name` plug.
+- GraphEditor : Added tool menu with options to control visibility of annotations.
+
+API
+---
+
+- MetadataAlgo :
+  - Added optional `user` argument to `addAnnotationTemplate()`.
+  - Added optional `userOnly` argument to `annotationTemplates()`.
+- AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
+- MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
 
 Breaking Changes
 ----------------
 
 - RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
+- MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
 
 0.60.0.0b1
 ==========

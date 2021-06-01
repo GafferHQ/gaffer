@@ -105,11 +105,6 @@ IECoreGL::Texture *numericBookmarkTexture()
 	return numericBookmarkTexture.get();
 }
 
-float luminance( const Color3f &c )
-{
-	return c.dot( V3f( 0.2126, 0.7152, 0.0722 ) );
-}
-
 string wrap( const std::string &text, size_t maxLineLength )
 {
 	string result;
@@ -140,10 +135,7 @@ string wrap( const std::string &text, size_t maxLineLength )
 
 	return result;
 }
-
 float g_offset = 0.5;
-float g_borderWidth = 0.5;
-float g_spacing = 0.25;
 
 } // namespace
 
@@ -153,8 +145,10 @@ float g_spacing = 0.25;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AnnotationsGadget );
 
+const std::string AnnotationsGadget::untemplatedAnnotations = "__untemplated__";
+
 AnnotationsGadget::AnnotationsGadget()
-	:	Gadget( "AnnotationsGadget" )
+	:	Gadget( "AnnotationsGadget" ), m_dirty( true ), m_visibleAnnotations( "*" )
 {
 	Metadata::nodeValueChangedSignal().connect(
 		boost::bind( &AnnotationsGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 )
@@ -163,6 +157,27 @@ AnnotationsGadget::AnnotationsGadget()
 
 AnnotationsGadget::~AnnotationsGadget()
 {
+}
+
+void AnnotationsGadget::setVisibleAnnotations( const IECore::StringAlgo::MatchPattern &patterns )
+{
+	if( patterns == m_visibleAnnotations )
+	{
+		return;
+	}
+
+	m_visibleAnnotations = patterns;
+	for( auto &a : m_annotations )
+	{
+		a.second.dirty = true;
+	}
+	m_dirty = true;
+	dirty( DirtyType::Render );
+}
+
+const IECore::StringAlgo::MatchPattern &AnnotationsGadget::getVisibleAnnotations() const
+{
+	return m_visibleAnnotations;
 }
 
 bool AnnotationsGadget::acceptsParent( const GraphComponent *potentialParent ) const
@@ -193,49 +208,12 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 		return;
 	}
 
-	vector<string> names;
+	update();
+
 	for( auto &ga : m_annotations )
 	{
-		const Node *node = ga.first->node();
 		Annotations &annotations = ga.second;
-
-		if( annotations.dirty )
-		{
-			annotations.renderable = false;
-
-			annotations.bookmarked = Gaffer::MetadataAlgo::getBookmarked( node );
-			annotations.renderable |= annotations.bookmarked;
-
-			if( int bookmark = MetadataAlgo::numericBookmark( node ) )
-			{
-				annotations.numericBookmark = std::to_string( bookmark );
-				annotations.renderable = true;
-			}
-			else
-			{
-				annotations.numericBookmark = InternedString();
-			}
-
-			annotations.standardAnnotations.clear();
-			names.clear();
-			MetadataAlgo::annotations( node, names );
-			for( const auto &name : names )
-			{
-				annotations.standardAnnotations.push_back(
-					MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
-				);
-				// Word wrap. It might be preferable to do this during
-				// rendering, but we have no way of querying the extent of
-				// `Style::renderWrappedText()`.
-				annotations.standardAnnotations.back().textData = new StringData(
-					wrap( annotations.standardAnnotations.back().text(), 60 )
-				);
-			}
-			annotations.renderable |= (bool)annotations.standardAnnotations.size();
-
-			annotations.dirty = false;
-		}
-
+		assert( !annotations.dirty );
 		if( !annotations.renderable )
 		{
 			continue;
@@ -263,53 +241,10 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 			glPopMatrix();
 		}
 
-		if( annotations.standardAnnotations.size() )
+		V2f origin( b.max.x + g_offset, b.max.y );
+		for( const auto &a : annotations.standardAnnotations )
 		{
-			// Baseline for `characterBound` and `textBound` is at `y == 0`.
-			const Box3f characterBound = style->characterBound( Style::BodyText );
-
-			glPushMatrix();
-			IECoreGL::glTranslate( V2f( b.max.x + g_offset + g_borderWidth, b.max.y ) );
-
-			const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
-			const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
-			float previousHeight = 0;
-			for( const auto &a : annotations.standardAnnotations )
-			{
-				// Translate down to put the text baseline where we want it.
-				float yOffset = g_borderWidth + characterBound.max.y;
-				if( &a != &annotations.standardAnnotations.front() )
-				{
-					yOffset += previousHeight + g_borderWidth + g_spacing;
-				}
-				IECoreGL::glTranslate( V2f( 0, -yOffset ) );
-
-				// Draw frame and text. `textBounds` is not ideal for use as a
-				// frame, as it provides an exact bound that changes in `y`
-				// depending on the existence of ascenders and/or descenders.
-				// We work around this by using `characterBound.max.y` for our
-				// `max`, but without reverse engineering the line spacing etc in
-				// `style`, we can't do much about `min`.
-				/// \todo We're using similar workarounds in TextGadget, so we
-				/// should probably improve `Style` and `IECoreScene::Font`
-				/// instead.
-				const Box3f textBounds = style->textBound( Style::BodyText, a.text() );
-
-				/// \todo We're using `renderNodeFrame()` because it's the only way we can specify a colour,
-				/// but really we want `renderFrame()` to provide that option. Or we could consider having
-				/// explicit annotation rendering methods in the Style class.
-				style->renderNodeFrame(
-					Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, characterBound.max.y ) ),
-					g_borderWidth, Style::NormalState,
-					&a.color()
-				);
-				style->renderText(
-					Style::BodyText, a.text(), Style::NormalState,
-					luminance( a.color() ) > 0.4 ? &darkGrey : &midGrey
-				);
-				previousHeight = -textBounds.min.y;
-			}
-			glPopMatrix();
+			origin = style->renderAnnotation( origin, a.text(), Style::NormalState, a.colorData ? &a.color() : nullptr );
 		}
 	}
 }
@@ -329,6 +264,7 @@ void AnnotationsGadget::graphGadgetChildAdded( GraphComponent *child )
 	if( NodeGadget *nodeGadget = runTimeCast<NodeGadget>( child ) )
 	{
 		m_annotations[nodeGadget] = Annotations();
+		m_dirty = true;
 	}
 }
 
@@ -337,6 +273,7 @@ void AnnotationsGadget::graphGadgetChildRemoved( const GraphComponent *child )
 	if( const NodeGadget *nodeGadget = runTimeCast<const NodeGadget>( child ) )
 	{
 		m_annotations.erase( nodeGadget );
+		m_dirty = true;
 	}
 }
 
@@ -352,7 +289,7 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 	if(
 		!MetadataAlgo::bookmarkedAffectedByChange( key ) &&
 		!MetadataAlgo::numericBookmarkAffectedByChange( key ) &&
-		!boost::starts_with( key.c_str(), "annotation:" )
+		!MetadataAlgo::annotationsAffectedByChange( key )
 	)
 	{
 		return;
@@ -363,6 +300,76 @@ void AnnotationsGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::
 		auto it = m_annotations.find( gadget );
 		assert( it != m_annotations.end() );
 		it->second.dirty = true;
+		m_dirty = true;
 		dirty( DirtyType::Render );
 	}
+}
+
+void AnnotationsGadget::update() const
+{
+	if( !m_dirty )
+	{
+		return;
+	}
+
+	vector<string> templates;
+	MetadataAlgo::annotationTemplates( templates );
+	std::sort( templates.begin(), templates.end() );
+	const bool untemplatedVisible = StringAlgo::matchMultiple( untemplatedAnnotations, m_visibleAnnotations );
+
+	vector<string> names;
+	for( auto &ga : m_annotations )
+	{
+		const Node *node = ga.first->node();
+		Annotations &annotations = ga.second;
+		if( !annotations.dirty )
+		{
+			continue;
+		}
+
+		annotations.renderable = false;
+
+		annotations.bookmarked = Gaffer::MetadataAlgo::getBookmarked( node );
+		annotations.renderable |= annotations.bookmarked;
+
+		if( int bookmark = MetadataAlgo::numericBookmark( node ) )
+		{
+			annotations.numericBookmark = std::to_string( bookmark );
+			annotations.renderable = true;
+		}
+		else
+		{
+			annotations.numericBookmark = InternedString();
+		}
+
+		annotations.standardAnnotations.clear();
+		names.clear();
+		MetadataAlgo::annotations( node, names );
+		for( const auto &name : names )
+		{
+			if( !StringAlgo::matchMultiple( name, m_visibleAnnotations ) )
+			{
+				const bool templated = binary_search( templates.begin(), templates.end(), name ) || name == "user";
+				if( templated || !untemplatedVisible )
+				{
+					continue;
+				}
+			}
+
+			annotations.standardAnnotations.push_back(
+				MetadataAlgo::getAnnotation( node, name, /* inheritTemplate = */ true )
+			);
+			// Word wrap. It might be preferable to do this during
+			// rendering, but we have no way of querying the extent of
+			// `Style::renderWrappedText()`.
+			annotations.standardAnnotations.back().textData = new StringData(
+				wrap( annotations.standardAnnotations.back().text(), 60 )
+			);
+		}
+		annotations.renderable |= (bool)annotations.standardAnnotations.size();
+
+		annotations.dirty = false;
+	}
+
+	m_dirty = false;
 }

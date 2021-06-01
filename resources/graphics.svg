@@ -1282,6 +1282,16 @@
        y1="578.07648"
        x2="121.48355"
        y2="578.07648" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#boundsTemplate"
+       id="linearGradient1975"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.78124999,0,0,0.78124999,2.1875,1431.6416)"
+       x1="10"
+       y1="1358.3622"
+       x2="42"
+       y2="1358.3622" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -1290,17 +1300,17 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="8"
-     inkscape:cx="147.8084"
-     inkscape:cy="-1051.5538"
+     inkscape:zoom="5.6568542"
+     inkscape:cx="22.537611"
+     inkscape:cy="-1445.4456"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     inkscape:window-width="2577"
-     inkscape:window-height="1474"
-     inkscape:window-x="1239"
-     inkscape:window-y="104"
-     showgrid="true"
-     inkscape:window-maximized="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="977"
+     inkscape:window-x="0"
+     inkscape:window-y="28"
+     showgrid="false"
+     inkscape:window-maximized="1"
      inkscape:snap-global="true"
      inkscape:snap-nodes="true"
      inkscape:snap-bbox="true"
@@ -1560,7 +1570,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -2380,8 +2390,7 @@
            height="54.25"
            width="343.75" /></flowRegion><flowPara
          id="flowPara2016-2"
-         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000536">Color Inspector Icons</flowPara></flowRoot>
-    <rect
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000536">Color Inspector Icons</flowPara></flowRoot>    <rect
        inkscape:label="sizeGuide"
        style="display:inline;opacity:1;fill:url(#linearGradient2022);fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
        id="rect2020-0"
@@ -2389,7 +2398,30 @@
        height="16"
        x="10"
        y="2302" />
-  </g>
+    <path
+       transform="translate(0,-52.362183)"
+       id="path1960"
+       inkscape:label="hr1"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0"
+       d="M -6,2473.3622 H 743.99999"
+       style="display:inline;opacity:1;fill:none;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <flowRoot
+       id="flowRoot1968"
+       inkscape:label="docTitle"
+       transform="matrix(1,0,0,1.0000138,288.10156,1409.8474)"
+       style="font-style:normal;font-weight:normal;font-size:24px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:1.00000381"
+       xml:space="preserve"><flowRegion
+         id="flowRegion1964"
+         style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"><rect
+           id="rect1962"
+           style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
+           y="983"
+           x="-295"
+           height="54.25"
+           width="343.75" /></flowRegion><flowPara
+         id="flowPara1966"
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381">GraphEditor</flowPara></flowRoot>  </g>
   <g
      inkscape:groupmode="layer"
      id="layer4"
@@ -3329,6 +3361,14 @@
        x="15"
        y="2366"
        inkscape:label="tabScrollMenu" />
+    <rect
+       inkscape:label="annotations"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+       id="annotations"
+       width="25"
+       height="25"
+       x="50"
+       y="2427.9998" />
   </g>
   <g
      inkscape:label="Artwork"
@@ -7856,6 +7896,42 @@
          id="rect2111"
          style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:7.15541172;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
          transform="rotate(-6.919988e-5)" />
+    </g>
+    <rect
+       y="2480.3621"
+       x="10"
+       height="25"
+       width="25"
+       id="rect1972"
+       style="display:inline;opacity:1;fill:url(#linearGradient1975);fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+       inkscape:label="sizeGuide" />
+    <g
+       style="display:inline"
+       id="f"
+       transform="translate(40,144.00001)"
+       inkscape:label="#g5694">
+      <path
+         inkscape:connector-curvature="0"
+         id="rect1979"
+         transform="translate(0,52.362183)"
+         d="m 16,2286.5 c -1.938933,0 -3.5,1.5611 -3.5,3.5 v 8.5 c 0,1.9389 1.561067,3.5 3.5,3.5 h 3.5 l 3,5 3,-5 H 29 c 1.938933,0 3.5,-1.5611 3.5,-3.5 v -8.5 c 0,-1.9389 -1.561067,-3.5 -3.5,-3.5 z"
+         style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         inkscape:connector-curvature="0"
+         id="path5680"
+         d="M 15,2343.3622 H 30"
+         style="fill:none;stroke:#535353;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <path
+         style="fill:none;stroke:#535353;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 15,2346.3622 H 30"
+         id="path5686"
+         inkscape:connector-curvature="0" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path5688"
+         d="m 15,2349.3622 h 8"
+         style="fill:none;stroke:#535353;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     </g>
   </g>
 </svg>

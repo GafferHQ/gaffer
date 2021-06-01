@@ -679,13 +679,13 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 	def testAnnotationTemplates( self ) :
 
+		defaultTemplates = Gaffer.MetadataAlgo.annotationTemplates()
 		self.assertIsNone( Gaffer.MetadataAlgo.getAnnotationTemplate( "test" ) )
-		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [] )
 
 		a = Gaffer.MetadataAlgo.Annotation( "", imath.Color3f( 1, 0, 0 ) )
 		Gaffer.MetadataAlgo.addAnnotationTemplate( "test", a )
 		self.assertEqual( Gaffer.MetadataAlgo.getAnnotationTemplate( "test" ), a )
-		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [ "test" ] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), defaultTemplates + [ "test" ] )
 
 		n = Gaffer.Node()
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( "hi" ) )
@@ -700,7 +700,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		Gaffer.MetadataAlgo.removeAnnotationTemplate( "test" )
 		self.assertIsNone( Gaffer.MetadataAlgo.getAnnotationTemplate( "test" ) )
-		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), [] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), defaultTemplates )
 
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
@@ -710,6 +710,21 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			Gaffer.MetadataAlgo.getAnnotation( n, "test", inheritTemplate = True ),
 			Gaffer.MetadataAlgo.Annotation( "hi" ),
 		)
+
+	def testNonUserAnnotationTemplates( self ) :
+
+		defaultTemplates = Gaffer.MetadataAlgo.annotationTemplates()
+		userOnlyDefaultTemplates = Gaffer.MetadataAlgo.annotationTemplates( userOnly = True )
+
+		a = Gaffer.MetadataAlgo.Annotation( "", imath.Color3f( 1, 0, 0 ) )
+		Gaffer.MetadataAlgo.addAnnotationTemplate( "test", a, user = False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), defaultTemplates + [ "test" ] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates( userOnly = True ), userOnlyDefaultTemplates )
+
+		Gaffer.MetadataAlgo.addAnnotationTemplate( "test2", a, user = True )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), defaultTemplates + [ "test", "test2" ] )
+		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates( userOnly = True ), userOnlyDefaultTemplates + [ "test2" ] )
 
 	def tearDown( self ) :
 

@@ -206,7 +206,7 @@ struct HashesPerComputeMetric
 
 // Utility for invoking a templated functor with a particular metric.
 template<typename F>
-typename F::ResultType dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
+std::result_of_t<F(const HashCountMetric &)> dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
 {
 	switch( performanceMetric )
 	{
@@ -230,6 +230,39 @@ typename F::ResultType dispatchMetric( const F &f, MonitorAlgo::PerformanceMetri
 			return f( InvalidMetric() );
 	}
 }
+
+const std::string g_contextAnnotationName = "contextMonitor";
+
+struct AnnotationRegistrations
+{
+	AnnotationRegistrations()
+	{
+		for( int m = Gaffer::MonitorAlgo::First; m <= Gaffer::MonitorAlgo::Last; ++m )
+		{
+			// We don't really need the template values, but by registering a
+			// template we get included nicely in the UI for filtering
+			// annotations in the GraphEditor.
+			dispatchMetric(
+				[] ( auto metric ) {
+					MetadataAlgo::addAnnotationTemplate(
+						metric.annotation,
+						MetadataAlgo::Annotation( "" ),
+						/* user = */ false
+					);
+				},
+				static_cast<Gaffer::MonitorAlgo::PerformanceMetric>( m )
+			);
+		}
+
+		MetadataAlgo::addAnnotationTemplate(
+			g_contextAnnotationName,
+			MetadataAlgo::Annotation( "" ),
+			/* user = */ false
+		);
+	}
+};
+
+const AnnotationRegistrations g_annotationRegistrations;
 
 } // namespace
 
@@ -465,8 +498,6 @@ struct Annotate
 
 };
 
-const std::string g_contextAnnotationName = "annotation:contextMonitor";
-
 ContextMonitor::Statistics annotateContextWalk( Node &node, const ContextMonitor::StatisticsMap &statistics, bool persistent )
 {
 
@@ -592,19 +623,9 @@ void annotate( Node &root, const PerformanceMonitor &monitor, bool persistent )
 	}
 }
 
-void annotate( Node &root, const PerformanceMonitor &monitor )
-{
-	annotate( root, monitor, /* persistent = */ true );
-}
-
 void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric, bool persistent )
 {
 	dispatchMetric<Annotate>( Annotate( root, monitor.allStatistics(), persistent ), metric );
-}
-
-void annotate( Node &root, const PerformanceMonitor &monitor, PerformanceMetric metric )
-{
-	annotate( root, monitor, metric, /* persistent = */ true );
 }
 
 void annotate( Node &root, const ContextMonitor &monitor, bool persistent )
@@ -612,9 +633,31 @@ void annotate( Node &root, const ContextMonitor &monitor, bool persistent )
 	annotateContextWalk( root, monitor.allStatistics(), persistent );
 }
 
-void annotate( Node &root, const ContextMonitor &monitor )
+void removePerformanceAnnotations( Node &root )
 {
-	annotate( root, monitor, /* persistent = */ true );
+	for( int m = Gaffer::MonitorAlgo::First; m <= Gaffer::MonitorAlgo::Last; ++m )
+	{
+		dispatchMetric(
+			[&root] ( auto metric ) {
+				MetadataAlgo::removeAnnotation( &root, metric.annotation );
+			},
+			static_cast<Gaffer::MonitorAlgo::PerformanceMetric>( m )
+		);
+	}
+
+	for( const auto &node : Node::Range( root ) )
+	{
+		removePerformanceAnnotations( *node );
+	}
+}
+
+void removeContextAnnotations( Node &root )
+{
+	MetadataAlgo::removeAnnotation( &root, g_contextAnnotationName );
+	for( const auto &node : Node::Range( root ) )
+	{
+		removeContextAnnotations( *node );
+	}
 }
 
 } // namespace MonitorAlgo

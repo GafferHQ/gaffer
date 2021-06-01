@@ -133,8 +133,9 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		virtual Imath::V3f closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const = 0;
 		virtual void renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame, State state ) const = 0;
 		virtual void renderAuxiliaryConnection( const Imath::V2f &srcPosition, const Imath::V2f &srcTangent, const Imath::V2f &dstPosition, const Imath::V2f &dstTangent, State state ) const = 0;
-
 		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;
+		/// Renders an annotation for a node, returning an origin suitable for rendering the next annotation.
+		virtual Imath::V2f renderAnnotation( const Imath::V2f &origin, const std::string &text, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const = 0;
 		//@}
 
 		/// @name 3D UI elements
