@@ -492,15 +492,13 @@ class Instancer::EngineData : public Data
 			h.append( (uint64_t)pointIndex );
 		}
 
-		CompoundObjectPtr instanceAttributes( size_t pointIndex ) const
+		void instanceAttributes( size_t pointIndex, CompoundObject &result ) const
 		{
-			CompoundObjectPtr result = new CompoundObject;
-			CompoundObject::ObjectMap &writableResult = result->members();
+			CompoundObject::ObjectMap &writableResult = result.members();
 			for( const auto &attributeCreator : m_attributeCreators )
 			{
 				writableResult[attributeCreator.first] = attributeCreator.second( pointIndex );
 			}
-			return result;
 		}
 
 		typedef std::map< InternedString, boost::unordered_set< IECore::MurmurHash > > PrototypeHashes;
@@ -1791,7 +1789,7 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &sourcePath, const S
 		M44f childTransform;
 		Box3f childBound;
 		{
-			PrototypeScope scope( enginePlug(), context, &sourcePath, &branchPath );
+			PrototypeScope scope( e.get(), context, &sourcePath, &branchPath );
 			childTransform = prototypesPlug()->transformPlug()->getValue();
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
@@ -1877,11 +1875,11 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &sourcePath, cons
 	{
 		// "/instances/<prototypeName>/<id>"
 		M44f result;
+		ConstEngineDataPtr e = engine( sourcePath, context );
 		{
-			PrototypeScope scope( enginePlug(), context, &sourcePath, &branchPath );
+			PrototypeScope scope( e.get(), context, &sourcePath, &branchPath );
 			result = prototypesPlug()->transformPlug()->getValue();
 		}
-		ConstEngineDataPtr e = engine( sourcePath, context );
 		const size_t pointIndex = e->pointIndex( branchPath[2] );
 		result = result * e->instanceTransform( pointIndex );
 		return result;
@@ -1904,28 +1902,22 @@ bool Instancer::affectsBranchAttributes( const Gaffer::Plug *input ) const
 
 void Instancer::hashBranchAttributes( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( branchPath.size() <= 1 )
+	if( branchPath.size() <= 2 )
 	{
-		// "/" or "/instances"
+		// "/" or "/instances" or "/instances/<prototypeName>"
 		h = outPlug()->attributesPlug()->defaultValue()->Object::hash();
-	}
-	else if( branchPath.size() == 2 )
-	{
-		// "/instances/<prototypeName>"
-		PrototypeScope scope( enginePlug(), context, &sourcePath, &branchPath );
-		h = prototypesPlug()->attributesPlug()->hash();
 	}
 	else if( branchPath.size() == 3 )
 	{
 		// "/instances/<prototypeName>/<id>"
 		BranchCreator::hashBranchAttributes( sourcePath, branchPath, context, h );
+		ConstEngineDataPtr e = engine( sourcePath, context );
+		if( e->numInstanceAttributes() )
 		{
-			ConstEngineDataPtr e = engine( sourcePath, context );
-			if( e->numInstanceAttributes() )
-			{
-				e->instanceAttributesHash( e->pointIndex( branchPath[2] ), h );
-			}
+			e->instanceAttributesHash( e->pointIndex( branchPath[2] ), h );
 		}
+		PrototypeScope scope( e.get(), context, &sourcePath, &branchPath );
+		prototypesPlug()->attributesPlug()->hash( h );
 	}
 	else
 	{
@@ -1937,28 +1929,28 @@ void Instancer::hashBranchAttributes( const ScenePath &sourcePath, const ScenePa
 
 IECore::ConstCompoundObjectPtr Instancer::computeBranchAttributes( const ScenePath &sourcePath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
-	if( branchPath.size() <= 1 )
+	if( branchPath.size() <= 2 )
 	{
-		// "/" or "/instances"
+		// "/" or "/instances" or "/instances/<prototypeName>"
 		return outPlug()->attributesPlug()->defaultValue();
-	}
-	else if( branchPath.size() == 2 )
-	{
-		// "/instances/<prototypeName>"
-		PrototypeScope scope( enginePlug(), context, &sourcePath, &branchPath );
-		return prototypesPlug()->attributesPlug()->getValue();
 	}
 	else if( branchPath.size() == 3 )
 	{
 		// "/instances/<prototypeName>/<id>"
 		ConstEngineDataPtr e = engine( sourcePath, context );
+		PrototypeScope scope( e.get(), context, &sourcePath, &branchPath );
+		ConstCompoundObjectPtr prototypeAttrs = prototypesPlug()->attributesPlug()->getValue();
 		if( e->numInstanceAttributes() )
 		{
-			return e->instanceAttributes( e->pointIndex( branchPath[2] ) );
+			CompoundObjectPtr result = new CompoundObject;
+			result->members() = prototypeAttrs->members();
+
+			e->instanceAttributes( e->pointIndex( branchPath[2] ), *result );
+			return result;
 		}
 		else
 		{
-			return outPlug()->attributesPlug()->defaultValue();
+			return prototypeAttrs;
 		}
 	}
 	else
@@ -2324,10 +2316,22 @@ void Instancer::prototypeChildNamesHash( const ScenePath &sourcePath, const Gaff
 Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath *sourcePath, const ScenePath *branchPath )
 	:	Gaffer::Context::EditableScope( context )
 {
-	assert( branchPath->size() >= 2 );
-
 	set( ScenePlug::scenePathContextName, sourcePath );
 	ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
+
+	setPrototype( engine.get(), branchPath );
+}
+
+Instancer::PrototypeScope::PrototypeScope( const EngineData *engine, const Gaffer::Context *context, const ScenePath *sourcePath, const ScenePath *branchPath )
+	:	Gaffer::Context::EditableScope( context )
+{
+	setPrototype( engine, branchPath );
+}
+
+void Instancer::PrototypeScope::setPrototype( const EngineData *engine, const ScenePath *branchPath )
+{
+	assert( branchPath->size() >= 2 );
+
 	const ScenePlug::ScenePath *prototypeRoot = engine->prototypeRoot( (*branchPath)[1] );
 
 	if( branchPath->size() >= 3 && engine->hasContextVariables() )

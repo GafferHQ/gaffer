@@ -22,11 +22,17 @@ API
 - AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
 - MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
 
+Fixes
+-----
+
+- Instancer : Fixed variation of prototype root attributes using context variables.
+
 Breaking Changes
 ----------------
 
 - RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
 - MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
+- Instancer : Attributes from the prototype root are now placed at the instance root, rather than on the instance group. This allows context variation to potentially vary these attributes. Usually attribute inheritance will mean that this behaves the same, but scenes which explicitly override attributes at specific locations in the hierarchy after an instancer could see modified behaviour.
 
 0.60.0.0b1
 ==========
