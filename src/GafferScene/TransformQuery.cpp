@@ -265,25 +265,20 @@ void TransformQuery::hash( Gaffer::ValuePlug const* const output, Gaffer::Contex
 					}
 					case Space::World:
 					{
-						if( invertPlug()->getValue() )
-						{
-							h.append( splug->fullTransformHash( path ) );
-						}
-						else
-						{
-							h = splug->fullTransformHash( path );
-						}
-						break;
+						h.append( splug->fullTransformHash( path ) );
+						h.append( invertPlug()->hash() );
 					}
 					case Space::Relative:
 					{
 						std::string const rloc = relativeLocationPlug()->getValue();
 
-						if( ! rloc.empty() && ( rloc != loc ) ) // NOTE : If loc == rloc then m is identity
+						if( ! rloc.empty() )
 						{
 							ScenePlug::ScenePath const rpath = ScenePlug::stringToPath( rloc );
 
-							if( splug->exists( rpath ) )
+							if(
+								( rpath != path ) &&
+								( splug->exists( rpath ) ) )
 							{
 								h.append( splug->fullTransformHash( path ) );
 								h.append( splug->fullTransformHash( rpath ) );
@@ -340,11 +335,13 @@ void TransformQuery::compute( Gaffer::ValuePlug* const output, Gaffer::Context c
 					{
 						std::string const rloc = relativeLocationPlug()->getValue();
 
-						if( ! rloc.empty() && ( rloc != loc ) ) // NOTE : If loc == rloc then m is identity
+						if( ! rloc.empty() )
 						{
 							ScenePlug::ScenePath const rpath = ScenePlug::stringToPath( rloc );
 
-							if( splug->exists( rpath ) )
+							if(
+								( rpath != path ) &&
+								( splug->exists( rpath ) ) )
 							{
 								m = splug->fullTransform( path ) * splug->fullTransform( rpath ).inverse();
 							}
