@@ -457,7 +457,7 @@ void SceneReader::hashSet( const IECore::InternedString &setName, const Gaffer::
 	h.append( setName );
 }
 
-static void loadSetWalk( const SceneInterface *s, const InternedString &setName, PathMatcher &set, const vector<InternedString> &path )
+static void loadSetWalk( const SceneInterface *s, const InternedString &setName, const Gaffer::Context *context, PathMatcher &set, const vector<InternedString> &path )
 {
 	if( s->hasTag( setName, SceneInterface::LocalTag ) )
 	{
@@ -480,9 +480,11 @@ static void loadSetWalk( const SceneInterface *s, const InternedString &setName,
 	childPath.push_back( InternedString() ); // room for the child name
 	for( SceneInterface::NameList::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
 	{
+		Canceller::check( context->canceller() );
+
 		ConstSceneInterfacePtr child = s->child( *it );
 		childPath.back() = *it;
-		loadSetWalk( child.get(), setName, set, childPath );
+		loadSetWalk( child.get(), setName, context, set, childPath );
 	}
 }
 
@@ -492,7 +494,7 @@ IECore::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedS
 	ConstSceneInterfacePtr rootScene = scene( ScenePath() );
 	if( rootScene )
 	{
-		loadSetWalk( rootScene.get(), setName, result->writable(), ScenePath() );
+		loadSetWalk( rootScene.get(), setName, context, result->writable(), ScenePath() );
 	}
 	return result;
 }
