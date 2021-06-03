@@ -162,6 +162,7 @@ enum TypeId
 	FilterQueryTypeId = 110617,
 	TransformQueryTypeId = 110618,
 	BoundQueryTypeId = 110619,
+	ExistenceQueryTypeId = 110620,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
