@@ -73,6 +73,6 @@ IECore::ConstObjectPtr ReverseWinding::computeProcessedObject( const ScenePath &
 	}
 
 	MeshPrimitivePtr meshCopy = mesh->copy();
-	MeshAlgo::reverseWinding( meshCopy.get() );
+	MeshAlgo::reverseWinding( meshCopy.get(), context->canceller() );
 	return meshCopy;
 }
