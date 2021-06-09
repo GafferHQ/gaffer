@@ -6,6 +6,11 @@ Features
 
 - TransformQuery : Added a new node to query the transform for a scene location.
 
+Improvements
+------------
+
+- OSLShader : Reduced loading times where many nodes reference the same shader.
+
 Documentation
 -------------
 

@@ -38,6 +38,7 @@ import os
 import unittest
 import imath
 import random
+import shutil
 
 import IECore
 import IECoreScene
@@ -552,8 +553,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n = GafferOSL.OSLShader()
 		n.loadShader( s1 )
 
+		s1Parameters = n["parameters"].keys()
 		self.assertEqual(
-			n["parameters"].keys(),
+			s1Parameters,
 			[
 				"commonI",
 				"commonF",
@@ -678,6 +680,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		for plug in n["parameters"] :
 			if isinstance( plug, Gaffer.ValuePlug ) :
 				self.assertTrue( plug.isSetToDefault() )
+
+		shutil.copyfile( s1 + ".oso", s2 + ".oso" )
+		n.reloadShader()
+		self.assertEqual(
+			n["parameters"].keys(),
+			s1Parameters
+		)
 
 	def testSplineParameters( self ) :
 
