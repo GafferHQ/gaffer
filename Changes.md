@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.0.0)
 ========
 
+Features
+--------
+
+- AttributeQuery : Added a new node for querying the value of an attribute at a location.
+
 Improvements
 ------------
 
