@@ -89,7 +89,7 @@ void Deformer::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	if(
 		input == adjustBoundsPlug() ||
 		input == filterPlug() ||
-		input == outPlug()->objectPlug() ||
+		affectsProcessedObjectBound( input ) ||
 		input == inPlug()->objectPlug() ||
 		input == outPlug()->childBoundsPlug() ||
 		input == inPlug()->childBoundsPlug() ||
@@ -103,6 +103,21 @@ void Deformer::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 bool Deformer::adjustBounds() const
 {
 	return adjustBoundsPlug()->getValue();
+}
+
+bool Deformer::affectsProcessedObjectBound( const Gaffer::Plug *input ) const
+{
+	return input == outPlug()->objectPlug();
+}
+
+void Deformer::hashProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	outPlug()->objectPlug()->hash( h );
+}
+
+Imath::Box3f Deformer::computeProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context ) const
+{
+	return SceneAlgo::bound( outPlug()->objectPlug()->getValue().get() );
 }
 
 void Deformer::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -121,7 +136,7 @@ void Deformer::hashBound( const ScenePath &path, const Gaffer::Context *context,
 			ObjectProcessor::hashBound( path, context, parent, h );
 			if( m & PathMatcher::ExactMatch )
 			{
-				outPlug()->objectPlug()->hash( h );
+				hashProcessedObjectBound( path, context, h );
 			}
 			else
 			{
@@ -168,10 +183,7 @@ Imath::Box3f Deformer::computeBound( const ScenePath &path, const Gaffer::Contex
 			if( m & PathMatcher::ExactMatch )
 			{
 				// Get bounds from deformed output object.
-				/// \todo Some derived classes may be able to compute an output bound
-				/// for the object without computing the full deformation. We could add
-				/// virtual methods to allow that.
-				result.extendBy( SceneAlgo::bound( outPlug()->objectPlug()->getValue().get() ) );
+				result.extendBy( computeProcessedObjectBound( path, context ) );
 			}
 			else
 			{

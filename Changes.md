@@ -22,6 +22,8 @@ API
   - Added optional `userOnly` argument to `annotationTemplates()`.
 - AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
 - MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
+- Deformer : Added `affectsProcessedObjectBound()`, `hashProcessedObjectBound()` and `computeProcessedObjectBound()` virtual
+  methods. These can optionally be overridden by derived classes to compute faster approximate bounds where possible.
 
 Fixes
 -----
