@@ -36,6 +36,8 @@
 
 #include "GafferVDB/MeshToLevelSet.h"
 
+#include "GafferVDB/Interrupter.h"
+
 #include "IECoreVDB/VDBObject.h"
 
 #include "Gaffer/StringPlug.h"
@@ -215,14 +217,15 @@ IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &
 	const float interiorBandwidth = interiorBandwidthPlug()->getValue();
 
 	openvdb::math::Transform::Ptr transform = openvdb::math::Transform::createLinearTransform( voxelSize );
+	Interrupter interrupter( context->canceller() );
 
 	openvdb::FloatGrid::Ptr grid = openvdb::tools::meshToVolume<openvdb::FloatGrid>(
+		interrupter,
 		CortexMeshAdapter( mesh, transform.get() ),
 		*transform,
 		exteriorBandwidth, //in voxel units
 		interiorBandwidth, //in voxel units
-		0 //conversionFlags,
-		//primitiveIndexGrid.get()
+		0 //conversionFlags
 	);
 
 	grid->setName( gridPlug()->getValue() );

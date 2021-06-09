@@ -36,6 +36,8 @@
 
 #include "GafferVDB/LevelSetOffset.h"
 
+#include "GafferVDB/Interrupter.h"
+
 #include "IECoreVDB/VDBObject.h"
 
 #include "Gaffer/StringPlug.h"
@@ -118,19 +120,20 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	}
 
 	openvdb::GridBase::Ptr newGrid;
+	Interrupter interrupter( context->canceller() );
 
 	if ( openvdb::FloatGrid::ConstPtr floatGrid = openvdb::GridBase::constGrid<openvdb::FloatGrid>( gridBase ) )
 	{
 		openvdb::FloatGrid::Ptr newFloatGrid = openvdb::GridBase::grid<openvdb::FloatGrid> ( floatGrid->deepCopyGrid() );
 		newGrid = newFloatGrid;
-		openvdb::tools::LevelSetFilter <openvdb::FloatGrid> filter( *newFloatGrid );
+		openvdb::tools::LevelSetFilter<openvdb::FloatGrid, openvdb::FloatGrid, Interrupter> filter( *newFloatGrid, &interrupter );
 		filter.offset( offsetPlug()->getValue() );
 	}
 	else if ( openvdb::DoubleGrid::ConstPtr doubleGrid = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( newGrid ) )
 	{
 		openvdb::DoubleGrid::Ptr newDoubleGrid = openvdb::GridBase::grid<openvdb::DoubleGrid>( doubleGrid->deepCopyGrid() );
 		newGrid = newDoubleGrid;
-		openvdb::tools::LevelSetFilter <openvdb::DoubleGrid> filter( *newDoubleGrid );
+		openvdb::tools::LevelSetFilter<openvdb::DoubleGrid, openvdb::DoubleGrid, Interrupter> filter( *newDoubleGrid, &interrupter );
 		filter.offset( offsetPlug()->getValue() );
 	}
 	else
