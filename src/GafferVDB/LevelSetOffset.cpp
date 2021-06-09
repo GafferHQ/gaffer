@@ -55,7 +55,7 @@ GAFFER_NODE_DEFINE_TYPE( LevelSetOffset );
 size_t LevelSetOffset::g_firstPlugIndex = 0;
 
 LevelSetOffset::LevelSetOffset( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+	:	Deformer( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -87,33 +87,22 @@ const Gaffer::FloatPlug *LevelSetOffset::offsetPlug() const
 	return  getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-void LevelSetOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool LevelSetOffset::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == gridPlug() || input == offsetPlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-		outputs.push_back( outPlug()->boundPlug() );
-	}
-}
-
-bool LevelSetOffset::processesObject() const
-{
-	return true;
+	return input == gridPlug() || input == offsetPlug();
 }
 
 void LevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	SceneElementProcessor::hashProcessedObject( path, context, h );
+	Deformer::hashProcessedObject( path, context, h );
 
 	gridPlug()->hash( h );
 	offsetPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const VDBObject *vdbObject = runTimeCast<const VDBObject>(inputObject.get());
+	const VDBObject *vdbObject = runTimeCast<const VDBObject>( inputObject );
 	if( !vdbObject )
 	{
 		return inputObject;
@@ -156,23 +145,26 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	return newVDBObject;
 }
 
-
-bool LevelSetOffset::processesBound() const
+bool LevelSetOffset::affectsProcessedObjectBound( const Gaffer::Plug *input ) const
 {
-	return true;
+	return
+		input == inPlug()->boundPlug() ||
+		input == offsetPlug()
+	;
 }
 
-void LevelSetOffset::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void LevelSetOffset::hashProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	SceneElementProcessor::hashProcessedBound( path, context, h );
-
-	gridPlug()->hash( h );
+	inPlug()->boundPlug()->hash( h );
 	offsetPlug()->hash( h );
 }
 
-Imath::Box3f LevelSetOffset::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
+Imath::Box3f LevelSetOffset::computeProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context ) const
 {
-	Imath::Box3f newBound = inputBound;
+	/// \todo `in.bound` includes the child bounds. Ideally we
+	/// would have a separate `in.objectBound` with just the bounds
+	/// of the input object.
+	Imath::Box3f newBound = inPlug()->boundPlug()->getValue();
 	float offset = -offsetPlug()->getValue();
 
 	newBound.min -= Imath::V3f(offset, offset, offset);

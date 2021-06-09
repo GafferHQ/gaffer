@@ -58,8 +58,12 @@ class PointsGridToPointsTest( GafferVDBTest.VDBTestCase ) :
 		sceneReader = GafferScene.SceneReader( "SceneReader" )
 		sceneReader["fileName"].setValue( self.sourcePath )
 
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/vdb" ] ) )
+
 		pointsGridToPoints = GafferVDB.PointsGridToPoints( "PointsGridToPoints" )
 		pointsGridToPoints["in"].setInput( sceneReader["out"] )
+		pointsGridToPoints["filter"].setInput( pointsFilter["out"] )
 
 		points = pointsGridToPoints["out"].object("/vdb")
 
@@ -73,8 +77,12 @@ class PointsGridToPointsTest( GafferVDBTest.VDBTestCase ) :
 		sceneReader = GafferScene.SceneReader( "SceneReader" )
 		sceneReader["fileName"].setValue( self.sourcePath )
 
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/vdb" ] ) )
+
 		pointsGridToPoints = GafferVDB.PointsGridToPoints( "PointsGridToPoints" )
 		pointsGridToPoints["in"].setInput( sceneReader["out"] )
+		pointsGridToPoints["filter"].setInput( pointsFilter["out"] )
 		pointsGridToPoints["grid"].setValue( "nogridhere" )
 
 		vdb = pointsGridToPoints["out"].object("/vdb")

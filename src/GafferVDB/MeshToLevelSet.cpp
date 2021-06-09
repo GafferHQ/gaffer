@@ -128,7 +128,7 @@ GAFFER_NODE_DEFINE_TYPE( MeshToLevelSet );
 size_t MeshToLevelSet::g_firstPlugIndex = 0;
 
 MeshToLevelSet::MeshToLevelSet( const std::string &name )
-	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
+	:	ObjectProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -182,29 +182,19 @@ const FloatPlug *MeshToLevelSet::interiorBandwidthPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-void MeshToLevelSet::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool MeshToLevelSet::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if(
+	return
 		input == gridPlug() ||
 		input == voxelSizePlug() ||
 		input == exteriorBandwidthPlug() ||
 		input == interiorBandwidthPlug()
-	)
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool MeshToLevelSet::processesObject() const
-{
-	return true;
+	;
 }
 
 void MeshToLevelSet::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	SceneElementProcessor::hashProcessedObject( path, context, h );
+	ObjectProcessor::hashProcessedObject( path, context, h );
 
 	gridPlug()->hash( h );
 	voxelSizePlug()->hash( h );
@@ -212,9 +202,9 @@ void MeshToLevelSet::hashProcessedObject( const ScenePath &path, const Gaffer::C
 	interiorBandwidthPlug()->hash ( h );
 }
 
-IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
+	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject );
 	if( !mesh )
 	{
 		return inputObject;

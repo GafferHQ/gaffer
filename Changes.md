@@ -36,6 +36,12 @@ Breaking Changes
 - RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
 - MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
 - Instancer : Attributes from the prototype root are now placed at the instance root, rather than on the instance group. This allows context variation to potentially vary these attributes. Usually attribute inheritance will mean that this behaves the same, but scenes which explicitly override attributes at specific locations in the hierarchy after an instancer could see modified behaviour.
+- PointsGridToPoints : Changed default value of `filter` input, so that a filter must now be connected to specify the objects to modify.
+- GafferVDB : Changed base class of the following nodes :
+  - LevelSetToMesh
+  - MeshToLevelSet
+  - LevelSetOffset
+  - PointsGridToPoints
 
 0.60.0.0b1
 ==========
