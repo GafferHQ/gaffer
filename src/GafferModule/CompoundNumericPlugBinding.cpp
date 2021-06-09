@@ -70,6 +70,11 @@ std::string serialisationRepr( const T *plug, Serialisation *serialisation = nul
 		boost::python::object interpretationRepr = interpretationAsPythonObject.attr( "__repr__" )();
 		extraArgs = "interpretation = " + std::string( boost::python::extract<std::string>( interpretationRepr ) );
 		boost::replace_first( extraArgs, "_IECore", "GeometricData" );
+
+		if( serialisation )
+		{
+			serialisation->addModule( "IECore" );
+		}
 	}
 
 	return ValuePlugSerialiser::repr( plug, extraArgs, serialisation );
