@@ -177,7 +177,8 @@ Gaffer.Metadata.registerNode(
 			An output plug containing the names of all currently active rows.
 			""",
 
-			"plugValueWidget:type", "",
+			"layout:section", "Advanced",
+			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget"
 
 		],
 

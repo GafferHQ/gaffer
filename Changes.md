@@ -6,6 +6,11 @@ Features
 
 - TransformQuery : Added a new node to query the transform for a scene location.
 
+Improvements
+------------
+
+- Spreadsheet : Added `activeRowNames` plug to the Node Editor UI, in the Advanced tab.
+
 Documentation
 -------------
 
