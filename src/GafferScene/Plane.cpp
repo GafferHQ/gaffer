@@ -100,5 +100,5 @@ void Plane::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) 
 IECore::ConstObjectPtr Plane::computeSource( const Context *context ) const
 {
 	V2f dimensions = dimensionsPlug()->getValue();
-	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ), divisionsPlug()->getValue() );
+	return MeshPrimitive::createPlane( Box2f( -dimensions / 2.0f, dimensions / 2.0f ), divisionsPlug()->getValue(), context->canceller() );
 }

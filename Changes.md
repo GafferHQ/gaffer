@@ -18,6 +18,8 @@ Improvements
   - SceneReader
   - LevelSetOffset
   - MeshToLevelSet
+  - Plane
+  - Sphere
 - Expression :
   - Improved performance of Python expression evaluation when the same result is required in multiple threads. Specific expression benchmarks have shown a 10x speedup and some production scenes show an overall 15-30% improvement. Caution : This can expose pre-existing bugs in other nodes - see Breaking Changes for details.
   - Improved error message when Python expression assigns an invalid value.
