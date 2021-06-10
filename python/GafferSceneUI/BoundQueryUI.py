@@ -39,14 +39,14 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.TransformQuery,
+	GafferScene.BoundQuery,
 
 	"description",
 	"""
-	Queries a particular location in a scene and outputs the transform.
+	Queries a particular location in a scene and outputs the bound.
 	""",
 
-	"layout:activator:spaceIsRelative", lambda node : node["space"].getValue() == GafferScene.TransformQuery.Space.Relative,
+	"layout:activator:spaceIsRelative", lambda node : node["space"].getValue() == GafferScene.BoundQuery.Space.Relative,
 
 	plugs = {
 
@@ -54,7 +54,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The scene to query the transform for.
+			The scene to query the bounds for.
 			"""
 
 		],
@@ -63,8 +63,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The location within the scene to query the transform at.
-
+			The location within the scene to query the bound at.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
@@ -79,12 +78,12 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The space to query the transform.
+			The space to query the bound in.
 			""",
 
-			"preset:Local", GafferScene.TransformQuery.Space.Local,
-			"preset:World", GafferScene.TransformQuery.Space.World,
-			"preset:Relative", GafferScene.TransformQuery.Space.Relative,
+			"preset:Local", GafferScene.BoundQuery.Space.Local,
+			"preset:World", GafferScene.BoundQuery.Space.World,
+			"preset:Relative", GafferScene.BoundQuery.Space.Relative,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"nodule:type", ""
@@ -94,8 +93,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The location within the scene to query the transform for relative space mode.
-
+			The location within the scene to use for relative space mode.
 			> Note : If the location does not exist then the query will not be
 			> performed and all outputs will be set to their default values.
 			""",
@@ -107,52 +105,37 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"invert" : [
+		"bound" : [
 
 			"description",
 			"""
-			Invert the result transform.
-			""",
-			"nodule:type", ""
-
-		],
-
-		"matrix" : [
-
-			"description",
-			"""
-			4x4 matrix of the requested transform.
+			Bounding box at specified location in specified space.
 			""",
 
 			"layout:section", "Settings.Outputs"
 
 		],
 
-		"translate" : [
+		"center" : [
+
 			"description",
 			"""
-			Translation component of requested transform.
+			Center point vector of the requested bound.
 			""",
 
 			"layout:section", "Settings.Outputs"
+
 		],
 
-		"rotate" : [
+		"size" : [
+
 			"description",
 			"""
-			Rotation component of requested transform (degrees).
+			Size vector of the requested bound.
 			""",
 
 			"layout:section", "Settings.Outputs"
-		],
 
-		"scale" : [
-			"description",
-			"""
-			Scaling component of requested transform.
-			""",
-
-			"layout:section", "Settings.Outputs"
 		],
 	}
 )

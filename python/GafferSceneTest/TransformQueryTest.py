@@ -43,9 +43,245 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
+def randomName( gen, mnc, mxc ):
+
+	from string import ascii_lowercase
+
+	return ''.join( gen.choice( ascii_lowercase )
+		for _ in range( gen.randrange( mnc, mxc ) ) )
+
 class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
-	def testOutMatrix( self ):
+	def testDefault( self ):
+
+		m = imath.M44f()
+		v0 = imath.V3f( 0.0, 0.0, 0.0 )
+		v1 = imath.V3f( 1.0, 1.0, 1.0 )
+
+		tq = GafferScene.TransformQuery()
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+	def testNoScene( self ):
+
+		from random import Random
+		from datetime import datetime
+
+		r = Random( datetime.now() )
+
+		name1 = randomName( r, 5, 10 )
+		name2 = randomName( r, 5, 10 )
+
+		m = imath.M44f()
+		v0 = imath.V3f( 0.0, 0.0, 0.0 )
+		v1 = imath.V3f( 1.0, 1.0, 1.0 )
+
+		tq = GafferScene.TransformQuery()
+		tq["space"].setValue( GafferScene.TransformQuery.Space.Local )
+		tq["location"].setValue( "/" )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["location"].setValue( "/" + name1 )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["space"].setValue( GafferScene.TransformQuery.Space.World )
+		tq["location"].setValue( "/" )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["location"].setValue( "/" + name1 )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["space"].setValue( GafferScene.TransformQuery.Space.Relative )
+		tq["location"].setValue( "/" )
+		tq["relativeLocation"].setValue( "" )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["relativeLocation"].setValue( "/" )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["location"].setValue( "/" + name1 )
+		tq["relativeLocation"].setValue( "" )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["relativeLocation"].setValue( "/" + name2 )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+	def testRelativeSpaceLocationsEquivalent( self ):
+
+		from random import Random
+		from datetime import datetime
+
+		s1 = GafferScene.Sphere()
+		gr = GafferScene.Group()
+		tq = GafferScene.TransformQuery()
+
+		gr["in"][0].setInput( s1["out"] )
+		tq["scene"].setInput( gr["out"] )
+
+		s1["name"].setValue( "sphere1" )
+		gr["name"].setValue( "group" )
+
+		r = Random( datetime.now() )
+
+		s1["transform"]["translate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0 ) )
+		s1["transform"]["rotate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
+		s1["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
+
+		gr["transform"]["translate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0 ) )
+		gr["transform"]["rotate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
+		gr["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
+
+		m = imath.M44f()
+		v0 = imath.V3f( 0.0, 0.0, 0.0 )
+		v1 = imath.V3f( 1.0, 1.0, 1.0 )
+
+		tq["space"].setValue( GafferScene.TransformQuery.Space.Relative )
+		tq["location"].setValue( "/group/sphere1" )
+		tq["relativeLocation"].setValue( "/group/sphere1" )
+		tq["invert"].setValue( False )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["invert"].setValue( True )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["location"].setValue( "/group/sphere1/" )
+		tq["invert"].setValue( False )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["invert"].setValue( True )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["location"].setValue( "/group/" )
+		tq["relativeLocation"].setValue( "/group/" )
+		tq["invert"].setValue( False )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["invert"].setValue( True )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["relativeLocation"].setValue( "/group" )
+		tq["invert"].setValue( False )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["invert"].setValue( True )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["relativeLocation"].setValue( "group" )
+		tq["invert"].setValue( False )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["invert"].setValue( True )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["relativeLocation"].setValue( "group/" )
+		tq["invert"].setValue( False )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+		tq["invert"].setValue( True )
+
+		self.assertEqual( tq["matrix"].getValue(), m )
+		self.assertEqual( tq["translate"].getValue(), v0 )
+		self.assertEqual( tq["rotate"].getValue(), v0 )
+		self.assertEqual( tq["scale"].getValue(), v1 )
+
+	def testMatrix( self ):
 
 		from random import Random
 		from datetime import datetime
@@ -65,64 +301,46 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		r = Random( datetime.now() )
 
-		s1t = imath.V3f(
+		s1["transform"]["translate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0,
 			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0 )
-
-		s2t = imath.V3f(
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0 )
-
-		grt = imath.V3f(
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0 )
-
-		s1r = imath.V3f(
+			( r.random() - 0.5 ) * 2.0 ) )
+		s1["transform"]["rotate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0 * 180.0,
 			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0 )
-
-		s2r = imath.V3f(
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0 )
-
-		grr = imath.V3f(
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0 )
-
-		s1s = imath.V3f(
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ) )
-
-		s2s = imath.V3f(
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ) )
-
-		grs = imath.V3f(
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ) )
-
-		s1["transform"]["translate"].setValue( s1t )
-		s1["transform"]["rotate"].setValue( s1r )
-		s1["transform"]["scale"].setValue( s1s )
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
+		s1["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
 		s1m = s1["transform"].matrix()
 
-		s2["transform"]["translate"].setValue( s2t )
-		s2["transform"]["rotate"].setValue( s2r )
-		s2["transform"]["scale"].setValue( s2s )
+		s2["transform"]["translate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0 ) )
+		s2["transform"]["rotate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
+		s2["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
 		s2m = s2["transform"].matrix()
 
-		gr["transform"]["translate"].setValue( grt )
-		gr["transform"]["rotate"].setValue( grr )
-		gr["transform"]["scale"].setValue( grs )
+		gr["transform"]["translate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0 ) )
+		gr["transform"]["rotate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
+		gr["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
 		grm = gr["transform"].matrix()
 
 		tq["location"].setValue( "/group/sphere1" )
@@ -130,28 +348,28 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Local )
 
 		m = s1m
-		self.assertTrue( tq["outMatrix"].getValue().equalWithAbsError( m, 0.000001 ) )
+		self.assertTrue( tq["matrix"].getValue().equalWithAbsError( m, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Local )
 
 		m = s1m.inverse()
-		self.assertTrue( tq["outMatrix"].getValue().equalWithAbsError( m, 0.000001 ) )
+		self.assertTrue( tq["matrix"].getValue().equalWithAbsError( m, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( False )
 		tq["space"].setValue( GafferScene.TransformQuery.Space.World )
 
 		m = ( s1m * grm )
-		self.assertTrue( tq["outMatrix"].getValue().equalWithAbsError( m, 0.000001 ) )
+		self.assertTrue( tq["matrix"].getValue().equalWithAbsError( m, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
 		tq["space"].setValue( GafferScene.TransformQuery.Space.World )
 
 		m = ( s1m * grm ).inverse()
-		self.assertTrue( tq["outMatrix"].getValue().equalWithAbsError( m, 0.000001 ) )
+		self.assertTrue( tq["matrix"].getValue().equalWithAbsError( m, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -159,7 +377,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Relative )
 
 		m = ( s1m * grm ) * ( s2m * grm ).inverse()
-		self.assertTrue( tq["outMatrix"].getValue().equalWithAbsError( m, 0.000001 ) )
+		self.assertTrue( tq["matrix"].getValue().equalWithAbsError( m, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -167,9 +385,9 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Relative )
 
 		m = ( ( s1m * grm ) * ( s2m * grm ).inverse() ).inverse()
-		self.assertTrue( tq["outMatrix"].getValue().equalWithAbsError( m, 0.000001 ) )
+		self.assertTrue( tq["matrix"].getValue().equalWithAbsError( m, 0.000001 ) )
 
-	def testOutTranslate( self ):
+	def testTranslate( self ):
 
 		from random import Random
 		from datetime import datetime
@@ -189,28 +407,22 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		r = Random( datetime.now() )
 
-		s1t = imath.V3f(
+		s1["transform"]["translate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0,
 			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0 )
-
-		s2t = imath.V3f(
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0 )
-
-		grt = imath.V3f(
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0,
-			( r.random() - 0.5 ) * 2.0 )
-
-		s1["transform"]["translate"].setValue( s1t )
+			( r.random() - 0.5 ) * 2.0 ) )
 		s1m = s1["transform"].matrix()
 
-		s2["transform"]["translate"].setValue( s2t )
+		s2["transform"]["translate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0 ) )
 		s2m = s2["transform"].matrix()
 
-		gr["transform"]["translate"].setValue( grt )
+		gr["transform"]["translate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0,
+			( r.random() - 0.5 ) * 2.0 ) )
 		grm = gr["transform"].matrix()
 
 		tq["location"].setValue( "/group/sphere1" )
@@ -218,28 +430,28 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Local )
 
 		v = s1m.translation()
-		self.assertTrue( tq["outTranslate"].getValue().equalWithAbsError( v, 0.000001 ) )
+		self.assertTrue( tq["translate"].getValue().equalWithAbsError( v, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Local )
 
 		v = s1m.inverse().translation()
-		self.assertTrue( tq["outTranslate"].getValue().equalWithAbsError( v, 0.000001 ) )
+		self.assertTrue( tq["translate"].getValue().equalWithAbsError( v, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( False )
 		tq["space"].setValue( GafferScene.TransformQuery.Space.World )
 
 		v = ( s1m * grm ).translation()
-		self.assertTrue( tq["outTranslate"].getValue().equalWithAbsError( v, 0.000001 ) )
+		self.assertTrue( tq["translate"].getValue().equalWithAbsError( v, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
 		tq["space"].setValue( GafferScene.TransformQuery.Space.World )
 
 		v = ( s1m * grm ).inverse().translation()
-		self.assertTrue( tq["outTranslate"].getValue().equalWithAbsError( v, 0.000001 ) )
+		self.assertTrue( tq["translate"].getValue().equalWithAbsError( v, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -247,7 +459,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Relative )
 
 		v = ( ( s1m * grm ) * ( s2m * grm ).inverse() ).translation()
-		self.assertTrue( tq["outTranslate"].getValue().equalWithAbsError( v, 0.000001 ) )
+		self.assertTrue( tq["translate"].getValue().equalWithAbsError( v, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -255,9 +467,9 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 		tq["space"].setValue( GafferScene.TransformQuery.Space.Relative )
 
 		v = ( ( s1m * grm ) * ( s2m * grm ).inverse() ).inverse().translation()
-		self.assertTrue( tq["outTranslate"].getValue().equalWithAbsError( v, 0.000001 ) )
+		self.assertTrue( tq["translate"].getValue().equalWithAbsError( v, 0.000001 ) )
 
-	def testOutRotate( self ):
+	def testRotate( self ):
 
 		from math import pi
 		from random import Random
@@ -278,28 +490,22 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		r = Random( datetime.now() )
 
-		s1r = imath.V3f(
+		s1["transform"]["rotate"].setValue( imath.V3f(
 			( r.random() - 0.5 ) * 2.0 * 180.0,
 			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0 )
-
-		s2r = imath.V3f(
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0 )
-
-		grr = imath.V3f(
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0,
-			( r.random() - 0.5 ) * 2.0 * 180.0 )
-
-		s1["transform"]["rotate"].setValue( s1r )
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
 		s1m = s1["transform"].matrix()
 
-		s2["transform"]["rotate"].setValue( s2r )
+		s2["transform"]["rotate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
 		s2m = s2["transform"].matrix()
 
-		gr["transform"]["rotate"].setValue( grr )
+		gr["transform"]["rotate"].setValue( imath.V3f(
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0,
+			( r.random() - 0.5 ) * 2.0 * 180.0 ) )
 		grm = gr["transform"].matrix()
 
 		ro = imath.Eulerf.XYZ
@@ -310,7 +516,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = s1m
 		e = imath.Eulerf( imath.M44f.sansScalingAndShear( m ), ro ) * ( 180.0 / pi )
-		self.assertTrue( tq["outRotate"].getValue().equalWithAbsError( e, 0.000001 ) )
+		self.assertTrue( tq["rotate"].getValue().equalWithAbsError( e, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
@@ -318,7 +524,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = s1m.inverse()
 		e = imath.Eulerf( imath.M44f.sansScalingAndShear( m ), ro ) * ( 180.0 / pi )
-		self.assertTrue( tq["outRotate"].getValue().equalWithAbsError( e, 0.000001 ) )
+		self.assertTrue( tq["rotate"].getValue().equalWithAbsError( e, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( False )
@@ -326,7 +532,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( s1m * grm )
 		e = imath.Eulerf( imath.M44f.sansScalingAndShear( m ), ro ) * ( 180.0 / pi )
-		self.assertTrue( tq["outRotate"].getValue().equalWithAbsError( e, 0.000001 ) )
+		self.assertTrue( tq["rotate"].getValue().equalWithAbsError( e, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
@@ -334,7 +540,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( s1m * grm ).inverse()
 		e = imath.Eulerf( imath.M44f.sansScalingAndShear( m ), ro ) * ( 180.0 / pi )
-		self.assertTrue( tq["outRotate"].getValue().equalWithAbsError( e, 0.000001 ) )
+		self.assertTrue( tq["rotate"].getValue().equalWithAbsError( e, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -343,7 +549,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( s1m * grm ) * ( s2m * grm ).inverse()
 		e = imath.Eulerf( imath.M44f.sansScalingAndShear( m ), ro ) * ( 180.0 / pi )
-		self.assertTrue( tq["outRotate"].getValue().equalWithAbsError( e, 0.000001 ) )
+		self.assertTrue( tq["rotate"].getValue().equalWithAbsError( e, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -352,9 +558,9 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( ( s1m * grm ) * ( s2m * grm ).inverse() ).inverse()
 		e = imath.Eulerf( imath.M44f.sansScalingAndShear( m ), ro ) * ( 180.0 / pi )
-		self.assertTrue( tq["outRotate"].getValue().equalWithAbsError( e, 0.000001 ) )
+		self.assertTrue( tq["rotate"].getValue().equalWithAbsError( e, 0.000001 ) )
 
-	def testOutScale( self ):
+	def testScale( self ):
 
 		from random import Random
 		from datetime import datetime
@@ -374,28 +580,22 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		r = Random( datetime.now() )
 
-		s1s = imath.V3f(
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ) )
-
-		s2s = imath.V3f(
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ) )
-
-		grs = imath.V3f(
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ),
-			( r.random()         * 2.0 ) )
-
-		s1["transform"]["scale"].setValue( s1s )
+		s1["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
 		s1m = s1["transform"].matrix()
 
-		s2["transform"]["scale"].setValue( s2s )
+		s2["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
 		s2m = s2["transform"].matrix()
 
-		gr["transform"]["scale"].setValue( grs )
+		gr["transform"]["scale"].setValue( imath.V3f(
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ),
+			( r.random() * 2.0 ) ) )
 		grm = gr["transform"].matrix()
 
 		s = imath.V3f()
@@ -406,7 +606,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = s1m
 		imath.M44f.extractScaling( m, s )
-		self.assertTrue( tq["outScale"].getValue().equalWithAbsError( s, 0.000001 ) )
+		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
@@ -414,7 +614,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = s1m.inverse()
 		imath.M44f.extractScaling( m, s )
-		self.assertTrue( tq["outScale"].getValue().equalWithAbsError( s, 0.000001 ) )
+		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( False )
@@ -422,7 +622,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( s1m * grm )
 		imath.M44f.extractScaling( m, s )
-		self.assertTrue( tq["outScale"].getValue().equalWithAbsError( s, 0.000001 ) )
+		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["invert"].setValue( True )
@@ -430,7 +630,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( s1m * grm ).inverse()
 		imath.M44f.extractScaling( m, s )
-		self.assertTrue( tq["outScale"].getValue().equalWithAbsError( s, 0.000001 ) )
+		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -439,7 +639,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( s2m * grm ).inverse() * ( s1m * grm )
 		imath.M44f.extractScaling( m, s )
-		self.assertTrue( tq["outScale"].getValue().equalWithAbsError( s, 0.000001 ) )
+		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
 
 		tq["location"].setValue( "/group/sphere1" )
 		tq["relativeLocation"].setValue( "/group/sphere2" )
@@ -448,7 +648,7 @@ class TransformQueryTest( GafferSceneTest.SceneTestCase ):
 
 		m = ( ( s2m * grm ).inverse() * ( s1m * grm ) ).inverse()
 		imath.M44f.extractScaling( m, s )
-		self.assertTrue( tq["outScale"].getValue().equalWithAbsError( s, 0.000001 ) )
+		self.assertTrue( tq["scale"].getValue().equalWithAbsError( s, 0.000001 ) )
 
 if __name__ == "__main__":
 	unittest.main()

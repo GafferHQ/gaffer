@@ -161,6 +161,8 @@ enum TypeId
 	InstancerContextVariablePlugTypeId = 110616,
 	FilterQueryTypeId = 110617,
 	TransformQueryTypeId = 110618,
+	BoundQueryTypeId = 110619,
+
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
 

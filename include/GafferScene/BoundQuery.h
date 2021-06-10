@@ -34,16 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TRANSFORMQUERY_H
-#define GAFFERSCENE_TRANSFORMQUERY_H
+#ifndef GAFFERSCENE_BOUNDQUERY_H
+#define GAFFERSCENE_BOUNDQUERY_H
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/TypeIds.h"
 
+#include "Gaffer/BoxPlug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 
 #include <string>
@@ -51,7 +52,7 @@
 namespace GafferScene
 {
 
-struct GAFFERSCENE_API TransformQuery : Gaffer::ComputeNode
+struct GAFFERSCENE_API BoundQuery : Gaffer::ComputeNode
 {
 	enum class Space
 	{
@@ -60,10 +61,10 @@ struct GAFFERSCENE_API TransformQuery : Gaffer::ComputeNode
 		Relative = 0x02
 	};
 
-	TransformQuery( std::string const& name = defaultName< TransformQuery >() );
-	~TransformQuery() override;
+	BoundQuery( std::string const& name = defaultName< BoundQuery >() );
+	~BoundQuery() override;
 
-	GAFFER_NODE_DECLARE_TYPE( GafferScene::TransformQuery, TransformQueryTypeId, Gaffer::ComputeNode );
+	GAFFER_NODE_DECLARE_TYPE( GafferScene::BoundQuery, BoundQueryTypeId, Gaffer::ComputeNode );
 
 	ScenePlug* scenePlug();
 	ScenePlug const* scenePlug() const;
@@ -73,16 +74,12 @@ struct GAFFERSCENE_API TransformQuery : Gaffer::ComputeNode
 	Gaffer::IntPlug const* spacePlug() const;
 	Gaffer::StringPlug* relativeLocationPlug();
 	Gaffer::StringPlug const* relativeLocationPlug() const;
-	Gaffer::BoolPlug* invertPlug();
-	Gaffer::BoolPlug const* invertPlug() const;
-	Gaffer::M44fPlug* matrixPlug();
-	Gaffer::M44fPlug const* matrixPlug() const;
-	Gaffer::V3fPlug* translatePlug();
-	Gaffer::V3fPlug const* translatePlug() const;
-	Gaffer::V3fPlug* rotatePlug();
-	Gaffer::V3fPlug const* rotatePlug() const;
-	Gaffer::V3fPlug* scalePlug();
-	Gaffer::V3fPlug const* scalePlug() const;
+	Gaffer::Box3fPlug* boundPlug();
+	Gaffer::Box3fPlug const* boundPlug() const;
+	Gaffer::V3fPlug* centerPlug();
+	Gaffer::V3fPlug const* centerPlug() const;
+	Gaffer::V3fPlug* sizePlug();
+	Gaffer::V3fPlug const* sizePlug() const;
 
 	void affects( Gaffer::Plug const* input, AffectedPlugsContainer& outputs ) const override;
 
@@ -91,11 +88,16 @@ protected:
 	void hash( Gaffer::ValuePlug const* output, Gaffer::Context const* context, IECore::MurmurHash& hash ) const override;
 	void compute( Gaffer::ValuePlug* output, Gaffer::Context const* context ) const override;
 
+private:
+
+	Gaffer::AtomicBox3fPlug* internalBoundPlug();
+	Gaffer::AtomicBox3fPlug const* internalBoundPlug() const;
+
 	static size_t g_firstPlugIndex;
 };
 
-IE_CORE_DECLAREPTR( TransformQuery )
+IE_CORE_DECLAREPTR( BoundQuery )
 
 } // GafferScene
 
-#endif // GAFFERSCENE_TRANSFORMQUERY_H
+#endif // GAFFERSCENE_BOUNDQUERY_H
