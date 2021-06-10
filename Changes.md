@@ -14,6 +14,10 @@ Improvements
 ------------
 
 - Serialisation : Reduced script save times by around 50%.
+- Cancellation : Improved responsiveness by supporting cancellation of long computes in the following nodes :
+  - SceneReader
+  - LevelSetOffset
+  - MeshToLevelSet
 - Expression :
   - Improved performance of Python expression evaluation when the same result is required in multiple threads. Specific expression benchmarks have shown a 10x speedup and some production scenes show an overall 15-30% improvement. Caution : This can expose pre-existing bugs in other nodes - see Breaking Changes for details.
   - Improved error message when Python expression assigns an invalid value.
@@ -32,8 +36,6 @@ Improvements
 - SceneAlgo : Reduced threading overhead for `parallelProcessLocations()`, `parallelTraverse()` and `filteredParallelTraverse()`. This is particularly noticeable when visiting locations with many children.
 - Set : Added wildcard support to the `name` plug.
 - GraphEditor : Added tool menu with options to control visibility of annotations.
-- SceneReader : Added support for cancellation of set loading.
-- LevelSetOffset/MeshToLevelSet : Added cancellation support.
 
 Fixes
 -----
