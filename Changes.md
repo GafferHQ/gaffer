@@ -5,6 +5,7 @@ Features
 --------
 
 - TransformQuery : Added a new node to query the transform for a scene location.
+- BoundQuery : Added a new node to query the bound for a scene location.
 
 Documentation
 -------------

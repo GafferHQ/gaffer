@@ -154,6 +154,7 @@ from .UnencapsulateTest import UnencapsulateTest
 from .MotionPathTest import MotionPathTest
 from .FilterQueryTest import FilterQueryTest
 from .TransformQueryTest import TransformQueryTest
+from .BoundQueryTest import BoundQueryTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

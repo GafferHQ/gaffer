@@ -167,6 +167,7 @@ from . import UnencapsulateUI
 from . import MotionPathUI
 from . import FilterQueryUI
 from . import TransformQueryUI
+from . import BoundQueryUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
