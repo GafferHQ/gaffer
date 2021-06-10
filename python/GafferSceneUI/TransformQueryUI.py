@@ -48,10 +48,6 @@ Gaffer.Metadata.registerNode(
 
 	"layout:activator:spaceIsRelative", lambda node : node["space"].getValue() == GafferScene.TransformQuery.Space.Relative,
 
-	# Work around StandardNodeGadget layout bug that would
-	# place the `filter` nodule inside the frame.
-	"nodeGadget:minWidth", 12.0,
-
 	plugs = {
 
 		"scene" : [
