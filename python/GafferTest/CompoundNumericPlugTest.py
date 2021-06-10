@@ -175,6 +175,21 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 1, 2, 3 ) )
 
+	def testDynamicSerialisationNonDefaultInterpretation( self ):
+
+		s = Gaffer.ScriptNode()
+		n = Gaffer.Node()
+		n["p"] = Gaffer.V3fPlug( flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, interpretation = IECore.GeometricData.Interpretation.Vector )
+		n["p"].setValue( imath.V3f( 1, 2, 3 ) )
+		s["n"] = n
+
+		ss = s.serialise()
+
+		s = Gaffer.ScriptNode()
+		s.execute( ss )
+
+		self.assertEqual( s["n"]["p"].interpretation(), IECore.GeometricData.Interpretation.Vector )
+
 	def testDynamicSerialisationWithConnection( self ) :
 
 		s = Gaffer.ScriptNode()

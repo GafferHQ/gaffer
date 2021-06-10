@@ -27,6 +27,7 @@ Fixes
 -----
 
 - Instancer : Fixed variation of prototype root attributes using context variables.
+- CompoundNumericPlug : Fixed serialisation of dynamic plugs with non-default interpretations.
 
 Breaking Changes
 ----------------
