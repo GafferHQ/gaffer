@@ -451,7 +451,8 @@ GAFFER_NODE_DEFINE_TYPE( PointsGridToPoints );
 
 size_t PointsGridToPoints::g_firstPlugIndex = 0;
 
-PointsGridToPoints::PointsGridToPoints( const std::string &name ) : SceneElementProcessor( name )
+PointsGridToPoints::PointsGridToPoints( const std::string &name )
+	:	ObjectProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -496,33 +497,23 @@ const Gaffer::BoolPlug *PointsGridToPoints::invertNamesPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
-void PointsGridToPoints::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+bool PointsGridToPoints::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	SceneElementProcessor::affects( input, outputs );
-
-	if( input == gridPlug() || input == namesPlug() || input == invertNamesPlug() )
-	{
-		outputs.push_back( outPlug()->objectPlug() );
-	}
-}
-
-bool PointsGridToPoints::processesObject() const
-{
-	return true;
+	return input == gridPlug() || input == namesPlug() || input == invertNamesPlug();
 }
 
 void PointsGridToPoints::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	SceneElementProcessor::hashProcessedObject( path, context, h );
+	ObjectProcessor::hashProcessedObject( path, context, h );
 
 	gridPlug()->hash( h );
 	namesPlug()->hash( h );
 	invertNamesPlug()->hash ( h );
 }
 
-IECore::ConstObjectPtr PointsGridToPoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr PointsGridToPoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const
 {
-	const VDBObject *vdbObject = runTimeCast<const VDBObject>( inputObject.get() );
+	const VDBObject *vdbObject = runTimeCast<const VDBObject>( inputObject );
 	if( !vdbObject )
 	{
 		return inputObject;

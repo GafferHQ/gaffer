@@ -40,7 +40,7 @@
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
 
-#include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ObjectProcessor.h"
 
 #include "Gaffer/NumericPlug.h"
 
@@ -52,7 +52,7 @@ class StringPlug;
 namespace GafferVDB
 {
 
-class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API PointsGridToPoints : public GafferScene::ObjectProcessor
 {
 
 	public :
@@ -60,7 +60,7 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcess
 		PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
 		~PointsGridToPoints() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferVDB::PointsGridToPoints, PointsGridToPointsId, GafferScene::SceneElementProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::PointsGridToPoints, PointsGridToPointsId, GafferScene::ObjectProcessor );
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;
@@ -71,13 +71,11 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcess
 		Gaffer::BoolPlug *invertNamesPlug();
 		const Gaffer::BoolPlug *invertNamesPlug() const;
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
 	protected :
 
-		bool processesObject() const override;
+		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
 
 	private :
 

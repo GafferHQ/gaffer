@@ -13,6 +13,7 @@ Improvements
 - Set : Added wildcard support to the `name` plug.
 - GraphEditor : Added tool menu with options to control visibility of annotations.
 - SceneReader : Added support for cancellation of set loading.
+- LevelSetOffset/MeshToLevelSet : Added cancellation support.
 
 API
 ---
@@ -22,6 +23,8 @@ API
   - Added optional `userOnly` argument to `annotationTemplates()`.
 - AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
 - MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
+- Deformer : Added `affectsProcessedObjectBound()`, `hashProcessedObjectBound()` and `computeProcessedObjectBound()` virtual
+  methods. These can optionally be overridden by derived classes to compute faster approximate bounds where possible.
 
 Fixes
 -----
@@ -35,6 +38,12 @@ Breaking Changes
 - RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
 - MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
 - Instancer : Attributes from the prototype root are now placed at the instance root, rather than on the instance group. This allows context variation to potentially vary these attributes. Usually attribute inheritance will mean that this behaves the same, but scenes which explicitly override attributes at specific locations in the hierarchy after an instancer could see modified behaviour.
+- PointsGridToPoints : Changed default value of `filter` input, so that a filter must now be connected to specify the objects to modify.
+- GafferVDB : Changed base class of the following nodes :
+  - LevelSetToMesh
+  - MeshToLevelSet
+  - LevelSetOffset
+  - PointsGridToPoints
 
 0.60.0.0b1
 ==========
