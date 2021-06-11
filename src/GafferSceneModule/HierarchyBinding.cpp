@@ -42,6 +42,7 @@
 #include "GafferScene/CollectScenes.h"
 #include "GafferScene/Duplicate.h"
 #include "GafferScene/Encapsulate.h"
+#include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/Group.h"
 #include "GafferScene/Instancer.h"
 #include "GafferScene/Isolate.h"
@@ -162,4 +163,6 @@ void GafferSceneModule::bindHierarchy()
 			.value( "Fixed", MotionPath::SamplingMode::Fixed )
 			;
 	}
+
+	GafferBindings::DependencyNodeClass<ExistenceQuery>();
 }

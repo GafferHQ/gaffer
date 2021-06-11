@@ -168,6 +168,7 @@ from . import MotionPathUI
 from . import FilterQueryUI
 from . import TransformQueryUI
 from . import BoundQueryUI
+from . import ExistenceQueryUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
