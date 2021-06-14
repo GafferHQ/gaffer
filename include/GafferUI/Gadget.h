@@ -315,7 +315,15 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		// Sets the GL state up with the name attribute and transform for
 		// this Gadget, makes sure the style is bound and then calls doRenderLayer().
-		void renderLayer( Layer layer, const Style *currentStyle = nullptr ) const;
+		//void renderLayer( Layer layer, const Style *currentStyle = nullptr ) const;
+
+		struct RenderItem
+		{
+			const Gadget *gadget;
+			const Imath::M44f transform;
+		};
+
+		void getRenderItems( const Imath::M44f &transform, std::vector<RenderItem> &renderItems ) const;
 
 		void styleChanged();
 		void emitDescendantVisibilityChanged();

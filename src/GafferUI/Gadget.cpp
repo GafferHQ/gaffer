@@ -313,59 +313,56 @@ Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 void Gadget::render() const
 {
 	bound(); // Updates layout if necessary
-	for( int layer = (int)Layer::Back; layer <= (int)Layer::Front; ++layer )
+
+	static std::vector<RenderItem> renderItems;
+	renderItems.clear();
+
+	M44f transform;
+	glGetFloatv( GL_MODELVIEW_MATRIX, transform.getValue() );
+
+	getRenderItems( transform, renderItems );
+
+	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+
+	const Style *currentStyle = style();
+	currentStyle->bind();
+	glPushMatrix();
+	for( int layerIndex = (int)Layer::Back; layerIndex <= (int)Layer::Front; ++layerIndex )
 	{
-		renderLayer( (Layer)layer, /* currentStyle = */ nullptr );
+		Layer layer = Layer(layerIndex);
+		for( const RenderItem &renderItem : renderItems )
+		{
+			glLoadMatrixf( renderItem.transform.getValue() );
+			if( selector )
+			{
+				selector->loadName( renderItem.gadget->m_glName );
+			}
+			renderItem.gadget->doRenderLayer( layer, currentStyle );
+		}
 	}
+	glPopMatrix();
 }
 
-void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
+void Gadget::getRenderItems( const M44f &transform, std::vector<RenderItem> &renderItems ) const
 {
+	M44f combinedTransform = transform;
 	const bool haveTransform = m_transform != M44f();
 	if( haveTransform )
 	{
-		glPushMatrix();
-		glMultMatrixf( m_transform.getValue() );
+		combinedTransform *= m_transform;
 	}
 
-		if( !currentStyle )
-		{
-			currentStyle = style();
-			currentStyle->bind();
-		}
-		else
-		{
-			if( m_style )
-			{
-				m_style->bind();
-				currentStyle = m_style.get();
-			}
-		}
+	renderItems.push_back( { this, combinedTransform } );
 
-		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
-		{
-			selector->loadName( m_glName );
-		}
-
-		doRenderLayer( layer, currentStyle );
-
-		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-		{
-			// Cast is safe because of the guarantees acceptsChild() gives us
-			const Gadget *c = static_cast<const Gadget *>( it->get() );
-			if( !c->getVisible() )
-			{
-				continue;
-			}
-			if( c->hasLayer( layer ) )
-			{
-				c->renderLayer( layer, currentStyle );
-			}
-		}
-
-	if( haveTransform )
+	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
-		glPopMatrix();
+		// Cast is safe because of the guarantees acceptsChild() gives us
+		const Gadget *c = static_cast<const Gadget *>( it->get() );
+		if( !c->getVisible() )
+		{
+			continue;
+		}
+		c->getRenderItems( combinedTransform, renderItems );
 	}
 }
 
