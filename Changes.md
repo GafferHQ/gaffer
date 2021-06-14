@@ -137,9 +137,10 @@ Build
 - Moved minimum required C++ standard to C++14.
 - Moved minimum required TBB version to 2018 Update 3.
 - Dependencies : Updated to GafferHQ/dependencies 3.0.0 :
-  - OpenImageIO 2.2.11.1.
+  - USD 21.05.
+  - OpenImageIO 2.2.15.1.
+  - OpenShadingLanguage 1.11.14.1.
   - LibTIFF 4.1.0.
-  - OpenShadingLanguage 1.11.11.0.
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
