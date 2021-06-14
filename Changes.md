@@ -1,52 +1,5 @@
-0.60.0.0bx
-==========
-
-Features
---------
-
-- InteractiveRender : Added support for motion blur.
-- Profiling : Added "Tools/Profiling" menu to annotate nodes with performance metrics.
-
-Improvements
-------------
-
-- Set : Added wildcard support to the `name` plug.
-- GraphEditor : Added tool menu with options to control visibility of annotations.
-- SceneReader : Added support for cancellation of set loading.
-- LevelSetOffset/MeshToLevelSet : Added cancellation support.
-
-API
----
-
-- MetadataAlgo :
-  - Added optional `user` argument to `addAnnotationTemplate()`.
-  - Added optional `userOnly` argument to `annotationTemplates()`.
-- AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
-- MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
-- Deformer : Added `affectsProcessedObjectBound()`, `hashProcessedObjectBound()` and `computeProcessedObjectBound()` virtual
-  methods. These can optionally be overridden by derived classes to compute faster approximate bounds where possible.
-
-Fixes
------
-
-- Instancer : Fixed variation of prototype root attributes using context variables.
-- CompoundNumericPlug : Fixed serialisation of dynamic plugs with non-default interpretations.
-
-Breaking Changes
-----------------
-
-- RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
-- MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
-- Instancer : Attributes from the prototype root are now placed at the instance root, rather than on the instance group. This allows context variation to potentially vary these attributes. Usually attribute inheritance will mean that this behaves the same, but scenes which explicitly override attributes at specific locations in the hierarchy after an instancer could see modified behaviour.
-- PointsGridToPoints : Changed default value of `filter` input, so that a filter must now be connected to specify the objects to modify.
-- GafferVDB : Changed base class of the following nodes :
-  - LevelSetToMesh
-  - MeshToLevelSet
-  - LevelSetOffset
-  - PointsGridToPoints
-
-0.60.0.0b1
-==========
+0.60.x.x
+========
 
 > Note : This version is built against Arnold 6.2.0.1, and is not compatible with earlier Arnold versions.
 
@@ -54,6 +7,8 @@ Features
 --------
 
 - Spreadsheet : Added drag and drop reordering of rows.
+- InteractiveRender : Added support for motion blur.
+- Profiling : Added "Tools/Profiling" menu to annotate nodes with performance metrics.
 
 Improvements
 ------------
@@ -75,14 +30,19 @@ Improvements
 - ContextVariables : Improved performance by around 50%.
 - FilterResults : Improved performance.
 - SceneAlgo : Reduced threading overhead for `parallelProcessLocations()`, `parallelTraverse()` and `filteredParallelTraverse()`. This is particularly noticeable when visiting locations with many children.
+- Set : Added wildcard support to the `name` plug.
+- GraphEditor : Added tool menu with options to control visibility of annotations.
+- SceneReader : Added support for cancellation of set loading.
+- LevelSetOffset/MeshToLevelSet : Added cancellation support.
 
 Fixes
 -----
 
+- Instancer : Fixed variation of prototype root attributes using context variables.
 - ScriptNode : Fixed bugs that allowed global variables to remain in the context after they had been disabled, renamed or deleted.
-- PlugValueWidget : Fixed bug that tried to update the widget before all graph edits were complete.
 - UDIMQuery and OSLImage : Fixed incorrectly isolated TBB which could cause hang when other nodes use Standard cache policy. Now uses TaskCollaboration to improve performance.
 - Wrapper : Removed the `PYTHONHOME` environment variable. This fixes problems running Gaffer in python-enabled versions of `gdb`.
+- CompoundNumericPlug : Fixed serialisation of dynamic plugs with non-default interpretations.
 
 API
 ---
@@ -103,6 +63,13 @@ API
 - Expression : Added `Engine::executeCachePolicy()` method which must be implemented by subclasses.
 - ImageAlgo : Added constants for the default channel names - `channelNameR` etc.
 - SceneAlgo : Added optional `root` argument to `filteredParallelTraverse( scene, pathMatcher )`.
+- MetadataAlgo :
+  - Added optional `user` argument to `addAnnotationTemplate()`.
+  - Added optional `userOnly` argument to `annotationTemplates()`.
+- AnnotationsGadget : Added `setVisibleAnnotations()` and `getVisibleAnnotations()` methods to allow filtering of annotations.
+- MonitorAlgo : Added `removePerformanceAnnotations()` and `removeContextAnnotations()` methods.
+- Deformer : Added `affectsProcessedObjectBound()`, `hashProcessedObjectBound()` and `computeProcessedObjectBound()` virtual
+  methods. These can optionally be overridden by derived classes to compute faster approximate bounds where possible.
 
 Breaking Changes
 ----------------
@@ -153,6 +120,16 @@ Breaking Changes
 - Node : Removed `plugFlagsChangedSignal()`. We aim to phase flags out completely in future, and none of the current flags are expected to be changed after construction.
 - ContextProcessor : Added `storage` argument to `processContext()` method.
 - FilteredChildIterator/FilteredRecursiveChildIterator : Annotated all namespace-level typedefs with `[[deprecated]]`. These were already documented as deprecated in Gaffer 0.59.0.0, but their use will now trigger compiler warnings. Please use the class-level typedefs instead, for example `Plug::Iterator` in place of `PlugIterator`.
+- RendererAlgo : Removed from the API. The render adaptor registry and `applyCameraGlobals()` are still available, but have been moved to SceneAlgo.
+- MonitorAlgo : Removed deprecated `annotate()` overloads. Source compatibility is retained.
+- Instancer : Attributes from the prototype root are now placed at the instance root, rather than on the instance group. This allows context variation to potentially vary these attributes. Usually attribute inheritance will mean that this behaves the same, but scenes which explicitly override attributes at specific locations in the hierarchy after an instancer could see modified behaviour.
+- PointsGridToPoints : Changed default value of `filter` input, so that a filter must now be connected to specify the objects to modify.
+- GafferVDB : Changed base class of the following nodes :
+  - LevelSetToMesh
+  - MeshToLevelSet
+  - LevelSetOffset
+  - PointsGridToPoints
+
 
 Build
 -----
