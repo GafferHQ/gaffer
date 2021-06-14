@@ -322,6 +322,10 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 			const Gadget *gadget;
 			const Imath::M44f transform;
 		};
+		mutable std::vector<RenderItem> m_renderItems;
+
+		void processLayout() const;
+		
 
 		void getRenderItems( const Imath::M44f &transform, std::vector<RenderItem> &renderItems ) const;
 

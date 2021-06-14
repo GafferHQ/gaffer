@@ -312,15 +312,15 @@ Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 
 void Gadget::render() const
 {
-	bound(); // Updates layout if necessary
+	processLayout(); // Updates layout if necessary
 
-	static std::vector<RenderItem> renderItems;
-	renderItems.clear();
+	M44f viewTransform;
+	glGetFloatv( GL_MODELVIEW_MATRIX, viewTransform.getValue() );
 
-	M44f transform;
-	glGetFloatv( GL_MODELVIEW_MATRIX, transform.getValue() );
-
-	getRenderItems( transform, renderItems );
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glMultMatrixf( viewTransform.getValue() );
+	glMatrixMode( GL_MODELVIEW );
 
 	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
 
@@ -330,7 +330,7 @@ void Gadget::render() const
 	for( int layerIndex = (int)Layer::Back; layerIndex <= (int)Layer::Front; ++layerIndex )
 	{
 		Layer layer = Layer(layerIndex);
-		for( const RenderItem &renderItem : renderItems )
+		for( const RenderItem &renderItem : m_renderItems )
 		{
 			glLoadMatrixf( renderItem.transform.getValue() );
 			if( selector )
@@ -341,6 +341,10 @@ void Gadget::render() const
 		}
 	}
 	glPopMatrix();
+
+	glMatrixMode( GL_PROJECTION );
+	glPopMatrix();
+	glMatrixMode( GL_MODELVIEW );
 }
 
 void Gadget::getRenderItems( const M44f &transform, std::vector<RenderItem> &renderItems ) const
@@ -406,11 +410,11 @@ bool Gadget::hasLayer( Layer layer ) const
 	return true;
 }
 
-Imath::Box3f Gadget::bound() const
+void Gadget::processLayout() const
 {
 	if( !m_layoutDirty )
 	{
-		return m_bound;
+		return;
 	}
 
 	updateLayout();
@@ -427,8 +431,14 @@ Imath::Box3f Gadget::bound() const
 		b = Imath::transform( b, c->getTransform() );
 		m_bound.extendBy( b );
 	}
-
+	m_renderItems.clear();
+	getRenderItems( M44f(), m_renderItems );
 	m_layoutDirty = false;
+}
+
+Imath::Box3f Gadget::bound() const
+{
+	processLayout();
 	return m_bound;
 }
 
