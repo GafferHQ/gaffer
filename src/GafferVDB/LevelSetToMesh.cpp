@@ -36,17 +36,14 @@
 
 #include "GafferVDB/LevelSetToMesh.h"
 
-#include "IECoreVDB/VDBObject.h"
-
 #include "Gaffer/StringPlug.h"
+
+#include "IECoreVDB/VDBObject.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/VolumeToMesh.h"
-
-#include "boost/mpl/for_each.hpp"
-#include "boost/mpl/list.hpp"
 
 using namespace std;
 using namespace Imath;
