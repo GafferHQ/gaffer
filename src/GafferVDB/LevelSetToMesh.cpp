@@ -252,24 +252,3 @@ IECore::ConstObjectPtr LevelSetToMesh::computeProcessedObject( const ScenePath &
 
 	return volumeToMesh( grid, isoValuePlug()->getValue(), adaptivityPlug()->getValue() );
 }
-
-bool LevelSetToMesh::affectsProcessedObjectBound( const Gaffer::Plug *input ) const
-{
-	return input == inPlug()->boundPlug() || input == isoValuePlug();
-}
-
-void LevelSetToMesh::hashProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	inPlug()->boundPlug()->hash( h );
-	isoValuePlug()->hash( h );
-}
-
-Imath::Box3f LevelSetToMesh::computeProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context ) const
-{
-	/// \todo `in.bound` includes the child bounds. Ideally we
-	/// would have a separate `in.objectBound` with just the bounds
-	/// of the input object.
-	const Box3f inputBound = inPlug()->boundPlug()->getValue();
-	const V3f offset( isoValuePlug()->getValue() );
-	return Box3f( inputBound.min - offset, inputBound.max + offset );
-}
