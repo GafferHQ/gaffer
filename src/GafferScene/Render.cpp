@@ -232,6 +232,27 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 
 void Render::execute() const
 {
+	executeInternal( /* flushCaches = */ true );
+}
+
+void Render::executeSequence( const std::vector<float> &frames ) const
+{
+	Context::EditableScope frameScope( Context::current() );
+
+	for( auto frame : frames )
+	{
+		frameScope.setFrame( frame );
+		// We don't flush Gaffer's caches when rendering batches of frames,
+		// because that would mean starting scene generation from scratch
+		// each time. We assume that if renders have been batched, they are
+		// lightweight in the first place (otherwise there is little benefit
+		// in sharing the startup cost between several of them).
+		executeInternal( /* flushCaches = */ frames.size() == 1 );
+	}
+}
+
+void Render::executeInternal( bool flushCaches ) const
+{
 	if( inPlug()->source()->direction() != Plug::Out )
 	{
 		return;
@@ -313,17 +334,17 @@ void Render::execute() const
 		return;
 	}
 
-	// Now we have generated the scene, flush Cortex and Gaffer caches to
-	// provide more memory to the renderer.
-	/// \todo This is not ideal. If dispatch is batched then multiple
-	/// renders in the same process might actually benefit from sharing
-	/// the cache. And if executing directly within the gui app
-	/// flushing the caches is definitely not wanted. Since these
-	/// scenarios are currently uncommon, we prioritise the common
-	/// case of performing a single render from within `gaffer execute`,
-	/// but it would be good to do better.
-	ObjectPool::defaultObjectPool()->clear();
-	ValuePlug::clearCache();
+	if( flushCaches )
+	{
+		// Now we have generated the scene, flush Cortex and Gaffer caches to
+		// provide more memory to the renderer.
+		/// \todo If executing directly within the gui app flushing the caches
+		/// is definitely not wanted. Since this scenario is currently uncommon,
+		/// we prioritise the common case of performing a single render from within
+		/// `gaffer execute`, but it would be good to do better.
+		ObjectPool::defaultObjectPool()->clear();
+		ValuePlug::clearCache();
+	}
 
 	renderer->render();
 	renderer.reset();

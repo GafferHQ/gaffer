@@ -46,6 +46,9 @@ Improvements
 - SceneAlgo : Reduced threading overhead for `parallelProcessLocations()`, `parallelTraverse()` and `filteredParallelTraverse()`. This is particularly noticeable when visiting locations with many children.
 - Set : Added wildcard support to the `name` plug.
 - GraphEditor : Added tool menu with options to control visibility of annotations.
+- Render : Improved scene generation times for renders that use `dispatcher.batchSize` to
+  render multiple frames at once. Previously Gaffer's cache was cleared after scene generation
+  on each frame, but this is now only done for single-frame batches.
 
 Fixes
 -----
