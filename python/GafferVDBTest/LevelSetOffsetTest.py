@@ -69,13 +69,13 @@ class LevelSetOffsetTest( GafferVDBTest.VDBTestCase ) :
 
 		# sphere centred at the origin so we just take the x value of the max and it should equal the radius
 		# hopefully the leafCounts should go like the square of the radius.
-		self.assertEqualTolerance( 5.0, levelSetOffset['out'].bound( "sphere" ).max()[0], 0.05 )
+		self.assertAlmostEqual( 5.0, levelSetOffset['out'].bound( "sphere" ).max()[0], delta = 0.05 )
 		self.assertTrue( 1020 <= levelSetOffset['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 1040 )
 
 		levelSetOffset["offset"].setValue( -1.0 )
-		self.assertEqualTolerance( 6.0, levelSetOffset['out'].bound( "sphere" ).max()[0], 0.05 )
+		self.assertAlmostEqual( 6.0, levelSetOffset['out'].bound( "sphere" ).max()[0], delta = 0.05 )
 		self.assertTrue( 1420 <= levelSetOffset['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 1450)
 
 		levelSetOffset["offset"].setValue( 1.0 )
-		self.assertEqualTolerance( 4.0, levelSetOffset['out'].bound( "sphere" ).max()[0], 0.05 )
+		self.assertAlmostEqual( 4.0, levelSetOffset['out'].bound( "sphere" ).max()[0], delta = 0.05 )
 		self.assertTrue( 640 <= levelSetOffset['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 650)
