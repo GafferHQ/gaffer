@@ -90,6 +90,11 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
 		self.assertSceneValid( levelSetToMesh["out"] )
+		self.assertEqual( levelSetToMesh["adjustBounds"].getValue(), False )
+		self.assertEqual( levelSetToMesh["out"].bound( "/sphere" ), levelSetToMesh["in"].bound( "/sphere" ) )
+
+		levelSetToMesh["adjustBounds"].setValue( True )
+		self.assertSceneValid( levelSetToMesh["out"] )
 		self.assertEqual(
 			levelSetToMesh["out"].bound( "/sphere" ),
 			levelSetToMesh["out"].object( "/sphere" ).bound()

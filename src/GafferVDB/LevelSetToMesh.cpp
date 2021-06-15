@@ -180,6 +180,11 @@ LevelSetToMesh::LevelSetToMesh( const std::string &name )
 	addChild( new FloatPlug( "isoValue", Plug::In, 0.0f ) );
 	addChild( new FloatPlug( "adaptivity", Plug::In, 0.0f, 0.0f, 1.0f ) );
 
+	// The output mesh will always be bounded by the input level set, and only
+	// in rare cases will it be shrunk enough to warrant the cost of computing
+	// exact bounds. So we default `adjustBounds` to `false`.
+	adjustBoundsPlug()->setValue( false );
+	adjustBoundsPlug()->resetDefault();
 }
 
 LevelSetToMesh::~LevelSetToMesh()
