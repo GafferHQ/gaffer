@@ -1,3 +1,11 @@
+0.58.6.x (relative to 0.58.6.6)
+========
+
+Fixes
+-----
+
+- ArnoldMeshLight : Fixed label for `cameraVisibility` plug.
+
 0.58.6.6 (relative to 0.58.6.5)
 ========
 
