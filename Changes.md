@@ -40,6 +40,9 @@ Fixes
 
 - Instancer : Fixed variation of prototype root attributes using context variables.
 - ScriptNode : Fixed bugs that allowed global variables to remain in the context after they had been disabled, renamed or deleted.
+- SceneReader :
+  - Fixed crash when reading Alembic caches with non-scalar `userProperties`.
+  - Fixed crash when reading Alembic caches with invalid primitive variables.
 - UDIMQuery and OSLImage : Fixed incorrectly isolated TBB which could cause hang when other nodes use Standard cache policy. Now uses TaskCollaboration to improve performance.
 - Wrapper : Removed the `PYTHONHOME` environment variable. This fixes problems running Gaffer in python-enabled versions of `gdb`.
 - CompoundNumericPlug : Fixed serialisation of dynamic plugs with non-default interpretations.
