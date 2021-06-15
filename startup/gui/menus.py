@@ -346,6 +346,7 @@ nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = 
 nodeMenu.append( "/Scene/Utility/Filter Query", GafferScene.FilterQuery, searchText = "FilterQuery" )
 nodeMenu.append( "/Scene/Utility/Transform Query", GafferScene.TransformQuery, searchText = "TransformQuery" )
 nodeMenu.append( "/Scene/Utility/Bound Query", GafferScene.BoundQuery, searchText = "BoundQuery" )
+nodeMenu.append( "/Scene/Utility/Existence Query", GafferScene.ExistenceQuery, searchText = "ExistenceQuery" )
 
 # Image nodes
 

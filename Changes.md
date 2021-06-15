@@ -156,6 +156,13 @@ Features
 
 - TransformQuery : Added a new node to query the transform for a scene location.
 - BoundQuery : Added a new node to query the bound for a scene location.
+- ExistenceQuery : Added a new node to query whether a scene location exists.
+
+Improvements
+------------
+
+- OSLShader : Reduced loading times where many nodes reference the same shader.
+- Spreadsheet : Added `activeRowNames` plug to the Node Editor UI, in the Advanced tab.
 
 Documentation
 -------------
