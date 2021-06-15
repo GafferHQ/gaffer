@@ -35,6 +35,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferOSL/Private/CapturingErrorHandler.h"
+// `OpenImageIO/strutil.h` includes `OpenImageIO/detail/farmhash.h`, and
+// that leaks all sorts of macros, including one for `fmix` which breaks
+// the definition of Cortex's perfectly well namespaced `IECore::fmix()`
+// in `IECore/MurmurHash.inl`. So we must undefine the offending macro.
+// See https://github.com/OpenImageIO/oiio/issues/3000.
+#undef fmix
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/Context.h"
