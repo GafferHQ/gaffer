@@ -222,7 +222,7 @@ IECore::ConstObjectPtr MeshTangents::computeProcessedObject( const ScenePath &pa
 		std::string uTangent = uTangentPlug()->getValue();
 		std::string vTangent = vTangentPlug()->getValue();
 
-		tangentPrimvars = MeshAlgo::calculateTangentsFromUV( mesh, uvSet, position, ortho, leftHanded );
+		tangentPrimvars = MeshAlgo::calculateTangentsFromUV( mesh, uvSet, position, ortho, leftHanded, context->canceller() );
 
 		meshWithTangents->variables[uTangent] = tangentPrimvars.first;
 		meshWithTangents->variables[vTangent] = tangentPrimvars.second;
@@ -235,15 +235,15 @@ IECore::ConstObjectPtr MeshTangents::computeProcessedObject( const ScenePath &pa
 
 		if ( mode == Mode::FirstEdge )
 		{
-			tangentPrimvars = MeshAlgo::calculateTangentsFromFirstEdge( mesh, position, normal, ortho, leftHanded  );
+			tangentPrimvars = MeshAlgo::calculateTangentsFromFirstEdge( mesh, position, normal, ortho, leftHanded, context->canceller() );
 		}
 		else if ( mode == Mode::TwoEdges )
 		{
-			tangentPrimvars = MeshAlgo::calculateTangentsFromTwoEdges( mesh, position, normal, ortho, leftHanded  );
+			tangentPrimvars = MeshAlgo::calculateTangentsFromTwoEdges( mesh, position, normal, ortho, leftHanded, context->canceller() );
 		}
 		else
 		{
-			tangentPrimvars = MeshAlgo::calculateTangentsFromPrimitiveCentroid( mesh, position, normal, ortho, leftHanded  );
+			tangentPrimvars = MeshAlgo::calculateTangentsFromPrimitiveCentroid( mesh, position, normal, ortho, leftHanded, context->canceller() );
 		}
 
 		meshWithTangents->variables[tangent] = tangentPrimvars.first;

@@ -141,5 +141,5 @@ IECore::ConstObjectPtr DeleteFaces::computeProcessedObject( const ScenePath &pat
 		throw InvalidArgumentException( boost::str( boost::format( "DeleteFaces : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
 	}
 
-	return MeshAlgo::deleteFaces( mesh, it->second, invertPlug()->getValue() );
+	return MeshAlgo::deleteFaces( mesh, it->second, invertPlug()->getValue(), context->canceller() );
 }

@@ -38,7 +38,7 @@
 
 #include "Gaffer/StringPlug.h"
 
-#include "IECoreScene/MeshNormalsOp.h"
+#include "IECoreScene/MeshAlgo.h"
 #include "IECoreScene/MeshPrimitive.h"
 
 using namespace IECore;
@@ -153,10 +153,7 @@ IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, 
 
 	if( doNormals )
 	{
-		IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
-		normalOp->inputParameter()->setValue( result );
-		normalOp->copyParameter()->setTypedValue( false );
-		normalOp->operate();
+		result->variables[ "N" ] = MeshAlgo::calculateNormals( result.get(), PrimitiveVariable::Interpolation::Vertex, "P", context->canceller() );
 	}
 
 	return result;

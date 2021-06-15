@@ -164,7 +164,8 @@ IECore::ConstObjectPtr MeshDistortion::computeProcessedObject( const ScenePath &
 		mesh,
 		uvSet,
 		referencePosition,
-		position
+		position,
+		context->canceller()
 	);
 
 	MeshPrimitivePtr result = mesh->copy();

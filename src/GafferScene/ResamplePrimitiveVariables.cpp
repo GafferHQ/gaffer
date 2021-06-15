@@ -98,7 +98,7 @@ void ResamplePrimitiveVariables::processPrimitiveVariable( const ScenePath &path
 
 	if( const MeshPrimitive *meshPrimitive = IECore::runTimeCast<const MeshPrimitive>( inputGeometry.get() ) )
 	{
-		MeshAlgo::resamplePrimitiveVariable( meshPrimitive, variable, interpolation );
+		MeshAlgo::resamplePrimitiveVariable( meshPrimitive, variable, interpolation, context->canceller() );
 	}
 	else if( const CurvesPrimitive *curvesPrimitive = IECore::runTimeCast<const CurvesPrimitive>( inputGeometry.get() ) )
 	{

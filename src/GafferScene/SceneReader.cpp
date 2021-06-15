@@ -342,7 +342,7 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 		return parent->objectPlug()->defaultValue();
 	}
 
-	return s->readObject( context->getTime() );
+	return s->readObject( context->getTime(), context->canceller() );
 }
 
 void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
