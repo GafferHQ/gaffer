@@ -1,3 +1,11 @@
+0.60.x.x
+======== (relative to 0.60.1.0)
+
+Improvements
+------------
+
+- GafferUI : Fix edge artifacts when rendering transparent icons ( Requires Cortex 10.2.1.0 to get perfect results, but is an improvement even without it )
+
 0.60.1.0 (relative to 0.60.0.0)
 ========
 
