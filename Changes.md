@@ -11,12 +11,8 @@ Features
 Improvements
 ------------
 
-- Spreadsheet : Added `activeRowNames` plug to the Node Editor UI, in the Advanced tab.
-
-Improvements
-------------
-
 - OSLShader : Reduced loading times where many nodes reference the same shader.
+- Spreadsheet : Added `activeRowNames` plug to the Node Editor UI, in the Advanced tab.
 
 Documentation
 -------------
