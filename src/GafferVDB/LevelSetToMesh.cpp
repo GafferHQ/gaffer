@@ -219,6 +219,7 @@ const Gaffer::FloatPlug *LevelSetToMesh::adaptivityPlug() const
 bool LevelSetToMesh::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
+		Deformer::affectsProcessedObject( input ) ||
 		input == isoValuePlug() ||
 		input == adaptivityPlug() ||
 		input == gridPlug()

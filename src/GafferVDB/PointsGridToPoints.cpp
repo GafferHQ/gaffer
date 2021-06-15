@@ -499,7 +499,10 @@ const Gaffer::BoolPlug *PointsGridToPoints::invertNamesPlug() const
 
 bool PointsGridToPoints::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	return input == gridPlug() || input == namesPlug() || input == invertNamesPlug();
+	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
+		input == gridPlug() || input == namesPlug() || input == invertNamesPlug()
+	;
 }
 
 void PointsGridToPoints::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const

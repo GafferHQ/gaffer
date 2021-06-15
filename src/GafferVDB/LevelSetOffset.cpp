@@ -91,7 +91,11 @@ const Gaffer::FloatPlug *LevelSetOffset::offsetPlug() const
 
 bool LevelSetOffset::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	return input == gridPlug() || input == offsetPlug();
+	return
+		Deformer::affectsProcessedObject( input ) ||
+		input == gridPlug() ||
+		input == offsetPlug()
+	;
 }
 
 void LevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
