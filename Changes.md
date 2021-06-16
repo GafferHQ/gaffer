@@ -1,4 +1,4 @@
-0.60.x.x
+0.60.0.0
 ========
 
 > Note : This version is built against Arnold 6.2.0.1, and is not compatible with earlier Arnold versions.
