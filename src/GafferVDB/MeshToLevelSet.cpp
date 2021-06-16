@@ -187,6 +187,7 @@ const FloatPlug *MeshToLevelSet::interiorBandwidthPlug() const
 bool MeshToLevelSet::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
+		ObjectProcessor::affectsProcessedObject( input ) ||
 		input == gridPlug() ||
 		input == voxelSizePlug() ||
 		input == exteriorBandwidthPlug() ||

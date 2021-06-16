@@ -36,17 +36,14 @@
 
 #include "GafferVDB/LevelSetToMesh.h"
 
-#include "IECoreVDB/VDBObject.h"
-
 #include "Gaffer/StringPlug.h"
+
+#include "IECoreVDB/VDBObject.h"
 
 #include "IECoreScene/MeshPrimitive.h"
 
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/VolumeToMesh.h"
-
-#include "boost/mpl/for_each.hpp"
-#include "boost/mpl/list.hpp"
 
 using namespace std;
 using namespace Imath;
@@ -183,6 +180,11 @@ LevelSetToMesh::LevelSetToMesh( const std::string &name )
 	addChild( new FloatPlug( "isoValue", Plug::In, 0.0f ) );
 	addChild( new FloatPlug( "adaptivity", Plug::In, 0.0f, 0.0f, 1.0f ) );
 
+	// The output mesh will always be bounded by the input level set, and only
+	// in rare cases will it be shrunk enough to warrant the cost of computing
+	// exact bounds. So we default `adjustBounds` to `false`.
+	adjustBoundsPlug()->setValue( false );
+	adjustBoundsPlug()->resetDefault();
 }
 
 LevelSetToMesh::~LevelSetToMesh()
@@ -222,6 +224,7 @@ const Gaffer::FloatPlug *LevelSetToMesh::adaptivityPlug() const
 bool LevelSetToMesh::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return
+		Deformer::affectsProcessedObject( input ) ||
 		input == isoValuePlug() ||
 		input == adaptivityPlug() ||
 		input == gridPlug()
@@ -253,25 +256,4 @@ IECore::ConstObjectPtr LevelSetToMesh::computeProcessedObject( const ScenePath &
 	}
 
 	return volumeToMesh( grid, isoValuePlug()->getValue(), adaptivityPlug()->getValue() );
-}
-
-bool LevelSetToMesh::affectsProcessedObjectBound( const Gaffer::Plug *input ) const
-{
-	return input == inPlug()->boundPlug() || input == isoValuePlug();
-}
-
-void LevelSetToMesh::hashProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	inPlug()->boundPlug()->hash( h );
-	isoValuePlug()->hash( h );
-}
-
-Imath::Box3f LevelSetToMesh::computeProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context ) const
-{
-	/// \todo `in.bound` includes the child bounds. Ideally we
-	/// would have a separate `in.objectBound` with just the bounds
-	/// of the input object.
-	const Box3f inputBound = inPlug()->boundPlug()->getValue();
-	const V3f offset( isoValuePlug()->getValue() );
-	return Box3f( inputBound.min - offset, inputBound.max + offset );
 }

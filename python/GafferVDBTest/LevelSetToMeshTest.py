@@ -75,27 +75,41 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		self.assertTrue( isinstance( mesh, IECoreScene.MeshPrimitive) )
 
 	def testChangingIsoValueUpdatesBounds ( self ) :
+
 		sphere = GafferScene.Sphere()
 		sphere["radius"].setValue( 5 )
 
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
 		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.05 )
-		meshToLevelSet["exteriorBandwidth"].setValue( 4.0 )
-		meshToLevelSet["interiorBandwidth"].setValue( 4.0 )
+		meshToLevelSet["interiorBandwidth"].setValue( 100 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
 		levelSetToMesh = GafferVDB.LevelSetToMesh()
 		self.setFilter( levelSetToMesh, path='/sphere' )
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
-		self.assertEqualTolerance( 5.0, levelSetToMesh['out'].bound( "sphere" ).max()[0], 0.05 )
+		self.assertSceneValid( levelSetToMesh["out"] )
+		self.assertEqual( levelSetToMesh["adjustBounds"].getValue(), False )
+		self.assertEqual( levelSetToMesh["out"].bound( "/sphere" ), levelSetToMesh["in"].bound( "/sphere" ) )
 
-		levelSetToMesh['isoValue'].setValue(0.5)
-		self.assertEqualTolerance( 5.5, levelSetToMesh['out'].bound( "sphere" ).max()[0], 0.05 )
+		levelSetToMesh["adjustBounds"].setValue( True )
+		self.assertSceneValid( levelSetToMesh["out"] )
+		self.assertEqual(
+			levelSetToMesh["out"].bound( "/sphere" ),
+			levelSetToMesh["out"].object( "/sphere" ).bound()
+		)
+		bound = levelSetToMesh["out"].bound( "/sphere" )
 
-		levelSetToMesh['isoValue'].setValue(-0.5)
-		self.assertEqualTolerance( 4.5, levelSetToMesh['out'].bound( "sphere" ).max()[0], 0.05 )
+		levelSetToMesh["isoValue"].setValue( -0.5 ) # Shrinks the output mesh
+
+		self.assertSceneValid( levelSetToMesh["out"] )
+		self.assertEqual(
+			levelSetToMesh["out"].bound( "/sphere" ),
+			levelSetToMesh["out"].object( "/sphere" ).bound()
+		)
+		self.assertTrue( bound.intersects( levelSetToMesh["out"].bound( "/sphere" ).min() ) )
+		self.assertTrue( bound.intersects( levelSetToMesh["out"].bound( "/sphere" ).max() ) )
 
 	def testIncreasingAdapativityDecreasesPolyCount( self ) :
 		sphere = GafferScene.Sphere()

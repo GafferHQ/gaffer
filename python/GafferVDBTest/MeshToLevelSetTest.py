@@ -44,12 +44,21 @@ import GafferVDBTest
 import os
 import GafferScene
 
-
 class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
-	def setUp( self ) :
-		GafferVDBTest.VDBTestCase.setUp( self )
-		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
+
+	def testAffects( self ) :
+
+		sphere = GafferScene.Sphere()
+		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		meshToLevelSet["in"].setInput( sphere["out"] )
+
+		cs = GafferTest.CapturingSlot( meshToLevelSet.plugDirtiedSignal() )
+		self.setFilter( meshToLevelSet, path = "/sphere" )
+		self.assertIn( meshToLevelSet["out"]["object"], { x[0] for x in cs } )
+
+		del cs[:]
+		sphere["radius"].setValue( 2 )
+		self.assertIn( meshToLevelSet["out"]["object"], { x[0] for x in cs } )
 
 	def testCanConvertMeshToLevelSetVolume( self ) :
 		sphere = GafferScene.Sphere()

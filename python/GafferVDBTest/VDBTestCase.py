@@ -43,9 +43,6 @@ import GafferSceneTest
 
 class VDBTestCase( GafferSceneTest.SceneTestCase ) :
 
-	def assertEqualTolerance(self, a, b, tolerance):
-		self.assertTrue( abs(a - b) < tolerance)
-
 	def setUp( self ) :
 		GafferSceneTest.SceneTestCase.setUp( self )
 		self.dataDir = os.path.join( os.path.dirname( __file__ ),  "data")

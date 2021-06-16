@@ -144,7 +144,7 @@ Breaking Changes
   - MeshToLevelSet
   - LevelSetOffset
   - PointsGridToPoints
-
+- LevelSetToMesh : Changed default value for `adjustBounds` plug.
 
 Build
 -----
