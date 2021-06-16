@@ -1,6 +1,11 @@
 0.61.x.x
 ========
 
+Breaking Changes
+----------------
+
+- FilteredChildIterator/FilteredRecursiveChildIterator : Removed all namespace-level typedefs, which were deprecated in Gaffer 0.59.0.0. Use the class-level typedefs instead, for example `Plug::Iterator` in place of `PlugIterator`.
+
 0.60.0.0
 ========
 

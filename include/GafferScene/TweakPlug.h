@@ -119,9 +119,6 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 
 };
 
-[[deprecated("Use `TweakPlug::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TweakPlug> > TweakPlugIterator;
-
 IE_CORE_DECLAREPTR( TweakPlug )
 
 /// Represents a collection of tweaks, and provides methods for applying them

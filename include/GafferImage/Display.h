@@ -123,11 +123,6 @@ class GAFFERIMAGE_API Display : public ImageNode
 
 IE_CORE_DECLAREPTR( Display );
 
-[[deprecated("Use `Display::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Display> > DisplayIterator;
-[[deprecated("Use `Display::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Display> > RecursiveDisplayIterator;
-
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_DISPLAY_H

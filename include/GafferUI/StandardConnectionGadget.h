@@ -147,11 +147,6 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		boost::signals::scoped_connection m_keyReleaseConnection;
 };
 
-[[deprecated("Use `StandardConnectionGadget::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<StandardConnectionGadget> > StandardConnectionGadgetIterator;
-[[deprecated("Use `StandardConnectionGadget::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<StandardConnectionGadget> > RecursiveStandardConnectionGadgetIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_STANDARDCONNECTIONGADGET_H

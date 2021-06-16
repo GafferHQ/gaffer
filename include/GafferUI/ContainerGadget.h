@@ -79,11 +79,6 @@ class GAFFERUI_API ContainerGadget : public Gadget
 
 IE_CORE_DECLAREPTR( ContainerGadget );
 
-[[deprecated("Use `ContainerGadget::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ContainerGadget> > ContainerGadgetIterator;
-[[deprecated("Use `ContainerGadget::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ContainerGadget> > RecursiveContainerGadgetIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_CONTAINERGADGET_H

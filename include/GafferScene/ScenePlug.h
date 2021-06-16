@@ -300,20 +300,6 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 
 IE_CORE_DECLAREPTR( ScenePlug );
 
-[[deprecated("Use `ScenePlug::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ScenePlug> > ScenePlugIterator;
-[[deprecated("Use `ScenePlug::InputIterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ScenePlug> > InputScenePlugIterator;
-[[deprecated("Use `ScenePlug::OutputIterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ScenePlug> > OutputScenePlugIterator;
-
-[[deprecated("Use `ScenePlug::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, ScenePlug>, Gaffer::PlugPredicate<> > RecursiveScenePlugIterator;
-[[deprecated("Use `ScenePlug::RecursiveInputIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, ScenePlug>, Gaffer::PlugPredicate<> > RecursiveInputScenePlugIterator;
-[[deprecated("Use `ScenePlug::RecursiveOutputIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, ScenePlug>, Gaffer::PlugPredicate<> > RecursiveOutputScenePlugIterator;
-
 } // namespace GafferScene
 
 GAFFERSCENE_API std::ostream &operator << ( std::ostream &o, const GafferScene::ScenePlug::ScenePath &path );

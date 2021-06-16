@@ -322,11 +322,6 @@ IE_CORE_DECLAREPTR( ImageGadget )
 
 size_t tbb_hasher( const ImageGadget::TileIndex &tileIndex );
 
-[[deprecated("Use `ImageGadget::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ImageGadget> > ImageGadgetIterator;
-[[deprecated("Use `ImageGadget::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ImageGadget> > RecursiveImageGadgetIterator;
-
 } // namespace GafferImageUI
 
 #endif // GAFFERIMAGEUI_IMAGEGADGET_H

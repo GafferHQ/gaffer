@@ -135,20 +135,6 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 
 IE_CORE_DECLAREPTR( FormatPlug );
 
-[[deprecated("Use `FormatPlug::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug> > FormatPlugIterator;
-[[deprecated("Use `FormatPlug::InputIterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug> > InputFormatPlugIterator;
-[[deprecated("Use `FormatPlug::OutputIterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug> > OutputFormatPlugIterator;
-
-[[deprecated("Use `FormatPlug::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveFormatPlugIterator;
-[[deprecated("Use `FormatPlug::RecursiveInputIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveInputFormatPlugIterator;
-[[deprecated("Use `FormatPlug::RecursiveOutputIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FormatPlug>, Gaffer::PlugPredicate<> > RecursiveOutputFormatPlugIterator;
-
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_FORMATPLUG_H

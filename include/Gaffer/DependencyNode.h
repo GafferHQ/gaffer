@@ -91,11 +91,6 @@ class GAFFER_API DependencyNode : public Node
 
 };
 
-[[deprecated("Use `DependencyNode::Iterator` instead")]]
-typedef FilteredChildIterator<TypePredicate<DependencyNode> > DependencyNodeIterator;
-[[deprecated("Use `DependencyNode::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<TypePredicate<DependencyNode> > RecursiveDependencyNodeIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_DEPENDENCYNODE_H

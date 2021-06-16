@@ -92,11 +92,6 @@ class GAFFER_API Reference : public SubGraph
 
 IE_CORE_DECLAREPTR( Reference )
 
-[[deprecated("Use `Reference::Iterator` instead")]]
-typedef FilteredChildIterator<TypePredicate<Reference> > ReferenceIterator;
-[[deprecated("Use `Reference::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<TypePredicate<Reference> > RecursiveReferenceIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_REFERENCE_H

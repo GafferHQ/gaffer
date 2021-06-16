@@ -62,11 +62,6 @@ class GAFFERUI_API NameGadget : public TextGadget
 
 IE_CORE_DECLAREPTR( NameGadget );
 
-[[deprecated("Use `NameGadget::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<NameGadget> > NameGadgetIterator;
-[[deprecated("Use `NameGadget::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<NameGadget> > RecursiveNameGadgetIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_NAMEGADGET_H

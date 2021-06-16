@@ -195,11 +195,6 @@ class GAFFER_API Node : public GraphComponent
 
 IE_CORE_DECLAREPTR( Node )
 
-[[deprecated("Use `Node::Iterator` instead")]]
-typedef FilteredChildIterator<TypePredicate<Node> > NodeIterator;
-[[deprecated("Use `Node::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<TypePredicate<Node> > RecursiveNodeIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_NODE_H

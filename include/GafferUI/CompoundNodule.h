@@ -77,11 +77,6 @@ class GAFFERUI_API CompoundNodule : public Nodule
 
 IE_CORE_DECLAREPTR( CompoundNodule );
 
-[[deprecated("Use `CompoundNodule::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<CompoundNodule> > CompoundNoduleIterator;
-[[deprecated("Use `CompoundNodule::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<CompoundNodule> > RecursiveCompoundNoduleIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_COMPOUNDNODULE_H

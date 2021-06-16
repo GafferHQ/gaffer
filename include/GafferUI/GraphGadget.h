@@ -297,11 +297,6 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 
 IE_CORE_DECLAREPTR( GraphGadget );
 
-[[deprecated("Use `GraphGadget::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<GraphGadget> > GraphGadgetIterator;
-[[deprecated("Use `GraphGadget::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<GraphGadget> > RecursiveGraphGadgetIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_GRAPHGADGET_H
