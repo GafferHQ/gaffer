@@ -93,8 +93,11 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 		void postTasks( const Gaffer::Context *context, Tasks &tasks ) const override;
 		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
 		void execute() const override;
+		void executeSequence( const std::vector<float> &frames ) const override;
 
 	private :
+
+		void executeInternal( bool flushCaches ) const;
 
 		ScenePlug *adaptedInPlug();
 		const ScenePlug *adaptedInPlug() const;
