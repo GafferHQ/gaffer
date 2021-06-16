@@ -163,7 +163,7 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
-0.59.x.x (relative to 0.59.8.0)
+0.59.9.0 (relative to 0.59.8.0)
 ========
 
 Features
@@ -178,6 +178,11 @@ Improvements
 
 - OSLShader : Reduced loading times where many nodes reference the same shader.
 - Spreadsheet : Added `activeRowNames` plug to the Node Editor UI, in the Advanced tab.
+
+Fixes
+-----
+
+- ArnoldMeshLight : Fixed label for `cameraVisibility` plug.
 
 Documentation
 -------------
@@ -691,6 +696,14 @@ Build
   - USD 20.11
   - OpenSSL 1.1.1h
   - See https://github.com/GafferHQ/dependencies/releases/tag/2.1.1 for full details.
+
+0.58.6.7 (relative to 0.58.6.6)
+========
+
+Fixes
+-----
+
+- ArnoldMeshLight : Fixed label for `cameraVisibility` plug.
 
 0.58.6.6 (relative to 0.58.6.5)
 ========
