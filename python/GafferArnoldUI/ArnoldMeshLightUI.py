@@ -64,6 +64,8 @@ Gaffer.Metadata.registerNode(
 			rays.
 			""",
 
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
 		],
 
 		"parameters" : [
