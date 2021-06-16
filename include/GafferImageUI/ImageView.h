@@ -117,10 +117,10 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		static void registeredDisplayTransforms( std::vector<std::string> &names );
 		static GafferImage::ImageProcessorPtr createDisplayTransform( const std::string &name );
 
-		class ColorInspectorPlug : public Gaffer::ValuePlug
+		class GAFFERIMAGEUI_API ColorInspectorPlug : public Gaffer::ValuePlug
 		{
 			public :
-				enum class Mode
+				enum class GAFFERIMAGEUI_API Mode
 				{
 					Cursor,
 					Pixel,
