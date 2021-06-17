@@ -133,7 +133,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// unless the same is true for all its ancestors.
 		void setVisible( bool visible );
 		/// Returns the visibility status for this Gadget.
-		bool getVisible() const;
+		bool getVisible() const { return m_visible; }
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
 		bool visible( Gadget *relativeTo = nullptr ) const;
