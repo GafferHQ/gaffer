@@ -83,19 +83,6 @@ class GAFFER_API TransformPlug : public ValuePlug
 
 IE_CORE_DECLAREPTR( TransformPlug );
 
-[[deprecated("Use `TransformPlug::Iterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, TransformPlug> > TransformPlugIterator;
-[[deprecated("Use `TransformPlug::InputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::In, TransformPlug> > InputTransformPlugIterator;
-[[deprecated("Use `TransformPlug::OutputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, TransformPlug> > OutputTransformPlugIterator;
-[[deprecated("Use `TransformPlug::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, TransformPlug>, PlugPredicate<> > RecursiveTransformPlugIterator;
-[[deprecated("Use `TransformPlug::RecursiveInputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, TransformPlug>, PlugPredicate<> > RecursiveInputTransformPlugIterator;
-[[deprecated("Use `TransformPlug::RecursiveOutputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, TransformPlug>, PlugPredicate<> > RecursiveOutputTransformPlugIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_TRANSFORMPLUG_H

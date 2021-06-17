@@ -97,11 +97,6 @@ class GAFFERUI_API ImageGadget : public Gadget
 
 IE_CORE_DECLAREPTR( ImageGadget )
 
-[[deprecated("Use `ImageGadget::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ImageGadget> > ImageGadgetIterator;
-[[deprecated("Use `ImageGadget::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ImageGadget> > RecursiveImageGadgetIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_IMAGEGADGET_H

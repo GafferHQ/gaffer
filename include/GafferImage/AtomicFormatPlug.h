@@ -49,20 +49,6 @@ typedef Gaffer::TypedPlug<GafferImage::Format> AtomicFormatPlug;
 
 IE_CORE_DECLAREPTR( AtomicFormatPlug );
 
-[[deprecated("Use `AtomicFormatPlug::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, AtomicFormatPlug> > AtomicFormatPlugIterator;
-[[deprecated("Use `AtomicFormatPlug::InputIterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, AtomicFormatPlug> > InputAtomicFormatPlugIterator;
-[[deprecated("Use `AtomicFormatPlug::OutputIterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, AtomicFormatPlug> > OutputAtomicFormatPlugIterator;
-
-[[deprecated("Use `AtomicFormatPlug::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, AtomicFormatPlug>, Gaffer::PlugPredicate<> > RecursiveAtomicFormatPlugIterator;
-[[deprecated("Use `AtomicFormatPlug::RecursiveInputIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, AtomicFormatPlug>, Gaffer::PlugPredicate<> > RecursiveInputAtomicFormatPlugIterator;
-[[deprecated("Use `AtomicFormatPlug::RecursiveOutputIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, AtomicFormatPlug>, Gaffer::PlugPredicate<> > RecursiveOutputAtomicFormatPlugIterator;
-
 } // namespace GafferImage
 
 #endif // GAFFERIMAGE_ATOMICFORMATPLUG_H

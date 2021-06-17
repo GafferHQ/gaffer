@@ -318,19 +318,6 @@ struct PlugPredicate
 	}
 };
 
-[[deprecated("Use `Plug::Iterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<> > PlugIterator;
-[[deprecated("Use `Plug::InputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::In, Plug> > InputPlugIterator;
-[[deprecated("Use `Plug::OutputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, Plug> > OutputPlugIterator;
-[[deprecated("Use `Plug::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<> > RecursivePlugIterator;
-[[deprecated("Use `Plug::RecursiveInputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, Plug>, PlugPredicate<> > RecursiveInputPlugIterator;
-[[deprecated("Use `Plug::RecursiveOutputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, Plug>, PlugPredicate<> > RecursiveOutputPlugIterator;
-
 } // namespace Gaffer
 
 #include "Gaffer/Plug.inl"

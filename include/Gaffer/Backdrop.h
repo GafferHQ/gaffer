@@ -74,11 +74,6 @@ class GAFFER_API Backdrop : public Node
 
 IE_CORE_DECLAREPTR( Backdrop )
 
-[[deprecated("Use `Backdrop::Iterator` instead")]]
-typedef FilteredChildIterator<TypePredicate<Backdrop> > BackdropIterator;
-[[deprecated("Use `Backdrop::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<TypePredicate<Backdrop> > RecursiveBackdropIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_BACKDROP_H

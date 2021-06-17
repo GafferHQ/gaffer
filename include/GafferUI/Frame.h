@@ -68,11 +68,6 @@ class GAFFERUI_API Frame : public IndividualContainer
 
 IE_CORE_DECLAREPTR( Frame );
 
-[[deprecated("Use `Frame::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Frame> > FrameIterator;
-[[deprecated("Use `Frame::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Frame> > RecursiveFrameIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_FRAME_H

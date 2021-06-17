@@ -160,9 +160,6 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 		};
 
-		[[deprecated("Use `TaskPlug::Iterator` instead")]]
-		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TaskPlug> > TaskPlugIterator;
-
 		/// Input plugs to which upstream tasks may be connected to cause them
 		/// to be executed before this node.
 		Gaffer::ArrayPlug *preTasksPlug();

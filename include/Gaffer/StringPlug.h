@@ -129,19 +129,6 @@ class GAFFER_API StringPlug : public ValuePlug
 
 IE_CORE_DECLAREPTR( StringPlug );
 
-[[deprecated("Use `StringPlug::Iterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, StringPlug> > StringPlugIterator;
-[[deprecated("Use `StringPlug::InputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::In, StringPlug> > InputStringPlugIterator;
-[[deprecated("Use `StringPlug::OutputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringPlug> > OutputStringPlugIterator;
-[[deprecated("Use `StringPlug::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, StringPlug>, PlugPredicate<> > RecursiveStringPlugIterator;
-[[deprecated("Use `StringPlug::RecursiveInputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, StringPlug>, PlugPredicate<> > RecursiveInputStringPlugIterator;
-[[deprecated("Use `StringPlug::RecursiveOutputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, StringPlug>, PlugPredicate<> > RecursiveOutputStringPlugIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_STRINGPLUG_H

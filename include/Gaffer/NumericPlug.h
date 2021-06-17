@@ -105,31 +105,6 @@ typedef NumericPlug<int> IntPlug;
 IE_CORE_DECLAREPTR( FloatPlug );
 IE_CORE_DECLAREPTR( IntPlug );
 
-[[deprecated("Use `FloatPlug::Iterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, FloatPlug> > FloatPlugIterator;
-[[deprecated("Use `FloatPlug::InputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::In, FloatPlug> > InputFloatPlugIterator;
-[[deprecated("Use `FloatPlug::OutputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, FloatPlug> > OutputFloatPlugIterator;
-[[deprecated("Use `IntPlug::Iterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, IntPlug> > IntPlugIterator;
-[[deprecated("Use `IntPlug::InputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::In, IntPlug> > InputIntPlugIterator;
-[[deprecated("Use `IntPlug::OutputIterator` instead")]]
-typedef FilteredChildIterator<PlugPredicate<Plug::Out, IntPlug> > OutputIntPlugIterator;
-[[deprecated("Use `FloatPlug::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, PlugPredicate<> > RecursiveFloatPlugIterator;
-[[deprecated("Use `FloatPlug::RecursiveInputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, FloatPlug>, PlugPredicate<> > RecursiveInputFloatPlugIterator;
-[[deprecated("Use `FloatPlug::RecursiveOutputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, PlugPredicate<> > RecursiveOutputFloatPlugIterator;
-[[deprecated("Use `IntPlug::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, IntPlug>, PlugPredicate<> > RecursiveIntPlugIterator;
-[[deprecated("Use `IntPlug::RecursiveInputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, IntPlug>, PlugPredicate<> > RecursiveInputIntPlugIterator;
-[[deprecated("Use `IntPlug::RecursiveOutputIterator` instead")]]
-typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, IntPlug>, PlugPredicate<> > RecursiveOutputIntPlugIterator;
-
 } // namespace Gaffer
 
 #endif // GAFFER_NUMERICPLUG_H

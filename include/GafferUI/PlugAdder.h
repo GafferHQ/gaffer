@@ -94,11 +94,6 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 
 IE_CORE_DECLAREPTR( PlugAdder )
 
-[[deprecated("Use `PlugAdder::Iterator` instead")]]
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<PlugAdder> > PlugAdderIterator;
-[[deprecated("Use `PlugAdder::RecursiveIterator` instead")]]
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<PlugAdder> > RecursivePlugAdderIterator;
-
 } // namespace GafferUI
 
 #endif // GAFFERUI_PLUGADDER_H

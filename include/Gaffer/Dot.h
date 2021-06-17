@@ -105,11 +105,6 @@ class GAFFER_API Dot : public DependencyNode
 
 IE_CORE_DECLAREPTR( Dot )
 
-[[deprecated("Use `Dot::Iterator` instead")]]
-typedef FilteredChildIterator<TypePredicate<Dot> > DotIterator;
-[[deprecated("Use `Dot::RecursiveIterator` instead")]]
-typedef FilteredRecursiveChildIterator<TypePredicate<Dot> > RecursiveDotIterator;
-
 } // namespace Gaffer
 
 #include "Gaffer/Dot.inl"
