@@ -153,28 +153,6 @@ void StandardNodule::createConnection( Gaffer::Plug *endpoint )
 	}
 }
 
-bool StandardNodule::hasLayer( Layer layer ) const
-{
-	if( children().size() )
-	{
-		return true;
-	}
-
-	switch( layer )
-	{
-		case GraphLayer::Connections :
-			return m_draggingConnection;
-		case GraphLayer::Nodes :
-			return !getHighlighted();
-		case GraphLayer::Highlighting :
-			return getHighlighted();
-		case GraphLayer::Overlay :
-			return m_labelVisible && !IECoreGL::Selector::currentSelector();
-		default :
-			return false;
-	}
-}
-
 void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 {
 	switch( layer )
@@ -224,6 +202,11 @@ void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 	}
 
 	// if the nodule isn't highlighted it will be drawn in the normal, non-overlayed manner
+}
+
+unsigned StandardNodule::layerMask() const
+{
+	return GraphLayer::Connections | GraphLayer::Nodes | GraphLayer::Highlighting | GraphLayer::Overlay;
 }
 
 void StandardNodule::renderLabel( const Style *style ) const

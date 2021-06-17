@@ -1372,3 +1372,8 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 		}
 	}
 }
+
+unsigned ImageGadget::layerMask() const
+{
+	return (unsigned)Layer::Main;
+}

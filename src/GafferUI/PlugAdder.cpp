@@ -251,6 +251,11 @@ void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 	}
 }
 
+unsigned PlugAdder::layerMask() const
+{
+	return GraphLayer::Connections | GraphLayer::Nodes | GraphLayer::Highlighting;
+}
+
 void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const
 {
 	const StandardNodeGadget::Edge edge = tangentEdge( tangent( this ) );

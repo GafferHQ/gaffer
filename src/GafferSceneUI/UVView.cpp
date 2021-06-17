@@ -474,6 +474,11 @@ class GridGadget : public GafferUI::Gadget
 			}
 		}
 
+		unsigned layerMask() const override
+		{
+			return Layer::Main | Layer::MidBack | Layer::Front;
+		}
+
 };
 
 } // namespace

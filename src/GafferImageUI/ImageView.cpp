@@ -554,6 +554,11 @@ class Box2iGadget : public GafferUI::Gadget
 			glPopMatrix();
 		}
 
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
+		}
+
 	private :
 
 		void plugDirtied( Plug *plug )
@@ -931,6 +936,11 @@ class V2iGadget : public GafferUI::Gadget
 			glPopAttrib();
 
 			glPopMatrix();
+		}
+
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
 		}
 
 	private :

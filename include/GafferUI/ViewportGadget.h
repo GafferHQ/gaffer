@@ -260,6 +260,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 			const Style *style;
 			const Imath::M44f transform;
 			const Imath::Box3f bound;
+			const unsigned layerMask;
 		};
 		mutable std::vector<RenderItem> m_renderItems;
 

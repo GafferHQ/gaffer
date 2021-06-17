@@ -270,6 +270,11 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 		}
 
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
+		}
+
 	private :
 
 		void setRectangleInternal( const Imath::Box2f &rectangle, RectangleChangedReason reason )

@@ -190,6 +190,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		unsigned layerMask() const override;
 
 	private :
 

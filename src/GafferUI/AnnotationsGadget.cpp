@@ -249,6 +249,11 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 	}
 }
 
+unsigned AnnotationsGadget::layerMask() const
+{
+	return (unsigned)GraphLayer::Overlay;
+}
+
 GraphGadget *AnnotationsGadget::graphGadget()
 {
 	return parent<GraphGadget>();

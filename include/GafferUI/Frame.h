@@ -59,6 +59,7 @@ class GAFFERUI_API Frame : public IndividualContainer
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		unsigned layerMask() const override;
 
 	private :
 

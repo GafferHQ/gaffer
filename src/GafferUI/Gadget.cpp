@@ -339,9 +339,9 @@ void Gadget::doRenderLayer( Layer layer, const Style *style ) const
 {
 }
 
-bool Gadget::hasLayer( Layer layer ) const
+unsigned Gadget::layerMask() const
 {
-	return true;
+	return 0;
 }
 
 Imath::Box3f Gadget::bound() const

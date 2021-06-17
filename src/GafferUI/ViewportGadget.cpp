@@ -1069,7 +1069,7 @@ void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 
 	const Style *currentStyle = nullptr;
 
-	for( int layerIndex = (int)Layer::Back; layerIndex <= (int)Layer::Front; ++layerIndex )
+	for( int layerIndex = (int)Layer::Back; layerIndex <= (int)Layer::Front; layerIndex <<= 1 )
 	{
 		Layer layer = Layer(layerIndex);
 		if( filterLayer != Layer::None && layer != filterLayer )
@@ -1079,6 +1079,11 @@ void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 
 		for( const RenderItem &renderItem : m_renderItems )
 		{
+			if( !( renderItem.layerMask & layerIndex ) )
+			{
+				continue;
+			}
+
 			if( !renderItem.bound.intersects( bound ) )
 			{
 				continue;
@@ -1118,10 +1123,15 @@ void ViewportGadget::getRenderItems( const Gadget *gadget, M44f transform, const
 		transform = gadget->m_transform * transform;
 	}
 
-	renderItems.push_back( {
-		gadget, style, transform,
-		boundDefault ? g_infiniteBox : Imath::transform( bound, transform )
-	} );
+	unsigned layerMask = gadget->layerMask();
+	if( layerMask )
+	{
+		renderItems.push_back( {
+			gadget, style, transform,
+			boundDefault ? g_infiniteBox : Imath::transform( bound, transform ),
+			layerMask
+		} );
+	}
 
 	for( const auto &i : gadget->children() )
 	{

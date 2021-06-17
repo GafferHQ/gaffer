@@ -109,7 +109,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 		{
 			if( layer != Layer::Main )
 			{
-				return Gadget::doRenderLayer( layer, style );
+				return;
 			}
 
 			if( IECoreGL::Selector::currentSelector() )
@@ -125,6 +125,11 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 			b.extendBy( viewportGadget->gadgetToRasterSpace( m_endPosition, this ) );
 
 			style->renderSelectionBox( b );
+		}
+
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
 		}
 
 	private :

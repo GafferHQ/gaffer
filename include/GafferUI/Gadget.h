@@ -88,13 +88,12 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		enum class Layer
 		{
-			None = -100,
-
-			Back = -2,
-			MidBack = -1,
-			Main = 0,
-			MidFront = 1,
-			Front = 2,
+			None = 0,
+			Back = 1,
+			MidBack = 2,
+			Main = 4,
+			MidFront = 8,
+			Front = 16,
 		};
 
 		/// @name Parent-child relationships
@@ -290,10 +289,13 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// for the specified layer. Child gadgets will be drawn automatically
 		/// _after_ the parent gadget has been drawn.
 		virtual void doRenderLayer( Layer layer, const Style *style ) const;
-		/// May return false to indicate that neither this gadget nor any
-		/// of its children will render anything for the specified layer.
-		/// The default implementation returns true.
-		virtual bool hasLayer( Layer layer ) const;
+
+		/// Returns a bitmask built from the flags in the Layer enum.
+		/// Any subclass which implements doRenderLayer must also implement layerMask
+		/// to indicate which layers doRenderLayer should be called for.
+		/// layerMask must currently return a constant value.  In the future, we
+		/// may implement a new DirtyType to allow dirtying the layerMask
+		virtual unsigned layerMask() const;
 
 		/// Implemented to dirty the layout for both the old and the new parent.
 		void parentChanged( GraphComponent *oldParent ) override;
@@ -335,6 +337,20 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		friend ViewportGadget;
 
 };
+
+
+/// Allow for clients to succinctly write bitmasks as Back | Main | Front
+inline unsigned operator| ( Gadget::Layer a, Gadget::Layer b )
+{
+	return (unsigned)a | (unsigned)b;
+}
+
+inline unsigned operator| ( unsigned a, Gadget::Layer b )
+{
+	return a | (unsigned)b;
+}
+
+
 
 } // namespace GafferUI
 

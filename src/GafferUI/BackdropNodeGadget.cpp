@@ -336,6 +336,11 @@ void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	glPopMatrix();
 }
 
+unsigned BackdropNodeGadget::layerMask() const
+{
+	return (unsigned)GraphLayer::Backdrops;
+}
+
 void BackdropNodeGadget::contextChanged()
 {
 	// Title and description may depend on the context

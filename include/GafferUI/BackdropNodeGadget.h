@@ -71,6 +71,7 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		unsigned layerMask() const override;
 
 	private :
 

@@ -86,6 +86,7 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		unsigned layerMask() const override;
 
 	private :
 

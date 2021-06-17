@@ -295,6 +295,18 @@ void CompoundNumericNodule::doRenderLayer( Layer layer, const Style *style ) con
 	}
 }
 
+unsigned CompoundNumericNodule::layerMask() const
+{
+	if( !noduleLayout() )
+	{
+		return StandardNodule::layerMask();
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 NoduleLayout *CompoundNumericNodule::noduleLayout()
 {
 	return children().size() ? getChild<NoduleLayout>( 0 ) : nullptr;

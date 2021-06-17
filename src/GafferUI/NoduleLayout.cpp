@@ -463,11 +463,6 @@ void NoduleLayout::registerCustomGadget( const std::string &gadgetType, CustomGa
 	customGadgetCreators()[gadgetType] = creator;
 }
 
-bool NoduleLayout::hasLayer( Layer layer ) const
-{
-	return layer != GraphLayer::Backdrops;
-}
-
 LinearContainer *NoduleLayout::noduleContainer()
 {
 	return getChild<LinearContainer>( 0 );

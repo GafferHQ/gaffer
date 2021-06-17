@@ -476,6 +476,11 @@ void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	renderScene();
 }
 
+unsigned SceneGadget::layerMask() const
+{
+	return (unsigned)Layer::Main;
+}
+
 void SceneGadget::updateRenderer()
 {
 	if( m_paused )

@@ -188,7 +188,6 @@ IECoreGL::ConstTexturePtr ImageGadget::loadTexture( const std::string &fileName 
 
 void ImageGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	Gadget::doRenderLayer( layer, style );
 	if( layer != Layer::Main )
 	{
 		return;
@@ -199,9 +198,13 @@ void ImageGadget::doRenderLayer( Layer layer, const Style *style ) const
 		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
 		style->renderImage( b, texture );
 	}
-
-	Gadget::doRenderLayer( layer, style );
 }
+
+unsigned ImageGadget::layerMask() const
+{
+	return (unsigned)Layer::Main;
+}
+
 
 Imath::Box3f ImageGadget::bound() const
 {

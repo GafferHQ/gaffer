@@ -164,6 +164,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 	protected :
 
 		void doRenderLayer( Layer layer, const GafferUI::Style *style ) const override;
+		unsigned layerMask() const override;
 
 	private :
 

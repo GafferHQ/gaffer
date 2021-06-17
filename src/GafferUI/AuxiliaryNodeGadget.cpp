@@ -91,6 +91,11 @@ void AuxiliaryNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	glPopMatrix();
 }
 
+unsigned AuxiliaryNodeGadget::layerMask() const
+{
+	return NodeGadget::layerMask() | (unsigned)GraphLayer::Nodes;
+}
+
 void AuxiliaryNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
 {
 	if( key == g_labelKey )

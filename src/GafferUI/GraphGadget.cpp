@@ -754,8 +754,6 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 
 void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	Gadget::doRenderLayer( layer, style );
-
 	glDisable( GL_DEPTH_TEST );
 
 	switch( layer )
@@ -809,6 +807,11 @@ void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 		break;
 	}
 
+}
+
+unsigned GraphGadget::layerMask() const
+{
+	return GraphLayer::Connections | GraphLayer::Overlay;
 }
 
 bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )

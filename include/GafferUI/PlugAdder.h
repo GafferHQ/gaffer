@@ -71,6 +71,7 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		unsigned layerMask() const override;
 
 		void applyEdgeMetadata( Gaffer::Plug *plug, bool opposite = false ) const;
 

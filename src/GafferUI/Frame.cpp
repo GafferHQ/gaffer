@@ -76,7 +76,6 @@ Imath::Box3f Frame::bound() const
 
 void Frame::doRenderLayer( Layer layer, const Style *style ) const
 {
-	IndividualContainer::doRenderLayer( layer, style );
 	if( layer != Layer::Main )
 	{
 		return;
@@ -84,4 +83,9 @@ void Frame::doRenderLayer( Layer layer, const Style *style ) const
 
 	Imath::Box3f b = IndividualContainer::bound();
 	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ), V2f( b.max.x, b.max.y ) ), m_border );
+}
+
+unsigned Frame::layerMask() const
+{
+	return (unsigned)Layer::Main;
 }
