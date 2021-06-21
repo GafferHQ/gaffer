@@ -3093,6 +3093,11 @@ class ArnoldGlobals
 			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
+				if( name == "ai:ignore_motion_blur" )
+				{
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "ai:ignore_motion_blur is not supported directly - set generic Gaffer option sampleMotion to False to control this option." ) );
+					return;
+				}
 				AtString arnoldName( name.c_str() + 3 );
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), arnoldName );
 				if( parameter )

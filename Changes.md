@@ -17,6 +17,7 @@ Breaking Changes
   - Moved `render()` and `renderRequestSignal()` to ViewportGadget.
   - Made `select()` private.
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
+- ArnoldOptions : Support for option ai:ignore_motion_blur has been removed, since it conflicted with a standard Gaffer option.  Set sampleMotion to False using a StandardOptions node instead
 
 0.60.0.0
 ========
