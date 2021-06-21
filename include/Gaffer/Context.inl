@@ -85,7 +85,7 @@ struct DataTraits<Imath::Vec3<T> >
 
 } // namespace Detail
 
-Context::Value::Value()
+inline Context::Value::Value()
 	:	m_typeId( IECore::InvalidTypeId ), m_value( nullptr )
 {
 }
@@ -166,7 +166,7 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	}
 }
 
-bool Context::internalSet( const IECore::InternedString &name, const Value &value )
+inline bool Context::internalSet( const IECore::InternedString &name, const Value &value )
 {
 	if( !m_changedSignal )
 	{
@@ -271,7 +271,7 @@ void Context::EditableScope::setAllocated( const IECore::InternedString &name, c
 	m_context->set( name, value );
 }
 
-const IECore::Canceller *Context::canceller() const
+inline const IECore::Canceller *Context::canceller() const
 {
 	return m_canceller;
 }

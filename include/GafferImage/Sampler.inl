@@ -41,7 +41,7 @@
 namespace GafferImage
 {
 
-float Sampler::sample( int x, int y )
+inline float Sampler::sample( int x, int y )
 {
 	Imath::V2i p( x, y );
 
@@ -79,7 +79,7 @@ float Sampler::sample( int x, int y )
 	return *(tileData + tileIndex.y * ImagePlug::tileSize() + tileIndex.x);
 }
 
-float Sampler::sample( float x, float y )
+inline float Sampler::sample( float x, float y )
 {
 	int xi;
 	float xf = OIIO::floorfrac( x - 0.5, &xi );
@@ -94,7 +94,7 @@ float Sampler::sample( float x, float y )
 	return OIIO::bilerp( x0y0, x1y0, x0y1, x1y1, xf, yf );
 }
 
-void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex )
+inline void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex )
 {
 	// Get the smart pointer to the tile we want.
 	Imath::V2i relP = p - m_cacheWindow.min;

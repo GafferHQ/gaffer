@@ -165,14 +165,14 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
 		template<typename T=GraphComponent>
-		inline T *getChild( size_t index );
+		T *getChild( size_t index );
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
 		template<typename T=GraphComponent>
-		inline const T *getChild( size_t index ) const;
+		const T *getChild( size_t index ) const;
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
-		inline const ChildContainer &children() const;
+		const ChildContainer &children() const;
 		/// Reorders the existing children.
 		/// \undoable
 		void reorderChildren( const ChildContainer &newOrder );
@@ -182,11 +182,11 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
 		template<typename T=GraphComponent>
-		inline T *descendant( const std::string &relativePath );
+		T *descendant( const std::string &relativePath );
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
 		template<typename T=GraphComponent>
-		inline const T *descendant( const std::string &relativePath ) const;
+		const T *descendant( const std::string &relativePath ) const;
 		/// Returns the parent for this component, performing a runTimeCast to T.
 		template<typename T=GraphComponent>
 		T *parent();

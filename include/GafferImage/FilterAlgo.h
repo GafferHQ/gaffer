@@ -60,7 +60,7 @@ GAFFERIMAGE_API const OIIO::Filter2D* acquireFilter( const std::string &name );
 
 // Find the region covered by a filter with a given width, given a position and axis-aligned derivatives
 // to compute the bounding rectangle
-inline Imath::Box2f filterSupport( const Imath::V2f &p, float dx, float dy, float filterWidth );
+Imath::Box2f filterSupport( const Imath::V2f &p, float dx, float dy, float filterWidth );
 
 // Filter over a rectangle shaped region of the image defined by a center point and two axis-aligned derivatives.
 // The sampler must have been initialized to cover all pixels with centers lying with the support of the filter,
@@ -77,7 +77,7 @@ GAFFERIMAGE_API float sampleParallelogram( Sampler &sampler, const Imath::V2f &p
 // If you have a point and derivatives defining a region to filter over, but you want to use sampleBox
 // instead of sampleParallelogram for performance reasons, you can use this function to get axis-aligned
 // derivatives which will approximate the result of sampleParallelogram
-inline Imath::V2f derivativesToAxisAligned( const Imath::V2f &p, const Imath::V2f &dpdx, const Imath::V2f &dpdy );
+Imath::V2f derivativesToAxisAligned( const Imath::V2f &p, const Imath::V2f &dpdx, const Imath::V2f &dpdy );
 
 } // namespace FilterAlgo
 
