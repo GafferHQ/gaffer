@@ -468,11 +468,6 @@ size_t GraphComponent::index() const
 	return std::find( c.begin(), c.end(), this ) - c.begin();
 }
 
-const GraphComponent::ChildContainer &GraphComponent::children() const
-{
-	return m_children;
-}
-
 void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 {
 	if( newOrder.size() != m_children.size() )

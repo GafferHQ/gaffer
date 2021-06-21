@@ -172,7 +172,7 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		inline const T *getChild( size_t index ) const;
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
-		const ChildContainer &children() const;
+		inline const ChildContainer &children() const;
 		/// Reorders the existing children.
 		/// \undoable
 		void reorderChildren( const ChildContainer &newOrder );

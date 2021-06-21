@@ -75,6 +75,11 @@ inline const T *GraphComponent::getChild( size_t index ) const
 	return IECore::runTimeCast<const T>( m_children[index].get() );
 }
 
+const GraphComponent::ChildContainer &GraphComponent::children() const
+{
+	return m_children;
+}
+
 template<typename T>
 T *GraphComponent::descendant( const std::string &relativePath )
 {
