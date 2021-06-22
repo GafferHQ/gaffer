@@ -71,6 +71,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Gadget );
 IE_CORE_FORWARDDECLARE( Style );
+IE_CORE_FORWARDDECLARE( ViewportGadget );
 
 /// Gadgets are zoomable UI elements. They draw themselves using OpenGL, and provide an interface for
 /// handling events. To present a Gadget in the user interface, it should be placed in the viewport of
@@ -87,6 +88,8 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		enum class Layer
 		{
+			None = -100,
+
 			Back = -2,
 			MidBack = -1,
 			Main = 0,
@@ -179,13 +182,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// @name Display
 		////////////////////////////////////////////////////////////////////
 		//@{
-		/// Renders the Gadget into the current OpenGL context. If currentStyle
-		/// is passed then it must already have been bound with Style::bind(),
-		/// and will be used if and only if not overridden by a Style applied
-		/// specifically to this Gadget. Typically users will not pass currentStyle -
-		/// but it must be passed by Gadget implementations when rendering child
-		/// Gadgets in doRenderLayer().
-		void render() const;
 		/// The bounding box of the Gadget before transformation. The default
 		/// implementation returns the union of the transformed bounding boxes
 		/// of all the children.
@@ -313,10 +309,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 	private :
 
-		// Sets the GL state up with the name attribute and transform for
-		// this Gadget, makes sure the style is bound and then calls doRenderLayer().
-		void renderLayer( Layer layer, const Style *currentStyle = nullptr ) const;
-
 		void styleChanged();
 		void emitDescendantVisibilityChanged();
 
@@ -343,6 +335,9 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		// when absolutely necessary (when slots are connected).
 		static IdleSignal &idleSignalAccessedSignal();
 		friend void GafferUIModule::bindGadget();
+
+		/// ViewportGadget performs the actual rendering, and needs access to the internals of all the gadgets it renders
+		friend ViewportGadget;
 
 };
 

@@ -923,10 +923,15 @@ bool ViewportGadget::getVariableAspectZoom() const
 
 void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
 {
+	gadgetsAt( Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ), gadgets );
+}
+
+void ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegion, std::vector<GadgetPtr> &gadgets, Gadget::Layer filterLayer ) const
+{
 	std::vector<HitRecord> selection;
 	{
-		SelectionScope selectionScope( this, rasterPosition, selection, IECoreGL::Selector::IDRender );
-		Gadget::render();
+		SelectionScope selectionScope( this, rasterRegion, selection, IECoreGL::Selector::IDRender );
+		renderInternal( filterLayer );
 	}
 
 	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
@@ -1007,8 +1012,75 @@ void ViewportGadget::render() const
 	glMultMatrixf( camera->getTransform().getValue() );
 	glMatrixMode( GL_MODELVIEW );
 
-	Gadget::render();
+	renderInternal();
 }
+
+void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
+{
+
+	bound(); // Updates layout if necessary
+	for( int layer = (int)Layer::Back; layer <= (int)Layer::Front; ++layer )
+	{
+		if( filterLayer != Gadget::Layer::None && (int)filterLayer != layer )
+		{
+			continue;
+		}
+
+		renderLayer( this, (Layer)layer, /* currentStyle = */ nullptr );
+	}
+}
+
+void ViewportGadget::renderLayer( const Gadget *gadget, Layer layer, const Style *currentStyle )
+{
+	const bool haveTransform = gadget->m_transform != M44f();
+	if( haveTransform )
+	{
+		glPushMatrix();
+		glMultMatrixf( gadget->m_transform.getValue() );
+	}
+
+		if( !currentStyle )
+		{
+			currentStyle = gadget->style();
+			currentStyle->bind();
+		}
+		else
+		{
+			if( gadget->m_style )
+			{
+				gadget->m_style->bind();
+				currentStyle = gadget->m_style.get();
+			}
+		}
+
+		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+		{
+			selector->loadName( gadget->m_glName );
+		}
+
+		gadget->doRenderLayer( layer, currentStyle );
+
+		for( ChildContainer::const_iterator it=gadget->children().begin(); it!=gadget->children().end(); it++ )
+		{
+			// Cast is safe because of the guarantees acceptsChild() gives us
+			const Gadget *c = static_cast<const Gadget *>( it->get() );
+			if( !c->getVisible() )
+			{
+				continue;
+			}
+			if( c->hasLayer( layer ) )
+			{
+				renderLayer( c, layer, currentStyle );
+			}
+		}
+
+	if( haveTransform )
+	{
+		glPopMatrix();
+	}
+}
+
+
 
 ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
 {
@@ -1674,10 +1746,10 @@ ViewportGadget::SelectionScope::SelectionScope( const Imath::V3f &corner0InGadge
 	begin( viewportGadget, rasterRegion, gadget->fullTransform(), mode );
 }
 
-ViewportGadget::SelectionScope::SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode )
+ViewportGadget::SelectionScope::SelectionScope( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode )
 	:	m_selection( selection )
 {
-	begin( viewportGadget, rasterPosition, M44f(), mode );
+	begin( viewportGadget, rasterRegion, M44f(), mode );
 }
 
 ViewportGadget::SelectionScope::~SelectionScope()

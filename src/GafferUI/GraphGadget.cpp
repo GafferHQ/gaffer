@@ -725,35 +725,27 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 
 ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const
 {
-	std::vector<GadgetPtr> gadgetsUnderMouse;
-
+	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	Imath::V3f center = gadget->transformedBound( this ).center();
-	const Imath::V3f corner0 = center - Imath::V3f( 2, 2, 1 );
-	const Imath::V3f corner1 = center + Imath::V3f( 2, 2, 1 );
 
-	std::vector<IECoreGL::HitRecord> selection;
+	Box2f rasterRegion;
+	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( center - Imath::V3f( 2, 2, 1 ), this ) );
+	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( center + Imath::V3f( 2, 2, 1 ), this ) );
+
+	std::vector<GadgetPtr> gadgetsUnderMouse;
+	viewportGadget->gadgetsAt( rasterRegion, gadgetsUnderMouse, GraphLayer::Connections );
+	for( const GadgetPtr &g : gadgetsUnderMouse )
 	{
-		ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
-
-		for ( ChildContainer::const_iterator it = children().begin(); it != children().end(); ++it )
+		if( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( g.get() ) )
 		{
-			if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
+			if(
+				c->srcNodule() &&
+				gadget->node() != c->srcNodule()->plug()->node() &&
+				gadget->node() != c->dstNodule()->plug()->node()
+			)
 			{
-				// don't consider the node's own connections, or connections without a source nodule
-				if ( c->srcNodule() && gadget->node() != c->srcNodule()->plug()->node() && gadget->node() != c->dstNodule()->plug()->node() )
-				{
-					c->render();
-				}
+				return c;
 			}
-		}
-	}
-
-	for ( std::vector<IECoreGL::HitRecord>::const_iterator it = selection.begin(); it != selection.end(); ++it )
-	{
-		GadgetPtr gadget = Gadget::select( it->name );
-		if ( gadget )
-		{
-			return runTimeCast<ConnectionGadget>( gadget.get() );
 		}
 	}
 

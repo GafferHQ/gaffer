@@ -310,65 +310,6 @@ Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 	return result;
 }
 
-void Gadget::render() const
-{
-	bound(); // Updates layout if necessary
-	for( int layer = (int)Layer::Back; layer <= (int)Layer::Front; ++layer )
-	{
-		renderLayer( (Layer)layer, /* currentStyle = */ nullptr );
-	}
-}
-
-void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
-{
-	const bool haveTransform = m_transform != M44f();
-	if( haveTransform )
-	{
-		glPushMatrix();
-		glMultMatrixf( m_transform.getValue() );
-	}
-
-		if( !currentStyle )
-		{
-			currentStyle = style();
-			currentStyle->bind();
-		}
-		else
-		{
-			if( m_style )
-			{
-				m_style->bind();
-				currentStyle = m_style.get();
-			}
-		}
-
-		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
-		{
-			selector->loadName( m_glName );
-		}
-
-		doRenderLayer( layer, currentStyle );
-
-		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-		{
-			// Cast is safe because of the guarantees acceptsChild() gives us
-			const Gadget *c = static_cast<const Gadget *>( it->get() );
-			if( !c->getVisible() )
-			{
-				continue;
-			}
-			if( c->hasLayer( layer ) )
-			{
-				c->renderLayer( layer, currentStyle );
-			}
-		}
-
-	if( haveTransform )
-	{
-		glPopMatrix();
-	}
-}
-
 void Gadget::dirty( DirtyType dirtyType )
 {
 	Gadget *g = this;

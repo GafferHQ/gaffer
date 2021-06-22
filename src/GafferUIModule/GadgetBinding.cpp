@@ -168,12 +168,6 @@ void setEnabled( Gadget &g, bool enabled )
 	g.setEnabled( enabled );
 }
 
-void render( const Gadget &g )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	g.render();
-}
-
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0, 1 );
 
 } // namespace
@@ -201,7 +195,6 @@ void GafferUIModule::bindGadget()
 		.def( "fullTransform", &Gadget::fullTransform, fullTransformOverloads() )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)( const Gadget * ) const)&Gadget::transformedBound )
-		.def( "render", &render )
 		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
 		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )

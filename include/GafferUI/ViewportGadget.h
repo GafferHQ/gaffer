@@ -168,6 +168,10 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// to use V3fs?
 		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
 
+		/// A more flexible form of the above, this allows specifying a region to test instead of a point,
+		/// and optionally accepts filterLayer - if set, only Gadgets in this layer will be rendered
+		void gadgetsAt( const Imath::Box2f &rasterRegion, std::vector<GadgetPtr> &gadgets, Layer filterLayer = Layer::None ) const;
+
 		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget ) const;
 		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget ) const;
 
@@ -203,7 +207,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 			private :
 
 				/// Private constructor for use by ViewportGadget.
-				SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode );
+				SelectionScope( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode );
 				friend class ViewportGadget;
 
 				void begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform, IECoreGL::Selector::Mode mode );
@@ -228,6 +232,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		};
 
+		/// Renders the children of the viewport into the current OpenGL context.
 		void render() const;
 
 		/// A signal emitted just prior to rendering the viewport each time. This
@@ -236,6 +241,12 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		UnarySignal &preRenderSignal();
 
 	private :
+
+		void renderInternal( Layer filterLayer = Layer::None ) const;
+
+		// Sets the GL state up with the name attribute and transform for
+		// the Gadget, makes sure the style is bound and then calls doRenderLayer().
+		static void renderLayer( const Gadget *gadget, Layer layer, const Style *currentStyle = nullptr );
 
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 
