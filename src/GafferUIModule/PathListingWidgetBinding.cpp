@@ -405,11 +405,6 @@ class PathModel : public QAbstractItemModel
 		{
 		}
 
-		~PathModel() override
-		{
-			delete m_rootItem;
-		}
-
 		///////////////////////////////////////////////////////////////////
 		// Our methods - these don't mean anything to Qt
 		///////////////////////////////////////////////////////////////////
@@ -433,7 +428,6 @@ class PathModel : public QAbstractItemModel
 		void setRoot( PathPtr root )
 		{
 			beginResetModel();
-			delete m_rootItem;
 			m_rootItem = new Item( root, 0, nullptr );
 			endResetModel();
 		}
@@ -497,17 +491,17 @@ class PathModel : public QAbstractItemModel
 			}
 
 			QModelIndex result;
-			Item *item = m_rootItem;
+			Item *item = m_rootItem.get();
 			for( size_t i = rootPath->names().size(); i < path.size(); ++i )
 			{
 				bool foundNextItem = false;
-				const std::vector<Item *> &childItems = item->childItems( this );
-				for( std::vector<Item *>::const_iterator it = childItems.begin(), eIt = childItems.end(); it != eIt; ++it )
+				const Item::ChildContainer &childItems = item->childItems( this );
+				for( auto it = childItems.begin(), eIt = childItems.end(); it != eIt; ++it )
 				{
 					if( (*it)->path()->names()[i] == path[i] )
 					{
 						result = index( it - childItems.begin(), 0, result );
-						item = *it;
+						item = it->get();
 						foundNextItem = true;
 						break;
 					}
@@ -535,7 +529,7 @@ class PathModel : public QAbstractItemModel
 				return result;
 			}
 
-			indicesForPathsWalk( m_rootItem, QModelIndex(), paths, result );
+			indicesForPathsWalk( m_rootItem.get(), QModelIndex(), paths, result );
 			return result;
 		}
 
@@ -565,11 +559,11 @@ class PathModel : public QAbstractItemModel
 
 		QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const override
 		{
-			Item *parentItem = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem;
+			Item *parentItem = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem.get();
 
 			if( row >=0 and row < (int)parentItem->childItems( this ).size() and column >=0 and column < (int)m_columns.size() )
 			{
-				return createIndex( row, column, parentItem->childItems( this )[row] );
+				return createIndex( row, column, parentItem->childItems( this )[row].get() );
 			}
 			else
 			{
@@ -607,7 +601,7 @@ class PathModel : public QAbstractItemModel
 			}
 			else
 			{
-				parentItem = m_rootItem;
+				parentItem = m_rootItem.get();
 			}
 
 			return parentItem->childItems( this ).size();
@@ -642,7 +636,7 @@ class PathModel : public QAbstractItemModel
 
 		// A single item in the PathModel - stores a path and caches
 		// data extracted from it to provide the model content.
-		struct Item
+		struct Item : public IECore::RefCounted
 		{
 
 			Item( Gaffer::PathPtr path, int row, Item *parent )
@@ -650,13 +644,7 @@ class PathModel : public QAbstractItemModel
 			{
 			}
 
-			~Item()
-			{
-				for( std::vector<Item *>::const_iterator it = m_childItems.begin(), eIt = m_childItems.end(); it != eIt; ++it )
-				{
-					delete *it;
-				}
-			}
+			IE_CORE_DECLAREMEMBERPTR( Item )
 
 			Gaffer::Path *path()
 			{
@@ -693,7 +681,9 @@ class PathModel : public QAbstractItemModel
 				}
 			}
 
-			std::vector<Item *> &childItems( const PathModel *model )
+			using ChildContainer = std::vector<Ptr>;
+
+			ChildContainer &childItems( const PathModel *model )
 			{
 				if( !m_childItemsDone && m_path )
 				{
@@ -736,7 +726,7 @@ class PathModel : public QAbstractItemModel
 				for( int i = 0, e = m_childItems.size(); i < e; ++i )
 				{
 					m_childItems[i]->ensureData( model->getColumns() );
-					sortableChildren.push_back( SortableItem( m_childItems[i], i ) );
+					sortableChildren.push_back( SortableItem( m_childItems[i].get(), i ) );
 				}
 
 				std::sort(
@@ -763,7 +753,7 @@ class PathModel : public QAbstractItemModel
 
 				const_cast<PathModel *>( model )->changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
 
-				for( std::vector<Item *>::const_iterator it = m_childItems.begin(), eIt = m_childItems.end(); it != eIt; ++it )
+				for( auto it = m_childItems.begin(), eIt = m_childItems.end(); it != eIt; ++it )
 				{
 					(*it)->sort( model );
 				}
@@ -819,7 +809,7 @@ class PathModel : public QAbstractItemModel
 				std::vector<QVariant> m_decorationData;
 
 				bool m_childItemsDone;
-				std::vector<Item *> m_childItems;
+				std::vector<Ptr> m_childItems;
 
 		};
 
@@ -844,11 +834,11 @@ class PathModel : public QAbstractItemModel
 			for( const auto &childItem : item->childItems( this ) )
 			{
 				const QModelIndex childIndex = index( row++, 0, itemIndex );
-				indicesForPathsWalk( childItem, childIndex, paths, indices );
+				indicesForPathsWalk( childItem.get(), childIndex, paths, indices );
 			}
 		}
 
-		Item *m_rootItem;
+		Item::Ptr m_rootItem;
 		bool m_flat;
 		std::vector<ColumnPtr> m_columns;
 		int m_sortColumn;
