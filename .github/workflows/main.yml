@@ -55,7 +55,7 @@ jobs:
             os: ubuntu-16.04
             buildType: DEBUG
             variant: linux-python2
-            publish: false
+            publish: true
             containerImage: gafferhq/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/2.3.0/gafferDependencies-2.3.0-Python2-linux.tar.gz
             testRunner: su testUser -c
