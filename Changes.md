@@ -6,6 +6,11 @@ Improvements
 
 - Process : Added warning messages for processes which don't respond promptly to cancellation.
 
+Fixes
+-----
+
+- RendererAlgo::outputOutputs : Fix typo and clarify wording of warning
+
 0.60.0.0
 ========
 

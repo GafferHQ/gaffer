@@ -1473,8 +1473,8 @@ ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *sc
 			default :
 				IECore::msg(
 					IECore::Msg::Debug,
-					"GafferScene::RendereAlgo",
-					boost::format(  "Unsupported data type for Context variable \"%s\" (%s), unable to add header" ) % name % data->typeName()
+					"GafferScene::RendererAlgo",
+					boost::format(  "Unsupported data type for Context variable \"%s\" (%s), unable to add this variable to output image header" ) % name % data->typeName()
 				);
 		};
 	}
