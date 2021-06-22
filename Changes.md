@@ -1,3 +1,11 @@
+0.59.x.x (relative to 0.59.9.0)
+========
+
+Fixes
+-----
+
+- ArnoldShader : Fixed loading of shaders with matrix outputs.
+
 0.59.9.0 (relative to 0.59.8.0)
 ========
 
