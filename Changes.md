@@ -1,6 +1,11 @@
 0.61.x.x
 ========
 
+API
+---
+
+- GraphComponent : Inlined `children()` method, yielding 20-40% improvements in various child iteration benchmarks.
+
 Breaking Changes
 ----------------
 

@@ -82,25 +82,25 @@ GAFFERIMAGE_API std::vector<std::string> layerNames( const std::vector<std::stri
 /// Returns the name of the layer the channel belongs to.
 /// This is simply the portion of the channelName up to the
 /// last '.', or "" if no such separator exists.
-inline std::string layerName( const std::string &channelName );
+std::string layerName( const std::string &channelName );
 
 /// Returns the base name for a channel - the portion of
 /// the name following the last '.', or the whole name
 /// if no separator exists.
-inline std::string baseName( const std::string &channelName );
+std::string baseName( const std::string &channelName );
 
 /// Joins a layer name and base name to form a channel name.
-inline std::string channelName( const std::string &layerName, const std::string &baseName );
+std::string channelName( const std::string &layerName, const std::string &baseName );
 
 /// Returns 0, 1, 2 and 3 for base names "R", "G", "B"
 /// and "A" respectively. Returns -1 for all other base names.
-inline int colorIndex( const std::string &channelName );
+int colorIndex( const std::string &channelName );
 
 /// Returns true if the specified channel exists in image
-inline bool channelExists( const ImagePlug *image, const std::string &channelName );
+bool channelExists( const ImagePlug *image, const std::string &channelName );
 
 /// Returns true if the specified channel exists in channelNames
-inline bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
+bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
 
 /// Default channel names
 /// ==============================

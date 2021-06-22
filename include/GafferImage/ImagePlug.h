@@ -206,30 +206,30 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
 
-		inline static int tileSize() { return 1 << tileSizeLog2(); };
-		inline static int tilePixels() { return tileSize() * tileSize(); };
+		static int tileSize() { return 1 << tileSizeLog2(); };
+		static int tilePixels() { return tileSize() * tileSize(); };
 
 		/// Returns the index of the tile containing a point
 		/// This just means dividing by tile size ( always rounding down )
-		inline static const Imath::V2i tileIndex( const Imath::V2i &point )
+		static const Imath::V2i tileIndex( const Imath::V2i &point )
 		{
 			return Imath::V2i( point.x >> tileSizeLog2(), point.y >> tileSizeLog2() );
 		};
 
 		/// Returns the origin of the tile that contains the point.
-		inline static Imath::V2i tileOrigin( const Imath::V2i &point )
+		static Imath::V2i tileOrigin( const Imath::V2i &point )
 		{
 			return tileIndex( point ) * tileSize();
 		}
 
 		/// Returns the unwrapped index of a point within a tile
-		inline static int pixelIndex( const Imath::V2i &point, const Imath::V2i &tileOrigin )
+		static int pixelIndex( const Imath::V2i &point, const Imath::V2i &tileOrigin )
 		{
 			return ( ( point.y - tileOrigin.y ) << tileSizeLog2() ) + point.x - tileOrigin.x;
 		};
 
 		/// Returns the pixel corresponding to an unwrapped index
-		inline static Imath::V2i indexPixel( int index, const Imath::V2i &tileOrigin )
+		static Imath::V2i indexPixel( int index, const Imath::V2i &tileOrigin )
 		{
 			int y = index >> tileSizeLog2();
 			return Imath::V2i( index - ( y << tileSizeLog2() ) + tileOrigin.x, y + tileOrigin.y );

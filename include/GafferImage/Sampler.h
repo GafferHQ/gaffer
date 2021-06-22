@@ -80,7 +80,7 @@ class GAFFERIMAGE_API Sampler
 		/// responsibility to ensure that this point is
 		/// contained within the sample window passed
 		/// to the constructor.
-		inline float sample( int x, int y );
+		float sample( int x, int y );
 
 		/// Samples the channel value at the specified
 		/// subpixel location using bilinear interpolation.
@@ -93,7 +93,7 @@ class GAFFERIMAGE_API Sampler
 		/// pixel location. For instance, the centre of the
 		/// pixel at the bottom left of the image has coordinate
 		/// 0.5, 0.5.
-		inline float sample( float x, float y );
+		float sample( float x, float y );
 
 		/// Appends a hash that represent all the pixel
 		/// values within the requested sample area.
@@ -108,7 +108,7 @@ class GAFFERIMAGE_API Sampler
 		/// @param p Any point within the cache that we wish to retrieve the data for.
 		/// @param tileData Is set to the tile's channel data.
 		/// @param tilePixelIndex XY indices that can be used to access the colour value of point 'p' from tileData.
-		inline void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex );
+		void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex );
 
 		const ImagePlug *m_plug;
 		const std::string m_channelName;

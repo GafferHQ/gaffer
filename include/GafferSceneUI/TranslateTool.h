@@ -117,7 +117,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 		bool buttonPress( const GafferUI::ButtonEvent &event );
 
 		void setTargetedMode( bool targeted );
-		inline bool getTargetedMode() const { return m_targetedMode; }
+		bool getTargetedMode() const { return m_targetedMode; }
 		bool m_targetedMode;
 
 		std::vector<Translation> m_drag;

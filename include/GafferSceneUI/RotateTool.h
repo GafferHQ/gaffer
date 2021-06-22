@@ -119,7 +119,7 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 		bool buttonPress( const GafferUI::ButtonEvent &event );
 
 		void setTargetedMode( bool targeted );
-		inline bool getTargetedMode() const { return m_targetedMode; }
+		bool getTargetedMode() const { return m_targetedMode; }
 		bool m_targetedMode;
 
 		std::vector<Rotation> m_drag;
