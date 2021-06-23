@@ -38,6 +38,7 @@
 #include "GafferUI/Gadget.h"
 
 #include "GafferUI/Style.h"
+#include "GafferUI/ViewportGadget.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/NameStateComponent.h"
@@ -68,7 +69,6 @@ struct Gadget::Signals : boost::noncopyable
 {
 
 	VisibilityChangedSignal visibilityChangedSignal;
-	RenderRequestSignal renderRequestSignal;
 
 	ButtonSignal buttonPressSignal;
 	ButtonSignal buttonReleaseSignal;
@@ -189,7 +189,6 @@ void Gadget::setVisible( bool visible )
 		emitDescendantVisibilityChanged();
 		Signals::emitLazily( m_signals.get(), &Signals::visibilityChangedSignal, this );
 	}
-	Signals::emitLazily( m_signals.get(), &Signals::renderRequestSignal, this );
 	if( p )
 	{
 		p->dirty( DirtyType::Layout );
@@ -319,26 +318,27 @@ void Gadget::dirty( DirtyType dirtyType )
 		{
 			g->m_layoutDirty = true;
 		}
-		Signals::emitLazily( g->m_signals.get(), &Signals::renderRequestSignal, g );
 		if( dirtyType == DirtyType::Bound )
 		{
 			// Bounds changes in children require layout updates in parents.
 			dirtyType = DirtyType::Layout;
 		}
-		g = g->parent<Gadget>();
+		Gadget *p = g->parent<Gadget>();
+		if( !p )
+		{
+			// Found top level gadget, maybe it's a ViewportGadget
+			ViewportGadget *viewportGadget = IECore::runTimeCast<ViewportGadget>( g );
+			if( viewportGadget )
+			{
+				viewportGadget->renderRequestSignal()( viewportGadget );
+			}
+		}
+		g = p;
 	}
 }
 
 void Gadget::updateLayout() const
 {
-}
-
-void Gadget::requestRender()
-{
-	// `requestRender()` has been deprecated and replaced by `dirty()` because
-	// it didn't provide the fine-grained control we need. Where extension code
-	// is still using it, we must assume the worst and dirty the layout.
-	dirty( DirtyType::Layout );
 }
 
 void Gadget::doRenderLayer( Layer layer, const Style *style ) const
@@ -386,11 +386,6 @@ Imath::Box3f Gadget::transformedBound( const Gadget *ancestor ) const
 {
 	Box3f b = bound();
 	return transform( b, fullTransform( ancestor ) );
-}
-
-Gadget::RenderRequestSignal &Gadget::renderRequestSignal()
-{
-	return signals()->renderRequestSignal;
 }
 
 std::string Gadget::getToolTip( const IECore::LineSegment3f &position ) const

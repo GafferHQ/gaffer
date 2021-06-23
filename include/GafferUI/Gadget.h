@@ -190,8 +190,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		Imath::Box3f transformedBound() const;
 		/// The bounding box transformed by the result of fullTransform( ancestor ).
 		Imath::Box3f transformedBound( const Gadget *ancestor ) const;
-		typedef boost::signal<void ( Gadget * )> RenderRequestSignal;
-		RenderRequestSignal &renderRequestSignal();
 		//@}
 
 		/// @name Tool tips
@@ -302,8 +300,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// The default implementation returns true.
 		virtual bool hasLayer( Layer layer ) const;
 
-		/// \deprecated
-		void requestRender();
 		/// Implemented to dirty the layout for both the old and the new parent.
 		void parentChanged( GraphComponent *oldParent ) override;
 

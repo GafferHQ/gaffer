@@ -56,7 +56,7 @@ using namespace GafferUI;
 namespace
 {
 
-struct RenderRequestSlotCaller
+struct VisibilityChangedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GadgetPtr g )
 	{
@@ -195,7 +195,6 @@ void GafferUIModule::bindGadget()
 		.def( "fullTransform", &Gadget::fullTransform, fullTransformOverloads() )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)() const)&Gadget::transformedBound )
 		.def( "transformedBound", (Imath::Box3f (Gadget::*)( const Gadget * ) const)&Gadget::transformedBound )
-		.def( "renderRequestSignal", &Gadget::renderRequestSignal, return_internal_reference<1>() )
 		.def( "setToolTip", &Gadget::setToolTip )
 		.def( "buttonPressSignal", &Gadget::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &Gadget::buttonReleaseSignal, return_internal_reference<1>() )
@@ -217,7 +216,6 @@ void GafferUIModule::bindGadget()
 		.def( "_idleSignalAccessedSignal", &Gadget::idleSignalAccessedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "_idleSignalAccessedSignal" )
 		.def( "_dirty", &Gadget::dirty )
-		.def( "_requestRender", &Gadget::requestRender )
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 
@@ -235,7 +233,7 @@ void GafferUIModule::bindGadget()
 		.value( "Layout", Gadget::DirtyType::Layout )
 	;
 
-	SignalClass<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>( "RenderRequestSignal" );
+	SignalClass<Gadget::VisibilityChangedSignal, DefaultSignalCaller<Gadget::VisibilityChangedSignal>, VisibilityChangedSlotCaller>( "VisibilityChangedSignal" );
 	SignalClass<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, ButtonSlotCaller>( "ButtonSignal" );
 	SignalClass<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, KeySlotCaller>( "KeySignal" );
 	SignalClass<Gadget::DragBeginSignal, DefaultSignalCaller<Gadget::DragBeginSignal>, DragBeginSlotCaller>( "DragBeginSignal" );

@@ -240,6 +240,9 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// the viewport or its children.
 		UnarySignal &preRenderSignal();
 
+		typedef boost::signal<void ( ViewportGadget * )> RenderRequestSignal;
+		RenderRequestSignal &renderRequestSignal();
+
 	private :
 
 		void renderInternal( Layer filterLayer = Layer::None ) const;
@@ -311,6 +314,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;
 		UnarySignal m_preRenderSignal;
+		RenderRequestSignal m_renderRequestSignal;
 
 };
 

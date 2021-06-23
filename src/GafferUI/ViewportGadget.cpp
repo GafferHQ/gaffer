@@ -1087,6 +1087,11 @@ ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
 	return m_preRenderSignal;
 }
 
+ViewportGadget::RenderRequestSignal &ViewportGadget::renderRequestSignal()
+{
+	return m_renderRequestSignal;
+}
+
 void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child )
 {
 	const Gadget *childGadget = static_cast<const Gadget *>( child );

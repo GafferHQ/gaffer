@@ -142,28 +142,33 @@ class GadgetTest( GafferUITest.TestCase ) :
 	def testRenderRequestOnStyleChange( self ) :
 
 		g = GafferUI.Gadget()
+		v = GafferUI.ViewportGadget()
+		v.addChild( g )
 
-		cs = GafferTest.CapturingSlot( g.renderRequestSignal() )
+		cs = GafferTest.CapturingSlot( v.renderRequestSignal() )
 		self.assertEqual( len( cs ), 0 )
 
 		s = GafferUI.StandardStyle()
 
 		g.setStyle( s )
 		self.assertEqual( len( cs ), 1 )
-		self.assertTrue( cs[0][0].isSame( g ) )
+		self.assertTrue( cs[0][0].isSame( v ) )
 
 		s2 = GafferUI.StandardStyle()
 		g.setStyle( s2 )
 		self.assertEqual( len( cs ), 2 )
-		self.assertTrue( cs[1][0].isSame( g ) )
+		self.assertTrue( cs[1][0].isSame( v ) )
 
 		s2.setColor( GafferUI.StandardStyle.Color.BackgroundColor, imath.Color3f( 1 ) )
 		self.assertEqual( len( cs ), 3 )
-		self.assertTrue( cs[2][0].isSame( g ) )
+		self.assertTrue( cs[2][0].isSame( v ) )
 
 	def testHighlighting( self ) :
 
 		g = GafferUI.Gadget()
+		v = GafferUI.ViewportGadget()
+		v.addChild( g )
+
 		self.assertEqual( g.getHighlighted(), False )
 
 		g.setHighlighted( True )
@@ -172,14 +177,14 @@ class GadgetTest( GafferUITest.TestCase ) :
 		g.setHighlighted( False )
 		self.assertEqual( g.getHighlighted(), False )
 
-		cs = GafferTest.CapturingSlot( g.renderRequestSignal() )
+		cs = GafferTest.CapturingSlot( v.renderRequestSignal() )
 
 		g.setHighlighted( False )
 		self.assertEqual( len( cs ), 0 )
 
 		g.setHighlighted( True )
 		self.assertEqual( len( cs ), 1 )
-		self.assertTrue( cs[0][0].isSame( g ) )
+		self.assertTrue( cs[0][0].isSame( v ) )
 
 	def testVisibility( self ) :
 
@@ -215,7 +220,10 @@ class GadgetTest( GafferUITest.TestCase ) :
 	def testVisibilitySignals( self ) :
 
 		g = GafferUI.Gadget()
-		cs = GafferTest.CapturingSlot( g.renderRequestSignal() )
+		v = GafferUI.ViewportGadget()
+		v.addChild( g )
+
+		cs = GafferTest.CapturingSlot( v.renderRequestSignal() )
 		self.assertEqual( len( cs ), 0 )
 
 		g.setVisible( True )
@@ -223,15 +231,15 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 		g.setVisible( False )
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0][0], g )
+		self.assertEqual( cs[0][0], v )
 
 		g.setVisible( False )
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0][0], g )
+		self.assertEqual( cs[0][0], v )
 
 		g.setVisible( True )
 		self.assertEqual( len( cs ), 2 )
-		self.assertEqual( cs[1][0], g )
+		self.assertEqual( cs[1][0], v )
 
 	def testBoundIgnoresHiddenChildren( self ) :
 

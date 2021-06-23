@@ -170,6 +170,7 @@ void GafferUIModule::bindViewportGadget()
 		.def( "worldToRasterSpace", &ViewportGadget::worldToRasterSpace, ( arg_( "worldPosition" ) ) )
 		.def( "render", &render )
 		.def( "preRenderSignal", &ViewportGadget::preRenderSignal, return_internal_reference<1>() )
+		.def( "renderRequestSignal", &ViewportGadget::renderRequestSignal, return_internal_reference<1>() )
 	;
 
 	enum_<ViewportGadget::DragTracking>( "DragTracking" )
