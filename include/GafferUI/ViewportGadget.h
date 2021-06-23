@@ -166,11 +166,14 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// depth buffer if it exists or the drawing order if it doesn't.
 		/// \todo Would it be more convenient for this and the space conversion functions below
 		/// to use V3fs?
-		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
+		std::vector<Gadget*> gadgetsAt( const Imath::V2f &rasterPosition ) const;
 
 		/// A more flexible form of the above, this allows specifying a region to test instead of a point,
 		/// and optionally accepts filterLayer - if set, only Gadgets in this layer will be rendered
-		void gadgetsAt( const Imath::Box2f &rasterRegion, std::vector<GadgetPtr> &gadgets, Layer filterLayer = Layer::None ) const;
+		std::vector<Gadget*> gadgetsAt( const Imath::Box2f &rasterRegion, Layer filterLayer = Layer::None ) const;
+
+		[[deprecated("Use above form which returns vector")]]
+		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
 
 		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget ) const;
 		Imath::V2f gadgetToRasterSpace( const Imath::V3f &gadgetPosition, const Gadget *gadget ) const;
@@ -278,16 +281,16 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void updateMotionState( const DragDropEvent &event, bool initialEvent = false );
 		Imath::V2f motionPositionFromEvent( const DragDropEvent &event ) const;
 
-		GadgetPtr updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event );
+		Gadget* updatedDragDestination( std::vector<Gadget*> &gadgets, const DragDropEvent &event );
 
 		void trackDrag( const DragDropEvent &event );
 		void trackDragIdle();
 
 		template<typename Event, typename Signal>
-		typename Signal::result_type dispatchEvent( std::vector<GadgetPtr> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr &handler );
+		typename Signal::result_type dispatchEvent( std::vector<Gadget*> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, Gadget* &handler );
 
 		template<typename Event, typename Signal>
-		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
+		typename Signal::result_type dispatchEvent( Gadget* gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
 
 		class CameraController;
 		std::unique_ptr<CameraController> m_cameraController;

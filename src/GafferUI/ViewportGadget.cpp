@@ -689,11 +689,10 @@ std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) cons
 		return result;
 	}
 
-	std::vector<GadgetPtr> gadgets;
-	gadgetsAt( V2f( line.p0.x, line.p0.y ), gadgets );
-	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
+	std::vector<Gadget*> gadgets = gadgetsAt( V2f( line.p0.x, line.p0.y ) );
+	for( Gadget *it : gadgets )
 	{
-		Gadget *gadget = it->get();
+		Gadget *gadget = it;
 		while( gadget && gadget != this )
 		{
 			IECore::LineSegment3f lineInGadgetSpace = rasterToGadgetSpace( V2f( line.p0.x, line.p0.y), gadget );
@@ -921,12 +920,12 @@ bool ViewportGadget::getVariableAspectZoom() const
 	return m_variableAspectZoom;
 }
 
-void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
+std::vector< Gadget* > ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition ) const
 {
-	gadgetsAt( Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ), gadgets );
+	return gadgetsAt( Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ) );
 }
 
-void ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegion, std::vector<GadgetPtr> &gadgets, Gadget::Layer filterLayer ) const
+std::vector< Gadget* > ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegion, Gadget::Layer filterLayer ) const
 {
 	std::vector<HitRecord> selection;
 	{
@@ -934,12 +933,13 @@ void ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegion, std::vector<Ga
 		renderInternal( filterLayer );
 	}
 
+	std::vector< Gadget* > gadgets;
 	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
 	{
 		GadgetPtr gadget = Gadget::select( it->name );
 		if( gadget )
 		{
-			gadgets.push_back( gadget );
+			gadgets.push_back( gadget.get() );
 		}
 	}
 
@@ -949,6 +949,17 @@ void ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegion, std::vector<Ga
 		{
 			gadgets.push_back( const_cast<Gadget *>( g ) );
 		}
+	}
+	return gadgets;
+}
+
+// DEPRECATED
+void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
+{
+	std::vector< Gadget* > retGadgets = gadgetsAt( rasterPosition );
+	for( Gadget *g : retGadgets )
+	{
+		gadgets.push_back( g );
 	}
 }
 
@@ -1118,10 +1129,9 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		return true;
 	}
 
-	std::vector<GadgetPtr> gadgets;
-	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
+	std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
 
-	GadgetPtr handler;
+	Gadget* handler;
 	m_lastButtonPressGadget = nullptr;
 	bool result = dispatchEvent( gadgets, &Gadget::buttonPressSignal, event, handler );
 	if( result )
@@ -1144,7 +1154,7 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 	bool result = false;
 	if( m_lastButtonPressGadget )
 	{
-		result = dispatchEvent( m_lastButtonPressGadget, &Gadget::buttonReleaseSignal, event );
+		result = dispatchEvent( m_lastButtonPressGadget.get(), &Gadget::buttonReleaseSignal, event );
 	}
 
 	m_lastButtonPressGadget = nullptr;
@@ -1160,10 +1170,9 @@ bool ViewportGadget::buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &eve
 
 void ViewportGadget::updateGadgetUnderMouse( const ButtonEvent &event )
 {
-	std::vector<GadgetPtr> gadgets;
-	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
+	std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
 
-	GadgetPtr newGadgetUnderMouse;
+	Gadget* newGadgetUnderMouse = nullptr;
 	if( gadgets.size() )
 	{
 		newGadgetUnderMouse = gadgets[0];
@@ -1221,9 +1230,9 @@ void ViewportGadget::emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, Gadget
 			enterTargets.push_back( enterTarget );
 			enterTarget = enterTarget->parent<Gadget>();
 		}
-		for( std::vector<GadgetPtr>::const_reverse_iterator it = enterTargets.rbegin(); it!=enterTargets.rend(); it++ )
+		for( GadgetPtr &it : enterTargets )
 		{
-			dispatchEvent( *it, &Gadget::enterSignal, event );
+			dispatchEvent( it.get(), &Gadget::enterSignal, event );
 		}
 	}
 
@@ -1251,8 +1260,8 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	// pass the signal through
 	if( m_gadgetUnderMouse )
 	{
-		std::vector<GadgetPtr> gadgetUnderMouse( 1, m_gadgetUnderMouse );
-		GadgetPtr handler;
+		std::vector<Gadget*> gadgetUnderMouse( 1, m_gadgetUnderMouse.get() );
+		Gadget* handler;
 		return dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
 	}
 
@@ -1269,7 +1278,7 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 	if( ( !cameraMotionType || unmodifiedMiddleDrag ) && m_lastButtonPressGadget )
 	{
 		// see if a child gadget would like to start a drag because the camera doesn't handle the event
-		RunTimeTypedPtr data = dispatchEvent( m_lastButtonPressGadget, &Gadget::dragBeginSignal, event );
+		RunTimeTypedPtr data = dispatchEvent( m_lastButtonPressGadget.get(), &Gadget::dragBeginSignal, event );
 		if( data )
 		{
 			const_cast<DragDropEvent &>( event ).sourceGadget = m_lastButtonPressGadget;
@@ -1320,10 +1329,9 @@ bool ViewportGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	else
 	{
-		std::vector<GadgetPtr> gadgets;
-		gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
+		std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
 
-		GadgetPtr dragDestination = updatedDragDestination( gadgets, event );
+		Gadget* dragDestination = updatedDragDestination( gadgets, event );
 		if( dragDestination )
 		{
 			const_cast<DragDropEvent &>( event ).destinationGadget = dragDestination;
@@ -1356,14 +1364,13 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		// step as an optimisation.
 		if( !event.destinationGadget || !event.data->isInstanceOf( IECore::NullObjectTypeId ) )
 		{
-			std::vector<GadgetPtr> gadgets;
-			gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
+			std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
 
 			// update drag destination
-			GadgetPtr updatedDestination = updatedDragDestination( gadgets, event );
+			Gadget* updatedDestination = updatedDragDestination( gadgets, event );
 			if( updatedDestination != event.destinationGadget )
 			{
-				GadgetPtr previousDestination = event.destinationGadget;
+				Gadget* previousDestination = event.destinationGadget.get();
 				const_cast<DragDropEvent &>( event ).destinationGadget = updatedDestination;
 				if( previousDestination )
 				{
@@ -1375,7 +1382,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		// dispatch drag move to current destination
 		if( event.destinationGadget )
 		{
-			return dispatchEvent( event.destinationGadget, &Gadget::dragMoveSignal, event );
+			return dispatchEvent( event.destinationGadget.get(), &Gadget::dragMoveSignal, event );
 		}
 	}
 
@@ -1527,11 +1534,11 @@ V2f ViewportGadget::motionPositionFromEvent( const DragDropEvent &event ) const
 	}
 }
 
-GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event )
+Gadget* ViewportGadget::updatedDragDestination( std::vector<Gadget*> &gadgets, const DragDropEvent &event )
 {
-	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
+	for( Gadget *it : gadgets )
 	{
-		GadgetPtr gadget = *it;
+		Gadget* gadget = it;
 		while( gadget && gadget != this )
 		{
 			if( gadget == event.destinationGadget )
@@ -1561,16 +1568,16 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	// keep the existing destination if it's also the source.
 	if( event.destinationGadget && event.destinationGadget == event.sourceGadget )
 	{
-		return event.destinationGadget;
+		return event.destinationGadget.get();
 	}
 
 	// and if that's not the case then give the drag source another chance
 	// to become the destination again.
 	if( event.sourceGadget )
 	{
-		if( dispatchEvent( event.sourceGadget, &Gadget::dragEnterSignal, event ) )
+		if( dispatchEvent( event.sourceGadget.get(), &Gadget::dragEnterSignal, event ) )
 		{
-			return event.sourceGadget;
+			return event.sourceGadget.get();
 		}
 	}
 
@@ -1584,7 +1591,7 @@ bool ViewportGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		GadgetPtr previousDestination = event.destinationGadget;
 		const_cast<DragDropEvent &>( event ).destinationGadget = nullptr;
-		dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
+		dispatchEvent( previousDestination.get(), &Gadget::dragLeaveSignal, event );
 	}
 	return true;
 }
@@ -1599,7 +1606,7 @@ bool ViewportGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		if( event.destinationGadget )
 		{
-			return dispatchEvent( event.destinationGadget, &Gadget::dropSignal, event );
+			return dispatchEvent( event.destinationGadget.get(), &Gadget::dropSignal, event );
 		}
 		else
 		{
@@ -1628,7 +1635,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		m_dragTrackingIdleConnection.disconnect();
 		if( event.sourceGadget )
 		{
-			return dispatchEvent( event.sourceGadget, &Gadget::dragEndSignal, event );
+			return dispatchEvent( event.sourceGadget.get(), &Gadget::dragEndSignal, event );
 		}
 	}
 	return false;
@@ -1695,11 +1702,11 @@ void ViewportGadget::eventToGadgetSpace( ButtonEvent &event, Gadget *gadget )
 }
 
 template<typename Event, typename Signal>
-typename Signal::result_type ViewportGadget::dispatchEvent( std::vector<GadgetPtr> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr &handler )
+typename Signal::result_type ViewportGadget::dispatchEvent( std::vector<Gadget*> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, Gadget* &handler )
 {
-	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
+	for( Gadget* it : gadgets )
 	{
-		GadgetPtr gadget = *it;
+		Gadget* gadget = it;
 		if( !gadget->enabled() )
 		{
 			continue;
@@ -1719,12 +1726,12 @@ typename Signal::result_type ViewportGadget::dispatchEvent( std::vector<GadgetPt
 }
 
 template<typename Event, typename Signal>
-typename Signal::result_type ViewportGadget::dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event )
+typename Signal::result_type ViewportGadget::dispatchEvent( Gadget* gadget, Signal &(Gadget::*signalGetter)(), const Event &event )
 {
 	Event transformedEvent( event );
-	eventToGadgetSpace( transformedEvent, gadget.get() );
-	Signal &s = (gadget.get()->*signalGetter)();
-	return s( gadget.get(), transformedEvent );
+	eventToGadgetSpace( transformedEvent, gadget );
+	Signal &s = (gadget->*signalGetter)();
+	return s( gadget, transformedEvent );
 }
 
 //////////////////////////////////////////////////////////////////////////

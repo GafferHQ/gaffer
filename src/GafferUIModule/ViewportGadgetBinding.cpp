@@ -96,13 +96,12 @@ void fitClippingPlanes( ViewportGadget &v, const Imath::Box3f &box )
 
 list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
 {
-	std::vector<GadgetPtr> gadgets;
-	v.gadgetsAt( position, gadgets );
+	std::vector<Gadget*> gadgets = v.gadgetsAt( position );
 
 	boost::python::list result;
-	for( std::vector<GadgetPtr>::const_iterator it=gadgets.begin(); it!=gadgets.end(); it++ )
+	for( Gadget *gadget : gadgets )
 	{
-		result.append( *it );
+		result.append( GadgetPtr( gadget ) );
 	}
 	return result;
 }

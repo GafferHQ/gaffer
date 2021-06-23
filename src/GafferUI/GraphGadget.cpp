@@ -682,10 +682,8 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 {
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
-	std::vector<GadgetPtr> gadgetsUnderMouse;
-	viewportGadget->gadgetsAt(
-		viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this ),
-		gadgetsUnderMouse
+	std::vector<Gadget*> gadgetsUnderMouse = viewportGadget->gadgetsAt(
+		viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this )
 	);
 
 	if( !gadgetsUnderMouse.size() )
@@ -693,7 +691,7 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 		return nullptr;
 	}
 
-	NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0].get() );
+	NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0] );
 	if( !nodeGadget )
 	{
 		nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
@@ -706,15 +704,16 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 {
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
-	std::vector<GadgetPtr> gadgetsUnderMouse;
-	viewportGadget->gadgetsAt( viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this ), gadgetsUnderMouse );
+	std::vector<Gadget*> gadgetsUnderMouse = viewportGadget->gadgetsAt(
+		viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this )
+	);
 
 	if ( !gadgetsUnderMouse.size() )
 	{
 		return nullptr;
 	}
 
-	ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( gadgetsUnderMouse[0].get() );
+	ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( gadgetsUnderMouse[0] );
 	if ( !connectionGadget )
 	{
 		connectionGadget = gadgetsUnderMouse[0]->ancestor<ConnectionGadget>();
@@ -732,11 +731,12 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( center - Imath::V3f( 2, 2, 1 ), this ) );
 	rasterRegion.extendBy( viewportGadget->gadgetToRasterSpace( center + Imath::V3f( 2, 2, 1 ), this ) );
 
-	std::vector<GadgetPtr> gadgetsUnderMouse;
-	viewportGadget->gadgetsAt( rasterRegion, gadgetsUnderMouse, GraphLayer::Connections );
-	for( const GadgetPtr &g : gadgetsUnderMouse )
+	std::vector<Gadget*> gadgetsUnderMouse = viewportGadget->gadgetsAt(
+		rasterRegion, GraphLayer::Connections
+	);
+	for( Gadget* g : gadgetsUnderMouse )
 	{
-		if( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( g.get() ) )
+		if( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( g ) )
 		{
 			if(
 				c->srcNodule() &&
@@ -1017,10 +1017,8 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 		ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 
-		std::vector<GadgetPtr> gadgetsUnderMouse;
-		viewportGadget->gadgetsAt(
-			viewportGadget->gadgetToRasterSpace( event.line.p0, this ),
-			gadgetsUnderMouse
+		std::vector<Gadget*> gadgetsUnderMouse = viewportGadget->gadgetsAt(
+			viewportGadget->gadgetToRasterSpace( event.line.p0, this )
 		);
 
 		if( !gadgetsUnderMouse.size() || gadgetsUnderMouse[0] == this )
@@ -1034,7 +1032,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 			return true;
 		}
 
-		NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0].get() );
+		NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0] );
 		if( !nodeGadget )
 		{
 			nodeGadget = gadgetsUnderMouse[0]->ancestor<NodeGadget>();
