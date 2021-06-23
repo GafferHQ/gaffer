@@ -85,7 +85,7 @@ SceneGadget::SceneGadget()
 	setOpenGLOptions( openGLOptions.get() );
 
 	m_controller.updateRequiredSignal().connect(
-		boost::bind( &SceneGadget::requestRender, this )
+		boost::bind( &SceneGadget::dirty, this, DirtyType::Layout )
 	);
 
 	visibilityChangedSignal().connect( boost::bind( &SceneGadget::visibilityChanged, this ) );
