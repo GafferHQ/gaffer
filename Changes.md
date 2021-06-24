@@ -9,7 +9,7 @@ Improvements
 Fixes
 -----
 
-- RendererAlgo::outputOutputs : Fix typo and clarify wording of warning
+- Render : Fixed typo and improved clarity of warning when a context variable can't be added to an image header.
 
 0.60.0.0
 ========
