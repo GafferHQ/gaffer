@@ -304,7 +304,6 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// \todo Consider better mechanisms.
 		static GadgetPtr select( GLuint id );
 
-
 		void styleChanged();
 		void emitDescendantVisibilityChanged();
 

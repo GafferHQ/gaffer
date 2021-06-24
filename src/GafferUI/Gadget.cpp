@@ -322,10 +322,9 @@ void Gadget::dirty( DirtyType dirtyType )
 		if( !p )
 		{
 			// Found top level gadget, maybe it's a ViewportGadget
-			ViewportGadget *viewportGadget = IECore::runTimeCast<ViewportGadget>( g );
-			if( viewportGadget )
+			if( auto viewportGadget = IECore::runTimeCast<ViewportGadget>( g ) )
 			{
-				viewportGadget->renderRequestSignal()( viewportGadget );
+				viewportGadget->childDirtied( dirtyType );
 			}
 		}
 		g = p;

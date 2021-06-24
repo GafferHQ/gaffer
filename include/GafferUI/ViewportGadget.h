@@ -248,6 +248,23 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 	private :
 
+		// Called by `Gadget::dirty()` to notify ViewportGadget of changes
+		// that may affect the rendering it is responsible for.
+		void childDirtied( DirtyType dirtyType );
+
+		friend class Gadget;
+
+		struct RenderItem
+		{
+			const Gadget *gadget;
+			const Style *style;
+			const Imath::M44f transform;
+			const Imath::Box3f bound;
+		};
+		mutable std::vector<RenderItem> m_renderItems;
+
+		static void getRenderItems( const Gadget *gadget,  Imath::M44f transform, const Style *parentStyle, std::vector<RenderItem> &renderItems );
+
 		void renderInternal( Layer filterLayer = Layer::None ) const;
 
 		// Sets the GL state up with the name attribute and transform for
