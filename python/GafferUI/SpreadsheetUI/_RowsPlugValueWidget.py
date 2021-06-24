@@ -201,6 +201,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
+	def getToolTip( self ) :
+
+		# The generic auto-generated PlugValueWidget tooltip is distracting
+		# rather than useful, so we disable it. Calling `Widget.getToolTip()`
+		# means we continue to support tooltips added explicitly with
+		# `setToolTip()`.
+		return GafferUI.Widget.getToolTip( self )
+
 	__addRowButtonMenuSignal = None
 	## This signal is emitted whenever the add row button is clicked.
 	# If the resulting menu definition has been populated with items,

@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- Spreadsheet : Removed distracting "rows" tooltip.
 - UVInspector : Added ability to drag and drop UV values out of the inspector.
 - Process : Added warning messages for processes which don't respond promptly to cancellation.
 
