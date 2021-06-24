@@ -21,6 +21,11 @@ Fixes
 
 - Render : Fixed typo and improved clarity of warning when a context variable can't be added to an image header.
 
+API
+---
+
+- TextInputDialogue : Added `multiLine` constructor argument, to allow input of multi-line values.
+
 0.60.0.0
 ========
 
