@@ -374,7 +374,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		plug = self.valuePlugForIndex( index )
 
-		if isinstance( plug, Gaffer.BoolPlug ) :
+		if not forToolTip and isinstance( plug, Gaffer.BoolPlug ) :
 			# Dealt with via CheckStateRole
 			return None
 
