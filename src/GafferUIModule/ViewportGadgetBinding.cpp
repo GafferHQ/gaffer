@@ -96,13 +96,24 @@ void fitClippingPlanes( ViewportGadget &v, const Imath::Box3f &box )
 
 list gadgetsAt( ViewportGadget &v, const Imath::V2f &position )
 {
-	std::vector<GadgetPtr> gadgets;
-	v.gadgetsAt( position, gadgets );
+	std::vector<Gadget*> gadgets = v.gadgetsAt( position );
 
 	boost::python::list result;
-	for( std::vector<GadgetPtr>::const_iterator it=gadgets.begin(); it!=gadgets.end(); it++ )
+	for( Gadget *gadget : gadgets )
 	{
-		result.append( *it );
+		result.append( GadgetPtr( gadget ) );
+	}
+	return result;
+}
+
+list gadgetsAt2( ViewportGadget &v, const Imath::Box2f &region, Gadget::Layer filterLayer = Gadget::Layer::None )
+{
+	std::vector<Gadget*> gadgets = v.gadgetsAt( region, filterLayer );
+
+	boost::python::list result;
+	for( Gadget *gadget : gadgets )
+	{
+		result.append( GadgetPtr( gadget ) );
 	}
 	return result;
 }
@@ -164,12 +175,14 @@ void GafferUIModule::bindViewportGadget()
 		.def( "setVariableAspectZoom", &ViewportGadget::setVariableAspectZoom )
 		.def( "getVariableAspectZoom", &ViewportGadget::getVariableAspectZoom )
 		.def( "gadgetsAt", &gadgetsAt )
+		.def( "gadgetsAt", &gadgetsAt2, ( arg_( "rasterRegion" ), arg_( "filterLayer" ) = Gadget::Layer::None )  )
 		.def( "rasterToGadgetSpace", &ViewportGadget::rasterToGadgetSpace, ( arg_( "rasterPosition" ), arg_( "gadget" ) ) )
 		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) ) )
 		.def( "rasterToWorldSpace", &ViewportGadget::rasterToWorldSpace, ( arg_( "rasterPosition" ) ) )
 		.def( "worldToRasterSpace", &ViewportGadget::worldToRasterSpace, ( arg_( "worldPosition" ) ) )
 		.def( "render", &render )
 		.def( "preRenderSignal", &ViewportGadget::preRenderSignal, return_internal_reference<1>() )
+		.def( "renderRequestSignal", &ViewportGadget::renderRequestSignal, return_internal_reference<1>() )
 	;
 
 	enum_<ViewportGadget::DragTracking>( "DragTracking" )

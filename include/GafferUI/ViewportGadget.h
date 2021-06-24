@@ -166,6 +166,13 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// depth buffer if it exists or the drawing order if it doesn't.
 		/// \todo Would it be more convenient for this and the space conversion functions below
 		/// to use V3fs?
+		std::vector<Gadget*> gadgetsAt( const Imath::V2f &rasterPosition ) const;
+
+		/// A more flexible form of the above, this allows specifying a region to test instead of a point,
+		/// and optionally accepts filterLayer - if set, only Gadgets in this layer will be rendered
+		std::vector<Gadget*> gadgetsAt( const Imath::Box2f &rasterRegion, Layer filterLayer = Layer::None ) const;
+
+		[[deprecated("Use above form which returns vector")]]
 		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
 
 		IECore::LineSegment3f rasterToGadgetSpace( const Imath::V2f &rasterPosition, const Gadget *gadget ) const;
@@ -203,7 +210,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 			private :
 
 				/// Private constructor for use by ViewportGadget.
-				SelectionScope( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode );
+				SelectionScope( const ViewportGadget *viewportGadget, const Imath::Box2f &rasterRegion, std::vector<IECoreGL::HitRecord> &selection, IECoreGL::Selector::Mode mode );
 				friend class ViewportGadget;
 
 				void begin( const ViewportGadget *viewportGadget, const Imath::V2f &rasterPosition, const Imath::M44f &transform, IECoreGL::Selector::Mode mode );
@@ -228,6 +235,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		};
 
+		/// Renders the children of the viewport into the current OpenGL context.
 		void render() const;
 
 		/// A signal emitted just prior to rendering the viewport each time. This
@@ -235,7 +243,16 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// the viewport or its children.
 		UnarySignal &preRenderSignal();
 
+		typedef boost::signal<void ( ViewportGadget * )> RenderRequestSignal;
+		RenderRequestSignal &renderRequestSignal();
+
 	private :
+
+		void renderInternal( Layer filterLayer = Layer::None ) const;
+
+		// Sets the GL state up with the name attribute and transform for
+		// the Gadget, makes sure the style is bound and then calls doRenderLayer().
+		static void renderLayer( const Gadget *gadget, Layer layer, const Style *currentStyle = nullptr );
 
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 
@@ -264,16 +281,16 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void updateMotionState( const DragDropEvent &event, bool initialEvent = false );
 		Imath::V2f motionPositionFromEvent( const DragDropEvent &event ) const;
 
-		GadgetPtr updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event );
+		Gadget* updatedDragDestination( std::vector<Gadget*> &gadgets, const DragDropEvent &event );
 
 		void trackDrag( const DragDropEvent &event );
 		void trackDragIdle();
 
 		template<typename Event, typename Signal>
-		typename Signal::result_type dispatchEvent( std::vector<GadgetPtr> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, GadgetPtr &handler );
+		typename Signal::result_type dispatchEvent( std::vector<Gadget*> &gadgets, Signal &(Gadget::*signalGetter)(), const Event &event, Gadget* &handler );
 
 		template<typename Event, typename Signal>
-		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
+		typename Signal::result_type dispatchEvent( Gadget* gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
 
 		class CameraController;
 		std::unique_ptr<CameraController> m_cameraController;
@@ -300,6 +317,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;
 		UnarySignal m_preRenderSignal;
+		RenderRequestSignal m_renderRequestSignal;
 
 };
 
