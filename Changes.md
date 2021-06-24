@@ -10,8 +10,8 @@ Improvements
 ------------
 
 - Spreadsheet :
-  - Added tooltips for column headers. These can be edited using the new "Set Description..."
-    option in the right-click popup menu.
+  - Added tooltips for column headers and sections. These can be edited using the new "Set Description..."
+    option in the right-click popup menus.
   - Removed distracting "rows" tooltip.
   - Added value tooltips for boolean cells.
   - Added "Empty" tooltip for empty array values.
