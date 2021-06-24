@@ -363,9 +363,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				with self.getContext() :
 					rowName = rowPlug["name"].getValue() or "unnamed"
 
+			columnPlug = self.getPlug().defaultRow()["cells"][plug.getName()]
+			columnName = Gaffer.Metadata.value( columnPlug, "spreadsheet:columnLabel" )
+			if not columnName :
+				columnName = IECore.CamelCase.toSpaced( columnPlug.getName() )
+
 			status = "Row : {}, Column : {}".format(
 				rowName,
-				IECore.CamelCase.toSpaced( plug.getName() ),
+				columnName
 			)
 
 		self.__statusLabel.setText( status )

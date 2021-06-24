@@ -15,6 +15,7 @@ Improvements
   - Removed distracting "rows" tooltip.
   - Added value tooltips for boolean cells.
   - Added "Empty" tooltip for empty array values.
+  - Fixed status bar to use the custom column label if it exists.
 - UVInspector : Added ability to drag and drop UV values out of the inspector.
 - Process : Added warning messages for processes which don't respond promptly to cancellation.
 
