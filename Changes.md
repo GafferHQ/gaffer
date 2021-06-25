@@ -5,6 +5,7 @@ Features
 --------
 
 - AttributeQuery : Added a new node for querying the value of an attribute at a location.
+- Constraint : New target modes constrain to a vertex id or uv coordinate.
 
 Improvements
 ------------
