@@ -153,7 +153,6 @@ def __featuresSummary( plug ) :
 		( "ignoreSubdivision", "Subdivs" ),
 		( "ignoreDisplacement", "Disp" ),
 		( "ignoreBump", "Bump" ),
-		( "ignoreMotionBlur", "MBlur" ),
 		( "ignoreSSS", "SSS" ),
 	) :
 		if plug[childName]["enabled"].getValue() :
@@ -846,20 +845,6 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Ignores all bump mapping.
-			""",
-
-			"layout:section", "Features",
-
-		],
-
-		"options.ignoreMotionBlur" : [
-
-			"description",
-			"""
-			Ignores motion blur. Note that the turn
-			off motion blur completely, it is more
-			efficient to use the motion blur controls
-			in the StandardOptions node.
 			""",
 
 			"layout:section", "Features",
