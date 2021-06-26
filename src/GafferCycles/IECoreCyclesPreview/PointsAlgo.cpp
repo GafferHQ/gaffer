@@ -104,7 +104,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 
 		for( size_t i = 0; i < numPoints; ++i )
 		{
-			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width[i] * 0.5f, 0);
+			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width[i], 0);
 		}
 		variablesToConvert.erase( "radius" );
 	}
@@ -114,7 +114,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 
 		if( const FloatData *w = points->variableData<FloatData>( "width", PrimitiveVariable::Constant ) )
 		{	
-			width = w->readable();
+			width = w->readable() * 0.5f;
 			variablesToConvert.erase( "width" );
 		}
 
@@ -126,7 +126,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 
 		for( size_t i = 0; i < numPoints; ++i )
 		{
-			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width * 0.5f, 0);
+			pointcloud->add_point( SocketAlgo::setVector( pos[i] ), width, 0);
 		}
 	}
 
