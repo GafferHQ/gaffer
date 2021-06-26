@@ -809,8 +809,8 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			normalOp->operate();
 			if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
 			{
-				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL );
-				convertN( trimesh.get(), normals, attr_N, PrimitiveVariable::Vertex );
+				ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
+				convertN( trimesh.get(), normals, attr_N, nInterpolation );
 			}
 		}
 	}
@@ -830,8 +830,8 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			normalOp->operate();
 			if( const V3fVectorData *normals = normal( normalmesh.get(), nInterpolation ) )
 			{
-				ccl::Attribute *attr_N = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL);
-				convertN( normalmesh.get(), normals, attr_N, PrimitiveVariable::Vertex );
+				ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
+				convertN( normalmesh.get(), normals, attr_N, nInterpolation );
 			}
 		}
 	}
@@ -1025,13 +1025,17 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
 	if( normal( meshes[0], nInterpolation ) )
 	{
-		if( nInterpolation == PrimitiveVariable::Uniform )
+		if( nInterpolation == PrimitiveVariable::FaceVarying )
 		{
-			msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"N\" has unsupported interpolation type \"Uniform\" for motion steps - not generating normals." );
+			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_CORNER_NORMAL, ccl::ustring("motion_Nc") );
+		}
+		else if( nInterpolation == PrimitiveVariable::Vertex )
+		{
+			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_NORMAL, ccl::ustring("motion_N") );
 		}
 		else
 		{
-			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_NORMAL, ccl::ustring("motion_N") );
+			msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"N\" has unsupported interpolation type for motion steps - not generating normals." );
 		}
 	}
 
