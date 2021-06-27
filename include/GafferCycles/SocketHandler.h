@@ -41,6 +41,7 @@
 
 // Cycles
 #include "graph/node.h"
+#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
 
 namespace GafferCycles
 {

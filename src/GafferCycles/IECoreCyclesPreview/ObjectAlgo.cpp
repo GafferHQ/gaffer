@@ -32,6 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+// Cycles (for ustring)
+#include "util/util_param.h"
+#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
+
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECore/MessageHandler.h"
@@ -39,9 +43,6 @@
 #include "IECoreScene/PrimitiveVariable.h"
 
 #include <unordered_map>
-
-// Cycles (for ustring)
-#include "util/util_param.h"
 
 using namespace std;
 using namespace IECore;
