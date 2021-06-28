@@ -2868,7 +2868,7 @@ class ArnoldGlobals
 				m_enableProgressiveRender( true ),
 				m_shaderCache( shaderCache ),
 				m_renderBegun( false ),
-				m_assFileName( fileName )
+				m_fileName( fileName )
 		{
 			// This only takes effect if called after the UniverseBlock has been created
 			if( messageHandler )
@@ -3314,12 +3314,16 @@ class ArnoldGlobals
 					}
 					break;
 				}
-				case IECoreScenePreview::Renderer::SceneDescription :
-					// An ASS file can only contain options to render from one camera,
-					// so just use the default camera
+				case IECoreScenePreview::Renderer::SceneDescription : {
+					// A scene file can only contain options to render from one camera,
+					// so just use the default camera.
 					updateCamera( m_cameraName );
-					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
+					unique_ptr<AtParamValueMap, decltype(&AiParamValueMapDestroy)> params(
+						AiParamValueMap(), AiParamValueMapDestroy
+					);
+					AiSceneWrite( m_universeBlock->universe(), m_fileName.c_str(), params.get() );
 					break;
+				}
 				case IECoreScenePreview::Renderer::Interactive :
 					// If we want to use Arnold's progressive refinement, we can't be constantly switching
 					// the camera around, so just use the default camera
@@ -3682,9 +3686,9 @@ class ArnoldGlobals
 
 		bool m_renderBegun;
 
-		// Members used by ass generation "renders"
+		// Members used by SceneDescription "renders"
 
-		std::string m_assFileName;
+		std::string m_fileName;
 
 };
 
