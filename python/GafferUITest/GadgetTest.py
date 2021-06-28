@@ -35,8 +35,10 @@
 #
 ##########################################################################
 
+import functools
 import unittest
 import imath
+import operator
 
 import IECore
 
@@ -77,6 +79,8 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 	def testDerivationInPython( self ) :
 
+		b = imath.Box3f( imath.V3f( -20, 10, 2 ), imath.V3f( 10, 15, 5 ) )
+		layers = [ GafferUI.Gadget.Layer.Main, GafferUI.Gadget.Layer.MidBack, GafferUI.Gadget.Layer.Front ]
 		class MyGadget( GafferUI.Gadget ) :
 
 			def __init__( self ) :
@@ -87,11 +91,15 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 			def bound( self ) :
 
-				return imath.Box3f( imath.V3f( -20, 10, 2 ), imath.V3f( 10, 15, 5 ) )
+				return b
 
 			def doRenderLayer( self, layer, style ) :
 
-				self.layersRendered.add( layer )
+				self.layersRendered.add( (layer,style) )
+
+			def layerMask( self ) :
+
+				return functools.reduce( operator.or_, layers )
 
 		mg = MyGadget()
 
@@ -106,12 +114,20 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( c.bound().size(), mg.bound().size() )
 
 		with GafferUI.Window() as w :
-			GafferUI.GadgetWidget( c )
+			gw = GafferUI.GadgetWidget( c )
+			gw.getViewportGadget().frame( b )
 
 		w.setVisible( True )
 		self.waitForIdle( 1000 )
 
-		self.assertEqual( mg.layersRendered, set( GafferUI.Gadget.Layer.values.values() ) )
+		self.assertEqual( set( i[0] for i in mg.layersRendered ), set(layers) )
+		mg.layersRendered = set()
+
+		s = GafferUI.StandardStyle()
+		c.setStyle( s )
+
+		self.waitForIdle( 1000 )
+		self.assertEqual( mg.layersRendered, set( (i,s) for i in layers ) )
 
 	def testStyle( self ) :
 
