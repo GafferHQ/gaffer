@@ -1461,7 +1461,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				if( !velocityScale || velocityScale.get() > 0 )
 				{
 					AtNode *options = AiUniverseGetOptions();
-					const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, "camera" ) );
+					const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, g_cameraArnoldString ) );
 
 					if( arnoldCamera )
 					{
