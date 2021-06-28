@@ -115,25 +115,25 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	auto shaderName = shaderNamePlug()->getValue();
 	if( shaderName == "spot_light" )
 	{
-		lightShader->parameters()["type"] = new IntData( (int)ccl::LIGHT_SPOT );
+		lightShader->parameters()["light_type"] = new IntData( (int)ccl::LIGHT_SPOT );
 	}
 	else if( ( shaderName == "quad_light" )
 	      || ( shaderName == "disk_light" )
 	      || ( shaderName == "portal" ) )	
 	{
-		lightShader->parameters()["type"] = new IntData( (int)ccl::LIGHT_AREA );
+		lightShader->parameters()["light_type"] = new IntData( (int)ccl::LIGHT_AREA );
 	}
 	else if( shaderName == "background_light" )
 	{
-		lightShader->parameters()["type"] = new IntData( (int)ccl::LIGHT_BACKGROUND );
+		lightShader->parameters()["light_type"] = new IntData( (int)ccl::LIGHT_BACKGROUND );
 	}
 	else if( shaderName == "distant_light" )
 	{
-		lightShader->parameters()["type"] = new IntData( (int)ccl::LIGHT_DISTANT );
+		lightShader->parameters()["light_type"] = new IntData( (int)ccl::LIGHT_DISTANT );
 	}
 	else
 	{
-		lightShader->parameters()["type"] = new IntData( (int)ccl::LIGHT_POINT );
+		lightShader->parameters()["light_type"] = new IntData( (int)ccl::LIGHT_POINT );
 	}
 
 	if( shaderName == "portal" )
@@ -164,7 +164,7 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	IECoreScene::ShaderPtr geoShader = new IECoreScene::Shader( "geometry", "ccl:surface" );
 	// Mult
 	IECoreScene::ShaderPtr tintShader = new IECoreScene::Shader( "vector_math", "ccl:surface" );
-	tintShader->parameters()["type"] = new IntData( 2 ); //Multiply
+	tintShader->parameters()["math_type"] = new IntData( 2 ); //Multiply
 	tintShader->parameters()["vector2"] = new V3fData( Imath::V3f( 1.0f, 1.0f, 1.0f ) );
 	// If we want to connect a texture to color
 	IECoreScene::ShaderNetwork::Connection colorEmitConnection;

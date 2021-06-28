@@ -43,7 +43,7 @@
 #include "kernel/kernel_types.h"
 #include "render/image.h"
 #include "render/image_vdb.h"
-#include "render/mesh.h"
+#include "render/volume.h"
 #include "util/util_param.h"
 #include "util/util_types.h"
 
@@ -120,11 +120,9 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 
 	ccl::Object *cobject = new ccl::Object();
 	cobject->name = ccl::ustring( name.c_str() );
-	ccl::Mesh *mesh = new ccl::Mesh();
+	ccl::Volume *volume = new ccl::Volume();
 
-	mesh->volume_clipping = 0.001f;
-	mesh->volume_step_size = 0.0f;
-	mesh->volume_object_space = true;
+	volume->set_object_space( true );
 
 	std::vector<std::string> gridNames = vdbObject->gridNames();
 
@@ -194,8 +192,8 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 		}
 
 		ccl::Attribute *attr = ( std != ccl::ATTR_STD_NONE ) ?
-							mesh->attributes.add( std ) :
-							mesh->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
+							volume->attributes.add( std ) :
+							volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
 
 		ccl::ImageLoader *loader = new GafferVolumeLoader( vdbObject, gridName );
 		ccl::ImageParams params;
@@ -204,7 +202,7 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 		attr->data_voxel() = scene->image_manager->add_image( loader, params );
 	}
 
-	cobject->geometry = mesh;
+	cobject->set_geometry( volume );
 
 	return cobject;
 }

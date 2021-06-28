@@ -79,7 +79,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 	warnIfUnsupported( sphere );
 	ccl::PointCloud *pointcloud = new ccl::PointCloud();
 
-	pointcloud->point_style = ccl::POINT_CLOUD_POINT_SPHERE;
+	pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
 	pointcloud->reserve( 1 );
 	pointcloud->add_point( ccl::make_float3( 0.0f, 0.0f, 0.0f ), sphere->radius(), 0);
 
@@ -110,7 +110,7 @@ namespace SphereAlgo
 ccl::Object *convert( const IECoreScene::SpherePrimitive *sphere, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)convertCommon(sphere);
+	cobject->set_geometry( convertCommon( sphere ) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -118,7 +118,7 @@ ccl::Object *convert( const IECoreScene::SpherePrimitive *sphere, const std::str
 ccl::Object *convert( const vector<const IECoreScene::SpherePrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)convertCommon(samples.front());
+	cobject->set_geometry( convertCommon( samples.front() ) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }

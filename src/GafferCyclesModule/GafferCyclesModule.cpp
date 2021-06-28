@@ -372,7 +372,7 @@ static py::dict getLights()
 		py::dict _in;
 		_in = getSockets( cNodeType, false );
 
-		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "type" ) );
+		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "light_type" ) );
 		const ccl::NodeEnum *enums = socketType->enum_values;
 
 		for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )

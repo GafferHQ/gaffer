@@ -71,7 +71,7 @@ struct MikkUserData {
 				  float *tangent_sign )
 		: mesh( mesh ), texface( NULL ), tangent( tangent ), tangent_sign( tangent_sign )
 	{
-		const ccl::AttributeSet &attributes = (mesh->subd_faces.size()) ? mesh->subd_attributes :
+		const ccl::AttributeSet &attributes = (mesh->get_num_subd_faces()) ? mesh->subd_attributes :
 																		  mesh->attributes;
 
 		ccl::Attribute *attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
@@ -108,6 +108,8 @@ struct MikkUserData {
 	ccl::float3* corner_normal;
 	ccl::float3 *vertex_normal;
 	ccl::float2 *texface;
+	ccl::float3 *orco;
+	ccl::float3 orco_loc, orco_size;
 
 	ccl::float3 *tangent;
 	float *tangent_sign;
@@ -116,9 +118,9 @@ struct MikkUserData {
 static int mikk_get_num_faces( const SMikkTSpaceContext *context )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
-	if( userdata->mesh->subd_faces.size() )
+	if( userdata->mesh->get_num_subd_faces() )
 	{
-		return userdata->mesh->subd_faces.size();
+		return userdata->mesh->get_num_subd_faces();
 	}
 	else
 	{
@@ -129,10 +131,10 @@ static int mikk_get_num_faces( const SMikkTSpaceContext *context )
 static int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const int face_num )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
-	if( userdata->mesh->subd_faces.size() )
+	if( userdata->mesh->get_num_subd_faces() )
 	{
 		const ccl::Mesh *mesh = userdata->mesh;
-		return mesh->subd_faces[face_num].num_corners;
+		return mesh->get_subd_num_corners()[face_num];
 	}
 	else
 	{
@@ -142,22 +144,22 @@ static int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const 
 
 static int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
 {
-	if( mesh->subd_faces.size() )
+	if( mesh->get_num_subd_faces() )
 	{
-		const ccl::Mesh::SubdFace &face = mesh->subd_faces[face_num];
-		return mesh->subd_face_corners[face.start_corner + vert_num];
+		const ccl::Mesh::SubdFace &face = mesh->get_subd_face(face_num);
+		return mesh->get_subd_face_corners()[face.start_corner + vert_num];
 	}
 	else
 	{
-		return mesh->triangles[face_num * 3 + vert_num];
+		return mesh->get_triangles()[face_num * 3 + vert_num];
 	}
 }
 
 static int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
 {
-	if( mesh->subd_faces.size() )
+	if( mesh->get_num_subd_faces() )
 	{
-		const ccl::Mesh::SubdFace &face = mesh->subd_faces[face_num];
+		const ccl::Mesh::SubdFace &face = mesh->get_subd_face(face_num);
 		return face.start_corner + vert_num;
 	}
 	else
@@ -174,7 +176,7 @@ static void mikk_get_position( const SMikkTSpaceContext *context,
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	const ccl::Mesh *mesh = userdata->mesh;
 	const int vertex_index = mikk_vertex_index(mesh, face_num, vert_num);
-	const ccl::float3 vP = mesh->verts[vertex_index];
+	const ccl::float3 vP = mesh->get_verts()[vertex_index];
 	P[0] = vP.x;
 	P[1] = vP.y;
 	P[2] = vP.z;
@@ -194,6 +196,17 @@ static void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
 		uv[0] = tfuv.x;
 		uv[1] = tfuv.y;
 	}
+	else if (userdata->orco != NULL)
+	{
+		const int vertex_index = mikk_vertex_index(mesh, face_num, vert_num);
+		const ccl::float3 orco_loc = userdata->orco_loc;
+		const ccl::float3 orco_size = userdata->orco_size;
+		const ccl::float3 orco = (userdata->orco[vertex_index] + orco_loc) / orco_size;
+
+		const ccl::float2 tmp = map_to_sphere(orco);
+		uv[0] = tmp.x;
+		uv[1] = tmp.y;
+	}
 	else
 	{
 		uv[0] = 0.0f;
@@ -209,9 +222,9 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	const ccl::Mesh *mesh = userdata->mesh;
 	ccl::float3 vN;
-	if( mesh->subd_faces.size() )
+	if( mesh->get_num_subd_faces() )
 	{
-		const ccl::Mesh::SubdFace &face = mesh->subd_faces[face_num];
+		const ccl::Mesh::SubdFace &face = mesh->get_subd_face(face_num);
 		if (userdata->corner_normal)
 		{
 			vN = userdata->corner_normal[face.start_corner + vert_num];
@@ -232,7 +245,7 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 		{
 			vN = userdata->corner_normal[face_num * 3 + vert_num];
 		}
-		if( mesh->smooth[face_num] )
+		if( mesh->get_smooth()[face_num] )
 		{
 			const int vertex_index = mikk_vertex_index( mesh, face_num, vert_num );
 			vN = userdata->vertex_normal[vertex_index];
@@ -240,7 +253,7 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 		else
 		{
 			const ccl::Mesh::Triangle tri = mesh->get_triangle( face_num );
-			vN = tri.compute_normal(&mesh->verts[0]);
+			vN = tri.compute_normal(&mesh->get_verts()[0]);
 		}
 	}
 	N[0] = vN.x;
@@ -267,7 +280,7 @@ static void mikk_set_tangent_space(const SMikkTSpaceContext *context,
 static void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool need_sign, bool active_render )
 {
 	/* Create tangent attributes. */
-	ccl::AttributeSet &attributes = ( mesh->subd_faces.size() ) ? mesh->subd_attributes : mesh->attributes;
+	ccl::AttributeSet &attributes = ( mesh->get_num_subd_faces() ) ? mesh->subd_attributes : mesh->attributes;
 	ccl::Attribute *attr;
 	ccl::ustring name;
 
@@ -658,7 +671,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		const vector<int> &vertexIds = mesh->vertexIds()->readable();
 		const size_t numVerts = points.size();
 		subdivision = true;
-		cmesh->subdivision_type = (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR;
+		cmesh->set_subdivision_type( (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR );
 		const BoolVectorData *s = getSmooth( mesh );
 		const IntVectorData *f = getFaceset( mesh );
 
@@ -693,8 +706,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 		if( numEdges )
 		{
-			cmesh->subd_creases.resize( numEdges );
-			ccl::Mesh::SubdEdgeCrease *crease = cmesh->subd_creases.data();
+			cmesh->reserve_subd_creases( numEdges );
 
 			auto id = mesh->creaseIds()->readable().begin();
 			auto sharpness = mesh->creaseSharpnesses()->readable().begin();
@@ -702,10 +714,10 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			{
 				for( int j = 0; j < length - 1; ++j )
 				{
-					crease->v[0] = *id++;
-					crease->v[1] = *id;
-					crease->crease = (*sharpness) * 0.1f;
-					crease++;
+					int v0 = *id++;
+					int v1 = *id;
+					float weight = (*sharpness) * 0.1f;
+					cmesh->add_crease( v0, v1, weight );
 				}
 				id++;
 				sharpness++;
@@ -714,17 +726,14 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			sharpness = mesh->cornerSharpnesses()->readable().begin();
 			for( int cornerId : mesh->cornerIds()->readable() )
 			{
-				crease->v[0] = cornerId;
-				crease->v[1] = cornerId;
-				crease->crease = (*sharpness) * 0.1f;
+				cmesh->add_crease( cornerId, cornerId, (*sharpness) * 0.1f );
 				sharpness++;
-				crease++;
 			}
 		}
 	}
 	else
 	{
-		cmesh->subdivision_type = (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE;
+		cmesh->set_subdivision_type( (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE );
 
 		if( !triangles )
 		{
@@ -768,17 +777,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 
 					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
-	}
-
-	// TODO: Maybe move this to attibutes so it can be shared between meshes?
-	if( ( subdivision ) && ( cmesh->subdivision_type != ccl::Mesh::SUBDIVISION_NONE ) && ( !cmesh->subd_params ) )
-	{
-		cmesh->subd_params = new ccl::SubdParams( cmesh );
-		cmesh->subd_params->test_steps = 1;
-		cmesh->subd_params->split_threshold = 1;
-		cmesh->subd_params->dicing_rate = 1.0f;
-		cmesh->subd_params->max_level = 1;
-		cmesh->subd_params->camera = NULL;
 	}
 
 	// Primitive Variables are Attributes in Cycles
@@ -928,7 +926,7 @@ namespace MeshAlgo
 ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)convertCommon(mesh);
+	cobject->set_geometry( convertCommon( mesh ) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -1017,8 +1015,8 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	}
 
 	// Add the motion position/normal attributes
-	cmesh->use_motion_blur = true;
-	cmesh->motion_steps = samples.size() + 1;
+	cmesh->set_use_motion_blur( true );
+	cmesh->set_motion_steps( samples.size() + 1 );
 	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
 	ccl::Attribute *attr_mN = nullptr;
@@ -1061,15 +1059,17 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 				else
 				{
 					msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					cmesh->attributes.remove(attr_mP);
-					cmesh->motion_steps = 0;
+					cmesh->attributes.remove( attr_mP );
+					cmesh->set_motion_steps( 0 );
+					cmesh->set_use_motion_blur( false );
 				}
 			}
 			else
 			{
 				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
-				cmesh->attributes.remove(attr_mP);
-				cmesh->motion_steps = 0;
+				cmesh->attributes.remove( attr_mP );
+				cmesh->set_motion_steps( 0) ;
+				cmesh->set_use_motion_blur( true );
 			}
 		}
 
@@ -1083,15 +1083,15 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	}
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)cmesh;
+	cobject->set_geometry( cmesh );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
 
 void computeTangents( ccl::Mesh *cmesh, const IECoreScene::MeshPrimitive *mesh, bool needsign )
 {
-	const ccl::AttributeSet &attributes = (cmesh->subd_faces.size()) ? cmesh->subd_attributes :
-																	   cmesh->attributes;
+	const ccl::AttributeSet &attributes = (cmesh->get_num_subd_faces()) ? cmesh->subd_attributes :
+																		  cmesh->attributes;
 
 	ccl::Attribute *attr = attributes.find( ccl::ATTR_STD_UV );
 	if( attr )
