@@ -301,17 +301,11 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		void parentChanged( GraphComponent *oldParent ) override;
 
 	private :
-		/// Returns the Gadget with the specified name, where name has been retrieved
-		/// from an IECoreGL::HitRecord after rendering some Gadget in GL_SELECT mode.
-		/// \todo Consider better mechanisms.
-		static GadgetPtr select( GLuint id );
-
 		void styleChanged();
 		void emitDescendantVisibilityChanged();
 
 		ConstStylePtr m_style;
 
-		GLuint m_glName;
 		bool m_visible;
 		bool m_enabled;
 		bool m_highlighted;

@@ -945,13 +945,12 @@ std::vector< Gadget* > ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegi
 	}
 
 	std::vector< Gadget* > gadgets;
-	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
+	for( const HitRecord &it : selection )
 	{
-		GadgetPtr gadget = Gadget::select( it->name );
-		if( gadget )
-		{
-			gadgets.push_back( gadget.get() );
-		}
+		// We can assume that renderInternal has populated m_renderItem, so we can just index into it
+		// using the index passed to loadName ( reversing the increment-by-one used to avoid the reserved
+		// name "0" )
+		gadgets.push_back( const_cast<Gadget*>( m_renderItems[ it.name - 1 ].gadget ) );
 	}
 
 	if( !gadgets.size() )
@@ -1077,8 +1076,9 @@ void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 			continue;
 		}
 
-		for( const RenderItem &renderItem : m_renderItems )
+		for( unsigned int i = 0; i < m_renderItems.size(); i++ )
 		{
+			const RenderItem &renderItem = m_renderItems[i];
 			if( !( renderItem.layerMask & layerIndex ) )
 			{
 				continue;
@@ -1093,7 +1093,8 @@ void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 			glMultMatrixf( renderItem.transform.getValue() );
 			if( selector )
 			{
-				selector->loadName( renderItem.gadget->m_glName );
+				// 0 is a reserved name for when nothing is selected, so start at 1
+				selector->loadName( i + 1 );
 			}
 
 			if( renderItem.style != currentStyle )
