@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_QUERYBINDING_H
-#define GAFFERSCENEUIMODULE_QUERYBINDING_H
+#ifndef GAFFERSCENEMODULE_QUERYBINDING_H
+#define GAFFERSCENEMODULE_QUERYBINDING_H
 
-namespace GafferSceneUIModule
+namespace GafferSceneModule
 {
 
 void bindQueries();
 
-} // namespace GafferSceneUIModule
+} // namespace GafferSceneModule
 
-#endif // GAFFERSCENEUIMODULE_QUERYBINDING_H
+#endif // GAFFERSCENEMODULE_QUERYBINDING_H
