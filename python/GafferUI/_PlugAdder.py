@@ -65,18 +65,28 @@ GafferUI.PlugAdder.plugMenuSignal().connect( __plugMenu, scoped = False )
 
 def __menu( title, names ) :
 
+	from uuid import uuid4
+
 	chosenNames = []
-	def chooseName( plug ) :
-		chosenNames.append( plug )
+	def chooseName( name ) :
+		chosenNames.append( name )
 
 	menuDefinition = IECore.MenuDefinition()
 	for name in names :
-		menuDefinition.append(
-			"/" + name,
-			{
-				"command" : functools.partial( chooseName, name )
-			}
-		)
+		if not name.split('/')[-1] :
+			menuDefinition.append(
+				"/" + name + uuid4().hex,
+				{
+					"divider" : True
+				}
+			)
+		else :
+			menuDefinition.append(
+				"/" + name,
+				{
+					"command" : functools.partial( chooseName, name )
+				}
+			)
 
 	menu = GafferUI.Menu( menuDefinition, title = title )
 	menu.popup( modal = True )

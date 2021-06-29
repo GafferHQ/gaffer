@@ -41,6 +41,7 @@
 #include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/AttributeVisualiser.h"
 #include "GafferScene/Attributes.h"
+#include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CollectTransforms.h"
 #include "GafferScene/CopyAttributes.h"
 #include "GafferScene/CustomAttributes.h"
@@ -53,9 +54,62 @@
 #include "GafferScene/StandardAttributes.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/Serialisation.h"
+
+#include <cassert>
 
 using namespace boost::python;
 using namespace GafferScene;
+
+namespace AttributeQueryBinding
+{
+
+bool isSetup( const AttributeQuery& query )
+{
+	return query.isSetup();
+}
+
+bool canSetup( const AttributeQuery& query, const Gaffer::ValuePlug& plug )
+{
+	return query.canSetup( & plug );
+}
+
+void setup( AttributeQuery& query, const Gaffer::ValuePlug& plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	if( !( query.canSetup( & plug ) ) )
+	{
+		throw IECore::Exception( "AttributeQuery cannot be setup from specified plug" );
+	}
+	query.setup( & plug );
+}
+
+class Serialiser : public GafferBindings::NodeSerialiser
+{
+	std::string postConstructor( const Gaffer::GraphComponent* component, const std::string& identifier, GafferBindings::Serialisation& serialisation ) const override;
+};
+
+std::string Serialiser::postConstructor( const Gaffer::GraphComponent* const component, const std::string& identifier, GafferBindings::Serialisation& serialisation ) const
+{
+	std::string result = GafferBindings::NodeSerialiser::postConstructor( component, identifier, serialisation );
+
+	const AttributeQuery* const query = IECore::assertedStaticCast< const AttributeQuery >( component );
+
+	if( query->isSetup() )
+	{
+		if( result.size() )
+		{
+			result += "\n";
+		}
+
+		const GafferBindings::Serialisation::Serialiser* const serialiser = GafferBindings::Serialisation::acquireSerialiser( query->valuePlug() );
+		result += identifier + ".setup( " + serialiser->constructor( query->valuePlug(), serialisation ) + " )\n";
+	}
+
+	return result;
+}
+
+} // AttributeQueryBinding
 
 void GafferSceneModule::bindAttributes()
 {
@@ -73,13 +127,22 @@ void GafferSceneModule::bindAttributes()
 	GafferBindings::DependencyNodeClass<CollectTransforms>();
 	GafferBindings::DependencyNodeClass<LocaliseAttributes>();
 
-	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
+	{
+		scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
 
-	enum_<AttributeVisualiser::Mode>( "Mode" )
-		.value( "Color", AttributeVisualiser::Color )
-		.value( "FalseColor", AttributeVisualiser::FalseColor )
-		.value( "Random", AttributeVisualiser::Random )
-		.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
-	;
+		enum_<AttributeVisualiser::Mode>( "Mode" )
+			.value( "Color", AttributeVisualiser::Color )
+			.value( "FalseColor", AttributeVisualiser::FalseColor )
+			.value( "Random", AttributeVisualiser::Random )
+			.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
+		;
+	}
 
+	GafferBindings::DependencyNodeClass<AttributeQuery>()
+		.def( "isSetup", & AttributeQueryBinding::isSetup )
+		.def( "canSetup", & AttributeQueryBinding::canSetup )
+		.def( "setup", & AttributeQueryBinding::setup )
+		;
+
+	GafferBindings::Serialisation::registerSerialiser( AttributeQuery::staticTypeId(), new AttributeQueryBinding::Serialiser() );
 }

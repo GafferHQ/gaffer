@@ -156,6 +156,7 @@ from .FilterQueryTest import FilterQueryTest
 from .TransformQueryTest import TransformQueryTest
 from .BoundQueryTest import BoundQueryTest
 from .ExistenceQueryTest import ExistenceQueryTest
+from .AttributeQueryTest import AttributeQueryTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

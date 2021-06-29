@@ -347,6 +347,7 @@ nodeMenu.append( "/Scene/Utility/Filter Query", GafferScene.FilterQuery, searchT
 nodeMenu.append( "/Scene/Utility/Transform Query", GafferScene.TransformQuery, searchText = "TransformQuery" )
 nodeMenu.append( "/Scene/Utility/Bound Query", GafferScene.BoundQuery, searchText = "BoundQuery" )
 nodeMenu.append( "/Scene/Utility/Existence Query", GafferScene.ExistenceQuery, searchText = "ExistenceQuery" )
+nodeMenu.append( "/Scene/Utility/Attribute Query", GafferScene.AttributeQuery, searchText = "AttributeQuery" )
 
 # Image nodes
 

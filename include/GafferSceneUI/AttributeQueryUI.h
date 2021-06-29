@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEUI_ATTRIBUTEQUERYUI_H
+#define GAFFERSCENEUI_ATTRIBUTEQUERYUI_H
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "SceneGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
-#include "QueryBinding.h"
+#include "GafferSceneUI/Export.h"
 
-using namespace GafferSceneUIModule;
+#include "GafferScene/AttributeQuery.h"
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+namespace GafferSceneUI
+{
+namespace AttributeQueryUI
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
-	bindQueries();
+	GAFFERSCENEUI_API bool showSetupMenu( GafferScene::AttributeQuery& query );
 
-}
+} // AttributeQueryUI
+} // GafferSceneUI
+
+#endif // GAFFERSCENEUI_ATTRIBUTEQUERYUI_H
