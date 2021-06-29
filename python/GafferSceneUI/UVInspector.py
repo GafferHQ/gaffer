@@ -74,6 +74,15 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 			self.__gadgetWidget.getViewportGadget().frame( imath.Box3f( imath.V3f( 0, 0, 0 ), imath.V3f( 1, 1, 0 ) ) )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+		self.__gadgetWidget.getViewportGadget().buttonPressSignal().connect(
+			Gaffer.WeakMethod( self.__buttonPress ), scoped = False
+		)
+		self.__gadgetWidget.getViewportGadget().dragBeginSignal().connect(
+			Gaffer.WeakMethod( self.__dragBegin ), scoped = False
+		)
+		self.__gadgetWidget.getViewportGadget().dragEndSignal().connect(
+			Gaffer.WeakMethod( self.__dragEnd ), scoped = False
+		)
 
 		self._updateFromSet()
 
@@ -101,6 +110,23 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 			return True
 
 		return False
+
+	def __buttonPress( self, viewportGadget, event ) :
+
+		return event.buttons == event.Buttons.Left
+
+	def __dragBegin( self, viewportGadget, event ) :
+
+		uv = viewportGadget.rasterToGadgetSpace(
+			imath.V2f( event.line.p0.x, event.line.p0.y ),
+			viewportGadget.getPrimaryChild() # The gadget displaying the UVs
+		)
+		GafferUI.Pointer.setCurrent( "values" )
+		return imath.V2f( uv.p0.x, uv.p0.y )
+
+	def __dragEnd( self, viewportGadget, event ) :
+
+		GafferUI.Pointer.setCurrent( "" )
 
 GafferUI.Editor.registerType( "UVInspector", UVInspector )
 
