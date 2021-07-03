@@ -329,6 +329,12 @@ unsigned Gadget::layerMask() const
 	return 0;
 }
 
+Imath::Box3f Gadget::renderBound() const
+{
+	return Box3f();
+}
+
+
 Imath::Box3f Gadget::bound() const
 {
 	if( !m_layoutDirty )

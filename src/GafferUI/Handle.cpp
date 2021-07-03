@@ -149,6 +149,14 @@ unsigned Handle::layerMask() const
 	return (unsigned)Layer::MidFront;
 }
 
+Imath::Box3f Handle::renderBound() const
+{
+	// Having a raster scale makes our bound somewhat meaningless
+	Box3f b;
+	b.makeInfinite();
+	return b;
+}
+
 Imath::V3f Handle::rasterScaleFactor() const
 {
 	if( m_rasterScale <= 0.0f )

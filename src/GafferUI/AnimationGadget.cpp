@@ -447,6 +447,14 @@ unsigned AnimationGadget::layerMask() const
 		AnimationLayer::Overlay;
 }
 
+Imath::Box3f AnimationGadget::renderBound() const
+{
+	// We render an infinite grid
+	Box3f b;
+	b.makeInfinite();
+	return b;
+}
+
 Gaffer::StandardSet *AnimationGadget::visiblePlugs()
 {
 	return m_visiblePlugs.get();

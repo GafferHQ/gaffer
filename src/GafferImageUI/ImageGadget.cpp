@@ -1377,3 +1377,8 @@ unsigned ImageGadget::layerMask() const
 {
 	return (unsigned)Layer::Main;
 }
+
+Imath::Box3f ImageGadget::renderBound() const
+{
+	return bound();
+}

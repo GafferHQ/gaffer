@@ -814,6 +814,14 @@ unsigned GraphGadget::layerMask() const
 	return GraphLayer::Connections | GraphLayer::Overlay;
 }
 
+Box3f GraphGadget::renderBound() const
+{
+	// We only have one graph gadget, so we don't need to worry about the exact extents for render culling
+	Box3f b;
+	b.makeInfinite();
+	return b;
+}
+
 bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 {
 	if( event.key == "D" )

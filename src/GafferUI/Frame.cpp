@@ -89,3 +89,8 @@ unsigned Frame::layerMask() const
 {
 	return (unsigned)Layer::Main;
 }
+
+Imath::Box3f Frame::renderBound() const
+{
+	return bound();
+}

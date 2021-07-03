@@ -256,6 +256,11 @@ unsigned PlugAdder::layerMask() const
 	return GraphLayer::Connections | GraphLayer::Nodes | GraphLayer::Highlighting;
 }
 
+Imath::Box3f PlugAdder::renderBound() const
+{
+	return bound();
+}
+
 void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const
 {
 	const StandardNodeGadget::Edge edge = tangentEdge( tangent( this ) );

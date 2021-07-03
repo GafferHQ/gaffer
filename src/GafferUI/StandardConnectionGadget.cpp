@@ -358,6 +358,17 @@ unsigned StandardConnectionGadget::layerMask() const
 	return (unsigned)GraphLayer::Connections;
 }
 
+Imath::Box3f StandardConnectionGadget::renderBound() const
+{
+	Box3f r = bound();
+
+	// Extend render bound to account for how the initial curve of the connection can stick out
+	// beyond the source point, plus the thickness of the connection line
+	r.min -= V3f( 2.5 );
+	r.max += V3f( 2.5 );
+	return r;
+}
+
 Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->updateConnectionGeometry();

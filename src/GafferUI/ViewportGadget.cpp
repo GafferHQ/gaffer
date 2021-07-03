@@ -1111,8 +1111,8 @@ void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 
 void ViewportGadget::getRenderItems( const Gadget *gadget, M44f transform, const Style *style, std::vector<RenderItem> &renderItems )
 {
-	const Box3f bound = gadget->bound();
-	bool boundDefault = bound == Box3f();
+	const Box3f bound = gadget->renderBound();
+	bool boundSpecial = bound.isEmpty() || bound == g_infiniteBox;
 
 	if( gadget->getStyle() )
 	{
@@ -1129,7 +1129,7 @@ void ViewportGadget::getRenderItems( const Gadget *gadget, M44f transform, const
 	{
 		renderItems.push_back( {
 			gadget, style, transform,
-			boundDefault ? g_infiniteBox : Imath::transform( bound, transform ),
+			boundSpecial ? bound : Imath::transform( bound, transform ),
 			layerMask
 		} );
 	}

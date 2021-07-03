@@ -60,6 +60,7 @@ class GAFFERUI_API Frame : public IndividualContainer
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
 		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
 
 	private :
 

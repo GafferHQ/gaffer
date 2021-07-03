@@ -344,10 +344,6 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 				self.setTransform( imath.M44f().translate( imath.V3f( t[0], t[1], 0 ) ) )
 				self.layer = layer
 
-			def bound( self ) :
-
-				return imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) )
-
 			def doRenderLayer( self, layer, style ) :
 
 				style.renderSolidRectangle( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) )
@@ -355,6 +351,11 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			def layerMask( self ) :
 
 				return self.layer
+
+			def renderBound( self ) :
+
+				return imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) )
+
 
 
 		a = TestGadget( "A", ( 0.5, 0.5 ), GafferUI.Gadget.Layer.Main )

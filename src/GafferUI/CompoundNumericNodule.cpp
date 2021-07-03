@@ -307,6 +307,18 @@ unsigned CompoundNumericNodule::layerMask() const
 	}
 }
 
+Imath::Box3f CompoundNumericNodule::renderBound() const
+{
+	if( !noduleLayout() )
+	{
+		return StandardNodule::renderBound();
+	}
+	else
+	{
+		return Box3f();
+	}
+}
+
 NoduleLayout *CompoundNumericNodule::noduleLayout()
 {
 	return children().size() ? getChild<NoduleLayout>( 0 ) : nullptr;

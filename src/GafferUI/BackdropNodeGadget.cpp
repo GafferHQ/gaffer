@@ -341,6 +341,18 @@ unsigned BackdropNodeGadget::layerMask() const
 	return (unsigned)GraphLayer::Backdrops;
 }
 
+Imath::Box3f BackdropNodeGadget::renderBound() const
+{
+	// This doesn't take into account the possibility that the title sticks out beyond the backdrop,
+	// meaning that you could see the part of the title sticking out of a Backdrop disappear when the Backdrop
+	// goes off-screen.
+	//
+	// To fix this, we could either take into account style()->textBound, scaling, and the title text here,
+	// or we could just limit the title to only rendering inside the Backdrop
+
+	return bound();
+}
+
 void BackdropNodeGadget::contextChanged()
 {
 	// Title and description may depend on the context

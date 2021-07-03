@@ -101,6 +101,10 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 				return functools.reduce( operator.or_, layers )
 
+			def renderBound( self ) :
+
+				return b
+
 		mg = MyGadget()
 
 		# we can't call the methods of the gadget directly in python to test the

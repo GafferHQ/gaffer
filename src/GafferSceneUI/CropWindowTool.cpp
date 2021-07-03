@@ -275,6 +275,21 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			return (unsigned)Layer::Main;
 		}
 
+		Imath::Box3f renderBound() const override
+		{
+			if( m_rasterSpace )
+			{
+				// We draw in raster space so don't have a sensible bound
+				Box3f b;
+				b.makeInfinite();
+				return b;
+			}
+			else
+			{
+				return bound();
+			}
+		}
+
 	private :
 
 		void setRectangleInternal( const Imath::Box2f &rectangle, RectangleChangedReason reason )

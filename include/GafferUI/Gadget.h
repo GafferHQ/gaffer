@@ -287,7 +287,8 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		/// Should be implemented by subclasses to draw themselves as appropriate
 		/// for the specified layer. Child gadgets will be drawn automatically
-		/// _after_ the parent gadget has been drawn.
+		/// _after_ the parent gadget has been drawn.  Whenever overriding this,
+		/// you must override layerMask and renderBound() as well.
 		virtual void doRenderLayer( Layer layer, const Style *style ) const;
 
 		/// Returns a bitmask built from the flags in the Layer enum.
@@ -296,6 +297,9 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// layerMask must currently return a constant value.  In the future, we
 		/// may implement a new DirtyType to allow dirtying the layerMask
 		virtual unsigned layerMask() const;
+
+		/// The bound of everything drawn by doRenderLayer
+		virtual Imath::Box3f renderBound() const;
 
 		/// Implemented to dirty the layout for both the old and the new parent.
 		void parentChanged( GraphComponent *oldParent ) override;

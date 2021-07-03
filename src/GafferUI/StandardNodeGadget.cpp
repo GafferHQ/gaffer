@@ -420,6 +420,11 @@ unsigned StandardNodeGadget::layerMask() const
 	return GraphLayer::Nodes | GraphLayer::Overlay;
 }
 
+Imath::Box3f StandardNodeGadget::renderBound() const
+{
+	return bound();
+}
+
 const Imath::Color3f *StandardNodeGadget::userColor() const
 {
 	return m_userColor.get_ptr();

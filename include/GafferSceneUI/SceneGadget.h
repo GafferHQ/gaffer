@@ -171,6 +171,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		void doRenderLayer( Layer layer, const GafferUI::Style *style ) const override;
 		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
 
 	private :
 

@@ -997,6 +997,14 @@ class CameraOverlay : public GafferUI::Gadget
 			return (unsigned)Layer::Main;
 		}
 
+		Imath::Box3f renderBound() const override
+		{
+			// we draw in raster space so don't have a sensible bound
+			Box3f b;
+			b.makeInfinite();
+			return b;
+		}
+
 	private :
 
 		Box2f m_resolutionGate;

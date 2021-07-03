@@ -209,6 +209,22 @@ unsigned StandardNodule::layerMask() const
 	return GraphLayer::Connections | GraphLayer::Nodes | GraphLayer::Highlighting | GraphLayer::Overlay;
 }
 
+Imath::Box3f StandardNodule::renderBound() const
+{
+	if( m_draggingConnection )
+	{
+		// When dragging a connection, we could drag it anywhere, and need to render it
+		Box3f b;
+		b.makeInfinite();
+		return b;
+	}
+	else
+	{
+		// Usual max size we render at ( when highlighted )
+		return Box3f( V3f( -1, -1, 0 ), V3f( 1, 1, 0 ) );
+	}
+}
+
 void StandardNodule::renderLabel( const Style *style ) const
 {
 	const NodeGadget *nodeGadget = ancestor<NodeGadget>();
