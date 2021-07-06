@@ -1038,7 +1038,7 @@ void ViewportGadget::render() const
 
 void ViewportGadget::childDirtied( DirtyType dirtyType )
 {
-	if( dirtyType == DirtyType::Layout )
+	if( dirtyType == DirtyType::Layout || dirtyType == DirtyType::RenderBound )
 	{
 		// We need to rebuild the render items list
 		m_renderItems.clear();

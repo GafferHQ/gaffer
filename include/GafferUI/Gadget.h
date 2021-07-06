@@ -270,10 +270,14 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 			/// A re-render is needed, but the bounding box
 			/// and layout remain the same.
 			Render,
-			/// The bounding box has changed. Implies Render.
+			/// The result of renderBound() has changed, but the layout bounds have not.
+			/// Internal render caches which depend on the render bounds need to be rebuilt,
+			/// but we don't need to re-layout
+			RenderBound,
+			/// The layout bounding box has changed. Implies RenderBound and Render.
 			Bound,
 			/// Parameters used by `updateLayout()` have changed.
-			/// Implies Bound and Render.
+			/// Implies Bound, RenderBound and Render.
 			Layout,
 		};
 

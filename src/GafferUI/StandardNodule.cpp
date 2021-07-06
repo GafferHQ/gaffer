@@ -136,7 +136,7 @@ void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath:
 	m_dragPosition = position;
 	m_dragTangent = tangent;
 	m_draggingConnection = true;
-	dirty( DirtyType::Render );
+	dirty( DirtyType::RenderBound );
 }
 
 void StandardNodule::createConnection( Gaffer::Plug *endpoint )
@@ -412,13 +412,14 @@ bool StandardNodule::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			setCompatibleLabelsVisible( event, false );
 		}
+		dirty( DirtyType::Render );
 	}
 	else if( !event.destinationGadget )
 	{
 		m_draggingConnection = false;
+		dirty( DirtyType::RenderBound );
 	}
 
-	dirty( DirtyType::Render );
 	return true;
 }
 
@@ -426,6 +427,7 @@ bool StandardNodule::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
 	GafferUI::Pointer::setCurrent( "" );
 	m_draggingConnection = false;
+	dirty( DirtyType::RenderBound );
 	setHighlighted( false );
 	return true;
 }
