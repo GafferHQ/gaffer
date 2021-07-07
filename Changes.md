@@ -1,11 +1,18 @@
 0.61.x.x
 ========
 
+Improvements
+------------
+
+- GraphEditor : Improved drawing performance for large node graphs, about 40% in general, with much greater gains when looking at a small region of a large graph, and even more gains for selection tests ( for example when hovering over something or dragging a noodle )
+
 API
 ---
 
 - GraphComponent : Inlined `children()` method, yielding 20-40% improvements in various child iteration benchmarks.
 - Gadget :
+  - Added `layerMask()` and `renderBound()` virtual functions.
+- ViewportGadget :
   - Added `gadgetsAt()` overload which returns the gadgets rather than taking an output parameter by reference.
   - Added `gadgetsAt()` overload taking a raster space region (rather than position) and an optional layer filter.
 
@@ -15,7 +22,9 @@ Breaking Changes
 - FilteredChildIterator/FilteredRecursiveChildIterator : Removed all namespace-level typedefs, which were deprecated in Gaffer 0.59.0.0. Use the class-level typedefs instead, for example `Plug::Iterator` in place of `PlugIterator`.
 - Gadget :
   - Moved `render()` and `renderRequestSignal()` to ViewportGadget.
-  - Made `select()` private.
+  - Removed `select()` method.
+  - Replaced `hasLayer()` virtual function with `layerMask()`.
+  - Added `renderBound()` virtual function.
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
 - ArnoldOptions : Removed support for the `ai:ignore_motion_blur` option. Turn off the `sampleMotion` option using a StandardOptions node instead.
 
