@@ -19,6 +19,25 @@ Breaking Changes
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
 - ArnoldOptions : Removed support for the `ai:ignore_motion_blur` option. Turn off the `sampleMotion` option using a StandardOptions node instead.
 
+0.60.x.x (relative to 0.60.0.0)
+========
+
+Features
+--------
+
+- AttributeQuery : Added a new node for querying the value of an attribute at a location.
+
+Improvements
+------------
+
+- UVInspector : Added ability to drag and drop UV values out of the inspector.
+- Process : Added warning messages for processes which don't respond promptly to cancellation.
+
+Fixes
+-----
+
+- Render : Fixed typo and improved clarity of warning when a context variable can't be added to an image header.
+
 0.60.0.0
 ========
 
@@ -183,6 +202,14 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
+
+0.59.x.x (relative to 0.59.9.0)
+========
+
+Fixes
+-----
+
+- ArnoldShader : Fixed loading of shaders with matrix outputs.
 
 0.59.9.0 (relative to 0.59.8.0)
 ========

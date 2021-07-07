@@ -42,7 +42,6 @@
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcessor.h"
-#include "GafferScene/BoundQuery.h"
 
 #include "GafferBindings/ComputeNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -407,14 +406,4 @@ void GafferSceneModule::bindCore()
 	;
 
 	Serialisation::registerSerialiser( SceneProcessor::staticTypeId(), new SceneProcessorSerialiser );
-
-	{
-		scope s = GafferBindings::DependencyNodeClass<BoundQuery>();
-
-		enum_<BoundQuery::Space>( "Space" )
-			.value( "Local", BoundQuery::Space::Local )
-			.value( "World", BoundQuery::Space::World )
-			.value( "Relative", BoundQuery::Space::Relative )
-		;
-	}
 }

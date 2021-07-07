@@ -58,6 +58,7 @@
 #include "SetAlgoBinding.h"
 #include "ShaderBinding.h"
 #include "TransformBinding.h"
+#include "QueryBinding.h"
 
 using namespace boost::python;
 using namespace GafferSceneModule;
@@ -86,5 +87,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindPrimitiveSampler();
 	bindIECoreGLPreview();
 	bindEditScopeAlgo();
+	bindQueries();
 
 }

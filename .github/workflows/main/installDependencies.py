@@ -47,7 +47,7 @@ else :
 # Determine default archive URL.
 
 platform = "osx" if sys.platform == "darwin" else "linux"
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.2.0.0-a2/cortex-10.2.0.0-a2-" + platform + "-python2.tar.gz"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/3.0.0/gafferDependencies-3.0.0-Python2-" + platform + ".tar.gz"
 
 # Parse command line arguments.
 

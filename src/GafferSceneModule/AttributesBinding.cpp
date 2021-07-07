@@ -73,13 +73,14 @@ void GafferSceneModule::bindAttributes()
 	GafferBindings::DependencyNodeClass<CollectTransforms>();
 	GafferBindings::DependencyNodeClass<LocaliseAttributes>();
 
-	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
+	{
+		scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
 
-	enum_<AttributeVisualiser::Mode>( "Mode" )
-		.value( "Color", AttributeVisualiser::Color )
-		.value( "FalseColor", AttributeVisualiser::FalseColor )
-		.value( "Random", AttributeVisualiser::Random )
-		.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
-	;
-
+		enum_<AttributeVisualiser::Mode>( "Mode" )
+			.value( "Color", AttributeVisualiser::Color )
+			.value( "FalseColor", AttributeVisualiser::FalseColor )
+			.value( "Random", AttributeVisualiser::Random )
+			.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
+		;
+	}
 }

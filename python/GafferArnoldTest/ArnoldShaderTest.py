@@ -620,6 +620,11 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader.loadShader( "switch_rgba", keepExistingValues = False )
 		assertParametersEqual( shader, switch )
 
+	def testLoadTransformMatrixShader( self ):
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "matrix_transform" )
+		self.assertEqual(type(shader["out"]), Gaffer.M44fPlug)
+
 	def testLoadShaderInSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()

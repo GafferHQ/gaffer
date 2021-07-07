@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_ATTRIBUTEQUERY_INL
+#define GAFFERSCENE_ATTRIBUTEQUERY_INL
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "SceneGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
-#include "QueryBinding.h"
-
-using namespace GafferSceneUIModule;
-
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+namespace GafferScene
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
-	bindQueries();
-
+template< typename PlugType >
+PlugType* AttributeQuery::defaultPlug()
+{
+	return const_cast< PlugType* >(
+		static_cast< const AttributeQuery* >( this )->defaultPlug< PlugType >() );
 }
+
+template< typename PlugType >
+const PlugType* AttributeQuery::defaultPlug() const
+{
+	return getChild< PlugType >( defaultPlugName() );
+}
+
+template< typename PlugType >
+PlugType* AttributeQuery::valuePlug()
+{
+	return const_cast< PlugType* >(
+		static_cast< const AttributeQuery* >( this )->valuePlug< PlugType >() );
+}
+
+template< typename PlugType >
+const PlugType* AttributeQuery::valuePlug() const
+{
+	return getChild< PlugType >( valuePlugName() );
+}
+
+} // GafferScene
+
+#endif // GAFFERSCENE_ATTRIBUTEQUERY_INL
