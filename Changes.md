@@ -28,24 +28,44 @@ Breaking Changes
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
 - ArnoldOptions : Removed support for the `ai:ignore_motion_blur` option. Turn off the `sampleMotion` option using a StandardOptions node instead.
 
-0.60.x.x (relative to 0.60.0.0)
+0.60.1.0 (relative to 0.60.0.0)
 ========
 
 Features
 --------
 
 - AttributeQuery : Added a new node for querying the value of an attribute at a location.
+- Constraint : New target modes constrain to a vertex id or uv coordinate.
 
 Improvements
 ------------
 
+- SceneReader/SceneWriter : Added limited support for reading and writing custom attributes via USD. Currently attributes are only supported if they are marked as `custom` in the USD file, and if their name contains a colon-delimited namespace, for example `custom int foo:bar = 10`.
+- Spreadsheet :
+  - Added tooltips for column headers and sections. These can be edited using the new "Set Description..."
+    option in the right-click popup menus.
+  - Removed distracting "rows" tooltip.
+  - Added value tooltips for boolean cells.
+  - Added "Empty" tooltip for empty array values.
+  - Fixed status bar to use the custom column label if it exists.
 - UVInspector : Added ability to drag and drop UV values out of the inspector.
 - Process : Added warning messages for processes which don't respond promptly to cancellation.
+- Expression : Added "Show Name" menu item to GraphEditor context menu.
 
 Fixes
 -----
 
 - Render : Fixed typo and improved clarity of warning when a context variable can't be added to an image header.
+
+API
+---
+
+- TextInputDialogue : Added `multiLine` constructor argument, to allow input of multi-line values.
+
+Build
+-----
+
+- Cortex : Updated to version 10.2.1.0.
 
 0.60.0.0
 ========
@@ -212,7 +232,7 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
-0.59.x.x (relative to 0.59.9.0)
+0.59.9.1 (relative to 0.59.9.0)
 ========
 
 Fixes

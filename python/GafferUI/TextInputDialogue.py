@@ -40,12 +40,16 @@ import GafferUI
 
 class TextInputDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", **kw ) :
+	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", multiLine = False, **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
 
-		self.__textWidget = GafferUI.TextWidget( initialText )
-		self.__textWidget.setSelection( None, None ) # all text
+		if multiLine :
+			self.__textWidget = GafferUI.MultiLineTextWidget( initialText )
+		else :
+			self.__textWidget = GafferUI.TextWidget( initialText )
+			self.__textWidget.setSelection( None, None ) # all text
+
 		self._setWidget( self.__textWidget )
 		self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__textActivated ), scoped = False )
 
@@ -54,7 +58,10 @@ class TextInputDialogue( GafferUI.Dialogue ) :
 
 	def waitForText( self, **kw ) :
 
-		self.__textWidget.grabFocus()
+		if isinstance( self.__textWidget, GafferUI.TextWidget ) :
+			self.__textWidget.grabFocus()
+		else :
+			self.__textWidget.setFocussed( True )
 
 		button = self.waitForButton( **kw )
 		if button is self.__confirmButton :
