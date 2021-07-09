@@ -39,6 +39,7 @@ import imath
 import six
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -213,6 +214,1663 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		sphere2["name"].setValue( "ball" )
 		constraint["ignoreMissingTarget"].setValue( True )
 		self.assertEqual( constraint["out"].fullTransform( "/cube" ), constraint["in"].fullTransform( "/cube" ) )
+
+	def testTargetVertexSpherePole( self ) :
+
+		target = GafferScene.Sphere()
+		target[ "name" ].setValue( "target" )
+		target[ "divisions" ].setValue( imath.V2i( 10, 10 ) )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.Vertex )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		# check y axis at pole
+		constraint[ "targetVertex" ].setValue( 0 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+
+		# check y axis at pole
+		constraint[ "targetVertex" ].setValue( 91 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], 1.0, places=6 )
+
+	def testTargetVertexOutOfRange( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 4, 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  3,  4,  1,
+			1,  4,  5,  2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.1, 0, 0 ),
+			imath.V3f( 0.2, 0, 0 ),
+			imath.V3f( 0, 0.1, 0 ),
+			imath.V3f( 0.1, 0.1, 0 ),
+			imath.V3f( 0.2, 0.1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 0.5, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 0.5, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.Vertex )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		for i in range( len( points ) ) :
+			constraint[ "targetVertex" ].setValue( i )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ i ] )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+		constraint[ "targetVertex" ].setValue( -1 )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+		constraint[ "targetVertex" ].setValue( len( points ) + 1 )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+
+		constraint[ "ignoreMissingTarget" ].setValue( True )
+
+		for i in range( len( points ) ) :
+			constraint[ "targetVertex" ].setValue( i )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ i ] )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+		constraint[ "targetVertex" ].setValue( -1 )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+		constraint[ "targetVertex" ].setValue( len( points ) + 1 )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+
+	def testTargetVertexCollinearTangent( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 3, 3, 3, 3 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			1, 0, 2,
+			0, 3, 2,
+			3, 4, 2,
+			4, 1, 2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.5, 0, 0.1 ),
+			imath.V3f( 0, 0.5, 0.1 ),
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 1, 0.5, 0.1 ),
+			imath.V3f( 0.5, 1, 0.1 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 0, 0.25 ),
+			imath.V2f( 0, 0.5 ),
+			imath.V2f( 0, 0.75 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 0.125 ),
+			imath.V2f( 0.75, 0.375 ),
+			imath.V2f( 0.75, 0.625 ),
+			imath.V2f( 1, 0.875 ) ]
+
+		uvs_ct = IECore.V2fVectorData( [ imath.V2f( uv.x, uv.y ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+		uvs_cb = IECore.V2fVectorData( [ imath.V2f( uv.y, uv.x ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+
+		uvIndices = IECore.IntVectorData( [
+			0, 1, 5,
+			1, 2, 6,
+			2, 3, 7,
+			3, 4, 8 ] )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.Vertex )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		# colinear tangent
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, uvs_ct, uvIndices )
+		target[ "object" ].setValue( mesh )
+
+		constraint[ "targetVertex" ].setValue( 2 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ 2 ] )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+		# colinear bitangent
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, uvs_cb, uvIndices )
+		target[ "object" ].setValue( mesh )
+
+		constraint[ "targetVertex" ].setValue( 2 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ 2 ] )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetVertexCollapsedTangent( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 3, 3, 3, 3 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			1, 0, 2,
+			0, 3, 2,
+			3, 4, 2,
+			4, 1, 2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.5, 0, 0.1 ),
+			imath.V3f( 0, 0.5, 0.1 ),
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 1, 0.5, 0.1 ),
+			imath.V3f( 0.5, 1, 0.1 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0.75, 0 ),
+			imath.V2f( 0.75, 0 ),
+			imath.V2f( 1, 0 ) ]
+
+		uvs_ct = IECore.V2fVectorData( [ imath.V2f( uv.x, uv.y ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+		uvs_cb = IECore.V2fVectorData( [ imath.V2f( uv.y, uv.x ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+
+		uvIndices = IECore.IntVectorData( [
+			0, 0, 1,
+			0, 0, 2,
+			0, 0, 3,
+			0, 0, 4 ] )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.Vertex )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		# collapsed tangent (bitangent not collinear with normal)
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, uvs_ct, uvIndices )
+		target[ "object" ].setValue( mesh )
+
+		constraint[ "targetVertex" ].setValue( 2 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ 2 ] )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+		# collapsed bitangent (tangent not collinear with normal)
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, uvs_cb, uvIndices )
+		target[ "object" ].setValue( mesh )
+
+		constraint[ "targetVertex" ].setValue( 2 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ 2 ] )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetVertexCollapsedNormal( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 3, 3 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 1, 2,
+			1, 0, 2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0.5, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0.5, 1 ),
+			imath.V2f( 1, 0.5 ),
+			imath.V2f( 0, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		uvIndices = IECore.IntVectorData( [
+			0, 1, 3,
+			0, 2, 3 ] )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.Vertex )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, uvs, uvIndices )
+		target[ "object" ].setValue( mesh )
+
+		constraint[ "targetVertex" ].setValue( 2 )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ 2 ] )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetVertexMissingUV( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 4, 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  3,  4,  1,
+			1,  4,  5,  2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.1, 0, 0 ),
+			imath.V3f( 0.2, 0, 0 ),
+			imath.V3f( 0, 0.1, 0 ),
+			imath.V3f( 0.1, 0.1, 0 ),
+			imath.V3f( 0.2, 0.1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.Vertex )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		for i in range( len( points ) ) :
+			constraint[ "targetVertex" ].setValue( i )
+			self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+
+		constraint[ "ignoreMissingTarget" ].setValue( True )
+
+		for i in range( len( points ) ) :
+			constraint[ "targetVertex" ].setValue( i )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ i ] )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( 1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 1, 0 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetUVOutOfRange( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetUV" ].setValue( imath.V2f( -0.5, 0.5 ) )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+		constraint[ "targetUV" ].setValue( imath.V2f( 1.5, 0.5 ) )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, -0.5 ) )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 1.5 ) )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+
+		constraint[ "ignoreMissingTarget" ].setValue( True )
+		constraint[ "targetUV" ].setValue( imath.V2f( -0.5, 0.5 ) )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+		constraint[ "targetUV" ].setValue( imath.V2f( 1.5, 0.5 ) )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, -0.5 ) )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 1.5 ) )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+
+	def testTargetUVEndPoints( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.21, 0.14, 0 ),
+			imath.V3f( 0.67, 0.14, 0 ),
+			imath.V3f( 0.21, 0.76, 0 ),
+			imath.V3f( 0.67, 0.76, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		for i in range( len( uvs ) ) :
+			constraint[ "targetUV" ].setValue( uvs[ i ] )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ i ] )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+	def testTargetUVAxisAlignedEdge( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		# left edge
+		for i in range( 10 ) :
+			v = r.uniform( uvs[ 0 ][ 1 ], uvs[ 2 ][ 1 ] )
+			constraint[ "targetUV" ].setValue( imath.V2f( 0, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+		# right edge
+		for i in range( 10 ) :
+			v = r.uniform( uvs[ 1 ][ 1 ], uvs[ 3 ][ 1 ] )
+			constraint[ "targetUV" ].setValue( imath.V2f( 1, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+		# bottom edge
+		for i in range( 10 ) :
+			u = r.uniform( uvs[ 0 ][ 0 ], uvs[ 1 ][ 0 ] )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, 0 ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+		# top edge
+		for i in range( 10 ) :
+			u = r.uniform( uvs[ 2 ][ 0 ], uvs[ 3 ][ 0 ] )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, 1 ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
+
+	def testTargetUVNonLinearUMapping( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 2, 3, 1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.4, 0, 0 ),
+			imath.V3f( 0.6, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		uvs_mu = IECore.V2fVectorData( [ imath.V2f( 1.0 - uv.x, uv.y ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+		uvs_mv = IECore.V2fVectorData( [ imath.V2f( uv.x, 1.0 - uv.y ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+
+		r = Random( datetime.now() )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+		target[ "object" ].setValue( mesh )
+
+		for i in range( 10 ) :
+			u = 0.5
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		# mirrored u
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_mu )
+		target[ "object" ].setValue( mesh )
+
+		for i in range( 10 ) :
+			u = 0.5
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		# mirrored v
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_mv )
+		target[ "object" ].setValue( mesh )
+
+		for i in range( 10 ) :
+			u = 0.5
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], 1.0 - v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVNonLinearVMapping( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 2, 3, 1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0.4, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0, 0.6, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		uvs_mu = IECore.V2fVectorData( [ imath.V2f( 1.0 - uv.x, uv.y ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+		uvs_mv = IECore.V2fVectorData( [ imath.V2f( uv.x, 1.0 - uv.y ) for uv in uvs ], IECore.GeometricData.Interpretation.UV )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+
+		r = Random( datetime.now() )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+		target[ "object" ].setValue( mesh )
+
+		for i in range( 10 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = 0.5
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		# mirrored u
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_mu )
+		target[ "object" ].setValue( mesh )
+
+		for i in range( 10 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = 0.5
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], 1.0 - u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		# mirrored v
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_mv )
+		target[ "object" ].setValue( mesh )
+
+		for i in range( 10 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = 0.5
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVAmbiguousMapping( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 4, 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 3, 4, 1,
+			1, 4, 5, 2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 2, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 1, 1, 0 ),
+			imath.V3f( 2, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0.5, 0 ),
+			imath.V2f( 0.5, 1 ),
+			imath.V2f( 0, 1.5 ),
+			imath.V2f( 1, 1.5 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		uvIndices = IECore.IntVectorData( [
+			0, 1, 1, 0,
+			2, 2, 3, 3 ] )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, uvs, uvIndices )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		# face 0 (constant u)
+
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 0.5 ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		constraint[ "ignoreMissingTarget" ].setValue( True )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		# face 1 (constant v)
+
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 1.5 ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 1.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		constraint[ "ignoreMissingTarget" ].setValue( True )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 1.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVCollapsedUTangent( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 10 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( 1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 1, 0 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetUVCollapsedVTangent( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 1, 0 ),
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 10 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( 1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 1, 0 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetUVZeroAreaFace( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 0.5, 0.5, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0, 0 ),
+			imath.V2f( 1, 0 ),
+			imath.V2f( 0, 1 ),
+			imath.V2f( 1, 1 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 10 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], points[ 0 ][ 0 ], places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], points[ 0 ][ 1 ], places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], points[ 0 ][ 2 ], places=6 )
+			self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( 1, 0, 0 ) )
+			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 1, 0 ) )
+			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetUVDegenerateFace( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		r = Random( datetime.now() )
+		u = r.uniform( 0.0, 1.0 )
+		v = r.uniform( 0.0, 1.0 )
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 0.5, 0.5, 0 ),
+			imath.V3f( 0.5, 0.5, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( u, v ),
+			imath.V2f( u, v ),
+			imath.V2f( u, v ),
+			imath.V2f( u, v ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+		constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 0.5, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( 1, 0, 0 ) )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 1, 0 ) )
+		self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
+
+	def testTargetUVNonConvexPoly( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  7,  4,  9,  3,  5,  1,
+			7, 11, 12,  8, 10,  4,
+			4, 10,  8, 12,  6,  5,  3,  9,
+			6, 12, 13,  2,  1,  5 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.8, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0.5, 0.1, 0 ),
+			imath.V3f( 0.2, 0.2, 0 ),
+			imath.V3f( 0.9, 0.2, 0 ),
+			imath.V3f( 0.6, 0.3, 0 ),
+			imath.V3f( 0, 0.4, 0 ),
+			imath.V3f( 0.5, 0.4, 0 ),
+			imath.V3f( 0.3, 0.5, 0 ),
+			imath.V3f( 0.3, 0.9, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 0.7, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [ imath.V2f( p.x, p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 1 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVNonConvexPolyMirroredU( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  7,  4,  9,  3,  5,  1,
+			7, 11, 12,  8, 10,  4,
+			4, 10,  8, 12,  6,  5,  3,  9,
+			6, 12, 13,  2,  1,  5 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.8, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0.5, 0.1, 0 ),
+			imath.V3f( 0.2, 0.2, 0 ),
+			imath.V3f( 0.9, 0.2, 0 ),
+			imath.V3f( 0.6, 0.3, 0 ),
+			imath.V3f( 0, 0.4, 0 ),
+			imath.V3f( 0.5, 0.4, 0 ),
+			imath.V3f( 0.3, 0.5, 0 ),
+			imath.V3f( 0.3, 0.9, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 0.7, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [ imath.V2f( 1.0 - p.x, p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 1 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], 1.0 - u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVNonConvexPolyMirroredV( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  7,  4,  9,  3,  5,  1,
+			7, 11, 12,  8, 10,  4,
+			4, 10,  8, 12,  6,  5,  3,  9,
+			6, 12, 13,  2,  1,  5 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.8, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0.5, 0.1, 0 ),
+			imath.V3f( 0.2, 0.2, 0 ),
+			imath.V3f( 0.9, 0.2, 0 ),
+			imath.V3f( 0.6, 0.3, 0 ),
+			imath.V3f( 0, 0.4, 0 ),
+			imath.V3f( 0.5, 0.4, 0 ),
+			imath.V3f( 0.3, 0.5, 0 ),
+			imath.V3f( 0.3, 0.9, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 0.7, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [ imath.V2f( p.x, 1.0 - p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 100 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], 1.0 - v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVNonConvexPolyMirroredUV( self ) :
+
+		from random import Random
+		from datetime import datetime
+
+		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  7,  4,  9,  3,  5,  1,
+			7, 11, 12,  8, 10,  4,
+			4, 10,  8, 12,  6,  5,  3,  9,
+			6, 12, 13,  2,  1,  5 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.8, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0.5, 0.1, 0 ),
+			imath.V3f( 0.2, 0.2, 0 ),
+			imath.V3f( 0.9, 0.2, 0 ),
+			imath.V3f( 0.6, 0.3, 0 ),
+			imath.V3f( 0, 0.4, 0 ),
+			imath.V3f( 0.5, 0.4, 0 ),
+			imath.V3f( 0.3, 0.5, 0 ),
+			imath.V3f( 0.3, 0.9, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 0.7, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [ imath.V2f( 1.0 - p.x, 1.0 - p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		r = Random( datetime.now() )
+
+		for i in range( 100 ) :
+			u = r.uniform( 0.0, 1.0 )
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], 1.0 - u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], 1.0 - v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVWindingOrder( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 10 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 7, 3, 4, 8, 9, 2, 6, 5, 1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 0.6, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0.2, 0.2, 0 ),
+			imath.V3f( 0.4, 0.2, 0 ),
+			imath.V3f( 0.6, 0.8, 0 ),
+			imath.V3f( 0.8, 0.8, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 0.4, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [ imath.V2f( p.x, p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+		uvs_mu = IECore.V2fVectorData( [ imath.V2f( 1.0 - p.x, p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+		uvs_mv = IECore.V2fVectorData( [ imath.V2f( p.x, 1.0 - p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+		uvs_muv = IECore.V2fVectorData( [ imath.V2f( 1.0 - p.x, 1.0 - p.y ) for p in points ], IECore.GeometricData.Interpretation.UV )
+
+		m1 = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		m1[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		m1[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		m2 = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		m2[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		m2[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_mu )
+
+		m3 = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		m3[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		m3[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_mv )
+
+		m4 = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		m4[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		m4[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs_muv )
+
+		t1 = GafferScene.ObjectToScene()
+		t1[ "name" ].setValue( "target1" )
+		t1[ "object" ].setValue( m1 )
+
+		t2 = GafferScene.ObjectToScene()
+		t2[ "name" ].setValue( "target2" )
+		t2[ "object" ].setValue( m2 )
+
+		t3 = GafferScene.ObjectToScene()
+		t3[ "name" ].setValue( "target3" )
+		t3[ "object" ].setValue( m3 )
+
+		t4 = GafferScene.ObjectToScene()
+		t4[ "name" ].setValue( "target3" )
+		t4[ "object" ].setValue( m4 )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+
+		u = 0.47
+		v = 0.54
+
+		constraint[ "targetScene" ].setInput( t1[ "out" ] )
+		constraint[ "target" ].setValue( "/" + t1[ "name" ].getValue() )
+		constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		constraint[ "targetScene" ].setInput( t2[ "out" ] )
+		constraint[ "target" ].setValue( "/" + t2[ "name" ].getValue() )
+		constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 1.0 - u, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		constraint[ "targetScene" ].setInput( t3[ "out" ] )
+		constraint[ "target" ].setValue( "/" + t3[ "name" ].getValue() )
+		constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 1.0 - v, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+		constraint[ "targetScene" ].setInput( t4[ "out" ] )
+		constraint[ "target" ].setValue( "/" + t4[ "name" ].getValue() )
+		constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertAlmostEqual( m[ 3 ][ 0 ], 1.0 - u, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 1 ], 1.0 - v, places=6 )
+		self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 0 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 1 ], 1.0, places=6 )
+		self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVMissingUV( self ) :
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0,  2,  3,  1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
+			imath.V3f( 0, 1, 0 ),
+			imath.V3f( 1, 1, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		constraint[ "ignoreMissingTarget" ].setValue( False )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 0.5 ) )
+		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+
+		constraint[ "ignoreMissingTarget" ].setValue( True )
+		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 0.5 ) )
+		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
 
 if __name__ == "__main__":
 	unittest.main()

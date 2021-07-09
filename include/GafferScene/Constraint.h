@@ -64,7 +64,9 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 			Origin = 0,
 			BoundMin = 1,
 			BoundMax = 2,
-			BoundCenter = 3
+			BoundCenter = 3,
+			UV = 4,
+			Vertex = 5
 		};
 
 		ScenePlug *targetScenePlug();
@@ -78,6 +80,12 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 		Gaffer::IntPlug *targetModePlug();
 		const Gaffer::IntPlug *targetModePlug() const;
+
+		Gaffer::V2fPlug *targetUVPlug();
+		const Gaffer::V2fPlug *targetUVPlug() const;
+
+		Gaffer::IntPlug *targetVertexPlug();
+		const Gaffer::IntPlug *targetVertexPlug() const;
 
 		Gaffer::V3fPlug *targetOffsetPlug();
 		const Gaffer::V3fPlug *targetOffsetPlug() const;

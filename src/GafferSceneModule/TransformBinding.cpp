@@ -84,6 +84,8 @@ void GafferSceneModule::bindTransform()
 			.value( "BoundMin", Constraint::BoundMin )
 			.value( "BoundMax", Constraint::BoundMax )
 			.value( "BoundCenter", Constraint::BoundCenter )
+			.value( "UV", Constraint::UV )
+			.value( "Vertex", Constraint::Vertex )
 		;
 	}
 
