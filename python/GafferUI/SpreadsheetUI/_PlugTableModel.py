@@ -160,25 +160,35 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 	def headerData( self, section, orientation, role ) :
 
-		if role != QtCore.Qt.DisplayRole :
-			return
+		if role == QtCore.Qt.DisplayRole :
 
-		if orientation == QtCore.Qt.Horizontal :
+			if orientation == QtCore.Qt.Horizontal :
 
-			if section < 2 :
-				label = ( "Name", "Enabled" )[ section ]
+				if section < 2 :
+					label = ( "Name", "Enabled" )[ section ]
+				else :
+					cellPlug = self.__rowsPlug.defaultRow()["cells"][ section - 2 ]
+					label = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" )
+					if not label :
+						label = IECore.CamelCase.toSpaced( cellPlug.getName() )
+				return label
+
 			else :
+
+				# We don't want to display the indices, but we do need
+				# a big enough section to use for drag and drop.
+				return " "
+
+		elif role == QtCore.Qt.ToolTipRole :
+
+			if orientation == QtCore.Qt.Horizontal :
+
 				cellPlug = self.__rowsPlug.defaultRow()["cells"][ section - 2 ]
-				label = Gaffer.Metadata.value( cellPlug, "spreadsheet:columnLabel" )
-				if not label :
-					label = IECore.CamelCase.toSpaced( cellPlug.getName() )
-			return label
-
-		else :
-
-			# We don't want to display the indices, but we do need
-			# a big enough section to use for drag and drop.
-			return " "
+				description = Gaffer.Metadata.value( cellPlug["value"], "description" )
+				if description :
+					return GafferUI.DocumentationAlgo.markdownToHTML( description )
+				else :
+					return ""
 
 	def flags( self, index ) :
 
@@ -374,7 +384,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		plug = self.valuePlugForIndex( index )
 
-		if isinstance( plug, Gaffer.BoolPlug ) :
+		if not forToolTip and isinstance( plug, Gaffer.BoolPlug ) :
 			# Dealt with via CheckStateRole
 			return None
 

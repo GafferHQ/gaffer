@@ -712,6 +712,14 @@ class _PlugTableView( GafferUI.Widget ) :
 			}
 		)
 
+		menuDefinition.append(
+			"/Set Description...",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setColumnDescription ), cellPlug ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( cellPlug ),
+			}
+		)
+
 		sectionNames = _SectionChooser.sectionNames( self._qtWidget().model().rowsPlug() )
 		currentSection = _SectionChooser.getSection( cellPlug )
 		for sectionName in sectionNames :
@@ -1010,6 +1018,19 @@ class _PlugTableView( GafferUI.Widget ) :
 		if label is not None :
 			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
 				Gaffer.Metadata.registerValue( cellPlug, "spreadsheet:columnLabel", label )
+
+	def __setColumnDescription( self, cellPlug ) :
+
+		description = GafferUI.TextInputDialogue(
+			title = "Set Description",
+			confirmLabel = "Set",
+			initialText = Gaffer.Metadata.value( cellPlug["value"], "description" ) or "",
+			multiLine = True,
+		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
+
+		if description is not None :
+			with Gaffer.UndoScope( cellPlug.ancestor( Gaffer.ScriptNode ) ) :
+				Gaffer.Metadata.registerValue( cellPlug["value"], "description", description )
 
 	def __canDeleteColumn( self, cellPlug ) :
 

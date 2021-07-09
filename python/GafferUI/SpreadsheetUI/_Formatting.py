@@ -78,13 +78,18 @@ def __defaultValueFormatter( plug, forToolTip ) :
 	elif isinstance( value, ( imath.V2i, imath.V2f, imath.V3i, imath.V3f ) ) :
 		return ", ".join( GafferUI.NumericWidget.valueToString( v ) for v in value )
 
+	# Unknown type. If iteration is supported then use that to
+	# format as a list, otherwise just cast to string.
 	try :
-		# Unknown type. If iteration is supported then use that.
-		separator = "\n" if forToolTip else ", "
-		return separator.join( str( x ) for x in value )
+		strings = [ str( x ) for x in value ]
 	except :
-		# Otherwise just cast to string
 		return str( value )
+
+	if forToolTip and not strings :
+		return "Empty"
+
+	separator = "\n" if forToolTip else ", "
+	return separator.join( strings )
 
 def __transformPlugFormatter( plug, forToolTip ) :
 

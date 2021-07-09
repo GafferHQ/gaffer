@@ -201,6 +201,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
+	def getToolTip( self ) :
+
+		# The generic auto-generated PlugValueWidget tooltip is distracting
+		# rather than useful, so we disable it. Calling `Widget.getToolTip()`
+		# means we continue to support tooltips added explicitly with
+		# `setToolTip()`.
+		return GafferUI.Widget.getToolTip( self )
+
 	__addRowButtonMenuSignal = None
 	## This signal is emitted whenever the add row button is clicked.
 	# If the resulting menu definition has been populated with items,
@@ -355,9 +363,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				with self.getContext() :
 					rowName = rowPlug["name"].getValue() or "unnamed"
 
+			columnPlug = self.getPlug().defaultRow()["cells"][plug.getName()]
+			columnName = Gaffer.Metadata.value( columnPlug, "spreadsheet:columnLabel" )
+			if not columnName :
+				columnName = IECore.CamelCase.toSpaced( columnPlug.getName() )
+
 			status = "Row : {}, Column : {}".format(
 				rowName,
-				IECore.CamelCase.toSpaced( plug.getName() ),
+				columnName
 			)
 
 		self.__statusLabel.setText( status )

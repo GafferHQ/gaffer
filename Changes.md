@@ -9,6 +9,13 @@ Features
 Improvements
 ------------
 
+- Spreadsheet :
+  - Added tooltips for column headers and sections. These can be edited using the new "Set Description..."
+    option in the right-click popup menus.
+  - Removed distracting "rows" tooltip.
+  - Added value tooltips for boolean cells.
+  - Added "Empty" tooltip for empty array values.
+  - Fixed status bar to use the custom column label if it exists.
 - UVInspector : Added ability to drag and drop UV values out of the inspector.
 - Process : Added warning messages for processes which don't respond promptly to cancellation.
 
@@ -16,6 +23,11 @@ Fixes
 -----
 
 - Render : Fixed typo and improved clarity of warning when a context variable can't be added to an image header.
+
+API
+---
+
+- TextInputDialogue : Added `multiLine` constructor argument, to allow input of multi-line values.
 
 0.60.0.0
 ========

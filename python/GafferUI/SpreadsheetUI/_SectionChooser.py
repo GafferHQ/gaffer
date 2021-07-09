@@ -170,7 +170,7 @@ class _SectionChooser( GafferUI.Widget ) :
 
 		if key == "spreadsheet:section" and self.__rowsPlug.isAncestorOf( plug ) :
 			self.__updateTabs()
-		elif re.match( "spreadsheet:section:.+:index", key ) and plug == self.__rowsPlug :
+		elif re.match( "spreadsheet:section:.+:(index|description)", key ) and plug == self.__rowsPlug :
 			self.__updateTabs()
 
 	def __updateTabs( self ) :
@@ -178,7 +178,15 @@ class _SectionChooser( GafferUI.Widget ) :
 		oldSectionNames = [ self._qtWidget().tabText( i ) for i in range( 0, self._qtWidget().count() ) ]
 		newSectionNames = self.sectionNames( self.__rowsPlug )
 
-		if oldSectionNames == newSectionNames :
+		oldSectionToolTips = [ self._qtWidget().tabToolTip( i ) for i in range( 0, self._qtWidget().count() ) ]
+		newSectionToolTips = [
+			GafferUI.DocumentationAlgo.markdownToHTML(
+				Gaffer.Metadata.value( self.__rowsPlug, "spreadsheet:section:{}:description".format( sectionName ) ) or ""
+			)
+			for sectionName in newSectionNames
+		]
+
+		if oldSectionNames == newSectionNames and oldSectionToolTips == newSectionToolTips :
 			return
 
 		currentSectionName = self._qtWidget().tabText( self._qtWidget().currentIndex() )
@@ -187,8 +195,11 @@ class _SectionChooser( GafferUI.Widget ) :
 		try :
 			while self._qtWidget().count() :
 				self._qtWidget().removeTab( 0 )
-			for sectionName in newSectionNames :
+			for index, sectionName in enumerate( newSectionNames ) :
 				self._qtWidget().addTab( sectionName )
+				self._qtWidget().setTabToolTip(
+					index, newSectionToolTips[index]
+				)
 			if currentSectionName in newSectionNames :
 				self.__setCurrent( newSectionNames.index( currentSectionName ) )
 			else :
@@ -262,6 +273,21 @@ class _SectionChooser( GafferUI.Widget ) :
 			if sectionIsCurrent :
 				self.__setCurrent( sectionNames.index( sectionName ) )
 
+	def __setSectionDescription( self, sectionName ) :
+
+		metadataKey = "spreadsheet:section:{}:description".format( sectionName )
+
+		description = GafferUI.TextInputDialogue(
+			title = "Set Description",
+			initialText = Gaffer.Metadata.value( self.__rowsPlug, metadataKey ),
+			confirmLabel = "Set",
+			multiLine = True,
+		).waitForText( parentWindow = self.ancestor( GafferUI.Window ) )
+
+		if description is not None :
+			with Gaffer.UndoScope( self.__rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+				Gaffer.Metadata.registerValue( self.__rowsPlug, metadataKey, description )
+
 	def __deleteSection( self, sectionName ) :
 
 		sectionNames = self.sectionNames( self.__rowsPlug )
@@ -326,9 +352,16 @@ class _SectionChooser( GafferUI.Widget ) :
 		m.append( "/__EditDivider__", { "divider" : True } )
 
 		m.append(
-			"/Rename",
+			"/Rename...",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__renameSection ), sectionName )
+			}
+		)
+
+		m.append(
+			"/Set Description...",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setSectionDescription ), sectionName )
 			}
 		)
 
