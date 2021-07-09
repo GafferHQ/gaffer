@@ -148,25 +148,6 @@ bool ptInPolygon( const Indexer vertices, const Imath::V2f v, const int n )
 template< typename PIndexer, typename UVIndexer >
 Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs, const Imath::V2f uv, const int n )
 {
-	Imath::V3f p( 0.f );
-
-	// NOTE : when uv matches one or more polygon vertices average all corresponding points
-
-	float ws = 0.f;
-	for( int i = 0; i < n; ++i )
-	{
-		if( uv == uvs( i ) )
-		{
-			p += points( i );
-			ws += 1.f;
-		}
-	}
-
-	if( ws != 0.f )
-	{
-		return p / ws;
-	}
-
 	// NOTE : compute vertex and edge triangle areas
 	//
 	//        Av[ i ] is 2 * area of the triangle formed by the vertices v(i-1), v(i) and v(i+1)
@@ -177,12 +158,27 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 
 	for( int i = 0; i < n; ++i )
 	{
-		const int ip = ( i + n - 1 ) % n;
-		const int in = ( i     + 1 ) % n;
-
 		const Imath::V2f vi = uvs( i );
-		const Imath::V2f vp = uvs( ip );
-		const Imath::V2f vn = uvs( in );
+
+		// NOTE : avoid zero length edges by skipping past adjacent duplicate uv vertices
+
+		float w = 1.f;
+
+		Imath::V2f vp;
+		for( int j = 1; j < n; ++j )
+		{
+			vp = uvs( ( i + n - j ) % n );
+			if( vp != vi ) break;
+			w += 1.f;
+		}
+
+		Imath::V2f vn;
+		for( int j = 1; j < n; ++j )
+		{
+			vn = uvs( ( i + j ) % n );
+			if( vn != vi ) break;
+			w += 1.f;
+		}
 
 		Av[ i ] = ( vi - vp ) % ( vn - vi );
 		Ae[ i ] = ( vn - vi ) % ( uv - vn );
@@ -195,17 +191,21 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 			Ae[ i ] = -( Ae[ i ] );
 		}
 
-		Av[ i ] = std::max( Av[ i ], std::numeric_limits< float >::min() );
+		Av[ i ] = std::max( Av[ i ], w * std::numeric_limits< float >::min() );
 		Ae[ i ] = std::max( Ae[ i ], 0.f );
+		Av[ i ] /= w;
 
 		// NOTE : uv is considered on an edge when the edge area is below threshold in which
 		//        case lerp between average of all positions corresponding to end vertices
 
-		if( ( Ae[ i ] < std::sqrt( std::numeric_limits< float >::min() ) ) && ( vi != vn ) )
+		if(
+			( Ae[ i ] < std::sqrt( std::numeric_limits< float >::min() ) ) &&
+			( ( ( uv - vi ) ^ ( uv - vn ) ) < std::numeric_limits< float >::min() ) )
 		{
 			const float l2 = ( vn - vi ).length2();
-			const float t = ( l2 > ( 2.f * std::numeric_limits< float >::min() ) )
-				? ( ( uv - vn ).length() / std::sqrt( l2 ) ) : 0.f;
+			const float t = std::min( std::max(
+				( l2 > ( 2.f * std::numeric_limits< float >::min() ) )
+					? std::sqrt( ( uv - vn ).length2() / l2 ) : 0.f, 0.f ), 1.f );
 
 			Imath::V3f pv( 0.f );
 			Imath::V3f pn( 0.f );
@@ -239,9 +239,21 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 	// NOTE : uv is not on any edges or coincident with any vertices use wachspress coordinates
 	//        the factor of 2 in the denominator cancels out during normalisation
 
+	float ws = 0.f;
+	Imath::V3f p( 0.f );
+
 	for( int i = 0; i < n; ++i )
 	{
-		const int ip = ( i + n - 1 ) % n;
+		const Imath::V2f vi = uvs( i );
+
+		int ip = 0;
+		for( int j = 1; j < n; ++j )
+		{
+			ip = ( i + n - j ) % n;
+			if( uvs( ip ) != vi )
+				break;
+		}
+
 		const float Ad = Ae[ ip ] * Ae[ i ];
 
 		if( Ad != 0.f )

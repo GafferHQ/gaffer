@@ -1334,6 +1334,205 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 1, 0 ) )
 			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
 
+	def testTargetUVDegenerateUVVertex( self ) :
+
+		from random import Random
+		from datetime import datetime
+		r = Random( datetime.now() )
+
+		verticesPerFace = IECore.IntVectorData( [ 4 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 2, 3, 1 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.0, 0.0, 0 ),
+			imath.V3f( 1.0, 0.0, 0 ),
+			imath.V3f( 0.0, 1.0, 0 ),
+			imath.V3f( 1.0, 1.0, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0.5, 0 ),
+			imath.V2f( 0.5, 0 ),
+			imath.V2f( 0.0, 1.0 ),
+			imath.V2f( 1.0, 1.0 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		for i in range( 10 ) :
+			u = 0.5
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVDegenerateUVVertexLine( self ) :
+
+		from random import Random
+		from datetime import datetime
+		r = Random( datetime.now() )
+
+		verticesPerFace = IECore.IntVectorData( [ 5 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			0, 1, 3, 4, 2 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.5, 0.0, 0 ),
+			imath.V3f( 0.2, 0.6, 0 ),
+			imath.V3f( 0.8, 0.6, 0 ),
+			imath.V3f( 0.4, 1.0, 0 ),
+			imath.V3f( 0.6, 1.0, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0.5, 0 ),
+			imath.V2f( 0.5, 0.6 ),
+			imath.V2f( 0.5, 0.6 ),
+			imath.V2f( 0.5, 1.0 ),
+			imath.V2f( 0.5, 1.0 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		for i in range( 10 ) :
+			u = 0.5
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
+	def testTargetUVDegenerateUVVertexLineRotate( self ) :
+
+		from random import Random
+		from datetime import datetime
+		r = Random( datetime.now() )
+
+		verticesPerFace = IECore.IntVectorData( [ 5 ] )
+
+		vertexIds = IECore.IntVectorData( [
+			1, 3, 4, 2, 0 ] )
+
+		points = IECore.V3fVectorData( [
+			imath.V3f( 0.5, 0.0, 0 ),
+			imath.V3f( 0.2, 0.6, 0 ),
+			imath.V3f( 0.8, 0.6, 0 ),
+			imath.V3f( 0.4, 1.0, 0 ),
+			imath.V3f( 0.6, 1.0, 0 ) ],
+			IECore.GeometricData.Interpretation.Point )
+
+		uvs = IECore.V2fVectorData( [
+			imath.V2f( 0.5, 0 ),
+			imath.V2f( 0.5, 0.6 ),
+			imath.V2f( 0.5, 0.6 ),
+			imath.V2f( 0.5, 1.0 ),
+			imath.V2f( 0.5, 1.0 ) ],
+			IECore.GeometricData.Interpretation.UV )
+
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
+		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
+		mesh[ "uv" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, uvs )
+
+		target = GafferScene.ObjectToScene()
+		target[ "name" ].setValue( "target" )
+		target[ "object" ].setValue( mesh )
+
+		cube = GafferScene.Cube()
+		cube[ "name" ].setValue( "cube" )
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter[ "paths" ].setValue( IECore.StringVectorData( [ "/" + cube[ "name" ].getValue() ] ) )
+
+		constraint = GafferScene.ParentConstraint()
+		constraint[ "in" ].setInput( cube[ "out" ] )
+		constraint[ "filter" ].setInput( cubeFilter[ "out" ] )
+		constraint[ "targetScene" ].setInput( target[ "out" ] )
+		constraint[ "target" ].setValue( "/" + target[ "name" ].getValue() )
+		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
+		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
+
+		for i in range( 10 ) :
+			u = 0.5
+			v = r.uniform( 0.0, 1.0 )
+			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
+			m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+			self.assertAlmostEqual( m[ 3 ][ 0 ], u, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 1 ], v, places=6 )
+			self.assertAlmostEqual( m[ 3 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 0 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 0 ][ 2 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 1 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 1 ][ 2 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 0 ], 0.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 1 ], -1.0, places=6 )
+			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
+
 	def testTargetUVDegenerateFace( self ) :
 
 		from random import Random
@@ -1448,7 +1647,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		r = Random( datetime.now() )
 
-		for i in range( 1 ) :
+		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
 			v = r.uniform( 0.0, 1.0 )
 			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
@@ -1522,7 +1721,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		r = Random( datetime.now() )
 
-		for i in range( 1 ) :
+		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
 			v = r.uniform( 0.0, 1.0 )
 			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
@@ -1596,7 +1795,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		r = Random( datetime.now() )
 
-		for i in range( 100 ) :
+		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
 			v = r.uniform( 0.0, 1.0 )
 			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
@@ -1670,7 +1869,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		r = Random( datetime.now() )
 
-		for i in range( 100 ) :
+		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
 			v = r.uniform( 0.0, 1.0 )
 			constraint[ "targetUV" ].setValue( imath.V2f( u, v ) )
