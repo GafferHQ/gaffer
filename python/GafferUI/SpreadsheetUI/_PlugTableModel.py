@@ -187,6 +187,8 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 				description = Gaffer.Metadata.value( cellPlug["value"], "description" )
 				if description :
 					return GafferUI.DocumentationAlgo.markdownToHTML( description )
+				else :
+					return ""
 
 	def flags( self, index ) :
 
