@@ -1,4 +1,4 @@
-0.60.x.x (relative to 0.60.0.0)
+0.60.1.0 (relative to 0.60.0.0)
 ========
 
 Features
@@ -10,6 +10,7 @@ Features
 Improvements
 ------------
 
+- SceneReader/SceneWriter : Added limited support for reading and writing custom attributes via USD. Currently attributes are only supported if they are marked as `custom` in the USD file, and if their name contains a colon-delimited namespace, for example `custom int foo:bar = 10`.
 - Spreadsheet :
   - Added tooltips for column headers and sections. These can be edited using the new "Set Description..."
     option in the right-click popup menus.
@@ -30,6 +31,11 @@ API
 ---
 
 - TextInputDialogue : Added `multiLine` constructor argument, to allow input of multi-line values.
+
+Build
+-----
+
+- Cortex : Updated to version 10.2.1.0.
 
 0.60.0.0
 ========
