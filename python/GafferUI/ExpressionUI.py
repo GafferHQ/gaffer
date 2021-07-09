@@ -55,6 +55,8 @@ Gaffer.Metadata.registerNode(
 
 	"layout:customWidget:Expression:widgetType", "GafferUI.ExpressionUI.ExpressionWidget",
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
+	"nodeGadget:shape", "oval",
+	"uiEditor:nodeGadgetTypes", IECore.StringVectorData( [ "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" ] ),
 	"auxiliaryNodeGadget:label", "e",
 
 	plugs = {
