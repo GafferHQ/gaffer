@@ -104,7 +104,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
-		bool hasLayer( Layer layer ) const override;
+		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
 
 		const Imath::Color3f *userColor() const;
 

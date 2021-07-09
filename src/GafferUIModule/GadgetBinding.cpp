@@ -216,7 +216,6 @@ void GafferUIModule::bindGadget()
 		.def( "_idleSignalAccessedSignal", &Gadget::idleSignalAccessedSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "_idleSignalAccessedSignal" )
 		.def( "_dirty", &Gadget::dirty )
-		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 
 	enum_<Gadget::Layer>( "Layer" )

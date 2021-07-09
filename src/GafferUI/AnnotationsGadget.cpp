@@ -249,6 +249,19 @@ void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style ) const
 	}
 }
 
+unsigned AnnotationsGadget::layerMask() const
+{
+	return (unsigned)GraphLayer::Overlay;
+}
+
+Imath::Box3f AnnotationsGadget::renderBound() const
+{
+	// This Gadget renders annotations for many nodes, so we can't give it a tight render bound
+	Box3f b;
+	b.makeInfinite();
+	return b;
+}
+
 GraphGadget *AnnotationsGadget::graphGadget()
 {
 	return parent<GraphGadget>();

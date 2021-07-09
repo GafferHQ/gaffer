@@ -63,7 +63,8 @@ class GAFFERUI_API TextGadget : public Gadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
-		bool hasLayer( Layer layer ) const override { return layer == Layer::Main; };
+		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
 
 	private :
 

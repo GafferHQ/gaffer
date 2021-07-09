@@ -73,8 +73,9 @@ class GAFFERUI_API StandardNodule : public Nodule
 
 	protected :
 
-		bool hasLayer( Layer layer ) const override;
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
 
 		void renderLabel( const Style *style ) const;
 

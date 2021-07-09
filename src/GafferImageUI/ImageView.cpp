@@ -554,6 +554,21 @@ class Box2iGadget : public GafferUI::Gadget
 			glPopMatrix();
 		}
 
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
+		}
+
+		Imath::Box3f renderBound() const override
+		{
+			// We draw handles outside the box, so we need to extend outside box - since we
+			// don't usually have many Box2iGadgets at once, we return infinite rather than
+			// finessing the overrender
+			Box3f b;
+			b.makeInfinite();
+			return b;
+		}
+
 	private :
 
 		void plugDirtied( Plug *plug )
@@ -931,6 +946,21 @@ class V2iGadget : public GafferUI::Gadget
 			glPopAttrib();
 
 			glPopMatrix();
+		}
+
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
+		}
+
+		Imath::Box3f renderBound() const override
+		{
+			// We draw handles outside the box, so we need to extend outside box - since we
+			// don't usually have many Box2iGadgets at once, we return infinite rather than
+			// finessing the overrender
+			Box3f b;
+			b.makeInfinite();
+			return b;
 		}
 
 	private :

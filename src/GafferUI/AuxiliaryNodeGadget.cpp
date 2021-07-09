@@ -73,7 +73,6 @@ Imath::Box3f AuxiliaryNodeGadget::bound() const
 
 void AuxiliaryNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-
 	if( layer != GraphLayer::Nodes )
 	{
 		return NodeGadget::doRenderLayer( layer, style );
@@ -89,6 +88,17 @@ void AuxiliaryNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 		glTranslatef( -offset.x, -offset.y, 0.0f );
 		style->renderText( Style::LabelText, m_label );
 	glPopMatrix();
+}
+
+unsigned AuxiliaryNodeGadget::layerMask() const
+{
+	return NodeGadget::layerMask() | (unsigned)GraphLayer::Nodes;
+}
+
+Imath::Box3f AuxiliaryNodeGadget::renderBound() const
+{
+	// If we expect to support labels longer than 2 characters, we should add the text bound in here
+	return bound();
 }
 
 void AuxiliaryNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )

@@ -176,6 +176,48 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			WrappedType::doRenderLayer( layer, style );
 		}
 
+		unsigned layerMask() const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "layerMask" );
+					if( f )
+					{
+						return boost::python::extract<unsigned>( f() );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::layerMask();
+		}
+
+		Imath::Box3f renderBound() const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "renderBound" );
+					if( f )
+					{
+						return boost::python::extract<Imath::Box3f>( f() );
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::bound();
+		}
+
 };
 
 } // namespace GafferUIBindings

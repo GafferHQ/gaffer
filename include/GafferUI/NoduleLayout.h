@@ -98,11 +98,6 @@ class GAFFERUI_API NoduleLayout : public Gadget
 		/// "noduleLayout:customGadget:*"" metadata entries.
 		static void registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator );
 
-
-	protected :
-
-		bool hasLayer( Layer layer ) const override;
-
 	private :
 
 		LinearContainer *noduleContainer();

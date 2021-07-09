@@ -112,6 +112,11 @@ void DotNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	NodeGadget::doRenderLayer( layer, style );
 }
 
+unsigned DotNodeGadget::layerMask() const
+{
+	return NodeGadget::layerMask() | (unsigned)GraphLayer::Nodes;
+}
+
 Gaffer::Dot *DotNodeGadget::dotNode()
 {
 	return static_cast<Dot *>( node() );

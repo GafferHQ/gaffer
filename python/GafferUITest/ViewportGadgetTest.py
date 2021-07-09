@@ -328,5 +328,69 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		m.removeScalingAndShear()
 		self.assertEqual( v.getCameraTransform(), m )
 
+	def testGadgetsAt( self ) :
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget()
+
+		v = gw.getViewportGadget()
+
+		class TestGadget( GafferUI.Gadget ) :
+
+			def __init__( self, name, t, layer ) :
+
+				GafferUI.Gadget.__init__( self )
+				self.setName( name )
+				self.setTransform( imath.M44f().translate( imath.V3f( t[0], t[1], 0 ) ) )
+				self.layer = layer
+
+			def doRenderLayer( self, layer, style ) :
+
+				style.renderSolidRectangle( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) )
+
+			def layerMask( self ) :
+
+				return self.layer
+
+			def renderBound( self ) :
+
+				return imath.Box3f( imath.V3f( 0 ), imath.V3f( 1 ) )
+
+
+
+		a = TestGadget( "A", ( 0.5, 0.5 ), GafferUI.Gadget.Layer.Main )
+		b = TestGadget( "B", ( 2.5, 0.5 ), GafferUI.Gadget.Layer.Back )
+		c = TestGadget( "C", ( 0.5, 2.5 ), GafferUI.Gadget.Layer.MidFront )
+		d = TestGadget( "D", ( 2.5, 2.5 ), GafferUI.Gadget.Layer.MidFront )
+		v.addChild( a )
+		v.addChild( b )
+		v.addChild( c )
+		v.addChild( d )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		v.setViewport( imath.V2i( 100 ) )
+		v.frame( imath.Box3f( imath.V3f( 0 ), imath.V3f( 4 ) ) )
+
+		# Single point form
+		self.assertEqual( v.gadgetsAt( imath.V2f( 2, 2 ) ), [] )
+		self.assertEqual( v.gadgetsAt( imath.V2f( 25, 75 ) ), [a] )
+		self.assertEqual( v.gadgetsAt( imath.V2f( 75, 75 ) ), [b] )
+		self.assertEqual( v.gadgetsAt( imath.V2f( 25, 25 ) ), [c] )
+		self.assertEqual( v.gadgetsAt( imath.V2f( 75, 25 ) ), [d] )
+
+		# Region form
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ) ) ), set( [a,b,c,d ] ) )
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 50 ), imath.V2f( 100, 100 ) ) ) ), set( [a,b] ) )
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 50, 0 ), imath.V2f( 100, 100 ) ) ) ), set( [b,d] ) )
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 50, 50 ), imath.V2f( 100, 100 ) ) ) ), set( [b] ) )
+
+		# Using filterLayer
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.Main ) ), set( [a] ) )
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.Back ) ), set( [b] ) )
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 0, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.MidFront ) ), set( [c,d] ) )
+		self.assertEqual( set( v.gadgetsAt( imath.Box2f( imath.V2f( 50, 0 ), imath.V2f( 100, 100 ) ), GafferUI.Gadget.Layer.MidFront ) ), set( [d] ) )
+
 if __name__ == "__main__":
 	unittest.main()

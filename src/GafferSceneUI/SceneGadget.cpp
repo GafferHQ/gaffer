@@ -476,6 +476,20 @@ void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 	renderScene();
 }
 
+unsigned SceneGadget::layerMask() const
+{
+	return (unsigned)Layer::Main;
+}
+
+Imath::Box3f SceneGadget::renderBound() const
+{
+	// The SceneGadget can render things outside it's layout, such as a Camera frustum, so it
+	// needs an infinite render bound
+	Box3f b;
+	b.makeInfinite();
+	return b;
+}
+
 void SceneGadget::updateRenderer()
 {
 	if( m_paused )

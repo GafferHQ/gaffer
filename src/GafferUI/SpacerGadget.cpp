@@ -49,10 +49,6 @@ SpacerGadget::~SpacerGadget()
 {
 }
 
-void SpacerGadget::doRenderLayer( Layer layer, const Style *style ) const
-{
-}
-
 Imath::Box3f SpacerGadget::bound() const
 {
 	return m_bound;

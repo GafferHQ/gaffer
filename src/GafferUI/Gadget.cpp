@@ -41,7 +41,6 @@
 #include "GafferUI/ViewportGadget.h"
 
 #include "IECoreGL/GL.h"
-#include "IECoreGL/NameStateComponent.h"
 #include "IECoreGL/Selector.h"
 
 #include "IECore/SimpleTypedData.h"
@@ -107,20 +106,6 @@ struct Gadget::Signals : boost::noncopyable
 Gadget::Gadget( const std::string &name )
 	:	GraphComponent( name ), m_style( nullptr ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_layoutDirty( false ), m_toolTip( "" )
 {
-	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
-	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
-}
-
-GadgetPtr Gadget::select( GLuint id )
-{
-	const std::string &name = IECoreGL::NameStateComponent::nameFromGLName( id );
-	if( name.compare( 0, 18, "__Gaffer::Gadget::" ) )
-	{
-		return nullptr;
-	}
-	std::string address = name.c_str() + 18;
-	size_t a = boost::lexical_cast<size_t>( address );
-	return reinterpret_cast<Gadget *>( a );
 }
 
 Gadget::~Gadget()
@@ -208,11 +193,6 @@ void Gadget::emitDescendantVisibilityChanged()
 		(*it)->emitDescendantVisibilityChanged();
 		Signals::emitLazily( (*it)->m_signals.get(), &Signals::visibilityChangedSignal, it->get() );
 	}
-}
-
-bool Gadget::getVisible() const
-{
-	return m_visible;
 }
 
 bool Gadget::visible( Gadget *relativeTo ) const
@@ -327,10 +307,9 @@ void Gadget::dirty( DirtyType dirtyType )
 		if( !p )
 		{
 			// Found top level gadget, maybe it's a ViewportGadget
-			ViewportGadget *viewportGadget = IECore::runTimeCast<ViewportGadget>( g );
-			if( viewportGadget )
+			if( auto viewportGadget = IECore::runTimeCast<ViewportGadget>( g ) )
 			{
-				viewportGadget->renderRequestSignal()( viewportGadget );
+				viewportGadget->childDirtied( dirtyType );
 			}
 		}
 		g = p;
@@ -345,10 +324,16 @@ void Gadget::doRenderLayer( Layer layer, const Style *style ) const
 {
 }
 
-bool Gadget::hasLayer( Layer layer ) const
+unsigned Gadget::layerMask() const
 {
-	return true;
+	return 0;
 }
+
+Imath::Box3f Gadget::renderBound() const
+{
+	return Box3f();
+}
+
 
 Imath::Box3f Gadget::bound() const
 {

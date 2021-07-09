@@ -1372,3 +1372,13 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 		}
 	}
 }
+
+unsigned ImageGadget::layerMask() const
+{
+	return (unsigned)Layer::Main;
+}
+
+Imath::Box3f ImageGadget::renderBound() const
+{
+	return bound();
+}

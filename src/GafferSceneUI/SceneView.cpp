@@ -576,6 +576,11 @@ class GnomonGadget : public GafferUI::Gadget
 
 		}
 
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
+		}
+
 		virtual void renderGnomon( const Style *style ) const = 0;
 
 };
@@ -870,7 +875,7 @@ class CameraOverlay : public GafferUI::Gadget
 		{
 			if( layer != Layer::Main )
 			{
-				return Gadget::doRenderLayer( layer, style );
+				return;
 			}
 
 			if( IECoreGL::Selector::currentSelector() || ( m_resolutionGate.isEmpty() && m_apertureGate.isEmpty() ) )
@@ -985,6 +990,19 @@ class CameraOverlay : public GafferUI::Gadget
 			}
 
 			glPopAttrib();
+		}
+
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::Main;
+		}
+
+		Imath::Box3f renderBound() const override
+		{
+			// we draw in raster space so don't have a sensible bound
+			Box3f b;
+			b.makeInfinite();
+			return b;
 		}
 
 	private :

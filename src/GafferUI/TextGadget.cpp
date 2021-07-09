@@ -92,3 +92,13 @@ void TextGadget::doRenderLayer( Layer layer, const Style *style ) const
 
 	style->renderText( Style::LabelText, m_text );
 }
+
+unsigned TextGadget::layerMask() const
+{
+	return (unsigned)Layer::Main;
+}
+
+Imath::Box3f TextGadget::renderBound() const
+{
+	return m_bound;
+}

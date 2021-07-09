@@ -415,9 +415,14 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	}
 }
 
-bool StandardNodeGadget::hasLayer( Layer layer ) const
+unsigned StandardNodeGadget::layerMask() const
 {
-	return layer != GraphLayer::Backdrops;
+	return GraphLayer::Nodes | GraphLayer::Overlay;
+}
+
+Imath::Box3f StandardNodeGadget::renderBound() const
+{
+	return bound();
 }
 
 const Imath::Color3f *StandardNodeGadget::userColor() const

@@ -754,8 +754,6 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 
 void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	Gadget::doRenderLayer( layer, style );
-
 	glDisable( GL_DEPTH_TEST );
 
 	switch( layer )
@@ -809,6 +807,19 @@ void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 		break;
 	}
 
+}
+
+unsigned GraphGadget::layerMask() const
+{
+	return GraphLayer::Connections | GraphLayer::Overlay;
+}
+
+Box3f GraphGadget::renderBound() const
+{
+	// We only have one graph gadget, so we don't need to worry about the exact extents for render culling
+	Box3f b;
+	b.makeInfinite();
+	return b;
 }
 
 bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )

@@ -295,6 +295,30 @@ void CompoundNumericNodule::doRenderLayer( Layer layer, const Style *style ) con
 	}
 }
 
+unsigned CompoundNumericNodule::layerMask() const
+{
+	if( !noduleLayout() )
+	{
+		return StandardNodule::layerMask();
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+Imath::Box3f CompoundNumericNodule::renderBound() const
+{
+	if( !noduleLayout() )
+	{
+		return StandardNodule::renderBound();
+	}
+	else
+	{
+		return Box3f();
+	}
+}
+
 NoduleLayout *CompoundNumericNodule::noduleLayout()
 {
 	return children().size() ? getChild<NoduleLayout>( 0 ) : nullptr;

@@ -88,13 +88,12 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		enum class Layer
 		{
-			None = -100,
-
-			Back = -2,
-			MidBack = -1,
-			Main = 0,
-			MidFront = 1,
-			Front = 2,
+			None = 0,
+			Back = 1,
+			MidBack = 2,
+			Main = 4,
+			MidFront = 8,
+			Front = 16,
 		};
 
 		/// @name Parent-child relationships
@@ -133,7 +132,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// unless the same is true for all its ancestors.
 		void setVisible( bool visible );
 		/// Returns the visibility status for this Gadget.
-		bool getVisible() const;
+		bool getVisible() const { return m_visible; }
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
 		bool visible( Gadget *relativeTo = nullptr ) const;
@@ -271,10 +270,14 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 			/// A re-render is needed, but the bounding box
 			/// and layout remain the same.
 			Render,
-			/// The bounding box has changed. Implies Render.
+			/// The result of renderBound() has changed, but the layout bounds have not.
+			/// Internal render caches which depend on the render bounds need to be rebuilt,
+			/// but we don't need to re-layout
+			RenderBound,
+			/// The layout bounding box has changed. Implies RenderBound and Render.
 			Bound,
 			/// Parameters used by `updateLayout()` have changed.
-			/// Implies Bound and Render.
+			/// Implies Bound, RenderBound and Render.
 			Layout,
 		};
 
@@ -288,29 +291,29 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		/// Should be implemented by subclasses to draw themselves as appropriate
 		/// for the specified layer. Child gadgets will be drawn automatically
-		/// _after_ the parent gadget has been drawn.
+		/// _after_ the parent gadget has been drawn.  Whenever overriding this,
+		/// you must override layerMask and renderBound() as well.
 		virtual void doRenderLayer( Layer layer, const Style *style ) const;
-		/// May return false to indicate that neither this gadget nor any
-		/// of its children will render anything for the specified layer.
-		/// The default implementation returns true.
-		virtual bool hasLayer( Layer layer ) const;
+
+		/// Returns a bitmask built from the flags in the Layer enum.
+		/// Any subclass which implements doRenderLayer must also implement layerMask
+		/// to indicate which layers doRenderLayer should be called for.
+		/// layerMask must currently return a constant value.  In the future, we
+		/// may implement a new DirtyType to allow dirtying the layerMask
+		virtual unsigned layerMask() const;
+
+		/// The bound of everything drawn by doRenderLayer
+		virtual Imath::Box3f renderBound() const;
 
 		/// Implemented to dirty the layout for both the old and the new parent.
 		void parentChanged( GraphComponent *oldParent ) override;
 
 	private :
-		/// Returns the Gadget with the specified name, where name has been retrieved
-		/// from an IECoreGL::HitRecord after rendering some Gadget in GL_SELECT mode.
-		/// \todo Consider better mechanisms.
-		static GadgetPtr select( GLuint id );
-
-
 		void styleChanged();
 		void emitDescendantVisibilityChanged();
 
 		ConstStylePtr m_style;
 
-		GLuint m_glName;
 		bool m_visible;
 		bool m_enabled;
 		bool m_highlighted;
@@ -336,6 +339,20 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		friend ViewportGadget;
 
 };
+
+
+/// Allow for clients to succinctly write bitmasks as Back | Main | Front
+inline unsigned operator| ( Gadget::Layer a, Gadget::Layer b )
+{
+	return (unsigned)a | (unsigned)b;
+}
+
+inline unsigned operator| ( unsigned a, Gadget::Layer b )
+{
+	return a | (unsigned)b;
+}
+
+
 
 } // namespace GafferUI
 

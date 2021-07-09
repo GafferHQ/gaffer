@@ -70,7 +70,8 @@ class GAFFERUI_API Handle : public Gadget
 		// Implemented to call renderHandle() after applying
 		// the raster scale.
 		void doRenderLayer( Layer layer, const Style *style ) const override;
-		bool hasLayer( Layer layer ) const override;
+		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
 
 		// Must be implemented by derived classes to draw their
 		// handle.

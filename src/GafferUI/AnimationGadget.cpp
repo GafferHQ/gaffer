@@ -271,8 +271,6 @@ AnimationGadget::~AnimationGadget()
 
 void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	Gadget::doRenderLayer( layer, style );
-
 	glDisable( GL_DEPTH_TEST );
 
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
@@ -437,6 +435,24 @@ void AnimationGadget::doRenderLayer( Layer layer, const Style *style ) const
 		break;
 
 	}
+}
+
+unsigned AnimationGadget::layerMask() const
+{
+	return
+		AnimationLayer::Grid |
+		AnimationLayer::Curves |
+		AnimationLayer::Keys |
+		AnimationLayer::Axes |
+		AnimationLayer::Overlay;
+}
+
+Imath::Box3f AnimationGadget::renderBound() const
+{
+	// We render an infinite grid
+	Box3f b;
+	b.makeInfinite();
+	return b;
 }
 
 Gaffer::StandardSet *AnimationGadget::visiblePlugs()

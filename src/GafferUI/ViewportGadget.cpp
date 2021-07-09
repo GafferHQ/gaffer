@@ -103,6 +103,17 @@ V2f planarScaleFromCameraAndRes( const IECoreScene::Camera *cam, const V2i &res 
 	return V2f( cam->getAperture()[0] / ((float)res[0] ), cam->getAperture()[1] / ((float)res[1] ) );
 }
 
+M44f g_identityMatrix;
+
+const Box3f initInfiniteBox()
+{
+	Box3f r;
+	r.makeInfinite();
+	return r;
+}
+
+Box3f g_infiniteBox( initInfiniteBox() );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -934,13 +945,12 @@ std::vector< Gadget* > ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegi
 	}
 
 	std::vector< Gadget* > gadgets;
-	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
+	for( const HitRecord &it : selection )
 	{
-		GadgetPtr gadget = Gadget::select( it->name );
-		if( gadget )
-		{
-			gadgets.push_back( gadget.get() );
-		}
+		// We can assume that renderInternal has populated m_renderItem, so we can just index into it
+		// using the index passed to loadName ( reversing the increment-by-one used to avoid the reserved
+		// name "0" )
+		gadgets.push_back( const_cast<Gadget*>( m_renderItems[ it.name - 1 ].gadget ) );
 	}
 
 	if( !gadgets.size() )
@@ -1026,72 +1036,115 @@ void ViewportGadget::render() const
 	renderInternal();
 }
 
+void ViewportGadget::childDirtied( DirtyType dirtyType )
+{
+	if( dirtyType == DirtyType::Layout || dirtyType == DirtyType::RenderBound )
+	{
+		// We need to rebuild the render items list
+		m_renderItems.clear();
+	}
+
+	renderRequestSignal()( this );
+}
+
 void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 {
 
 	bound(); // Updates layout if necessary
-	for( int layer = (int)Layer::Back; layer <= (int)Layer::Front; ++layer )
+
+	if( !m_renderItems.size() )
 	{
-		if( filterLayer != Gadget::Layer::None && (int)filterLayer != layer )
+		getRenderItems( this, M44f(), style(), m_renderItems );
+	}
+
+	M44f viewTransform;
+	glGetFloatv( GL_MODELVIEW_MATRIX, viewTransform.getValue() );
+	M44f projectionTransform;
+	glGetFloatv( GL_PROJECTION_MATRIX, projectionTransform.getValue() );
+
+	M44f combinedInverse = projectionTransform.inverse() * viewTransform.inverse();
+	Box3f bound = transform( Box3f( V3f( -1 ), V3f( 1 ) ), combinedInverse );
+	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+
+	const Style *currentStyle = nullptr;
+
+	for( int layerIndex = (int)Layer::Back; layerIndex <= (int)Layer::Front; layerIndex <<= 1 )
+	{
+		Layer layer = Layer(layerIndex);
+		if( filterLayer != Layer::None && layer != filterLayer )
 		{
 			continue;
 		}
 
-		renderLayer( this, (Layer)layer, /* currentStyle = */ nullptr );
-	}
-}
-
-void ViewportGadget::renderLayer( const Gadget *gadget, Layer layer, const Style *currentStyle )
-{
-	const bool haveTransform = gadget->m_transform != M44f();
-	if( haveTransform )
-	{
-		glPushMatrix();
-		glMultMatrixf( gadget->m_transform.getValue() );
-	}
-
-		if( !currentStyle )
+		for( unsigned int i = 0; i < m_renderItems.size(); i++ )
 		{
-			currentStyle = gadget->style();
-			currentStyle->bind();
-		}
-		else
-		{
-			if( gadget->m_style )
-			{
-				gadget->m_style->bind();
-				currentStyle = gadget->m_style.get();
-			}
-		}
-
-		if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
-		{
-			selector->loadName( gadget->m_glName );
-		}
-
-		gadget->doRenderLayer( layer, currentStyle );
-
-		for( ChildContainer::const_iterator it=gadget->children().begin(); it!=gadget->children().end(); it++ )
-		{
-			// Cast is safe because of the guarantees acceptsChild() gives us
-			const Gadget *c = static_cast<const Gadget *>( it->get() );
-			if( !c->getVisible() )
+			const RenderItem &renderItem = m_renderItems[i];
+			if( !( renderItem.layerMask & layerIndex ) )
 			{
 				continue;
 			}
-			if( c->hasLayer( layer ) )
-			{
-				renderLayer( c, layer, currentStyle );
-			}
-		}
 
-	if( haveTransform )
-	{
-		glPopMatrix();
+			if( !renderItem.bound.intersects( bound ) )
+			{
+				continue;
+			}
+
+			glLoadMatrixf( viewTransform.getValue() );
+			glMultMatrixf( renderItem.transform.getValue() );
+			if( selector )
+			{
+				// 0 is a reserved name for when nothing is selected, so start at 1
+				selector->loadName( i + 1 );
+			}
+
+			if( renderItem.style != currentStyle )
+			{
+				renderItem.style->bind( currentStyle );
+				currentStyle = renderItem.style;
+			}
+
+			renderItem.gadget->doRenderLayer( layer, currentStyle );
+		}
 	}
+	glLoadMatrixf( viewTransform.getValue() );
 }
 
+void ViewportGadget::getRenderItems( const Gadget *gadget, M44f transform, const Style *style, std::vector<RenderItem> &renderItems )
+{
+	const Box3f bound = gadget->renderBound();
+	bool boundSpecial = bound.isEmpty() || bound == g_infiniteBox;
 
+	if( gadget->getStyle() )
+	{
+		style = gadget->getStyle();
+	}
+
+	if( gadget->m_transform != g_identityMatrix )
+	{
+		transform = gadget->m_transform * transform;
+	}
+
+	unsigned layerMask = gadget->layerMask();
+	if( layerMask )
+	{
+		renderItems.push_back( {
+			gadget, style, transform,
+			boundSpecial ? bound : Imath::transform( bound, transform ),
+			layerMask
+		} );
+	}
+
+	for( const auto &i : gadget->children() )
+	{
+		// Cast is safe because of the guarantees acceptsChild() gives us
+		const Gadget *c = static_cast<const Gadget *>( i.get() );
+		if( !c->getVisible() )
+		{
+			continue;
+		}
+		getRenderItems( c, transform, style, renderItems );
+	}
+}
 
 ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
 {

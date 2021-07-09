@@ -313,6 +313,18 @@ void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style 
 	}
 }
 
+unsigned AuxiliaryConnectionsGadget::layerMask() const
+{
+	return (unsigned)GraphLayer::Connections;
+}
+
+Box3f AuxiliaryConnectionsGadget::renderBound() const
+{
+	Box3f b;
+	b.makeInfinite();
+	return b;
+}
+
 void AuxiliaryConnectionsGadget::renderConnection( const AuxiliaryConnection &c, const Style *style ) const
 {
 	const Style::State state = c.srcNodeGadget->getHighlighted() || c.dstNodeGadget->getHighlighted() ? Style::HighlightedState : Style::NormalState;

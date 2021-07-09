@@ -175,6 +175,11 @@ class HandlesGadget : public Gadget
 
 		}
 
+		unsigned layerMask() const override
+		{
+			return (unsigned)Layer::MidFront;
+		}
+
 };
 
 } // namespace
