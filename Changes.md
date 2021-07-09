@@ -11,6 +11,7 @@ Improvements
 
 - UVInspector : Added ability to drag and drop UV values out of the inspector.
 - Process : Added warning messages for processes which don't respond promptly to cancellation.
+- Expression : Added "Show Name" menu item to GraphEditor context menu.
 
 Fixes
 -----
