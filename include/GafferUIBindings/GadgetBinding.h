@@ -215,7 +215,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
-			return WrappedType::bound();
+			return WrappedType::renderBound();
 		}
 
 };
