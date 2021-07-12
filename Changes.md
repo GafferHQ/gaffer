@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - GraphEditor : Improved drawing performance for large node graphs, about 40% in general, with much greater gains when looking at a small region of a large graph, and even more gains for selection tests ( for example when hovering over something or dragging a noodle )
+- GafferUI : Fix edge artifacts when rendering transparent icons ( Requires Cortex 10.2.1.0 to get perfect results, but is an improvement even without it )
 
 API
 ---
