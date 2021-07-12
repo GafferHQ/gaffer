@@ -1389,7 +1389,7 @@ static const std::string &fragmentSource()
 		"	if( textureType==1 )"
 		"	{"
 		"		OUTCOLOR = texture2D( texture, gl_TexCoord[0].xy );"
-		"		OUTCOLOR = vec4( ieLinToSRGB( OUTCOLOR.r ), ieLinToSRGB( OUTCOLOR.g ), ieLinToSRGB( OUTCOLOR.b ), ieLinToSRGB( OUTCOLOR.a ) );"
+		"		OUTCOLOR = vec4( OUTCOLOR.a * ieLinToSRGB( OUTCOLOR.r / OUTCOLOR.a ), OUTCOLOR.a * ieLinToSRGB( OUTCOLOR.g / OUTCOLOR.a ), OUTCOLOR.a * ieLinToSRGB( OUTCOLOR.b / OUTCOLOR.a ), OUTCOLOR.a );"
 		"	}"
 		"	else if( textureType==2 )"
 		"	{"
