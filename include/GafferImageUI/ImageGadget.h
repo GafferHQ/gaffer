@@ -44,6 +44,7 @@
 #include "GafferImage/DeepState.h"
 #include "GafferImage/Format.h"
 #include "GafferImage/Grade.h"
+#include "GafferImage/Saturation.h"
 #include "GafferImage/ImageProcessor.h"
 
 #include "GafferUI/Gadget.h"
@@ -196,6 +197,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		float m_gamma;
 
 		GafferImage::DeepStatePtr m_deepStateNode;
+		GafferImage::SaturationPtr m_saturationNode;
 		GafferImage::ClampPtr m_clampNode;
 		GafferImage::GradePtr m_gradeNode;
 		GafferImage::ImageProcessorPtr m_displayTransform;

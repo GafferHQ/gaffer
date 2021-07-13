@@ -719,6 +719,16 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+		m.append( "/LuminanceDivider", { "divider" : True, })
+
+		m.append(
+				"/Luminance",
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
+					"checkBox" : soloChannel == -2
+				}
+			)
+
 		return m
 
 	def __setValue( self, value, *unused ) :

@@ -111,7 +111,7 @@ class ImageView::ChannelChooser : public boost::signals::trackable
 					"soloChannel",
 					Plug::In,
 					/* defaultValue = */ -1,
-					/* minValue = */ -1,
+					/* minValue = */ -2,
 					/* maxValue = */ 3
 				)
 			);
@@ -166,13 +166,14 @@ class ImageView::ChannelChooser : public boost::signals::trackable
 				return false;
 			}
 
-			const char *rgba[4] = { "R", "G", "B", "A" };
-			for( int i = 0; i < 4; ++i )
+			const char *rgbal[5] = { "R", "G", "B", "A", "L" };
+			for( int i = 0; i < 5; ++i )
 			{
-				if( event.key == rgba[i] )
+				if( event.key == rgbal[i] )
 				{
+					int soloChannel = i < 4 ? i : -2;
 					soloChannelPlug()->setValue(
-						soloChannelPlug()->getValue() == i ? -1 : i
+						soloChannelPlug()->getValue() == soloChannel ? -1 : soloChannel
 					);
 					return true;
 				}

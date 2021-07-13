@@ -232,7 +232,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 		struct ScopedBinding : PushAttrib
 		{
 
-			ScopedBinding( const TileShader &tileShader, bool clipping, float exposure, float gamma )
+			ScopedBinding( const TileShader &tileShader, bool clipping, float exposure, float gamma, bool luminance )
 				:	PushAttrib( GL_COLOR_BUFFER_BIT ), m_tileShader( tileShader )
 			{
 				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
@@ -244,6 +244,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				glUniform1f( tileShader.m_shader->uniformParameter( "multiply" )->location, pow( 2.0f, exposure ) );
 				glUniform1f( tileShader.m_shader->uniformParameter( "power" )->location, gamma > 0.0 ? 1.0f / gamma : 1.0f );
 				glUniform1f( tileShader.m_shader->uniformParameter( "clipping" )->location, clipping );
+				glUniform1f( tileShader.m_shader->uniformParameter( "luminance" )->location, luminance );
 
 				glUniform1i( tileShader.m_shader->uniformParameter( "redTexture" )->location, tileShader.m_channelTextureUnits[0] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "greenTexture" )->location, tileShader.m_channelTextureUnits[1] );
@@ -319,6 +320,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				"uniform float multiply;\n"
 				"uniform float power;\n"
 				"uniform bool clipping;\n"
+				"uniform bool luminance;\n"
 
 				"#if __VERSION__ >= 330\n"
 
@@ -341,6 +343,11 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				"		texture2D( blueTexture, gl_TexCoord[0].xy ).r,\n"
 				"		texture2D( alphaTexture, gl_TexCoord[0].xy ).r\n"
 				"	);\n"
+				"	if( luminance )\n"
+				"	{\n"
+				"		float lum = OUTCOLOR.r * 0.2126 + OUTCOLOR.g * 0.7152 + OUTCOLOR.b * 0.0722;\n"
+				"		OUTCOLOR = vec4( lum, lum, lum, OUTCOLOR.a );\n"
+				"	}\n"
 				"	if( clipping )\n"
 				"	{\n"
 				"		OUTCOLOR = vec4(\n"
@@ -399,8 +406,11 @@ ImageGadget::ImageGadget()
 	m_deepStateNode = new DeepState();
 	m_deepStateNode->deepStatePlug()->setValue( int( DeepState::TargetState::Flat ) );
 
+	m_saturationNode = new Saturation;
+	m_saturationNode->inPlug()->setInput( m_deepStateNode->outPlug() );
+
 	m_clampNode = new Clamp();
-	m_clampNode->inPlug()->setInput( m_deepStateNode->outPlug() );
+	m_clampNode->inPlug()->setInput( m_saturationNode->outPlug() );
 	m_clampNode->enabledPlug()->setValue( false );
 	m_clampNode->channelsPlug()->setValue( "*" );
 	m_clampNode->minClampToEnabledPlug()->setValue( true );
@@ -505,20 +515,22 @@ void ImageGadget::setSoloChannel( int index )
 	{
 		return;
 	}
-	if( index < -1 || index > 3 )
+	if( index < -2 || index > 3 )
 	{
 		throw Exception( "Invalid index" );
 	}
 
-	m_soloChannel = index;
-	if( m_soloChannel == -1 )
+	if( m_soloChannel >= 0 )
 	{
 		// Last time we called updateTiles(), we
 		// only updated the solo channel, so now
-		// we need to trigger a pass over all the
-		// channels.
+		// we need to trigger a pass over the
+		// channels we're going to use now.
 		dirty( TilesDirty );
 	}
+
+	m_soloChannel = index;
+
 	Gadget::dirty( DirtyType::Render );
 }
 
@@ -1039,6 +1051,7 @@ void ImageGadget::updateTiles()
 		/// ImageGadget introspect the last node(s) in the chain to see if they can be implemented via the
 		/// GPU path. ImageGadget could perhaps provide a utility that provides a bundle of grade/clamp/displayTransform
 		/// that it guarantees can be introspected.
+		m_saturationNode->saturationPlug()->setValue( m_soloChannel == -2 ? 0.0f : 1.0f );
 		m_clampNode->enabledPlug()->setValue( m_clipping );
 		const float m = pow( 2.0f, m_exposure );
 		m_gradeNode->multiplyPlug()->setValue( Color4f( m, m, m, 1.0f ) );
@@ -1055,7 +1068,7 @@ void ImageGadget::updateTiles()
 	{
 		if( find( m_rgbaChannels.begin(), m_rgbaChannels.end(), *it ) != m_rgbaChannels.end() )
 		{
-			if( m_soloChannel == -1 || m_rgbaChannels[m_soloChannel] == *it )
+			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it )
 			{
 				channelsToCompute.push_back( *it );
 			}
@@ -1185,7 +1198,8 @@ void ImageGadget::renderTiles() const
 		*shader(),
 		usingGPU() ? m_clipping : false,
 		usingGPU() ? m_exposure : 0.0f,
-		usingGPU() ? m_gamma : 1.0f
+		usingGPU() ? m_gamma : 1.0f,
+		usingGPU() ? m_soloChannel == -2 : false
 	);
 
 	const Box2i dataWindow = this->dataWindow();
@@ -1200,7 +1214,7 @@ void ImageGadget::renderTiles() const
 			IECoreGL::ConstTexturePtr channelTextures[4];
 			for( int i = 0; i < 4; ++i )
 			{
-				const InternedString channelName = m_soloChannel == -1 ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
+				const InternedString channelName = ( m_soloChannel < 0 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
 				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
 				if( it != m_tiles.end() )
 				{
