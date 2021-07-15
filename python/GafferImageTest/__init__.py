@@ -103,6 +103,7 @@ from .EmptyTest import EmptyTest
 from .DeepHoldoutTest import DeepHoldoutTest
 from .DeepRecolorTest import DeepRecolorTest
 from .ContextSanitiserTest import ContextSanitiserTest
+from .SaturationTest import SaturationTest
 
 if __name__ == "__main__":
 	import unittest
