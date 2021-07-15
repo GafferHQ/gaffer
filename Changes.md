@@ -1,3 +1,11 @@
+0.59.x.x
+======== (relative to 0.59.9.1) 
+
+Fixes
+-----
+
+- Merge : Fixed failure to update when only the dataWindow of an input changed.
+
 0.59.9.1 (relative to 0.59.9.0)
 ========
 
