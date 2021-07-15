@@ -39,10 +39,6 @@
 
 #include "GafferImageUI/ImageGadget.h"
 
-#include "GafferImage/Clamp.h"
-#include "GafferImage/Format.h"
-#include "GafferImage/DeepState.h"
-#include "GafferImage/Grade.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
