@@ -89,10 +89,12 @@ cortexCompatibilityVersion = ".".join( cortexVersion.split( "." )[0:2] )
 cortexReg = IEEnv.registry["libraries"]["cortex"][cortexCompatibilityVersion][IEEnv.platform()]
 compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
+pythonVersion = getOption( "PYTHON_VERSION", cortexReg["preferredPythonVersion"] )
 targetApp = getOption( "APP", None )
 targetAppVersion = None
 
 gafferReg = IEEnv.registry["apps"]["gaffer"][gafferRegistryVersion()][IEEnv.platform()]
+gafferBuildVariant = getOption( "GAFFER_BUILD_VARIANT", "py2" )
 qtVersion = gafferReg["qtVersion"]
 pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
 qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
@@ -145,7 +147,6 @@ else :
 
 	targetApp = "gaffer"
 	targetAppReg = gafferReg
-	pythonVersion = cortexReg["preferredPythonVersion"]
 	platformReg = IEEnv.registry["platformDefaults"][IEEnv.platform()]
 	if not compiler :
 		compiler = cortexReg.get( "compiler", platformReg["compiler"] )
@@ -202,11 +203,12 @@ baseInstallDir = os.path.join( installRoot, "apps", "gaffer", versionString, IEE
 
 BUILD_DIR = os.path.join( baseBuildDir, targetApp )
 INSTALL_DIR = os.path.join( baseInstallDir, targetApp )
-
 if targetAppVersion :
-
 	BUILD_DIR = os.path.join( BUILD_DIR, targetAppMajorVersion )
 	INSTALL_DIR = os.path.join( INSTALL_DIR, targetAppMajorVersion )
+else :
+	BUILD_DIR = os.path.join( BUILD_DIR, gafferBuildVariant )
+	INSTALL_DIR = os.path.join( INSTALL_DIR, gafferBuildVariant )
 
 GAFFERCORTEX = True
 
@@ -387,14 +389,15 @@ CXX = os.path.join( compilerReg["location"], compilerReg["bin"] )
 SPHINX = os.path.join( sphinxRoot, "bin", "sphinx-build" )
 
 if "install" in sys.argv :
-	# disable docs for releases (the postInstall command will symlink them from the public build)
-	if getOption( "RELEASE", "0" )=="1" :
-		SPHINX = "disableDocs"
-	# disable docs and graphics for all DCC installs (the postInstall command will symlink them our standalone build)
+	# disable docs for installations (the postInstall command will symlink them from the public build)
+	SPHINX = "disableDocs"
+	# disable graphics for all DCC installs (the postInstall command will symlink them our standalone build)
 	if targetAppVersion :
-		SPHINX = "disableDocs"
 		INKSCAPE = "disableGraphics"
-	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall BASE_INSTALL_DIR={baseInstallDir} INSTALL_DIR=$INSTALL_DIR".format( baseInstallDir = baseInstallDir )
+	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall BASE_INSTALL_DIR={baseInstallDir} INSTALL_DIR=$INSTALL_DIR GAFFER_BUILD_VARIANT={gafferBuildVariant}".format(
+		baseInstallDir = baseInstallDir,
+		gafferBuildVariant = gafferBuildVariant,
+	)
 
 ##########################################################################
 # figure out the lib suffixes
@@ -405,6 +408,9 @@ OIIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenImageIO", oiioVersion )
 OCIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenColorIO", ocioVersion )
 OSL_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenShadingLanguage", oslVersion )
 BOOST_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "boost", boostVersion, { "compiler" : compiler, "compilerVersion" : compilerVersion } )
+BOOST_PYTHON_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix(
+	"boost_python", boostVersion, { "compiler" : compiler, "compilerVersion" : compilerVersion, "pythonVersion" : pythonVersion }
+)
 CORTEX_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "cortex", cortexCompatibilityVersion )
 CORTEX_PYTHON_LIB_SUFFIX = CORTEX_LIB_SUFFIX + "-python" + pythonVersion
 
