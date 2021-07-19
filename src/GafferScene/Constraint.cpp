@@ -161,15 +161,20 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 		const Imath::V2f vi = uvs( i );
 
 		// NOTE : avoid zero length edges by skipping past adjacent duplicate uv vertices
+		//        in both directions, c is the number of times the duplicate vertex occurs
+		//        in a consecutive run including the current vertex (vi). It is important
+		//        that only adjacent duplicated vertices are included. The computed vertex
+		//        area is weighted by the reciprocal of c to average the influence of the
+		//        positions corresponding to the duplicated uv vertices.
 
-		float w = 1.f;
+		float c = 1.f;
 
 		Imath::V2f vp;
 		for( int j = 1; j < n; ++j )
 		{
 			vp = uvs( ( i + n - j ) % n );
 			if( vp != vi ) break;
-			w += 1.f;
+			c += 1.f;
 		}
 
 		Imath::V2f vn;
@@ -177,7 +182,7 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 		{
 			vn = uvs( ( i + j ) % n );
 			if( vn != vi ) break;
-			w += 1.f;
+			c += 1.f;
 		}
 
 		Av[ i ] = ( vi - vp ) % ( vn - vi );
@@ -191,9 +196,14 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 			Ae[ i ] = -( Ae[ i ] );
 		}
 
-		Av[ i ] = std::max( Av[ i ], w * std::numeric_limits< float >::min() );
+		// NOTE : clamp edge area to minimum of zero to prevent negative weights
+
 		Ae[ i ] = std::max( Ae[ i ], 0.f );
-		Av[ i ] /= w;
+
+		// NOTE : this clamp is done in two steps to prevent underflow to zero
+
+		Av[ i ] = std::max( Av[ i ], c * std::numeric_limits< float >::min() );
+		Av[ i ] /= c;
 
 		// NOTE : uv is considered on an edge when the edge area is below threshold in which
 		//        case lerp between average of all positions corresponding to end vertices
@@ -210,29 +220,29 @@ Imath::V3f interpolateConvexPolygon( const PIndexer points, const UVIndexer uvs,
 			Imath::V3f pv( 0.f );
 			Imath::V3f pn( 0.f );
 
-			float pvw = 0.f;
-			float pnw = 0.f;
+			float pvc = 0.f;
+			float pnc = 0.f;
 
 			for( int j = 0; j < n; ++j )
 			{
 				if( uvs( j ) == vi )
 				{
 					pv += points( j );
-					pvw += 1.f;
+					pvc += 1.f;
 				}
 				if( uvs( j ) == vn )
 				{
 					pn += points( j );
-					pnw += 1.f;
+					pnc += 1.f;
 				}
 			}
 
-			assert( pvw != 0.f );
-			assert( pnw != 0.f );
+			assert( pvc != 0.f );
+			assert( pnc != 0.f );
 
 			return
-				( pv / pvw ) * (       t ) +
-				( pn / pnw ) * ( 1.0 - t );
+				( pv / pvc ) * (       t ) +
+				( pn / pnc ) * ( 1.0 - t );
 		}
 	}
 
