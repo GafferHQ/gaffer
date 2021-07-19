@@ -1081,5 +1081,47 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			r["name"].setValue( name )
 			self.assertEqual( rows.row( name ), r )
 
+	class CustomSpreadsheet( Gaffer.Node ) :
+
+		def __init__( self, name = "CustomSpreadsheet" ) :
+
+			Gaffer.Node.__init__( self, name )
+
+			self["__spreadsheet"] = Gaffer.Spreadsheet()
+			self["__spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "testString" ) )
+			self["__spreadsheet"]["rows"].addColumn( Gaffer.IntPlug( "testInt" ) )
+
+			Gaffer.PlugAlgo.promote( self["__spreadsheet"]["rows"], excludeMetadata = "*" )
+
+	IECore.registerRunTimeTyped( CustomSpreadsheet )
+
+	Gaffer.Metadata.registerNode(
+		CustomSpreadsheet,
+		plugs = {
+			"rows" : [
+				# Prevents `addColumn()` calls being added to the
+				# serialisation, since we make those calls in our
+				# constructor.
+				"spreadsheet:columnsNeedSerialisation", False,
+			]
+		}
+	)
+
+	def testCustomClassWithRowsPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+		script["box"]["node"] = self.CustomSpreadsheet()
+		self.assertEqual( script["box"]["node"]["rows"][0]["cells"].keys(), [ "testString", "testInt" ] )
+
+		p = Gaffer.PlugAlgo.promote( script["box"]["node"]["rows"] )
+		self.assertEqual( p[0]["cells"].keys(), [ "testString", "testInt" ] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertEqual( script2["box"]["rows"][0]["cells"].keys(), script["box"]["rows"][0]["cells"].keys() )
+		self.assertEqual( script2["box"]["node"]["rows"][0]["cells"].keys(), script["box"]["node"]["rows"][0]["cells"].keys() )
+
 if __name__ == "__main__":
 	unittest.main()
