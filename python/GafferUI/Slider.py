@@ -544,7 +544,8 @@ class Slider( GafferUI.Widget ) :
 
 	def __valueToPosition( self, value ) :
 
-		f = ( value - self.__min ) / ( self.__max - self.__min )
+		r = self.__max - self.__min
+		f = ( ( value - self.__min ) / r ) if r != 0 else 0
 		return f * self.size().x
 
 	def __draw( self, painter ) :
