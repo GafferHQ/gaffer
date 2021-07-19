@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Timeline : Fixed errors when the end frame is the same as the start frame (#4294).
 - GafferUI : Fixed edge artifacts when rendering transparent icons.
 
 0.60.1.0 (relative to 0.60.0.0)
