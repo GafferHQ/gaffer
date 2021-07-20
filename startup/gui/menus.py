@@ -303,6 +303,7 @@ nodeMenu.append( "/Scene/Object/Mesh Distortion", GafferScene.MeshDistortion, se
 nodeMenu.append( "/Scene/Object/Camera Tweaks", GafferScene.CameraTweaks, searchText = "CameraTweaks" )
 nodeMenu.append( "/Scene/Object/Curve Sampler", GafferScene.CurveSampler, searchText = "CurveSampler" )
 nodeMenu.append( "/Scene/Object/Closest Point Sampler", GafferScene.ClosestPointSampler, searchText = "ClosestPointSampler" )
+nodeMenu.append( "/Scene/Object/UV Sampler", GafferScene.UVSampler, searchText = "UVSampler" )
 nodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
 nodeMenu.append( "/Scene/Attributes/Shader Tweaks", GafferScene.ShaderTweaks, searchText = "ShaderTweaks" )
 nodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
