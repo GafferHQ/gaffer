@@ -6,11 +6,17 @@ Features
 
 - UVSampler : Added a new node sampling primitive variables from specific UV positions on a source object.
 
+Improvements
+------------
+
+- Render : In addition to the compute cache, the hash cache is now cleared prior to rendering.
+
 Fixes
 -----
 
 - Timeline : Fixed errors when the end frame is the same as the start frame (#4294).
 - GafferUI : Fixed edge artifacts when rendering transparent icons.
+- Render : Added workaround for hangs caused by specific chains of Expressions being evaluated after completion of the render.
 
 0.60.1.0 (relative to 0.60.0.0)
 ========
