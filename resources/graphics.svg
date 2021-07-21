@@ -23,52 +23,12 @@
   <defs
      id="defs4">
     <linearGradient
-       id="linearGradient5870"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop5868" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient5864"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#829d8c;stop-opacity:1;"
-         offset="0"
-         id="stop5862" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1974"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop1972" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient3014"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop3012" />
-    </linearGradient>
-    <linearGradient
        id="linearGradient3002"
        osb:paint="solid">
       <stop
          style="stop-color:#787878;stop-opacity:1;"
          offset="0"
          id="stop3000" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2785"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop2783" />
     </linearGradient>
     <linearGradient
        id="linearGradient2779"
@@ -79,101 +39,12 @@
          id="stop2777" />
     </linearGradient>
     <linearGradient
-       id="linearGradient2773"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop2771" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2767"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop2765" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2705"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop2703" />
-    </linearGradient>
-    <linearGradient
        id="boundsTemplate"
        osb:paint="solid">
       <stop
          style="stop-color:#ff0101;stop-opacity:0.0787037;"
          offset="0"
          id="stop2644" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2640"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop2638" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2559"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop2557" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2553"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop2551" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2547"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop2545" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1643"
-       osb:paint="solid"
-       gradientTransform="translate(54.13258,7492.5003)">
-      <stop
-         style="stop-color:#9e9e9e;stop-opacity:1;"
-         offset="0"
-         id="stop1641" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1637"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#9e9e9e;stop-opacity:1;"
-         offset="0"
-         id="stop1635" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1631"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#9e9e9e;stop-opacity:1;"
-         offset="0"
-         id="stop1629" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1650"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#000000;stop-opacity:1;"
-         offset="0"
-         id="stop1648" />
     </linearGradient>
     <linearGradient
        id="linearGradient1644"
@@ -193,46 +64,6 @@
          id="stop1630" />
     </linearGradient>
     <linearGradient
-       id="linearGradient1622"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1620" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1614"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1612" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1608"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1606" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1600"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1598" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1594"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1592" />
-    </linearGradient>
-    <linearGradient
        id="linearGradient1586"
        osb:paint="solid">
       <stop
@@ -241,83 +72,11 @@
          id="stop1584" />
     </linearGradient>
     <linearGradient
-       id="linearGradient1578"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1576" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient2267"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop2265" />
-    </linearGradient>
-    <linearGradient
        id="compoundEditorButtonDisabled">
       <stop
          style="stop-color:#696969;stop-opacity:1;"
          offset="0"
          id="stop1497" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1537"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop1535" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1531"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop1529" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1521"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#779bbc;stop-opacity:1;"
-         offset="0"
-         id="stop1519" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1550"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#3c3c3c;stop-opacity:1;"
-         offset="0"
-         id="stop1548" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1542"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#8f8f8f;stop-opacity:1;"
-         offset="0"
-         id="stop1540" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1534"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#8f8f8f;stop-opacity:1;"
-         offset="0"
-         id="stop1532" />
-    </linearGradient>
-    <linearGradient
-       id="linearGradient1571"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop1569" />
     </linearGradient>
     <linearGradient
        id="linearGradient6112"
@@ -344,14 +103,6 @@
          style="stop-color:#414141;stop-opacity:0;" />
     </linearGradient>
     <linearGradient
-       id="linearGradient6253"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#787878;stop-opacity:1;"
-         offset="0"
-         id="stop6251" />
-    </linearGradient>
-    <linearGradient
        id="linearGradient6241"
        osb:paint="solid"
        gradientTransform="translate(-71.339679,50.536488)">
@@ -359,14 +110,6 @@
          style="stop-color:#969696;stop-opacity:1;"
          offset="0"
          id="stop6239" />
-    </linearGradient>
-    <linearGradient
-       id="background"
-       osb:paint="solid">
-      <stop
-         style="stop-color:#4c4c4c;stop-opacity:1;"
-         offset="0"
-         id="stop6215" />
     </linearGradient>
     <linearGradient
        id="backgroundDark"
