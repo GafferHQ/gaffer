@@ -18,6 +18,8 @@
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="graphics.svg"
    enable-background="new">
+  <title
+     id="title2005">Gaffer Icons</title>
   <defs
      id="defs4">
     <linearGradient
@@ -1300,34 +1302,13 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6568542"
-     inkscape:cx="22.537611"
-     inkscape:cy="-1445.4456"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
-     inkscape:window-width="1920"
-     inkscape:window-height="977"
-     inkscape:window-x="0"
-     inkscape:window-y="28"
-     showgrid="false"
-     inkscape:window-maximized="1"
-     inkscape:snap-global="true"
-     inkscape:snap-nodes="true"
-     inkscape:snap-bbox="true"
      inkscape:object-nodes="true"
-     inkscape:snap-object-midpoints="false"
-     inkscape:snap-bbox-midpoints="true"
-     inkscape:snap-smooth-nodes="true"
      showguides="false"
      inkscape:guide-bbox="true"
-     inkscape:snap-grids="true"
      inkscape:object-paths="false"
      inkscape:bbox-paths="true"
-     inkscape:bbox-nodes="true"
-     inkscape:snap-to-guides="true"
-     inkscape:snap-others="true"
-     inkscape:snap-page="false"
-     inkscape:snap-bbox-edge-midpoints="false">
+     inkscape:bbox-nodes="true">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
@@ -1570,7 +1551,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title>Gaffer Icons</dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
