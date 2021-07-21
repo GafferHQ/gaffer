@@ -164,6 +164,7 @@ enum TypeId
 	BoundQueryTypeId = 110619,
 	ExistenceQueryTypeId = 110620,
 	AttributeQueryTypeId = 110621,
+	UVSamplerTypeId = 110622,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,

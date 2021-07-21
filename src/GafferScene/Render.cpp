@@ -344,6 +344,9 @@ void Render::executeInternal( bool flushCaches ) const
 		/// `gaffer execute`, but it would be good to do better.
 		ObjectPool::defaultObjectPool()->clear();
 		ValuePlug::clearCache();
+		/// \todo This is not as effective as it could be, because it doesn't actually
+		/// clear the per-thread caches until the next operation on each thread.
+		ValuePlug::clearHashCache();
 	}
 
 	renderer->render();
