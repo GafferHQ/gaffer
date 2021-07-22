@@ -36,6 +36,7 @@
 
 #include "Gaffer/Spreadsheet.h"
 
+#include "Gaffer/Metadata.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 
@@ -336,6 +337,16 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 		RowsMap::Selector m_selector;
 
 };
+
+struct MetadataRegistration
+{
+	MetadataRegistration()
+	{
+		Metadata::registerValue( Spreadsheet::RowsPlug::staticTypeId(), "spreadsheet:columnsNeedSerialisation:promotable", new BoolData( false ) );
+	}
+};
+
+MetadataRegistration g_metadataRegistration;
 
 } // namespace
 

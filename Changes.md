@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - Render : In addition to the compute cache, the hash cache is now cleared prior to rendering.
+- Spreadsheet : Added interim support for adding a `Spreadsheet::RowsPlug` to a custom node. The previous doubling up of columns on reload can now be avoided by registering `False` for the new `spreadsheet:columnsNeedSerialisation` metadata item.
 
 Fixes
 -----
