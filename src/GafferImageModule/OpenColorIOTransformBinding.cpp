@@ -43,6 +43,7 @@
 #include "GafferImage/DisplayTransform.h"
 #include "GafferImage/LUT.h"
 #include "GafferImage/OpenColorIOTransform.h"
+#include "GafferImage/Saturation.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -100,6 +101,9 @@ void GafferImageModule::bindOpenColorIOTransform()
 {
 
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
+
+	// This probably shouldn't live in this file, but neither should the ColorProcessor line above?
+	GafferBindings::DependencyNodeClass<Saturation>();
 
 	GafferBindings::DependencyNodeClass<OpenColorIOTransform>()
 		.def( "availableColorSpaces", &availableColorSpaces ).staticmethod( "availableColorSpaces" )

@@ -38,6 +38,7 @@
 
 #include "SpreadsheetBinding.h"
 
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Reference.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -117,8 +118,26 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 
 			// Serialise columns
 
-			if( !reference )
+			IECore::ConstBoolDataPtr columnsNeedSerialisation = Metadata::value<IECore::BoolData>( plug, "spreadsheet:columnsNeedSerialisation" );
+
+			if( reference )
 			{
+				// We don't currently allow users to add new columns to
+				// referenced spreadsheets - the referenced columns will be
+				// created in `Reference::loadReference()`, so don't need to
+				// be serialised here.
+			}
+			else if( columnsNeedSerialisation && !columnsNeedSerialisation->readable() )
+			{
+				// We also allow opting out of column serialisation using metadata.
+				// This allows custom nodes to create columns in their constructors
+				// without them getting doubled up after save and reload.
+				/// \todo This should be replaced with a more general purpose mechanism
+				/// for nodes to control plug serialisation.
+			}
+			else
+			{
+				// Standard case. Serialise an `addColumn()` call for each column.
 				for( const auto &cell : Spreadsheet::CellPlug::Range( *plug->getChild<Spreadsheet::RowPlug>( 0 )->cellsPlug() ) )
 				{
 					PlugPtr p = cell->valuePlug()->createCounterpart( cell->getName(), Plug::In );
@@ -130,13 +149,6 @@ class RowsPlugSerialiser : public ValuePlugSerialiser
 					}
 					result += " )\n";
 				}
-			}
-			else
-			{
-				// We don't currently allow users to add new columns to
-				// referenced spreadsheets, so we have nothing to do here. The
-				// referenced columns will be created in
-				// `Reference::loadReference()`.
 			}
 
 			// Serialise rows. We do this as an `addRows()` call because it is much faster

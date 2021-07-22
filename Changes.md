@@ -35,11 +35,13 @@ Features
 --------
 
 - UVSampler : Added a new node sampling primitive variables from specific UV positions on a source object.
+- Saturation : Added a new node to adjust image saturation.  This could previously be done using the CDL node, but using a specific node is sometimes clearer.
 
 Improvements
 ------------
 
 - Render : In addition to the compute cache, the hash cache is now cleared prior to rendering.
+- Spreadsheet : Added interim support for adding a `Spreadsheet::RowsPlug` to a custom node. The previous doubling up of columns on reload can now be avoided by registering `False` for the new `spreadsheet:columnsNeedSerialisation` metadata item.
 
 Fixes
 -----
@@ -251,6 +253,14 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
+
+0.59.9.x (relative to 0.59.9.1)
+========
+
+Fixes
+-----
+
+- Merge : Fixed failure to update when only the dataWindow of an input changed.
 
 0.59.9.1 (relative to 0.59.9.0)
 ========

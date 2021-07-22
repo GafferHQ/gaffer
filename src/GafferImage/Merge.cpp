@@ -655,6 +655,12 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		if( inputImage->parent<ArrayPlug>() == inPlugs() )
 		{
 			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+
+			// The input data window affects the output channel data
+			if( input == inputImage->dataWindowPlug() )
+			{
+				outputs.push_back( outPlug()->channelDataPlug() );
+			}
 		}
 	}
 }
