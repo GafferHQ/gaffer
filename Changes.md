@@ -54,6 +54,12 @@ Fixes
 - Timeline : Fixed errors when the end frame is the same as the start frame (#4294).
 - GafferUI : Fixed edge artifacts when rendering transparent icons.
 - Render : Added workaround for hangs caused by specific chains of Expressions being evaluated after completion of the render.
+- NodeEditor : Fixed `Internal C++ object already deleted` errors in Python 3 builds.
+
+Build
+-----
+
+- Cortex : Updated to version 10.2.2.0.
 
 0.60.1.0 (relative to 0.60.0.0)
 ========
