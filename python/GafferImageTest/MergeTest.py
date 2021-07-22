@@ -692,6 +692,29 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( merge["out"].dataWindow(), imath.Box2i( imath.V2i( -1024 ), imath.V2i( -512 ) ) )
 
+	def testChangeDataWindow( self ):
+		constant1 = GafferImage.Constant()
+		constant1["format"].setValue( GafferImage.Format( 512, 512, 1.000 ) )
+		constant1["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
+
+		constant2 = GafferImage.Constant()
+		constant2["format"].setValue( GafferImage.Format( 512, 512, 1.000 ) )
+		constant2["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( constant1["out"] )
+		merge["in"][1].setInput( constant2["out"] )
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( merge["out"] )
+		stats["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ) )
+
+		for i in range( 0, 512, 16 ):
+			constant2["format"].setValue( GafferImage.Format( 512, i, 1.000 ) )
+			frac = i / 512.0
+			self.assertEqual( stats["average"].getValue(), imath.Color4f( 1 - frac, frac, 0, 1 ) )
+
 	def mergePerf( self, operation, mismatch ):
 		r = GafferImage.Checkerboard( "Checkerboard" )
 		r["format"].setValue( GafferImage.Format( 4096, 3112, 1.000 ) )
