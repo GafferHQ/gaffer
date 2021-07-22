@@ -20,11 +20,6 @@ Fixes
 - GafferUI : Fixed edge artifacts when rendering transparent icons.
 - Render : Added workaround for hangs caused by specific chains of Expressions being evaluated after completion of the render.
 
-API
----
-
-- New convention for graphics.svg to simplify diffs.  Use the new script `contrib/scripts/cleanGraphicsSVG.py` and the Inkscape option "Edit > Preferences > Behaviour > Cleanup > Remove unused swatches" with the "File > Clean up document" menu to reduce unnecessary noise, and when intentionally adding a swatch, try to give it a descriptive name.
-
 0.60.1.0 (relative to 0.60.0.0)
 ========
 
