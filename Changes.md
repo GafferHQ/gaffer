@@ -1,6 +1,11 @@
 0.61.x.x
 ========
 
+Features
+--------
+
+- Image Viewer : Added Luminance option to the channel selection menu.
+
 Improvements
 ------------
 

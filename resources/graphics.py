@@ -135,7 +135,8 @@
 				'soloChannel0',
 				'soloChannel1',
 				'soloChannel2',
-				'soloChannel3'
+				'soloChannel3',
+				'soloChannel-2'
 			]
 
 		},
