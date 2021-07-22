@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import Gaffer
 import GafferUI
@@ -128,6 +129,26 @@ class StringPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( n["user"]["p1"].getValue(), "" )
 		self.assertEqual( n["user"]["p2"].getValue(), "" )
+
+	def testExceptionHandling( self ) :
+
+		# Compute for `n["p"]` will error because it's an output plug
+		# that ComputeNode knows nothing about.
+
+		n = Gaffer.ComputeNode()
+		n["p"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+
+		# We want that to be reflected in the UI.
+
+		w = GafferUI.StringPlugValueWidget( n["p"] )
+		self.assertEqual( w.textWidget().getText(), "" )
+		self.assertTrue( w.textWidget().getErrored() )
+
+		# And we don't want the widget to live beyond its natural life
+		# due to reference cycles introduced by exception handling.
+
+		w = weakref.ref( w )
+		self.assertIsNone( w() )
 
 if __name__ == "__main__":
 	unittest.main()
