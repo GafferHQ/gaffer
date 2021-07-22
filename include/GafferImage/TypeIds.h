@@ -128,6 +128,7 @@ enum TypeId
 	DeepToFlatTypeId = 110832,
 	DeepHoldoutTypeId = 110833,
 	DeepRecolorTypeId = 110834,
+	SaturationTypeId = 110835,
 
 	LastTypeId = 110849
 };
