@@ -51,10 +51,12 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed bug which prevented the "Expand Selection Fully" operation from working.
 - Timeline : Fixed errors when the end frame is the same as the start frame (#4294).
 - GafferUI : Fixed edge artifacts when rendering transparent icons.
 - Render : Added workaround for hangs caused by specific chains of Expressions being evaluated after completion of the render.
 - NodeEditor : Fixed `Internal C++ object already deleted` errors in Python 3 builds.
+- Merge : Fixed failure to update when only the dataWindow of an input changed.
 
 Build
 -----

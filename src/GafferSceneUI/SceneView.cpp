@@ -1839,10 +1839,10 @@ void SceneView::frame( const PathMatcher &filter, const Imath::V3f &direction )
 
 void SceneView::expandSelection( size_t depth )
 {
-	// Note that we are scoping this context at the same time that expandDescendants is doing a cheeky in-place
-	// modification of the context.  In general this could result in highly inconsistent hash results ... it
-	// is safe only because the selected paths is a "ui:" prefixed context variable, and Context is hardcoded
-	// to ignore variables with this prefix during hashing
+	// Note that we are scoping this context when expandDescendants computes a new value for the expanded paths.
+	// This could result in unnecessary cache misses due to changing the context entry, but it's OK because the
+	// selected paths is a "ui:" prefixed context variable, and Context is hardcoded to ignore variables with
+	// this prefix during hashing
 	Context::Scope scope( getContext() );
 	PathMatcher selection = ContextAlgo::expandDescendants( getContext(), m_sceneGadget->getSelection(), preprocessedInPlug<ScenePlug>(), depth - 1 );
 	ContextAlgo::setSelectedPaths( getContext(), selection );
