@@ -21,6 +21,7 @@ Fixes
 - GafferUI : Fixed edge artifacts when rendering transparent icons.
 - Render : Added workaround for hangs caused by specific chains of Expressions being evaluated after completion of the render.
 - NodeEditor : Fixed `Internal C++ object already deleted` errors in Python 3 builds.
+- Merge : Fixed failure to update when only the dataWindow of an input changed.
 
 Build
 -----
