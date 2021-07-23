@@ -555,7 +555,7 @@ Shader::Shader( const std::string &name )
 	addChild( new CompoundObjectPlug( "__outAttributes", Plug::Out, new IECore::CompoundObject ) );
 
 	nameChangedSignal().connect( boost::bind( &Shader::nameChanged, this ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &Shader::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Metadata::nodeValueChangedSignal( this ).connect( boost::bind( &Shader::nodeMetadataChanged, this, ::_2 ) );
 }
 
 Shader::~Shader()
@@ -840,14 +840,9 @@ void Shader::nameChanged()
 	nodeNamePlug()->setValue( getName() );
 }
 
-void Shader::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
+void Shader::nodeMetadataChanged( IECore::InternedString key )
 {
-	if( node && node != this )
-	{
-		return;
-	}
-
-	if( key == g_nodeColorMetadataName && this->isInstanceOf( nodeTypeId ) )
+	if( key == g_nodeColorMetadataName )
 	{
 		IECore::ConstColor3fDataPtr d = Metadata::value<const IECore::Color3fData>( this, g_nodeColorMetadataName );
 		nodeColorPlug()->setValue( d ? d->readable() : Color3f( 0.0f ) );
