@@ -33,7 +33,7 @@ Breaking Changes
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
 - ArnoldOptions : Removed support for the `ai:ignore_motion_blur` option. Turn off the `sampleMotion` option using a StandardOptions node instead.
 
-0.60.x.x (relative to 0.60.1.0)
+0.60.2.0 (relative to 0.60.1.0)
 ========
 
 Features
@@ -267,7 +267,7 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
-0.59.9.x (relative to 0.59.9.1)
+0.59.9.2 (relative to 0.59.9.1)
 ========
 
 Fixes
