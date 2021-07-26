@@ -56,7 +56,7 @@ static IECore::InternedString g_colorKey( "nodeGadget:color" );
 AuxiliaryNodeGadget::AuxiliaryNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ), m_label( "" ), m_radius( 1.0 )
 {
-	Gaffer::Metadata::nodeValueChangedSignal().connect( boost::bind( &AuxiliaryNodeGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Gaffer::Metadata::nodeValueChangedSignal( node.get() ).connect( boost::bind( &AuxiliaryNodeGadget::nodeMetadataChanged, this, ::_2 ) );
 
 	updateLabel();
 	updateUserColor();
@@ -91,7 +91,7 @@ void AuxiliaryNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	glPopMatrix();
 }
 
-void AuxiliaryNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
+void AuxiliaryNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 {
 	if( key == g_labelKey )
 	{

@@ -164,7 +164,7 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 		class NetworkBuilder;
 
 		void nameChanged();
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Node *node );
+		void nodeMetadataChanged( IECore::InternedString key );
 
 		// We want to use the node name when computing the shader, so that we
 		// can generate more useful shader handles. It's illegal to use anything
