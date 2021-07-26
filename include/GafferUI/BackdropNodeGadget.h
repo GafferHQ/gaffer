@@ -93,7 +93,7 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 		// means not hovered in that direction.
 		void hoveredEdges( const ButtonEvent &event, int &horizontal, int &vertical ) const;
 
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
+		void nodeMetadataChanged( IECore::InternedString key );
 
 		bool updateUserColor();
 

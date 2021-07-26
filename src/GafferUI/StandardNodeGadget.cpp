@@ -340,7 +340,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 		l->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
 	}
 
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Metadata::nodeValueChangedSignal( node.get() ).connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_2 ) );
 
 	// do our first update
 	////////////////////////////////////////////////////////
@@ -764,18 +764,8 @@ ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEve
 	return result;
 }
 
-void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
+void StandardNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 {
-	if( node && node != this->node() )
-	{
-		return;
-	}
-
-	if( !this->node()->isInstanceOf( nodeTypeId ) )
-	{
-		return;
-	}
-
 	if( key == g_colorKey )
 	{
 		if( updateUserColor() )

@@ -123,7 +123,7 @@ BackdropNodeGadget::BackdropNodeGadget( Gaffer::NodePtr node )
 	dragEndSignal().connect( boost::bind( &BackdropNodeGadget::dragEnd, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &BackdropNodeGadget::leave, this, ::_1, ::_2 ) );
 
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &BackdropNodeGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
+	Metadata::nodeValueChangedSignal( node.get() ).connect( boost::bind( &BackdropNodeGadget::nodeMetadataChanged, this, ::_2 ) );
 
 	updateUserColor();
 }
@@ -548,14 +548,9 @@ Gaffer::Box2fPlug *BackdropNodeGadget::acquireBoundPlug( bool createIfMissing )
 	return newPlug.get();
 }
 
-void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
+void BackdropNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 {
-	if( node && node != this->node() )
-	{
-		return;
-	}
-
-	if( this->node()->isInstanceOf( nodeTypeId ) && key == g_colorKey )
+	if( key == g_colorKey )
 	{
 		if( updateUserColor() )
 		{

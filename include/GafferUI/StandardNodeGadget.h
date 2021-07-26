@@ -139,7 +139,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 		ConnectionCreator *closestDragDestination( const DragDropEvent &event ) const;
 
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
+		void nodeMetadataChanged( IECore::InternedString key );
 
 		bool updateUserColor();
 		void updatePadding();

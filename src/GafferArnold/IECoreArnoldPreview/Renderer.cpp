@@ -77,6 +77,7 @@
 #include "tbb/partitioner.h"
 #include "tbb/spin_mutex.h"
 
+#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <sstream>
@@ -1460,7 +1461,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				if( !velocityScale || velocityScale.get() > 0 )
 				{
 					AtNode *options = AiUniverseGetOptions();
-					const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, "camera" ) );
+					const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, g_cameraArnoldString ) );
 
 					if( arnoldCamera )
 					{
@@ -2749,6 +2750,111 @@ std::string g_consoleFlagsOptionPrefix( "ai:console:" );
 const int g_logFlagsDefault = AI_LOG_ALL;
 const int g_consoleFlagsDefault = AI_LOG_WARNINGS | AI_LOG_ERRORS | AI_LOG_TIMESTAMP | AI_LOG_BACKTRACE | AI_LOG_MEMORY | AI_LOG_COLOR;
 
+void throwError( int errorCode )
+{
+	switch( errorCode )
+	{
+		case AI_ABORT :
+			throw IECore::Exception( "Render aborted" );
+		case AI_ERROR_NO_CAMERA :
+			throw IECore::Exception( "Camera not defined" );
+		case AI_ERROR_BAD_CAMERA :
+			throw IECore::Exception( "Bad camera" );
+		case AI_ERROR_VALIDATION :
+			throw IECore::Exception( "Usage not validated" );
+		case AI_ERROR_RENDER_REGION :
+			throw IECore::Exception( "Invalid render region" );
+		case AI_INTERRUPT :
+			throw IECore::Exception( "Render interrupted by user" );
+		case AI_ERROR_NO_OUTPUTS :
+			throw IECore::Exception( "No outputs" );
+		case AI_ERROR :
+			throw IECore::Exception( "Generic Arnold error" );
+	}
+}
+
+// Arnold's `AiRender()` function does exactly what you want for a batch render :
+// starts a render and returns when it is complete. But it is deprecated. Here we
+// jump through hoops to re-implement the behaviour using non-deprecated API.
+void renderAndWait()
+{
+
+	// Updated by `callback` to notify this thread when the render has
+	// completed.
+	struct Status {
+		std::mutex mutex;
+		std::condition_variable conditionVariable;
+		AtRenderStatus value = AI_RENDER_STATUS_NOT_STARTED;
+	} status;
+
+	// Called from one of the Arnold render threads to notify us of progress.
+	auto callback = []( void *voidStatus, AtRenderUpdateType updateType, const AtRenderUpdateInfo *updateInfo ) {
+
+		// We are required to return a new status for the render,
+		// following a table of values in `ai_render.h`.
+		AtRenderStatus newStatus = AI_RENDER_STATUS_FAILED;
+		switch( updateType )
+		{
+			case AI_RENDER_UPDATE_INTERRUPT :
+				newStatus = AI_RENDER_STATUS_PAUSED;
+				break;
+			case AI_RENDER_UPDATE_BEFORE_PASS :
+				newStatus = AI_RENDER_STATUS_RENDERING;
+				break;
+			case AI_RENDER_UPDATE_DURING_PASS :
+				newStatus = AI_RENDER_STATUS_RENDERING;
+				break;
+			case AI_RENDER_UPDATE_AFTER_PASS :
+				newStatus = AI_RENDER_STATUS_RENDERING;
+				break;
+			case AI_RENDER_UPDATE_IMAGERS :
+				// Documentation doesn't state the appropriate
+				// return value, so this is a guess.
+				newStatus = AI_RENDER_STATUS_RENDERING;
+				break;
+			case AI_RENDER_UPDATE_FINISHED :
+				newStatus = AI_RENDER_STATUS_FINISHED;
+				break;
+			case AI_RENDER_UPDATE_ERROR :
+				newStatus = AI_RENDER_STATUS_FAILED;
+				break;
+			// No `default` clause so that the compiler will warn us
+			// when new AtRenderUpdateType values are added.
+		}
+
+		if( newStatus == AI_RENDER_STATUS_FINISHED || newStatus == AI_RENDER_STATUS_FAILED )
+		{
+			// Notify the waiting thread that we're done.
+			Status *status = static_cast<Status *>( voidStatus );
+			{
+				std::lock_guard<std::mutex> lock( status->mutex );
+				status->value = newStatus;
+			}
+			status->conditionVariable.notify_one();
+		}
+
+		return newStatus;
+	};
+
+	// Start the render. `AiRenderBegin()` returns immediately.
+	AtRenderErrorCode result = AiRenderBegin( AI_RENDER_MODE_CAMERA, callback, &status );
+	if( result != AI_SUCCESS )
+	{
+		throwError( result );
+	}
+
+	// Wait to be notified that the render has finished. We're using the
+	// condition variable approach to avoid busy-waiting on `AiRenderGetStatus()`.
+	std::unique_lock<std::mutex> lock( status.mutex );
+	status.conditionVariable.wait( lock, [&status]{ return status.value != AI_RENDER_STATUS_NOT_STARTED; } );
+
+	result = AiRenderEnd();
+	if( result != AI_SUCCESS )
+	{
+		throwError( result );
+	}
+}
+
 class ArnoldGlobals
 {
 
@@ -2762,7 +2868,7 @@ class ArnoldGlobals
 				m_enableProgressiveRender( true ),
 				m_shaderCache( shaderCache ),
 				m_renderBegun( false ),
-				m_assFileName( fileName )
+				m_fileName( fileName )
 		{
 			// This only takes effect if called after the UniverseBlock has been created
 			if( messageHandler )
@@ -3209,20 +3315,20 @@ class ArnoldGlobals
 					for( const auto &cameraOverride : cameraOverrides )
 					{
 						updateCamera( cameraOverride.size() ? cameraOverride : m_cameraName );
-						const int result = AiRender( AI_RENDER_MODE_CAMERA );
-						if( result != AI_SUCCESS )
-						{
-							throwError( result );
-						}
+						renderAndWait();
 					}
 					break;
 				}
-				case IECoreScenePreview::Renderer::SceneDescription :
-					// An ASS file can only contain options to render from one camera,
-					// so just use the default camera
+				case IECoreScenePreview::Renderer::SceneDescription : {
+					// A scene file can only contain options to render from one camera,
+					// so just use the default camera.
 					updateCamera( m_cameraName );
-					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
+					unique_ptr<AtParamValueMap, decltype(&AiParamValueMapDestroy)> params(
+						AiParamValueMap(), AiParamValueMapDestroy
+					);
+					AiSceneWrite( m_universeBlock->universe(), m_fileName.c_str(), params.get() );
 					break;
+				}
 				case IECoreScenePreview::Renderer::Interactive :
 					// If we want to use Arnold's progressive refinement, we can't be constantly switching
 					// the camera around, so just use the default camera
@@ -3282,29 +3388,6 @@ class ArnoldGlobals
 		}
 
 	private :
-
-		void throwError( int errorCode )
-		{
-			switch( errorCode )
-			{
-				case AI_ABORT :
-					throw IECore::Exception( "Render aborted" );
-				case AI_ERROR_NO_CAMERA :
-					throw IECore::Exception( "Camera not defined" );
-				case AI_ERROR_BAD_CAMERA :
-					throw IECore::Exception( "Bad camera" );
-				case AI_ERROR_VALIDATION :
-					throw IECore::Exception( "Usage not validated" );
-				case AI_ERROR_RENDER_REGION :
-					throw IECore::Exception( "Invalid render region" );
-				case AI_INTERRUPT :
-					throw IECore::Exception( "Render interrupted by user" );
-				case AI_ERROR_NO_OUTPUTS :
-					throw IECore::Exception( "No outputs" );
-				case AI_ERROR :
-					throw IECore::Exception( "Generic Arnold error" );
-			}
-		}
 
 		bool updateLogFlags( const std::string name, const IECore::Data *value, bool console )
 		{
@@ -3608,9 +3691,9 @@ class ArnoldGlobals
 
 		bool m_renderBegun;
 
-		// Members used by ass generation "renders"
+		// Members used by SceneDescription "renders"
 
-		std::string m_assFileName;
+		std::string m_fileName;
 
 };
 
