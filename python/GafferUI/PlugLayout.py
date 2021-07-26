@@ -40,6 +40,8 @@ import sys
 import functools
 import collections
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -331,7 +333,13 @@ class PlugLayout( GafferUI.Widget ) :
 				result = activators.get( activatorName )
 				if result is None :
 					with self.getContext() :
-						result = self.__metadataValue( self.__parent, self.__layoutName + ":activator:" + activatorName )
+						metadataName = self.__layoutName + ":activator:" + activatorName
+						result = self.__metadataValue( self.__parent, metadataName )
+						if result is None and metadataName not in Gaffer.Metadata.registeredValues( self.__parent ) :
+							IECore.msg(
+								IECore.Msg.Level.Warning, "PlugLayout",
+								"Activator metadata `{}` not registered".format( metadataName )
+							)
 					result = result if result is not None else False
 					activators[activatorName] = result
 
