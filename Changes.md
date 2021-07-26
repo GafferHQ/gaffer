@@ -1,3 +1,12 @@
+0.60.x.x (relative to 0.60.2.0)
+========
+
+Fixes
+-----
+
+- Shader : Fixed metadata signalling performance issue that could cause very poor load times for scripts containing many Shader nodes.
+- GraphEditor : Removed unnecessary metadata tracking overhead.
+
 0.60.2.0 (relative to 0.60.1.0)
 ========
 
@@ -232,7 +241,15 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
-0.59.9.x (relative to 0.59.9.1)
+0.59.9.3 (relative to 0.59.9.2)
+========
+
+Fixes
+-----
+
+- Shader : Fixed metadata signalling performance issue that could cause very poor load times for scripts containing many Shader nodes.
+- GraphEditor : Removed unnecessary metadata tracking overhead.
+
 0.59.9.2 (relative to 0.59.9.1)
 ========
 

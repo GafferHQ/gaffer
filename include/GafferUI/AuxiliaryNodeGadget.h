@@ -62,7 +62,7 @@ class GAFFERUI_API AuxiliaryNodeGadget : public NodeGadget
 
 		static NodeGadgetTypeDescription<AuxiliaryNodeGadget> g_nodeGadgetTypeDescription;
 
-		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
+		void nodeMetadataChanged( IECore::InternedString key );
 		bool updateLabel();
 		bool updateUserColor();
 
