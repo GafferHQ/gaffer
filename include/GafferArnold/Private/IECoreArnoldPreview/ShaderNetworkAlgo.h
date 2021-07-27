@@ -55,7 +55,7 @@ namespace ShaderNetworkAlgo
 /// to Arnold. The output shader is the last node in the returned vector,
 /// and is given the specified `name`. All other nodes will be named
 /// uniquely using `name` as a prefix.
-GAFFERARNOLD_API std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const AtNode *parentNode = nullptr );
+GAFFERARNOLD_API std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode = nullptr );
 /// Updates a previously converted set of nodes to reflect changes in `shaderNetwork`,
 /// reusing AtNodes where possible. The `nodes` vector is updated in place, newly created
 /// nodes use the same parent as the original nodes, and unused nodes are destroyed with

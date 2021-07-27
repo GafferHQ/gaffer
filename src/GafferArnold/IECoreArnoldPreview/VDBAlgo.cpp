@@ -43,6 +43,7 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/Version.h"
 
 #include "openvdb/io/Stream.h"
 #include "openvdb/openvdb.h"
@@ -136,9 +137,9 @@ CompoundDataPtr createParameters(const IECoreVDB::VDBObject* vdbObject)
 	return parameters;
 }
 
-AtNode *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name, const AtNode* parent )
+AtNode *convert( const IECoreVDB::VDBObject *vdbObject, AtUniverse *universe, const std::string &name, const AtNode* parent )
 {
-	AtNode *node = AiNode( g_volume, AtString( name.c_str() ), parent );
+	AtNode *node = AiNode( universe, g_volume, AtString( name.c_str() ), parent );
 
 	CompoundDataPtr parameters = createParameters( vdbObject );
 	ParameterAlgo::setParameters( node, parameters->readable() );
@@ -146,6 +147,18 @@ AtNode *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name
 	return node;
 }
 
+#if CORTEX_COMPATIBILITY_VERSION < 10003
+
+NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description(
+	[] ( const IECoreVDB::VDBObject *vdbObject, const std::string &name, const AtNode *parent ) {
+		return ::convert( vdbObject, nullptr, name, parent );
+	}
+);
+
+#else
+
 NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( ::convert );
+
+#endif
 
 } // namespace

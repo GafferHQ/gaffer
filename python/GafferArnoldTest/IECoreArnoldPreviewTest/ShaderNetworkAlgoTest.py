@@ -63,9 +63,9 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			output = "flatHandle"
 		)
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, "test" )
+			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, universe, "test" )
 
 			self.assertEqual( len( nodes ), 2 )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "noise" )
@@ -92,11 +92,11 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			output = "flatHandle"
 		)
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
 			# Convert
 
-			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, "test" )
+			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, universe, "test" )
 
 			def assertNoiseAndFlatNodes() :
 
@@ -161,7 +161,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 				ctypes.addressof( nodes[0].contents )
 			)
 
-			self.assertIsNone( arnold.AiNodeLookUpByName( "test:noiseHandle" ) )
+			self.assertIsNone( arnold.AiNodeLookUpByName( universe, "test:noiseHandle" ) )
 
 			# Replace the output shader with something else.
 
@@ -208,9 +208,9 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			output = "flatHandle"
 		)
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, "test" )
+			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, universe, "test" )
 
 			self.assertEqual( len( nodes ), 2 )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "noise" )
