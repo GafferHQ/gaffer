@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.2.1)
+========
+
+API
+---
+
+- PlugLayout : Added a warning for plugs that reference activators that have not been registered.
+
 0.60.2.1 (relative to 0.60.2.0)
 ========
 
