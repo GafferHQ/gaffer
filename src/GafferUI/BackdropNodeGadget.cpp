@@ -48,8 +48,6 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/UndoScope.h"
 
-#include "IECoreGL/Selector.h"
-
 #include "IECore/BoxOps.h"
 #include "IECore/NullObject.h"
 
@@ -252,7 +250,7 @@ Imath::Box3f BackdropNodeGadget::bound() const
 	return Box3f( V3f( b.min.x, b.min.y, 0.0f ), V3f( b.max.x, b.max.y, 0.0f ) );
 }
 
-void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
+void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Backdrops )
 	{
@@ -279,7 +277,7 @@ void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	const Box3f titleCharacterBound = style->characterBound( Style::HeadingText );
 	const float titleBaseline = bound.max.y - g_margin - titleCharacterBound.max.y;
 
-	if( IECoreGL::Selector::currentSelector() )
+	if( isSelectionRender( reason ) )
 	{
 		// when selecting we render in a simplified form.
 		// we only draw a thin strip around the edge of the backdrop

@@ -93,9 +93,9 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 				return b
 
-			def doRenderLayer( self, layer, style ) :
+			def doRenderLayer( self, layer, style, reason ) :
 
-				self.layersRendered.add( (layer,style) )
+				self.layersRendered.add( (layer, style, reason) )
 
 			def layerMask( self ) :
 
@@ -131,7 +131,8 @@ class GadgetTest( GafferUITest.TestCase ) :
 		c.setStyle( s )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( mg.layersRendered, set( (i,s) for i in layers ) )
+
+		self.assertEqual( mg.layersRendered, set( (i,s, GafferUI.Gadget.RenderReason.Draw) for i in layers ) )
 
 	def testStyle( self ) :
 

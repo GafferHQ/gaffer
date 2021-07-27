@@ -74,7 +74,7 @@ Imath::Box3f Frame::bound() const
 	return b;
 }
 
-void Frame::doRenderLayer( Layer layer, const Style *style ) const
+void Frame::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
 	{

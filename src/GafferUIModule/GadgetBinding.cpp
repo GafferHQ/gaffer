@@ -232,6 +232,12 @@ void GafferUIModule::bindGadget()
 		.value( "Layout", Gadget::DirtyType::Layout )
 	;
 
+	enum_<Gadget::RenderReason>( "RenderReason" )
+		.value( "Draw", Gadget::RenderReason::Draw )
+		.value( "Select", Gadget::RenderReason::Select )
+		.value( "DragSelect", Gadget::RenderReason::DragSelect )
+	;
+
 	SignalClass<Gadget::VisibilityChangedSignal, DefaultSignalCaller<Gadget::VisibilityChangedSignal>, VisibilityChangedSlotCaller>( "VisibilityChangedSignal" );
 	SignalClass<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, ButtonSlotCaller>( "ButtonSignal" );
 	SignalClass<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, KeySlotCaller>( "KeySignal" );

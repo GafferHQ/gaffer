@@ -83,7 +83,7 @@ Imath::Box3f TextGadget::bound() const
 	return m_bound;
 }
 
-void TextGadget::doRenderLayer( Layer layer, const Style *style ) const
+void TextGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
 	{

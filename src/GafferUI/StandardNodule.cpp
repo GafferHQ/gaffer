@@ -50,8 +50,6 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/UndoScope.h"
 
-#include "IECoreGL/Selector.h"
-
 #include "IECore/AngleConversion.h"
 
 #include "boost/bind.hpp"
@@ -153,14 +151,14 @@ void StandardNodule::createConnection( Gaffer::Plug *endpoint )
 	}
 }
 
-void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
+void StandardNodule::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	switch( layer )
 	{
 
 		case GraphLayer::Connections :
 
-			if( m_draggingConnection && !IECoreGL::Selector::currentSelector() )
+			if( m_draggingConnection && !isSelectionRender( reason ) )
 			{
 				V3f srcTangent( 0.0f, 1.0f, 0.0f );
 				if( const NodeGadget *nodeGadget = ancestor<NodeGadget>() )
@@ -189,7 +187,7 @@ void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 
 		case GraphLayer::Overlay :
 
-			if( m_labelVisible && !IECoreGL::Selector::currentSelector() )
+			if( m_labelVisible && !isSelectionRender( reason ) )
 			{
 				renderLabel( style );
 			}

@@ -154,7 +154,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			WrappedType::updateLayout();
 		}
 
-		void doRenderLayer( GafferUI::Gadget::Layer layer, const GafferUI::Style *style ) const override
+		void doRenderLayer( GafferUI::Gadget::Layer layer, const GafferUI::Style *style, GafferUI::Gadget::RenderReason reason ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -164,7 +164,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "doRenderLayer" );
 					if( f )
 					{
-						f( layer, GafferUI::StylePtr( const_cast<GafferUI::Style *>( style ) ) );
+						f( layer, GafferUI::StylePtr( const_cast<GafferUI::Style *>( style ) ), reason );
 						return;
 					}
 				}
@@ -173,7 +173,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
-			WrappedType::doRenderLayer( layer, style );
+			WrappedType::doRenderLayer( layer, style, reason );
 		}
 
 		unsigned layerMask() const override

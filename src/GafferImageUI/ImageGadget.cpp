@@ -1277,7 +1277,7 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 	style->renderText( Style::LabelText, text );
 }
 
-void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) const
+void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
 	{
@@ -1332,7 +1332,7 @@ void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) con
 
 	// Draw the image tiles over the top.
 
-	if( IECoreGL::Selector::currentSelector() )
+	if( isSelectionRender( reason ) )
 	{
 		// The rectangle we drew above is sufficient for
 		// selection rendering.

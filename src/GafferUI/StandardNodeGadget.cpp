@@ -57,8 +57,6 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "IECoreGL/Selector.h"
-
 #include "IECore/MessageHandler.h"
 
 #include "OpenEXR/ImathBoxAlgo.h"
@@ -369,9 +367,9 @@ Imath::Box3f StandardNodeGadget::bound() const
 	return b;
 }
 
-void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
+void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
-	NodeGadget::doRenderLayer( layer, style );
+	NodeGadget::doRenderLayer( layer, style, reason );
 
 	switch( layer )
 	{
@@ -402,7 +400,7 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 		{
 			const Box3f b = bound();
 
-			if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
+			if( !m_nodeEnabled && !isSelectionRender( reason ) )
 			{
 				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.

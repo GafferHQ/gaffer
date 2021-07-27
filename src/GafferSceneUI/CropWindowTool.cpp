@@ -204,7 +204,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main )
 			{
@@ -229,7 +229,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 			glPushAttrib( GL_CURRENT_BIT | GL_LINE_BIT | GL_ENABLE_BIT );
 
-				if( IECoreGL::Selector::currentSelector() )
+				if( isSelectionRender( reason ) )
 				{
 					if( m_editable )
 					{

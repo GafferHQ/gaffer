@@ -266,7 +266,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		static void getRenderItems( const Gadget *gadget,  Imath::M44f transform, const Style *parentStyle, std::vector<RenderItem> &renderItems );
 
-		void renderInternal( Layer filterLayer = Layer::None ) const;
+		void renderInternal( RenderReason reason, Layer filterLayer = Layer::None ) const;
 
 		// Sets the GL state up with the name attribute and transform for
 		// the Gadget, makes sure the style is bound and then calls doRenderLayer().
@@ -292,6 +292,10 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		void eventToGadgetSpace( Event &event, Gadget *gadget );
 		void eventToGadgetSpace( ButtonEvent &event, Gadget *gadget );
+
+		// If dragging is true, then the gadgets will be tested in DragSelect mode.
+		std::vector<Gadget*> gadgetsAtInternal( const Imath::V2f &rasterPosition, bool dragging ) const;
+		std::vector<Gadget*> gadgetsAtInternal( const Imath::Box2f &rasterRegion, Layer filterLayer, bool dragging ) const;
 
 		void updateGadgetUnderMouse( const ButtonEvent &event );
 		void emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event );

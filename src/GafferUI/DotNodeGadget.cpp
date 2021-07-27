@@ -49,7 +49,6 @@
 #include "Gaffer/UndoScope.h"
 
 #include "IECoreGL/GL.h"
-#include "IECoreGL/Selector.h"
 
 #include "boost/bind.hpp"
 
@@ -88,11 +87,11 @@ DotNodeGadget::~DotNodeGadget()
 {
 }
 
-void DotNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
+void DotNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Nodes )
 	{
-		return NodeGadget::doRenderLayer( layer, style );
+		return NodeGadget::doRenderLayer( layer, style, reason );
 	}
 
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
@@ -101,7 +100,7 @@ void DotNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	const V3f s = b.size();
 	style->renderNodeFrame( Box2f( V2f( 0 ), V2f( 0 ) ), std::min( s.x, s.y ) / 2.0f, state, userColor() );
 
-	if( !m_label.empty() && !IECoreGL::Selector::currentSelector() )
+	if( !m_label.empty() && !isSelectionRender( reason ) )
 	{
 		glPushMatrix();
 		IECoreGL::glTranslate( m_labelPosition );

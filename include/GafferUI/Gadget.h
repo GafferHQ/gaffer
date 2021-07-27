@@ -281,6 +281,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 			Layout,
 		};
 
+
 		/// Must be called by derived classes to reflect changes
 		/// affecting `doRenderLayer()`, `bound()` or `updateLayout().
 		void dirty( DirtyType dirtyType );
@@ -289,11 +290,23 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// This is called automatically prior to rendering or bound computation.
 		virtual void updateLayout() const;
 
+		enum class RenderReason
+		{
+			Draw,       // A render that will display to the screen
+			Select,     // A render to determine what Gadget the cursor is over
+			DragSelect, // A render to determine what Gadget a drag is over
+		};
+
+		inline static bool isSelectionRender( RenderReason reason )
+		{
+			return reason == RenderReason::Select || reason == RenderReason::DragSelect;
+		}
+
 		/// Should be implemented by subclasses to draw themselves as appropriate
 		/// for the specified layer. Child gadgets will be drawn automatically
 		/// _after_ the parent gadget has been drawn.  Whenever overriding this,
 		/// you must override layerMask and renderBound() as well.
-		virtual void doRenderLayer( Layer layer, const Style *style ) const;
+		virtual void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const;
 
 		/// Returns a bitmask built from the flags in the Layer enum.
 		/// Any subclass which implements doRenderLayer must also implement layerMask
@@ -351,8 +364,6 @@ inline unsigned operator| ( unsigned a, Gadget::Layer b )
 {
 	return a | (unsigned)b;
 }
-
-
 
 } // namespace GafferUI
 

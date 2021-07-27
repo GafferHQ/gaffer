@@ -299,7 +299,7 @@ std::string AuxiliaryConnectionsGadget::getToolTip( const IECore::LineSegment3f 
 	return s;
 }
 
-void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style ) const
+void AuxiliaryConnectionsGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Connections )
 	{

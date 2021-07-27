@@ -218,14 +218,14 @@ PlugAdder::MenuSignal &PlugAdder::menuSignal()
 	return s;
 }
 
-void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
+void PlugAdder::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	switch( layer )
 	{
 		case GraphLayer::Connections :
 			if( m_dragging )
 			{
-				if( !IECoreGL::Selector::currentSelector() )
+				if( !isSelectionRender( reason ) )
 				{
 					const V3f srcTangent = tangent( this );
 					style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );

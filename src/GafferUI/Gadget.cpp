@@ -320,7 +320,7 @@ void Gadget::updateLayout() const
 {
 }
 
-void Gadget::doRenderLayer( Layer layer, const Style *style ) const
+void Gadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 }
 

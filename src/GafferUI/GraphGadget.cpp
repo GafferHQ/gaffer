@@ -752,7 +752,7 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 	return nullptr;
 }
 
-void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
+void GraphGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	glDisable( GL_DEPTH_TEST );
 

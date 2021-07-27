@@ -186,7 +186,7 @@ IECoreGL::ConstTexturePtr ImageGadget::loadTexture( const std::string &fileName 
 	return texture;
 }
 
-void ImageGadget::doRenderLayer( Layer layer, const Style *style ) const
+void ImageGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
 	{
