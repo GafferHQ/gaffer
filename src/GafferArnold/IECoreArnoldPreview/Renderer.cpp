@@ -2899,6 +2899,7 @@ class ArnoldGlobals
 			:	m_renderType( renderType ),
 				m_universeBlock( new IECoreArnold::UniverseBlock( /* writable = */ true ) ),
 				m_messageHandler( messageHandler ),
+				m_interactiveOutput( -1 ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_enableProgressiveRender( true ),
@@ -3562,21 +3563,29 @@ class ArnoldGlobals
 					it->second->append( outputs->writable(), lpes->writable() );
 				}
 			}
+
+			if( m_interactiveOutput >= 0 )
+			{
+				// Remove interactive output before the index is invalidated. We'll set it
+				// again to the right index below.
+				AiRenderRemoveInteractiveOutput( m_interactiveOutput );
+			}
+
 			std::sort( outputs->writable().begin(), outputs->writable().end() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
 
 			// Set the beauty as the output to get frequent interactive updates
-			unsigned int primaryOutput = 0;
+			m_interactiveOutput = 0;
 			for( unsigned int i = 0; i < outputs->readable().size(); i++ )
 			{
 				if( boost::starts_with( outputs->readable()[i], "RGBA " ) )
 				{
-					primaryOutput = i;
+					m_interactiveOutput = i;
 					break;
 				}
 			}
-			AiRenderSetInteractiveOutput( primaryOutput );
+			AiRenderAddInteractiveOutput( m_interactiveOutput );
 
 			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( m_universeBlock->universe(), AtString( cameraName.c_str() ) );
@@ -3722,6 +3731,7 @@ class ArnoldGlobals
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
+		int m_interactiveOutput; // Negative if not yet set.
 
 		typedef std::map<IECore::InternedString, ArnoldShaderPtr> AOVShaderMap;
 		AOVShaderMap m_aovShaders;
