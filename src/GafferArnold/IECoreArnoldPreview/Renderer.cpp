@@ -288,6 +288,7 @@ const AtString g_regionMinXArnoldString( "region_min_x" );
 const AtString g_regionMaxXArnoldString( "region_max_x" );
 const AtString g_regionMinYArnoldString( "region_min_y" );
 const AtString g_regionMaxYArnoldString( "region_max_y" );
+const AtString g_renderSessionArnoldString( "render_session" );
 const AtString g_selfShadowsArnoldString( "self_shadows" );
 const AtString g_shaderArnoldString( "shader" );
 const AtString g_shutterStartArnoldString( "shutter_start" );
@@ -2808,10 +2809,78 @@ void throwError( int errorCode )
 	}
 }
 
+#if ARNOLD_VERSION_NUM < 70000
+
+// Arnold 6 doesn't have AtRenderSession, so we define forwards-compatibility wrappers
+// that let us write code to the new API only, rather than sprinkle `#ifdefs` throughout.
+
+class AtRenderSession;
+
+AtRenderSession *AiRenderSession( AtUniverse *universe, AtSessionMode mode )
+{
+	return nullptr;
+}
+
+AtRenderErrorCode AiRenderBegin( AtRenderSession *renderSession, AtRenderMode mode = AI_RENDER_MODE_CAMERA, AtRenderUpdateCallback callback = nullptr, void *callbackData = nullptr )
+{
+	return ::AiRenderBegin( mode, callback, callbackData );
+}
+
+void AiRenderInterrupt( AtRenderSession *renderSession, AtBlockingCall blocking )
+{
+	return ::AiRenderInterrupt( blocking );
+}
+
+void AiRenderRestart( AtRenderSession *renderSession )
+{
+	return ::AiRenderRestart();
+}
+
+AtRenderErrorCode AiRenderEnd( AtRenderSession *renderSession )
+{
+	return ::AiRenderEnd();
+}
+
+bool AiRenderSetHintInt( AtRenderSession *renderSession, AtString hint, int32_t value )
+{
+	return AiRenderSetHintInt( hint, value );
+}
+
+bool AiRenderSetHintBool( AtRenderSession *renderSession, AtString hint, bool value )
+{
+	return AiRenderSetHintBool( hint, value );
+}
+
+void AiRenderAddInteractiveOutput( AtRenderSession *renderSession, uint32_t outputIndex )
+{
+	::AiRenderAddInteractiveOutput( outputIndex );
+}
+
+bool AiRenderRemoveInteractiveOutput( AtRenderSession *renderSession, uint32_t outputIndex )
+{
+	return ::AiRenderRemoveInteractiveOutput( outputIndex );
+}
+
+void AiRenderSessionDestroy( AtRenderSession *renderSession )
+{
+}
+
+void AiMsgSetConsoleFlags( const AtRenderSession *renderSession, int flags )
+{
+	::AiMsgSetConsoleFlags( flags );
+}
+
+void AiMsgSetLogFileFlags( const AtRenderSession *renderSession, int flags )
+{
+	::AiMsgSetLogFileFlags( flags );
+}
+
+#endif
+
 // Arnold's `AiRender()` function does exactly what you want for a batch render :
 // starts a render and returns when it is complete. But it is deprecated. Here we
 // jump through hoops to re-implement the behaviour using non-deprecated API.
-void renderAndWait()
+void renderAndWait( AtRenderSession *renderSession )
 {
 
 	// Updated by `callback` to notify this thread when the render has
@@ -2872,7 +2941,7 @@ void renderAndWait()
 	};
 
 	// Start the render. `AiRenderBegin()` returns immediately.
-	AtRenderErrorCode result = AiRenderBegin( AI_RENDER_MODE_CAMERA, callback, &status );
+	AtRenderErrorCode result = AiRenderBegin( renderSession, AI_RENDER_MODE_CAMERA, callback, &status );
 	if( result != AI_SUCCESS )
 	{
 		throwError( result );
@@ -2883,7 +2952,7 @@ void renderAndWait()
 	std::unique_lock<std::mutex> lock( status.mutex );
 	status.conditionVariable.wait( lock, [&status]{ return status.value != AI_RENDER_STATUS_NOT_STARTED; } );
 
-	result = AiRenderEnd();
+	result = AiRenderEnd( renderSession );
 	if( result != AI_SUCCESS )
 	{
 		throwError( result );
@@ -2898,6 +2967,13 @@ class ArnoldGlobals
 		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_renderType( renderType ),
 				m_universeBlock( new IECoreArnold::UniverseBlock( /* writable = */ true ) ),
+				m_renderSession(
+					AiRenderSession(
+						m_universeBlock->universe(),
+						renderType == IECoreScenePreview::Renderer::RenderType::Interactive ? AI_SESSION_INTERACTIVE : AI_SESSION_BATCH
+					),
+					&AiRenderSessionDestroy
+				),
 				m_messageHandler( messageHandler ),
 				m_interactiveOutput( -1 ),
 				m_logFileFlags( g_logFlagsDefault ),
@@ -2912,14 +2988,14 @@ class ArnoldGlobals
 			if( m_messageHandler )
 			{
 				m_messageCallbackId = AiMsgRegisterCallback( &messageCallback, m_consoleFlags, this );
-				AiMsgSetConsoleFlags( AI_LOG_NONE );
+				AiMsgSetConsoleFlags( m_renderSession.get(), AI_LOG_NONE );
 			}
 			else
 			{
-				AiMsgSetConsoleFlags( m_consoleFlags );
+				AiMsgSetConsoleFlags( m_renderSession.get(), m_consoleFlags );
 			}
 
-			AiMsgSetLogFileFlags( m_logFileFlags );
+			AiMsgSetLogFileFlags( m_renderSession.get(), m_logFileFlags );
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
@@ -2928,8 +3004,8 @@ class ArnoldGlobals
 		{
 			if( m_renderBegun )
 			{
-				AiRenderInterrupt( AI_BLOCKING );
-				AiRenderEnd();
+				AiRenderInterrupt( m_renderSession.get(), AI_BLOCKING );
+				AiRenderEnd( m_renderSession.get() );
 			}
 
 			// Delete nodes we own before universe is destroyed.
@@ -2941,6 +3017,7 @@ class ArnoldGlobals
 			m_defaultCamera.reset();
 			// Destroy the universe while our message callback is
 			// still active, so we catch any Arnold shutdown messages.
+			m_renderSession.reset( nullptr );
 			m_universeBlock.reset( nullptr );
 
 			if( m_messageCallbackId )
@@ -3366,7 +3443,7 @@ class ArnoldGlobals
 					for( const auto &cameraOverride : cameraOverrides )
 					{
 						updateCamera( cameraOverride.size() ? cameraOverride : m_cameraName );
-						renderAndWait();
+						renderAndWait( m_renderSession.get() );
 					}
 					break;
 				}
@@ -3385,7 +3462,7 @@ class ArnoldGlobals
 					// the camera around, so just use the default camera
 					if( m_renderBegun )
 					{
-						AiRenderInterrupt( AI_BLOCKING );
+						AiRenderInterrupt( m_renderSession.get(), AI_BLOCKING );
 					}
 					updateCamera( m_cameraName );
 
@@ -3407,16 +3484,16 @@ class ArnoldGlobals
 					const int minAASamples = m_progressiveMinAASamples.get_value_or( -4 );
 					// Must never set `progressive_min_AA_samples > -1`, as it'll get stuck and
 					// Arnold will never let us set it back.
-					AiRenderSetHintInt( AtString( "progressive_min_AA_samples" ), std::min( minAASamples, -1 ) );
+					AiRenderSetHintInt( m_renderSession.get(), AtString( "progressive_min_AA_samples" ), std::min( minAASamples, -1 ) );
 					// It seems important to set `progressive` after `progressive_min_AA_samples`,
 					// otherwise Arnold may ignore changes to the latter. Disable entirely for
 					// `minAASamples == 0` to account for the workaround above.
-					AiRenderSetHintBool( AtString( "progressive" ), m_enableProgressiveRender && minAASamples < 0 );
+					AiRenderSetHintBool( m_renderSession.get(), AtString( "progressive" ), m_enableProgressiveRender && minAASamples < 0 );
 					AiNodeSetBool( AiUniverseGetOptions( m_universeBlock->universe() ), g_enableProgressiveRenderString, m_enableProgressiveRender );
 
 					if( !m_renderBegun )
 					{
-						AiRenderBegin( AI_RENDER_MODE_CAMERA );
+						AiRenderBegin( m_renderSession.get(), AI_RENDER_MODE_CAMERA );
 
 						// Arnold's AiRenderGetStatus is not particularly reliable - renders start up on a separate thread,
 						// and the currently reported status may not include recent changes.  So instead, we track a basic
@@ -3425,7 +3502,7 @@ class ArnoldGlobals
 					}
 					else
 					{
-						AiRenderRestart();
+						AiRenderRestart( m_renderSession.get() );
 					}
 					break;
 			}
@@ -3435,7 +3512,7 @@ class ArnoldGlobals
 		{
 			// We need to block here because pause() is used to make sure that the render isn't running
 			// before performing IPR edits.
-			AiRenderInterrupt( AI_BLOCKING );
+			AiRenderInterrupt( m_renderSession.get(), AI_BLOCKING );
 		}
 
 	private :
@@ -3532,12 +3609,12 @@ class ArnoldGlobals
 				}
 				else
 				{
-					AiMsgSetConsoleFlags( flags );
+					AiMsgSetConsoleFlags( m_renderSession.get(), flags );
 				}
 			}
 			else
 			{
-				AiMsgSetLogFileFlags( flags );
+				AiMsgSetLogFileFlags( m_renderSession.get(), flags );
 			}
 
 			return true;
@@ -3568,7 +3645,7 @@ class ArnoldGlobals
 			{
 				// Remove interactive output before the index is invalidated. We'll set it
 				// again to the right index below.
-				AiRenderRemoveInteractiveOutput( m_interactiveOutput );
+				AiRenderRemoveInteractiveOutput( m_renderSession.get(), m_interactiveOutput );
 			}
 
 			std::sort( outputs->writable().begin(), outputs->writable().end() );
@@ -3585,7 +3662,7 @@ class ArnoldGlobals
 					break;
 				}
 			}
-			AiRenderAddInteractiveOutput( m_interactiveOutput );
+			AiRenderAddInteractiveOutput( m_renderSession.get(), m_interactiveOutput );
 
 			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( m_universeBlock->universe(), AtString( cameraName.c_str() ) );
@@ -3686,6 +3763,19 @@ class ArnoldGlobals
 		{
 			const ArnoldGlobals *that = static_cast<ArnoldGlobals *>( userPtr );
 
+#if ARNOLD_VERSION_NUM >= 70000
+			// We get given messages from all render sessions, but can filter them based on the
+			// `render_session` metadata.
+			void *renderSession = nullptr;
+			if( AiParamValueMapGetPtr( metadata, g_renderSessionArnoldString, &renderSession ) )
+			{
+				if( renderSession != that->m_renderSession.get() )
+				{
+					return;
+				}
+			}
+#endif
+
 			const IECore::Msg::Level level = \
 				( mask == AI_LOG_DEBUG ) ? IECore::Msg::Level::Debug : g_ieMsgLevels[ min( severity, 3 ) ];
 
@@ -3726,6 +3816,7 @@ class ArnoldGlobals
 		IECoreScenePreview::Renderer::RenderType m_renderType;
 
 		std::unique_ptr<UniverseBlock> m_universeBlock;
+		std::unique_ptr<AtRenderSession, decltype(&AiRenderSessionDestroy)> m_renderSession;
 		IECore::MessageHandlerPtr m_messageHandler;
 		boost::optional<unsigned> m_messageCallbackId;
 

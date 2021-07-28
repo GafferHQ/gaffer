@@ -2371,6 +2371,42 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
+	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] < [ 7, 0, 0 ], "Two renders not supported" )
+	def testMessageHandlersForTwoRenders( self ) :
+
+		# Make two renderers, each with a different message handler.
+
+		mh1 = IECore.CapturingMessageHandler()
+		mh2 = IECore.CapturingMessageHandler()
+
+		r1 = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = mh1
+		)
+
+
+		r2 = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = mh2
+		)
+
+		# Generate some artificial errors.
+
+		u1 = ctypes.cast( r1.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		u2 = ctypes.cast( r2.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+
+		arnold.AiNodeSetInt( arnold.AiUniverseGetOptions( u1 ), "invalid1", 10 )
+		arnold.AiNodeSetInt( arnold.AiUniverseGetOptions( u2 ), "invalid2", 10 )
+
+		# Check that they were directed to the appropriate handler.
+
+		self.assertEqual( len( mh1.messages ), 1 )
+		self.assertIn( "invalid1", mh1.messages[0].message )
+		self.assertEqual( len( mh2.messages ), 1 )
+		self.assertIn( "invalid2", mh2.messages[0].message )
+
 	def testProcedural( self ) :
 
 		class SphereProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
