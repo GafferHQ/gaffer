@@ -2898,6 +2898,7 @@ class ArnoldGlobals
 		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_renderType( renderType ),
 				m_universeBlock( new IECoreArnold::UniverseBlock( /* writable = */ true ) ),
+				m_messageHandler( messageHandler ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_enableProgressiveRender( true ),
@@ -2905,20 +2906,19 @@ class ArnoldGlobals
 				m_renderBegun( false ),
 				m_fileName( fileName )
 		{
-			// This only takes effect if called after the UniverseBlock has been created
-			if( messageHandler )
+			// If we've been given a MessageHandler then we output to that and
+			// turn off Arnold's console logging.
+			if( m_messageHandler )
 			{
-				g_currentMessageHandler = messageHandler;
-				AiMsgSetCallback( &aiMsgCallback );
+				m_messageCallbackId = AiMsgRegisterCallback( &messageCallback, m_consoleFlags, this );
+				AiMsgSetConsoleFlags( AI_LOG_NONE );
 			}
 			else
 			{
-				AiMsgResetCallback();
-				g_currentMessageHandler = nullptr;
+				AiMsgSetConsoleFlags( m_consoleFlags );
 			}
 
 			AiMsgSetLogFileFlags( m_logFileFlags );
-			AiMsgSetConsoleFlags( m_consoleFlags );
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
@@ -2942,8 +2942,10 @@ class ArnoldGlobals
 			// still active, so we catch any Arnold shutdown messages.
 			m_universeBlock.reset( nullptr );
 
-			AiMsgResetCallback();
-			g_currentMessageHandler = nullptr;
+			if( m_messageCallbackId )
+			{
+				AiMsgDeregisterCallback( *m_messageCallbackId );
+			}
 		}
 
 		AtUniverse *universe() { return m_universeBlock->universe(); }
@@ -3523,7 +3525,14 @@ class ArnoldGlobals
 
 			if( console )
 			{
-				AiMsgSetConsoleFlags( flags );
+				if( m_messageCallbackId )
+				{
+					AiMsgSetCallbackMask( *m_messageCallbackId, flags );
+				}
+				else
+				{
+					AiMsgSetConsoleFlags( flags );
+				}
 			}
 			else
 			{
@@ -3664,23 +3673,16 @@ class ArnoldGlobals
 			}
 		}
 
-
-		// Members used by all render types
-
-		IECoreScenePreview::Renderer::RenderType m_renderType;
-
-		// Arnold's singleton-centric design means there is no way to pass any
-		// instance-specific references as part of the log callback. As such
-		// we have to make do with a global handler.
-		static void aiMsgCallback( int logmask, int severity, const char *msg_string, int tabs )
+		static void messageCallback( int mask, int severity, const char *message, AtParamValueMap *metadata, void *userPtr )
 		{
+			const ArnoldGlobals *that = static_cast<ArnoldGlobals *>( userPtr );
+
 			const IECore::Msg::Level level = \
-				( logmask == AI_LOG_DEBUG ) ? IECore::Msg::Level::Debug : g_ieMsgLevels[ min( severity, 3 ) ];
+				( mask == AI_LOG_DEBUG ) ? IECore::Msg::Level::Debug : g_ieMsgLevels[ min( severity, 3 ) ];
 
 			std::stringstream msg;
 
-			const int flags = AiMsgGetConsoleFlags();
-			if( flags & AI_LOG_TIMESTAMP )
+			if( that->m_consoleFlags & AI_LOG_TIMESTAMP )
 			{
 				const boost::posix_time::time_duration elapsed = boost::posix_time::millisec( AiMsgUtilGetElapsedTime() );
 				msg << std::setfill( '0' );
@@ -3688,7 +3690,7 @@ class ArnoldGlobals
 				msg << std::setw( 2 ) << elapsed.minutes() << ":";
 				msg << std::setw( 2 ) << elapsed.seconds() << " ";
 			}
-			if( flags & AI_LOG_MEMORY )
+			if( that->m_consoleFlags & AI_LOG_MEMORY )
 			{
 				const size_t mb = AiMsgUtilGetUsedMemory() / 1024 / 1024;
 				msg << std::setfill( ' ' ) << std::setw( 4 );
@@ -3703,15 +3705,20 @@ class ArnoldGlobals
 				}
 			}
 
-			msg << std::string( tabs, ' ' ) << msg_string;
+			msg << message;
 
-			g_currentMessageHandler->handle( level, "Arnold", msg.str() );
+			that->m_messageHandler->handle( level, "Arnold", msg.str() );
 		}
 
-		static IECore::MessageHandlerPtr g_currentMessageHandler;
 		static const std::vector<IECore::MessageHandler::Level> g_ieMsgLevels;
 
-		std::unique_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
+		// Members used by all render types
+
+		IECoreScenePreview::Renderer::RenderType m_renderType;
+
+		std::unique_ptr<UniverseBlock> m_universeBlock;
+		IECore::MessageHandlerPtr m_messageHandler;
+		boost::optional<unsigned> m_messageCallbackId;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
@@ -3744,8 +3751,6 @@ class ArnoldGlobals
 		std::string m_fileName;
 
 };
-
-IECore::MessageHandlerPtr ArnoldGlobals::g_currentMessageHandler = nullptr;
 
 const std::vector<IECore::MessageHandler::Level> ArnoldGlobals::g_ieMsgLevels = {
 	IECore::MessageHandler::Level::Info,
