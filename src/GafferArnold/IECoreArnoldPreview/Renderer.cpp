@@ -3937,6 +3937,12 @@ class ArnoldRenderer final : public ArnoldRendererBase
 				// and testing.
 				return new IECore::UInt64Data( (uint64_t)m_universe );
 			}
+			else if( name == "ai:cacheFlush" )
+			{
+				const int flags = parameter<int>( parameters, "flags", AI_CACHE_ALL );
+				AiUniverseCacheFlush( m_universe, flags );
+				return nullptr;
+			}
 
 			throw IECore::Exception( "Unknown command" );
 		}
