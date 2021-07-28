@@ -321,6 +321,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		Imath::V2f m_motionSegmentEventOrigin;
 
 		GadgetPtr m_lastButtonPressGadget;
+		GadgetPtr m_previousClickGadget;
 		GadgetPtr m_gadgetUnderMouse;
 
 		unsigned m_dragTracking;

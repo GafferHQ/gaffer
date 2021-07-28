@@ -1174,6 +1174,11 @@ void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child
 		m_lastButtonPressGadget = nullptr;
 	}
 
+	if( childGadget == m_previousClickGadget || childGadget->isAncestorOf( m_previousClickGadget.get() ) )
+	{
+		m_previousClickGadget = nullptr;
+	}
+
 	if( childGadget == m_gadgetUnderMouse || childGadget->isAncestorOf( m_gadgetUnderMouse.get() ) )
 	{
 		m_gadgetUnderMouse = nullptr;
@@ -1195,10 +1200,12 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 	Gadget* handler;
 	m_lastButtonPressGadget = nullptr;
+	m_previousClickGadget = nullptr;
 	bool result = dispatchEvent( gadgets, &Gadget::buttonPressSignal, event, handler );
 	if( result )
 	{
 		m_lastButtonPressGadget = handler;
+		m_previousClickGadget = handler;
 		return true;
 	}
 
@@ -1225,8 +1232,11 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 
 bool ViewportGadget::buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &event )
 {
-	/// \todo Implement me. I'm not sure who this event should go to - probably
-	/// the last button press gadget, but we erased that in buttonRelease.
+	if( m_previousClickGadget )
+	{
+		return dispatchEvent( m_previousClickGadget.get(), &Gadget::buttonDoubleClickSignal, event );
+	}
+
 	return false;
 }
 
