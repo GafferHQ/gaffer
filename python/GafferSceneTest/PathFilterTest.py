@@ -373,5 +373,32 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
 				self.assertEqual( pathFilter["out"].getValue(), expectedResult )
 
+	def testContextSanitisation( self ) :
+
+		plane = GafferScene.Plane()
+
+		attributeQuery = GafferScene.AttributeQuery()
+		attributeQuery.setup( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
+		attributeQuery["scene"].setInput( plane["out"] )
+		attributeQuery["location"].setValue( "/plane" )
+		attributeQuery["attribute"].setValue( "test" )
+		attributeQuery["default"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setInput( attributeQuery["value"] )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( plane["out"] )
+		attributes["filter"].setInput( pathFilter["out"] )
+		attributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+
+		# This exposes a bug whereby the PathFilter leaked the `scene:filter:inputScene`
+		# and `scene:path` context variables when evaluating `paths`.
+		with Gaffer.ContextMonitor( attributeQuery["value"] ) as contextMonitor :
+			self.assertEqual( attributes["out"].attributes( "/plane")["doubleSided"].value, True )
+
+		self.assertNotIn( "scene:filter:inputScene", contextMonitor.combinedStatistics().variableNames() )
+		self.assertNotIn( "scene:path", contextMonitor.combinedStatistics().variableNames() )
+
 if __name__ == "__main__":
 	unittest.main()

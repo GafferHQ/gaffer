@@ -221,6 +221,7 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 		}
 		else
 		{
+			ScenePlug::GlobalScope globalScope( context );
 			pathMatcherPlug()->hash( h );
 		}
 		return;
@@ -236,6 +237,7 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 	}
 	else
 	{
+		ScenePlug::GlobalScope globalScope( context );
 		pathMatcherPlug()->hash( h );
 	}
 
@@ -248,11 +250,18 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : pathMatcherPlug()->getValue();
+
+	ConstPathMatcherDataPtr pathMatcherData;
+	if( !m_pathMatcher )
+	{
+		ScenePlug::GlobalScope globalScope( context );
+		pathMatcherData = pathMatcherPlug()->getValue();
+	}
+	const PathMatcher &pathMatcher = pathMatcherData ? pathMatcherData->readable() : m_pathMatcher->readable();
 
 	if( !rootsPlug()->getInput() )
 	{
-		return pathMatcher->readable().match( path );
+		return pathMatcher.match( path );
 	}
 
 	ConstIntVectorDataPtr rootSizes = rootSizesPlug()->getValue();
@@ -264,14 +273,14 @@ unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context
 	{
 		if( rootSize == g_descendantRoots )
 		{
-			if( !pathMatcher->readable().isEmpty() )
+			if( !pathMatcher.isEmpty() )
 			{
 				result |= PathMatcher::DescendantMatch;
 			}
 			break;
 		}
 		relativePath.erase( relativePath.begin(), relativePath.begin() + rootSize - previousRootSize );
-		result |= pathMatcher->readable().match( relativePath );
+		result |= pathMatcher.match( relativePath );
 		previousRootSize = rootSize;
 	}
 
