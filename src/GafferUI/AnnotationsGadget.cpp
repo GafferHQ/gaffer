@@ -201,7 +201,7 @@ void AnnotationsGadget::parentChanging( Gaffer::GraphComponent *newParent )
 	}
 }
 
-void AnnotationsGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void AnnotationsGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Overlay )
 	{

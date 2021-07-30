@@ -460,7 +460,7 @@ Imath::Box3f SceneGadget::bound() const
 	return static_cast<Box3fData *>( d.get() )->readable();
 }
 
-void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
+void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
 	{

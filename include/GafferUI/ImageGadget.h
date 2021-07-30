@@ -82,14 +82,14 @@ class GAFFERUI_API ImageGadget : public Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
 		unsigned layerMask() const override;
 		Imath::Box3f renderBound() const override;
 
 	private :
 
 		Imath::Box3f m_bound;
-		// We can't actually generate the GL texture until doRender(), as
+		// We can't actually generate the GL texture until renderLayer(), as
 		// the GL state might not be valid until then. so we store either
 		// the image to convert, the filename to load, or the previously
 		// converted texture in this member.

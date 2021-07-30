@@ -218,7 +218,7 @@ PlugAdder::MenuSignal &PlugAdder::menuSignal()
 	return s;
 }
 
-void PlugAdder::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void PlugAdder::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	switch( layer )
 	{

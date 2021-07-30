@@ -67,7 +67,7 @@ class GAFFERUI_API CompoundNumericNodule : public StandardNodule
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
 		unsigned layerMask() const override;
 		Imath::Box3f renderBound() const override;
 

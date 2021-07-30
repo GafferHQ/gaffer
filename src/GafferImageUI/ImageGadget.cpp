@@ -1277,7 +1277,7 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 	style->renderText( Style::LabelText, text );
 }
 
-void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
+void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
 	{

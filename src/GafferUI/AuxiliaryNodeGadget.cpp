@@ -71,11 +71,11 @@ Imath::Box3f AuxiliaryNodeGadget::bound() const
 	return Box3f( V3f( -m_radius, -m_radius, 0 ), V3f( m_radius, m_radius, 0 ) );
 }
 
-void AuxiliaryNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void AuxiliaryNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Nodes )
 	{
-		return NodeGadget::doRenderLayer( layer, style, reason );
+		return NodeGadget::renderLayer( layer, style, reason );
 	}
 
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;

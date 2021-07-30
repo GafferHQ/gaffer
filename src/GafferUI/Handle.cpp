@@ -120,7 +120,7 @@ Imath::Box3f Handle::bound() const
 	return Box3f( V3f( -1 ), V3f( 1 ) );
 }
 
-void Handle::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void Handle::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( m_visibleOnHover )
 	{

@@ -78,7 +78,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
 		unsigned layerMask() const override;
 		Imath::Box3f renderBound() const override;
 

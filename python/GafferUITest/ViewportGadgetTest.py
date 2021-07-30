@@ -344,7 +344,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 				self.setTransform( imath.M44f().translate( imath.V3f( t[0], t[1], 0 ) ) )
 				self.layer = layer
 
-			def doRenderLayer( self, layer, style, renderReason ) :
+			def renderLayer( self, layer, style, renderReason ) :
 
 				style.renderSolidRectangle( imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ) )
 

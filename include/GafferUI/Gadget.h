@@ -283,7 +283,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 
 		/// Must be called by derived classes to reflect changes
-		/// affecting `doRenderLayer()`, `bound()` or `updateLayout().
+		/// affecting `renderLayer()`, `bound()` or `updateLayout().
 		void dirty( DirtyType dirtyType );
 
 		/// May be implemented by derived classes to position child widgets.
@@ -306,16 +306,16 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// for the specified layer. Child gadgets will be drawn automatically
 		/// _after_ the parent gadget has been drawn.  Whenever overriding this,
 		/// you must override layerMask and renderBound() as well.
-		virtual void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const;
+		virtual void renderLayer( Layer layer, const Style *style, RenderReason reason ) const;
 
 		/// Returns a bitmask built from the flags in the Layer enum.
-		/// Any subclass which implements doRenderLayer must also implement layerMask
-		/// to indicate which layers doRenderLayer should be called for.
+		/// Any subclass which implements renderLayer must also implement layerMask
+		/// to indicate which layers renderLayer should be called for.
 		/// layerMask must currently return a constant value.  In the future, we
 		/// may implement a new DirtyType to allow dirtying the layerMask
 		virtual unsigned layerMask() const;
 
-		/// The bound of everything drawn by doRenderLayer
+		/// The bound of everything drawn by renderLayer
 		virtual Imath::Box3f renderBound() const;
 
 		/// Implemented to dirty the layout for both the old and the new parent.

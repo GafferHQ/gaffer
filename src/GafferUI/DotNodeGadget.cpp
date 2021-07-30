@@ -87,11 +87,11 @@ DotNodeGadget::~DotNodeGadget()
 {
 }
 
-void DotNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void DotNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Nodes )
 	{
-		return NodeGadget::doRenderLayer( layer, style, reason );
+		return NodeGadget::renderLayer( layer, style, reason );
 	}
 
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;

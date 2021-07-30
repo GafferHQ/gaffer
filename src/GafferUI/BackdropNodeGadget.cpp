@@ -250,7 +250,7 @@ Imath::Box3f BackdropNodeGadget::bound() const
 	return Box3f( V3f( b.min.x, b.min.y, 0.0f ), V3f( b.max.x, b.max.y, 0.0f ) );
 }
 
-void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Backdrops )
 	{

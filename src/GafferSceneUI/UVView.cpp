@@ -397,7 +397,7 @@ class GridGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main && layer != Layer::MidBack && layer != Layer::Front )
 			{

@@ -151,7 +151,7 @@ void StandardNodule::createConnection( Gaffer::Plug *endpoint )
 	}
 }
 
-void StandardNodule::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void StandardNodule::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	switch( layer )
 	{

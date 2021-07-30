@@ -93,7 +93,7 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 				return b
 
-			def doRenderLayer( self, layer, style, reason ) :
+			def renderLayer( self, layer, style, reason ) :
 
 				self.layersRendered.add( (layer, style, reason) )
 

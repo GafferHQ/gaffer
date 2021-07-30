@@ -367,9 +367,9 @@ Imath::Box3f StandardNodeGadget::bound() const
 	return b;
 }
 
-void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
-	NodeGadget::doRenderLayer( layer, style, reason );
+	NodeGadget::renderLayer( layer, style, reason );
 
 	switch( layer )
 	{

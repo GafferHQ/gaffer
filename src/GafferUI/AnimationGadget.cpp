@@ -269,7 +269,7 @@ AnimationGadget::~AnimationGadget()
 {
 }
 
-void AnimationGadget::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	glDisable( GL_DEPTH_TEST );
 

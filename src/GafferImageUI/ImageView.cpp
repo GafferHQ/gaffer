@@ -462,7 +462,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main )
 			{
@@ -736,7 +736,7 @@ class Box2iGadget : public GafferUI::Gadget
 		// Returns the scale from screen raster pixels to Gaffer image pixels.  This includes both
 		// the scaling applied by ViewportGadget, and the pixelAspect scaling which isn't applied
 		// automatically ( it is optionally returned separately so we can apply it manually in
-		// doRenderLayer )
+		// renderLayer )
 		V2f screenToImageScale( float *pixelAspectOut = nullptr ) const
 		{
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
@@ -878,7 +878,7 @@ class V2iGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main )
 			{
@@ -1084,7 +1084,7 @@ class V2iGadget : public GafferUI::Gadget
 		// Returns the scale from screen raster pixels to Gaffer image pixels.  This includes both
 		// the scaling applied by ViewportGadget, and the pixelAspect scaling which isn't applied
 		// automatically ( it is optionally returned separately so we can apply it manually in
-		// doRenderLayer )
+		// renderLayer )
 		V2f screenToImageScale( float *pixelAspectOut = nullptr ) const
 		{
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();

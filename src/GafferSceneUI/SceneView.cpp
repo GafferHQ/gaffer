@@ -509,7 +509,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const final
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const final
 		{
 			if( layer != Layer::Main )
 			{
@@ -871,7 +871,7 @@ class CameraOverlay : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const override
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main )
 			{

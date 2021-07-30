@@ -154,14 +154,14 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			WrappedType::updateLayout();
 		}
 
-		void doRenderLayer( GafferUI::Gadget::Layer layer, const GafferUI::Style *style, GafferUI::Gadget::RenderReason reason ) const override
+		void renderLayer( GafferUI::Gadget::Layer layer, const GafferUI::Style *style, GafferUI::Gadget::RenderReason reason ) const override
 		{
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					boost::python::object f = this->methodOverride( "doRenderLayer" );
+					boost::python::object f = this->methodOverride( "renderLayer" );
 					if( f )
 					{
 						f( layer, GafferUI::StylePtr( const_cast<GafferUI::Style *>( style ) ), reason );
@@ -173,7 +173,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
-			WrappedType::doRenderLayer( layer, style, reason );
+			WrappedType::renderLayer( layer, style, reason );
 		}
 
 		unsigned layerMask() const override

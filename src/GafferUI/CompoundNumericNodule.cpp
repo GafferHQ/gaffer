@@ -287,11 +287,11 @@ Imath::Box3f CompoundNumericNodule::bound() const
 	}
 }
 
-void CompoundNumericNodule::doRenderLayer( Layer layer, const Style *style, RenderReason reason ) const
+void CompoundNumericNodule::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( !noduleLayout() )
 	{
-		StandardNodule::doRenderLayer( layer, style, reason );
+		StandardNodule::renderLayer( layer, style, reason );
 	}
 }
 

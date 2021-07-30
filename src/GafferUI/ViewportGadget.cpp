@@ -1112,7 +1112,7 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 				currentStyle = renderItem.style;
 			}
 
-			renderItem.gadget->doRenderLayer( layer, currentStyle, reason );
+			renderItem.gadget->renderLayer( layer, currentStyle, reason );
 		}
 	}
 	glLoadMatrixf( viewTransform.getValue() );

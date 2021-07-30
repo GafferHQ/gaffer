@@ -268,10 +268,6 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		void renderInternal( RenderReason reason, Layer filterLayer = Layer::None ) const;
 
-		// Sets the GL state up with the name attribute and transform for
-		// the Gadget, makes sure the style is bound and then calls doRenderLayer().
-		static void renderLayer( const Gadget *gadget, Layer layer, const Style *currentStyle = nullptr );
-
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
