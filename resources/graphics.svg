@@ -79,8 +79,7 @@
     </linearGradient>
     <linearGradient
        id="arrowDefault"
-       osb:paint="solid"
-       gradientTransform="translate(-71.339679,50.536488)">
+       osb:paint="solid">
       <stop
          style="stop-color:#969696;stop-opacity:1;"
          offset="0"
@@ -96,8 +95,7 @@
     </linearGradient>
     <linearGradient
        id="backgroundLighter"
-       osb:paint="solid"
-       gradientTransform="matrix(-3.5374372,0,0,4.8441373,435.74315,7818.3291)">
+       osb:paint="solid">
       <stop
          style="stop-color:#9e9e9e;stop-opacity:1;"
          offset="0"
@@ -121,8 +119,7 @@
     </linearGradient>
     <linearGradient
        id="foreground"
-       osb:paint="solid"
-       gradientTransform="matrix(0.24,0,0,0.24,128.58,124.63193)">
+       osb:paint="solid">
       <stop
          style="stop-color:#e0e0e0;stop-opacity:1;"
          offset="0"
