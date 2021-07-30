@@ -334,7 +334,7 @@ namespace IECoreArnoldPreview
 namespace ShaderNetworkAlgo
 {
 
-std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const AtNode *parentNode )
+std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode )
 {
 	// \todo: remove this conversion once Arnold supports it natively
 	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
@@ -350,8 +350,8 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 	}
 	else
 	{
-		auto nodeCreator = [parentNode]( const AtString &nodeType, const AtString &nodeName ) {
-			return AiNode( nodeType, nodeName, parentNode );
+		auto nodeCreator = [universe, parentNode]( const AtString &nodeType, const AtString &nodeName ) {
+			return AiNode( universe, nodeType, nodeName, parentNode );
 		};
 		convertWalk( shaderNetwork->getOutput(), shaderNetwork, name, nodeCreator, result, converted );
 		for( const auto &kv : shaderNetwork->outputShader()->blindData()->readable() )
@@ -365,6 +365,7 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	assert( nodes.size() );
+	AtUniverse *universe = AiNodeGetUniverse( nodes.back() );
 	AtNode *parentNode = AiNodeGetParent( nodes.back() );
 	const std::string &name = AiNodeGetName( nodes.back() );
 
@@ -376,7 +377,7 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 	std::unordered_set<AtNode *> reusedNodes;
 	nodes.clear();
 
-	auto nodeCreator = [parentNode, &originalNodes, &reusedNodes]( const AtString &nodeType, const AtString &nodeName ) {
+	auto nodeCreator = [universe, parentNode, &originalNodes, &reusedNodes]( const AtString &nodeType, const AtString &nodeName ) {
 		auto it = originalNodes.find( nodeName );
 		if( it != originalNodes.end() )
 		{
@@ -397,7 +398,7 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 				originalNodes.erase( it );
 			}
 		}
-		return AiNode( nodeType, nodeName, parentNode );
+		return AiNode( universe, nodeType, nodeName, parentNode );
 	};
 
 	ShaderMap converted;

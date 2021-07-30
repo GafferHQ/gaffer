@@ -38,6 +38,7 @@
 #include "IECoreArnold/ParameterAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
+#include "IECore/Version.h"
 
 using namespace std;
 using namespace Imath;
@@ -53,7 +54,19 @@ using namespace IECoreArnoldPreview;
 namespace
 {
 
+#if CORTEX_COMPATIBILITY_VERSION < 10003
+
+NodeAlgo::ConverterDescription<ExternalProcedural> g_description(
+	[] ( const IECoreScene::ExternalProcedural *procedural, const std::string &name, const AtNode *parent ) {
+		return ProceduralAlgo::convert( procedural, nullptr, name, parent );
+	}
+);
+
+#else
+
 NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
+
+#endif
 
 } // namespace
 
@@ -67,9 +80,9 @@ namespace IECoreArnoldPreview
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode  )
+AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
 {
-	AtNode *node = AiNode( AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
+	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
 	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
 
 	return node;

@@ -43,6 +43,7 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/Version.h"
 
 #include "openvdb/io/Stream.h"
 #include "openvdb/openvdb.h"
@@ -58,99 +59,106 @@ using namespace IECoreArnold;
 
 namespace
 {
-	IECore::InternedString g_filedataParam("filedata");
-	IECore::InternedString g_filenameParam("filename");
 
-	IECore::InternedString g_gridParam("grids");
-	AtString g_volume("volume");
+IECore::InternedString g_filedataParam("filedata");
+IECore::InternedString g_filenameParam("filename");
 
+IECore::InternedString g_gridParam("grids");
+AtString g_volume("volume");
 
-	///! utility to allow us to stream directly into a UCharVectorData
-	struct UCharVectorDataSink
+///! utility to allow us to stream directly into a UCharVectorData
+struct UCharVectorDataSink
+{
+	typedef char char_type;
+	typedef boost::iostreams::sink_tag category;
+
+	UCharVectorDataSink( IECore::UCharVectorData *storage ) : m_storage( storage->writable() )
 	{
-		typedef char char_type;
-		typedef boost::iostreams::sink_tag category;
-
-		UCharVectorDataSink( IECore::UCharVectorData *storage ) : m_storage( storage->writable() )
-		{
-		}
-
-		std::streamsize write( const char *s, std::streamsize n )
-		{
-			m_storage.insert( m_storage.end(), s, s + n );
-			return n;
-		}
-
-		std::vector<unsigned char> &m_storage;
-	};
-
-
-	UCharVectorDataPtr createMemoryBuffer(const IECoreVDB::VDBObject* vdbObject)
-	{
-		// estimate the size of the memory required to hand the VDB to arnold.
-		// This is required so we can reserve the right amount of space in the output
-		// buffer.
-		int64_t totalSizeBytes = 0;
-		openvdb::GridCPtrVec gridsToWrite;
-		std::vector<std::string> gridNames = vdbObject->gridNames();
-		try
-		{
-			for( const std::string& gridName : gridNames )
-			{
-				openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
-				totalSizeBytes += grid->metaValue<int64_t>( "file_mem_bytes" );
-				gridsToWrite.push_back( grid );
-			}
-		}
-		catch( const std::exception &e )
-		{
-			IECore::msg( IECore::MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
-		}
-
-		IECore::UCharVectorDataPtr buffer = new IECore::UCharVectorData();
-		buffer->writable().reserve( totalSizeBytes );
-		UCharVectorDataSink sink( buffer.get() );
-		boost::iostreams::stream<UCharVectorDataSink> memoryStream( sink );
-
-		openvdb::io::Stream vdbStream( memoryStream );
-		vdbStream.write( gridsToWrite );
-
-		return buffer;
 	}
 
-	CompoundDataPtr  createParameters(const IECoreVDB::VDBObject* vdbObject)
+	std::streamsize write( const char *s, std::streamsize n )
 	{
-		CompoundDataPtr parameters = new CompoundData();
-		CompoundDataMap& compoundData = parameters->writable();
-
-		compoundData[g_gridParam] = new StringVectorData( vdbObject->gridNames() );
-
-		if ( vdbObject->unmodifiedFromFile() )
-		{
-			compoundData[g_filenameParam] = new StringData( vdbObject->fileName() );
-		}
-		else
-		{
-			compoundData[g_filedataParam] = createMemoryBuffer( vdbObject );
-		}
-
-		return parameters;
+		m_storage.insert( m_storage.end(), s, s + n );
+		return n;
 	}
 
-	AtNode *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name, const AtNode* parent )
+	std::vector<unsigned char> &m_storage;
+};
+
+UCharVectorDataPtr createMemoryBuffer(const IECoreVDB::VDBObject* vdbObject)
+{
+	// estimate the size of the memory required to hand the VDB to arnold.
+	// This is required so we can reserve the right amount of space in the output
+	// buffer.
+	int64_t totalSizeBytes = 0;
+	openvdb::GridCPtrVec gridsToWrite;
+	std::vector<std::string> gridNames = vdbObject->gridNames();
+	try
 	{
-		AtNode *node = AiNode( g_volume, AtString( name.c_str() ), parent );
-
-		CompoundDataPtr parameters = createParameters( vdbObject );
-		ParameterAlgo::setParameters( node, parameters->readable() );
-
-		return node;
+		for( const std::string& gridName : gridNames )
+		{
+			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
+			totalSizeBytes += grid->metaValue<int64_t>( "file_mem_bytes" );
+			gridsToWrite.push_back( grid );
+		}
 	}
+	catch( const std::exception &e )
+	{
+		IECore::msg( IECore::MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
+	}
+
+	IECore::UCharVectorDataPtr buffer = new IECore::UCharVectorData();
+	buffer->writable().reserve( totalSizeBytes );
+	UCharVectorDataSink sink( buffer.get() );
+	boost::iostreams::stream<UCharVectorDataSink> memoryStream( sink );
+
+	openvdb::io::Stream vdbStream( memoryStream );
+	vdbStream.write( gridsToWrite );
+
+	return buffer;
 }
 
-namespace
+CompoundDataPtr createParameters(const IECoreVDB::VDBObject* vdbObject)
 {
+	CompoundDataPtr parameters = new CompoundData();
+	CompoundDataMap& compoundData = parameters->writable();
+
+	compoundData[g_gridParam] = new StringVectorData( vdbObject->gridNames() );
+
+	if ( vdbObject->unmodifiedFromFile() )
+	{
+		compoundData[g_filenameParam] = new StringData( vdbObject->fileName() );
+	}
+	else
+	{
+		compoundData[g_filedataParam] = createMemoryBuffer( vdbObject );
+	}
+
+	return parameters;
+}
+
+AtNode *convert( const IECoreVDB::VDBObject *vdbObject, AtUniverse *universe, const std::string &name, const AtNode* parent )
+{
+	AtNode *node = AiNode( universe, g_volume, AtString( name.c_str() ), parent );
+
+	CompoundDataPtr parameters = createParameters( vdbObject );
+	ParameterAlgo::setParameters( node, parameters->readable() );
+
+	return node;
+}
+
+#if CORTEX_COMPATIBILITY_VERSION < 10003
+
+NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description(
+	[] ( const IECoreVDB::VDBObject *vdbObject, const std::string &name, const AtNode *parent ) {
+		return ::convert( vdbObject, nullptr, name, parent );
+	}
+);
+
+#else
 
 NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( ::convert );
+
+#endif
 
 } // namespace

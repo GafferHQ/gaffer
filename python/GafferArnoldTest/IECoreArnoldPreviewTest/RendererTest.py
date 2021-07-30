@@ -86,11 +86,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			n = arnold.AiNodeLookUpByName( "testPlane" )
+			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_SHAPE )
 
 	def testRenderRegion( self ) :
@@ -117,10 +117,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			options = arnold.AiUniverseGetOptions()
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions( universe )
 
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 2000 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 1000 )
@@ -155,10 +155,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			self.assertEqual( len( self.__allNodes( universe, type = arnold.AI_NODE_SHADER ) ), 1 )
 
 	def testShaderGarbageCollection( self ) :
 
@@ -193,7 +193,8 @@ class RendererTest( GafferTest.TestCase ) :
 			del a
 
 		r.render()
-		self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		self.assertEqual( len( self.__allNodes( universe, type = arnold.AI_NODE_SHADER ) ), 1 )
 
 		del o
 		del r
@@ -251,11 +252,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shaders = self.__allNodes( type = arnold.AI_NODE_SHADER )
+			shaders = self.__allNodes( universe, type = arnold.AI_NODE_SHADER )
 			self.assertEqual( len( shaders ), 4 )
 			shaderNames = [ arnold.AiNodeGetName( s ) for s in shaders ]
 			self.assertEqual( len( shaderNames ), 4 )
@@ -305,14 +306,15 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			target = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarColor" ), "shader" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+
+			target = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane_scalarColor" ), "shader" )
 			source = arnold.AiNodeGetLink( target, "Kd_color" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
 
-			target = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_arrayColor" ), "shader" )
+			target = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane_arrayColor" ), "shader" )
 			source = arnold.AiNodeGetLink( target, "color[0]" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
 
@@ -350,11 +352,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "test" ), "shader" )
+			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "test" ), "shader" )
 
 			componentIndex = ctypes.c_int()
 			sourceR = arnold.AiNodeGetLink( outputNode, "color.r", componentIndex )
@@ -406,11 +408,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "test" ), "shader" )
+			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "test" ), "shader" )
 
 			pack = arnold.AiNodeGetLink( outputNode, "param_a" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( pack ) ), "osl" )
@@ -462,11 +464,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			lights = self.__allNodes( universe, type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 1 )
 			self.assertEqual( "light:testLight", arnold.AiNodeGetName( lights[0] ) )
 
@@ -499,13 +501,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			untransformedLight = arnold.AiNodeLookUpByName( "light:untransformedLight" )
-			staticLight = arnold.AiNodeLookUpByName( "light:staticLight" )
-			movingLight = arnold.AiNodeLookUpByName( "light:movingLight" )
+			untransformedLight = arnold.AiNodeLookUpByName( universe, "light:untransformedLight" )
+			staticLight = arnold.AiNodeLookUpByName( universe, "light:staticLight" )
+			movingLight = arnold.AiNodeLookUpByName( universe, "light:movingLight" )
 
 			m = arnold.AiNodeGetMatrix( untransformedLight, "matrix" )
 			self.assertEqual( self.__m44f( m ), imath.M44f() )
@@ -545,11 +547,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			lights = self.__allNodes( universe, type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 2 )
 			self.assertEqual( set( [ arnold.AiNodeGetName( l ) for l in lights ] ), { "light:testLight1", "light:testLight2" } )
 
@@ -610,13 +612,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			o1 = arnold.AiNodeLookUpByName( "testMesh1" )
-			o2 = arnold.AiNodeLookUpByName( "testMesh2" )
-			o3 = arnold.AiNodeLookUpByName( "testMesh3" )
+			o1 = arnold.AiNodeLookUpByName( universe, "testMesh1" )
+			o2 = arnold.AiNodeLookUpByName( universe, "testMesh2" )
+			o3 = arnold.AiNodeLookUpByName( universe, "testMesh3" )
 
 			self.assertEqual( arnold.AiNodeGetByte( o1, "sidedness" ), arnold.AI_RAY_ALL )
 			self.assertEqual( arnold.AiNodeGetByte( o2, "sidedness" ), arnold.AI_RAY_UNDEFINED )
@@ -675,11 +677,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			options = arnold.AiUniverseGetOptions()
+			options = arnold.AiUniverseGetOptions( universe )
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
 			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
 			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
@@ -712,10 +714,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			filters = self.__allNodes( type = arnold.AI_NODE_FILTER )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
 			self.assertEqual( len( filters ), 1 )
 			f = filters[0]
 
@@ -755,11 +757,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			options = arnold.AiUniverseGetOptions()
+			options = arnold.AiUniverseGetOptions( universe )
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
 			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
 			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
@@ -865,18 +867,18 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			options = arnold.AiUniverseGetOptions()
+			options = arnold.AiUniverseGetOptions( universe )
 
 			camera = arnold.AiNodeGetPtr( options, "camera" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( camera ) ), "uv_camera" )
 			mesh = arnold.AiNodeGetPtr( camera, "mesh" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
 			self.assertEqual(
-				arnold.AiNodeGetName( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane" ), "node" ) ),
+				arnold.AiNodeGetName( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "node" ) ),
 				arnold.AiNodeGetName( mesh )
 			)
 
@@ -953,12 +955,12 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( msg.messages[-1].message, expectedMessage )
 		self.assertEqual( msg.messages[-1].level, IECore.Msg.Level.Warning)
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
 			# test if data was added correctly to existing data
-			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrTest" )
+			exrDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:exrTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
 			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
 			customAttributesExpected = set([
@@ -968,7 +970,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( customAttributesValues, customAttributesExpected )
 
 			# test if all data types work correctly
-			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrDataTest" )
+			exrDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:exrDataTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
 			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
 
@@ -988,7 +990,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( customAttributesValues, customAttributesExpected )
 
 			# make sure that attribute isn't added to drivers that don't support it
-			tiffDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:tiffTest" )
+			tiffDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:tiffTest" )
 			customAttributes = arnold.AiNodeGetArray( tiffDriver, "custom_attributes" )
 			self.assertEqual(customAttributes, None)
 
@@ -1065,11 +1067,11 @@ class RendererTest( GafferTest.TestCase ) :
 		del defaultAttributes, adaptiveAttributes, nonAdaptiveAttributes, adaptiveObjectSpaceAttributes
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 
@@ -1077,6 +1079,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numInstances, 11 )
 
 			self.__assertInstanced(
+				universe,
 				"polyDefaultAttributes1",
 				"polyDefaultAttributes2",
 				"polyAdaptiveAttributes1",
@@ -1084,6 +1087,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 
 			self.__assertInstanced(
+				universe,
 				"subdivDefaultAttributes1",
 				"subdivDefaultAttributes2",
 				"subdivNonAdaptiveAttributes1",
@@ -1091,11 +1095,13 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 
 			self.__assertNotInstanced(
+				universe,
 				"subdivAdaptiveAttributes1",
 				"subdivAdaptiveAttributes2"
 			)
 
 			self.__assertInstanced(
+				universe,
 				"subdivAdaptiveObjectSpaceAttributes1",
 				"subdivAdaptiveObjectSpaceAttributes2",
 			)
@@ -1128,11 +1134,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			defaultNode = arnold.AiNodeLookUpByName( "planeDefault" )
-			linearNode = arnold.AiNodeLookUpByName( "planeLinear" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			defaultNode = arnold.AiNodeLookUpByName( universe, "planeDefault" )
+			linearNode = arnold.AiNodeLookUpByName( universe, "planeLinear" )
 			self.assertEqual( arnold.AiNodeGetStr( defaultNode, "transform_type" ), "rotate_about_center" )
 			self.assertEqual( arnold.AiNodeGetStr( linearNode, "transform_type" ), "linear" )
 
@@ -1163,10 +1169,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			node = arnold.AiNodeLookUpByName( "plane" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
 			self.assertEqual( arnold.AiNodeGetByte( node, "subdiv_iterations" ), 10 )
 			self.assertEqual( arnold.AiNodeGetFlt( node, "subdiv_adaptive_error" ), 0.25 )
@@ -1196,10 +1202,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			node = arnold.AiNodeLookUpByName( "plane" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
 
 	def testUserAttributes( self ) :
@@ -1241,18 +1247,18 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			plane1 = arnold.AiNodeLookUpByName( "plane1" )
+			plane1 = arnold.AiNodeLookUpByName( universe, "plane1" )
 			self.assertEqual( arnold.AiNodeGetInt( plane1, "user:testInt" ), 1 )
 			self.assertEqual( arnold.AiNodeGetFlt( plane1, "user:testFloat" ), 2.5 )
 			self.assertEqual( arnold.AiNodeGetVec( plane1, "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
 			self.assertEqual( arnold.AiNodeGetRGB( plane1, "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
 			self.assertEqual( arnold.AiNodeGetStr( plane1, "user:testString" ), "we're all doomed" )
 
-			plane2 = arnold.AiNodeLookUpByName( "plane2" )
+			plane2 = arnold.AiNodeLookUpByName( universe, "plane2" )
 			self.assertEqual( arnold.AiNodeGetInt( plane2, "user:testInt" ), 2 )
 			self.assertEqual( arnold.AiNodeGetFlt( plane2, "user:testFloat" ), 25 )
 			self.assertEqual( arnold.AiNodeGetVec( plane2, "user:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
@@ -1301,16 +1307,16 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			self.assertEqual( len( shapes ), 5 )
 
-			plane1 = arnold.AiNodeLookUpByName( "plane1" )
-			plane2 = arnold.AiNodeLookUpByName( "plane2" )
-			plane3 = arnold.AiNodeLookUpByName( "plane3" )
+			plane1 = arnold.AiNodeLookUpByName( universe, "plane1" )
+			plane2 = arnold.AiNodeLookUpByName( universe, "plane2" )
+			plane3 = arnold.AiNodeLookUpByName( universe, "plane3" )
 
 			self.assertTrue( arnold.AiNodeIs( plane1, "ginstance" ) )
 			self.assertTrue( arnold.AiNodeIs( plane2, "ginstance" ) )
@@ -1364,14 +1370,14 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
 			for interpolation in meshes.keys() :
 				for subdividePolygons in ( None, False, True ) :
 
-					instance = arnold.AiNodeLookUpByName( interpolation + "-" + str( subdividePolygons ) )
+					instance = arnold.AiNodeLookUpByName( universe, interpolation + "-" + str( subdividePolygons ) )
 					self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
 					mesh = arnold.AiNodeGetPtr( instance, "node" )
@@ -1407,13 +1413,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
 			for uvSmoothing in smoothingTypes :
 
-				instance = arnold.AiNodeLookUpByName( "mesh-" + ( uvSmoothing or "default" ) )
+				instance = arnold.AiNodeLookUpByName( universe, "mesh-" + ( uvSmoothing or "default" ) )
 				self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
 				mesh = arnold.AiNodeGetPtr( instance, "node" )
@@ -1443,19 +1449,19 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			self.assertEqual( len( shapes ), 2 )
 
-			instance = arnold.AiNodeLookUpByName( "myLight" )
+			instance = arnold.AiNodeLookUpByName( universe, "myLight" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance ) ), "ginstance" )
 			mesh = arnold.AiNodeGetPtr( instance, "node" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
 
-			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			lights = self.__allNodes( universe, type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 1 )
 			light = lights[0]
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( light ) ), "mesh_light" )
@@ -1501,15 +1507,15 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			self.assertEqual( len( shapes ), 3 )
 
-			instance1 = arnold.AiNodeLookUpByName( "myLight1" )
-			instance2 = arnold.AiNodeLookUpByName( "myLight2" )
+			instance1 = arnold.AiNodeLookUpByName( universe, "myLight1" )
+			instance2 = arnold.AiNodeLookUpByName( universe, "myLight2" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance1 ) ), "ginstance" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance2 ) ), "ginstance" )
 
@@ -1518,7 +1524,7 @@ class RendererTest( GafferTest.TestCase ) :
 			mesh = arnold.AiNodeGetPtr( instance1, "node" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
 
-			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			lights = self.__allNodes( universe, type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 2 )
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( lights[0] ) ), "mesh_light" )
@@ -1579,14 +1585,14 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			options = arnold.AiUniverseGetOptions()
+			options = arnold.AiUniverseGetOptions( universe )
 			self.assertTrue( os.path.expandvars( "$GAFFER_ROOT/shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
-			n = arnold.AiNodeLookUpByName( "testPlane" )
+			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
 			add = arnold.AiNodeGetPtr( n, "shader" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( add ) ), "add" )
@@ -1633,13 +1639,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			options = arnold.AiUniverseGetOptions()
+			options = arnold.AiUniverseGetOptions( universe )
 
-			n = arnold.AiNodeLookUpByName( "testPlane" )
+			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
 			noise = arnold.AiNodeGetPtr( n, "shader" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
@@ -1681,10 +1687,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			n = arnold.AiNodeLookUpByName( "testPlane" )
+			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
 			floatToColor = arnold.AiNodeGetPtr( n, "shader" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatToColor ) ), "osl" )
@@ -1740,13 +1746,13 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
 			for objectName, sets in objectNamesAndSets :
 
-				n = arnold.AiNodeLookUpByName( objectName )
+				n = arnold.AiNodeLookUpByName( universe, objectName )
 				a = arnold.AiNodeGetArray( n, "trace_sets" )
 
 				if sets is None or len( sets ) == 0 :
@@ -1812,11 +1818,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
 
@@ -1824,19 +1830,21 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numCurves, 5 )
 
 			self.__assertInstanced(
+				universe,
 				"default",
 				"modeRibbon",
 				"pixelWidth0ModeRibbon",
 			)
 
 			self.__assertNotInstanced(
+				universe,
 				"pixelWidth1",
 				"pixelWidth1Duplicate",
 				"pixelWidth2",
 			)
 
 			for name in ( "modeRibbon", "modeThick" ) :
-				self.__assertInstanced( name )
+				self.__assertInstanced( universe, name )
 
 			for name, minPixelWidth, mode in (
 				( "default", 0, "ribbon" ),
@@ -1848,7 +1856,7 @@ class RendererTest( GafferTest.TestCase ) :
 				( "pixelWidth0ModeRibbon", 0, "ribbon" ),
 			) :
 
-				node = arnold.AiNodeLookUpByName( name )
+				node = arnold.AiNodeLookUpByName( universe, name )
 				if arnold.AiNodeIs( node, "ginstance" ) :
 					shape = arnold.AiNodeGetPtr( node, "node" )
 				else :
@@ -1973,11 +1981,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 			numBoxes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "box" ] )
@@ -1993,16 +2001,19 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numVolumes,  4 )
 
 			self.__assertInstanced(
+				universe,
 				"mesh_default",
 				"mesh_stepSizeZero",
 			)
 
 			self.__assertInstanced(
+				universe,
 				"sphere_default",
 				"sphere_stepSizeZero",
 			)
 
 			self.__assertInstanced(
+				universe,
 				"curves_default",
 				"curves_stepSizeZero",
 				"curves_stepSizeOne",
@@ -2012,7 +2023,7 @@ class RendererTest( GafferTest.TestCase ) :
 			for pn in primitives.keys() :
 				for an, a in attributes.items() :
 
-					instance = arnold.AiNodeLookUpByName( pn + "_" + an )
+					instance = arnold.AiNodeLookUpByName( universe, pn + "_" + an )
 					shape = arnold.AiNodeGetPtr( instance, "node" )
 
 					stepSize = a.get( "ai:shape:step_size" )
@@ -2073,11 +2084,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 			numBoxes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "box" ] )
@@ -2093,16 +2104,19 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numVolumes, 3 )
 
 			self.__assertInstanced(
+				universe,
 				"mesh_default",
 				"mesh_volumePaddingZero",
 			)
 
 			self.__assertInstanced(
+				universe,
 				"sphere_default",
 				"sphere_volumePaddingZero",
 			)
 
 			self.__assertInstanced(
+				universe,
 				"curves_default",
 				"curves_volumePaddingZero",
 				"curves_volumePaddingOne",
@@ -2112,7 +2126,7 @@ class RendererTest( GafferTest.TestCase ) :
 			for pn in primitives.keys() :
 				for an, a in attributes.items() :
 
-					instance = arnold.AiNodeLookUpByName( pn + "_" + an )
+					instance = arnold.AiNodeLookUpByName( universe, pn + "_" + an )
 					shape = arnold.AiNodeGetPtr( instance, "node" )
 
 					volumePadding = a.get( "ai:shape:volume_padding" )
@@ -2160,11 +2174,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			instance = arnold.AiNodeLookUpByName( "test" )
+			instance = arnold.AiNodeLookUpByName( universe, "test" )
 			self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
 			shape = arnold.AiNodeGetPtr( instance, "node" )
@@ -2184,10 +2198,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			options = arnold.AiUniverseGetOptions()
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions( universe )
 
 			self.assertEqual( arnold.AiNodeGetStr( options, "myCustomOption" ), "myCustomOptionValue" )
 
@@ -2210,11 +2224,11 @@ class RendererTest( GafferTest.TestCase ) :
 				r.render()
 				del r
 
-				with IECoreArnold.UniverseBlock( writable = True ) :
+				with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-					arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+					arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-					options = arnold.AiUniverseGetOptions()
+					options = arnold.AiUniverseGetOptions( universe )
 					self.assertEqual(
 						arnold.AiNodeGetInt( options, "AA_seed" ),
 						seed or frame or 1
@@ -2357,6 +2371,42 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
+	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] < [ 7, 0, 0 ], "Two renders not supported" )
+	def testMessageHandlersForTwoRenders( self ) :
+
+		# Make two renderers, each with a different message handler.
+
+		mh1 = IECore.CapturingMessageHandler()
+		mh2 = IECore.CapturingMessageHandler()
+
+		r1 = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = mh1
+		)
+
+
+		r2 = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = mh2
+		)
+
+		# Generate some artificial errors.
+
+		u1 = ctypes.cast( r1.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		u2 = ctypes.cast( r2.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+
+		arnold.AiNodeSetInt( arnold.AiUniverseGetOptions( u1 ), "invalid1", 10 )
+		arnold.AiNodeSetInt( arnold.AiUniverseGetOptions( u2 ), "invalid2", 10 )
+
+		# Check that they were directed to the appropriate handler.
+
+		self.assertEqual( len( mh1.messages ), 1 )
+		self.assertIn( "invalid1", mh1.messages[0].message )
+		self.assertEqual( len( mh2.messages ), 1 )
+		self.assertIn( "invalid2", mh2.messages[0].message )
+
 	def testProcedural( self ) :
 
 		class SphereProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
@@ -2390,14 +2440,15 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "/sphere", IECoreScene.SpherePrimitive(), r.attributes( IECore.CompoundObject() ) )
 		r.object( "/procedural", SphereProcedural(), r.attributes( IECore.CompoundObject() ) )
 
-		procedurals = self.__allNodes( nodeEntryName = "procedural" )
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		procedurals = self.__allNodes( universe, nodeEntryName = "procedural" )
 		self.assertEqual( len( procedurals ), 1 )
 
 		r.render()
 
 		for i in range( 0, 5 ) :
 			# Look for spheres of the correct types parented under the procedural
-			sphere = arnold.AiNodeLookUpByName( "/sphere%i" % i, procedurals[0] )
+			sphere = arnold.AiNodeLookUpByName( universe, "/sphere%i" % i, procedurals[0] )
 			# We actually expect the node to be a ginstance, but during `render()` Arnold seems
 			# to switch the type of ginstances to match the type of the node they are instancing.
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( sphere ) ), "sphere" )
@@ -2405,7 +2456,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# We expect to find 8 "spheres" - the 6 ginstances masquerading
 		# as spheres (1 from the top level sphere, 5 from the procedural),
 		# and the two true spheres that they reference.
-		spheres = self.__allNodes( nodeEntryName = "sphere" )
+		spheres = self.__allNodes( universe, nodeEntryName = "sphere" )
 		self.assertEqual( len( spheres ), 8 )
 		# Use node names to distinguish the true spheres.
 		trueSpheres = [ x for x in spheres if "sphere" not in arnold.AiNodeGetName( x ) ]
@@ -2524,8 +2575,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check that we are instancing procedurals as expected.
 
-		self.assertEqual( len( self.__allNodes( nodeEntryName = "procedural" ) ), 2 )
-		self.assertEqual( len( self.__allNodes( nodeEntryName = "ginstance" ) ), len( attributeVariants ) )
+		universe = ctypes.cast( renderer.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		self.assertEqual( len( self.__allNodes( universe, nodeEntryName = "procedural" ) ), 2 )
+		self.assertEqual( len( self.__allNodes( universe, nodeEntryName = "ginstance" ) ), len( attributeVariants ) )
 
 		instanceSharers = [
 			# All the same because camera visibility is on, and user attributes arent' relevant.
@@ -2535,9 +2587,9 @@ class RendererTest( GafferTest.TestCase ) :
 		]
 
 		for sharers in instanceSharers :
-			firstNode = arnold.AiNodeLookUpByName( sharers[0] )
+			firstNode = arnold.AiNodeLookUpByName( universe, sharers[0] )
 			for name in sharers :
-				node = arnold.AiNodeLookUpByName( name )
+				node = arnold.AiNodeLookUpByName( universe, name )
 				self.assertTrue( arnold.AiNodeIs( node, "ginstance" ) )
 				self.assertReferSameNode(
 					arnold.AiNodeGetPtr( node, "node" ),
@@ -2548,7 +2600,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		for name, attributes in attributeVariants.items() :
 
-			node = arnold.AiNodeLookUpByName( name )
+			node = arnold.AiNodeLookUpByName( universe, name )
 			for attributeName, attributeValue in attributes.items() :
 				if attributeName.startswith( "user:" ) :
 					self.assertEqual(
@@ -2587,7 +2639,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.render()
 
-		for sphere in self.__allNodes( nodeEntryName = "sphere" ) :
+		for sphere in self.__allNodes( universe, nodeEntryName = "sphere" ) :
 			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:a" ) )
 			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:b" ) )
 
@@ -2664,9 +2716,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( color, imath.Color3f( 1 ) )
 
 	@staticmethod
-	def __aovShaders() :
+	def __aovShaders( universe ) :
 
-		options = arnold.AiUniverseGetOptions()
+		options = arnold.AiUniverseGetOptions( universe )
 		shaders = arnold.AiNodeGetArray( options, "aov_shaders" )
 
 		result = {}
@@ -2695,23 +2747,25 @@ class RendererTest( GafferTest.TestCase ) :
 			output = "output"
 		) )
 
-		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_rgb" ] ) )
-		source = arnold.AiNodeGetLink( self.__aovShaders()["aov_write_rgb"], "aov_input" )
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+
+		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set( [ "aov_write_rgb" ] ) )
+		source = arnold.AiNodeGetLink( self.__aovShaders( universe )["aov_write_rgb"], "aov_input" )
 		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "float_to_rgb" )
 
 		# Add another
 		r.option( "ai:aov_shader:test2", IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "aov_write_float", "ai:shader" ) }, output = "output" ) )
-		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_rgb", "aov_write_float" ] ) )
+		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set( [ "aov_write_rgb", "aov_write_float" ] ) )
 
 		# Add overwrite
 		r.option( "ai:aov_shader:test", IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "aov_write_int", "ai:shader" ) }, output = "output" ) )
-		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_int", "aov_write_float" ] ) )
+		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set( [ "aov_write_int", "aov_write_float" ] ) )
 
 		r.option( "ai:aov_shader:test", None )
-		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_float" ] ) )
+		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set( [ "aov_write_float" ] ) )
 
 		r.option( "ai:aov_shader:test2", None )
-		self.assertEqual( set( self.__aovShaders().keys() ), set() )
+		self.assertEqual( set( self.__aovShaders( universe ).keys() ), set() )
 
 		del r
 
@@ -2722,7 +2776,8 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
-		options = arnold.AiUniverseGetOptions()
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		options = arnold.AiUniverseGetOptions( universe )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "atmosphere" ), None )
 
 		r.option(
@@ -2746,7 +2801,8 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
-		options = arnold.AiUniverseGetOptions()
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		options = arnold.AiUniverseGetOptions( universe )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "background" ), None )
 
 		r.option(
@@ -2770,7 +2826,8 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
-		options = arnold.AiUniverseGetOptions()
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		options = arnold.AiUniverseGetOptions( universe )
 		self.assertEqual( arnold.AiNodeGetPtr( options, "color_manager" ), None )
 
 		r.option(
@@ -2835,14 +2892,14 @@ class RendererTest( GafferTest.TestCase ) :
 		del o
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
 			# Since Arnold's `light_blocker` node doesn't support transform blur,
 			# we just expect a single matrix with the first transform sample.
 
-			node = arnold.AiNodeLookUpByName( "lightFilter:/lightFilter" )
+			node = arnold.AiNodeLookUpByName( universe, "lightFilter:/lightFilter" )
 			self.assertEqual(
 				self.__m44f( arnold.AiNodeGetMatrix( node, "geometry_matrix" ) ),
 				imath.M44f().translate( imath.V3f( 1, 0, 0 ) )
@@ -2892,11 +2949,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( tmpFile )
+			arnold.AiASSLoad( universe, tmpFile )
 
-			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numVDBs = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
 
@@ -2904,7 +2961,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numInstances, 1 )
 			self.assertEqual( numVDBs, 1 )
 
-			vdbInstance = arnold.AiNodeLookUpByName( "test_vdb" )
+			vdbInstance = arnold.AiNodeLookUpByName( universe, "test_vdb" )
 			vdbShape = arnold.AiNodeGetPtr( vdbInstance, "node" )
 
 			self.assertEqual( arnold.AiNodeGetFlt( vdbShape, "velocity_scale" ), 10 )
@@ -2955,11 +3012,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			cameraNode = arnold.AiNodeLookUpByName( "/camera" )
+			cameraNode = arnold.AiNodeLookUpByName( universe, "/camera" )
 
 			filterMapNode = arnold.AiNodeGetPtr( cameraNode, "filtermap" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( filterMapNode ) ), "noise" )
@@ -3023,6 +3080,9 @@ class RendererTest( GafferTest.TestCase ) :
 		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", lightParametersChanged), "tex" : IECoreScene.Shader( "image", "ai:shader", texParametersChanged) }, [(("tex", ""), ("light", "color"))], output = "light" )
 		self.assertFalse( quadLight.attributes( r.attributes( IECore.CompoundObject( { "ai:light" : quadLightShader } ) ) ) )
 
+		# Must delete objects before the renderer.
+		del skydomeLight, quadLight
+
 	def testAnimatedCameras( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -3046,11 +3106,11 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
-			n = arnold.AiNodeLookUpByName( "testCamera" )
+			n = arnold.AiNodeLookUpByName( universe, "testCamera" )
 			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
 
 			self.assertEqual( arnold.AiNodeGetFlt( n, "motion_start" ), 1 )
@@ -3068,10 +3128,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return imath.M44f( *[ i for row in m.data for i in row ] )
 
-	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True, nodeEntryName = None ) :
+	def __allNodes( self, universe, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True, nodeEntryName = None ) :
 
 		result = []
-		i = arnold.AiUniverseGetNodeIterator( type )
+		i = arnold.AiUniverseGetNodeIterator( universe, type )
 		while not arnold.AiNodeIteratorFinished( i ) :
 			node = arnold.AiNodeIteratorGetNext( i )
 			if ignoreBuiltIn and arnold.AiNodeGetName( node ) in ( "root", "ai_default_reflection_shader" ) :
@@ -3082,22 +3142,22 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return result
 
-	def __assertInstanced( self, *names ) :
+	def __assertInstanced( self, universe, *names ) :
 
-		firstInstanceNode = arnold.AiNodeLookUpByName( names[0] )
+		firstInstanceNode = arnold.AiNodeLookUpByName( universe, names[0] )
 		for name in names :
 
-			instanceNode = arnold.AiNodeLookUpByName( name )
+			instanceNode = arnold.AiNodeLookUpByName( universe, name )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
 
 			nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
 			self.assertReferSameNode( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
 			self.assertEqual( arnold.AiNodeGetByte( nodePtr, "visibility" ), 0 )
 
-	def __assertNotInstanced( self, *names ) :
+	def __assertNotInstanced( self, universe, *names ) :
 
 		for name in names :
-			node = arnold.AiNodeLookUpByName( name )
+			node = arnold.AiNodeLookUpByName( universe, name )
 			self.assertNotEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "ginstance" )
 
 if __name__ == "__main__":

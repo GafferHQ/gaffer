@@ -111,6 +111,8 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
+		IECoreScenePreview::Renderer *renderer() { return m_renderer.get(); }
+
 	private :
 
 		ScenePlug *adaptedInPlug();

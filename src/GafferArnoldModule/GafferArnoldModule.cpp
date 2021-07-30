@@ -129,9 +129,28 @@ AtNode *atNodeFromPythonObject( object o )
 	return reinterpret_cast<AtNode *>( address );
 }
 
-list shaderNetworkAlgoConvert( const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name )
+AtUniverse *pythonObjectToAtUniverse( const boost::python::object &universe )
 {
-	std::vector<AtNode *> nodes = ShaderNetworkAlgo::convert( shaderNetwork, name );
+	if( universe.is_none() )
+	{
+		return nullptr;
+	}
+
+	const std::string className = extract<std::string>( universe.attr( "__class__" ).attr( "__name__" ) );
+	if( className != "LP_AtUniverse" )
+	{
+		throw IECore::Exception( boost::str( boost::format( "%1% is not an AtUniverse" ) % className ) );
+	}
+
+	object ctypes = import( "ctypes" );
+	object address = ctypes.attr( "addressof" )( object( universe.attr( "contents" ) ) );
+
+	return reinterpret_cast<AtUniverse *>( extract<size_t>( address )() );
+}
+
+list shaderNetworkAlgoConvert( const IECoreScene::ShaderNetwork *shaderNetwork, object universe, const std::string &name )
+{
+	std::vector<AtNode *> nodes = ShaderNetworkAlgo::convert( shaderNetwork, pythonObjectToAtUniverse( universe ), name );
 	list result;
 	for( const auto &n : nodes )
 	{
