@@ -39,10 +39,12 @@
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/ImageGadget.h"
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Style.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
@@ -220,31 +222,44 @@ void AnnotationsGadget::renderLayer( Layer layer, const Style *style, RenderReas
 		}
 
 		const Box2f b = nodeFrame( ga.first );
+
+		V2f bookmarkIconPos( b.min.x, b.max.y );
+		V2f annotationOrigin( b.max.x + g_offset, b.max.y );
+		if( ga.first->node() == ga.first->node()->ancestor<ScriptNode>()->getFocus() )
+		{
+			const StandardNodeGadget *standardNodeGadget = runTimeCast<const StandardNodeGadget>( ga.first );
+			if( standardNodeGadget )
+			{
+				float fbw = standardNodeGadget->focusBorderWidth();
+				bookmarkIconPos += V2f( -fbw, fbw );
+				annotationOrigin += V2f( fbw, 0.0f );
+			}
+		}
+
 		if( annotations.bookmarked )
 		{
-			style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), bookmarkTexture() );
+			style->renderImage( Box2f( bookmarkIconPos - V2f( 1.0 ), bookmarkIconPos + V2f( 1.0 ) ), bookmarkTexture() );
 		}
 
 		if( annotations.numericBookmark.string().size() )
 		{
 			if( !annotations.bookmarked )
 			{
-				style->renderImage( Box2f( V2f( b.min.x - 1.0, b.max.y - 1.0 ), V2f( b.min.x + 1.0, b.max.y + 1.0 ) ), numericBookmarkTexture() );
+				style->renderImage( Box2f( bookmarkIconPos - V2f( 1.0 ), bookmarkIconPos + V2f( 1.0 ) ), numericBookmarkTexture() );
 			}
 
 			const Box3f textBounds = style->textBound( Style::LabelText, annotations.numericBookmark.string() );
 
-			const Imath::Color4f textColor( 1.0f );
+			const Imath::Color4f textColor( 0.8f );
 			glPushMatrix();
-				IECoreGL::glTranslate( V2f( b.min.x + 1.0 - textBounds.size().x * 0.5, b.max.y - textBounds.size().y * 0.5 - 0.7 ) );
-				style->renderText( Style::BodyText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
+				IECoreGL::glTranslate( V2f( bookmarkIconPos.x - 0.9 - textBounds.size().x, bookmarkIconPos.y - textBounds.size().y * 0.5 - 0.2 ) );
+				style->renderText( Style::LabelText, annotations.numericBookmark.string(), Style::NormalState, &textColor );
 			glPopMatrix();
 		}
 
-		V2f origin( b.max.x + g_offset, b.max.y );
 		for( const auto &a : annotations.standardAnnotations )
 		{
-			origin = style->renderAnnotation( origin, a.text(), Style::NormalState, a.colorData ? &a.color() : nullptr );
+			annotationOrigin = style->renderAnnotation( annotationOrigin, a.text(), Style::NormalState, a.colorData ? &a.color() : nullptr );
 		}
 	}
 }

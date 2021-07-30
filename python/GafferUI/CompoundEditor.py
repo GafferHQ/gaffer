@@ -1495,13 +1495,14 @@ class _PinningWidget( _Frame ) :
 		row = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
 		with row :
 
+			self.__bookmarkNumber = GafferUI.Label( horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
+			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+
 			self.__icon = GafferUI.Button( hasFrame=False, highlightOnOver=False )
 			self.__icon._qtWidget().setFixedHeight( 13 )
 			self.__icon._qtWidget().setFixedWidth( 13 )
 			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
-			self.__bookmarkNumber = GafferUI.Label( horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
-			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
 			self.__menuButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False, highlightOnOver=False )
 			self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
