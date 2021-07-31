@@ -314,8 +314,6 @@
 		'minus',
 		'navigationArrow',
 		'nodeSetDriverNodeSelection',
-		'nodeSetDriverNodeSet',
-		'nodeSetDrivertestMode',
 		'nodeSetNumericBookmarkSet',
 		'nodeSetStandardSet',
 		'plugAdder',
