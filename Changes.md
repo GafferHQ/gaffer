@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.2.1)
 ========
 
+Features
+--------
+
+- Drag and drop : Added <key>G</key> hotkey for starting and stopping drags without using buttons on the mouse or stylus. This can be used for any drag and drop operation in Gaffer, including making connections in the GraphEditor. Press <key>G</key> to start a drag, and press <key>G</key> again to drop.
+
 Improvements
 ------------
 
