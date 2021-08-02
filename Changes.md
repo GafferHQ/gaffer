@@ -19,6 +19,11 @@ Fixes
 
 - ImageReader/ImageWriter : The `name`, `oiio:subimagename` and `oiio:subimages` metadata items are now ignored because they are ambiguous, and caused ImageWriter to write incorrect images. The same information is available in Gaffer via the image's `channelNames`.
 
+Fixes
+-----
+
+- GraphEditor : Fixed bug in <key>D</key> shortcut.
+
 API
 ---
 
