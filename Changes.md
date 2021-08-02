@@ -33,6 +33,14 @@ Breaking Changes
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
 - ArnoldOptions : Removed support for the `ai:ignore_motion_blur` option. Turn off the `sampleMotion` option using a StandardOptions node instead.
 
+0.60.x.x (relative to 0.60.2.1)
+========
+
+API
+---
+
+- PlugLayout : Added a warning for plugs that reference activators that have not been registered.
+
 0.60.2.1 (relative to 0.60.2.0)
 ========
 
