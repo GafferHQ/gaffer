@@ -54,7 +54,7 @@ class GAFFER_API Animation : public ComputeNode
 
 	public :
 
-		Animation( const std::string &name=defaultName<Animation>() );
+		explicit Animation( const std::string &name=defaultName<Animation>() );
 		~Animation() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
@@ -62,28 +62,183 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines the method used to interpolate between a key and the next one.
 		enum class Interpolation
 		{
-			Constant,
+			Constant = 0,
 			ConstantNext,
 			Linear,
-			/// \todo Add Smooth, implemented as
-			/// bezier curves using V2f in and out
-			/// tangents on each key.
+			Cubic,
+			Bezier
 		};
 
+		/// Defines direction relative to a key.
+		enum class Direction
+		{
+			In = 0,
+			Out
+		};
+
+		/// Defines whether slope and scale are tied.
+		enum class TieMode
+		{
+			Manual = 0,		/// Slope and scale are not tied
+			Slope,			/// Slope is tied, scale is not tied
+			Scale			/// Slope and scale are tied
+		};
+
+		/// Get the default interpolation mode.
 		static Interpolation defaultInterpolation();
 
+		/// Get the default tie mode.
+		static TieMode defaultTieMode();
+
+		/// Get the opposite direction to the specified direction
+		static Direction opposite( Direction direction );
+
+		/// Get the default slope
+		static double defaultSlope();
+
+		/// Get the default Scale
+		static double defaultScale();
+
+		class Key;
 		class CurvePlug;
+		class Interpolator;
+
+		// Defines a tangent
+		class Tangent : private boost::noncopyable
+		{
+			public:
+
+				~Tangent();
+
+				/// Get parent key.
+				Key& key();
+				/// Get parent key. (const access)
+				const Key& key() const;
+
+				/// Get the direction of the tangent
+				Direction direction() const;
+
+				/// Get tangent's position.
+				/// If relative is true the position is relative to the parent key's position.
+				/// The position returned will incorporate the results of getSlope() and getScale() so that if the tangent's key is parented
+				/// to a curve and slopeIsConstrained() returns true and/or scaleIsConstrained() returns true, the constrained values will be used.
+				/// The position will be the same as the parent key when there is no adjacent key in the direction of the tangent.
+				Imath::V2d getPosition( bool relative ) const;
+				/// \undoable
+				/// Set tangent's position.
+				/// If relative is true the position is relative to the parent key's position.
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true and/or scaleIsConstrained() returns true this
+				/// function will ensure the constrained values for slope and/or scale are maintained.
+				/// The position cannot be set if there is no adjacent key in the direction of the tangent.
+				void setPosition( const Imath::V2d& position, bool relative );
+				/// \undoable
+				/// Set tangent's position whilst maintaining specified slope.
+				/// If relative is true the position is relative to the parent key's position.
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true and/or scaleIsConstrained() returns true this
+				/// function will ensure the constrained values for slope and/or scale are maintained.
+				/// The position cannot be set if there is no adjacent key in the direction of the tangent.
+				void setPositionWithSlope( const Imath::V2d& position, bool relative, double slope );
+				/// \undoable
+				/// Set tangent's position whilst maintaining specified scale.
+				/// If relative is true the position is relative to the parent key's position.
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true and/or scaleIsConstrained() returns true this
+				/// function will ensure the constrained values for slope and/or scale are maintained.
+				/// The position cannot be set if there is no adjacent key in the direction of the tangent.
+				void setPositionWithScale( const Imath::V2d& position, bool relative, double scale );
+
+				/// Get tangent's slope.
+				/// The slope is in range [-inf,+inf]
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true this function will return the constrained slope.
+				double getSlope() const;
+				/// \undoable
+				/// Set tangent's slope.
+				/// The slope is in range [-inf,+inf]
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true this function will have no effect.
+				/// If the tangent's key has tieMode set to either Slope or Scale the opposite tangents slope will be set to the same value.
+				void setSlope( double slope );
+				/// \undoable
+				/// Set tangent's slope whilst maintaining specified scale.
+				/// The slope is in range [-inf,+inf]
+				/// If the tangent's key has tieMode set to either Slope or Scale the opposite tangent's slope will be set to the same value
+				void setSlopeWithScale( double slope, double scale );
+
+				/// Get tangent's scale.
+				/// The scale is multiplied by the span width to derive the tangent's length.
+				/// If the tangent's key is parented to a curve and scaleIsConstrained() returns true this function will return the constrained scale.
+				double getScale() const;
+				/// \undoable
+				/// Set tangent's scale.
+				/// The scale is multiplied by the span width to derive the tangent's length.
+				/// If the tangent's key is parented to a curve and scaleIsConstrained() returns true this function will have no effect.
+				/// If the tangent's key has tieMode set to Scale the opposite tangent's scale will be kept proportional.
+				void setScale( double scale );
+
+				/// Is slope currently constrained by interpolation mode.
+				bool slopeIsConstrained() const;
+				/// Is scale currently constrained by interpolation mode.
+				bool scaleIsConstrained() const;
+
+			private:
+
+				friend class CurvePlug;
+				friend class Key;
+				friend class Interpolator;
+
+				/// \undoable
+				void setSlope( double slope, bool );
+				/// \undoable
+				void setScale( double scale, bool );
+
+				void update();
+				void positionToRelative( Imath::V2d&, bool ) const;
+
+				Tangent( Key& key, Direction direction, double slope, double scale );
+
+				Key* m_key;
+				Direction m_direction;
+				double m_dt;
+				double m_dv;
+				double m_slope;
+				double m_scale;
+		};
 
 		/// Defines a single keyframe.
 		class Key : public IECore::RunTimeTyped
 		{
-
 			public :
 
-				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Animation::defaultInterpolation() );
+				/// Construct a key with specified time, value and interpolation. Tangent slope, scale and tie mode can also be specified
+				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Animation::defaultInterpolation(),
+					double inSlope = Animation::defaultSlope(), double inScale = Animation::defaultScale(),
+					double outSlope = Animation::defaultSlope(), double outScale = Animation::defaultScale(),
+					TieMode tieMode = Animation::defaultTieMode() );
 				~Key() override;
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
+
+				// Get in tangent
+				Tangent& tangentIn();
+				// Get in tangent (const access)
+				const Tangent& tangentIn() const;
+				// Get out tangent
+				Tangent& tangentOut();
+				// Get out tangent (const access)
+				const Tangent& tangentOut() const;
+				// Get tangent in specified direction
+				Tangent& tangent( Direction direction );
+				// Get tangent in specified direction (const access)
+				const Tangent& tangent( Direction direction ) const;
+
+				/// Get current tie mode of key.
+				TieMode getTieMode() const;
+				/// Set tie mode of key. If tie mode is Slope or Scale the slope of the in and
+				/// out tangents with be made equal. If only one tangent's slope is constrained
+				/// or protrudes beyond the start or end of the parent curve, the opposite tangent's
+				/// slope will be preserved, otherwise the slopes are averaged. If tie mode is Scale
+				/// the ratio between the in and out tangent's scales is captured and changes to
+				/// either tangent's scale preserve the proportionality of the opposite tangent's scale.
+				/// \undoable
+				void setTieMode( TieMode mode );
 
 				/// Get current time of key.
 				float getTime() const;
@@ -109,12 +264,24 @@ class GAFFER_API Animation : public ComputeNode
 				/// Is the key currently active? The key is considered inactive whilst unparented.
 				bool isActive() const;
 
+				/// Get parent curve.
 				CurvePlug *parent();
+				/// Get parent curve (const access).
 				const CurvePlug *parent() const;
 
 			private :
 
 				friend class CurvePlug;
+				friend class Tangent;
+
+				bool tieSlopeActive() const;
+				bool tieScaleActive() const;
+				void ensureTieMode();
+
+				Key *nextKey();
+				Key *prevKey();
+				const Key *nextKey() const;
+				const Key *prevKey() const;
 
 				void throwIfStateNotAsExpected( const CurvePlug*, bool, float ) const;
 
@@ -134,11 +301,14 @@ class GAFFER_API Animation : public ComputeNode
 
 				Hook m_hook;
 				CurvePlug *m_parent;
+				Tangent m_in;
+				Tangent m_out;
 				float m_time;
 				float m_value;
-				Interpolation m_interpolation;
+				Interpolator* m_interpolator;
+				double m_tieScaleRatio;
+				TieMode m_tieMode;
 				bool m_active;
-
 		};
 
 		IE_CORE_DECLAREPTR( Key )
@@ -156,7 +326,7 @@ class GAFFER_API Animation : public ComputeNode
 
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Animation::CurvePlug, AnimationCurvePlugTypeId, Gaffer::ValuePlug );
 
-				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
+				explicit CurvePlug( const std::string &name = defaultName<CurvePlug>(), Plug::Direction direction = Plug::In, unsigned flags = Plug::Default );
 				~CurvePlug() override;
 
 				typedef boost::signal< void ( CurvePlug*, Key* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeySignal;
@@ -166,6 +336,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyTimeChangedSignal();
 				CurvePlugKeySignal& keyValueChangedSignal();
 				CurvePlugKeySignal& keyInterpolationChangedSignal();
+				CurvePlugKeySignal& keyTieModeChangedSignal();
 
 				/// Adds specified key to curve, if key is parented to another curve or already parented
 				/// to the curve and inactive it is removed from its parent curve. If the key has already
@@ -255,6 +426,7 @@ class GAFFER_API Animation : public ComputeNode
 			private :
 
 				friend class Key;
+				friend class Tangent;
 				friend KeyIterator;
 				friend ConstKeyIterator;
 
@@ -284,10 +456,13 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyTimeChangedSignal;
 				CurvePlugKeySignal m_keyValueChangedSignal;
 				CurvePlugKeySignal m_keyInterpolationChangedSignal;
+				CurvePlugKeySignal m_keyTieModeChangedSignal;
 		};
 
 		/// convert enums to strings
 		static const char* toString( Interpolation interpolation );
+		static const char* toString( Direction direction );
+		static const char* toString( TieMode mode );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 

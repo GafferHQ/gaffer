@@ -68,6 +68,25 @@ using namespace Imath;
 
 namespace
 {
+void tieModeToBools( const Animation::TieMode mode, bool& tieSlope, bool& tieScale )
+{
+	tieSlope = false;
+	tieScale = false;
+	switch( mode )
+	{
+		case Animation::TieMode::Manual:
+			break;
+		case Animation::TieMode::Slope:
+			tieSlope = true;
+			break;
+		case Animation::TieMode::Scale:
+			tieSlope = true;
+			tieScale = true;
+			break;
+		default:
+			break;
+	}
+}
 
 /// Aliases that define the intended use of each
 /// Gadget::Layer by the AnimationGadget components.
@@ -450,6 +469,9 @@ AnimationGadget::AnimationGadget()
 , m_editablePlugs( new StandardSet() )
 , m_selectedKeys( new AnimationGadget::SelectionSet() )
 , m_originalKeyValues()
+, m_dragTangent( nullptr, Animation::Direction::In )
+, m_dragTangentOriginalSlope( 0.0 )
+, m_dragTangentOriginalScale( 0.0 )
 , m_dragStartPosition( 0 )
 , m_lastDragPosition( 0 )
 , m_dragMode( DragMode::None )
@@ -457,6 +479,7 @@ AnimationGadget::AnimationGadget()
 , m_snappingClosestKey( nullptr )
 , m_highlightedKey( nullptr )
 , m_highlightedCurve( nullptr )
+, m_highlightedTangent( nullptr, Animation::Direction::In )
 , m_mergeGroupId( 0 )
 , m_keyPreview( false )
 , m_keyPreviewLocation( 0 )
@@ -569,12 +592,61 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 		{
 			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped );
 
+			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
+			const Imath::Color4f color4( color3.x, color3.y, color3.z, 1.0 );
+
+			Animation::Key* previousKey = 0;
+			V2f previousKeyPosition = V2f( 0 );
+			bool previousKeySelected = false;
 			for( Animation::Key &key : *curvePlug )
 			{
 				bool isHighlighted = ( & key == m_highlightedKey.get() ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ) );
 				bool isSelected = m_selectedKeys->contains( &key );
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
+
+				// draw the tangents
+				//
+				// NOTE : only draw if they are used and key or adjacent key is selected
+
+				if( previousKey )
+				{
+
+					const Animation::Tangent& in = key.tangentIn();
+					const Animation::Tangent& out = previousKey->tangentOut();
+
+					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					{
+						bool tieSlope, tieScale;
+						tieModeToBools( previousKey->getTieMode(), tieSlope, tieScale );
+						const V2d outPosKey = out.getPosition( false );
+						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						const bool isOutHighlighted = ( ( m_highlightedTangent.first == previousKey ) &&  m_highlightedTangent.second == Animation::Direction::Out );
+						const double outSize = isOutHighlighted ? 4.0 : 2.0;
+						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
+						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
+							tieSlope ? 2.0 : 1.0, &color4 );
+						( tieScale ) ? style->renderSolidRectangle( outBox ) : style->renderRectangle( outBox );
+					}
+
+					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					{
+						bool tieSlope, tieScale;
+						tieModeToBools( key.getTieMode(), tieSlope, tieScale );
+						const V2d inPosKey = in.getPosition( false );
+						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						const bool isInHighlighted = ( ( m_highlightedTangent.first == &key ) &&  m_highlightedTangent.second == Animation::Direction::In );
+						const double inSize = isInHighlighted ? 4.0 : 2.0;
+						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
+						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
+							tieSlope ? 2.0 : 1.0, &color4 );
+						( tieScale ) ? style->renderSolidRectangle( inBox ) : style->renderRectangle( inBox );
+					}
+				}
+
+				previousKey = & key;
+				previousKeyPosition = keyPosition;
+				previousKeySelected = isSelected;
 			}
 		}
 		break;
@@ -716,7 +788,18 @@ void AnimationGadget::plugDirtied( Gaffer::Plug *plug )
 
 std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	if( const Animation::ConstKeyPtr key = keyAt( line ) )
+	std::pair< Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction > keyTangent = tangentAt( line );
+	if( keyTangent.first )
+	{
+		const Gaffer::Animation::Tangent& tangent = keyTangent.first->tangent( keyTangent.second );
+		std::ostringstream os;
+		os.precision( 4 );
+		os << "Direction: " << Gaffer::Animation::toString( tangent.direction() );
+		os << "<br>Slope: " << tangent.getSlope();
+		os << "<br>Scale: " << tangent.getScale();
+		return os.str();
+	}
+	else if( const Animation::ConstKeyPtr key = keyAt( line ) )
 	{
 		const Gaffer::ScriptNode* const scriptNode =
 			IECore::assertedStaticCast< const Gaffer::ScriptNode >( key->parent()->ancestor( (IECore::TypeId) Gaffer::ScriptNodeTypeId ) );
@@ -726,6 +809,7 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 		os << "Frame: " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() );
 		os << "<br>Value: " << key->getValue();
 		os << "<br>Interpolation: " << Animation::toString( key->getInterpolation() );
+		os << "<br>Tie Mode: " << Animation::toString( key->getTieMode() );
 		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )
@@ -851,6 +935,66 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	}
 }
 
+void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
+{
+	if( !( m_dragTangent.first ) || ( m_moveAxis == MoveAxis::Undefined ) )
+	{
+		return;
+	}
+
+	// NOTE : check tangent usage
+
+	Animation::Tangent& tangent = m_dragTangent.first->tangent( m_dragTangent.second );
+
+	if( ( m_moveAxis == MoveAxis::X ) && tangent.scaleIsConstrained() )
+	{
+		return;
+	}
+	else if( ( m_moveAxis == MoveAxis::Y ) && tangent.slopeIsConstrained() )
+	{
+		return;
+	}
+	else if( ( m_moveAxis == MoveAxis::Both ) && tangent.scaleIsConstrained() && tangent.slopeIsConstrained() )
+	{
+		return;
+	}
+
+	// NOTE : create undo scope and move the tangent
+
+	auto first = m_editablePlugs->member( 0 );
+	ScriptNode *scriptNode = IECore::runTimeCast<Animation::CurvePlug>( first )->ancestor<ScriptNode>();
+	UndoScope undoEnabled( scriptNode, UndoScope::Enabled, undoMergeGroup() );
+
+	switch( m_moveAxis )
+	{
+		case MoveAxis::X:
+			tangent.setPositionWithSlope( currentDragOffset, false, m_dragTangentOriginalSlope );
+			break;
+		case MoveAxis::Y:
+			tangent.setPositionWithScale( currentDragOffset, false, m_dragTangentOriginalScale );
+			break;
+		case MoveAxis::Both:
+			if( tangent.scaleIsConstrained() )
+			{
+				tangent.setPositionWithScale( currentDragOffset, false, m_dragTangentOriginalScale );
+			}
+			else
+			if( tangent.slopeIsConstrained() )
+			{
+				tangent.setPositionWithSlope( currentDragOffset, false, m_dragTangentOriginalSlope );
+			}
+			else
+			{
+				tangent.setPosition( currentDragOffset, false );
+			}
+			break;
+		case MoveAxis::Undefined:
+		default:
+			// NOTE : do nothing unless move axis is defined
+			break;
+	};
+}
+
 void AnimationGadget::frame()
 {
 	Box3f b;
@@ -972,7 +1116,6 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 		if( controlHeld ) // insert a keyframe
 		{
 			m_selectedKeys->clear();
-
 			insertKeyframe( curvePlug.get(), i.x );
 			++m_mergeGroupId;
 			m_keyPreview = false;
@@ -1024,7 +1167,33 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	case ButtonEvent::Left :
 	{
-		if( Animation::KeyPtr key = keyAt( event.line ) )
+		std::pair<Animation::KeyPtr, Animation::Direction> tangent = tangentAt( event.line );
+
+		if( tangent.first )
+		{
+			Animation::Tangent& t = tangent.first->tangent( tangent.second );
+			m_dragTangentOriginalSlope = t.getSlope();
+			m_dragTangentOriginalScale = t.getScale();
+			m_dragTangent = tangent;
+			m_dragMode = DragMode::MoveTangent;
+			if(
+				( event.modifiers & DragDropEvent::Control ) &&
+				( ( event.modifiers & DragDropEvent::Shift ) == DragDropEvent::None ) )
+			{
+				m_moveAxis = MoveAxis::Y;
+			}
+			else if(
+				( event.modifiers & DragDropEvent::Shift ) &&
+				( ( event.modifiers & DragDropEvent::Control ) == DragDropEvent::None ) )
+			{
+				m_moveAxis = MoveAxis::X;
+			}
+			else
+			{
+				m_moveAxis = MoveAxis::Both;
+			}
+		}
+		else if( Animation::KeyPtr key = keyAt( event.line ) )
 		{
 			// If dragging an unselected Key, the assumption is that only this Key
 			// should be moved. On the other hand, if the key was selected, we will
@@ -1119,9 +1288,18 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		m_frameIndicatorPreviewFrame = boost::none;
 	}
 
-	if( Animation::KeyPtr key = keyAt( event.line ) )
+	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
+
+	if( tangent.first )
+	{
+		m_highlightedTangent = tangent;
+		m_highlightedKey = nullptr;
+		m_highlightedCurve = nullptr;
+	}
+	else if( Animation::KeyPtr key = keyAt( event.line ) )
 	{
 		m_highlightedKey = key;
+		m_highlightedTangent.first = nullptr;
 		m_highlightedCurve = nullptr;
 	}
 	else
@@ -1129,6 +1307,11 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		if( m_highlightedKey )
 		{
 			m_highlightedKey = nullptr;
+		}
+
+		if( m_highlightedTangent.first )
+		{
+			m_highlightedTangent.first = nullptr;
 		}
 
 		if( Animation::CurvePlugPtr curvePlug = curveAt( event.line ) )
@@ -1202,7 +1385,10 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 				viewportGadget->setDragTracking( ViewportGadget::DragTracking::YDragTracking );
 			}
 		}
+	}
 
+	if( m_dragMode == DragMode::Moving && ! m_selectedKeys->empty() )
+	{
 		if( m_moveAxis != MoveAxis::Y && !m_snappingClosestKey )
 		{
 			// determine position of selected keyframe that is closest to pointer
@@ -1225,6 +1411,11 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		}
 
 		moveKeyframes( V2f( i.x, i.y ) );
+	}
+
+	if( m_dragMode == DragMode::MoveTangent && m_dragTangent.first )
+	{
+		moveTangent( V2f( i.x, i.y ) );
 	}
 
 	if( m_dragMode == DragMode::MoveFrame )
@@ -1275,6 +1466,14 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		removeInactiveKeyframes();
 		m_originalKeyValues.clear();
+		m_mergeGroupId++;
+		break;
+	}
+	case DragMode::MoveTangent :
+	{
+		m_dragTangent.first.reset();
+		m_dragTangentOriginalSlope = 0.0;
+		m_dragTangentOriginalScale = 0.0;
 		m_mergeGroupId++;
 		break;
 	}
@@ -1426,6 +1625,87 @@ Animation::ConstKeyPtr AnimationGadget::keyAt( const IECore::LineSegment3f &posi
 	return keys[selection[0].name-1];
 }
 
+std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> AnimationGadget::tangentAt( const IECore::LineSegment3f &position )
+{
+	const std::pair<Animation::ConstKeyPtr, Animation::Direction> result =
+		static_cast< const AnimationGadget* >( this )->tangentAt( position );
+	return std::pair<Animation::KeyPtr, Animation::Direction>(
+		const_cast< Animation::Key* >( result.first.get() ), result.second );
+}
+
+std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> AnimationGadget::tangentAt( const IECore::LineSegment3f &position ) const
+{
+	std::pair<Animation::ConstKeyPtr, Animation::Direction> result( 0, Animation::Direction::In );
+
+	std::vector<IECoreGL::HitRecord> selection;
+	std::vector<Animation::ConstKeyPtr> keys;
+
+	{
+		ViewportGadget::SelectionScope selectionScope( position, this, selection, IECoreGL::Selector::IDRender );
+		IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+		const Style *style = this->style();
+		style->bind();
+		GLuint name = 0;
+
+		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+		ViewportGadget::RasterScope rasterScope( viewportGadget );
+
+		for( auto &member : *m_editablePlugs )
+		{
+			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &member );
+
+			++name; // NOTE : Name 0 is invalid, so start at 1, for each curve this skips in tangent of first key
+
+			const Animation::Key* previousKey = 0;
+			bool previousKeySelected = false;
+			for( Animation::Key &key : *curvePlug )
+			{
+				const bool isSelected = m_selectedKeys->contains( &key );
+				keys.emplace_back( &key );
+
+				if( previousKey )
+				{
+					const Animation::Tangent& in = key.tangentIn();
+					const Animation::Tangent& out = previousKey->tangentOut();
+
+					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					{
+						const V2d outPosKey = out.getPosition( false );
+						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						selector->loadName( name );
+						style->renderSolidRectangle( Box2f( outPosRas - V2f( 4.0 ), outPosRas + V2f( 4.0 ) ) ); // slightly bigger for easier selection
+					}
+
+					++name;
+
+					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					{
+						const V2d inPosKey = in.getPosition( false );
+						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						selector->loadName( name );
+						style->renderSolidRectangle( Box2f( inPosRas - V2f( 4.0 ), inPosRas + V2f( 4.0 ) ) ); // slightly bigger for easier selection
+					}
+
+					++name;
+				}
+
+				previousKey = & key;
+				previousKeySelected = isSelected;
+			}
+
+			++name; // NOTE : for each curve this skips out tangent of last key
+		}
+	}
+
+	if( ! selection.empty() )
+	{
+		result.first = keys[ ( selection[0].name ) / 2 ];
+		result.second = static_cast< Animation::Direction >( ( selection[0].name ) % 2 );
+	}
+
+	return result;
+}
+
 Animation::CurvePlugPtr AnimationGadget::curveAt( const IECore::LineSegment3f &position )
 {
 	Animation::ConstCurvePlugPtr c = const_cast<const AnimationGadget*>( this )->curveAt( position );
@@ -1541,9 +1821,6 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 		if( previousKey )
 		{
-			// \todo: needs tangent computation/hand-off as soon as we support more interpolation modes
-			//        consider passing interpolation into renderCurveSegment to handle all drawing there
-
 			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
 			switch( previousKey->getInterpolation() )
