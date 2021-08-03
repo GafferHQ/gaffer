@@ -87,6 +87,17 @@ DotNodeGadget::~DotNodeGadget()
 {
 }
 
+Box3f DotNodeGadget::bound() const
+{
+	// Take base class bound, but make it square, since we always render as a perfect circle
+	Box3f b = StandardNodeGadget::bound();
+	const V3f s = b.size();
+	V3f c = b.center();
+	const float radius = std::min( s.x, s.y ) / 2.0f;
+	V3f offset( radius, radius, 0.0f );
+	return Box3f( c - offset, c + offset );
+}
+
 void DotNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	if( layer != GraphLayer::Nodes )
