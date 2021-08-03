@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.6.0)
 ========
 
+Improvements
+------------
+
+- SubTree : Added `inheritTransform`, `inheritAttributes` and `inheritSetMembership` plugs.
+
 Fixes
 -----
 

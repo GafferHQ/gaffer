@@ -79,7 +79,39 @@ Gaffer.Metadata.registerNode(
 			/street/house instead.
 			""",
 
-		]
+		],
+
+		"inheritTransform" : [
+
+			"description",
+			"""
+			Maintains the subtree's world-space position by applying the `root`
+			location's full transform to the subtree's children.
+			"""
+
+		],
+
+		"inheritAttributes" : [
+
+			"description",
+			"""
+			Maintains the subtree's attributes (including shader assignments) by
+			applying the `root` location's full attributes to the subtree's
+			children.
+			"""
+
+		],
+
+		"inheritSetMembership" : [
+
+			"description",
+			"""
+			Maintains the subtree's membership in sets by transferring the
+			`root` location's memberships to the subtree's children.
+			"""
+
+
+		],
 
 	}
 

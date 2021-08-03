@@ -65,6 +65,15 @@ class GAFFERSCENE_API SubTree : public SceneProcessor
 		Gaffer::BoolPlug *includeRootPlug();
 		const Gaffer::BoolPlug *includeRootPlug() const;
 
+		Gaffer::BoolPlug *inheritTransformPlug();
+		const Gaffer::BoolPlug *inheritTransformPlug() const;
+
+		Gaffer::BoolPlug *inheritAttributesPlug();
+		const Gaffer::BoolPlug *inheritAttributesPlug() const;
+
+		Gaffer::BoolPlug *inheritSetMembershipPlug();
+		const Gaffer::BoolPlug *inheritSetMembershipPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
