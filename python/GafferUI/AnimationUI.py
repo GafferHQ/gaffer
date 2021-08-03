@@ -82,13 +82,19 @@ def __setKey( plug, context ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		curve = Gaffer.Animation.acquire( plug )
-		curve.addKey( Gaffer.Animation.Key( context.getTime(), value ) )
+		time = Gaffer.Animation.Time( context.getTime(), Gaffer.Animation.Time.Units.Seconds )
+		curve.addKey( Gaffer.Animation.Key( time, value ), True )
 
 def __removeKey( plug, key ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		curve = Gaffer.Animation.acquire( plug )
 		curve.removeKey( key )
+
+def __setKeyInterpolator( plug, key, name ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		key.setInterpolator( name )
 
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
@@ -103,27 +109,44 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if Gaffer.Animation.isAnimated( plug ) :
 
 		curve = Gaffer.Animation.acquire( plug )
+		time = Gaffer.Animation.Time( context.getTime(), Gaffer.Animation.Time.Units.Seconds )
 
-		nextKey = curve.nextKey( context.getTime() )
+		nextKey = curve.nextKey( time )
 		menuDefinition.prepend(
 			"/Jump To/Next Key",
 			{
-				"command" : functools.partial( context.setTime, nextKey.getTime() if nextKey is not None else 0 ),
+				"command" : functools.partial( context.setTime, nextKey.getTime().getSeconds() if nextKey is not None else 0 ),
 				"active" : nextKey is not None,
 			}
 		)
 
-		previousKey = curve.previousKey( context.getTime() )
+		previousKey = curve.previousKey( time )
 		menuDefinition.prepend(
 			"/Jump To/Previous Key",
 			{
-				"command" : functools.partial( context.setTime, previousKey.getTime() if previousKey is not None else 0 ),
+				"command" : functools.partial( context.setTime, previousKey.getTime().getSeconds() if previousKey is not None else 0 ),
 				"active" : previousKey is not None,
 			}
 		)
 
-		closestKey = curve.closestKey( context.getTime() )
-		closestKeyOnThisFrame = closestKey is not None and math.fabs( context.getTime() - closestKey.getTime() ) * context.getFramesPerSecond() < 0.5
+		spanKey = curve.getKey( time ) or previousKey
+		spanKeyOnThisFrame = spanKey is not None
+		for name in reversed( Gaffer.Animation.Interpolator.getFactory().getNames() ) :
+			menuDefinition.prepend(
+				"/Set Interpolator/%s" % ( name ),
+				{
+					"command" : functools.partial(
+						__setKeyInterpolator,
+						plug,
+						spanKey,
+						name
+					),
+					"active" : bool( spanKeyOnThisFrame ) and plugValueWidget._editable( canEditAnimation = True ),
+				}
+			)
+
+		closestKey = curve.closestKey( time )
+		closestKeyOnThisFrame = closestKey is not None and math.fabs( ( time - closestKey.getTime() ).getSeconds() ) * context.getFramesPerSecond() < 0.5
 		menuDefinition.prepend(
 			"/Remove Key",
 			{

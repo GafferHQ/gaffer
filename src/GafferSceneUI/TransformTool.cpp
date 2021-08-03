@@ -1252,7 +1252,7 @@ bool TransformTool::keyPress( const GafferUI::KeyEvent &event )
 					{
 						const float value = plug->getValue();
 						Animation::CurvePlug *curve = Animation::acquire( plug.get() );
-						curve->addKey( new Animation::Key( s.context()->getTime(), value ) );
+						curve->addKey( new Animation::Key( Animation::Time( s.context()->getTime(), Animation::Time::Units::Seconds ), value ), true );
 					}
 				}
 			}
@@ -1286,7 +1286,7 @@ void TransformTool::setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float
 	if( Animation::isAnimated( plug ) )
 	{
 		Animation::CurvePlug *curve = Animation::acquire( plug );
-		curve->addKey( new Animation::Key( time, value ) );
+		curve->addKey( new Animation::Key( Animation::Time( time, Animation::Time::Units::Seconds ), value ), true );
 	}
 	else
 	{

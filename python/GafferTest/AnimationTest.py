@@ -46,12 +46,12 @@ class AnimationTest( GafferTest.TestCase ) :
 	def testKey( self ) :
 
 		k = Gaffer.Animation.Key()
-		self.assertEqual( k.getTime(), 0 )
+		self.assertEqual( k.getFloatTime(), 0 )
 		self.assertEqual( k.getValue(), 0 )
-		self.assertEqual( k.getType(), Gaffer.Animation.Type.Linear )
+		self.assertEqual( k.getType(), Gaffer.Animation.Type.Unknown )
 
 		k = Gaffer.Animation.Key( 1, 2, Gaffer.Animation.Type.Step )
-		self.assertEqual( k.getTime(), 1 )
+		self.assertEqual( k.getFloatTime(), 1 )
 		self.assertEqual( k.getValue(), 2 )
 		self.assertEqual( k.getType(), Gaffer.Animation.Type.Step )
 
@@ -61,7 +61,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		k.setValue( 1 )
 		k.setType( Gaffer.Animation.Type.Linear )
 
-		self.assertEqual( k.getTime(), 2 )
+		self.assertEqual( k.getFloatTime(), 2 )
 		self.assertEqual( k.getValue(), 1 )
 		self.assertEqual( k.getType(), Gaffer.Animation.Type.Linear )
 
@@ -270,9 +270,9 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
-		curve.addKey( Gaffer.Animation.Key( 0, 0 ) )
-		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Linear ) )
-		curve.addKey( Gaffer.Animation.Key( 2, 2, Gaffer.Animation.Type.Step ) )
+		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Step ) )
+		curve.addKey( Gaffer.Animation.Key( 2, 2 ) )
 
 		with Gaffer.Context() as c :
 			# Linear interpolation from 0 to 1.
@@ -500,7 +500,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		self.assertTrue( curve.getKey( 1 ) is None )
 		self.assertTrue( curve.getKey( 0 ).isSame( k ) )
-		self.assertEqual( k.getTime(), 0 )
+		self.assertEqual( k.getFloatTime(), 0 )
 		self.assertIn( s["n"]["op1"], { x[0] for x in cs } )
 
 		del cs[:]
@@ -508,7 +508,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		self.assertTrue( curve.getKey( 0 ) is None )
 		self.assertTrue( curve.getKey( 1 ).isSame( k ) )
-		self.assertEqual( k.getTime(), 1 )
+		self.assertEqual( k.getFloatTime(), 1 )
 		self.assertIn( s["n"]["op1"], { x[0] for x in cs } )
 
 		del cs[:]
@@ -516,7 +516,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		self.assertTrue( curve.getKey( 1 ) is None )
 		self.assertTrue( curve.getKey( 0 ).isSame( k ) )
-		self.assertEqual( k.getTime(), 0 )
+		self.assertEqual( k.getFloatTime(), 0 )
 		self.assertIn( s["n"]["op1"], { x[0] for x in cs } )
 
 	def testModifyKeyReplacesExistingKey( self ) :

@@ -39,10 +39,13 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/CatchingSignalCombiner.h"
 
 #include "boost/multi_index/mem_fun.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index_container.hpp"
+
+#include <cstdint>
 
 namespace Gaffer
 {
@@ -60,16 +63,222 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// Defines the method used to interpolate
 		/// between a key and the previous one.
+		/// \deprecated Use Interpolator instead.
 		enum Type
 		{
 			Step,
 			Linear,
-			/// \todo Add Smooth, implemented as
-			/// bezier curves using V2f in and out
-			/// tangents on each key.
+			Unknown
 		};
 
+		/// Defines tick based time
+		class Time
+		{
+
+			public:
+
+				enum class Units
+				{
+					Seconds	= 1,
+					Fps24	= 24,
+					Fps25	= 25,
+					Fps48	= 48,
+					Fps60	= 60,
+					Fps90	= 90,
+					Fps120	= 120,
+					Milli	= 1000,
+					Ticks	= 705600000
+				};
+
+				Time();
+				explicit Time( std::int64_t value );
+				Time( double value, Units units );
+				Time( double value, double units );
+				Time( Time const& rhs );
+				~Time();
+
+				Time& operator  = ( const Time& rhs );
+				Time& operator += ( const Time& rhs );
+				Time& operator -= ( const Time& rhs );
+				Time& operator /= ( const Time& rhs );
+				Time& operator %= ( const Time& rhs );
+
+				std::int64_t getTicks() const;
+				double getReal( double units ) const;
+				double getSeconds() const;
+
+				void snap( double units );
+
+				GAFFER_API friend Time operator +  ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend Time operator -  ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend Time operator /  ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend Time operator %  ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend bool operator == ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend bool operator != ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend bool operator <  ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend bool operator >  ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend bool operator <= ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend bool operator >= ( const Time& lhs, const Time& rhs );
+				GAFFER_API friend Time abs( const Time& rhs );
+
+			private:
+
+				std::int64_t m_ticks;
+		};
+
+		class Key;
 		class CurvePlug;
+
+		// Defines a tangent
+		class Tangent : private boost::noncopyable
+		{
+
+			public:
+
+				enum class Space
+				{
+					Key  = 0,
+					Span = 1
+				};
+
+				enum class Direction
+				{
+					Into = 0,
+					From = 1
+				};
+
+				static Direction opposite( Direction direction );
+
+				static double defaultSlope();
+				static double defaultAccel();
+
+				~Tangent();
+
+				Key& getKey();
+				const Key& getKey() const;
+				Direction getDirection() const;
+
+				Imath::V2d getPosition( Space space, bool relative ) const;
+				/// \undoable
+				void setPosition( Imath::V2d position, Space space, bool relative );
+				/// \undoable
+				/// set position whilst maintaining specified span space slope
+				void setPositionWithSlope( Imath::V2d position, double slope, Space space, bool relative );
+				/// \undoable
+				/// set position whilst maintaining specified span space acceleration
+				void setPositionWithAccel( Imath::V2d position, double accel, Space space, bool relative );
+
+				double getSlope( Space space ) const;
+				/// \undoable
+				void setSlope( double slope, Space space );
+				/// \undoable
+				/// set slope whilst maintaining specified span space acceleration
+				void setSlopeWithAccel( double slope, double accel, Space space );
+
+				double getAccel( Space space ) const;
+				/// \undoable
+				void setAccel( double accel, Space space );
+				/// \undoable
+				/// set acceleration whilst maintaining specified span space slope
+				void setAccelWithSlope( double accel, double slope, Space space );
+
+			private:
+
+				friend class CurvePlug;
+				friend class Key;
+
+				void update();
+				void convertPosition( Imath::V2d&, Space, bool ) const;
+
+				Tangent( Key& key, Direction direction, double slope, double accel );
+
+				Key* m_key;
+				Direction m_direction;
+				double m_slope;
+				double m_accel;
+				double m_dt;
+		};
+
+		/// Defines span interpolator
+		class Interpolator : public IECore::RefCounted
+		{
+
+			public:
+
+				IE_CORE_DECLAREMEMBERPTR( Interpolator )
+
+				enum class Hint
+				{
+					UseSlopeLo = 0,
+					UseSlopeHi = 1,
+					UseAccelLo = 2,
+					UseAccelHi = 3
+				};
+
+				struct Hints
+				{
+					Hints();
+					Hints( Hint hint );
+					Hints( const Hints& rhs );
+					Hints& operator = ( const Hints& rhs );
+					bool test( Hint hint ) const;
+
+					GAFFER_API friend Hints operator | ( const Hints& lhs, const Hints& rhs );
+
+				private:
+
+					std::uint32_t m_bits;
+				};
+
+				struct Factory : public IECore::RefCounted
+				{
+					~Factory();
+
+					bool add( Interpolator::Ptr interpolator );
+					std::uint32_t count();
+					Interpolator* get( const std::string& name );
+					Interpolator* get( std::uint32_t index );
+					Interpolator* getDefault();
+
+					IE_CORE_DECLAREMEMBERPTR( Factory )
+
+				private:
+
+					friend class Interpolator;
+					Factory();
+
+					typedef std::vector< Interpolator::Ptr > Container;
+					Container m_container;
+					Interpolator::Ptr m_default;
+				};
+
+			static Factory& getFactory();
+
+			~Interpolator();
+
+			const std::string& getName() const;
+			Hints getHints() const;
+
+		protected:
+
+			Interpolator( const std::string& name, Hints hints );
+
+		private:
+
+			friend class CurvePlug;
+
+			/// Implement to return interpolated value at specified normalised time
+			virtual double evaluate( double valueLo, double valueHi, const Tangent& tangentLo, const Tangent& tangentHi, double time ) const = 0;
+
+			/// Implement to bisect the span at the specified time, should set new key's value and slope and accel of new tangents
+			virtual void bisect( double valueLo, double valueHi, const Tangent& tangentLo, const Tangent& tangentHi, double time,
+				Key& newKey, Tangent& newTangentLo, Tangent& newTangentHi ) const;
+
+			std::string m_name;
+			Hints m_hints;
+		};
+
+		IE_CORE_DECLAREPTR( Interpolator )
 
 		/// Defines a single keyframe.
 		class Key : public IECore::RefCounted
@@ -77,24 +286,60 @@ class GAFFER_API Animation : public ComputeNode
 
 			public :
 
+				/// \deprecated Use Key(const Time&, float, const std::string&, ... ) instead.
 				Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
+				Key( const Time& time = Time(), float value = 0.0f,
+					const std::string& interpolatorName = Interpolator::getFactory().getDefault()->getName(),
+					double slopeInto = Tangent::defaultSlope(), double slopeFrom = Tangent::defaultSlope(),
+					double accelInto = Tangent::defaultAccel(), double accelFrom = Tangent::defaultAccel(),
+					bool tieSlope = true, bool tieAccel = true );
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 
-				float getTime() const { return m_time; };
-				/// \undoable
-				void setTime( float time );
+				Tangent& getTangent( Tangent::Direction direction );
+				const Tangent& getTangent( Tangent::Direction direction ) const;
 
-				float getValue() const  { return m_value; };
+				bool getTieSlope() const;
+				/// \undoable
+				void setTieSlope( bool tie );
+
+				bool getTieAccel() const;
+				/// \undoable
+				void setTieAccel( bool tie );
+
+				/// \deprecated Use Time getTime() instead.
+				float getFloatTime() const;
+				Time getTime() const;
+				Time getTime( Tangent::Direction direction ) const;
+
+				/// \undoable
+				/// \deprecated Use setTime(const Time&) instead.
+				void setTime( float time );
+				/// \undoable
+				void setTime( const Time& time );
+
+				float getValue() const;
 				/// \undoable
 				void setValue( float value );
 
-				Type getType() const { return m_type; };
+				/// \deprecated Use getInterpolator() instead.
+				Type getType() const;
 				/// \undoable
+				/// \deprecated Use setInterpolator( const std::string& ) instead.
 				void setType( Type type );
+
+				Interpolator* getInterpolator();
+				const Interpolator* getInterpolator() const;
+				/// \undoable
+				void setInterpolator( const std::string& name );
 
 				bool operator == ( const Key &rhs ) const;
 				bool operator != ( const Key &rhs ) const;
+
+				Key *nextKey();
+				Key *prevKey();
+				const Key *nextKey() const;
+				const Key *prevKey() const;
 
 				CurvePlug *parent();
 				const CurvePlug *parent() const;
@@ -102,11 +347,21 @@ class GAFFER_API Animation : public ComputeNode
 			private :
 
 				friend class CurvePlug;
+				friend class Tangent;
+
+				Tangent::Space tieSlopeSpace() const;
+				void tieSlopeAverage( Tangent::Space );
+				bool tieAccelActive( Tangent::Direction ) const;
+				bool tieSlopeActive( Tangent::Direction ) const;
 
 				CurvePlug *m_parent;
-				float m_time;
+				Interpolator* m_interpolator;
+				Tangent m_into;
+				Tangent m_from;
+				Time m_time;
 				float m_value;
-				Type m_type;
+				bool m_tieSlope;
+				bool m_tieAccel;
 
 		};
 
@@ -130,25 +385,76 @@ class GAFFER_API Animation : public ComputeNode
 
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
 
+				typedef boost::signal< void ( CurvePlug* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugSignal;
+				typedef boost::signal< void ( CurvePlug*, Tangent::Direction ), Gaffer::CatchingSignalCombiner< void > > CurvePlugDirectionSignal;
+				typedef boost::signal< void ( CurvePlug*, Key* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeySignal;
+				typedef boost::signal< void ( CurvePlug*, Key*, Tangent::Direction ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeyDirectionSignal;
+
+				CurvePlugSignal& colorChangedSignal();
+				CurvePlugDirectionSignal& extrapolatorChangedSignal();
+				CurvePlugKeySignal& keyAddedSignal();
+				CurvePlugKeySignal& keyRemovedSignal();
+				CurvePlugKeySignal& keyTimeChangedSignal();
+				CurvePlugKeySignal& keyValueChangedSignal();
+				CurvePlugKeySignal& keyTieSlopeChangedSignal();
+				CurvePlugKeySignal& keyTieAccelChangedSignal();
+				CurvePlugKeySignal& keyInterpolatorChangedSignal();
+				CurvePlugKeyDirectionSignal& keyTangentSlopeChangedSignal();
+				CurvePlugKeyDirectionSignal& keyTangentAccelChangedSignal();
+				CurvePlugKeyDirectionSignal& keyTangentAutoModeChangedSignal();
+
 				/// \undoable
-				void addKey( const KeyPtr &key );
+				void addKey( const KeyPtr &key, bool inherit = false );
+
+				/// \undoable
+				Key *insertKey( const Time& time );
+
+				/// \deprecated Use hasKey( const Time& ) instead.
 				bool hasKey( float time ) const;
+				bool hasKey( const Time& time ) const;
+
+				/// \deprecated Use getKey( const Time& ) instead.
 				Key *getKey( float time );
+				Key *getKey( const Time& time );
+
+				/// \deprecated Use getKey( const Time& ) instead.
 				const Key *getKey( float time ) const;
-				// /// \undoable
+				const Key *getKey( const Time& time ) const;
+
+				/// \undoable
 				void removeKey( const KeyPtr &key );
 
+				/// \deprecated Use closestKey( const Time& ) instead.
 				Key *closestKey( float time );
+				Key *closestKey( const Time& time );
+
+				/// \deprecated Use closestKey( const Time& ) instead.
 				const Key *closestKey( float time ) const;
+				const Key *closestKey( const Time& time ) const;
 
+				/// \deprecated Use closestKey( const Time&, float ) instead.
 				Key *closestKey( float time, float maxDistance );
+				Key *closestKey( const Time& time, float maxDistance );
+
+				/// \deprecated Use closestKey( const Time&, float ) instead.
 				const Key *closestKey( float time, float maxDistance ) const;
+				const Key *closestKey( const Time& time, float maxDistance ) const;
 
+				/// \deprecated Use previousKey( const Time& ) instead.
 				Key *previousKey( float time );
-				const Key *previousKey( float time ) const;
+				Key *previousKey( const Time& time );
 
+				/// \deprecated Use previousKey( const Time& ) instead.
+				const Key *previousKey( float time ) const;
+				const Key *previousKey( const Time& time ) const;
+
+				/// \deprecated Use nextKey( const Time& ) instead.
 				Key *nextKey( float time );
+				Key *nextKey( const Time& time );
+
+				/// \deprecated Use nextKey( const Time& ) instead.
 				const Key *nextKey( float time ) const;
+				const Key *nextKey( const Time& time ) const;
 
 				KeyIterator begin();
 				KeyIterator end();
@@ -156,7 +462,9 @@ class GAFFER_API Animation : public ComputeNode
 				ConstKeyIterator begin() const;
 				ConstKeyIterator end() const;
 
+				/// \deprecated Use evaluate( const Time& ) instead.
 				float evaluate( float time ) const;
+				float evaluate( const Time& time ) const;
 
 				/// Output plug for evaluating the curve
 				/// over time - use this as the input to
@@ -167,21 +475,41 @@ class GAFFER_API Animation : public ComputeNode
 			private :
 
 				friend class Key;
+				friend class Tangent;
 				friend KeyIterator;
 				friend ConstKeyIterator;
+
+				Key *firstKey();
+				Key *finalKey();
+				const Key *firstKey() const;
+				const Key *finalKey() const;
 
 				typedef boost::multi_index::multi_index_container<
 					KeyPtr,
 					boost::multi_index::indexed_by<
 						boost::multi_index::ordered_unique<
-							boost::multi_index::const_mem_fun<Key, float, &Key::getTime>
+							boost::multi_index::const_mem_fun<Key, Time, &Key::getTime>
 						>
 					>
 				> Keys;
 
 				Keys m_keys;
-
+				CurvePlugSignal m_colorChangedSignal;
+				CurvePlugDirectionSignal m_extrapolatorChangedSignal;
+				CurvePlugKeySignal m_keyAddedSignal;
+				CurvePlugKeySignal m_keyRemovedSignal;
+				CurvePlugKeySignal m_keyTimeChangedSignal;
+				CurvePlugKeySignal m_keyValueChangedSignal;
+				CurvePlugKeySignal m_keyTieSlopeChangedSignal;
+				CurvePlugKeySignal m_keyTieAccelChangedSignal;
+				CurvePlugKeySignal m_keyInterpolatorChangedSignal;
+				CurvePlugKeyDirectionSignal m_keyTangentSlopeChangedSignal;
+				CurvePlugKeyDirectionSignal m_keyTangentAccelChangedSignal;
+				CurvePlugKeyDirectionSignal m_keyTangentAutoModeChangedSignal;
 		};
+
+		/// Are two double precision values considered equivalent
+		static bool equivalentValues( double a, double b );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 

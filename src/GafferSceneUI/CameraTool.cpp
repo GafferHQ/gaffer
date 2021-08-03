@@ -87,7 +87,7 @@ void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
 	if( Animation::isAnimated( plug ) )
 	{
 		Animation::CurvePlug *curve = Animation::acquire( plug );
-		curve->addKey( new Animation::Key( time, value ) );
+		curve->addKey( new Animation::Key( Animation::Time( time, Animation::Time::Units::Seconds ), value ), true );
 	}
 	else
 	{

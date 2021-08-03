@@ -178,14 +178,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 					if Gaffer.Animation.isAnimated( plug ) :
 						curve = Gaffer.Animation.acquire( plug )
-						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.getContext().getTime() ) ) :
-							curve.addKey(
-								Gaffer.Animation.Key(
-									self.getContext().getTime(),
-									self.__numericWidget.getValue(),
-									Gaffer.Animation.Type.Linear
-								)
-							)
+						time = Gaffer.Animation.Time( self.getContext().getTime(), Gaffer.Animation.Time.Units.Seconds )
+						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( time ) ) :
+							curve.addKey( Gaffer.Animation.Key( time, self.__numericWidget.getValue(), "Bezier" ), True )
 					else :
 						try :
 							plug.setValue( self.__numericWidget.getValue() )

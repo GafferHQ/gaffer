@@ -371,7 +371,8 @@ class Menu( GafferUI.Widget ) :
 		if item.checkBox is not None :
 			qtAction.setCheckable( True )
 			checked = self.__evaluateItemValue( item.checkBox )
-			qtAction.setChecked( checked )
+			if checked is not None :
+				qtAction.setChecked( checked )
 
 		if item.command :
 

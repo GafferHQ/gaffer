@@ -71,16 +71,49 @@ Gaffer::StandardSetPtr editablePlugs( AnimationGadget &a )
 	return a.editablePlugs();
 }
 
+boost::python::list selectedKeys( AnimationGadget &a )
+{
+	boost::python::list keys;
+	for( AnimationGadget::SelectedKeyIterator it = a.selectedKeysBegin(), itEnd = a.selectedKeysEnd(); it != itEnd; ++it )
+	{
+		keys.append( Gaffer::Animation::KeyPtr( &( *it ) ) );
+	}
+	return keys;
+}
+
+struct AnimationGadgetSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, AnimationGadgetPtr g )
+	{
+		try
+		{
+			slot( g );
+		}
+		catch( const error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 } // namespace
 
 void GafferUIModule::bindAnimationGadget()
 {
 
-	scope s = GadgetClass<AnimationGadget>()
+	GadgetClass< AnimationGadget >()
 		.def( init<>() )
 		.def( "visiblePlugs", &visiblePlugs )
 		.def( "editablePlugs", &editablePlugs )
+		.def( "selectedKeys", &selectedKeys )
+		.def( "isSelectedKey", &AnimationGadget::isSelectedKey )
+		.def( "selectedKeysChangedSignal", &AnimationGadget::selectedKeysChangedSignal, return_internal_reference< 1 >() )
 		.def( "setContext", &AnimationGadget::setContext )
+		.def( "onTimeAxis", (bool (AnimationGadget::*)(const Imath::V2i&) const)&AnimationGadget::onTimeAxis )
+		.def( "onValueAxis", (bool (AnimationGadget::*)(const Imath::V2i&) const)&AnimationGadget::onValueAxis )
 		;
 
+	SignalClass< AnimationGadget::AnimationGadgetSignal,
+		DefaultSignalCaller< AnimationGadget::AnimationGadgetSignal >, AnimationGadgetSlotCaller >( "AnimationGadgetSignal" );
 }

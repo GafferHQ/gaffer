@@ -357,7 +357,9 @@ class ValueAdaptor :
 
 		if Gaffer.Animation.isAnimated( plug ) :
 			curve = Gaffer.Animation.acquire( plug )
-			curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Type.Linear ) )
+			if not isinstance( atTime, Gaffer.Animation.Time ):
+				atTime = Gaffer.Animation.Time( atTime, Gaffer.Animation.Time.Units.Seconds )
+			curve.addKey( Gaffer.Animation.Key( atTime, value, "Bezier" ), True )
 		else :
 			plug.setValue( value )
 
