@@ -6,6 +6,11 @@ Improvements
 
 - ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
 
+Fixes
+-----
+
+- ImageReader/ImageWriter : The `name`, `oiio:subimagename` and `oiio:subimages` metadata items are no longer loaded because they are ambiguous, and caused ImageWriter to write incorrect images. The same information is available in Gaffer via the image's `channelNames`.
+
 API
 ---
 
