@@ -66,7 +66,6 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 	protected :
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
-		unsigned layerMask() const override;
 
 	private :
 

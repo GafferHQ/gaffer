@@ -100,31 +100,18 @@ Box3f DotNodeGadget::bound() const
 
 void DotNodeGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
+	StandardNodeGadget::renderLayer( layer, style, reason );
+
 	if( layer != GraphLayer::Nodes )
 	{
-		return NodeGadget::renderLayer( layer, style, reason );
+		if( !m_label.empty() && !isSelectionRender( reason ) )
+		{
+			glPushMatrix();
+			IECoreGL::glTranslate( m_labelPosition );
+			style->renderText( Style::LabelText, m_label );
+			glPopMatrix();
+		}
 	}
-
-	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
-
-	const Box3f b = bound();
-	const V3f s = b.size();
-	style->renderNodeFrame( Box2f( V2f( 0 ), V2f( 0 ) ), std::min( s.x, s.y ) / 2.0f, state, userColor() );
-
-	if( !m_label.empty() && !isSelectionRender( reason ) )
-	{
-		glPushMatrix();
-		IECoreGL::glTranslate( m_labelPosition );
-		style->renderText( Style::LabelText, m_label );
-		glPopMatrix();
-	}
-
-	NodeGadget::doRenderLayer( layer, style );
-}
-
-unsigned DotNodeGadget::layerMask() const
-{
-	return NodeGadget::layerMask() | (unsigned)GraphLayer::Nodes;
 }
 
 Gaffer::Dot *DotNodeGadget::dotNode()
