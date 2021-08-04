@@ -1379,5 +1379,28 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( writer["in"], rereader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
 
+		# Deliberately introduce some metadata that would confuse OIIO,
+		# and check that it is ignored.
+
+		metadata = GafferImage.ImageMetadata()
+		metadata["in"].setInput( shuffle["out"] )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "name", "test" ) )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:subimagename", "test" ) )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:subimages", 1 ) )
+
+		writer["in"].setInput( metadata["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test2.exr" ) )
+
+		with IECore.CapturingMessageHandler() as mh :
+			writer["task"].execute()
+
+		self.assertImagesEqual( rereader["out"], shuffle["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
+		warnings = { m.message for m in mh.messages if m.level == IECore.Msg.Level.Warning }
+		self.assertEqual( len( warnings ), 3 )
+		self.assertIn( "Ignoring metadata \"name\" because it conflicts with OpenImageIO.", warnings )
+		self.assertIn( "Ignoring metadata \"oiio:subimagename\" because it conflicts with OpenImageIO.", warnings )
+		self.assertIn( "Ignoring metadata \"oiio:subimages\" because it conflicts with OpenImageIO.", warnings )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -9,7 +9,7 @@ Improvements
 Fixes
 -----
 
-- ImageReader/ImageWriter : The `name`, `oiio:subimagename` and `oiio:subimages` metadata items are no longer loaded because they are ambiguous, and caused ImageWriter to write incorrect images. The same information is available in Gaffer via the image's `channelNames`.
+- ImageReader/ImageWriter : The `name`, `oiio:subimagename` and `oiio:subimages` metadata items are now ignored because they are ambiguous, and caused ImageWriter to write incorrect images. The same information is available in Gaffer via the image's `channelNames`.
 
 API
 ---
