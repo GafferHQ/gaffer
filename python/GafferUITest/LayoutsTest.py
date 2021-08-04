@@ -181,44 +181,5 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		ns = editors[3].getNodeSet()
 		self.assertTrue( isinstance( ns, Gaffer.StandardSet ) )
 
-	def testSetNodeSetDriverRestore( self ) :
-
-		s = Gaffer.ScriptNode()
-		c = GafferUI.CompoundEditor( s )
-
-		GafferUI.NodeSetEditor.registerNodeSetDriverMode( "testMode", lambda e, t : t.getNodeSet() )
-
-		editors = list((
-			GafferUI.NodeEditor( s ),
-			GafferUI.NodeEditor( s ),
-			GafferUI.AnimationEditor( s ),
-			GafferUI.NodeEditor( s )
-		))
-
-		editors[0].setNodeSetDriver( editors[1] )
-		editors[2].setNodeSetDriver( editors[3], "testMode" )
-
-		for e in editors :
-			c.addEditor( e )
-
-		a = Gaffer.ApplicationRoot( "testApp" )
-		l = GafferUI.Layouts.acquire( a )
-		l.add( "ReprDriverTest", repr(c), persistent = False )
-
-		cc = l.create( "ReprDriverTest", s )
-
-		editors = cc.editors()
-
-		driver, mode = editors[0].getNodeSetDriver()
-		self.assertTrue( driver is editors[1] )
-		self.assertTrue( mode is GafferUI.NodeSetEditor.DriverModeNodeSet )
-
-		driver, mode = editors[2].getNodeSetDriver()
-		self.assertTrue( driver is editors[3] )
-		self.assertTrue( mode is "testMode" )
-
-		driver, mode = editors[3].getNodeSetDriver()
-		self.assertIsNone( driver )
-
 if __name__ == "__main__":
 	unittest.main()
