@@ -198,5 +198,27 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		m["enabled"].setValue( False )
 		self.assertEqual( { x[0] for x in cs }, { m["enabled"], m["out"]["metadata"], m["out"] } )
 
+	def testExtraMetadata( self ) :
+
+		m = GafferImage.ImageMetadata()
+		self.assertEqual( m["out"].metadata(), IECore.CompoundData() )
+
+		m["metadata"].addChild( Gaffer.NameValuePlug( "a", "originalA" ) )
+		m["metadata"].addChild( Gaffer.NameValuePlug( "b", "originalB" ) )
+
+		m["extraMetadata"].setValue( IECore.CompoundData( {
+			"a" : "extraA",
+			"c" : "extraC",
+		} ) )
+
+		self.assertEqual(
+			m["out"].metadata(),
+			IECore.CompoundData( {
+				"a" : "extraA",
+				"b" : "originalB",
+				"c" : "extraC",
+			} )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
