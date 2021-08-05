@@ -110,6 +110,8 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		self.__plug = None
 		self._updateFromSet()
+		self.__transferExpansionFromContext()
+		self.__transferSelectionFromContext()
 
 	def scene( self ) :
 
@@ -182,8 +184,6 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 				f.setContext( contextCopy )
 			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
 				self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
-			self.__transferExpansionFromContext()
-			self.__transferSelectionFromContext()
 		else :
 			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
 				self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
