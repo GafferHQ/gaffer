@@ -57,6 +57,9 @@ class GAFFERIMAGE_API ImageMetadata : public MetadataProcessor
 		Gaffer::CompoundDataPlug *metadataPlug();
 		const Gaffer::CompoundDataPlug *metadataPlug() const;
 
+		Gaffer::AtomicCompoundDataPlug *extraMetadataPlug();
+		const Gaffer::AtomicCompoundDataPlug *extraMetadataPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

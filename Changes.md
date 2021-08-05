@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.2.1)
 ========
 
+Improvements
+------------
+
+- ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
+
 API
 ---
 
