@@ -72,6 +72,54 @@ using namespace Gaffer;
 namespace
 {
 
+// QVariant does have `operator <`, but it's deprecated as it doesn't define a
+// total ordering, making it unsuitable for our purposes.
+// See https://doc.qt.io/qt-5/qvariant-obsolete.html#operator-lt.
+bool variantLess( const QVariant &left, const QVariant &right )
+{
+	// Lexicographical comparison, first on type and then on value.
+
+	if( left.userType() < right.userType() )
+	{
+		return true;
+	}
+	else if( right.userType() < left.userType() )
+	{
+		return false;
+	}
+
+	assert( left.userType() == right.userType() );
+
+	switch( left.userType() )
+	{
+		case QVariant::Invalid :
+			// Both values are invalid, making them equal.
+			return false;
+		case QVariant::Int :
+			return left.toInt() < right.toInt();
+		case QVariant::UInt :
+			return left.toUInt() < right.toUInt();
+		case QVariant::LongLong:
+			return left.toLongLong() < right.toLongLong();
+		case QVariant::ULongLong:
+			return left.toULongLong() < right.toULongLong();
+		case QMetaType::Float:
+			return left.toFloat() < right.toFloat();
+		case QVariant::Double:
+			return left.toDouble() < right.toDouble();
+		case QVariant::Char:
+			return left.toChar() < right.toChar();
+		case QVariant::Date:
+			return left.toDate() < right.toDate();
+		case QVariant::Time:
+			return left.toTime() < right.toTime();
+		case QVariant::DateTime:
+			return left.toDateTime() < right.toDateTime();
+		default :
+			return left.toString() < right.toString();
+	}
+}
+
 IECore::InternedString g_namePropertyName( "name" );
 
 // Abstract class for extracting QVariants from Path objects
@@ -691,7 +739,13 @@ class PathModel : public QAbstractItemModel
 					sortableChildren.push_back( SortableItem( m_childItems[i], i ) );
 				}
 
-				std::sort( sortableChildren.begin(), sortableChildren.end(), Less( model->m_sortColumn ) );
+				std::sort(
+					sortableChildren.begin(), sortableChildren.end(),
+					[column = model->m_sortColumn] ( const SortableItem &left, const SortableItem &right )
+					{
+						return variantLess( left.first->m_displayData[column], right.first->m_displayData[column] );
+					}
+				);
 
 				const bool reverse = model->m_sortOrder == Qt::DescendingOrder;
 				QModelIndexList changedPersistentIndexesFrom, changedPersistentIndexesTo;
@@ -755,52 +809,6 @@ class PathModel : public QAbstractItemModel
 
 					m_dataDone = true;
 				}
-
-				struct Less
-				{
-					Less( int column )
-						:	m_column( column )
-					{
-					}
-
-					bool operator () ( const SortableItem &leftItem, const SortableItem &rightItem )
-					{
-						const QVariant &left = leftItem.first->m_displayData[m_column];
-						const QVariant &right = rightItem.first->m_displayData[m_column];
-						switch( left.userType() )
-						{
-							case QVariant::Invalid :
-								return right.type() != QVariant::Invalid;
-							case QVariant::Int :
-								return left.toInt() < right.toInt();
-							case QVariant::UInt :
-								return left.toUInt() < right.toUInt();
-							case QVariant::LongLong:
-								return left.toLongLong() < right.toLongLong();
-							case QVariant::ULongLong:
-								return left.toULongLong() < right.toULongLong();
-							case QMetaType::Float:
-								return left.toFloat() < right.toFloat();
-							case QVariant::Double:
-								return left.toDouble() < right.toDouble();
-							case QVariant::Char:
-								return left.toChar() < right.toChar();
-							case QVariant::Date:
-								return left.toDate() < right.toDate();
-							case QVariant::Time:
-								return left.toTime() < right.toTime();
-							case QVariant::DateTime:
-								return left.toDateTime() < right.toDateTime();
-							default :
-								return left.toString().compare( right.toString() ) < 0;
-						}
-					}
-
-					private :
-
-						int m_column;
-
-				};
 
 				Gaffer::PathPtr m_path;
 				Item *m_parent;
