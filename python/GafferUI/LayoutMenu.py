@@ -167,7 +167,7 @@ def layoutMenuCallable( menu ) :
 
 	# Other menu items
 
-	menuDefinition.append( "/Full Screen", { "command" : fullScreen, "checkBox" : fullScreenCheckBox, "shortCut" : "`" } )
+	menuDefinition.append( "/Full Screen", { "command" : fullScreen, "checkBox" : fullScreenCheckBox, "shortCut" : "F11" } )
 
 	return menuDefinition
 
