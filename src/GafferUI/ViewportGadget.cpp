@@ -1216,9 +1216,13 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 
 bool ViewportGadget::buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &event )
 {
-	/// \todo Implement me. I'm not sure who this event should go to - probably
-	/// the last button press gadget, but we erased that in buttonRelease.
-	return false;
+	bool result = false;
+	if( m_gadgetUnderMouse )
+	{
+		result = dispatchEvent( m_gadgetUnderMouse.get(), &Gadget::buttonDoubleClickSignal, event );
+	}
+
+	return result;
 }
 
 void ViewportGadget::updateGadgetUnderMouse( const ButtonEvent &event )
