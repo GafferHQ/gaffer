@@ -103,6 +103,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 	protected :
 
+		StandardNodeGadget( Gaffer::NodePtr node, bool auxillary );
+
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
 		unsigned layerMask() const override;
 		Imath::Box3f renderBound() const override;
@@ -162,6 +164,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		ConnectionCreator *m_dragDestination;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
+		bool m_auxiliary;
 
 };
 

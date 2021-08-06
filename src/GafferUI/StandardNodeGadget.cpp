@@ -218,12 +218,23 @@ static IECore::InternedString g_iconScaleKey( "iconScale" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
+	: StandardNodeGadget( node, false )
+{
+}
+
+
+// \todo - Needing an auxiliary argument here isn't great - it's overly tight binding with AuxiliaryNodeGadget,
+// and it should be possible to make NodeGadget's independent of StandardNodeGadget.  The right solution is
+// probably to move more functionality for dealing with Focus and such into NodeGadget, so that other Gadgets
+// can optionally use it without needing to inherit from StandardNodeGadget
+StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	:	NodeGadget( node ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
 		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
-		m_oval( false )
+		m_oval( false ),
+		m_auxiliary( auxiliary )
 {
 
 	// build our ui structure
@@ -235,57 +246,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 		minWidth = d->readable();
 	}
 
-	// four containers for nodules - one each for the top, bottom, left and right.
-	// these contain spacers at either end to prevent nodules being placed in
-	// the corners of the node gadget, and also to guarantee a minimim width for the
-	// vertical containers and a minimum height for the horizontal ones.
-
-	LinearContainerPtr topNoduleContainer = new LinearContainer( "topNoduleContainer", LinearContainer::X );
-	topNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
-	topNoduleContainer->addChild( new NoduleLayout( node, "top" ) );
-	topNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
-
-	LinearContainerPtr bottomNoduleContainer = new LinearContainer( "bottomNoduleContainer", LinearContainer::X );
-	bottomNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
-	bottomNoduleContainer->addChild( new NoduleLayout( node, "bottom" ) );
-	bottomNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
-
-	LinearContainerPtr leftNoduleContainer = new LinearContainer( "leftNoduleContainer", LinearContainer::Y, LinearContainer::Centre, 0.0f, LinearContainer::Decreasing );
-	leftNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
-	leftNoduleContainer->addChild( new NoduleLayout( node, "left" ) );
-	leftNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
-
-	LinearContainerPtr rightNoduleContainer = new LinearContainer( "rightNoduleContainer", LinearContainer::Y, LinearContainer::Centre, 0.0f, LinearContainer::Decreasing );
-	rightNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
-	rightNoduleContainer->addChild( new NoduleLayout( node, "right" ) );
-	rightNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
-
-	// column - this is our outermost structuring container
-
-	LinearContainerPtr column = new LinearContainer(
-		"column",
-		LinearContainer::Y,
-		LinearContainer::Centre,
-		0.0f,
-		LinearContainer::Decreasing
-	);
-
-	column->addChild( topNoduleContainer );
-
-	LinearContainerPtr row = new LinearContainer(
-		"row",
-		LinearContainer::X,
-		LinearContainer::Centre,
-		0.0f
-	);
-
-	column->addChild( row );
-
-	// central row - this holds our main contents, with the
-	// nodule containers surrounding it.
-
-	row->addChild( leftNoduleContainer );
-
 	LinearContainerPtr contentsColumn = new LinearContainer(
 		"contentsColumn",
 		LinearContainer::Y,
@@ -293,7 +253,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 		0.0f,
 		LinearContainer::Decreasing
 	);
-	row->addChild( contentsColumn );
 
 	LinearContainerPtr contentsRow = new LinearContainer(
 		"paddingRow",
@@ -314,10 +273,73 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	contentsColumn->addChild( contentsRow );
 	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 
-	row->addChild( rightNoduleContainer );
-	column->addChild( bottomNoduleContainer );
 
-	addChild( column );
+	if( auxiliary )
+	{
+		addChild( contentsColumn );
+	}
+	else
+	{
+		// four containers for nodules - one each for the top, bottom, left and right.
+		// these contain spacers at either end to prevent nodules being placed in
+		// the corners of the node gadget, and also to guarantee a minimim width for the
+		// vertical containers and a minimum height for the horizontal ones.
+
+		LinearContainerPtr topNoduleContainer = new LinearContainer( "topNoduleContainer", LinearContainer::X );
+		LinearContainerPtr bottomNoduleContainer = new LinearContainer( "bottomNoduleContainer", LinearContainer::X );
+		LinearContainerPtr leftNoduleContainer = new LinearContainer( "leftNoduleContainer", LinearContainer::Y, LinearContainer::Centre, 0.0f, LinearContainer::Decreasing );
+		LinearContainerPtr rightNoduleContainer = new LinearContainer( "rightNoduleContainer", LinearContainer::Y, LinearContainer::Centre, 0.0f, LinearContainer::Decreasing );
+
+		topNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
+		topNoduleContainer->addChild( new NoduleLayout( node, "top" ) );
+		topNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
+
+		bottomNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
+		bottomNoduleContainer->addChild( new NoduleLayout( node, "bottom" ) );
+		bottomNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 2, 1, 0 ) ) ) );
+
+		leftNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
+		leftNoduleContainer->addChild( new NoduleLayout( node, "left" ) );
+		leftNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
+
+		rightNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
+		rightNoduleContainer->addChild( new NoduleLayout( node, "right" ) );
+		rightNoduleContainer->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( 1, 0.2, 0 ) ) ) );
+
+		// column - this is our outermost structuring container
+
+		LinearContainerPtr column = new LinearContainer(
+			"column",
+			LinearContainer::Y,
+			LinearContainer::Centre,
+			0.0f,
+			LinearContainer::Decreasing
+		);
+
+		column->addChild( topNoduleContainer );
+
+		LinearContainerPtr row = new LinearContainer(
+			"row",
+			LinearContainer::X,
+			LinearContainer::Centre,
+			0.0f
+		);
+
+		column->addChild( row );
+
+		// central row - this holds our main contents, with the
+		// nodule containers surrounding it.
+
+		row->addChild( leftNoduleContainer );
+
+
+		row->addChild( contentsColumn );
+		row->addChild( rightNoduleContainer );
+		column->addChild( bottomNoduleContainer );
+
+		addChild( column );
+	}
+
 	setContents( new NameGadget( node ) );
 
 	// connect to the signals we need in order to operate
@@ -334,8 +356,11 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	for( int e = FirstEdge; e <= LastEdge; e++ )
 	{
 		NoduleLayout *l = noduleLayout( (Edge)e );
-		l->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
-		l->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
+		if( l )
+		{
+			l->enterSignal().connect( boost::bind( &StandardNodeGadget::enter, this, ::_1 ) );
+			l->leaveSignal().connect( boost::bind( &StandardNodeGadget::leave, this, ::_1 ) );
+		}
 	}
 
 	Metadata::nodeValueChangedSignal( node.get() ).connect( boost::bind( &StandardNodeGadget::nodeMetadataChanged, this, ::_2 ) );
@@ -433,9 +458,12 @@ Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
 	for( int e = FirstEdge; e <= LastEdge; e++ )
 	{
 		NoduleLayout *l = noduleLayout( (Edge)e );
-		if( Nodule *n = l->nodule( plug ) )
+		if( l )
 		{
-			return n;
+			if( Nodule *n = l->nodule( plug ) )
+			{
+				return n;
+			}
 		}
 	}
 	return nullptr;
@@ -449,6 +477,11 @@ const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
 
 Imath::V3f StandardNodeGadget::connectionTangent( const ConnectionCreator *creator ) const
 {
+	if( m_auxiliary )
+	{
+		return V3f( 0, 0, 0 );
+	}
+
 	if( noduleContainer( LeftEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( -1, 0, 0 );
@@ -469,6 +502,11 @@ Imath::V3f StandardNodeGadget::connectionTangent( const ConnectionCreator *creat
 
 LinearContainer *StandardNodeGadget::noduleContainer( Edge edge )
 {
+	if( m_auxiliary )
+	{
+		return nullptr;
+	}
+
 	Gadget *column = getChild<Gadget>( 0 );
 
 	if( edge == TopEdge )
@@ -498,21 +536,29 @@ const LinearContainer *StandardNodeGadget::noduleContainer( Edge edge ) const
 
 NoduleLayout *StandardNodeGadget::noduleLayout( Edge edge )
 {
-	return noduleContainer( edge )->getChild<NoduleLayout>( 1 );
+	return m_auxiliary ? nullptr : noduleContainer( edge )->getChild<NoduleLayout>( 1 );
 }
 
 const NoduleLayout *StandardNodeGadget::noduleLayout( Edge edge ) const
 {
-	return noduleContainer( edge )->getChild<NoduleLayout>( 1 );
+	return m_auxiliary ? nullptr : noduleContainer( edge )->getChild<NoduleLayout>( 1 );
 }
 
 LinearContainer *StandardNodeGadget::paddingRow()
 {
-	return getChild<Gadget>( 0 ) // column
-		->getChild<Gadget>( 1 ) // row
-		->getChild<Gadget>( 1 ) // contentsColumn
-		->getChild<LinearContainer>( 1 )
-	;
+	if( m_auxiliary )
+	{
+		return getChild<Gadget>( 0 ) // contentsColumn
+			->getChild<LinearContainer>( 1 );
+	}
+	else
+	{
+		return getChild<Gadget>( 0 ) // column
+			->getChild<Gadget>( 1 ) // row
+			->getChild<Gadget>( 1 ) // contentsColumn
+			->getChild<LinearContainer>( 1 )
+		;
+	}
 }
 
 const LinearContainer *StandardNodeGadget::paddingRow() const
@@ -557,6 +603,11 @@ const Gadget *StandardNodeGadget::getContents() const
 
 void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
 {
+	if( m_auxiliary )
+	{
+		return;
+	}
+
 	GadgetPtr previous = getEdgeGadget( edge );
 	if( previous == gadget )
 	{
@@ -585,6 +636,11 @@ void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
 
 Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
 {
+	if( m_auxiliary )
+	{
+		return nullptr;
+	}
+
 	LinearContainer *c = noduleContainer( edge );
 	const size_t s = c->children().size();
 	if( s != 4 )
@@ -597,6 +653,11 @@ Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
 
 const Gadget *StandardNodeGadget::getEdgeGadget( Edge edge ) const
 {
+	if( m_auxiliary )
+	{
+		return nullptr;
+	}
+
 	const LinearContainer *c = noduleContainer( edge );
 	return c->getChild<Gadget>( c->children().size() - 1 );
 }
@@ -889,10 +950,18 @@ void StandardNodeGadget::updateIcon()
 bool StandardNodeGadget::updateShape()
 {
 	bool oval = false;
-	if( IECore::ConstStringDataPtr s = Metadata::value<IECore::StringData>( node(), g_shapeKey ) )
+	if( m_auxiliary )
 	{
-		oval = s->readable() == "oval";
+		oval = true;
 	}
+	else
+	{
+		if( IECore::ConstStringDataPtr s = Metadata::value<IECore::StringData>( node(), g_shapeKey ) )
+		{
+			oval = s->readable() == "oval";
+		}
+	}
+
 	if( oval == m_oval )
 	{
 		return false;

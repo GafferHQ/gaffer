@@ -123,6 +123,7 @@ from .NumericWidgetTest import NumericWidgetTest
 from .PresetsPlugValueWidgetTest import PresetsPlugValueWidgetTest
 from .SpreadsheetUITest import SpreadsheetUITest
 from .NodeUITest import NodeUITest
+from .AuxiliaryNodeGadgetTest import AuxiliaryNodeGadgetTest
 
 if __name__ == "__main__":
 	unittest.main()
