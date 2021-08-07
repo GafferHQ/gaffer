@@ -51,7 +51,7 @@ import weakref
 # to the ScriptNode.selection() but can be modified to be any Set of nodes.
 class NodeSetEditor( GafferUI.Editor ) :
 
-	def __init__( self, topLevelWidget, scriptNode, **kw ) :
+	def __init__( self, topLevelWidget, scriptNode, nodeSet = None, **kw ) :
 
 		self.__nodeSet = Gaffer.StandardSet()
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
@@ -60,12 +60,15 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		self.__titleFormat = None
 
+		if not nodeSet:
+			nodeSet = self.scriptNode().selection()
+
 		# Allow derived classes to call `_updateFromSet()` themselves after construction,
 		# to avoid being called when they're only half constructed.
 		## \todo Should we call `__lazyUpdate()` instead, so `_updateFromSet()` is called
 		# when the editor becomes visible? Then derived classes shouldn't need to call
 		# `_updateFromSet()` in their constructors at all.
-		self.__setNodeSetInternal( self.scriptNode().selection(), callUpdateFromSet=False )
+		self.__setNodeSetInternal( nodeSet, callUpdateFromSet=False )
 
 	## Sets the nodes that will be displayed by this editor. As members are
 	# added to and removed from the set, the UI will be updated automatically

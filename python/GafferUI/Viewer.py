@@ -68,7 +68,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			),
 		)
 
-		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		self.__nodeToolbars = []
 		self.__viewToolbars = []

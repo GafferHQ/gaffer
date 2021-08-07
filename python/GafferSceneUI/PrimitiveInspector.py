@@ -218,7 +218,7 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.Varying], "Varying" )
 		self.__tabbedContainer.append( self.__tabbedChildWidgets[IECoreScene.PrimitiveVariable.Interpolation.FaceVarying], "FaceVarying" )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		self._updateFromSet()
 

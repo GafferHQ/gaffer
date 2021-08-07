@@ -158,7 +158,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 		mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
 
-		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, mainColumn, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		self.__sections = []
 

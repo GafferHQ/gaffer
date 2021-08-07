@@ -51,7 +51,7 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 
 		column = GafferUI.ListContainer()
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		self.__uvView = GafferSceneUI.UVView()
 

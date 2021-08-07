@@ -57,7 +57,7 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 4, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		searchFilter = _GafferSceneUI._HierarchyViewSearchFilter()
 		setFilter = _GafferSceneUI._HierarchyViewSetFilter()
