@@ -260,6 +260,13 @@ class GraphEditor( GafferUI.Editor ) :
 	@classmethod
 	def appendContentsMenuDefinitions( cls, graphEditor, node, menuDefinition ) :
 
+		menuDefinition.append( "/FocusDivider", { "divider" : True } )
+		menuDefinition.append( "/Focus", {
+			"command" : functools.partial( graphEditor.scriptNode().setFocus, node ),
+			"active" : not node.isSame( graphEditor.scriptNode().getFocus() ),
+			"shortCut" : "Ctrl+`"
+		} )
+
 		if not GraphEditor.__childrenViewable( node ) :
 			return
 
@@ -375,6 +382,13 @@ class GraphEditor( GafferUI.Editor ) :
 		if event.key == "F" and not event.modifiers :
 			self.__frame( self.scriptNode().selection() )
 			return True
+		elif event.key == "QuoteLeft" and not event.modifiers :
+			self.__frame( [ self.scriptNode().getFocus() ] )
+			return True
+		elif event.key == "QuoteLeft" and event.modifiers == event.modifiers.Control :
+			selection = self.scriptNode().selection()
+			if len( selection ) > 0 :
+				self.scriptNode().setFocus( selection[0] )
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() == 1 and selection[0].parent() == self.graphGadget().getRoot() :

@@ -303,11 +303,15 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 			m_selectionMemberRemovedConnection = m_scriptNode->selection()->memberRemovedSignal().connect(
 				boost::bind( &GraphGadget::selectionMemberRemoved, this, ::_1, ::_2 )
 			);
+			m_focusChangedConnection = m_scriptNode->focusChangedSignal().connect(
+				boost::bind( &GraphGadget::focusChanged, this, ::_1, ::_2 )
+			);
 		}
 		else
 		{
 			m_selectionMemberAddedConnection.disconnect();
 			m_selectionMemberAddedConnection.disconnect();
+			m_focusChangedConnection.disconnect();
 		}
 	}
 
@@ -891,6 +895,19 @@ void GraphGadget::selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped
 		{
 			nodeGadget->setHighlighted( false );
 		}
+	}
+}
+
+void GraphGadget::focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node )
+{
+	if( !node || findNodeGadget( node ) )
+	{
+		// We don't currently rely on dirtying specific children for rendering, so
+		// we can just dirty the top level for triggering a render.  If we switched
+		// to something where renderLayer prepared caches that needed invalidating
+		// by DirtyType::Render, then we could need to find both the previous
+		// focussed Gadget and the next focussed Gadget and dirty them specifically.
+		dirty( DirtyType::Render );
 	}
 }
 

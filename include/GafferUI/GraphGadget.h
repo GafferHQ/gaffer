@@ -203,6 +203,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		void rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
 		void selectionMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
+		void focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node );
 		void filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void filterMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void inputChanged( Gaffer::Plug *dstPlug );
@@ -257,6 +258,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		boost::signals::scoped_connection m_rootChildRemovedConnection;
 		boost::signals::scoped_connection m_selectionMemberAddedConnection;
 		boost::signals::scoped_connection m_selectionMemberRemovedConnection;
+		boost::signals::scoped_connection m_focusChangedConnection;
 
 		Gaffer::SetPtr m_filter;
 		boost::signals::scoped_connection m_filterMemberAddedConnection;

@@ -101,6 +101,12 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 		Imath::Box3f bound() const override;
 
+		/// This currently needs to be public so that AnnotationsGadget can manually account for
+		/// the thick border on focussed StandardNodeGadgets.  This is a bit of a weird dependency:
+		/// the long term solution may involve giving a NodeGadget more responsibility over how
+		/// it's annotations are drawn
+		float focusBorderWidth() const;
+
 	protected :
 
 		StandardNodeGadget( Gaffer::NodePtr node, bool auxillary );
@@ -165,6 +171,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
 		bool m_auxiliary;
+
+		GadgetPtr m_focusGadget;
 
 };
 
