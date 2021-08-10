@@ -313,9 +313,10 @@
 		'menuIndicatorDisabled',
 		'minus',
 		'navigationArrow',
-		'nodeSetDriverNodeSelection',
+		'nodeSetNodeSelection',
 		'nodeSetNumericBookmarkSet',
 		'nodeSetStandardSet',
+		'nodeSetFocusNode',
 		'plugAdder',
 		'plugAdderHighlighted',
 		'plus',
@@ -359,6 +360,10 @@
 		'lutCPU',
 		'editDisabled',
 		'editOff',
-		'editOn'
+		'editOn',
+		'focusOn',
+		'focusOff',
+		'focusOnHover',
+		'focusOffHover'
 	]
 }

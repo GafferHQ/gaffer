@@ -23,6 +23,14 @@
   <defs
      id="defs4">
     <linearGradient
+       id="nodeBorder"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#262626;stop-opacity:1;"
+         offset="0"
+         id="stop2049" />
+    </linearGradient>
+    <linearGradient
        id="greyedOut"
        osb:paint="solid">
       <stop
@@ -2069,12 +2077,12 @@
        id="g2707"
        inkscape:label="editorFocusMenu">
       <rect
-         inkscape:label="nodeSetDriverNodeSelection"
+         inkscape:label="nodeSetNodeSelection"
          y="2064"
          x="31"
          height="13"
          width="13"
-         id="nodeSetDriverNodeSelection"
+         id="nodeSetNodeSelection"
          style="display:inline;opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:0.91766286;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill" />
       <rect
          style="display:inline;opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:0.91766286;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
@@ -2092,6 +2100,15 @@
          x="65"
          y="2064"
          inkscape:label="nodeSetNumericBookmarkSet" />
+      <rect
+         inkscape:label="nodeSetFocusNode"
+         y="-2077"
+         x="82"
+         height="13"
+         width="13"
+         id="nodeSetFocusNode"
+         style="display:inline;opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:0.91766286;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         transform="scale(1,-1)" />
     </g>
     <rect
        style="opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:3.5999999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:stroke markers fill"
@@ -3640,29 +3657,6 @@
          height="75"
          x="285"
          y="607.36218" />
-    </g>
-    <g
-       transform="translate(-5.0000019,3.8586102e-4)"
-       inkscape:label="#g4200"
-       id="g4630">
-      <path
-         sodipodi:nodetypes="cccccc"
-         id="path4632"
-         d="m 360,722.3618 h 15 V 572.36178 H 225 V 722.3618 h 15"
-         style="fill:none;stroke:#e5e5e5;stroke-width:19.99999428;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:142.99989319;stroke-opacity:1"
-         inkscape:connector-curvature="0" />
-      <path
-         id="path4634"
-         d="m 260,687.36218 h 80 l -40,60 z"
-         style="fill:#e5e5e5;fill-opacity:1;stroke:#e5e5e5;stroke-width:10;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-         inkscape:connector-curvature="0" />
-      <rect
-         y="607.36218"
-         x="285"
-         height="75"
-         width="30"
-         id="rect4636"
-         style="fill:#e5e5e5;fill-opacity:1;stroke:#e5e5e5;stroke-width:10;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:142.99989319;stroke-opacity:1" />
     </g>
     <g
        id="export"
@@ -6668,6 +6662,124 @@
          id="path5688"
          d="m 15,2349.3622 h 8"
          style="fill:none;stroke:#535353;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+    <g
+       id="focusOn"
+       inkscape:label="focusOn"
+       transform="translate(0,208)">
+      <circle
+         r="84"
+         cy="440.36218"
+         cx="492"
+         id="path2019"
+         style="fill:url(#foreground);fill-opacity:1;stroke:none;stroke-width:8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+      <circle
+         style="fill:url(#nodeBorder);fill-opacity:1;stroke:none;stroke-width:5.33333349;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1874"
+         cx="492"
+         cy="440.36218"
+         r="56" />
+      <circle
+         style="fill:url(#foreground);fill-opacity:1;stroke:none;stroke-width:2.66666675;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1878"
+         cx="492"
+         cy="440.36218"
+         r="28" />
+    </g>
+    <g
+       id="focusOnHover"
+       inkscape:label="focusOnHover"
+       transform="translate(-4,208)">
+      <circle
+         r="84"
+         cy="440.36218"
+         cx="896"
+         id="path2019-6-7"
+         style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-width:8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+      <circle
+         style="display:inline;opacity:1;fill:url(#nodeBorder);fill-opacity:1;stroke:none;stroke-width:5.33333349;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1874-9-0"
+         cx="896"
+         cy="440.36218"
+         r="56" />
+      <circle
+         style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-width:2.66666675;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1878-1-3"
+         cx="896"
+         cy="440.36218"
+         r="28" />
+    </g>
+    <g
+       id="focusOff"
+       inkscape:label="focusOff"
+       transform="translate(-4,208)"
+       style="opacity:1">
+      <circle
+         r="84"
+         cy="440.36218"
+         cx="696"
+         id="path2019-6"
+         style="display:inline;fill:url(#greyedOut);fill-opacity:1;stroke:none;stroke-width:8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+      <circle
+         style="display:inline;fill:url(#nodeBorder);fill-opacity:1;stroke:none;stroke-width:5.33333349;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1874-9"
+         cx="696"
+         cy="440.36218"
+         r="56" />
+      <circle
+         style="display:inline;fill:url(#greyedOut);fill-opacity:1;stroke:none;stroke-width:2.66666675;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1878-1"
+         cx="696"
+         cy="440.36218"
+         r="28" />
+    </g>
+    <g
+       id="focusOffHover"
+       inkscape:label="focusOffHover"
+       transform="translate(4,208)">
+      <circle
+         r="84"
+         cy="440.36218"
+         cx="1088"
+         id="path2019-6-2"
+         style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-width:8;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+      <circle
+         style="display:inline;opacity:1;fill:url(#nodeBorder);fill-opacity:1;stroke:none;stroke-width:5.33333349;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1874-9-5"
+         cx="1088"
+         cy="440.36218"
+         r="56" />
+      <circle
+         style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;stroke:none;stroke-width:2.66666675;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="circle1878-1-1"
+         cx="1088"
+         cy="440.36218"
+         r="28" />
+    </g>
+    <g
+       id="g1870"
+       inkscape:label="nodeSetFocusNode">
+      <circle
+         style="display:inline;fill:url(#foreground);fill-opacity:1;stroke:none;stroke-width:0.61904764;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="path2019-8"
+         cx="-88.5"
+         cy="-2122.8621"
+         r="6.5"
+         transform="scale(-1)" />
+      <circle
+         transform="scale(-1)"
+         r="4.5"
+         cy="-2122.8621"
+         cx="-88.5"
+         id="circle2088"
+         style="display:inline;fill:url(#nodeBorder);fill-opacity:1;stroke:none;stroke-width:0.42857143;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+      <circle
+         transform="scale(-1)"
+         r="2"
+         cy="-2122.8621"
+         cx="-88.5"
+         id="circle1060"
+         style="display:inline;fill:url(#foreground);fill-opacity:1;stroke:none;stroke-width:0.19047619;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
     </g>
   </g>
 </svg>
