@@ -140,6 +140,11 @@ class PythonEditor( GafferUI.Editor ) :
 						except Exception as e :
 							self.__outputWidget.appendHTML( self.__exceptionToHTML() )
 
+	## The Python dictionary that provides the globals and locals for `execute()`.
+	def namespace( self ) :
+
+		return self.__executionDict
+
 	def __repr__( self ) :
 
 		return "GafferUI.PythonEditor( scriptNode )"
