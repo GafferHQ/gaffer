@@ -100,8 +100,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			"fileFormat" : IECore.StringData( "openexr" ),
 			"dataType" : IECore.StringData( "float" ),
 		} )
-		if hasattr( IECoreImage, "OpenImageIOAlgo" ) and IECoreImage.OpenImageIOAlgo.version() >= 20206 :
-			expectedMetadata['oiio:subimages'] = IECore.IntData( 1 )
 
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
 
@@ -640,6 +638,16 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( GafferImage.OpenImageIOReader.getOpenFilesLimit(), l + 1 )
 		finally :
 			GafferImage.OpenImageIOReader.setOpenFilesLimit( l )
+
+	def testSubimageMetadataNotLoaded( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/multipart.exr" )
+		metadata = reader["out"].metadata()
+
+		self.assertNotIn( "name", metadata )
+		self.assertNotIn( "oiio:subimagename", metadata )
+		self.assertNotIn( "oiio:subimages", metadata )
 
 if __name__ == "__main__":
 	unittest.main()

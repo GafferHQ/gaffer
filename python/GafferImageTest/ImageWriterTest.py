@@ -1343,5 +1343,64 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
 		self.assertEqual( reader["out"].metadata()["openexr:dwaCompressionLevel"].value, 110.0 )
 
+	def testNameMetadata( self ) :
+
+		# Load an image with various layers.
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/multipart.exr" )
+		self.assertEqual(
+			set( reader["out"].channelNames() ),
+			{
+				"rgb.R", "rgb.G", "rgb.B",
+				"rgba.R", "rgba.G", "rgba.B", "rgba.A",
+				"depth.Z",
+			}
+		)
+
+		# Shuffle one of them into the primary RGBA layer.
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( reader["out"] )
+		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "rgba.R" ) )
+		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "rgba.G" ) )
+		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "rgba.B" ) )
+		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "rgba.A" ) )
+
+		# Write the image out and assert that it reads in again the same.
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( shuffle["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["task"].execute()
+
+		rereader = GafferImage.ImageReader()
+		rereader["fileName"].setInput( writer["fileName"] )
+
+		self.assertImagesEqual( writer["in"], rereader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
+		# Deliberately introduce some metadata that would confuse OIIO,
+		# and check that it is ignored.
+
+		metadata = GafferImage.ImageMetadata()
+		metadata["in"].setInput( shuffle["out"] )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "name", "test" ) )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:subimagename", "test" ) )
+		metadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:subimages", 1 ) )
+
+		writer["in"].setInput( metadata["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test2.exr" ) )
+
+		with IECore.CapturingMessageHandler() as mh :
+			writer["task"].execute()
+
+		self.assertImagesEqual( rereader["out"], shuffle["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
+		warnings = { m.message for m in mh.messages if m.level == IECore.Msg.Level.Warning }
+		self.assertEqual( len( warnings ), 3 )
+		self.assertIn( "Ignoring metadata \"name\" because it conflicts with OpenImageIO.", warnings )
+		self.assertIn( "Ignoring metadata \"oiio:subimagename\" because it conflicts with OpenImageIO.", warnings )
+		self.assertIn( "Ignoring metadata \"oiio:subimages\" because it conflicts with OpenImageIO.", warnings )
+
 if __name__ == "__main__":
 	unittest.main()

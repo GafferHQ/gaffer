@@ -6,10 +6,16 @@ Improvements
 
 - ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
 
+Fixes
+-----
+
+- ImageReader/ImageWriter : The `name`, `oiio:subimagename` and `oiio:subimages` metadata items are now ignored because they are ambiguous, and caused ImageWriter to write incorrect images. The same information is available in Gaffer via the image's `channelNames`.
+
 API
 ---
 
 - PlugLayout : Added a warning for plugs that reference activators that have not been registered.
+- ImageTestCase : Added `ignoreChannelNamesOrder` keyword argument to `assertImagesEqual()`. This defaults to `False`, maintaining the previous behaviour.
 
 0.60.2.1 (relative to 0.60.2.0)
 ========
