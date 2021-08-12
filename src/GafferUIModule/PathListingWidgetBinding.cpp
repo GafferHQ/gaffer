@@ -389,12 +389,7 @@ IE_CORE_DECLAREPTR( FileIconColumn )
 class PathModel : public QAbstractItemModel
 {
 
-		// Typically the Q_OBJECT macro would be added here,
-		// but since we're not adding signals, slots or properties
-		// to our class, it seems we don't need it. Omitting
-		// it simplifies the build process, because otherwise we
-		// would need to run things through the Qt meta object
-		// compiler (moc).
+	Q_OBJECT
 
 	public :
 
@@ -1282,3 +1277,5 @@ void GafferUIModule::bindPathListingWidget()
 		.def( init<>() )
 	;
 }
+
+#include "PathListingWidgetBinding.moc"

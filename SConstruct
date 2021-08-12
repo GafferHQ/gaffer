@@ -722,10 +722,10 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
-			 # Prevent Qt clashing with boost::signals - we can remove
-			 # this if we move to boost::signals2.
-			 "CXXFLAGS" : [ "-DQT_NO_KEYWORDS" ],
 		},
+		"mocSourceFiles" : [
+			"src/GafferUIModule/PathListingWidgetBinding.cpp",
+		],
 		"apps" : [ "browser", "gui", "screengrab", "view" ],
 	},
 
@@ -1156,6 +1156,17 @@ for libraryName, libraryDef in libraries.items() :
 
 		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
 		pythonModuleEnv.Alias( "build", moduleInstall )
+
+	# Moc preprocessing, for QObject derived classes. SCons does include a "qt" tool that
+	# can scan files automatically for the Q_OBJECT macro, but it hasn't been updated for Qt 5.
+	# We don't need `moc` for many files, so we just list them manually and emit the `moc`
+	# command ourselves.
+
+	for sourceFile in libraryDef.get( "mocSourceFiles", [] ) :
+		mocOutput = commandEnv.Command( os.path.splitext( sourceFile )[0] + ".moc", sourceFile, "moc $SOURCE -o $TARGET" )
+		# Somehow the above leads to a circular dependency between `mocOutput` and itself.
+		# Tell SCons not to worry. The official SCons tool does the same.
+		env.Ignore( mocOutput, mocOutput )
 
 	# python component of python module
 
