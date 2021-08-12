@@ -80,7 +80,8 @@ class ImageTestCase( GafferTest.TestCase ) :
 				tileOrigin.x += GafferImage.ImagePlug.tileSize()
 			tileOrigin.y += GafferImage.ImagePlug.tileSize()
 
-	def assertImagesEqual( self, imageA, imageB, maxDifference = 0.0, ignoreMetadata = False, ignoreDataWindow = False ) :
+	def assertImagesEqual( self, imageA, imageB, maxDifference = 0.0, ignoreMetadata = False, ignoreDataWindow = False, ignoreChannelNamesOrder = False ) :
+
 		self.longMessage = True
 
 		self.assertEqual( imageA["format"].getValue(), imageB["format"].getValue() )
@@ -88,7 +89,12 @@ class ImageTestCase( GafferTest.TestCase ) :
 			self.assertEqual( imageA["dataWindow"].getValue(), imageB["dataWindow"].getValue() )
 		if not ignoreMetadata :
 			self.assertEqual( imageA["metadata"].getValue(), imageB["metadata"].getValue() )
-		self.assertEqual( imageA["channelNames"].getValue(), imageB["channelNames"].getValue() )
+
+		if not ignoreChannelNamesOrder :
+			self.assertEqual( imageA["channelNames"].getValue(), imageB["channelNames"].getValue() )
+		else :
+			self.assertEqual( set( imageA["channelNames"].getValue() ), set( imageB["channelNames"].getValue() ) )
+
 		deep = imageA["deep"].getValue()
 		self.assertEqual( deep, imageB["deep"].getValue() )
 

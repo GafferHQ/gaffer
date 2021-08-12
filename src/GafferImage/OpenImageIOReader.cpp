@@ -746,6 +746,27 @@ FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode
 	return cacheEntry.file;
 }
 
+boost::container::flat_set<ustring> g_metadataBlacklist = {
+	// These two attributes are used by OIIO/EXR to specify the names of
+	// subimages. We don't want to load them because :
+	//
+	// - We already account for them when generating `channelNames`, so the same
+	//   information is available elsewhere.
+	// - We can only have one metadata item called `name` or
+	//   `oiio:subimagename`, which is ambiguous when there are multiple
+	//   subimages.
+	// - They will quickly get out of sync as channels are added/removed/renamed
+	//   in Gaffer.
+	// - The OIIO ImageOutput classes react to them, causing ImageWriter to
+	//   write out channels with the wrong name.
+	ustring( "name" ),
+	ustring( "oiio:subimagename" ),
+	// This attribute is used by OIIO to say how many subimages there are. This
+	// isn't very meaningful in Gaffer where we deal in layers and channel
+	// names.
+	ustring( "oiio:subimages" )
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1090,6 +1111,10 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 
 	for( const auto &attrib : spec.extra_attribs )
 	{
+		if( g_metadataBlacklist.count( attrib.name() ) )
+		{
+			continue;
+		}
 		if( DataPtr data = IECoreImage::OpenImageIOAlgo::data( attrib ) )
 		{
 			result->writable()[attrib.name().string()] = data;

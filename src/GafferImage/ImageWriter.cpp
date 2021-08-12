@@ -1019,11 +1019,27 @@ class DeepScanlineWriter
 // Utility for converting IECore::Data types to OIIO::TypeDesc types.
 //////////////////////////////////////////////////////////////////////////
 
+// See associated blacklist in OpenImageIOReader.
+boost::container::flat_set<InternedString> g_metadataBlacklist = {
+	"name",
+	"oiio:subimagename",
+	"oiio:subimages"
+};
+
 void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spec )
 {
 	const CompoundData::ValueType &members = metadata->readable();
 	for( CompoundData::ValueType::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
+		if( g_metadataBlacklist.count( it->first ) )
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "ImageWriter",
+				boost::format( "Ignoring metadata \"%1%\" because it conflicts with OpenImageIO." ) % it->first
+			);
+			continue;
+		}
+
 		const IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
