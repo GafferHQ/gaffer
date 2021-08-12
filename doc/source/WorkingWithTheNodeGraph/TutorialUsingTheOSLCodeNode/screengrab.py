@@ -15,7 +15,7 @@ import GafferUI
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
 
 script["OSLCode"] = GafferOSL.OSLCode()
-script.selection().add( script["OSLCode"] )
+script.setFocus( script["OSLCode"] )
 oslEditor = GafferUI.NodeEditor.acquire( script["OSLCode"], floating=True )
 GafferUI.WidgetAlgo.grab( widget = oslEditor, imagePath = "images/blank.png" )
 

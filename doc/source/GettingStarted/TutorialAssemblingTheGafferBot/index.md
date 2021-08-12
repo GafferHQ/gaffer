@@ -39,14 +39,18 @@ First, load Gaffy's geometry cache with a SceneReader node:
 
 3. The Node Editor in the top-right panel has now updated to display the SceneReader node's values. In the _File Name_ field, type `${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc`.
 
-4. Hover the cursor over the background of the Viewer (in the top-left panel), and hit <kbd>F</kbd>. The view will reframe to cover the whole scene.
+4. Click the focus icon on the top right of the SceneReader to set it as the focus node, so that it will appear in editors set to follow focus, such as the viewer.
+
+    ![](images/mainSceneReaderNodeFocussed.png "The SceneReader node now has a focus icon")
+
+5. Hover the cursor over the background of the Viewer (in the top-left panel), and hit <kbd>F</kbd>. The view will reframe to cover the whole scene.
 
     ![](images/viewerSceneReaderBounding.png "The bounding box of the selected SceneReader node") <!-- TODO: add annotation -->
 
 The SceneReader node has loaded, and the Viewer is showing a bounding box, but the geometry remains invisible. You can confirm that the scene has loaded by examining the Hierarchy View in the bottom-right panel. It too has updated, and shows that you have `GAFFERBOT` at the root of the scene. In order to view the geometry, you will need to expand the scene's locations down to their leaves.
 
 > Important :
-> By default, the Viewer, Node Editor, and Hierarchy View update to reflect the last selected node, and go blank when no node is selected.
+> By default, the Viewer, and Hierarchy View show the focus node, and go blank when no node is focused ( Indicated by icon: ![](images/nodeSetFocusNode.png "The focus mode icon") ).  The Node Editor shows the selected node ( Indicated by icon: ![](images/nodeSetNodeSelection.png "The selection mode icon") ).
 
 
 ## The scene hierarchy ##
@@ -292,7 +296,7 @@ With all the settings complete, start the interactive renderer:
 
 2. In the Node Editor, click ![](images/timelinePlay.png "the play button") to start the renderer.
 
-3. Select the Catalogue node.
+3. Click the focus icon on the Catalogue node.
 
 4. Hover the cursor over the Viewer and hit <kbd>F</kbd> to frame the Catalogue node's live image of the interactive render.
 
@@ -303,36 +307,30 @@ Congratulations! You have successfully rendered your first image. Gaffy is curre
 
 ## Pinning an editor to a node ##
 
-As mentioned earlier, the Viewer, Hierarchy View, and Node Editor (each an **editor**) show their respective outputs of the currently selected node. This is not always convenient, because often you will need to edit one node while viewing the output of another. You can solve this by **pinning** an editor while a node is selected, which keeps that editor focused on the node.
+To make switching between viewing Gaffy's geometry and the render easier, you can modify the UI so you can work with two Viewers. First, start by pinning the catalogue node:
 
-To make switching between viewing Gaffy's geometry and the render easier, you can modify the UI so you can work with two Viewers. First, start by pinning the last node in the graph that contains the scene:
+1. Select the Catalogue node.
 
-1. Select the InteractiveAppleseedRender node.
+2. From the editor focus menu ![](images/editorFocusMenuFocusNode.png "The editor focus menu") at the top-right of the top panel, choose _Pin Catalogue_. The menu's icon will change to the pinned icon (![](images/nodeSetStandardSet.png "highlighted pin")) to show it is now locked to a specific node, and the Viewer's title in the tab bar will now include _[Catalogue]_ to help you keep track of which node(s) are pinned in which editors.
 
-2. From the editor focus menu ![](images/editorFocusMenuNodeSelectionLinked.png "The editor focus menu") at the top-right of the top panel, choose _Pin InteractiveAppleseedRender_. The menu's icon will change to the pinned icon (![](images/nodeSetStandardSet.png "highlighted pin")) to show it is now locked to a specific node, and the Viewer's title in the tab bar will now include _[InteractiveAppleseedRender]_ to help you keep track of which node(s) are pinned in which editors.
-
-![](images/viewerPinnedMaster.png "The Viewer's tab bar and editor focus menu when pinned to a specific node")
+![](images/viewerPinned.png "The Viewer's tab bar and editor focus menu when pinned to a specific node")
 
 > Tip :
-> You can also pin an editor to the current node selection by pressing <kbd>P</kbd> whilst the cursor is over the editor.
+> You can also pin an editor to the current node selection by pressing <kbd>P</kbd> whilst the cursor is over the editor, or by middle-click and dragging the Catalogue node onto the Viewer.
 
-The Viewer is now locked to the InteractiveAppleseedRender node's scene (which contains all of the parts from its upstream scenes), and will only show that scene, even if you deselect it or select a different node.
+The Viewer is now locked to the Catalogue image, and will only show that image, even if you deselect it and select or focus a different node.
 
-In the default layout, the Hierarchy View and other editors are set to follow the Viewer. You can tell which editors are linked in this way by the color of their editor focus mode menu. Slave editors will also show the slave icon (![](images/nodeSetDriverNodeSet.png "The slave editor focus mode icon")) in their editor focus menu.
+In the default layout, the Hierarchy View and other editors are set to follow the focus node.
 
-![](images/hierarchyViewSlave.png "The Hierarchy View's tab bar and editor focus menu when following another editor")
-
-For the final adjustment to the UI, create another Viewer in the top-left panel, and pin the Catalogue node to it. This time we'll use another pinning shortcut:
+For the final adjustment to the UI, create another Viewer in the top-left panel, which will also follow the focus node.
 
 1. At the top-right of the top panel, click ![](images/layoutButton.png "the layout menu button") to open the layout menu.
 
 2. Select Viewer. A new Viewer will appear on the panel next to the first one.
 
-3. Middle-click and drag the Catalogue node onto the new Viewer. That Viewer is now pinned to that node.
-
 <!-- TODO: Screenshot of the pinned Viewer -->
 
-Now you can switch between the scene's geometry (first Viewer) and the rendered image (second Viewer).
+Now you can switch between the rendered image (first Viewer) and the scene's geometry (second Viewer).
 
 Now it is time to shade Gaffy.
 

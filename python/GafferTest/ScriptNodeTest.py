@@ -94,6 +94,56 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		self.assertNotIn( n, s.selection() )
 
+	def testFocus( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		cs = GafferTest.CapturingSlot( s.focusChangedSignal() )
+
+		f = s.focusSet()
+		self.assertIsInstance( f, Gaffer.Set )
+		self.assertEqual( f.size(), 0 )
+
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+		n3 = Gaffer.Node()
+
+		s.setFocus( s["n1"] )
+		self.assertEqual( s.getFocus(), s["n1"] )
+		self.assertEqual( set( f ), { s["n1"] } )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( cs[0][0].isSame( s ) )
+		self.assertTrue( cs[0][1].isSame( s["n1"] ) )
+
+		s.setFocus( s["n2"] )
+		self.assertEqual( s.getFocus(), s["n2"] )
+		self.assertEqual( set( f ), { s["n2"] } )
+
+		self.assertEqual( len( cs ), 2 )
+		self.assertTrue( cs[1][0].isSame( s ) )
+		self.assertTrue( cs[1][1].isSame( s["n2"] ) )
+
+		with six.assertRaisesRegex( self, Exception, "Node is not a child of this script" ) :
+			s.setFocus( n3 )
+		self.assertEqual( set( f ), { s["n2"] } )
+
+		self.assertEqual( len( cs ), 2 )
+
+		with six.assertRaisesRegex( self, Exception, "Python argument types in.*" ) :
+			s.setFocus( Gaffer.Plug() )
+		self.assertEqual( set( f ), { s["n2"] } )
+
+		self.assertEqual( len( cs ), 2 )
+
+		s.setFocus( None )
+		self.assertEqual( s.getFocus(), None )
+		self.assertEqual( set( f ), set() )
+
+		self.assertEqual( len( cs ), 3 )
+		self.assertTrue( cs[2][0].isSame( s ) )
+		self.assertEqual( cs[2][1], None )
+
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()

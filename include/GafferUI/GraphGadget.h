@@ -64,6 +64,7 @@ IE_CORE_FORWARDDECLARE( AuxiliaryConnectionsGadget );
 namespace GraphLayer
 {
 	constexpr Gadget::Layer Backdrops = Gadget::Layer::Back;
+	constexpr Gadget::Layer OverBackdrops = Gadget::Layer::BackMidBack;
 	constexpr Gadget::Layer Connections = Gadget::Layer::MidBack;
 	constexpr Gadget::Layer Nodes = Gadget::Layer::Main;
 	constexpr Gadget::Layer Highlighting = Gadget::Layer::MidFront;
@@ -189,7 +190,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override;
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
 		unsigned layerMask() const override;
 		Imath::Box3f renderBound() const override;
 
@@ -202,6 +203,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		void rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
 		void selectionMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
+		void focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node );
 		void filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void filterMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void inputChanged( Gaffer::Plug *dstPlug );
@@ -256,6 +258,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		boost::signals::scoped_connection m_rootChildRemovedConnection;
 		boost::signals::scoped_connection m_selectionMemberAddedConnection;
 		boost::signals::scoped_connection m_selectionMemberRemovedConnection;
+		boost::signals::scoped_connection m_focusChangedConnection;
 
 		Gaffer::SetPtr m_filter;
 		boost::signals::scoped_connection m_filterMemberAddedConnection;

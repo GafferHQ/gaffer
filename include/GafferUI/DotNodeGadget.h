@@ -61,10 +61,11 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 		DotNodeGadget( Gaffer::NodePtr node );
 		~DotNodeGadget() override;
 
+		Imath::Box3f bound() const override;
+
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override;
-		unsigned layerMask() const override;
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
 
 	private :
 

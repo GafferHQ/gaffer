@@ -90,10 +90,11 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		{
 			None = 0,
 			Back = 1,
-			MidBack = 2,
-			Main = 4,
-			MidFront = 8,
-			Front = 16,
+			BackMidBack = 2,
+			MidBack = 4,
+			Main = 8,
+			MidFront = 16,
+			Front = 32,
 		};
 
 		/// @name Parent-child relationships
@@ -281,28 +282,41 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 			Layout,
 		};
 
+
 		/// Must be called by derived classes to reflect changes
-		/// affecting `doRenderLayer()`, `bound()` or `updateLayout().
+		/// affecting `renderLayer()`, `bound()` or `updateLayout().
 		void dirty( DirtyType dirtyType );
 
 		/// May be implemented by derived classes to position child widgets.
 		/// This is called automatically prior to rendering or bound computation.
 		virtual void updateLayout() const;
 
+		enum class RenderReason
+		{
+			Draw,       // A render that will display to the screen
+			Select,     // A render to determine what Gadget the cursor is over
+			DragSelect, // A render to determine what Gadget a drag is over
+		};
+
+		inline static bool isSelectionRender( RenderReason reason )
+		{
+			return reason == RenderReason::Select || reason == RenderReason::DragSelect;
+		}
+
 		/// Should be implemented by subclasses to draw themselves as appropriate
 		/// for the specified layer. Child gadgets will be drawn automatically
 		/// _after_ the parent gadget has been drawn.  Whenever overriding this,
 		/// you must override layerMask and renderBound() as well.
-		virtual void doRenderLayer( Layer layer, const Style *style ) const;
+		virtual void renderLayer( Layer layer, const Style *style, RenderReason reason ) const;
 
 		/// Returns a bitmask built from the flags in the Layer enum.
-		/// Any subclass which implements doRenderLayer must also implement layerMask
-		/// to indicate which layers doRenderLayer should be called for.
+		/// Any subclass which implements renderLayer must also implement layerMask
+		/// to indicate which layers renderLayer should be called for.
 		/// layerMask must currently return a constant value.  In the future, we
 		/// may implement a new DirtyType to allow dirtying the layerMask
 		virtual unsigned layerMask() const;
 
-		/// The bound of everything drawn by doRenderLayer
+		/// The bound of everything drawn by renderLayer
 		virtual Imath::Box3f renderBound() const;
 
 		/// Implemented to dirty the layout for both the old and the new parent.
@@ -351,8 +365,6 @@ inline unsigned operator| ( unsigned a, Gadget::Layer b )
 {
 	return a | (unsigned)b;
 }
-
-
 
 } // namespace GafferUI
 

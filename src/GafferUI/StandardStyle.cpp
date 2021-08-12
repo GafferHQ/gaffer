@@ -688,6 +688,11 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 	renderFrameInternal( contents, borderWidth, 0.15f / borderWidth, colorForState( RaisedColor, state, userColor ) );
 }
 
+void StandardStyle::renderNodeFocusRegion( const Imath::Box2f &contents, float borderWidth, State state ) const
+{
+	renderFrameInternal( contents, borderWidth, 0.0f, Color3f( 0.878f ) );
+}
+
 void StandardStyle::renderNodule( float radius, State state, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
@@ -1369,7 +1374,10 @@ static const std::string &fragmentSource()
 		"		v /= borderRadius;"
 		"		float r = length( v );"
 
-		"		OUTCOLOR = mix( OUTCOLOR, vec4( 0.15, 0.15, 0.15, OUTCOLOR.a ), ieFilteredStep( 1.0 - borderWidth, r ) );"
+		"		if( borderWidth != 0.0 )"
+		"		{"
+		"			OUTCOLOR = mix( OUTCOLOR, vec4( 0.15, 0.15, 0.15, OUTCOLOR.a ), ieFilteredStep( 1.0 - borderWidth, r ) );"
+		"		}"
 		"		OUTCOLOR.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
 		"	}"
 

@@ -220,6 +220,7 @@ void GafferUIModule::bindGadget()
 
 	enum_<Gadget::Layer>( "Layer" )
 		.value( "Back", Gadget::Layer::Back )
+		.value( "BackMidBack", Gadget::Layer::BackMidBack )
 		.value( "MidBack", Gadget::Layer::MidBack )
 		.value( "Main", Gadget::Layer::Main )
 		.value( "MidFront", Gadget::Layer::MidFront )
@@ -230,6 +231,12 @@ void GafferUIModule::bindGadget()
 		.value( "Render", Gadget::DirtyType::Render )
 		.value( "Bound", Gadget::DirtyType::Bound )
 		.value( "Layout", Gadget::DirtyType::Layout )
+	;
+
+	enum_<Gadget::RenderReason>( "RenderReason" )
+		.value( "Draw", Gadget::RenderReason::Draw )
+		.value( "Select", Gadget::RenderReason::Select )
+		.value( "DragSelect", Gadget::RenderReason::DragSelect )
 	;
 
 	SignalClass<Gadget::VisibilityChangedSignal, DefaultSignalCaller<Gadget::VisibilityChangedSignal>, VisibilityChangedSlotCaller>( "VisibilityChangedSignal" );

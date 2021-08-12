@@ -69,6 +69,7 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:minWidth", 0.0,
 	"nodeGadget:padding", 0.5,
+	"nodeGadget:shape", "oval",
 
 	"layout:activator:labelTypeIsCustom", lambda node : node["labelType"].getValue() == node.LabelType.Custom,
 

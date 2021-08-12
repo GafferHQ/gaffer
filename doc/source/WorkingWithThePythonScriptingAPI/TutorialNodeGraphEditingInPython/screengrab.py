@@ -83,10 +83,9 @@ pythonEditor.inputWidget().setText( "" )
 # Sphere with increased radius in Viewer
 pythonEditor.inputWidget().setText( "root['Sphere']['radius'].setValue( 4 )" )
 pythonEditor.execute()
-script.selection().add( script["Sphere"] )
+script.setFocus( script["Sphere"] )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerSphereRadius.png" )
 pythonEditor.outputWidget().setText( "" )
-script.selection().clear()
 
 # OpenGL node with constant plug in Node Editor
 script["OpenGLShader"].loadShader( "Constant" )
@@ -97,12 +96,11 @@ GafferUI.WidgetAlgo.grab( widget = nodeEditor, imagePath = "images/nodeEditorOpe
 
 # Camera node with adjusted translate in Viewer
 script["Camera"]["transform"]["translate"]["z"].setValue( 8 )
-script.selection().add( script["Camera"] )
+script.setFocus( script["Camera"] )
 paths = IECore.PathMatcher( [ "/camera" ] )
 GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraPosition.png" )
-script.selection().clear()
 
 # ShaderAssignment node with connections in Graph Editor
 script['ShaderAssignment']['in'].setInput( script['Sphere']['out'] )
@@ -125,7 +123,7 @@ graphEditor.frame( Gaffer.StandardSet( [ script["Sphere"], script["OpenGLShader"
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorRearrangedNodes.png" )
 
 # Final script in Viewer
-script.selection().add( script["Group"] )
+script.setFocus( script["Group"] )
 paths = IECore.PathMatcher( [ "/group" ] )
 GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), paths )
 GafferSceneUI.ContextAlgo.expandDescendants( script.context(), paths, script["Group"]["out"] )

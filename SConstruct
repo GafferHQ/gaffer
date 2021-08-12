@@ -1019,16 +1019,20 @@ for library in ( "GafferUI", "GafferScene", "GafferSceneUI", "GafferImageUI" ) :
 
 # Add on Qt libraries to definitions - these vary from platform to platform
 
-def addQtLibrary( library, qtLibrary ) :
+def addQtLibrary( library, qtLibrary, pythonOnly = True ) :
 
 	if env["PLATFORM"] == "darwin" :
 		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "Qt" + qtLibrary )
+		if not pythonOnly:
+			libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "Qt" + qtLibrary )
 	else :
 		prefix = "Qt" if int( env["QT_VERSION"] ) < 5 else "Qt${QT_VERSION}"
 		libraries[library]["pythonEnvAppends"]["LIBS"].append( prefix + qtLibrary )
+		if not pythonOnly:
+			libraries[library]["envAppends"]["LIBS"].append( prefix + qtLibrary )
 
 for library in ( "GafferUI", ) :
-	addQtLibrary( library, "Core" )
+	addQtLibrary( library, "Core", False )
 	addQtLibrary( library, "Gui" )
 	addQtLibrary( library, "OpenGL" )
 	if int( env["QT_VERSION"] ) > 4 :

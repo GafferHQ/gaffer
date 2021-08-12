@@ -1,6 +1,7 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,15 +34,55 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
-import weakref
 
+import unittest
+import imath
+
+import IECore
+
+import Gaffer
+import GafferTest
 import GafferUI
-import GafferSceneUI
+import GafferUITest
 
-def __editorCreated( editor ) :
+class AuxiliaryNodeGadgetTest( GafferUITest.TestCase ) :
 
-	GafferUI.GraphBookmarksUI.connectToEditor( editor )
-	GafferSceneUI.SceneHistoryUI.connectToEditor( editor )
+	def testContents( self ) :
 
-GafferUI.Editor.instanceCreatedSignal().connect( __editorCreated, scoped = False )
-GafferUI.CompoundEditor.nodeSetMenuSignal().connect( GafferUI.GraphBookmarksUI.appendNodeSetMenuDefinitions, scoped = False )
+		n = Gaffer.Node()
+
+		g = GafferUI.AuxiliaryNodeGadget( n )
+
+		self.assertFalse( g.getContents() )
+
+	def testNodules( self ) :
+		# Test a bunch of things not supported on AuxiliaryGadgets, just to make sure that they return
+		# None instead of crashing
+
+		n = Gaffer.Node()
+		n["i"] = Gaffer.IntPlug()
+
+		g = GafferUI.AuxiliaryNodeGadget( n )
+
+		self.assertFalse( g.nodule( n["i"] ) )
+
+	def testNoduleTangents( self ) :
+
+		n = GafferTest.AddNode()
+		g = GafferUI.AuxiliaryNodeGadget( n )
+
+		self.assertEqual( g.connectionTangent( g.nodule( n["op1"] ) ), imath.V3f( 0, 0, 0 ) )
+
+	def testEdgeGadgets( self ) :
+
+		n = GafferTest.MultiplyNode()
+		g = GafferUI.AuxiliaryNodeGadget( n )
+
+		for name, edge in g.Edge.names.items() :
+			self.assertTrue( g.getEdgeGadget( edge ) is None )
+			eg = GafferUI.TextGadget( name )
+			g.setEdgeGadget( edge, eg )
+			self.assertTrue( g.getEdgeGadget( edge ) is None )
+
+if __name__ == "__main__":
+	unittest.main()

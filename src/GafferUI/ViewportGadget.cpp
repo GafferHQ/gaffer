@@ -700,7 +700,7 @@ std::string ViewportGadget::getToolTip( const IECore::LineSegment3f &line ) cons
 		return result;
 	}
 
-	std::vector<Gadget*> gadgets = gadgetsAt( V2f( line.p0.x, line.p0.y ) );
+	std::vector<Gadget*> gadgets = gadgetsAtInternal( V2f( line.p0.x, line.p0.y ), false );
 	for( Gadget *it : gadgets )
 	{
 		Gadget *gadget = it;
@@ -933,15 +933,24 @@ bool ViewportGadget::getVariableAspectZoom() const
 
 std::vector< Gadget* > ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition ) const
 {
-	return gadgetsAt( Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ) );
+	return gadgetsAtInternal( Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ), Layer::None, false );
 }
 
 std::vector< Gadget* > ViewportGadget::gadgetsAt( const Imath::Box2f &rasterRegion, Gadget::Layer filterLayer ) const
 {
+	return gadgetsAtInternal( rasterRegion, filterLayer, false );
+}
+std::vector< Gadget* > ViewportGadget::gadgetsAtInternal( const Imath::V2f &rasterPosition, bool dragging ) const
+{
+	return gadgetsAtInternal( Box2f( rasterPosition - V2f( 1 ), rasterPosition + V2f( 1 ) ), Layer::None, dragging );
+}
+
+std::vector< Gadget* > ViewportGadget::gadgetsAtInternal( const Imath::Box2f &rasterRegion, Gadget::Layer filterLayer, bool dragging ) const
+{
 	std::vector<HitRecord> selection;
 	{
 		SelectionScope selectionScope( this, rasterRegion, selection, IECoreGL::Selector::IDRender );
-		renderInternal( filterLayer );
+		renderInternal( dragging ? RenderReason::DragSelect : RenderReason::Select, filterLayer );
 	}
 
 	std::vector< Gadget* > gadgets;
@@ -1033,7 +1042,7 @@ void ViewportGadget::render() const
 	glMultMatrixf( camera->getTransform().getValue() );
 	glMatrixMode( GL_MODELVIEW );
 
-	renderInternal();
+	renderInternal( RenderReason::Draw );
 }
 
 void ViewportGadget::childDirtied( DirtyType dirtyType )
@@ -1047,7 +1056,7 @@ void ViewportGadget::childDirtied( DirtyType dirtyType )
 	renderRequestSignal()( this );
 }
 
-void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
+void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLayer ) const
 {
 
 	bound(); // Updates layout if necessary
@@ -1103,7 +1112,7 @@ void ViewportGadget::renderInternal( Gadget::Layer filterLayer ) const
 				currentStyle = renderItem.style;
 			}
 
-			renderItem.gadget->doRenderLayer( layer, currentStyle );
+			renderItem.gadget->renderLayer( layer, currentStyle, reason );
 		}
 	}
 	glLoadMatrixf( viewTransform.getValue() );
@@ -1165,6 +1174,11 @@ void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child
 		m_lastButtonPressGadget = nullptr;
 	}
 
+	if( childGadget == m_previousClickGadget || childGadget->isAncestorOf( m_previousClickGadget.get() ) )
+	{
+		m_previousClickGadget = nullptr;
+	}
+
 	if( childGadget == m_gadgetUnderMouse || childGadget->isAncestorOf( m_gadgetUnderMouse.get() ) )
 	{
 		m_gadgetUnderMouse = nullptr;
@@ -1182,14 +1196,16 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		return true;
 	}
 
-	std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
+	std::vector<Gadget*> gadgets = gadgetsAtInternal( V2f( event.line.p0.x, event.line.p0.y ), false );
 
 	Gadget* handler;
 	m_lastButtonPressGadget = nullptr;
+	m_previousClickGadget = nullptr;
 	bool result = dispatchEvent( gadgets, &Gadget::buttonPressSignal, event, handler );
 	if( result )
 	{
 		m_lastButtonPressGadget = handler;
+		m_previousClickGadget = handler;
 		return true;
 	}
 
@@ -1216,14 +1232,17 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 
 bool ViewportGadget::buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &event )
 {
-	/// \todo Implement me. I'm not sure who this event should go to - probably
-	/// the last button press gadget, but we erased that in buttonRelease.
+	if( m_previousClickGadget )
+	{
+		return dispatchEvent( m_previousClickGadget.get(), &Gadget::buttonDoubleClickSignal, event );
+	}
+
 	return false;
 }
 
 void ViewportGadget::updateGadgetUnderMouse( const ButtonEvent &event )
 {
-	std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
+	std::vector<Gadget*> gadgets = gadgetsAtInternal( V2f( event.line.p0.x, event.line.p0.y ), false );
 
 	Gadget* newGadgetUnderMouse = nullptr;
 	if( gadgets.size() )
@@ -1382,7 +1401,7 @@ bool ViewportGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	else
 	{
-		std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
+		std::vector<Gadget*> gadgets = gadgetsAtInternal( V2f( event.line.p0.x, event.line.p0.y ), true );
 
 		Gadget* dragDestination = updatedDragDestination( gadgets, event );
 		if( dragDestination )
@@ -1417,7 +1436,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		// step as an optimisation.
 		if( !event.destinationGadget || !event.data->isInstanceOf( IECore::NullObjectTypeId ) )
 		{
-			std::vector<Gadget*> gadgets = gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ) );
+			std::vector<Gadget*> gadgets = gadgetsAtInternal( V2f( event.line.p0.x, event.line.p0.y ), true );
 
 			// update drag destination
 			Gadget* updatedDestination = updatedDragDestination( gadgets, event );

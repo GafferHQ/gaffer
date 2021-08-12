@@ -117,7 +117,7 @@ GafferScene::ScenePlug *findSceneForImage( GafferImage::ImagePlug *image, std::s
 /// \todo This should become a public public class that
 /// could be reused in other tools. The main obstacle
 /// to that is that this is hardcoded to work in raster
-/// space - see comments in doRender() for ideas as to
+/// space - see comments in renderLayer() for ideas as to
 /// how we could avoid that.
 class CropWindowTool::Rectangle : public GafferUI::Gadget
 {
@@ -204,7 +204,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main )
 			{
@@ -229,7 +229,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 			glPushAttrib( GL_CURRENT_BIT | GL_LINE_BIT | GL_ENABLE_BIT );
 
-				if( IECoreGL::Selector::currentSelector() )
+				if( isSelectionRender( reason ) )
 				{
 					if( m_editable )
 					{

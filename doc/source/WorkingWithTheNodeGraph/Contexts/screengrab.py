@@ -50,18 +50,21 @@ contextVariablesNode["in"].setInput( textNode["out"] )
 script.addChild( textNode )
 script.addChild( contextVariablesNode )
 script.selection().add( script["ContextVariables"] )
+script.setFocus( script["ContextVariables"] )
 graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/conceptContextsReadingContextVariable.png" )
 
 # Concept: Editor focus
 script.selection().clear()
 script.selection().add( script["Text"] )
+script.setFocus( script["Text"] )
 GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/conceptContextsEditorFocus.png" )
 
 # Concept: Context Variables in expressions
 script["fileName"].setValue( "scripts/conceptContextsContextVariablesInExpressions.gfr" )
 script.load()
 script.selection().add( Gaffer.StandardSet( [ script["Cube"] ] ) )
+script.setFocus( script["Cube"] )
 graphEditor.frame( Gaffer.StandardSet( [ script["Expression"], script["Cube"] ] ) )
 GafferUI.PlugValueWidget.acquire( script["Cube"]["transform"] )
 GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/conceptContextsContextVariablesInExpressions.png" )
@@ -79,6 +82,7 @@ script["Cube"].setName( "Cube_old" )
 script["Cube1"].setName( "Cube" )
 script.selection().clear()
 script.selection().add( Gaffer.StandardSet( [ script["Transform"] ] ) )
+script.setFocus( script["Transform"] )
 graphEditor.frame( Gaffer.StandardSet( [ script["Cube"], script["Duplicate"], script["Transform"] ] ) )
 GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/conceptContextsRandomNode1.png" )
 
@@ -125,6 +129,7 @@ text = 'context = Gaffer.Context( root.context() )\ncontext["scene:path"] = IECo
 tempPythonEditor.inputWidget().setText( text )
 tempPythonEditor.execute()
 tempPythonEditor.inputWidget().setText( text )
+GafferUI.WidgetAlgo.grab( widget = tempPythonEditor.outputWidget(), imagePath = "images/conceptContextsQueryingResultsPythonEditor.png" )
 GafferUI.WidgetAlgo.grab( widget = tempPythonEditor.outputWidget(), imagePath = "images/conceptContextsQueryingResultsFixedPythonEditor.png" )
 tempWindow.close()
 del tempWindow
@@ -155,9 +160,10 @@ __delay( 0.1 )
 
 # Concept: Contexts in parallel branches
 script.selection().add( Gaffer.StandardSet( [ script["Merge"] ] ) )
+script.setFocus( script["Merge"] )
 # Layout: Graph Editor, 1 Viewer
 layouts = GafferUI.Layouts.acquire( mainWindow.scriptNode().applicationRoot() )
-layouts.add( 'graphAndViewer', "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : ( GafferUI.SplitContainer.Orientation.Vertical, 0.960419, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( {'tabs': (GafferUI.Viewer( scriptNode ), GafferSceneUI.UVInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0}, {'tabs': (GafferUI.GraphEditor( scriptNode ), GafferUI.AnimationEditor( scriptNode ), GafferSceneUI.PrimitiveInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0} ) ), {'tabs': (GafferUI.Timeline( scriptNode ),), 'tabsVisible': False, 'currentTab': 0} ) ), 'detachedPanels' : (), 'windowState' : { 'fullScreen' : False, 'screen' : -1, 'bound' : imath.Box2f( imath.V2f( 0.046875, 0.109625667 ), imath.V2f( 0.78125, 0.9073084 ) ), 'maximized' : False }, 'editorState' : {'c-0-1-0-2': {'driver': 'c-0-0-0-0', 'driverMode': 'NodeSet'}, 'c-0-0-0-1': {'driver': 'c-0-0-0-0', 'driverMode': 'NodeSet'}} } )", persistent = False )
+layouts.add( 'graphAndViewer', "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : ( GafferUI.SplitContainer.Orientation.Vertical, 0.960419, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( {'tabs': (GafferUI.Viewer( scriptNode ), GafferSceneUI.UVInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0}, {'tabs': (GafferUI.GraphEditor( scriptNode ), GafferUI.AnimationEditor( scriptNode ), GafferSceneUI.PrimitiveInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0} ) ), {'tabs': (GafferUI.Timeline( scriptNode ),), 'tabsVisible': False, 'currentTab': 0} ) ), 'detachedPanels' : (), 'windowState' : { 'fullScreen' : False, 'screen' : -1, 'bound' : imath.Box2f( imath.V2f( 0.046875, 0.109625667 ), imath.V2f( 0.78125, 0.9073084 ) ), 'maximized' : False } } )", persistent = False )
 layout = layouts.create( "graphAndViewer", mainWindow.scriptNode() )
 mainWindow.setLayout( layout )
 viewer = mainWindow.getLayout().editors( GafferUI.Viewer )[0]
@@ -172,7 +178,7 @@ GafferUI.WidgetAlgo.grab( widget = mainWindow, imagePath = "images/conceptContex
 script["fileName"].setValue( os.path.abspath( "scripts/conceptContextsInParallelBranchesDownstream.gfr" ) )
 script.load()
 # Layout: Graph Editor, 2 Viewers
-layouts.add( 'graphAndViewers', "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : ( GafferUI.SplitContainer.Orientation.Vertical, 0.960419, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( ( GafferUI.SplitContainer.Orientation.Horizontal, 0.5, ( {'tabs': (GafferUI.Viewer( scriptNode ), GafferSceneUI.UVInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0}, {'tabs': (GafferUI.Viewer( scriptNode ),), 'tabsVisible': True, 'currentTab': 0} ) ), {'tabs': (GafferUI.GraphEditor( scriptNode ), GafferUI.AnimationEditor( scriptNode ), GafferSceneUI.PrimitiveInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0} ) ), {'tabs': (GafferUI.Timeline( scriptNode ),), 'tabsVisible': False, 'currentTab': 0} ) ), 'detachedPanels' : (), 'windowState' : { 'fullScreen' : False, 'screen' : -1, 'bound' : imath.Box2f( imath.V2f( 0.046875, 0.111408196 ), imath.V2f( 0.78125, 0.909090936 ) ), 'maximized' : False }, 'editorState' : {'c-0-1-0-2': {'driver': 'c-0-0-0-0-0', 'driverMode': 'NodeSet'}, 'c-0-0-0-0-1': {'driver': 'c-0-0-0-0-0', 'driverMode': 'NodeSet'}} } )", persistent = False )
+layouts.add( 'graphAndViewers', "GafferUI.CompoundEditor( scriptNode, _state={ 'children' : ( GafferUI.SplitContainer.Orientation.Vertical, 0.960419, ( ( GafferUI.SplitContainer.Orientation.Vertical, 0.5, ( ( GafferUI.SplitContainer.Orientation.Horizontal, 0.5, ( {'tabs': (GafferUI.Viewer( scriptNode ), GafferSceneUI.UVInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0}, {'tabs': (GafferUI.Viewer( scriptNode ),), 'tabsVisible': True, 'currentTab': 0} ) ), {'tabs': (GafferUI.GraphEditor( scriptNode ), GafferUI.AnimationEditor( scriptNode ), GafferSceneUI.PrimitiveInspector( scriptNode )), 'tabsVisible': True, 'currentTab': 0} ) ), {'tabs': (GafferUI.Timeline( scriptNode ),), 'tabsVisible': False, 'currentTab': 0} ) ), 'detachedPanels' : (), 'windowState' : { 'fullScreen' : False, 'screen' : -1, 'bound' : imath.Box2f( imath.V2f( 0.046875, 0.111408196 ), imath.V2f( 0.78125, 0.909090936 ) ), 'maximized' : False } } )", persistent = False )
 layout = layouts.create( "graphAndViewers", mainWindow.scriptNode() )
 mainWindow.setLayout( layout )
 viewer = mainWindow.getLayout().editors( GafferUI.Viewer )[0]

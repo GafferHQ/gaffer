@@ -509,7 +509,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const final
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const final
 		{
 			if( layer != Layer::Main )
 			{
@@ -533,9 +533,9 @@ class GnomonGadget : public GafferUI::Gadget
 
 			// if we're drawing for selection, the selector will have its own
 			// post-projection matrix which needs taking into account as well.
-			if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )
+			if( isSelectionRender( reason ) )
 			{
-				glMultMatrixd( selector->postProjectionMatrix().getValue() );
+				glMultMatrixd( IECoreGL::Selector::currentSelector()->postProjectionMatrix().getValue() );
 			}
 
 			// this is our post projection matrix, which scales down to the size we want and
@@ -871,14 +871,14 @@ class CameraOverlay : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::Main )
 			{
 				return;
 			}
 
-			if( IECoreGL::Selector::currentSelector() || ( m_resolutionGate.isEmpty() && m_apertureGate.isEmpty() ) )
+			if( isSelectionRender( reason ) || ( m_resolutionGate.isEmpty() && m_apertureGate.isEmpty() ) )
 			{
 				return;
 			}
@@ -1789,7 +1789,7 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 		collapseSelection();
 		return true;
 	}
-	else if( event.key == "F" )
+	else if( event.key == "F" && event.modifiers == GafferUI::ModifiableEvent::Modifiers::None )
 	{
 		Imath::Box3f b = framingBound();
 		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )

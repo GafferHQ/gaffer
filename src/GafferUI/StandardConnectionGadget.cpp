@@ -314,7 +314,7 @@ void StandardConnectionGadget::createConnection( Gaffer::Plug *endpoint )
 	}
 }
 
-void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) const
+void StandardConnectionGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
 	// Connections get rendered below NodeGadgets but over BackdropGadgets
 	if( layer != GraphLayer::Connections )
