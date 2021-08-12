@@ -4,8 +4,8 @@
 Features
 --------
 
+- GraphEditor : Added new "Focus Node" concept. Clicking on the top right of a node tags it as the focus node, and editors and viewers can be set to follow the focus node. This is useful when you have several viewers that you want to view the same node, but you don't want them to follow selection.
 - Image Viewer : Added Luminance option to the channel selection menu.
-- Node graph: Added New "Focus Node" concept.  Clicking on the top right of a node tags it as the focus node, and editors and viewers can be set to follow the focus node.  This is useful when you have several viewers that you want to view the same node, but you don't want them to follow selection.
 
 Improvements
 ------------
@@ -15,15 +15,15 @@ Improvements
 API
 ---
 
-- ScriptNode : Added focus API
+- ScriptNode : Added focus node API.
 - GraphComponent : Inlined `children()` method, yielding 20-40% improvements in various child iteration benchmarks.
 - Gadget :
   - Added `layerMask()` and `renderBound()` virtual functions.
-  - Added BackMidBack render layer
+  - Added `BackMidBack` render layer.
 - ViewportGadget :
   - Added `gadgetsAt()` overload which returns the gadgets rather than taking an output parameter by reference.
   - Added `gadgetsAt()` overload taking a raster space region (rather than position) and an optional layer filter.
-  - Add support for Gadget's double click signal
+  - Add support for Gadget's double click signal.
 
 Breaking Changes
 ----------------
@@ -34,12 +34,12 @@ Breaking Changes
   - Removed `select()` method.
   - Replaced `hasLayer()` virtual function with `layerMask()`.
   - Added `renderBound()` virtual function.
-  - Renamed doRenderLayer() to renderLayer(), and added new argument renderReason, which can be used to check for selection renders without needing to query Selector::currentSelector()
+  - Renamed `doRenderLayer()` to `renderLayer()`, and added new `renderReason` argument, which can be used to check for selection renders without needing to query `Selector::currentSelector()`.
 - ViewportGadget : Deprecated old `gadgetsAt()` signature. Please use the new form instead.
 - ArnoldOptions : Removed support for the `ai:ignore_motion_blur` option. Turn off the `sampleMotion` option using a StandardOptions node instead.
 - DotNodeGadget and AuxiliaryNodeGadget now use more inherited functionality from StandardNodeGadget, which could cause problems if anyone has subclassed the gadgets
-- Fullscreen hotkey is now F11 instead of `
-- Removed support for linking editors ( setting focus node replaces most practical uses of this feature )
+- Fullscreen hotkey is now <kbd>F11</kbd> instead of <kbd>`</kbd>.
+- Removed support for linking editors (following the focus node replaces most practical uses of this feature).
 
 0.60.x.x (relative to 0.60.2.1)
 ========
