@@ -4,6 +4,14 @@
 Improvements
 ------------
 
+- PythonEditor :
+  - Added syntax highlighting and tab completion.
+  - Added <kbd>Ctrl</kbd> + <kbd>]</kbd> hotkey for indenting and <kbd>Ctrl</kbd> + <kbd>[</kbd> for unindenting the selection.
+  - Added <kbd>Ctrl</kbd> + <kbd>/</kbd> hotkey for commenting and uncommenting the selection.
+  - Added context menus to input and output widgets.
+  - All Gaffer and IECore modules are now imported by default.
+- UIEditor : Added syntax highlighting and tab completion to the code editor for button widgets.
+- OSLCode : Added syntax highlighting.
 - ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
 
 Fixes
@@ -14,8 +22,12 @@ Fixes
 API
 ---
 
+- CodeWidget : Added new class for displaying/editing code.
 - PlugLayout : Added a warning for plugs that reference activators that have not been registered.
 - ImageTestCase : Added `ignoreChannelNamesOrder` keyword argument to `assertImagesEqual()`. This defaults to `False`, maintaining the previous behaviour.
+- MultiLineTextWidget : Added `cursorBound()` method.
+- WidgetAlgo : `joinEdges()` now accepts an arbitrary list of widgets rather than requiring a `ListContainer`. In this case, the orientation must be passed as an additional argument.
+- PythonEditor : Added a `namespace()` method, which returns the globals/locals used by `execute()`.
 
 0.60.2.1 (relative to 0.60.2.0)
 ========

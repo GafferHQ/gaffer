@@ -1727,6 +1727,53 @@ UIEditor.registerPlugValueWidget( "Button", Gaffer.Plug, "GafferUI.ButtonPlugVal
 ##########################################################################
 # Registering standard Widget Settings for the UIEditor
 ##########################################################################
+
+class _ButtonCodeMetadataWidget( GafferUI.MetadataWidget.MetadataWidget ) :
+
+	def __init__( self, target = None, **kw ) :
+
+		self.__codeWidget = GafferUI.CodeWidget()
+		GafferUI.MetadataWidget.MetadataWidget.__init__( self, self.__codeWidget, "buttonPlugValueWidget:clicked", target, defaultValue = "", **kw )
+
+		## \todo Qt 5.6 can't deal with multiline placeholder text. In Qt 5.12
+		# we should be able to provide a little more detail here.
+		self.__codeWidget._qtWidget().setPlaceholderText(
+			"# Access the node graph via `plug`, and the UI via `button`"
+		)
+
+		self.__codeWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
+
+		self.__codeWidget.editingFinishedSignal().connect(
+			Gaffer.WeakMethod( self.__editingFinished ), scoped = False
+		)
+
+	def setTarget( self, target ) :
+
+		GafferUI.MetadataWidget.MetadataWidget.setTarget( self, target )
+
+		if target is not None :
+
+			self.__codeWidget.setCompleter(
+				GafferUI.CodeWidget.PythonCompleter( {
+					"IECore" : IECore,
+					"Gaffer" : Gaffer,
+					"plug" : target,
+					"button" : GafferUI.ButtonPlugValueWidget( target ),
+				} )
+			)
+
+		else :
+
+			self.__codeWidget.setCompleter( None )
+
+	def _updateFromValue( self, value ) :
+
+		self.__codeWidget.setText( str( value ) )
+
+	def __editingFinished( self, *unused ) :
+
+		self._updateFromWidget( self.__codeWidget.getText() )
+
 UIEditor.registerWidgetMetadata( "File Extensions", "GafferUI.FileSystemPath*PlugValueWidget", "fileSystemPath:extensions", "" )
 UIEditor.registerWidgetMetadata( "Bookmarks Category", "GafferUI.FileSystemPath*PlugValueWidget", "path:bookmarks", "" )
 UIEditor.registerWidgetMetadata( "File Must Exist", "GafferUI.FileSystemPath*PlugValueWidget", "path:valid", False )
@@ -1738,7 +1785,7 @@ UIEditor.registerWidgetMetadata( "Sequences include frame range", "GafferUI.File
 UIEditor.registerWidgetSetting(
 	"Button Click Code",
 	"GafferUI.ButtonPlugValueWidget",
-	lambda plug : MetadataWidget.MultiLineStringMetadataWidget( "buttonPlugValueWidget:clicked", target = plug, role = GafferUI.MultiLineTextWidget.Role.Code ),
+	_ButtonCodeMetadataWidget,
 )
 UIEditor.registerWidgetMetadata( "Inline", "GafferUI.ButtonPlugValueWidget", "layout:accessory", False )
 UIEditor.registerWidgetMetadata( "Divider", "*", "divider", False )
