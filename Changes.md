@@ -1,4 +1,4 @@
-0.60.x.x (relative to 0.60.2.1)
+0.60.3.0 (relative to 0.60.2.1)
 ========
 
 Features
