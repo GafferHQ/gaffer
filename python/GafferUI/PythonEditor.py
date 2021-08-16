@@ -36,6 +36,7 @@
 ##########################################################################
 
 import ast
+import functools
 import sys
 import traceback
 import imath
@@ -50,8 +51,6 @@ from Qt import QtCore
 
 ## \todo Custom right click menu with script load, save, execute file, undo, redo etc.
 ## \todo Standard way for users to customise all menus
-## \todo Tab completion and popup help. rlcompleter module should be useful for tab completion. Completer( dict ) constructs a completer
-# that works in a specific namespace.
 class PythonEditor( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -65,18 +64,24 @@ class PythonEditor( GafferUI.Editor ) :
 			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
 			role = GafferUI.MultiLineTextWidget.Role.Code,
 		)
-		self.__inputWidget = GafferUI.MultiLineTextWidget(
-			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None_,
-			role = GafferUI.MultiLineTextWidget.Role.Code,
+		self.__outputWidget.contextMenuSignal().connect(
+			Gaffer.WeakMethod( self.__contextMenu ), scoped = False
 		)
 
-		self.__outputWidget._qtWidget().setProperty( "gafferTextRole", "output" )
-		self.__inputWidget._qtWidget().setProperty( "gafferTextRole", "input" )
+		self.__inputWidget = GafferUI.CodeWidget()
+
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
 
 		self.__inputWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
 		self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
+		self.__inputWidget.contextMenuSignal().connect(
+			Gaffer.WeakMethod( self.__contextMenu ), scoped = False
+		)
+		GafferUI.WidgetAlgo.joinEdges(
+			[ self.__outputWidget, self.__inputWidget ],
+			orientation = GafferUI.ListContainer.Orientation.Vertical
+		)
 
 		self.__executionDict = {
 			"imath" : imath,
@@ -85,6 +90,9 @@ class PythonEditor( GafferUI.Editor ) :
 			"GafferUI" : GafferUI,
 			"root" : scriptNode,
 		}
+		self.__inputWidget.setCompleter( GafferUI.CodeWidget.PythonCompleter( self.__executionDict ) )
+		self.__inputWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
+		self.__inputWidget.setCommentPrefix( "#" )
 
 	def inputWidget( self ) :
 
@@ -131,6 +139,11 @@ class PythonEditor( GafferUI.Editor ) :
 								self.__inputWidget.setText( "" )
 						except Exception as e :
 							self.__outputWidget.appendHTML( self.__exceptionToHTML() )
+
+	## The Python dictionary that provides the globals and locals for `execute()`.
+	def namespace( self ) :
+
+		return self.__executionDict
 
 	def __repr__( self ) :
 
@@ -193,6 +206,70 @@ class PythonEditor( GafferUI.Editor ) :
 			# update the gui so messages are output as they occur, rather than all getting queued
 			# up till the end.
 			QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+
+	def __contextMenu( self, widget ) :
+
+		definition = IECore.MenuDefinition()
+
+		if widget is self.inputWidget() :
+
+			definition.append(
+				"/Execute Selection" if widget.selectedText() else "/Execute",
+				{
+					"command" : self.execute,
+					"shortCut" : "Enter",
+				}
+			)
+
+			definition.append( "/ExecuteDivider", { "divider" : True } )
+
+		definition.append(
+			"/Copy",
+			{
+				"command" : functools.partial(
+					self.scriptNode().ancestor( Gaffer.ApplicationRoot ).setClipboardContents,
+					IECore.StringData( widget.selectedText() )
+				),
+				"active" : bool( widget.selectedText() )
+			}
+		)
+
+		if widget is self.inputWidget() :
+			definition.append(
+				"/Paste",
+				{
+					"command" : functools.partial(
+						widget.insertText,
+						self.scriptNode().ancestor( Gaffer.ApplicationRoot ).getClipboardContents().value,
+					),
+					"active" : isinstance( self.scriptNode().ancestor( Gaffer.ApplicationRoot ).getClipboardContents(), IECore.StringData )
+				}
+			)
+
+		definition.append( "/CopyPasteDivider", { "divider" : True } )
+
+		definition.append(
+			"/Select All",
+			{
+				"command" : widget._qtWidget().selectAll,
+				"active" :  bool( widget.getText() )
+			}
+		)
+
+		definition.append( "/SelectDivider", { "divider" : True } )
+
+		definition.append(
+			"/Clear",
+			{
+				"command" : functools.partial( widget.setText, "" ),
+				"active" : bool( widget.getText() )
+			}
+		)
+
+		self.__popupMenu = GafferUI.Menu( definition )
+		self.__popupMenu.popup( parent = self )
+
+		return True
 
 GafferUI.Editor.registerType( "PythonEditor", PythonEditor )
 

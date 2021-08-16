@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,35 +34,16 @@
 #
 ##########################################################################
 
-import functools
-
-import Gaffer
+import sys
 import GafferUI
 
-from . import _CodeMenu
-from . import _CodeWidget
+def __pythonEditorCreated( editor ) :
 
-def __oslPopupMenu( menuDefinition, widget ) :
+	# The PythonEditor itself can't have any dependencies outside of `GafferUI`, but
+	# it's convenient for the user to have easy access to all Gaffer/Cortex modules in
+	# use by the _application_, so we add them here.
+	for name, module in sys.modules.items() :
+		if "." not in name and ( name.startswith( "Gaffer" ) or name.startswith( "IECore" ) )  :
+			editor.namespace()[name] = module
 
-	node = widget.node()
-	if not isinstance( node, Gaffer.Expression ) or node.getExpression()[-1] != "OSL" :
-		return
-
-	if len( menuDefinition.items() ) :
-		menuDefinition.append( "/InsertOSLDivider", { "divider" : True } )
-
-	menuDefinition.append(
-		"/Insert OSL",
-		{
-			"subMenu" : functools.partial(
-				_CodeMenu.commonFunctionMenu,
-				command = widget.textWidget().insertText,
-				activator = lambda : widget.textWidget().getEditable() and not Gaffer.MetadataAlgo.readOnly( node["__expression"] ),
-			),
-		},
-	)
-
-GafferUI.ExpressionUI.ExpressionWidget.expressionContextMenuSignal().connect( __oslPopupMenu, scoped = False )
-
-GafferUI.ExpressionUI.ExpressionWidget.registerHighlighter( "OSL", lambda node : _CodeWidget._Highlighter() )
-GafferUI.ExpressionUI.ExpressionWidget.registerCommentPrefix( "OSL", "//" )
+GafferUI.PythonEditor.instanceCreatedSignal().connect( __pythonEditorCreated, scoped = False )

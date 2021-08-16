@@ -124,6 +124,7 @@ from .PresetsPlugValueWidgetTest import PresetsPlugValueWidgetTest
 from .SpreadsheetUITest import SpreadsheetUITest
 from .NodeUITest import NodeUITest
 from .AuxiliaryNodeGadgetTest import AuxiliaryNodeGadgetTest
+from .CodeWidgetTest import CodeWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

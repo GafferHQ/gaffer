@@ -41,12 +41,25 @@ Breaking Changes
 - Fullscreen hotkey is now <kbd>F11</kbd> instead of <kbd>`</kbd>.
 - Removed support for linking editors (following the focus node replaces most practical uses of this feature).
 
-0.60.x.x (relative to 0.60.2.1)
+0.60.3.0 (relative to 0.60.2.1)
 ========
+
+Features
+--------
+
+- Drag and drop : Added <key>G</key> hotkey for starting and stopping drags without using buttons on the mouse or stylus. This can be used for any drag and drop operation in Gaffer, including making connections in the GraphEditor. Press <key>G</key> to start a drag, and press <key>G</key> again to drop.
 
 Improvements
 ------------
 
+- PythonEditor :
+  - Added syntax highlighting and tab completion.
+  - Added <kbd>Ctrl</kbd> + <kbd>]</kbd> hotkey for indenting and <kbd>Ctrl</kbd> + <kbd>[</kbd> for unindenting the selection.
+  - Added <kbd>Ctrl</kbd> + <kbd>/</kbd> hotkey for commenting and uncommenting the selection.
+  - Added context menus to input and output widgets.
+  - All Gaffer and IECore modules are now imported by default.
+- UIEditor : Added syntax highlighting and tab completion to the code editor for button widgets.
+- OSLCode : Added syntax highlighting.
 - ImageMetadata : Added `extraMetadata` plug, which is useful for generating arbitrary metadata from an expression, and for using types which are not supported by the standard `metadata` plug (timecodes for instance).
 
 Fixes
@@ -54,11 +67,20 @@ Fixes
 
 - ImageReader/ImageWriter : The `name`, `oiio:subimagename` and `oiio:subimages` metadata items are now ignored because they are ambiguous, and caused ImageWriter to write incorrect images. The same information is available in Gaffer via the image's `channelNames`.
 
+Fixes
+-----
+
+- GraphEditor : Fixed bug in <key>D</key> shortcut.
+
 API
 ---
 
+- CodeWidget : Added new class for displaying/editing code.
 - PlugLayout : Added a warning for plugs that reference activators that have not been registered.
 - ImageTestCase : Added `ignoreChannelNamesOrder` keyword argument to `assertImagesEqual()`. This defaults to `False`, maintaining the previous behaviour.
+- MultiLineTextWidget : Added `cursorBound()` method.
+- WidgetAlgo : `joinEdges()` now accepts an arbitrary list of widgets rather than requiring a `ListContainer`. In this case, the orientation must be passed as an additional argument.
+- PythonEditor : Added a `namespace()` method, which returns the globals/locals used by `execute()`.
 
 0.60.2.1 (relative to 0.60.2.0)
 ========

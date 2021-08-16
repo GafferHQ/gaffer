@@ -46,16 +46,22 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-def joinEdges( listContainer ) :
+def joinEdges( widgets, orientation = None ) :
 
-	if listContainer.orientation() == listContainer.Orientation.Horizontal :
+	if isinstance( widgets, GafferUI.ListContainer ) :
+		assert( orientation is None )
+		orientation = widgets.orientation()
+	else :
+		assert( orientation is not None )
+
+	if orientation == GafferUI.ListContainer.Orientation.Horizontal :
 		lowProperty = "gafferAdjoinedLeft"
 		highProperty = "gafferAdjoinedRight"
 	else :
 		lowProperty = "gafferAdjoinedTop"
 		highProperty = "gafferAdjoinedBottom"
 
-	visibleWidgets = [ w for w in listContainer if w.getVisible() ]
+	visibleWidgets = [ w for w in widgets if w.getVisible() ]
 	l = len( visibleWidgets )
 	for i, widget in enumerate( visibleWidgets ) :
 

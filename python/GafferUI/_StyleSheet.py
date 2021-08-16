@@ -356,6 +356,8 @@ _styleSheet = string.Template(
 
 	QPlainTextEdit[gafferRole="Code"] {
 		font-family: $monospaceFontFamily;
+		font-size: 11px;
+		background-color: $backgroundDark;
 	}
 
 	QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted="true"] {
@@ -1591,25 +1593,6 @@ _styleSheet = string.Template(
 	/* Mix of NodeEdit and EditScopeEdit */
 	QLabel[inspectorValueState="MixedEdits" ] {
 		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 $editScopeEditTint, stop:0.49 $editScopeEditTint, stop:0.51 $genericEditTint, stop:1 $genericEditTint);
-	}
-
-	/* PythonEditor */
-
-	*[gafferClass="GafferUI.PythonEditor"] QSplitter {
-		background-color: $background;
-	}
-
-	*[gafferClass="GafferUI.PythonEditor"] QPlainTextEdit[gafferTextRole="output"] {
-		border-radius: 0;
-		border-top-left-radius: $widgetCornerRadius;
-		border-top-right-radius: $widgetCornerRadius;
-		background-color: rbg( 30, 30, 30 );
-	}
-
-	*[gafferClass="GafferUI.PythonEditor"] QPlainTextEdit[gafferTextRole="input"] {
-		border-radius: 0;
-		border-bottom-left-radius: $widgetCornerRadius;
-		border-bottom-right-radius: $widgetCornerRadius;
 	}
 
 	/* PinningWidget */

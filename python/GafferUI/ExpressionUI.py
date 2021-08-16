@@ -146,7 +146,7 @@ class ExpressionWidget( GafferUI.Widget ) :
 				self.__languageMenu = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__languageMenuDefinition ) ) )
 				self.__languageMenu.setEnabled( not Gaffer.MetadataAlgo.readOnly( node ) )
 
-			self.__textWidget = GafferUI.MultiLineTextWidget( role = GafferUI.MultiLineTextWidget.Role.Code )
+			self.__textWidget = GafferUI.CodeWidget()
 			self.__textWidget.setEditable( not Gaffer.MetadataAlgo.readOnly( node ) )
 
 			self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ), scoped = False )
@@ -180,6 +180,31 @@ class ExpressionWidget( GafferUI.Widget ) :
 	def expressionContextMenuSignal( cls ) :
 
 		return cls.__expressionContextMenuSignal
+
+	__highlighters = {}
+	## Registers a function to return a `CodeWidget.Highlighter`
+	# for a particular engine type. `highlighter` will be passed
+	# an Expression node and must return a Completer.
+	@classmethod
+	def registerHighlighter( cls, language, highlighter ) :
+
+		cls.__highlighters[language] = highlighter
+
+	__completers = {}
+	## Registers a function to return a `CodeWidget.Completer`
+	# for a particular engine type. `completer` will be passed
+	# an Expression node and must return a Completer.
+	@classmethod
+	def registerCompleter( cls, language, completer ) :
+
+		cls.__completers[language] = completer
+
+	__commentPrefixes = {}
+	## Registers the comment prefix for a particular engine type.
+	@classmethod
+	def registerCommentPrefix( cls, language, commentPrefix ) :
+
+		cls.__commentPrefixes[language] = commentPrefix
 
 	def __expressionContextMenuDefinition( self ) :
 
@@ -252,6 +277,14 @@ class ExpressionWidget( GafferUI.Widget ) :
 		self.__textWidget.setText( expression )
 		self.__textWidget.setEnabled( bool( language ) )
 		self.__languageMenu.setText( IECore.CamelCase.toSpaced( language ) if language else "Choose..." )
+
+		completer = self.__completers.get( language )
+		self.__textWidget.setCompleter( completer( self.__node ) if completer is not None else None )
+
+		highlighter = self.__highlighters.get( language )
+		self.__textWidget.setHighlighter( highlighter( self.__node ) if highlighter is not None else None )
+
+		self.__textWidget.setCommentPrefix( self.__commentPrefixes.get( language ) )
 
 		self.__messageWidget.clear()
 		self.__messageWidget.setVisible( False )
@@ -334,3 +367,19 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 		self.__messageWidget.setVisible( True )
 		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Error, "Execution error", error )
+
+# Python Language Support
+##########################################################################
+
+def __pythonCompleter( node ) :
+
+	namespace = {
+		"imath" : imath,
+		"IECore" : IECore,
+		"parent" : node.parent(),
+	}
+
+	return GafferUI.CodeWidget.PythonCompleter( namespace, includeGraphComponentAttributes = False )
+
+ExpressionWidget.registerHighlighter( "python", lambda node : GafferUI.CodeWidget.PythonHighlighter() )
+ExpressionWidget.registerCommentPrefix( "python", "#" )

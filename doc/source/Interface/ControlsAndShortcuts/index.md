@@ -408,6 +408,9 @@ Drop plug value into Python Editor                 :kbd:`Shift` + |M1| and drag 
 Drop color value into Python Editor                |M1| and drag a pixel from Viewer
 Drop scene location path(s) into Python Editor     |M1| and drag selection from Viewer or
                                                    Hierarchy View
+Indent selection                                   :kbd:`Ctrl` + :kbd:`]`
+Unindent selection                                 :kbd:`Ctrl` + :kbd:`[`
+Comment/uncomment selection                        :kbd:`Ctrl` + :kbd:`/`
 ================================================== ================================================
 ```
 

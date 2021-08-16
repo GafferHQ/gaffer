@@ -848,6 +848,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 				}
 			}
 		}
+		return true;
 	}
 	return false;
 }
