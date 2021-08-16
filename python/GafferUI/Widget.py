@@ -1062,7 +1062,8 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __mouseButtonRelease( self, qObject, qEvent ) :
 
-		if self.__dragDropEvent is not None :
+		buttons = Widget._buttons( qEvent.buttons() )
+		if self.__dragDropEvent is not None and ( buttons & self.__dragDropEvent.buttons ) == 0 :
 			return self.__endDrag( qObject, qEvent )
 		else :
 
@@ -1074,7 +1075,7 @@ class _EventFilter( QtCore.QObject ) :
 
 				event = GafferUI.ButtonEvent(
 					Widget._buttons( qEvent.button() ),
-					Widget._buttons( qEvent.buttons() ),
+					buttons,
 					self.__widgetSpaceLine( qEvent, widget ),
 					0.0,
 					Widget._modifiers( qEvent.modifiers() ),
