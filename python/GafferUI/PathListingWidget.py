@@ -104,10 +104,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 
-		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			self._qtWidget().header().setSectionsMovable( False )
-		else :
-			self._qtWidget().header().setMovable( False )
+		self._qtWidget().header().setSectionsMovable( False )
 
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		self._qtWidget().setSortingEnabled( sortable )

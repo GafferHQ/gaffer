@@ -62,13 +62,8 @@
 #include "QtCore/QModelIndex"
 #include "QtCore/QVariant"
 
-#if QT_VERSION >= 0x050000
-	#include "QtWidgets/QTreeView"
-	#include "QtWidgets/QFileIconProvider"
-#else
-	#include "QtGui/QTreeView"
-	#include "QtGui/QFileIconProvider"
-#endif
+#include "QtWidgets/QTreeView"
+#include "QtWidgets/QFileIconProvider"
 
 using namespace boost::python;
 using namespace boost::posix_time;
