@@ -1035,6 +1035,7 @@ for library in ( "GafferUI", ) :
 	addQtLibrary( library, "Core", False )
 	addQtLibrary( library, "Gui" )
 	addQtLibrary( library, "OpenGL" )
+	addQtLibrary( library, "Test" )
 	if int( env["QT_VERSION"] ) > 4 :
 		addQtLibrary( library, "Widgets" )
 

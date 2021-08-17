@@ -55,6 +55,8 @@
 #include "boost/date_time/posix_time/conversion.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
+#include "QtTest/QAbstractItemModelTester"
+
 #include "QtCore/QAbstractItemModel"
 #include "QtCore/QDateTime"
 #include "QtCore/QModelIndex"
@@ -410,6 +412,19 @@ class PathModel : public QAbstractItemModel
 			return m_flat;
 		}
 
+		void attachTester()
+		{
+			if( !m_tester )
+			{
+				m_tester = std::make_unique<QAbstractItemModelTester>(
+					this,
+					// Outputs messages that are turned into test failures by
+					// the handler installed by `GafferUI.TestCase.setUp()`.
+					QAbstractItemModelTester::FailureReportingMode::Warning
+				);
+			}
+		}
+
 		Path *pathForIndex( const QModelIndex &index )
 		{
 			if( !index.isValid() )
@@ -507,10 +522,11 @@ class PathModel : public QAbstractItemModel
 
 		QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const override
 		{
-			Item *item = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem;
-			if( row >=0 and row < (int)item->childItems( this ).size() and column >=0 and column < (int)m_columns.size() )
+			Item *parentItem = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem;
+
+			if( row >=0 and row < (int)parentItem->childItems( this ).size() and column >=0 and column < (int)m_columns.size() )
 			{
-				return createIndex( row, column, item->childItems( this )[row] );
+				return createIndex( row, column, parentItem->childItems( this )[row] );
 			}
 			else
 			{
@@ -526,7 +542,7 @@ class PathModel : public QAbstractItemModel
 			}
 
 			Item *item = static_cast<Item *>( index.internalPointer() );
-			if( !item || item == m_rootItem )
+			if( !item || item->parent() == m_rootItem )
 			{
 				return QModelIndex();
 			}
@@ -536,12 +552,22 @@ class PathModel : public QAbstractItemModel
 
 		int rowCount( const QModelIndex &parentIndex = QModelIndex() ) const override
 		{
-			Item *item = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem;
-			if( item == m_rootItem || !m_flat )
+			Item *parentItem;
+			if( parentIndex.isValid() )
 			{
-				return item->childItems( this ).size();
+				// Parent is not the root item.
+				if( m_flat || parentIndex.column() != 0 )
+				{
+					return 0;
+				}
+				parentItem = static_cast<Item *>( parentIndex.internalPointer() );
 			}
-			return 0;
+			else
+			{
+				parentItem = m_rootItem;
+			}
+
+			return parentItem->childItems( this ).size();
 		}
 
 		int columnCount( const QModelIndex &parent = QModelIndex() ) const override
@@ -824,6 +850,7 @@ class PathModel : public QAbstractItemModel
 		std::vector<ColumnPtr> m_columns;
 		int m_sortColumn;
 		Qt::SortOrder m_sortOrder;
+		std::unique_ptr<QAbstractItemModelTester> m_tester;
 
 };
 
@@ -1052,6 +1079,13 @@ list pathsForPathMatcher( uint64_t treeViewAddress, const IECore::PathMatcher &p
 	return result;
 }
 
+void attachTester( uint64_t treeViewAddress )
+{
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	model->attachTester();
+}
+
 } // namespace
 
 void GafferUIModule::bindPathListingWidget()
@@ -1079,6 +1113,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetPathForIndex", &pathForIndex );
 	def( "_pathListingWidgetIndexForPath", &indexForPath );
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
+	def( "_pathListingWidgetAttachTester", &attachTester );
 
 	IECorePython::RefCountedClass<Column, IECore::RefCounted>( "_PathListingWidgetColumn" );
 
