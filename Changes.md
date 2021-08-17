@@ -24,6 +24,7 @@ API
   - Added `gadgetsAt()` overload which returns the gadgets rather than taking an output parameter by reference.
   - Added `gadgetsAt()` overload taking a raster space region (rather than position) and an optional layer filter.
   - Add support for Gadget's double click signal.
+- GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 
 Breaking Changes
 ----------------

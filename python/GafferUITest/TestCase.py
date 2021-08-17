@@ -36,9 +36,15 @@
 
 import os
 import sys
+import functools
 import unittest
 import inspect
 import weakref
+
+from Qt import QtCore
+from Qt import QtCompat
+
+import IECore
 
 import Gaffer
 import GafferTest
@@ -46,6 +52,28 @@ import GafferUI
 
 ## A useful base class for creating test cases for the ui.
 class TestCase( GafferTest.TestCase ) :
+
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		# Forward Qt messages to the IECore message handler.
+		# This causes them to be reported as errors by our
+		# base class.
+
+		def messageHandler( type, context, message ) :
+
+			IECore.msg(
+				{
+					QtCore.QtMsgType.QtInfoMsg : IECore.Msg.Level.Info,
+					QtCore.QtMsgType.QtDebugMsg : IECore.Msg.Level.Debug,
+				}.get( type, IECore.Msg.Level.Error ),
+				"Qt",
+				message
+			)
+
+		QtCompat.qInstallMessageHandler( messageHandler )
+		self.addCleanup( functools.partial( QtCompat.qInstallMessageHandler, None ) )
 
 	def tearDown( self ) :
 
