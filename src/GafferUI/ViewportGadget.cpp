@@ -655,7 +655,9 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 		m_preciseMotionAllowed( true ),
 		m_preciseMotionEnabled( false ),
 		m_dragTracking( DragTracking::NoDragTracking ),
-		m_variableAspectZoom( false )
+		m_variableAspectZoom( false ),
+		m_dragButton( ButtonEvent::None ),
+		m_cameraMotionDuringDrag( false )
 {
 
 	// Viewport visibility is managed by GadgetWidgets,
@@ -1187,6 +1189,18 @@ void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child
 
 bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 {
+	if( m_dragButton != ButtonEvent::None && m_dragButton != ButtonEvent::Middle && event.buttons == ( m_dragButton | ButtonEvent::Middle ) )
+	{
+		m_cameraMotionDuringDrag = true;
+
+		if( getCameraEditable() )
+		{
+			updateMotionState( event, true );
+			m_cameraController->motionStart( CameraController::Track, motionPositionFromEvent( event ) );
+		}
+		return true;
+	}
+
 	// A child's interaction with an unmodifier MMB drag takes precedence over camera moves
 	bool unmodifiedMiddleDrag = event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None;
 
@@ -1220,6 +1234,21 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 {
+	if( m_cameraMotionDuringDrag && !( event.buttons & ButtonEvent::Middle ) )
+	{
+		m_cameraMotionDuringDrag = false;
+
+		if( getCameraEditable() )
+		{
+			updateMotionState( event );
+			m_cameraController->motionEnd( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
+			m_cameraChangedSignal( this );
+			m_preciseMotionEnabled = false;
+			dirty( DirtyType::Render );
+		}
+		return true;
+	}
+
 	bool result = false;
 	if( m_lastButtonPressGadget )
 	{
@@ -1342,6 +1371,7 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
 {
+	m_dragButton = event.buttons;
 	m_dragTrackingThreshold = limits<float>::max();
 
 	CameraController::MotionType cameraMotionType = m_cameraController->cameraMotionType( event, m_variableAspectZoom, m_preciseMotionAllowed );
@@ -1415,7 +1445,7 @@ bool ViewportGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 
 bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( m_cameraInMotion )
+	if( m_cameraInMotion || m_cameraMotionDuringDrag )
 	{
 		if( getCameraEditable() )
 		{
@@ -1540,6 +1570,12 @@ void ViewportGadget::trackDrag( const DragDropEvent &event )
 
 void ViewportGadget::trackDragIdle()
 {
+	if( m_cameraMotionDuringDrag )
+	{
+		// If the user engages an explicit track using the middle mouse button, don't do autoscrolling
+		return;
+	}
+
 	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 	std::chrono::duration<float> duration( now - m_dragTrackingTime );
 	// Avoid excessive movements if some other process causes a large delay
@@ -1560,7 +1596,7 @@ void ViewportGadget::trackDragIdle()
 	dirty( DirtyType::Render );
 }
 
-void ViewportGadget::updateMotionState( const DragDropEvent &event, bool initialEvent )
+void ViewportGadget::updateMotionState( const ButtonEvent &event, bool initialEvent )
 {
 	if( !m_preciseMotionAllowed )
 	{
@@ -1592,7 +1628,7 @@ void ViewportGadget::updateMotionState( const DragDropEvent &event, bool initial
 	m_preciseMotionEnabled = shiftHeld;
 }
 
-V2f ViewportGadget::motionPositionFromEvent( const DragDropEvent &event ) const
+V2f ViewportGadget::motionPositionFromEvent( const ButtonEvent &event ) const
 {
 	V2f eventPosition( event.line.p1.x, event.line.p1.y );
 	if( m_preciseMotionAllowed )
@@ -1689,6 +1725,9 @@ bool ViewportGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 
 bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 {
+	m_dragButton = ButtonEvent::None;
+	m_cameraMotionDuringDrag = false;
+
 	if( m_cameraInMotion )
 	{
 		m_cameraInMotion = false;
@@ -1715,7 +1754,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 {
-	if( m_cameraInMotion )
+	if( m_cameraInMotion || m_cameraMotionDuringDrag )
 	{
 		// we can't embed a dolly inside whatever other motion we already
 		// started - we get here when the user accidentally rotates

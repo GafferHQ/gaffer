@@ -296,8 +296,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void updateGadgetUnderMouse( const ButtonEvent &event );
 		void emitEnterLeaveEvents( GadgetPtr newGadgetUnderMouse, GadgetPtr oldGadgetUnderMouse, const ButtonEvent &event );
 
-		void updateMotionState( const DragDropEvent &event, bool initialEvent = false );
-		Imath::V2f motionPositionFromEvent( const DragDropEvent &event ) const;
+		void updateMotionState( const ButtonEvent &event, bool initialEvent = false );
+		Imath::V2f motionPositionFromEvent( const ButtonEvent &event ) const;
 
 		Gadget* updatedDragDestination( std::vector<Gadget*> &gadgets, const DragDropEvent &event );
 
@@ -332,6 +332,9 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		std::chrono::steady_clock::time_point m_dragTrackingTime;
 
 		bool m_variableAspectZoom;
+
+		ButtonEvent::Buttons m_dragButton;
+		bool m_cameraMotionDuringDrag;
 
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;
