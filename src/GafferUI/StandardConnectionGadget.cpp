@@ -457,11 +457,13 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 			dot->inPlug()->setInput( srcNodule()->plug() );
 			dstNodule()->plug()->setInput( dot->outPlug() );
 
+			// Clear the previous selection.  Since we return false, the click will pass through to
+			// the newly created dot, adding it to the selection.
 			script->selection()->clear();
-			script->selection()->add( dot );
 		}
+
 		// If we are showing a preview for a potential Dot to be added, we don't
-		// want the user to move the connection away from under the preview. Users
+		// want the user to start a drag of the connection which is hidden under the preview. Users
 		// should leave preview state before dragging the noodle.
 		return false;
 	}
