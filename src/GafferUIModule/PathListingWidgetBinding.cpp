@@ -65,6 +65,8 @@
 #include "QtWidgets/QTreeView"
 #include "QtWidgets/QFileIconProvider"
 
+#include <unordered_map>
+
 using namespace boost::python;
 using namespace boost::posix_time;
 using namespace Gaffer;
@@ -398,7 +400,7 @@ class PathModel : public QAbstractItemModel
 
 		PathModel( QObject *parent = nullptr )
 			:	QAbstractItemModel( parent ),
-				m_rootItem( new Item( nullptr, 0, nullptr ) ),
+				m_rootItem( new Item( nullptr, nullptr ) ),
 				m_flat( true ),
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder )
@@ -411,8 +413,12 @@ class PathModel : public QAbstractItemModel
 
 		void setColumns( const std::vector<ColumnPtr> columns )
 		{
+			/// \todo Maintain persistent indices etc
+			/// using `m_rootItem->update()`.
+			beginResetModel();
 			m_columns = columns;
-			setRoot( getRoot() ); // force a rebuild of our items
+			m_rootItem = new Item( getRoot(), nullptr );
+			endResetModel();
 		}
 
 		const std::vector<ColumnPtr> &getColumns() const
@@ -427,9 +433,7 @@ class PathModel : public QAbstractItemModel
 
 		void setRoot( PathPtr root )
 		{
-			beginResetModel();
-			m_rootItem = new Item( root, 0, nullptr );
-			endResetModel();
+			m_rootItem->update( root, this );
 		}
 
 		void setFlat( bool flat )
@@ -545,7 +549,7 @@ class PathModel : public QAbstractItemModel
 			}
 
 			Item *item = static_cast<Item *>( index.internalPointer() );
-			return item->data( index.column(), role, m_columns );
+			return item->data( index.column(), role, this );
 		}
 
 		QVariant headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override
@@ -603,7 +607,6 @@ class PathModel : public QAbstractItemModel
 			{
 				parentItem = m_rootItem.get();
 			}
-
 			return parentItem->childItems( this ).size();
 		}
 
@@ -619,17 +622,15 @@ class PathModel : public QAbstractItemModel
 		// sorting".
 		void sort( int column, Qt::SortOrder order = Qt::AscendingOrder ) override
 		{
-			m_sortColumn = column;
-			m_sortOrder = order;
-
-			if( m_sortColumn < 0 )
+			if( m_sortColumn == column && m_sortOrder == order )
 			{
 				return;
 			}
 
-			layoutAboutToBeChanged();
-			m_rootItem->sort( this );
-			layoutChanged();
+			m_sortColumn = column;
+			m_sortOrder = order;
+
+			m_rootItem->update( m_rootItem->path(), this );
 		}
 
 	private :
@@ -639,12 +640,25 @@ class PathModel : public QAbstractItemModel
 		struct Item : public IECore::RefCounted
 		{
 
-			Item( Gaffer::PathPtr path, int row, Item *parent )
-				:	m_path( path ), m_parent( parent ), m_row( row ), m_dataDone( false ), m_childItemsDone( false )
+			Item( Gaffer::PathPtr path, Item *parent )
+				:	m_path( path ),
+					m_parent( parent ),
+					m_row( -1 ), // Assigned true value in `updateChildItems()`
+					m_dataState( State::Unrequested ),
+					m_childItemsState( State::Unrequested )
 			{
 			}
 
 			IE_CORE_DECLAREMEMBERPTR( Item )
+
+			void update( const Gaffer::PathPtr &path, PathModel *model )
+			{
+				// This is just intended to be called on the root item by the
+				// PathModel when the path changes.
+				assert( !m_parent );
+				m_path = path;
+				updateWalk( model );
+			}
 
 			Gaffer::Path *path()
 			{
@@ -664,11 +678,22 @@ class PathModel : public QAbstractItemModel
 			// Returns the data for the specified column and role, using the provided
 			// Columns to generate it as necessary. The Item is responsible for caching
 			// the results of these queries internally.
-			QVariant data( int column, int role, const std::vector<ColumnPtr> &columns )
+			QVariant data( int column, int role, const PathModel *model )
 			{
-				// We generate data for all columns and roles at once, on the assumption
-				// that access to one is likely to indicate upcoming accesses to the others.
-				ensureData( columns );
+				// We generate data for all columns and roles at once, on the
+				// assumption that access to one is likely to indicate upcoming
+				// accesses to the others.
+				//
+				// Note : `data()` is called from public query methods of the
+				// PathModel. We don't call `updateData()` here if
+				// `m_childItemsState == Dirty` because we can't modify the
+				// model from within a query function.
+
+				if( m_dataState == State::Unrequested )
+				{
+					m_dataState = State::Requested;
+					updateData( const_cast<PathModel *>( model ) );
+				}
 
 				switch( role )
 				{
@@ -685,102 +710,59 @@ class PathModel : public QAbstractItemModel
 
 			ChildContainer &childItems( const PathModel *model )
 			{
-				if( !m_childItemsDone && m_path )
+				// Note : `childItems()` is called from public query methods of
+				// the PathModel. We don't call `updateChildItems()` here
+				// if `m_childItemsState == Dirty` because we can't modify the
+				// model from within a query function.
+				if( m_childItemsState == State::Unrequested )
 				{
-					std::vector<Gaffer::PathPtr> children;
-					try
-					{
-						m_path->children( children );
-					}
-					catch( const std::exception &e )
-					{
-						IECore::msg( IECore::Msg::Error, "PathListingWidget", e.what() );
-					}
-
-					for( std::vector<Gaffer::PathPtr>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
-					{
-						m_childItems.push_back( new Item( *it, it - children.begin(), this ) );
-					}
-					// If the model is sorted, then we need to apply that same
-					// sorting to the new items - see comment for PathModel::sort().
-					sort( model );
+					m_childItemsState = State::Requested;
+					updateChildItems( const_cast<PathModel *>( model ) );
 				}
-				m_childItemsDone = true;
 				return m_childItems;
-			}
-
-			void sort( const PathModel *model )
-			{
-				if( model->m_sortColumn < 0 || model->m_sortColumn >= model->columnCount() )
-				{
-					return;
-				}
-
-				if( !m_childItems.size() )
-				{
-					return;
-				}
-
-				SortableItems sortableChildren;
-				sortableChildren.reserve( m_childItems.size() );
-				for( int i = 0, e = m_childItems.size(); i < e; ++i )
-				{
-					m_childItems[i]->ensureData( model->getColumns() );
-					sortableChildren.push_back( SortableItem( m_childItems[i].get(), i ) );
-				}
-
-				std::sort(
-					sortableChildren.begin(), sortableChildren.end(),
-					[column = model->m_sortColumn] ( const SortableItem &left, const SortableItem &right )
-					{
-						return variantLess( left.first->m_displayData[column], right.first->m_displayData[column] );
-					}
-				);
-
-				const bool reverse = model->m_sortOrder == Qt::DescendingOrder;
-				QModelIndexList changedPersistentIndexesFrom, changedPersistentIndexesTo;
-				for( int i = 0, e = sortableChildren.size(); i < e; ++i )
-				{
-					int fromRow = sortableChildren[i].second;
-					int toRow = reverse ? e - i - 1 : i;
-					m_childItems[toRow] = sortableChildren[i].first;
-					for( int c = 0, ce = model->getColumns().size(); c < ce; ++c )
-					{
-						changedPersistentIndexesFrom.append( model->createIndex( fromRow, c, sortableChildren[i].first ) );
-						changedPersistentIndexesTo.append( model->createIndex( toRow, c, sortableChildren[i].first ) );
-					}
-				}
-
-				const_cast<PathModel *>( model )->changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
-
-				for( auto it = m_childItems.begin(), eIt = m_childItems.end(); it != eIt; ++it )
-				{
-					(*it)->sort( model );
-				}
 			}
 
 			private :
 
-				typedef std::pair<Item *, size_t> SortableItem;
-				typedef std::vector<SortableItem> SortableItems;
-
-				void ensureData( const std::vector<ColumnPtr> &columns )
+				void updateWalk( PathModel *model )
 				{
-					if( m_dataDone )
+					if( m_dataState == State::Clean )
+					{
+						m_dataState = State::Dirty;
+					}
+					if( m_childItemsState == State::Clean )
+					{
+						m_childItemsState = State::Dirty;
+					}
+					updateData( model );
+					updateChildItems( model );
+					for( const auto &child : m_childItems )
+					{
+						child->updateWalk( model );
+					}
+				}
+
+				void updateData( PathModel *model )
+				{
+					if( m_dataState == State::Clean || m_dataState == State::Unrequested )
 					{
 						return;
 					}
 
-					m_displayData.reserve( columns.size() );
-					m_decorationData.reserve( columns.size() );
-					for( int i = 0, e = columns.size(); i < e; ++i )
+					std::vector<QVariant> newDisplayData;
+					std::vector<QVariant> newDecorationData;
+
+					newDisplayData.reserve( model->m_columns.size() );
+					newDecorationData.reserve( model->m_columns.size() );
+
+					for( int i = 0, e = model->m_columns.size(); i < e; ++i )
 					{
 						QVariant displayData;
 						QVariant decorationData;
 						try
 						{
-							displayData = columns[i]->data( m_path.get(), Qt::DisplayRole );
-							decorationData = columns[i]->data( m_path.get(), Qt::DecorationRole );
+							displayData = model->m_columns[i]->data( m_path.get(), Qt::DisplayRole );
+							decorationData = model->m_columns[i]->data( m_path.get(), Qt::DecorationRole );
 						}
 						catch( const std::exception &e )
 						{
@@ -793,22 +775,200 @@ class PathModel : public QAbstractItemModel
 							IECore::msg( IECore::Msg::Warning, "PathListingWidget", "Unknown error" );
 						}
 
-						m_displayData.push_back( displayData );
-						m_decorationData.push_back( decorationData );
+						newDisplayData.push_back( displayData );
+						newDecorationData.push_back( decorationData );
 					}
 
-					m_dataDone = true;
+					if( newDisplayData != m_displayData || newDecorationData != m_decorationData )
+					{
+						m_displayData.swap( newDisplayData );
+						m_decorationData.swap( newDecorationData );
+						if( m_dataState != State::Requested )
+						{
+							model->dataChanged( model->createIndex( m_row, 0, this ), model->createIndex( m_row, model->m_columns.size() - 1, this ) );
+						}
+					}
+
+					m_dataState = State::Clean;
+				}
+
+				void updateChildItems( PathModel *model )
+				{
+					if( m_childItemsState == State::Unrequested || m_childItemsState == State::Clean )
+					{
+						return;
+					}
+
+					// Construct a new ChildContainer to replace our previous children.
+					// Where possible we reuse existing children instead of creating new
+					// ones.
+
+					ChildContainer newChildItems;
+					if( m_path )
+					{
+						std::vector<Gaffer::PathPtr> children;
+						try
+						{
+							m_path->children( children );
+						}
+						catch( const std::exception &e )
+						{
+							IECore::msg( IECore::Msg::Error, "PathListingWidget", e.what() );
+						}
+
+						std::unordered_map<IECore::InternedString, Item *> oldChildMap;
+						for( const auto &oldChild : m_childItems )
+						{
+							oldChildMap[oldChild->path()->names().back()] = oldChild.get();
+						}
+
+						for( auto it = children.begin(), eIt = children.end(); it != eIt; ++it )
+						{
+							auto oldIt = oldChildMap.find( (*it)->names().back() );
+							if( oldIt != oldChildMap.end() )
+							{
+								// Reuse previous item.
+								Ptr itemToReuse = oldIt->second;
+								itemToReuse->m_path = *it;
+								newChildItems.push_back( itemToReuse );
+							}
+							else
+							{
+								// Make new item.
+								newChildItems.push_back( new Item( *it, this ) );
+							}
+						}
+					}
+
+					// Sort the new container if necessary.
+
+					if( model->m_sortColumn >= 0 && model->m_sortColumn < (int)model->m_columns.size() )
+					{
+						for( const auto &childItem : newChildItems )
+						{
+							if( childItem->m_dataState == State::Unrequested )
+							{
+								childItem->m_dataState = State::Requested;
+							}
+							childItem->updateData( model );
+						}
+						std::sort(
+							newChildItems.begin(), newChildItems.end(),
+							[model] ( const Item::Ptr &left, const Item::Ptr &right ) {
+								const QVariant &l = left->m_displayData[model->m_sortColumn];
+								const QVariant &r = right->m_displayData[model->m_sortColumn];
+								return model->m_sortOrder == Qt::AscendingOrder ? variantLess( l, r ) : variantLess( r, l );
+							}
+						);
+					}
+
+					// Early out if nothing has changed.
+
+					if( newChildItems == m_childItems )
+					{
+						m_childItemsState = State::Clean;
+						return;
+					}
+
+					// If we had children before, figure out the mapping from old to new,
+					// so we can tell Qt about it. This is necessary so that persistent
+					// indices used to represent selection and expansion remain valid.
+
+					QModelIndexList changedPersistentIndexesFrom, changedPersistentIndexesTo;
+
+					std::unordered_map<IECore::InternedString, size_t> newChildMap;
+					for( size_t i = 0; i < newChildItems.size(); ++i )
+					{
+						newChildMap[newChildItems[i]->path()->names().back()] = i;
+					}
+
+					for( const auto &oldChild : m_childItems )
+					{
+						auto nIt = newChildMap.find( oldChild->m_path->names().back() );
+						if( nIt != newChildMap.end() )
+						{
+							const int toRow = nIt->second;
+							for( int c = 0, ce = model->getColumns().size(); c < ce; ++c )
+							{
+								changedPersistentIndexesFrom.append( model->createIndex( oldChild->row(), c, oldChild.get() ) );
+								changedPersistentIndexesTo.append( model->createIndex( toRow, c, newChildItems[toRow].get() ) );
+							}
+						}
+						else
+						{
+							oldChild->invalidateIndexes( model, changedPersistentIndexesFrom, changedPersistentIndexesTo );
+						}
+					}
+
+					// Apply the update. We have to mark ourselves clean _before_
+					// changing layout, to avoid recursion when Qt responds to
+					// `layoutAboutToBeChanged()`.
+
+					const bool emitLayoutChanged = m_childItemsState != State::Requested;
+					m_childItemsState = State::Clean;
+
+					if( emitLayoutChanged )
+					{
+						model->layoutAboutToBeChanged( { model->createIndex( row(), 0, this ) } );
+					}
+
+					m_childItems.swap( newChildItems );
+					for( size_t i = 0; i < m_childItems.size(); ++i )
+					{
+						m_childItems[i]->m_row = i;
+					}
+
+					if( emitLayoutChanged )
+					{
+						model->changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
+						model->layoutChanged();
+					}
+				}
+
+				void invalidateIndexes( PathModel *model, QModelIndexList &from, QModelIndexList &to )
+				{
+					for( int c = 0, ce = model->getColumns().size(); c < ce; ++c )
+					{
+						from.append( model->createIndex( m_row, c, this ) );
+						to.append( QModelIndex() );
+					}
+					for( const auto &child : m_childItems )
+					{
+						child->invalidateIndexes( model, from, to );
+					}
 				}
 
 				Gaffer::PathPtr m_path;
 				Item *m_parent;
 				int m_row;
 
-				bool m_dataDone;
+				// State transitions :
+				//
+				// - Unrequested->Requested : When first queried.
+				// - Requested->Clean : When first updated.
+				// - Clean->Dirty : When path changes.
+				// - Dirty->Clean : On all subsequent updates.
+				enum class State
+				{
+					// Initial state. Not yet requested by clients
+					// of the model, therefore not yet computed, and not
+					// in need of consideration during recursive updates.
+					Unrequested,
+					// Has just been requested for the first time. Needs
+					// to be updated, but there is no need to emit change
+					// signals for the first update.
+					Requested,
+					// Computed and up to date.
+					Clean,
+					// Stale data that needs recomputing.
+					Dirty
+				};
+
+				State m_dataState;
 				std::vector<QVariant> m_displayData;
 				std::vector<QVariant> m_decorationData;
 
-				bool m_childItemsDone;
+				State m_childItemsState;
 				std::vector<Ptr> m_childItems;
 
 		};
