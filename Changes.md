@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- Node Graph : The Dot created when you Ctrl-click on a connection is now selected automatically
+- GraphEditor : The Dot created when you <kbd>Ctrl</kbd>+click on a connection is now selected automatically, so it can be repositioned by an immediate drag.
 
 0.60.3.0 (relative to 0.60.2.1)
 ========
@@ -12,7 +12,7 @@ Fixes
 Features
 --------
 
-- Drag and drop : Added <key>G</key> hotkey for starting and stopping drags without using buttons on the mouse or stylus. This can be used for any drag and drop operation in Gaffer, including making connections in the GraphEditor. Press <key>G</key> to start a drag, and press <key>G</key> again to drop.
+- Drag and drop : Added <kbd>G</kbd> hotkey for starting and stopping drags without using buttons on the mouse or stylus. This can be used for any drag and drop operation in Gaffer, including making connections in the GraphEditor. Press <kbd>G</kbd> to start a drag, and press <kbd>G</kbd> again to drop.
 
 Improvements
 ------------
