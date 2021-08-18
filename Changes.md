@@ -1,3 +1,11 @@
+0.59.9.x (relative to 0.59.9.3)
+========
+
+Fixes
+-----
+
+- Reference : Add support for Spreadsheet inside another Plug
+
 0.59.9.3 (relative to 0.59.9.2)
 ========
 
