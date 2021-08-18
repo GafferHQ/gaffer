@@ -96,17 +96,27 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		w = GafferUI.PathListingWidget( p )
-		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+		with GafferUI.Window() as window :
+			w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+		window.setVisible( True )
 
 		self.assertTrue( w.getExpansion().isEmpty() )
 
 		cs = GafferTest.CapturingSlot( w.expansionChangedSignal() )
-		e = IECore.PathMatcher( [ "/1", "/2", "/2" ] )
+		e = IECore.PathMatcher( [ "/1", "/2", "/2/4", "/1/5", "/3" ] )
 
 		w.setExpansion( e )
 		self.assertEqual( w.getExpansion(), e )
 		self.assertEqual( len( cs ), 1 )
+
+		del d["2"]
+		p.pathChangedSignal()( p )
+		self.waitForIdle( 100 )
+
+		e.removePath( "/2" )
+		e.removePath( "/2/4" )
+		self.assertEqual( w.getExpansion(), e )
 
 		w.setPath( Gaffer.DictPath( {}, "/" ) )
 		self.assertTrue( w.getExpansion().isEmpty() )
@@ -155,16 +165,27 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True )
-		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+		with GafferUI.Window() as window :
+			w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+		window.setVisible( True )
+
 		self.assertTrue( w.getSelection().isEmpty() )
 
 		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
-		s = IECore.PathMatcher( [ "/1", "/2/5", "/3/1" ] )
+		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5", "/3/1" ] )
 
 		w.setSelection( s )
 		self.assertEqual( w.getSelection(), s )
 		self.assertEqual( len( cs ), 1 )
+
+		del d["2"]
+		p.pathChangedSignal()( p )
+		self.waitForIdle( 100 )
+
+		s.removePath( "/2" )
+		s.removePath( "/2/5" )
+		self.assertEqual( w.getSelection(), s )
 
 		w.setPath( Gaffer.DictPath( {}, "/" ) )
 		self.assertTrue( w.getSelection().isEmpty() )
