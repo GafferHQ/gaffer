@@ -1,3 +1,11 @@
+0.60.x.x ( relative to 0.60.3.0 )
+========
+
+Fixes
+-----
+
+- Node Graph : The Dot created when you Ctrl-click on a connection is now selected automatically
+
 0.60.3.0 (relative to 0.60.2.1)
 ========
 
