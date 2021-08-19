@@ -1762,6 +1762,16 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertTrue( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( s["r1"] ) )
 
+		# bake in the metadata into the Box to test if it will be handled by the Reference
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( b, False )
+
+		b.exportForReference( self.temporaryDirectory() + "/testWithMetadata.grf" )
+
+		s["r2"] = Gaffer.Reference()
+		s["r2"].load( self.temporaryDirectory() + "/testWithMetadata.grf" )
+
+		self.assertTrue( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( s["r2"] ) )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

@@ -143,6 +143,8 @@ void transferOutputs( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug )
 	}
 }
 
+const InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -541,6 +543,8 @@ void Reference::loadInternal( const std::string &fileName )
 	{
 		PlugEdits::LoadingScope loadingScope( m_plugEdits.get() );
 		errors = script->executeFile( path.string(), this, /* continueOnError = */ true );
+		// deregister "childNodesAreReadOnly" metadata, in case it was baked in the exported file
+		Metadata::deregisterValue( this, g_childNodesAreReadOnlyName );
 	}
 
 	// Do a little bit of post processing on everything that was loaded.
