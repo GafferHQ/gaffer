@@ -1,10 +1,20 @@
 0.60.x.x ( relative to 0.60.3.0 )
 ========
 
+Features
+--------
+
+- ArnoldAttributes : Added Displacement section with plugs for controlling Arnold's `disp_autobump` and `autobump_visibility` parameters.
+
 Fixes
 -----
 
 - GraphEditor : The Dot created when you <kbd>Ctrl</kbd>+click on a connection is now selected automatically, so it can be repositioned by an immediate drag.
+
+Breaking Changes
+----------------
+
+- ArnoldDisplacement : Deprecated the `autoBump` plug, use `ArnoldAttributes.autoBump` instead.
 
 0.60.3.0 (relative to 0.60.2.1)
 ========

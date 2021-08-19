@@ -62,6 +62,17 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:visibility:volume", new IECore::BoolData( true ), false, "volumeVisibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:visibility:subsurface", new IECore::BoolData( true ), false, "subsurfaceVisibility" ) );
 
+	// Displacement parameters
+
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:disp_autobump", new IECore::BoolData( false ), false, "autoBump" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:camera", new IECore::BoolData( true ), false, "cameraAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:diffuse_reflect", new IECore::BoolData( false ), false, "diffuseReflectionAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:specular_reflect", new IECore::BoolData( false ), false, "specularReflectionAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:diffuse_transmit", new IECore::BoolData( false ), false, "diffuseTransmissionAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:specular_transmit", new IECore::BoolData( false ), false, "specularTransmissionAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:volume", new IECore::BoolData( false ), false, "volumeAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:subsurface", new IECore::BoolData( false ), false, "subsurfaceAutoBumpVisibility" ) );
+
 	// Transform parameters
 
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:transform_type", new StringPlug( "value", Plug::In, "rotate_about_center" ), false, "transformType" ) );

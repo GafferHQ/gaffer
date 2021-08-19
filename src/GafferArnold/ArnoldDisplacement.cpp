@@ -181,8 +181,10 @@ IECore::ConstCompoundObjectPtr ArnoldDisplacement::attributes( const Gaffer::Plu
 	m[g_heightAttributeName] = new FloatData( heightPlug()->getValue() );
 	m[g_paddingAttributeName] = new FloatData( paddingPlug()->getValue() );
 	m[g_zeroValueAttributeName] = new FloatData( zeroValuePlug()->getValue() );
-	m[g_autoBumpAttributeName] = new BoolData( autoBumpPlug()->getValue() );
-
+	if ( !autoBumpPlug()->isSetToDefault() )
+	{
+		m[g_autoBumpAttributeName] = new BoolData( autoBumpPlug()->getValue() );
+	}
 	return result;
 }
 
