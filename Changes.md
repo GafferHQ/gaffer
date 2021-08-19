@@ -5,6 +5,7 @@ Fixes
 -----
 
 - GraphEditor : The Dot created when you <kbd>Ctrl</kbd>+click on a connection is now selected automatically, so it can be repositioned by an immediate drag.
+- MetadataAlgo : Numeric bookmarks are no longer loaded inside nodes with `childNodesAreReadOnly` metadata, to prevent them "stealing" bookmarks from other nodes. Previously this only applied to nodes inside References.
 
 0.60.3.0 (relative to 0.60.2.1)
 ========
