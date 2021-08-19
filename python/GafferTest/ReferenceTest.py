@@ -1747,6 +1747,21 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script2.execute( script.serialise() )
 		assertColumnsMatch( script2["reference"]["rows"], script["box"]["rows"].defaultRow() )
 
+	def testChildNodesAreReadOnlyMetadata( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+
+		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		s["r1"] = Gaffer.Reference()
+		s["r1"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertTrue( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( s["r1"] ) )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
