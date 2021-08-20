@@ -825,13 +825,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			updateVisibility( m_visibility, g_specularTransmitVisibilityAttributeName, AI_RAY_SPECULAR_TRANSMIT, attributes );
 			updateVisibility( m_visibility, g_volumeVisibilityAttributeName, AI_RAY_VOLUME, attributes );
 			updateVisibility( m_visibility, g_subsurfaceVisibilityAttributeName, AI_RAY_SUBSURFACE, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_cameraVisibilityAutoBumpAttributeName, AI_RAY_CAMERA, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_diffuseReflectVisibilityAutoBumpAttributeName, AI_RAY_DIFFUSE_REFLECT, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_specularReflectVisibilityAutoBumpAttributeName, AI_RAY_SPECULAR_REFLECT, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_diffuseTransmitVisibilityAutoBumpAttributeName, AI_RAY_DIFFUSE_TRANSMIT, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_specularTransmitVisibilityAutoBumpAttributeName, AI_RAY_SPECULAR_TRANSMIT, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_volumeVisibilityAutoBumpAttributeName, AI_RAY_VOLUME, attributes );
-			updateVisibility( m_displacement.autoBumpVisibility, g_subsurfaceVisibilityAutoBumpAttributeName, AI_RAY_SUBSURFACE, attributes );
 
 			if( const IECore::BoolData *d = attribute<IECore::BoolData>( g_doubleSidedAttributeName, attributes ) )
 			{
@@ -1340,6 +1333,13 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				zeroValue = attributeValue<float>( g_dispZeroValueAttributeName, attributes, 0.0f );
 				autoBump = attributeValue<bool>( g_dispAutoBumpAttributeName, attributes, false );
 				autoBumpVisibility = AI_RAY_CAMERA;
+				updateVisibility( autoBumpVisibility, g_cameraVisibilityAutoBumpAttributeName, AI_RAY_CAMERA, attributes );
+				updateVisibility( autoBumpVisibility, g_diffuseReflectVisibilityAutoBumpAttributeName, AI_RAY_DIFFUSE_REFLECT, attributes );
+				updateVisibility( autoBumpVisibility, g_specularReflectVisibilityAutoBumpAttributeName, AI_RAY_SPECULAR_REFLECT, attributes );
+				updateVisibility( autoBumpVisibility, g_diffuseTransmitVisibilityAutoBumpAttributeName, AI_RAY_DIFFUSE_TRANSMIT, attributes );
+				updateVisibility( autoBumpVisibility, g_specularTransmitVisibilityAutoBumpAttributeName, AI_RAY_SPECULAR_TRANSMIT, attributes );
+				updateVisibility( autoBumpVisibility, g_volumeVisibilityAutoBumpAttributeName, AI_RAY_VOLUME, attributes );
+				updateVisibility( autoBumpVisibility, g_subsurfaceVisibilityAutoBumpAttributeName, AI_RAY_SUBSURFACE, attributes );
 			}
 
 			ArnoldShaderPtr map;
@@ -1560,7 +1560,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return data ? data->readable() : boost::optional<T>();
 		}
 
-		void updateVisibility( unsigned char &visibility, const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
+		static void updateVisibility( unsigned char &visibility, const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
 		{
 			if( const IECore::BoolData *d = attribute<IECore::BoolData>( name, attributes ) )
 			{
