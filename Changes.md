@@ -6,6 +6,11 @@ Fixes
 
 - GraphEditor : The Dot created when you <kbd>Ctrl</kbd>+click on a connection is now selected automatically, so it can be repositioned by an immediate drag.
 
+Build
+-----
+
+- Added `BOOST_PYTHON_LIB_SUFFIX` option. This matches the approach used in Cortex.
+
 0.60.3.0 (relative to 0.60.2.1)
 ========
 

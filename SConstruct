@@ -234,6 +234,13 @@ options.Add(
 )
 
 options.Add(
+	"BOOST_PYTHON_LIB_SUFFIX",
+	"The suffix appended to the names of the python boost libraries. "
+	"You can modify this so that the correct python library name is used, "
+	"likely related to the specific python version.",
+)
+
+options.Add(
 	"GLEW_LIB_SUFFIX",
 	"The suffix used when locating the glew libraries.",
 	"",
@@ -639,9 +646,12 @@ basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
 	env=commandEnv["ENV"]
 ).strip()
 
-basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = ""
-if ( int( basePythonEnv["BOOST_MAJOR_VERSION"] ), int( basePythonEnv["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
-	basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" )
+# if BOOST_PYTHON_LIB_SUFFIX is provided, use it
+boostPythonLibSuffix = basePythonEnv.get( "BOOST_PYTHON_LIB_SUFFIX", None )
+if boostPythonLibSuffix is None :
+	basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = basePythonEnv["BOOST_LIB_SUFFIX"]
+	if ( int( basePythonEnv["BOOST_MAJOR_VERSION"] ), int( basePythonEnv["BOOST_MINOR_VERSION"] ) ) >= ( 1, 67 ) :
+		basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" ) + basePythonEnv["BOOST_PYTHON_LIB_SUFFIX"]
 
 basePythonEnv.Append(
 
@@ -650,7 +660,7 @@ basePythonEnv.Append(
 	],
 
 	LIBS = [
-		"boost_python$BOOST_PYTHON_LIB_SUFFIX$BOOST_LIB_SUFFIX",
+		"boost_python$BOOST_PYTHON_LIB_SUFFIX",
 		"IECorePython$CORTEX_PYTHON_LIB_SUFFIX",
 		"Gaffer",
 	],
