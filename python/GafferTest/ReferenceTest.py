@@ -1633,6 +1633,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["node"]["user"]["compoundData"] = Gaffer.CompoundDataPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		Gaffer.PlugAlgo.promoteWithName( script["box"]["node"]["user"]["compoundData"], "compoundData" )
 
+		# also test promotion not directly to the box, but to a plug inside the box
+
+		script["box"]["container"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["spreadsheetInPlug"] = Gaffer.Spreadsheet()
+		script["box"]["spreadsheetInPlug"]["rows"].addColumn( Gaffer.IntPlug( "c1" ) )
+		Gaffer.PlugAlgo.promote( script["box"]["spreadsheetInPlug"]["rows"], parent = script["box"]["container"] )
+
 		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
 		script["box"].exportForReference( fileName )
 
@@ -1647,6 +1654,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		script["reference"]["compoundData"]["m1"] = Gaffer.NameValuePlug( "test1", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		script["reference"]["compoundData"]["m2"] = Gaffer.NameValuePlug( "test2", 20, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["reference"]["container"]["rows"].addRows( 2 )
+		for i, row in enumerate( script["reference"]["container"]["rows"] ) :
+			row["cells"]["c1"]["value"].setValue( i )
 
 		def assertExpectedChildren( reference ) :
 
@@ -1672,6 +1683,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 			self.assertFalse( reference.isChildEdit( reference["rows"] ) )
 			self.assertFalse( reference.isChildEdit( reference["compoundData"] ) )
 			self.assertFalse( reference.isChildEdit( reference["compoundData"]["m1"]["value"] ) )
+
+			self.assertEqual( len( reference["container"]["rows"] ), 3 )
+			for i, row in enumerate( reference["container"]["rows"] ) :
+				self.assertEqual( row["cells"]["c1"]["value"].getValue(), i )
+				self.assertEqual( reference.isChildEdit( row ), i > 0 )
+
+			self.assertEqual( len( reference["spreadsheetInPlug"]["rows"] ), 3 )
+			self.assertEqual( reference["spreadsheetInPlug"]["rows"].getInput(), reference["container"]["rows"] )
 
 		assertExpectedChildren( script["reference"] )
 
