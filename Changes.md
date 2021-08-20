@@ -1,4 +1,12 @@
-0.60.4.0 ( relative to 0.60.3.0 )
+0.60.x.x (relative to 0.60.4.0)
+========
+
+Improvements
+------------
+
+- PythonCommand : Added syntax highlighting and auto-complete.
+
+0.60.4.0 (relative to 0.60.3.0)
 ========
 
 Features

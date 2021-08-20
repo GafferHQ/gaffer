@@ -85,7 +85,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 	def execute( self ) :
 
-		executionDict = self.__executionDict()
+		executionDict = self._executionDict()
 		with executionDict["context"] :
 			exec( _codeObjectCache.get( self["command"].getValue() ), executionDict, executionDict )
 
@@ -100,7 +100,7 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 			GafferDispatch.TaskNode.executeSequence( self, frames )
 			return
 
-		executionDict = self.__executionDict( frames )
+		executionDict = self._executionDict( frames )
 		with executionDict["context"] :
 			exec( self["command"].getValue(), executionDict, executionDict )
 
@@ -108,7 +108,9 @@ class PythonCommand( GafferDispatch.TaskNode ) :
 
 		return self["sequence"].getValue()
 
-	def __executionDict( self, frames = None ) :
+	# Protected rather than private to allow access by PythonCommandUI.
+	# Not for general use.
+	def _executionDict( self, frames = None ) :
 
 		context = Gaffer.Context( Gaffer.Context.current() )
 
@@ -145,6 +147,11 @@ class _VariablesDict( dict ) :
 
 		self.__update()
 		return dict.keys( self )
+
+	def items( self ) :
+
+		self.__update()
+		return dict.items( self )
 
 	def __getitem__( self, key ) :
 

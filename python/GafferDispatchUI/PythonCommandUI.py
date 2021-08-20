@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import inspect
+
 import Gaffer
 import GafferUI
 import GafferDispatch
@@ -58,8 +60,7 @@ Gaffer.Metadata.registerNode(
 			and the current Context as `context`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget",
-			"multiLineStringPlugValueWidget:role", "code",
+			"plugValueWidget:type", "GafferDispatchUI.PythonCommandUI._CommandPlugValueWidget",
 			"layout:label", "",
 
 		),
@@ -111,3 +112,96 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# _CodePlugValueWidget
+##########################################################################
+
+class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__codeWidget = GafferUI.CodeWidget()
+
+		GafferUI.PlugValueWidget.__init__( self, self.__codeWidget, plug, **kw )
+
+		self.__codeWidget._qtWidget().setPlaceholderText(
+			inspect.cleandoc(
+				"""
+				# Global variables :
+				#
+				# `context` : Context the command is being executed in.
+				# `variables` : Contents of the Variables tab.
+				"""
+			)
+		)
+
+		self.__codeWidget.setHighlighter( GafferUI.CodeWidget.PythonHighlighter() )
+		self.__codeWidget.setCommentPrefix( "#" )
+
+		self.__codeWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
+		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
+
+		node = self.__pythonCommandNode()
+		if node is not None :
+			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__pythonCommandPlugDirtied ), scoped = False )
+		self.__updateCompleter()
+
+		self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		if self.getPlug() is not None :
+			with self.getContext() :
+				try :
+					value = self.getPlug().getValue()
+				except :
+					value = None
+
+			if value is not None :
+				self.__codeWidget.setText( value )
+
+			self.__codeWidget.setErrored( value is None )
+
+		self.__codeWidget.setEditable( self._editable() )
+
+	def __setPlugValue( self, *unused ) :
+
+		if not self._editable() :
+			return
+
+		text = self.__codeWidget.getText()
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().setValue( text )
+
+	def __pythonCommandNode( self ) :
+
+		def walk( plug ) :
+
+			if isinstance( plug.parent(), GafferDispatch.PythonCommand ) :
+				return plug.parent()
+
+			for output in plug.outputs() :
+				r = walk( output )
+				if r is not None :
+					return r
+
+			return None
+
+		return walk( self.getPlug() )
+
+	def __pythonCommandPlugDirtied( self, plug ) :
+
+		if plug == plug.node()["variables"] :
+			self.__updateCompleter()
+
+	def __updateCompleter( self ) :
+
+		node = self.__pythonCommandNode()
+		if node is not None :
+			with self.getContext() :
+				self.__codeWidget.setCompleter(
+					GafferUI.CodeWidget.PythonCompleter( node._executionDict() )
+				)
+		else :
+			self.__codeWidget.setCompleter( None )
