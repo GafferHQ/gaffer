@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- Reference : Add support for Spreadsheet inside another Plug
+- Reference : Added support for Spreadsheets promoted inside another plug.
 
 0.59.9.3 (relative to 0.59.9.2)
 ========
