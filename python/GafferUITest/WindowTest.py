@@ -396,7 +396,7 @@ class WindowTest( GafferUITest.TestCase ) :
 	def testRemoveOnCloseCrash( self ) :
 
 		parent = GafferUI.Window()
-		parent.setChild( GafferUI.Label( "Hello" ) )
+		parent.setChild( GafferUI.Label( "\n".join( [ "Hello" * 10 ] * 10 ) ) )
 		parent.setVisible( True )
 
 		for i in range( 0, 50 ) :
