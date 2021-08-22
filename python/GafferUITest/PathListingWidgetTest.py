@@ -43,6 +43,7 @@ import Gaffer
 import GafferTest
 
 import GafferUI
+from GafferUI import _GafferUI
 import GafferUITest
 
 class PathListingWidgetTest( GafferUITest.TestCase ) :
@@ -59,6 +60,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		p = Gaffer.DictPath( d, "/" )
 
 		w = GafferUI.PathListingWidget( p )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 0 )
 
 		p1 = Gaffer.DictPath( d, "/1" )
@@ -95,6 +97,8 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		p = Gaffer.DictPath( d, "/" )
 
 		w = GafferUI.PathListingWidget( p )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
 		self.assertTrue( w.getExpansion().isEmpty() )
 
 		cs = GafferTest.CapturingSlot( w.expansionChangedSignal() )
@@ -118,6 +122,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 		w = GafferUI.PathListingWidget( p )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		c = GafferTest.CapturingSlot( w.expansionChangedSignal() )
 		self.assertEqual( len( c ), 0 )
@@ -151,6 +156,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		p = Gaffer.DictPath( d, "/" )
 
 		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 		self.assertTrue( w.getSelection().isEmpty() )
 
 		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
@@ -176,6 +182,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 		w = GafferUI.PathListingWidget( p, allowMultipleSelection=True )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		c = GafferTest.CapturingSlot( w.selectionChangedSignal() )
 		self.assertEqual( len( c ), 0 )
@@ -199,6 +206,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		p = Gaffer.DictPath( d, "/" )
 		p1 = Gaffer.DictPath( d, "/a" )
 		w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertEqual( w.getPathExpanded( p1 ), False )
 		w.setPathExpanded( p1, True )
@@ -229,6 +237,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		pa = Gaffer.DictPath( d, "/a" )
 		pae = Gaffer.DictPath( d, "/a/e" )
 		w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertEqual( w.getPathExpanded( pa ), False )
 		self.assertEqual( w.getPathExpanded( pae ), False )
@@ -252,6 +261,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		with GafferUI.ListContainer() as c :
 			w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getHeaderVisible() )
 
@@ -272,6 +282,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		p = Gaffer.DictPath( { "a" : { "b" : { "c" : { "d" : 10 } } } }, "/" )
 
 		w = GafferUI.PathListingWidget( p )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 		w.setPathExpanded( p.copy().setFromString( "/a/b/c" ), True )
 
 		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
@@ -279,6 +290,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 	def testColumns( self ) :
 
 		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertEqual( w.getColumns(), list( w.defaultFileSystemColumns ) )
 
