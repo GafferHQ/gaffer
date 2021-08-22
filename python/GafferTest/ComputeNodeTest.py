@@ -496,9 +496,9 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		s["n"] = GafferTest.AddNode()
 		s["e1"] = Gaffer.Expression()
-		s["e1"].setExpression( "import time; time.sleep( 1 ); parent['n']['op1'] = 10" )
+		s["e1"].setExpression( "import time; time.sleep( 0.9 ); parent['n']['op1'] = 10" )
 		s["e2"] = Gaffer.Expression()
-		s["e2"].setExpression( "import time; time.sleep( 1 ); parent['n']['op2'] = 20" )
+		s["e2"].setExpression( "import time; time.sleep( 0.9 ); parent['n']['op2'] = 20" )
 
 		cs = GafferTest.CapturingSlot( s["n"].errorSignal() )
 
