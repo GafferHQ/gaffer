@@ -1283,6 +1283,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:disp_padding" : IECore.FloatData( 2.5 ),
 				"ai:disp_zero_value" : IECore.FloatData( 0.5 ),
 				"ai:disp_autobump" : IECore.BoolData( True ),
+				"ai:autobump_visibility:camera" : IECore.BoolData( True ),
+				"ai:autobump_visibility:diffuse_reflect" : IECore.BoolData( True ),
+				"ai:autobump_visibility:specular_reflect" : IECore.BoolData( False ),
+				"ai:autobump_visibility:diffuse_transmit" : IECore.BoolData( True ),
+				"ai:autobump_visibility:specular_transmit" : IECore.BoolData( False ),
+				"ai:autobump_visibility:volume" : IECore.BoolData( True ),
+				"ai:autobump_visibility:subsurface" : IECore.BoolData( False ),
 			} )
 		)
 
@@ -1300,6 +1307,13 @@ class RendererTest( GafferTest.TestCase ) :
 					"ai:disp_padding" : IECore.FloatData( 5.0 ),
 					"ai:disp_zero_value" : IECore.FloatData( 0.0 ),
 					"ai:disp_autobump" : IECore.BoolData( True ),
+					"ai:autobump_visibility:camera" : IECore.BoolData( False ),
+					"ai:autobump_visibility:diffuse_reflect" : IECore.BoolData( False ),
+					"ai:autobump_visibility:specular_reflect" : IECore.BoolData( True ),
+					"ai:autobump_visibility:diffuse_transmit" : IECore.BoolData( False ),
+					"ai:autobump_visibility:specular_transmit" : IECore.BoolData( True ),
+					"ai:autobump_visibility:volume" : IECore.BoolData( False ),
+					"ai:autobump_visibility:subsurface" : IECore.BoolData( True ),
 				} )
 			)
 		)
@@ -1340,6 +1354,45 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetFlt( polymesh2, "disp_zero_value" ), 0.0 )
 			self.assertEqual( arnold.AiNodeGetBool( polymesh1, "disp_autobump" ), True )
 			self.assertEqual( arnold.AiNodeGetBool( polymesh2, "disp_autobump" ), True )
+
+			self.assertEqual(
+				arnold.AiNodeGetByte( polymesh1, "autobump_visibility" ),
+				arnold.AI_RAY_CAMERA | arnold.AI_RAY_DIFFUSE_REFLECT | arnold.AI_RAY_DIFFUSE_TRANSMIT | arnold.AI_RAY_VOLUME
+			)
+			self.assertEqual(
+				arnold.AiNodeGetByte( polymesh2, "autobump_visibility" ),
+				arnold.AI_RAY_SPECULAR_REFLECT | arnold.AI_RAY_SPECULAR_TRANSMIT | arnold.AI_RAY_SUBSURFACE
+			)
+
+	def testAutobumpVisibilityInit( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+			"default",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() )
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			default = arnold.AiNodeLookUpByName( "default" )
+
+			polymesh = arnold.AiNodeGetPtr( default, "node" )
+
+			self.assertEqual(
+				arnold.AiNodeGetByte( polymesh, "autobump_visibility" ),
+				arnold.AI_RAY_CAMERA
+			)
 
 	def testSubdividePolygonsAttribute( self ) :
 

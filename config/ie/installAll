@@ -33,6 +33,8 @@ def gafferRegistryVersion() :
 	return varsFound["gafferMilestoneVersion"] + "." + varsFound["gafferMajorVersion"] + ".0.0"
 
 gafferRegVersion = gafferRegistryVersion()
+gafferReg = IEEnv.registry["apps"]["gaffer"][gafferRegVersion][IEEnv.platform()]
+variantReg = gafferReg.get( "variants", {} )
 
 ##########################################################################
 # Run a single build
@@ -40,7 +42,7 @@ gafferRegVersion = gafferRegistryVersion()
 
 def build( extraArgs = [] ) :
 
-	argsToValidate = [ "GAFFER_VERSION={}".format( gafferRegVersion ) ] + extraArgs
+	argsToValidate = [ "GAFFER_VERSION={}".format( gafferRegVersion ) ] + [ x for x in extraArgs if "_VERSION=" in x or x.startswith( "APP=" ) ]
 	if not IEEnv.Registry.validateVariation( argsToValidate ) :
 		print( "Skipped invalid variation combination: " + str(argsToValidate) + "\n" )
 		return
@@ -88,16 +90,18 @@ if platform in ( "cent7.x86_64" ) :
 
 	for cortexCompatibilityVersion, cortexReg in cortexInfo.items() :
 
-		# standalone build
+		# standalone builds
 		compilerVersion = cortexReg.get( "compilerVersion", defaultCompilerVersion )
 		appleseedVersion = appleseedCompilerMap[compilerVersion][cortexCompatibilityVersion]
-		build( [
+		baseArgs = [
 			"COMPILER_VERSION={}".format( compilerVersion ),
 			"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
 			"APPLESEED_VERSION={}".format( appleseedVersion ),
 			"ARNOLD_VERSION={}".format( aiVersion ),
 			"DL_VERSION={}".format( dlVersion ),
-		] )
+		]
+		for variant, variantArgs in variantReg.items() :
+			build( baseArgs + [ "GAFFER_BUILD_VARIANT={}".format( variant ) ] + [ "=".join( x ) for x in variantArgs.items() ] )
 
 		# app specific builds
 		for app, minimumVersion in (
@@ -112,10 +116,10 @@ if platform in ( "cent7.x86_64" ) :
 					"APP={}".format( app ),
 					"APP_VERSION={}".format( appVersion ),
 					"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
-                    "APPLESEED_VERSION={}".format( appleseedVersion ),
-                    "ARNOLD_VERSION={}".format( aiVersion ),
-                    "DL_VERSION={}".format( dlVersion ),
-                ] )
+					"APPLESEED_VERSION={}".format( appleseedVersion ),
+					"ARNOLD_VERSION={}".format( aiVersion ),
+					"DL_VERSION={}".format( dlVersion ),
+				] )
 
 else :
 

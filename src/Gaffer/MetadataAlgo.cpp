@@ -118,6 +118,37 @@ const Gaffer::GraphComponent *readOnlyReason( const Gaffer::GraphComponent *grap
 	return reason;
 }
 
+bool ancestorChildNodesAreReadOnly( const Gaffer::GraphComponent *graphComponent )
+{
+
+	bool haveNodeDescendants = false;
+	const Gaffer::Node *node = runTimeCast<const Gaffer::Node>( graphComponent );
+	if ( node )
+	{
+		haveNodeDescendants = true;
+	}
+
+	graphComponent = graphComponent->parent();
+
+	while( graphComponent )
+	{
+		const Gaffer::Node *node = runTimeCast<const Gaffer::Node>( graphComponent );
+
+		if( node && haveNodeDescendants && Gaffer::MetadataAlgo::getChildNodesAreReadOnly( node ) )
+		{
+			return true;
+		}
+
+		if( !haveNodeDescendants && node )
+		{
+			haveNodeDescendants = true;
+		}
+
+		graphComponent = graphComponent->parent();
+	}
+	return false;
+}
+
 } // namespace
 
 namespace Gaffer
@@ -262,7 +293,7 @@ void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
 
 void setNumericBookmark( ScriptNode *scriptNode, int bookmark, Node *node )
 {
-	if( scriptNode->isExecuting() && node && node->ancestor<Reference>() )
+	if( scriptNode->isExecuting() && node && ancestorChildNodesAreReadOnly( node ) )
 	{
 		return;
 	}

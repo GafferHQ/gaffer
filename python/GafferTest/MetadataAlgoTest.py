@@ -563,6 +563,49 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["r2"]["n"] ), 0 )
 		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
 
+	def testNumericBookmarksInReadOnlyBox( self ) :
+
+		# Numeric bookmarks are removed when loading read-only boxes.
+
+		s = Gaffer.ScriptNode()
+		s["box"] = Gaffer.Box()
+		s["box"]["n"] = Gaffer.Node()
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["box"]["n"] )
+
+		s["box"].exportForReference( self.temporaryDirectory() + "/bookmarked.grf" )
+
+		# Bring the box back in, not as a Reference, but as read-only Box
+		s["b1"] = Gaffer.Box()
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b1"], True )
+		s.executeFile( self.temporaryDirectory() + "/bookmarked.grf", parent = s["b1"], continueOnError = True)
+
+		# Clashing Metadata was completely removed
+		self.assertEqual( Gaffer.Metadata.value( s["b1"]["n"], "numericBookmark1" ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["b1"]["n"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["box"]["n"] )
+
+		# Even without the clash, the metadata is removed
+
+		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, None )
+
+		s["b2"] = Gaffer.Box()
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b2"], True )
+		s.executeFile( self.temporaryDirectory() + "/bookmarked.grf", parent = s["b2"], continueOnError = True)
+
+		self.assertEqual( Gaffer.Metadata.value( s["b2"]["n"], "numericBookmark1" ), None )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["b2"]["n"] ), 0 )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), None )
+
+		# But loading it without the read-only flag results in the bookmark being set
+
+		s["b3"] = Gaffer.Box()
+		s.executeFile( self.temporaryDirectory() + "/bookmarked.grf", parent = s["b3"], continueOnError = True)
+
+		self.assertEqual( Gaffer.Metadata.value( s["b3"]["n"], "numericBookmark1" ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["b3"]["n"] ), 1 )
+		self.assertEqual( Gaffer.MetadataAlgo.getNumericBookmark( s, 1 ), s["b3"]["n"] )
+
 	def testNumericBookmarkAffectedByChange( self ) :
 
 		# The naming convention for valid numeric bookmarks is "numericBookmark<1-9>"

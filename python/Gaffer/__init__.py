@@ -58,3 +58,6 @@ from . import NodeAlgo
 from . import ExtensionAlgo
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )
+
+# Class-level non-UI metadata registration
+Metadata.registerValue( Reference, "childNodesAreReadOnly", True )

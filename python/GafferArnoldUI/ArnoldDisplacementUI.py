@@ -55,6 +55,8 @@ Gaffer.Metadata.registerNode(
 	the ArnoldDisplacement to specific objects.
 	""",
 
+	"layout:activator:autoBumpVisibility", lambda node : not node["autoBump"].isSetToDefault(),
+
 	plugs = {
 
 		"map" : [
@@ -126,6 +128,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"layout:visibilityActivator", "autoBumpVisibility",
 
 		],
 

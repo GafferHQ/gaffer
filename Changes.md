@@ -50,10 +50,29 @@ Breaking Changes
 0.60.x.x ( relative to 0.60.3.0 )
 ========
 
+Features
+--------
+
+- ArnoldAttributes : Added Displacement section with plugs for controlling Arnold's `disp_autobump` and `autobump_visibility` parameters.
+
 Fixes
 -----
 
 - GraphEditor : The Dot created when you <kbd>Ctrl</kbd>+click on a connection is now selected automatically, so it can be repositioned by an immediate drag.
+- MetadataAlgo : Numeric bookmarks are no longer loaded inside nodes with `childNodesAreReadOnly` metadata, to prevent them "stealing" bookmarks from other nodes. Previously this only applied to nodes inside References.
+- Reference :
+  - Moved the `childNodesAreReadOnly` metadata registration to the Gaffer module, so it applies even without `GafferUI` being imported.
+  - Prevented `childNodesAreReadOnly` metadata baked into a referenced file from overriding the Reference node's own metadata.
+
+Build
+-----
+
+- Added `BOOST_PYTHON_LIB_SUFFIX` option. This matches the approach used in Cortex.
+
+Breaking Changes
+----------------
+
+- ArnoldDisplacement : Deprecated the `autoBump` plug, use `ArnoldAttributes.autoBump` instead.
 
 0.60.3.0 (relative to 0.60.2.1)
 ========
@@ -338,6 +357,14 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
+
+0.59.9.x (relative to 0.59.9.3)
+========
+
+Fixes
+-----
+
+- Reference : Added support for Spreadsheets promoted inside another plug.
 
 0.59.9.3 (relative to 0.59.9.2)
 ========

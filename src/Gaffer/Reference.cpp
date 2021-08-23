@@ -143,6 +143,8 @@ void transferOutputs( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug )
 	}
 }
 
+const InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -334,7 +336,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 
 		void loadingFinished()
 		{
-			for( auto &plug : Plug::Range( *m_reference ) )
+			for( auto &plug : Plug::RecursiveRange( *m_reference ) )
 			{
 				if( !m_reference->isReferencePlug( plug.get() ) )
 				{
@@ -392,6 +394,16 @@ class Reference::PlugEdits : public boost::signals::trackable
 			if( newPlug->typeId() != oldPlug->typeId() )
 			{
 				return;
+			}
+
+			// Recurse
+
+			for( PlugIterator it( oldPlug ); !it.done(); ++it )
+			{
+				if( Plug *dstChildPlug = newPlug->getChild<Plug>( (*it)->getName() ) )
+				{
+					transferChildEdits( it->get(), dstChildPlug );
+				}
 			}
 
 			auto *edit = plugEdit( oldPlug );
@@ -541,6 +553,8 @@ void Reference::loadInternal( const std::string &fileName )
 	{
 		PlugEdits::LoadingScope loadingScope( m_plugEdits.get() );
 		errors = script->executeFile( path.string(), this, /* continueOnError = */ true );
+		// deregister "childNodesAreReadOnly" metadata, in case it was baked in the exported file
+		Metadata::deregisterValue( this, g_childNodesAreReadOnlyName );
 	}
 
 	// Do a little bit of post processing on everything that was loaded.
