@@ -310,6 +310,7 @@ Build
   - Cortex 10.2.0.0.
 
 0.59.9.x (relative to 0.59.9.3)
+0.59.9.4 (relative to 0.59.9.3)
 ========
 
 Fixes
