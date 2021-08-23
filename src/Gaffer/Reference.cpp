@@ -398,7 +398,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 
 			// Recurse
 
-			for( PlugIterator it( oldPlug ); !it.done(); ++it )
+			for( Plug::Iterator it( oldPlug ); !it.done(); ++it )
 			{
 				if( Plug *dstChildPlug = newPlug->getChild<Plug>( (*it)->getName() ) )
 				{
