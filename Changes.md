@@ -15,15 +15,18 @@ Fixes
   - Moved the `childNodesAreReadOnly` metadata registration to the Gaffer module, so it applies even without `GafferUI` being imported.
   - Prevented `childNodesAreReadOnly` metadata baked into a referenced file from overriding the Reference node's own metadata.
 
-Build
------
-
-- Added `BOOST_PYTHON_LIB_SUFFIX` option. This matches the approach used in Cortex.
-
 Breaking Changes
 ----------------
 
 - ArnoldDisplacement : Deprecated the `autoBump` plug, use `ArnoldAttributes.autoBump` instead.
+
+Build
+-----
+
+- Updated to GafferHQ/dependencies 3.1.0 :
+  - Fixed missing `ssl` module in Python 3 builds.
+  - USD : Enabled OpenVDB support.
+- Added `BOOST_PYTHON_LIB_SUFFIX` option. This matches the approach used in Cortex.
 
 0.60.3.0 (relative to 0.60.2.1)
 ========
