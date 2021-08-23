@@ -5,6 +5,10 @@ Fixes
 -----
 
 - GraphEditor : The Dot created when you <kbd>Ctrl</kbd>+click on a connection is now selected automatically, so it can be repositioned by an immediate drag.
+- MetadataAlgo : Numeric bookmarks are no longer loaded inside nodes with `childNodesAreReadOnly` metadata, to prevent them "stealing" bookmarks from other nodes. Previously this only applied to nodes inside References.
+- Reference :
+  - Moved the `childNodesAreReadOnly` metadata registration to the Gaffer module, so it applies even without `GafferUI` being imported.
+  - Prevented `childNodesAreReadOnly` metadata baked into a referenced file from overriding the Reference node's own metadata.
 
 Build
 -----

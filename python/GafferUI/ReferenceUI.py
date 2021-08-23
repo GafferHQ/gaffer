@@ -59,7 +59,6 @@ Gaffer.Metadata.registerNode(
 	"icon", "referenceNode.png",
 
 	"graphEditor:childrenViewable", True,
-	"childNodesAreReadOnly", True,
 
 	"layout:customWidget:fileName:widgetType", "GafferUI.ReferenceUI._FileNameWidget"
 
