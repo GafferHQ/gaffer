@@ -294,7 +294,7 @@ class FocusGadget : public Gadget
 
 		unsigned layerMask() const override
 		{
-			return (int)GraphLayer::Highlighting;
+			return (int)GraphLayer::Overlay;
 		}
 
 		Imath::Box3f renderBound() const override
