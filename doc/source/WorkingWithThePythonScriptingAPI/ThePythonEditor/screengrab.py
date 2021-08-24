@@ -11,9 +11,9 @@ pythonEditor = mainWindow.getLayout().editors( GafferUI.ScriptEditor )[0]
 
 # Interface: Python Editor with output
 pythonEditor.reveal()
-pythonEditor.inputWidget().setText( 'print "Hello, world!"' )
+pythonEditor.inputWidget().setText( 'print( "Hello, world!" )' )
 pythonEditor.execute()
-pythonEditor.inputWidget().setText( 'print "Hello, world!"' )
+pythonEditor.inputWidget().setText( 'print( "Hello, world!" )' )
 GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/interfacePythonEditorOutput.png" )
 
 # Interface: Python Editor with error
