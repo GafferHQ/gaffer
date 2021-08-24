@@ -547,6 +547,26 @@ StandardStyle::~StandardStyle()
 
 void StandardStyle::bind( const Style *currentStyle ) const
 {
+
+	// Compute pixel size so we can do effects that are a fixed size in pixels.
+	// We do this using glGet, which can be a performance hazard, but hopefully people
+	// don't actually use custom styles, in which case the StandardStyle will only be
+	// bound once per frame.
+	//
+	// Also note: this is based on whatever the current pixel size is - during a selection render,
+	// it will be set to much smaller selection pixels.  It seems like it would be better to always
+	// scale based on the pixels of the main render - if trying to click on something that is a fixed
+	// size in the GL display, it should be that same size when trying to select it.  But this good
+	// enough for now to slightly thicken connections when zoomed out.
+	M44f viewTransform;
+	glGetFloatv( GL_MODELVIEW_MATRIX, viewTransform.getValue() );
+	M44f projectionTransform;
+	glGetFloatv( GL_PROJECTION_MATRIX, projectionTransform.getValue() );
+	M44f combinedInverse = projectionTransform.inverse() * viewTransform.inverse();
+	int viewport[4];
+	glGetIntegerv( GL_VIEWPORT, viewport );
+	m_pixelSize = 2.0f * combinedInverse[0][0] / viewport[2];
+
 	if( currentStyle && currentStyle->typeId()==staticTypeId() )
 	{
 		// binding the shader is actually quite an expensive operation
@@ -720,7 +740,9 @@ void StandardStyle::renderNodule( float radius, State state, const Imath::Color3
 
 void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state, const Imath::Color3f *userColor ) const
 {
-	glUniform1f( g_lineWidthParameter, 0.5 );
+	float connectionWidth = min( 1.5f, max( 0.5f, m_pixelSize * 3.0f ) );
+	glUniform1f( g_lineWidthParameter, connectionWidth );
+
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
 	renderConnectionInternal( srcPosition, srcTangent, dstPosition, dstTangent );
