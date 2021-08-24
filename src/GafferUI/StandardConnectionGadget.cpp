@@ -323,7 +323,7 @@ void StandardConnectionGadget::renderLayer( Layer layer, const Style *style, Ren
 	}
 
 	const_cast<StandardConnectionGadget *>( this )->updateConnectionGeometry();
-	const Style::State state = highlighted() ? Style::HighlightedState : Style::NormalState;
+	const Style::State state = highlighted() ? Style::HighlightedState : ( m_active ? Style::NormalState : Style::DisabledState );
 
 	V3f minimisedSrcPos, minimisedSrcTangent;
 	minimisedPositionAndTangent( state == Style::HighlightedState, minimisedSrcPos, minimisedSrcTangent );

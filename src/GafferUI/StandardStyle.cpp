@@ -536,7 +536,7 @@ StandardStyle::StandardStyle()
 	setColor( RaisedColor, Color3f( 0.4 ) );
 	setColor( ForegroundColor, Color3f( 0.9 ) );
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
-	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
+	setColor( ConnectionColor, Color3f( 0.6, 0.6, 0.6 ) );
 	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
 	setColor( AnimationCurveColor, Color3f( 1.0, 1.0, 1.0 ) );
 }
@@ -1258,6 +1258,22 @@ Imath::Color3f StandardStyle::colorForState( Color c, State s, const Imath::Colo
 	if( s == Style::HighlightedState )
 	{
 		result = m_colors[HighlightColor];
+	}
+	else if( s == Style::DisabledState )
+	{
+		if( c == ConnectionColor )
+		{
+			result = lerp( result, Color3f( 0.26 ), 0.5 ); // Desaturate 50%
+			result *= 0.31 / luminance( result ); // Fix luminance to a bit brighter than background
+		}
+		else if( c == ForegroundColor )
+		{
+			result = lerp( result, Color3f( 0.26 ), 0.5 );
+		}
+		else
+		{
+			result = lerp( result, Color3f( 0.26 ), 0.75 );
+		}
 	}
 
 	return result;

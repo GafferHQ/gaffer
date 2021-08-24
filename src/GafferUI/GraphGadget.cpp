@@ -50,14 +50,22 @@
 #include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/Loop.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/NameSwitch.h"
+#include "Gaffer/NameValuePlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/RecursiveChildIterator.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
+#include "Gaffer/Switch.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/ParallelAlgo.h"
+#include "Gaffer/Process.h"
 
 #include "IECore/BoxOps.h"
 #include "IECore/Export.h"
@@ -68,6 +76,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind.hpp"
+#include "boost/unordered_set.hpp"
 #include "boost/bind/placeholders.hpp"
 
 using namespace GafferUI;
@@ -223,6 +232,227 @@ class SetPositionsAction : public Gaffer::Action
 IE_CORE_DEFINERUNTIMETYPED( SetPositionsAction );
 IE_CORE_DECLAREPTR( SetPositionsAction )
 
+void activeWalkOutput(
+	const Gaffer::Plug *connectionStart,
+	const Gaffer::Context *context,
+	const IECore::Canceller *canceller,
+	std::unordered_set<const Gaffer::Plug*> &activePlugs,
+	std::unordered_set<const Gaffer::Node*> &activeNodes,
+	boost::unordered_set<IECore::MurmurHash> &plugContextsVisited
+);
+
+void activeWalkInput(
+	const Gaffer::Plug *connectionEnd,
+	bool recurse,
+	const Gaffer::Context *context,
+	const IECore::Canceller *canceller,
+	std::unordered_set<const Gaffer::Plug*> &activePlugs,
+	std::unordered_set<const Gaffer::Node*> &activeNodes,
+	boost::unordered_set<IECore::MurmurHash> &plugContextsVisited
+)
+{
+	if( const Gaffer::Plug *connectionStart = connectionEnd->getInput() )
+	{
+		activePlugs.insert( connectionEnd );
+		activeWalkOutput( connectionStart, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+	}
+	else if( recurse )
+	{
+		for( Gaffer::Plug::RecursiveInputIterator childPlug( connectionEnd ); !childPlug.done(); ++childPlug )
+		{
+			if( const Gaffer::Plug *connectionStart = (*childPlug)->getInput() )
+			{
+				activePlugs.insert( childPlug->get() );
+				activeWalkOutput( connectionStart, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+
+				// All children will have the same connection, we don't need to repeat the traversal
+				childPlug.prune();
+			}
+		}
+	}
+}
+
+void activeWalkOutput(
+	const Gaffer::Plug *connectionStart,
+	const Gaffer::Context *context,
+	const IECore::Canceller *canceller,
+	std::unordered_set<const Gaffer::Plug*> &activePlugs,
+	std::unordered_set<const Gaffer::Node*> &activeNodes,
+	boost::unordered_set<IECore::MurmurHash> &plugContextsVisited
+)
+{
+	// TODO - this canceller check isn't actually very useful?  The only things we do that may take a long time
+	// are plug evaluations, which respect a canceller in the context.
+	//
+	// In theory, it would be useful if we were traversing a massive hierarchy without a valid context, but
+	// that's hard to build a test for
+	Canceller::check( canceller );
+
+	// Create a hash representing this node of the active traversal
+	IECore::MurmurHash plugContextHash = context ? context->hash() : IECore::MurmurHash();
+	plugContextHash.append( (size_t)connectionStart ); // OK to just hash the pointer, we only compare within this traversal
+	if( !plugContextsVisited.insert( plugContextHash ).second )
+	{
+		return;
+	}
+
+	const Gaffer::Node *node = connectionStart->node();
+	bool firstVisit = activeNodes.insert( node ).second;
+
+	if( connectionStart->getInput() )
+	{
+		// This plug isn't computed, it's driven by an input, so follow that input ( this covers plugs
+		// like the output of a Box )
+		activeWalkInput( connectionStart, false, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+		return;
+	}
+	else
+	{
+		if( connectionStart->direction() != Gaffer::Plug::Direction::Out )
+		{
+			// An input plug with no input connections isn't affected by anything
+			return;
+		}
+	}
+
+	std::set<const Gaffer::Plug*> handledBySpecialCase;
+	try
+	{
+		// If we don't have a valid context, then we can no longer track accurately, and must instead
+		// always use the default path, which conservatively assumes that all inputs could affect the output
+		if( context )
+		{
+			if( const Gaffer::DependencyNode *dependencyNode = runTimeCast<const Gaffer::DependencyNode>( node ) )
+			{
+				Gaffer::Context::Scope s( context );
+				const Gaffer::BoolPlug *enabledPlug = dependencyNode->enabledPlug();
+				if( enabledPlug && !enabledPlug->getValue() )
+				{
+					if( const Gaffer::Plug *active = dependencyNode->correspondingInput( connectionStart ) )
+					{
+						activeWalkInput( active, true, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+					}
+
+					activeWalkInput( enabledPlug, false, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+					return;
+				}
+			}
+
+			if( const Gaffer::Switch *switchNode = runTimeCast<const Gaffer::Switch>( node ) )
+			{
+				const Gaffer::Plug *activeOutput = nullptr;
+
+				if( const Gaffer::NameSwitch *nameSwitchNode = runTimeCast<const Gaffer::NameSwitch>( switchNode ) )
+				{
+					// The top level output plug is an NameValuePlug - track just the value part for
+					// specific traversal, since all the name inputs must be tracked anyway
+					const Gaffer::NameValuePlug *outputNameValue = runTimeCast<const Gaffer::NameValuePlug>( nameSwitchNode->outPlug() );
+					if( outputNameValue && ( connectionStart == outputNameValue || connectionStart == outputNameValue->valuePlug() || outputNameValue->valuePlug()->isAncestorOf( connectionStart ) ) )
+					{
+						activeOutput = outputNameValue->valuePlug();
+					}
+
+					// We are handling just the value inputs specially
+					for( auto &inNameValue : Gaffer::NameValuePlug::InputRange( *nameSwitchNode->inPlugs() ) )
+					{
+						handledBySpecialCase.insert( inNameValue->valuePlug() );
+					}
+				}
+				else
+				{
+					if( connectionStart == switchNode->outPlug() || switchNode->outPlug()->isAncestorOf( connectionStart ) )
+					{
+						activeOutput = switchNode->outPlug();
+					}
+
+					for( auto &inSourcePlug : Gaffer::Plug::InputRange( *switchNode->inPlugs() ) )
+					{
+						handledBySpecialCase.insert( inSourcePlug.get() );
+					}
+				}
+
+				const Gaffer::Plug *active = nullptr;
+				if( activeOutput )
+				{
+					Gaffer::Context::Scope s( context );
+					active = switchNode->activeInPlug( activeOutput );
+				}
+
+				// Track the active input plug
+				if( active )
+				{
+					activeWalkInput( active, true, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+				}
+			}
+			else if( const Gaffer::ContextProcessor *contextProcessorNode = runTimeCast<const Gaffer::ContextProcessor>( node ) )
+			{
+				if( connectionStart == contextProcessorNode->outPlug() || contextProcessorNode->outPlug()->isAncestorOf( connectionStart ) )
+				{
+					Gaffer::Context::Scope s( context );
+					const Gaffer::ContextPtr newContext = contextProcessorNode->inPlugContext();
+					activeWalkInput( contextProcessorNode->inPlug(), true, newContext.get(), canceller, activePlugs, activeNodes, plugContextsVisited );
+				}
+				handledBySpecialCase.insert( contextProcessorNode->inPlug() );
+			}
+		}
+
+		if( const Gaffer::Loop *loopNode = runTimeCast<const Gaffer::Loop>( node ) )
+		{
+			if(
+				!firstVisit &&
+				( connectionStart == loopNode->previousPlug() ||  connectionStart->parent() == loopNode->previousPlug() )
+			)
+			{
+				// In any normal circumstance, if we've already visited this loop, that means we will
+				// have already done all needed traversal, and just stop here.
+				//
+				// Stopping here avoids leaking out the traversal from inside the loop where we don't
+				// know the context.
+				//
+				// There are some weird cases where this might not be totally accurate - it's technically
+				// possible to make a graph that uses the inner nodes of a loop both through the loop, and
+				// also through manually using a ContextVariables node to set loop:index - this is a very
+				// rare special case though
+				return;
+			}
+
+			// The input plug of the loop is a normal input, and will be handled below
+
+			// The next plug of the loop is evaluated in many different contexts - instead of evaluating all
+			// of them, pass a null context which will trigger a conservative evaluation of all possible inputs
+			activeWalkInput( loopNode->nextPlug(), true, nullptr, canceller, activePlugs, activeNodes, plugContextsVisited );
+			handledBySpecialCase.insert( loopNode->nextPlug() );
+		}
+	}
+	catch( const Gaffer::ProcessException &e )
+	{
+		// If there's an error in the graph, we can't figure out specifically which nodes contribute,
+		// fall back to showing all possible inputs as active
+		context = nullptr;
+		handledBySpecialCase.clear();
+
+		IECore::msg( IECore::Msg::Warning, "Gaffer", std::string( "Error during graph active state visualisation: " ) + e.what() );
+	}
+
+	// For default nodes
+	for( Gaffer::Plug::RecursiveInputIterator inSourcePlug( node ); !inSourcePlug.done(); ++inSourcePlug )
+	{
+		if( handledBySpecialCase.count( inSourcePlug->get() ) )
+		{
+			inSourcePlug.prune();
+			continue;
+		}
+
+		activeWalkInput( inSourcePlug->get(), false, context, canceller, activePlugs, activeNodes, plugContextsVisited );
+
+		if( (*inSourcePlug)->getInput() )
+		{
+			// All children will have the same connection, we don't need to repeat the traversal
+			inSourcePlug.prune();
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -232,7 +462,7 @@ IE_CORE_DECLAREPTR( SetPositionsAction )
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( GraphGadget );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr ), m_dragMergeGroupId( 0 )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr ), m_dragMergeGroupId( 0 ), m_activeStateDirty( false )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -257,6 +487,10 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 GraphGadget::~GraphGadget()
 {
 	removeChild( auxiliaryConnectionsGadget() );
+	if( m_activeStateTask )
+	{
+		m_activeStateTask->cancelAndWait();
+	}
 }
 
 Gaffer::Node *GraphGadget::getRoot()
@@ -306,6 +540,9 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 			m_focusChangedConnection = m_scriptNode->focusChangedSignal().connect(
 				boost::bind( &GraphGadget::focusChanged, this, ::_1, ::_2 )
 			);
+			m_scriptContextChangedConnection = m_scriptNode->context()->changedSignal().connect(
+				boost::bind( &GraphGadget::scriptContextChanged, this, ::_1, ::_2 )
+			);
 		}
 		else
 		{
@@ -328,6 +565,7 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	if( rootChanged )
 	{
 		m_rootChangedSignal( this, previousRoot.get() );
+		dirtyActive();
 	}
 }
 
@@ -756,8 +994,183 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 	return nullptr;
 }
 
+void GraphGadget::dirtyActive()
+{
+	if( m_activeStateTask )
+	{
+		m_activeStateTask->cancelAndWait();
+		m_activeStateTask.reset();
+	}
+	m_activeStateDirty = true;
+	dirty( DirtyType::Render );
+}
+
+void GraphGadget::updateActive()
+{
+	if( m_activeStateTask )
+	{
+		m_activeStateTask->cancelAndWait();
+		m_activeStateTask.reset();
+	}
+
+	const Gaffer::Node *focusNode = m_scriptNode->getFocus();
+	std::vector<Gaffer::ConstPlugPtr> focusPlugs;
+	if( focusNode )
+	{
+		Gaffer::ConstPlugPtr hiddenFocusPlug = nullptr;
+		for( auto &plug : Gaffer::Plug::OutputRange( *focusNode ) )
+		{
+			const std::string &n = plug->getName();
+			if( n.size() >= 2 && n[0] == '_' && n[1] == '_' )
+			{
+				if( !hiddenFocusPlug )
+				{
+					hiddenFocusPlug = plug;
+				}
+				continue;
+			}
+
+			focusPlugs.push_back( plug );
+		}
+
+		if( !focusPlugs.size() && hiddenFocusPlug )
+		{
+			// If we couldn't find any visible output plug, take the hidden one
+			focusPlugs.push_back( hiddenFocusPlug );
+		}
+	}
+
+	if( !focusPlugs.size() )
+	{
+		Gaffer::ParallelAlgo::callOnUIThread(
+			[this] {
+				this->applyActive( nullptr, nullptr );
+			}
+		);
+		return;
+	}
+
+	m_activeStateTask = Gaffer::ParallelAlgo::callOnBackgroundThread(
+		// TODO - if we make cancellation for graph edits more granular ( instead of for the whole graph ),
+		// we may need to somehow pass all focusPlugs as the subject
+		focusPlugs[0].get(),
+		// Must hold a reference to stop us dying before our UI thread call is scheduled.
+		[focusPlugs, thisRef = GraphGadgetPtr( this ) ] {
+
+			std::shared_ptr< std::unordered_set<const Gaffer::Plug*> > activePlugs( new std::unordered_set<const Gaffer::Plug*> );
+			std::shared_ptr< std::unordered_set<const Gaffer::Node*> > activeNodes( new std::unordered_set<const Gaffer::Node*> );
+
+			Canceller::check( Gaffer::Context::current()->canceller() );
+
+			const Gaffer::ScriptNode *script = focusPlugs[0]->ancestor<Gaffer::ScriptNode>();
+			// Take the context from the script, which has various variables set, including the correct frame.
+			// But take the canceller from the current context, which has been set by the BackgroundTask
+
+			Gaffer::ContextPtr context;
+			if( script && script->context() )
+			{
+				context = new Gaffer::Context( *script->context(), *Gaffer::Context::current()->canceller() );
+			}
+			else
+			{
+				context = new Gaffer::Context( Gaffer::Context(), *Gaffer::Context::current()->canceller() );
+			}
+
+			for( const Gaffer::ConstPlugPtr &focusPlug : focusPlugs )
+			{
+				activePlugsAndNodes(
+					focusPlug.get(), context.get(),
+					*activePlugs, *activeNodes
+				);
+			}
+
+			Gaffer::ParallelAlgo::callOnUIThread(
+				[thisRef, activePlugs, activeNodes] {
+					thisRef->applyActive( activePlugs, activeNodes );
+				}
+			);
+		}
+	);
+
+}
+
+void GraphGadget::applyActive(
+	std::shared_ptr< std::unordered_set<const Gaffer::Plug*> > activePlugs,
+	std::shared_ptr< std::unordered_set<const Gaffer::Node*> > activeNodes
+)
+{
+	if( activePlugs && activeNodes )
+	{
+		for( auto &g : children() )
+		{
+			if( ConnectionGadget *c = runTimeCast<ConnectionGadget>( g.get() ) )
+			{
+				c->activeForFocusNode( activePlugs->count( c->dstNodule()->plug() ) );
+			}
+			else if( NodeGadget *n = runTimeCast<NodeGadget>( g.get() ) )
+			{
+				n->activeForFocusNode( activeNodes->count( n->node() ) );
+			}
+		}
+	}
+	else
+	{
+		// If we haven't got a focus node to trigger active state visualisation, just show everything active
+		for( auto &g : children() )
+		{
+			if( ConnectionGadget *c = runTimeCast<ConnectionGadget>( g.get() ) )
+			{
+				c->activeForFocusNode( true );
+			}
+			else if( NodeGadget *n = runTimeCast<NodeGadget>( g.get() ) )
+			{
+				n->activeForFocusNode( true );
+			}
+		}
+	}
+
+	m_activeStateDirty = false;
+
+	if( m_activeStateTask )
+	{
+		// This is probably unnecessary, since launching this function in a UI thread is the last thing activeStateTask
+		// does - it should definitely be finished by now, but seems safer to cancelAndWait before resetting.
+		m_activeStateTask->cancelAndWait();
+
+		// Clear the task, so that a new task will run next time activeStateDirty is set
+		m_activeStateTask.reset();
+	}
+
+	// TODO - this const_cast is pretty ugly
+	const_cast< GraphGadget*>( this )->dirty( DirtyType::Render );
+}
+
+void GraphGadget::activePlugsAndNodes(
+	const Gaffer::Plug *plug,
+	const Gaffer::Context *context,
+	std::unordered_set<const Gaffer::Plug*> &activePlugs,
+	std::unordered_set<const Gaffer::Node*> &activeNodes
+)
+{
+	// TODO - we seem to be prefering std::unordered_set.  We should probably add
+	// a specialization of std::hash to include/IECore/MurmurHash.h so that we can
+	// use it here
+	boost::unordered_set<IECore::MurmurHash> plugContextsVisited;
+	activeWalkOutput( plug, context, context->canceller(), activePlugs, activeNodes, plugContextsVisited );
+}
+
 void GraphGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
 {
+	if(
+		m_activeStateDirty &&
+		!( m_activeStateTask && ( m_activeStateTask->status() != Gaffer::BackgroundTask::Cancelled ) )
+	)
+	{
+		// It's slightly naughty to trigger updateActive from the const renderLayer - it could be moved to
+		// anything that gets called regularly on the UI thread
+		const_cast< GraphGadget*>( this )->updateActive();
+	}
+
 	glDisable( GL_DEPTH_TEST );
 
 	switch( layer )
@@ -863,6 +1276,10 @@ void GraphGadget::rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphCom
 			if( NodeGadget *g = addNodeGadget( node ) )
 			{
 				addConnectionGadgets( g );
+
+				// Needed in case there is no focus node, where we set all nodes as active
+				// and can't rely on the focus node being dirtied to update active state
+				dirtyActive();
 			}
 		}
 	}
@@ -909,6 +1326,35 @@ void GraphGadget::focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node )
 		// by DirtyType::Render, then we could need to find both the previous
 		// focussed Gadget and the next focussed Gadget and dirty them specifically.
 		dirty( DirtyType::Render );
+	}
+
+	if( node )
+	{
+		m_focusPlugDirtiedConnection = node->plugDirtiedSignal().connect(
+			boost::bind( &GraphGadget::focusPlugDirtied, this, ::_1 )
+		);
+	}
+	else
+	{
+		m_focusPlugDirtiedConnection = boost::signals::scoped_connection();
+	}
+
+	dirtyActive();
+}
+
+
+void GraphGadget::focusPlugDirtied( Gaffer::Plug *plug )
+{
+	dirtyActive();
+}
+
+void GraphGadget::scriptContextChanged( const Gaffer::Context *context, const IECore::InternedString & )
+{
+	IECore::MurmurHash newHash = context->hash();
+	if( newHash != m_scriptContextHash )
+	{
+		m_scriptContextHash = newHash;
+		dirtyActive();
 	}
 }
 
@@ -1799,6 +2245,10 @@ void GraphGadget::addConnectionGadget( Nodule *dstNodule )
 	addChild( connection );
 
 	m_connectionGadgets[dstNodule] = connection.get();
+
+	// Needed in case there is no focus node, where we set all nodes as active
+	// and can't rely on the focus node being dirtied to update active state
+	dirtyActive();
 }
 
 void GraphGadget::removeConnectionGadgets( const NodeGadget *nodeGadget )

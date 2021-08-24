@@ -48,7 +48,7 @@ using namespace boost;
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TextGadget );
 
 TextGadget::TextGadget( const std::string &text )
-	:	Gadget( defaultName<TextGadget>() )
+	:	Gadget( defaultName<TextGadget>() ), m_dimmed( false )
 {
 	setText( text );
 }
@@ -78,6 +78,15 @@ void TextGadget::setText( const std::string &text )
 	}
 }
 
+void TextGadget::setDimmed( bool dimmed )
+{
+	if( m_dimmed != dimmed )
+	{
+		m_dimmed = dimmed;
+		dirty( DirtyType::Render );
+	}
+}
+
 Imath::Box3f TextGadget::bound() const
 {
 	return m_bound;
@@ -90,7 +99,7 @@ void TextGadget::renderLayer( Layer layer, const Style *style, RenderReason reas
 		return;
 	}
 
-	style->renderText( Style::LabelText, m_text );
+	style->renderText( Style::LabelText, m_text, m_dimmed ? Style::DisabledState : Style::NormalState );
 }
 
 unsigned TextGadget::layerMask() const

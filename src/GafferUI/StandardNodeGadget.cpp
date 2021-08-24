@@ -679,7 +679,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 		case GraphLayer::Nodes :
 		{
 			// decide what state we're rendering in
-			Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
+			Style::State state = getHighlighted() ? Style::HighlightedState : ( m_active ? Style::NormalState : Style::DisabledState );
 
 			// draw our background frame
 			const Box3f b = bound();
@@ -753,6 +753,27 @@ float StandardNodeGadget::focusBorderWidth() const
 	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 1.0f ), this ).p0;
 	float pixelSize = ( p0 - p1 ).length();
 	return min( g_maxFocusWidth, max( 0.75f, 8.0f * pixelSize ) );
+}
+
+void StandardNodeGadget::setHighlighted( bool highlighted )
+{
+	NodeGadget::setHighlighted( highlighted );
+	updateTextDimming();
+}
+
+void StandardNodeGadget::activeForFocusNode( bool active )
+{
+	NodeGadget::activeForFocusNode( active );
+	updateTextDimming();
+}
+
+void StandardNodeGadget::updateTextDimming()
+{
+	NameGadget *name = IECore::runTimeCast<NameGadget>( getContents() );
+	if( name )
+	{
+		name->setDimmed( !( m_active || getHighlighted() ) );
+	}
 }
 
 unsigned StandardNodeGadget::layerMask() const
