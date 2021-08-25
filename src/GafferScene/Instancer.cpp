@@ -2317,9 +2317,11 @@ Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug,
 	:	Gaffer::Context::EditableScope( context )
 {
 	set( ScenePlug::scenePathContextName, sourcePath );
-	ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
 
-	setPrototype( engine.get(), branchPath );
+	// Must hold a smart pointer to engine so it can't be freed during the lifespan of this scope
+	m_engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
+
+	setPrototype( m_engine.get(), branchPath );
 }
 
 Instancer::PrototypeScope::PrototypeScope( const EngineData *engine, const Gaffer::Context *context, const ScenePath *sourcePath, const ScenePath *branchPath )
