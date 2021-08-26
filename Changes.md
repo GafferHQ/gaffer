@@ -6,6 +6,11 @@ Improvements
 
 - Viewer : Added <kbd>PgDn</kbd> and <kbd>PgUp</kbd> hotkeys for switching to the previous and next image layer respectively.
 
+Fixes
+-----
+
+- Fix crash that could be triggered by exceptions being thrown during parallel evaluation.  This could potentially happen while rendering Instancers where some locations were invalid.
+
 0.60.5.0 (relative to 0.60.4.0)
 ========
 
