@@ -6,6 +6,13 @@ Improvements
 
 - PythonCommand : Added syntax highlighting and auto-complete.
 
+Fixes
+-----
+
+- Instancer :
+  - Fixed random crash when instancer engine evicted from cache
+  - Throw descriptive error instead of crashing if points disappear within Arnold shutter
+
 0.60.4.0 (relative to 0.60.3.0)
 ========
 

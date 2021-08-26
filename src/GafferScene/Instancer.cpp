@@ -418,13 +418,17 @@ class Instancer::EngineData : public Data
 			const size_t i = boost::lexical_cast<size_t>( name );
 			if( !m_ids )
 			{
+				if( i >= numPoints() )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid, instancer produces only %2% children.  Topology may have changed during shutter." ) % name % numPoints() ) );
+				}
 				return i;
 			}
 
 			IdsToPointIndices::const_iterator it = m_idsToPointIndices.find( i );
 			if( it == m_idsToPointIndices.end() )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid" ) % name ) );
+				throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid.  Topology may have changed during shutter." ) % name ) );
 			}
 
 			return it->second;
