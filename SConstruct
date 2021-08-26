@@ -1500,11 +1500,9 @@ def locateDocs( docRoot, env ) :
 def buildDocs( target, source, env ) :
 
 	# Run sphinx to generate the final documentation.
-	# Run via `python` as sphinx hard-codes `/usr/bin/python`.
 
 	subprocess.check_call(
 		[
-			"python",
 			findOnPath( env.subst( "$SPHINX" ), env["ENV"]["PATH"] ),
 			"-b", "html",
 			str( source[0] ), os.path.dirname( str( target[0] ) )
