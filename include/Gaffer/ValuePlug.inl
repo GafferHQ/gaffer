@@ -46,6 +46,19 @@ boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHas
 	boost::intrusive_ptr<const T> result = IECore::runTimeCast<const T>( value );
 	if( !result )
 	{
+		if( !value )
+		{
+			// This is quite a serious error, and it may occur when a calculation has already been cancelled,
+			// which could result in the exception that first cancelled the calculation being displayed, but
+			// not this error - print the error as a message as well as throwing an exception
+			std::string error = boost::str(
+				boost::format( "%1% : getValueInternal() returned NULL. This should be impossible, something has gone badly wrong internally to Gaffer." )
+				% fullName()
+			);
+			IECore::msg( IECore::Msg::Error, "ValuePlug::getObjectValue", error );
+			throw IECore::Exception( error );
+		}
+
 		throw IECore::Exception( boost::str(
 			boost::format( "%1% : getValueInternal() didn't return expected type (wanted %2% but got %3%). Is the hash being computed correctly?" )
 				% fullName() % T::staticTypeName() % value->typeName()
