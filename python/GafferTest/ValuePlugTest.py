@@ -38,8 +38,7 @@
 import gc
 import inspect
 import imath
-
-import imath
+import six
 
 import IECore
 
@@ -848,6 +847,27 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertNotEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V2iPlug( defaultValue = imath.V2i( 0, 1 ) ).defaultHash() )
 		self.assertNotEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V3iPlug().defaultHash() )
 		self.assertEqual( Gaffer.V2iPlug().defaultHash(), Gaffer.V2iPlug().hash() )
+
+	def testExceptionDuringParallelEval( self ) :
+
+		# This only caused a problem when using GAFFER_PYTHONEXPRESSION_CACHEPOLICY=TaskCollaboration
+		# with a TaskMutex without a properly isolated task_group so that exceptions in one thread
+		# can cancel the other.  We're adding a more specific test for this to TaskMutex, so we're not
+		# expecting this to catch anything, but it's still a valid test
+
+		m = GafferTest.MultiplyNode()
+
+		m["e"] = Gaffer.Expression()
+		m["e"].setExpression( inspect.cleandoc(
+			"""
+			if context["testVar"]%10 == 9:
+				raise BaseException( "Foo" )
+			parent['op1'] = 1
+			"""
+		) )
+
+		with six.assertRaisesRegex( self, BaseException, "Foo" ):
+			GafferTest.parallelGetValue( m["product"], 10000, "testVar" )
 
 	def setUp( self ) :
 
