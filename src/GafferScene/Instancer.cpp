@@ -418,13 +418,17 @@ class Instancer::EngineData : public Data
 			const size_t i = boost::lexical_cast<size_t>( name );
 			if( !m_ids )
 			{
+				if( i >= numPoints() )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid, instancer produces only %2% children.  Topology may have changed during shutter." ) % name % numPoints() ) );
+				}
 				return i;
 			}
 
 			IdsToPointIndices::const_iterator it = m_idsToPointIndices.find( i );
 			if( it == m_idsToPointIndices.end() )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid" ) % name ) );
+				throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid.  Topology may have changed during shutter." ) % name ) );
 			}
 
 			return it->second;
@@ -2317,9 +2321,11 @@ Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug,
 	:	Gaffer::Context::EditableScope( context )
 {
 	set( ScenePlug::scenePathContextName, sourcePath );
-	ConstEngineDataPtr engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
 
-	setPrototype( engine.get(), branchPath );
+	// Must hold a smart pointer to engine so it can't be freed during the lifespan of this scope
+	m_engine = boost::static_pointer_cast<const EngineData>( enginePlug->getValue() );
+
+	setPrototype( m_engine.get(), branchPath );
 }
 
 Instancer::PrototypeScope::PrototypeScope( const EngineData *engine, const Gaffer::Context *context, const ScenePath *sourcePath, const ScenePath *branchPath )
