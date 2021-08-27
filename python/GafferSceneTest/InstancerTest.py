@@ -128,6 +128,18 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( instancer["out"].bound( instancePath ), sphere.bound() )
 			self.assertEqual( instancer["out"].childNames( instancePath ), IECore.InternedStringVectorData() )
 
+
+		# Test paths that don't exist - the transform will trigger an error, the other functions don't depend on
+		# the index, so will just return a reasonable value
+		six.assertRaisesRegex( self,
+			Gaffer.ProcessException,
+			'Instancer.out.transform : Instance id "77" is invalid, instancer produces only 4 children.  Topology may have changed during shutter.',
+			instancer["out"].transform, "/seeds/instances/sphere/77"
+		)
+		self.assertEqual( instancer["out"].object( "/seeds/instances/sphere/77" ), sphere )
+		self.assertEqual( instancer["out"].bound( "/seeds/instances/sphere/77" ), sphere.bound() )
+		self.assertEqual( instancer["out"].childNames( "/seeds/instances/sphere/77" ), IECore.InternedStringVectorData() )
+
 		# Test passthrough when disabled
 		instancer["enabled"].setValue( False )
 		self.assertScenesEqual( instancer["in"], instancer["out"] )
@@ -1292,6 +1304,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].transform( "/object/instances/cube/100" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( instancer["out"].transform( "/object/instances/cube/5" ), imath.M44f().translate( imath.V3f( 3, 0, 0 ) ) )
 
+		six.assertRaisesRegex( self,
+			Gaffer.ProcessException,
+			'Instancer.out.transform : Instance id "77" is invalid.  Topology may have changed during shutter.',
+			instancer["out"].transform, "/object/instances/cube/77"
+		)
+
 		self.assertSceneValid( instancer["out"] )
 
 	def testNegativeIdsAndIndices( self ) :
@@ -2091,6 +2109,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertAlmostEqual( instancer['out'].attributes( "points1/instances/withAttrs/3/sphere" )["floatAttr"].value, 1.2006, places = 6 )
 		self.assertAlmostEqual( instancer['out'].attributes( "points2/instances/withAttrs/5/sphere" )["floatAttr"].value, 2.4012, places = 6 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 15, "" : 15 } )
+
+
+		# Test invalid location
+		for func in [ instancer["out"].object, instancer["out"].childNames, instancer["out"].bound, instancer["out"].transform ]:
+			six.assertRaisesRegex( self,
+				Gaffer.ProcessException,
+				'Instancer.out.' + func.__name__ + ' : Instance id "777" is invalid, instancer produces only 10 children.  Topology may have changed during shutter.',
+				func, "/points/instances/withAttrs/777"
+			)
 
 		# Test passthrough when disabled
 		instancer["enabled"].setValue( False )
