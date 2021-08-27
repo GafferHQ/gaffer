@@ -1,4 +1,4 @@
-0.60.x.x (relative to 0.60.4.0)
+0.60.5.0 (relative to 0.60.4.0)
 ========
 
 Improvements
@@ -10,8 +10,8 @@ Fixes
 -----
 
 - Instancer :
-  - Fixed random crash when instancer engine evicted from cache
-  - Throw descriptive error instead of crashing if points disappear within Arnold shutter
+  - Fixed crash caused by engine being evicted from the cache.
+  - Fixed crash caused by points disappearing within the shutter range.
 
 0.60.4.0 (relative to 0.60.3.0)
 ========
