@@ -345,6 +345,19 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# build context menu
 		menuDefinition = IECore.MenuDefinition()
 
+		for name in Gaffer.Animation.Interpolator.getFactory().getNames() :
+			menuDefinition.append(
+				"/Set Interpolator/%s" % ( name ),
+				{
+					"command" : functools.partial(
+						Gaffer.WeakMethod( self.__setSelectedKeysInterpolator ),
+						name=name
+					),
+					"active" : not emptySelectedKeys,
+					"checkBox" : None if interpolatorName is None else interpolatorName == name
+				}
+			)
+
 		menuDefinition.append(
 			"/Tie Slope/True",
 			{
@@ -392,19 +405,6 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				"checkBox" : None if tieAccel is None else not tieAccel
 			}
 		)
-
-		for name in Gaffer.Animation.Interpolator.getFactory().getNames() :
-			menuDefinition.append(
-				"/Set Interpolator/%s" % ( name ),
-				{
-					"command" : functools.partial(
-						Gaffer.WeakMethod( self.__setSelectedKeysInterpolator ),
-						name=name
-					),
-					"active" : not emptySelectedKeys,
-					"checkBox" : None if interpolatorName is None else interpolatorName == name
-				}
-			)
 
 		self.__popupMenu = GafferUI.Menu( menuDefinition, title="Selected Keys" )
 		self.__popupMenu.popup( parent = self )

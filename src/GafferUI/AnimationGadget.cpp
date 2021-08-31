@@ -596,9 +596,42 @@ void AnimationGadget::plugDirtied( Gaffer::Plug *plug )
 
 std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	if( const Animation::ConstKeyPtr key = keyAt( line ) )
+	std::pair< Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Tangent::Direction > keyTangent = tangentAt( line );
+	if( keyTangent.first )
 	{
-		return boost::str( boost::format( "%f -> %f" ) % key->getTime().getSeconds() % key->getValue() );
+		const Gaffer::Animation::Tangent& tangent = keyTangent.first->getTangent( keyTangent.second );
+		std::ostringstream os;
+		os.precision( std::min( 4, std::numeric_limits< double >::max_digits10 ) );
+		os << "Direction: ";
+		switch( tangent.getDirection() )
+		{
+			case Gaffer::Animation::Tangent::Direction::Into:
+				os << "Into";
+				break;
+			case Gaffer::Animation::Tangent::Direction::From:
+				os << "From";
+				break;
+			default:
+				os << "Unknown";
+		}
+		os << "<br>Slope: " << tangent.getSlope( Gaffer::Animation::Tangent::Space::Key );
+		os << "<br>Accel: " << tangent.getAccel( Gaffer::Animation::Tangent::Space::Span );
+		return os.str();
+	}
+	else if( const Animation::ConstKeyPtr key = keyAt( line ) )
+	{
+		const Gaffer::ScriptNode* const scriptNode =
+			IECore::assertedStaticCast< const Gaffer::ScriptNode >( key->parent()->ancestor( (IECore::TypeId) Gaffer::ScriptNodeTypeId ) );
+
+		std::ostringstream os;
+		os.precision( std::min( 4, std::numeric_limits< double >::max_digits10 ) );
+		os.setf( std::ios::boolalpha );
+		os << "Frame: " << key->getTime().getReal( scriptNode->framesPerSecondPlug()->getValue() );
+		os << "<br>Value: " << key->getValue();
+		os << "<br>Interpolator: " << key->getInterpolator()->getName();
+		os << "<br>Tie Slope: " << key->getTieSlope();
+		os << "<br>Tie Accel: " << key->getTieAccel();
+		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )
 	{
