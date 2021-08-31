@@ -1103,6 +1103,33 @@ double Animation::Tangent::getSlope( const Animation::Tangent::Space space ) con
 	return ( space == Space::Key ) ? slopeToKeySpace( m_slope, m_dt ) : m_slope;
 }
 
+bool Animation::Tangent::slopeIsUsed() const
+{
+	assert( m_key );
+
+	// check key added to curve
+
+	if( m_key->m_parent == 0 )
+	{
+		return false;
+	}
+
+	// check whether key is first or final key then interpolator hints
+
+	if(
+		( ( m_direction == Direction::From ) && (
+			( m_key->m_parent->finalKey() == m_key ) ||
+			( m_key->m_interpolator->getHints().test( Interpolator::Hint::UseSlopeLo ) == false ) ) ) ||
+		( ( m_direction == Direction::Into ) && (
+			( m_key->m_parent->firstKey() == m_key ) ||
+			( m_key->prevKey()->m_interpolator->getHints().test( Interpolator::Hint::UseSlopeHi ) == false ) ) ) )
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void Animation::Tangent::setAccel( double accel, const Animation::Tangent::Space space )
 {
 	// convert to span space
@@ -1174,6 +1201,33 @@ void Animation::Tangent::setAccelWithSlope( const double accel, const double slo
 double Animation::Tangent::getAccel( const Space space ) const
 {
 	return ( space == Space::Key ) ? accelToKeySpace( m_accel, m_slope, m_dt ) : m_accel;
+}
+
+bool Animation::Tangent::accelIsUsed() const
+{
+	assert( m_key );
+
+	// check key added to curve
+
+	if( m_key->m_parent == 0 )
+	{
+		return false;
+	}
+
+	// check whether key is first or final key then interpolator hints
+
+	if(
+		( ( m_direction == Direction::From ) && (
+			( m_key->m_parent->finalKey() == m_key ) ||
+			( m_key->m_interpolator->getHints().test( Interpolator::Hint::UseAccelLo ) == false ) ) ) ||
+		( ( m_direction == Direction::Into ) && (
+			( m_key->m_parent->firstKey() == m_key ) ||
+			( m_key->prevKey()->m_interpolator->getHints().test( Interpolator::Hint::UseAccelHi ) == false ) ) ) )
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void Animation::Tangent::update()

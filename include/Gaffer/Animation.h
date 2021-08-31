@@ -182,6 +182,11 @@ class GAFFER_API Animation : public ComputeNode
 				/// set acceleration whilst maintaining specified span space slope
 				void setAccelWithSlope( double accel, double slope, Space space );
 
+				/// is slope currently used by interpolator
+				bool slopeIsUsed() const;
+				/// is accel currently used by interpolator
+				bool accelIsUsed() const;
+
 			private:
 
 				friend class CurvePlug;

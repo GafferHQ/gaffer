@@ -944,8 +944,13 @@ class _TangentTab( GafferUI.GridContainer ) :
 				self.__slopeEditor[ direction ].setText( "" )
 				self.__slopeEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
 
-		# set disabled when no selected keys
-		self.__slopeEditor[ direction ].setEnabled( bool( selectedKeys ) )
+		# set disabled when no selected keys or slope is not used
+		enabled = bool( selectedKeys )
+		for key in selectedKeys :
+			if not key.getTangent( direction ).slopeIsUsed() :
+				enabled = False
+				break
+		self.__slopeEditor[ direction ].setEnabled( enabled )
 
 	def __updateTangentAccel( self, direction ) :
 
@@ -968,8 +973,13 @@ class _TangentTab( GafferUI.GridContainer ) :
 				self.__accelEditor[ direction ].setText( "" )
 				self.__accelEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
 
-		# set disabled when no selected keys
-		self.__accelEditor[ direction ].setEnabled( bool( selectedKeys ) )
+		# set disabled when no selected keys or accel is not used
+		enabled = bool( selectedKeys )
+		for key in selectedKeys :
+			if not key.getTangent( direction ).accelIsUsed() :
+				enabled = False
+				break
+		self.__accelEditor[ direction ].setEnabled( enabled )
 
 	def __updateTangentAutoMode( self, direction ) :
 		pass
