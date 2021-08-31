@@ -707,7 +707,11 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 			{
 				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.
-				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
+				Imath::Color4f inactiveCol( 0.2f, 0.2f, 0.2f, 1.0 );
+				style->renderLine(
+					IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ),
+					0.5f, m_active ? nullptr : &inactiveCol
+				);
 			}
 			break;
 		}
