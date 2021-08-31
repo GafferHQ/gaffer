@@ -1291,8 +1291,8 @@ Animation::Key::Key( const Animation::Time& time, float value, const std::string
 , m_from( *this, Animation::Tangent::Direction::From, slopeFrom, accelFrom )
 , m_time( time )
 , m_value( value )
-, m_tieSlope( tieAccel )
-, m_tieAccel( tieSlope )
+, m_tieSlope( tieSlope )
+, m_tieAccel( tieAccel )
 {}
 
 Animation::Tangent& Animation::Key::getTangent( const Animation::Tangent::Direction direction )
