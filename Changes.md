@@ -30,6 +30,7 @@ API
   - Added `gadgetsAt()` overload taking a raster space region (rather than position) and an optional layer filter.
   - Add support for Gadget's double click signal.
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
+- Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 
 Breaking Changes
 ----------------
