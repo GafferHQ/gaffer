@@ -1794,7 +1794,7 @@ void Animation::Key::tieSlopeAverage( const Animation::Tangent::Space space )
 		const double si = m_into.getSlope( space );
 		const double sf = m_from.getSlope( space );
 
-		if( Animation::equivalentValues( si, sf ) )
+		if( ! Animation::equivalentValues( si, sf ) )
 		{
 			// NOTE : average slope angles
 
