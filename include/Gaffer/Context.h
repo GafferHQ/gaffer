@@ -37,6 +37,7 @@
 #ifndef GAFFER_CONTEXT_H
 #define GAFFER_CONTEXT_H
 
+#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
 #include "Gaffer/ThreadState.h"
 
@@ -92,7 +93,7 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( Context )
 
-		typedef boost::signal<void ( const Context *context, const IECore::InternedString & )> ChangedSignal;
+		typedef boost::signal<void ( const Context *context, const IECore::InternedString & ), CatchingSignalCombiner<void>> ChangedSignal;
 
 		/// Sets a variable to the specified value. A copy is taken so that
 		/// subsequent changes to `value` do not affect the context.
