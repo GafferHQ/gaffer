@@ -69,7 +69,7 @@ namespace
 		//        y = s
 		//        a = sqrt(1 + s^2)
 
-		return std::sqrt( 1.0 + slope * slope );
+		return std::sqrt( std::fma( slope, slope, 1.0 ) );
 	}
 
 	double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::Tangent::Direction direction )
@@ -133,13 +133,13 @@ namespace
 		{
 			const double sc = slope;
 			const double sk = sc / dt;
-			return accel * dt * std::sqrt( ( 1.0 + sk * sk ) / ( 1.0 + sc * sc ) );
+			return accel * std::sqrt( std::fma( sk, sk, 1.0 ) / std::fma( sc, sc, 1.0 ) ) * dt;
 		}
 		else
 		{
 			const double sc = 1.0 / slope;
 			const double sk = sc * dt;
-			return accel * std::sqrt( ( 1.0 + sk * sk ) / ( 1.0 + sc * sc ) );
+			return accel * std::sqrt( std::fma( sk, sk, 1.0 ) / std::fma( sc, sc, 1.0 ) );
 		}
 	}
 
@@ -160,13 +160,13 @@ namespace
 		{
 			const double sc = slope;
 			const double sk = sc / dt;
-			return accel * std::sqrt( ( 1.0 + sc * sc ) / ( 1.0 + sk * sk ) ) / dt;
+			return accel * std::sqrt( std::fma( sc, sc, 1.0 ) / std::fma( sk, sk, 1.0 ) ) / dt;
 		}
 		else
 		{
 			const double sc = 1.0 / slope;
 			const double sk = sc * dt;
-			return accel * std::sqrt( ( 1.0 + sc * sc ) / ( 1.0 + sk * sk ) );
+			return accel * std::sqrt( std::fma( sc, sc, 1.0 ) / std::fma( sk, sk, 1.0 ) );
 		}
 	}
 
@@ -267,7 +267,7 @@ namespace
 
 			// NOTE : v  = at^3 + bt^2 + ct + d
 
-			return ( time * ( time * ( time * a + b ) + c ) + d );
+			return std::fma( time, std::fma( time, std::fma( time, a, b ), c ), d );
 		}
 
 		void bisect(
@@ -282,8 +282,8 @@ namespace
 			// NOTE : v  =  at^3 +  bt^2 + ct + d
 			//        v' = 3at^2 + 2bt   + c
 
-			const double v = ( time * ( time * ( time *           a       + b ) + c ) + d );
-			const double s =          ( time * ( time * ( a + a + a ) + b + b ) + c );
+			const double v = std::fma( time, std::fma( time, std::fma( time,         a,     b ), c ), d );
+			const double s =                 std::fma( time, std::fma( time, a + a + a, b + b ), c );
 			const double x = Gaffer::Animation::Tangent::defaultAccel();
 
 			const Gaffer::Animation::Tangent::Space space = Gaffer::Animation::Tangent::Space::Span;
@@ -373,7 +373,7 @@ namespace
 
 			// evaluate value polynomial
 
-			return ( s * ( s * ( s * av + bv ) + cv ) + dv );
+			return std::fma( s, std::fma( s, std::fma( s, av, bv ), cv ), dv );
 		}
 
 		void bisect(
@@ -426,6 +426,7 @@ namespace
 			const double at = ct - th3 + 1.0;
 			const double bt = th3 - ct - ct;
 			const double bt2 = bt + bt;
+			const double at3 = at + at + at;
 
 			// root bracketed in interval [0,1]
 
@@ -445,8 +446,8 @@ namespace
 				// NOTE : f   =  a(t)s^3 +  b(t)s^2 + c(t)s + d(t) - t
 				//        f'  = 3a(t)s^2 + 2b(t)s   + c(t)
 
-				const double  f = ( s * ( s * ( s *             at   + bt  ) + ct ) - time );
-				const double df =       ( s * ( s * ( at + at + at ) + bt2 ) + ct );
+				const double  f = std::fma( s, std::fma( s, std::fma( s, at,  bt  ), ct ), -time );
+				const double df =              std::fma( s, std::fma( s, at3, bt2 ), ct );
 
 				// maintain bounds
 
@@ -991,13 +992,13 @@ Imath::V2d Animation::Tangent::getPosition( const Animation::Tangent::Space spac
 	if( std::abs( m_slope ) < 1.0 )
 	{
 		const double s = m_slope;
-		p.x = std::min( m_accel / std::sqrt( 1.0 + s * s ), 1.0 );
+		p.x = std::min( m_accel / std::sqrt( std::fma( s, s, 1.0 ) ), 1.0 );
 		p.y = p.x * s;
 	}
 	else
 	{
 		const double s = 1.0 / m_slope;
-		p.y = std::copysign( m_accel / std::sqrt( 1.0 + s * s ), s );
+		p.y = std::copysign( m_accel / std::sqrt( std::fma( s, s, 1.0 ) ), s );
 		p.x = std::min( p.y * s, 1.0 );
 	}
 
