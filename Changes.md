@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.5.0)
+========
+
+Improvements
+------------
+
+- Viewer : Added <kbd>PgDn</kbd> and <kbd>PgUp</kbd> hotkeys for switching to the previous and next image layer respectively.
+
 0.60.5.0 (relative to 0.60.4.0)
 ========
 
