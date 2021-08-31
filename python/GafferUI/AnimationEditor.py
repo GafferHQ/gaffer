@@ -886,10 +886,10 @@ class _TangentTab( GafferUI.GridContainer ) :
 		self.__connections = {}
 
 		# numeric widget undo queue state
-		self.__lastChangedReasonSlope = None
-		self.__lastChangedReasonAccel = None
-		self.__mergeGroupIdSlope = 0
-		self.__mergeGroupIdAccel = 0
+		self.__lastChangedReasonSlope = [ None, None ]
+		self.__lastChangedReasonAccel = [ None, None ]
+		self.__mergeGroupIdSlope = [ 0, 0 ]
+		self.__mergeGroupIdAccel = [ 0, 0 ]
 
 	def connect( self, curve ) :
 		if curve not in self.__connections :
@@ -982,9 +982,9 @@ class _TangentTab( GafferUI.GridContainer ) :
 			return
 
 		# handle undo queue
-		if not widget.changesShouldBeMerged( self.__lastChangedReasonSlope, reason ) :
-			self.__mergeGroupIdSlope += 1
-		self.__lastChangedReasonSlope = reason
+		if not widget.changesShouldBeMerged( self.__lastChangedReasonSlope[ direction ], reason ) :
+			self.__mergeGroupIdSlope[ direction ] += 1
+		self.__lastChangedReasonSlope[ direction ] = reason
 
 		# set slope for all selected keys in specified direction
 		selectedKeys = self.parent().curveGadget().selectedKeys()
@@ -993,7 +993,7 @@ class _TangentTab( GafferUI.GridContainer ) :
 				value = widget.getValue()
 			except ValueError :
 				return
-			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope ) ) :
+			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
 				for key in selectedKeys :
 					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].slope ) :
 						key.getTangent( direction ).setSlope( value, self.slopeSpace )
@@ -1010,9 +1010,9 @@ class _TangentTab( GafferUI.GridContainer ) :
 			return
 
 		# handle undo queue
-		if not widget.changesShouldBeMerged( self.__lastChangedReasonAccel, reason ) :
-			self.__mergeGroupIdAccel += 1
-		self.__lastChangedReasonAccel = reason
+		if not widget.changesShouldBeMerged( self.__lastChangedReasonAccel[ direction ], reason ) :
+			self.__mergeGroupIdAccel[ direction ] += 1
+		self.__lastChangedReasonAccel[ direction ] = reason
 
 		# set accel for all selected keys in specified direction
 		selectedKeys = self.parent().curveGadget().selectedKeys()
@@ -1021,7 +1021,7 @@ class _TangentTab( GafferUI.GridContainer ) :
 				value = max( widget.getValue(), float(0) )
 			except ValueError :
 				return
-			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdAccel ) ) :
+			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdAccel[ direction ] ) ) :
 				for key in selectedKeys :
 					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].accel ) :
 						key.getTangent( direction ).setAccel( value, self.accelSpace )
