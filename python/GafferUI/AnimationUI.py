@@ -141,7 +141,8 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 						spanKey,
 						name
 					),
-					"active" : bool( spanKeyOnThisFrame ) and plugValueWidget._editable( canEditAnimation = True ),
+					"active" : spanKeyOnThisFrame and plugValueWidget._editable( canEditAnimation = True ),
+					"checkBox" : spanKeyOnThisFrame and ( spanKey.getInterpolator().getName() == name )
 				}
 			)
 
