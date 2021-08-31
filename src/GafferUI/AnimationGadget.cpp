@@ -1100,9 +1100,21 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			m_dragTangentOriginalAccel = t.getAccel( Animation::Tangent::Space::Span );
 			m_dragTangent = tangent;
 			m_dragMode = DragMode::MoveTangent;
-			if( event.modifiers & DragDropEvent::Control )
+			if(
+				( event.modifiers & DragDropEvent::Control ) &&
+				( ( event.modifiers & DragDropEvent::Shift ) == DragDropEvent::None ) )
 			{
 				m_moveAxis = MoveAxis::Y;
+			}
+			else if(
+				( event.modifiers & DragDropEvent::Shift ) &&
+				( ( event.modifiers & DragDropEvent::Control ) == DragDropEvent::None ) )
+			{
+				m_moveAxis = MoveAxis::X;
+			}
+			else
+			{
+				m_moveAxis = MoveAxis::Both;
 			}
 		}
 		else if( Animation::KeyPtr key = keyAt( event.line ) )
@@ -1137,26 +1149,6 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 		break;
 	}
 
-	case ButtonEvent::Right :
-	{
-		if( event.modifiers & DragDropEvent::Control )
-		{
-			std::pair<Animation::KeyPtr, Animation::Tangent::Direction> tangent = tangentAt( event.line );
-
-			if( tangent.first )
-			{
-				Animation::Tangent& t = tangent.first->getTangent( tangent.second );
-				m_dragTangentOriginalSlope = t.getSlope( Animation::Tangent::Space::Span );
-				m_dragTangentOriginalAccel = t.getAccel( Animation::Tangent::Space::Span );
-				m_dragTangent = tangent;
-				m_dragMode = DragMode::MoveTangent;
-				m_moveAxis = MoveAxis::X;
-			}
-		}
-
-		break;
-	}
-
 	default:
 	{
 	}
@@ -1186,14 +1178,6 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			assert( m_editablePlugs->contains( key->parent() ) );
 
 			m_originalKeyValues[ key ] = std::make_pair( key->getTime(), key->getValue() );
-		}
-	}
-
-	if( m_dragMode == DragMode::MoveTangent )
-	{
-		if( shiftHeld )
-		{
-			m_moveAxis = MoveAxis::Undefined;
 		}
 	}
 
@@ -1318,9 +1302,7 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	if(
-		( m_dragMode == DragMode::Moving && !m_selectedKeys.empty() ) ||
-		( m_dragMode == DragMode::MoveTangent && m_dragTangent.first ) )
+	if( m_dragMode == DragMode::Moving && !m_selectedKeys.empty() )
 	{
 		if( m_moveAxis == MoveAxis::Undefined )
 		{
