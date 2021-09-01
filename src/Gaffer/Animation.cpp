@@ -58,7 +58,6 @@ using namespace Gaffer;
 
 namespace
 {
-
 	double maxAccel( const double slope )
 	{
 		// NOTE : s = y/x
@@ -284,7 +283,7 @@ namespace
 
 			const double v = std::fma( time, std::fma( time, std::fma( time,         a,     b ), c ), d );
 			const double s =                 std::fma( time, std::fma( time, a + a + a, b + b ), c );
-			const double x = Gaffer::Animation::Tangent::defaultAccel();
+			const double x = defaultAccel();
 
 			const Gaffer::Animation::Tangent::Space space = Gaffer::Animation::Tangent::Space::Span;
 
@@ -791,9 +790,12 @@ Animation::Interpolator::Factory& Animation::Interpolator::getFactory()
 	return *factory;
 }
 
-Animation::Interpolator::Interpolator( const std::string& name, const Hints hints )
+Animation::Interpolator::Interpolator( const std::string& name, const Hints hints,
+	const double defaultSlope, const double defaultAccel )
 : m_name( name )
 , m_hints( hints )
+, m_defaultSlope( defaultSlope )
+, m_defaultAccel( defaultAccel )
 {}
 
 Animation::Interpolator::~Interpolator()
@@ -807,6 +809,16 @@ const std::string& Animation::Interpolator::getName() const
 Animation::Interpolator::Hints Animation::Interpolator::getHints() const
 {
 	return m_hints;
+}
+
+double Animation::Interpolator::defaultSlope() const
+{
+	return m_defaultSlope;
+}
+
+double Animation::Interpolator::defaultAccel() const
+{
+	return m_defaultAccel;
 }
 
 double Animation::Interpolator::evaluate(
@@ -828,20 +840,6 @@ void Animation::Interpolator::bisect(
 //////////////////////////////////////////////////////////////////////////
 // Tangent implementation
 //////////////////////////////////////////////////////////////////////////
-
-double Animation::Tangent::defaultSlope()
-{
-	// NOTE : flat slope
-
-	return 0.0;
-}
-
-double Animation::Tangent::defaultAccel()
-{
-	// NOTE : one third is the tangent length that corresponds to linear interpolation
-
-	return ( 1.0 / 3.0 );
-}
 
 Animation::Tangent::Direction Animation::Tangent::opposite( const Animation::Tangent::Direction direction )
 {
@@ -1276,9 +1274,20 @@ void Animation::Tangent::update()
 Animation::Key::Key( float time, float value, Type type )
 : m_parent( nullptr )
 , m_interpolator( getInterpolatorForType( type ) )
-, m_into( *this, Animation::Tangent::Direction::Into, Animation::Tangent::defaultSlope(), Animation::Tangent::defaultAccel() )
-, m_from( *this, Animation::Tangent::Direction::From, Animation::Tangent::defaultSlope(), Animation::Tangent::defaultAccel() )
+, m_into( *this, Animation::Tangent::Direction::Into, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
+, m_from( *this, Animation::Tangent::Direction::From, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
 , m_time( time, Animation::Time::Units::Seconds )
+, m_value( value )
+, m_tieSlope( true )
+, m_tieAccel( true )
+{}
+
+Animation::Key::Key( const Animation::Time& time, float value, const std::string& interpolatorName )
+: m_parent( nullptr )
+, m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
+, m_into( *this, Animation::Tangent::Direction::Into, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
+, m_from( *this, Animation::Tangent::Direction::From, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
+, m_time( time )
 , m_value( value )
 , m_tieSlope( true )
 , m_tieAccel( true )
@@ -1502,12 +1511,12 @@ void Animation::Key::setTime( const Animation::Time& time )
 
 			if( ! hints.test( Interpolator::Hint::UseSlopeLo ) )
 			{
-				m_into.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+				m_into.setSlope( kp->m_interpolator->defaultSlope(), Tangent::Space::Span );
 			}
 
 			if( ! hints.test( Interpolator::Hint::UseAccelLo ) )
 			{
-				m_into.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+				m_into.setAccel( kp->m_interpolator->defaultAccel(), Tangent::Space::Span );
 			}
 
 			// NOTE : update previous final key tie slope as final key from tangent not valid
@@ -1527,12 +1536,12 @@ void Animation::Key::setTime( const Animation::Time& time )
 
 			if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
 			{
-				kn->m_into.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+				kn->m_into.setSlope( kn->m_interpolator->defaultSlope(), Tangent::Space::Span );
 			}
 
 			if( ! hints.test( Interpolator::Hint::UseAccelHi ) )
 			{
-				kn->m_into.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+				kn->m_into.setAccel( kn->m_interpolator->defaultAccel(), Tangent::Space::Span );
 			}
 
 			// NOTE : update previous first key tie slope as first key from tangent not valid
@@ -1663,7 +1672,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 
 			if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
 			{
-				kn->m_into.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+				kn->m_into.setSlope( m_interpolator->defaultSlope(), Tangent::Space::Span );
 			}
 			else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeHi ) && kn->tieSlopeActive( Tangent::Direction::Into ) )
 			{
@@ -1673,7 +1682,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 
 			if( ! hints.test( Interpolator::Hint::UseAccelHi ) )
 			{
-				kn->m_into.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+				kn->m_into.setAccel( m_interpolator->defaultAccel(), Tangent::Space::Span );
 			}
 		}
 	}
@@ -1690,7 +1699,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 
 	if( ! hints.test( Interpolator::Hint::UseSlopeLo ) )
 	{
-		m_from.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+		m_from.setSlope( m_interpolator->defaultSlope(), Tangent::Space::Span );
 	}
 	else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeLo ) && tieSlopeActive( Tangent::Direction::From ) )
 	{
@@ -1700,7 +1709,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 
 	if( ! hints.test( Interpolator::Hint::UseAccelLo ) )
 	{
-		m_from.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+		m_from.setAccel( m_interpolator->defaultAccel(), Tangent::Space::Span );
 	}
 }
 
@@ -2019,12 +2028,12 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 
 		if( ! hints.test( Interpolator::Hint::UseSlopeLo ) )
 		{
-			key->m_into.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+			key->m_into.setSlope( kp->m_interpolator->defaultSlope(), Tangent::Space::Span );
 		}
 
 		if( ! hints.test( Interpolator::Hint::UseAccelLo ) )
 		{
-			key->m_from.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+			key->m_from.setAccel( kp->m_interpolator->defaultAccel(), Tangent::Space::Span );
 		}
 
 		// NOTE : update previous final key tie slope as final key from tangent not valid
@@ -2044,12 +2053,12 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 
 		if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
 		{
-			kn->m_into.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+			kn->m_into.setSlope( key->m_interpolator->defaultSlope(), Tangent::Space::Span );
 		}
 
 		if( ! hints.test( Interpolator::Hint::UseAccelHi ) )
 		{
-			kn->m_into.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+			kn->m_into.setAccel( key->m_interpolator->defaultAccel(), Tangent::Space::Span );
 		}
 
 		// NOTE : update previous first key tie slope as first key from tangent not valid
@@ -2102,7 +2111,7 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 	// badly behaved interpolators.
 
 	KeyPtr km( new Animation::Key( time, 0.0, interpolator->getName(),
-		Tangent::defaultSlope(), Tangent::defaultSlope(), Tangent::defaultAccel(), Tangent::defaultAccel(), false, false ) );
+		interpolator->defaultSlope(), interpolator->defaultSlope(), interpolator->defaultAccel(), interpolator->defaultAccel(), false, false ) );
 	KeyPtr kl( new Animation::Key( lo.getTime(), lo.getValue(), interpolator->getName(),
 		lo.m_into.m_slope, lo.m_from.m_slope, lo.m_into.m_accel, lo.m_from.m_accel, false, false ) );
 	KeyPtr kh( new Animation::Key( hi.getTime(), hi.getValue(), interpolator->getName(),
@@ -2213,12 +2222,12 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 
 			if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
 			{
-				kn->m_into.setSlope( Tangent::defaultSlope(), Tangent::Space::Span );
+				kn->m_into.setSlope( kp->m_interpolator->defaultSlope(), Tangent::Space::Span );
 			}
 
 			if( ! hints.test( Interpolator::Hint::UseAccelHi ) )
 			{
-				kn->m_into.setAccel( Tangent::defaultAccel(), Tangent::Space::Span );
+				kn->m_into.setAccel( kp->m_interpolator->defaultAccel(), Tangent::Space::Span );
 			}
 		}
 	}

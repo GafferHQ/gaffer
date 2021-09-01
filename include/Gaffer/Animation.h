@@ -149,9 +149,6 @@ class GAFFER_API Animation : public ComputeNode
 
 				static Direction opposite( Direction direction );
 
-				static double defaultSlope();
-				static double defaultAccel();
-
 				~Tangent();
 
 				Key& getKey();
@@ -263,10 +260,13 @@ class GAFFER_API Animation : public ComputeNode
 
 			const std::string& getName() const;
 			Hints getHints() const;
+			double defaultSlope() const;
+			double defaultAccel() const;
 
 		protected:
 
-			Interpolator( const std::string& name, Hints hints );
+			Interpolator( const std::string& name, Hints hints,
+				double defaultSlope = 0.0, double defaultAccel = (1.0/3.0) );
 
 		private:
 
@@ -281,6 +281,8 @@ class GAFFER_API Animation : public ComputeNode
 
 			std::string m_name;
 			Hints m_hints;
+			double m_defaultSlope;
+			double m_defaultAccel;
 		};
 
 		IE_CORE_DECLAREPTR( Interpolator )
@@ -291,13 +293,12 @@ class GAFFER_API Animation : public ComputeNode
 
 			public :
 
-				/// \deprecated Use Key(const Time&, float, const std::string&, ... ) instead.
-				Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
-				Key( const Time& time = Time(), float value = 0.0f,
-					const std::string& interpolatorName = Interpolator::getFactory().getDefault()->getName(),
-					double slopeInto = Tangent::defaultSlope(), double slopeFrom = Tangent::defaultSlope(),
-					double accelInto = Tangent::defaultAccel(), double accelFrom = Tangent::defaultAccel(),
-					bool tieSlope = true, bool tieAccel = true );
+				/// \deprecated Use Key(const Time&, float, const std::string& ) instead.
+				explicit Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
+				explicit Key( const Time& time = Time(), float value = 0.0f,
+					const std::string& interpolatorName = Interpolator::getFactory().getDefault()->getName() );
+				Key( const Time& time, float value, const std::string& interpolatorName,
+					double slopeInto, double slopeFrom, double accelInto, double accelFrom, bool tieSlope, bool tieAccel );
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 

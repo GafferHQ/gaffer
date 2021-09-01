@@ -412,10 +412,6 @@ void GafferModule::bindAnimation()
 			.def( "accelIsUsed", &Animation::Tangent::accelIsUsed )
 			.def( "opposite", &Animation::Tangent::opposite )
 			.staticmethod( "opposite" )
-			.def( "defaultSlope", &Animation::Tangent::defaultSlope )
-			.staticmethod( "defaultSlope" )
-			.def( "defaultAccel", &Animation::Tangent::defaultAccel )
-			.staticmethod( "defaultAccel" )
 			;
 
 		enum_<Animation::Tangent::Direction>( "Direction" )
@@ -436,20 +432,15 @@ void GafferModule::bindAnimation()
 				)
 			)
 		)
-		.def( init<const Animation::Time&, float, const std::string&, double, double, double, double, bool, bool>(
+		.def( init<const Animation::Time&, float, const std::string&>(
 				(
 					arg( "time" ) = Animation::Time(),
 					arg( "value" ) = 0.0f,
-					arg( "interpolator" ) = Animation::Interpolator::getFactory().getDefault()->getName(),
-					arg( "slopeInto" ) = Animation::Tangent::defaultSlope(),
-					arg( "slopeFrom" ) = Animation::Tangent::defaultSlope(),
-					arg( "accelInto" ) = Animation::Tangent::defaultAccel(),
-					arg( "accelFrom" ) = Animation::Tangent::defaultAccel(),
-					arg( "tieSlope" ) = true,
-					arg( "tieAccel" ) = true
+					arg( "interpolator" ) = Animation::Interpolator::getFactory().getDefault()->getName()
 				)
 			)
 		)
+		.def( init<const Animation::Time&, float, const std::string&, double, double, double, double, bool, bool>() )
 		.def( "getFloatTime", &Animation::Key::getFloatTime )
 		.def( "getTime",
 			(Animation::Time (Animation::Key::*)() const)&Animation::Key::getTime ) // TODO : this now returns an Animation.Time ...
