@@ -564,7 +564,7 @@ class TextDiff( SideBySideDiff ) :
 				formattedValues.append( "Missing output shader" )
 				continue
 			shaderName = shader.name
-			nodeName = shader.blindData().get( "gaffer:nodeName", None )
+			nodeName = shader.blindData().get( "label", shader.blindData().get( "gaffer:nodeName", None ) )
 
 			formattedValue = "<table cellspacing=2><tr>"
 			if nodeName is not None :
