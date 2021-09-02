@@ -2033,7 +2033,7 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 
 		if( ! hints.test( Interpolator::Hint::UseAccelLo ) )
 		{
-			key->m_from.setAccel( kp->m_interpolator->defaultAccel(), Tangent::Space::Span );
+			key->m_into.setAccel( kp->m_interpolator->defaultAccel(), Tangent::Space::Span );
 		}
 
 		// NOTE : update previous final key tie slope as final key from tangent not valid
