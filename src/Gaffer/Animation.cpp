@@ -95,32 +95,21 @@ namespace
 
 	double slopeToKeySpace( const double slope, const double dt )
 	{
-		if( dt == 0.0 )
-		{
-			return 0.0;
-		}
+		assert( dt != 0.0 );
 
 		return slope / dt;
 	}
 
 	double slopeFromKeySpace( const double slope, const double dt )
 	{
-		// NOTE : (+/-) infinity * 0.0 == nan
-
-		if( dt == 0.0 )
-		{
-			return 0.0;
-		}
+		assert( dt != 0.0 );
 
 		return slope * dt;
 	}
 
 	double accelToKeySpace( const double accel, const double slope, const double dt )
 	{
-		if( dt == 0.0 )
-		{
-			return 0.0;
-		}
+		assert( dt != 0.0 );
 
 		// NOTE : As s tends to (+/-) infinity, ((1 + s(k)^2) / (1 + s(c)^2)) tends to
 		//        (infinity / infinity) which is meaningless, So,
@@ -144,10 +133,7 @@ namespace
 
 	double accelFromKeySpace( const double accel, const double slope, const double dt )
 	{
-		if( dt == 0.0 )
-		{
-			return 0.0;
-		}
+		assert( dt != 0.0 );
 
 		// NOTE : As s tends to (+/-) infinity, ((1 + s(c)^2) / (1 + s(k)^2)) tends to
 		//        (infinity / infinity) which is meaningless, So,
@@ -846,12 +832,15 @@ Animation::Tangent::Direction Animation::Tangent::opposite( const Animation::Tan
 	return static_cast< Direction >( ( static_cast< int >( direction ) + 1 ) % 2 );
 }
 
-Animation::Tangent::Tangent( Animation::Key& key, const Animation::Tangent::Direction direction, const double slope, const double accel )
+Animation::Tangent::Tangent( Animation::Key& key, const Animation::Tangent::Direction direction,
+	const double slope, const Animation::Tangent::Space slopeSpace, const double accel, const Animation::Tangent::Space accelSpace )
 : m_key( & key )
-, m_direction( direction )
 , m_slope( slope )
 , m_accel( std::min( accel, maxAccel( m_slope ) ) )
 , m_dt( 0.0 )
+, m_direction( direction )
+, m_slopeSpace( slopeSpace )
+, m_accelSpace( accelSpace )
 {}
 
 Animation::Tangent::~Tangent()
@@ -893,10 +882,12 @@ void Animation::Tangent::convertPosition( Imath::V2d& position, const Animation:
 	}
 
 	// convert from key space
+	//
+	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0
 
-	if( space == Space::Key )
+	if( space == Space::Key && ( m_dt != 0.0 ) )
 	{
-		position.x = ( m_dt == 0.0 ) ? 0.0 : ( position.x / m_dt );
+		position.x /= m_dt;
 	}
 
 	// constrain direction of tangent
@@ -913,9 +904,18 @@ void Animation::Tangent::setPosition( Imath::V2d position, const Animation::Tang
 	convertPosition( position, space, relative );
 
 	// set slope and acceleration
+	//
+	// NOTE : use guards to prevent update of slope/accel space.
 
-	setSlope( slopeFromPosition( position, m_direction ), Space::Span );
-	setAccel( position.length(), Space::Span );
+	{
+		Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Span );
+		Private::ScopedValue< Space > asGuard( m_accelSpace, Space::Span );
+		setSlope( slopeFromPosition( position, m_direction ), Space::Span );
+		setAccel( position.length(), Space::Span );
+	}
+
+	setSlopeSpace( space );
+	setAccelSpace( space );
 }
 
 void Animation::Tangent::setPositionWithSlope( Imath::V2d position, const double slope, const Animation::Tangent::Space space, const bool relative )
@@ -935,9 +935,17 @@ void Animation::Tangent::setPositionWithSlope( Imath::V2d position, const double
 			: std::max( position.y, 0.0 ) );
 
 	// set slope and acceleration
+	//
+	// NOTE : use guards to prevent update of slope/accel space.
 
-	setSlope( slope, Space::Span );
-	setAccel( position.length(), Space::Span );
+	{
+		Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Span );
+		Private::ScopedValue< Space > asGuard( m_accelSpace, Space::Span );
+		setSlope( slope, Space::Span );
+		setAccel( position.length(), Space::Span );
+	}
+
+	setAccelSpace( space );
 }
 
 void Animation::Tangent::setPositionWithAccel( Imath::V2d position, const double accel, const Animation::Tangent::Space space, const bool relative )
@@ -947,18 +955,21 @@ void Animation::Tangent::setPositionWithAccel( Imath::V2d position, const double
 	convertPosition( position, space, relative );
 
 	// set slope and acceleration
+	//
+	// NOTE : use guards to prevent update of slope/accel space.
 
-	setSlope( slopeFromPosition( position, m_direction ), Space::Span );
-	setAccel( accel, Space::Span );
+	{
+		Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Span );
+		Private::ScopedValue< Space > asGuard( m_accelSpace, Space::Span );
+		setSlope( slopeFromPosition( position, m_direction ), Space::Span );
+		setAccel( accel, Space::Span );
+	}
+
+	setSlopeSpace( space );
 }
 
 Imath::V2d Animation::Tangent::getPosition( const Animation::Tangent::Space space, const bool relative ) const
 {
-	if( ( space == Space::Key ) && ( m_dt == 0.0 ) )
-	{
-		return Imath::V2d( 0.0, 0.0 );
-	}
-
 	// compute relative position in span space
 	//
 	// NOTE : s   = y/x
@@ -1006,7 +1017,9 @@ Imath::V2d Animation::Tangent::getPosition( const Animation::Tangent::Space spac
 		if( p.y != 0.0 ) { p.y = -p.y; }
 	}
 
-	if( space == Space::Key )
+	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0
+
+	if( ( space == Space::Key ) && ( m_dt != 0.0 ) )
 	{
 		p.x *= m_dt;
 	}
@@ -1030,14 +1043,55 @@ Imath::V2d Animation::Tangent::getPosition( const Animation::Tangent::Space spac
 	return p;
 }
 
+void Animation::Tangent::setSlopeSpace( const Animation::Tangent::Space space )
+{
+	// check for no change
+
+	if( ( m_dt != 0.0 ) || ( m_slopeSpace == space ) )
+	{
+		return;
+	}
+
+	// make change via action
+
+	if( m_key->m_parent )
+	{
+		KeyPtr key = m_key;
+		const Space ss = m_slopeSpace;
+		Action::enact(
+			key->m_parent,
+			// Do
+			[ this, key, space ] {
+				m_slopeSpace = space;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			},
+			// Undo
+			[ this, key, ss ] {
+				m_slopeSpace = ss;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			}
+		);
+	}
+	else
+	{
+		m_slopeSpace = space;
+	}
+}
+
 void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space space )
 {
 	// convert to span space
+	//
+	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0
 
-	if( space == Space::Key )
+	if( ( space == Space::Key ) && ( m_dt != 0.0 ) )
 	{
 		slope = slopeFromKeySpace( slope, m_dt );
 	}
+
+	// set slope space
+
+	setSlopeSpace( space );
 
 	// check for no change
 
@@ -1081,25 +1135,29 @@ void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space
 		m_accel = accel;
 	}
 
-	// tie slope of sibling
+	// tie slope of opposite tangent
 
 	if( m_key->tieSlopeActive( opposite( m_direction ) ) )
 	{
-		const Space space = m_key->tieSlopeSpace();
-		Private::ScopedValue< bool > guard( m_key->m_tieSlope, false );
-		m_key->getTangent( opposite( m_direction ) ).setSlope( getSlope( space ), space );
+		Tangent& ot = m_key->getTangent( opposite( m_direction ) );
+		Private::ScopedValue< bool > tsGuard( m_key->m_tieSlope, false );
+		Private::ScopedValue< Space > ssGuard( ot.m_slopeSpace, Space::Key );
+		ot.setSlope( getSlope( Space::Key ), Space::Key );
 	}
 }
 
 void Animation::Tangent::setSlopeWithAccel( const double slope, const double accel, const Animation::Tangent::Space space )
 {
+	Private::ScopedValue< Space > asGuard( m_accelSpace, Space::Span );
 	setSlope( slope, space );
 	setAccel( accel, Space::Span );
 }
 
 double Animation::Tangent::getSlope( const Animation::Tangent::Space space ) const
 {
-	return ( space == Space::Key ) ? slopeToKeySpace( m_slope, m_dt ) : m_slope;
+	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0
+
+	return ( ( space == Space::Key ) && ( m_dt != 0.0 ) ) ? slopeToKeySpace( m_slope, m_dt ) : m_slope;
 }
 
 bool Animation::Tangent::slopeIsUsed() const
@@ -1129,14 +1187,55 @@ bool Animation::Tangent::slopeIsUsed() const
 	return true;
 }
 
+void Animation::Tangent::setAccelSpace( const Animation::Tangent::Space space )
+{
+	// check for no change
+
+	if( ( m_dt != 0.0 ) || ( m_accelSpace == space ) )
+	{
+		return;
+	}
+
+	// make change via action
+
+	if( m_key->m_parent )
+	{
+		KeyPtr key = m_key;
+		const Space as = m_accelSpace;
+		Action::enact(
+			key->m_parent,
+			// Do
+			[ this, key, space ] {
+				m_accelSpace = space;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			},
+			// Undo
+			[ this, key, as ] {
+				m_accelSpace = as;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			}
+		);
+	}
+	else
+	{
+		m_accelSpace = space;
+	}
+}
+
 void Animation::Tangent::setAccel( double accel, const Animation::Tangent::Space space )
 {
 	// convert to span space
+	//
+	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0
 
-	if( space == Space::Key )
+	if( ( space == Space::Key ) && ( m_dt != 0.0 ) )
 	{
 		accel = accelFromKeySpace( accel, m_slope, m_dt );
 	}
+
+	// set accel space
+
+	setAccelSpace( space );
 
 	// clamp acceleration
 
@@ -1149,17 +1248,18 @@ void Animation::Tangent::setAccel( double accel, const Animation::Tangent::Space
 		return;
 	}
 
-	// tie acceleration of sibling
+	// tie acceleration of opposite tangent
 	//
-	// NOTE : scale sibling by same amount, unless scale is infinite then add instead.
+	// NOTE : scale opposite by same amount, unless scale is infinite then add instead.
 
 	if( m_key->tieAccelActive( opposite( m_direction ) ) )
 	{
-		Tangent& sibling = m_key->getTangent( opposite( m_direction ) );
-		Private::ScopedValue< bool > guard( m_key->m_tieAccel, false );
-		sibling.setAccel( ( m_accel == 0.0 )
-				? ( sibling.m_accel + accel )
-				: ( sibling.m_accel * ( accel / m_accel ) ),
+		Tangent& ot = m_key->getTangent( opposite( m_direction ) );
+		Private::ScopedValue< bool > tsGuard( m_key->m_tieAccel, false );
+		Private::ScopedValue< Space > asGuard( ot.m_accelSpace, Space::Span );
+		ot.setAccel( ( m_accel == 0.0 )
+				? ( ot.m_accel + accel )
+				: ( ot.m_accel * ( accel / m_accel ) ),
 			Space::Span );
 	}
 
@@ -1193,13 +1293,16 @@ void Animation::Tangent::setAccel( double accel, const Animation::Tangent::Space
 
 void Animation::Tangent::setAccelWithSlope( const double accel, const double slope, const Animation::Tangent::Space space )
 {
+	Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Span );
 	setSlope( slope, Space::Span );
 	setAccel( accel, space );
 }
 
 double Animation::Tangent::getAccel( const Space space ) const
 {
-	return ( space == Space::Key ) ? accelToKeySpace( m_accel, m_slope, m_dt ) : m_accel;
+	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0
+
+	return ( ( space == Space::Key ) && ( m_dt != 0.0 ) ) ? accelToKeySpace( m_accel, m_slope, m_dt ) : m_accel;
 }
 
 bool Animation::Tangent::accelIsUsed() const
@@ -1232,33 +1335,72 @@ bool Animation::Tangent::accelIsUsed() const
 void Animation::Tangent::update()
 {
 	// update span time difference
+	// 
+	// NOTE : when dt is zero the tangent's parent key has not been added to a curve or
+	//        the tangent's direction is into and its parent key is the first key in a
+	//        curve or the tangent's direction is from and its parent key is the final
+	//        key in a curve. In all these cases treat dt as one, this makes span space
+	//        and key space equivalent. However if dt was 1.0 in the above cases it
+	//        would not be possible to differentiate from the case where the time
+	//        difference to next/prev key is actually one second.
 
-	const double dt = m_key->getTime( m_direction ).getSeconds();
+	const Key* key = 0;
+
+	if( m_key->m_parent )
+	{
+		switch( m_direction )
+		{
+			case Animation::Tangent::Direction::Into:
+				key = m_key->prevKey();
+				break;
+			case Animation::Tangent::Direction::From:
+				key = m_key->nextKey();
+				break;
+			default:
+				break;
+		}
+	}
+
+	const double dt = ( key == 0 ) ? 0.0 : ( abs( m_key->m_time - key->getTime() ) ).getSeconds();
+
+	// NOTE : when dt becomes zero either the tangent's parent key has been removed from a curve
+	//        or the tangent's direction is into and its parent key is the first key in a curve
+	//        or the tangent's direction is from and its parent key is the final key in a curve.
+	//        In all the above cases do not update m_dt so that if the parent key is added back
+	//        to a curve or is no longer the first or final key in a curve, it is possible to
+	//        correctly adjust the slope and accel to a new span dt. this is not possible by
+	//        converting the slope and accel to key space.
+	// NOTE : when dt becomes non zero either the tangent's parent key has been added to a curve
+	//        or is no longer the first or final key in a curve (and above note does not apply)
+	//        so convert the slope and accel to span space based on new span dt.
+	// NOTE : when dt changes from non zero to a different non zero value, adjust slope and accel
+	//        based on new span dt as determined by tangent auto mode.
 
 	if( dt != m_dt )
 	{
-		if( dt == 0.0 )
+		if( m_dt == 0.0 )
 		{
-			// NOTE : when key is removed from curve (dt == 0) we do not update m_dt so that we know
-			//        the previous span dt if the key is added back to a curve. dt may also be zero
-			//        when the parent key is the only key in its parent curve.
-		}
-		else if( m_dt == 0.0 )
-		{
-			// NOTE : when a new key is added to curve (m_dt == 0) we set m_dt but do not adjust
-			//        slope and accel as the values are explicitly given in span space. This case
-			//        occurs when a key is newly contructed (including deserialisation)
+			// NOTE : convert slope and accel to span space
+
+			if( m_slopeSpace == Space::Key )
+			{
+				m_slope = slopeFromKeySpace( m_slope, dt );
+				m_slopeSpace = Space::Span;
+			}
+
+			if( m_accelSpace == Space::Key )
+			{
+				m_accel = accelFromKeySpace( m_accel, m_slope, dt );
+				m_accelSpace = Space::Span;
+			}
 
 			m_dt = dt;
 		}
-		else
+		else if( dt != 0.0 )
 		{
-			// NOTE : when both dt and m_dt are non zero then either the key has been removed from
-			//        the curve, then added back, or its time or one of its adjacent keys' time has
-			//        changed, in which case we adjust the slope and accel to maintain key space slope.
-
-			// TODO : the slope is changed here without being signaled ...
-
+			// NOTE : adjust slope to maintain key space slope
+			// TODO : this should be done (or not) by tangent auto mode
+			
 			m_slope *= ( dt / m_dt );
 			m_dt = dt;
 		}
@@ -1271,33 +1413,44 @@ void Animation::Tangent::update()
 // Key implementation
 //////////////////////////////////////////////////////////////////////////
 
-Animation::Key::Key( float time, float value, Type type )
+Animation::Key::Key( const float time, const float value, const Type type )
 : m_parent( nullptr )
 , m_interpolator( getInterpolatorForType( type ) )
-, m_into( *this, Animation::Tangent::Direction::Into, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
-, m_from( *this, Animation::Tangent::Direction::From, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
+, m_into( *this, Animation::Tangent::Direction::Into,
+	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
+, m_from( *this, Animation::Tangent::Direction::From,
+	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
 , m_time( time, Animation::Time::Units::Seconds )
 , m_value( value )
 , m_tieSlope( true )
 , m_tieAccel( true )
 {}
 
-Animation::Key::Key( const Animation::Time& time, float value, const std::string& interpolatorName )
+Animation::Key::Key( const Animation::Time& time, const float value, const std::string& interpolatorName )
 : m_parent( nullptr )
 , m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
-, m_into( *this, Animation::Tangent::Direction::Into, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
-, m_from( *this, Animation::Tangent::Direction::From, m_interpolator->defaultSlope(), m_interpolator->defaultAccel() )
+, m_into( *this, Animation::Tangent::Direction::Into,
+	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
+, m_from( *this, Animation::Tangent::Direction::From,
+	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
 , m_time( time )
 , m_value( value )
 , m_tieSlope( true )
 , m_tieAccel( true )
 {}
 
-Animation::Key::Key( const Animation::Time& time, float value, const std::string& interpolatorName, double slopeInto, double slopeFrom, double accelInto, double accelFrom, bool tieSlope, bool tieAccel )
+Animation::Key::Key( const Animation::Time& time, const float value, const std::string& interpolatorName,
+	const double intoSlope, const Tangent::Space intoSlopeSpace, const double intoAccel, const Tangent::Space intoAccelSpace,
+	const double fromSlope, const Tangent::Space fromSlopeSpace, const double fromAccel, const Tangent::Space fromAccelSpace,
+	const bool tieSlope, const bool tieAccel )
 : m_parent( nullptr )
 , m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
-, m_into( *this, Animation::Tangent::Direction::Into, slopeInto, accelInto )
-, m_from( *this, Animation::Tangent::Direction::From, slopeFrom, accelFrom )
+, m_into( *this, Animation::Tangent::Direction::Into, intoSlope, intoSlopeSpace, intoAccel, intoAccelSpace )
+, m_from( *this, Animation::Tangent::Direction::From, fromSlope, fromSlopeSpace, fromAccel, fromAccelSpace )
 , m_time( time )
 , m_value( value )
 , m_tieSlope( tieSlope )
@@ -1357,7 +1510,7 @@ void Animation::Key::setTieSlope( const bool tie )
 
 	// tie slope
 
-	tieSlopeAverage( tieSlopeSpace() );
+	tieSlopeAverage();
 }
 
 bool Animation::Key::getTieAccel() const
@@ -1409,28 +1562,6 @@ float Animation::Key::getFloatTime() const
 Animation::Time Animation::Key::getTime() const
 {
 	return m_time;
-}
-
-Animation::Time Animation::Key::getTime( const Animation::Tangent::Direction direction ) const
-{
-	// NOTE : At first key in into direction and at last key in from direction time is zero.
-	//        When key is the only key, time is zero is both directions.
-
-	const Key* k = 0;
-
-	if( m_parent )
-	{
-		if( direction == Animation::Tangent::Direction::Into )
-		{
-			k = prevKey();
-		}
-		else
-		{
-			k = nextKey();
-		}
-	}
-
-	return ( k == 0 ) ? Animation::Time() : abs( m_time - k->getTime() );
 }
 
 void Animation::Key::setTime( float time )
@@ -1677,6 +1808,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 			else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeHi ) && kn->tieSlopeActive( Tangent::Direction::Into ) )
 			{
 				Private::ScopedValue< bool > guard( kn->m_tieSlope, false );
+				Private::ScopedValue< Tangent::Space > issGuard( kn->m_into.m_slopeSpace, Tangent::Space::Key );
 				kn->m_into.setSlope( kn->m_from.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 			}
 
@@ -1703,7 +1835,8 @@ void Animation::Key::setInterpolator( const std::string& name )
 	}
 	else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeLo ) && tieSlopeActive( Tangent::Direction::From ) )
 	{
-		Private::ScopedValue< bool > guard( m_tieSlope, false );
+		Private::ScopedValue< bool > tsGuard( m_tieSlope, false );
+		Private::ScopedValue< Tangent::Space > issGuard( m_from.m_slopeSpace, Tangent::Space::Key );
 		m_from.setSlope( m_into.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 	}
 
@@ -1783,23 +1916,13 @@ const Animation::CurvePlug *Animation::Key::parent() const
 	return m_parent;
 }
 
-Animation::Tangent::Space Animation::Key::tieSlopeSpace() const
-{
-	// NOTE : dt is zero when key is not in curve or key is only key in curve or
-	//        key is first or last key in curve.
-	//        when dt is zero for key space is meaningless so tie slope in span space
-
-	return ( ( m_into.m_dt != 0.0 ) && ( m_from.m_dt != 0.0 ) )
-		? Animation::Tangent::Space::Key
-		: Animation::Tangent::Space::Span;
-}
-
-void Animation::Key::tieSlopeAverage( const Animation::Tangent::Space space )
+void Animation::Key::tieSlopeAverage()
 {
 	if(
 		tieSlopeActive( Tangent::Direction::Into ) &&
 		tieSlopeActive( Tangent::Direction::From ) )
 	{
+		const Tangent::Space space = Tangent::Space::Key;
 		const double si = m_into.getSlope( space );
 		const double sf = m_from.getSlope( space );
 
@@ -1811,7 +1934,9 @@ void Animation::Key::tieSlopeAverage( const Animation::Tangent::Space space )
 				std::atan( si ) * 0.5 +
 				std::atan( sf ) * 0.5 );
 
-			Private::ScopedValue< bool > guard( m_tieSlope, false );
+			Private::ScopedValue< bool > tsGuard( m_tieSlope, false );
+			Private::ScopedValue< Tangent::Space > issGuard( m_into.m_slopeSpace, space );
+			Private::ScopedValue< Tangent::Space > fssGuard( m_from.m_slopeSpace, space );
 			m_into.setSlope( s, space );
 			m_from.setSlope( s, space );
 		}
@@ -1998,8 +2123,8 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 			key->m_parent = this;
 			key->m_into.update();
 			key->m_from.update();
-			if( Key* const k = key->nextKey() ){ k->m_into.update(); }
-			if( Key* const k = key->prevKey() ){ k->m_from.update(); }
+			if( Key* const kn = key->nextKey() ){ kn->m_into.update(); }
+			if( Key* const kp = key->prevKey() ){ kp->m_from.update(); }
 			propagateDirtiness( outPlug() );
 			m_keyAddedSignal( this, key.get() );
 		},
@@ -2111,11 +2236,20 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 	// badly behaved interpolators.
 
 	KeyPtr km( new Animation::Key( time, 0.0, interpolator->getName(),
-		interpolator->defaultSlope(), interpolator->defaultSlope(), interpolator->defaultAccel(), interpolator->defaultAccel(), false, false ) );
+		interpolator->defaultSlope(), Tangent::Space::Span,
+		interpolator->defaultAccel(), Tangent::Space::Span,
+		interpolator->defaultSlope(), Tangent::Space::Span,
+		interpolator->defaultAccel(), Tangent::Space::Span, false, false ) );
 	KeyPtr kl( new Animation::Key( lo.getTime(), lo.getValue(), interpolator->getName(),
-		lo.m_into.m_slope, lo.m_from.m_slope, lo.m_into.m_accel, lo.m_from.m_accel, false, false ) );
+		lo.m_into.m_slope, lo.m_into.m_slopeSpace,
+		lo.m_into.m_accel, lo.m_into.m_accelSpace,
+		lo.m_from.m_slope, lo.m_from.m_slopeSpace,
+		lo.m_from.m_accel, lo.m_from.m_accelSpace, false, false ) );
 	KeyPtr kh( new Animation::Key( hi.getTime(), hi.getValue(), interpolator->getName(),
-		hi.m_into.m_slope, hi.m_from.m_slope, hi.m_into.m_accel, hi.m_from.m_accel, false, false ) );
+		hi.m_into.m_slope, hi.m_into.m_slopeSpace,
+		hi.m_into.m_accel, hi.m_into.m_accelSpace,
+		hi.m_from.m_slope, hi.m_from.m_slopeSpace,
+		hi.m_from.m_accel, hi.m_from.m_accelSpace, false, false ) );
 
 	// new tangents are in space of new spans (post-bisection)
 

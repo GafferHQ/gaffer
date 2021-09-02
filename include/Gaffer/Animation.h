@@ -186,19 +186,26 @@ class GAFFER_API Animation : public ComputeNode
 
 			private:
 
+				/// \undoable
+				void setSlopeSpace( Space );
+				/// \undoable
+				void setAccelSpace( Space );
+
 				friend class CurvePlug;
 				friend class Key;
 
 				void update();
 				void convertPosition( Imath::V2d&, Space, bool ) const;
 
-				Tangent( Key& key, Direction direction, double slope, double accel );
+				Tangent( Key& key, Direction direction, double slope, Space slopeSpace, double accel, Space accelSpace );
 
 				Key* m_key;
-				Direction m_direction;
 				double m_slope;
 				double m_accel;
 				double m_dt;
+				Direction m_direction;
+				Space m_slopeSpace;
+				Space m_accelSpace;
 		};
 
 		/// Defines span interpolator
@@ -265,6 +272,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		protected:
 
+			/// construct with specified name, hints and span space default slope and accel
 			Interpolator( const std::string& name, Hints hints,
 				double defaultSlope = 0.0, double defaultAccel = (1.0/3.0) );
 
@@ -297,8 +305,11 @@ class GAFFER_API Animation : public ComputeNode
 				explicit Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
 				explicit Key( const Time& time = Time(), float value = 0.0f,
 					const std::string& interpolatorName = Interpolator::getFactory().getDefault()->getName() );
+				/// construct Key with specified key space tangent slope and accel
 				Key( const Time& time, float value, const std::string& interpolatorName,
-					double slopeInto, double slopeFrom, double accelInto, double accelFrom, bool tieSlope, bool tieAccel );
+					double intoSlope, Tangent::Space intoSlopeSpace, double intoAccel, Tangent::Space intoAccelSpace,
+					double fromSlope, Tangent::Space fromSlopeSpace, double fromAccel, Tangent::Space fromAccelSpace,
+					bool tieSlope, bool tieAccel );
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 
@@ -316,7 +327,6 @@ class GAFFER_API Animation : public ComputeNode
 				/// \deprecated Use Time getTime() instead.
 				float getFloatTime() const;
 				Time getTime() const;
-				Time getTime( Tangent::Direction direction ) const;
 
 				/// \undoable
 				/// \deprecated Use setTime(const Time&) instead.
@@ -355,8 +365,7 @@ class GAFFER_API Animation : public ComputeNode
 				friend class CurvePlug;
 				friend class Tangent;
 
-				Tangent::Space tieSlopeSpace() const;
-				void tieSlopeAverage( Tangent::Space );
+				void tieSlopeAverage();
 				bool tieAccelActive( Tangent::Direction ) const;
 				bool tieSlopeActive( Tangent::Direction ) const;
 

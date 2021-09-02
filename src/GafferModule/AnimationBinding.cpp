@@ -169,14 +169,17 @@ std::string keyRepr( const Animation::Key &k )
 	// NOTE : slope may be (+/-) infinity which is represented in python as float( 'inf' ) or float( '-inf' )
 
 	return boost::str(
-		boost::format( "Gaffer.Animation.Key( Gaffer.Animation.Time( %d ), %.9g, \"%s\", float( '%.9g' ), float( '%.9g' ), %.9g, %.9g, %s, %s )" )
+		boost::format( "Gaffer.Animation.Key( Gaffer.Animation.Time( %d ), %.9g, \"%s\", "
+			"float( '%.9g' ), Gaffer.Animation.Tangent.Space.Key, %.9g, Gaffer.Animation.Tangent.Space.Key, "
+			"float( '%.9g' ), Gaffer.Animation.Tangent.Space.Key, %.9g, Gaffer.Animation.Tangent.Space.Key, "
+			"%s, %s )" )
 			% k.getTime().getTicks()
 			% k.getValue()
 			% k.getInterpolator()->getName()
-			% k.getTangent( Animation::Tangent::Direction::Into ).getSlope( Animation::Tangent::Space::Span )
-			% k.getTangent( Animation::Tangent::Direction::From ).getSlope( Animation::Tangent::Space::Span )
-			% k.getTangent( Animation::Tangent::Direction::Into ).getAccel( Animation::Tangent::Space::Span )
-			% k.getTangent( Animation::Tangent::Direction::From ).getAccel( Animation::Tangent::Space::Span )
+			% k.getTangent( Animation::Tangent::Direction::Into ).getSlope( Animation::Tangent::Space::Key )
+			% k.getTangent( Animation::Tangent::Direction::Into ).getAccel( Animation::Tangent::Space::Key )
+			% k.getTangent( Animation::Tangent::Direction::From ).getSlope( Animation::Tangent::Space::Key )
+			% k.getTangent( Animation::Tangent::Direction::From ).getAccel( Animation::Tangent::Space::Key )
 			% ( k.getTieSlope() ? "True" : "False" )
 			% ( k.getTieAccel() ? "True" : "False" )
 	);
@@ -440,12 +443,12 @@ void GafferModule::bindAnimation()
 				)
 			)
 		)
-		.def( init<const Animation::Time&, float, const std::string&, double, double, double, double, bool, bool>() )
+		.def( init< const Animation::Time&, float, const std::string&,
+			double, Animation::Tangent::Space, double, Animation::Tangent::Space,
+			double, Animation::Tangent::Space, double, Animation::Tangent::Space, bool, bool>() )
 		.def( "getFloatTime", &Animation::Key::getFloatTime )
 		.def( "getTime",
 			(Animation::Time (Animation::Key::*)() const)&Animation::Key::getTime ) // TODO : this now returns an Animation.Time ...
-		.def( "getTime",
-			(Animation::Time (Animation::Key::*)( Animation::Tangent::Direction ) const)&Animation::Key::getTime )
 		.def( "setTime", &setFloatTime )
 		.def( "setTime", &setTime )
 		.def( "getValue", &Animation::Key::getValue )
