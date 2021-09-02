@@ -189,7 +189,7 @@ Gaffer.Metadata.registerNode(
 			Chooses an RGBA layer or an auxiliary channel to display.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ChannelsPlugValueWidget",
 			"toolbarLayout:index", 2,
 			"toolbarLayout:width", 175,
 			"label", "",
@@ -670,6 +670,89 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.Pointer.setCurrent( "" )
 		return True
+
+##########################################################################
+# _ChannelsPlugValueWidget
+##########################################################################
+
+class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferImageUI.RGBAChannelsPlugValueWidget.__init__( self, plug, **kw )
+
+		plug.node().viewportGadget().keyPressSignal().connect(
+			Gaffer.WeakMethod( self.__keyPress ),
+			scoped = False
+		)
+
+	def _menuDefinition( self ) :
+
+		result = GafferImageUI.RGBAChannelsPlugValueWidget._menuDefinition( self )
+
+		result.append( "/__PreviousNextDivider__", { "divider" : True } )
+
+		try :
+			currentValue = self.getPlug().getValue()
+		except Gaffer.ProcessException :
+			currentValue = None
+
+		previousValue = self.__incrementedValue( -1 )
+		result.append(
+			"/Previous",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = previousValue ),
+				"shortCut" : "PgUp",
+				"active" : previousValue is not None and previousValue != currentValue,
+			}
+		)
+
+		nextValue = self.__incrementedValue( 1 )
+		result.append(
+			"/Next",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = nextValue ),
+				"shortCut" : "PgDown",
+				"active" : nextValue is not None and nextValue != currentValue,
+			}
+		)
+
+		return result
+
+	def __keyPress( self, gadget, event ) :
+
+		if event.key in ( "PageUp", "PageDown" ) :
+			value = self.__incrementedValue( -1 if event.key == "PageUp" else 1 )
+			if value is not None :
+				self.__setValue( value )
+			return True
+
+		return False
+
+	def __setValue( self, value ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().setValue( value )
+
+	def __incrementedValue( self, increment ) :
+
+		try :
+			currentValue = self.getPlug().getValue()
+		except Gaffer.ProcessException :
+			return None
+
+		values = list( self._rgbaChannels().values() )
+		if not values :
+			return currentValue
+
+		try :
+			index = values.index( currentValue ) + increment
+		except ValueError :
+			return values[0]
+
+		index = max( 0, min( index, len( values ) - 1 ) )
+		return values[index]
+
 
 ##########################################################################
 # _SoloChannelPlugValueWidget

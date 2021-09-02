@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import collections
 import functools
 
 import IECore
@@ -46,7 +47,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self._menuDefinition ) ) )
 		self.__menuButton._qtWidget().setMinimumWidth( 150 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
@@ -67,6 +68,9 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Start out with "Custom" to represent something arbitrary
 		# chosen via scripting, and then assign more descriptive labels
 		# to anything that can be chosen via the menu.
+		# > Note : We don't use `_rgbaChannels()` to generate
+		# > our label because it depends on the currently available
+		# > channels. We need a label even if the channels are unavailable.
 		text = "Custom"
 		if len( set( layers ) ) == 1 :
 			prefix = layers[0] + "." if layers[0] else ""
@@ -78,22 +82,23 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton.setText( text )
 		self.__menuButton.setEnabled( self._editable() )
 
-	def __menuDefinition( self ) :
+	# Returns a dictionary mapping from display name to sets of `[ R, G, B, A ]`
+	# channels. Maybe belongs in ImageAlgo.h?
+	def _rgbaChannels( self ) :
 
 		image = next( iter( self.getPlug().node().children( GafferImage.ImagePlug ) ) )
-		channelNames = []
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Exception ) :
+		try :
+			with self.getContext() :
 				channelNames = image["channelNames"].getValue()
+		except Gaffer.ProcessException :
+			return {}
 
-		result = IECore.MenuDefinition()
-		if not channelNames :
-			result.append( "/No channels available", { "active" : False } )
-			return result
+		result = collections.OrderedDict()
 
-		added = set()
-		nonStandardLayers = set( [ GafferImage.ImageAlgo.layerName( x ) for x in channelNames
-			if GafferImage.ImageAlgo.baseName( x ) not in [ "R", "G", "B", "A" ] ] )
+		nonStandardLayers = {
+			GafferImage.ImageAlgo.layerName( c ) for c in channelNames
+			if GafferImage.ImageAlgo.baseName( c ) not in [ "R", "G", "B", "A" ]
+		}
 
 		for channelName in sorted( channelNames, key = GafferImage.ImageAlgo.layerName ) :
 
@@ -101,25 +106,44 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				layerName = GafferImage.ImageAlgo.layerName( channelName )
 				prefix = layerName + "." if layerName else ""
 				text = prefix + "RGBA"
-				value = [ prefix + x for x in [ "R", "G", "B", "A" ] ]
+				value = IECore.StringVectorData( [ prefix + x for x in [ "R", "G", "B", "A" ] ] )
 			else :
 				text = channelName
-				value = [ channelName ] * 4
+				value = IECore.StringVectorData( [ channelName ] * 4 )
 
-			if text in added :
+			if not GafferImage.ImageAlgo.layerName( text ) in nonStandardLayers :
+				# If there are only standard channels, we don't need to differentiate
+				# them from non-standard channels.
+				text = text.replace( ".RGBA", "" )
+
+			if text in result :
 				continue
 
-			added.add( text )
+			result[text] = value
 
-			if not GafferImage.ImageAlgo.layerName( text ) in nonStandardLayers:
-				# If there are only the standard channels, we don't need a submenu
-				text = text.replace( ".RGBA", "" )
+		return result
+
+	def _menuDefinition( self ) :
+
+		currentValue = None
+		with self.getContext() :
+			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+				currentValue = self.getPlug().getValue()
+
+		rgbaChannels = self._rgbaChannels()
+
+		result = IECore.MenuDefinition()
+		if not rgbaChannels :
+			result.append( "/No channels available", { "active" : False } )
+			return result
+
+		for text, value in rgbaChannels.items() :
 
 			result.append(
 				"/" + text.replace( ".", "/" ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = value ),
-					"checkBox" : text == self.__menuButton.getText(),
+					"checkBox" : value == currentValue,
 				}
 			)
 
@@ -128,4 +152,4 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __setValue( self, unused, value ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( IECore.StringVectorData( value ) )
+			self.getPlug().setValue( value )
