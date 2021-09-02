@@ -891,6 +891,9 @@ class _TangentTab( GafferUI.GridContainer ) :
 		self.__mergeGroupIdSlope = [ 0, 0 ]
 		self.__mergeGroupIdAccel = [ 0, 0 ]
 
+		# accel of selected keys at start of merge group
+		self.__selectedKeysMergeGroupAccel = [ {}, {} ]
+
 	def connect( self, curve ) :
 		if curve not in self.__connections :
 			self.__connections[ curve ] = _TangentTab.Connections(
@@ -992,12 +995,15 @@ class _TangentTab( GafferUI.GridContainer ) :
 			return
 
 		# handle undo queue
+		selectedKeys = self.parent().curveGadget().selectedKeys()
 		if not widget.changesShouldBeMerged( self.__lastChangedReasonSlope[ direction ], reason ) :
 			self.__mergeGroupIdSlope[ direction ] += 1
+			self.__selectedKeysMergeGroupAccel[ direction ].clear()
+			for key in selectedKeys :
+				self.__selectedKeysMergeGroupAccel[ direction ][ key ] = key.getTangent( direction ).getAccel( Gaffer.Animation.Tangent.Space.Span )
 		self.__lastChangedReasonSlope[ direction ] = reason
 
 		# set slope for all selected keys in specified direction
-		selectedKeys = self.parent().curveGadget().selectedKeys()
 		if selectedKeys :
 			try :
 				value = widget.getValue()
@@ -1006,7 +1012,8 @@ class _TangentTab( GafferUI.GridContainer ) :
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
 				for key in selectedKeys :
 					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].slope ) :
-						key.getTangent( direction ).setSlope( value, self.slopeSpace )
+						key.getTangent( direction ).setSlopeWithAccel( value,
+							self.__selectedKeysMergeGroupAccel[ direction ][ key ], self.slopeSpace )
 			widget.clearUndo()
 
 		# ensure editors are up to date
