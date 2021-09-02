@@ -1009,8 +1009,11 @@ class _TangentTab( GafferUI.GridContainer ) :
 						key.getTangent( direction ).setSlope( value, self.slopeSpace )
 			widget.clearUndo()
 
-		# we have blocked update of slope in opposite direction so update editor
-		self.__updateTangentSlope( Gaffer.Animation.Tangent.opposite( direction ) )
+		# ensure editors are up to date
+		for value in Gaffer.Animation.Tangent.Direction.values :
+			direction = Gaffer.Animation.Tangent.Direction( value )
+			self.__updateTangentSlope( direction )
+			self.__updateTangentAccel( direction )
 
 	def __setAccel( self, direction, widget, reason ) :
 
@@ -1037,8 +1040,10 @@ class _TangentTab( GafferUI.GridContainer ) :
 						key.getTangent( direction ).setAccel( value, self.accelSpace )
 			widget.clearUndo()
 
-		# we have blocked update of accel in opposite direction so update editor
-		self.__updateTangentAccel( Gaffer.Animation.Tangent.opposite( direction ) )
+		# ensure editors are up to date
+		for value in Gaffer.Animation.Tangent.Direction.values :
+			direction = Gaffer.Animation.Tangent.Direction( value )
+			self.__updateTangentAccel( direction )
 
 # Private implementation - curve tab
 class _CurveTab( GafferUI.GridContainer ) :
