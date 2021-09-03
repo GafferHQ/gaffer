@@ -203,6 +203,7 @@ class GAFFER_API Animation : public ComputeNode
 				double m_slope;
 				double m_accel;
 				double m_dt;
+				double m_vt;
 				Direction m_direction;
 				Space m_slopeSpace;
 				Space m_accelSpace;

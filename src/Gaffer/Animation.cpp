@@ -838,6 +838,7 @@ Animation::Tangent::Tangent( Animation::Key& key, const Animation::Tangent::Dire
 , m_slope( slope )
 , m_accel( std::min( accel, maxAccel( m_slope ) ) )
 , m_dt( 0.0 )
+, m_vt( 0.0 )
 , m_direction( direction )
 , m_slopeSpace( slopeSpace )
 , m_accelSpace( accelSpace )
@@ -1334,7 +1335,7 @@ bool Animation::Tangent::accelIsUsed() const
 
 void Animation::Tangent::update()
 {
-	// update span time difference
+	// update span time and value differences
 	// 
 	// NOTE : when dt is zero the tangent's parent key has not been added to a curve or
 	//        the tangent's direction is into and its parent key is the first key in a
@@ -1344,24 +1345,31 @@ void Animation::Tangent::update()
 	//        would not be possible to differentiate from the case where the time
 	//        difference to next/prev key is actually one second.
 
-	const Key* key = 0;
+	double dt = 0.0;
+	double vt = 0.0;
 
 	if( m_key->m_parent )
 	{
 		switch( m_direction )
 		{
-			case Animation::Tangent::Direction::Into:
-				key = m_key->prevKey();
+			case Direction::Into:
+				if( const Key* const kp = m_key->prevKey() )
+				{
+					dt = ( m_key->m_time - kp->m_time ).getSeconds();
+					vt = ( m_key->m_value - kp->m_value );
+				}
 				break;
-			case Animation::Tangent::Direction::From:
-				key = m_key->nextKey();
+			case Direction::From:
+				if( const Key* const kn = m_key->nextKey() )
+				{
+					dt = ( kn->m_time - m_key->m_time ).getSeconds();
+					vt = ( kn->m_value - m_key->m_value );
+				}
 				break;
 			default:
 				break;
 		}
 	}
-
-	const double dt = ( key == 0 ) ? 0.0 : ( abs( m_key->m_time - key->getTime() ) ).getSeconds();
 
 	// NOTE : when dt becomes zero either the tangent's parent key has been removed from a curve
 	//        or the tangent's direction is into and its parent key is the first key in a curve
@@ -1398,13 +1406,32 @@ void Animation::Tangent::update()
 		}
 		else if( dt != 0.0 )
 		{
-			// NOTE : adjust slope to maintain key space slope
 			// TODO : this should be done (or not) by tangent auto mode
-			
+
+#			define AUTO_MODE_MANUAL 1
+#			define AUTO_MODE_MANUAL_SLOPE 2
+#			define AUTO_MODE_SIMPLE 3
+#			define AUTO_MODE AUTO_MODE_MANUAL_SLOPE
+
+#			if   AUTO_MODE == AUTO_MODE_MANUAL
+			const double ss = m_slope;
+			const double st = m_slope * ( dt / m_dt );
+			// TODO : signal change to accel as it is changing in span space. however no action neeeded
+			m_accel = accelFromKeySpace( accelToKeySpace( m_accel, ss, m_dt ), st, dt );
+			// NOTE : no need to signal slope change as it is not changing in key space
+			m_slope = st;
+#			elif AUTO_MODE == AUTO_MODE_MANUAL_SLOPE
+			// NOTE : no need to signal accel change as it is not changing in span space
+			// NOTE : no need to signal slope change as it is not changing in key space
 			m_slope *= ( dt / m_dt );
+#			elif AUTO_MODE == AUTO_MODE_SIMPLE
+			// TODO : average slopes in key space if tie slope enabled
+#			endif
 			m_dt = dt;
 		}
 	}
+
+	m_vt = vt;
 }
 
 } // Gaffer
@@ -1713,12 +1740,20 @@ void Animation::Key::setValue( float value )
 			// Do
 			[ key, value ] {
 				key->m_value = value;
+				key->m_from.update();
+				key->m_into.update();
+				if( Key* const kn = key->nextKey() ){ kn->m_into.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_from.update(); }
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
 			},
 			// Undo
 			[ key, previousValue ] {
 				key->m_value = previousValue;
+				key->m_from.update();
+				key->m_into.update();
+				if( Key* const kn = key->nextKey() ){ kn->m_into.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_from.update(); }
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
 			}
