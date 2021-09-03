@@ -434,13 +434,13 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 
 				// draw the tangents
 				//
-				// NOTE : only draw if they are used by span interpolator and key is selected
+				// NOTE : only draw if they are used by span interpolator and key or adjacent key is selected
 
 				if( previousKey )
 				{
 					const Animation::Interpolator::Hints hints = previousKey->getInterpolator()->getHints();
 
-					if(	previousKeySelected && (
+					if( ( isSelected || previousKeySelected ) && (
 							hints.test( Animation::Interpolator::Hint::UseSlopeLo ) ||
 							hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) )
 					{
@@ -457,7 +457,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						( tieAccel ) ? style->renderSolidRectangle( fromBox ) : style->renderRectangle( fromBox );
 					}
 
-					if( isSelected && (
+					if( ( isSelected || previousKeySelected ) && (
 						hints.test( Animation::Interpolator::Hint::UseSlopeHi ) ||
 						hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) )
 					{
@@ -1623,7 +1623,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Tangent::Direction>
 				{
 					const Animation::Interpolator::Hints hints = previousKey->getInterpolator()->getHints();
 
-					if( previousKeySelected && (
+					if( ( isSelected || previousKeySelected ) && (
 							hints.test( Animation::Interpolator::Hint::UseSlopeLo ) ||
 							hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) )
 					{
@@ -1636,7 +1636,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Tangent::Direction>
 
 					++name;
 
-					if( isSelected && (
+					if( ( isSelected || previousKeySelected ) && (
 						hints.test( Animation::Interpolator::Hint::UseSlopeHi ) ||
 						hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) )
 					{
