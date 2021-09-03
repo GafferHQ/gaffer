@@ -182,10 +182,7 @@ class GAFFER_API Animation : public ComputeNode
 				double getAccel( Space space ) const;
 				/// \undoable
 				void setAccel( double accel, Space space );
-				/// \undoable
-				/// set acceleration whilst maintaining specified span space slope
-				void setAccelWithSlope( double accel, double slope, Space space );
-
+				
 				/// is slope currently used by interpolator
 				bool slopeIsUsed() const;
 				/// is accel currently used by interpolator

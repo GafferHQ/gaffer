@@ -1292,13 +1292,6 @@ void Animation::Tangent::setAccel( double accel, const Animation::Tangent::Space
 	}
 }
 
-void Animation::Tangent::setAccelWithSlope( const double accel, const double slope, const Animation::Tangent::Space space )
-{
-	Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Span );
-	setSlope( slope, Space::Span );
-	setAccel( accel, space );
-}
-
 double Animation::Tangent::getAccel( const Space space ) const
 {
 	// NOTE : see comment in update() regards treating m_dt == 0.0 as 1.0

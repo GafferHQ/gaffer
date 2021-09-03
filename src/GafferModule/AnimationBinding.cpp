@@ -131,12 +131,6 @@ void setAccel( Animation::Tangent &t, double accel, Animation::Tangent::Space sp
 	t.setAccel( accel, space );
 }
 
-void setAccelWithSlope( Animation::Tangent &t, double accel, double slope, Animation::Tangent::Space space )
-{
-	ScopedGILRelease gilRelease;
-	t.setAccelWithSlope( accel, slope, space );
-}
-
 void setTieMode( Animation::Key &k, Animation::Tangent::TieMode mode )
 {
 	ScopedGILRelease gilRelease;
@@ -409,7 +403,6 @@ void GafferModule::bindAnimation()
 			.def( "getSlope", &Animation::Tangent::getSlope )
 			.def( "slopeIsUsed", &Animation::Tangent::slopeIsUsed )
 			.def( "setAccel", &setAccel )
-			.def( "setAccelWithSlope", &setAccelWithSlope )
 			.def( "getAccel", &Animation::Tangent::getAccel )
 			.def( "accelIsUsed", &Animation::Tangent::accelIsUsed )
 			.def( "opposite", &Animation::Tangent::opposite )
