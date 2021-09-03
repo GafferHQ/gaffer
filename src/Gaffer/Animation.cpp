@@ -1339,7 +1339,7 @@ bool Animation::Tangent::accelIsUsed() const
 void Animation::Tangent::update()
 {
 	// update span time and value differences
-	// 
+	//
 	// NOTE : when dt is zero the tangent's parent key has not been added to a curve or
 	//        the tangent's direction is into and its parent key is the first key in a
 	//        curve or the tangent's direction is from and its parent key is the final
@@ -2268,7 +2268,7 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 
 	Private::ScopedValue< Tangent::TieMode > ltm( lo.m_tieMode, Tangent::TieMode::Manual );
 	Private::ScopedValue< Tangent::TieMode > htm( hi.m_tieMode, Tangent::TieMode::Manual );
-	
+
 	// add new key to curve
 
 	addKey( km );

@@ -416,7 +416,7 @@ void GafferModule::bindAnimation()
 		enum_< Animation::Tangent::Space >( "Space" )
 			.value( Animation::toString( Animation::Tangent::Space::Key ), Animation::Tangent::Space::Key )
 			.value( Animation::toString( Animation::Tangent::Space::Span ), Animation::Tangent::Space::Span );
-		
+
 		enum_< Animation::Tangent::TieMode >( "TieMode" )
 			.value( Animation::toString( Animation::Tangent::TieMode::Manual ), Animation::Tangent::TieMode::Manual )
 			.value( Animation::toString( Animation::Tangent::TieMode::Slope ), Animation::Tangent::TieMode::Slope )
