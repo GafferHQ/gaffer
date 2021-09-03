@@ -832,6 +832,16 @@ Animation::Tangent::Direction Animation::Tangent::opposite( const Animation::Tan
 	return static_cast< Direction >( ( static_cast< int >( direction ) + 1 ) % 2 );
 }
 
+double Animation::Tangent::defaultSlope()
+{
+	return 0.0;
+}
+
+double Animation::Tangent::defaultAccel()
+{
+	return ( 1.0 / 3.0 );
+}
+
 Animation::Tangent::Tangent( Animation::Key& key, const Animation::Tangent::Direction direction,
 	const double slope, const Animation::Tangent::Space slopeSpace, const double accel, const Animation::Tangent::Space accelSpace )
 : m_key( & key )
@@ -1437,11 +1447,9 @@ Animation::Key::Key( const float time, const float value, const Animation::Type 
 : m_parent( nullptr )
 , m_interpolator( getInterpolatorForType( type ) )
 , m_into( *this, Tangent::Direction::Into,
-	m_interpolator->defaultSlope(), Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Tangent::Space::Span )
+	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultAccel(), Tangent::Space::Span )
 , m_from( *this, Tangent::Direction::From,
-	m_interpolator->defaultSlope(), Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Tangent::Space::Span )
+	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultAccel(), Tangent::Space::Span )
 , m_time( time, Time::Units::Seconds )
 , m_value( value )
 , m_tieMode( Tangent::TieMode::SlopeAndAccel )
@@ -1451,11 +1459,9 @@ Animation::Key::Key( const Animation::Time& time, const float value, const std::
 : m_parent( nullptr )
 , m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
 , m_into( *this, Tangent::Direction::Into,
-	m_interpolator->defaultSlope(), Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Tangent::Space::Span )
+	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultAccel(), Tangent::Space::Span )
 , m_from( *this, Tangent::Direction::From,
-	m_interpolator->defaultSlope(), Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Tangent::Space::Span )
+	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultAccel(), Tangent::Space::Span )
 , m_time( time )
 , m_value( value )
 , m_tieMode( Tangent::TieMode::SlopeAndAccel )

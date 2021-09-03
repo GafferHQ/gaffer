@@ -156,6 +156,9 @@ class GAFFER_API Animation : public ComputeNode
 
 				static Direction opposite( Direction direction );
 
+				static double defaultSlope();
+				static double defaultAccel();
+
 				~Tangent();
 
 				Key& getKey();
@@ -279,7 +282,8 @@ class GAFFER_API Animation : public ComputeNode
 
 			/// construct with specified name, hints and span space default slope and accel
 			Interpolator( const std::string& name, Hints hints,
-				double defaultSlope = 0.0, double defaultAccel = (1.0/3.0) );
+				double defaultSlope = Tangent::defaultSlope(),
+				double defaultAccel = Tangent::defaultAccel() );
 
 		private:
 
