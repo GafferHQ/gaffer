@@ -1141,7 +1141,7 @@ void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space
 	if( m_key->tieSlopeActive( opposite( m_direction ) ) )
 	{
 		Tangent& ot = m_key->getTangent( opposite( m_direction ) );
-		Private::ScopedValue< bool > tsGuard( m_key->m_tieSlope, false );
+		Private::ScopedValue< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
 		Private::ScopedValue< Space > ssGuard( ot.m_slopeSpace, Space::Key );
 		ot.setSlope( getSlope( Space::Key ), Space::Key );
 	}
@@ -1256,7 +1256,7 @@ void Animation::Tangent::setAccel( double accel, const Animation::Tangent::Space
 	if( m_key->tieAccelActive( opposite( m_direction ) ) )
 	{
 		Tangent& ot = m_key->getTangent( opposite( m_direction ) );
-		Private::ScopedValue< bool > tsGuard( m_key->m_tieAccel, false );
+		Private::ScopedValue< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
 		Private::ScopedValue< Space > asGuard( ot.m_accelSpace, Space::Span );
 		ot.setAccel( ( m_accel == 0.0 )
 				? ( ot.m_accel + accel )
@@ -1440,71 +1440,68 @@ void Animation::Tangent::update()
 // Key implementation
 //////////////////////////////////////////////////////////////////////////
 
-Animation::Key::Key( const float time, const float value, const Type type )
+Animation::Key::Key( const float time, const float value, const Animation::Type type )
 : m_parent( nullptr )
 , m_interpolator( getInterpolatorForType( type ) )
-, m_into( *this, Animation::Tangent::Direction::Into,
-	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
-, m_from( *this, Animation::Tangent::Direction::From,
-	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
-, m_time( time, Animation::Time::Units::Seconds )
+, m_into( *this, Tangent::Direction::Into,
+	m_interpolator->defaultSlope(), Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Tangent::Space::Span )
+, m_from( *this, Tangent::Direction::From,
+	m_interpolator->defaultSlope(), Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Tangent::Space::Span )
+, m_time( time, Time::Units::Seconds )
 , m_value( value )
-, m_tieSlope( true )
-, m_tieAccel( true )
+, m_tieMode( Tangent::TieMode::SlopeAndAccel )
 {}
 
 Animation::Key::Key( const Animation::Time& time, const float value, const std::string& interpolatorName )
 : m_parent( nullptr )
 , m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
-, m_into( *this, Animation::Tangent::Direction::Into,
-	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
-, m_from( *this, Animation::Tangent::Direction::From,
-	m_interpolator->defaultSlope(), Animation::Tangent::Space::Span,
-	m_interpolator->defaultAccel(), Animation::Tangent::Space::Span )
+, m_into( *this, Tangent::Direction::Into,
+	m_interpolator->defaultSlope(), Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Tangent::Space::Span )
+, m_from( *this, Tangent::Direction::From,
+	m_interpolator->defaultSlope(), Tangent::Space::Span,
+	m_interpolator->defaultAccel(), Tangent::Space::Span )
 , m_time( time )
 , m_value( value )
-, m_tieSlope( true )
-, m_tieAccel( true )
+, m_tieMode( Tangent::TieMode::SlopeAndAccel )
 {}
 
 Animation::Key::Key( const Animation::Time& time, const float value, const std::string& interpolatorName,
-	const double intoSlope, const Tangent::Space intoSlopeSpace, const double intoAccel, const Tangent::Space intoAccelSpace,
-	const double fromSlope, const Tangent::Space fromSlopeSpace, const double fromAccel, const Tangent::Space fromAccelSpace,
-	const bool tieSlope, const bool tieAccel )
+	const double intoSlope, const Animation::Tangent::Space intoSlopeSpace, const double intoAccel, const Animation::Tangent::Space intoAccelSpace,
+	const double fromSlope, const Animation::Tangent::Space fromSlopeSpace, const double fromAccel, const Animation::Tangent::Space fromAccelSpace,
+	const Animation::Tangent::TieMode tieMode )
 : m_parent( nullptr )
 , m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
-, m_into( *this, Animation::Tangent::Direction::Into, intoSlope, intoSlopeSpace, intoAccel, intoAccelSpace )
-, m_from( *this, Animation::Tangent::Direction::From, fromSlope, fromSlopeSpace, fromAccel, fromAccelSpace )
+, m_into( *this, Tangent::Direction::Into, intoSlope, intoSlopeSpace, intoAccel, intoAccelSpace )
+, m_from( *this, Tangent::Direction::From, fromSlope, fromSlopeSpace, fromAccel, fromAccelSpace )
 , m_time( time )
 , m_value( value )
-, m_tieSlope( tieSlope )
-, m_tieAccel( tieAccel )
+, m_tieMode( tieMode )
 {}
 
 Animation::Tangent& Animation::Key::getTangent( const Animation::Tangent::Direction direction )
 {
-	return const_cast< Animation::Tangent& >(
-		static_cast< const Animation::Key* >( this )->getTangent( direction ) );
+	return const_cast< Tangent& >(
+		static_cast< const Key* >( this )->getTangent( direction ) );
 }
 
 const Animation::Tangent& Animation::Key::getTangent( const Animation::Tangent::Direction direction ) const
 {
-	return ( direction == Animation::Tangent::Direction::Into ) ? m_into : m_from;
+	return ( direction == Tangent::Direction::Into ) ? m_into : m_from;
 }
 
-bool Animation::Key::getTieSlope() const
+Animation::Tangent::TieMode Animation::Key::getTieMode() const
 {
-	return m_tieSlope;
+	return m_tieMode;
 }
 
-void Animation::Key::setTieSlope( const bool tie )
+void Animation::Key::setTieMode( const Animation::Tangent::TieMode tieMode )
 {
 	// check for no change
 
-	if( tie == m_tieSlope )
+	if( tieMode == m_tieMode )
 	{
 		return;
 	}
@@ -1514,71 +1511,29 @@ void Animation::Key::setTieSlope( const bool tie )
 	if( m_parent )
 	{
 		KeyPtr key = this;
+		Tangent::TieMode pm = m_tieMode;
 		Action::enact(
 			m_parent,
 			// Do
-			[ key, tie ] {
-				key->m_tieSlope = tie;
+			[ key, tieMode ] {
+				key->m_tieMode = tieMode;
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
-				key->m_parent->m_keyTieSlopeChangedSignal( key->m_parent, key.get() );
+				key->m_parent->m_keyTieModeChangedSignal( key->m_parent, key.get() );
 			},
 			// Undo
-			[ key, tie ] {
-				key->m_tieSlope = ! tie;
+			[ key, pm ] {
+				key->m_tieMode = pm;
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
-				key->m_parent->m_keyTieSlopeChangedSignal( key->m_parent, key.get() );
+				key->m_parent->m_keyTieModeChangedSignal( key->m_parent, key.get() );
 			}
 		);
 	}
 	else
 	{
-		m_tieSlope = tie;
+		m_tieMode = tieMode;
 	}
-
-	// tie slope
 
 	tieSlopeAverage();
-}
-
-bool Animation::Key::getTieAccel() const
-{
-	return m_tieAccel;
-}
-
-void Animation::Key::setTieAccel( const bool tie )
-{
-	// check for no change
-
-	if( tie == m_tieAccel )
-	{
-		return;
-	}
-
-	// make change via action
-
-	if( m_parent )
-	{
-		KeyPtr key = this;
-		Action::enact(
-			m_parent,
-			// Do
-			[ key, tie ] {
-				key->m_tieAccel = tie;
-				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
-				key->m_parent->m_keyTieAccelChangedSignal( key->m_parent, key.get() );
-			},
-			// Undo
-			[ key, tie ] {
-				key->m_tieAccel = ! tie;
-				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
-				key->m_parent->m_keyTieAccelChangedSignal( key->m_parent, key.get() );
-			}
-		);
-	}
-	else
-	{
-		m_tieAccel = tie;
-	}
 }
 
 float Animation::Key::getFloatTime() const
@@ -1593,7 +1548,7 @@ Animation::Time Animation::Key::getTime() const
 
 void Animation::Key::setTime( float time )
 {
-	setTime( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	setTime( Animation::Time( time, Time::Units::Seconds ) );
 }
 
 void Animation::Key::setTime( const Animation::Time& time )
@@ -1611,7 +1566,7 @@ void Animation::Key::setTime( const Animation::Time& time )
 		}
 
 		KeyPtr key = this;
-		const Animation::Time previousTime = m_time;
+		const Time previousTime = m_time;
 		CurvePlug *curve = m_parent;
 		Action::enact(
 			m_parent,
@@ -1683,7 +1638,7 @@ void Animation::Key::setTime( const Animation::Time& time )
 
 			if( key.get() == m_parent->finalKey() && kp->tieSlopeActive( Tangent::Direction::From ) )
 			{
-				Private::ScopedValue< bool > guard( kp->m_tieSlope, false );
+				Private::ScopedValue< Tangent::TieMode > guard( kp->m_tieMode, Tangent::TieMode::Manual );
 				kp->m_from.setSlope( kp->m_into.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 			}
 		}
@@ -1708,7 +1663,7 @@ void Animation::Key::setTime( const Animation::Time& time )
 
 			if( key.get() == m_parent->firstKey() && kn->tieSlopeActive( Tangent::Direction::Into ) )
 			{
-				Private::ScopedValue< bool > guard( kn->m_tieSlope, false );
+				Private::ScopedValue< Tangent::TieMode > guard( kn->m_tieMode, Tangent::TieMode::Manual );
 				kn->m_into.setSlope( kn->m_from.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 			}
 		}
@@ -1769,15 +1724,15 @@ Animation::Type Animation::Key::getType() const
 {
 	if( m_interpolator->getName() == "Step" )
 	{
-		return Animation::Type::Step;
+		return Type::Step;
 	}
 	else if( m_interpolator->getName() == "Linear" )
 	{
-		return Animation::Type::Linear;
+		return Type::Linear;
 	}
 	else
 	{
-		return Animation::Type::Unknown;
+		return Type::Unknown;
 	}
 }
 
@@ -1788,7 +1743,7 @@ void Animation::Key::setType( const Animation::Type type )
 
 Animation::Interpolator* Animation::Key::getInterpolator()
 {
-	return const_cast< Interpolator* >( static_cast< const Animation::Key* >( this )->getInterpolator() );
+	return const_cast< Interpolator* >( static_cast< const Key* >( this )->getInterpolator() );
 }
 
 const Animation::Interpolator* Animation::Key::getInterpolator() const
@@ -1842,7 +1797,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 			}
 			else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeHi ) && kn->tieSlopeActive( Tangent::Direction::Into ) )
 			{
-				Private::ScopedValue< bool > guard( kn->m_tieSlope, false );
+				Private::ScopedValue< Tangent::TieMode > tmGuard( kn->m_tieMode, Tangent::TieMode::Manual );
 				Private::ScopedValue< Tangent::Space > issGuard( kn->m_into.m_slopeSpace, Tangent::Space::Key );
 				kn->m_into.setSlope( kn->m_from.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 			}
@@ -1870,7 +1825,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 	}
 	else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeLo ) && tieSlopeActive( Tangent::Direction::From ) )
 	{
-		Private::ScopedValue< bool > tsGuard( m_tieSlope, false );
+		Private::ScopedValue< Tangent::TieMode > tmGuard( m_tieMode, Tangent::TieMode::Manual );
 		Private::ScopedValue< Tangent::Space > issGuard( m_from.m_slopeSpace, Tangent::Space::Key );
 		m_from.setSlope( m_into.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 	}
@@ -1969,7 +1924,7 @@ void Animation::Key::tieSlopeAverage()
 				std::atan( si ) * 0.5 +
 				std::atan( sf ) * 0.5 );
 
-			Private::ScopedValue< bool > tsGuard( m_tieSlope, false );
+			Private::ScopedValue< Tangent::TieMode > tmGuard( m_tieMode, Tangent::TieMode::Manual );
 			Private::ScopedValue< Tangent::Space > issGuard( m_into.m_slopeSpace, space );
 			Private::ScopedValue< Tangent::Space > fssGuard( m_from.m_slopeSpace, space );
 			m_into.setSlope( s, space );
@@ -1980,9 +1935,16 @@ void Animation::Key::tieSlopeAverage()
 
 bool Animation::Key::tieAccelActive( const Tangent::Direction direction ) const
 {
-	if( ! m_tieAccel )
+	switch( m_tieMode )
 	{
-		return false;
+		case Tangent::TieMode::Manual:
+			return false;
+		case Tangent::TieMode::Slope:
+			return false;
+		case Tangent::TieMode::SlopeAndAccel:
+			break;
+		default:
+			return false;
 	}
 
 	// NOTE : when key not added to curve tie accel is active
@@ -2008,9 +1970,16 @@ bool Animation::Key::tieAccelActive( const Tangent::Direction direction ) const
 
 bool Animation::Key::tieSlopeActive( const Tangent::Direction direction ) const
 {
-	if( ! m_tieSlope )
+	switch( m_tieMode )
 	{
-		return false;
+		case Tangent::TieMode::Manual:
+			return false;
+		case Tangent::TieMode::Slope:
+			break;
+		case Tangent::TieMode::SlopeAndAccel:
+			break;
+		default:
+			return false;
 	}
 
 	// NOTE : when key not added to curve tie slope is active
@@ -2049,8 +2018,7 @@ Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, u
 , m_keyRemovedSignal()
 , m_keyTimeChangedSignal()
 , m_keyValueChangedSignal()
-, m_keyTieSlopeChangedSignal()
-, m_keyTieAccelChangedSignal()
+, m_keyTieModeChangedSignal()
 , m_keyInterpolatorChangedSignal()
 , m_keyTangentSlopeChangedSignal()
 , m_keyTangentAccelChangedSignal()
@@ -2089,14 +2057,9 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyValueChangedS
 	return m_keyValueChangedSignal;
 }
 
-Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTieSlopeChangedSignal()
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTieModeChangedSignal()
 {
-	return m_keyTieSlopeChangedSignal;
-}
-
-Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTieAccelChangedSignal()
-{
-	return m_keyTieAccelChangedSignal;
+	return m_keyTieModeChangedSignal;
 }
 
 Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyInterpolatorChangedSignal()
@@ -2202,7 +2165,7 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 
 		if( key.get() == finalKey() && kp->tieSlopeActive( Tangent::Direction::From ) )
 		{
-			Private::ScopedValue< bool > guard( kp->m_tieSlope, false );
+			Private::ScopedValue< Tangent::TieMode > guard( kp->m_tieMode, Tangent::TieMode::Manual );
 			kp->m_from.setSlope( kp->m_into.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 		}
 	}
@@ -2227,7 +2190,7 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 
 		if( key.get() == firstKey() && kn->tieSlopeActive( Tangent::Direction::Into ) )
 		{
-			Private::ScopedValue< bool > guard( kn->m_tieSlope, false );
+			Private::ScopedValue< Tangent::TieMode > guard( kn->m_tieMode, Tangent::TieMode::Manual );
 			kn->m_into.setSlope( kn->m_from.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
 		}
 	}
@@ -2270,21 +2233,21 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 	// create new key and dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
 	// badly behaved interpolators.
 
-	KeyPtr km( new Animation::Key( time, 0.0, interpolator->getName(),
+	KeyPtr km( new Key( time, 0.0, interpolator->getName(),
 		interpolator->defaultSlope(), Tangent::Space::Span,
 		interpolator->defaultAccel(), Tangent::Space::Span,
 		interpolator->defaultSlope(), Tangent::Space::Span,
-		interpolator->defaultAccel(), Tangent::Space::Span, false, false ) );
-	KeyPtr kl( new Animation::Key( lo.getTime(), lo.getValue(), interpolator->getName(),
+		interpolator->defaultAccel(), Tangent::Space::Span, Tangent::TieMode::Manual ) );
+	KeyPtr kl( new Key( lo.getTime(), lo.getValue(), interpolator->getName(),
 		lo.m_into.m_slope, lo.m_into.m_slopeSpace,
 		lo.m_into.m_accel, lo.m_into.m_accelSpace,
 		lo.m_from.m_slope, lo.m_from.m_slopeSpace,
-		lo.m_from.m_accel, lo.m_from.m_accelSpace, false, false ) );
-	KeyPtr kh( new Animation::Key( hi.getTime(), hi.getValue(), interpolator->getName(),
+		lo.m_from.m_accel, lo.m_from.m_accelSpace, Tangent::TieMode::Manual ) );
+	KeyPtr kh( new Key( hi.getTime(), hi.getValue(), interpolator->getName(),
 		hi.m_into.m_slope, hi.m_into.m_slopeSpace,
 		hi.m_into.m_accel, hi.m_into.m_accelSpace,
 		hi.m_from.m_slope, hi.m_from.m_slopeSpace,
-		hi.m_from.m_accel, hi.m_from.m_accelSpace, false, false ) );
+		hi.m_from.m_accel, hi.m_from.m_accelSpace, Tangent::TieMode::Manual ) );
 
 	// new tangents are in space of new spans (post-bisection)
 
@@ -2304,11 +2267,9 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 
 	// ensure slope/accel untied for lo and hi keys
 
-	Private::ScopedValue< bool > lts( lo.m_tieSlope, false );
-	Private::ScopedValue< bool > lta( lo.m_tieAccel, false );
-	Private::ScopedValue< bool > hts( hi.m_tieSlope, false );
-	Private::ScopedValue< bool > hta( hi.m_tieAccel, false );
-
+	Private::ScopedValue< Tangent::TieMode > ltm( lo.m_tieMode, Tangent::TieMode::Manual );
+	Private::ScopedValue< Tangent::TieMode > htm( hi.m_tieMode, Tangent::TieMode::Manual );
+	
 	// add new key to curve
 
 	addKey( km );
@@ -2322,20 +2283,19 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 		return 0;
 	}
 
-	// set new tangent positions and tie slope/accel of new key
+	// set new tangent positions and tie mode of new key
 
 	lo.m_from.setPosition( lfp, Tangent::Space::Span, false );
 	hi.m_into.setPosition( hip, Tangent::Space::Span, false );
 
-	km->setTieSlope( true );
-	km->setTieAccel( true );
+	km->setTieMode( Tangent::TieMode::SlopeAndAccel );
 
 	return km.get();
 }
 
 bool Animation::CurvePlug::hasKey( float time ) const
 {
-	return hasKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return hasKey( Time( time, Time::Units::Seconds ) );
 }
 
 bool Animation::CurvePlug::hasKey( const Animation::Time& time ) const
@@ -2345,7 +2305,7 @@ bool Animation::CurvePlug::hasKey( const Animation::Time& time ) const
 
 Animation::Key *Animation::CurvePlug::getKey( float time )
 {
-	return getKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return getKey( Time( time, Time::Units::Seconds ) );
 }
 
 Animation::Key *Animation::CurvePlug::getKey( const Animation::Time& time )
@@ -2360,7 +2320,7 @@ Animation::Key *Animation::CurvePlug::getKey( const Animation::Time& time )
 
 const Animation::Key *Animation::CurvePlug::getKey( float time ) const
 {
-	return getKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return getKey( Time( time, Time::Units::Seconds ) );
 }
 
 const Animation::Key *Animation::CurvePlug::getKey( const Animation::Time& time ) const
@@ -2432,17 +2392,17 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 
 Animation::Key *Animation::CurvePlug::closestKey( float time )
 {
-	return closestKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return closestKey( Time( time, Time::Units::Seconds ) );
 }
 
 Animation::Key *Animation::CurvePlug::closestKey( const Animation::Time& time )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->closestKey( time ) );
+	return const_cast< Key* >( const_cast< const CurvePlug* >( this )->closestKey( time ) );
 }
 
 const Animation::Key *Animation::CurvePlug::closestKey( float time ) const
 {
-	return closestKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return closestKey( Time( time, Time::Units::Seconds ) );
 }
 
 const Animation::Key *Animation::CurvePlug::closestKey( const Animation::Time& time ) const
@@ -2470,22 +2430,22 @@ const Animation::Key *Animation::CurvePlug::closestKey( const Animation::Time& t
 
 Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDistance )
 {
-	return closestKey( Animation::Time( time, Animation::Time::Units::Seconds ), maxDistance );
+	return closestKey( Time( time, Time::Units::Seconds ), maxDistance );
 }
 
 Animation::Key *Animation::CurvePlug::closestKey( const Animation::Time& time, float maxDistance )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->closestKey( time, maxDistance ) );
+	return const_cast< Key* >( const_cast< const CurvePlug* >( this )->closestKey( time, maxDistance ) );
 }
 
 const Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDistance ) const
 {
-	return closestKey( Animation::Time( time, Animation::Time::Units::Seconds ), maxDistance );
+	return closestKey( Time( time, Time::Units::Seconds ), maxDistance );
 }
 
 const Animation::Key *Animation::CurvePlug::closestKey( const Animation::Time& time, float maxDistance ) const
 {
-	const Animation::Key *candidate = closestKey( time );
+	const Key *candidate = closestKey( time );
 
 	if( !candidate || ( abs( candidate->getTime() - time ) ).getSeconds() > static_cast< double >( maxDistance ) )
 	{
@@ -2497,17 +2457,17 @@ const Animation::Key *Animation::CurvePlug::closestKey( const Animation::Time& t
 
 Animation::Key *Animation::CurvePlug::previousKey( float time )
 {
-	return previousKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return previousKey( Time( time, Time::Units::Seconds ) );
 }
 
 Animation::Key *Animation::CurvePlug::previousKey( const Animation::Time& time )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->previousKey( time ) );
+	return const_cast< Key* >( const_cast< const CurvePlug* >( this )->previousKey( time ) );
 }
 
 const Animation::Key *Animation::CurvePlug::previousKey( float time ) const
 {
-	return previousKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return previousKey( Time( time, Time::Units::Seconds ) );
 }
 
 const Animation::Key *Animation::CurvePlug::previousKey( const Animation::Time& time ) const
@@ -2522,17 +2482,17 @@ const Animation::Key *Animation::CurvePlug::previousKey( const Animation::Time& 
 
 Animation::Key *Animation::CurvePlug::nextKey( float time )
 {
-	return nextKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return nextKey( Time( time, Time::Units::Seconds ) );
 }
 
 Animation::Key *Animation::CurvePlug::nextKey( const Animation::Time& time )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->nextKey( time ) );
+	return const_cast< Key* >( const_cast< const CurvePlug* >( this )->nextKey( time ) );
 }
 
 const Animation::Key *Animation::CurvePlug::nextKey( float time ) const
 {
-	return nextKey( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return nextKey( Time( time, Time::Units::Seconds ) );
 }
 
 const Animation::Key *Animation::CurvePlug::nextKey( const Animation::Time& time ) const
@@ -2601,7 +2561,7 @@ Animation::ConstKeyIterator Animation::CurvePlug::end() const
 
 float Animation::CurvePlug::evaluate( float time ) const
 {
-	return evaluate( Animation::Time( time, Animation::Time::Units::Seconds ) );
+	return evaluate( Animation::Time( time, Time::Units::Seconds ) );
 }
 
 float Animation::CurvePlug::evaluate( const Animation::Time& time ) const
@@ -2640,8 +2600,8 @@ float Animation::CurvePlug::evaluate( const Animation::Time& time ) const
 
 	return lo.getInterpolator()->evaluate(
 		lo.m_value, hi.m_value,
-		lo.getTangent( Animation::Tangent::Direction::From ),
-		hi.getTangent( Animation::Tangent::Direction::Into ), nt );
+		lo.getTangent( Tangent::Direction::From ),
+		hi.getTangent( Tangent::Direction::Into ), nt );
 }
 
 FloatPlug *Animation::CurvePlug::outPlug()
@@ -2812,7 +2772,7 @@ void Animation::hash( const ValuePlug *output, const Context *context, IECore::M
 
 	if( const CurvePlug *parent = output->parent<CurvePlug>() )
 	{
-		h.append( parent->evaluate( Animation::Time( context->getTime(), Animation::Time::Units::Seconds ) ) );
+		h.append( parent->evaluate( Time( context->getTime(), Time::Units::Seconds ) ) );
 	}
 }
 
@@ -2821,7 +2781,7 @@ void Animation::compute( ValuePlug *output, const Context *context ) const
 	if( const CurvePlug *parent = output->parent<CurvePlug>() )
 	{
 		static_cast<FloatPlug *>( output )->setValue( parent->evaluate(
-			Animation::Time( context->getTime(), Animation::Time::Units::Seconds ) ) );
+			Time( context->getTime(), Time::Units::Seconds ) ) );
 		return;
 	}
 
@@ -2861,4 +2821,92 @@ bool Animation::equivalentValues( const double a, const double b )
 		( ( delta <= std::abs( relative * a ) ) &&
 		( ( delta <= std::abs( relative * b ) ) ) ) ||
 			( delta <= absolute );
+}
+
+const char* Animation::toString( const Animation::Type type )
+{
+	switch( type )
+	{
+		case Type::Step:
+			return "Step";
+		case Type::Linear:
+			return "Linear";
+		case Type::Unknown:
+			return "Unknown";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::toString( const Animation::Time::Units time )
+{
+	switch( time )
+	{
+		case Time::Units::Seconds:
+			return "Seconds";
+		case Time::Units::Fps24:
+			return "Fps24";
+		case Time::Units::Fps25:
+			return "Fps25";
+		case Time::Units::Fps48:
+			return "Fps48";
+		case Time::Units::Fps60:
+			return "Fps60";
+		case Time::Units::Fps90:
+			return "Fps90";
+		case Time::Units::Fps120:
+			return "Fps120";
+		case Time::Units::Milli:
+			return "Milli";
+		case Time::Units::Ticks:
+			return "Ticks";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::toString( const Animation::Tangent::Space space )
+{
+	switch( space )
+	{
+		case Tangent::Space::Span:
+			return "Span";
+		case Tangent::Space::Key:
+			return "Key";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::toString( const Animation::Tangent::Direction direction )
+{
+	switch( direction )
+	{
+		case Tangent::Direction::Into:
+			return "Into";
+		case Tangent::Direction::From:
+			return "From";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::toString( const Animation::Tangent::TieMode mode )
+{
+	switch( mode )
+	{
+		case Tangent::TieMode::Manual:
+			return "Manual";
+		case Tangent::TieMode::Slope:
+			return "Slope";
+		case Tangent::TieMode::SlopeAndAccel:
+			return "SlopeAndAccel";
+		default:
+			assert( 0 );
+			return 0;
+	}
 }

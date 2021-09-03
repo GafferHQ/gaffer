@@ -137,16 +137,10 @@ void setAccelWithSlope( Animation::Tangent &t, double accel, double slope, Anima
 	t.setAccelWithSlope( accel, slope, space );
 }
 
-void setTieSlope( Animation::Key &k, bool tie )
+void setTieMode( Animation::Key &k, Animation::Tangent::TieMode mode )
 {
 	ScopedGILRelease gilRelease;
-	k.setTieSlope( tie );
-}
-
-void setTieAccel( Animation::Key &k, bool tie )
-{
-	ScopedGILRelease gilRelease;
-	k.setTieAccel( tie );
+	k.setTieMode( mode );
 }
 
 Animation::Interpolator::Factory* getInterpolatorFactory()
@@ -168,20 +162,25 @@ std::string keyRepr( const Animation::Key &k )
 {
 	// NOTE : slope may be (+/-) infinity which is represented in python as float( 'inf' ) or float( '-inf' )
 
+	const Animation::Tangent::Space space = Animation::Tangent::Space::Key;
+
 	return boost::str(
 		boost::format( "Gaffer.Animation.Key( Gaffer.Animation.Time( %d ), %.9g, \"%s\", "
-			"float( '%.9g' ), Gaffer.Animation.Tangent.Space.Key, %.9g, Gaffer.Animation.Tangent.Space.Key, "
-			"float( '%.9g' ), Gaffer.Animation.Tangent.Space.Key, %.9g, Gaffer.Animation.Tangent.Space.Key, "
-			"%s, %s )" )
+			"float( '%.9g' ), Gaffer.Animation.Tangent.Space.%s, %.9g, Gaffer.Animation.Tangent.Space.%s, "
+			"float( '%.9g' ), Gaffer.Animation.Tangent.Space.%s, %.9g, Gaffer.Animation.Tangent.Space.%s, "
+			"Gaffer.Animation.Tangent.TieMode.%s )" )
 			% k.getTime().getTicks()
 			% k.getValue()
 			% k.getInterpolator()->getName()
-			% k.getTangent( Animation::Tangent::Direction::Into ).getSlope( Animation::Tangent::Space::Key )
-			% k.getTangent( Animation::Tangent::Direction::Into ).getAccel( Animation::Tangent::Space::Key )
-			% k.getTangent( Animation::Tangent::Direction::From ).getSlope( Animation::Tangent::Space::Key )
-			% k.getTangent( Animation::Tangent::Direction::From ).getAccel( Animation::Tangent::Space::Key )
-			% ( k.getTieSlope() ? "True" : "False" )
-			% ( k.getTieAccel() ? "True" : "False" )
+			% k.getTangent( Animation::Tangent::Direction::Into ).getSlope( space )
+			% Animation::toString( space )
+			% k.getTangent( Animation::Tangent::Direction::Into ).getAccel( space )
+			% Animation::toString( space )
+			% k.getTangent( Animation::Tangent::Direction::From ).getSlope( space )
+			% Animation::toString( space )
+			% k.getTangent( Animation::Tangent::Direction::From ).getAccel( space )
+			% Animation::toString( space )
+			% Animation::toString( k.getTieMode() )
 	);
 };
 
@@ -300,7 +299,7 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 void GafferModule::bindAnimation()
 {
 
-	scope s = DependencyNodeClass<Animation>()
+	scope s = DependencyNodeClass< Animation >()
 		.def( "canAnimate", &Animation::canAnimate )
 		.staticmethod( "canAnimate" )
 		.def( "isAnimated", &Animation::isAnimated )
@@ -312,13 +311,13 @@ void GafferModule::bindAnimation()
 	;
 
 	enum_<Animation::Type>( "Type" )
-		.value( "Step", Animation::Step )
-		.value( "Linear", Animation::Linear )
-		.value( "Unknown", Animation::Unknown )
+		.value( Animation::toString( Animation::Step ), Animation::Step )
+		.value( Animation::toString( Animation::Linear ), Animation::Linear )
+		.value( Animation::toString( Animation::Unknown ), Animation::Unknown )
 	;
 
 	{
-		scope s = class_<Animation::Time>( "Time", init<>() )
+		scope s = class_< Animation::Time >( "Time", init<>() )
 			.def( init< std::int64_t >() )
 			.def( init< double, Animation::Time::Units >() )
 			.def( init< double, double >() )
@@ -350,20 +349,20 @@ void GafferModule::bindAnimation()
 			.def( self >  self )
 			;
 
-		enum_<Animation::Time::Units>( "Units" )
-			.value( "Seconds", Animation::Time::Units::Seconds )
-			.value( "Fps24", Animation::Time::Units::Fps24 )
-			.value( "Fps25", Animation::Time::Units::Fps25 )
-			.value( "Fps48", Animation::Time::Units::Fps48 )
-			.value( "Fps60", Animation::Time::Units::Fps60 )
-			.value( "Fps90", Animation::Time::Units::Fps90 )
-			.value( "Fps120", Animation::Time::Units::Fps120 )
-			.value( "Milli", Animation::Time::Units::Milli )
-			.value( "Ticks", Animation::Time::Units::Ticks );
+		enum_< Animation::Time::Units >( "Units" )
+			.value( Animation::toString( Animation::Time::Units::Seconds ), Animation::Time::Units::Seconds )
+			.value( Animation::toString( Animation::Time::Units::Fps24 ), Animation::Time::Units::Fps24 )
+			.value( Animation::toString( Animation::Time::Units::Fps25 ), Animation::Time::Units::Fps25 )
+			.value( Animation::toString( Animation::Time::Units::Fps48 ), Animation::Time::Units::Fps48 )
+			.value( Animation::toString( Animation::Time::Units::Fps60 ), Animation::Time::Units::Fps60 )
+			.value( Animation::toString( Animation::Time::Units::Fps90 ), Animation::Time::Units::Fps90 )
+			.value( Animation::toString( Animation::Time::Units::Fps120 ), Animation::Time::Units::Fps120 )
+			.value( Animation::toString( Animation::Time::Units::Milli ), Animation::Time::Units::Milli )
+			.value( Animation::toString( Animation::Time::Units::Ticks ), Animation::Time::Units::Ticks );
 	}
 
 	{
-		scope s = IECorePython::RefCountedClass<Animation::Interpolator, IECore::RefCounted>( "Interpolator" )
+		scope s = IECorePython::RefCountedClass< Animation::Interpolator, IECore::RefCounted >( "Interpolator" )
 			.def( "getName", &Animation::Interpolator::getName,
 				return_value_policy<copy_const_reference>() )
 			.def( "getHints", &Animation::Interpolator::getHints )
@@ -372,17 +371,17 @@ void GafferModule::bindAnimation()
 			.staticmethod( "getFactory" )
 			;
 
-		enum_<Animation::Interpolator::Hint>( "Hint" )
+		enum_< Animation::Interpolator::Hint >( "Hint" )
 			.value( "UseSlopeLo", Animation::Interpolator::Hint::UseSlopeLo )
 			.value( "UseSlopeHi", Animation::Interpolator::Hint::UseSlopeHi )
 			.value( "UseAccelLo", Animation::Interpolator::Hint::UseAccelLo )
 			.value( "UseAccelHi", Animation::Interpolator::Hint::UseAccelHi );
 
-		class_<Animation::Interpolator::Hints>( "Hints", no_init )
+		class_< Animation::Interpolator::Hints >( "Hints", no_init )
 			.def( "test", &Animation::Interpolator::Hints::test )
 			;
 
-		IECorePython::RefCountedClass<Animation::Interpolator::Factory, IECore::RefCounted>( "Factory" )
+		IECorePython::RefCountedClass< Animation::Interpolator::Factory, IECore::RefCounted >( "Factory" )
 			.def( "getNames", &getInterpolatorNames )
 			.def( "get",
 				(Animation::Interpolator* (Animation::Interpolator::Factory::*)( std::uint32_t )) &Animation::Interpolator::Factory::get,
@@ -396,7 +395,7 @@ void GafferModule::bindAnimation()
 	}
 
 	{
-		scope s = class_<Animation::Tangent, boost::noncopyable>( "Tangent", no_init )
+		scope s = class_< Animation::Tangent, boost::noncopyable >( "Tangent", no_init )
 			.def( "getKey", &getKey,
 				return_value_policy<IECorePython::CastToIntrusivePtr>()
 			)
@@ -417,17 +416,22 @@ void GafferModule::bindAnimation()
 			.staticmethod( "opposite" )
 			;
 
-		enum_<Animation::Tangent::Direction>( "Direction" )
-			.value( "Into", Animation::Tangent::Direction::Into )
-			.value( "From", Animation::Tangent::Direction::From );
+		enum_< Animation::Tangent::Direction >( "Direction" )
+			.value( Animation::toString( Animation::Tangent::Direction::Into ), Animation::Tangent::Direction::Into )
+			.value( Animation::toString( Animation::Tangent::Direction::From ), Animation::Tangent::Direction::From );
 
-		enum_<Animation::Tangent::Space>( "Space" )
-			.value( "Key",  Animation::Tangent::Space::Key )
-			.value( "Span", Animation::Tangent::Space::Span );
+		enum_< Animation::Tangent::Space >( "Space" )
+			.value( Animation::toString( Animation::Tangent::Space::Key ), Animation::Tangent::Space::Key )
+			.value( Animation::toString( Animation::Tangent::Space::Span ), Animation::Tangent::Space::Span );
+		
+		enum_< Animation::Tangent::TieMode >( "TieMode" )
+			.value( Animation::toString( Animation::Tangent::TieMode::Manual ), Animation::Tangent::TieMode::Manual )
+			.value( Animation::toString( Animation::Tangent::TieMode::Slope ), Animation::Tangent::TieMode::Slope )
+			.value( Animation::toString( Animation::Tangent::TieMode::SlopeAndAccel ), Animation::Tangent::TieMode::SlopeAndAccel );
 	}
 
-	IECorePython::RefCountedClass<Animation::Key, IECore::RefCounted>( "Key" )
-		.def( init<float, float, Animation::Type>(
+	IECorePython::RefCountedClass< Animation::Key, IECore::RefCounted >( "Key" )
+		.def( init< float, float, Animation::Type >(
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
@@ -435,7 +439,7 @@ void GafferModule::bindAnimation()
 				)
 			)
 		)
-		.def( init<const Animation::Time&, float, const std::string&>(
+		.def( init< const Animation::Time&, float, const std::string& >(
 				(
 					arg( "time" ) = Animation::Time(),
 					arg( "value" ) = 0.0f,
@@ -445,7 +449,8 @@ void GafferModule::bindAnimation()
 		)
 		.def( init< const Animation::Time&, float, const std::string&,
 			double, Animation::Tangent::Space, double, Animation::Tangent::Space,
-			double, Animation::Tangent::Space, double, Animation::Tangent::Space, bool, bool>() )
+			double, Animation::Tangent::Space, double, Animation::Tangent::Space,
+			Animation::Tangent::TieMode >() )
 		.def( "getFloatTime", &Animation::Key::getFloatTime )
 		.def( "getTime",
 			(Animation::Time (Animation::Key::*)() const)&Animation::Key::getTime ) // TODO : this now returns an Animation.Time ...
@@ -462,10 +467,8 @@ void GafferModule::bindAnimation()
 		.def( "getTangent",
 			(Animation::Tangent& (Animation::Key::*)( Animation::Tangent::Direction ))&Animation::Key::getTangent,
 			return_internal_reference<>() )
-		.def( "setTieSlope", &setTieSlope )
-		.def( "getTieSlope", &Animation::Key::getTieSlope )
-		.def( "setTieAccel", &setTieAccel )
-		.def( "getTieAccel", &Animation::Key::getTieAccel )
+		.def( "setTieMode", &setTieMode )
+		.def( "getTieMode", &Animation::Key::getTieMode )
 		.def( "__repr__", &keyRepr )
 		.def( self == self )
 		.def( self != self )
@@ -476,8 +479,8 @@ void GafferModule::bindAnimation()
 		)
 	;
 
-	PlugClass<Animation::CurvePlug>()
-		.def( init<const char *, Plug::Direction, unsigned>(
+	PlugClass< Animation::CurvePlug >()
+		.def( init< const char *, Plug::Direction, unsigned >(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<Animation::CurvePlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
@@ -491,8 +494,7 @@ void GafferModule::bindAnimation()
 		.def( "keyRemovedSignal", &Animation::CurvePlug::keyRemovedSignal, return_internal_reference< 1 >() )
 		.def( "keyTimeChangedSignal", &Animation::CurvePlug::keyTimeChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyValueChangedSignal", &Animation::CurvePlug::keyValueChangedSignal, return_internal_reference< 1 >() )
-		.def( "keyTieSlopeChangedSignal", &Animation::CurvePlug::keyTieSlopeChangedSignal, return_internal_reference< 1 >() )
-		.def( "keyTieAccelChangedSignal", &Animation::CurvePlug::keyTieAccelChangedSignal, return_internal_reference< 1 >() )
+		.def( "keyTieModeChangedSignal", &Animation::CurvePlug::keyTieModeChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyInterpolatorChangedSignal", &Animation::CurvePlug::keyInterpolatorChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyTangentSlopeChangedSignal", &Animation::CurvePlug::keyTangentSlopeChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyTangentAccelChangedSignal", &Animation::CurvePlug::keyTangentAccelChangedSignal, return_internal_reference< 1 >() )

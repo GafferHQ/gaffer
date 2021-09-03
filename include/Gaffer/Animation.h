@@ -147,6 +147,13 @@ class GAFFER_API Animation : public ComputeNode
 					From = 1
 				};
 
+				enum class TieMode
+				{
+					Manual = 0,
+					Slope = 1,
+					SlopeAndAccel = 2
+				};
+
 				static Direction opposite( Direction direction );
 
 				~Tangent();
@@ -310,20 +317,16 @@ class GAFFER_API Animation : public ComputeNode
 				Key( const Time& time, float value, const std::string& interpolatorName,
 					double intoSlope, Tangent::Space intoSlopeSpace, double intoAccel, Tangent::Space intoAccelSpace,
 					double fromSlope, Tangent::Space fromSlopeSpace, double fromAccel, Tangent::Space fromAccelSpace,
-					bool tieSlope, bool tieAccel );
+					Tangent::TieMode tieMode );
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 
 				Tangent& getTangent( Tangent::Direction direction );
 				const Tangent& getTangent( Tangent::Direction direction ) const;
 
-				bool getTieSlope() const;
+				Tangent::TieMode getTieMode() const;
 				/// \undoable
-				void setTieSlope( bool tie );
-
-				bool getTieAccel() const;
-				/// \undoable
-				void setTieAccel( bool tie );
+				void setTieMode( Tangent::TieMode mode );
 
 				/// \deprecated Use Time getTime() instead.
 				float getFloatTime() const;
@@ -367,8 +370,8 @@ class GAFFER_API Animation : public ComputeNode
 				friend class Tangent;
 
 				void tieSlopeAverage();
-				bool tieAccelActive( Tangent::Direction ) const;
 				bool tieSlopeActive( Tangent::Direction ) const;
+				bool tieAccelActive( Tangent::Direction ) const;
 
 				CurvePlug *m_parent;
 				Interpolator* m_interpolator;
@@ -376,8 +379,7 @@ class GAFFER_API Animation : public ComputeNode
 				Tangent m_from;
 				Time m_time;
 				float m_value;
-				bool m_tieSlope;
-				bool m_tieAccel;
+				Tangent::TieMode m_tieMode;
 
 		};
 
@@ -412,8 +414,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyRemovedSignal();
 				CurvePlugKeySignal& keyTimeChangedSignal();
 				CurvePlugKeySignal& keyValueChangedSignal();
-				CurvePlugKeySignal& keyTieSlopeChangedSignal();
-				CurvePlugKeySignal& keyTieAccelChangedSignal();
+				CurvePlugKeySignal& keyTieModeChangedSignal();
 				CurvePlugKeySignal& keyInterpolatorChangedSignal();
 				CurvePlugKeyDirectionSignal& keyTangentSlopeChangedSignal();
 				CurvePlugKeyDirectionSignal& keyTangentAccelChangedSignal();
@@ -516,8 +517,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyRemovedSignal;
 				CurvePlugKeySignal m_keyTimeChangedSignal;
 				CurvePlugKeySignal m_keyValueChangedSignal;
-				CurvePlugKeySignal m_keyTieSlopeChangedSignal;
-				CurvePlugKeySignal m_keyTieAccelChangedSignal;
+				CurvePlugKeySignal m_keyTieModeChangedSignal;
 				CurvePlugKeySignal m_keyInterpolatorChangedSignal;
 				CurvePlugKeyDirectionSignal m_keyTangentSlopeChangedSignal;
 				CurvePlugKeyDirectionSignal m_keyTangentAccelChangedSignal;
@@ -526,6 +526,13 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// Are two double precision values considered equivalent
 		static bool equivalentValues( double a, double b );
+
+		/// convert enums to strings
+		static const char* toString( Type type );
+		static const char* toString( Time::Units time );
+		static const char* toString( Tangent::Space space );
+		static const char* toString( Tangent::Direction direction );
+		static const char* toString( Tangent::TieMode mode );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 

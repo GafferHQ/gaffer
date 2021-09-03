@@ -64,6 +64,25 @@ using namespace Imath;
 
 namespace
 {
+void tieModeToBools( const Animation::Tangent::TieMode mode, bool& tieSlope, bool& tieAccel )
+{
+	tieSlope = false;
+	tieAccel = false;
+	switch( mode )
+	{
+		case Animation::Tangent::TieMode::Manual:
+			break;
+		case Animation::Tangent::TieMode::Slope:
+			tieSlope = true;
+			break;
+		case Animation::Tangent::TieMode::SlopeAndAccel:
+			tieSlope = true;
+			tieAccel = true;
+			break;
+		default:
+			break;
+	}
+}
 
 /// Aliases that define the intended use of each
 /// Gadget::Layer by the AnimationGadget components.
@@ -425,6 +444,8 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 							hints.test( Animation::Interpolator::Hint::UseSlopeLo ) ||
 							hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) )
 					{
+						bool tieSlope, tieAccel;
+						tieModeToBools( previousKey->getTieMode(), tieSlope, tieAccel );
 						const Animation::Tangent& from = previousKey->getTangent( Animation::Tangent::Direction::From );
 						const V2d fromPosKey = from.getPosition( Animation::Tangent::Space::Key, false );
 						const V2f fromPosRas = viewportGadget->worldToRasterSpace( V3f( fromPosKey.x, fromPosKey.y, 0 ) );
@@ -432,14 +453,16 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						const double fromSize = isFromHighlighted ? 4.0 : 2.0;
 						const Box2f fromBox( fromPosRas - V2f( fromSize ), fromPosRas + V2f( fromSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( fromPosRas.x, fromPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
-							previousKey->getTieSlope() ? 2.0 : 1.0, &color4 );
-						( previousKey->getTieAccel() ) ? style->renderSolidRectangle( fromBox ) : style->renderRectangle( fromBox );
+							tieSlope ? 2.0 : 1.0, &color4 );
+						( tieAccel ) ? style->renderSolidRectangle( fromBox ) : style->renderRectangle( fromBox );
 					}
 
 					if( isSelected && (
 						hints.test( Animation::Interpolator::Hint::UseSlopeHi ) ||
 						hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) )
 					{
+						bool tieSlope, tieAccel;
+						tieModeToBools( key.getTieMode(), tieSlope, tieAccel );
 						const Animation::Tangent& into = key.getTangent( Animation::Tangent::Direction::Into );
 						const V2d intoPosKey = into.getPosition( Animation::Tangent::Space::Key, false );
 						const V2f intoPosRas = viewportGadget->worldToRasterSpace( V3f( intoPosKey.x, intoPosKey.y, 0 ) );
@@ -447,8 +470,8 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						const double intoSize = isIntoHighlighted ? 4.0 : 2.0;
 						const Box2f intoBox( intoPosRas - V2f( intoSize ), intoPosRas + V2f( intoSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( intoPosRas.x, intoPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
-							key.getTieSlope() ? 2.0 : 1.0, &color4 );
-						( key.getTieAccel() ) ? style->renderSolidRectangle( intoBox ) : style->renderRectangle( intoBox );
+							tieSlope ? 2.0 : 1.0, &color4 );
+						( tieAccel ) ? style->renderSolidRectangle( intoBox ) : style->renderRectangle( intoBox );
 					}
 				}
 
@@ -629,8 +652,7 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 		os << "Frame: " << key->getTime().getReal( scriptNode->framesPerSecondPlug()->getValue() );
 		os << "<br>Value: " << key->getValue();
 		os << "<br>Interpolator: " << key->getInterpolator()->getName();
-		os << "<br>Tie Slope: " << key->getTieSlope();
-		os << "<br>Tie Accel: " << key->getTieAccel();
+		os << "<br>Tie Mode: " << Animation::toString( key->getTieMode() );
 		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )

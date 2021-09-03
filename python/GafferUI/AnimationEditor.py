@@ -333,11 +333,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# check there are selected keys
 		emptySelectedKeys = not self.__animationGadget.selectedKeys()
 
-		# tie slope state for selected keys
-		tieSlope = None if emptySelectedKeys else self.__curveEditor.keyTab().getTieSlopeForSelectedKeys()
-
-		# tie accel state for selected keys
-		tieAccel = None if emptySelectedKeys else self.__curveEditor.keyTab().getTieAccelForSelectedKeys()
+		# tie state for selected keys
+		tieMode = None if emptySelectedKeys else self.__curveEditor.keyTab().getTieModeForSelectedKeys()
 
 		# interpolator name for selected keys
 		interpolatorName = None if emptySelectedKeys else self.__curveEditor.keyTab().getInterpolatorNameForSelectedKeys()
@@ -358,53 +355,18 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 
-		menuDefinition.append(
-			"/Tie Slope/True",
-			{
-				"command" : functools.partial(
-					Gaffer.WeakMethod( self.__setSelectedKeysTieSlope ),
-					value=True
-				),
-				"active" : not emptySelectedKeys,
-				"checkBox" : tieSlope
-			}
-		)
-
-		menuDefinition.append(
-			"/Tie Slope/False",
-			{
-				"command" : functools.partial(
-					Gaffer.WeakMethod( self.__setSelectedKeysTieSlope ),
-					value=False
-				),
-				"active" : not emptySelectedKeys,
-				"checkBox" : None if tieSlope is None else not tieSlope
-			}
-		)
-
-		menuDefinition.append(
-			"/Tie Accel/True",
-			{
-				"command" : functools.partial(
-					Gaffer.WeakMethod( self.__setSelectedKeysTieAccel ),
-					value=True
-				),
-				"active" : not emptySelectedKeys,
-				"checkBox" : tieAccel
-			}
-		)
-
-		menuDefinition.append(
-			"/Tie Accel/False",
-			{
-				"command" : functools.partial(
-					Gaffer.WeakMethod( self.__setSelectedKeysTieAccel ),
-					value=False
-				),
-				"active" : not emptySelectedKeys,
-				"checkBox" : None if tieAccel is None else not tieAccel
-			}
-		)
+		for mode in sorted( Gaffer.Animation.Tangent.TieMode.values.values() ) :
+			menuDefinition.append(
+				"/Tie Mode/%s" % ( mode.name ),
+				{
+					"command" : functools.partial(
+						Gaffer.WeakMethod( self.__setSelectedKeysTieMode ),
+						tieMode=mode
+					),
+					"active" : not emptySelectedKeys,
+					"checkBox" : tieMode == mode
+				}
+			)
 
 		self.__popupMenu = GafferUI.Menu( menuDefinition, title="Selected Keys" )
 		self.__popupMenu.popup( parent = self )
@@ -417,17 +379,11 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			for key in self.__animationGadget.selectedKeys() :
 				key.setInterpolator( name )
 
-	def __setSelectedKeysTieSlope( self, unused, value ) :
+	def __setSelectedKeysTieMode( self, unused, tieMode ) :
 
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for key in self.__animationGadget.selectedKeys() :
-				key.setTieSlope( value )
-
-	def __setSelectedKeysTieAccel( self, unused, value ) :
-
-		with Gaffer.UndoScope( self.scriptNode() ) :
-			for key in self.__animationGadget.selectedKeys() :
-				key.setTieAccel( value )
+				key.setTieMode( tieMode )
 
 	def __repr__( self ) :
 
@@ -492,7 +448,7 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 class _KeyTab( GafferUI.GridContainer ) :
 
 	from collections import namedtuple
-	Connections = namedtuple( "Connections", ("frame", "value", "tieSlope", "tieAccel", "interp") )
+	Connections = namedtuple( "Connections", ("frame", "value", "tieMode", "interp") )
 
 	def __init__( self ) :
 
@@ -504,31 +460,33 @@ class _KeyTab( GafferUI.GridContainer ) :
 		# create labels
 		self.__frameLabel = GafferUI.Label( text="Frame" )
 		self.__valueLabel = GafferUI.Label( text="Value" )
-		self.__tieSlopeLabel = GafferUI.Label( text="Tie Slope" )
-		self.__tieAccelLabel = GafferUI.Label( text="Tie Accel" )
 		self.__interpLabel = GafferUI.Label( text="Interpolator" )
+		self.__tieModeLabel = GafferUI.Label( text="Tie Mode" )
 
 		# create editors
 		# NOTE: initial value type (e.g. int or float) determines validated value type of widget
 		self.__frameEditor = GafferUI.NumericWidget( value=int(0) )
 		self.__valueEditor = GafferUI.NumericWidget( value=float(0) )
 		self.__interpEditor = GafferUI.MenuButton()
-		self.__tieSlopeEditor = GafferUI.BoolWidget()
-		self.__tieAccelEditor = GafferUI.BoolWidget()
+		self.__tieModeEditor = GafferUI.MenuButton()
 
 		# build interpolator menu
-		menuDefinition = IECore.MenuDefinition()
+		im = IECore.MenuDefinition()
 		for name in Gaffer.Animation.Interpolator.getFactory().getNames() :
-			menuDefinition.append( "%s" % ( name ), {
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setKeyInterpolator ), name=name ),
+			im.append( "%s" % ( name ), {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setInterpolator ), name=name ),
 				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForInterpolatorName ), name=name ) } )
-		self.__interpEditor.setMenu( GafferUI.Menu( menuDefinition ) )
+		self.__interpEditor.setMenu( GafferUI.Menu( im ) )
+
+		# build tie mode menu
+		tm = IECore.MenuDefinition()
+		for mode in sorted( Gaffer.Animation.Tangent.TieMode.values.values() ) :
+			tm.append( "%s" % ( mode.name ), {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setTieMode ), mode=mode ),
+				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForTieMode ), mode=mode ) } )
+		self.__tieModeEditor.setMenu( GafferUI.Menu( tm ) )
 
 		# setup editor connections
-		self.__tieSlopeConnection = self.__tieSlopeEditor.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__setTieSlope ), scoped = False )
-		self.__tieAccelConnection = self.__tieAccelEditor.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__setTieAccel ), scoped = False )
 		self.__frameConnection = self.__frameEditor.valueChangedSignal().connect(
 			Gaffer.WeakMethod( self.__setFrame ), scoped = False )
 		self.__valueConnection = self.__valueEditor.valueChangedSignal().connect(
@@ -541,10 +499,8 @@ class _KeyTab( GafferUI.GridContainer ) :
 		self.addChild( self.__valueEditor, ( 1, 1 ) )
 		self.addChild( self.__interpLabel, ( 0, 2 ) )
 		self.addChild( self.__interpEditor, ( 1, 2 ) )
-		self.addChild( self.__tieSlopeLabel, ( 0, 3 ) )
-		self.addChild( self.__tieSlopeEditor, ( 1, 3 ) )
-		self.addChild( self.__tieAccelLabel, ( 0, 4 ) )
-		self.addChild( self.__tieAccelEditor, ( 1, 4 ) )
+		self.addChild( self.__tieModeLabel, ( 0, 3 ) )
+		self.addChild( self.__tieModeEditor, ( 1, 3 ) )
 
 		# curve connections
 		self.__connections = {}
@@ -560,8 +516,7 @@ class _KeyTab( GafferUI.GridContainer ) :
 			self.__connections[ curve ] = _KeyTab.Connections(
 				frame = curve.keyTimeChangedSignal().connect( Gaffer.WeakMethod( self.__keyFrameChanged ), scoped = False ),
 				value = curve.keyValueChangedSignal().connect( Gaffer.WeakMethod( self.__keyValueChanged ), scoped = False ),
-				tieSlope = curve.keyTieSlopeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTieSlopeChanged ), scoped = False ),
-				tieAccel = curve.keyTieAccelChangedSignal().connect( Gaffer.WeakMethod( self.__keyTieAccelChanged ), scoped = False ),
+				tieMode = curve.keyTieModeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTieModeChanged ), scoped = False ),
 				interp = curve.keyInterpolatorChangedSignal().connect( Gaffer.WeakMethod( self.__keyInterpolatorChanged ), scoped = False ) )
 
 	def disconnect( self, curve ) :
@@ -573,37 +528,22 @@ class _KeyTab( GafferUI.GridContainer ) :
 	def update( self ) :
 		self.__updateKeyFrame()
 		self.__updateKeyValue()
-		self.__updateKeyTieSlope()
-		self.__updateKeyTieAccel()
 		self.__updateKeyInterpolator()
+		self.__updateKeyTieMode()
 
-	def getTieSlopeForSelectedKeys( self ) :
-		# if multiple keys selected check if all have same tie slope state otherwise return Indeterminate state
+	def getTieModeForSelectedKeys( self ) :
+		# if multiple keys selected check if all have same tie mode state otherwise return Indeterminate state
 		selectedKeys = self.parent().curveGadget().selectedKeys()
-		state = None
+		mode = None
 		if len( selectedKeys ) > 1 :
-			state = selectedKeys[ 0 ].getTieSlope()
+			mode = selectedKeys[ 0 ].getTieMode()
 			for key in selectedKeys[1:] :
-				if state != key.getTieSlope() :
-					state = None
+				if mode != key.getTieMode() :
+					mode = None
 					break
 		elif selectedKeys :
-			state = selectedKeys[ 0 ].getTieSlope()
-		return state
-
-	def getTieAccelForSelectedKeys( self ) :
-		# if multiple keys selected check if all have same tie accel state otherwise return Indeterminate state
-		selectedKeys = self.parent().curveGadget().selectedKeys()
-		state = None
-		if len( selectedKeys ) > 1 :
-			state = selectedKeys[ 0 ].getTieAccel()
-			for key in selectedKeys[1:] :
-				if state != key.getTieAccel() :
-					state = None
-					break
-		elif selectedKeys :
-			state = selectedKeys[ 0 ].getTieAccel()
-		return state
+			mode = selectedKeys[ 0 ].getTieMode()
+		return mode
 
 	def getInterpolatorNameForSelectedKeys( self ) :
 		# if multiple keys selected check if all have same interpolator otherwise return None
@@ -627,13 +567,9 @@ class _KeyTab( GafferUI.GridContainer ) :
 		if self.parent().curveGadget().isSelectedKey( key ) :
 			self.__updateKeyValue()
 
-	def __keyTieSlopeChanged( self, curve, key ) :
+	def __keyTieModeChanged( self, curve, key ) :
 		if self.parent().curveGadget().isSelectedKey( key ) :
-			self.__updateKeyTieSlope()
-
-	def __keyTieAccelChanged( self, curve, key ) :
-		if self.parent().curveGadget().isSelectedKey( key ) :
-			self.__updateKeyTieAccel()
+			self.__updateKeyTieMode()
 
 	def __keyInterpolatorChanged( self, curve, key ) :
 		if self.parent().curveGadget().isSelectedKey( key ) :
@@ -697,23 +633,13 @@ class _KeyTab( GafferUI.GridContainer ) :
 		# set disabled when no selected keys
 		self.__valueEditor.setEnabled( bool( selectedKeys ) )
 
-	def __updateKeyTieSlope( self ) :
+	def __updateKeyTieMode( self ) :
 
-		state = self.getTieSlopeForSelectedKeys()
-		with Gaffer.BlockedConnection( self.__tieSlopeConnection ) :
-			self.__tieSlopeEditor.setState( GafferUI.BoolWidget.State.Indeterminate if state is None else state )
-
-		# set disabled when no selected keys
-		self.__tieSlopeEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
-
-	def __updateKeyTieAccel( self ) :
-
-		state = self.getTieAccelForSelectedKeys()
-		with Gaffer.BlockedConnection( self.__tieAccelConnection ) :
-			self.__tieAccelEditor.setState( GafferUI.BoolWidget.State.Indeterminate if state is None else state )
+		mode = self.getTieModeForSelectedKeys()
+		self.__tieModeEditor.setText( "---" if mode is None else mode.name )
 
 		# set disabled when no selected keys
-		self.__tieAccelEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
+		self.__tieModeEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
 
 	def __updateKeyInterpolator( self ) :
 
@@ -723,7 +649,7 @@ class _KeyTab( GafferUI.GridContainer ) :
 		# set disabled when no selected keys
 		self.__interpEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
 
-	def __setKeyInterpolator( self, unused, name ) :
+	def __setInterpolator( self, unused, name ) :
 
 		# set interpolator for all selected keys
 		selectedKeys = self.parent().curveGadget().selectedKeys()
@@ -734,33 +660,16 @@ class _KeyTab( GafferUI.GridContainer ) :
 						key.setInterpolator( name )
 		self.__interpEditor.setText( name )
 
-	def __setTieSlope( self, unused ) :
+	def __setTieMode( self, unused, mode ) :
 
-		# set tie slope for all selected keys
-		value = self.__tieSlopeEditor.getState()
-		if value != GafferUI.BoolWidget.State.Indeterminate :
-			selectedKeys = self.parent().curveGadget().selectedKeys()
-			if selectedKeys :
-				with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ) ) :
-					for key in selectedKeys :
-						with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tieSlope ) :
-							key.setTieSlope( value )
-			# ensure that user cannot choose Indeterminate state
-			self.__tieSlopeEditor._qtWidget().setTristate( False )
-
-	def __setTieAccel( self, unused ) :
-
-		# set tie accel for all selected keys
-		value = self.__tieAccelEditor.getState()
-		if value != GafferUI.BoolWidget.State.Indeterminate :
-			selectedKeys = self.parent().curveGadget().selectedKeys()
-			if selectedKeys :
-				with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ) ) :
-					for key in selectedKeys :
-						with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tieAccel ) :
-							key.setTieAccel( value )
-			# ensure that user cannot choose Indeterminate state
-			self.__tieSlopeEditor._qtWidget().setTristate( False )
+		# set interpolator for all selected keys
+		selectedKeys = self.parent().curveGadget().selectedKeys()
+		if selectedKeys :
+			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ) ) :
+				for key in selectedKeys :
+					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tieMode ) :
+						key.setTieMode( mode )
+		self.__tieModeEditor.setText( mode.name )
 
 	def __setFrame( self, widget, reason ) :
 
@@ -822,8 +731,14 @@ class _KeyTab( GafferUI.GridContainer ) :
 	def __checkBoxStateForInterpolatorName( self, name ) :
 
 		# check if name equals common name of selected keys
-		interpolatorName = self.getInterpolatorNameForSelectedKeys()
-		return None if interpolatorName is None else interpolatorName == name
+		commonName = self.getInterpolatorNameForSelectedKeys()
+		return None if commonName is None else commonName == name
+
+	def __checkBoxStateForTieMode( self, mode ) :
+
+		# check if tie mode equals common tie mode of selected keys
+		commonMode = self.getTieModeForSelectedKeys()
+		return None if commonMode is None else commonMode == mode
 
 # Private implementation - tangent tab
 class _TangentTab( GafferUI.GridContainer ) :
@@ -908,8 +823,7 @@ class _TangentTab( GafferUI.GridContainer ) :
 			del self.__connections[ curve ]
 
 	def update( self ) :
-		for value in Gaffer.Animation.Tangent.Direction.values :
-			direction = Gaffer.Animation.Tangent.Direction( value )
+		for direction in Gaffer.Animation.Tangent.Direction.names.values() :
 			self.__updateTangentAccel( direction )
 			self.__updateTangentSlope( direction )
 			#self.__updateTangentAutoMode( direction )
@@ -1017,8 +931,7 @@ class _TangentTab( GafferUI.GridContainer ) :
 			widget.clearUndo()
 
 		# ensure editors are up to date
-		for value in Gaffer.Animation.Tangent.Direction.values :
-			direction = Gaffer.Animation.Tangent.Direction( value )
+		for direction in Gaffer.Animation.Tangent.Direction.names.values() :
 			self.__updateTangentSlope( direction )
 			self.__updateTangentAccel( direction )
 
@@ -1048,8 +961,7 @@ class _TangentTab( GafferUI.GridContainer ) :
 			widget.clearUndo()
 
 		# ensure editors are up to date
-		for value in Gaffer.Animation.Tangent.Direction.values :
-			direction = Gaffer.Animation.Tangent.Direction( value )
+		for direction in Gaffer.Animation.Tangent.Direction.names.values() :
 			self.__updateTangentAccel( direction )
 
 # Private implementation - curve tab
@@ -1079,8 +991,7 @@ class _CurveTab( GafferUI.GridContainer ) :
 
 	def update( self ) :
 		self.__updateColor()
-		for value in Gaffer.Animation.Tangent.Direction.values :
-			direction = Gaffer.Animation.Tangent.Direction( value )
+		for direction in Gaffer.Animation.Tangent.Direction.names.values() :
 			self.__updateExtrapolator( direction )
 
 	def __colorChanged( self, curve ) :
