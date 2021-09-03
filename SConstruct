@@ -637,13 +637,13 @@ basePythonEnv = baseLibEnv.Clone()
 
 basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
 	[ "python", "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
-	env=commandEnv["ENV"]
+	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
 basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
 basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
 	[ "python", "-c", "import sysconfig; print( sysconfig.get_config_var( 'abiflags' ) or '' )" ],
-	env=commandEnv["ENV"]
+	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
 # if BOOST_PYTHON_LIB_SUFFIX is provided, use it
