@@ -234,6 +234,7 @@ def __defaultCellMetadata( plug, key ) :
 
 for key in [
 	"spreadsheet:columnLabel",
+	"spreadsheet:columnWidth",
 	"plugValueWidget:type",
 	"presetsPlugValueWidget:allowCustom",
 	"ui:scene:acceptsSetName",
