@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.6.0)
+========
+
+Fixes
+-----
+
+- Edit menu : Stopped the <kbd>Backspace</kbd> hotkey from deleting nodes when the keyboard focus is not in a GraphEditor.
+
 0.60.6.0 (relative to 0.60.5.0)
 ========
 

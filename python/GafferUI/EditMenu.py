@@ -44,6 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtWidgets
+
 def appendDefinitions( menuDefinition, prefix="" ) :
 
 	menuDefinition.append( prefix + "/Undo", { "command" : undo, "shortCut" : "Ctrl+Z", "active" : __undoAvailable } )
@@ -194,6 +196,20 @@ def paste( menu ) :
 ## A function suitable as the command for an Edit/Delete menu item. It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
 def delete( menu ) :
+
+	focusWidget = QtWidgets.QApplication.focusWidget()
+	if focusWidget is not None :
+		focusWidget = GafferUI.Widget._owner( focusWidget )
+		if isinstance( focusWidget, GafferUI.Editor ) :
+			editor = focusWidget
+		else :
+			editor = focusWidget.ancestor( GafferUI.Editor )
+		if editor is not None and not isinstance( editor, GafferUI.GraphEditor ) :
+			# Don't delete unless invoked directly from the menu, or via the
+			# shortcut when a GraphEditor has focus. This avoids unexpected
+			# deletions when the focus is in other editors that don't handle
+			# <kbd>Delete</kbd> themselves.
+			return
 
 	s = scope( menu )
 	with Gaffer.UndoScope( s.script ) :
