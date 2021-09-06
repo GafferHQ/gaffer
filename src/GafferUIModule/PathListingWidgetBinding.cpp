@@ -1008,6 +1008,7 @@ void setColumns( uint64_t treeViewAddress, object pythonColumns )
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 	std::vector<ColumnPtr> columns;
 	boost::python::container_utils::extend_container( columns, pythonColumns );
+	IECorePython::ScopedGILRelease gilRelease;
 	model->setColumns( columns );
 }
 
@@ -1028,6 +1029,7 @@ void updateModel( uint64_t treeViewAddress, Gaffer::PathPtr path )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	IECorePython::ScopedGILRelease gilRelease;
 	if( !model )
 	{
 		model = new PathModel( treeView );
@@ -1040,6 +1042,7 @@ void setFlat( uint64_t treeViewAddress, bool flat )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	IECorePython::ScopedGILRelease gilRelease;
 	model->setFlat( flat );
 }
 

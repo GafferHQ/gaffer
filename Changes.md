@@ -24,7 +24,9 @@ Improvements
 Fixes
 -----
 
-- PathListingWidget : Fixed subtle bugs in the underlying Qt model, although they haven't been observed to cause problems in practice.
+- PathListingWidget :
+  - Fixed subtle bugs in the underlying Qt model, although they haven't been observed to cause problems in practice.
+  - Fixed potential hangs when displaying Paths which launch threaded computes.
 - Animation :
   - Fixed bug in `Key.setType()`. Previously it modified the value instead of the type.
   - Fixed crash when dragging multiple keys around in editor.
