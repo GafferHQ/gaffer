@@ -1,4 +1,4 @@
-0.60.x.x (relative to 0.60.5.0)
+0.60.6.0 (relative to 0.60.5.0)
 ========
 
 Improvements
@@ -11,7 +11,7 @@ Improvements
 Fixes
 -----
 
-- Fix crash that could be triggered by exceptions being thrown during parallel evaluation.  This could potentially happen while rendering Instancers where some locations were invalid.
+- Fixed crash that could be triggered by exceptions being thrown during parallel evaluation. This could potentially happen while rendering Instancers where some locations were invalid.
 
 0.60.5.0 (relative to 0.60.4.0)
 ========
