@@ -39,6 +39,8 @@
 
 #include "Gaffer/Metadata.h"
 
+#include "IECoreScene/ShaderNetwork.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -63,6 +65,7 @@ ShaderAssignment::ShaderAssignment( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShaderPlug( "shader" ) );
+	addChild( new StringPlug( "label" ) );
 }
 
 ShaderAssignment::~ShaderAssignment()
@@ -79,9 +82,19 @@ const GafferScene::ShaderPlug *ShaderAssignment::shaderPlug() const
 	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *ShaderAssignment::labelPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *ShaderAssignment::labelPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 bool ShaderAssignment::affectsProcessedAttributes( const Gaffer::Plug *input ) const
 {
-	return AttributeProcessor::affectsProcessedAttributes( input ) || input == shaderPlug();
+	return AttributeProcessor::affectsProcessedAttributes( input ) || input == shaderPlug() || input == labelPlug();
 }
 
 void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -89,6 +102,7 @@ void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaf
 	AttributeProcessor::hashProcessedAttributes( path, context, h );
 	ScenePlug::GlobalScope globalScope( context );
 	h.append( shaderPlug()->attributesHash() );
+	labelPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const
@@ -100,6 +114,8 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 	{
 		return inputAttributes;
 	}
+
+	std::string labelOverride = labelPlug()->getValue();
 
 	CompoundObjectPtr result = new CompoundObject;
 	// Since we're not going to modify any existing members (only add new ones),
@@ -147,6 +163,20 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 		{
 			name = g_oslTarget;
 		}
+
+		if( const auto *network = runTimeCast<IECoreScene::ShaderNetwork>( attribute.second.get() ) )
+		{
+			if( !labelOverride.empty() )
+			{
+				IECoreScene::ShaderNetworkPtr renamedNetwork = network->copy();
+				IECoreScene::ShaderPtr renamedOutput = network->outputShader()->copy();
+				renamedOutput->blindData()->writable()["label"] = new IECore::StringData( labelOverride );
+				renamedNetwork->setShader( network->getOutput().shader, std::move( renamedOutput ) );
+				result->members()[name] = renamedNetwork;
+				continue;
+			}
+		}
+
 		result->members()[name] = attribute.second;
 	}
 

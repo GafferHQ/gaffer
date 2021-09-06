@@ -5,6 +5,8 @@ Improvements
 ------------
 
 - Viewer : Added <kbd>PgDn</kbd> and <kbd>PgUp</kbd> hotkeys for switching to the previous and next image layer respectively.
+- Shader : Added "label" blindData which should be used in preference to "gaffer:nodeName" blindData.
+- ShaderAssignment : Added `label` plug to optionally override the shader's "label" blindData.
 
 Fixes
 -----
