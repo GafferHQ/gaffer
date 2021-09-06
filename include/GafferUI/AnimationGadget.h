@@ -176,7 +176,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		std::map<const Gaffer::Animation::Key*, std::pair<Gaffer::Animation::Time, float> > m_originalKeyValues;
 
 		std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Tangent::Direction> m_dragTangent;
-		double m_dragTangentOriginalSlope;
+		double m_dragTangentOriginalAngle;
 		double m_dragTangentOriginalWeight;
 
 		Imath::V2f m_dragStartPosition;

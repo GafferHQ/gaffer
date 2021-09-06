@@ -43,6 +43,7 @@
 #include "OpenEXR/ImathFun.h"
 
 #include "boost/bind.hpp"
+#include "boost/math/constants/constants.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -58,6 +59,9 @@ using namespace Gaffer;
 
 namespace
 {
+	const double defaultSlope = 0.0;
+	const double defaultLength = ( 1.0 / 3.0 );
+
 	double maxLength( const double slope )
 	{
 		// NOTE : s = y/x
@@ -240,8 +244,8 @@ namespace
 	{
 		InterpolatorCubic()
 		: Gaffer::Animation::Interpolator( "Cubic", Gaffer::Animation::Interpolator::Hints(
-			Gaffer::Animation::Interpolator::Hint::UseSlopeLo ) |
-			Gaffer::Animation::Interpolator::Hint::UseSlopeHi )
+			Gaffer::Animation::Interpolator::Hint::UseAngleLo ) |
+			Gaffer::Animation::Interpolator::Hint::UseAngleHi )
 		{}
 
 		double evaluate(
@@ -271,7 +275,7 @@ namespace
 
 			const double v = std::fma( time, std::fma( time, std::fma( time,         a,     b ), c ), d );
 			const double s =                 std::fma( time, std::fma( time, a + a + a, b + b ), c );
-			const double l = defaultWeight();
+			const double l = ( 1.0 / 3.0 );
 
 			const Gaffer::Animation::Tangent::Space space = Gaffer::Animation::Tangent::Space::Span;
 
@@ -322,8 +326,8 @@ namespace
 	{
 		InterpolatorBezier()
 		: Gaffer::Animation::Interpolator( "Bezier", Gaffer::Animation::Interpolator::Hints(
-			Gaffer::Animation::Interpolator::Hint::UseSlopeLo ) |
-			Gaffer::Animation::Interpolator::Hint::UseSlopeHi   |
+			Gaffer::Animation::Interpolator::Hint::UseAngleLo ) |
+			Gaffer::Animation::Interpolator::Hint::UseAngleHi   |
 			Gaffer::Animation::Interpolator::Hint::UseWeightLo   |
 			Gaffer::Animation::Interpolator::Hint::UseWeightHi )
 		{}
@@ -778,12 +782,9 @@ Animation::Interpolator::Factory& Animation::Interpolator::getFactory()
 	return *factory;
 }
 
-Animation::Interpolator::Interpolator( const std::string& name, const Hints hints,
-	const double defaultSlope, const double defaultWeight )
+Animation::Interpolator::Interpolator( const std::string& name, const Hints hints )
 : m_name( name )
 , m_hints( hints )
-, m_defaultSlope( defaultSlope )
-, m_defaultWeight( defaultWeight )
 {}
 
 Animation::Interpolator::~Interpolator()
@@ -797,16 +798,6 @@ const std::string& Animation::Interpolator::getName() const
 Animation::Interpolator::Hints Animation::Interpolator::getHints() const
 {
 	return m_hints;
-}
-
-double Animation::Interpolator::defaultSlope() const
-{
-	return m_defaultSlope;
-}
-
-double Animation::Interpolator::defaultWeight() const
-{
-	return m_defaultWeight;
 }
 
 double Animation::Interpolator::evaluate(
@@ -832,16 +823,6 @@ void Animation::Interpolator::bisect(
 Animation::Tangent::Direction Animation::Tangent::opposite( const Animation::Tangent::Direction direction )
 {
 	return static_cast< Direction >( ( static_cast< int >( direction ) + 1 ) % 2 );
-}
-
-double Animation::Tangent::defaultSlope()
-{
-	return 0.0;
-}
-
-double Animation::Tangent::defaultWeight()
-{
-	return ( 1.0 / 3.0 );
 }
 
 Animation::Tangent::Tangent( Animation::Key& key, const Animation::Tangent::Direction direction,
@@ -876,7 +857,7 @@ Animation::Tangent::Direction Animation::Tangent::getDirection() const
 	return m_direction;
 }
 
-void Animation::Tangent::convertPosition( Imath::V2d& position, const Animation::Tangent::Space space, const bool relative ) const
+void Animation::Tangent::positionToRelativeSpanSpace( Imath::V2d& position, const Animation::Tangent::Space space, const bool relative ) const
 {
 	// convert from absolute position
 
@@ -910,11 +891,44 @@ void Animation::Tangent::convertPosition( Imath::V2d& position, const Animation:
 		: std::max( position.x, 0.0 );
 }
 
+double Animation::Tangent::angleToSlope( double angle ) const
+{
+	// NOTE : angle should be in range [-90,90] degrees
+
+	if( angle >  90.0 ) angle =  90.0;
+	if( angle < -90.0 ) angle = -90.0;
+
+	// flip sign of angle for into tangent direction
+
+	if( m_direction == Direction::Into )
+	{
+		angle = -angle;
+	}
+
+	// convert angle to radians and compute slope
+
+	return std::tan( angle * ( boost::math::constants::pi< double >() / 180.0 ) );
+}
+
+double Animation::Tangent::angleFromSlope( double slope ) const
+{
+	double angle = std::atan( slope ) * ( 180.0 / boost::math::constants::pi< double >() );
+
+	// flip sign of angle for into tangent direction
+
+	if( m_direction == Direction::Into )
+	{
+		angle = -angle;
+	}
+
+	return angle;
+}
+
 void Animation::Tangent::setPosition( Imath::V2d position, const Animation::Tangent::Space space, const bool relative )
 {
 	// convert position to relative span space
 
-	convertPosition( position, space, relative );
+	positionToRelativeSpanSpace( position, space, relative );
 
 	// set slope and length
 	//
@@ -931,11 +945,15 @@ void Animation::Tangent::setPosition( Imath::V2d position, const Animation::Tang
 	setLengthSpace( space );
 }
 
-void Animation::Tangent::setPositionWithSlope( Imath::V2d position, const double slope, const Animation::Tangent::Space space, const bool relative )
+void Animation::Tangent::setPositionWithAngle( Imath::V2d position, const double angle, const Animation::Tangent::Space space, const bool relative )
 {
 	// convert position to relative span space
 
-	convertPosition( position, space, relative );
+	positionToRelativeSpanSpace( position, space, relative );
+
+	// convert angle to span space slope
+
+	const double slope = angleToSlope( angle );
 
 	// constrain position to quadrant based on slope and direction
 
@@ -952,9 +970,9 @@ void Animation::Tangent::setPositionWithSlope( Imath::V2d position, const double
 	// NOTE : use guards to prevent update of slope/length space.
 
 	{
-		Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Span );
+		Private::ScopedValue< Space > ssGuard( m_slopeSpace, Space::Key );
 		Private::ScopedValue< Space > asGuard( m_lengthSpace, Space::Span );
-		setSlope( slope, Space::Span );
+		setSlope( slope, Space::Key );
 		setLength( position.length(), Space::Span );
 	}
 
@@ -965,7 +983,7 @@ void Animation::Tangent::setPositionWithWeight( Imath::V2d position, const doubl
 {
 	// convert position to relative span space
 
-	convertPosition( position, space, relative );
+	positionToRelativeSpanSpace( position, space, relative );
 
 	// set slope and length
 	//
@@ -1091,6 +1109,23 @@ void Animation::Tangent::setSlopeSpace( const Animation::Tangent::Space space )
 	}
 }
 
+double Animation::Tangent::getAngle() const
+{
+	return angleFromSlope( getSlope( Space::Key ) );
+}
+
+void Animation::Tangent::setAngle( const double angle )
+{
+	setSlope( angleToSlope( angle ), Space::Key );
+}
+
+void Animation::Tangent::setAngleWithWeight( const double angle, const double weight )
+{
+	Private::ScopedValue< Space > asGuard( m_lengthSpace, Space::Span );
+	setAngle( angle );
+	setWeight( weight );
+}
+
 void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space space )
 {
 	// convert to span space
@@ -1131,7 +1166,7 @@ void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space
 				m_slope = slope;
 				m_length = length;
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
-				key->m_parent->m_keyTangentSlopeChangedSignal( key->m_parent, key.get(), m_direction );
+				key->m_parent->m_keyTangentAngleChangedSignal( key->m_parent, key.get(), m_direction );
 				key->m_parent->m_keyTangentWeightChangedSignal( key->m_parent, key.get(), m_direction );
 			},
 			// Undo
@@ -1139,7 +1174,7 @@ void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space
 				m_slope = ps;
 				m_length = pl;
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
-				key->m_parent->m_keyTangentSlopeChangedSignal( key->m_parent, key.get(), m_direction );
+				key->m_parent->m_keyTangentAngleChangedSignal( key->m_parent, key.get(), m_direction );
 				key->m_parent->m_keyTangentWeightChangedSignal( key->m_parent, key.get(), m_direction );
 			}
 		);
@@ -1150,22 +1185,15 @@ void Animation::Tangent::setSlope( double slope, const Animation::Tangent::Space
 		m_length = length;
 	}
 
-	// tie slope of opposite tangent
+	// tie angle of opposite tangent
 
-	if( m_key->tieSlopeActive( opposite( m_direction ) ) )
+	if( m_key->tieAngleActive( opposite( m_direction ) ) )
 	{
 		Tangent& ot = m_key->getTangent( opposite( m_direction ) );
 		Private::ScopedValue< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
 		Private::ScopedValue< Space > ssGuard( ot.m_slopeSpace, Space::Key );
 		ot.setSlope( getSlope( Space::Key ), Space::Key );
 	}
-}
-
-void Animation::Tangent::setSlopeWithWeight( const double slope, const double weight, const Animation::Tangent::Space space )
-{
-	Private::ScopedValue< Space > asGuard( m_lengthSpace, Space::Span );
-	setSlope( slope, space );
-	setWeight( weight );
 }
 
 double Animation::Tangent::getSlope( const Animation::Tangent::Space space ) const
@@ -1175,7 +1203,7 @@ double Animation::Tangent::getSlope( const Animation::Tangent::Space space ) con
 	return ( ( space == Space::Key ) && ( m_dt != 0.0 ) ) ? slopeToKeySpace( m_slope, m_dt ) : m_slope;
 }
 
-bool Animation::Tangent::slopeIsUsed() const
+bool Animation::Tangent::angleIsUsed() const
 {
 	assert( m_key );
 
@@ -1191,10 +1219,10 @@ bool Animation::Tangent::slopeIsUsed() const
 	if(
 		( ( m_direction == Direction::From ) && (
 			( m_key->m_parent->finalKey() == m_key ) ||
-			( m_key->m_interpolator->getHints().test( Interpolator::Hint::UseSlopeLo ) == false ) ) ) ||
+			( m_key->m_interpolator->getHints().test( Interpolator::Hint::UseAngleLo ) == false ) ) ) ||
 		( ( m_direction == Direction::Into ) && (
 			( m_key->m_parent->firstKey() == m_key ) ||
-			( m_key->prevKey()->m_interpolator->getHints().test( Interpolator::Hint::UseSlopeHi ) == false ) ) ) )
+			( m_key->prevKey()->m_interpolator->getHints().test( Interpolator::Hint::UseAngleHi ) == false ) ) ) )
 	{
 		return false;
 	}
@@ -1442,7 +1470,7 @@ void Animation::Tangent::update()
 			// NOTE : no need to signal slope change as it is not changing in key space
 			m_slope *= ( dt / m_dt );
 #			elif AUTO_MODE == AUTO_MODE_SIMPLE
-			// TODO : average slopes in key space if tie slope enabled
+			// TODO : average slopes in key space if tie angle enabled
 #			endif
 			m_dt = dt;
 		}
@@ -1460,25 +1488,21 @@ void Animation::Tangent::update()
 Animation::Key::Key( const float time, const float value, const Animation::Type type )
 : m_parent( nullptr )
 , m_interpolator( getInterpolatorForType( type ) )
-, m_into( *this, Tangent::Direction::Into,
-	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultWeight(), Tangent::Space::Span )
-, m_from( *this, Tangent::Direction::From,
-	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultWeight(), Tangent::Space::Span )
+, m_into( *this, Tangent::Direction::Into, defaultSlope, Tangent::Space::Span, defaultLength, Tangent::Space::Span )
+, m_from( *this, Tangent::Direction::From, defaultSlope, Tangent::Space::Span, defaultLength, Tangent::Space::Span )
 , m_time( time, Time::Units::Seconds )
 , m_value( value )
-, m_tieMode( Tangent::TieMode::SlopeAndWeight )
+, m_tieMode( Tangent::TieMode::AngleAndWeight )
 {}
 
 Animation::Key::Key( const Animation::Time& time, const float value, const std::string& interpolatorName )
 : m_parent( nullptr )
 , m_interpolator( Interpolator::getFactory().get( interpolatorName ) )
-, m_into( *this, Tangent::Direction::Into,
-	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultWeight(), Tangent::Space::Span )
-, m_from( *this, Tangent::Direction::From,
-	Tangent::defaultSlope(), Tangent::Space::Span, Tangent::defaultWeight(), Tangent::Space::Span )
+, m_into( *this, Tangent::Direction::Into, defaultSlope, Tangent::Space::Span, defaultLength, Tangent::Space::Span )
+, m_from( *this, Tangent::Direction::From, defaultSlope, Tangent::Space::Span, defaultLength, Tangent::Space::Span )
 , m_time( time )
 , m_value( value )
-, m_tieMode( Tangent::TieMode::SlopeAndWeight )
+, m_tieMode( Tangent::TieMode::AngleAndWeight )
 {}
 
 Animation::Key::Key( const Animation::Time& time, const float value, const std::string& interpolatorName,
@@ -1546,7 +1570,7 @@ void Animation::Key::setTieMode( const Animation::Tangent::TieMode tieMode )
 		m_tieMode = tieMode;
 	}
 
-	tieSlopeAverage();
+	tieAngleAverage();
 }
 
 float Animation::Key::getFloatTime() const
@@ -1635,21 +1659,21 @@ void Animation::Key::setTime( const Animation::Time& time )
 		{
 			const Interpolator::Hints hints = kp->m_interpolator->getHints();
 
-			if( ! hints.test( Interpolator::Hint::UseSlopeLo ) )
+			if( ! hints.test( Interpolator::Hint::UseAngleLo ) )
 			{
-				m_into.setSlope( kp->m_interpolator->defaultSlope(), Tangent::Space::Span );
+				m_into.setSlope( defaultSlope, Tangent::Space::Span );
 			}
 
 			if( ! hints.test( Interpolator::Hint::UseWeightLo ) )
 			{
-				m_into.setLength( kp->m_interpolator->defaultWeight(), Tangent::Space::Span );
+				m_into.setLength( defaultLength, Tangent::Space::Span );
 			}
 
-			// NOTE : update previous final key tie slope as final key from tangent not valid
+			// NOTE : update previous final key tie angle as final key from tangent not valid
 			//        due to zero time dt. the into tangent may have been manipulated assume
 			//        user wants to keep into tangent as is so just copy its slope to from tangent
 
-			if( key.get() == m_parent->finalKey() && kp->tieSlopeActive( Tangent::Direction::From ) )
+			if( key.get() == m_parent->finalKey() && kp->tieAngleActive( Tangent::Direction::From ) )
 			{
 				Private::ScopedValue< Tangent::TieMode > guard( kp->m_tieMode, Tangent::TieMode::Manual );
 				kp->m_from.setSlope( kp->m_into.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
@@ -1660,21 +1684,21 @@ void Animation::Key::setTime( const Animation::Time& time )
 		{
 			const Interpolator::Hints hints = m_interpolator->getHints();
 
-			if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
+			if( ! hints.test( Interpolator::Hint::UseAngleHi ) )
 			{
-				kn->m_into.setSlope( kn->m_interpolator->defaultSlope(), Tangent::Space::Span );
+				kn->m_into.setSlope( defaultSlope, Tangent::Space::Span );
 			}
 
 			if( ! hints.test( Interpolator::Hint::UseWeightHi ) )
 			{
-				kn->m_into.setLength( kn->m_interpolator->defaultWeight(), Tangent::Space::Span );
+				kn->m_into.setLength( defaultLength, Tangent::Space::Span );
 			}
 
-			// NOTE : update previous first key tie slope as first key from tangent not valid
+			// NOTE : update previous first key tie angle as first key from tangent not valid
 			//        due to zero time dt. the from tangent may have been manipulated assume
 			//        user wants to keep from tangent as is so just copy its slope to into tangent
 
-			if( key.get() == m_parent->firstKey() && kn->tieSlopeActive( Tangent::Direction::Into ) )
+			if( key.get() == m_parent->firstKey() && kn->tieAngleActive( Tangent::Direction::Into ) )
 			{
 				Private::ScopedValue< Tangent::TieMode > guard( kn->m_tieMode, Tangent::TieMode::Manual );
 				kn->m_into.setSlope( kn->m_from.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
@@ -1797,18 +1821,18 @@ void Animation::Key::setInterpolator( const std::string& name )
 		);
 
 		// NOTE : check if new interpolator uses slope/weight of next key's into tangent, if not set default values
-		//        if not check if previous interpolator used slope of into tangent, if not and tie slope
+		//        if not check if previous interpolator used slope of into tangent, if not and tie angle
 		//        active copy slope from next key's from tangent so slopes remain tied after interpolator change.
 
 		if( Key* const kn = nextKey() )
 		{
 			const Interpolator::Hints hints = m_interpolator->getHints();
 
-			if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
+			if( ! hints.test( Interpolator::Hint::UseAngleHi ) )
 			{
-				kn->m_into.setSlope( m_interpolator->defaultSlope(), Tangent::Space::Span );
+				kn->m_into.setSlope( defaultSlope, Tangent::Space::Span );
 			}
-			else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeHi ) && kn->tieSlopeActive( Tangent::Direction::Into ) )
+			else if( ! pi->getHints().test( Interpolator::Hint::UseAngleHi ) && kn->tieAngleActive( Tangent::Direction::Into ) )
 			{
 				Private::ScopedValue< Tangent::TieMode > tmGuard( kn->m_tieMode, Tangent::TieMode::Manual );
 				Private::ScopedValue< Tangent::Space > issGuard( kn->m_into.m_slopeSpace, Tangent::Space::Key );
@@ -1817,7 +1841,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 
 			if( ! hints.test( Interpolator::Hint::UseWeightHi ) )
 			{
-				kn->m_into.setLength( m_interpolator->defaultWeight(), Tangent::Space::Span );
+				kn->m_into.setLength( defaultLength, Tangent::Space::Span );
 			}
 		}
 	}
@@ -1826,17 +1850,17 @@ void Animation::Key::setInterpolator( const std::string& name )
 		m_interpolator = interpolator;
 	}
 
-	// NOTE : check if new interpolator uses slope/accel of from tangent, if not set default values
-	//        if not check if previous interpolator used slope of from tangent, if not and tie slope
-	//        active copy slope from into tangent so slopes remain tied after interpolator change.
+	// NOTE : check if new interpolator uses angle/accel of from tangent, if not set default values
+	//        if not check if previous interpolator used angle of from tangent, if not and tie angle
+	//        active copy slope from into tangent so angles remain tied after interpolator change.
 
 	const Interpolator::Hints hints = m_interpolator->getHints();
 
-	if( ! hints.test( Interpolator::Hint::UseSlopeLo ) )
+	if( ! hints.test( Interpolator::Hint::UseAngleLo ) )
 	{
-		m_from.setSlope( m_interpolator->defaultSlope(), Tangent::Space::Span );
+		m_from.setSlope( defaultSlope, Tangent::Space::Span );
 	}
-	else if( ! pi->getHints().test( Interpolator::Hint::UseSlopeLo ) && tieSlopeActive( Tangent::Direction::From ) )
+	else if( ! pi->getHints().test( Interpolator::Hint::UseAngleLo ) && tieAngleActive( Tangent::Direction::From ) )
 	{
 		Private::ScopedValue< Tangent::TieMode > tmGuard( m_tieMode, Tangent::TieMode::Manual );
 		Private::ScopedValue< Tangent::Space > issGuard( m_from.m_slopeSpace, Tangent::Space::Key );
@@ -1845,7 +1869,7 @@ void Animation::Key::setInterpolator( const std::string& name )
 
 	if( ! hints.test( Interpolator::Hint::UseWeightLo ) )
 	{
-		m_from.setLength( m_interpolator->defaultWeight(), Tangent::Space::Span );
+		m_from.setLength( defaultLength, Tangent::Space::Span );
 	}
 }
 
@@ -1919,11 +1943,11 @@ const Animation::CurvePlug *Animation::Key::parent() const
 	return m_parent;
 }
 
-void Animation::Key::tieSlopeAverage()
+void Animation::Key::tieAngleAverage()
 {
 	if(
-		tieSlopeActive( Tangent::Direction::Into ) &&
-		tieSlopeActive( Tangent::Direction::From ) )
+		tieAngleActive( Tangent::Direction::Into ) &&
+		tieAngleActive( Tangent::Direction::From ) )
 	{
 		const Tangent::Space space = Tangent::Space::Key;
 		const double si = m_into.getSlope( space );
@@ -1952,9 +1976,9 @@ bool Animation::Key::tieWeightActive( const Tangent::Direction direction ) const
 	{
 		case Tangent::TieMode::Manual:
 			return false;
-		case Tangent::TieMode::Slope:
+		case Tangent::TieMode::Angle:
 			return false;
-		case Tangent::TieMode::SlopeAndWeight:
+		case Tangent::TieMode::AngleAndWeight:
 			break;
 		default:
 			return false;
@@ -1981,33 +2005,33 @@ bool Animation::Key::tieWeightActive( const Tangent::Direction direction ) const
 	return true;
 }
 
-bool Animation::Key::tieSlopeActive( const Tangent::Direction direction ) const
+bool Animation::Key::tieAngleActive( const Tangent::Direction direction ) const
 {
 	switch( m_tieMode )
 	{
 		case Tangent::TieMode::Manual:
 			return false;
-		case Tangent::TieMode::Slope:
+		case Tangent::TieMode::Angle:
 			break;
-		case Tangent::TieMode::SlopeAndWeight:
+		case Tangent::TieMode::AngleAndWeight:
 			break;
 		default:
 			return false;
 	}
 
-	// NOTE : when key not added to curve tie slope is active
+	// NOTE : when key not added to curve tie angle is active
 
 	if( m_parent )
 	{
-		// check that interpolator of previous key uses slope
+		// check that interpolator of previous key uses angle
 
 		const Key* const kp = prevKey();
 
 		if( ! kp ||
 			( ( direction == Tangent::Direction::Into ) &&
-				( ! kp->m_interpolator->getHints().test( Interpolator::Hint::UseSlopeHi ) ) ) ||
+				( ! kp->m_interpolator->getHints().test( Interpolator::Hint::UseAngleHi ) ) ) ||
 			( ( direction == Tangent::Direction::From ) &&
-				( !     m_interpolator->getHints().test( Interpolator::Hint::UseSlopeLo ) || ( m_parent->finalKey() == this ) ) ) )
+				( !     m_interpolator->getHints().test( Interpolator::Hint::UseAngleLo ) || ( m_parent->finalKey() == this ) ) ) )
 		{
 			return false;
 		}
@@ -2033,7 +2057,7 @@ Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, u
 , m_keyValueChangedSignal()
 , m_keyTieModeChangedSignal()
 , m_keyInterpolatorChangedSignal()
-, m_keyTangentSlopeChangedSignal()
+, m_keyTangentAngleChangedSignal()
 , m_keyTangentWeightChangedSignal()
 , m_keyTangentAutoModeChangedSignal()
 {
@@ -2080,9 +2104,9 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyInterpolatorC
 	return m_keyInterpolatorChangedSignal;
 }
 
-Animation::CurvePlug::CurvePlugKeyDirectionSignal& Animation::CurvePlug::keyTangentSlopeChangedSignal()
+Animation::CurvePlug::CurvePlugKeyDirectionSignal& Animation::CurvePlug::keyTangentAngleChangedSignal()
 {
-	return m_keyTangentSlopeChangedSignal;
+	return m_keyTangentAngleChangedSignal;
 }
 
 Animation::CurvePlug::CurvePlugKeyDirectionSignal& Animation::CurvePlug::keyTangentWeightChangedSignal()
@@ -2162,21 +2186,21 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 	{
 		const Interpolator::Hints hints = kp->m_interpolator->getHints();
 
-		if( ! hints.test( Interpolator::Hint::UseSlopeLo ) )
+		if( ! hints.test( Interpolator::Hint::UseAngleLo ) )
 		{
-			key->m_into.setSlope( kp->m_interpolator->defaultSlope(), Tangent::Space::Span );
+			key->m_into.setSlope( defaultSlope, Tangent::Space::Span );
 		}
 
 		if( ! hints.test( Interpolator::Hint::UseWeightLo ) )
 		{
-			key->m_into.setLength( kp->m_interpolator->defaultWeight(), Tangent::Space::Span );
+			key->m_into.setLength( defaultLength, Tangent::Space::Span );
 		}
 
-		// NOTE : update previous final key tie slope as final key from tangent not valid
+		// NOTE : update previous final key tie angle as final key from tangent not valid
 		//        due to zero time dt. the into tangent may have been manipulated assume
 		//        user wants to keep into tangent as is so just copy its slope to from tangent
 
-		if( key.get() == finalKey() && kp->tieSlopeActive( Tangent::Direction::From ) )
+		if( key.get() == finalKey() && kp->tieAngleActive( Tangent::Direction::From ) )
 		{
 			Private::ScopedValue< Tangent::TieMode > guard( kp->m_tieMode, Tangent::TieMode::Manual );
 			kp->m_from.setSlope( kp->m_into.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
@@ -2187,21 +2211,21 @@ void Animation::CurvePlug::addKey( const KeyPtr &key, const bool inherit )
 	{
 		const Interpolator::Hints hints = key->m_interpolator->getHints();
 
-		if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
+		if( ! hints.test( Interpolator::Hint::UseAngleHi ) )
 		{
-			kn->m_into.setSlope( key->m_interpolator->defaultSlope(), Tangent::Space::Span );
+			kn->m_into.setSlope( defaultSlope, Tangent::Space::Span );
 		}
 
 		if( ! hints.test( Interpolator::Hint::UseWeightHi ) )
 		{
-			kn->m_into.setLength( key->m_interpolator->defaultWeight(), Tangent::Space::Span );
+			kn->m_into.setLength( defaultLength, Tangent::Space::Span );
 		}
 
-		// NOTE : update previous first key tie slope as first key from tangent not valid
+		// NOTE : update previous first key tie angle as first key from tangent not valid
 		//        due to zero time dt. the from tangent may have been manipulated assume
 		//        user wants to keep from tangent as is so just copy its slope to into tangent
 
-		if( key.get() == firstKey() && kn->tieSlopeActive( Tangent::Direction::Into ) )
+		if( key.get() == firstKey() && kn->tieAngleActive( Tangent::Direction::Into ) )
 		{
 			Private::ScopedValue< Tangent::TieMode > guard( kn->m_tieMode, Tangent::TieMode::Manual );
 			kn->m_into.setSlope( kn->m_from.getSlope( Tangent::Space::Key ), Tangent::Space::Key );
@@ -2247,10 +2271,10 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 	// badly behaved interpolators.
 
 	KeyPtr km( new Key( time, 0.0, interpolator->getName(),
-		interpolator->defaultSlope(), Tangent::Space::Span,
-		interpolator->defaultWeight(), Tangent::Space::Span,
-		interpolator->defaultSlope(), Tangent::Space::Span,
-		interpolator->defaultWeight(), Tangent::Space::Span, Tangent::TieMode::Manual ) );
+		defaultSlope, Tangent::Space::Span,
+		defaultLength, Tangent::Space::Span,
+		defaultSlope, Tangent::Space::Span,
+		defaultLength, Tangent::Space::Span, Tangent::TieMode::Manual ) );
 	KeyPtr kl( new Key( lo.getTime(), lo.getValue(), interpolator->getName(),
 		lo.m_into.m_slope, lo.m_into.m_slopeSpace,
 		lo.m_into.m_length, lo.m_into.m_lengthSpace,
@@ -2301,7 +2325,7 @@ Animation::Key *Animation::CurvePlug::insertKey( const Animation::Time& time )
 	lo.m_from.setPosition( lfp, Tangent::Space::Span, false );
 	hi.m_into.setPosition( hip, Tangent::Space::Span, false );
 
-	km->setTieMode( Tangent::TieMode::SlopeAndWeight );
+	km->setTieMode( Tangent::TieMode::AngleAndWeight );
 
 	return km.get();
 }
@@ -2362,14 +2386,14 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 		{
 			const Interpolator::Hints hints = kp->m_interpolator->getHints();
 
-			if( ! hints.test( Interpolator::Hint::UseSlopeHi ) )
+			if( ! hints.test( Interpolator::Hint::UseAngleHi ) )
 			{
-				kn->m_into.setSlope( kp->m_interpolator->defaultSlope(), Tangent::Space::Span );
+				kn->m_into.setSlope( defaultSlope, Tangent::Space::Span );
 			}
 
 			if( ! hints.test( Interpolator::Hint::UseWeightHi ) )
 			{
-				kn->m_into.setLength( kp->m_interpolator->defaultWeight(), Tangent::Space::Span );
+				kn->m_into.setLength( defaultLength, Tangent::Space::Span );
 			}
 		}
 	}
@@ -2914,10 +2938,10 @@ const char* Animation::toString( const Animation::Tangent::TieMode mode )
 	{
 		case Tangent::TieMode::Manual:
 			return "Manual";
-		case Tangent::TieMode::Slope:
-			return "Slope";
-		case Tangent::TieMode::SlopeAndWeight:
-			return "SlopeAndWeight";
+		case Tangent::TieMode::Angle:
+			return "Angle";
+		case Tangent::TieMode::AngleAndWeight:
+			return "AngleAndWeight";
 		default:
 			assert( 0 );
 			return 0;

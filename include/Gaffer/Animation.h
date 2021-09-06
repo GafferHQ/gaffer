@@ -150,14 +150,11 @@ class GAFFER_API Animation : public ComputeNode
 				enum class TieMode
 				{
 					Manual = 0,
-					Slope = 1,
-					SlopeAndWeight = 2
+					Angle = 1,
+					AngleAndWeight = 2
 				};
 
 				static Direction opposite( Direction direction );
-
-				static double defaultSlope();
-				static double defaultWeight();
 
 				~Tangent();
 
@@ -169,33 +166,40 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				void setPosition( Imath::V2d position, Space space, bool relative );
 				/// \undoable
-				/// set position whilst maintaining specified span space slope
-				void setPositionWithSlope( Imath::V2d position, double slope, Space space, bool relative );
+				/// set position whilst maintaining specified angle
+				void setPositionWithAngle( Imath::V2d position, double angle, Space space, bool relative );
 				/// \undoable
 				/// set position whilst maintaining specified weight
 				void setPositionWithWeight( Imath::V2d position, double weight, Space space, bool relative );
 
-				double getSlope( Space space ) const;
+				/// The angle is in degrees [-90,+90] measured from the time axis. For a tangent in the from direction the angle is
+				/// measured in the anti-clockwise sense, for a tangent in the into direction the angle is measured in the clockwise sense
+				/// The angle is an offset from the auto tangent.
+				double getAngle() const;
 				/// \undoable
-				void setSlope( double slope, Space space );
+				void setAngle( double angle );
 				/// \undoable
-				/// set slope whilst maintaining specified weight
-				void setSlopeWithWeight( double slope, double weight, Space space );
+				/// set angle whilst maintaining specified weight
+				void setAngleWithWeight( double angle, double weight );
 
 				/// The weight is a measure of the influence the tangent has on the shape of the curve segment it affects.
 				double getWeight() const;
 				/// \undoable
 				void setWeight( double weight );
 
+				/// is angle currently used by interpolator
+				bool angleIsUsed() const;
+				/// is weight currently used by interpolator
+				bool weightIsUsed() const;
+
+				double getSlope( Space space ) const;
+				/// \undoable
+				void setSlope( double slope, Space space );
+
 				/// Get the length of the tangent in the specified space
 				double getLength( Space space ) const;
 				/// \undoable
 				void setLength( double length, Space space );
-
-				/// is slope currently used by interpolator
-				bool slopeIsUsed() const;
-				/// is weight currently used by interpolator
-				bool weightIsUsed() const;
 
 			private:
 
@@ -208,7 +212,9 @@ class GAFFER_API Animation : public ComputeNode
 				friend class Key;
 
 				void update();
-				void convertPosition( Imath::V2d&, Space, bool ) const;
+				void positionToRelativeSpanSpace( Imath::V2d&, Space, bool ) const;
+				double angleToSlope( double ) const;
+				double angleFromSlope( double ) const;
 
 				Tangent( Key& key, Direction direction, double slope, Space slopeSpace, double length, Space lengthSpace );
 
@@ -232,8 +238,8 @@ class GAFFER_API Animation : public ComputeNode
 
 				enum class Hint
 				{
-					UseSlopeLo = 0,
-					UseSlopeHi = 1,
+					UseAngleLo = 0,
+					UseAngleHi = 1,
 					UseWeightLo = 2,
 					UseWeightHi = 3
 				};
@@ -281,15 +287,11 @@ class GAFFER_API Animation : public ComputeNode
 
 			const std::string& getName() const;
 			Hints getHints() const;
-			double defaultSlope() const;
-			double defaultWeight() const;
 
 		protected:
 
-			/// construct with specified name, hints and span space default slope and weight
-			Interpolator( const std::string& name, Hints hints,
-				double defaultSlope = Tangent::defaultSlope(),
-				double defaultWeight = Tangent::defaultWeight() );
+			/// construct with specified name, hints
+			Interpolator( const std::string& name, Hints hints );
 
 		private:
 
@@ -304,8 +306,6 @@ class GAFFER_API Animation : public ComputeNode
 
 			std::string m_name;
 			Hints m_hints;
-			double m_defaultSlope;
-			double m_defaultWeight;
 		};
 
 		IE_CORE_DECLAREPTR( Interpolator )
@@ -320,7 +320,7 @@ class GAFFER_API Animation : public ComputeNode
 				explicit Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
 				explicit Key( const Time& time = Time(), float value = 0.0f,
 					const std::string& interpolatorName = Interpolator::getFactory().getDefault()->getName() );
-				/// construct Key with specified key space tangent slope and length
+				/// construct Key with specified tangent slope and length
 				Key( const Time& time, float value, const std::string& interpolatorName,
 					double intoSlope, Tangent::Space intoSlopeSpace, double intoLength, Tangent::Space intoLengthSpace,
 					double fromSlope, Tangent::Space fromSlopeSpace, double fromLength, Tangent::Space fromLengthSpace,
@@ -376,8 +376,8 @@ class GAFFER_API Animation : public ComputeNode
 				friend class CurvePlug;
 				friend class Tangent;
 
-				void tieSlopeAverage();
-				bool tieSlopeActive( Tangent::Direction ) const;
+				void tieAngleAverage();
+				bool tieAngleActive( Tangent::Direction ) const;
 				bool tieWeightActive( Tangent::Direction ) const;
 
 				CurvePlug *m_parent;
@@ -423,7 +423,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyValueChangedSignal();
 				CurvePlugKeySignal& keyTieModeChangedSignal();
 				CurvePlugKeySignal& keyInterpolatorChangedSignal();
-				CurvePlugKeyDirectionSignal& keyTangentSlopeChangedSignal();
+				CurvePlugKeyDirectionSignal& keyTangentAngleChangedSignal();
 				CurvePlugKeyDirectionSignal& keyTangentWeightChangedSignal();
 				CurvePlugKeyDirectionSignal& keyTangentAutoModeChangedSignal();
 
@@ -526,7 +526,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyValueChangedSignal;
 				CurvePlugKeySignal m_keyTieModeChangedSignal;
 				CurvePlugKeySignal m_keyInterpolatorChangedSignal;
-				CurvePlugKeyDirectionSignal m_keyTangentSlopeChangedSignal;
+				CurvePlugKeyDirectionSignal m_keyTangentAngleChangedSignal;
 				CurvePlugKeyDirectionSignal m_keyTangentWeightChangedSignal;
 				CurvePlugKeyDirectionSignal m_keyTangentAutoModeChangedSignal;
 		};

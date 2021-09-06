@@ -744,9 +744,7 @@ class _KeyTab( GafferUI.GridContainer ) :
 class _TangentTab( GafferUI.GridContainer ) :
 
 	from collections import namedtuple
-	Connections = namedtuple( "Connections", ("slope", "weight", "autoMode") )
-
-	slopeSpace = Gaffer.Animation.Tangent.Space.Key
+	Connections = namedtuple( "Connections", ("angle", "weight", "autoMode") )
 
 	def __init__( self ) :
 
@@ -756,13 +754,13 @@ class _TangentTab( GafferUI.GridContainer ) :
 
 		self.__intoLabel = GafferUI.Label( text="Into" )
 		self.__fromLabel = GafferUI.Label( text="From" )
-		self.__slopeLabel = GafferUI.Label( text="Slope" )
+		self.__angleLabel = GafferUI.Label( text="Angle" )
 		self.__weightLabel = GafferUI.Label( text="Weight" )
 		#self.__modeLabel = GafferUI.Label( text="Auto mode" )
 
 		# create editors
 		# NOTE: initial value type (e.g. int or float) determines validated value type of widget
-		self.__slopeEditor = (
+		self.__angleEditor = (
 			GafferUI.NumericWidget( value=float(0) ),
 			GafferUI.NumericWidget( value=float(0) ) )
 		self.__weightEditor = (
@@ -772,11 +770,11 @@ class _TangentTab( GafferUI.GridContainer ) :
 		#self.__fromModeEditor = GafferUI.Button()
 
 		# setup editor connections
-		self.__slopeConnection = (
-			self.__slopeEditor[ Gaffer.Animation.Tangent.Direction.Into ].valueChangedSignal().connect(
-				functools.partial( Gaffer.WeakMethod( self.__setSlope ), Gaffer.Animation.Tangent.Direction.Into ), scoped = False ),
-			self.__slopeEditor[ Gaffer.Animation.Tangent.Direction.From ].valueChangedSignal().connect(
-				functools.partial( Gaffer.WeakMethod( self.__setSlope ), Gaffer.Animation.Tangent.Direction.From ), scoped = False ) )
+		self.__angleConnection = (
+			self.__angleEditor[ Gaffer.Animation.Tangent.Direction.Into ].valueChangedSignal().connect(
+				functools.partial( Gaffer.WeakMethod( self.__setAngle ), Gaffer.Animation.Tangent.Direction.Into ), scoped = False ),
+			self.__angleEditor[ Gaffer.Animation.Tangent.Direction.From ].valueChangedSignal().connect(
+				functools.partial( Gaffer.WeakMethod( self.__setAngle ), Gaffer.Animation.Tangent.Direction.From ), scoped = False ) )
 		self.__weightConnection = (
 			self.__weightEditor[ Gaffer.Animation.Tangent.Direction.Into ].valueChangedSignal().connect(
 				functools.partial( Gaffer.WeakMethod( self.__setWeight ), Gaffer.Animation.Tangent.Direction.Into ), scoped = False ),
@@ -786,9 +784,9 @@ class _TangentTab( GafferUI.GridContainer ) :
 		# layout widgets
 		self.addChild( self.__intoLabel, ( 1, 0 ) )
 		self.addChild( self.__fromLabel, ( 2, 0 ) )
-		self.addChild( self.__slopeLabel, ( 0, 1 ) )
-		self.addChild( self.__slopeEditor[ Gaffer.Animation.Tangent.Direction.Into ], ( 1, 1 ) )
-		self.addChild( self.__slopeEditor[ Gaffer.Animation.Tangent.Direction.From ], ( 2, 1 ) )
+		self.addChild( self.__angleLabel, ( 0, 1 ) )
+		self.addChild( self.__angleEditor[ Gaffer.Animation.Tangent.Direction.Into ], ( 1, 1 ) )
+		self.addChild( self.__angleEditor[ Gaffer.Animation.Tangent.Direction.From ], ( 2, 1 ) )
 		self.addChild( self.__weightLabel, ( 0, 2 ) )
 		self.addChild( self.__weightEditor[ Gaffer.Animation.Tangent.Direction.Into ], ( 1, 2 ) )
 		self.addChild( self.__weightEditor[ Gaffer.Animation.Tangent.Direction.From ], ( 2, 2 ) )
@@ -800,9 +798,9 @@ class _TangentTab( GafferUI.GridContainer ) :
 		self.__connections = {}
 
 		# numeric widget undo queue state
-		self.__lastChangedReasonSlope = [ None, None ]
+		self.__lastChangedReasonAngle = [ None, None ]
 		self.__lastChangedReasonWeight = [ None, None ]
-		self.__mergeGroupIdSlope = [ 0, 0 ]
+		self.__mergeGroupIdAngle = [ 0, 0 ]
 		self.__mergeGroupIdWeight = [ 0, 0 ]
 
 		# weight of selected keys at start of merge group
@@ -811,7 +809,7 @@ class _TangentTab( GafferUI.GridContainer ) :
 	def connect( self, curve ) :
 		if curve not in self.__connections :
 			self.__connections[ curve ] = _TangentTab.Connections(
-				slope = curve.keyTangentSlopeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTangentSlopeChanged ), scoped = False ),
+				angle = curve.keyTangentAngleChangedSignal().connect( Gaffer.WeakMethod( self.__keyTangentAngleChanged ), scoped = False ),
 				weight = curve.keyTangentWeightChangedSignal().connect( Gaffer.WeakMethod( self.__keyTangentWeightChanged ), scoped = False ),
 				autoMode = curve.keyTangentAutoModeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTangentAutoModeChanged ), scoped = False ) )
 
@@ -823,13 +821,13 @@ class _TangentTab( GafferUI.GridContainer ) :
 
 	def update( self ) :
 		for direction in Gaffer.Animation.Tangent.Direction.names.values() :
-			self.__updateTangentSlope( direction )
+			self.__updateTangentAngle( direction )
 			self.__updateTangentWeight( direction )
 			#self.__updateTangentAutoMode( direction )
 
-	def __keyTangentSlopeChanged( self, curve, key, direction ) :
+	def __keyTangentAngleChanged( self, curve, key, direction ) :
 		if self.parent().curveGadget().isSelectedKey( key ) :
-			self.__updateTangentSlope( direction )
+			self.__updateTangentAngle( direction )
 
 	def __keyTangentWeightChanged( self, curve, key, direction ) :
 		if self.parent().curveGadget().isSelectedKey( key ) :
@@ -839,34 +837,34 @@ class _TangentTab( GafferUI.GridContainer ) :
 		if self.parent().curveGadget().isSelectedKey( key ) :
 			self.__updateTangentAutoMode( direction )
 
-	def __updateTangentSlope( self, direction ) :
+	def __updateTangentAngle( self, direction ) :
 
-		# if multiple keys selected display "---" unless all selected keys have same slope for tangent direction
+		# if multiple keys selected display "---" unless all selected keys have same angle for tangent direction
 		selectedKeys = self.parent().curveGadget().selectedKeys()
 		value = None
 		if len( selectedKeys ) > 1 :
-			value = selectedKeys[ 0 ].getTangent( direction ).getSlope( self.slopeSpace )
+			value = selectedKeys[ 0 ].getTangent( direction ).getAngle()
 			for key in selectedKeys[1:] :
-				if not Gaffer.Animation.equivalentValues( value, key.getTangent( direction ).getSlope( self.slopeSpace ) ) :
+				if not Gaffer.Animation.equivalentValues( value, key.getTangent( direction ).getAngle() ) :
 					value = None
 					break
 		elif selectedKeys :
-			value = selectedKeys[ 0 ].getTangent( direction ).getSlope( self.slopeSpace )
+			value = selectedKeys[ 0 ].getTangent( direction ).getAngle()
 		if not value is None :
-			with Gaffer.BlockedConnection( self.__slopeConnection[ direction ] ) :
-				self.__slopeEditor[ direction ].setValue( value )
+			with Gaffer.BlockedConnection( self.__angleConnection[ direction ] ) :
+				self.__angleEditor[ direction ].setValue( value )
 		else :
-			with Gaffer.BlockedConnection( self.__slopeConnection[ direction ] ) :
-				self.__slopeEditor[ direction ].setText( "" )
-				self.__slopeEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
+			with Gaffer.BlockedConnection( self.__angleConnection[ direction ] ) :
+				self.__angleEditor[ direction ].setText( "" )
+				self.__angleEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
 
-		# set disabled when no selected keys or slope is not used
+		# set disabled when no selected keys or angle is not used
 		enabled = bool( selectedKeys )
 		for key in selectedKeys :
-			if not key.getTangent( direction ).slopeIsUsed() :
+			if not key.getTangent( direction ).angleIsUsed() :
 				enabled = False
 				break
-		self.__slopeEditor[ direction ].setEnabled( enabled )
+		self.__angleEditor[ direction ].setEnabled( enabled )
 
 	def __updateTangentWeight( self, direction ) :
 
@@ -900,38 +898,38 @@ class _TangentTab( GafferUI.GridContainer ) :
 	def __updateTangentAutoMode( self, direction ) :
 		pass
 
-	def __setSlope( self, direction, widget, reason ) :
+	def __setAngle( self, direction, widget, reason ) :
 
 		# check for invalid edit
 		if reason == GafferUI.NumericWidget.ValueChangedReason.InvalidEdit :
-			self.__updateTangentSlope( direction )
+			self.__updateTangentAngle( direction )
 			return
 
 		# handle undo queue
 		selectedKeys = self.parent().curveGadget().selectedKeys()
-		if not widget.changesShouldBeMerged( self.__lastChangedReasonSlope[ direction ], reason ) :
-			self.__mergeGroupIdSlope[ direction ] += 1
+		if not widget.changesShouldBeMerged( self.__lastChangedReasonAngle[ direction ], reason ) :
+			self.__mergeGroupIdAngle[ direction ] += 1
 			self.__selectedKeysMergeGroupWeight[ direction ].clear()
 			for key in selectedKeys :
 				self.__selectedKeysMergeGroupWeight[ direction ][ key ] = key.getTangent( direction ).getWeight()
-		self.__lastChangedReasonSlope[ direction ] = reason
+		self.__lastChangedReasonAngle[ direction ] = reason
 
-		# set slope for all selected keys in specified direction
+		# set angle for all selected keys in specified direction
 		if selectedKeys :
 			try :
 				value = widget.getValue()
 			except ValueError :
 				return
-			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
+			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdAngle[ direction ] ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].slope ) :
-						key.getTangent( direction ).setSlopeWithWeight( value,
-							self.__selectedKeysMergeGroupWeight[ direction ][ key ], self.slopeSpace )
+					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].angle ) :
+						key.getTangent( direction ).setAngleWithWeight( value,
+							self.__selectedKeysMergeGroupWeight[ direction ][ key ] )
 			widget.clearUndo()
 
 		# ensure editors are up to date
 		for direction in Gaffer.Animation.Tangent.Direction.names.values() :
-			self.__updateTangentSlope( direction )
+			self.__updateTangentAngle( direction )
 			self.__updateTangentWeight( direction )
 
 	def __setWeight( self, direction, widget, reason ) :
