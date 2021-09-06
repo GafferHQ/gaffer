@@ -177,7 +177,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Tangent::Direction> m_dragTangent;
 		double m_dragTangentOriginalSlope;
-		double m_dragTangentOriginalAccel;
+		double m_dragTangentOriginalWeight;
 
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;

@@ -107,10 +107,10 @@ void setPositionWithSlope( Animation::Tangent &t, const Imath::V2d& position, do
 	t.setPositionWithSlope( position, slope, space, relative );
 }
 
-void setPositionWithAccel( Animation::Tangent &t, const Imath::V2d& position, double accel, Animation::Tangent::Space space, bool relative )
+void setPositionWithWeight( Animation::Tangent &t, const Imath::V2d& position, double weight, Animation::Tangent::Space space, bool relative )
 {
 	ScopedGILRelease gilRelease;
-	t.setPositionWithAccel( position, accel, space, relative );
+	t.setPositionWithWeight( position, weight, space, relative );
 }
 
 void setSlope( Animation::Tangent &t, double slope, Animation::Tangent::Space space )
@@ -119,16 +119,22 @@ void setSlope( Animation::Tangent &t, double slope, Animation::Tangent::Space sp
 	t.setSlope( slope, space );
 }
 
-void setSlopeWithAccel( Animation::Tangent &t, double slope, double accel, Animation::Tangent::Space space )
+void setSlopeWithWeight( Animation::Tangent &t, double slope, double weight, Animation::Tangent::Space space )
 {
 	ScopedGILRelease gilRelease;
-	t.setSlopeWithAccel( slope, accel, space );
+	t.setSlopeWithWeight( slope, weight, space );
 }
 
-void setAccel( Animation::Tangent &t, double accel, Animation::Tangent::Space space )
+void setWeight( Animation::Tangent &t, double weight )
 {
 	ScopedGILRelease gilRelease;
-	t.setAccel( accel, space );
+	t.setWeight( weight );
+}
+
+void setLength( Animation::Tangent &t, double length, Animation::Tangent::Space space )
+{
+	ScopedGILRelease gilRelease;
+	t.setLength( length, space );
 }
 
 void setTieMode( Animation::Key &k, Animation::Tangent::TieMode mode )
@@ -168,11 +174,11 @@ std::string keyRepr( const Animation::Key &k )
 			% k.getInterpolator()->getName()
 			% k.getTangent( Animation::Tangent::Direction::Into ).getSlope( space )
 			% Animation::toString( space )
-			% k.getTangent( Animation::Tangent::Direction::Into ).getAccel( space )
+			% k.getTangent( Animation::Tangent::Direction::Into ).getLength( space )
 			% Animation::toString( space )
 			% k.getTangent( Animation::Tangent::Direction::From ).getSlope( space )
 			% Animation::toString( space )
-			% k.getTangent( Animation::Tangent::Direction::From ).getAccel( space )
+			% k.getTangent( Animation::Tangent::Direction::From ).getLength( space )
 			% Animation::toString( space )
 			% Animation::toString( k.getTieMode() )
 	);
@@ -368,8 +374,8 @@ void GafferModule::bindAnimation()
 		enum_< Animation::Interpolator::Hint >( "Hint" )
 			.value( "UseSlopeLo", Animation::Interpolator::Hint::UseSlopeLo )
 			.value( "UseSlopeHi", Animation::Interpolator::Hint::UseSlopeHi )
-			.value( "UseAccelLo", Animation::Interpolator::Hint::UseAccelLo )
-			.value( "UseAccelHi", Animation::Interpolator::Hint::UseAccelHi );
+			.value( "UseWeightLo", Animation::Interpolator::Hint::UseWeightLo )
+			.value( "UseWeightHi", Animation::Interpolator::Hint::UseWeightHi );
 
 		class_< Animation::Interpolator::Hints >( "Hints", no_init )
 			.def( "test", &Animation::Interpolator::Hints::test )
@@ -396,15 +402,17 @@ void GafferModule::bindAnimation()
 			.def( "getDirection", &Animation::Tangent::getDirection )
 			.def( "setPosition", &setPosition )
 			.def( "setPositionWithSlope", &setPositionWithSlope )
-			.def( "setPositionWithAccel", &setPositionWithAccel )
+			.def( "setPositionWithWeight", &setPositionWithWeight )
 			.def( "getPosition", &Animation::Tangent::getPosition )
 			.def( "setSlope", &setSlope )
-			.def( "setSlopeWithAccel", &setSlopeWithAccel )
+			.def( "setSlopeWithWeight", &setSlopeWithWeight )
 			.def( "getSlope", &Animation::Tangent::getSlope )
 			.def( "slopeIsUsed", &Animation::Tangent::slopeIsUsed )
-			.def( "setAccel", &setAccel )
-			.def( "getAccel", &Animation::Tangent::getAccel )
-			.def( "accelIsUsed", &Animation::Tangent::accelIsUsed )
+			.def( "setWeight", &setWeight )
+			.def( "getWeight", &Animation::Tangent::getWeight )
+			.def( "weightIsUsed", &Animation::Tangent::weightIsUsed )
+			.def( "setLength", &setLength )
+			.def( "getLength", &Animation::Tangent::getLength )
 			.def( "opposite", &Animation::Tangent::opposite )
 			.staticmethod( "opposite" )
 			;
@@ -420,7 +428,7 @@ void GafferModule::bindAnimation()
 		enum_< Animation::Tangent::TieMode >( "TieMode" )
 			.value( Animation::toString( Animation::Tangent::TieMode::Manual ), Animation::Tangent::TieMode::Manual )
 			.value( Animation::toString( Animation::Tangent::TieMode::Slope ), Animation::Tangent::TieMode::Slope )
-			.value( Animation::toString( Animation::Tangent::TieMode::SlopeAndAccel ), Animation::Tangent::TieMode::SlopeAndAccel );
+			.value( Animation::toString( Animation::Tangent::TieMode::SlopeAndWeight ), Animation::Tangent::TieMode::SlopeAndWeight );
 	}
 
 	IECorePython::RefCountedClass< Animation::Key, IECore::RefCounted >( "Key" )
@@ -490,7 +498,7 @@ void GafferModule::bindAnimation()
 		.def( "keyTieModeChangedSignal", &Animation::CurvePlug::keyTieModeChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyInterpolatorChangedSignal", &Animation::CurvePlug::keyInterpolatorChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyTangentSlopeChangedSignal", &Animation::CurvePlug::keyTangentSlopeChangedSignal, return_internal_reference< 1 >() )
-		.def( "keyTangentAccelChangedSignal", &Animation::CurvePlug::keyTangentAccelChangedSignal, return_internal_reference< 1 >() )
+		.def( "keyTangentWeightChangedSignal", &Animation::CurvePlug::keyTangentWeightChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyTangentAutoModeChangedSignal", &Animation::CurvePlug::keyTangentAutoModeChangedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey )
 		.def( "addKey", &addKeyInherit )

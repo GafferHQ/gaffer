@@ -151,13 +151,13 @@ class GAFFER_API Animation : public ComputeNode
 				{
 					Manual = 0,
 					Slope = 1,
-					SlopeAndAccel = 2
+					SlopeAndWeight = 2
 				};
 
 				static Direction opposite( Direction direction );
 
 				static double defaultSlope();
-				static double defaultAccel();
+				static double defaultWeight();
 
 				~Tangent();
 
@@ -172,31 +172,37 @@ class GAFFER_API Animation : public ComputeNode
 				/// set position whilst maintaining specified span space slope
 				void setPositionWithSlope( Imath::V2d position, double slope, Space space, bool relative );
 				/// \undoable
-				/// set position whilst maintaining specified span space acceleration
-				void setPositionWithAccel( Imath::V2d position, double accel, Space space, bool relative );
+				/// set position whilst maintaining specified weight
+				void setPositionWithWeight( Imath::V2d position, double weight, Space space, bool relative );
 
 				double getSlope( Space space ) const;
 				/// \undoable
 				void setSlope( double slope, Space space );
 				/// \undoable
-				/// set slope whilst maintaining specified span space acceleration
-				void setSlopeWithAccel( double slope, double accel, Space space );
+				/// set slope whilst maintaining specified weight
+				void setSlopeWithWeight( double slope, double weight, Space space );
 
-				double getAccel( Space space ) const;
+				/// The weight is a measure of the influence the tangent has on the shape of the curve segment it affects.
+				double getWeight() const;
 				/// \undoable
-				void setAccel( double accel, Space space );
+				void setWeight( double weight );
+
+				/// Get the length of the tangent in the specified space
+				double getLength( Space space ) const;
+				/// \undoable
+				void setLength( double length, Space space );
 
 				/// is slope currently used by interpolator
 				bool slopeIsUsed() const;
-				/// is accel currently used by interpolator
-				bool accelIsUsed() const;
+				/// is weight currently used by interpolator
+				bool weightIsUsed() const;
 
 			private:
 
 				/// \undoable
 				void setSlopeSpace( Space );
 				/// \undoable
-				void setAccelSpace( Space );
+				void setLengthSpace( Space );
 
 				friend class CurvePlug;
 				friend class Key;
@@ -204,16 +210,16 @@ class GAFFER_API Animation : public ComputeNode
 				void update();
 				void convertPosition( Imath::V2d&, Space, bool ) const;
 
-				Tangent( Key& key, Direction direction, double slope, Space slopeSpace, double accel, Space accelSpace );
+				Tangent( Key& key, Direction direction, double slope, Space slopeSpace, double length, Space lengthSpace );
 
 				Key* m_key;
 				double m_slope;
-				double m_accel;
+				double m_length;
 				double m_dt;
 				double m_vt;
 				Direction m_direction;
 				Space m_slopeSpace;
-				Space m_accelSpace;
+				Space m_lengthSpace;
 		};
 
 		/// Defines span interpolator
@@ -228,8 +234,8 @@ class GAFFER_API Animation : public ComputeNode
 				{
 					UseSlopeLo = 0,
 					UseSlopeHi = 1,
-					UseAccelLo = 2,
-					UseAccelHi = 3
+					UseWeightLo = 2,
+					UseWeightHi = 3
 				};
 
 				struct Hints
@@ -276,14 +282,14 @@ class GAFFER_API Animation : public ComputeNode
 			const std::string& getName() const;
 			Hints getHints() const;
 			double defaultSlope() const;
-			double defaultAccel() const;
+			double defaultWeight() const;
 
 		protected:
 
-			/// construct with specified name, hints and span space default slope and accel
+			/// construct with specified name, hints and span space default slope and weight
 			Interpolator( const std::string& name, Hints hints,
 				double defaultSlope = Tangent::defaultSlope(),
-				double defaultAccel = Tangent::defaultAccel() );
+				double defaultWeight = Tangent::defaultWeight() );
 
 		private:
 
@@ -292,14 +298,14 @@ class GAFFER_API Animation : public ComputeNode
 			/// Implement to return interpolated value at specified normalised time
 			virtual double evaluate( double valueLo, double valueHi, const Tangent& tangentLo, const Tangent& tangentHi, double time ) const = 0;
 
-			/// Implement to bisect the span at the specified time, should set new key's value and slope and accel of new tangents
+			/// Implement to bisect the span at the specified time, should set new key's value and slope and length of new tangents
 			virtual void bisect( double valueLo, double valueHi, const Tangent& tangentLo, const Tangent& tangentHi, double time,
 				Key& newKey, Tangent& newTangentLo, Tangent& newTangentHi ) const;
 
 			std::string m_name;
 			Hints m_hints;
 			double m_defaultSlope;
-			double m_defaultAccel;
+			double m_defaultWeight;
 		};
 
 		IE_CORE_DECLAREPTR( Interpolator )
@@ -314,10 +320,10 @@ class GAFFER_API Animation : public ComputeNode
 				explicit Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
 				explicit Key( const Time& time = Time(), float value = 0.0f,
 					const std::string& interpolatorName = Interpolator::getFactory().getDefault()->getName() );
-				/// construct Key with specified key space tangent slope and accel
+				/// construct Key with specified key space tangent slope and length
 				Key( const Time& time, float value, const std::string& interpolatorName,
-					double intoSlope, Tangent::Space intoSlopeSpace, double intoAccel, Tangent::Space intoAccelSpace,
-					double fromSlope, Tangent::Space fromSlopeSpace, double fromAccel, Tangent::Space fromAccelSpace,
+					double intoSlope, Tangent::Space intoSlopeSpace, double intoLength, Tangent::Space intoLengthSpace,
+					double fromSlope, Tangent::Space fromSlopeSpace, double fromLength, Tangent::Space fromLengthSpace,
 					Tangent::TieMode tieMode );
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
@@ -372,7 +378,7 @@ class GAFFER_API Animation : public ComputeNode
 
 				void tieSlopeAverage();
 				bool tieSlopeActive( Tangent::Direction ) const;
-				bool tieAccelActive( Tangent::Direction ) const;
+				bool tieWeightActive( Tangent::Direction ) const;
 
 				CurvePlug *m_parent;
 				Interpolator* m_interpolator;
@@ -418,7 +424,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyTieModeChangedSignal();
 				CurvePlugKeySignal& keyInterpolatorChangedSignal();
 				CurvePlugKeyDirectionSignal& keyTangentSlopeChangedSignal();
-				CurvePlugKeyDirectionSignal& keyTangentAccelChangedSignal();
+				CurvePlugKeyDirectionSignal& keyTangentWeightChangedSignal();
 				CurvePlugKeyDirectionSignal& keyTangentAutoModeChangedSignal();
 
 				/// \undoable
@@ -521,7 +527,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyTieModeChangedSignal;
 				CurvePlugKeySignal m_keyInterpolatorChangedSignal;
 				CurvePlugKeyDirectionSignal m_keyTangentSlopeChangedSignal;
-				CurvePlugKeyDirectionSignal m_keyTangentAccelChangedSignal;
+				CurvePlugKeyDirectionSignal m_keyTangentWeightChangedSignal;
 				CurvePlugKeyDirectionSignal m_keyTangentAutoModeChangedSignal;
 		};
 

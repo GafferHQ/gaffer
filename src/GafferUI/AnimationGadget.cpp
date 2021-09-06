@@ -64,10 +64,10 @@ using namespace Imath;
 
 namespace
 {
-void tieModeToBools( const Animation::Tangent::TieMode mode, bool& tieSlope, bool& tieAccel )
+void tieModeToBools( const Animation::Tangent::TieMode mode, bool& tieSlope, bool& tieWeight )
 {
 	tieSlope = false;
-	tieAccel = false;
+	tieWeight = false;
 	switch( mode )
 	{
 		case Animation::Tangent::TieMode::Manual:
@@ -75,9 +75,9 @@ void tieModeToBools( const Animation::Tangent::TieMode mode, bool& tieSlope, boo
 		case Animation::Tangent::TieMode::Slope:
 			tieSlope = true;
 			break;
-		case Animation::Tangent::TieMode::SlopeAndAccel:
+		case Animation::Tangent::TieMode::SlopeAndWeight:
 			tieSlope = true;
-			tieAccel = true;
+			tieWeight = true;
 			break;
 		default:
 			break;
@@ -262,7 +262,7 @@ AnimationGadget::AnimationGadget()
 	, m_originalKeyValues()
 	, m_dragTangent( nullptr, Animation::Tangent::Direction::Into )
 	, m_dragTangentOriginalSlope( 0.0 )
-	, m_dragTangentOriginalAccel( 0.0 )
+	, m_dragTangentOriginalWeight( 0.0 )
 	, m_dragStartPosition( 0 )
 	, m_lastDragPosition( 0 )
 	, m_dragMode( DragMode::None )
@@ -442,10 +442,10 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 
 					if( ( isSelected || previousKeySelected ) && (
 							hints.test( Animation::Interpolator::Hint::UseSlopeLo ) ||
-							hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) )
+							hints.test( Animation::Interpolator::Hint::UseWeightLo ) ) )
 					{
-						bool tieSlope, tieAccel;
-						tieModeToBools( previousKey->getTieMode(), tieSlope, tieAccel );
+						bool tieSlope, tieWeight;
+						tieModeToBools( previousKey->getTieMode(), tieSlope, tieWeight );
 						const Animation::Tangent& from = previousKey->getTangent( Animation::Tangent::Direction::From );
 						const V2d fromPosKey = from.getPosition( Animation::Tangent::Space::Key, false );
 						const V2f fromPosRas = viewportGadget->worldToRasterSpace( V3f( fromPosKey.x, fromPosKey.y, 0 ) );
@@ -454,15 +454,15 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						const Box2f fromBox( fromPosRas - V2f( fromSize ), fromPosRas + V2f( fromSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( fromPosRas.x, fromPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
 							tieSlope ? 2.0 : 1.0, &color4 );
-						( tieAccel ) ? style->renderSolidRectangle( fromBox ) : style->renderRectangle( fromBox );
+						( tieWeight ) ? style->renderSolidRectangle( fromBox ) : style->renderRectangle( fromBox );
 					}
 
 					if( ( isSelected || previousKeySelected ) && (
 						hints.test( Animation::Interpolator::Hint::UseSlopeHi ) ||
-						hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) )
+						hints.test( Animation::Interpolator::Hint::UseWeightHi ) ) )
 					{
-						bool tieSlope, tieAccel;
-						tieModeToBools( key.getTieMode(), tieSlope, tieAccel );
+						bool tieSlope, tieWeight;
+						tieModeToBools( key.getTieMode(), tieSlope, tieWeight );
 						const Animation::Tangent& into = key.getTangent( Animation::Tangent::Direction::Into );
 						const V2d intoPosKey = into.getPosition( Animation::Tangent::Space::Key, false );
 						const V2f intoPosRas = viewportGadget->worldToRasterSpace( V3f( intoPosKey.x, intoPosKey.y, 0 ) );
@@ -471,7 +471,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						const Box2f intoBox( intoPosRas - V2f( intoSize ), intoPosRas + V2f( intoSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( intoPosRas.x, intoPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
 							tieSlope ? 2.0 : 1.0, &color4 );
-						( tieAccel ) ? style->renderSolidRectangle( intoBox ) : style->renderRectangle( intoBox );
+						( tieWeight ) ? style->renderSolidRectangle( intoBox ) : style->renderRectangle( intoBox );
 					}
 				}
 
@@ -638,7 +638,7 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 				os << "Unknown";
 		}
 		os << "<br>Slope: " << tangent.getSlope( Gaffer::Animation::Tangent::Space::Key );
-		os << "<br>Accel: " << tangent.getAccel( Gaffer::Animation::Tangent::Space::Span );
+		os << "<br>Weight: " << tangent.getWeight();
 		return os.str();
 	}
 	else if( const Animation::ConstKeyPtr key = keyAt( line ) )
@@ -853,9 +853,9 @@ void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
 
 	if( ( axis == MoveAxis::X ) && (
 		( ( tangent.getDirection() == Animation::Tangent::Direction::From ) &&
-			! hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) ||
+			! hints.test( Animation::Interpolator::Hint::UseWeightLo ) ) ||
 		( ( tangent.getDirection() == Animation::Tangent::Direction::Into ) &&
-			! hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) ) )
+			! hints.test( Animation::Interpolator::Hint::UseWeightHi ) ) ) )
 	{
 		return;
 	}
@@ -870,10 +870,10 @@ void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
 	else if( ( axis == MoveAxis::Both ) && (
 		( ( tangent.getDirection() == Animation::Tangent::Direction::From ) && (
 			! hints.test( Animation::Interpolator::Hint::UseSlopeLo ) &&
-			! hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) ) ||
+			! hints.test( Animation::Interpolator::Hint::UseWeightLo ) ) ) ||
 		( ( tangent.getDirection() == Animation::Tangent::Direction::Into ) && (
 			! hints.test( Animation::Interpolator::Hint::UseSlopeHi ) &&
-			! hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) ) ) )
+			! hints.test( Animation::Interpolator::Hint::UseWeightHi ) ) ) ) )
 	{
 		return;
 	}
@@ -890,15 +890,15 @@ void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
 			tangent.setPositionWithSlope( currentDragOffset, m_dragTangentOriginalSlope, Animation::Tangent::Space::Key, false );
 			break;
 		case MoveAxis::Y:
-			tangent.setPositionWithAccel( currentDragOffset, m_dragTangentOriginalAccel, Animation::Tangent::Space::Key, false );
+			tangent.setPositionWithWeight( currentDragOffset, m_dragTangentOriginalWeight, Animation::Tangent::Space::Key, false );
 			break;
 		case MoveAxis::Both:
 			if( ( ( tangent.getDirection() == Animation::Tangent::Direction::From ) &&
-				! hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) ||
+				! hints.test( Animation::Interpolator::Hint::UseWeightLo ) ) ||
 				( ( tangent.getDirection() == Animation::Tangent::Direction::Into ) &&
-				! hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) )
+				! hints.test( Animation::Interpolator::Hint::UseWeightHi ) ) )
 			{
-				tangent.setPositionWithAccel( currentDragOffset, m_dragTangentOriginalAccel, Animation::Tangent::Space::Key, false );
+				tangent.setPositionWithWeight( currentDragOffset, m_dragTangentOriginalWeight, Animation::Tangent::Space::Key, false );
 			}
 			else
 			if( ( ( tangent.getDirection() == Animation::Tangent::Direction::From ) &&
@@ -1119,7 +1119,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 		{
 			Animation::Tangent& t = tangent.first->getTangent( tangent.second );
 			m_dragTangentOriginalSlope = t.getSlope( Animation::Tangent::Space::Span );
-			m_dragTangentOriginalAccel = t.getAccel( Animation::Tangent::Space::Span );
+			m_dragTangentOriginalWeight = t.getWeight();
 			m_dragTangent = tangent;
 			m_dragMode = DragMode::MoveTangent;
 			if(
@@ -1440,7 +1440,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		m_dragTangent.first.reset();
 		m_dragTangentOriginalSlope = 0.0;
-		m_dragTangentOriginalAccel = 0.0;
+		m_dragTangentOriginalWeight = 0.0;
 		m_mergeGroupId++;
 		break;
 	}
@@ -1625,7 +1625,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Tangent::Direction>
 
 					if( ( isSelected || previousKeySelected ) && (
 							hints.test( Animation::Interpolator::Hint::UseSlopeLo ) ||
-							hints.test( Animation::Interpolator::Hint::UseAccelLo ) ) )
+							hints.test( Animation::Interpolator::Hint::UseWeightLo ) ) )
 					{
 						const Animation::Tangent& from = previousKey->getTangent( Animation::Tangent::Direction::From );
 						const V2d fromPosKey = from.getPosition( Animation::Tangent::Space::Key, false );
@@ -1638,7 +1638,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Tangent::Direction>
 
 					if( ( isSelected || previousKeySelected ) && (
 						hints.test( Animation::Interpolator::Hint::UseSlopeHi ) ||
-						hints.test( Animation::Interpolator::Hint::UseAccelHi ) ) )
+						hints.test( Animation::Interpolator::Hint::UseWeightHi ) ) )
 					{
 						const Animation::Tangent& into = key.getTangent( Animation::Tangent::Direction::Into );
 						const V2d intoPosKey = into.getPosition( Animation::Tangent::Space::Key, false );
