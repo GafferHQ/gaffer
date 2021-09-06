@@ -629,5 +629,33 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		# were being removed between nodes during script destruction.
 		del script
 
+	def testLabelOverride( self ) :
+
+		shader = GafferSceneTest.TestShader()
+		shader["type"].setValue( "test:surface" )
+		shader["name"].setValue( "shader1" )
+
+		shader2 = GafferSceneTest.TestShader()
+		shader2["type"].setValue( "test:surface" )
+		shader2["name"].setValue( "shader2" )
+
+		plane = GafferScene.Plane()
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		assignment = GafferScene.ShaderAssignment()
+		assignment["in"].setInput( plane["out"] )
+		assignment["filter"].setInput( planeFilter["out"] )
+		assignment["shader"].setInput( shader["out"] )
+
+		output = assignment["out"].attributes( "/plane" )["test:surface"].outputShader()
+		self.assertEqual( output.name, "shader1" )
+		self.assertEqual( output.blindData()["label"], IECore.StringData( "TestShader" ) )
+
+		assignment["label"].setValue( "glass" )
+		output = assignment["out"].attributes( "/plane" )["test:surface"].outputShader()
+		self.assertEqual( output.name, "shader1" )
+		self.assertEqual( output.blindData()["label"], IECore.StringData( "glass" ) )
+
 if __name__ == "__main__":
 	unittest.main()

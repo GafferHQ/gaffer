@@ -49,6 +49,8 @@ Gaffer.Metadata.registerNode(
 	Assigns shaders to objects.
 	""",
 
+	"layout:activator:labelOverride", lambda node : not node["label"].isSetToDefault(),
+
 	plugs = {
 
 		"shader" : [
@@ -60,6 +62,19 @@ Gaffer.Metadata.registerNode(
 
 			"noduleLayout:section", "left",
 			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"label" : [
+
+			"description",
+			"""
+			A label for the shader to be assigned. If this is empty, the node
+			connected to the `shader` plug will be used instead.
+			""",
+
+			"nodule:type", "",
+			"layout:visibilityActivator", "labelOverride",
 
 		]
 

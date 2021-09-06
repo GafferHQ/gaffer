@@ -355,6 +355,8 @@ Isolate red channel                   :kbd:`R`
 Isolate green channel                 :kbd:`G`
 Isolate blue channel                  :kbd:`B`
 Isolate alpha channel                 :kbd:`A`
+Previous layer                        :kbd:`PgDn`
+Next layer                            :kbd:`PgUp`
 Center image at 1:1 scale             :kbd:`Home`
 Next Catalogue image                  :kbd:`↓`
 Previous Catalogue image              :kbd:`↑`

@@ -333,6 +333,8 @@ class Shader::NetworkBuilder
 			IECoreScene::ShaderPtr shader = new IECoreScene::Shader( shaderNode->namePlug()->getValue(), type );
 
 			const std::string nodeName = shaderNode->nodeNamePlug()->getValue();
+			shader->blindData()->writable()["label"] = new IECore::StringData( nodeName );
+			// \todo: deprecated, stop storing gaffer:nodeName after a grace period
 			shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( nodeName );
 			shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
 

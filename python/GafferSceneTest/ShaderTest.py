@@ -95,8 +95,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s2 = s.attributes()["test:surface"]
 		self.assertNotEqual( s2, s1 )
 
-		self.assertEqual( s1.getShader( "node1" ).blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
-		self.assertEqual( s2.getShader( "node2" ).blindData()["gaffer:nodeName"], IECore.StringData( "node2" ) )
+		self.assertEqual( s1.getShader( "node1" ).blindData()["label"], IECore.StringData( "node1" ) )
+		self.assertEqual( s2.getShader( "node2" ).blindData()["label"], IECore.StringData( "node2" ) )
 
 	def testNodeColorBlindData( self ) :
 

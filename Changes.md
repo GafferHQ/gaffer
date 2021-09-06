@@ -50,6 +50,21 @@ Breaking Changes
 - Fullscreen hotkey is now <kbd>F11</kbd> instead of <kbd>`</kbd>.
 - Removed support for linking editors (following the focus node replaces most practical uses of this feature).
 
+0.60.6.0 (relative to 0.60.5.0)
+========
+
+Improvements
+------------
+
+- Viewer : Added <kbd>PgDn</kbd> and <kbd>PgUp</kbd> hotkeys for switching to the previous and next image layer respectively.
+- Shader : Added "label" blindData which should be used in preference to "gaffer:nodeName" blindData.
+- ShaderAssignment : Added `label` plug to optionally override the shader's "label" blindData.
+
+Fixes
+-----
+
+- Fixed crash that could be triggered by exceptions being thrown during parallel evaluation. This could potentially happen while rendering Instancers where some locations were invalid.
+
 0.60.5.0 (relative to 0.60.4.0)
 ========
 
