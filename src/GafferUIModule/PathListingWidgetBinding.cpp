@@ -38,7 +38,9 @@
 
 #include "PathListingWidgetBinding.h"
 
+#include "Gaffer/BackgroundTask.h"
 #include "Gaffer/FileSystemPath.h"
+#include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/Path.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
@@ -58,15 +60,20 @@
 #include "QtTest/QAbstractItemModelTester"
 
 #include "QtCore/QAbstractItemModel"
+#include "QtCore/QCoreApplication"
 #include "QtCore/QDateTime"
+#include "QtCore/QEvent"
 #include "QtCore/QModelIndex"
+#include "QtCore/QTimer"
 #include "QtCore/QVariant"
 
 #include "QtWidgets/QTreeView"
 #include "QtWidgets/QFileIconProvider"
 
+#include <chrono>
 #include <unordered_map>
 
+using namespace std::chrono_literals;
 using namespace boost::python;
 using namespace boost::posix_time;
 using namespace Gaffer;
@@ -382,6 +389,8 @@ class FileIconColumn : public Column
 
 IE_CORE_DECLAREPTR( FileIconColumn )
 
+static IECore::InternedString g_childPlaceholder( "childPlaceholder" );
+
 // A QAbstractItemModel for the navigation of Gaffer::Paths.
 // This allows us to view Paths in QTreeViews. This forms part
 // of the internal implementation of PathListingWidget, the rest
@@ -395,24 +404,38 @@ class PathModel : public QAbstractItemModel
 
 		PathModel( QObject *parent = nullptr )
 			:	QAbstractItemModel( parent ),
-				m_rootItem( new Item( nullptr, nullptr ) ),
+				m_rootItem( new Item( IECore::InternedString(), nullptr ) ),
 				m_flat( true ),
 				m_sortColumn( -1 ),
-				m_sortOrder( Qt::AscendingOrder )
+				m_sortOrder( Qt::AscendingOrder ),
+				m_updateScheduled( false )
 		{
 		}
 
+		~PathModel()
+		{
+			// Cancel update task before the things it relies on are destroyed.
+			// No need to flush pending edits, because Qt won't deliver the events
+			// to us after we're destructed anyway.
+			cancelUpdate( /* flushPendingEdits = */ false );
+		}
+
 		///////////////////////////////////////////////////////////////////
-		// Our methods - these don't mean anything to Qt
+		// Our public methods - these don't mean anything to Qt
 		///////////////////////////////////////////////////////////////////
 
 		void setColumns( const std::vector<ColumnPtr> columns )
 		{
 			/// \todo Maintain persistent indices etc
 			/// using `m_rootItem->update()`.
+
+			// Cancel update and flush edit queue before we destroy
+			// the items they reference.
+			cancelUpdate();
+
 			beginResetModel();
 			m_columns = columns;
-			m_rootItem = new Item( getRoot(), nullptr );
+			m_rootItem = new Item( IECore::InternedString(), nullptr );
 			endResetModel();
 		}
 
@@ -423,12 +446,18 @@ class PathModel : public QAbstractItemModel
 
 		Path *getRoot()
 		{
-			return m_rootItem->path();
+			return m_rootPath.get();
 		}
 
 		void setRoot( PathPtr root )
 		{
-			m_rootItem->update( root, this );
+			// Cancel update and flush edit queue before we dirty
+			// the items they reference.
+			cancelUpdate();
+			m_rootPath = root;
+			m_rootItem->dirty();
+			// Schedule update to process the dirtied items.
+			scheduleUpdate();
 		}
 
 		void setFlat( bool flat )
@@ -438,6 +467,7 @@ class PathModel : public QAbstractItemModel
 				return;
 			}
 
+			cancelUpdate();
 			beginResetModel();
 			m_flat = flat;
 			endResetModel();
@@ -461,43 +491,53 @@ class PathModel : public QAbstractItemModel
 			}
 		}
 
-		Path *pathForIndex( const QModelIndex &index )
+		PathPtr pathForIndex( const QModelIndex &index )
 		{
-			if( !index.isValid() )
+			if( !index.isValid() || !m_rootPath )
 			{
 				return nullptr;
 			}
-			return static_cast<Item *>( index.internalPointer() )->path();
+			PathPtr result = m_rootPath->copy();
+			std::vector<IECore::InternedString> relativePath;
+			Item *item = static_cast<Item *>( index.internalPointer() );
+			while( item->parent() )
+			{
+				relativePath.push_back( item->name() );
+				item = item->parent();
+			}
+			for( auto it = relativePath.rbegin(); it != relativePath.rend(); ++it )
+			{
+				result->append( *it );
+			}
+			return result;
 		}
 
 		QModelIndex indexForPath( const std::vector<IECore::InternedString> &path )
 		{
-			const Path *rootPath = m_rootItem->path();
-
-			if( !rootPath )
+			if( !m_rootPath )
 			{
 				return QModelIndex();
 			}
 
-			if( path.size() <= rootPath->names().size() )
+			if( path.size() <= m_rootPath->names().size() )
 			{
 				return QModelIndex();
 			}
 
-			if( !equal( rootPath->names().begin(), rootPath->names().end(), path.begin() ) )
+			if( !equal( m_rootPath->names().begin(), m_rootPath->names().end(), path.begin() ) )
 			{
 				return QModelIndex();
 			}
 
 			QModelIndex result;
 			Item *item = m_rootItem.get();
-			for( size_t i = rootPath->names().size(); i < path.size(); ++i )
+			for( size_t i = m_rootPath->names().size(); i < path.size(); ++i )
 			{
 				bool foundNextItem = false;
 				const Item::ChildContainer &childItems = item->childItems( this );
 				for( auto it = childItems.begin(), eIt = childItems.end(); it != eIt; ++it )
 				{
-					if( (*it)->path()->names()[i] == path[i] )
+					if( (*it)->name() == path[i] )
 					{
 						result = index( it - childItems.begin(), 0, result );
 						item = it->get();
@@ -522,14 +562,23 @@ class PathModel : public QAbstractItemModel
 		std::vector<QModelIndex> indicesForPaths( const IECore::PathMatcher &paths )
 		{
 			std::vector<QModelIndex> result;
-			const Path *rootPath = m_rootItem->path();
-			if( !rootPath )
+			if( !m_rootPath )
 			{
 				return result;
 			}
 
-			indicesForPathsWalk( m_rootItem.get(), QModelIndex(), paths, result );
+			indicesForPathsWalk( m_rootItem.get(), Path::Names(), QModelIndex(), paths, result );
 			return result;
+		}
+
+		void waitForPendingUpdates()
+		{
+			startUpdate();
+			if( m_updateTask )
+			{
+				m_updateTask->wait();
+			}
+			QCoreApplication::sendPostedEvents( this, EditEvent::staticType() );
 		}
 
 		///////////////////////////////////////////////////////////////////
@@ -622,42 +671,178 @@ class PathModel : public QAbstractItemModel
 				return;
 			}
 
+			cancelUpdate();
+
 			m_sortColumn = column;
 			m_sortOrder = order;
+			m_rootItem->dirty();
 
-			m_rootItem->update( m_rootItem->path(), this );
+			scheduleUpdate();
 		}
 
 	private :
 
+		// Async update mechanism
+		// ======================
+		//
+		// Queries such as `Path::children()` and `Path::property()` can take
+		// significant amounts of time, for instance when querying a slow
+		// filesystem via FileSystemPath or a complex scene via ScenePath. We
+		// want to avoid blocking the UI when making such queries, to avoid user
+		// frustration.
+		//
+		// We therefore return immediately from methods such as
+		// `PathModel::rowCount()` and `PathModel::data()`, even if it means
+		// returning default or stale results. At the same time, we call
+		// `scheduleUpdate()` to launch a background task which will compute updates for the
+		// model asynchronously.
+		//
+		// We need to apply the updates and signal them to Qt on the main thread,
+		// for which we use `queueEdit()`.
+
+		// Arranges to peform a background update after a short delay.
+		void scheduleUpdate()
+		{
+			if( !m_rootPath || m_updateScheduled )
+			{
+				return;
+			}
+
+			// It's typical for several queries to `PathModel::data()` and
+			// `PathModel::rowCount()` etc to come in a little flurry, for all
+			// of the visible items in the QTreeView. So we delay the start of
+			// the update for a grace period to avoid repeatedly starting and
+			// cancelling updates when each query happens.
+			QTimer::singleShot(
+				50ms,
+				// Using `this` as the context for Qt means that we can safely
+				// call a method, because the timer will be cancelled if we are
+				// destroyed.
+				this,
+				&PathModel::startUpdate
+			);
+			m_updateScheduled = true;
+		}
+
+		void startUpdate()
+		{
+			if( !m_updateScheduled )
+			{
+				// We can get here if `waitForPendingUpdates()` starts the
+				// update early, and the timer triggers afterwards. Or if
+				// `waitForPendingUpdates()` is called when there are no
+				// updates to do.
+				return;
+			}
+
+			// Cancel previous update and flush pending edits, as they
+			// may delete or modify the items being visited by the
+			// background task.
+			cancelUpdate();
+
+			// And then we can reschedule our update task.
+			m_updateTask = ParallelAlgo::callOnBackgroundThread(
+				/// \todo We need to pass an appropriate subject here
+				/// based on the root path, so that we can participate
+				/// in cancellation appropriately.
+				/* subject = */ nullptr,
+				[this] {
+					m_rootItem->update( this );
+				}
+			);
+			m_updateScheduled = false;
+		}
+
+		// Cancels the current background update, optionally flushing the
+		// queue of pending edits.
+		void cancelUpdate( bool flushPendingEdits = true )
+		{
+			m_updateTask.reset(); // Implicitly calls `cancelAndWait()`.
+			if( flushPendingEdits )
+			{
+				QCoreApplication::sendPostedEvents( this, EditEvent::staticType() );
+			}
+		}
+
+		// Custom event class used by `queueEdit()`. This simply holds a
+		// `std::function` to be executed on the main thread, allowing us to
+		// write the edit as a lambda at the call site.
+		struct EditEvent : public QEvent
+		{
+
+			using Edit = std::function<void()>;
+
+			EditEvent( const Edit &edit )
+				:	QEvent( staticType() ), edit( edit )
+			{
+			}
+
+			Edit edit;
+
+			static QEvent::Type staticType()
+			{
+				static QEvent::Type g_type = (QEvent::Type)registerEventType();
+				return g_type;
+			}
+
+		};
+
+		// Queues an arbitrary edit to be made on the UI thread.
+		template<typename F>
+		void queueEdit( const F &edit )
+		{
+			// Qt takes responsibility for deleting the event after it is
+			// delivered.
+			QCoreApplication::postEvent( this, new EditEvent( edit ) );
+		}
+
+		// Executed the edit events posted by `queueEdit()`.
+		void customEvent( QEvent *event ) override
+		{
+			if( event->type() == EditEvent::staticType() )
+			{
+				static_cast<EditEvent *>( event )->edit();
+				return;
+			}
+			QObject::customEvent( event );
+		}
+
 		// A single item in the PathModel - stores a path and caches
 		// data extracted from it to provide the model content.
+		// Uses `scheduleUpdate()` and `queueEdit()` to update itself
+		// asynchronously.
 		struct Item : public IECore::RefCounted
 		{
 
-			Item( Gaffer::PathPtr path, Item *parent )
-				:	m_path( path ),
+			Item( const IECore::InternedString &name, Item *parent )
+				:	m_name( name ),
 					m_parent( parent ),
 					m_row( -1 ), // Assigned true value in `updateChildItems()`
 					m_dataState( State::Unrequested ),
 					m_childItemsState( State::Unrequested )
 			{
+				static auto g_emptyChildItems = std::make_shared<PathModel::Item::ChildContainer>();
+				m_childItems = g_emptyChildItems;
 			}
 
 			IE_CORE_DECLAREMEMBERPTR( Item )
 
-			void update( const Gaffer::PathPtr &path, PathModel *model )
+			const IECore::InternedString &name() const
+			{
+				return m_name;
+			}
+
+			void dirty()
 			{
 				// This is just intended to be called on the root item by the
 				// PathModel when the path changes.
 				assert( !m_parent );
-				m_path = path;
-				updateWalk( model );
+				dirtyWalk();
 			}
 
-			Gaffer::Path *path()
+			void update( PathModel *model )
 			{
-				return m_path.get();
+				updateWalk( model, model->m_rootPath.get() );
 			}
 
 			Item *parent()
@@ -670,24 +855,19 @@ class PathModel : public QAbstractItemModel
 				return m_row;
 			}
 
-			// Returns the data for the specified column and role, using the provided
-			// Columns to generate it as necessary. The Item is responsible for caching
-			// the results of these queries internally.
+			// Returns the data for the specified column and role. The Item is
+			// responsible for caching the results of these queries internally.
 			QVariant data( int column, int role, const PathModel *model )
 			{
-				// We generate data for all columns and roles at once, on the
-				// assumption that access to one is likely to indicate upcoming
-				// accesses to the others.
-				//
-				// Note : `data()` is called from public query methods of the
-				// PathModel. We don't call `updateData()` here if
-				// `m_childItemsState == Dirty` because we can't modify the
-				// model from within a query function.
-
-				if( m_dataState == State::Unrequested )
+				if( requestIfUnrequested( m_dataState ) )
 				{
-					m_dataState = State::Requested;
-					updateData( const_cast<PathModel *>( model ) );
+					const_cast<PathModel *>( model )->scheduleUpdate();
+				}
+
+				if( column >= (int)m_displayData.size() )
+				{
+					// We haven't computed any data yet.
+					return QVariant();
 				}
 
 				switch( role )
@@ -705,21 +885,16 @@ class PathModel : public QAbstractItemModel
 
 			ChildContainer &childItems( const PathModel *model )
 			{
-				// Note : `childItems()` is called from public query methods of
-				// the PathModel. We don't call `updateChildItems()` here
-				// if `m_childItemsState == Dirty` because we can't modify the
-				// model from within a query function.
-				if( m_childItemsState == State::Unrequested )
+				if( requestIfUnrequested( m_childItemsState ) )
 				{
-					m_childItemsState = State::Requested;
-					updateChildItems( const_cast<PathModel *>( model ) );
+					const_cast<PathModel *>( model )->scheduleUpdate();
 				}
-				return m_childItems;
+				return *m_childItems;
 			}
 
 			private :
 
-				void updateWalk( PathModel *model )
+				void dirtyWalk()
 				{
 					if( m_dataState == State::Clean )
 					{
@@ -729,20 +904,47 @@ class PathModel : public QAbstractItemModel
 					{
 						m_childItemsState = State::Dirty;
 					}
-					updateData( model );
-					updateChildItems( model );
-					for( const auto &child : m_childItems )
+					for( const auto &child : *m_childItems )
 					{
-						child->updateWalk( model );
+						child->dirtyWalk();
 					}
 				}
 
-				void updateData( PathModel *model )
+				void updateWalk( PathModel *model,const Path *path )
+				{
+					updateData( model, path );
+					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path );
+					PathPtr childPath = path->copy();
+					childPath->append( g_childPlaceholder );
+					for( const auto &child : *updatedChildItems )
+					{
+						childPath->set( childPath->names().size() - 1, child->name() );
+						child->updateWalk( model, childPath.get() );
+					}
+				}
+
+				static QVariant dataForSort( const std::vector<QVariant> &displayData, PathModel *model )
+				{
+					if( model->m_sortColumn < 0 || model->m_sortColumn >= (int)displayData.size() )
+					{
+						return QVariant();
+					}
+					return displayData[model->m_sortColumn];
+				}
+
+				// Updates data and returns the value that should be used for sorting.
+				// This value is returned because the actual edit to `m_displayData` will not be
+				// complete until the queued edit is processed by the UI thread.
+				QVariant updateData( PathModel *model, const Path *path )
 				{
 					if( m_dataState == State::Clean || m_dataState == State::Unrequested )
 					{
-						return;
+						return dataForSort( m_displayData, model );
 					}
+
+					// We generate data for all columns and roles at once, on the
+					// assumption that access to one is likely to indicate upcoming
+					// accesses to the others.
 
 					std::vector<QVariant> newDisplayData;
 					std::vector<QVariant> newDecorationData;
@@ -756,8 +958,8 @@ class PathModel : public QAbstractItemModel
 						QVariant decorationData;
 						try
 						{
-							displayData = model->m_columns[i]->data( m_path.get(), Qt::DisplayRole );
-							decorationData = model->m_columns[i]->data( m_path.get(), Qt::DecorationRole );
+							displayData = model->m_columns[i]->data( path, Qt::DisplayRole );
+							decorationData = model->m_columns[i]->data( path, Qt::DecorationRole );
 						}
 						catch( const std::exception &e )
 						{
@@ -774,64 +976,94 @@ class PathModel : public QAbstractItemModel
 						newDecorationData.push_back( decorationData );
 					}
 
-					if( newDisplayData != m_displayData || newDecorationData != m_decorationData )
+					if( newDisplayData == m_displayData && newDecorationData == m_decorationData )
 					{
-						m_displayData.swap( newDisplayData );
-						m_decorationData.swap( newDecorationData );
-						if( m_dataState != State::Requested )
-						{
-							model->dataChanged( model->createIndex( m_row, 0, this ), model->createIndex( m_row, model->m_columns.size() - 1, this ) );
-						}
+						// No update necessary.
+						m_dataState = State::Clean;
+						return dataForSort( m_displayData, model );
 					}
 
+					if( m_row == -1 )
+					{
+						// We have just been created in `updateChildItems()` and haven't
+						// been made visible to Qt yet. No need to emit `dataChanged` or
+						// worry about concurrent access from the UI thread.
+						m_displayData.swap( newDisplayData );
+						m_decorationData.swap( newDecorationData );
+						m_dataState = State::Clean;
+						return dataForSort( m_displayData, model );
+					}
+
+					// Mark clean _now_, to avoid a double update if we are
+					// called from our parent's `updateChildItems()` (to obtain
+					// data for sorting) and then called again from
+					// `updateWalk()` before the queued edit is applied.
 					m_dataState = State::Clean;
+
+					// Get result before we move `newDisplayData` into the lambda.
+					const QVariant result = dataForSort( newDisplayData, model );
+
+					model->queueEdit(
+
+						[this, model, newDisplayData = std::move( newDisplayData ), newDecorationData = std::move( newDecorationData )] () mutable {
+
+							m_displayData.swap( newDisplayData );
+							m_decorationData.swap( newDecorationData );
+							model->dataChanged( model->createIndex( m_row, 0, this ), model->createIndex( m_row, model->m_columns.size() - 1, this ) );
+
+						}
+
+					);
+
+					return result;
 				}
 
-				void updateChildItems( PathModel *model )
+				// Returns the updated ChildContainer. This will not be visible in the model
+				// until the queued edit is executed. It is returned so that we can update
+				// the not-yet-visible children in `updateWalk()`.
+				std::shared_ptr<ChildContainer> updateChildItems( PathModel *model, const Gaffer::Path *path )
 				{
 					if( m_childItemsState == State::Unrequested || m_childItemsState == State::Clean )
 					{
-						return;
+						return m_childItems;
 					}
 
 					// Construct a new ChildContainer to replace our previous children.
 					// Where possible we reuse existing children instead of creating new
 					// ones.
 
-					ChildContainer newChildItems;
-					if( m_path )
+					auto newChildItemsPtr = std::make_shared<ChildContainer>();
+					ChildContainer &newChildItems = *newChildItemsPtr;
+
+					std::vector<Gaffer::PathPtr> children;
+					try
 					{
-						std::vector<Gaffer::PathPtr> children;
-						try
-						{
-							m_path->children( children );
-						}
-						catch( const std::exception &e )
-						{
-							IECore::msg( IECore::Msg::Error, "PathListingWidget", e.what() );
-						}
+						path->children( children );
+					}
+					catch( const std::exception &e )
+					{
+						IECore::msg( IECore::Msg::Error, "PathListingWidget", e.what() );
+					}
 
-						std::unordered_map<IECore::InternedString, Item *> oldChildMap;
-						for( const auto &oldChild : m_childItems )
-						{
-							oldChildMap[oldChild->path()->names().back()] = oldChild.get();
-						}
+					std::unordered_map<IECore::InternedString, Item *> oldChildMap;
+					for( const auto &oldChild : *m_childItems )
+					{
+						oldChildMap[oldChild->m_name] = oldChild.get();
+					}
 
-						for( auto it = children.begin(), eIt = children.end(); it != eIt; ++it )
+					for( auto it = children.begin(), eIt = children.end(); it != eIt; ++it )
+					{
+						auto oldIt = oldChildMap.find( (*it)->names().back() );
+						if( oldIt != oldChildMap.end() )
 						{
-							auto oldIt = oldChildMap.find( (*it)->names().back() );
-							if( oldIt != oldChildMap.end() )
-							{
-								// Reuse previous item.
-								Ptr itemToReuse = oldIt->second;
-								itemToReuse->m_path = *it;
-								newChildItems.push_back( itemToReuse );
-							}
-							else
-							{
-								// Make new item.
-								newChildItems.push_back( new Item( *it, this ) );
-							}
+							// Reuse previous item.
+							Ptr itemToReuse = oldIt->second;
+							newChildItems.push_back( itemToReuse );
+						}
+						else
+						{
+							// Make new item.
+							newChildItems.push_back( new Item( (*it)->names().back(), this ) );
 						}
 					}
 
@@ -839,30 +1071,41 @@ class PathModel : public QAbstractItemModel
 
 					if( model->m_sortColumn >= 0 && model->m_sortColumn < (int)model->m_columns.size() )
 					{
+						using SortablePair = std::pair<QVariant, size_t>;
+						std::vector<SortablePair> sortedIndices;
+						sortedIndices.reserve( newChildItems.size() );
+
 						for( const auto &childItem : newChildItems )
 						{
-							if( childItem->m_dataState == State::Unrequested )
-							{
-								childItem->m_dataState = State::Requested;
-							}
-							childItem->updateData( model );
+							requestIfUnrequested( childItem->m_dataState );
+							sortedIndices.push_back( SortablePair(
+								childItem->updateData( model, children[sortedIndices.size()].get() ),
+								sortedIndices.size()
+							) );
 						}
+
 						std::sort(
-							newChildItems.begin(), newChildItems.end(),
-							[model] ( const Item::Ptr &left, const Item::Ptr &right ) {
-								const QVariant &l = left->m_displayData[model->m_sortColumn];
-								const QVariant &r = right->m_displayData[model->m_sortColumn];
-								return model->m_sortOrder == Qt::AscendingOrder ? variantLess( l, r ) : variantLess( r, l );
+							sortedIndices.begin(), sortedIndices.end(),
+							[model] ( const SortablePair &l, const SortablePair &r ) {
+								return model->m_sortOrder == Qt::AscendingOrder ? variantLess( l.first, r.first ) : variantLess( r.first, l.first );
 							}
 						);
+
+						ChildContainer sortedChildItems;
+						sortedChildItems.reserve( sortedIndices.size() );
+						for( const auto &item : sortedIndices )
+						{
+							sortedChildItems.push_back( newChildItems[item.second] );
+						}
+						newChildItems.swap( sortedChildItems );
 					}
 
 					// Early out if nothing has changed.
 
-					if( newChildItems == m_childItems )
+					if( newChildItems == *m_childItems )
 					{
 						m_childItemsState = State::Clean;
-						return;
+						return m_childItems;
 					}
 
 					// If we had children before, figure out the mapping from old to new,
@@ -874,12 +1117,12 @@ class PathModel : public QAbstractItemModel
 					std::unordered_map<IECore::InternedString, size_t> newChildMap;
 					for( size_t i = 0; i < newChildItems.size(); ++i )
 					{
-						newChildMap[newChildItems[i]->path()->names().back()] = i;
+						newChildMap[newChildItems[i]->m_name] = i;
 					}
 
-					for( const auto &oldChild : m_childItems )
+					for( const auto &oldChild : *m_childItems )
 					{
-						auto nIt = newChildMap.find( oldChild->m_path->names().back() );
+						auto nIt = newChildMap.find( oldChild->m_name );
 						if( nIt != newChildMap.end() )
 						{
 							const int toRow = nIt->second;
@@ -895,29 +1138,33 @@ class PathModel : public QAbstractItemModel
 						}
 					}
 
-					// Apply the update. We have to mark ourselves clean _before_
-					// changing layout, to avoid recursion when Qt responds to
-					// `layoutAboutToBeChanged()`.
+					// Apply the update.
 
-					const bool emitLayoutChanged = m_childItemsState != State::Requested;
-					m_childItemsState = State::Clean;
+					model->queueEdit(
 
-					if( emitLayoutChanged )
-					{
-						model->layoutAboutToBeChanged( { model->createIndex( row(), 0, this ) } );
-					}
+						[this, model, newChildItemsPtr, changedPersistentIndexesFrom, changedPersistentIndexesTo]() mutable {
 
-					m_childItems.swap( newChildItems );
-					for( size_t i = 0; i < m_childItems.size(); ++i )
-					{
-						m_childItems[i]->m_row = i;
-					}
+							// We have to mark ourselves clean _before_ changing
+							// layout, to avoid recursion when Qt responds to
+							// `layoutAboutToBeChanged()`.
+							m_childItemsState = State::Clean;
+							QList<QPersistentModelIndex> parents = { model->createIndex( row(), 0, this ) };
+							model->layoutAboutToBeChanged( parents );
 
-					if( emitLayoutChanged )
-					{
-						model->changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
-						model->layoutChanged();
-					}
+							m_childItems = newChildItemsPtr;
+							for( size_t i = 0; i < m_childItems->size(); ++i )
+							{
+								(*m_childItems)[i]->m_row = i;
+							}
+
+							model->changePersistentIndexList( changedPersistentIndexesFrom, changedPersistentIndexesTo );
+							model->layoutChanged( parents );
+
+						}
+
+					);
+
+					return newChildItemsPtr;
 				}
 
 				void invalidateIndexes( PathModel *model, QModelIndexList &from, QModelIndexList &to )
@@ -927,13 +1174,13 @@ class PathModel : public QAbstractItemModel
 						from.append( model->createIndex( m_row, c, this ) );
 						to.append( QModelIndex() );
 					}
-					for( const auto &child : m_childItems )
+					for( const auto &child : *m_childItems )
 					{
 						child->invalidateIndexes( model, from, to );
 					}
 				}
 
-				Gaffer::PathPtr m_path;
+				const IECore::InternedString m_name;
 				Item *m_parent;
 				int m_row;
 
@@ -959,22 +1206,33 @@ class PathModel : public QAbstractItemModel
 					Dirty
 				};
 
-				State m_dataState;
+				static bool requestIfUnrequested( std::atomic<State> &state )
+				{
+					State unrequested = State::Unrequested;
+					return state.compare_exchange_strong( unrequested, State::Requested );
+				}
+
+				std::atomic<State> m_dataState;
 				std::vector<QVariant> m_displayData;
 				std::vector<QVariant> m_decorationData;
 
-				State m_childItemsState;
-				std::vector<Ptr> m_childItems;
+				std::atomic<State> m_childItemsState;
+				// Children are held by `shared_ptr` in order to support
+				// asynchronous update. Newly created children aren't owned
+				// by the Item until `m_childItems` is assigned on the UI
+				// thread, which may happen before, during, or after the
+				// recursive background update completes.
+				std::shared_ptr<ChildContainer> m_childItems;
 
 		};
 
-		void indicesForPathsWalk( Item *item, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
+		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
 		{
 			/// \todo Using `match()` here isn't right, because we want to
 			/// treat wildcards in the selection verbatim rather than perform
 			/// matching with them. We should use `find()`, but that doesn't
 			/// provide a convenient way of checking for descendant matches.
-			const unsigned match = paths.match( item->path()->names() );
+			const unsigned match = paths.match( itemPath );
 			if( match & IECore::PathMatcher::ExactMatch )
 			{
 				indices.push_back( itemIndex );
@@ -986,12 +1244,17 @@ class PathModel : public QAbstractItemModel
 			}
 
 			size_t row = 0;
+			Path::Names childItemPath = itemPath;
+			childItemPath.push_back( IECore::InternedString() ); // Room for child name
 			for( const auto &childItem : item->childItems( this ) )
 			{
 				const QModelIndex childIndex = index( row++, 0, itemIndex );
-				indicesForPathsWalk( childItem.get(), childIndex, paths, indices );
+				childItemPath.back() = childItem->name();
+				indicesForPathsWalk( childItem.get(), childItemPath, childIndex, paths, indices );
 			}
 		}
+
+		Gaffer::PathPtr m_rootPath;
 
 		Item::Ptr m_rootItem;
 		bool m_flat;
@@ -999,6 +1262,9 @@ class PathModel : public QAbstractItemModel
 		int m_sortColumn;
 		Qt::SortOrder m_sortOrder;
 		std::unique_ptr<QAbstractItemModelTester> m_tester;
+
+		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
+		bool m_updateScheduled;
 
 };
 
@@ -1237,6 +1503,13 @@ void attachTester( uint64_t treeViewAddress )
 	model->attachTester();
 }
 
+void waitForPendingUpdates( uint64_t modelAddress )
+{
+	PathModel *model = reinterpret_cast<PathModel *>( modelAddress );
+	IECorePython::ScopedGILRelease gilRelease;
+	model->waitForPendingUpdates();
+}
+
 } // namespace
 
 void GafferUIModule::bindPathListingWidget()
@@ -1265,6 +1538,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetIndexForPath", &indexForPath );
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
 	def( "_pathListingWidgetAttachTester", &attachTester );
+	def( "_pathModelWaitForPendingUpdates", &waitForPendingUpdates );
 
 	IECorePython::RefCountedClass<Column, IECore::RefCounted>( "_PathListingWidgetColumn" );
 
