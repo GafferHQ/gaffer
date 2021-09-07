@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.6.0)
+========
+
+Fixes
+-----
+
+- Window : Fixed errors printed by floating child windows at shutdown (bug introduced in 0.60.3.0).
+
 0.60.6.0 (relative to 0.60.5.0)
 ========
 
