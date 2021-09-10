@@ -84,5 +84,9 @@ class TaskMutexTest( GafferTest.TestCase ) :
 
 		GafferTest.testTaskMutexDontSilentlyCancel()
 
+	def testCancellation( self ) :
+
+		GafferTest.testTaskMutexCancellation()
+
 if __name__ == "__main__":
 	unittest.main()

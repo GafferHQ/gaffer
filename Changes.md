@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Fixed crash triggered by cancellation of long running computes (bug introduced in Gaffer 0.60.6.0).
 - Window : Fixed errors printed by floating child windows at shutdown (bug introduced in 0.60.3.0).
 
 0.60.6.0 (relative to 0.60.5.0)

@@ -478,6 +478,42 @@ void testTaskMutexDontSilentlyCancel()
 	GAFFERTEST_ASSERT( !incorrectlyCancelled.load() );
 }
 
+void testTaskMutexCancellation()
+{
+	TaskMutex mutex;
+
+	auto executeWithLock = [&mutex] () {
+
+		TaskMutex::ScopedLock lock( mutex );
+		lock.execute(
+			[] () { std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) ); }
+		);
+
+	};
+
+	// Launch many tasks that all acquire the same mutex and call `execute()`.
+
+	tbb::task_group_context context;
+	tbb::parallel_for(
+		0, 10000,
+		[&executeWithLock, &context] ( int i ) {
+			executeWithLock();
+			if( i % 10 == 9 )
+			{
+				// Once a few tasks are launched, cancel the execution
+				// of the `parallel_for()`. This will cause TBB to cancel
+				// calls to `execute()` so that they don't run the functor.
+				// This exposed a bug whereby cancellation left the TaskMutex
+				// in an invalid state, triggering a debug assertion in
+				// `execute()`.
+				context.cancel_group_execution();
+			}
+		},
+		context
+	);
+
+}
+
 } // namespace
 
 void GafferTestModule::bindTaskMutexTest()
@@ -491,4 +527,5 @@ void GafferTestModule::bindTaskMutexTest()
 	def( "testTaskMutexExceptions", &testTaskMutexExceptions );
 	def( "testTaskMutexWorkerExceptions", &testTaskMutexWorkerExceptions );
 	def( "testTaskMutexDontSilentlyCancel", &testTaskMutexDontSilentlyCancel );
+	def( "testTaskMutexCancellation", &testTaskMutexCancellation );
 }
