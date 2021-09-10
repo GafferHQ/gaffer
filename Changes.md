@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Window : Fixed errors printed by floating child windows at shutdown (bug introduced in 0.60.3.0).
+- GraphEditor : Fixed annotation drawing glitch triggered by annotations with empty text. Empty annotations are now ignored.
 
 0.60.6.0 (relative to 0.60.5.0)
 ========
