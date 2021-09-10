@@ -37,6 +37,7 @@
 
 import inspect
 import unittest
+import time
 import threading
 import imath
 
@@ -392,6 +393,62 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			self.assertSceneValid( script["plane"]["out"] )
 
 		self.assertEqual( monitor.combinedStatistics().numUniqueValues( "scene:path" ), 0 )
+
+	def testChildBoundsCancellation( self ) :
+
+		# Make Sierpinski triangle type thing.
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( script["sphere"]["out"] )
+		script["loop"]["in"].setInput( script["sphere"]["out"] )
+		script["loop"]["iterations"].setValue( 12 )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		script["transform1"] = GafferScene.Transform()
+		script["transform1"]["in"].setInput( script["loop"]["previous"] )
+		script["transform1"]["filter"].setInput( script["filter"]["out"] )
+		script["transform1"]["transform"]["translate"]["x"].setValue( 1 )
+
+		script["transform2"] = GafferScene.Transform()
+		script["transform2"]["in"].setInput( script["loop"]["previous"] )
+		script["transform2"]["filter"].setInput( script["filter"]["out"] )
+		script["transform2"]["transform"]["translate"]["y"].setValue( 1 )
+
+		script["transform3"] = GafferScene.Transform()
+		script["transform3"]["in"].setInput( script["loop"]["previous"] )
+		script["transform3"]["filter"].setInput( script["filter"]["out"] )
+		script["transform3"]["transform"]["translate"]["z"].setValue( 1 )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["transform1"]["out"] )
+		script["group"]["in"][1].setInput( script["transform2"]["out"] )
+		script["group"]["in"][2].setInput( script["transform3"]["out"] )
+		script["group"]["transform"]["scale"].setValue( imath.V3f( 0.666 ) )
+
+		script["loop"]["next"].setInput( script["group"]["out"] )
+
+		for i in range( 0, 10 ) :
+
+			# Launch background task to compute root bounds. This will perform
+			# a deep recursion through the hierarchy using parallel tasks.
+
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
+				script["loop"]["out"],
+				lambda : script["loop"]["out"].bound( "/" )
+			)
+
+			time.sleep( 0.1 )
+
+			# Cancel background task so that we don't perform all the work.
+			# This triggered a crash bug in TaskMutex, but should return
+			# cleanly if it has been fixed.
+			backgroundTask.cancelAndWait()
 
 	def setUp( self ) :
 
