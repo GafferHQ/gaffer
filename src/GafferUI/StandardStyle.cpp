@@ -822,6 +822,12 @@ Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const I
 
 Imath::V2f StandardStyle::renderAnnotation( const Imath::V2f &origin, const std::string &text, State state, const Imath::Color3f *userColor ) const
 {
+	const Box3f textBounds = textBound( BodyText, text );
+	if( textBounds.isEmpty() )
+	{
+		return origin;
+	}
+
 	const float padding = 0.5;
 	const float borderWidth = 0.1;
 	const float spacing = 0.25;
@@ -834,8 +840,6 @@ Imath::V2f StandardStyle::renderAnnotation( const Imath::V2f &origin, const std:
 
 		const Color4f darkGrey( 0.1, 0.1, 0.1, 1.0 );
 		const Color4f midGrey( 0.65, 0.65, 0.65, 1.0 );
-
-		Box3f textBounds = textBound( BodyText, text );
 
 		renderFrameInternal(
 			Box2f( V2f( 0, textBounds.min.y ), V2f( textBounds.max.x, characterBound.max.y ) ),
