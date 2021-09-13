@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import six
+import sys
 import unittest
 import warnings
 import weakref
@@ -419,6 +421,36 @@ class WindowTest( GafferUITest.TestCase ) :
 			self.waitForIdle( 1000 )
 			self.assertEqual( parent.childWindows(), [] )
 			self.assertEqual( weakChild(), None )
+
+	def testChildWindowDuringShutdown( self ) :
+
+		with GafferUI.Window( "Parent" ) as parent :
+
+			GafferUI.Label( "Parent\n" * 10 )
+
+		with GafferUI.Window( "Child" ) as child :
+
+			GafferUI.Label( "child\n" * 4 )
+
+		parent.setVisible( True )
+		parent.addChildWindow( child )
+		child.setVisible( True )
+
+		# Delete the child and parent windows, while capturing `sys.stderr`.
+		# This demonstrated a bug which caused Widget's `_EventFilter` to access
+		# an already-deleted QObject, causing PySide to print an exception to
+		# `stderr`.
+
+		tmpStdErr = six.moves.cStringIO()
+		sys.stderr = tmpStdErr
+		try :
+			del child
+			del parent
+		finally :
+			sys.stderr = sys.__stderr__
+
+		# If the bug is fixed, nothing should have been printed.
+		self.assertEqual( tmpStdErr.getvalue(), "" )
 
 if __name__ == "__main__":
 	unittest.main()

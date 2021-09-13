@@ -928,7 +928,7 @@ class _EventFilter( QtCore.QObject ) :
 
 		elif qEventType==qEvent.Show or qEventType==qEvent.Hide :
 
-			self.__showHide( qObject, qEvent )
+			return self.__showHide( qObject, qEvent )
 
 		# but for anything else we ignore disabled widgets
 		if not qObject.isEnabled() :
