@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Spreadsheet : The popup editor for lists of items (e.g. scene paths) is now at least as wide as the spreadsheet column itself.
+- VectorDataWidget : Added <kbd>Backspace</kbd> shortcut for deleting the selected rows.
 
 0.60.6.1 (relative to 0.60.6.0)
 ========
