@@ -50,6 +50,16 @@ Breaking Changes
 - Fullscreen hotkey is now <kbd>F11</kbd> instead of <kbd>`</kbd>.
 - Removed support for linking editors (following the focus node replaces most practical uses of this feature).
 
+0.60.x.x (relative to 0.60.6.1)
+========
+
+Improvements
+------------
+
+- Spreadsheet : The popup editor for lists of items (e.g. scene paths) is now at least as wide as the spreadsheet column itself.
+- VectorDataWidget : Added <kbd>Backspace</kbd> shortcut for deleting the selected rows.
+- GraphEditor : Simplified logic for drawing strike-throughs on disabled nodes. The strike-through is now only drawn for nodes which have a constant value for their `enabled` plug. This avoids blocking the UI waiting for computes that drive the `enabled` plug, and avoids erroneously drawing the strike-through when the appropriate context to evaluate the plug in is not known.
+
 0.60.6.1 (relative to 0.60.6.0)
 ========
 
@@ -404,7 +414,6 @@ Build
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
 
-0.59.9.x (relative to 0.59.9.3)
 0.59.9.4 (relative to 0.59.9.3)
 ========
 

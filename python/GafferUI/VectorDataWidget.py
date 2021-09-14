@@ -155,6 +155,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableViewHolder.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 		self.__tableViewHolder.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 
+		# key handling
+
+		self.__tableViewHolder.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+
 		# final setup
 
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
@@ -428,7 +432,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.getEditable() and self.getSizeEditable() :
 
 			m.append( "/divider", { "divider" : True } )
-			m.append( "/Remove Selected Rows", { "command" : functools.partial( Gaffer.WeakMethod( self.__removeRows ), selectedRows ) } )
+			m.append(
+				"/Delete Selected Rows",
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__removeRows ), selectedRows ),
+					"shortCut" : "Backspace, Delete"
+				}
+			)
 
 		return m
 
@@ -741,6 +751,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__tableView.mousePressEvent( qEvent )
 		finally :
 			self.__emittingButtonPress = False
+
+	def __keyPress( self, widget, event ) :
+
+		if event.key in ( "Backspace", "Delete" ) :
+			if self.getEditable() and self.getSizeEditable() :
+				self.__removeRows( self.__selectedRows() )
+			return True
 
 # Internal implementation detail - a qt model which wraps
 # around the VectorData.
