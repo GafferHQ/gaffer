@@ -187,7 +187,12 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 					walk( childWidget )
 
 		if isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
-			plugValueWidget._qtWidget().setFixedWidth( 250 )
+			# It's pretty common to make wide spreadsheet columns to accommodate
+			# lists of long scene locations. When that is the case, we want
+			# to make sure the editor is equally wide, so that it shows at least
+			# as much content as the spreadsheet itself.
+			columnWidth = Gaffer.Metadata.value( plugValueWidget.getPlug().parent(), "spreadsheet:columnWidth" ) or 0
+			plugValueWidget._qtWidget().setFixedWidth( max( columnWidth, 250 ) )
 		else :
 			walk( plugValueWidget )
 
