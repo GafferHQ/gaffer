@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,49 +43,29 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
-class ViewTest( GafferUITest.TestCase ) :
+class ToolTest( GafferUITest.TestCase ) :
 
-	class MyView( GafferUI.View ) :
+	def testDerivingInPython( self ) :
 
-		def __init__( self, viewedPlug = None ) :
+		class TestTool( GafferUI.Tool ) :
 
-			GafferUI.View.__init__( self, "MyView", Gaffer.IntPlug( "in" ) )
+			def __init__( self, view, name = "TestTool" ) :
 
-			self["in"].setInput( viewedPlug )
+				GafferUI.Tool.__init__( self, view, name )
 
-	IECore.registerRunTimeTyped( MyView, typeName = "GafferUITest::MyView" )
+		IECore.registerRunTimeTyped( TestTool, typeName = "GafferUITest::TestTool" )
+		GafferUI.Tool.registerTool( "TestTool", GafferUITest.ViewTest.MyView, TestTool )
 
-	def testFactory( self ) :
+		self.assertIn( "TestTool", GafferUI.Tool.registeredTools( GafferUITest.ViewTest.MyView ) )
 
-		node = GafferTest.AddNode()
-		self.assertTrue( GafferUI.View.create( node["sum"] ) is None )
+		view = GafferUITest.ViewTest.MyView()
+		tool = GafferUI.Tool.create( "TestTool", view )
+		self.assertIsInstance( tool, TestTool )
+		self.assertIsInstance( tool, GafferUI.Tool )
+		self.assertTrue( tool.view() is view )
 
-		# check that we can make our own view and register it for the node
-
-		GafferUI.View.registerView( GafferTest.AddNode, "sum", self.MyView )
-
-		view = GafferUI.View.create( node["sum"] )
-		self.assertTrue( isinstance( view, self.MyView ) )
-		self.assertTrue( view["in"].getInput().isSame( node["sum"] ) )
-
-		# and check that that registration leaves other nodes alone
-
-		n = Gaffer.Node()
-		n["sum"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-
-		self.assertTrue( GafferUI.View.create( n["sum"] ) is None )
-
-	def testEditScope( self ) :
-
-		view = self.MyView()
-
-		addNode = GafferTest.AddNode()
-		editScope = Gaffer.EditScope()
-		editScope.setup( view["in"] )
-
-		self.assertEqual( view.editScope(), None )
-		view["editScope"].setInput( editScope["out"] )
-		self.assertEqual( view.editScope(), editScope )
+		Gaffer.Metadata.registerValue( TestTool, "test", 10 )
+		self.assertEqual( Gaffer.Metadata.value( tool, "test" ), 10 )
 
 if __name__ == "__main__":
 	unittest.main()

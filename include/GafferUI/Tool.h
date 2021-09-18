@@ -76,6 +76,7 @@ class GAFFERUI_API Tool : public Gaffer::Node
 
 	public :
 
+		Tool( View *view, const std::string &name = defaultName<Tool>() );
 		~Tool() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferUI::Tool, ToolTypeId, Gaffer::Node );
@@ -102,8 +103,6 @@ class GAFFERUI_API Tool : public Gaffer::Node
 		//@}
 
 	protected :
-
-		Tool( View *view, const std::string &name = defaultName<Tool>() );
 
 		template<typename ToolType, typename ViewType>
 		struct ToolDescription
