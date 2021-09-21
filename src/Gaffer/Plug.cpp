@@ -43,6 +43,8 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 
+#include "Gaffer/Private/ScopedAssignment.h"
+
 #include "IECore/Exception.h"
 
 #include "boost/bind.hpp"
@@ -62,31 +64,6 @@ using namespace Gaffer;
 
 namespace
 {
-
-/// Assigns a value to something, reassigning the original
-/// value when it goes out of scope.
-template<typename T>
-class ScopedAssignment : boost::noncopyable
-{
-	public :
-
-		ScopedAssignment( T &target, const T &value )
-			:	m_target( target ), m_originalValue( target )
-		{
-			m_target = value;
-		}
-
-		~ScopedAssignment()
-		{
-			m_target = m_originalValue;
-		}
-
-	private :
-
-		T &m_target;
-		T m_originalValue;
-
-};
 
 bool allDescendantInputsAreNull( const Plug *plug )
 {
@@ -638,7 +615,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 					// We're removing the child precisely so that the parent connection
 					// remains valid, so we can block its updateInputFromChildInputs() call.
 					assert( outputParent->m_skipNextUpdateInputFromChildInputs == false );
-					ScopedAssignment<bool> blocker( outputParent->m_skipNextUpdateInputFromChildInputs, true );
+					Private::ScopedAssignment<bool> blocker( outputParent->m_skipNextUpdateInputFromChildInputs, true );
 					outputParent->removeChild( output );
 				}
 			}
@@ -667,7 +644,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 					// block the call to updateInputFromChildInputs() to keep the parent
 					// connection intact.
 					assert( output->m_skipNextUpdateInputFromChildInputs == false );
-					ScopedAssignment<bool> blocker( output->m_skipNextUpdateInputFromChildInputs, true );
+					Private::ScopedAssignment<bool> blocker( output->m_skipNextUpdateInputFromChildInputs, true );
 					output->addChild( outputChildPlug );
 				}
 				outputChildPlug->setInput( this, /* setChildInputs = */ true, /* updateParentInput = */ false );
@@ -945,7 +922,7 @@ class Plug::DirtyPlugs
 			// secondary propagations during emit(), since they're not
 			// needed, and can cause crashes.
 
-			ScopedAssignment<bool> scopedAssignment( m_emitting, true );
+			Private::ScopedAssignment<bool> scopedAssignment( m_emitting, true );
 
 			try
 			{
