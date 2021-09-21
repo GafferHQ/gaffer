@@ -56,7 +56,7 @@ class DictPath( Gaffer.Path ) :
 
 		return self.__dict
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		try :
 			self.__dictEntry()
@@ -64,7 +64,7 @@ class DictPath( Gaffer.Path ) :
 		except :
 			return False
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		try :
 			e = self.__dictEntry()
@@ -72,12 +72,11 @@ class DictPath( Gaffer.Path ) :
 		except :
 			return False
 
-
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + [ "dict:value" ]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name == "dict:value" :
 			with IECore.IgnoredExceptions( Exception ) :
@@ -91,7 +90,7 @@ class DictPath( Gaffer.Path ) :
 
 		return DictPath( self.__dict, self[:], self.root(), self.getFilter(), self.__dictTypes )
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		try :
 			e = self.__dictEntry()

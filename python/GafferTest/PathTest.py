@@ -323,5 +323,66 @@ class PathTest( GafferTest.TestCase ) :
 		self.assertTrue( p.pathChangedSignalCreatedCalled )
 		self.assertTrue( p._havePathChangedSignal() )
 
+	class CancellingPath( Gaffer.Path ) :
+
+		def __init__( self, path=None, root="/", filter=None ) :
+
+			Gaffer.Path.__init__( self, path, root, filter )
+
+		def isValid( self, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def isLeaf( self, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def copy( self ) :
+
+			return CancellingPath( self[:], self.root(), self.getFilter() )
+
+		def propertyNames( self, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def property( self, name, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def _children( self, canceller ) :
+
+			self.__waitForCancellation( canceller )
+
+		def __waitForCancellation( self, canceller ) :
+
+			while True :
+				IECore.Canceller.check( canceller )
+
+	def testCancellation( self ) :
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		path = self.CancellingPath( "/" )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.isValid( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.isLeaf( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.propertyNames( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.property( "test", canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			# This is the only one of the assertions that really
+			# tests the Python bindings for Path, because it's
+			# the only one where C++ calls into Python. Above
+			# we're just calling the Python methods directly.
+			path.children( canceller )
+
 if __name__ == "__main__":
 	unittest.main()

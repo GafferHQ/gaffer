@@ -51,7 +51,7 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		self.__rootComponent = rootComponent
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		try :
 			self.__graphComponent()
@@ -59,7 +59,7 @@ class GraphComponentPath( Gaffer.Path ) :
 		except :
 			return False
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		return False
 
@@ -67,18 +67,18 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		return GraphComponentPath( self.__rootComponent, self[:], self.root(), self.getFilter() )
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + [ "graphComponent:graphComponent" ]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name == "graphComponent:graphComponent" :
 			return self.__graphComponent()
 		else :
 			return Gaffer.Path.property( self, name )
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		try :
 			e = self.__graphComponent()

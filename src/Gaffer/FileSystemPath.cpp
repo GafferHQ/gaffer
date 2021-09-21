@@ -89,7 +89,7 @@ FileSystemPath::~FileSystemPath()
 {
 }
 
-bool FileSystemPath::isValid() const
+bool FileSystemPath::isValid( const IECore::Canceller *canceller ) const
 {
 	if( !Path::isValid() )
 	{
@@ -105,7 +105,7 @@ bool FileSystemPath::isValid() const
 	return t != status_error && t != file_not_found;
 }
 
-bool FileSystemPath::isLeaf() const
+bool FileSystemPath::isLeaf( const IECore::Canceller *canceller ) const
 {
 	return isValid() && !is_directory( path( this->string() ) );
 }
@@ -150,7 +150,7 @@ FileSequencePtr FileSystemPath::fileSequence() const
 	return sequence;
 }
 
-void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names ) const
+void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller ) const
 {
 	Path::propertyNames( names );
 
@@ -165,7 +165,7 @@ void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names )
 	}
 }
 
-IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedString &name ) const
+IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedString &name, const IECore::Canceller *canceller ) const
 {
 	if( name == g_ownerPropertyName )
 	{
@@ -318,7 +318,7 @@ PathPtr FileSystemPath::copy() const
 	return new FileSystemPath( names(), root(), const_cast<PathFilter *>( getFilter() ), m_includeSequences );
 }
 
-void FileSystemPath::doChildren( std::vector<PathPtr> &children ) const
+void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
 	path p( this->string() );
 

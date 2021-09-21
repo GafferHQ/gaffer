@@ -145,7 +145,7 @@ const Gaffer::Context *ScenePath::getContext() const
 	return m_context.get();
 }
 
-bool ScenePath::isValid() const
+bool ScenePath::isValid( const IECore::Canceller *canceller ) const
 {
 	if( !Path::isValid() )
 	{
@@ -156,7 +156,7 @@ bool ScenePath::isValid() const
 	return m_scene->exists( names() );
 }
 
-bool ScenePath::isLeaf() const
+bool ScenePath::isLeaf( const IECore::Canceller *canceller ) const
 {
 	// Any part of the scene could get children at any time
 	return false;
@@ -167,7 +167,7 @@ PathPtr ScenePath::copy() const
 	return new ScenePath( m_scene, m_context, names(), root(), const_cast<PathFilter *>( getFilter() ) );
 }
 
-void ScenePath::doChildren( std::vector<PathPtr> &children ) const
+void ScenePath::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
 	Context::Scope scopedContext( m_context.get() );
 	ConstInternedStringVectorDataPtr childNamesData = m_scene->childNames( names() );

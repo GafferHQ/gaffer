@@ -100,23 +100,23 @@ bool Path::isEmpty() const
 	return m_names.empty() && m_root.string().empty();
 }
 
-bool Path::isValid() const
+bool Path::isValid( const IECore::Canceller *canceller ) const
 {
 	return !isEmpty();
 }
 
-bool Path::isLeaf() const
+bool Path::isLeaf( const IECore::Canceller *canceller ) const
 {
 	return false;
 }
 
-void Path::propertyNames( std::vector<IECore::InternedString> &names ) const
+void Path::propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller ) const
 {
 	names.push_back( g_namePropertyName );
 	names.push_back( g_fullNamePropertyName );
 }
 
-IECore::ConstRunTimeTypedPtr Path::property( const IECore::InternedString &name ) const
+IECore::ConstRunTimeTypedPtr Path::property( const IECore::InternedString &name, const IECore::Canceller *canceller ) const
 {
 	if( name == g_namePropertyName )
 	{
@@ -149,9 +149,9 @@ PathPtr Path::parent() const
 	return result;
 }
 
-size_t Path::children( std::vector<PathPtr> &children ) const
+size_t Path::children( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
-	doChildren( children );
+	doChildren( children, canceller );
 	if( m_filter )
 	{
 		m_filter->filter( children );
@@ -380,7 +380,7 @@ bool Path::operator != ( const Path &other ) const
 	return !(*this == other );
 }
 
-void Path::doChildren( std::vector<PathPtr> &children ) const
+void Path::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
 }
 

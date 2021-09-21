@@ -519,15 +519,15 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return self.__class__( self.__images, self[:], self.root(), self.getFilter() )
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		return len( self ) > 0
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + registeredColumns()
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name not in registeredColumns() :
 			return Gaffer.Path.property( self, name )
@@ -563,7 +563,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return [ i[0] for i in sorted( imageAndIndices, key = lambda i : i[1] ) ]
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		if len( self ) != 0 :
 			return []
