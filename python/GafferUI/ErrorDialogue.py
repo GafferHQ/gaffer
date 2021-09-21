@@ -145,8 +145,8 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 			return
 
 		excType, excValue, excTrace = exceptionInfo
-		if excValue and excValue.message:
-			message = excValue.message.strip( "\n" ).split( "\n" )[-1]
+		if excValue :
+			message = str( excValue )
 		else:
 			message = str( excType.__name__ )
 
