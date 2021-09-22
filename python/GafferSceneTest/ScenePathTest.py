@@ -37,6 +37,7 @@
 import os
 import unittest
 import six
+import inspect
 import imath
 
 import IECore
@@ -266,6 +267,20 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 			context["sphereName"] = "sphere{}".format( i )
 			path = GafferScene.ScenePath( script["parent"]["out"], context, "/plane/instances/{}/2410/cube".format( context["sphereName"] ) )
 			self.assertTrue( path.isValid() )
+
+	def testCancellation( self ) :
+
+		plane = GafferScene.Plane()
+		path = GafferScene.ScenePath( plane["out"], Gaffer.Context(), "/" )
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.children( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.isValid( canceller )
 
 if __name__ == "__main__":
 	unittest.main()

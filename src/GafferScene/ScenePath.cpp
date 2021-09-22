@@ -152,7 +152,11 @@ bool ScenePath::isValid( const IECore::Canceller *canceller ) const
 		return false;
 	}
 
-	Context::Scope scopedContext( m_context.get() );
+	Context::EditableScope scopedContext( m_context.get() );
+	if( canceller )
+	{
+		scopedContext.setCanceller( canceller );
+	}
 	return m_scene->exists( names() );
 }
 
@@ -169,7 +173,12 @@ PathPtr ScenePath::copy() const
 
 void ScenePath::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
-	Context::Scope scopedContext( m_context.get() );
+	Context::EditableScope scopedContext( m_context.get() );
+	if( canceller )
+	{
+		scopedContext.setCanceller( canceller );
+	}
+
 	ConstInternedStringVectorDataPtr childNamesData = m_scene->childNames( names() );
 	const std::vector<InternedString> &childNames = childNamesData->readable();
 	ScenePlug::ScenePath childPath( names() );

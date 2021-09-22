@@ -36,6 +36,7 @@ API
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
 - Path : Added optional `canceller` argument to `isValid()`, `isLeaf()`, `propertyNames()`, `property()` and `children()` methods.
+- ScenePath : Added support for cancellation of calls to `isValid()` and `children()`.
 
 Breaking Changes
 ----------------
