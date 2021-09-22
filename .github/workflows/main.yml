@@ -38,7 +38,7 @@ jobs:
         include:
 
           - name: linux
-            os: ubuntu-16.04
+            os: ubuntu-20.04
             buildType: RELEASE
             variant: linux-python2
             publish: true
@@ -52,7 +52,7 @@ jobs:
             sconsCacheMegabytes: 400
 
           - name: linux-debug
-            os: ubuntu-16.04
+            os: ubuntu-20.04
             buildType: DEBUG
             variant: linux-python2
             publish: false
@@ -64,7 +64,7 @@ jobs:
             sconsCacheMegabytes: 2500
 
           - name: linux-python3
-            os: ubuntu-16.04
+            os: ubuntu-20.04
             buildType: RELEASE
             variant: linux-python3
             publish: true
