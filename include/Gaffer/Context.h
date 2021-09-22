@@ -257,6 +257,11 @@ class GAFFER_API Context : public IECore::RefCounted
 				void remove( const IECore::InternedString &name );
 				void removeMatching( const IECore::StringAlgo::MatchPattern &pattern );
 
+				/// Sets the canceller. It is the caller's responsibility to
+				/// ensure that the pointer remains valid for the lifetime
+				/// of the EditableScope.
+				void setCanceller( const IECore::Canceller *canceller );
+
 				const Context *context() const { return m_context.get(); }
 
 			private :

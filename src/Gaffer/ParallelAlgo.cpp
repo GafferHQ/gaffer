@@ -106,8 +106,8 @@ GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread(
 
 		[backgroundContext, backgroundMonitors, function] ( const IECore::Canceller &canceller ) {
 
-			ContextPtr c = new Context( *backgroundContext, canceller );
-			Context::Scope contextScope( c.get() );
+			Context::EditableScope contextScope( backgroundContext.get() );
+			contextScope.setCanceller( &canceller );
 			Monitor::Scope monitorScope( backgroundMonitors );
 
 			function();
