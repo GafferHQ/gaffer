@@ -140,11 +140,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget.addOverlay( verticalToolbars )
 
 		self.__views = []
-		# Indexed by view instance. We would prefer to simply
-		# store tools as python attributes on the view instances
-		# themselves, but we can't because that would create
-		# circular references. Maybe it makes sense to be able to
-		# query tools from a view anyway?
 		self.__currentView = None
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
