@@ -1403,5 +1403,22 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		# 0.5.
 		self.assertImagesEqual( s["deformationOff"]["out"], s["deformationOn"]["out"], maxDifference = 0.27, ignoreMetadata = True )
 
+	def testCoordinateSystem( self ) :
+
+		coordinateSystem = GafferScene.CoordinateSystem()
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( coordinateSystem["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.ass" ) )
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiASSLoad( universe, render["fileName"].getValue() )
+
+			# Arnold doesn't support coordinate systems, so we don't expect a
+			# node to have been created for ours.
+			self.assertIsNone( arnold.AiNodeLookUpByName( universe, "/coordinateSystem" ) )
+
 if __name__ == "__main__":
 	unittest.main()

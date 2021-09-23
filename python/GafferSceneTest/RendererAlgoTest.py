@@ -138,5 +138,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 0.75 ), expectedCamera( 1.25 ) ] )
 		self.assertEqual( capturedCamera.capturedSampleTimes(), [ 0.75, 1.25 ] )
 
+	def testCoordinateSystemSamples( self ) :
+
+		coordinateSystem = GafferScene.CoordinateSystem()
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "coordinateSystem" ] )
+			samples = GafferScene.Private.RendererAlgo.objectSamples( coordinateSystem["out"]["object"], [ 0.75, 1.25 ] )
+			self.assertEqual( len( samples ), 1 )
+			self.assertEqual( samples[0], coordinateSystem["out"].object( "/coordinateSystem" ) )
+
 if __name__ == "__main__":
 	unittest.main()
