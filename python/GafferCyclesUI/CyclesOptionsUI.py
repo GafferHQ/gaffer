@@ -786,7 +786,7 @@ Gaffer.Metadata.registerNode(
 		"options.bvhLayout.value" : [
 
 			"preset:BVH2", 0 | ( 1 << 0 ),
-			"preset:EMBREE", 0 | ( 1 << 3 ),
+			"preset:EMBREE", 0 | ( 1 << 1 ),
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

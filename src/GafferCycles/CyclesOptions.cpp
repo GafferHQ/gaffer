@@ -107,8 +107,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Scene/BVH
 
-	//options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_type", new IECore::IntData( 0 ), false, "bvhType" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 3 ), false, "bvhLayout" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), false, "bvhLayout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), false, "useBvhSpatialSplit" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), false, "useBvhUnalignedNodes" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), false, "numBvhTimeSteps" ) );

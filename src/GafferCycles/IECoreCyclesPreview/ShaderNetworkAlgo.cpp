@@ -670,7 +670,10 @@ ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 				}
 				continue;
 			}
-			SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
+			else
+			{
+				SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
+			}
 		}
 	}
 	return result;
