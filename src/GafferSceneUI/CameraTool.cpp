@@ -44,6 +44,8 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/UndoScope.h"
 
+#include "Gaffer/Private/ScopedAssignment.h"
+
 #include "IECore/AngleConversion.h"
 
 #include "OpenEXR/ImathEuler.h"
@@ -94,32 +96,6 @@ void setValueOrAddKey( Gaffer::FloatPlug *plug, float time, float value )
 		plug->setValue( value );
 	}
 }
-
-/// Assigns a value to something, reassigning the original
-/// value when it goes out of scope. If `experimental::scope_exit`
-/// makes it into the C++ standard, we could use that instead.
-template<typename T>
-class ScopedAssignment : boost::noncopyable
-{
-	public :
-
-		ScopedAssignment( T &target, const T &value )
-			:	m_target( target ), m_originalValue( target )
-		{
-			m_target = value;
-		}
-
-		~ScopedAssignment()
-		{
-			m_target = m_originalValue;
-		}
-
-	private :
-
-		T &m_target;
-		T m_originalValue;
-
-};
 
 bool g_editingTransform = false;
 
@@ -400,7 +376,7 @@ void CameraTool::viewportCameraChanged()
 
 	// Now apply this offset to the current value on the transform plug.
 
-	ScopedAssignment<bool> editingScope( g_editingTransform, true );
+	Gaffer::Private::ScopedAssignment<bool> editingScope( g_editingTransform, true );
 	UndoScope undoScope( selection.editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
 	auto edit = selection.acquireTransformEdit();
 
