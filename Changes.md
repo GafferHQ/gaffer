@@ -37,6 +37,7 @@ API
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
 - Path : Added optional `canceller` argument to `isValid()`, `isLeaf()`, `propertyNames()`, `property()` and `children()` methods.
 - ScenePath : Added support for cancellation of calls to `isValid()` and `children()`.
+- FileSystemPath : Added support for cancellation of calls to `children()` and `property()`.
 
 Breaking Changes
 ----------------

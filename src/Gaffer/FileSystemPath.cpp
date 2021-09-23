@@ -146,6 +146,7 @@ FileSequencePtr FileSystemPath::fileSequence() const
 	}
 
 	FileSequencePtr sequence = nullptr;
+	/// \todo Add cancellation support to `ls`.
 	IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
 	return sequence;
 }
@@ -171,9 +172,11 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	{
 		if( m_includeSequences )
 		{
+			IECore::Canceller::check( canceller );
 			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
+				IECore::Canceller::check( canceller );
 				std::vector<std::string> files;
 				sequence->fileNames( files );
 
@@ -182,6 +185,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				std::map<std::string,size_t> ownerCounter;
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
+					IECore::Canceller::check( canceller );
 					struct stat s;
 					stat( it->c_str(), &s );
 					struct passwd *pw = getpwuid( s.st_uid );
@@ -208,9 +212,11 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	{
 		if( m_includeSequences )
 		{
+			IECore::Canceller::check( canceller );
 			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
+				IECore::Canceller::check( canceller );
 				std::vector<std::string> files;
 				sequence->fileNames( files );
 
@@ -219,6 +225,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				std::map<std::string,size_t> ownerCounter;
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
+					IECore::Canceller::check( canceller );
 					struct stat s;
 					stat( it->c_str(), &s );
 					struct group *gr = getgrgid( s.st_gid );
@@ -247,15 +254,18 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 
 		if( m_includeSequences )
 		{
+			IECore::Canceller::check( canceller );
 			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
+				IECore::Canceller::check( canceller );
 				std::vector<std::string> files;
 				sequence->fileNames( files );
 
 				std::time_t newest = 0;
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
+					IECore::Canceller::check( canceller );
 					std::time_t t = last_write_time( path( *it ), e );
 					if( t > newest )
 					{
@@ -276,15 +286,18 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 
 		if( m_includeSequences )
 		{
+			IECore::Canceller::check( canceller );
 			FileSequencePtr sequence = fileSequence();
 			if( sequence )
 			{
+				IECore::Canceller::check( canceller );
 				std::vector<std::string> files;
 				sequence->fileNames( files );
 
 				uintmax_t total = 0;
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
+					IECore::Canceller::check( canceller );
 					uintmax_t s = file_size( path( *it ), e );
 					if( !e )
 					{
@@ -329,15 +342,18 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 
 	for( directory_iterator it( p ), eIt; it != eIt; ++it )
 	{
+		IECore::Canceller::check( canceller );
 		children.push_back( new FileSystemPath( it->path().string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 	}
 
 	if( m_includeSequences )
 	{
+		IECore::Canceller::check( canceller );
 		std::vector<FileSequencePtr> sequences;
 		IECore::ls( p.string(), sequences, /* minSequenceSize */ 1 );
 		for( std::vector<FileSequencePtr>::iterator it = sequences.begin(); it != sequences.end(); ++it )
 		{
+			IECore::Canceller::check( canceller );
 			std::vector<FrameList::Frame> frames;
 			(*it)->getFrameList()->asList( frames );
 			if ( !is_directory( path( (*it)->fileNameForFrame( frames[0] ) ) ) )

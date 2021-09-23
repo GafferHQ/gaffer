@@ -308,6 +308,38 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		c = p.children()
 		self.assertEqual( len( c ), 8 )
 
+	def testCancellation( self ) :
+
+		p = Gaffer.FileSystemPath( os.path.dirname( __file__ ) )
+
+		# Children
+
+		c = IECore.Canceller()
+		c.cancel()
+
+		with self.assertRaises( IECore.Cancelled ) :
+			p.children( c )
+
+		# Sequence properties
+
+		for f in range( 0, 100 ) :
+			with open( os.path.join( self.temporaryDirectory(), "{}.txt".format( f ) ), "w" ) as f :
+				f.write( "x" )
+
+		p = Gaffer.FileSystemPath( os.path.join( self.temporaryDirectory(), "#.txt" ), includeSequences = True )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			p.property( "fileSystem:owner", c )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			p.property( "fileSystem:group", c )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			p.property( "fileSystem:size", c )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			p.property( "fileSystem:modificationTime", c )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
