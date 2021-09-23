@@ -48,29 +48,29 @@ class AnimationTest( GafferTest.TestCase ) :
 		k = Gaffer.Animation.Key()
 		self.assertEqual( k.getTime(), 0 )
 		self.assertEqual( k.getValue(), 0 )
-		self.assertEqual( k.getType(), Gaffer.Animation.Type.Linear )
+		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Linear )
 
-		k = Gaffer.Animation.Key( 1, 2, Gaffer.Animation.Type.Step )
+		k = Gaffer.Animation.Key( 1, 2, Gaffer.Animation.Interpolation.Step )
 		self.assertEqual( k.getTime(), 1 )
 		self.assertEqual( k.getValue(), 2 )
-		self.assertEqual( k.getType(), Gaffer.Animation.Type.Step )
+		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Step )
 
 		self.assertEqual( k.parent(), None )
 
 		k.setTime( 2 )
 		k.setValue( 1 )
-		k.setType( Gaffer.Animation.Type.Linear )
+		k.setInterpolation( Gaffer.Animation.Interpolation.Linear )
 
 		self.assertEqual( k.getTime(), 2 )
 		self.assertEqual( k.getValue(), 1 )
-		self.assertEqual( k.getType(), Gaffer.Animation.Type.Linear )
+		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Linear )
 
 	def testKeyRepr( self ) :
 
 		k = Gaffer.Animation.Key()
 		self.assertEqual( k, eval( repr( k ) ) )
 
-		k = Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Type.Step )
+		k = Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Interpolation.Step )
 		self.assertEqual( k, eval( repr( k ) ) )
 
 	def testCanAnimate( self ) :
@@ -239,7 +239,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
-		curve.addKey( Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Type.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Interpolation.Linear ) )
 
 		with Gaffer.Context() as c :
 			for t in range( -10, 10 ) :
@@ -254,8 +254,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
-		curve.addKey( Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Type.Linear ) )
-		curve.addKey( Gaffer.Animation.Key( 1, 3, Gaffer.Animation.Type.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Interpolation.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 1, 3, Gaffer.Animation.Interpolation.Linear ) )
 
 		with Gaffer.Context() as c :
 			for i in range( 0, 10 ) :
@@ -271,8 +271,8 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 		curve.addKey( Gaffer.Animation.Key( 0, 0 ) )
-		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Linear ) )
-		curve.addKey( Gaffer.Animation.Key( 2, 2, Gaffer.Animation.Type.Step ) )
+		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 2, 2, Gaffer.Animation.Interpolation.Step ) )
 
 		with Gaffer.Context() as c :
 			# Linear interpolation from 0 to 1.
@@ -310,14 +310,14 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
-		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Linear ) )
-		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
 
 		def assertAnimation( script ) :
 
 			curve = Gaffer.Animation.acquire( script["n"]["user"]["f"] )
-			self.assertEqual( curve.getKey( 0 ),  Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Linear ) )
-			self.assertEqual( curve.getKey( 1 ),  Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Linear ) )
+			self.assertEqual( curve.getKey( 0 ),  Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
+			self.assertEqual( curve.getKey( 1 ),  Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
 			with Gaffer.Context() as c :
 				for i in range( 0, 10 ) :
 					c.setTime( i / 9.0 )
@@ -456,8 +456,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		# Cannot promote an animated plug, because it has an input.
 		self.assertFalse( Gaffer.PlugAlgo.canPromote( s["b"]["n"]["op2"] ) )
 
-		op2Curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Step ) )
-		op2Curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Step ) )
+		op2Curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Step ) )
+		op2Curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Step ) )
 
 		with Gaffer.Context() as c :
 			self.assertEqual( s["b"]["sum"].getValue(), 0 )
@@ -488,7 +488,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["n"] = GafferTest.AddNode()
 		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
 
-		k = Gaffer.Animation.Key( time = 1, value = 2, type = Gaffer.Animation.Type.Linear )
+		k = Gaffer.Animation.Key( time = 1, value = 2, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( k )
 		curve.addKey( Gaffer.Animation.Key( 0.5 ) )
 
@@ -569,7 +569,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		context = Gaffer.Context()
 		for frame in range( 0, 10000 ) :
 			context.setFrame( frame )
-			curve.addKey( Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Type.Linear ) )
+			curve.addKey( Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Interpolation.Linear ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -580,7 +580,7 @@ class AnimationTest( GafferTest.TestCase ) :
 			context.setFrame( frame )
 			self.assertEqual(
 				curve.getKey( context.getTime() ),
-				Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Type.Linear )
+				Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Interpolation.Linear )
 			)
 
 if __name__ == "__main__":

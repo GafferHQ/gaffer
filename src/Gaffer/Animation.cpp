@@ -52,8 +52,8 @@ using namespace Gaffer;
 // Key implementation
 //////////////////////////////////////////////////////////////////////////
 
-Animation::Key::Key( float time, float value, Type type )
-	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_type( type )
+Animation::Key::Key( float time, float value, Animation::Interpolation interpolation )
+	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_interpolation( interpolation )
 {
 }
 
@@ -134,9 +134,14 @@ void Animation::Key::setValue( float value )
 	}
 }
 
-void Animation::Key::setType( Type type )
+Animation::Interpolation Animation::Key::getInterpolation() const
 {
-	if( type == m_type )
+	return m_interpolation;
+}
+
+void Animation::Key::setInterpolation( Animation::Interpolation interpolation )
+{
+	if( interpolation == m_interpolation )
 	{
 		return;
 	}
@@ -144,24 +149,24 @@ void Animation::Key::setType( Type type )
 	if( m_parent )
 	{
 		KeyPtr k = this;
-		const Type previousType = m_type;
+		const Animation::Interpolation previousInterpolation = m_interpolation;
 		Action::enact(
 			m_parent,
 			// Do
-			[ k, type ] {
-				k->m_value = type;
+			[ k, interpolation ] {
+				k->m_interpolation = interpolation;
 				k->m_parent->propagateDirtiness( k->m_parent->outPlug() );
 			},
 			// Undo
-			[ k, previousType ] {
-				k->m_type = previousType;
+			[ k, previousInterpolation ] {
+				k->m_interpolation = previousInterpolation;
 				k->m_parent->propagateDirtiness( k->m_parent->outPlug() );
 			}
 		);
 	}
 	else
 	{
-		m_type = type;
+		m_interpolation = interpolation;
 	}
 }
 
@@ -170,7 +175,7 @@ bool Animation::Key::operator == ( const Key &rhs ) const
 	return
 		m_time == rhs.m_time &&
 		m_value == rhs.m_value &&
-		m_type == rhs.m_type;
+		m_interpolation == rhs.m_interpolation;
 }
 
 bool Animation::Key::operator != ( const Key &rhs ) const
@@ -397,7 +402,7 @@ float Animation::CurvePlug::evaluate( float time ) const
 	}
 
 	const Key &left = **std::prev( rightIt );
-	if( right.getType() == Linear )
+	if( right.getInterpolation() == Interpolation::Linear )
 	{
 		const float t = ( time - left.getTime() ) / ( right.getTime() - left.getTime() );
 		return Imath::lerp( left.getValue(), right.getValue(), t );

@@ -18,6 +18,7 @@ Fixes
 -----
 
 - PathListingWidget : Fixed subtle bugs in the underlying Qt model, although they haven't been observed to cause problems in practice.
+- Animation : Fixed bug in `Key.setType()`. Previously it modified the value instead of the type.
 
 API
 ---
@@ -50,6 +51,9 @@ Breaking Changes
 - DotNodeGadget and AuxiliaryNodeGadget now use more inherited functionality from StandardNodeGadget, which could cause problems if anyone has subclassed the gadgets
 - Fullscreen hotkey is now <kbd>F11</kbd> instead of <kbd>`</kbd>.
 - Removed support for linking editors (following the focus node replaces most practical uses of this feature).
+- Animation :
+  - Renamed `Type` enum to `Interpolation`.
+  - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
 
 0.60.x.x (relative to 0.60.6.1)
 ========

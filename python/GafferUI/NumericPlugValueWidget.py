@@ -183,7 +183,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 								Gaffer.Animation.Key(
 									self.getContext().getTime(),
 									self.__numericWidget.getValue(),
-									Gaffer.Animation.Type.Linear
+									Gaffer.Animation.Interpolation.Linear
 								)
 							)
 					else :

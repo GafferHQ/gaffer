@@ -1327,11 +1327,11 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
-			if( key.getType() == Gaffer::Animation::Linear )
+			if( key.getInterpolation() == Gaffer::Animation::Interpolation::Linear )
 			{
 				style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
 			}
-			else if( key.getType() == Gaffer::Animation::Step )
+			else if( key.getInterpolation() == Gaffer::Animation::Interpolation::Step )
 			{
 				const Color4f color4( color3[0], color3[1], color3[2], 1.0f );
 				// \todo: replace with linear curve segment to get highlighting

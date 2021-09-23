@@ -53,14 +53,14 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 		script["cube"]["sets"].setValue( "geometry" )
 
 		animY = Gaffer.Animation.acquire( script["cube"]["transform"]["translate"]["y"] )
-		animY.addKey( Gaffer.Animation.Key( 0 / 24.0, 0, Gaffer.Animation.Type.Step ) )
-		animY.addKey( Gaffer.Animation.Key( 1 / 24.0, 1, Gaffer.Animation.Type.Step ) )
-		animY.addKey( Gaffer.Animation.Key( 2 / 24.0, 2, Gaffer.Animation.Type.Step ) )
+		animY.addKey( Gaffer.Animation.Key( 0 / 24.0, 0, Gaffer.Animation.Interpolation.Step ) )
+		animY.addKey( Gaffer.Animation.Key( 1 / 24.0, 1, Gaffer.Animation.Interpolation.Step ) )
+		animY.addKey( Gaffer.Animation.Key( 2 / 24.0, 2, Gaffer.Animation.Interpolation.Step ) )
 
 		animX = Gaffer.Animation.acquire( script["cube"]["transform"]["translate"]["x"] )
-		animX.addKey( Gaffer.Animation.Key( 2 / 24.0, 0, Gaffer.Animation.Type.Step ) )
-		animX.addKey( Gaffer.Animation.Key( 3 / 24.0, 1, Gaffer.Animation.Type.Step ) )
-		animX.addKey( Gaffer.Animation.Key( 4 / 24.0, 2, Gaffer.Animation.Type.Step ) )
+		animX.addKey( Gaffer.Animation.Key( 2 / 24.0, 0, Gaffer.Animation.Interpolation.Step ) )
+		animX.addKey( Gaffer.Animation.Key( 3 / 24.0, 1, Gaffer.Animation.Interpolation.Step ) )
+		animX.addKey( Gaffer.Animation.Key( 4 / 24.0, 2, Gaffer.Animation.Interpolation.Step ) )
 
 		script["sphere"] = GafferScene.Sphere()
 		script["sphere"]["sets"].setValue( "geometry" )
@@ -75,8 +75,8 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 		script["camera"]["sets"].setValue( "cameras" )
 		script["camera"]["transform"]["translate"]["y"].setValue( 0.5 )
 		camAnimZ = Gaffer.Animation.acquire( script["camera"]["transform"]["translate"]["z"] )
-		camAnimZ.addKey( Gaffer.Animation.Key( 0 / 24.0, 5, Gaffer.Animation.Type.Linear ) )
-		camAnimZ.addKey( Gaffer.Animation.Key( 4 / 24.0, 10, Gaffer.Animation.Type.Linear ) )
+		camAnimZ.addKey( Gaffer.Animation.Key( 0 / 24.0, 5, Gaffer.Animation.Interpolation.Linear ) )
+		camAnimZ.addKey( Gaffer.Animation.Key( 4 / 24.0, 10, Gaffer.Animation.Interpolation.Linear ) )
 
 		script["light"] = GafferSceneTest.TestLight()
 		script["light"]["sets"].setValue( "lights" )
