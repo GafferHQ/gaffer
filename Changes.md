@@ -11,6 +11,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed drawing of CoordinateSystems (bug introduced in 0.60.0.0).
 - ErrorDialogue : Fixed Python 3 incompatibility in `displayException()`.
 
 0.60.6.1 (relative to 0.60.6.0)

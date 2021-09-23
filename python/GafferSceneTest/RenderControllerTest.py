@@ -736,5 +736,15 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.update()
 		assertMotionSamples( [ 0.6, 1.4 ], False )
 
+	def testCoordinateSystem( self ) :
+
+		coordinateSystem = GafferScene.CoordinateSystem()
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( coordinateSystem["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		capturedObject = renderer.capturedObject( "/coordinateSystem" )
+		self.assertEqual( capturedObject.capturedSamples(), [ coordinateSystem["out"].object( "/coordinateSystem" ) ] )
+
 if __name__ == "__main__":
 	unittest.main()
