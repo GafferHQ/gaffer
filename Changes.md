@@ -7,6 +7,7 @@ Improvements
 - Spreadsheet : The popup editor for lists of items (e.g. scene paths) is now at least as wide as the spreadsheet column itself.
 - VectorDataWidget : Added <kbd>Backspace</kbd> shortcut for deleting the selected rows.
 - GraphEditor : Simplified logic for drawing strike-throughs on disabled nodes. The strike-through is now only drawn for nodes which have a constant value for their `enabled` plug. This avoids blocking the UI waiting for computes that drive the `enabled` plug, and avoids erroneously drawing the strike-through when the appropriate context to evaluate the plug in is not known.
+- Animation : Added compatibility for loading animation from Gaffer 0.61.
 
 Fixes
 -----
