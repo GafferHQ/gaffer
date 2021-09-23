@@ -71,7 +71,7 @@ class GAFFER_API PathFilter : public IECore::RunTimeTyped
 		void setEnabled( bool enabled );
 		bool getEnabled() const;
 
-		void filter( std::vector<PathPtr> &paths ) const;
+		void filter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller = nullptr ) const;
 
 		typedef boost::signal<void ( PathFilter * )> ChangedSignal;
 		ChangedSignal &changedSignal();
@@ -80,7 +80,7 @@ class GAFFER_API PathFilter : public IECore::RunTimeTyped
 
 		/// Must be implemented by derived classes to filter the passed
 		/// paths in place.
-		virtual void doFilter( std::vector<PathPtr> &paths ) const = 0;
+		virtual void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const = 0;
 
 	private :
 

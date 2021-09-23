@@ -154,7 +154,7 @@ size_t Path::children( std::vector<PathPtr> &children, const IECore::Canceller *
 	doChildren( children, canceller );
 	if( m_filter )
 	{
-		m_filter->filter( children );
+		m_filter->filter( children, canceller );
 	}
 	return children.size();
 }

@@ -53,7 +53,7 @@ LeafPathFilter::~LeafPathFilter()
 {
 }
 
-void LeafPathFilter::doFilter( std::vector<PathPtr> &paths ) const
+void LeafPathFilter::doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const
 {
 	paths.erase(
 		std::remove_if(

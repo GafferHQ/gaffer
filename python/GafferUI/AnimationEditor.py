@@ -68,7 +68,7 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 		self.__plugInputChangedConnections = [ node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) ) for node in selection ]
 		self.__nameChangedConnections = []
 
-	def _filter( self, paths ) :
+	def _filter( self, paths, canceller ) :
 
 		def shouldKeep( path ) :
 

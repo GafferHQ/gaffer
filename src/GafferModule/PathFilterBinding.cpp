@@ -76,7 +76,7 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 		{
 		}
 
-		void doFilter( std::vector<PathPtr> &paths ) const override
+		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -91,7 +91,9 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						{
 							pythonPaths.append( *it );
 						}
-						pythonPaths = extract<list>( f( pythonPaths ) );
+						// Beware! We are relying on `canceller` living longer than the Python object
+						// created by `ptr()`.
+						pythonPaths = extract<list>( f( pythonPaths, boost::python::ptr( canceller ) ) );
 						paths.clear();
 						boost::python::container_utils::extend_container( paths, pythonPaths );
 						return;
@@ -102,16 +104,16 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
-			WrappedType::doFilter( paths );
+			WrappedType::doFilter( paths, canceller );
 		}
 
 };
 
-list filter( PathFilter &f, list pythonPaths )
+list filter( PathFilter &f, list pythonPaths, const IECore::Canceller *canceller )
 {
 	std::vector<PathPtr> paths;
 	boost::python::container_utils::extend_container( paths, pythonPaths );
-	f.filter( paths );
+	f.filter( paths, canceller );
 
 	list result;
 	for( std::vector<PathPtr>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
@@ -208,7 +210,7 @@ void GafferModule::bindPathFilter()
 			.def( "userData", &PathFilter::userData, return_value_policy<CastToIntrusivePtr>() )
 			.def( "setEnabled", &PathFilter::setEnabled )
 			.def( "getEnabled", &PathFilter::getEnabled )
-			.def( "filter", &filter )
+			.def( "filter", &filter, ( ( args( "paths" ), arg( "canceller" ) = object() ) ) )
 			.def( "changedSignal", &PathFilter::changedSignal, return_internal_reference<1>() )
 		;
 

@@ -119,7 +119,7 @@ void CompoundPathFilter::getFilters( Filters &filters ) const
 	}
 }
 
-void CompoundPathFilter::doFilter( std::vector<PathPtr> &paths ) const
+void CompoundPathFilter::doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const
 {
 	for( std::list<Filter>::const_iterator it = m_filters.begin(), eIt = m_filters.end(); it != eIt; ++it )
 	{

@@ -64,7 +64,7 @@ class GAFFER_API CompoundPathFilter : public Gaffer::PathFilter
 
 	protected :
 
-		void doFilter( std::vector<PathPtr> &paths ) const override;
+		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override;
 
 	private :
 

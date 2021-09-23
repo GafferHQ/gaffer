@@ -102,7 +102,7 @@ struct SceneFilterPathFilter::Remove
 
 };
 
-void SceneFilterPathFilter::doFilter( std::vector<Gaffer::PathPtr> &paths ) const
+void SceneFilterPathFilter::doFilter( std::vector<Gaffer::PathPtr> &paths, const IECore::Canceller *canceller ) const
 {
 	paths.erase(
 		std::remove_if(
