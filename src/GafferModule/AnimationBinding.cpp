@@ -71,29 +71,29 @@ void setValue( Animation::Key &k, float value )
 	k.setValue( value );
 }
 
-void setType( Animation::Key &k, Animation::Type type )
+void setInterpolation( Animation::Key &k, Animation::Interpolation interpolation )
 {
 	ScopedGILRelease gilRelease;
-	k.setType( type );
+	k.setInterpolation( interpolation );
 }
 
-const char *typeRepr( const Animation::Type &t )
+const char *interpolationRepr( const Animation::Interpolation &t )
 {
 	switch( t )
 	{
-		case Animation::Step :
-			return "Gaffer.Animation.Type.Step";
-		case Animation::Linear :
-			return "Gaffer.Animation.Type.Linear";
+		case Animation::Interpolation::Step :
+			return "Gaffer.Animation.Interpolation.Step";
+		case Animation::Interpolation::Linear :
+			return "Gaffer.Animation.Interpolation.Linear";
 	}
 
-	throw IECore::Exception( "Unknown Animation::Type" );
+	throw IECore::Exception( "Unknown Animation::Interpolation" );
 }
 
 std::string keyRepr( const Animation::Key &k )
 {
 	return boost::str(
-		boost::format( "Gaffer.Animation.Key( %.9g, %.9g, %s )" ) % k.getTime() % k.getValue() % typeRepr( k.getType() )
+		boost::format( "Gaffer.Animation.Key( %.9g, %.9g, %s )" ) % k.getTime() % k.getValue() % interpolationRepr( k.getInterpolation() )
 	);
 };
 
@@ -141,17 +141,17 @@ void GafferModule::bindAnimation()
 		.staticmethod( "acquire" )
 	;
 
-	enum_<Animation::Type>( "Type" )
-		.value( "Step", Animation::Step )
-		.value( "Linear", Animation::Linear )
+	enum_<Animation::Interpolation>( "Interpolation" )
+		.value( "Step", Animation::Interpolation::Step )
+		.value( "Linear", Animation::Interpolation::Linear )
 	;
 
 	IECorePython::RefCountedClass<Animation::Key, IECore::RefCounted>( "Key" )
-		.def( init<float, float, Animation::Type>(
+		.def( init<float, float, Animation::Interpolation>(
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
-					arg( "type" ) = Animation::Linear
+					arg( "interpolation" ) = Animation::Interpolation::Linear
 				)
 			)
 		)
@@ -159,8 +159,8 @@ void GafferModule::bindAnimation()
 		.def( "setTime", &setTime )
 		.def( "getValue", &Animation::Key::getValue )
 		.def( "setValue", &setValue )
-		.def( "getType", &Animation::Key::getType )
-		.def( "setType", &setType )
+		.def( "getInterpolation", &Animation::Key::getInterpolation )
+		.def( "setInterpolation", &setInterpolation )
 		.def( "__repr__", &keyRepr )
 		.def( self == self )
 		.def( self != self )

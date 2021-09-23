@@ -60,7 +60,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// Defines the method used to interpolate
 		/// between a key and the previous one.
-		enum Type
+		enum class Interpolation
 		{
 			Step,
 			Linear,
@@ -77,7 +77,7 @@ class GAFFER_API Animation : public ComputeNode
 
 			public :
 
-				Key( float time = 0.0f, float value = 0.0f, Type type = Linear );
+				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Interpolation::Linear );
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 
@@ -89,9 +89,9 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				void setValue( float value );
 
-				Type getType() const { return m_type; };
+				Interpolation getInterpolation() const;
 				/// \undoable
-				void setType( Type type );
+				void setInterpolation( Interpolation interpolation );
 
 				bool operator == ( const Key &rhs ) const;
 				bool operator != ( const Key &rhs ) const;
@@ -106,7 +106,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlug *m_parent;
 				float m_time;
 				float m_value;
-				Type m_type;
+				Interpolation m_interpolation;
 
 		};
 
