@@ -551,6 +551,10 @@ class _ImagesPath( Gaffer.Path ) :
 				# not in a position to do anything more helpful.
 				return None
 
+	def cancellationSubject( self ) :
+
+		return self.__images
+
 	def _orderedImages( self ) :
 
 		# Avoid repeat lookups for plugs with no ui index by first getting all

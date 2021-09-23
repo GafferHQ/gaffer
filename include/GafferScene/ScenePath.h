@@ -82,6 +82,8 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 		bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
 		Gaffer::PathPtr copy() const override;
 
+		const Gaffer::Plug *cancellationSubject() const override;
+
 		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
 
 	protected :

@@ -37,6 +37,7 @@
 
 import unittest
 import six
+import threading
 
 import IECore
 
@@ -383,6 +384,52 @@ class PathTest( GafferTest.TestCase ) :
 			# the only one where C++ calls into Python. Above
 			# we're just calling the Python methods directly.
 			path.children( canceller )
+
+	def testBackgroundTaskCancellation( self ) :
+
+		class CancellingSubjectPath( self.CancellingPath ) :
+
+			def __init__( self, subject, path = None, root = "/", filter = None ) :
+
+				PathTest.CancellingPath.__init__( self, path, root, filter )
+
+				self.__subject = subject
+
+			def copy( self ) :
+
+				return CancellingSubjectPath( self.__subject, self[:], self.root(), self.getFilter() )
+
+			def cancellationSubject( self ) :
+
+				# A real path would use `__subject` in the overrides for
+				# `children()` etc. But we're just doing the minimum necessary
+				# for testing the cancellation mechanism.
+				return self.__subject
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.AddNode()
+		path = CancellingSubjectPath( script["node"]["sum"], "/" )
+
+		startedCondition = threading.Condition()
+
+		def f() :
+
+			with startedCondition :
+				startedCondition.notify()
+
+			while True :
+				path.children( Gaffer.Context.current().canceller() )
+
+		with startedCondition :
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
+				path.cancellationSubject(), f
+			)
+			# Wait for `f()` to start executing, because if we cancel before
+			# that, the BackgroundTask may not call `f()` at all.
+			startedCondition.wait()
+
+		script["node"]["op1"].setValue( 10 )
+		self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
 
 if __name__ == "__main__":
 	unittest.main()

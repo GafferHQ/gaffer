@@ -171,6 +171,11 @@ PathPtr ScenePath::copy() const
 	return new ScenePath( m_scene, m_context, names(), root(), const_cast<PathFilter *>( getFilter() ) );
 }
 
+const Gaffer::Plug *ScenePath::cancellationSubject() const
+{
+	return m_scene.get();
+}
+
 void ScenePath::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
 	Context::EditableScope scopedContext( m_context.get() );

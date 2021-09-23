@@ -78,6 +78,23 @@ class GraphComponentPath( Gaffer.Path ) :
 		else :
 			return Gaffer.Path.property( self, name )
 
+	def cancellationSubject( self ) :
+
+		if isinstance( self.__rootComponent, Gaffer.ScriptNode ) :
+			script = self.__rootComponent
+		else :
+			script = self.__rootComponent.ancestor( Gaffer.ScriptNode )
+
+		if script is None :
+			return None
+
+		# The BackgroundTask cancellation mechanism is plug-centric, but we deal
+		# with any kind of GraphComponent. Returning a plug on the script is
+		# currently sufficient for any edit to a child of the script to cancel
+		# background tasks.
+		## \todo Perhaps BackgroundTask cancellation shouldn't only be plug-centric?
+		return script["fileName"]
+
 	def _children( self, canceller ) :
 
 		try :

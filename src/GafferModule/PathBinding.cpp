@@ -246,6 +246,27 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::copy();
 		}
 
+		const Plug *cancellationSubject() const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "cancellationSubject" );
+					if( f )
+					{
+						return extract<Plug *>( f() );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::cancellationSubject();
+		}
+
 		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )

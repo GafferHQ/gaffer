@@ -35,7 +35,9 @@ API
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
-- Path : Added optional `canceller` argument to `isValid()`, `isLeaf()`, `propertyNames()`, `property()` and `children()` methods.
+- Path :
+  - Added optional `canceller` argument to `isValid()`, `isLeaf()`, `propertyNames()`, `property()` and `children()` methods.
+  - Added `cancellationSubject()` virtual function that must be implemented by any paths which access the node graph.
 - ScenePath : Added support for cancellation of calls to `isValid()` and `children()`.
 - FileSystemPath : Added support for cancellation of calls to `children()` and `property()`.
 - PathFilter : Added support for cancellation of calls to `filter()`.

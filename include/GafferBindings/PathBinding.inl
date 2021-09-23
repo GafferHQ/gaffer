@@ -40,6 +40,7 @@
 #include "GafferBindings/DataBinding.h"
 
 #include "Gaffer/Path.h"
+#include "Gaffer/Plug.h"
 
 namespace GafferBindings
 {
@@ -163,6 +164,12 @@ Gaffer::PathPtr copy( const T &p )
 	return p.T::copy();
 }
 
+template<typename T>
+Gaffer::PlugPtr cancellationSubject( const T &p )
+{
+	return const_cast<Gaffer::Plug *>( p.T::cancellationSubject() );
+}
+
 } // namespace Detail
 
 template<typename T, typename TWrapper>
@@ -173,6 +180,7 @@ PathClass<T, TWrapper>::PathClass( const char *docString )
 	this->def( "isLeaf", &Detail::isLeaf<T>, boost::python::arg( "canceller" ) = boost::python::object() );
 	this->def( "propertyNames", &Detail::propertyNames<T>, boost::python::arg( "canceller" ) = boost::python::object() );
 	this->def( "property", &Detail::property<T>, ( boost::python::arg( "name" ), boost::python::arg( "canceller" ) = boost::python::object() ) );
+	this->def( "cancellationSubject", &Detail::cancellationSubject<T> );
 	// Backwards compatibility with deprecated Path.info()
 	// method from original python implementation.
 	/// \todo Remove this in due course.

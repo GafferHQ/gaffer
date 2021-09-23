@@ -63,6 +63,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Path )
 IE_CORE_FORWARDDECLARE( PathFilter )
+IE_CORE_FORWARDDECLARE( Plug )
 
 /// The Path base class provides an abstraction for traversing a hierarchy
 /// of items by name, and retrieving properties from them. Examples of intended
@@ -174,6 +175,13 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 
 		bool operator == ( const Path &other ) const;
 		bool operator != ( const Path &other ) const;
+
+		/// Must be implemented by Paths which access node graphs. The result
+		/// must be suitable for pasing to `ParallelAlgo::callOnBackgroundThread()` by
+		/// code which will query the Path in the background. This allows the background
+		/// processing to be cancelled before node graph edits that affect the Path are
+		/// made.
+		virtual const Plug *cancellationSubject() const;
 
 	protected :
 

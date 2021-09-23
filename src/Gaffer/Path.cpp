@@ -380,6 +380,11 @@ bool Path::operator != ( const Path &other ) const
 	return !(*this == other );
 }
 
+const Plug *Path::cancellationSubject() const
+{
+	return nullptr;
+}
+
 void Path::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
 }
