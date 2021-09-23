@@ -33,6 +33,7 @@ API
   - Add support for Gadget's double click signal.
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
+- Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
 
 Breaking Changes
 ----------------
