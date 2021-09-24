@@ -2921,6 +2921,60 @@ IE_CORE_DECLAREPTR( CyclesCamera )
 namespace
 {
 
+// Enums
+std::array<IECore::InternedString, 6> g_tileOrderEnumNames = { {
+	"center",
+	"right_to_left",
+	"left_to_right",
+	"top_to_bottom",
+	"bottom_to_top",
+	"hilbert_spiral"
+} };
+
+ccl::TileOrder nameToTileOrderEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	MAP_NAME(g_tileOrderEnumNames[0], ccl::TileOrder::TILE_CENTER);
+	MAP_NAME(g_tileOrderEnumNames[1], ccl::TileOrder::TILE_RIGHT_TO_LEFT);
+	MAP_NAME(g_tileOrderEnumNames[2], ccl::TileOrder::TILE_LEFT_TO_RIGHT);
+	MAP_NAME(g_tileOrderEnumNames[3], ccl::TileOrder::TILE_TOP_TO_BOTTOM);
+	MAP_NAME(g_tileOrderEnumNames[4], ccl::TileOrder::TILE_BOTTOM_TO_TOP);
+	MAP_NAME(g_tileOrderEnumNames[5], ccl::TileOrder::TILE_HILBERT_SPIRAL);
+#undef MAP_NAME
+
+	return ccl::TileOrder::TILE_CENTER;
+}
+
+std::array<IECore::InternedString, 2> g_bvhLayoutEnumNames = { {
+	"embree",
+	"bvh2"
+} };
+
+ccl::BVHLayout nameToBvhLayoutEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	MAP_NAME(g_bvhLayoutEnumNames[0], ccl::BVHLayout::BVH_LAYOUT_EMBREE);
+	MAP_NAME(g_bvhLayoutEnumNames[1], ccl::BVHLayout::BVH_LAYOUT_BVH2);
+#undef MAP_NAME
+
+	return ccl::BVHLayout::BVH_LAYOUT_AUTO;
+}
+
+std::array<IECore::InternedString, 2> g_curveShapeTypeEnumNames = { {
+	"ribbon",
+	"thick"
+} };
+
+ccl::CurveShapeType nameToCurveShapeTypeEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	MAP_NAME(g_curveShapeTypeEnumNames[0], ccl::CurveShapeType::CURVE_RIBBON);
+	MAP_NAME(g_curveShapeTypeEnumNames[1], ccl::CurveShapeType::CURVE_THICK);
+#undef MAP_NAME
+
+	return ccl::CurveShapeType::CURVE_THICK;
+}
+
 // Core
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
@@ -3413,11 +3467,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						return;
 					}
 				}
+				if( name == g_tileOrderOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sessionParams.tile_order = ccl::TileOrder::TILE_CENTER;
+					}
+					else if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+					{
+						m_sessionParams.tile_order = nameToTileOrderEnum( data->readable() );
+					}
+					return;
+				}
 				OPTION_BOOL (m_sessionParams, g_featureSetOptionName,               experimental);
 				OPTION_BOOL (m_sessionParams, g_progressiveRefineOptionName,        progressive_refine);
 				OPTION_BOOL (m_sessionParams, g_progressiveOptionName,              progressive);
 				OPTION_V2I  (m_sessionParams, g_tileSizeOptionName,                 tile_size);
-				OPTION_INT_C(m_sessionParams, g_tileOrderOptionName,                tile_order, ccl::TileOrder);
 				OPTION_INT  (m_sessionParams, g_startResolutionOptionName,          start_resolution);
 				OPTION_INT  (m_sessionParams, g_pixelSizeOptionName,                pixel_size);
 				OPTION_BOOL (m_sessionParams, g_displayBufferLinearOptionName,      display_buffer_linear);
@@ -3447,12 +3512,34 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:scene:" ) )
 			{
-				OPTION_INT_C(m_sceneParams, g_bvhLayoutOptionName,            bvh_layout, ccl::BVHLayout);
+				if( name == g_bvhLayoutOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sceneParams.bvh_layout = ccl::BVHLayout::BVH_LAYOUT_AUTO;
+					}
+					else if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+					{
+						m_sceneParams.bvh_layout = nameToBvhLayoutEnum( data->readable() );
+					}
+					return;
+				}
+				if( name == g_hairShapeOptionName )
+				{
+					if( value == nullptr )
+					{
+						m_sceneParams.hair_shape = ccl::CurveShapeType::CURVE_THICK;
+					}
+					else if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+					{
+						m_sceneParams.hair_shape = nameToCurveShapeTypeEnum( data->readable() );
+					}
+					return;
+				}
 				OPTION_BOOL (m_sceneParams, g_useBvhSpatialSplitOptionName,   use_bvh_spatial_split);
 				OPTION_BOOL (m_sceneParams, g_useBvhUnalignedNodesOptionName, use_bvh_unaligned_nodes);
 				OPTION_INT  (m_sceneParams, g_numBvhTimeStepsOptionName,      num_bvh_time_steps);
 				OPTION_INT  (m_sceneParams, g_hairSubdivisionsOptionName,     hair_subdivisions);
-				OPTION_INT_C(m_sceneParams, g_hairShapeOptionName,            hair_shape, ccl::CurveShapeType);
 				OPTION_INT  (m_sceneParams, g_textureLimitOptionName,         texture_limit);
 
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );

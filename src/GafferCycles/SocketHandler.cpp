@@ -410,11 +410,15 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		case ccl::SocketType::ENUM :
 
 			{
-				plug = setupNumericPlug<IntPlug>(
+				const int *defaultValue = (int*)socketType.default_value;
+				const ccl::NodeEnum &enums = *socketType.enum_values;
+
+				plug = setupTypedPlug<StringPlug>(
 					nodeType,
 					socketType,
 					plugParent,
-					direction
+					direction,
+					enums[*defaultValue].c_str()
 				);
 			}
 			break;

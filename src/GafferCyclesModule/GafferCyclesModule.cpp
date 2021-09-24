@@ -127,7 +127,11 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 				py::dict enumDict;
 				for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
 				{
-					enumDict[it->first.c_str()] = it->second;
+					std::string uiEnumName( it->first.c_str() );
+					uiEnumName[0] = toupper( uiEnumName[0] );
+					boost::replace_all( uiEnumName, "_", " " );
+
+					enumDict[uiEnumName.c_str()] = it->first.c_str();
 				}
 				d["enum_values"] = enumDict;
 			}

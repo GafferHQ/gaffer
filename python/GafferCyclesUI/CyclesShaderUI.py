@@ -75,7 +75,7 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	flags = value["flags"]
 	if socketType == "enum" :
 		presetNames = IECore.StringVectorData()
-		presetValues = IECore.IntVectorData()
+		presetValues = IECore.StringVectorData()
 		for enumName, enumValues in value["enum_values"].items() :
 			presetNames.append(enumName)
 			presetValues.append(enumValues)

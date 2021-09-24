@@ -54,7 +54,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:log_level", new IECore::IntData( 0 ), false, "logLevel" ) );
 
 	// Device
-
 	options->addChild( new Gaffer::NameValuePlug( "ccl:device", new IECore::StringData( "CPU" ), false, "device" ) );
 
 	// Session and scene
@@ -71,7 +70,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:progressive", new IECore::BoolData( false ), false, "method" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:samples", new IECore::IntData( 8 ), false, "samples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:tile_size", new IECore::V2iData( Imath::V2i( 64, 64 ) ), false, "tileSize" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:session:tile_order", new IECore::IntData( 0 ), false, "tileOrder" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:session:tile_order", new IECore::StringData( "center" ), false, "tileOrder" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:start_resolution", new IECore::IntData( 64 ), false, "startResolution" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:pixel_size", new IECore::IntData( 64 ), false, "pixelSize" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:threads", new IECore::IntData( 0 ), false, "numThreads" ) );
@@ -107,12 +106,12 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	// Scene/BVH
 
-	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_layout", new IECore::IntData( 0 | 1 << 1 ), false, "bvhLayout" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:bvh_layout", new IECore::StringData( "embree" ), false, "bvhLayout" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:use_bvh_spatial_split", new IECore::BoolData( false ), false, "useBvhSpatialSplit" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:use_bvh_unaligned_nodes", new IECore::BoolData( true ), false, "useBvhUnalignedNodes" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:num_bvh_time_steps", new IECore::IntData( 0 ), false, "numBvhTimeSteps" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:hair_subdivisions", new IECore::IntData( 0 ), false, "hairSubdivisions" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:hair_shape", new IECore::IntData( 0 ), false, "hairShape" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:hair_shape", new IECore::StringData( "thick" ), false, "hairShape" ) );
 	//options->addChild( new Gaffer::NameValuePlug( "ccl:scene:persistent_data", new IECore::BoolData( true ), false, "persistentData" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:scene:texture_limit", new IECore::IntData( 0 ), false, "textureLimit" ) );
 
@@ -154,7 +153,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sample_all_lights_indirect", new IECore::BoolData( true ), false, "sampleAllLightsIndirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:light_sampling_threshold", new IECore::FloatData( 0.05f ), false, "lightSamplingThreshold" ) );
 
-	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sampling_pattern", new IECore::IntData( 0 ), false, "samplingPattern" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:integrator:sampling_pattern", new IECore::StringData( "sobol" ), false, "samplingPattern" ) );
 
 	// Background
 	options->addChild( new Gaffer::NameValuePlug( "ccl:background:ao_factor", new IECore::FloatData( 0.0f ), false, "aoFactor" ) );
@@ -174,7 +173,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	// Film
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:exposure", new IECore::FloatData( 1.0f ), false, "exposure" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:pass_alpha_threshold", new IECore::FloatData( 0.5f ), false, "passAlphaThreshold" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_type", new IECore::IntData( 0 ), false, "filterType" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_type", new IECore::StringData( "box" ), false, "filterType" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:filter_width", new IECore::FloatData( 1.0f ), false, "filterWidth" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_start", new IECore::FloatData( 0.0f ), false, "mistStart" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:mist_depth", new IECore::FloatData( 100.0f ), false, "mistDepth" ) );

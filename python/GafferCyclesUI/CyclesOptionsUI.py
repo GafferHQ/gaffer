@@ -106,19 +106,10 @@ def __sessionSummary( plug ) :
 
 def __sceneSummary( plug ) :
 
-	def __getBvhLayout( layout ) :
-
-		if( layout == 0 | ( 1 << 0 ) ):
-			return "BVH2"
-		elif( layout == 0 | ( 1 << 3 ) ):
-			return "Embree"
-		else :
-			return "BVH2"
-
 	info = []
 
 	if plug["bvhLayout"]["enabled"].getValue() :
-		info.append( "BVH Layout {}".format( __getBvhLayout( plug["bvhLayout"]["value"].getValue() ) ) )
+		info.append( "BVH Layout {}".format( Gaffer.NodeAlgo.currentPreset( plug["bvhLayout"]["value"].getValue() ) ) )
 
 	if plug["useBvhSpatialSplit"]["enabled"].getValue() :
 		info.append( "Use BVH Spatial Splits {}".format( plug["useBvhSpatialSplit"]["value"].getValue() ) )
@@ -133,7 +124,7 @@ def __sceneSummary( plug ) :
 		info.append( "Num hair subdivisions {}".format( plug["hairSubdivisions"]["value"].getValue() ) )
 
 	if plug["hairShape"]["enabled"].getValue() :
-		info.append( "Hair shape {}".format( plug["hairShape"]["value"].getValue() ) )
+		info.append( "Hair shape {}".format( Gaffer.NodeAlgo.currentPreset( plug["hairShape"]["value"].getValue() ) ) )
 
 	if plug["textureLimit"]["enabled"].getValue() :
 			info.append( "Texture Limit - {}".format( plug["textureLimit"]["value"].getValue() ) )
@@ -175,7 +166,7 @@ def __samplingSummary( plug ) :
 				info.append( "{} {}".format( sampleType, samples ) )
 
 	if plug["samplingPattern"]["enabled"].getValue() :
-		info.append( "Sampling Pattern {}".format( plug["samplingPattern"]["value"].getValue() ) )
+		info.append( "Sampling Pattern {}".format( Gaffer.NodeAlgo.currentPreset( plug["samplingPattern"]["value"].getValue() ) ) )
 
 	if plug["sampleAllLightsDirect"]["enabled"].getValue() :
 		info.append( "All Lights Direct {}".format( plug["sampleAllLightsDirect"]["value"].getValue() ) )
@@ -291,7 +282,7 @@ def __filmSummary( plug ) :
 		info.append( "Pass Alpha Threshold {}".format( plug["passAlphaThreshold"]["value"].getValue() ) )
 
 	if plug["filterType"]["enabled"].getValue() :
-		info.append( "Filter Type {}".format( plug["filterType"]["value"].getValue() ) )
+		info.append( "Filter Type {}".format( Gaffer.NodeAlgo.currentPreset( plug["filterType"]["value"].getValue() ) ) )
 
 	if plug["filterWidth"]["enabled"].getValue() :
 		info.append( "Filter Width {}".format( plug["filterWidth"]["value"].getValue() ) )
@@ -676,7 +667,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"presetNames", IECore.StringVectorData( ["Center", "Right to Left", "Left to Right", "Top to Bottom", "Bottom to Top", "Hilbert Spiral"] ),
-			"presetValues", IECore.IntVectorData( [0, 1, 2, 3, 4, 5] ),
+			"presetValues", IECore.StringVectorData( ["center", "right_to_left", "left_to_right", "top_to_bottom", "bottom_to_top", "hilbert_spiral"] ),
 
 		],
 
@@ -785,8 +776,8 @@ Gaffer.Metadata.registerNode(
 
 		"options.bvhLayout.value" : [
 
-			"preset:BVH2", 0 | ( 1 << 0 ),
-			"preset:EMBREE", 0 | ( 1 << 1 ),
+			"preset:BVH2", "bvh2",
+			"preset:EMBREE", "embree",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -855,8 +846,8 @@ Gaffer.Metadata.registerNode(
 
 		"options.hairShape.value" : [
 
-			"preset:Round Ribbons", 0,
-			"preset:3D Curves", 1,
+			"preset:Round Ribbons", "ribbon",
+			"preset:3D Curves", "thick",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -1069,9 +1060,9 @@ Gaffer.Metadata.registerNode(
 
 		"options.samplingPattern.value" : [
 
-			"preset:Sobol", 0,
-			"preset:Correlated Multi-Jitter", 1,
-			"preset:Progressive Multi-Jitter", 2,
+			"preset:Sobol", "sobol",
+			"preset:Correlated Multi-Jitter", "cmj",
+			"preset:Progressive Multi-Jitter", "pmj",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -1631,9 +1622,9 @@ Gaffer.Metadata.registerNode(
 
 		"options.filterType.value" : [
 
-			"preset:Box", 0,
-			"preset:Gaussian", 1,
-			"preset:Blackman Harris", 2,
+			"preset:Box", "box",
+			"preset:Gaussian", "gaussian",
+			"preset:Blackman Harris", "blackman_harris",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
