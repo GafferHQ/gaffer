@@ -57,6 +57,11 @@ IE_CORE_FORWARDDECLARE( ScriptNode );
 IE_CORE_FORWARDDECLARE( Set );
 }
 
+namespace GafferUIModule
+{
+	class ActivePlugsWrapperClassToUseAsFriend;
+}
+
 namespace GafferUI
 {
 
@@ -337,6 +342,8 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 			std::unordered_set<const Gaffer::Plug*> &activePlugs,
 			std::unordered_set<const Gaffer::Node*> &activeNodes
 		);
+
+		friend GafferUIModule::ActivePlugsWrapperClassToUseAsFriend;
 };
 
 IE_CORE_DECLAREPTR( GraphGadget );
