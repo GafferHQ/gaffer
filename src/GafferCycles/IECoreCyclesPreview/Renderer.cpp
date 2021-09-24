@@ -3078,7 +3078,7 @@ IECore::InternedString g_aoSamplesOptionName( "ccl:integrator:ao_samples" );
 IECore::InternedString g_meshLightSamplesOptionName( "ccl:integrator:mesh_light_samples" );
 IECore::InternedString g_subsurfaceSamplesOptionName( "ccl:integrator:subsurface_samples" );
 IECore::InternedString g_volumeSamplesOptionName( "ccl:integrator:volume_samples" );
-IECore::InternedString g_adaptiveMinSamplesOptionName( "ccl:integrator:adaptive_samples" );
+IECore::InternedString g_adaptiveMinSamplesOptionName( "ccl:integrator:adaptive_min_samples" );
 
 // Dicing camera
 IECore::InternedString g_dicingCameraOptionName( "ccl:dicing_camera" );
