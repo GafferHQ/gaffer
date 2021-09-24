@@ -352,7 +352,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 
 		case AI_TYPE_MATRIX :
 
-			return setupTypedPlug<M44fPlug>( parameterName, plugParent, direction, false );
+			return setupTypedPlug<M44fPlug>( parameterName, plugParent, direction, M44f() );
 
 		default :
 
