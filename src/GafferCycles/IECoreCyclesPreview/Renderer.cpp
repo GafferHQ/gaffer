@@ -1091,7 +1091,7 @@ class ShaderCache : public IECore::RefCounted
 
 			if( toErase.size() )
 			{
-				updateShaders();
+				m_updateFlags |= ccl::ShaderManager::SHADER_MODIFIED;
 			}
 		}
 
@@ -1934,7 +1934,9 @@ class ParticleSystemsCache : public IECore::RefCounted
 			}
 
 			if( toErase.size() )
-				updateParticleSystems();
+			{
+				m_scene->particle_system_manager->tag_update( m_scene );
+			}
 		}
 
 	private :
@@ -1953,8 +1955,6 @@ class ParticleSystemsCache : public IECore::RefCounted
 					pSystems.push_back( it->second.get() );
 				}
 			}
-
-			m_scene->particle_system_manager->tag_update( m_scene );
 		}
 
 		ccl::Scene *m_scene;
@@ -2265,7 +2265,6 @@ class InstanceCache : public IECore::RefCounted
 			}
 
 			m_uniqueGeometry = geomKeep;
-			updateGeometry();
 
 			// Objects
 			Objects objectsKeep;
@@ -2282,7 +2281,6 @@ class InstanceCache : public IECore::RefCounted
 			}
 
 			m_objects = objectsKeep;
-			updateObjects();
 		}
 
 	private :
@@ -2412,8 +2410,6 @@ class LightCache : public IECore::RefCounted
 			{
 				m_lights = lightsKeep;
 			}
-
-			updateLights();
 		}
 
 	private :
