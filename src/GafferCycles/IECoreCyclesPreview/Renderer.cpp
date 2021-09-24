@@ -1126,6 +1126,9 @@ class ShaderCache : public IECore::RefCounted
 				{
 					ccl::Geometry *geo = static_cast<ccl::Geometry*>( shaderAssignPair.first );
 					geo->set_used_shaders( shaderAssignPair.second );
+					m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::SHADER_ATTRIBUTE_MODIFIED |
+																	ccl::GeometryManager::SHADER_DISPLACEMENT_MODIFIED |
+																	ccl::GeometryManager::VISIBILITY_MODIFIED );
 				}
 				else if( shaderAssignPair.first->is_a( ccl::Light::get_node_type() ) )
 				{
@@ -1138,6 +1141,7 @@ class ShaderCache : public IECore::RefCounted
 					{
 						light->set_shader( m_scene->default_light );
 					}
+					m_scene->light_manager->tag_update( m_scene, ccl::LightManager::SHADER_COMPILED | ccl::LightManager::SHADER_MODIFIED );
 				}
 			}
 			m_shaderAssignPairs.clear();
@@ -1176,7 +1180,6 @@ class ShaderCache : public IECore::RefCounted
 				{
 					ccl::Shader *cshader = it->second.get();
 					shaders.push_back( cshader );
-					//cshader->tag_update( m_scene );
 				}
 			}
 
@@ -2290,13 +2293,16 @@ class InstanceCache : public IECore::RefCounted
 			if( m_objUpdateFlags == ccl::ObjectManager::UPDATE_NONE )
 				return;
 
-			auto &objects = m_scene->objects;
-			objects.clear();
-			for( Objects::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
+			if( m_geoUpdateFlags & ( ccl::ObjectManager::OBJECT_ADDED | ccl::ObjectManager::OBJECT_REMOVED | ccl::ObjectManager::OBJECT_MODIFIED ) )
 			{
-				if( it->get() )
+				auto &objects = m_scene->objects;
+				objects.clear();
+				for( Objects::const_iterator it = m_objects.begin(), eIt = m_objects.end(); it != eIt; ++it )
 				{
-					objects.push_back( it->get() );
+					if( it->get() )
+					{
+						objects.push_back( it->get() );
+					}
 				}
 			}
 			m_scene->object_manager->tag_update( m_scene, m_objUpdateFlags );
@@ -2308,24 +2314,27 @@ class InstanceCache : public IECore::RefCounted
 			if( m_geoUpdateFlags == ccl::GeometryManager::UPDATE_NONE )
 				return;
 
-			auto &geoms = m_scene->geometry;
-			geoms.clear();
-
-			// Unique geometry
-			for( UniqueGeometry::const_iterator it = m_uniqueGeometry.begin(), eIt = m_uniqueGeometry.end(); it != eIt; ++it )
+			if( m_geoUpdateFlags & ( ccl::GeometryManager::GEOMETRY_ADDED | ccl::GeometryManager::GEOMETRY_REMOVED | ccl::GeometryManager::GEOMETRY_MODIFIED ) )
 			{
-				if( it->get() )
+				auto &geoms = m_scene->geometry;
+				geoms.clear();
+
+				// Unique geometry
+				for( UniqueGeometry::const_iterator it = m_uniqueGeometry.begin(), eIt = m_uniqueGeometry.end(); it != eIt; ++it )
 				{
-					geoms.push_back( it->get() );
+					if( it->get() )
+					{
+						geoms.push_back( it->get() );
+					}
 				}
-			}
 
-			// Instanced meshes
-			for( Cache::const_iterator it = m_instancedGeometry.begin(), eIt = m_instancedGeometry.end(); it != eIt; ++it )
-			{
-				if( it->second )
+				// Instanced meshes
+				for( Cache::const_iterator it = m_instancedGeometry.begin(), eIt = m_instancedGeometry.end(); it != eIt; ++it )
 				{
-					geoms.push_back( it->second.get() );
+					if( it->second )
+					{
+						geoms.push_back( it->second.get() );
+					}
 				}
 			}
 			m_scene->geometry_manager->tag_update( m_scene, m_geoUpdateFlags );
