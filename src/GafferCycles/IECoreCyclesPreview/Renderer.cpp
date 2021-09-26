@@ -4361,7 +4361,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			else if( !lightBackground )
 			{
 				// Fallback to default background
-				background->set_shader( m_scene->default_background );
+				background->set_shader( m_scene->default_empty );
 			}
 
 			if( integrator->is_modified() )
