@@ -4358,13 +4358,24 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			integrator->set_method( (ccl::Integrator::Method)m_sessionParams.progressive );
 			if( !m_sessionParams.progressive )
 			{
+				// Branched-path mode
 				m_sessionParams.progressive_refine = false;
 				m_sessionParams.samples = integrator->get_aa_samples();
 			}
 
+			ccl::Film *film = m_scene->film;
 			if( m_sessionParams.adaptive_sampling )
 			{
-				integrator->set_sampling_pattern( ccl::SAMPLING_PATTERN_PMJ );
+				if( m_renderType == Interactive && m_sessionParams.progressive )
+				{
+					// Disable progressive in interactive path-trace mode
+					m_sessionParams.adaptive_sampling = false;
+					film->set_use_adaptive_sampling( false );
+				}
+				else
+				{
+					integrator->set_sampling_pattern( ccl::SAMPLING_PATTERN_PMJ );
+				}
 			}
 
 			m_session->set_samples( m_sessionParams.samples );
@@ -4415,7 +4426,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_background = *background;
 			}
 
-			ccl::Film *film = m_scene->film;
 			if( film->is_modified() )
 			{
 				//film->tag_update( m_scene );
