@@ -91,7 +91,7 @@ FT_Library library()
 // is fairly costly. But since FT_Faces belong to FT_Libraries
 // the cache must be maintained per-thread.
 typedef std::shared_ptr<FT_FaceRec_> FacePtr;
-FacePtr faceLoader( const std::string &font, size_t &cost )
+FacePtr faceLoader( const std::string &font, size_t &cost, const IECore::Canceller *canceller )
 {
 	const char *e = getenv( "IECORE_FONT_PATHS" );
 	IECore::SearchPath sp( e ? e : "" );

@@ -390,7 +390,7 @@ class ValuePlug::HashProcess : public Process
 			}
 		}
 
-		static IECore::MurmurHash globalCacheGetter( const HashProcessKey &key, size_t &cost )
+		static IECore::MurmurHash globalCacheGetter( const HashProcessKey &key, size_t &cost, const IECore::Canceller *canceller )
 		{
 			cost = 1;
 			IECore::MurmurHash result;
@@ -421,7 +421,7 @@ class ValuePlug::HashProcess : public Process
 			return result;
 		}
 
-		static IECore::MurmurHash localCacheGetter( const HashProcessKey &key, size_t &cost )
+		static IECore::MurmurHash localCacheGetter( const HashProcessKey &key, size_t &cost, const IECore::Canceller *canceller )
 		{
 			cost = 1;
 			switch( key.cachePolicy )
@@ -671,7 +671,7 @@ class ValuePlug::ComputeProcess : public Process
 			}
 		}
 
-		static IECore::ConstObjectPtr cacheGetter( const ComputeProcessKey &key, size_t &cost )
+		static IECore::ConstObjectPtr cacheGetter( const ComputeProcessKey &key, size_t &cost, const IECore::Canceller *canceller )
 		{
 			IECore::ConstObjectPtr result;
 			switch( key.cachePolicy )

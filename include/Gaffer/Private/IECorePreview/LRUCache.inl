@@ -221,7 +221,7 @@ class Serial
 		// handle is writable or not is determined by the AcquireMode.
 		// Returns true on success and false if no entry was
 		// found.
-		bool acquire( const Key &key, Handle &handle, AcquireMode mode )
+		bool acquire( const Key &key, Handle &handle, AcquireMode mode, const IECore::Canceller *canceller )
 		{
 			if( mode == Insert || mode == InsertWritable )
 			{
@@ -415,7 +415,7 @@ class Parallel
 
 			private :
 
-				bool acquire( Bin &bin, const Key &key, AcquireMode mode )
+				bool acquire( Bin &bin, const Key &key, AcquireMode mode, const IECore::Canceller *canceller )
 				{
 					assert( !m_item );
 
@@ -487,6 +487,10 @@ class Parallel
 							// access another item in the same Bin.
 							binLock.release();
 						}
+						// Check for cancellation before trying again. We could
+						// be waiting a while, and our caller may have lost interest
+						// in the meantime.
+						IECore::Canceller::check( canceller );
 					}
 				}
 
@@ -498,9 +502,9 @@ class Parallel
 
 		};
 
-		bool acquire( const Key &key, Handle &handle, AcquireMode mode )
+		bool acquire( const Key &key, Handle &handle, AcquireMode mode, const IECore::Canceller *canceller )
 		{
-			return handle.acquire( bin( key ), key, mode );
+			return handle.acquire( bin( key ), key, mode, canceller );
 		}
 
 		void push( Handle &handle )
@@ -773,7 +777,7 @@ class TaskParallel
 
 			private :
 
-				bool acquire( Bin &bin, const Key &key, AcquireMode mode, bool spawnsTasks )
+				bool acquire( Bin &bin, const Key &key, AcquireMode mode, bool spawnsTasks, const IECore::Canceller *canceller )
 				{
 					assert( !m_item );
 
@@ -823,12 +827,30 @@ class TaskParallel
 						const bool acquired = m_itemLock.acquireOr(
 							it->mutex, lockType,
 							// Work accepter
-							[&binLock] ( bool workAvailable ) {
+							[&binLock, canceller] ( bool workAvailable ) {
 								// Release the bin lock prior to accepting work, because
 								// the work might involve recursion back into the cache,
 								// thus requiring the bin lock.
 								binLock.release();
-								return true;
+								// Only accept work if our caller still wants
+								// the result. Note : Once we've accepted the
+								// work, the caller has no ability to recall us.
+								// The only canceller being checked at that
+								// point will be the one passed to the
+								// `LRUCache::get()` call that we work in
+								// service of. This isn't ideal, as it can cause
+								// UI stalls if one UI element is waiting to
+								// cancel an operation, but it's tasks have been
+								// "captured" by collaboration on a compute
+								// started by another UI element (which hasn't
+								// requested cancellation).  One alternative is
+								// that we would only accept work if our
+								// canceller matches the one in use by the
+								// original caller. This would rule out
+								// collaboration between UI elements, but would
+								// still allow diamond dependencies in graph
+								// evaluation to use collaboration.
+								return (!canceller || !canceller->cancelled());
 							}
 						);
 
@@ -858,6 +880,8 @@ class TaskParallel
 							m_spawnsTasks = spawnsTasks;
 							return true;
 						}
+
+						IECore::Canceller::check( canceller );
 					}
 				}
 
@@ -872,7 +896,7 @@ class TaskParallel
 		/// Templated so that we can be called with the GetterKey as
 		/// well as the regular Key.
 		template<typename K>
-		bool acquire( const K &key, Handle &handle, AcquireMode mode )
+		bool acquire( const K &key, Handle &handle, AcquireMode mode, const IECore::Canceller *canceller )
 		{
 			return handle.acquire(
 				bin( key ), key, mode,
@@ -882,7 +906,8 @@ class TaskParallel
 				/// to do. `TaskMutex::ScopedLock::execute()` has significant
 				/// overhead, so we also want to avoid it if tasks won't
 				/// be spawned for a particular key.
-				mode == AcquireMode::Insert && spawnsTasks( key )
+				mode == AcquireMode::Insert && spawnsTasks( key ),
+				canceller
 			);
 		}
 
@@ -1076,10 +1101,10 @@ typename LRUCache<Key, Value, Policy, GetterKey>::Cost LRUCache<Key, Value, Poli
 }
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
-Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
+Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key, const IECore::Canceller *canceller )
 {
 	typename Policy<LRUCache>::Handle handle;
-	m_policy.acquire( key, handle, LRUCachePolicy::Insert );
+	m_policy.acquire( key, handle, LRUCachePolicy::Insert, canceller );
 	const CacheEntry &cacheEntry = handle.readable();
 	const Status status = cacheEntry.status();
 
@@ -1089,7 +1114,7 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key )
 		Cost cost = 0;
 		try
 		{
-			handle.execute( [this, &value, &key, &cost] { value = m_getter( key, cost ); } );
+			handle.execute( [this, &value, &key, &cost, canceller] { value = m_getter( key, cost, canceller ); } );
 		}
 		catch( IECore::Cancelled const &c )
 		{
@@ -1133,7 +1158,7 @@ template<typename Key, typename Value, template <typename> class Policy, typenam
 boost::optional<Value> LRUCache<Key, Value, Policy, GetterKey>::getIfCached( const Key &key )
 {
 	typename Policy<LRUCache>::Handle handle;
-	if( !m_policy.acquire( key, handle, LRUCachePolicy::FindReadable ) )
+	if( !m_policy.acquire( key, handle, LRUCachePolicy::FindReadable, /* canceller = */ nullptr ) )
 	{
 		return boost::none;
 	}
@@ -1160,7 +1185,7 @@ template<typename Key, typename Value, template <typename> class Policy, typenam
 bool LRUCache<Key, Value, Policy, GetterKey>::set( const Key &key, const Value &value, Cost cost )
 {
 	typename Policy<LRUCache>::Handle handle;
-	m_policy.acquire( key, handle, LRUCachePolicy::InsertWritable );
+	m_policy.acquire( key, handle, LRUCachePolicy::InsertWritable, /* canceller = */ nullptr );
 	assert( handle.isWritable() );
 	bool result = setInternal( key, handle.writable(), value, cost );
 	m_policy.push( handle );
@@ -1193,7 +1218,7 @@ bool LRUCache<Key, Value, Policy, GetterKey>::cached( const Key &key ) const
 	typename Policy<LRUCache>::Handle handle;
 	// Preferring const_cast over forcing all policies to implement
 	// a ConstHandle and const acquire() variant.
-	if( !const_cast<Policy<LRUCache> &>( m_policy ).acquire( key, handle, LRUCachePolicy::FindReadable ) )
+	if( !const_cast<Policy<LRUCache> &>( m_policy ).acquire( key, handle, LRUCachePolicy::FindReadable, /* canceller = */ nullptr ) )
 	{
 		return false;
 	}
@@ -1205,7 +1230,7 @@ template<typename Key, typename Value, template <typename> class Policy, typenam
 bool LRUCache<Key, Value, Policy, GetterKey>::erase( const Key &key )
 {
 	typename Policy<LRUCache>::Handle handle;
-	if( !m_policy.acquire( key, handle, LRUCachePolicy::FindWritable ) )
+	if( !m_policy.acquire( key, handle, LRUCachePolicy::FindWritable, /* canceller = */ nullptr ) )
 	{
 		return false;
 	}

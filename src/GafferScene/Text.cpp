@@ -60,7 +60,7 @@ namespace GafferScene
 namespace Detail
 {
 
-FontPtr fontGetter( const std::string &fileName, size_t &cost )
+FontPtr fontGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
 {
 	const char *e = getenv( "IECORE_FONT_PATHS" );
 	IECore::SearchPath sp( e ? e : "" );

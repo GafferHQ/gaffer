@@ -140,7 +140,7 @@ struct OSLTextureCacheGetterKey
 
 };
 
-CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
+CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller )
 {
 	// make the cost be image data in bytes
 	cost = key.resolution * key.resolution * 3 * 4;

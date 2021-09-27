@@ -101,7 +101,7 @@ struct SurfaceTextureCacheGetterKey
 	MurmurHash hash;
 };
 
-CompoundDataPtr surfaceTextureGetter( const SurfaceTextureCacheGetterKey &key, size_t &cost )
+CompoundDataPtr surfaceTextureGetter( const SurfaceTextureCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = key.resolution.x * key.resolution.y * 3 * 4; // 3 x 32bit float channels;
 

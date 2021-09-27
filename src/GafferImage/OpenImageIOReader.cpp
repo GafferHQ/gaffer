@@ -651,7 +651,7 @@ struct CacheEntry
 };
 
 
-CacheEntry fileCacheGetter( const std::string &fileName, size_t &cost )
+CacheEntry fileCacheGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 

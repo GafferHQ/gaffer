@@ -105,7 +105,7 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
+std::string shaderCacheGetter( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 	const char *oslShaderPaths = getenv( "OSL_SHADER_PATHS" );
