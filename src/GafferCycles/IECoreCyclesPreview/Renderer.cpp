@@ -2984,6 +2984,23 @@ ccl::CurveShapeType nameToCurveShapeTypeEnum( const IECore::InternedString &name
 	return ccl::CurveShapeType::CURVE_THICK;
 }
 
+// Shading-Systems
+IECore::InternedString g_shadingsystemOSL( "OSL" );
+IECore::InternedString g_shadingsystemSVM( "SVM" );
+
+ccl::ShadingSystem nameToShadingSystemEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	MAP_NAME(g_shadingsystemOSL, ccl::ShadingSystem::SHADINGSYSTEM_OSL);
+	MAP_NAME(g_shadingsystemSVM, ccl::ShadingSystem::SHADINGSYSTEM_SVM);
+#undef MAP_NAME
+
+	return ccl::ShadingSystem::SHADINGSYSTEM_SVM;
+}
+
+// Default device
+IECore::InternedString g_defaultDeviceName( "CPU" );
+
 // Core
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
@@ -3126,8 +3143,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 				m_textureCacheParams( ccl::TextureCacheParams() ),
 #endif
-				m_deviceName( "CPU" ),
-				m_shadingsystemName( "SVM" ),
+				m_deviceName( g_defaultDeviceName ),
 				m_session( nullptr ),
 				m_scene( nullptr ),
 				m_renderCallback( nullptr ),
@@ -3361,17 +3377,99 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( value == nullptr )
 				{
-					m_deviceName = "CPU";
+					m_multiDevices.clear();
+					const auto device = m_deviceMap.find( g_defaultDeviceName );
+					if( device != m_deviceMap.end() )
+					{
+						m_multiDevices.push_back( device->second );
+					}
+					m_deviceName = g_defaultDeviceName;
 				}
 				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 				{
-					auto device_name = data->readable();
-					m_deviceName = device_name;
+					m_multiDevices.clear();
+					auto deviceName = data->readable();
+					m_deviceName = "MULTI";
+
+					std::vector<std::string> split;
+					if( boost::contains( deviceName, " " ) )
+					{
+						boost::split( split, deviceName, boost::is_any_of( " " ) );
+					}
+					else
+					{
+						split.push_back( deviceName );
+					}
+
+					for( std::string &deviceStr : split )
+					{
+						if( deviceStr == g_defaultDeviceName.c_str() )
+						{
+							const auto device = m_deviceMap.find( g_defaultDeviceName );
+							if( device != m_deviceMap.end() )
+							{
+								m_multiDevices.push_back( device->second );
+
+								if( split.size() == 1 )
+								{
+									m_deviceName = g_defaultDeviceName;
+									break;
+								}
+								continue;
+							}
+						}
+						else if( boost::contains( deviceStr, ":" ) )
+						{
+							std::vector<std::string> _split;
+							boost::split( _split, deviceStr, boost::is_any_of( ":" ) );
+							ccl::DeviceType deviceType = ccl::Device::type_from_string( _split[0].c_str() );
+
+							if( _split[1] == "*" )
+							{
+								for( const auto device : m_deviceMap )
+								{
+									if( deviceType == device.second.type )
+									{
+										m_multiDevices.push_back( device.second );
+									}
+								}
+							}
+							else
+							{
+								const auto device = m_deviceMap.find( deviceStr );
+								if( device != m_deviceMap.end() )
+								{
+									m_multiDevices.push_back( device->second );
+
+									if( split.size() == 1 )
+									{
+										m_deviceName = device->second.id;
+										break;
+									}
+									continue;
+								}
+								else
+								{
+									IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Cannot find device \"%s\" for option \"%s\"." ) % deviceStr % name.string() );
+								}
+							}
+						}
+						else
+						{
+							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Cannot find device \"%s\" for option \"%s\"." ) % deviceStr % name.string() );
+						}
+					}
 				}
 				else
 				{
-					m_deviceName = "CPU";
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % m_deviceName % name.string() );
+					m_multiDevices.clear();
+					const auto device = m_deviceMap.find( g_defaultDeviceName );
+					if( device != m_deviceMap.end() )
+					{
+						m_multiDevices.push_back( device->second );
+					}
+					m_deviceName = g_defaultDeviceName;
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
 				}
 				m_sessionReset = true;
 				return;
@@ -3396,32 +3494,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( value == nullptr )
 				{
-					m_shadingsystemName = "SVM";
 					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
 					m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
 				}
 				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 				{
 					auto shadingsystemName = data->readable();
-					if( shadingsystemName == "OSL" )
-					{
-						m_shadingsystemName = shadingsystemName;
-						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
-					}
-					else if( shadingsystemName == "SVM" )
-					{
-						m_shadingsystemName = shadingsystemName;
-						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
-						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
-					}
-					else
-					{
-						m_shadingsystemName = "SVM";
-						m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_SVM;
-						m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_SVM;
-						IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value \"%s\" for option \"%s\"." ) % shadingsystemName % name.string() );
-					}
+
+					m_sessionParams.shadingsystem = nameToShadingSystemEnum( shadingsystemName );
+					m_sceneParams.shadingsystem   = nameToShadingSystemEnum( shadingsystemName );
 				}
 				else
 				{
@@ -3505,13 +3586,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					if( value == nullptr )
 					{
 						m_sessionParams.adaptive_sampling = false;
-						m_film.set_use_adaptive_sampling( false );
+						film->set_use_adaptive_sampling( false );
 						return;
 					}
 					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
 					{
 						m_sessionParams.adaptive_sampling = data->readable();
-						m_film.set_use_adaptive_sampling( data->readable() );
+						film->set_use_adaptive_sampling( data->readable() );
 						return;
 					}
 				}
@@ -3846,53 +3927,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:multidevice:" ) )
-			{
-				string deviceName = name.string().c_str() + 16;
-				if( value == nullptr )
-				{
-					for( ccl::DeviceInfo& device : m_multiDevices )
-					{
-						if( m_deviceMap[deviceName].id == device.id )
-						{
-							m_multiDevices.erase( std::remove( m_multiDevices.begin(), m_multiDevices.end(), device ) );
-							return;
-						}
-					}
-					return;
-				}
-				if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-				{
-					for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
-					{
-						if( m_deviceMap[deviceName].id == device.id ) 
-						{
-							for( ccl::DeviceInfo& existingDevice : m_multiDevices )
-							{
-								if( m_deviceMap[deviceName].id == existingDevice.id )
-								{
-									if( !data->readable() )
-									{
-										m_multiDevices.erase( std::remove( m_multiDevices.begin(), m_multiDevices.end(), existingDevice ) );
-										return;
-									}
-									else
-									{
-										return;
-									}
-								}
-							}
-							if( data->readable() )
-							{
-								m_multiDevices.push_back( device );
-							}
-							return;
-						}
-					}
-				}
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown device \"%s\"." ) % deviceName );
-				return;
-			}
 			else if( boost::starts_with( name.string(), "ccl:" ) )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
@@ -4176,6 +4210,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					device_fallback = device;
 					break;
 				}
+			}
+
+			if( m_multiDevices.size() == 0 )
+			{
+				m_deviceName = g_defaultDeviceName;
 			}
 
 			if( m_deviceName == "MULTI" )
@@ -4757,20 +4796,27 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( device.type == ccl::DEVICE_CPU )
 				{
-					m_deviceMap["CPU"] = device;
+					m_deviceMap[g_defaultDeviceName] = device;
 					continue;
 				}
 				string deviceName = ccl::Device::string_from_type( device.type ).c_str();
 				if( device.type == ccl::DEVICE_CUDA )
 				{
-					auto optionName = boost::format( "%s%02i" ) % deviceName % indexCuda;
+					auto optionName = boost::format( "CUDA:%02i" ) % indexCuda;
 					m_deviceMap[optionName.str()] = device;
 					++indexCuda;
 					continue;
 				}
 				if( device.type == ccl::DEVICE_OPENCL )
 				{
-					auto optionName = boost::format( "%s%02i" ) % deviceName % indexOpenCL;
+					auto optionName = boost::format( "OPENCL:%02i" ) % indexOpenCL;
+					m_deviceMap[optionName.str()] = device;
+					++indexOpenCL;
+					continue;
+				}
+				if( device.type == ccl::DEVICE_OPTIX )
+				{
+					auto optionName = boost::format( "OPTIX:%02i" ) % indexOpenCL;
 					m_deviceMap[optionName.str()] = device;
 					++indexOpenCL;
 					continue;
@@ -4822,7 +4868,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// IECoreScene::Renderer
 		string m_deviceName;
-		string m_shadingsystemName;
 		RenderType m_renderType;
 		int m_frame;
 		string m_camera;

@@ -45,7 +45,7 @@ def __sessionSummary( plug ) :
 	info = []
 
 	if plug["device"]["enabled"].getValue() :
-		info.append( "Device {}".format( plug["device"]["value"].getValue() ) )
+		info.append( "Device(s) {}".format( plug["device"]["value"].getValue() ) )
 
 	if plug["featureSet"]["enabled"].getValue() :
 		if plug["featureSet"]["value"].getValue() :
@@ -468,55 +468,72 @@ def __devicePresetValues( plug ) :
 
 	presetValues = IECore.StringVectorData()
 
+	cudaIndex = 0
+	openclIndex = 0
+	optixIndex = 0
+
 	for device in GafferCycles.devices :
-		presetValues.append( device["id"] )
+		index = 0
+		if device["type"] == "MULTI" or device["type"] == "CPU" :
+			presetValues.append( device["type"] )
+			continue
+		elif device["type"] == "CUDA" :
+			index = cudaIndex
+			cudaIndex += 1
+		elif device["type"] == "OPENCL" :
+			index = openclIndex
+			openclIndex += 1
+		elif device["type"] == "OPTIX" :
+			index = optixIndex
+			optixIndex += 1
+		presetValues.append( "%s:%02i" % ( device["type"], index ) )
 
 	return presetValues
 
-def __multideviceNames() :
+def __devicesPreset() :
 
-	indexCuda = 0
-	indexOpenCL = 0
-	indexOptiX = 0
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
+
+	cudaIndex = 0
+	openclIndex = 0
+	optixIndex = 0
+
 	for device in GafferCycles.devices :
-		if device["type"] == "MULTI" :
-			continue
-		optionName = ""
-		if device["type"] == "CPU" :
-			optionName = "options.multideviceCPU"
-		elif device["type"] == "CUDA" :
-			optionName = "options.multidevice%s%02i" % ( device["type"], indexCuda )
-			indexCuda += 1
-		elif device["type"] == "OPENCL" :
-			optionName = "options.multidevice%s%02i" % ( device["type"], indexOpenCL )
-			indexOpenCL += 1
-		elif device["type"] == "OPTIX" :
-			optionName = "options.multidevice%s%02i" % ( device["type"], indexOptiX )
-			indexOptiX += 1
-		else :
-			continue
 
+		index = 0
+		if device["type"] == "MULTI" or device["type"] == "CPU" :
+			continue
+		elif device["type"] == "CUDA" :
+			index = cudaIndex
+			cudaIndex += 1
+		elif device["type"] == "OPENCL" :
+			index = openclIndex
+			openclIndex += 1
+		elif device["type"] == "OPTIX" :
+			index = optixIndex
+			optixIndex += 1
 		Gaffer.Metadata.registerValue( 
 			GafferCycles.CyclesOptions, 
-			optionName,
-			"description",
-			"""
-			Device to use for multi-device rendering.
-			Note: Device must be set to Multi-Device.
-			"""
+			"options.device.value", 
+			"preset:%s:%02i - %s" % ( device["type"], index, device["description"] ), 
+			"%s:%02i" % ( device["type"], index )
 			)
 		Gaffer.Metadata.registerValue( 
 			GafferCycles.CyclesOptions, 
-			optionName,
-			"layout:section",
-			"Multi-Device"
+			"options.device.value", 
+			"preset:CPU and %s:%02i - %s" % ( device["type"], index, device["description"] ), 
+			"CPU %s:%02i" % ( device["type"], index )
 			)
-		Gaffer.Metadata.registerValue( 
-			GafferCycles.CyclesOptions, 
-			optionName,
-			"label", 
-			"%s - %s" % ( device["type"], device["description"] )
-			)
+
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All CUDA", "CUDA:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All OptiX", "OPTIX:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All OpenCL", "OPENCL:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all CUDA", "CPU CUDA:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all OptiX", "CPU OPTIX:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all OpenCL", "CPU OPENCL:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first CUDA found", "CPU CUDA:00" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first OptiX found", "CPU OPTIX:00" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first OpenCL found", "CPU OPENCL:00" )
 
 Gaffer.Metadata.registerNode(
 
@@ -556,19 +573,28 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Device to use for rendering.
+			Device(s) to use for rendering.
+			To specify multiple devices, there's a few examples under presets.
+
+			To render on CPU and the first CUDA device:
+
+				CPU CUDA:00
+
+			To render on the first and second OpenCL device:
+
+				OPENCL:00 OPENCL:01
+
+			To render on every OptiX device found:
+
+				OPTIX:*
+
+			To render on everything found (not recommended, 1 device may have multiple backends!)
+
+				CPU CUDA:* OPTIX:* OPENCL:*
 			""",
 
 			"layout:section", "Session",
-			"label", "Device",
-
-		],
-
-		"options.device.value" : [
-
-		"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-		"presetNames", __devicePresetNames,
-		"presetValues", __devicePresetValues,
+			"label", "Device(s)",
 
 		],
 
@@ -2108,9 +2134,7 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
-__multideviceNames()
-
-
+__devicesPreset()
 
 if not GafferCycles.withTextureCache :
 

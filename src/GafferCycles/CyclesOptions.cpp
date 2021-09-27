@@ -182,50 +182,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:cryptomatte_accurate", new IECore::BoolData( false ), false, "cryptomatteAccurate" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:film:cryptomatte_depth", new IECore::IntData( 6 ), false, "cryptomatteDepth" ) );
 
-	// Multi-Device
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
-#ifdef WITH_OPTIX
-		| ccl::DEVICE_MASK_OPTIX
-#endif
-	 );
-	int indexCuda = 0;
-	int indexOpenCL = 0;
-	int indexOptiX = 0;
-	for( const ccl::DeviceInfo &device : devices ) 
-	{
-		if( device.type == ccl::DEVICE_CPU )
-		{
-			options->addChild( new Gaffer::NameValuePlug( "ccl:multidevice:CPU", new IECore::BoolData( true ), false, "multideviceCPU" ) );
-			continue;
-		}
-		if( device.type == ccl::DEVICE_CUDA )
-		{
-			auto internalName = boost::format( "ccl:multidevice:CUDA%02i" ) % indexCuda;
-			auto optionName = boost::format( "multideviceCUDA%02i" ) % indexCuda;
-			options->addChild( new Gaffer::NameValuePlug( internalName.str(), new IECore::BoolData( false ), false, optionName.str() ) );
-			++indexCuda;
-			continue;
-		}
-		if( device.type == ccl::DEVICE_OPENCL )
-		{
-			auto internalName = boost::format( "ccl:multidevice:OPENCL%02i" ) % indexOpenCL;
-			auto optionName = boost::format( "multideviceOPENCL%02i" ) % indexOpenCL;
-			options->addChild( new Gaffer::NameValuePlug( internalName.str(), new IECore::BoolData( false ), false, optionName.str() ) );
-			++indexOpenCL;
-			continue;
-		}
-#ifdef WITH_OPTIX
-		if( device.type == ccl::DEVICE_OPTIX )
-		{
-			auto internalName = boost::format( "ccl:multidevice:OPTIX%02i" ) % indexOptiX;
-			auto optionName = boost::format( "multideviceOPTIX%02i" ) % indexOptiX;
-			options->addChild( new Gaffer::NameValuePlug( internalName.str(), new IECore::BoolData( false ), false, optionName.str() ) );
-			++indexOptiX;
-			continue;
-		}
-#endif
-	}
-
 	// Dicing camera
 	options->addChild( new Gaffer::NameValuePlug( "ccl:dicing_camera", new IECore::StringData(), false, "dicingCamera" ) );
 
