@@ -675,6 +675,10 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		const BoolVectorData *s = getSmooth( mesh );
 		const IntVectorData *f = getFaceset( mesh );
 
+		cmesh->reserve_mesh( numVerts, numFaces );
+		for( size_t i = 0; i < numVerts; i++ )
+			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ngons = 0;
 		size_t ncorners = 0;
@@ -683,11 +687,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 			ngons += ( vertsPerFace[i] == 4 ) ? 0 : 1;
 			ncorners += vertsPerFace[i];
 		}
-		cmesh->reserve_mesh( numVerts, numFaces );
 		cmesh->reserve_subd_faces(numFaces, ngons, ncorners);
-
-		for( size_t i = 0; i < numVerts; i++ )
-			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
 		int indexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
