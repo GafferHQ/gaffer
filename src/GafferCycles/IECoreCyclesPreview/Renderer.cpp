@@ -1119,6 +1119,13 @@ class ShaderCache : public IECore::RefCounted
 
 		void updateShaders()
 		{
+			// We need to update all of these, it seems as though being fine-grained causes
+			// graphical glitches unfortunately.
+			if( m_shaderAssignPairs.size() )
+			{
+				m_scene->light_manager->tag_update( m_scene, ccl::LightManager::UPDATE_ALL );
+				m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::UPDATE_ALL );
+			}
 			// Do the shader assignment here
 			for( ShaderAssignPair shaderAssignPair : m_shaderAssignPairs )
 			{
@@ -1126,9 +1133,6 @@ class ShaderCache : public IECore::RefCounted
 				{
 					ccl::Geometry *geo = static_cast<ccl::Geometry*>( shaderAssignPair.first );
 					geo->set_used_shaders( shaderAssignPair.second );
-					m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::SHADER_ATTRIBUTE_MODIFIED |
-																	ccl::GeometryManager::SHADER_DISPLACEMENT_MODIFIED |
-																	ccl::GeometryManager::VISIBILITY_MODIFIED );
 				}
 				else if( shaderAssignPair.first->is_a( ccl::Light::get_node_type() ) )
 				{
@@ -1141,7 +1145,6 @@ class ShaderCache : public IECore::RefCounted
 					{
 						light->set_shader( m_scene->default_light );
 					}
-					m_scene->light_manager->tag_update( m_scene, ccl::LightManager::SHADER_COMPILED | ccl::LightManager::SHADER_MODIFIED );
 				}
 			}
 			m_shaderAssignPairs.clear();
@@ -2704,10 +2707,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object || cyclesAttributes->applyObject( object, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
+				object->tag_update( m_session->scene );
 				return true;
 			}
 
-			object->tag_update( m_session->scene );
 			return false;
 		}
 
@@ -2781,7 +2784,6 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 				return true;
 			}
 
-			light->tag_update( m_session->scene );
 			return false;
 		}
 
@@ -4295,10 +4297,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateSceneObjects( bool force = false )
 		{
-			m_shaderCache->update( m_scene, force );
 			m_lightCache->update( m_scene, force );
 			m_particleSystemsCache->update( m_scene, force );
 			m_instanceCache->update( m_scene, force );
+			m_shaderCache->update( m_scene, force );
 		}
 
 		void updateOptions()
@@ -4310,13 +4312,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::Integrator *integrator = m_scene->integrator;
 			ccl::Background *background = m_scene->background;
 
-			bool lightBackground = false;
+			ccl::Shader *lightShader = nullptr;
 			for( ccl::Light *light : m_scene->lights )
 			{
 				if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
 				{
-					background->set_shader( light->get_shader() );
-					lightBackground = true;
+					lightShader = light->get_shader();
 					break;
 				}
 			}
@@ -4408,9 +4409,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				background->set_shader( m_backgroundShader.get() );
 			}
-			else if( !lightBackground )
+			else if( lightShader )
 			{
-				// Fallback to default background
+				background->set_shader( lightShader );
+			}
+			else
+			{
 				background->set_shader( m_scene->default_empty );
 			}
 
