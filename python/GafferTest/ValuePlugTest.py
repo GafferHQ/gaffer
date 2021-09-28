@@ -37,6 +37,8 @@
 
 import gc
 import inspect
+import threading
+import time
 import imath
 import six
 
@@ -868,6 +870,74 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		with six.assertRaisesRegex( self, BaseException, "Foo" ):
 			GafferTest.parallelGetValue( m["product"], 10000, "testVar" )
+
+	def testCancellationOfSecondGetValueCall( self ) :
+
+		class InfiniteLoop( Gaffer.ComputeNode ) :
+
+			def __init__( self, name = "InfiniteLoop", cachePolicy = Gaffer.ValuePlug.CachePolicy.Standard ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+
+				self.computeStartedCondition = threading.Condition()
+				self.__cachePolicy = cachePolicy
+				self["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+			# No need to implement `hash()` - because our result is constant (or
+			# non-existent), the default hash is sufficient.
+
+			def compute( self, output, context ) :
+
+				with self.computeStartedCondition :
+					self.computeStartedCondition.notify()
+
+				if output == self["out"] :
+					while True :
+						IECore.Canceller.check( context.canceller() )
+
+			def computeCachePolicy( self, output ) :
+
+				return self.__cachePolicy
+
+		IECore.registerRunTimeTyped( InfiniteLoop )
+
+		for cachePolicy in (
+			Gaffer.ValuePlug.CachePolicy.Legacy,
+			Gaffer.ValuePlug.CachePolicy.Standard,
+			Gaffer.ValuePlug.CachePolicy.TaskIsolation,
+			# Omitting TaskCollaboration, because if our second compute joins as
+			# a worker, there is currently no way we can recall it. See comments
+			# in `LRUCachePolicy.TaskParallel.Handle.acquire`.
+		) :
+
+			node = InfiniteLoop( cachePolicy = cachePolicy )
+
+			# Launch a compute in the background, and wait for it to start.
+
+			with node.computeStartedCondition :
+				backgroundTask1 = Gaffer.ParallelAlgo.callOnBackgroundThread( node["out"], lambda : node["out"].getValue() )
+				node.computeStartedCondition.wait()
+
+			# Launch a second compute in the background, wait for it to start, and
+			# then make sure we can cancel it even though the compute is already in
+			# progress on another thread.
+
+			startedCondition = threading.Condition()
+
+			def getValueExpectingCancellation() :
+
+				with startedCondition :
+					startedCondition.notify()
+
+				with self.assertRaises( IECore.Cancelled ) :
+					node["out"].getValue()
+
+			with startedCondition :
+				backgroundTask2 = Gaffer.ParallelAlgo.callOnBackgroundThread( node["out"], getValueExpectingCancellation )
+				startedCondition.wait()
+
+			backgroundTask2.cancelAndWait()
+			backgroundTask1.cancelAndWait()
 
 	def setUp( self ) :
 
