@@ -500,5 +500,25 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		attributes["attributes"].reorderChildren( reversed( attributes["attributes"].children() ) )
 		self.assertEqual( attributes["out"].attributes( "/sphere" )["test"].value, 10 )
 
+	def testSerialiseExtraAttributesAlone( self ) :
+
+		# This exercises a bug where the serialisation of the `CompoundObject`
+		# value didn't include the necessary `import IECore`. This problem was
+		# masked in the previous tests, because other components were adding
+		# the import.
+
+		script = Gaffer.ScriptNode()
+
+		attributes = IECore.CompoundObject( {
+			"ai:surface" : IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "flat" ) }, output = "output" )
+		} )
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["extraAttributes"].setValue( attributes )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( script2["attributes"]["extraAttributes"].getValue(), attributes )
+
 if __name__ == "__main__":
 	unittest.main()

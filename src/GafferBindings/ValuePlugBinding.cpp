@@ -141,6 +141,8 @@ std::string compoundObjectRepr( const IECore::CompoundObject &o, Serialisation *
 		items += "'" + e.first.string() + "' : " + ValuePlugSerialiser::valueRepr( object( e.second ), serialisation );
 	}
 
+	serialisation->addModule( "IECore" );
+
 	if( items.empty() )
 	{
 		return "IECore.CompoundObject()";

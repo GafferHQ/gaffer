@@ -301,5 +301,33 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["user"]["compoundObject"].getInput(), s2["n"]["user"]["compoundData"] )
 		self.assertEqual( s2["n"]["user"]["compoundObject"].getValue(), IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) )
 
+	def testStaticPlugSerialisationWithoutRepr( self ) :
+
+		# This exposed a bug not exposed by `testSerialisationWithoutRepr()`. In
+		# this case the only part of the serialisation that requires `import
+		# IECore` is the value itself, exposing a bug where the import was not
+		# serialised.
+
+		value = IECore.CompoundObject( {
+			"a" : IECore.TransformationMatrixfData(
+				IECore.TransformationMatrixf(
+					imath.V3f( 1, 2, 3 ),
+					imath.Eulerf(),
+					imath.V3f( 1, 1, 1 )
+				)
+			)
+		} )
+
+		with self.assertRaises( Exception ) :
+			eval( repr( v1 ) )
+
+		s = Gaffer.ScriptNode()
+		s["n"] = self.TypedObjectPlugNode()
+		s["n"]["p"].setValue( value )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["n"]["p"].getValue(), s["n"]["p"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()
