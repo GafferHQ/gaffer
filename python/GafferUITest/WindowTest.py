@@ -439,18 +439,35 @@ class WindowTest( GafferUITest.TestCase ) :
 		# Delete the child and parent windows, while capturing `sys.stderr`.
 		# This demonstrated a bug which caused Widget's `_EventFilter` to access
 		# an already-deleted QObject, causing PySide to print an exception to
-		# `stderr`.
+		# `stderr`. On Mac we get also get intermittent "Window position outside
+		# any known screen" messages from Qt, which we suppress since they're not
+		# what we're testing here.
 
-		tmpStdErr = six.moves.cStringIO()
-		sys.stderr = tmpStdErr
-		try :
-			del child
-			del parent
-		finally :
-			sys.stderr = sys.__stderr__
+		contextManager = IECore.CapturingMessageHandler() if sys.platform == "darwin" else _NullContextManager()
+
+		with contextManager :
+			tmpStdErr = six.moves.cStringIO()
+			sys.stderr = tmpStdErr
+			try :
+				del child
+				del parent
+			finally :
+				sys.stderr = sys.__stderr__
 
 		# If the bug is fixed, nothing should have been printed.
 		self.assertEqual( tmpStdErr.getvalue(), "" )
+
+## \todo When we finally ditch Python 2, we can use `contextlib.nullcontext()`
+# instead of this.
+class _NullContextManager( object ) :
+
+	def __enter__( self ) :
+
+		pass
+
+	def __exit__( self, type, value, traceBack ) :
+
+		pass
 
 if __name__ == "__main__":
 	unittest.main()
