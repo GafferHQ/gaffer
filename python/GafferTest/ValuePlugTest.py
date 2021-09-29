@@ -37,6 +37,8 @@
 
 import gc
 import inspect
+import os
+import subprocess
 import threading
 import time
 import imath
@@ -872,6 +874,36 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			GafferTest.parallelGetValue( m["product"], 10000, "testVar" )
 
 	def testCancellationOfSecondGetValueCall( self ) :
+
+		## \todo Should just be checking `tbb.global_control.active_value( max_allowed_parallelism )`
+		# to get the true limit set by `-threads` argument. But IECore's Python
+		# binding of `global_control` doesn't expose that yet.
+		if IECore.hardwareConcurrency() < 3 and "VALUEPLUGTEST_SUBPROCESS" not in os.environ :
+
+			# This test requires at least 3 TBB threads (including the main
+			# thread), because we need the second enqueued BackgroundTask to
+			# start execution before the first one has completed. If we have
+			# insufficient threads then we end up in deadlock, so to avoid this
+			# we relaunch in a subprocess with sufficient threads.
+			#
+			# Note : deadlock only ensues because the first task will never
+			# return without cancellation. This is an artificial situation, not
+			# one that would occur in practical usage of Gaffer itself.
+
+			print( "Running in subprocess due to insufficient TBB threads" )
+
+			try :
+				env = os.environ.copy()
+				env["VALUEPLUGTEST_SUBPROCESS"] = "1"
+				subprocess.check_output(
+					[ "gaffer", "test", "-threads", "3", "GafferTest.ValuePlugTest.testCancellationOfSecondGetValueCall" ],
+					stderr = subprocess.STDOUT,
+					env = env
+				)
+			except subprocess.CalledProcessError as e :
+				self.fail( e.output )
+
+			return
 
 		class InfiniteLoop( Gaffer.ComputeNode ) :
 
