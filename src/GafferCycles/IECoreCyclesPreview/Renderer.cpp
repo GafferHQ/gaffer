@@ -1115,6 +1115,32 @@ class ShaderCache : public IECore::RefCounted
 			return m_numDefaultShaders;
 		}
 
+		void flushTextures()
+		{
+			for( ccl::Shader *shader : m_scene->shaders )
+			{
+				for( ccl::ShaderNode *node : shader->graph->nodes )
+				{
+					if( node->special_type == ccl::SHADER_SPECIAL_TYPE_IMAGE_SLOT )
+					{
+						static_cast<ccl::ImageSlotTextureNode*>( node )->handle.clear();
+					}
+					else if( node->type == ccl::SkyTextureNode::get_node_type() )
+					{
+						static_cast<ccl::SkyTextureNode*>( node )->handle.clear();
+					}
+					else if( node->type == ccl::PointDensityTextureNode::get_node_type() )
+					{
+						static_cast<ccl::PointDensityTextureNode*>( node )->handle.clear();
+					}
+					else if( node->type == ccl::VolumeTextureNode::get_node_type() )
+					{
+						static_cast<ccl::VolumeTextureNode*>( node )->handle.clear();
+					}
+				}
+			}
+		}
+
 	private :
 
 		void updateShaders()
@@ -3201,10 +3227,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_renderCallback = new RenderCallback( ( m_renderType == Interactive ) ? true : false );
 
 			init();
-			// Maintain our own ImageManager
-			m_imageManager = new ccl::ImageManager( m_session->device->info );
-			m_imageManagerOld = m_scene->image_manager;
-			m_scene->image_manager = m_imageManager;
 
 			// CyclesOptions will set some values to these.
 			m_integrator = *(m_scene->integrator);
@@ -3236,6 +3258,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		~CyclesRenderer() override
 		{
+			m_session->cancel();
 			m_scene->mutex.lock();
 			uint32_t numDefaultShaders = m_shaderCache->numDefaultShaders();
 			// Reduce the refcount so that it gets cleared.
@@ -3256,7 +3279,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->mutex.unlock();
 
 			delete m_session;
-			delete m_imageManagerOld;
 		}
 
 		IECore::InternedString name() const override
@@ -3317,6 +3339,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
 			auto *film = m_scene->film;
+
+			// Error about options that cannot be set while interactive rendering.
+			if( m_renderState == RENDERSTATE_RENDERING )
+			{
+				if( name == g_deviceOptionName ||
+					name == g_shadingsystemOptionName ||
+					boost::starts_with( name.string(), "ccl:session:" ) ||
+					boost::starts_with( name.string(), "ccl:scene:" ) )
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
+				}
+			}
 
 			if( name == g_frameOptionName )
 			{
@@ -4440,7 +4474,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Check if an OSL shader exists & set the shadingsystem
 			if( m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_SVM && m_shaderCache->hasOSLShader() )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "OSL Shader detected, forcing OSL shading-system (CPU-only)" );
+				if( m_renderState != RENDERSTATE_RENDERING )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "OSL Shader detected, forcing OSL shading-system (CPU-only)" );
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer", "OSL Shader detected, this will cause problems in a running interactive render" );
+				}
 				m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 				m_sceneParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 			}
@@ -4451,8 +4492,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionReset )
 			{
 				// Flag it true here so that we never mutex unlock a different scene pointer due to the reset
-				m_sessionReset = true;
-				reset();
+				if( m_renderState != RENDERSTATE_RENDERING )
+				{
+					m_sessionReset = true;
+					reset();
+				}
 			}
 		}
 
@@ -4617,21 +4661,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void reset()
 		{
+			m_session->cancel();
 			m_renderState = RENDERSTATE_READY;
 			// This is so cycles doesn't delete the objects that Gaffer manages.
 			m_scene->objects.clear();
 			m_scene->geometry.clear();
+			m_shaderCache->flushTextures();
 			m_scene->shaders.resize( m_shaderCache->numDefaultShaders() );
-			//m_scene->shaders.clear();
 			m_scene->lights.clear();
 			m_scene->particle_systems.clear();
-			// Give back a dummy ImageManager for Cycles to "delete"
-			m_scene->image_manager = m_imageManagerOld;
 
 			init();
-			// Make sure we are using our ImageManager
-			m_imageManagerOld = m_scene->image_manager;
-			m_scene->image_manager = m_imageManager;
 
 			// Re-apply the settings for these.
 			for( const ccl::SocketType socketType : m_scene->integrator->type->inputs )
@@ -4647,22 +4687,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_scene->film->copy_value(socketType, m_film, *m_film.type->find_input( socketType.name ) );
 			}
 
+			m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::UPDATE_ALL );
 			m_scene->integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
 			m_scene->background->tag_update( m_scene );
-			//m_session->reset( m_bufferParams, m_sessionParams.samples );
 
-			//m_session->progress.reset();
-			//m_scene->reset();
-			//m_session->tile_manager.set_tile_order( m_sessionParams.tile_order );
-			/* peak memory usage should show current render peak, not peak for all renders
-				* made by this render session
-				*/
-			//m_session->stats.mem_peak = m_session->stats.mem_used;
-
+			m_session->stats.mem_peak = m_session->stats.mem_used;
 			// Make sure the instance cache points to the right scene.
 			updateSceneObjects( true );
-
-			//m_session->reset( m_bufferParams, m_sessionParams.samples );
+			m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::UPDATE_ALL );
 		}
 
 		bool updateCamera()
@@ -4851,10 +4883,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::Integrator m_integrator;
 		ccl::Background m_background;
 		ccl::Film m_film;
-		// Hold onto ImageManager so it doesn't get deleted.
-		ccl::ImageManager *m_imageManager;
-		// Dummy ImageManager for Cycles
-		ccl::ImageManager *m_imageManagerOld;
 
 		// Background shader
 		SharedCShaderPtr m_backgroundShader;
