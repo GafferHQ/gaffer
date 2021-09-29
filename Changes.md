@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.7.0)
+========
+
+Fixes
+-----
+
+- TypedObjectPlug : Fixed bug in the serialisation of some `IECore.CompoundObject` values (the necessary `import IECore` was sometimes missing). This was particularly likely to affect CustomAttributes nodes where the `extraAttributes` plug was used.
+
 0.60.7.0 (relative to 0.60.6.1)
 ========
 
