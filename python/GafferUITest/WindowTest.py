@@ -424,28 +424,29 @@ class WindowTest( GafferUITest.TestCase ) :
 
 	def testChildWindowDuringShutdown( self ) :
 
-		with GafferUI.Window( "Parent" ) as parent :
-
-			GafferUI.Label( "Parent\n" * 10 )
-
-		with GafferUI.Window( "Child" ) as child :
-
-			GafferUI.Label( "child\n" * 4 )
-
-		parent.setVisible( True )
-		parent.addChildWindow( child )
-		child.setVisible( True )
-
-		# Delete the child and parent windows, while capturing `sys.stderr`.
-		# This demonstrated a bug which caused Widget's `_EventFilter` to access
-		# an already-deleted QObject, causing PySide to print an exception to
-		# `stderr`. On Mac we get also get intermittent "Window position outside
-		# any known screen" messages from Qt, which we suppress since they're not
-		# what we're testing here.
-
+		# On Mac we get intermittent "Window position outside any known screen" messages
+		# from Qt, which we suppress since they're not what we're testing here.
 		contextManager = IECore.CapturingMessageHandler() if sys.platform == "darwin" else _NullContextManager()
 
 		with contextManager :
+
+			with GafferUI.Window( "Parent" ) as parent :
+
+				GafferUI.Label( "Parent\n" * 10 )
+
+			with GafferUI.Window( "Child" ) as child :
+
+				GafferUI.Label( "child\n" * 4 )
+
+			parent.setVisible( True )
+			parent.addChildWindow( child )
+			child.setVisible( True )
+
+			# Delete the child and parent windows, while capturing `sys.stderr`.
+			# This demonstrated a bug which caused Widget's `_EventFilter` to access
+			# an already-deleted QObject, causing PySide to print an exception to
+			# `stderr`.
+
 			tmpStdErr = six.moves.cStringIO()
 			sys.stderr = tmpStdErr
 			try :
@@ -454,8 +455,8 @@ class WindowTest( GafferUITest.TestCase ) :
 			finally :
 				sys.stderr = sys.__stderr__
 
-		# If the bug is fixed, nothing should have been printed.
-		self.assertEqual( tmpStdErr.getvalue(), "" )
+			# If the bug is fixed, nothing should have been printed.
+			self.assertEqual( tmpStdErr.getvalue(), "" )
 
 ## \todo When we finally ditch Python 2, we can use `contextlib.nullcontext()`
 # instead of this.
