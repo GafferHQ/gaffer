@@ -99,7 +99,7 @@ struct ShadingEngineCacheGetterKey
 
 };
 
-ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &cost )
+ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 
@@ -152,7 +152,7 @@ using QueryCache = IECorePreview::LRUCache<string, OSLQueryPtr, IECorePreview::L
 QueryCache &queryCache()
 {
 	static QueryCache g_cache(
-		[] ( const std::string &shaderName, size_t &cost ) {
+		[] ( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller ) {
 			const char *searchPath = getenv( "OSL_SHADER_PATHS" );
 			OSLQueryPtr query = make_shared<OSLQuery>();
 			if( !query->open( shaderName, searchPath ? searchPath : "" ) )
@@ -1189,7 +1189,7 @@ static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Para
 	return result;
 }
 
-static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size_t &cost )
+static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 	if( !key.size() )

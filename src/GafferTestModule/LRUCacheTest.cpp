@@ -100,7 +100,7 @@ struct TestLRUCache
 	{
 		typedef LRUCache<int, int, Policy> Cache;
 		Cache cache(
-			[]( int key, size_t &cost ) { cost = 1; return key; },
+			[]( int key, size_t &cost, const IECore::Canceller *canceller ) { cost = 1; return key; },
 			m_maxCost
 		);
 
@@ -147,7 +147,7 @@ struct TestLRUCacheRemovalCallback
 		typedef LRUCache<int, int, Policy> Cache;
 		Cache cache(
 			// Getter
-			[]( int key, size_t &cost ) {
+			[]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				cost = 1; return key * 2;
 			},
 			/* maxCost = */ 5,
@@ -207,31 +207,42 @@ template<template<typename> class Policy>
 struct TestLRUCacheContentionForOneItem
 {
 
+	TestLRUCacheContentionForOneItem( bool withCanceller )
+		:	m_withCanceller( withCanceller )
+	{
+	}
+
 	void operator()()
 	{
 		typedef LRUCache<int, int, Policy> Cache;
 		Cache cache(
-			[]( int key, size_t &cost ) { cost = 1; return key; },
+			[]( int key, size_t &cost, const IECore::Canceller *canceller ) { cost = 1; return key; },
 			100
 		);
+
+		IECore::Canceller canceller;
+		const IECore::Canceller *cancellerOrNull = m_withCanceller ? &canceller : nullptr;
 
 		tbb::parallel_for(
 			tbb::blocked_range<size_t>( 0, 10000000 ),
 			[&]( const tbb::blocked_range<size_t> &r ) {
 				for( size_t i = r.begin(); i < r.end(); ++i )
 				{
-					GAFFERTEST_ASSERTEQUAL( cache.get( 1 ), 1 );
+					GAFFERTEST_ASSERTEQUAL( cache.get( 1, cancellerOrNull ), 1 );
 				}
 			}
 		);
 	}
 
+	private :
+
+		bool m_withCanceller;
 
 };
 
-void testLRUCacheContentionForOneItem( const std::string &policy )
+void testLRUCacheContentionForOneItem( const std::string &policy, bool withCanceller )
 {
-	DispatchTest<TestLRUCacheContentionForOneItem>()( policy );
+	DispatchTest<TestLRUCacheContentionForOneItem>()( policy, withCanceller );
 }
 
 template<template<typename> class Policy>
@@ -252,7 +263,7 @@ struct TestLRUCacheRecursion
 		cache.reset(
 			new Cache(
 				// Getter that calls back into the cache with a different key.
-				[&cache]( int key, size_t &cost ) {
+				[&cache]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 					cost = 1;
 					switch( key )
 					{
@@ -314,7 +325,7 @@ struct TestLRUCacheRecursionOnOneItem
 				// key, up to a certain limit, and then actually returns
 				// a value. This is basically insane, but it models
 				// situations that can occur in Gaffer.
-				[&cache, &recursionDepth]( int key, size_t &cost ) {
+				[&cache, &recursionDepth]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 					cost = 1;
 					if( ++recursionDepth == 100 )
 					{
@@ -360,7 +371,7 @@ struct TestLRUCacheClearFromGet
 				// in Gaffer, because `get()` might trigger arbitrary python, arbitrary python
 				// might trigger garbage collection, garbage collection might destroy a plug,
 				// and destroying a plug clears the cache.
-				[&cache]( int key, size_t &cost ) { cache->clear(); cost = 1; return key; },
+				[&cache]( int key, size_t &cost, const IECore::Canceller *canceller ) { cache->clear(); cost = 1; return key; },
 				100
 			)
 		);
@@ -385,7 +396,7 @@ struct TestLRUCacheExceptions
 
 		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
 		Cache cache(
-			[&calls]( int key, size_t &cost ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
 				throw IECore::Exception( boost::str(
 					boost::format( "Get failed for %1%" ) % key
@@ -481,7 +492,7 @@ struct TestLRUCacheExceptions
 		// Check that if we don't cache errors, then it gets called twice
 		calls.clear();
 		Cache noErrorsCache(
-			[&calls]( int key, size_t &cost ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
 				throw IECore::Exception( boost::str(
 					boost::format( "Get failed for %1%" ) % key
@@ -543,15 +554,13 @@ struct TestLRUCacheCancellation
 	{
 		std::vector<int> calls;
 
-		typedef std::unique_ptr<IECore::Canceller> CancellerPtr;
-		CancellerPtr canceller;
-		canceller.reset( new IECore::Canceller() );
+		IECore::Canceller canceller;
 
 		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
 		Cache cache(
-			[&calls, &canceller]( int key, size_t &cost ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
-				IECore::Canceller::check( canceller.get() );
+				IECore::Canceller::check( canceller );
 				return key;
 			},
 			1000
@@ -559,8 +568,8 @@ struct TestLRUCacheCancellation
 
 		// Check normal operation
 
-		GAFFERTEST_ASSERTEQUAL( cache.get( 1 ), 1 );
-		GAFFERTEST_ASSERTEQUAL( cache.get( 2 ), 2 );
+		GAFFERTEST_ASSERTEQUAL( cache.get( 1, &canceller ), 1 );
+		GAFFERTEST_ASSERTEQUAL( cache.get( 2, &canceller ), 2 );
 
 		GAFFERTEST_ASSERTEQUAL( calls.size(), 2 );
 		GAFFERTEST_ASSERTEQUAL( calls[0], 1 );
@@ -570,13 +579,13 @@ struct TestLRUCacheCancellation
 		// exception, and will simply get the value again for subsequent
 		// lookups.
 
-		canceller->cancel();
+		canceller.cancel();
 
 		bool caughtCancel = false;
 		int val = -1;
 		try
 		{
-			val = cache.get( 3 );
+			val = cache.get( 3, &canceller );
 		}
 		catch( IECore::Cancelled const &c )
 		{
@@ -589,11 +598,11 @@ struct TestLRUCacheCancellation
 		GAFFERTEST_ASSERTEQUAL( calls.size(), 3 );
 		GAFFERTEST_ASSERTEQUAL( calls.back(), 3 );
 
-		// reset and check that we get called again
+		// Use a fresh canceller and check that we get called again.
 
-		canceller.reset( new IECore::Canceller() );
+		IECore::Canceller canceller2;
 
-		val = cache.get( 3 );
+		val = cache.get( 3, &canceller2 );
 
 		GAFFERTEST_ASSERTEQUAL( val, 3 );
 		GAFFERTEST_ASSERTEQUAL( calls.size(), 4 );
@@ -606,6 +615,92 @@ struct TestLRUCacheCancellation
 void testLRUCacheCancellation( const std::string &policy )
 {
 	DispatchTest<TestLRUCacheCancellation>()( policy );
+}
+
+template<template<typename> class Policy>
+struct TestLRUCacheCancellationOfSecondGet
+{
+
+	void operator()()
+	{
+
+		// Make a cache with a getter that will never return unless cancelled.
+
+		std::atomic_int getterCount; getterCount = 0;
+
+		typedef IECorePreview::LRUCache<int, int, Policy> Cache;
+		Cache cache(
+			[&getterCount]( int key, size_t &cost, const IECore::Canceller *canceller ) {
+				getterCount++;
+				while( true )
+				{
+					IECore::Canceller::check( canceller );
+				}
+				cost = 1;
+				return key;
+			},
+			10
+		);
+
+		// Run an async task that will make a first call to `get()`.
+		// This will never return unless we can cancel it via
+		// `firstCanceller`.
+
+		IECore::Canceller firstCanceller;
+		tbb::task_group taskGroup;
+
+		taskGroup.run(
+			[&cache, &firstCanceller] {
+				cache.get( 1, &firstCanceller );
+			}
+		);
+
+		// Wait for it to get stuck inside the getter.
+
+		while( !getterCount )
+		{
+		}
+
+		// Now make a second call to `get()`. We want to be
+		// able to cancel this even though it would otherwise
+		// have to wait for the first call to complete.
+
+		IECore::Canceller secondCanceller;
+		secondCanceller.cancel();
+		try
+		{
+			cache.get( 1, &secondCanceller );
+		}
+		catch( const IECore::Cancelled &e )
+		{
+			firstCanceller.cancel();
+		}
+
+		GAFFERTEST_ASSERT( firstCanceller.cancelled() );
+
+		// Now wait for the first task and check that it
+		// was the only one to actually run the getter.
+
+		bool firstCancelled = false;
+		try
+		{
+			taskGroup.wait();
+		}
+		catch( IECore::Cancelled &e )
+		{
+			firstCancelled = true;
+		}
+
+		GAFFERTEST_ASSERT( firstCancelled );
+		GAFFERTEST_ASSERTEQUAL( getterCount.load(), 1 );
+	}
+
+};
+
+void testLRUCacheCancellationOfSecondGet( const std::string &policy )
+{
+	GAFFERTEST_ASSERT( policy != "serial" ); // Test requires parallel calls to `get()`.
+	DispatchTest<TestLRUCacheCancellationOfSecondGet>()( policy );
 }
 
 // This test exposes a potential source of bugs when some items
@@ -627,7 +722,7 @@ struct TestLRUCacheUncacheableItem
 		CachePtr cache;
 		cache.reset(
 			new Cache(
-				[&cache]( int key, size_t &cost ) {
+				[&cache]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 					if( key == 0 )
 					{
 						// Too big to cache
@@ -677,7 +772,7 @@ struct TestLRUCacheGetIfCached
 		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 
 		Cache cache(
-			[]( int key, size_t &cost ) {
+			[]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				cost = 1;
 				return key;
 			},
@@ -713,12 +808,13 @@ void GafferTestModule::bindLRUCacheTest()
 {
 	def( "testLRUCache", &testLRUCache, ( arg( "numIterations" ), arg( "numValues" ), arg( "maxCost" ), arg( "clearFrequency" ) = 0 ) );
 	def( "testLRUCacheRemovalCallback", &testLRUCacheRemovalCallback );
-	def( "testLRUCacheContentionForOneItem", &testLRUCacheContentionForOneItem );
+	def( "testLRUCacheContentionForOneItem", &testLRUCacheContentionForOneItem, arg( "withCanceller" ) = false );
 	def( "testLRUCacheRecursion", &testLRUCacheRecursion, ( arg( "numIterations" ), arg( "numValues" ), arg( "maxCost" ) ) );
 	def( "testLRUCacheRecursionOnOneItem", &testLRUCacheRecursionOnOneItem );
 	def( "testLRUCacheClearFromGet", &testLRUCacheClearFromGet );
 	def( "testLRUCacheExceptions", &testLRUCacheExceptions );
 	def( "testLRUCacheCancellation", &testLRUCacheCancellation );
+	def( "testLRUCacheCancellationOfSecondGet", &testLRUCacheCancellationOfSecondGet );
 	def( "testLRUCacheUncacheableItem", &testLRUCacheUncacheableItem );
 	def( "testLRUCacheGetIfCached", &testLRUCacheGetIfCached );
 }

@@ -235,7 +235,8 @@ class ValuePlug::HashProcess : public Process
 			// using a HashProcess instance.
 
 			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
-			const HashProcessKey processKey( p, plug, Context::current(), p->m_dirtyCount, computeNode, computeNode ? computeNode->hashCachePolicy( p ) : CachePolicy::Uncached );
+			const Context *currentContext = Context::current();
+			const HashProcessKey processKey( p, plug, currentContext, p->m_dirtyCount, computeNode, computeNode ? computeNode->hashCachePolicy( p ) : CachePolicy::Uncached );
 
 			if( processKey.cachePolicy == CachePolicy::Uncached )
 			{
@@ -261,15 +262,15 @@ class ValuePlug::HashProcess : public Process
 				// And then look up the result in our cache.
 				if( g_hashCacheMode == HashCacheMode::Standard )
 				{
-					return threadData.cache.get( processKey );
+					return threadData.cache.get( processKey, currentContext->canceller() );
 				}
 				else if( g_hashCacheMode == HashCacheMode::Checked )
 				{
 					HashProcessKey legacyProcessKey( processKey );
 					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_MAX + 1;
 
-					const IECore::MurmurHash check = threadData.cache.get( legacyProcessKey );
-					const IECore::MurmurHash result = threadData.cache.get( processKey );
+					const IECore::MurmurHash check = threadData.cache.get( legacyProcessKey, currentContext->canceller() );
+					const IECore::MurmurHash result = threadData.cache.get( processKey, currentContext->canceller() );
 
 					if( result != check )
 					{
@@ -282,7 +283,7 @@ class ValuePlug::HashProcess : public Process
 						}
 						catch( ... )
 						{
-							ProcessException::wrapCurrentException( processKey.plug, Context::current(), staticType );
+							ProcessException::wrapCurrentException( processKey.plug, currentContext, staticType );
 						}
 					}
 					return result;
@@ -293,7 +294,7 @@ class ValuePlug::HashProcess : public Process
 					HashProcessKey legacyProcessKey( processKey );
 					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_MAX + 1;
 
-					return threadData.cache.get( legacyProcessKey );
+					return threadData.cache.get( legacyProcessKey, currentContext->canceller() );
 				}
 			}
 		}
@@ -390,8 +391,11 @@ class ValuePlug::HashProcess : public Process
 			}
 		}
 
-		static IECore::MurmurHash globalCacheGetter( const HashProcessKey &key, size_t &cost )
+		static IECore::MurmurHash globalCacheGetter( const HashProcessKey &key, size_t &cost, const IECore::Canceller *canceller )
 		{
+			// Canceller will be passed to `ComputeNode::hash()` implicitly
+			// via the context.
+			assert( canceller == Context::current()->canceller() );
 			cost = 1;
 			IECore::MurmurHash result;
 			switch( key.cachePolicy )
@@ -421,14 +425,15 @@ class ValuePlug::HashProcess : public Process
 			return result;
 		}
 
-		static IECore::MurmurHash localCacheGetter( const HashProcessKey &key, size_t &cost )
+		static IECore::MurmurHash localCacheGetter( const HashProcessKey &key, size_t &cost, const IECore::Canceller *canceller )
 		{
+			assert( canceller == Context::current()->canceller() );
 			cost = 1;
 			switch( key.cachePolicy )
 			{
 				case CachePolicy::TaskCollaboration :
 				case CachePolicy::TaskIsolation :
-					return g_globalCache.get( key );
+					return g_globalCache.get( key, canceller );
 				default :
 				{
 					assert( key.cachePolicy != CachePolicy::Uncached );
@@ -611,7 +616,7 @@ class ValuePlug::ComputeProcess : public Process
 			}
 			else
 			{
-				return g_cache.get( processKey );
+				return g_cache.get( processKey, Context::current()->canceller() );
 			}
 		}
 
@@ -671,8 +676,11 @@ class ValuePlug::ComputeProcess : public Process
 			}
 		}
 
-		static IECore::ConstObjectPtr cacheGetter( const ComputeProcessKey &key, size_t &cost )
+		static IECore::ConstObjectPtr cacheGetter( const ComputeProcessKey &key, size_t &cost, const IECore::Canceller *canceller )
 		{
+			// Canceller will be passed to `ComputeNode::hash()` implicitly
+			// via the context.
+			assert( canceller == Context::current()->canceller() );
 			IECore::ConstObjectPtr result;
 			switch( key.cachePolicy )
 			{

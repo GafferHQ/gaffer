@@ -66,7 +66,7 @@ const char *g_oslSearchPaths = getenv( "OSL_SHADER_PATHS" );
 
 typedef std::shared_ptr<OSLQuery> OSLQueryPtr;
 
-OSLQueryPtr oslQueryGetter( const std::string &shaderName, size_t &cost )
+OSLQueryPtr oslQueryGetter( const std::string &shaderName, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 

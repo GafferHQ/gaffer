@@ -35,6 +35,8 @@
 #ifndef IECOREPREVIEW_LRUCACHE_H
 #define IECOREPREVIEW_LRUCACHE_H
 
+#include "IECore/Canceller.h"
+
 #include "boost/function.hpp"
 #include "boost/noncopyable.hpp"
 #include "boost/variant.hpp"
@@ -100,8 +102,9 @@ class LRUCache : private boost::noncopyable
 
 		/// The GetterFunction is responsible for computing the value and cost for a cache entry
 		/// when given the key. It should throw a descriptive exception if it can't get the data for
-		/// any reason.
-		typedef boost::function<Value ( const GetterKey &key, Cost &cost )> GetterFunction;
+		/// any reason. Cancellation support requires that `IECore::Canceller::check( canceller )`
+		/// is called periodically.
+		typedef boost::function<Value ( const GetterKey &key, Cost &cost, const IECore::Canceller *canceller )> GetterFunction;
 		/// The optional RemovalCallback is called whenever an item is discarded from the cache.
 		typedef boost::function<void ( const Key &key, const Value &data )> RemovalCallback;
 
@@ -112,8 +115,10 @@ class LRUCache : private boost::noncopyable
 		/// The item is returned by value, as it may be removed from the
 		/// cache at any time by operations on another thread, or may not
 		/// even be stored in the cache if it exceeds the maximum cost.
-		/// Throws if the item can not be computed.
-		Value get( const GetterKey &key );
+		/// Throws if the item can not be computed. Throws `IECore::Cancelled`
+		/// if the operation was successfully cancelled via the `canceller`
+		/// argument.
+		Value get( const GetterKey &key, const IECore::Canceller *canceller = nullptr );
 
 		/// Retrieves an item from the cache if it has been computed or set
 		/// previously. Throws if a previous call to `get()` failed.

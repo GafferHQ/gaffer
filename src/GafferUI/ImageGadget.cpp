@@ -61,7 +61,7 @@ using namespace GafferUI;
 namespace
 {
 
-Box3f boundGetter( const std::string &fileName, size_t &cost )
+Box3f boundGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
 {
 	const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
 	IECore::SearchPath sp( s ? s : "" );

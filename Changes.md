@@ -13,6 +13,7 @@ Improvements
 - GraphEditor :
   - Improved drawing performance for large node graphs. Gains of about 40% are typical, with much greater gains when looking at a small region of a large graph or performing selection tests (for example when hovering over something or dragging a connection).
   - Added support for middle-drag panning while dragging nodes and connections using <kbd>G</kbd>.
+- Cancellation : Improved responsiveness of cancellation of tasks waiting on results from another thread.
 
 Fixes
 -----

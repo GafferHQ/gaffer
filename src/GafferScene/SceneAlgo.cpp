@@ -942,7 +942,7 @@ GAFFERSCENE_API IECore::PathMatcher GafferScene::SceneAlgo::linkedObjects( const
 	using QueryCache = IECorePreview::LRUCache<std::string, bool, IECorePreview::LRUCachePolicy::TaskParallel>;
 	const Context *context = Context::current();
 	QueryCache queryCache(
-		[&lights, scene, context]( const std::string &setExpression, size_t &cost )
+		[&lights, scene, context]( const std::string &setExpression, size_t &cost, const IECore::Canceller *canceller )
 		{
 			cost = 1;
 			Context::Scope scopedContext( context );
