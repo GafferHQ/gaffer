@@ -35,6 +35,12 @@ API
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
+- Path :
+  - Added optional `canceller` argument to `isValid()`, `isLeaf()`, `propertyNames()`, `property()` and `children()` methods.
+  - Added `cancellationSubject()` virtual function that must be implemented by any paths which access the node graph.
+- ScenePath : Added support for cancellation of calls to `isValid()` and `children()`.
+- FileSystemPath : Added support for cancellation of calls to `children()` and `property()`.
+- PathFilter : Added support for cancellation of calls to `filter()`.
 
 Breaking Changes
 ----------------
@@ -54,6 +60,8 @@ Breaking Changes
 - Animation :
   - Renamed `Type` enum to `Interpolation`.
   - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
+- Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
+- PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 
 0.60.7.0 (relative to 0.60.6.1)
 ========

@@ -128,7 +128,7 @@ class _LocalJobsPath( Gaffer.Path ) :
 
 		return c
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames() + [
 			"localDispatcher:status",
@@ -139,7 +139,7 @@ class _LocalJobsPath( Gaffer.Path ) :
 			"localDispatcher:memory",
 		]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		result = Gaffer.Path.property( self, name )
 		if result is not None :
@@ -178,11 +178,11 @@ class _LocalJobsPath( Gaffer.Path ) :
 
 		return self.__jobPool
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		return len( self )
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		if self.isLeaf() :
 			return []

@@ -51,7 +51,7 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		self.__rootComponent = rootComponent
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		try :
 			self.__graphComponent()
@@ -59,7 +59,7 @@ class GraphComponentPath( Gaffer.Path ) :
 		except :
 			return False
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		return False
 
@@ -67,18 +67,35 @@ class GraphComponentPath( Gaffer.Path ) :
 
 		return GraphComponentPath( self.__rootComponent, self[:], self.root(), self.getFilter() )
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + [ "graphComponent:graphComponent" ]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name == "graphComponent:graphComponent" :
 			return self.__graphComponent()
 		else :
 			return Gaffer.Path.property( self, name )
 
-	def _children( self ) :
+	def cancellationSubject( self ) :
+
+		if isinstance( self.__rootComponent, Gaffer.ScriptNode ) :
+			script = self.__rootComponent
+		else :
+			script = self.__rootComponent.ancestor( Gaffer.ScriptNode )
+
+		if script is None :
+			return None
+
+		# The BackgroundTask cancellation mechanism is plug-centric, but we deal
+		# with any kind of GraphComponent. Returning a plug on the script is
+		# currently sufficient for any edit to a child of the script to cancel
+		# background tasks.
+		## \todo Perhaps BackgroundTask cancellation shouldn't only be plug-centric?
+		return script["fileName"]
+
+	def _children( self, canceller ) :
 
 		try :
 			e = self.__graphComponent()

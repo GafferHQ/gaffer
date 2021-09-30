@@ -548,15 +548,15 @@ class _PlugListing( GafferUI.Widget ) :
 
 			return self.__class__( self.__rootItem, self[:], self.root(), self.getFilter() )
 
-		def isLeaf( self ) :
+		def isLeaf( self, canceller = None ) :
 
 			return not isinstance( self.item(), _SectionLayoutItem )
 
-		def isValid( self ) :
+		def isValid( self, canceller = None ) :
 
 			return self.item() is not None
 
-		def _children( self ) :
+		def _children( self, canceller ) :
 
 			item = self.item()
 			if item is None :

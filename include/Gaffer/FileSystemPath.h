@@ -58,9 +58,9 @@ class GAFFER_API FileSystemPath : public Path
 
 		~FileSystemPath() override;
 
-		bool isValid() const override;
-		bool isLeaf() const override;
-		void propertyNames( std::vector<IECore::InternedString> &names ) const override;
+		bool isValid( const IECore::Canceller *canceller = nullptr ) const override;
+		bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
+		void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr ) const override;
 		/// Supported properties :
 		///
 		/// "fileSystem:owner" -> StringData
@@ -68,7 +68,7 @@ class GAFFER_API FileSystemPath : public Path
 		/// "fileSystem:modificationTime" -> DateTimeData, in UTC time
 		/// "fileSystem:size" -> UInt64Data, in bytes
 		/// "fileSystem:frameRange" -> StringData
-		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const override;
+		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override;
 		PathPtr copy() const override;
 
 		// Returns true if this FileSystemPath includes FileSequences
@@ -86,7 +86,7 @@ class GAFFER_API FileSystemPath : public Path
 
 	protected :
 
-		void doChildren( std::vector<PathPtr> &children ) const override;
+		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const override;
 
 	private :
 

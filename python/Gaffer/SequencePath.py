@@ -58,7 +58,7 @@ class SequencePath( Gaffer.Path ) :
 		self.__basePathSeed = path
 		self.__minSequenceSize = minSequenceSize
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		for p in self.__basePaths() :
 			if not p.isValid() :
@@ -66,7 +66,7 @@ class SequencePath( Gaffer.Path ) :
 
 		return True
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		for p in self.__basePaths() :
 			if not p.isLeaf() :
@@ -74,11 +74,11 @@ class SequencePath( Gaffer.Path ) :
 
 		return True
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return self.__basePathSeed.propertyNames()
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		result = Gaffer.Path.property( self, name )
 		if result is not None :
@@ -114,7 +114,7 @@ class SequencePath( Gaffer.Path ) :
 
 		return None
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		p = self.__basePath( self )
 

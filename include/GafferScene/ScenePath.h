@@ -78,15 +78,17 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
-		bool isValid() const override;
-		bool isLeaf() const override;
+		bool isValid( const IECore::Canceller *canceller = nullptr ) const override;
+		bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
 		Gaffer::PathPtr copy() const override;
+
+		const Gaffer::Plug *cancellationSubject() const override;
 
 		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
 
 	protected :
 
-		void doChildren( std::vector<Gaffer::PathPtr> &children ) const override;
+		void doChildren( std::vector<Gaffer::PathPtr> &children, const IECore::Canceller *canceller ) const override;
 		void pathChangedSignalCreated() override;
 
 	private :

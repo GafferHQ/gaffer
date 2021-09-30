@@ -51,7 +51,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		else :
 			self.__indexedIO = indexedIO
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		try :
 			self.__entry()
@@ -59,7 +59,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		except :
 			return False
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		try :
 			e = self.__entry()
@@ -68,13 +68,13 @@ class IndexedIOPath( Gaffer.Path ) :
 
 		return e.entryType() == IECore.IndexedIO.EntryType.File
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + [
 			"indexedIO:entryType", "indexedIO:dataType", "indexedIO:arrayLength"
 		]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		result = Gaffer.Path.property( self, name )
 		if result is not None :
@@ -100,7 +100,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		d = self.__indexedIO.directory( self[:-1] )
 		return d.read( self[-1] )
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		try :
 			d = self.__indexedIO.directory( self[:] )

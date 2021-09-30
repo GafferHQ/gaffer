@@ -70,7 +70,7 @@ class FileNamePathFilter( Gaffer.PathFilter ) :
 
 		self.__leafOnly = leafOnly
 
-	def _filter( self, paths ) :
+	def _filter( self, paths, canceller ) :
 
 		result = []
 		for p in paths :

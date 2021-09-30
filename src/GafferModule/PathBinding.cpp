@@ -103,8 +103,17 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 		{
 		}
 
+		// Caution : In the overrides below, we pass `canceller` to Python via
+		// `boost::python::ptr()`. This produces a Python object which
+		// references `canceller` directly. We can't guarantee the lifetime of
+		// `canceller` beyond the function call,  but we can't stop a Python
+		// override from storing the Python object outside that scope, after
+		// which any accesses will crash. Our only advice is "don't do that",
+		// which seems fairly reasonable given that the only expected use is
+		// to call `IECore.Canceller.check( canceller )` within the override
+		// itself.
 
-		bool isValid() const override
+		bool isValid( const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -114,7 +123,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "isValid" );
 					if( f )
 					{
-						return f();
+						return f( boost::python::ptr( canceller ) );
 					}
 				}
 				catch( const error_already_set &e )
@@ -122,10 +131,10 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					ExceptionAlgo::translatePythonException();
 				}
 			}
-			return WrappedType::isValid();
+			return WrappedType::isValid( canceller );
 		}
 
-		bool isLeaf() const override
+		bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -135,7 +144,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "isLeaf" );
 					if( f )
 					{
-						return f();
+						return f( boost::python::ptr( canceller ) );
 					}
 				}
 				catch( const error_already_set &e )
@@ -143,10 +152,10 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					ExceptionAlgo::translatePythonException();
 				}
 			}
-			return WrappedType::isLeaf();
+			return WrappedType::isLeaf( canceller );
 		}
 
-		void propertyNames( std::vector<IECore::InternedString> &names ) const override
+		void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -156,8 +165,8 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "propertyNames" );
 					if( f )
 					{
-						WrappedType::propertyNames( names );
-						boost::python::list pythonNames = extract<boost::python::list>( f() );
+						WrappedType::propertyNames( names, canceller  );
+						boost::python::list pythonNames = extract<boost::python::list>( f( boost::python::ptr( canceller ) ) );
 						boost::python::container_utils::extend_container( names, pythonNames );
 						return;
 					}
@@ -176,10 +185,10 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					ExceptionAlgo::translatePythonException();
 				}
 			}
-			WrappedType::propertyNames( names );
+			WrappedType::propertyNames( names, canceller  );
 		}
 
-		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const override
+		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -189,7 +198,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "property" );
 					if( f )
 					{
-						return extract<IECore::ConstRunTimeTypedPtr>( f( name.c_str() ) );
+						return extract<IECore::ConstRunTimeTypedPtr>( f( name.c_str(), boost::python::ptr( canceller ) ) );
 					}
 					// fall back to emulating properties using the deprecated python info() method.
 					f = this->methodOverride( "info" );
@@ -209,7 +218,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					ExceptionAlgo::translatePythonException();
 				}
 			}
-			return WrappedType::property( name );
+			return WrappedType::property( name, canceller );
 		}
 
 		PathPtr copy() const override
@@ -237,7 +246,28 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::copy();
 		}
 
-		void doChildren( std::vector<PathPtr> &children ) const override
+		const Plug *cancellationSubject() const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "cancellationSubject" );
+					if( f )
+					{
+						return extract<Plug *>( f() );
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::cancellationSubject();
+		}
+
+		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -247,7 +277,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					boost::python::object f = this->methodOverride( "_children" );
 					if( f )
 					{
-						list l = extract<list>( f() );
+						list l = extract<list>( f( boost::python::ptr( canceller ) ) );
 						boost::python::container_utils::extend_container( children, l );
 						return;
 					}
@@ -257,7 +287,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 					ExceptionAlgo::translatePythonException();
 				}
 			}
-			WrappedType::doChildren( children );
+			WrappedType::doChildren( children, canceller );
 		}
 
 		void pathChangedSignalCreated() override
@@ -296,10 +326,10 @@ const char *rootWrapper( Path &p )
 	return p.root().c_str();
 }
 
-list childrenWrapper( Path &p )
+list childrenWrapper( Path &p, const IECore::Canceller *canceller )
 {
 	std::vector<PathPtr> c;
-	p.children( c );
+	p.children( c, canceller );
 	list result;
 	for( std::vector<PathPtr>::const_iterator it = c.begin(), eIt = c.end(); it != eIt; ++it )
 	{
@@ -451,7 +481,7 @@ void GafferModule::bindPath()
 			.def( "root", &rootWrapper )
 			.def( "isEmpty", &Path::isEmpty )
 			.def( "parent", &Path::parent )
-			.def( "children", &childrenWrapper )
+			.def( "children", &childrenWrapper, arg( "canceller" ) = object() )
 			.def( "setFilter", &Path::setFilter )
 			.def( "getFilter", (PathFilter *(Path::*)())&Path::getFilter, return_value_policy<CastToIntrusivePtr>() )
 			.def( "pathChangedSignal", &Path::pathChangedSignal, return_internal_reference<1>() )

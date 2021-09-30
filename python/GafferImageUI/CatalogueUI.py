@@ -519,15 +519,15 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return self.__class__( self.__images, self[:], self.root(), self.getFilter() )
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		return len( self ) > 0
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + registeredColumns()
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name not in registeredColumns() :
 			return Gaffer.Path.property( self, name )
@@ -551,6 +551,10 @@ class _ImagesPath( Gaffer.Path ) :
 				# not in a position to do anything more helpful.
 				return None
 
+	def cancellationSubject( self ) :
+
+		return self.__images
+
 	def _orderedImages( self ) :
 
 		# Avoid repeat lookups for plugs with no ui index by first getting all
@@ -563,7 +567,7 @@ class _ImagesPath( Gaffer.Path ) :
 
 		return [ i[0] for i in sorted( imageAndIndices, key = lambda i : i[1] ) ]
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		if len( self ) != 0 :
 			return []

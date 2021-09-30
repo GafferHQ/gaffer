@@ -46,7 +46,7 @@ class ClassLoaderPath( Gaffer.Path ) :
 
 		self.__classLoader = classLoader
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		if not len( self ) :
 			# root is always valid
@@ -61,15 +61,15 @@ class ClassLoaderPath( Gaffer.Path ) :
 
 		return False
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		return str( self )[1:] in self.__classLoader.classNames()
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + [ "classLoader:versions" ]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name == "classLoader:versions" :
 			if not self.isLeaf() :
@@ -90,7 +90,7 @@ class ClassLoaderPath( Gaffer.Path ) :
 
 		return self.__classLoader.load( str( self )[1:], version )
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		result = []
 		added = set()

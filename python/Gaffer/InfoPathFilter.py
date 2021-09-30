@@ -64,7 +64,7 @@ class InfoPathFilter( Gaffer.PathFilter ) :
 
 		return self.__infoKey, self.__matcher
 
-	def _filter( self, paths ) :
+	def _filter( self, paths, canceller ) :
 
 		if self.__matcher is None :
 			return paths

@@ -271,7 +271,7 @@ class HierarchyViewSetFilter : public HierarchyViewFilter
 			}
 		}
 
-		void doFilter( vector<Gaffer::PathPtr> &paths ) const override
+		void doFilter( vector<Gaffer::PathPtr> &paths, const IECore::Canceller *canceller ) const override
 		{
 			if( paths.empty() )
 			{
@@ -414,7 +414,7 @@ class HierarchyViewSearchFilter : public HierarchyViewFilter
 			}
 		}
 
-		void doFilter( vector<Gaffer::PathPtr> &paths ) const override
+		void doFilter( vector<Gaffer::PathPtr> &paths, const IECore::Canceller *canceller ) const override
 		{
 			if( m_matchPattern.empty() || paths.empty() )
 			{

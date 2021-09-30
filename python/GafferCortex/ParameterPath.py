@@ -49,7 +49,7 @@ class ParameterPath( Gaffer.Path ) :
 		self.__forcedLeafTypes = forcedLeafTypes
 		self.__rootParameter = rootParameter
 
-	def isValid( self ) :
+	def isValid( self, canceller = None ) :
 
 		try :
 			self.__parameter()
@@ -57,7 +57,7 @@ class ParameterPath( Gaffer.Path ) :
 		except :
 			return False
 
-	def isLeaf( self ) :
+	def isLeaf( self, canceller = None ) :
 
 		try :
 			p = self.__parameter()
@@ -66,11 +66,11 @@ class ParameterPath( Gaffer.Path ) :
 
 		return isinstance( p, self.__forcedLeafTypes ) or not isinstance( p, IECore.CompoundParameter )
 
-	def propertyNames( self ) :
+	def propertyNames( self, canceller = None ) :
 
 		return Gaffer.Path.propertyNames( self ) + [ "parameter:parameter" ]
 
-	def property( self, name ) :
+	def property( self, name, canceller = None ) :
 
 		if name == "parameter:parameter" :
 			with IECore.IgnoredExceptions( Exception ) :
@@ -83,7 +83,7 @@ class ParameterPath( Gaffer.Path ) :
 
 		return ParameterPath( self.__rootParameter, self[:], self.root(), self.getFilter(), self.__forcedLeafTypes )
 
-	def _children( self ) :
+	def _children( self, canceller ) :
 
 		try :
 			p = self.__parameter()

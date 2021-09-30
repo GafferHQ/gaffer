@@ -37,6 +37,7 @@
 
 import unittest
 import six
+import threading
 
 import IECore
 
@@ -322,6 +323,113 @@ class PathTest( GafferTest.TestCase ) :
 		p.pathChangedSignal()
 		self.assertTrue( p.pathChangedSignalCreatedCalled )
 		self.assertTrue( p._havePathChangedSignal() )
+
+	class CancellingPath( Gaffer.Path ) :
+
+		def __init__( self, path=None, root="/", filter=None ) :
+
+			Gaffer.Path.__init__( self, path, root, filter )
+
+		def isValid( self, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def isLeaf( self, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def copy( self ) :
+
+			return CancellingPath( self[:], self.root(), self.getFilter() )
+
+		def propertyNames( self, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def property( self, name, canceller = None ) :
+
+			self.__waitForCancellation( canceller )
+
+		def _children( self, canceller ) :
+
+			self.__waitForCancellation( canceller )
+
+		def __waitForCancellation( self, canceller ) :
+
+			while True :
+				IECore.Canceller.check( canceller )
+
+	def testCancellation( self ) :
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		path = self.CancellingPath( "/" )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.isValid( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.isLeaf( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.propertyNames( canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			path.property( "test", canceller )
+
+		with self.assertRaises( IECore.Cancelled ) :
+			# This is the only one of the assertions that really
+			# tests the Python bindings for Path, because it's
+			# the only one where C++ calls into Python. Above
+			# we're just calling the Python methods directly.
+			path.children( canceller )
+
+	def testBackgroundTaskCancellation( self ) :
+
+		class CancellingSubjectPath( self.CancellingPath ) :
+
+			def __init__( self, subject, path = None, root = "/", filter = None ) :
+
+				PathTest.CancellingPath.__init__( self, path, root, filter )
+
+				self.__subject = subject
+
+			def copy( self ) :
+
+				return CancellingSubjectPath( self.__subject, self[:], self.root(), self.getFilter() )
+
+			def cancellationSubject( self ) :
+
+				# A real path would use `__subject` in the overrides for
+				# `children()` etc. But we're just doing the minimum necessary
+				# for testing the cancellation mechanism.
+				return self.__subject
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.AddNode()
+		path = CancellingSubjectPath( script["node"]["sum"], "/" )
+
+		startedCondition = threading.Condition()
+
+		def f() :
+
+			with startedCondition :
+				startedCondition.notify()
+
+			while True :
+				path.children( Gaffer.Context.current().canceller() )
+
+		with startedCondition :
+			backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
+				path.cancellationSubject(), f
+			)
+			# Wait for `f()` to start executing, because if we cancel before
+			# that, the BackgroundTask may not call `f()` at all.
+			startedCondition.wait()
+
+		script["node"]["op1"].setValue( 10 )
+		self.assertEqual( backgroundTask.status(), backgroundTask.Status.Cancelled )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -61,7 +61,7 @@ class GAFFERSCENE_API SceneFilterPathFilter : public Gaffer::PathFilter
 
 	protected :
 
-		void doFilter( std::vector<Gaffer::PathPtr> &paths ) const override;
+		void doFilter( std::vector<Gaffer::PathPtr> &paths, const IECore::Canceller *canceller ) const override;
 
 	private :
 
