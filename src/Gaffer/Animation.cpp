@@ -43,6 +43,8 @@
 
 #include "boost/bind.hpp"
 
+#include <cassert>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -55,6 +57,13 @@ using namespace Gaffer;
 Animation::Key::Key( float time, float value, Animation::Interpolation interpolation )
 	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_interpolation( interpolation )
 {
+}
+
+Animation::Key::~Key()
+{
+	// NOTE : parent reference should have been reset before the key is destructed
+
+	assert( m_parent == 0 );
 }
 
 void Animation::Key::setTime( float time )
@@ -71,28 +80,31 @@ void Animation::Key::setTime( float time )
 			m_parent->removeKey( existingKey );
 		}
 
+		KeyPtr key = this;
 		const float previousTime = m_time;
 		CurvePlug *curve = m_parent;
 		Action::enact(
 			m_parent,
 			// Do
-			[ curve, previousTime, time ] {
-				curve->m_keys.modify(
-					curve->m_keys.find( previousTime ),
-					[ time ] ( KeyPtr &key ) {
-						key->m_time = time;
-					}
-				);
+			[ curve, time, key ] {
+				assert( key->m_parent == curve );
+				assert( key->m_hook.is_linked() );
+				curve->m_keys.erase( curve->m_keys.iterator_to( *key ) ); // NOTE : never throws or fails
+				assert( ! key->m_hook.is_linked() );
+				key->m_time = time;
+				assert( curve->m_keys.count( key->m_time ) == static_cast< CurvePlug::Keys::size_type >( 0 ) );
+				curve->m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
 				curve->propagateDirtiness( curve->outPlug() );
 			},
 			// Undo
-			[ curve, previousTime, time ] {
-				curve->m_keys.modify(
-					curve->m_keys.find( time ),
-					[ previousTime ] ( KeyPtr &key ) {
-						key->m_time = previousTime;
-					}
-				);
+			[ curve, previousTime, key ] {
+				assert( key->m_parent == curve );
+				assert( key->m_hook.is_linked() );
+				curve->m_keys.erase( curve->m_keys.iterator_to( *key ) ); // NOTE : never throws or fails
+				assert( ! key->m_hook.is_linked() );
+				key->m_time = previousTime;
+				assert( curve->m_keys.count( key->m_time ) == static_cast< CurvePlug::Keys::size_type >( 0 ) );
+				curve->m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
 				curve->propagateDirtiness( curve->outPlug() );
 			}
 		);
@@ -193,6 +205,14 @@ const Animation::CurvePlug *Animation::Key::parent() const
 	return m_parent;
 }
 
+void Animation::Key::Dispose::operator()( Animation::Key* const key ) const
+{
+	assert( key != 0 );
+
+	key->m_parent = nullptr;
+	key->removeRef();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // CurvePlug implementation
 //////////////////////////////////////////////////////////////////////////
@@ -203,6 +223,11 @@ Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, u
 	:	ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
+}
+
+Animation::CurvePlug::~CurvePlug()
+{
+	m_keys.clear_and_dispose( Key::Dispose() );
 }
 
 void Animation::CurvePlug::addKey( const KeyPtr &key )
@@ -221,18 +246,33 @@ void Animation::CurvePlug::addKey( const KeyPtr &key )
 		key->m_parent->removeKey( key.get() );
 	}
 
+	// save the time of the key at the point it is added in case it was previously
+	// removed from the curve and changes have been made whilst the key was outside
+	// the curve (these changes will not have been recorded in the undo/redo system)
+	// when redo is called we can then check for any change and throw an exception
+	// if time is not as we expect it to be. principle here is that the user should
+	// not make changes outside the undo system so if they have then let them know.
+
+	const float time = key->m_time;
+
 	Action::enact(
 		this,
 		// Do
-		[this, key] {
-			m_keys.insert( key );
-			key->m_parent = this;
+		[ this, key, time ] {
+			if( key->m_time != time ) throw IECore::Exception( "Key time changed outside undo system." );
+			assert( key->m_parent == 0 );
+			assert( ! key->m_hook.is_linked() );
+			assert( m_keys.count( key->m_time ) == static_cast< Keys::size_type >( 0 ) );
+			m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
+			key->m_parent = this; // NOTE : never throws or fails
+			key->addRef();        // NOTE : take ownership
 			propagateDirtiness( outPlug() );
 		},
 		// Undo
-		[this, key] {
-			m_keys.erase( key->getTime() );
-			key->m_parent = nullptr;
+		[ this, key ] {
+			assert( key->m_parent == this );
+			assert( key->m_hook.is_linked() );
+			m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
 			propagateDirtiness( outPlug() );
 		}
 	);
@@ -245,22 +285,15 @@ bool Animation::CurvePlug::hasKey( float time ) const
 
 Animation::Key *Animation::CurvePlug::getKey( float time )
 {
-	auto it = m_keys.find( time );
-	if( it != m_keys.end() )
-	{
-		return it->get();
-	}
-	return nullptr;
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKey( time ) );
 }
 
 const Animation::Key *Animation::CurvePlug::getKey( float time ) const
 {
-	auto it = m_keys.find( time );
-	if( it != m_keys.end() )
-	{
-		return it->get();
-	}
-	return nullptr;
+	Keys::const_iterator it = m_keys.find( time );
+	return ( it != m_keys.end() )
+		? &( *it )
+		: nullptr;
 }
 
 void Animation::CurvePlug::removeKey( const KeyPtr &key )
@@ -270,18 +303,33 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 		throw IECore::Exception( "Key is not a child" );
 	}
 
+	// save the time of the key at the point it is removed in case it is subsequently
+	// added back to the curve and changes are made whilst the key is outside
+	// the curve (these changes will not be recorded in the undo/redo system)
+	// when undo is called we can then check for any change and throw an exception
+	// if time is not as we expect it to be. principle here is that the user should
+	// not make changes outside the undo system so if they have then let them know.
+
+	const float time = key->m_time;
+
 	Action::enact(
 		this,
 		// Do
 		[ this, key ] {
-			m_keys.erase( key->getTime() );
-			key->m_parent = nullptr;
+			assert( key->m_parent == this );
+			assert( key->m_hook.is_linked() );
+			m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
 			propagateDirtiness( outPlug() );
 		},
 		// Undo
-		[ this, key ] {
-			m_keys.insert( key );
-			key->m_parent = this;
+		[ this, key, time ] {
+			if( key->m_time != time ) throw IECore::Exception( "Key time changed outside undo system." );
+			assert( key->m_parent == 0 );
+			assert( ! key->m_hook.is_linked() );
+			assert( m_keys.count( key->m_time ) == static_cast< Keys::size_type >( 0 ) );
+			m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
+			key->m_parent = this; // NOTE : never throws or fails
+			key->addRef();        // NOTE : take ownership
 			propagateDirtiness( outPlug() );
 		}
 	);
@@ -302,16 +350,16 @@ const Animation::Key *Animation::CurvePlug::closestKey( float time ) const
 	Keys::const_iterator rightIt = m_keys.lower_bound( time );
 	if( rightIt == m_keys.end() )
 	{
-		return m_keys.rbegin()->get();
+		return &( *( m_keys.rbegin() ) );
 	}
-	else if( (*rightIt)->getTime() == time || rightIt == m_keys.begin() )
+	else if( rightIt->m_time == time || rightIt == m_keys.begin() )
 	{
-		return rightIt->get();
+		return &( *( rightIt ) );
 	}
 	else
 	{
 		Keys::const_iterator leftIt = std::prev( rightIt );
-		return fabs( time - (*leftIt)->getTime() ) < fabs( time - (*rightIt)->getTime() ) ? leftIt->get() : rightIt->get();
+		return &( *( fabs( time - leftIt->m_time ) < fabs( time - rightIt->m_time ) ? leftIt : rightIt ) );
 	}
 }
 
@@ -340,11 +388,9 @@ Animation::Key *Animation::CurvePlug::previousKey( float time )
 const Animation::Key *Animation::CurvePlug::previousKey( float time ) const
 {
 	Keys::const_iterator rightIt = m_keys.lower_bound( time );
-	if( rightIt == m_keys.begin() )
-	{
-		return nullptr;
-	}
-	return std::prev( rightIt )->get();
+	return ( rightIt != m_keys.begin() )
+		? &( *( std::prev( rightIt ) ) )
+		: nullptr;
 }
 
 Animation::Key *Animation::CurvePlug::nextKey( float time )
@@ -355,11 +401,14 @@ Animation::Key *Animation::CurvePlug::nextKey( float time )
 const Animation::Key *Animation::CurvePlug::nextKey( float time ) const
 {
 	Keys::const_iterator rightIt = m_keys.upper_bound( time );
-	if( rightIt == m_keys.end() )
-	{
-		return nullptr;
-	}
-	return rightIt->get();
+	return ( rightIt != m_keys.end() )
+		? &( *( rightIt ) )
+		: nullptr;
+}
+
+Animation::CurvePlug::TimeKey::type Animation::CurvePlug::TimeKey::operator()( const Animation::Key& key ) const
+{
+	return key.getTime();
 }
 
 Animation::KeyIterator Animation::CurvePlug::begin()
@@ -392,16 +441,16 @@ float Animation::CurvePlug::evaluate( float time ) const
 	Keys::const_iterator rightIt = m_keys.lower_bound( time );
 	if( rightIt == m_keys.end() )
 	{
-		return (*m_keys.rbegin())->getValue();
+		return (m_keys.rbegin())->getValue();
 	}
 
-	const Key &right = **rightIt;
+	const Key &right = *( rightIt );
 	if( right.getTime() == time || rightIt == m_keys.begin() )
 	{
 		return right.getValue();
 	}
 
-	const Key &left = **std::prev( rightIt );
+	const Key &left = *( std::prev( rightIt ) );
 	if( right.getInterpolation() == Interpolation::Linear )
 	{
 		const float t = ( time - left.getTime() ) / ( right.getTime() - left.getTime() );

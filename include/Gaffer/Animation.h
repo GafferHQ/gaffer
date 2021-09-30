@@ -40,9 +40,9 @@
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
-#include "boost/multi_index/mem_fun.hpp"
-#include "boost/multi_index/ordered_index.hpp"
-#include "boost/multi_index_container.hpp"
+#include "boost/intrusive/avl_set.hpp"
+#include "boost/intrusive/avl_set_hook.hpp"
+#include "boost/intrusive/options.hpp"
 
 namespace Gaffer
 {
@@ -78,6 +78,7 @@ class GAFFER_API Animation : public ComputeNode
 			public :
 
 				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Interpolation::Linear );
+				~Key() override;
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 
@@ -103,6 +104,21 @@ class GAFFER_API Animation : public ComputeNode
 
 				friend class CurvePlug;
 
+				typedef boost::intrusive::avl_set_member_hook<
+					boost::intrusive::link_mode<
+#					ifndef NDEBUG
+					boost::intrusive::safe_link
+#					else
+					boost::intrusive::normal_link
+#					endif
+					> > Hook;
+
+				struct Dispose
+				{
+					void operator()( Key* ) const;
+				};
+
+				Hook m_hook;
 				CurvePlug *m_parent;
 				float m_time;
 				float m_value;
@@ -112,11 +128,8 @@ class GAFFER_API Animation : public ComputeNode
 
 		IE_CORE_DECLAREPTR( Key )
 
-		template<typename ValueType>
-		class KeyIteratorT;
-
-		typedef KeyIteratorT<Key> KeyIterator;
-		typedef KeyIteratorT<const Key> ConstKeyIterator;
+		class KeyIterator;
+		class ConstKeyIterator;
 
 		/// Defines a curve as a collection of keyframes and methods
 		/// for editing them. Provides methods for evaluating the
@@ -129,6 +142,7 @@ class GAFFER_API Animation : public ComputeNode
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Animation::CurvePlug, AnimationCurvePlugTypeId, Gaffer::ValuePlug );
 
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
+				~CurvePlug() override;
 
 				/// \undoable
 				void addKey( const KeyPtr &key );
@@ -170,14 +184,15 @@ class GAFFER_API Animation : public ComputeNode
 				friend KeyIterator;
 				friend ConstKeyIterator;
 
-				typedef boost::multi_index::multi_index_container<
-					KeyPtr,
-					boost::multi_index::indexed_by<
-						boost::multi_index::ordered_unique<
-							boost::multi_index::const_mem_fun<Key, float, &Key::getTime>
-						>
-					>
-				> Keys;
+				struct TimeKey
+				{
+					typedef float type;
+					type operator()( const Animation::Key& key ) const;
+				};
+
+				typedef boost::intrusive::avl_set< Key,
+					boost::intrusive::member_hook< Key, Key::Hook, &Key::m_hook >,
+					boost::intrusive::key_of_value< TimeKey > > Keys;
 
 				Keys m_keys;
 
@@ -225,42 +240,70 @@ class GAFFER_API Animation : public ComputeNode
 
 IE_CORE_DECLAREPTR( Animation )
 
-template<typename ValueType>
-class Animation::KeyIteratorT : public boost::iterator_facade<Animation::KeyIteratorT<ValueType>, ValueType, boost::bidirectional_traversal_tag>
+class Animation::KeyIterator
+: public boost::iterator_facade< Animation::KeyIterator, Animation::Key, boost::bidirectional_traversal_tag >
 {
+	friend class boost::iterator_core_access;
+	friend class Animation::CurvePlug;
 
-	private :
+	KeyIterator( const Animation::CurvePlug::Keys::iterator it )
+	: m_it( it )
+	{}
 
-		KeyIteratorT( Animation::CurvePlug::Keys::const_iterator it )
-			:	m_it( it )
-		{
-		}
+	void increment()
+	{
+		++m_it;
+	}
 
-		friend class boost::iterator_core_access;
-		friend class Animation::CurvePlug;
+	void decrement()
+	{
+		--m_it;
+	}
 
-		void increment()
-		{
-			++m_it;
-		}
+	bool equal( const KeyIterator& other ) const
+	{
+		return m_it == other.m_it;
+	}
 
-		void decrement()
-		{
-			--m_it;
-		}
+	Animation::Key& dereference() const
+	{
+		return *( m_it );
+	}
 
-		bool equal( const KeyIteratorT &other ) const
-		{
-			return m_it == other.m_it;
-		}
+	Animation::CurvePlug::Keys::iterator m_it;
+};
 
-		ValueType& dereference() const
-		{
-			return *(m_it->get());
-		}
+class Animation::ConstKeyIterator
+: public boost::iterator_facade< Animation::ConstKeyIterator, const Animation::Key, boost::bidirectional_traversal_tag >
+{
+	friend class boost::iterator_core_access;
+	friend class Animation::CurvePlug;
 
-		Animation::CurvePlug::Keys::const_iterator m_it;
+	ConstKeyIterator( const Animation::CurvePlug::Keys::const_iterator it )
+	: m_it( it )
+	{}
 
+	void increment()
+	{
+		++m_it;
+	}
+
+	void decrement()
+	{
+		--m_it;
+	}
+
+	bool equal( const ConstKeyIterator& other ) const
+	{
+		return m_it == other.m_it;
+	}
+
+	const Animation::Key& dereference() const
+	{
+		return *( m_it );
+	}
+
+	Animation::CurvePlug::Keys::const_iterator m_it;
 };
 
 } // namespace Gaffer
