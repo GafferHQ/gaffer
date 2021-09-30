@@ -54,6 +54,7 @@ GafferScene.Outputs.registerOutput(
 		"ieDisplay",
 		"rgba",
 		{
+			"catalogue:imageName" : "Image",
 			"driverType" : "ClientDisplayDriver",
 			"displayHost" : "localhost",
 			"displayPort" : "${image:catalogue:port}",
