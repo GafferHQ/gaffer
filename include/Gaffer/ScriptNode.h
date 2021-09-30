@@ -323,6 +323,9 @@ class GAFFER_API ScriptNode : public Node
 		void addAction( ActionPtr action );
 		void popUndoState();
 
+		// Called by undo/redo to cleanup after action stage
+		void postActionStageCleanup();
+
 		typedef std::stack<UndoScope::State> UndoStateStack;
 		typedef std::list<CompoundActionPtr> UndoList;
 		typedef UndoList::iterator UndoIterator;

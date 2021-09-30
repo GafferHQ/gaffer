@@ -407,6 +407,95 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertFalse( curve.hasKey( key.getTime() ) )
 		self.assertEqual( key.parent(), None )
 
+	def testUndoRemoveKeyTimeChangeOutsideCurve( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+		self.assertFalse( curve.getKey( 0 ) )
+
+		key1 = Gaffer.Animation.Key( 1, 0 )
+
+		curve.addKey( key1 )
+		self.assertEqual( curve.getKey( 1 ), key1 )
+
+		with Gaffer.UndoScope( s ) :
+			curve.removeKey( key1 )
+			self.assertIsNone( curve.getKey( 1 ) )
+			# NOTE : this operation is not captured by the undo system as key is not in curve
+			key1.setTime( 2 )
+			self.assertEqual( key1.getTime(), 2 )
+
+		with Gaffer.UndoScope( s ) :
+			curve.addKey( key1 )
+			self.assertEqual( curve.getKey( 2 ), key1 )
+
+		s.undo()
+		self.assertIsNone( curve.getKey( 2 ) )
+
+		# check that an exception is thrown on undo as setTime was not captured
+		self.assertRaises( IECore.Exception, lambda : s.undo() )
+
+		# check state is consistent with state before we tried to undo
+		self.assertIsNone( curve.getKey( 2 ) )
+
+		# check there is still an outstanding undo in queue
+		self.assertTrue( s.undoAvailable() )
+
+		# check that an exception is thrown again if we try to undo again
+		self.assertRaises( IECore.Exception, lambda : s.undo() )
+
+		# check state is consistent with state before we tried to undo
+		self.assertIsNone( curve.getKey( 2 ) )
+
+		# check there is still an outstanding undo in queue
+		self.assertTrue( s.undoAvailable() )
+
+		# check that we can redo the successful first undo
+		s.redo()
+		self.assertEqual( curve.getKey( 2 ), key1 )
+
+	def testRedoAddKeyTimeChangeOutsideCurve( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+		self.assertFalse( curve.getKey( 0 ) )
+
+		key1 = Gaffer.Animation.Key( 1, 0 )
+
+		with Gaffer.UndoScope( s ) :
+			curve.addKey( key1 )
+			self.assertEqual( curve.getKey( 1 ), key1 )
+
+		s.undo()
+		self.assertIsNone( curve.getKey( 1 ) )
+
+		# NOTE : this operation is not captured by the undo system as key is not in curve
+		key1.setTime( 2 )
+		self.assertEqual( key1.getTime(), 2 )
+
+		# check that an exception is thrown if we redo as setTime was not captured
+		self.assertRaises( IECore.Exception, lambda : s.redo() )
+
+		# check state is consistent with state before we tried to redo
+		self.assertIsNone( curve.getKey( 1 ) )
+
+		# check there is still an outstanding redo in queue
+		self.assertTrue( s.redoAvailable() )
+
+		# check that an exception is thrown again if we try to redo again
+		self.assertRaises( IECore.Exception, lambda : s.redo() )
+
+		# check state is consistent with state before we tried to undo
+		self.assertIsNone( curve.getKey( 1 ) )
+
 	def testNextAndPreviousKeys( self ) :
 
 		s = Gaffer.ScriptNode()

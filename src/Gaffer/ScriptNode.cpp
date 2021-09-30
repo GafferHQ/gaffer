@@ -591,6 +591,14 @@ void ScriptNode::popUndoState()
 
 }
 
+void ScriptNode::postActionStageCleanup()
+{
+	m_currentActionStage = Action::Invalid;
+
+	UndoScope undoDisabled( this, UndoScope::Disabled );
+	unsavedChangesPlug()->setValue( true );
+}
+
 bool ScriptNode::undoAvailable() const
 {
 	return m_currentActionStage == Action::Invalid && m_undoIterator != m_undoList.begin();
@@ -607,28 +615,21 @@ void ScriptNode::undo()
 
 	m_currentActionStage = Action::Undo;
 
-		m_undoIterator--;
-		(*m_undoIterator)->undoAction();
+	try
+	{
+		// NOTE : Decrement the undo iterator if undoAction() completes without throwing an exception
 
-	/// \todo It's conceivable that an exception from somewhere in
-	/// Action::undoAction() could prevent this cleanup code from running,
-	/// leaving us in a bad state. This could perhaps be addressed
-	/// by using BOOST_SCOPE_EXIT. The most likely cause of such an
-	/// exception would be in an errant slot connected to a signal
-	/// triggered by the action performed. However, currently most
-	/// python slot callers suppress python exceptions (printing
-	/// them to the shell), so it's not even straightforward to
-	/// write a test case for this potential problem. It could be
-	/// argued that we shouldn't be suppressing exceptions in slots,
-	/// but if we don't then well-behaved (and perhaps crucial) slots
-	/// might not get called when badly behaved slots mess up. It seems
-	/// best to simply report errors as we do, and allow the well behaved
-	/// slots to have their turn - we might even want to extend this
-	/// behaviour to the c++ slots.
-	m_currentActionStage = Action::Invalid;
+		UndoIterator it = m_undoIterator;
+		(*(--it))->undoAction();
+		m_undoIterator = it;
+	}
+	catch( ... )
+	{
+		postActionStageCleanup();
+		throw;
+	}
 
-	UndoScope undoDisabled( this, UndoScope::Disabled );
-	unsavedChangesPlug()->setValue( true );
+	postActionStageCleanup();
 }
 
 bool ScriptNode::redoAvailable() const
@@ -647,13 +648,18 @@ void ScriptNode::redo()
 
 	m_currentActionStage = Action::Redo;
 
+	try
+	{
 		(*m_undoIterator)->doAction();
-		m_undoIterator++;
+		++m_undoIterator;
+	}
+	catch( ... )
+	{
+		postActionStageCleanup();
+		throw;
+	}
 
-	m_currentActionStage = Action::Invalid;
-
-	UndoScope undoDisabled( this, UndoScope::Disabled );
-	unsavedChangesPlug()->setValue( true );
+	postActionStageCleanup();
 }
 
 Action::Stage ScriptNode::currentActionStage() const
