@@ -421,7 +421,7 @@ void constructLocalFrame( Imath::M44f& m, const Imath::V3f& p, const Imath::V3f&
 struct UVIndexer
 {
 	UVIndexer( const IECoreScene::MeshPrimitive& primitive, const std::string& uvSet, const bool throwOnError )
-	: m_indices( 0 )
+	: m_indices( nullptr )
 	, m_view()
 	{
 		const IECoreScene::PrimitiveVariableMap::const_iterator it = primitive.variables.find( uvSet );
@@ -477,7 +477,7 @@ struct UVIndexer
 	const Imath::V2f& operator[]( const int i ) const
 	{
 		assert( valid() );
-		const int index = ( m_indices != 0 ) ? ( ( *m_indices )[ i ] ) : i;
+		const int index = ( m_indices != nullptr ) ? ( ( *m_indices )[ i ] ) : i;
 		return ( *m_view )[ index ];
 	}
 
@@ -490,7 +490,7 @@ private:
 void computePrimitiveVertexLocalFrame( const IECoreScene::Primitive& primitive, Imath::M44f& m, const int vertexId, const bool throwOnError )
 {
 	const IECore::V3fVectorData* const pdata = primitive.variableData< IECore::V3fVectorData >( "P" );
-	if( pdata == 0 )
+	if( pdata == nullptr )
 	{
 		if( throwOnError )
 		{
@@ -525,7 +525,7 @@ void computeMeshVertexLocalFrame( const IECoreScene::MeshPrimitive& primitive, I
 {
 	const IECore::V3fVectorData* const pdata = primitive.variableData< IECore::V3fVectorData >( "P" );
 
-	if( pdata == 0 )
+	if( pdata == nullptr )
 	{
 		if( throwOnError )
 		{
@@ -673,7 +673,7 @@ void computeMeshUVLocalFrame( const IECoreScene::MeshPrimitive& primitive, Imath
 {
 	const IECore::V3fVectorData* const pdata = primitive.variableData< IECore::V3fVectorData >( "P" );
 
-	if( pdata == 0 )
+	if( pdata == nullptr )
 	{
 		if( throwOnError )
 		{

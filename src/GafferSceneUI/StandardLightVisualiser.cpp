@@ -666,7 +666,7 @@ void StandardLightVisualiser::spotlightParameters( const InternedString &attribu
 	outerAngle = 0;
 
 	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
-	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : NULL;
+	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : nullptr;
 
 	if( !penumbraType || *penumbraType == "inset" )
 	{
