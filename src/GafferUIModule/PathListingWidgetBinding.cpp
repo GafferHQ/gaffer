@@ -55,6 +55,7 @@
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/date_time/posix_time/conversion.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
@@ -67,6 +68,8 @@
 #include "QtCore/QModelIndex"
 #include "QtCore/QTimer"
 #include "QtCore/QVariant"
+
+#include "QtGui/QGuiApplication"
 
 #include "QtWidgets/QTreeView"
 #include "QtWidgets/QFileIconProvider"
@@ -473,6 +476,7 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 			m_rootPath = root;
 			m_rootItem->dirty();
+			m_recursiveExpansionPath.reset();
 			// Schedule update to process the dirtied items.
 			scheduleUpdate();
 		}
@@ -487,6 +491,7 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 			beginResetModel();
 			m_flat = flat;
+			m_recursiveExpansionPath.reset();
 			endResetModel();
 		}
 
@@ -507,6 +512,7 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 
 			m_expandedPaths = IECore::PathMatcher( expandedPaths );
+			m_recursiveExpansionPath.reset();
 			m_rootItem->dirtyExpansion();
 			expansionChanged();
 
@@ -836,6 +842,11 @@ class PathModel : public QAbstractItemModel
 				/* subject = */ nullptr,
 				[this] {
 					m_rootItem->update( this );
+					queueEdit(
+						[this] () {
+							finaliseRecursiveExpansion();
+						}
+					);
 				}
 			);
 			m_updateScheduled = false;
@@ -1157,8 +1168,17 @@ class PathModel : public QAbstractItemModel
 						return;
 					}
 
-					const unsigned match = expandedPaths.match( path->names() );
-					const bool expanded = match & IECore::PathMatcher::ExactMatch;
+					unsigned match = expandedPaths.match( path->names() );
+					bool expanded = match & IECore::PathMatcher::ExactMatch;
+
+					if( model->m_recursiveExpansionPath )
+					{
+						if( boost::starts_with( path->names(), *model->m_recursiveExpansionPath ) )
+						{
+							match |= IECore::PathMatcher::DescendantMatch;
+							expanded = true;
+						}
+					}
 
 					if( expanded != m_expandedInTreeView )
 					{
@@ -1501,6 +1521,44 @@ class PathModel : public QAbstractItemModel
 			{
 				expansionChanged();
 			}
+
+			if( QGuiApplication::keyboardModifiers() & Qt::ShiftModifier )
+			{
+				// Recursively expand everything below this index. This
+				// could be expensive, so we do it during the async update.
+				cancelUpdate();
+				m_recursiveExpansionPath = expandedPath;
+				static_cast<Item *>( index.internalPointer() )->dirtyExpansion();
+				scheduleUpdate();
+			}
+		}
+
+		void finaliseRecursiveExpansion()
+		{
+			if( !m_recursiveExpansionPath )
+			{
+				return;
+			}
+			// We've expanded a bunch of paths on the Qt side, and now
+			// we need to reflect that in `m_expandedPaths`.
+			QModelIndex index = indexForPath( *m_recursiveExpansionPath );
+			assert( index.isValid() );
+			m_expandedPaths.addPath( *m_recursiveExpansionPath );
+			m_expandedPaths.addPaths( descendantPaths( static_cast<Item *>( index.internalPointer() ) ), *m_recursiveExpansionPath );
+			m_recursiveExpansionPath.reset();
+			expansionChanged();
+		}
+
+		IECore::PathMatcher descendantPaths( Item *item )
+		{
+			IECore::PathMatcher result;
+			for( const auto &child : item->childItems( this ) )
+			{
+				std::vector<IECore::InternedString> childPath( { child->name() } );
+				result.addPath( childPath );
+				result.addPaths( descendantPaths( child.get() ), childPath );
+			}
+			return result;
 		}
 
 		void treeViewCollapsed( const QModelIndex &index )
@@ -1513,9 +1571,38 @@ class PathModel : public QAbstractItemModel
 			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( false );
 
 			const Path::Names collapsedPath = namesForIndex( index );
-			if( m_expandedPaths.removePath( collapsedPath ) )
+			bool expandedPathsChanged = m_expandedPaths.removePath( collapsedPath );
+
+			if( m_recursiveExpansionPath && boost::starts_with( *m_recursiveExpansionPath, collapsedPath ) )
+			{
+				// Abort recursive expansion because a parent path has been
+				// collapsed.
+				cancelUpdate();
+				m_recursiveExpansionPath.reset();
+				scheduleUpdate();
+			}
+
+			if( QGuiApplication::keyboardModifiers() & Qt::ShiftModifier )
+			{
+				// Recursively collapse everything below this index.
+				expandedPathsChanged |= m_expandedPaths.prune( collapsedPath );
+				Private::ScopedAssignment<bool> assignment( m_modifyingTreeViewExpansion, true );
+				collapseDescendants( static_cast<QTreeView *>( QObject::parent() ), index );
+			}
+
+			if( expandedPathsChanged )
 			{
 				expansionChanged();
+			}
+		}
+
+		void collapseDescendants( QTreeView *treeView, const QModelIndex &index )
+		{
+			for( int i = 0, e = rowCount( index ); i < e; ++i )
+			{
+				const QModelIndex childIndex = this->index( i, 0, index );
+				treeView->setExpanded( childIndex, false );
+				collapseDescendants( treeView, childIndex );
 			}
 		}
 
@@ -1576,6 +1663,7 @@ class PathModel : public QAbstractItemModel
 
 		IECore::PathMatcher m_expandedPaths;
 		bool m_modifyingTreeViewExpansion;
+		boost::optional<Path::Names> m_recursiveExpansionPath;
 
 		IECore::PathMatcher m_selectedPaths;
 		bool m_modifyingSelectionModel;
@@ -1652,34 +1740,6 @@ IECore::PathMatcher getExpansion( uint64_t treeViewAddress )
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 	return model ? model->getExpansion() : IECore::PathMatcher();
-}
-
-void propagateExpandedWalk( QTreeView *treeView, PathModel *model, QModelIndex index, bool expanded, int numLevels )
-{
-	for( int i = 0, e = model->rowCount( index ); i < e; ++i )
-	{
-		QModelIndex childIndex = model->index( i, 0, index );
-		treeView->setExpanded( childIndex, expanded );
-		if( numLevels - 1 > 0 )
-		{
-			propagateExpandedWalk( treeView, model, childIndex, expanded, numLevels - 1 );
-		}
-	}
-}
-
-void propagateExpanded( uint64_t treeViewAddress, uint64_t modelIndexAddress, bool expanded, int numLevels )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-
-	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
-	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	if( !model )
-	{
-		return;
-	}
-
-	QModelIndex *modelIndex = reinterpret_cast<QModelIndex *>( modelIndexAddress );
-	propagateExpandedWalk( treeView, model, *modelIndex, expanded, numLevels );
 }
 
 void setSelection( uint64_t treeViewAddress, const IECore::PathMatcher &paths, bool scrollToFirst, bool expandNonLeaf )
@@ -1789,7 +1849,6 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetGetFlat", &getFlat );
 	def( "_pathListingWidgetSetExpansion", &setExpansion );
 	def( "_pathListingWidgetGetExpansion", &getExpansion );
-	def( "_pathListingWidgetPropagateExpanded", &propagateExpanded );
 	def( "_pathListingWidgetSetSelection", &setSelection );
 	def( "_pathListingWidgetGetSelection", &getSelection );
 	def( "_pathListingWidgetPathForIndex", &pathForIndex );

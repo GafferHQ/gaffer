@@ -565,8 +565,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		finally :
 			self.__emittingButtonPress = False
 
-# Private implementation - a QTreeView with some specific size behaviour, and shift
-# clicking for recursive expand/collapse.
+# Private implementation - a QTreeView with some specific size behaviour.
 class _TreeView( QtWidgets.QTreeView ) :
 
 	def __init__( self ) :
@@ -575,9 +574,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
-
-		self.collapsed.connect( self.__collapsed )
-		self.expanded.connect( self.__expanded )
 
 		self.__recalculatingColumnWidths = False
 		# the ideal size for each column. we cache these because they're slow to compute
@@ -615,28 +611,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		return QtWidgets.QTreeView.event( self, event )
 
-	def mousePressEvent( self, event ) :
-
-		# we store the modifiers so that we can turn single
-		# expands/collapses into recursive ones in __propagateExpanded.
-		self.__currentEventModifiers = event.modifiers()
-		QtWidgets.QTreeView.mousePressEvent( self, event )
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
-
-	def mouseReleaseEvent( self, event ) :
-
-		# we store the modifiers so that we can turn single
-		# expands/collapses into recursive ones in __propagateExpanded.
-		self.__currentEventModifiers = event.modifiers()
-		QtWidgets.QTreeView.mouseReleaseEvent( self, event )
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
-
-	def mouseDoubleClickEvent( self, event ) :
-
-		self.__currentEventModifiers = event.modifiers()
-		QtWidgets.QTreeView.mouseDoubleClickEvent( self, event )
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
-
 	def updateColumnWidths( self ) :
 
 		self.__recalculatingColumnWidths = True
@@ -669,44 +643,3 @@ class _TreeView( QtWidgets.QTreeView ) :
 		# we can apply it again in updateColumnWidths
 		if len( self.__idealColumnWidths ) > index :
 			self.__columnWidthAdjustments[index] = newWidth - self.__idealColumnWidths[index]
-
-	def __collapsed( self, index ) :
-
-		self.__propagateExpanded( index, False )
-		self.updateColumnWidths()
-
-	def __expanded( self, index ) :
-
-		self.__propagateExpanded( index, True )
-		self.updateColumnWidths()
-
-	def __propagateExpanded( self, index, expanded ) :
-
-		numLevels = 0
-		if self.__currentEventModifiers & QtCore.Qt.ShiftModifier :
-			numLevels = 10000
-		elif self.__currentEventModifiers & QtCore.Qt.ControlModifier :
-			numLevels = 1
-
-		if numLevels :
-
-			self.collapsed.disconnect( self.__collapsed )
-			self.expanded.disconnect( self.__expanded )
-
-			# This call is critical for performance. Without it,
-			# QTreeView will start doing relayout for every single
-			# call to setExpanded() that we make inside
-			# _pathListingWidgetPropagateExpanded(). With it, it
-			# waits nicely till the end and does it all at once.
-			self.scheduleDelayedItemsLayout()
-
-			# Defer to C++ to do the heavy lifting.
-			_GafferUI._pathListingWidgetPropagateExpanded(
-				GafferUI._qtAddress( self ),
-				GafferUI._qtAddress( index ),
-				expanded,
-				numLevels
-			)
-
-			self.collapsed.connect( self.__collapsed )
-			self.expanded.connect( self.__expanded )
