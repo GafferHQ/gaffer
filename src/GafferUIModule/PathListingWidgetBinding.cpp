@@ -674,6 +674,7 @@ class PathModel : public QAbstractItemModel
 
 		void expansionChanged();
 		void selectionChanged();
+		void updateFinished();
 
 		///////////////////////////////////////////////////////////////////
 		// QAbstractItemModel implementation - this is what Qt cares about
@@ -854,6 +855,7 @@ class PathModel : public QAbstractItemModel
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
+								updateFinished();
 							}
 						);
 					}

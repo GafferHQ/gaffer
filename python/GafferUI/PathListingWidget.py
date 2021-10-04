@@ -377,7 +377,6 @@ class PathListingWidget( GafferUI.Widget ) :
 
 			_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), dirPath.copy() )
 			self.__currentDir = dirPath
-			self._qtWidget().updateColumnWidths()
 
 		self.__currentPath = str( self.__path )
 
@@ -587,7 +586,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.setModel( self, model )
 
-		model.modelReset.connect( self.updateColumnWidths )
+		model.updateFinished.connect( self.updateColumnWidths )
 
 		self.updateColumnWidths()
 

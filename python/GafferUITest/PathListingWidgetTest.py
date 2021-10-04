@@ -154,11 +154,12 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" ),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
 		)
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( w.getExpansion(), IECore.PathMatcher() )
 
 		cs = GafferTest.CapturingSlot( w.expansionChangedSignal() )
-		model = w._qtWidget().model()
 		w._qtWidget().setExpanded( model.index( 0, 0 ), True ) # Equivalent to a click by the user
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/a" ] ) )
@@ -174,6 +175,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
 		)
 		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( w.getExpansion(), IECore.PathMatcher() )
 
@@ -317,11 +319,12 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" ),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
 		)
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
 
 		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
-		model = w._qtWidget().model()
 		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
@@ -362,6 +365,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
 		)
 		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
 
