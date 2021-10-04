@@ -39,6 +39,7 @@
 #include "PathListingWidgetBinding.h"
 
 #include "Gaffer/BackgroundTask.h"
+#include "Gaffer/Context.h"
 #include "Gaffer/FileSystemPath.h"
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/Path.h"
@@ -146,7 +147,7 @@ class Column : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( Column )
 
-		virtual QVariant data( const Path *path, int role = Qt::DisplayRole ) const = 0;
+		virtual QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const = 0;
 		virtual QVariant headerData( int role = Qt::DisplayRole ) const = 0;
 
 };
@@ -165,12 +166,12 @@ class StandardColumn : public Column
 		{
 		}
 
-		QVariant data( const Path *path, int role = Qt::DisplayRole ) const override
+		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			switch( role )
 			{
 				case Qt::DisplayRole :
-					return variantFromProperty( path );
+					return variantFromProperty( path, canceller );
 				default :
 					return QVariant();
 			}
@@ -187,7 +188,7 @@ class StandardColumn : public Column
 
 	private :
 
-		QVariant variantFromProperty( const Path *path ) const
+		QVariant variantFromProperty( const Path *path, const IECore::Canceller *canceller ) const
 		{
 			// shortcut for getting the name property directly
 			if( m_propertyName == g_namePropertyName )
@@ -202,7 +203,7 @@ class StandardColumn : public Column
 				}
 			}
 
-			IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName );
+			IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName, canceller );
 
 			if( !property )
 			{
@@ -261,11 +262,11 @@ class IconColumn : public Column
 		{
 		}
 
-		QVariant data( const Path *path, int role = Qt::DisplayRole ) const override
+		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( role == Qt::DecorationRole )
 			{
-				IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName );
+				IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName, canceller );
 				if( !property )
 				{
 					return QVariant();
@@ -349,7 +350,7 @@ class FileIconColumn : public Column
 		{
 		}
 
-		QVariant data( const Path *path, int role = Qt::DisplayRole ) const override
+		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( role == Qt::DecorationRole )
 			{
@@ -420,6 +421,7 @@ class PathModel : public QAbstractItemModel
 		{
 			connect( parent, &QTreeView::expanded, this, &PathModel::treeViewExpanded );
 			connect( parent, &QTreeView::collapsed, this, &PathModel::treeViewCollapsed );
+			parent->installEventFilter( this );
 			parent->setModel( this );
 			// Selection model doesn't exist until `setModel()` is called.
 			connect( parent->selectionModel(), &QItemSelectionModel::selectionChanged, this, &PathModel::selectionModelSelectionChanged );
@@ -660,7 +662,7 @@ class PathModel : public QAbstractItemModel
 
 		void waitForPendingUpdates()
 		{
-			startUpdate();
+			startUpdate( /* skipIfInvisible = */ false );
 			if( m_updateTask )
 			{
 				m_updateTask->wait();
@@ -813,12 +815,12 @@ class PathModel : public QAbstractItemModel
 				// call a method, because the timer will be cancelled if we are
 				// destroyed.
 				this,
-				&PathModel::startUpdate
+				[this] () { startUpdate(); }
 			);
 			m_updateScheduled = true;
 		}
 
-		void startUpdate()
+		void startUpdate( bool skipIfInvisible = true )
 		{
 			if( !m_updateScheduled )
 			{
@@ -829,6 +831,14 @@ class PathModel : public QAbstractItemModel
 				return;
 			}
 
+			if( skipIfInvisible && !static_cast<QTreeView *>( QObject::parent() )->isVisible() )
+			{
+				// No point in performing an update if we're not visible.
+				// Wait for `eventFilter()` to start the update in the next
+				// `QShowEvent`.
+				return;
+			}
+
 			// Cancel previous update and flush pending edits, as they
 			// may delete or modify the items being visited by the
 			// background task.
@@ -836,17 +846,37 @@ class PathModel : public QAbstractItemModel
 
 			// And then we can reschedule our update task.
 			m_updateTask = ParallelAlgo::callOnBackgroundThread(
-				/// \todo We need to pass an appropriate subject here
-				/// based on the root path, so that we can participate
-				/// in cancellation appropriately.
-				/* subject = */ nullptr,
+				getRoot()->cancellationSubject(),
 				[this] {
-					m_rootItem->update( this );
-					queueEdit(
-						[this] () {
-							finaliseRecursiveExpansion();
-						}
-					);
+					try
+					{
+						m_rootItem->update( this, Context::current()->canceller() );
+						queueEdit(
+							[this] () {
+								finaliseRecursiveExpansion();
+							}
+						);
+					}
+					catch( const IECore::Cancelled &e )
+					{
+						// Cancellation could be due to several causes :
+						//
+						// - A graph edit that will lead to
+						//   `Path::pathChangedSignal()` being emitted.
+						// - A graph edit that won't lead to
+						//   `Path::pathChangedSignal()` being emitted.
+						// - A member of this class cancelling an update to make
+						//   an edit and launch a new update.
+						// - The QTreeView being hidden.
+						//
+						// In all cases we need to perform an update eventually,
+						// and we can rely on `scheduleUpdate()` to deduplicate
+						// multiple requests, and `startUpdate()` to defer
+						// requests if we're hidden.
+						queueEdit(
+							[this] () { scheduleUpdate(); }
+						);
+					}
 				}
 			);
 			m_updateScheduled = false;
@@ -904,6 +934,29 @@ class PathModel : public QAbstractItemModel
 				return;
 			}
 			QObject::customEvent( event );
+		}
+
+		bool eventFilter( QObject *object, QEvent *event ) override
+		{
+			// We are installed as an event filter on our QTreeView
+			// so that we can react to it being shown and hidden.
+			assert( object == QObject::parent() );
+
+			switch( event->type() )
+			{
+				case QEvent::Show :
+					// Do any updates that have been requested
+					// while we were hidden.
+					startUpdate();
+					break;
+				case QEvent::Hide :
+					cancelUpdate();
+					break;
+				default :
+					break;
+			}
+
+			return false;
 		}
 
 		// A single item in the PathModel - stores a path and caches
@@ -971,13 +1024,13 @@ class PathModel : public QAbstractItemModel
 				m_selectedInSelectionModel = selected;
 			}
 
-			void update( PathModel *model )
+			void update( PathModel *model, const IECore::Canceller *canceller )
 			{
 				// We take a copy of `expandedPaths` and `selectedPaths` because
 				// they may be modified on the UI thread by `treeViewExpanded()`
 				// and `selectionModelSelectionChanged` while we run in the
 				// background.
-				updateWalk( model, model->m_rootPath.get(), IECore::PathMatcher( model->m_expandedPaths ), IECore::PathMatcher( model->m_selectedPaths ) );
+				updateWalk( model, model->m_rootPath.get(), IECore::PathMatcher( model->m_expandedPaths ), IECore::PathMatcher( model->m_selectedPaths ), canceller );
 			}
 
 			Item *parent()
@@ -1045,12 +1098,13 @@ class PathModel : public QAbstractItemModel
 					}
 				}
 
-				void updateWalk( PathModel *model, const Path *path, const IECore::PathMatcher &expandedPaths, const IECore::PathMatcher &selectedPaths )
+				void updateWalk( PathModel *model, const Path *path, const IECore::PathMatcher &expandedPaths, const IECore::PathMatcher &selectedPaths, const IECore::Canceller *canceller )
 				{
-					updateData( model, path );
+					IECore::Canceller::check( canceller );
+					updateData( model, path, canceller );
 					updateExpansion( model, path, expandedPaths );
 					updateSelection( model, path, selectedPaths );
-					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path );
+					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
 					PathPtr childPath = path->copy();
 					childPath->append( g_childPlaceholder );
 					/// \todo We could consider using `parallel_for()` here for improved
@@ -1062,7 +1116,7 @@ class PathModel : public QAbstractItemModel
 					for( const auto &child : *updatedChildItems )
 					{
 						childPath->set( childPath->names().size() - 1, child->name() );
-						child->updateWalk( model, childPath.get(), expandedPaths, selectedPaths );
+						child->updateWalk( model, childPath.get(), expandedPaths, selectedPaths, canceller );
 					}
 				}
 
@@ -1078,7 +1132,7 @@ class PathModel : public QAbstractItemModel
 				// Updates data and returns the value that should be used for sorting.
 				// This value is returned because the actual edit to `m_displayData` will not be
 				// complete until the queued edit is processed by the UI thread.
-				QVariant updateData( PathModel *model, const Path *path )
+				QVariant updateData( PathModel *model, const Path *path, const IECore::Canceller *canceller )
 				{
 					if( m_dataState == State::Clean || m_dataState == State::Unrequested )
 					{
@@ -1101,8 +1155,12 @@ class PathModel : public QAbstractItemModel
 						QVariant decorationData;
 						try
 						{
-							displayData = model->m_columns[i]->data( path, Qt::DisplayRole );
-							decorationData = model->m_columns[i]->data( path, Qt::DecorationRole );
+							displayData = model->m_columns[i]->data( path, Qt::DisplayRole, canceller );
+							decorationData = model->m_columns[i]->data( path, Qt::DecorationRole, canceller );
+						}
+						catch( const IECore::Cancelled &e )
+						{
+							throw;
 						}
 						catch( const std::exception &e )
 						{
@@ -1258,7 +1316,7 @@ class PathModel : public QAbstractItemModel
 				// Returns the updated ChildContainer. This will not be visible in the model
 				// until the queued edit is executed. It is returned so that we can update
 				// the not-yet-visible children in `updateWalk()`.
-				std::shared_ptr<ChildContainer> updateChildItems( PathModel *model, const Gaffer::Path *path )
+				std::shared_ptr<ChildContainer> updateChildItems( PathModel *model, const Gaffer::Path *path, const IECore::Canceller *canceller )
 				{
 					if( m_childItemsState == State::Unrequested || m_childItemsState == State::Clean )
 					{
@@ -1275,7 +1333,7 @@ class PathModel : public QAbstractItemModel
 					std::vector<Gaffer::PathPtr> children;
 					try
 					{
-						path->children( children );
+						path->children( children, canceller );
 					}
 					catch( const std::exception &e )
 					{
@@ -1316,7 +1374,7 @@ class PathModel : public QAbstractItemModel
 						{
 							requestIfUnrequested( childItem->m_dataState );
 							sortedIndices.push_back( SortablePair(
-								childItem->updateData( model, children[sortedIndices.size()].get() ),
+								childItem->updateData( model, children[sortedIndices.size()].get(), canceller ),
 								sortedIndices.size()
 							) );
 						}
