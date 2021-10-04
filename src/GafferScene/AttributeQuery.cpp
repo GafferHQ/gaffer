@@ -407,13 +407,13 @@ const Gaffer::ObjectPlug* AttributeQuery::internalObjectPlug() const
 
 bool AttributeQuery::isSetup() const
 {
-	return ( defaultPlug() != 0 ) && ( valuePlug() != 0 );
+	return ( defaultPlug() != nullptr ) && ( valuePlug() != nullptr );
 }
 
 bool AttributeQuery::canSetup( const Gaffer::ValuePlug* const plug ) const
 {
 	const bool success =
-		( plug != 0 ) &&
+		( plug != nullptr ) &&
 		( ! isSetup() ) &&
 		( canSetPlugType( static_cast< Gaffer::TypeId >( plug->typeId() ) ) );
 
@@ -464,7 +464,7 @@ void AttributeQuery::affects( const Gaffer::Plug* const input, AffectedPlugsCont
 	{
 		const Gaffer::ValuePlug* const vplug = valuePlug();
 
-		if( vplug != 0 )
+		if( vplug != nullptr )
 		{
 			addChildPlugsToAffectedOutputs( vplug, outputs );
 		}
@@ -492,7 +492,7 @@ void AttributeQuery::affects( const Gaffer::Plug* const input, AffectedPlugsCont
 		{
 			const Gaffer::ValuePlug* const vplug = valuePlug();
 
-			if( vplug != 0 )
+			if( vplug != nullptr )
 			{
 				outputs.push_back( correspondingPlug( dplug, input, vplug ) );
 			}
