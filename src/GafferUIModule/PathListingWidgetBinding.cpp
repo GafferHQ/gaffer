@@ -410,10 +410,16 @@ class PathModel : public QAbstractItemModel
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder ),
 				m_modifyingTreeViewExpansion( false ),
+				m_modifyingSelectionModel( false ),
+				m_scrollToNextSelected( false ),
+				m_expandNonLeafSelection( false ),
 				m_updateScheduled( false )
 		{
 			connect( parent, &QTreeView::expanded, this, &PathModel::treeViewExpanded );
 			connect( parent, &QTreeView::collapsed, this, &PathModel::treeViewCollapsed );
+			parent->setModel( this );
+			// Selection model doesn't exist until `setModel()` is called.
+			connect( parent->selectionModel(), &QItemSelectionModel::selectionChanged, this, &PathModel::selectionModelSelectionChanged );
 		}
 
 		~PathModel()
@@ -455,6 +461,13 @@ class PathModel : public QAbstractItemModel
 
 		void setRoot( PathPtr root )
 		{
+			if( m_rootPath && m_rootPath->names() != root->names() )
+			{
+				// We're changing directory. Our current selection won't make sense
+				// relative to the new directory, so we clear it.
+				setSelection( IECore::PathMatcher() );
+			}
+
 			// Cancel update and flush edit queue before we dirty
 			// the items they reference.
 			cancelUpdate();
@@ -503,6 +516,28 @@ class PathModel : public QAbstractItemModel
 		const IECore::PathMatcher &getExpansion() const
 		{
 			return m_expandedPaths;
+		}
+
+		// See comments for `setExpansion()`. The PathMatcher is our source of
+		// truth, not the QItemSelectionModel.
+		void setSelection( const IECore::PathMatcher &selectedPaths, bool scrollToFirst = true, bool expandNonLeaf = true )
+		{
+			cancelUpdate();
+
+			// Copy, so can't be modified without `setSelection()` call.
+			m_selectedPaths = IECore::PathMatcher( selectedPaths );
+			m_scrollToNextSelected = scrollToFirst;
+			m_expandNonLeafSelection = expandNonLeaf;
+
+			m_rootItem->dirtySelection();
+			selectionChanged();
+
+			scheduleUpdate();
+		}
+
+		const IECore::PathMatcher &getSelection() const
+		{
+			return m_selectedPaths;
 		}
 
 		void attachTester()
@@ -630,6 +665,7 @@ class PathModel : public QAbstractItemModel
 	signals :
 
 		void expansionChanged();
+		void selectionChanged();
 
 		///////////////////////////////////////////////////////////////////
 		// QAbstractItemModel implementation - this is what Qt cares about
@@ -873,7 +909,9 @@ class PathModel : public QAbstractItemModel
 					m_dataState( State::Unrequested ),
 					m_childItemsState( State::Unrequested ),
 					m_expansionDirty( true ),
-					m_expandedInTreeView( false )
+					m_expandedInTreeView( false ),
+					m_selectionDirty( true ),
+					m_selectedInSelectionModel( false )
 			{
 				static auto g_emptyChildItems = std::make_shared<PathModel::Item::ChildContainer>();
 				m_childItems = g_emptyChildItems;
@@ -908,12 +946,27 @@ class PathModel : public QAbstractItemModel
 				m_expandedInTreeView = expanded;
 			}
 
+			void dirtySelection()
+			{
+				m_selectionDirty = true;
+				for( const auto &child : *m_childItems )
+				{
+					child->dirtySelection();
+				}
+			}
+
+			void selectionModelSelectionChanged( bool selected )
+			{
+				m_selectedInSelectionModel = selected;
+			}
+
 			void update( PathModel *model )
 			{
-				// We take a copy of `expandedPaths` because it may be modified
-				// on the UI thread by `treeViewExpanded()` while we run in the
+				// We take a copy of `expandedPaths` and `selectedPaths` because
+				// they may be modified on the UI thread by `treeViewExpanded()`
+				// and `selectionModelSelectionChanged` while we run in the
 				// background.
-				updateWalk( model, model->m_rootPath.get(), IECore::PathMatcher( model->m_expandedPaths ) );
+				updateWalk( model, model->m_rootPath.get(), IECore::PathMatcher( model->m_expandedPaths ), IECore::PathMatcher( model->m_selectedPaths ) );
 			}
 
 			Item *parent()
@@ -981,17 +1034,24 @@ class PathModel : public QAbstractItemModel
 					}
 				}
 
-				void updateWalk( PathModel *model, const Path *path, const IECore::PathMatcher &expandedPaths )
+				void updateWalk( PathModel *model, const Path *path, const IECore::PathMatcher &expandedPaths, const IECore::PathMatcher &selectedPaths )
 				{
 					updateData( model, path );
 					updateExpansion( model, path, expandedPaths );
+					updateSelection( model, path, selectedPaths );
 					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path );
 					PathPtr childPath = path->copy();
 					childPath->append( g_childPlaceholder );
+					/// \todo We could consider using `parallel_for()` here for improved
+					/// performance. But given all the other modules vying for processor time
+					/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
+					/// a single core is reasonable. If we do use `parallel_for` we need to
+					/// consider the interaction with `m_scrollToNextSelected` because the order
+					/// we visit children in would no longer be deterministic.
 					for( const auto &child : *updatedChildItems )
 					{
 						childPath->set( childPath->names().size() - 1, child->name() );
-						child->updateWalk( model, childPath.get(), expandedPaths );
+						child->updateWalk( model, childPath.get(), expandedPaths, selectedPaths );
 					}
 				}
 
@@ -1119,6 +1179,60 @@ class PathModel : public QAbstractItemModel
 					}
 
 					m_expansionDirty = false;
+				}
+
+				void updateSelection( PathModel *model, const Gaffer::Path *path, const IECore::PathMatcher &selectedPaths )
+				{
+					if( !m_selectionDirty )
+					{
+						return;
+					}
+
+					const unsigned match = selectedPaths.match( path->names() );
+					const bool selected = match & IECore::PathMatcher::ExactMatch;
+
+					if( selected != m_selectedInSelectionModel )
+					{
+						const bool expand = model->m_expandNonLeafSelection && !path->isLeaf();
+						model->queueEdit(
+							[this, model, selected, expand] {
+								QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
+								QItemSelectionModel *selectionModel = treeView->selectionModel();
+								Private::ScopedAssignment<bool> assignment( model->m_modifyingSelectionModel, true );
+								const QModelIndex index = model->createIndex( m_row, 0, this );
+								selectionModel->select(
+									QItemSelection( index, index.sibling( index.row(), model->columnCount() - 1 ) ),
+									selected ? QItemSelectionModel::Select : QItemSelectionModel::Deselect
+								);
+								m_selectedInSelectionModel = selected;
+								if( selected )
+								{
+									if( expand )
+									{
+										treeView->setExpanded( index, true );
+									}
+									if( model->m_scrollToNextSelected )
+									{
+										treeView->scrollTo( index, QTreeView::EnsureVisible );
+										selectionModel->setCurrentIndex( index, QItemSelectionModel::Current );
+										model->m_scrollToNextSelected = false;
+									}
+								}
+							}
+						);
+					}
+
+					if(
+						( model->m_scrollToNextSelected || model->m_expandNonLeafSelection )
+						&&
+						( match & IECore::PathMatcher::DescendantMatch )
+					)
+					{
+						// Force an expansion so we'll have something to scroll to.
+						requestIfUnrequested( m_childItemsState );
+					}
+
+					m_selectionDirty = false;
 				}
 
 				// Returns the updated ChildContainer. This will not be visible in the model
@@ -1331,6 +1445,10 @@ class PathModel : public QAbstractItemModel
 				// Mirrors current Qt expansion status, because we can't query it
 				// directly in a threadsafe way.
 				bool m_expandedInTreeView;
+				bool m_selectionDirty;
+				// Mirrors current Qt selection status, because we can't query it
+				// directly in a threadsafe way.
+				bool m_selectedInSelectionModel;
 
 		};
 
@@ -1401,6 +1519,52 @@ class PathModel : public QAbstractItemModel
 			}
 		}
 
+		void selectionModelSelectionChanged( const QItemSelection &selected, const QItemSelection &deselected )
+		{
+			if( m_modifyingSelectionModel )
+			{
+				return;
+			}
+
+			bool changed = false;
+
+			const QModelIndexList selectedIndexes = selected.indexes();
+			if( !selectedIndexes.isEmpty() )
+			{
+				const QTreeView *treeView = static_cast<const QTreeView *>( QObject::parent() );
+				if( treeView->selectionMode() != QTreeView::ExtendedSelection )
+				{
+					// Single selection mode. Contents of `m_selectedPaths` may not be in
+					// `deselected` if the corresponding items don't currently exist in Qt.
+					m_selectedPaths.clear();
+				}
+
+				for( const auto &index : selectedIndexes )
+				{
+					static_cast<Item *>( index.internalPointer() )->selectionModelSelectionChanged( true );
+					changed |= m_selectedPaths.addPath(
+						namesForIndex( index )
+					);
+				}
+			}
+
+			for( const auto &index : deselected.indexes() )
+			{
+				static_cast<Item *>( index.internalPointer() )->selectionModelSelectionChanged( false );
+				changed |= m_selectedPaths.removePath(
+					namesForIndex( index )
+				);
+			}
+
+			// `changed == false` is possible if the path was already in
+			// `m_selectedPaths` but the async update to push it to the model
+			// hadn't completed before the user selected the item.
+			if( changed )
+			{
+				selectionChanged();
+			}
+		}
+
 		Gaffer::PathPtr m_rootPath;
 
 		Item::Ptr m_rootItem;
@@ -1412,6 +1576,12 @@ class PathModel : public QAbstractItemModel
 
 		IECore::PathMatcher m_expandedPaths;
 		bool m_modifyingTreeViewExpansion;
+
+		IECore::PathMatcher m_selectedPaths;
+		bool m_modifyingSelectionModel;
+		// Parameters used to update the Qt selection from `setSelection()`.
+		bool m_scrollToNextSelected;
+		bool m_expandNonLeafSelection;
 
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateScheduled;
@@ -1449,7 +1619,6 @@ void updateModel( uint64_t treeViewAddress, Gaffer::PathPtr path )
 	if( !model )
 	{
 		model = new PathModel( treeView );
-		treeView->setModel( model );
 	}
 	model->setRoot( path );
 }
@@ -1518,56 +1687,20 @@ void setSelection( uint64_t treeViewAddress, const IECore::PathMatcher &paths, b
 	IECorePython::ScopedGILRelease gilRelease;
 
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
-	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	if( !model )
-	{
-		return;
-	}
-
-	const std::vector<QModelIndex> indices = model->indicesForPaths( paths );
-	if( treeView->selectionMode() != QAbstractItemView::ExtendedSelection && indices.size() > 1 )
+	if( treeView->selectionMode() != QAbstractItemView::ExtendedSelection && paths.size() > 1 )
 	{
 		throw IECore::InvalidArgumentException( "More than one path selected" );
 	}
 
-	QItemSelection itemSelection;
-	for( const auto &modelIndex : indices )
-	{
-		if( !modelIndex.isValid() )
-		{
-			continue;
-		}
-		itemSelection.select( modelIndex, modelIndex.sibling( modelIndex.row(), model->columnCount() - 1 ) );
-		if( expandNonLeaf && !model->pathForIndex( modelIndex )->isLeaf() )
-		{
-			treeView->setExpanded( modelIndex, true );
-		}
-	}
-
-	QItemSelectionModel *selectionModel = treeView->selectionModel();
-	selectionModel->select( itemSelection, QItemSelectionModel::Select );
-
-	if( scrollToFirst && !indices.empty() )
-	{
-		treeView->scrollTo( indices[0], QTreeView::EnsureVisible );
-		selectionModel->setCurrentIndex( indices[0], QItemSelectionModel::Current );
-	}
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	model->setSelection( paths, scrollToFirst, expandNonLeaf );
 }
 
 IECore::PathMatcher getSelection( uint64_t treeViewAddress )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-
-	QModelIndexList selectedIndices = treeView->selectionModel()->selectedIndexes();
-	IECore::PathMatcher result;
-	for( const auto &index : selectedIndices )
-	{
-		result.addPath( model->pathForIndex( index )->names() );
-	}
-	return result;
+	return model->getSelection();
 }
 
 PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )

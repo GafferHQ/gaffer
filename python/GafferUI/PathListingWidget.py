@@ -109,18 +109,17 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		self._qtWidget().setSortingEnabled( sortable )
 
-		# install an empty model, so we an construct our selection model
-		# around it. we'll update the model contents shortly in setPath().
+		# Install an empty model. We'll update the model contents shortly in setPath().
+
 		_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), None )
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 
-		self.__selectionModel = QtCore.QItemSelectionModel( self._qtWidget().model() )
-		self._qtWidget().setSelectionModel( self.__selectionModel )
-		self.__selectionChangedSlot = Gaffer.WeakMethod( self.__selectionChanged )
-		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
+		# Set up selection and our various signals.
+
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.ExtendedSelection )
 
+		self._qtWidget().model().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		self._qtWidget().model().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
@@ -301,27 +300,10 @@ class PathListingWidget( GafferUI.Widget ) :
 	def setSelection( self, paths, scrollToFirst=True, expandNonLeaf=True ) :
 
 		assert( isinstance( paths, IECore.PathMatcher ) )
-
-		# If there are pending changes to our path model, we must perform
-		# them now, so that the model is valid with respect to the paths
-		# we're trying to select.
-		self.__updateLazily.flush( self )
-
-		assert( isinstance( paths, IECore.PathMatcher ) )
-
-		selectionModel = self._qtWidget().selectionModel()
-		selectionModel.selectionChanged.disconnect( self.__selectionChangedSlot )
-
-		selectionModel.clear()
-
 		_GafferUI._pathListingWidgetSetSelection(
 			GafferUI._qtAddress( self._qtWidget() ),
 			paths, scrollToFirst, expandNonLeaf
 		)
-
-		selectionModel.selectionChanged.connect( self.__selectionChangedSlot )
-
-		self.selectionChangedSignal()( self )
 
 	## Returns an `IECore.PathMatcher` object containing
 	# the currently selected paths.
@@ -441,10 +423,9 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return False
 
-	def __selectionChanged( self, selected, deselected ) :
+	def __selectionChanged( self ) :
 
 		self.selectionChangedSignal()( self )
-		return True
 
 	def __pathChanged( self, path ) :
 

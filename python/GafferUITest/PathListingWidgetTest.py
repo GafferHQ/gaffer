@@ -224,7 +224,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setExpandedPaths( e )
 		self.assertEqual( len( c ), 4 )
 
-	@unittest.expectedFailure
 	def testSelection( self ) :
 
 		d = {}
@@ -236,12 +235,13 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		with GafferUI.Window() as window :
-			w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
-		window.setVisible( True )
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getSelection().isEmpty() )
+
+		# Set selection. This should be immediately reflected in
+		# the `selectionChangedSignal` and the result of `getSelection()`.
 
 		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
 		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5", "/3/1" ] )
@@ -250,18 +250,43 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getSelection(), s )
 		self.assertEqual( len( cs ), 1 )
 
+		# But will not have been reflected into Qt until the completion of
+		# an async update.
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__selectionFromQt( w ), s )
+
+		# Delete a path that was selected.
+		d2 = d["2"]
 		del d["2"]
-		p.pathChangedSignal()( p )
-		self.waitForIdle( 100 )
-
-		s.removePath( "/2" )
-		s.removePath( "/2/5" )
+		self.__emitPathChanged( w )
+		# We don't expect this to affect the result of `getSelection()` because
+		# the selection state is independent of the model contents.
 		self.assertEqual( w.getSelection(), s )
+		# But it should affect what is mirrored in Qt.
+		s2 = IECore.PathMatcher( s )
+		s2.removePath( "/2" )
+		s2.removePath( "/2/5" )
+		self.assertEqual( self.__selectionFromQt( w ), s2 )
 
-		w.setPath( Gaffer.DictPath( {}, "/" ) )
-		self.assertTrue( w.getSelection().isEmpty() )
+		# If we reintroduce the deleted path, it should be selected again in Qt.
+		# This behaviour is particularly convenient when switching between
+		# different scenes in the HierarchyView, and matches the behaviour of
+		# the SceneGadget.
+		d["2"] = d2
+		self.__emitPathChanged( w )
+		self.assertEqual( self.__selectionFromQt( w ), s )
 
-	@unittest.expectedFailure
+		# Now try to set selection twice in succession, so the model doesn't have
+		# chance to finish one update before starting the next.
+
+		s1 = IECore.PathMatcher( [ "/9", "/9/10", "/8/6" ] )
+		s2 = IECore.PathMatcher( [ "/9", "/9/9", "/5/6", "3" ] )
+		w.setSelection( s1 )
+		w.setSelection( s2 )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__selectionFromQt( w ), s2 )
+
 	def testSelectionSignalFrequency( self ) :
 
 		d = {
@@ -281,9 +306,89 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( c ), 0 )
 
 		w.setSelectedPaths( [ Gaffer.DictPath( d, "/a" ), Gaffer.DictPath( d, "/b" ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( set( [ str( p ) for p in w.getSelectedPaths() ] ), set( [ "/a", "/b" ] ) )
 
 		self.assertEqual( len( c ), 1 )
+
+	def testSelectionByUser( self ) :
+
+		w = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+
+		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
+		model = w._qtWidget().model()
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Deselect ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+
+		# If we use the API to select a non-existent path, the next user
+		# selection should remove it, because we constructed the
+		# PathListingWidget with `allowMultipleSelection == False`.
+
+		w.setSelection( IECore.PathMatcher( [ "/nonExistent" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/nonExistent" ] ) )
+		self.assertEqual( len( cs ), 3 )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 4 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		# Likewise, if we used the API to select something valid, but it hasn't
+		# been synced to Qt yet, it should still be cleared by a user selection.
+
+		w.setSelection( IECore.PathMatcher() )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		w.setSelection( IECore.PathMatcher( [ "/a/b" ] ) )
+		self.assertEqual( len( cs ), 6 )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 7 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+	def testSetSelectionClearsSelectionByUser( self ) :
+
+		w = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "a" : 1, "b" : 2, "c" : 3 }, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		model = w._qtWidget().model()
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		w.setSelection( IECore.PathMatcher( [ "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( self.__selectionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
+
+		w._qtWidget().selectionModel().select( model.index( 1, 0 ), QtCore.QItemSelectionModel.Deselect ) # Equivalent to a click by the user
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+		w.setSelection( IECore.PathMatcher( [ "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( self.__selectionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
+
+	def testChangingDirectoryClearsSelection( self ) :
+
+		path = Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" )
+		widget = GafferUI.PathListingWidget( path )
+
+		widget.setSelection( IECore.PathMatcher( [ "/a" ] ) )
+		self.assertEqual( widget.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		path.append( "a" )
+		widget._PathListingWidget__updateLazily.flush( widget ) # See comments in `__emitPathChanged`
+		self.assertEqual( widget.getSelection(), IECore.PathMatcher() )
 
 	def testExpandedPathsWhenPathChanges( self ) :
 
@@ -401,7 +506,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setSortable( True )
 		self.assertTrue( w.getSortable() )
 
-	@unittest.expectedFailure
 	def testSetSelectedPathsAfterPathChange( self ) :
 
 		d = {}
@@ -412,6 +516,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		d["a"] = 10
 		p.pathChangedSignal()( p )
 		w.setSelectedPaths( [ p.copy().setFromString( "/a" ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 
 		s = w.getSelectedPaths()
 		self.assertEqual( len( s ), 1 )
@@ -848,6 +953,17 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				result.addPath(
 					str( widget._PathListingWidget__pathForIndex( index ) )
 				)
+
+		return result
+
+	@staticmethod
+	def __selectionFromQt( widget ) :
+
+		result = IECore.PathMatcher()
+		for index in widget._qtWidget().selectionModel().selectedIndexes() :
+			result.addPath(
+				str( widget._PathListingWidget__pathForIndex( index ) )
+			)
 
 		return result
 
