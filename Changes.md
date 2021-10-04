@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- PythonEditor : Fixed bug where the input widget didn't scroll to show the new line when <kbd>Return</kbd> was pressed.
 - TypedObjectPlug : Fixed bug in the serialisation of some `IECore.CompoundObject` values (the necessary `import IECore` was sometimes missing). This was particularly likely to affect CustomAttributes nodes where the `extraAttributes` plug was used.
 
 0.60.7.0 (relative to 0.60.6.1)
