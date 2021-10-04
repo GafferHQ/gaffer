@@ -6,6 +6,7 @@ Fixes
 
 - OSL Expression : Fixed crash due to exception in upstream computation.
 - OSLShader : Fixed loading of a further 85 MaterialX shaders which were renamed by https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/pull/909.
+- StandardNodeGadget : Changes to `nodeGadget:minWidth` metadata now take immediate effect in all GraphEditors.
 
 0.60.7.1 (relative to 0.60.7.0)
 ========

@@ -141,6 +141,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void nodeMetadataChanged( IECore::InternedString key );
 
 		bool updateUserColor();
+		void updateMinWidth();
 		void updatePadding();
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
