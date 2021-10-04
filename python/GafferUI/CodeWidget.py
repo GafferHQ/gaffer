@@ -234,6 +234,7 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 		try :
 			cursor.beginEditBlock()
 			cursor.insertText( "\n" + indent )
+			self._qtWidget().ensureCursorVisible()
 		finally :
 			cursor.endEditBlock()
 
