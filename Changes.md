@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- OSLShader : Fixed loading of `mx_invert_float` shaders. These were renamed to `mx_invert_float_float` in the OpenShadingLanguage project.
 - PythonEditor : Fixed bug where the input widget didn't scroll to show the new line when <kbd>Return</kbd> was pressed.
 - TypedObjectPlug : Fixed bug in the serialisation of some `IECore.CompoundObject` values (the necessary `import IECore` was sometimes missing). This was particularly likely to affect CustomAttributes nodes where the `extraAttributes` plug was used.
 
