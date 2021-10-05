@@ -43,6 +43,8 @@
 
 #include "boost/bind.hpp"
 
+#include <algorithm>
+
 #include <cassert>
 
 using namespace std;
@@ -55,7 +57,7 @@ using namespace Gaffer;
 //////////////////////////////////////////////////////////////////////////
 
 Animation::Key::Key( float time, float value, Animation::Interpolation interpolation )
-	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_interpolation( interpolation )
+	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_interpolation( interpolation ), m_active( false )
 {
 }
 
@@ -63,56 +65,207 @@ Animation::Key::~Key()
 {
 	// NOTE : parent reference should have been reset before the key is destructed
 
-	assert( m_parent == 0 );
+	assert( m_parent == nullptr );
 }
 
-void Animation::Key::setTime( float time )
+Animation::KeyPtr Animation::Key::setTime( float time )
 {
 	if( time == m_time )
 	{
-		return;
+		return KeyPtr();
 	}
+
+	KeyPtr clashingKey;
 
 	if( m_parent )
 	{
-		if( KeyPtr existingKey = m_parent->getKey( time ) )
+		// find any clashing active key.
+		clashingKey = m_parent->getKey( time );
+
+		// if key is active find first clashing inactive key
+		KeyPtr clashingInactiveKey;
+		if( m_active )
 		{
-			m_parent->removeKey( existingKey );
+			const CurvePlug::InactiveKeys::iterator it = m_parent->m_inactiveKeys.find( m_time );
+			if( it != m_parent->m_inactiveKeys.end() )
+			{
+				clashingInactiveKey = &( *it );
+			}
 		}
 
 		KeyPtr key = this;
 		const float previousTime = m_time;
-		CurvePlug *curve = m_parent;
+		const bool active = m_active;
+		CurvePlug* const curve = m_parent;
+
+#		define ASSERTCONTAINSKEY( KEY, CONTAINER, RESULT ) \
+			assert( ( RESULT ) == ( std::find_if( ( CONTAINER ).begin(), ( CONTAINER ).end(), \
+				[ key = &( *( KEY ) ) ]( const Key& k ) { return key == & k; } ) != ( CONTAINER ).end() ) );
+
 		Action::enact(
 			m_parent,
 			// Do
-			[ curve, time, key ] {
-				assert( key->m_parent == curve );
+			[ curve, time, previousTime, active, key, clashingKey, clashingInactiveKey ] {
+				// check state is as expected
+				key->throwIfStateNotAsExpected( curve, active, previousTime );
+				if( clashingInactiveKey )
+					clashingInactiveKey->throwIfStateNotAsExpected( curve, false, previousTime );
+				if( clashingKey )
+					clashingKey->throwIfStateNotAsExpected( curve, true, time );
+				// NOTE : If key is inactive,
+				//          remove key from inactive keys container
+				//        else if there is a clashing inactive key
+				//          remove the clashing inactive key from inactive keys container
+				//          replace key with clashing inactive key in active keys container
+				//        else
+				//          remove key from active keys container
+				//        set time of key
+				//        If there is a clashing active key,
+				//          replace clashing active key with key in active container
+				//          insert clashing key into inactive keys container
+				//        else insert key into active keys container
+				// NOTE : It is critical to the following code that the key comparison NEVER throws.
 				assert( key->m_hook.is_linked() );
-				curve->m_keys.erase( curve->m_keys.iterator_to( *key ) ); // NOTE : never throws or fails
+				if( ! active )
+				{
+					ASSERTCONTAINSKEY( key, curve->m_inactiveKeys, true )
+					curve->m_inactiveKeys.erase( curve->m_inactiveKeys.iterator_to( *key ) );
+					ASSERTCONTAINSKEY( key, curve->m_inactiveKeys, false )
+				}
+				else if( clashingInactiveKey )
+				{
+					assert( clashingInactiveKey->m_hook.is_linked() );
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_inactiveKeys, true )
+					curve->m_inactiveKeys.erase( curve->m_inactiveKeys.iterator_to( *clashingInactiveKey ) );
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_inactiveKeys, false )
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+					curve->m_keys.replace_node( curve->m_keys.iterator_to( *key ), *clashingInactiveKey );
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_keys, true )
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					clashingInactiveKey->m_active = true;
+				}
+				else
+				{
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+					curve->m_keys.erase( curve->m_keys.iterator_to( *key ) );
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+				}
 				assert( ! key->m_hook.is_linked() );
 				key->m_time = time;
-				assert( curve->m_keys.count( key->m_time ) == static_cast< CurvePlug::Keys::size_type >( 0 ) );
-				curve->m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
+				key->m_active = true;
+				if( clashingKey )
+				{
+					assert( clashingKey->m_hook.is_linked() );
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					ASSERTCONTAINSKEY( key, curve->m_inactiveKeys, false )
+					ASSERTCONTAINSKEY( clashingKey, curve->m_keys, true )
+					curve->m_keys.replace_node( curve->m_keys.iterator_to( *clashingKey ), *key );
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+					ASSERTCONTAINSKEY( clashingKey, curve->m_keys, false )
+					assert( ! clashingKey->m_hook.is_linked() );
+					curve->m_inactiveKeys.insert_before( curve->m_inactiveKeys.lower_bound( key->m_time ), *clashingKey );
+					ASSERTCONTAINSKEY( clashingKey, curve->m_inactiveKeys, true )
+					clashingKey->m_active = false;
+				}
+				else
+				{
+					assert( curve->m_keys.count( key->m_time ) == static_cast< CurvePlug::Keys::size_type >( 0 ) );
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					curve->m_keys.insert( *key );
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+				}
+
+				assert( ! key || ( key->m_active == true ) );
+				assert( ! clashingKey || ( clashingKey->m_active == false ) );
+				assert( ! clashingInactiveKey || ( clashingInactiveKey->m_active == true ) );
 				curve->propagateDirtiness( curve->outPlug() );
 			},
 			// Undo
-			[ curve, previousTime, key ] {
-				assert( key->m_parent == curve );
+			[ curve, time, previousTime, active, key, clashingKey, clashingInactiveKey ] {
+				// check state is as expected
+				key->throwIfStateNotAsExpected( curve, true, time );
+				if( clashingKey )
+					clashingKey->throwIfStateNotAsExpected( curve, false, time );
+				if( clashingInactiveKey )
+					clashingInactiveKey->throwIfStateNotAsExpected( curve, true, previousTime );
+				// NOTE : If there was a clashing active key
+				//          remove the clashing active key from inactive keys container
+				//          replace key with clashing active key in active keys container
+				//        else
+				//          remove key from active keys container
+				//        reset time of key
+				//        If key was inactive reinsert key into inactive container
+				//        else if there was a clashing inactive key
+				//          replace clashing inactive key with key in active container
+				//          reinsert clashing inactive key into inactive keys container
+				//        else reinsert key into active keys container
+				// NOTE : It is critical to the following code that the key comparison NEVER throws.
 				assert( key->m_hook.is_linked() );
-				curve->m_keys.erase( curve->m_keys.iterator_to( *key ) ); // NOTE : never throws or fails
+				if( clashingKey )
+				{
+					assert( clashingKey->m_hook.is_linked() );
+					ASSERTCONTAINSKEY( clashingKey, curve->m_inactiveKeys, true )
+					curve->m_inactiveKeys.erase( curve->m_inactiveKeys.iterator_to( *clashingKey ) );
+					ASSERTCONTAINSKEY( clashingKey, curve->m_inactiveKeys, false )
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+					curve->m_keys.replace_node( curve->m_keys.iterator_to( *key ), *clashingKey );
+					ASSERTCONTAINSKEY( clashingKey, curve->m_keys, true )
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					clashingKey->m_active = true;
+				}
+				else
+				{
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+					curve->m_keys.erase( curve->m_keys.iterator_to( *key ) );
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+				}
 				assert( ! key->m_hook.is_linked() );
 				key->m_time = previousTime;
-				assert( curve->m_keys.count( key->m_time ) == static_cast< CurvePlug::Keys::size_type >( 0 ) );
-				curve->m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
+				key->m_active = active;
+				if( ! key->m_active )
+				{
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					ASSERTCONTAINSKEY( key, curve->m_inactiveKeys, false )
+					curve->m_inactiveKeys.insert_before( curve->m_inactiveKeys.lower_bound( key->m_time ), *key );
+					ASSERTCONTAINSKEY( key, curve->m_inactiveKeys, true )
+				}
+				else if( clashingInactiveKey )
+				{
+					assert( clashingInactiveKey->m_hook.is_linked() );
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					ASSERTCONTAINSKEY( key, curve->m_inactiveKeys, false )
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_keys, true )
+					curve->m_keys.replace_node( curve->m_keys.iterator_to( *clashingInactiveKey ), *key );
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_keys, false )
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_inactiveKeys, false )
+					curve->m_inactiveKeys.insert_before( curve->m_inactiveKeys.lower_bound( key->m_time ), *clashingInactiveKey );
+					ASSERTCONTAINSKEY( clashingInactiveKey, curve->m_inactiveKeys, true )
+					clashingInactiveKey->m_active = false;
+				}
+				else
+				{
+					assert( curve->m_keys.count( key->m_time ) == static_cast< CurvePlug::Keys::size_type >( 0 ) );
+					ASSERTCONTAINSKEY( key, curve->m_keys, false )
+					curve->m_keys.insert( *key );
+					ASSERTCONTAINSKEY( key, curve->m_keys, true )
+				}
+
+				assert( ! key || ( key->m_active == active ) );
+				assert( ! clashingKey || ( clashingKey->m_active == true ) );
+				assert( ! clashingInactiveKey || ( clashingInactiveKey->m_active == false ) );
 				curve->propagateDirtiness( curve->outPlug() );
 			}
 		);
+
+#		undef ASSERTCONTAINSKEY
 	}
 	else
 	{
 		m_time = time;
 	}
+
+	return clashingKey;
 }
 
 void Animation::Key::setValue( float value )
@@ -182,6 +335,11 @@ void Animation::Key::setInterpolation( Animation::Interpolation interpolation )
 	}
 }
 
+bool Animation::Key::isActive() const
+{
+	return m_active;
+}
+
 bool Animation::Key::operator == ( const Key &rhs ) const
 {
 	return
@@ -205,11 +363,35 @@ const Animation::CurvePlug *Animation::Key::parent() const
 	return m_parent;
 }
 
+void Animation::Key::throwIfStateNotAsExpected( const Animation::CurvePlug* const curve, const bool active, const float time ) const
+{
+	// check that state is as expected
+	//
+	// NOTE : state may be changed outside the undo system and therefore not be as expected in
+	//        which case throw an appropriate exception so user is informed of invalid api usage.
+
+	if( m_parent != curve )
+	{
+		throw IECore::Exception( "Key parent changed outside undo system." );
+	}
+
+	if( m_active != active )
+	{
+		throw IECore::Exception( "Key active changed outside undo system." );
+	}
+
+	if( m_time != time )
+	{
+		throw IECore::Exception( "Key time changed outside undo system." );
+	}
+}
+
 void Animation::Key::Dispose::operator()( Animation::Key* const key ) const
 {
-	assert( key != 0 );
+	assert( key != nullptr );
 
 	key->m_parent = nullptr;
+	key->m_active = false;
 	key->removeRef();
 }
 
@@ -219,8 +401,10 @@ void Animation::Key::Dispose::operator()( Animation::Key* const key ) const
 
 GAFFER_PLUG_DEFINE_TYPE( Animation::CurvePlug );
 
-Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, unsigned flags )
-	:	ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
+Animation::CurvePlug::CurvePlug( const std::string &name, const Direction direction, const unsigned flags )
+: ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
+, m_keys()
+, m_inactiveKeys()
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
@@ -228,17 +412,19 @@ Animation::CurvePlug::CurvePlug( const std::string &name, Direction direction, u
 Animation::CurvePlug::~CurvePlug()
 {
 	m_keys.clear_and_dispose( Key::Dispose() );
+	m_inactiveKeys.clear_and_dispose( Key::Dispose() );
 }
 
-void Animation::CurvePlug::addKey( const KeyPtr &key )
+Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )
 {
-	if( Key *previousKey = getKey( key->getTime() ) )
+	const KeyPtr clashingKey = getKey( key->m_time );
+
+	if( clashingKey )
 	{
-		if( key == previousKey )
+		if( key == clashingKey )
 		{
-			return;
+			return KeyPtr();
 		}
-		removeKey( previousKey );
 	}
 
 	if( key->m_parent )
@@ -255,27 +441,96 @@ void Animation::CurvePlug::addKey( const KeyPtr &key )
 
 	const float time = key->m_time;
 
+#	define ASSERTCONTAINSKEY( KEY, CONTAINER, RESULT ) \
+		assert( ( RESULT ) == ( std::find_if( ( CONTAINER ).begin(), ( CONTAINER ).end(), \
+			[ key = &( *( KEY ) ) ]( const Key& k ) { return key == & k; } ) != ( CONTAINER ).end() ) );
+
 	Action::enact(
 		this,
 		// Do
-		[ this, key, time ] {
-			if( key->m_time != time ) throw IECore::Exception( "Key time changed outside undo system." );
-			assert( key->m_parent == 0 );
+		[ this, key, clashingKey, time ] {
+			// check state is as expected
+			key->throwIfStateNotAsExpected( nullptr, false, time );
+			if( clashingKey )
+				clashingKey->throwIfStateNotAsExpected( this, true, time );
+			// NOTE : If there is a clashing key,
+			//          replace clashing key with key in active container
+			//          insert clashing key into inactive keys container
+			//        else insert key into active keys container
+			// NOTE : It is critical to the following code that the key comparison NEVER throws.
 			assert( ! key->m_hook.is_linked() );
-			assert( m_keys.count( key->m_time ) == static_cast< Keys::size_type >( 0 ) );
-			m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
+			if( clashingKey )
+			{
+				assert( clashingKey->m_hook.is_linked() );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				ASSERTCONTAINSKEY( key, m_inactiveKeys, false )
+				ASSERTCONTAINSKEY( clashingKey, m_keys, true )
+				m_keys.replace_node( m_keys.iterator_to( *clashingKey ), *key );
+				ASSERTCONTAINSKEY( key, m_keys, true )
+				ASSERTCONTAINSKEY( clashingKey, m_keys, false )
+				m_inactiveKeys.insert_before( m_inactiveKeys.lower_bound( time ), *clashingKey );
+				ASSERTCONTAINSKEY( clashingKey, m_inactiveKeys, true )
+				clashingKey->m_active = false;
+			}
+			else
+			{
+				assert( m_keys.count( key->m_time ) == static_cast< Keys::size_type >( 0 ) );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				m_keys.insert( *key );
+				ASSERTCONTAINSKEY( key, m_keys, true )
+			}
 			key->m_parent = this; // NOTE : never throws or fails
 			key->addRef();        // NOTE : take ownership
+			key->m_active = true;
 			propagateDirtiness( outPlug() );
 		},
 		// Undo
-		[ this, key ] {
-			assert( key->m_parent == this );
+		[ this, key, clashingKey, time ] {
+			// check state is as expected
+			key->throwIfStateNotAsExpected( this, true, time );
+			if( clashingKey )
+				clashingKey->throwIfStateNotAsExpected( this, false, time );
+			// NOTE : If there was a clashing key
+			//          remove the clashing key from inactive keys container
+			//          replace key with clashing key in active keys container
+			//        else
+			//          remove key from active keys container
+			// NOTE : It is critical to the following code that the key comparison NEVER throws.
 			assert( key->m_hook.is_linked() );
-			m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
+			if( clashingKey )
+			{
+				assert( clashingKey->m_hook.is_linked() );
+				ASSERTCONTAINSKEY( clashingKey, m_inactiveKeys, true )
+				m_inactiveKeys.erase( m_inactiveKeys.iterator_to( *clashingKey ) );
+				ASSERTCONTAINSKEY( clashingKey, m_inactiveKeys, false )
+				ASSERTCONTAINSKEY( key, m_keys, true )
+				m_keys.replace_node( m_keys.iterator_to( *key ), *clashingKey );
+				Key::Dispose()( key.get() );
+				ASSERTCONTAINSKEY( clashingKey, m_keys, true )
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				clashingKey->m_active = true;
+			}
+			else
+			{
+				assert( key->m_active == true );
+				ASSERTCONTAINSKEY( key, m_keys, true )
+				m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+			}
 			propagateDirtiness( outPlug() );
 		}
 	);
+
+#	undef ASSERTCONTAINSKEY
+
+	// remove the clashing key
+
+	if( clashingKey && removeActiveClashing )
+	{
+		removeKey( clashingKey );
+	}
+
+	return clashingKey;
 }
 
 bool Animation::CurvePlug::hasKey( float time ) const
@@ -312,27 +567,123 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 
 	const float time = key->m_time;
 
+	// if key is active find first clashing inactive key
+	KeyPtr clashingKey;
+	if( key->m_active )
+	{
+		const InactiveKeys::iterator it = m_inactiveKeys.find( key->m_time );
+		if( it != m_inactiveKeys.end() )
+		{
+			clashingKey = &( *it );
+		}
+	}
+
+	const bool active = key->m_active;
+
+#	define ASSERTCONTAINSKEY( KEY, CONTAINER, RESULT ) \
+		assert( ( RESULT ) == ( std::find_if( ( CONTAINER ).begin(), ( CONTAINER ).end(), \
+			[ key = &( *( KEY ) ) ]( const Key& k ) { return key == & k; } ) != ( CONTAINER ).end() ) );
+
 	Action::enact(
 		this,
 		// Do
-		[ this, key ] {
-			assert( key->m_parent == this );
+		[ this, key, clashingKey, active, time ] {
+			// check state is as expected
+			key->throwIfStateNotAsExpected( this, active, time );
+			if( clashingKey )
+				clashingKey->throwIfStateNotAsExpected( this, false, time );
+			// NOTE : If key is inactive,
+			//          remove key from inactive keys container
+			//        else if there is a clashing key
+			//          remove the clashing key from inactive keys container
+			//          replace key with clashing key in active keys container
+			//        else
+			//          remove key from active keys container
+			// NOTE : It is critical to the following code that the key comparison NEVER throws.
 			assert( key->m_hook.is_linked() );
-			m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
+			if( ! active )
+			{
+				ASSERTCONTAINSKEY( key, m_inactiveKeys, true )
+				m_inactiveKeys.erase_and_dispose( m_inactiveKeys.iterator_to( *key ), Key::Dispose() );
+				ASSERTCONTAINSKEY( key, m_inactiveKeys, false )
+			}
+			else if( clashingKey )
+			{
+				assert( clashingKey->m_hook.is_linked() );
+				ASSERTCONTAINSKEY( clashingKey, m_inactiveKeys, true )
+				m_inactiveKeys.erase( m_inactiveKeys.iterator_to( *clashingKey ) );
+				ASSERTCONTAINSKEY( clashingKey, m_inactiveKeys, false )
+				ASSERTCONTAINSKEY( key, m_keys, true )
+				m_keys.replace_node( m_keys.iterator_to( *key ), *clashingKey );
+				Key::Dispose()( key.get() );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				ASSERTCONTAINSKEY( clashingKey, m_keys, true )
+				clashingKey->m_active = true;
+			}
+			else
+			{
+				ASSERTCONTAINSKEY( key, m_keys, true )
+				m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+			}
 			propagateDirtiness( outPlug() );
 		},
 		// Undo
-		[ this, key, time ] {
-			if( key->m_time != time ) throw IECore::Exception( "Key time changed outside undo system." );
-			assert( key->m_parent == 0 );
+		[ this, key, clashingKey, active, time ] {
+			// check state is as expected
+			key->throwIfStateNotAsExpected( nullptr, false, time );
+			if( clashingKey )
+				clashingKey->throwIfStateNotAsExpected( this, true, time );
+			// NOTE : If key was inactive reinsert key into inactive container
+			//        else if there was a clashing key
+			//          replace clashing key with key in active container
+			//          reinsert clashing key into inactive keys container
+			//        else reinsert key into active keys container
+			// NOTE : It is critical to the following code that the key comparison NEVER throws.
 			assert( ! key->m_hook.is_linked() );
-			assert( m_keys.count( key->m_time ) == static_cast< Keys::size_type >( 0 ) );
-			m_keys.insert( *key ); // NOTE : never throws or fails as long as no key with same time in keys
+			if( ! active )
+			{
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				ASSERTCONTAINSKEY( key, m_inactiveKeys, false )
+				m_inactiveKeys.insert_before( m_inactiveKeys.lower_bound( time ), *key );
+				ASSERTCONTAINSKEY( key, m_inactiveKeys, true )
+			}
+			else if( clashingKey )
+			{
+				assert( clashingKey->m_hook.is_linked() );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				ASSERTCONTAINSKEY( key, m_inactiveKeys, false )
+				ASSERTCONTAINSKEY( clashingKey, m_keys, true )
+				m_keys.replace_node( m_keys.iterator_to( *clashingKey ), *key );
+				ASSERTCONTAINSKEY( key, m_keys, true )
+				ASSERTCONTAINSKEY( clashingKey, m_keys, false )
+				m_inactiveKeys.insert_before( m_inactiveKeys.lower_bound( time ), *clashingKey );
+				ASSERTCONTAINSKEY( clashingKey, m_inactiveKeys, true )
+				clashingKey->m_active = false;
+			}
+			else
+			{
+				assert( m_keys.count( key->m_time ) == static_cast< Keys::size_type >( 0 ) );
+				ASSERTCONTAINSKEY( key, m_keys, false )
+				m_keys.insert( *key );
+				ASSERTCONTAINSKEY( key, m_keys, true )
+			}
 			key->m_parent = this; // NOTE : never throws or fails
 			key->addRef();        // NOTE : take ownership
+			key->m_active = active;
 			propagateDirtiness( outPlug() );
 		}
 	);
+
+#	undef ASSERTCONTAINSKEY
+}
+
+void Animation::CurvePlug::removeInactiveKeys()
+{
+	for( InactiveKeys::iterator it = m_inactiveKeys.begin(), itEnd = m_inactiveKeys.end(); it != itEnd; )
+	{
+		removeKey( &( *it++ ) );
+	}
 }
 
 Animation::Key *Animation::CurvePlug::closestKey( float time )

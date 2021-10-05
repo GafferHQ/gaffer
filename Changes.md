@@ -42,6 +42,12 @@ API
 - ScenePath : Added support for cancellation of calls to `isValid()` and `children()`.
 - FileSystemPath : Added support for cancellation of calls to `children()` and `property()`.
 - PathFilter : Added support for cancellation of calls to `filter()`.
+- Animation :
+  - `curve.addKey()` and `key.setTime()` now return active clashing key
+  - `curve.addKey()` now has optional remove parameter that defaults to true, if false active clashing key is not removed and becomes inactive.
+  - `key.setTime()` will not remove active clashing key, instead it becomes become inactive. inactive key at old time becomes active.
+  - Added `curve.removeInactiveKeys()` function, removes all the inactive keys parented to a curve.
+  - Added `key.isActive()` function, returns true if key is parented to curve and is the active key at its current time.
 
 Breaking Changes
 ----------------

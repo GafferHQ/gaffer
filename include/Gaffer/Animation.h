@@ -82,17 +82,29 @@ class GAFFER_API Animation : public ComputeNode
 
 				IE_CORE_DECLAREMEMBERPTR( Key )
 
+				/// Get current time of key.
 				float getTime() const { return m_time; };
-				/// \undoable
-				void setTime( float time );
 
+				/// Set time of key. If key is parented it will become the active key of its parent
+				/// curve at the specified time. If parent curve has an existing active key at the
+				/// specified time, that key will remain parented to curve, become inactive and be
+				/// returned by this function. The parent curve's inactive keys are inspected and
+				/// the last key to become inactive, at the old time, is made active.
+				/// \undoable
+				Key::Ptr setTime( float time );
+
+				/// Get current value of key.
 				float getValue() const  { return m_value; };
+				/// Set the value of the key.
 				/// \undoable
 				void setValue( float value );
 
 				Interpolation getInterpolation() const;
 				/// \undoable
 				void setInterpolation( Interpolation interpolation );
+
+				/// Is the key currently active? The key is considered inactive whilst unparented.
+				bool isActive() const;
 
 				bool operator == ( const Key &rhs ) const;
 				bool operator != ( const Key &rhs ) const;
@@ -103,6 +115,8 @@ class GAFFER_API Animation : public ComputeNode
 			private :
 
 				friend class CurvePlug;
+
+				void throwIfStateNotAsExpected( const CurvePlug*, bool, float ) const;
 
 				typedef boost::intrusive::avl_set_member_hook<
 					boost::intrusive::link_mode<
@@ -123,6 +137,7 @@ class GAFFER_API Animation : public ComputeNode
 				float m_time;
 				float m_value;
 				Interpolation m_interpolation;
+				bool m_active;
 
 		};
 
@@ -144,30 +159,66 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
 				~CurvePlug() override;
 
+				/// Adds specified key to curve, if key is parented to another curve it is removed
+				/// from the other curve. If the key has already been added to the curve, there is
+				/// no affect. If the curve already has an active key with the same time, then if
+				/// removeActiveClashing is true that key will be removed from the curve and returned
+				/// otherwise that key will remain parented to the curve, become inactive and be returned.
+				/// The new key will be the active key at its time.
 				/// \undoable
-				void addKey( const KeyPtr &key );
+				KeyPtr addKey( const KeyPtr &key, bool removeActiveClashing = true );
+
+				/// Does the curve have a key at the specified time?
 				bool hasKey( float time ) const;
+
+				/// Get the active key at the specified time, returns nullptr if no key with specified
+				/// time.
 				Key *getKey( float time );
+				/// Get the active key at the specified time, returns nullptr if no key with specified
+				/// time. (const access)
 				const Key *getKey( float time ) const;
-				// /// \undoable
+
+				/// Removes specified key from curve, if key is not parented to curve an exception
+				/// is thrown. If key is active, after it has been removed from curve, the inactive
+				/// keys are inspected and the last key to become inactive, with the same time as
+				/// the key being removed, is made active.
+				/// \undoable
 				void removeKey( const KeyPtr &key );
 
+				/// Removes all inactive keys from curve.
+				/// \undoable
+				void removeInactiveKeys();
+
+				/// Get the closest active key to the specified time.
 				Key *closestKey( float time );
+				/// Get the closest active key to the specified time. (const access)
 				const Key *closestKey( float time ) const;
 
+				/// Get the closest active key to the specified time, search is limited to specified
+				/// maxDistance.
 				Key *closestKey( float time, float maxDistance );
+				/// Get the closest active key to the specified time, search is limited to specified
+				/// maxDistance. (const access)
 				const Key *closestKey( float time, float maxDistance ) const;
 
+				/// Get the closest active key with time less than the specified time.
 				Key *previousKey( float time );
+				/// Get the closest active key with time less than the specified time. (const access)
 				const Key *previousKey( float time ) const;
 
+				/// Get the closest active key with time greater than the specified time.
 				Key *nextKey( float time );
+				/// Get the closest active key with time greater than the specified time. (const access)
 				const Key *nextKey( float time ) const;
 
+				/// iterator to start of range of active keys
 				KeyIterator begin();
+				/// iterator to end of range of active keys
 				KeyIterator end();
 
+				/// iterator to start of range of active keys. (const access)
 				ConstKeyIterator begin() const;
+				/// iterator to end of range of active keys. (const access)
 				ConstKeyIterator end() const;
 
 				float evaluate( float time ) const;
@@ -187,15 +238,17 @@ class GAFFER_API Animation : public ComputeNode
 				struct TimeKey
 				{
 					typedef float type;
-					type operator()( const Animation::Key& key ) const;
+					type operator()( const Animation::Key& key ) const; // NOTE : must NEVER throw
 				};
 
-				typedef boost::intrusive::avl_set< Key,
-					boost::intrusive::member_hook< Key, Key::Hook, &Key::m_hook >,
-					boost::intrusive::key_of_value< TimeKey > > Keys;
+				typedef boost::intrusive::member_hook< Key, Key::Hook, &Key::m_hook > KeyHook;
+				typedef boost::intrusive::key_of_value< TimeKey > KeyOfValue;
+
+				typedef boost::intrusive::avl_set< Key, KeyHook, KeyOfValue > Keys;
+				typedef boost::intrusive::avl_multiset< Key, KeyHook, KeyOfValue > InactiveKeys;
 
 				Keys m_keys;
-
+				InactiveKeys m_inactiveKeys;
 		};
 
 		IE_CORE_DECLAREPTR( CurvePlug );
