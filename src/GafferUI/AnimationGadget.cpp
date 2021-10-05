@@ -544,6 +544,23 @@ void AnimationGadget::removeKeyframes()
 	m_selectedKeys.clear();
 }
 
+void AnimationGadget::removeInactiveKeyframes()
+{
+	if( m_selectedKeys.empty() )
+	{
+		return;
+	}
+
+	auto first = m_editablePlugs->member( 0 );
+	ScriptNode *scriptNode = IECore::runTimeCast<Animation::CurvePlug>( first )->ancestor<ScriptNode>();
+	UndoScope undoEnabled( scriptNode, UndoScope::Enabled, undoMergeGroup() );
+
+	for( Gaffer::StandardSet::Iterator it = m_editablePlugs->begin(), itEnd = m_editablePlugs->end(); it != itEnd; ++it )
+	{
+		IECore::assertedStaticCast< Animation::CurvePlug >( &( *it ) )->removeInactiveKeys();
+	}
+}
+
 void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 {
 	if( m_selectedKeys.empty() )
@@ -561,76 +578,29 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	if( m_moveAxis != MoveAxis::Y )
 	{
 		// Update offset to make sure that the closest key ends up on an integer frame
-		float originalTime = m_originalKeyValues[m_snappingClosestKey.get()].first;
+		float originalTime = m_originalKeyValues[ m_snappingClosestKey.get() ].first;
 		globalOffset.x = snapTimeToFrame( m_context->getFramesPerSecond(), originalTime + globalOffset.x ) - originalTime;
 	}
 
-	// When moving selected plugs, we need to make sure we're not temporarily
-	// dragging a plug over another selected plug (which would then lose its
-	// parent). To avoid that, we process Keys in an order such that we free up
-	// frames first.
-	std::vector<Animation::Key *> selectedKeys;
-	selectedKeys.reserve( m_selectedKeys.size() );
-	for( auto it = m_selectedKeys.begin(); it != m_selectedKeys.end(); ++it )
+	// move selected keys
+	for( SelectedKeys::iterator it = m_selectedKeys.begin(), itEnd = m_selectedKeys.end(); it != itEnd; ++it )
 	{
-		selectedKeys.push_back( it->get() );
-	}
-	const bool reverseOrder = globalOffset.x >= 0;
-	std::sort(
-		selectedKeys.begin(), selectedKeys.end(),
-		[reverseOrder]( const Animation::Key *lhs, const Animation::Key *rhs ) {
-			if( reverseOrder )
-			{
-				return rhs->getTime() < lhs->getTime();
-			}
-			return lhs->getTime() < rhs->getTime();
-		}
-	);
-
-	for( auto it = selectedKeys.begin(); it != selectedKeys.end(); ++it )
-	{
-		Animation::Key *key = *it;
+		Animation::KeyPtr key = *it;
 
 		if( m_moveAxis != MoveAxis::X )
 		{
-			key->setValue( m_originalKeyValues[key].second + globalOffset.y );
+			key->setValue( m_originalKeyValues[ key.get() ].second + globalOffset.y );
 		}
 
 		// Compute new time and make sure that we eliminate floating point precision
 		// issues that could cause keys landing a little bit off integer frames for
 		// keys that are meant to snap to frames.
-		float newTime = m_originalKeyValues[key].first + globalOffset.x;
+		float newTime = m_originalKeyValues[ key.get() ].first + globalOffset.x;
 		newTime = snapTimeToFrame( m_context->getFramesPerSecond(), newTime, 0.004 );
 
-		if( m_moveAxis != MoveAxis::Y && newTime != key->getTime() )
+		if( m_moveAxis != MoveAxis::Y )
 		{
-			// If a key already exists on the new frame, we overwrite it, but
-			// store it for reinserting should the drag continue and the frame
-			// free up again.
-			Animation::KeyPtr clashingKey = key->parent()->closestKey( newTime, 0.004 );
-			if( clashingKey && clashingKey != key )
-			{
-				m_overwrittenKeys.emplace( clashingKey, clashingKey->parent() );
-				clashingKey->parent()->removeKey( clashingKey );
-			}
-
 			key->setTime( newTime );
-		}
-	}
-
-	// Check if any of the previously overwritten keys can be inserted back into the curve
-	for( auto it = m_overwrittenKeys.begin(); it != m_overwrittenKeys.end(); )
-	{
-		Animation::KeyPtr clashingKey = it->second->closestKey( it->first->getTime(), 0.004 ); // \todo: use proper ticks
-
-		if( clashingKey )
-		{
-			++it;
-		}
-		else
-		{
-			it->second->addKey( it->first );
-			it = m_overwrittenKeys.erase( it );
 		}
 	}
 }
@@ -816,6 +786,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			}
 
 			m_selectedKeys.insert( key );
+			removeInactiveKeyframes();
 			m_dragMode = DragMode::Moving;
 		}
 		else if( ( onTimeAxis( mouseRasterPosition.y ) && !onValueAxis( mouseRasterPosition.x ) ) || frameIndicatorUnderMouse( event.line ) )
@@ -1071,7 +1042,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	}
 	case DragMode::Moving :
 	{
-		m_overwrittenKeys.clear();
+		removeInactiveKeyframes();
 		m_originalKeyValues.clear();
 		m_mergeGroupId++;
 		break;

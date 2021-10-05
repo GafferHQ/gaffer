@@ -91,6 +91,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		/// \undoable
 		void removeKeyframes();
 		/// \undoable
+		void removeInactiveKeyframes();
+		/// \undoable
 		void moveKeyframes( const Imath::V2f currentDragOffset );
 
 		void frame();
@@ -138,7 +140,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::StandardSetPtr m_visiblePlugs;
 		Gaffer::StandardSetPtr m_editablePlugs;
 
-		std::set<Gaffer::Animation::KeyPtr> m_selectedKeys;
+		typedef std::set< Gaffer::Animation::KeyPtr > SelectedKeys;
+		SelectedKeys m_selectedKeys;
 		std::map<const Gaffer::Animation::Key*, std::pair<float, float> > m_originalKeyValues;
 
 		Imath::V2f m_dragStartPosition;
@@ -167,8 +170,6 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::Animation::KeyPtr m_snappingClosestKey;
 		Gaffer::Animation::KeyPtr m_highlightedKey;
 		Gaffer::Animation::CurvePlugPtr m_highlightedCurve;
-
-		std::set<std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::CurvePlugPtr> > m_overwrittenKeys;
 
 		int m_mergeGroupId;
 

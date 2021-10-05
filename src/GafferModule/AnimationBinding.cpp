@@ -59,10 +59,10 @@ Animation::CurvePlugPtr acquire( ValuePlug *plug )
 	return Animation::acquire( plug );
 }
 
-void setTime( Animation::Key &k, float time )
+Animation::KeyPtr setTime( Animation::Key &k, float time )
 {
 	ScopedGILRelease gilRelease;
-	k.setTime( time );
+	return k.setTime( time );
 }
 
 void setValue( Animation::Key &k, float value )
@@ -97,16 +97,22 @@ std::string keyRepr( const Animation::Key &k )
 	);
 };
 
-void addKey( Animation::CurvePlug &p, const Animation::KeyPtr &k )
+Animation::KeyPtr addKey( Animation::CurvePlug &p, const Animation::KeyPtr &k, const bool removeActiveClashing )
 {
 	ScopedGILRelease gilRelease;
-	p.addKey( k );
+	return p.addKey( k, removeActiveClashing );
 }
 
 void removeKey( Animation::CurvePlug &p, const Animation::KeyPtr &k )
 {
 	ScopedGILRelease gilRelease;
 	p.removeKey( k );
+}
+
+void removeInactiveKeys( Animation::CurvePlug &p )
+{
+	ScopedGILRelease gilRelease;
+	p.removeInactiveKeys();
 }
 
 class CurvePlugSerialiser : public ValuePlugSerialiser
@@ -161,6 +167,7 @@ void GafferModule::bindAnimation()
 		.def( "setValue", &setValue )
 		.def( "getInterpolation", &Animation::Key::getInterpolation )
 		.def( "setInterpolation", &setInterpolation )
+		.def( "isActive", &Animation::Key::isActive )
 		.def( "__repr__", &keyRepr )
 		.def( self == self )
 		.def( self != self )
@@ -180,7 +187,7 @@ void GafferModule::bindAnimation()
 				)
 			)
 		)
-		.def( "addKey", &addKey )
+		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
 		.def(
 			"getKey",
@@ -188,6 +195,7 @@ void GafferModule::bindAnimation()
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
 		.def( "removeKey", &removeKey )
+		.def( "removeInactiveKeys", &removeInactiveKeys )
 		.def(
 			"closestKey",
 			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::closestKey,
