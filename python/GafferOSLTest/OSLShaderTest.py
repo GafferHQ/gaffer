@@ -1098,5 +1098,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		shader.loadShader( "Surface/Constant" )
 		self.assertEqual( len( shader["out"].children() ), 0 )
 
+	def testLoadMxInvertFloat( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "mxInvert-0.59.8.0.gfr" ) )
+		s.load()
+
+		self.assertEqual( s["mx_invert_float"]["parameters"]["in"].getValue(), 1 )
+		self.assertEqual( s["mx_invert_float"]["parameters"]["amount"].getValue(), 2 )
+
 if __name__ == "__main__":
 	unittest.main()

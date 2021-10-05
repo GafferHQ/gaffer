@@ -51,6 +51,14 @@ def __loadShaderWrapper( originalLoadShader ) :
 			"Maths/FloatMultiply" : "Maths/MultiplyFloat",
 			"Maths/VectorAdd" : "Maths/AddVector",
 			"Maths/VectorMultiply" : "Maths/ScaleVector",
+			# `mx_invert_float` was renamed to `mx_invert_float_float` in
+			# https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/pull/909.
+			# It seems likely that this was a mistake, given that the equivalent
+			# shader in the MaterialX repo is just `mx_invert_float`. But to
+			# keep old scenes loading we have to do the conversion. If in future we
+			# switch to the MaterialX implementation, we will just have to
+			# reverse the renaming here.
+			"MaterialX/mx_invert_float" : "MaterialX/mx_invert_float_float",
 		}.get( shaderName, shaderName )
 
 		return originalLoadShader( self, renamed, **kwargs )
