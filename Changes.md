@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.7.1)
+========
+
+Fixes
+-----
+
+- OSL Expression : Fixed crash due to exception in upstream computation.
+
 0.60.7.1 (relative to 0.60.7.0)
 ========
 
@@ -378,6 +386,14 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
+
+0.59.9.5 (relative to 0.59.9.4)
+========
+
+Fixes
+-----
+
+- OSL Expression : Fixed crash due to exception in upstream computation.
 
 0.59.9.4 (relative to 0.59.9.3)
 ========
