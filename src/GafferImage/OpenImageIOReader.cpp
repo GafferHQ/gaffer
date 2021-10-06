@@ -56,6 +56,7 @@
 #include "OpenImageIO/imagecache.h"
 #include "OpenImageIO/deepdata.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/regex.hpp"
@@ -191,7 +192,23 @@ class File
 					continue;
 				}
 
-				const OIIO::string_view subImageName = currentSpec.get_string_attribute( "name", "" );
+				OIIO::string_view subImageName = currentSpec.get_string_attribute( "name", "" );
+
+				// Weird hack to match the behaviour of other applications that use multipart EXRs.
+				// According to the standard, we should always prefix with the layer name, but several
+				// other applications ignore the layer name in cases like a subimage named "RGB" containing
+				// channels R, G and B.
+				// This is currently extremely permissive, simply blanking out any subimage name that matches
+				// "rgb", "rgba", or "depth" in upper or lower case.  Perhaps we should be more selective and
+				// only handle certain channels ( ie. only R, G, B within "rgb", and only Z within "depth" ).
+				// Nuke actually has an extra special case where it creates a channel named rgb_extra.channelName
+				// if it finds an unexpected channel name within "rgb" - but this just seems weird?  For the
+				// moment, this permissive version feels easiest
+				if( boost::iequals( subImageName, "RGBA" ) || boost::iequals( subImageName, "RGB" ) || boost::iequals( subImageName, "depth" ) )
+				{
+					subImageName = "";
+				}
+
 
 				for( const auto &n : currentSpec.channelnames )
 				{
