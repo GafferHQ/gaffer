@@ -79,6 +79,7 @@ struct RenderState
 	const vector<ustring> *inParameters;
 	const Gaffer::Context *context;
 	const vector<const Gaffer::ValuePlug *> *inPlugs;
+	mutable std::exception_ptr exception;
 
 };
 
@@ -173,36 +174,46 @@ class RendererServices : public OSL::RendererServices
 
 			if( value )
 			{
-				const size_t index = it - renderState->inParameters->begin();
-				const ValuePlug *plug = (*renderState->inPlugs)[index];
-				switch( (Gaffer::TypeId)plug->typeId() )
+				try
 				{
-					case BoolPlugTypeId :
-						*(int *)value = static_cast<const BoolPlug *>( plug )->getValue();
-						return true;
-					case FloatPlugTypeId :
-						*(float *)value = static_cast<const FloatPlug *>( plug )->getValue();
-						return true;
-					case IntPlugTypeId :
-						*(int *)value = static_cast<const IntPlug *>( plug )->getValue();
-						return true;
-					case Color3fPlugTypeId :
-						*(Color3f *)value = static_cast<const Color3fPlug *>( plug )->getValue();
-						return true;
-					case V3fPlugTypeId :
-						*(V3f *)value = static_cast<const V3fPlug *>( plug )->getValue();
-						return true;
-					case M44fPlugTypeId :
-						*(M44f *)value = static_cast<const M44fPlug *>( plug )->getValue();
-						return true;
-					case StringPlugTypeId :
+					const size_t index = it - renderState->inParameters->begin();
+					const ValuePlug *plug = (*renderState->inPlugs)[index];
+					switch( (Gaffer::TypeId)plug->typeId() )
 					{
-						ustring s( static_cast<const StringPlug *>( plug )->getValue() );
-						*(const char **)value = s.c_str();
-						return true;
+						case BoolPlugTypeId :
+							*(int *)value = static_cast<const BoolPlug *>( plug )->getValue();
+							return true;
+						case FloatPlugTypeId :
+							*(float *)value = static_cast<const FloatPlug *>( plug )->getValue();
+							return true;
+						case IntPlugTypeId :
+							*(int *)value = static_cast<const IntPlug *>( plug )->getValue();
+							return true;
+						case Color3fPlugTypeId :
+							*(Color3f *)value = static_cast<const Color3fPlug *>( plug )->getValue();
+							return true;
+						case V3fPlugTypeId :
+							*(V3f *)value = static_cast<const V3fPlug *>( plug )->getValue();
+							return true;
+						case M44fPlugTypeId :
+							*(M44f *)value = static_cast<const M44fPlug *>( plug )->getValue();
+							return true;
+						case StringPlugTypeId :
+						{
+							ustring s( static_cast<const StringPlug *>( plug )->getValue() );
+							*(const char **)value = s.c_str();
+							return true;
+						}
+						default :
+							return false;
 					}
-					default :
-						return false;
+				}
+				catch( ... )
+				{
+					// We need to catch this exception so that OSL doesn't trigger a termination.
+					// Cache the exception so we can throw it from the expression execute()
+					renderState->exception = std::current_exception();
+					return false;
 				}
 			}
 			return false;
@@ -411,6 +422,13 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			}
 
 			s->release_context( shadingContext );
+
+			if( renderState.exception )
+			{
+				// Rethrow any exception that occurred in the internals like get_userdata
+				std::rethrow_exception( renderState.exception );
+			}
+
 			return result;
 		}
 
