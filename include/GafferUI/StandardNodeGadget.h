@@ -125,6 +125,9 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		NoduleLayout *noduleLayout( Edge edge );
 		const NoduleLayout *noduleLayout( Edge edge ) const;
 
+		LinearContainer *contentsColumn();
+		const LinearContainer *contentsColumn() const;
+
 		LinearContainer *paddingRow();
 		const LinearContainer *paddingRow() const;
 
@@ -150,6 +153,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void nodeMetadataChanged( IECore::InternedString key );
 
 		bool updateUserColor();
+		void updateMinWidth();
 		void updatePadding();
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();

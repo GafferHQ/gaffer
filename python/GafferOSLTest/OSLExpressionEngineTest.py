@@ -706,5 +706,23 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 			self.assertAlmostEqual( s["dest%i"%i]["p"].getValue().y, 0.2 + 0.3 * i + 10 * i, places = 5 )
 			self.assertAlmostEqual( s["dest%i"%i]["p"].getValue().z, 0.3 + 0.3 * i + 10 * i, places = 5 )
 
+	def testException( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["g"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["ePython"] = Gaffer.Expression()
+		s["ePython"].setExpression( "raise IECore.Exception( 'test string' ); parent['n']['user']['g'] = 4.0" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent.n.user.f = parent.n.user.g", "OSL" )
+
+		six.assertRaisesRegex( self,
+			Gaffer.ProcessException, "ePython.__execute : test string",
+			s["n"]["user"]["f"].getValue
+		)
+
 if __name__ == "__main__":
 	unittest.main()

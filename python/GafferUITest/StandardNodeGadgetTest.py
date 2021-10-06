@@ -289,5 +289,24 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 			g.nodule( n["b"] ).transformedBound().center().x
 		)
 
+	def testMinWidth( self ) :
+
+		def assertMinWidth( gadget, minWidth ) :
+
+			# Min width applies to central frame, but there is additional
+			# spacing for the left/right nodules, and an additional fudge
+			# in `StandardNodeGadget::bound()`. The `+ 1.0` accounts for this.
+			self.assertEqual( gadget.bound().size().x, minWidth + 1.0 )
+
+		n = Gaffer.Node( "I" )
+		g = GafferUI.StandardNodeGadget( n )
+		assertMinWidth( g, 10.0 ) # Default min is 10
+
+		Gaffer.Metadata.registerValue( n, "nodeGadget:minWidth", 20.0 )
+		assertMinWidth( g, 20.0 )
+
+		Gaffer.Metadata.deregisterValue( n, "nodeGadget:minWidth" )
+		assertMinWidth( g, 10.0 )
+
 if __name__ == "__main__":
 	unittest.main()

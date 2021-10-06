@@ -72,6 +72,31 @@ Breaking Changes
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 
+0.60.8.0 (relative to 0.60.7.1)
+========
+
+Improvements
+------------
+
+- Catalogue : Added support for naming incoming images using a `catalogue:imageName` display driver parameter. The default `Interactive/Beauty` output now includes this parameter so that it can be specified via the Outputs node.
+
+Fixes
+-----
+
+- OSL Expression : Fixed crash due to exception in upstream computation.
+- OSLShader : Fixed loading of a further 85 MaterialX shaders which were renamed by https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/pull/909.
+- StandardNodeGadget : Changes to `nodeGadget:minWidth` metadata now take immediate effect in all GraphEditors.
+
+0.60.7.1 (relative to 0.60.7.0)
+========
+
+Fixes
+-----
+
+- OSLShader : Fixed loading of `mx_invert_float` shaders. These were renamed to `mx_invert_float_float` in the OpenShadingLanguage project.
+- PythonEditor : Fixed bug where the input widget didn't scroll to show the new line when <kbd>Return</kbd> was pressed.
+- TypedObjectPlug : Fixed bug in the serialisation of some `IECore.CompoundObject` values (the necessary `import IECore` was sometimes missing). This was particularly likely to affect CustomAttributes nodes where the `extraAttributes` plug was used.
+
 0.60.7.0 (relative to 0.60.6.1)
 ========
 
@@ -442,6 +467,14 @@ Build
   - LLVM 10.0.1.
   - OpenVDB 7.2.2.
   - Cortex 10.2.0.0.
+
+0.59.9.5 (relative to 0.59.9.4)
+========
+
+Fixes
+-----
+
+- OSL Expression : Fixed crash due to exception in upstream computation.
 
 0.59.9.4 (relative to 0.59.9.3)
 ========

@@ -1,0 +1,32 @@
+import Gaffer
+import GafferImage
+import GafferOSL
+import IECore
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 59, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 8, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+parent["variables"].addChild( Gaffer.NameValuePlug( "image:catalogue:port", Gaffer.IntPlug( "value", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "imageCataloguePort", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:name", Gaffer.StringPlug( "value", defaultValue = 'default', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectName", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:rootDirectory", Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectRootDirectory", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["mx_invert_float"] = GafferOSL.OSLShader( "mx_invert_float" )
+parent.addChild( __children["mx_invert_float"] )
+__children["mx_invert_float"].loadShader( "MaterialX/mx_invert_float" )
+__children["mx_invert_float"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 45837 )
+Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
+__children["mx_invert_float"]["parameters"]["in"].setValue( 1.0 )
+__children["mx_invert_float"]["parameters"]["amount"].setValue( 2.0 )
+__children["mx_invert_float"]["__uiPosition"].setValue( imath.V2f( -7.1500001, 6.20000029 ) )
+
+
+del __children
