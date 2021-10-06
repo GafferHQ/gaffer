@@ -536,10 +536,14 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		compareDelete = GafferImage.DeleteChannels()
 		compareDelete["in"].setInput( rgbReader["out"] )
 
-		# This test multipart file contains a "rgb" subimage, an "rgba" subimage, and a "depth" subimage, with
-		# one channel named "Z" ( copied from the green channel of our reference image.
-		# It was created using this command:
-		# > oiiotool rgb.100x100.exr --attrib "oiio:subimagename" rgb -ch "R,G,B" rgb.100x100.exr --attrib "oiio:subimagename" rgba rgb.100x100.exr --attrib "oiio:subimagename" depth --ch "G" --chnames "Z" --siappendall -o multipart.exr
+		# This test multipart file contains a "customRgb" subimage, a "customRgba" subimage,
+		# and a "customDepth" subimage, with one channel named "Z" ( copied from the green
+		# channel of our reference image. )
+		# We don't use the subimage names "rgb", "rgba" or "depth", because we want to look
+		# at channels which don't get automatically mapped to the default channel names.
+		# ( see testDefaultChannelsMultipartRead for that )
+		# The test file was created using this command:
+		# > oiiotool rgb.100x100.exr --attrib "oiio:subimagename" customRgb -ch "R,G,B" rgb.100x100.exr --attrib "oiio:subimagename" customRgba rgb.100x100.exr --attrib "oiio:subimagename" customDepth --ch "G" --chnames "Z" --siappendall -o multipart.exr
 		multipartReader = GafferImage.OpenImageIOReader()
 		multipartReader["fileName"].setValue( self.multipartFileName )
 
@@ -551,25 +555,25 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		multipartDelete['channels'].setValue( "*.*" )
 
 		self.assertEqual( set( multipartReader["out"]["channelNames"].getValue() ),
-			set([ "rgba.R", "rgba.G", "rgba.B", "rgba.A", "rgb.R", "rgb.G", "rgb.B", "depth.Z" ])
+			set([ "customRgba.R", "customRgba.G", "customRgba.B", "customRgba.A", "customRgb.R", "customRgb.G", "customRgb.B", "customDepth.Z" ])
 		)
 
 		multipartShuffle["channels"].clearChildren()
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "rgba.R" ) )
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "rgba.G" ) )
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "rgba.B" ) )
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "rgba.A" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "customRgba.R" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "customRgba.G" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "customRgba.B" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "customRgba.A" ) )
 		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
 
 		multipartShuffle["channels"].clearChildren()
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "rgb.R" ) )
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "rgb.G" ) )
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "rgb.B" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "customRgb.R" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "customRgb.G" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "customRgb.B" ) )
 		compareDelete['channels'].setValue( "A" )
 		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
 
 		multipartShuffle["channels"].clearChildren()
-		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "depth.Z" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "customDepth.Z" ) )
 		compareDelete['channels'].setValue( "R B A" )
 		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
 
@@ -577,18 +581,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		rgbReader = GafferImage.OpenImageIOReader()
 		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
-
-		compareShuffle = GafferImage.Shuffle()
-		compareShuffle["in"].setInput( rgbReader["out"] )
-		compareShuffle["channels"].clearChildren()
-		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.R", "R" ) )
-		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.G", "G" ) )
-		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.B", "B" ) )
-		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.A", "A" ) )
-
-		compareDelete = GafferImage.DeleteChannels()
-		compareDelete["in"].setInput( compareShuffle["out"] )
-		compareDelete["channels"].setValue( "R G B A" )
 
 		# This test multipart file contains a "rgba" subimage, and a second subimage with a
 		# differing data window.  The second part can currently not be loaded, because Gaffer images
@@ -607,7 +599,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# When we compare to the single part comparison file, the image will come out the same, because
 		# the second part is ignored - and we should get a message about it being ignored
 		with IECore.CapturingMessageHandler() as mh :
-			self.assertImagesEqual( compareDelete["out"], multipartReader["out"], ignoreMetadata = True )
+			self.assertImagesEqual( rgbReader["out"], multipartReader["out"], ignoreMetadata = True )
 
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertTrue( mh.messages[0].message.startswith( "Ignoring subimage 1 of " ) )
