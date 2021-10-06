@@ -79,7 +79,7 @@ struct RenderState
 	const vector<ustring> *inParameters;
 	const Gaffer::Context *context;
 	const vector<const Gaffer::ValuePlug *> *inPlugs;
-	mutable std::exception_ptr exception;
+	std::exception_ptr exception;
 
 };
 
@@ -161,7 +161,7 @@ class RendererServices : public OSL::RendererServices
 		// So we implement it to search for an appropriate input plug and get its value.
 		bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
+			RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
 			{
 				return false;
