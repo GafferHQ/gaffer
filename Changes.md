@@ -6,6 +6,7 @@ Features
 
 - GraphEditor : Added new "Focus Node" concept. Clicking on the top right of a node tags it as the focus node, and editors and viewers can be set to follow the focus node. This is useful when you have several viewers that you want to view the same node, but you don't want them to follow selection.
 - Image Viewer : Added Luminance option to the channel selection menu.
+- Graph Editor : When a Focus node is set, dim nodes and connections which don't contribute to computing the Focus Node.  This helps see what part of the graph is active.
 
 Improvements
 ------------
@@ -14,6 +15,7 @@ Improvements
   - Improved drawing performance for large node graphs. Gains of about 40% are typical, with much greater gains when looking at a small region of a large graph or performing selection tests (for example when hovering over something or dragging a connection).
   - Added support for middle-drag panning while dragging nodes and connections using <kbd>G</kbd>.
 - Cancellation : Improved responsiveness of cancellation of tasks waiting on results from another thread.
+- Graph Editor : Made connections slightly more visible when zoomed out
 
 Fixes
 -----
@@ -22,6 +24,7 @@ Fixes
 - Animation :
   - Fixed bug in `Key.setType()`. Previously it modified the value instead of the type.
   - Fixed crash when dragging multiple keys around in editor
+- ParallelAlgo : Fixed deadlock in callOnUIThread
 
 API
 ---
