@@ -1,10 +1,10 @@
-0.59.x.x (relative to 0.59.9.4)
+0.59.9.5 (relative to 0.59.9.4)
 ========
 
 Fixes
 -----
 
-- OSL Expression : Fixed crash due to exception in upstream computation
+- OSL Expression : Fixed crash due to exception in upstream computation.
 
 0.59.9.4 (relative to 0.59.9.3)
 ========
