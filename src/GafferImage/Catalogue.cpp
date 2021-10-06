@@ -58,6 +58,7 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/regex.hpp"
 #include "boost/unordered_map.hpp"
 
 #include <thread>
@@ -280,6 +281,25 @@ class Catalogue::InternalImage : public ImageNode
 			if( clientPID )
 			{
 				m_clientPID = clientPID->readable();
+			}
+
+			if( auto nameData = parameters->member<StringData>( "catalogue:imageName" ) )
+			{
+				if( Plug *p = fileNamePlug()->getInput() )
+				{
+					if( Image *image = p->source()->parent<Image>() )
+					{
+						/// \todo GraphComponent or GraphComponentAlgo really should have
+						/// a utility for sanitising names and/or we should loosen the naming
+						/// restrictions anyway.
+						const std::string name = boost::regex_replace(
+							nameData->readable(),
+							boost::regex( "(^[0-9])|([^0-9a-zA-Z_]+)" ),
+							"_"
+						);
+						image->setName( name );
+					}
+				}
 			}
 
 			updateImageFlags( Plug::Serialisable, false ); // Don't serialise in-progress renders

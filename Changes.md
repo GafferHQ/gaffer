@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.7.1)
 ========
 
+Improvements
+------------
+
+- Catalogue : Added support for naming incoming images using a `catalogue:imageName` display driver parameter. The default `Interactive/Beauty` output now includes this parameter so that it can be specified via the Outputs node.
+
 Fixes
 -----
 

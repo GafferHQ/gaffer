@@ -813,5 +813,48 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 				isinstance( g, Gaffer.Node )
 			)
 
+	def testImageName( self ) :
+
+		catalogue = GafferImage.Catalogue()
+		self.assertEqual( len( catalogue["images"] ), 0 )
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 64, 64 ) )
+		self.sendImage(
+			constant["out"],
+			catalogue,
+			{
+				"catalogue:imageName" : "testName",
+			}
+		)
+
+		self.assertEqual( len( catalogue["images"] ), 1 )
+		self.assertEqual( catalogue["images"][0].getName(), "testName" )
+
+		self.sendImage(
+			constant["out"],
+			catalogue,
+			{
+				"catalogue:imageName" : "!invalid&^ Name[]",
+			}
+		)
+
+		self.assertEqual( len( catalogue["images"] ), 2 )
+		self.assertEqual( catalogue["images"][0].getName(), "testName" )
+		self.assertEqual( catalogue["images"][1].getName(), "_invalid_Name_" )
+
+		self.sendImage(
+			constant["out"],
+			catalogue,
+			{
+				"catalogue:imageName" : "5IsntAValidStartingCharacter",
+			}
+		)
+
+		self.assertEqual( len( catalogue["images"] ), 3 )
+		self.assertEqual( catalogue["images"][0].getName(), "testName" )
+		self.assertEqual( catalogue["images"][1].getName(), "_invalid_Name_" )
+		self.assertEqual( catalogue["images"][2].getName(), "_IsntAValidStartingCharacter" )
+
 if __name__ == "__main__":
 	unittest.main()
