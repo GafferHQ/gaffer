@@ -212,6 +212,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( StandardNodeGadget );
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
 
 static const float g_borderWidth = 0.5f;
+static const float g_defaultMinWidth = 10.0f;
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
@@ -231,12 +232,6 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 
 	// build our ui structure
 	////////////////////////////////////////////////////////
-
-	float minWidth = 10.0f;
-	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node.get(), g_minWidthKey ) )
-	{
-		minWidth = d->readable();
-	}
 
 	// four containers for nodules - one each for the top, bottom, left and right.
 	// these contain spacers at either end to prevent nodules being placed in
@@ -313,9 +308,9 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	contentsContainer->setName( "contentsContainer" );
 	contentsRow->addChild( contentsContainer );
 
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( g_defaultMinWidth, 0, 0 ) ) ) );
 	contentsColumn->addChild( contentsRow );
-	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
+	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( g_defaultMinWidth, 0, 0 ) ) ) );
 
 	row->addChild( rightNoduleContainer );
 	column->addChild( bottomNoduleContainer );
@@ -347,6 +342,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	////////////////////////////////////////////////////////
 
 	updateUserColor();
+	updateMinWidth();
 	updatePadding();
 	updateNodeEnabled();
 	updateIcon();
@@ -769,6 +765,10 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 			dirty( DirtyType::Render );
 		}
 	}
+	else if( key == g_minWidthKey )
+	{
+		updateMinWidth();
+	}
 	else if( key == g_paddingKey )
 	{
 		updatePadding();
@@ -801,6 +801,24 @@ bool StandardNodeGadget::updateUserColor()
 
 	m_userColor = c;
 	return true;
+}
+
+void StandardNodeGadget::updateMinWidth()
+{
+	float minWidth = g_defaultMinWidth;
+	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node(), g_minWidthKey ) )
+	{
+		minWidth = d->readable();
+	}
+
+	LinearContainer *contentsColumn = getChild<Gadget>( 0 ) // column
+		->getChild<Gadget>( 1 ) // row
+		->getChild<LinearContainer>( 1 ) // contentsColumn
+	;
+
+	const Box3f size( V3f( 0 ), V3f( minWidth, 0, 0 ) );
+	contentsColumn->getChild<SpacerGadget>( 0 )->setSize( size );
+	contentsColumn->getChild<SpacerGadget>( 2 )->setSize( size );
 }
 
 void StandardNodeGadget::updatePadding()
