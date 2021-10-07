@@ -90,7 +90,7 @@ NodeCreatorMap &nodeCreators()
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NodeGadget );
 
 NodeGadget::NodeGadget( Gaffer::NodePtr node )
-	:	m_node( node.get() )
+	:	m_active( false ), m_node( node.get() )
 {
 }
 
@@ -212,4 +212,13 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 	}
 
 	return result;
+}
+
+void NodeGadget::activeForFocusNode( bool active )
+{
+	if( m_active != active )
+	{
+		m_active = active;
+		dirty( DirtyType::Render );
+	}
 }

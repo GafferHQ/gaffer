@@ -38,6 +38,8 @@
 import unittest
 import threading
 import imath
+import inspect
+import time
 
 import IECore
 
@@ -1405,6 +1407,359 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( s["b"]["n"], "nodeGadget:type", "GafferUI::AuxiliaryNodeGadget" )
 		self.assertIsNone( g.nodeGadget( s["b"]["n"] ) )
+
+	def testActivePlugsAndNodes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# Basic network with single and multiple inputs
+
+		s["add1"] = GafferTest.AddNode()
+		s["add2"] = GafferTest.AddNode()
+		s["add3"] = GafferTest.AddNode()
+		s["add4"] = GafferTest.AddNode()
+
+		s["add1"]["op1"].setInput( s["add2"]["sum"] )
+		s["add1"]["op2"].setInput( s["add3"]["sum"] )
+
+		s["add2"]["op1"].setInput( s["add4"]["sum"] )
+
+		c = Gaffer.Context()
+
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add1"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add1"]["op1"], s["add1"]["op2"], s["add2"]["op1"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["add1"], s["add2"], s["add3"], s["add4"] ] ) )
+
+
+		# Test disabling
+		s["add2"]["op1"].setInput( None )
+		s["add1"]["enabled"].setValue( False )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add1"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add1"]["op1"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["add1"], s["add2"] ] ) )
+
+		s["add1"]["expr"] = Gaffer.Expression()
+		s["add1"]["expr"].setExpression( 'parent["enabled"] = True', "python" )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add1"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add1"]["op1"], s["add1"]["op2"], s["add1"]["enabled"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["add1"], s["add2"], s["add3"], s["add1"]["expr"] ] ) )
+
+		s["add1"]["expr"].setExpression( 'parent["enabled"] = False', "python" )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add1"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add1"]["op1"], s["add1"]["enabled"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["add1"], s["add2"], s["add1"]["expr"] ] ) )
+
+		del s["add1"]["expr"]
+		s["add1"]["enabled"].setValue( True )
+
+
+		# Setup switch instead
+		s["add1"]["op1"].setInput( None )
+		s["add1"]["op2"].setInput( None )
+
+		s["switch"] = Gaffer.Switch()
+		s["switch"].setup( Gaffer.FloatPlug() )
+
+		s["switch"]["in"][0].setInput( s["add3"]["sum"] )
+		s["switch"]["in"][1].setInput( s["add4"]["sum"] )
+
+
+		# Test with index set to a hardcoded value, which will just follow the connections created inside
+		# the Switch when the index isn't computed.
+
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][0], s["switch"]["out"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add3"] ] ) )
+
+		s["switch"]["index"].setValue( 1 )
+
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][1], s["switch"]["out"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add4"] ] ) )
+
+		s["switch"]["enabled"].setValue( False )
+
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][0], s["switch"]["out"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add3"] ] ) )
+
+		s["switch"]["enabled"].setValue( True )
+
+		# Now set with an expression, so that there is actually a compute happening on the Switch to track
+
+		s["switch"]["expr"] = Gaffer.Expression()
+		s["switch"]["expr"].setExpression( 'parent["index"] = context["foo"]', "python" )
+
+		# Error during evaluation falls back to taking all inputs
+		with IECore.CapturingMessageHandler() as mh :
+			plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "Gaffer" )
+		self.assertEqual( mh.messages[0].message, 'Error during graph active state visualisation: switch.expr.__execute : Context has no variable named "foo"' )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][0], s["switch"]["in"][1], s["switch"]["index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add3"], s["add4"], s["switch"]["expr"] ] ) )
+
+		# Test setting switch index from context
+		c["foo"] = 0
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][0], s["switch"]["index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add3"], s["switch"]["expr"] ] ) )
+
+		c["foo"] = 1
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][1], s["switch"]["index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add4"], s["switch"]["expr"] ] ) )
+
+		# Also test disabling
+		s["switch"]["expr2"] = Gaffer.Expression()
+		s["switch"]["expr2"].setExpression( 'parent["enabled"] = False', "python" )
+
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][0], s["switch"]["enabled"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add3"], s["switch"]["expr2"] ] ) )
+
+		s["switch"]["expr2"].setExpression( 'parent["enabled"] = True', "python" )
+
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"][1], s["switch"]["enabled"], s["switch"]["index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["switch"], s["add4"], s["switch"]["expr2"], s["switch"]["expr"] ] ) )
+
+		# And NameSwitch
+		s["nameSwitch"] = Gaffer.NameSwitch()
+		s["nameSwitch"].setup( Gaffer.FloatPlug() )
+
+		s["nameSwitch"]["in"].resize( 3 )
+		s["nameSwitch"]["in"][0]["value"].setInput( s["add3"]["sum"] ) # Default
+		s["nameSwitch"]["in"][1]["name"].setValue( "AAA" )
+		s["nameSwitch"]["in"][1]["value"].setInput( s["add1"]["sum"] )
+		s["nameSwitch"]["in"][2]["value"].setInput( s["add2"]["sum"] )
+
+		s["nameSwitch"]["expr"] = Gaffer.Expression()
+		s["nameSwitch"]["expr"].setExpression( 'parent["selector"] = context["foo"]', "python" )
+
+		# Set one name with an expression - the output will always depend on this name
+		s["nameSwitch"]["expr2"] = Gaffer.Expression()
+		s["nameSwitch"]["expr2"].setExpression( 'parent["in"]["in2"]["name"] = "BBB"', "python" )
+
+		# Test default output
+		c["foo"] = "XXX"
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["nameSwitch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["nameSwitch"]["in"]["in0"]["value"], s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["nameSwitch"], s["add3"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+		# Test first input
+		c["foo"] = "AAA"
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["nameSwitch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["nameSwitch"]["in"]["in1"]["value"], s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["nameSwitch"], s["add1"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+		# Test second input
+		c["foo"] = "BBB"
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["nameSwitch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["nameSwitch"]["in"]["in2"]["value"], s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["nameSwitch"], s["add2"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+		# Test same result if just querying value of output
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["nameSwitch"]["out"]["value"], c )
+		self.assertEqual( set( plugs ), set( [ s["nameSwitch"]["in"]["in2"]["value"], s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["nameSwitch"], s["add2"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+		# Name of the output only depends names of inputs
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["nameSwitch"]["out"]["name"], c )
+		self.assertEqual( set( plugs ), set( [ s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["nameSwitch"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+		# Test ContextProcessor
+		s["contextVariables"] = Gaffer.ContextVariables()
+		s["contextVariables"].setup( Gaffer.FloatPlug() )
+		s["contextVariables"]["variables"]["setVar"] = Gaffer.NameValuePlug( "foo", Gaffer.StringPlug( "value", defaultValue = 'AAA' ), True )
+
+		s["contextVariables"]["in"].setInput( s["nameSwitch"]["out"]["value"] )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["contextVariables"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["contextVariables"]["in"], s["nameSwitch"]["in"]["in1"]["value"], s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["nameSwitch"], s["add1"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+		s["contextVariables"]["enabled"].setValue( False )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["contextVariables"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["contextVariables"]["in"], s["nameSwitch"]["in"]["in2"]["value"], s["nameSwitch"]["selector"], s["nameSwitch"]["in"]["in2"]["name"], s["nameSwitch"]["__index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["nameSwitch"], s["add2"], s["nameSwitch"]["expr"], s["nameSwitch"]["expr2"] ] ) )
+
+
+		# The behaviour of a Box is just a consequence of the previous behaviour, but it's somewhat complex
+		# and confusing, so I've got some specific tests for it
+		s["add5"] = GafferTest.AddNode()
+		s["add6"] = GafferTest.AddNode()
+
+		s["add3"]["op1"].setInput( s["add5"]["sum"] )
+		s["add4"]["op1"].setInput( s["add6"]["sum"] )
+
+		s["add1"]["op1"].setInput( s["add3"]["sum"] )
+		s["add2"]["op1"].setInput( s["add4"]["sum"] )
+
+		box = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["add3"], s["add4"] ] ) )
+
+
+		# The box itself counts as active, plus the input which is used by the internal network
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add1"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add1"]["op1"], box["add3"]["op1"], box["op1"], box["sum"] ] ) )
+		self.assertEqual( set( nodes ), set( [ box, s["add1"], box["add3"], s["add5"] ] ) )
+
+
+		# Add BoxIO nodes
+		Gaffer.BoxIO.insert( box )
+
+		# And add a passThrough connection
+		box["BoxOut1"]["passThrough"].setInput( box["BoxIn"]["out"] )
+
+		# Now we've got a bunch of intermediate BoxIO and Switch nodes
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add2"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add2"]["op1"], box["add4"]["op1"], box["op2"], box["sum1"], box["BoxIn1"]["__in"], box["BoxOut1"]["in"], box["BoxOut1"]["__out"], box["BoxOut1"]["__switch"]["in"]["in1"], box["BoxOut1"]["__switch"]["out"], box["BoxIn1"]["out"] ] ) )
+		self.assertEqual( set( nodes ), set( [ box, s["add2"], box["add4"], s["add6"], box["BoxOut1"]["__switch"], box["BoxOut1"], box["BoxIn1"] ] ) )
+
+		# Disabling uses the passThrough instead
+		box["enabled"].setValue( False )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add2"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add2"]["op1"], box["op1"], box["sum1"], box["BoxIn"]["__in"], box["BoxOut1"]["passThrough"], box["BoxOut1"]["__out"], box["BoxOut1"]["__switch"]["in"]["in0"], box["BoxOut1"]["__switch"]["out"], box["BoxIn"]["out"] ] ) )
+		self.assertEqual( set( nodes ), set( [ box, s["add2"], s["add5"], box["BoxOut1"]["__switch"], box["BoxOut1"], box["BoxIn"] ] ) )
+
+		# If we disconnect the passThrough, nothing gets through
+		box["BoxOut1"]["passThrough"].setInput( None )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add2"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add2"]["op1"], box["sum1"], box["BoxOut1"]["__out"], box["BoxOut1"]["__switch"]["in"]["in0"], box["BoxOut1"]["__switch"]["out"] ] ) )
+		self.assertEqual( set( nodes ), set( [ box, s["add2"], box["BoxOut1"]["__switch"], box["BoxOut1"] ] ) )
+
+
+		# Test Loop
+
+		s["loopSwitch"] = Gaffer.Switch()
+		s["loopSwitch"].setup( Gaffer.FloatPlug() )
+		for i in range( 5 ):
+			s["loopSwitchIn%i" % i ] = GafferTest.AddNode()
+			s["loopSwitchIn%i" % i ]["op1"].setValue( (i+1) * 10 ** i )
+			s["loopSwitch"]["in"][-1].setInput( s["loopSwitchIn%i" % i ]["sum"] )
+
+		s["loopSwitch"]["expr"] = Gaffer.Expression()
+		s["loopSwitch"]["expr"].setExpression( 'parent["index"] = context.get("loop:index", 4)', "python" )
+
+		s["start"] = GafferTest.AddNode()
+		s["start"]["op1"].setValue( 900000 )
+
+		s["loop"] = Gaffer.Loop()
+		s["loop"].setup( Gaffer.FloatPlug() )
+		s["loop"]["in"].setInput( s["start"]["sum"] )
+
+		s["merge"] = GafferTest.AddNode()
+		s["merge"]["op1"].setInput( s["loop"]["previous"] )
+		s["loop"]["next"].setInput( s["merge"]["sum"] )
+		s["merge"]["op2"].setInput( s["loopSwitch"]["out"] )
+
+		s["loop"]["iterations"].setValue( 4 )
+
+		self.assertEqual( s["loop"]["out"].getValue(), 904321.0 )
+
+		# We don't track through the loop for every separate loop context, we just fall back to a naive
+		# traversal that takes every input
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["loop"]["out"], c )
+		self.assertEqual( set( nodes ), set( [ s["loop"], s["start"], s["merge"], s["loopSwitch"], s["loopSwitch"]["expr"] ] + [ s["loopSwitchIn%i"%i] for i in range(5) ] ) )
+
+		# Same deal if we start from a node in the middle of the loop iteration
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["merge"]["sum"], c )
+		self.assertEqual( set( nodes ), set( [ s["loop"], s["start"], s["merge"], s["loopSwitch"], s["loopSwitch"]["expr"] ] + [ s["loopSwitchIn%i"%i] for i in range(5) ] ) )
+
+
+	def testActiveCompoundPlugs( self ):
+
+		s = Gaffer.ScriptNode()
+		c = Gaffer.Context()
+
+		p = Gaffer.Plug()
+		p.addChild( Gaffer.StringPlug() )
+		p.addChild( Gaffer.FloatPlug() )
+
+		s["contextVariables"] = Gaffer.ContextVariables()
+		s["contextVariables"].setup( p )
+
+		s["dummyNode"] = Gaffer.ComputeNode()
+		s["dummyNode"]["in"] = p.createCounterpart( "in", Gaffer.Plug.Direction.In )
+		s["dummyNode"]["out"] = p.createCounterpart( "out", Gaffer.Plug.Direction.Out )
+		s["dummyNode"]["in"].setInput( s["contextVariables"]["out"] )
+
+		# Check that we don't explicitly include child connections when the parents are connected
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["dummyNode"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["dummyNode"]["in"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["dummyNode"] ] ) )
+
+		s["switch"] = Gaffer.Switch()
+		s["switch"].setup( p )
+
+		s["switch"]["in"][0].setInput( s["dummyNode"]["out"] )
+		s["switch"]["in"][1].setInput( s["contextVariables"]["out"] )
+		s["switch"]["expr"] = Gaffer.Expression()
+		s["switch"]["expr"].setExpression( 'parent["index"] = 1' )
+
+		# Check that we take only the children of active inputs
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"]["in1"], s["switch"]["index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["switch"], s["switch"]["expr"] ] ) )
+
+		# Test that if a compound plug gets split, we take the children, even from one of the special case nodes
+		s["dummyNode"]["in"]["FloatPlug"].setInput( None )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["dummyNode"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["dummyNode"]["in"]["StringPlug"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["dummyNode"] ] ) )
+
+		s["switch"]["in"][1]["StringPlug"].setInput( None )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["switch"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["switch"]["in"]["in1"]["FloatPlug"], s["switch"]["index"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["switch"], s["switch"]["expr"] ] ) )
+
+		s["dummyNode"]["in"].setInput( None )
+		s["contextVariables"]["in"]["StringPlug"].setInput( s["dummyNode"]["out"]["StringPlug"] )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["contextVariables"]["out"], c )
+		self.assertEqual( set( plugs ), set( [ s["contextVariables"]["in"]["StringPlug"] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["contextVariables"], s["dummyNode"] ] ) )
+
+	testActivePlugsAndNodesCancellationCondition = threading.Condition()
+	def testActivePlugsAndNodesCancellation( self ) :
+
+		def testThreadFunc( plug, canceller, testInstance ):
+			with testInstance.assertRaises( IECore.Cancelled ):
+				GafferUI.GraphGadget._activePlugsAndNodes( plug, Gaffer.Context( Gaffer.Context(), canceller ) )
+
+		s = Gaffer.ScriptNode()
+
+		# Test a computation that supports cancellation
+
+		s["add"] = GafferTest.AddNode()
+
+		s["addExpr"] = Gaffer.Expression()
+		s["addExpr"].setExpression( inspect.cleandoc(
+			"""
+			import time
+			import Gaffer
+			import GafferUITest.GraphGadgetTest
+
+			with GafferUITest.GraphGadgetTest.testActivePlugsAndNodesCancellationCondition:
+				GafferUITest.GraphGadgetTest.testActivePlugsAndNodesCancellationCondition.notify()
+			while True:
+				IECore.Canceller.check( context.canceller() )
+
+			parent["add"]["enabled"] = True
+			"""
+		) )
+
+		canceller = IECore.Canceller()
+
+		t = Gaffer.ParallelAlgo.callOnBackgroundThread(
+			s["add"]["sum"], lambda : testThreadFunc( s["add"]["sum"], canceller, self )
+		)
+		with GraphGadgetTest.testActivePlugsAndNodesCancellationCondition:
+			GraphGadgetTest.testActivePlugsAndNodesCancellationCondition.wait()
+
+		canceller.cancel()
+		t.wait()
 
 if __name__ == "__main__":
 	unittest.main()

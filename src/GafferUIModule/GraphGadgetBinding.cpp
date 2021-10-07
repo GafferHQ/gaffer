@@ -217,6 +217,41 @@ void layoutNodes( const GraphLayout &layout, GraphGadget &graph, Gaffer::Set *no
 
 } // namespace
 
+namespace GafferUIModule
+{
+	class ActivePlugsWrapperClassToUseAsFriend
+	{
+	public:
+		static boost::python::tuple activePlugsAndNodesWrapper(
+					const Gaffer::Plug *plug,
+					const Gaffer::Context *context
+		)
+		{
+			std::unordered_set<const Gaffer::Plug*> activePlugs;
+			std::unordered_set<const Gaffer::Node*> activeNodes;
+
+			{
+				ScopedGILRelease gilRelease;
+				GraphGadget::activePlugsAndNodes( plug, context, activePlugs, activeNodes );
+			}
+
+			boost::python::list activePlugsList;
+			for( const auto &p : activePlugs )
+			{
+				activePlugsList.append( Gaffer::PlugPtr( const_cast<Plug*>( p ) ) );
+			}
+
+			boost::python::list activeNodesList;
+			for( const auto &n : activeNodes )
+			{
+				activeNodesList.append( Gaffer::NodePtr( const_cast<Node*>( n ) ) );
+			}
+
+			return boost::python::make_tuple( activePlugsList, activeNodesList );
+		}
+	};
+}
+
 void GafferUIModule::bindGraphGadget()
 {
 	{
@@ -247,6 +282,8 @@ void GafferUIModule::bindGraphGadget()
 			.def( "getLayout", (GraphLayout *(GraphGadget::*)())&GraphGadget::getLayout, return_value_policy<CastToIntrusivePtr>() )
 			.def( "nodeGadgetAt", &GraphGadget::nodeGadgetAt, return_value_policy<CastToIntrusivePtr>() )
 			.def( "connectionGadgetAt", &GraphGadget::connectionGadgetAt, return_value_policy<CastToIntrusivePtr>() )
+			.def( "_activePlugsAndNodes", &ActivePlugsWrapperClassToUseAsFriend::activePlugsAndNodesWrapper )
+			.staticmethod("_activePlugsAndNodes")
 		;
 
 		GafferBindings::SignalClass<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>( "RootChangedSignal" );

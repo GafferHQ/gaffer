@@ -49,7 +49,7 @@ using namespace GafferUI;
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( ConnectionGadget );
 
 ConnectionGadget::ConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	ConnectionCreator( defaultName<ConnectionGadget>() ), m_minimised( false )
+	:	ConnectionCreator( defaultName<ConnectionGadget>() ), m_active( false ), m_minimised( false )
 {
 	setNodules( srcNodule, dstNodule );
 }
@@ -200,4 +200,13 @@ ConnectionGadget::NamedCreatorMap &ConnectionGadget::namedCreators()
 {
 	static NamedCreatorMap *m = new NamedCreatorMap;
 	return *m;
+}
+
+void ConnectionGadget::activeForFocusNode( bool active )
+{
+	if( m_active != active )
+	{
+		m_active = active;
+		dirty( DirtyType::Render );
+	}
 }

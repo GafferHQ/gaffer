@@ -679,7 +679,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 		case GraphLayer::Nodes :
 		{
 			// decide what state we're rendering in
-			Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
+			Style::State state = getHighlighted() ? Style::HighlightedState : ( m_active ? Style::NormalState : Style::DisabledState );
 
 			// draw our background frame
 			const Box3f b = bound();
@@ -707,7 +707,11 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 			{
 				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
 				/// so that styles can do customised drawing based on knowledge of what is being drawn.
-				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
+				Imath::Color4f inactiveCol( 0.2f, 0.2f, 0.2f, 1.0 );
+				style->renderLine(
+					IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ),
+					0.5f, m_active ? nullptr : &inactiveCol
+				);
 			}
 			break;
 		}
@@ -753,6 +757,27 @@ float StandardNodeGadget::focusBorderWidth() const
 	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 1.0f ), this ).p0;
 	float pixelSize = ( p0 - p1 ).length();
 	return min( g_maxFocusWidth, max( 0.75f, 8.0f * pixelSize ) );
+}
+
+void StandardNodeGadget::setHighlighted( bool highlighted )
+{
+	NodeGadget::setHighlighted( highlighted );
+	updateTextDimming();
+}
+
+void StandardNodeGadget::activeForFocusNode( bool active )
+{
+	NodeGadget::activeForFocusNode( active );
+	updateTextDimming();
+}
+
+void StandardNodeGadget::updateTextDimming()
+{
+	NameGadget *name = IECore::runTimeCast<NameGadget>( getContents() );
+	if( name )
+	{
+		name->setDimmed( !( m_active || getHighlighted() ) );
+	}
 }
 
 unsigned StandardNodeGadget::layerMask() const

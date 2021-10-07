@@ -121,6 +121,12 @@ class GAFFERUI_API ConnectionGadget : public ConnectionCreator
 			static ConnectionGadgetPtr creator( NodulePtr srcNodule, NodulePtr dstNodule ) { return new T( srcNodule, dstNodule ); };
 		};
 
+		virtual void activeForFocusNode( bool active );
+
+		friend class GraphGadget;
+
+		bool m_active;
+
 	private :
 
 		NodulePtr m_srcNodule;

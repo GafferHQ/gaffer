@@ -107,6 +107,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		/// it's annotations are drawn
 		float focusBorderWidth() const;
 
+		void setHighlighted( bool highlighted ) override;
+
 	protected :
 
 		StandardNodeGadget( Gaffer::NodePtr node, bool auxillary );
@@ -116,6 +118,8 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		Imath::Box3f renderBound() const override;
 
 		const Imath::Color3f *userColor() const;
+
+		void activeForFocusNode( bool active ) override;
 
 	private :
 
@@ -158,6 +162,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
+		void updateTextDimming();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );

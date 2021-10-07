@@ -156,6 +156,7 @@ class GAFFERUI_API StandardStyle : public Style
 		float m_fontScales[LastText];
 
 		IECoreGL::StatePtr m_highlightState;
+		mutable float m_pixelSize;
 
 };
 
