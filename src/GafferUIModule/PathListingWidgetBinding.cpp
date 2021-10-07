@@ -43,6 +43,7 @@
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/Path.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
+#include "Gaffer/Private/ScopedAssignment.h"
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
@@ -402,14 +403,17 @@ class PathModel : public QAbstractItemModel
 
 	public :
 
-		PathModel( QObject *parent = nullptr )
+		PathModel( QTreeView *parent )
 			:	QAbstractItemModel( parent ),
 				m_rootItem( new Item( IECore::InternedString(), nullptr ) ),
 				m_flat( true ),
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder ),
+				m_modifyingTreeViewExpansion( false ),
 				m_updateScheduled( false )
 		{
+			connect( parent, &QTreeView::expanded, this, &PathModel::treeViewExpanded );
+			connect( parent, &QTreeView::collapsed, this, &PathModel::treeViewCollapsed );
 		}
 
 		~PathModel()
@@ -478,6 +482,29 @@ class PathModel : public QAbstractItemModel
 			return m_flat;
 		}
 
+		// In Qt, the expanded indices are a property of the View rather than
+		// the Model. This is perfectly logical, but it's tricky for an
+		// asynchronous model, where the indices you want to expand may not
+		// exist at the time you want to expand them. So we treat expansion as a
+		// property of our model, allowing us to factor it in to our background
+		// update logic. Our "source of truth" is the PathMatcher, not
+		// `QTreeView::isExpanded()`.
+		void setExpansion( const IECore::PathMatcher &expandedPaths )
+		{
+			cancelUpdate();
+
+			m_expandedPaths = IECore::PathMatcher( expandedPaths );
+			m_rootItem->dirtyExpansion();
+			expansionChanged();
+
+			scheduleUpdate();
+		}
+
+		const IECore::PathMatcher &getExpansion() const
+		{
+			return m_expandedPaths;
+		}
+
 		void attachTester()
 		{
 			if( !m_tester )
@@ -489,6 +516,25 @@ class PathModel : public QAbstractItemModel
 					QAbstractItemModelTester::FailureReportingMode::Warning
 				);
 			}
+		}
+
+		Path::Names namesForIndex( const QModelIndex &index )
+		{
+			if( !index.isValid() || !m_rootPath )
+			{
+				return Path::Names();
+			}
+
+			std::vector<IECore::InternedString> result;
+			Item *item = static_cast<Item *>( index.internalPointer() );
+			while( item->parent() )
+			{
+				result.push_back( item->name() );
+				item = item->parent();
+			}
+			std::reverse( result.begin(), result.end() );
+			result.insert( result.begin(), m_rootPath->names().begin(), m_rootPath->names().end() );
+			return result;
 		}
 
 		PathPtr pathForIndex( const QModelIndex &index )
@@ -581,9 +627,15 @@ class PathModel : public QAbstractItemModel
 			QCoreApplication::sendPostedEvents( this, EditEvent::staticType() );
 		}
 
+	signals :
+
+		void expansionChanged();
+
 		///////////////////////////////////////////////////////////////////
 		// QAbstractItemModel implementation - this is what Qt cares about
 		///////////////////////////////////////////////////////////////////
+
+	public :
 
 		QVariant data( const QModelIndex &index, int role ) const override
 		{
@@ -819,7 +871,9 @@ class PathModel : public QAbstractItemModel
 					m_parent( parent ),
 					m_row( -1 ), // Assigned true value in `updateChildItems()`
 					m_dataState( State::Unrequested ),
-					m_childItemsState( State::Unrequested )
+					m_childItemsState( State::Unrequested ),
+					m_expansionDirty( true ),
+					m_expandedInTreeView( false )
 			{
 				static auto g_emptyChildItems = std::make_shared<PathModel::Item::ChildContainer>();
 				m_childItems = g_emptyChildItems;
@@ -840,9 +894,26 @@ class PathModel : public QAbstractItemModel
 				dirtyWalk();
 			}
 
+			void dirtyExpansion()
+			{
+				m_expansionDirty = true;
+				for( const auto &child : *m_childItems )
+				{
+					child->dirtyExpansion();
+				}
+			}
+
+			void treeViewExpansionChanged( bool expanded )
+			{
+				m_expandedInTreeView = expanded;
+			}
+
 			void update( PathModel *model )
 			{
-				updateWalk( model, model->m_rootPath.get() );
+				// We take a copy of `expandedPaths` because it may be modified
+				// on the UI thread by `treeViewExpanded()` while we run in the
+				// background.
+				updateWalk( model, model->m_rootPath.get(), IECore::PathMatcher( model->m_expandedPaths ) );
 			}
 
 			Item *parent()
@@ -910,16 +981,17 @@ class PathModel : public QAbstractItemModel
 					}
 				}
 
-				void updateWalk( PathModel *model,const Path *path )
+				void updateWalk( PathModel *model, const Path *path, const IECore::PathMatcher &expandedPaths )
 				{
 					updateData( model, path );
+					updateExpansion( model, path, expandedPaths );
 					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path );
 					PathPtr childPath = path->copy();
 					childPath->append( g_childPlaceholder );
 					for( const auto &child : *updatedChildItems )
 					{
 						childPath->set( childPath->names().size() - 1, child->name() );
-						child->updateWalk( model, childPath.get() );
+						child->updateWalk( model, childPath.get(), expandedPaths );
 					}
 				}
 
@@ -1016,6 +1088,37 @@ class PathModel : public QAbstractItemModel
 					);
 
 					return result;
+				}
+
+				void updateExpansion( PathModel *model, const Gaffer::Path *path, const IECore::PathMatcher &expandedPaths )
+				{
+					if( !m_expansionDirty )
+					{
+						return;
+					}
+
+					const unsigned match = expandedPaths.match( path->names() );
+					const bool expanded = match & IECore::PathMatcher::ExactMatch;
+
+					if( expanded != m_expandedInTreeView )
+					{
+						model->queueEdit(
+							[this, model, expanded] {
+								QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
+								Private::ScopedAssignment<bool> assignment( model->m_modifyingTreeViewExpansion, true );
+								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
+								m_expandedInTreeView = expanded;
+							}
+						);
+					}
+
+					if( match & IECore::PathMatcher::DescendantMatch )
+					{
+						// Force creation of children so we can expand them.
+						requestIfUnrequested( m_childItemsState );
+					}
+
+					m_expansionDirty = false;
 				}
 
 				// Returns the updated ChildContainer. This will not be visible in the model
@@ -1224,6 +1327,11 @@ class PathModel : public QAbstractItemModel
 				// recursive background update completes.
 				std::shared_ptr<ChildContainer> m_childItems;
 
+				bool m_expansionDirty;
+				// Mirrors current Qt expansion status, because we can't query it
+				// directly in a threadsafe way.
+				bool m_expandedInTreeView;
+
 		};
 
 		void indicesForPathsWalk( Item *item, const Path::Names &itemPath, const QModelIndex &itemIndex, const IECore::PathMatcher &paths, std::vector<QModelIndex> &indices )
@@ -1254,6 +1362,45 @@ class PathModel : public QAbstractItemModel
 			}
 		}
 
+		void treeViewExpanded( const QModelIndex &index )
+		{
+			if( m_modifyingTreeViewExpansion )
+			{
+				// When we're modifying the expansion ourselves, it's to mirror
+				// `m_expandedPaths` into the tree view. In this case there is
+				// no need to sync back into `m_expandedPaths`.
+				return;
+			}
+
+			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( true );
+
+			const Path::Names expandedPath = namesForIndex( index );
+			// It's possible for `addPath()` to return false if the path is
+			// already added, but the async update hasn't transferred it to
+			// the QTreeView yet (allowing a user to expand it manually in
+			// the meantime).
+			if( m_expandedPaths.addPath( expandedPath ) )
+			{
+				expansionChanged();
+			}
+		}
+
+		void treeViewCollapsed( const QModelIndex &index )
+		{
+			if( m_modifyingTreeViewExpansion )
+			{
+				return;
+			}
+
+			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( false );
+
+			const Path::Names collapsedPath = namesForIndex( index );
+			if( m_expandedPaths.removePath( collapsedPath ) )
+			{
+				expansionChanged();
+			}
+		}
+
 		Gaffer::PathPtr m_rootPath;
 
 		Item::Ptr m_rootItem;
@@ -1262,6 +1409,9 @@ class PathModel : public QAbstractItemModel
 		int m_sortColumn;
 		Qt::SortOrder m_sortOrder;
 		std::unique_ptr<QAbstractItemModelTester> m_tester;
+
+		IECore::PathMatcher m_expandedPaths;
+		bool m_modifyingTreeViewExpansion;
 
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateScheduled;
@@ -1325,39 +1475,14 @@ void setExpansion( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
 
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	for( const auto &modelIndex : model->indicesForPaths( paths ) )
-	{
-		treeView->setExpanded( modelIndex, true );
-	}
-}
-
-void getExpansionWalk( QTreeView *treeView, PathModel *model, QModelIndex index, IECore::PathMatcher &expanded )
-{
-	for( int i = 0, e = model->rowCount( index ); i < e; ++i )
-	{
-		QModelIndex childIndex = model->index( i, 0, index );
-		if( treeView->isExpanded( childIndex ) )
-		{
-			expanded.addPath( model->pathForIndex( childIndex )->names() );
-			getExpansionWalk( treeView, model, childIndex, expanded );
-		}
-	}
+	model->setExpansion( paths );
 }
 
 IECore::PathMatcher getExpansion( uint64_t treeViewAddress )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-
-	IECore::PathMatcher result;
-	if( !model )
-	{
-		return result;
-	}
-
-	IECorePython::ScopedGILRelease gilRelease;
-	getExpansionWalk( treeView, model, QModelIndex(), result );
-	return result;
+	return model ? model->getExpansion() : IECore::PathMatcher();
 }
 
 void propagateExpandedWalk( QTreeView *treeView, PathModel *model, QModelIndex index, bool expanded, int numLevels )

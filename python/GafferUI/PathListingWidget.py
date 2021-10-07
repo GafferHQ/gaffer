@@ -109,8 +109,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		self._qtWidget().setSortingEnabled( sortable )
 
-		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
-
 		# install an empty model, so we an construct our selection model
 		# around it. we'll update the model contents shortly in setPath().
 		_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), None )
@@ -122,6 +120,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.ExtendedSelection )
+
+		self._qtWidget().model().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
@@ -185,7 +185,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	def setExpansion( self, paths ) :
 
 		assert( isinstance( paths, IECore.PathMatcher ) )
-		self._qtWidget().setExpansion( paths )
+		_GafferUI._pathListingWidgetSetExpansion( GafferUI._qtAddress( self._qtWidget() ), paths )
 
 	## Returns an `IECore.PathMatcher` object containing
 	# the currently expanded paths.
@@ -195,17 +195,17 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def setPathExpanded( self, path, expanded ) :
 
-		index = self.__indexForPath( path )
-		if index.isValid() :
-			self._qtWidget().setExpanded( index, expanded )
+		e = self.getExpansion()
+		if expanded :
+			if e.addPath( str( path ) ) :
+				self.setExpansion( e )
+		else :
+			if e.removePath( str( path ) ) :
+				self.setExpansion( e )
 
 	def getPathExpanded( self, path ) :
 
-		index = self.__indexForPath( path )
-		if index.isValid() :
-			return self._qtWidget().isExpanded( index )
-
-		return False
+		return bool( self.getExpansion().match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch )
 
 	## \deprecated Use `setExpansion()` instead
 	def setExpandedPaths( self, paths ) :
@@ -219,6 +219,9 @@ class PathListingWidget( GafferUI.Widget ) :
 	## \deprecated Use `getExpansion()` instead
 	def getExpandedPaths( self ) :
 
+		# Note : This doesn't follow the semantics of `getExpansion()` with
+		# respect to paths that are not currently in the model. It is probably
+		# time it was removed.
 		return _GafferUI._pathListingWidgetPathsForPathMatcher(
 			GafferUI._qtAddress( self._qtWidget() ),
 			self.getExpansion()
@@ -585,12 +588,6 @@ class PathListingWidget( GafferUI.Widget ) :
 # clicking for recursive expand/collapse.
 class _TreeView( QtWidgets.QTreeView ) :
 
-	# This signal is called when some items are either collapsed or
-	# expanded. It can be preferable to use this over the expanded or
-	# collapsed signals as it is emitted only once when making several
-	# changes.
-	expansionChanged = QtCore.Signal()
-
 	def __init__( self ) :
 
 		QtWidgets.QTreeView.__init__( self )
@@ -616,26 +613,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 		model.modelReset.connect( self.updateColumnWidths )
 
 		self.updateColumnWidths()
-
-	def setExpansion( self, paths ) :
-
-		self.collapsed.disconnect( self.__collapsed )
-		self.expanded.disconnect( self.__expanded )
-
-		self.collapseAll()
-		# This call is critical to performance - without
-		# it an update is triggered for every call to
-		# setExpanded().
-		self.scheduleDelayedItemsLayout()
-
-		_GafferUI._pathListingWidgetSetExpansion( GafferUI._qtAddress( self ), paths )
-
-		self.collapsed.connect( self.__collapsed )
-		self.expanded.connect( self.__expanded )
-
-		self.updateColumnWidths()
-
-		self.expansionChanged.emit()
 
 	def sizeHint( self ) :
 
@@ -717,14 +694,10 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.__propagateExpanded( index, False )
 		self.updateColumnWidths()
 
-		self.expansionChanged.emit()
-
 	def __expanded( self, index ) :
 
 		self.__propagateExpanded( index, True )
 		self.updateColumnWidths()
-
-		self.expansionChanged.emit()
 
 	def __propagateExpanded( self, index, expanded ) :
 
