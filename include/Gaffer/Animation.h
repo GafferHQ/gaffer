@@ -73,7 +73,7 @@ class GAFFER_API Animation : public ComputeNode
 		class CurvePlug;
 
 		/// Defines a single keyframe.
-		class Key : public IECore::RefCounted
+		class Key : public IECore::RunTimeTyped
 		{
 
 			public :
@@ -81,7 +81,7 @@ class GAFFER_API Animation : public ComputeNode
 				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Interpolation::Linear );
 				~Key() override;
 
-				IE_CORE_DECLAREMEMBERPTR( Key )
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
 
 				/// Get current time of key.
 				float getTime() const { return m_time; };

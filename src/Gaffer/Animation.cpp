@@ -56,6 +56,8 @@ using namespace Gaffer;
 // Key implementation
 //////////////////////////////////////////////////////////////////////////
 
+IE_CORE_DEFINERUNTIMETYPED( Gaffer::Animation::Key )
+
 Animation::Key::Key( float time, float value, Animation::Interpolation interpolation )
 	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_interpolation( interpolation ), m_active( false )
 {
