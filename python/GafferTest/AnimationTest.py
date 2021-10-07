@@ -263,6 +263,84 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.parent().isSame( curve ) )
 		self.assertFalse( k1.isActive() )
 
+	def testAddKeySignals( self ) :
+
+		ps = set()
+
+		def added( curve, key ) :
+
+			ps.add( key )
+
+		def removed( curve, key ) :
+
+			ps.remove( key )
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		c1 = curve.keyAddedSignal().connect( added )
+		c2 = curve.keyRemovedSignal().connect( removed )
+
+		k = Gaffer.Animation.Key( 0, 0 )
+
+		with Gaffer.UndoScope( s ) :
+			curve.addKey( k )
+
+		self.assertTrue( k in ps )
+
+		s.undo()
+
+		self.assertTrue( k not in ps )
+
+		s.redo()
+
+		self.assertTrue( k in ps )
+
+	def testRemoveKeySignals( self ) :
+
+		ps = set()
+
+		def added( curve, key ) :
+
+			ps.add( key )
+
+		def removed( curve, key ) :
+
+			ps.remove( key )
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		c1 = curve.keyAddedSignal().connect( added )
+		c2 = curve.keyRemovedSignal().connect( removed )
+
+		k = Gaffer.Animation.Key( 0, 0 )
+
+		curve.addKey( k )
+
+		self.assertTrue( k in ps )
+
+		with Gaffer.UndoScope( s ) :
+			curve.removeKey( k )
+
+		self.assertTrue( k not in ps )
+
+		s.undo()
+
+		self.assertTrue( k in ps )
+
+		s.redo()
+
+		self.assertTrue( k not in ps )
+
 	def testClosestKey( self ) :
 
 		s = Gaffer.ScriptNode()

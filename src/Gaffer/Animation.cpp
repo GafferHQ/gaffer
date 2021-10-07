@@ -405,6 +405,8 @@ Animation::CurvePlug::CurvePlug( const std::string &name, const Direction direct
 : ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
 , m_keys()
 , m_inactiveKeys()
+, m_keyAddedSignal()
+, m_keyRemovedSignal()
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
@@ -413,6 +415,16 @@ Animation::CurvePlug::~CurvePlug()
 {
 	m_keys.clear_and_dispose( Key::Dispose() );
 	m_inactiveKeys.clear_and_dispose( Key::Dispose() );
+}
+
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyAddedSignal()
+{
+	return m_keyAddedSignal;
+}
+
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyRemovedSignal()
+{
+	return m_keyRemovedSignal;
 }
 
 Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )
@@ -482,6 +494,7 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 			key->m_parent = this; // NOTE : never throws or fails
 			key->addRef();        // NOTE : take ownership
 			key->m_active = true;
+			m_keyAddedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		},
 		// Undo
@@ -517,6 +530,7 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 				m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
 				ASSERTCONTAINSKEY( key, m_keys, false )
 			}
+			m_keyRemovedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		}
 	);
@@ -626,6 +640,7 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 				m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
 				ASSERTCONTAINSKEY( key, m_keys, false )
 			}
+			m_keyRemovedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		},
 		// Undo
@@ -671,6 +686,7 @@ void Animation::CurvePlug::removeKey( const KeyPtr &key )
 			key->m_parent = this; // NOTE : never throws or fails
 			key->addRef();        // NOTE : take ownership
 			key->m_active = active;
+			m_keyAddedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		}
 	);
