@@ -322,6 +322,11 @@ options.Add(
 	"",
 )
 
+options.Add( "GAFFER_MILESTONE_VERSION", "Milestone version", str( gafferMilestoneVersion ) )
+options.Add( "GAFFER_MAJOR_VERSION", "Major version", str( gafferMajorVersion ) )
+options.Add( "GAFFER_MINOR_VERSION", "Minor version", str( gafferMinorVersion ) )
+options.Add( "GAFFER_PATCH_VERSION", "Patch version", str( gafferPatchVersion ) )
+
 ###############################################################################################
 # Basic environment object. All the other environments will be based on this.
 ###############################################################################################
@@ -329,11 +334,6 @@ options.Add(
 env = Environment(
 
 	options = options,
-
-	GAFFER_MILESTONE_VERSION = str( gafferMilestoneVersion ),
-	GAFFER_MAJOR_VERSION = str( gafferMajorVersion ),
-	GAFFER_MINOR_VERSION = str( gafferMinorVersion ),
-	GAFFER_PATCH_VERSION = str( gafferPatchVersion ),
 
 	CPPDEFINES = [
 		( "GAFFER_MILESTONE_VERSION", "$GAFFER_MILESTONE_VERSION" ),
