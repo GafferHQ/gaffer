@@ -678,11 +678,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				self.visitedPaths = visitedPaths if visitedPaths is not None else IECore.PathMatcher()
 				self.visitedPaths.addPath( str( self ) )
 
-			def isValid( self ) :
+			def isValid( self, canceller = None ) :
 
 				return True
 
-			def isLeaf( self ) :
+			def isLeaf( self, canceller = None ) :
 
 				return False
 
@@ -690,7 +690,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 				return InfinitePath( self[:], self.root(), self.getFilter(), self.visitedPaths )
 
-			def _children( self ) :
+			def _children( self, canceller = None ) :
 
 				return [ InfinitePath( self[:] + [ x ], self.root(), self.getFilter(), self.visitedPaths ) for x in [ "a", "b" ] ]
 
