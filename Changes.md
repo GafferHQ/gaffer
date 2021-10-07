@@ -17,6 +17,7 @@ Improvements
   - Added support for middle-drag panning while dragging nodes and connections using <kbd>G</kbd>.
   - Made connections slightly more visible when zoomed out.
 - Cancellation : Improved responsiveness of cancellation of tasks waiting on results from another thread.
+- ImageReader : Channels from EXR subimages named `rgb`, `rgba` or `depth` (either uppercase or lowercase) are now loaded into Gaffer's primary image layer.
 
 Fixes
 -----
@@ -58,6 +59,7 @@ API
 Breaking Changes
 ----------------
 
+- ImageReader : Channels from EXR subimages named `rgb`, `rgba` or `depth` (either uppercase or lowercase) are now loaded into Gaffer's primary image layer.
 - FilteredChildIterator/FilteredRecursiveChildIterator : Removed all namespace-level typedefs, which were deprecated in Gaffer 0.59.0.0. Use the class-level typedefs instead, for example `Plug::Iterator` in place of `PlugIterator`.
 - Gadget :
   - Moved `render()` and `renderRequestSignal()` to ViewportGadget.
