@@ -104,10 +104,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().setHorizontalScrollBarPolicy( GafferUI.ScrollMode._toQt( horizontalScrollMode ) )
 
-		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			self._qtWidget().header().setSectionsMovable( False )
-		else :
-			self._qtWidget().header().setMovable( False )
+		self._qtWidget().header().setSectionsMovable( False )
 
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		self._qtWidget().setSortingEnabled( sortable )
@@ -283,7 +280,6 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return not self._qtWidget().header().isHidden()
 
-	## \deprecated Use constructor argument instead.
 	def setSortable( self, sortable ) :
 
 		if sortable == self.getSortable() :
@@ -293,7 +289,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		if not sortable :
 			self._qtWidget().model().sort( -1 )
 
-	## \deprecated
 	def getSortable( self ) :
 
 		return self._qtWidget().isSortingEnabled()
@@ -395,23 +390,9 @@ class PathListingWidget( GafferUI.Widget ) :
 		dirPath = self.__dirPath()
 		if self.__currentDir!=dirPath or str( self.__path )==self.__currentPath :
 
-			selectedPaths = self.getSelectedPaths()
-			expandedPaths = None
-			if str( self.__path ) == self.__currentPath :
-				# the path location itself hasn't changed so we are assuming that just the filter has.
-				# if we're in the tree view mode, the user would probably be very happy
-				# if we didn't forget what was expanded.
-				if self.getDisplayMode() == self.DisplayMode.Tree :
-					expandedPaths = self.getExpandedPaths()
-
 			_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), dirPath.copy() )
-
-			if expandedPaths is not None :
-				self.setExpandedPaths( expandedPaths )
-
-			self.setSelectedPaths( selectedPaths, scrollToFirst = False, expandNonLeaf = False )
-
 			self.__currentDir = dirPath
+			self._qtWidget().updateColumnWidths()
 
 		self.__currentPath = str( self.__path )
 
@@ -632,9 +613,9 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.setModel( self, model )
 
-		model.modelReset.connect( self.__recalculateColumnSizes )
+		model.modelReset.connect( self.updateColumnWidths )
 
-		self.__recalculateColumnSizes()
+		self.updateColumnWidths()
 
 	def setExpansion( self, paths ) :
 
@@ -652,7 +633,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.collapsed.connect( self.__collapsed )
 		self.expanded.connect( self.__expanded )
 
-		self.__recalculateColumnSizes()
+		self.updateColumnWidths()
 
 		self.expansionChanged.emit()
 
@@ -698,7 +679,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 		QtWidgets.QTreeView.mouseDoubleClickEvent( self, event )
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
-	def __recalculateColumnSizes( self ) :
+	def updateColumnWidths( self ) :
 
 		self.__recalculatingColumnWidths = True
 
@@ -727,21 +708,21 @@ class _TreeView( QtWidgets.QTreeView ) :
 			return
 
 		# store the difference between the ideal size and what the user would prefer, so
-		# we can apply it again in __recalculateColumnSizes
+		# we can apply it again in updateColumnWidths
 		if len( self.__idealColumnWidths ) > index :
 			self.__columnWidthAdjustments[index] = newWidth - self.__idealColumnWidths[index]
 
 	def __collapsed( self, index ) :
 
 		self.__propagateExpanded( index, False )
-		self.__recalculateColumnSizes()
+		self.updateColumnWidths()
 
 		self.expansionChanged.emit()
 
 	def __expanded( self, index ) :
 
 		self.__propagateExpanded( index, True )
-		self.__recalculateColumnSizes()
+		self.updateColumnWidths()
 
 		self.expansionChanged.emit()
 

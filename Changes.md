@@ -41,6 +41,8 @@ API
   - Added `gadgetsAt()` overload which returns the gadgets rather than taking an output parameter by reference.
   - Added `gadgetsAt()` overload taking a raster space region (rather than position) and an optional layer filter.
   - Add support for Gadget's double click signal.
+- PathListingWidget : `setSortable()` and `getSortable()` are no longer deprecated. The underlying bug that made them unreliable
+  has been fixed.
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
