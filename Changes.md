@@ -26,7 +26,8 @@ Fixes
 - PathListingWidget : Fixed subtle bugs in the underlying Qt model, although they haven't been observed to cause problems in practice.
 - Animation :
   - Fixed bug in `Key.setType()`. Previously it modified the value instead of the type.
-  - Fixed crash when dragging multiple keys around in editor
+  - Fixed crash when dragging multiple keys around in editor.
+  - Inserting a new key in editor (Hold "Ctrl" and left click on curve) is now undone/redone as a distinct step.
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 
 API
