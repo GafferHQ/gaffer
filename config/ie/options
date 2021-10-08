@@ -93,7 +93,13 @@ pythonVersion = getOption( "PYTHON_VERSION", cortexReg["preferredPythonVersion"]
 targetApp = getOption( "APP", None )
 targetAppVersion = None
 
-gafferReg = IEEnv.registry["apps"]["gaffer"][gafferRegistryVersion()][IEEnv.platform()]
+if int( getOption( "IE_STOMP_VERSION", "0" ) ):
+	registryVersion = os.environ["GAFFER_COMPATIBILITY_VERSION"] + ".0.0"
+	GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION, GAFFER_MINOR_VERSION, GAFFER_PATH_VERSION = os.environ["GAFFER_VERSION"].rstrip( "dev" ).split( "." )
+else:
+	registryVersion = gafferRegistryVersion()
+
+gafferReg = IEEnv.registry["apps"]["gaffer"][registryVersion][IEEnv.platform()]
 gafferBuildVariant = getOption( "GAFFER_BUILD_VARIANT", "py2" )
 qtVersion = gafferReg["qtVersion"]
 pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
