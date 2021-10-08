@@ -447,6 +447,7 @@ ENV_VARS_TO_IMPORT = " ".join( [
 	"DOXYGEN_VERSION",
 	"OSL_VERSION",
 	"OCIO",
+	"QT_VERSION",
 	"QT_QPA_PLATFORM_PLUGIN_PATH",
 	"GAFFER_JEMALLOC",
 ] )
@@ -462,6 +463,7 @@ os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 # disable jemalloc for doc builds. the docs run with the native gaffer binary and it can't locate our custom libjemalloc
 os.environ["GAFFER_JEMALLOC"] = "0"
 # required to run gaffer gui for the doc builds
+os.environ["QT_VERSION"] = qtVersion
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "plugins" )
 
 # speed up the build a bit hopefully.
