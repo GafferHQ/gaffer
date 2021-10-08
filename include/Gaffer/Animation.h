@@ -59,8 +59,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
 
-		/// Defines the method used to interpolate
-		/// between a key and the previous one.
+		/// Defines the method used to interpolate between a key and the next one.
 		enum class Interpolation
 		{
 			Step,

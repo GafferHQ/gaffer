@@ -83,6 +83,7 @@ Breaking Changes
 - Removed support for linking editors (following the focus node replaces most practical uses of this feature).
 - Animation :
   - Renamed `Type` enum to `Interpolation`.
+  - Interpolation of a key now affects span to next instead of previous key.
   - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.

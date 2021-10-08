@@ -1501,16 +1501,33 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
-			if( key.getInterpolation() == Gaffer::Animation::Interpolation::Linear )
+			switch( previousKey->getInterpolation() )
 			{
-				style->renderAnimationCurve( previousKeyPosition, keyPosition, /* inTangent */ V2f( 0 ), /* outTangent */ V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
-			}
-			else if( key.getInterpolation() == Gaffer::Animation::Interpolation::Step )
-			{
-				const Color4f color4( color3[0], color3[1], color3[2], 1.0f );
-				// \todo: replace with linear curve segment to get highlighting
-				style->renderLine( IECore::LineSegment3f( V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, previousKeyPosition.y, 0) ), 0.5, &color4 );
-				style->renderLine( IECore::LineSegment3f( V3f( keyPosition.x, previousKeyPosition.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ), 0.5, &color4 );
+				case Gaffer::Animation::Interpolation::Step:
+					style->renderAnimationCurve( previousKeyPosition, V2f( keyPosition.x, previousKeyPosition.y ), V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					style->renderAnimationCurve( V2f( keyPosition.x, previousKeyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					break;
+				case Gaffer::Animation::Interpolation::Linear:
+					style->renderAnimationCurve( previousKeyPosition, keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					break;
+				default:
+				{
+					V2f p0 = previousKeyPosition;
+					const double range = ( key.getTime() - previousKey->getTime() );
+
+					for( int i = 1; i < 50; ++ i )
+					{
+						const double scale = static_cast< double >( i ) / 50.0;
+						const double time = previousKey->getTime() + ( range * scale );
+						double value = curvePlug->evaluate( time );
+						V2f p1 = viewportGadget->worldToRasterSpace( V3f( time, value, 0 ) );
+						style->renderAnimationCurve( p0, p1, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+						p0 = p1;
+					}
+
+					style->renderAnimationCurve( p0, keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					break;
+				}
 			}
 		}
 
