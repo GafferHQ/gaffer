@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.1.1)
 ========
 
+Features
+--------
+
+- LightEditor : Added a new editor UI for inspecting and editing lights. This can be found in the tab next to the GraphEditor in the standard layouts.
+
 Improvements
 ------------
 
