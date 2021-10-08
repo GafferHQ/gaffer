@@ -27,6 +27,7 @@ Fixes
 - Animation :
   - Fixed bug in `Key.setType()`. Previously it modified the value instead of the type.
   - Fixed crash when dragging multiple keys around in editor.
+  - Fixed bug which resulted in preview key being incorrectly drawn at the origin.
   - Inserting a new key in editor (Hold "Ctrl" and left click on curve) is now undone/redone as a distinct step.
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 
