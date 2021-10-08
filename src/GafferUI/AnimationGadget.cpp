@@ -725,6 +725,7 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 		if( controlHeld ) // insert a keyframe
 		{
 			insertKeyframe( curvePlug.get(), i.x );
+			++m_mergeGroupId;
 			m_keyPreview = false;
 		}
 		else
