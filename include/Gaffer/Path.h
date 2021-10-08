@@ -113,9 +113,18 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 		/// has no parent (is the root).
 		PathPtr parent() const;
 
-		/// Fills the vector with Path instances representing all
-		/// the children of this path. Note that an empty list may
-		/// be returned even if isLeaf() is false.
+		/// Fills the vector with Path instances representing all the children
+		/// of this path. Note that an empty list may be returned even if
+		/// isLeaf() is false.
+		///
+		/// > Caution : This is a flawed API. It is possible to implement
+		/// > `children()` to return children of a different type than
+		/// > this, but the type change cannot be reverted by `parent()`,
+		/// > nor repeated by methods like `append()` and `setFromString()`.
+		/// > Changing type in `children()` is not supported by UI components
+		/// > such as PathListingWidget and PathChooserWidget.
+		///
+		/// \todo Replace with a `childNames()` method.
 		size_t children( std::vector<PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const;
 
 		void setFilter( PathFilterPtr filter );
