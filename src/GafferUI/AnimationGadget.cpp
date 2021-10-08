@@ -985,8 +985,6 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	case ButtonEvent::Left :
 	{
-		Imath::V2f mouseRasterPosition = viewportGadget->worldToRasterSpace( i );
-
 		if( Animation::KeyPtr key = keyAt( event.line ) )
 		{
 			// If dragging an unselected Key, the assumption is that only this Key
@@ -1001,7 +999,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			removeInactiveKeyframes();
 			m_dragMode = DragMode::Moving;
 		}
-		else if( ( onTimeAxis( mouseRasterPosition.y ) && !onValueAxis( mouseRasterPosition.x ) ) || frameIndicatorUnderMouse( event.line ) )
+		else if( ( onTimeAxis( event.line ) && ! onValueAxis( event.line ) ) || frameIndicatorUnderMouse( event.line ) )
 		{
 			m_dragMode = DragMode::MoveFrame;
 			m_frameIndicatorPreviewFrame = boost::none;
@@ -1073,10 +1071,7 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		return false;
 	}
 
-	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-	Imath::V2f mouseRasterPosition = viewportGadget->worldToRasterSpace( i );
-
-	if( onTimeAxis( mouseRasterPosition.y ) && !onValueAxis( mouseRasterPosition.x ) )
+	if( onTimeAxis( event.line ) && ! onValueAxis( event.line ) )
 	{
 		m_frameIndicatorPreviewFrame = static_cast<int>( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
 	}
@@ -1325,17 +1320,28 @@ std::string AnimationGadget::undoMergeGroup() const
 	return boost::str( boost::format( "AnimationGadget%1%%2%" ) % this % m_mergeGroupId );
 }
 
-bool AnimationGadget::onTimeAxis( int y ) const
+bool AnimationGadget::onTimeAxis( const IECore::LineSegment3f& line ) const
 {
-	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-	Imath::V2i resolution = viewportGadget->getViewport();
+	Imath::V3f i;
+	if( ! line.intersect( Imath::Plane3f( Imath::V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return false;
+	}
 
-	return y >= resolution.y - m_yMargin;
+	const ViewportGadget* const viewportGadget = ancestor<ViewportGadget>();
+	return viewportGadget->gadgetToRasterSpace( i, this ).y >= ( viewportGadget->getViewport().y - m_yMargin );
 }
 
-bool AnimationGadget::onValueAxis( int x ) const
+bool AnimationGadget::onValueAxis( const IECore::LineSegment3f& line ) const
 {
-	return x <= m_xMargin;
+	Imath::V3f i;
+	if( ! line.intersect( Imath::Plane3f( Imath::V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return false;
+	}
+
+	const ViewportGadget* const viewportGadget = ancestor<ViewportGadget>();
+	return viewportGadget->gadgetToRasterSpace( i, this ).x <= m_xMargin;
 }
 
 Animation::KeyPtr AnimationGadget::keyAt( const IECore::LineSegment3f &position )

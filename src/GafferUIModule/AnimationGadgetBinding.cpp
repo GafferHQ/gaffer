@@ -66,5 +66,7 @@ void GafferUIModule::bindAnimationGadget()
 		.def( "selectedKeys", (Gaffer::Set *(AnimationGadget::*)())&AnimationGadget::selectedKeys,
 			return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &AnimationGadget::setContext )
+		.def( "onTimeAxis", &AnimationGadget::onTimeAxis )
+		.def( "onValueAxis", &AnimationGadget::onValueAxis )
 		;
 }
