@@ -1359,6 +1359,7 @@ void AnimationGadget::updateKeyPreviewLocation( const Gaffer::Animation::CurvePl
 	if( !curvePlug )
 	{
 		m_keyPreviewLocation = V3f( 0 );
+		m_keyPreview = false;
 		return;
 	}
 
