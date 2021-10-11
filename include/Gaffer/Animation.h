@@ -171,8 +171,10 @@ class GAFFER_API Animation : public ComputeNode
 				/// removeActiveClashing is true that key will be removed from the curve and returned
 				/// otherwise that key will remain parented to the curve, become inactive and be returned.
 				/// The new key will be the active key at its time.
+				/// When inheritInterpolation is true the key will inherit interpolation from previous key
+				/// or first key of the curve.
 				/// \undoable
-				KeyPtr addKey( const KeyPtr &key, bool removeActiveClashing = true );
+				KeyPtr addKey( const KeyPtr &key, bool inheritInterpolation = false, bool removeActiveClashing = true );
 
 				/// Does the curve have a key at the specified time?
 				bool hasKey( float time ) const;
@@ -240,6 +242,11 @@ class GAFFER_API Animation : public ComputeNode
 				friend class Key;
 				friend KeyIterator;
 				friend ConstKeyIterator;
+
+				Key *firstKey();
+				Key *finalKey();
+				const Key *firstKey() const;
+				const Key *finalKey() const;
 
 				struct TimeKey
 				{

@@ -357,7 +357,7 @@ class ValueAdaptor :
 
 		if Gaffer.Animation.isAnimated( plug ) :
 			curve = Gaffer.Animation.acquire( plug )
-			curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Interpolation.Linear ) )
+			curve.addKey( Gaffer.Animation.Key( atTime, value, Gaffer.Animation.Interpolation.Linear ), inheritInterpolation = True )
 		else :
 			plug.setValue( value )
 

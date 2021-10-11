@@ -132,13 +132,8 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				if Gaffer.Animation.isAnimated( plug ) :
 					curve = Gaffer.Animation.acquire( plug )
-					curve.addKey(
-						Gaffer.Animation.Key(
-							time = self.getContext().getTime(),
-							value = value,
-							type = Gaffer.Animation.Interpolation.Step
-						)
-					)
+					context = self.getContext()
+					curve.addKey( Gaffer.Animation.Key( context.getTime(), value, Gaffer.Animation.Interpolation.Step ), inheritInterpolation = True )
 				else :
 					plug.setValue( value )
 

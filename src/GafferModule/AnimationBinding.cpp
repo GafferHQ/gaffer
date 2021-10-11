@@ -98,10 +98,10 @@ std::string keyRepr( const Animation::Key &k )
 	);
 };
 
-Animation::KeyPtr addKey( Animation::CurvePlug &p, const Animation::KeyPtr &k, const bool removeActiveClashing )
+Animation::KeyPtr addKey( Animation::CurvePlug &p, const Animation::KeyPtr &k, const bool inheritInterpolation, const bool removeActiveClashing )
 {
 	ScopedGILRelease gilRelease;
-	return p.addKey( k, removeActiveClashing );
+	return p.addKey( k, inheritInterpolation, removeActiveClashing );
 }
 
 void removeKey( Animation::CurvePlug &p, const Animation::KeyPtr &k )
@@ -207,7 +207,7 @@ void GafferModule::bindAnimation()
 		)
 		.def( "keyAddedSignal", &Animation::CurvePlug::keyAddedSignal, return_internal_reference< 1 >() )
 		.def( "keyRemovedSignal", &Animation::CurvePlug::keyRemovedSignal, return_internal_reference< 1 >() )
-		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
+		.def( "addKey", &addKey, ( boost::python::arg_( "inheritInterpolation" ) = false, boost::python::arg_( "removeActiveClashing" ) = true ) )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
 		.def(
 			"getKey",

@@ -178,14 +178,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 					if Gaffer.Animation.isAnimated( plug ) :
 						curve = Gaffer.Animation.acquire( plug )
-						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( self.getContext().getTime() ) ) :
-							curve.addKey(
-								Gaffer.Animation.Key(
-									self.getContext().getTime(),
-									self.__numericWidget.getValue(),
-									Gaffer.Animation.Interpolation.Linear
-								)
-							)
+						time = self.getContext().getTime()
+						if self.__numericWidget.getText() != self.__numericWidget.valueToString( curve.evaluate( time ) ) :
+							curve.addKey( Gaffer.Animation.Key( time, self.__numericWidget.getValue(), Gaffer.Animation.Interpolation.Linear ), inheritInterpolation = True )
 					else :
 						try :
 							plug.setValue( self.__numericWidget.getValue() )

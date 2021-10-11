@@ -429,7 +429,7 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyRemovedSignal
 	return m_keyRemovedSignal;
 }
 
-Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )
+Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool inheritInterpolation, const bool removeActiveClashing )
 {
 	const KeyPtr clashingKey = getKey( key->m_time );
 
@@ -444,6 +444,20 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 	if( key->m_parent )
 	{
 		key->m_parent->removeKey( key.get() );
+	}
+
+	// inherit interpolation from existing span or first key
+
+	if( inheritInterpolation )
+	{
+		if( Key* const kp = previousKey( key->m_time ) )
+		{
+			key->setInterpolation( kp->getInterpolation() );
+		}
+		else if( Key* const kf = firstKey() )
+		{
+			key->setInterpolation( kf->getInterpolation() );
+		}
 	}
 
 	// save the time of the key at the point it is added in case it was previously
@@ -773,6 +787,40 @@ const Animation::Key *Animation::CurvePlug::nextKey( float time ) const
 	return ( rightIt != m_keys.end() )
 		? &( *( rightIt ) )
 		: nullptr;
+}
+
+Animation::Key *Animation::CurvePlug::firstKey()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->firstKey() );
+}
+
+Animation::Key *Animation::CurvePlug::finalKey()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->finalKey() );
+}
+
+const Animation::Key *Animation::CurvePlug::firstKey() const
+{
+	const Key* k = nullptr;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.cbegin() ) );
+	}
+
+	return k;
+}
+
+const Animation::Key *Animation::CurvePlug::finalKey() const
+{
+	const Key* k = nullptr;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.crbegin() ) );
+	}
+
+	return k;
 }
 
 Animation::CurvePlug::TimeKey::type Animation::CurvePlug::TimeKey::operator()( const Animation::Key& key ) const

@@ -710,7 +710,7 @@ void AnimationGadget::insertKeyframe( Animation::CurvePlug *curvePlug, float tim
 	{
 		const float value = curvePlug->evaluate( snappedTime );
 		const Animation::KeyPtr key( new Animation::Key( snappedTime, value ) );
-		curvePlug->addKey( key );
+		curvePlug->addKey( key, /* inheritInterpolation = */ true );
 		m_selectedKeys->add( key );
 	}
 }
