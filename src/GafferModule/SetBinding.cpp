@@ -51,6 +51,7 @@
 #include "boost/python/slice.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 
@@ -102,8 +103,7 @@ boost::python::list getSlice( Set &s, boost::python::slice sl )
 
 struct MemberSignalSlotCaller
 {
-
-	boost::signals::detail::unusable operator()( boost::python::object slot, SetPtr s, Set::MemberPtr m )
+	boost::signals::detail::unusable operator()( boost::python::object slot, const SetPtr s, const Set::MemberPtr m )
 	{
 		try
 		{
@@ -111,12 +111,10 @@ struct MemberSignalSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}
-
-
 };
 
 // StandardSet
@@ -183,7 +181,8 @@ void GafferModule::bindSet()
 			.def( "memberRemovedSignal", &Set::memberRemovedSignal, boost::python::return_internal_reference<1>() )
 		;
 
-		SignalClass<Set::MemberSignal, DefaultSignalCaller<Set::MemberSignal>, MemberSignalSlotCaller>( "MemberSignal" );
+		SignalClass< Set::MemberSignal,
+			DefaultSignalCaller< Set::MemberSignal >, MemberSignalSlotCaller >( "MemberSignal" );
 	}
 
 	{

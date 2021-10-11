@@ -212,13 +212,13 @@ class SignalsTest( GafferTest.TestCase ) :
 				# note the use of Gaffer.WeakMethod to avoid creating a circular reference
 				# from self -> self.connection -> self.callback -> self. this is critical
 				# when connecting methods of class to a signal.
-				self.connection = s.memberAddedSignal().connect( Gaffer.WeakMethod( self.callback ) )
+				self.connection = s.childAddedSignal().connect( Gaffer.WeakMethod( self.callback ) )
 
-			def callback( self, s, n ) :
+			def callback( self, n, c ) :
 
 				raise Exception
 
-		s = Gaffer.StandardSet()
+		s = Gaffer.Node()
 		t = T( s )
 		w = weakref.ref( t )
 
@@ -226,7 +226,7 @@ class SignalsTest( GafferTest.TestCase ) :
 		sio = six.moves.cStringIO()
 		try :
 			sys.stderr = sio
-			s.add( Gaffer.Node() )
+			s.addChild( Gaffer.Node() )
 		finally :
 			sys.stderr = realStdErr
 
