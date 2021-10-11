@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.8.0)
+========
+
+Improvements
+------------
+
+- Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
+
 0.60.8.0 (relative to 0.60.7.1)
 ========
 
