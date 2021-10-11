@@ -39,6 +39,7 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/CatchingSignalCombiner.h"
 
 #include "boost/intrusive/avl_set.hpp"
 #include "boost/intrusive/avl_set_hook.hpp"
@@ -72,7 +73,7 @@ class GAFFER_API Animation : public ComputeNode
 		class CurvePlug;
 
 		/// Defines a single keyframe.
-		class Key : public IECore::RefCounted
+		class Key : public IECore::RunTimeTyped
 		{
 
 			public :
@@ -80,7 +81,7 @@ class GAFFER_API Animation : public ComputeNode
 				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Interpolation::Linear );
 				~Key() override;
 
-				IE_CORE_DECLAREMEMBERPTR( Key )
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
 
 				/// Get current time of key.
 				float getTime() const { return m_time; };
@@ -158,6 +159,11 @@ class GAFFER_API Animation : public ComputeNode
 
 				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
 				~CurvePlug() override;
+
+				typedef boost::signal< void ( CurvePlug*, Key* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeySignal;
+
+				CurvePlugKeySignal& keyAddedSignal();
+				CurvePlugKeySignal& keyRemovedSignal();
 
 				/// Adds specified key to curve, if key is parented to another curve it is removed
 				/// from the other curve. If the key has already been added to the curve, there is
@@ -249,6 +255,8 @@ class GAFFER_API Animation : public ComputeNode
 
 				Keys m_keys;
 				InactiveKeys m_inactiveKeys;
+				CurvePlugKeySignal m_keyAddedSignal;
+				CurvePlugKeySignal m_keyRemovedSignal;
 		};
 
 		IE_CORE_DECLAREPTR( CurvePlug );

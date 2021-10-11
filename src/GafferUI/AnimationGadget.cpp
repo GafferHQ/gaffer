@@ -54,6 +54,9 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/bind.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index/random_access_index.hpp"
+#include "boost/multi_index_container.hpp"
 
 #include <cmath>
 
@@ -235,13 +238,204 @@ std::string drivenPlugName( const Animation::CurvePlug *curvePlug )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// AnimationGadget SelectionSet implementation
+//////////////////////////////////////////////////////////////////////////
+
+namespace GafferUI
+{
+
+struct AnimationGadget::SelectionSet : public Gaffer::Set
+{
+	SelectionSet();
+	~SelectionSet();
+
+	bool contains( const Gaffer::Set::Member *member ) const override;
+	Gaffer::Set::Member *member( size_t index ) override;
+	const Gaffer::Set::Member *member( size_t index ) const override;
+	size_t size() const override;
+
+	bool add( Gaffer::Animation::KeyPtr key );
+	bool remove( Gaffer::Animation::KeyPtr key );
+	void clear();
+	bool empty() const;
+
+private:
+
+	friend class AnimationGadget;
+
+	bool removeInternal( const Gaffer::Animation::CurvePlug*, Gaffer::Animation::KeyPtr );
+
+	struct MemberCompare
+	{
+		typedef bool result_type;
+		bool operator()( const Gaffer::Set::Member* const lhs, const Gaffer::Animation::KeyPtr& rhs ) const { return lhs < rhs.get(); }
+		bool operator()( const Gaffer::Animation::KeyPtr& lhs, const Gaffer::Set::Member* const rhs ) const { return lhs.get() < rhs; }
+	};
+
+	typedef boost::multi_index::multi_index_container<
+		Gaffer::Animation::KeyPtr,
+		boost::multi_index::indexed_by<
+			boost::multi_index::ordered_unique< boost::multi_index::identity< Gaffer::Animation::KeyPtr > >,
+			boost::multi_index::random_access<>
+		>
+	> KeyContainer;
+
+	struct ConnectionData
+	{
+		explicit ConnectionData( boost::signals::connection connection = boost::signals::connection() );
+		boost::signals::connection m_connection;
+		unsigned int m_count;
+	};
+
+	typedef std::map<
+		const Gaffer::Animation::CurvePlug*, ConnectionData
+	> CurveConnectionMap;
+
+	KeyContainer m_keys;
+	CurveConnectionMap m_connections;
+};
+
+} // GafferUI
+
+//////////////////////////////////////////////////////////////////////////
+// AnimationGadget::SelectionSet implementation
+//////////////////////////////////////////////////////////////////////////
+
+AnimationGadget::SelectionSet::SelectionSet()
+: m_keys()
+, m_connections()
+{}
+
+AnimationGadget::SelectionSet::~SelectionSet()
+{
+	assert( m_connections.empty() );
+}
+
+bool AnimationGadget::SelectionSet::contains( const Gaffer::Set::Member* const member ) const
+{
+	return ( m_keys.find( member, MemberCompare() ) != m_keys.end() );
+}
+
+Gaffer::Set::Member *AnimationGadget::SelectionSet::member( const size_t index )
+{
+	return const_cast< Gaffer::Set::Member* >(
+		static_cast< const AnimationGadget::SelectionSet* >( this )->member( index ) );
+}
+
+const Gaffer::Set::Member *AnimationGadget::SelectionSet::member( const size_t index ) const
+{
+	return m_keys.get< 1 >()[ index ].get();
+}
+
+size_t AnimationGadget::SelectionSet::size() const
+{
+	return static_cast< size_t >( m_keys.size() );
+}
+
+bool AnimationGadget::SelectionSet::add( const Gaffer::Animation::KeyPtr key )
+{
+	if( ! key || ! key->parent() )
+	{
+		return false;
+	}
+
+	if( m_keys.insert( key ).second )
+	{
+		// connect to curve key removed signal to ensure set only contains parented keys
+		std::pair< CurveConnectionMap::iterator, bool > result =
+			m_connections.insert( CurveConnectionMap::value_type( key->parent(), ConnectionData() ) );
+		if( result.second )
+		{
+			result.first->second.m_connection = key->parent()->keyRemovedSignal().connect(
+				boost::bind( &AnimationGadget::SelectionSet::removeInternal, this, ::_1, ::_2 ) );
+		}
+		++( result.first->second.m_count );
+		memberAddedSignal()( this, key.get() );
+		return true;
+	}
+	return false;
+}
+
+bool AnimationGadget::SelectionSet::remove( const Gaffer::Animation::KeyPtr key )
+{
+	return removeInternal( key->parent(), key );
+}
+
+bool AnimationGadget::SelectionSet::removeInternal( const Gaffer::Animation::CurvePlug* const curve, const Gaffer::Animation::KeyPtr key )
+{
+	KeyContainer::iterator it = m_keys.find( key );
+	const bool result = ( it != m_keys.end() );
+	if( result )
+	{
+		// disconnect from curve key removed signal if last selected key of curve is being removed
+		CurveConnectionMap::iterator cit = m_connections.find( curve );
+		assert( cit != m_connections.end() );
+		if( --( cit->second.m_count ) == 0u )
+		{
+			cit->second.m_connection.disconnect();
+			m_connections.erase( cit );
+		}
+		m_keys.erase( it );
+		memberRemovedSignal()( this, key.get() );
+	}
+	return result;
+}
+
+void AnimationGadget::SelectionSet::clear()
+{
+	// remove keys from selection (signaling member removal)
+	for( KeyContainer::iterator it = m_keys.begin(), itEnd = m_keys.end(); it != itEnd; )
+	{
+		const Gaffer::Animation::KeyPtr key = *( it );
+		m_keys.erase( it++ );
+		memberRemovedSignal()( this, key.get() );
+	}
+
+	// disconnect all curve connections
+	for( CurveConnectionMap::iterator it = m_connections.begin(), itEnd = m_connections.end(); it != itEnd; ++it )
+	{
+		it->second.m_connection.disconnect();
+	}
+	m_connections.clear();
+}
+
+bool AnimationGadget::SelectionSet::empty() const
+{
+	return m_keys.empty();
+}
+
+AnimationGadget::SelectionSet::ConnectionData::ConnectionData( const boost::signals::connection connection )
+: m_connection( connection )
+, m_count( 0u )
+{}
+
+//////////////////////////////////////////////////////////////////////////
 // AnimationGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( AnimationGadget );
 
 AnimationGadget::AnimationGadget()
-	: m_context( nullptr ), m_visiblePlugs( new StandardSet() ), m_editablePlugs( new StandardSet() ), m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( DragMode::None ), m_moveAxis( MoveAxis::Both ), m_snappingClosestKey( nullptr ), m_highlightedKey( nullptr ), m_highlightedCurve( nullptr ), m_mergeGroupId( 0 ), m_keyPreview( false ), m_keyPreviewLocation( 0 ), m_xMargin( 60 ), m_yMargin( 20 ), m_textScale( 10 ), m_labelPadding( 5 ), m_frameIndicatorPreviewFrame( boost::none )
+: m_context( nullptr )
+, m_visiblePlugs( new StandardSet() )
+, m_editablePlugs( new StandardSet() )
+, m_selectedKeys( new AnimationGadget::SelectionSet() )
+, m_originalKeyValues()
+, m_dragStartPosition( 0 )
+, m_lastDragPosition( 0 )
+, m_dragMode( DragMode::None )
+, m_moveAxis( MoveAxis::Both )
+, m_snappingClosestKey( nullptr )
+, m_highlightedKey( nullptr )
+, m_highlightedCurve( nullptr )
+, m_mergeGroupId( 0 )
+, m_keyPreview( false )
+, m_keyPreviewLocation( 0 )
+, m_xMargin( 60 )
+, m_yMargin( 20 )
+, m_textScale( 10 )
+, m_labelPadding( 5 )
+, m_frameIndicatorPreviewFrame( boost::none )
 {
 	buttonPressSignal().connect( boost::bind( &AnimationGadget::buttonPress, this, ::_1,  ::_2 ) );
 	buttonReleaseSignal().connect( boost::bind( &AnimationGadget::buttonRelease, this, ::_1,  ::_2 ) );
@@ -267,6 +461,17 @@ AnimationGadget::AnimationGadget()
 
 AnimationGadget::~AnimationGadget()
 {
+	m_selectedKeys->clear();
+}
+
+Gaffer::Set *AnimationGadget::selectedKeys()
+{
+	return m_selectedKeys.get();
+}
+
+const Gaffer::Set *AnimationGadget::selectedKeys() const
+{
+	return m_selectedKeys.get();
 }
 
 void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason reason ) const
@@ -338,7 +543,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 			for( Animation::Key &key : *curvePlug )
 			{
 				bool isHighlighted = ( m_highlightedKey && key == *m_highlightedKey ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ));
-				bool isSelected = m_selectedKeys.count( Animation::KeyPtr( &key ) ) > 0;
+				bool isSelected = m_selectedKeys->contains( &key );
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
 			}
@@ -503,8 +708,10 @@ void AnimationGadget::insertKeyframe( Animation::CurvePlug *curvePlug, float tim
 
 	if( !curvePlug->closestKey( snappedTime, 0.004 ) ) // \todo: use proper ticks
 	{
-		float value = curvePlug->evaluate( snappedTime );
-		curvePlug->addKey( new Animation::Key( snappedTime, value ) );
+		const float value = curvePlug->evaluate( snappedTime );
+		const Animation::KeyPtr key( new Animation::Key( snappedTime, value ) );
+		curvePlug->addKey( key );
+		m_selectedKeys->add( key );
 	}
 }
 
@@ -515,6 +722,8 @@ void AnimationGadget::insertKeyframes()
 		return;
 	}
 
+	m_selectedKeys->m_keys.clear();
+
 	for( auto &runtimeTyped : *m_editablePlugs )
 	{
 		insertKeyframe( IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped ), m_context->getTime() );
@@ -523,7 +732,7 @@ void AnimationGadget::insertKeyframes()
 
 void AnimationGadget::removeKeyframes()
 {
-	if( m_selectedKeys.empty() )
+	if( m_selectedKeys->empty() )
 	{
 		return;
 	}
@@ -532,21 +741,21 @@ void AnimationGadget::removeKeyframes()
 	ScriptNode *scriptNode = IECore::runTimeCast<Animation::CurvePlug>( first )->ancestor<ScriptNode>();
 	UndoScope undoEnabled( scriptNode, UndoScope::Enabled, undoMergeGroup() );
 
-	for( const auto &keyPtr : m_selectedKeys )
+	for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; )
 	{
-		Animation::CurvePlug *parent = keyPtr->parent();
-		if( parent )
-		{
-			parent->removeKey( keyPtr );
-		}
+		// NOTE : SelectionSet ensures unparented keys are removed from selection so parent should be valid.
+		//        The removal of the unparented key from the selection will invalidate our iterator so pre increment it.
+		Animation::CurvePlug* const curve = ( *it )->parent();
+		assert( curve != nullptr );
+		curve->removeKey( *it++ );
 	}
-
-	m_selectedKeys.clear();
+	assert( m_selectedKeys->m_keys.empty() );
+	assert( m_selectedKeys->m_connections.empty() );
 }
 
 void AnimationGadget::removeInactiveKeyframes()
 {
-	if( m_selectedKeys.empty() )
+	if( m_selectedKeys->empty() )
 	{
 		return;
 	}
@@ -563,7 +772,7 @@ void AnimationGadget::removeInactiveKeyframes()
 
 void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 {
-	if( m_selectedKeys.empty() )
+	if( m_selectedKeys->empty() )
 	{
 		return;
 	}
@@ -583,7 +792,7 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	}
 
 	// move selected keys
-	for( SelectedKeys::iterator it = m_selectedKeys.begin(), itEnd = m_selectedKeys.end(); it != itEnd; ++it )
+	for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
 	{
 		Animation::KeyPtr key = *it;
 
@@ -610,11 +819,11 @@ void AnimationGadget::frame()
 	Box3f b;
 
 	// trying to frame to selected keys first
-	if( !m_selectedKeys.empty() )
+	if( ! m_selectedKeys->empty() )
 	{
-		for( const auto &key : m_selectedKeys )
+		for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
 		{
-			b.extendBy( V3f( key->getTime(), key->getValue(), 0 ) );
+			b.extendBy( V3f( ( *it )->getTime(), ( *it )->getValue(), 0 ) );
 		}
 	}
 	// trying to frame to editable curves next
@@ -701,20 +910,19 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 		// replacing selection
 		if( !shiftHeld )
 		{
-			m_selectedKeys.clear();
-			m_selectedKeys.insert( key );
+			if( ( m_selectedKeys->size() != static_cast< size_t >( 1 ) ) ||
+				( m_selectedKeys->m_keys.get< 1 >()[ 0 ] != key ) )
+			{
+				m_selectedKeys->clear();
+				m_selectedKeys->add( key );
+			}
 		}
 		else
 		{
 			// toggle selection
-			auto it = m_selectedKeys.find( key );
-			if( it != m_selectedKeys.end() )
+			if( ! m_selectedKeys->remove( key ) )
 			{
-				m_selectedKeys.erase( key );
-			}
-			else
-			{
-				m_selectedKeys.insert( key );
+				m_selectedKeys->add( key );
 			}
 		}
 	}
@@ -724,6 +932,8 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 
 		if( controlHeld ) // insert a keyframe
 		{
+			m_selectedKeys->clear();
+
 			insertKeyframe( curvePlug.get(), i.x );
 			++m_mergeGroupId;
 			m_keyPreview = false;
@@ -734,7 +944,7 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 			{
 				for( Animation::Key &key : *curvePlug )
 				{
-					m_selectedKeys.emplace( &key );
+					m_selectedKeys->add( &key );
 				}
 			}
 			else // try to make it editable
@@ -743,6 +953,7 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 				if( !shiftHeld )
 				{
 					m_editablePlugs->clear();
+					m_selectedKeys->clear();
 				}
 
 				m_editablePlugs->add( curvePlug.get() );
@@ -751,7 +962,7 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 	}
 	else // background
 	{
-		m_selectedKeys.clear();
+		m_selectedKeys->clear();
 	}
 
 	dirty( DirtyType::Render );
@@ -781,12 +992,12 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			// If dragging an unselected Key, the assumption is that only this Key
 			// should be moved. On the other hand, if the key was selected, we will
 			// move the entire selection.
-			if( m_selectedKeys.count( key ) == 0 )
+			if( ! m_selectedKeys->contains( key.get() ) )
 			{
-				m_selectedKeys.clear();
+				m_selectedKeys->clear();
+				m_selectedKeys->add( key );
 			}
 
-			m_selectedKeys.insert( key );
 			removeInactiveKeyframes();
 			m_dragMode = DragMode::Moving;
 		}
@@ -828,24 +1039,10 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 		m_snappingClosestKey = nullptr;
 
-		// Clean up selection so that we operate on valid Keys only. Also, store
-		// current positions so that updating during drag can be done without many
-		// small incremental updates.
-		for( auto it = m_selectedKeys.begin(); it != m_selectedKeys.end(); )
+		// Store current positions so that updating during drag can be done without many small incremental updates.
+		for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
 		{
-			auto key = (*it);
-
-			if( !key->parent() )
-			{
-				it = m_selectedKeys.erase( it );
-				continue;
-			}
-			else
-			{
-				++it;
-			}
-
-			m_originalKeyValues[key.get()] = std::make_pair( key->getTime(), key->getValue() );
+			m_originalKeyValues[ ( *it ).get() ] = std::make_pair( ( *it )->getTime(), ( *it )->getValue() );
 		}
 	}
 
@@ -853,7 +1050,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 	{
 		if( !shiftHeld )
 		{
-			m_selectedKeys.clear();
+			m_selectedKeys->clear();
 		}
 	}
 
@@ -952,9 +1149,8 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	if( m_dragMode == DragMode::Moving && !m_selectedKeys.empty() )
+	if( m_dragMode == DragMode::Moving && ! m_selectedKeys->empty() )
 	{
-
 		if( m_moveAxis == MoveAxis::Undefined )
 		{
 			ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
@@ -977,13 +1173,13 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			// determine position of selected keyframe that is closest to pointer
 			// \todo: move into separate function, ideally consolidate with Animation::CurvePlug::closestKey?
-			auto rightIt = m_selectedKeys.lower_bound( Animation::KeyPtr( new Animation::Key(i.x, 0) ) );
+			auto rightIt = m_selectedKeys->m_keys.lower_bound( Animation::KeyPtr( new Animation::Key(i.x, 0) ) );
 
-			if( rightIt == m_selectedKeys.end() )
+			if( rightIt == m_selectedKeys->m_keys.end() )
 			{
-				m_snappingClosestKey = *m_selectedKeys.rbegin();
+				m_snappingClosestKey = *( m_selectedKeys->m_keys.rbegin() );
 			}
-			else if( (*rightIt)->getTime() == i.x || rightIt == m_selectedKeys.begin() )
+			else if( (*rightIt)->getTime() == i.x || rightIt == m_selectedKeys->m_keys.begin() )
 			{
 				m_snappingClosestKey = *rightIt;
 			}
@@ -1034,7 +1230,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 			{
 				if( b.intersects( V2f( key.getTime(), key.getValue() ) ) )
 				{
-					m_selectedKeys.emplace( &key );
+					m_selectedKeys->add( &key );
 				}
 			}
 		}

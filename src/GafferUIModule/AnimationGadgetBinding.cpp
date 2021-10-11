@@ -42,15 +42,11 @@
 
 #include "GafferUI/AnimationGadget.h"
 
-#include "GafferBindings/SignalBinding.h"
-
 #include "Gaffer/Context.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
-
-#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -58,29 +54,17 @@ using namespace GafferUI;
 using namespace GafferUIBindings;
 using namespace GafferBindings;
 
-namespace
-{
-
-Gaffer::StandardSetPtr visiblePlugs( AnimationGadget &a )
-{
-	return a.visiblePlugs();
-}
-
-Gaffer::StandardSetPtr editablePlugs( AnimationGadget &a )
-{
-	return a.editablePlugs();
-}
-
-} // namespace
-
 void GafferUIModule::bindAnimationGadget()
 {
 
-	scope s = GadgetClass<AnimationGadget>()
+	GadgetClass< AnimationGadget >()
 		.def( init<>() )
-		.def( "visiblePlugs", &visiblePlugs )
-		.def( "editablePlugs", &editablePlugs )
+		.def( "visiblePlugs", (Gaffer::StandardSet *(AnimationGadget::*)())&AnimationGadget::visiblePlugs,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "editablePlugs", (Gaffer::StandardSet *(AnimationGadget::*)())&AnimationGadget::editablePlugs,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "selectedKeys", (Gaffer::Set *(AnimationGadget::*)())&AnimationGadget::selectedKeys,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &AnimationGadget::setContext )
 		;
-
 }

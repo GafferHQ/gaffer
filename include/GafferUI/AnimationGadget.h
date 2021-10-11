@@ -56,11 +56,9 @@ namespace GafferUI
 
 class GAFFERUI_API AnimationGadget : public Gadget
 {
-
 	public :
 
 		AnimationGadget();
-
 		~AnimationGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AnimationGadget, AnimationGadgetTypeId, Gadget );
@@ -74,6 +72,9 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		void setContext( Gaffer::Context *context );
 		Gaffer::Context *getContext() const;
 
+		Gaffer::Set *selectedKeys();
+		const Gaffer::Set *selectedKeys() const;
+
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
@@ -83,6 +84,9 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Imath::Box3f renderBound() const override;
 
 	private :
+
+		struct SelectionSet;
+		IE_CORE_DECLAREPTR( SelectionSet )
 
 		/// \undoable
 		void insertKeyframe( Gaffer::Animation::CurvePlug *curvePlug, float time );
@@ -140,9 +144,9 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::StandardSetPtr m_visiblePlugs;
 		Gaffer::StandardSetPtr m_editablePlugs;
 
-		typedef std::set< Gaffer::Animation::KeyPtr > SelectedKeys;
-		SelectedKeys m_selectedKeys;
-		std::map<const Gaffer::Animation::Key*, std::pair<float, float> > m_originalKeyValues;
+		SelectionSetPtr m_selectedKeys;
+
+		std::map< const Gaffer::Animation::Key*, std::pair< float, float > > m_originalKeyValues;
 
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;

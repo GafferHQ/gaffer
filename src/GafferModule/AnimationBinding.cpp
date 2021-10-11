@@ -40,6 +40,7 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ValuePlugBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "Gaffer/Animation.h"
 
@@ -115,6 +116,23 @@ void removeInactiveKeys( Animation::CurvePlug &p )
 	p.removeInactiveKeys();
 }
 
+struct CurvePlugKeySlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot,
+		const Animation::CurvePlugPtr c, const Animation::KeyPtr k )
+	{
+		try
+		{
+			slot( c, k );
+		}
+		catch( const error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
 class CurvePlugSerialiser : public ValuePlugSerialiser
 {
 
@@ -187,6 +205,8 @@ void GafferModule::bindAnimation()
 				)
 			)
 		)
+		.def( "keyAddedSignal", &Animation::CurvePlug::keyAddedSignal, return_internal_reference< 1 >() )
+		.def( "keyRemovedSignal", &Animation::CurvePlug::keyRemovedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
 		.def(
@@ -219,6 +239,9 @@ void GafferModule::bindAnimation()
 		.def( "evaluate", &Animation::CurvePlug::evaluate )
 		.attr( "__qualname__" ) = "Animation.CurvePlug"
 	;
+
+	SignalClass< Animation::CurvePlug::CurvePlugKeySignal,
+		DefaultSignalCaller< Animation::CurvePlug::CurvePlugKeySignal >, CurvePlugKeySlotCaller >( "CurvePlugKeySignal" );
 
 	Serialisation::registerSerialiser( Gaffer::Animation::CurvePlug::staticTypeId(), new CurvePlugSerialiser );
 
