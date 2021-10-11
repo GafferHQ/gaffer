@@ -583,12 +583,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( bIndex.isValid() )
 		self.assertEqual( model.rowCount( bIndex ), 1 )
 		self.assertEqual( model.columnCount( bIndex ), 1 )
-
-		# If we query data from the new item, it will initially be empty because
-		# it is evaluated asynchronously.
-		self.assertIsNone( model.data( model.index( 0, 0, bIndex ) ) )
-		# But if we wait, we will see the new value.
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( model.data( model.index( 0, 0, bIndex ) ), "c" )
 
 		# We should be able to add and remove children from `c`
@@ -603,8 +597,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( cIndex.isValid() )
 		self.assertEqual( model.rowCount( cIndex ), 1 )
 		self.assertEqual( model.columnCount( cIndex ), 1 )
-		self.assertIsNone( model.data( model.index( 0, 0, cIndex ) ) )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( model.data( model.index( 0, 0, cIndex ) ), "d" )
 
 		dIndex = QtCore.QPersistentModelIndex( model.index( 0, 0, cIndex ) )

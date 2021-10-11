@@ -166,6 +166,11 @@ class StandardColumn : public Column
 		{
 		}
 
+		IECore::InternedString propertyName() const
+		{
+			return m_propertyName;
+		}
+
 		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			switch( role )
@@ -1057,6 +1062,22 @@ class PathModel : public QAbstractItemModel
 				if( column >= (int)m_displayData.size() )
 				{
 					// We haven't computed any data yet.
+					if( column < (int)model->m_columns.size() && role == Qt::DisplayRole )
+					{
+						if( auto *standardColumn = dynamic_cast<const StandardColumn *>( model->m_columns[column].get() ) )
+						{
+							if( standardColumn->propertyName() == g_namePropertyName )
+							{
+								// Optimisation for standard name column. We
+								// know the name already, so there is no need to
+								// wait for the data to be computed. This
+								// reduces flicker when scrolling rapidly
+								// through many items, making it easier to
+								// orientate yourself.
+								return m_name.c_str();
+							}
+						}
+					}
 					return QVariant();
 				}
 
