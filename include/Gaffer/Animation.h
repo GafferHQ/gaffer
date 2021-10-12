@@ -259,6 +259,9 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyRemovedSignal;
 		};
 
+		/// Are two double precision values considered equivalent
+		static bool equivalentValues( double a, double b );
+
 		IE_CORE_DECLAREPTR( CurvePlug );
 
 		/// Parent for all the curves belonging to this

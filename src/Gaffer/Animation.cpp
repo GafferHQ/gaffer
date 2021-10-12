@@ -272,7 +272,7 @@ Animation::KeyPtr Animation::Key::setTime( float time )
 
 void Animation::Key::setValue( float value )
 {
-	if( value == m_value )
+	if( Animation::equivalentValues( value, m_value ) )
 	{
 		return;
 	}
@@ -1027,4 +1027,29 @@ ValuePlug::CachePolicy Animation::computeCachePolicy( const Gaffer::ValuePlug *o
 	}
 
 	return ComputeNode::computeCachePolicy( output );
+}
+
+bool Animation::equivalentValues( const double a, const double b )
+{
+	// see python PEP 485 : https://www.python.org/dev/peps/pep-0485
+
+	if( a == b )
+	{
+		return true;
+	}
+
+	if( std::isinf( a ) || std::isinf( b ) )
+	{
+		return false;
+	}
+
+	const double delta = std::abs( a - b );
+
+	static const double relative = 1E-9;
+	static const double absolute = std::numeric_limits< double >::epsilon();
+
+	return
+		( ( delta <= std::abs( relative * a ) ) &&
+		( ( delta <= std::abs( relative * b ) ) ) ) ||
+			( delta <= absolute );
 }

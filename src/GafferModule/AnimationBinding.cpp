@@ -163,6 +163,8 @@ void GafferModule::bindAnimation()
 		.staticmethod( "isAnimated" )
 		.def( "acquire", &acquire )
 		.staticmethod( "acquire" )
+		.def( "equivalentValues", &Animation::equivalentValues )
+		.staticmethod( "equivalentValues" )
 	;
 
 	enum_<Animation::Interpolation>( "Interpolation" )
