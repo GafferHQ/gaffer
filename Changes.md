@@ -62,6 +62,8 @@ API
   - Added `key.isActive()` function, returns true if key is parented to curve and is the active key at its current time.
 - AnimationGadget :
   - Added `selectedKeys()` function, returns current set of selected keys.
+  - Added `onTimeAxis()` function, returns true if specified line is over the time axis of the gadget.
+  - Added `onValueAxis()` function, returns true if specified line is over the value axis of the gadget.
 
 Breaking Changes
 ----------------

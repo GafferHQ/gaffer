@@ -75,6 +75,9 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::Set *selectedKeys();
 		const Gaffer::Set *selectedKeys() const;
 
+		bool onTimeAxis( const IECore::LineSegment3f& line ) const;
+		bool onValueAxis( const IECore::LineSegment3f& line ) const;
+
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
@@ -135,9 +138,6 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		void updateKeyPreviewLocation( const Gaffer::Animation::CurvePlug *curvePlug, float time );
 
 		std::string undoMergeGroup() const;
-
-		bool onTimeAxis( int y ) const;
-		bool onValueAxis( int x ) const;
 
 		Gaffer::Context *m_context;
 
