@@ -170,7 +170,7 @@ void GafferModule::bindAnimation()
 		.value( "Linear", Animation::Interpolation::Linear )
 	;
 
-	IECorePython::RefCountedClass<Animation::Key, IECore::RefCounted>( "Key" )
+	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
 		.def( init<float, float, Animation::Interpolation>(
 				(
 					arg( "time" ) = 0.0f,
