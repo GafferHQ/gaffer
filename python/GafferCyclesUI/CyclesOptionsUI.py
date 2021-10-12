@@ -56,25 +56,12 @@ def __sessionSummary( plug ) :
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
 
-	if plug["progressiveRefine"]["enabled"].getValue() :
-		info.append( "Progressive Refine {}".format( plug["progressiveRefine"]["value"].getValue() ) )
-
 	if plug["numThreads"]["enabled"].getValue() :
 		info.append( "Threads {}".format( plug["numThreads"]["value"].getValue() ) )
-
-	if plug["tileOrder"]["enabled"].getValue() :
-		info.append(
-			"Tile Order {}".format( Gaffer.NodeAlgo.currentPreset( plug["tileOrder"]["value"] ) )
-		)
 
 	if plug["tileSize"]["enabled"].getValue() :
 		info.append(
 			"Tile Size {}".format( Gaffer.NodeAlgo.currentPreset( plug["tileSize"]["value"] ) )
-		)
-
-	if plug["startResolution"]["enabled"].getValue() :
-		info.append(
-			"Start Resolution {}".format( Gaffer.NodeAlgo.currentPreset( plug["startResolution"]["value"] ) )
 		)
 
 	if plug["pixelSize"]["enabled"].getValue() :
@@ -82,24 +69,9 @@ def __sessionSummary( plug ) :
 			"Pixel Size {}".format( Gaffer.NodeAlgo.currentPreset( plug["pixelSize"]["value"] ) )
 		)
 
-	if plug["cancelTimeout"]["enabled"].getValue() :
+	if plug["timeLimit"]["enabled"].getValue() :
 		info.append(
-			"Cancel Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["cancelTimeout"]["value"] ) )
-		)
-
-	if plug["resetTimeout"]["enabled"].getValue() :
-		info.append(
-			"Reset Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["resetTimeout"]["value"] ) )
-		)
-
-	if plug["textTimeout"]["enabled"].getValue() :
-		info.append(
-			"Text Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["textTimeout"]["value"] ) )
-		)
-
-	if plug["progressiveUpdateTimeout"]["enabled"].getValue() :
-		info.append(
-			"Progressive Update Timeout {}".format( Gaffer.NodeAlgo.currentPreset( plug["progressiveUpdateTimeout"]["value"] ) )
+			"Time Limit {}".format( Gaffer.NodeAlgo.currentPreset( plug["timeLimit"]["value"] ) )
 		)
 
 	return ", ".join( info )
@@ -135,60 +107,29 @@ def __samplingSummary( plug ) :
 
 	info = []
 
-	if plug["method"]["enabled"].getValue() :
-		if plug["method"]["value"].getValue() == 0 :
-			info.append( "Branched-Path Integrator" )
-		elif plug["method"]["value"].getValue() == 1 :
-			info.append( "Path Integrator" )
-	
-	squareSamples = True
-	if plug["squareSamples"]["enabled"].getValue() :
-		squareSamples = plug["squareSamples"]["value"].getValue()
-		info.append( "Square Samples {}".format( squareSamples ) )
-
 	if plug["useAdaptiveSampling"]["enabled"].getValue() :
 		info.append( "Use Adaptive Sampling {}".format( plug["useAdaptiveSampling"]["value"].getValue() ) )
 
 	if plug["samples"]["enabled"].getValue() :
-		samples = plug["samples"]["value"].getValue()
-		if squareSamples :
-			info.append( "Samples {} ({})".format( samples, samples * samples ) )
-		else :
-			info.append( "Samples {}".format( samples ) )
-
-	for sampleType in ( "Diffuse", "Glossy", "Transmission", "AO", "MeshLight", "Subsurface", "Volume" ) :
-		childName = "%sSamples" % sampleType.lower()
-		if plug[childName]["enabled"].getValue() :
-			samples = plug[childName]["value"].getValue()
-			if squareSamples :
-				info.append( "{} {} ({})".format( sampleType, samples, samples * samples ) )
-			else :
-				info.append( "{} {}".format( sampleType, samples ) )
+		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
 
 	if plug["samplingPattern"]["enabled"].getValue() :
 		info.append( "Sampling Pattern {}".format( Gaffer.NodeAlgo.currentPreset( plug["samplingPattern"]["value"].getValue() ) ) )
 
-	if plug["sampleAllLightsDirect"]["enabled"].getValue() :
-		info.append( "All Lights Direct {}".format( plug["sampleAllLightsDirect"]["value"].getValue() ) )
-
-	if plug["sampleAllLightsIndirect"]["enabled"].getValue() :
-		info.append( "All Lights Indirect {}".format( plug["sampleAllLightsIndirect"]["value"].getValue() ) )
-
 	if plug["lightSamplingThreshold"]["enabled"].getValue() :
 		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
 
-	if plug["adaptiveSamplingThreshold"]["enabled"].getValue() :
-		info.append( "Adaptive Sampling Threshold {}".format( plug["adaptiveSamplingThreshold"]["value"].getValue() ) )
+	if plug["adaptiveThreshold"]["enabled"].getValue() :
+		info.append( "Adaptive Threshold {}".format( plug["adaptiveThreshold"]["value"].getValue() ) )
 
 	if plug["adaptiveMinSamples"]["enabled"].getValue() :
-		samples = plug["adaptiveMinSamples"]["value"].getValue()
-		if squareSamples :
-			info.append( "Adaptive Min Samples {} ({})".format( samples, samples * samples ) )
-		else :
-			info.append( "Adaptive Min Samples {}".format( samples ) )
+		info.append( "Adaptive Min Samples {}".format( plug["adaptiveMinSamples"]["value"].getValue() ) )
 
 	if plug["filterGlossy"]["enabled"].getValue() :
 		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
+
+	if plug["useFrameAsSeed"]["enabled"].getValue() :
+		info.append( "Use Frame As Seed {}".format( plug["useFrameAsSeed"]["value"].getValue() ) )
 
 	if plug["seed"]["enabled"].getValue() :
 		info.append( "Seed Value {}".format( plug["seed"]["value"].getValue() ) )
@@ -238,6 +179,9 @@ def __volumesSummary( plug ) :
 
 	if plug["volumeMaxSteps"]["enabled"].getValue() :
 		info.append( "Max Steps {}".format( plug["volumeMaxSteps"]["value"].getValue() ) )
+
+	if plug["volumeStepRate"]["enabled"].getValue() :
+		info.append( "Step Rate {}".format( plug["volumeStepRate"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -296,9 +240,6 @@ def __filmSummary( plug ) :
 	if plug["mistFalloff"]["enabled"].getValue() :
 		info.append( "Mist Falloff {}".format( plug["mistFalloff"]["value"].getValue() ) )
 
-	if plug["useSampleClamp"]["enabled"].getValue() :
-		info.append( "Use Sample Clamp {}".format( plug["useSampleClamp"]["value"].getValue() ) )
-
 	if plug["cryptomatteAccurate"]["enabled"].getValue() :
 		info.append( "Cryptomatte Accurate {}".format( plug["cryptomatteAccurate"]["value"].getValue() ) )
 
@@ -309,67 +250,22 @@ def __filmSummary( plug ) :
 
 def __denoisingSummary( plug ) :
 
-	def __getDenoiseType( dType ) :
-
-		if dType == 0 :
-			return "None"
-		elif dType == 1 :
-			return "NLM"
-		elif dType == 2 :
-			return "OptiX Denoiser"
-		elif dType == 4 :
-			return "Open Image Denoise"
-
-	def __getDenoiseInputPasses( passes ) :
-		if passes == 0 :
-			return "Beauty"
-		elif passes == 1 :
-			return "Beauty Albedo"
-		elif passes == 2 :
-			return "Beauty Albedo Normal"
-
 	info = []
 
-	if plug["denoiseUse"]["enabled"].getValue() :
-		info.append( "Use Denoising {}".format( plug["denoiseUse"]["value"].getValue() ) )
-
-	if plug["denoiseStorePasses"]["enabled"].getValue() :
-		info.append( "Write Denoising Passes {}".format( plug["denoiseStorePasses"]["value"].getValue() ) )
-
-	if plug["denoiseType"]["enabled"].getValue() :
-		info.append( "Denoise Type {}".format( __getDenoiseType( plug["denoiseType"]["value"].getValue() ) ) )
-
-	for rayType in ( "Diffuse", "Glossy", "Transmission" ) :
-		for dirType in ( "Direct", "Indirect") :
-			childName = "denoising%s%s" % ( rayType, dirType )
-			if plug[childName]["enabled"].getValue() :
-				info.append(
-					"{} {} {}".format( rayType, dirType, plug[childName]["value"].getValue() )
-				)
-
-	if plug["denoiseStrength"]["enabled"].getValue() :
-		info.append( "Strength {}".format( plug["denoiseStrength"]["value"].getValue() ) )
-
-	if plug["denoiseFeatureStrength"]["enabled"].getValue() :
-		info.append( "Feature Strength {}".format( plug["denoiseFeatureStrength"]["value"].getValue() ) )
-
-	if plug["denoiseRadius"]["enabled"].getValue() :
-		info.append( "Radius {}".format( plug["denoiseRadius"]["value"].getValue() ) )
-
-	if plug["denoiseRelativePca"]["enabled"].getValue() :
-		info.append( "Relative Filter {}".format( plug["denoiseRelativePca"]["value"].getValue() ) )
-
-	if plug["denoiseNeighborFrames"]["enabled"].getValue() :
-		info.append( "Neighbor Frames {}".format( plug["denoiseNeighborFrames"]["value"].getValue() ) )
-
-	if plug["denoiseClampInput"]["enabled"].getValue() :
-		info.append( "Clamp Input {}".format( plug["denoiseClampInput"]["value"].getValue() ) )
-
-	if plug["denoiseInputPasses"]["enabled"].getValue() :
-		info.append( "Denoise Input Passes {}".format( __getDenoiseInputPasses( plug["denoiseInputPasses"]["value"].getValue() ) ) )
+	if plug["denoiserType"]["enabled"].getValue() :
+		info.append( "Denoise Type {}".format( plug["denoiserType"]["value"].getValue() ) )
 
 	if plug["denoiseStartSample"]["enabled"].getValue() :
 		info.append( "Denoise Start Sample {}".format( plug["denoiseStartSample"]["value"].getValue() ) )
+
+	if plug["useDenoisePassAlbedo"]["enabled"].getValue() :
+		info.append( "Use Denoise Pass Albedo {}".format( plug["useDenoisePassAlbedo"]["value"].getValue() ) )
+
+	if plug["useDenoisePassNormal"]["enabled"].getValue() :
+		info.append( "Use Denoise Pass Normal {}".format( plug["useDenoisePassNormal"]["value"].getValue() ) )
+
+	if plug["denoiserPrefilter"]["enabled"].getValue() :
+		info.append( "Denoise Pre-Filter {}".format( plug["denoiserPrefilter"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -385,9 +281,6 @@ def __backgroundSummary( plug ) :
 
 	if plug["bgUseShader"]["enabled"].getValue() :
 		info.append( "Use Shader {}".format( plug["bgUseShader"]["value"].getValue() ) )
-
-	if plug["useAO"]["enabled"].getValue() :
-		info.append( "Use AO {}".format( plug["useAO"]["value"].getValue() ) )
 
 	if plug["bgTransparent"]["enabled"].getValue() :
 		info.append( "Transparent {}".format( plug["bgTransparent"]["value"].getValue() ) )
@@ -454,41 +347,6 @@ def __logSummary( plug ) :
 		info.append( "Log level {}".format( plug["logLevel"]["value"].getValue() ) )
 
 	return ", ".join( info )
-
-def __devicePresetNames( plug ) :
-
-	presetNames = IECore.StringVectorData()
-
-	for device in GafferCycles.devices :
-		presetNames.append( "%s - %s" % ( device["type"], device["description"] ) )
-
-	return presetNames
-
-def __devicePresetValues( plug ) :
-
-	presetValues = IECore.StringVectorData()
-
-	cudaIndex = 0
-	openclIndex = 0
-	optixIndex = 0
-
-	for device in GafferCycles.devices :
-		index = 0
-		if device["type"] == "MULTI" or device["type"] == "CPU" :
-			presetValues.append( device["type"] )
-			continue
-		elif device["type"] == "CUDA" :
-			index = cudaIndex
-			cudaIndex += 1
-		elif device["type"] == "OPENCL" :
-			index = openclIndex
-			openclIndex += 1
-		elif device["type"] == "OPTIX" :
-			index = optixIndex
-			optixIndex += 1
-		presetValues.append( "%s:%02i" % ( device["type"], index ) )
-
-	return presetValues
 
 def __devicesPreset() :
 
@@ -645,20 +503,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.progressiveRefine" : [
-
-			"description",
-			"""
-			Instead of rendering each tile until it is finished,
-			refine the whole image progressively
-			(this renders somewhat slower,
-			but time can be saved by manually stopping the render when the noise is low enough),
-			""",
-
-			"layout:section", "Session",
-
-		],
-
 		"options.numThreads" : [
 
 			"description",
@@ -678,41 +522,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.tileOrder" : [
-
-			"description",
-			"""
-			Tile order for rendering.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.tileOrder.value" : [
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetNames", IECore.StringVectorData( ["Center", "Right to Left", "Left to Right", "Top to Bottom", "Bottom to Top", "Hilbert Spiral"] ),
-			"presetValues", IECore.StringVectorData( ["center", "right_to_left", "left_to_right", "top_to_bottom", "bottom_to_top", "hilbert_spiral"] ),
-
-		],
-
 		"options.tileSize" : [
 
 			"description",
 			"""
 			Tile size for rendering.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.startResolution" : [
-
-			"description",
-			"""
-			Start resolution.
 			""",
 
 			"layout:section", "Session",
@@ -730,55 +544,33 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.cancelTimeout" : [
+		"options.timeLimit" : [
 
 			"description",
 			"""
-			Cancel Timeout.
+			Time-limit.
 			""",
 
 			"layout:section", "Session",
 
 		],
 
-		"options.resetTimeout" : [
+		"options.useProfiling" : [
 
 			"description",
 			"""
-			Reset Timeout.
+			Use Profiling.
 			""",
 
 			"layout:section", "Session",
 
 		],
 
-		"options.textTimeout" : [
+		"options.useAutoTile" : [
 
 			"description",
 			"""
-			Text Timeout.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.progressiveUpdateTimeout" : [
-
-			"description",
-			"""
-			Progressive Update Timeout.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.adaptiveSampling" : [
-
-			"description",
-			"""
-			Automatically reduce the number of samples per pixel based on estimated noise level.
+			Automatically render high resolution images in tiles to reduce memory usage, using the specified tile size. Tiles are cached to disk while rendering to save memory.
 			""",
 
 			"layout:section", "Session",
@@ -908,44 +700,6 @@ Gaffer.Metadata.registerNode(
 
 		# Sampling
 
-		"options.method" : [
-
-			"description",
-			"""
-			Method to sample lights and materials.
-
-			- Branched Path : Path tracing integrator that branches on
-			  the first bounce, giving more control over the number of
-			  light and material samples.
-			- Path Tracing : Pure path tracing integrator.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Integrator",
-
-		],
-
-		"options.method.value" : [
-
-			"preset:BranchedPath", False,
-			"preset:Path", True,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.squareSamples" : [
-
-			"description",
-			"""
-			Square sampling values for easier artist control. Calculated as samples * samples.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Square Samples",
-
-		],
-
 		"options.useAdaptiveSampling" : [
 
 			"description",
@@ -971,108 +725,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.aaSamples" : [
-
-			"description",
-			"""
-			The number of antialiasing samples to render for 
-			each pixel.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "AntiAlias",
-
-		],
-
-		"options.diffuseSamples" : [
-
-			"description",
-			"""
-			Number of diffuse bounce samples to render for each 
-			AA sample.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Diffuse",
-
-		],
-
-		"options.glossySamples" : [
-
-			"description",
-			"""
-			Number of glossy bounce samples to render for each 
-			AA sample.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Glossy",
-
-		],
-
-		"options.transmissionSamples" : [
-
-			"description",
-			"""
-			Number of transmission bounce samples to render for 
-			each AA sample.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Transmission",
-
-		],
-
-		"options.aoSamples" : [
-
-			"description",
-			"""
-			Number of ambient occlusion bounce samples to render
-			for each AA sample.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Ambient Occlusion",
-
-		],
-
-		"options.meshlightSamples" : [
-
-			"description",
-			"""
-			Number of mesh emission light bounce samples to render
-			for each AA sample.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Meshlight",
-
-		],
-
-		"options.subsurfaceSamples" : [
-
-			"description",
-			"""
-			Number of subsurface scattering samples to render for each 
-			AA sample.
-			""",
-
-			"layout:section", "Sampling",
-			"label", "Subsurface",
-
-		],
-
-		"options.volumeSamples" : [
-
-			"description",
-			"""
-			Number of volume scattering samples to render for each AA sample.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
 		"options.samplingPattern" : [
 
 			"description",
@@ -1094,28 +746,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.sampleAllLightsDirect" : [
-
-			"description",
-			"""
-			Sample all lights (for direct samples), rather than randomly picking one.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
-		"options.sampleAllLightsIndirect" : [
-
-			"description",
-			"""
-			Sample all lights (for indirect samples), rather than randomly picking one.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
 		"options.lightSamplingThreshold" : [
 
 			"description",
@@ -1130,7 +760,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.adaptiveSamplingThreshold" : [
+		"options.adaptiveThreshold" : [
 
 			"description",
 			"""
@@ -1166,11 +796,22 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.useFrameAsSeed" : [
+
+			"description",
+			"""
+			Use current frame as the seed value for the sampling pattern.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
 		"options.seed" : [
 
 			"description",
 			"""
-			Seed value for the sampling pattern.
+			Seed value for the sampling pattern. Disabled if \"Use Frame As Seed\" is on.
 			""",
 
 			"layout:section", "Sampling",
@@ -1354,6 +995,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.volumeStepRate" : [
+
+			"description",
+			"""
+			"Globally adjust detail for volume rendering, on top of automatically estimated step size."
+			"Higher values reduce render time, lower values render with more detail."
+			""",
+
+			"layout:section", "Volumes",
+
+		],
+
 		# Caustics
 
 		"options.causticsReflective" : [
@@ -1480,18 +1133,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Background",
 			"label", "Use Shader",
-
-		],
-
-		"options.useAO" : [
-
-			"description",
-			"""
-			Enable Ambient Occlusion.
-			""",
-
-			"layout:section", "Background",
-			"label", "Use Ambient Occlusion",
 
 		],
 
@@ -1700,17 +1341,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.useSampleClamp" : [
-
-			"description",
-			"""
-			Use sample clamp.
-			""",
-
-			"layout:section", "Film",
-
-		],
-
 		"options.cryptomatteAccurate" : [
 
 			"description",
@@ -1733,40 +1363,41 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.displayPass" : [
+
+			"description",
+			"""
+			Render pass to show in the 3D Viewport.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
+		"options.displayPass.value" : [
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.showActivePixels" : [
+
+			"description",
+			"""
+			When using adaptive sampling highlight pixels which are being sampled.
+			""",
+
+			"layout:section", "Film",
+
+		],
+
 		# Denoising
 
-		"options.denoiseUse" : [
-
-			"description",
-			"""
-			Denoise the rendered image. This is Cycles' built-in denoising.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Use Denoising",
-
-		],
-
-		"options.denoiseStorePasses" : [
-
-			"description",
-			"""
-			Store the denoising passes.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Store Denoising Passes",
-
-		],
-
-		"options.denoiseType" : [
+		"options.denoiserType" : [
 
 			"description",
 			"""
 			Denoise the image with the selected denoiser.
-			For denoising the image after rendering, denoising data render passes
-			also adapt to the selected denoiser.
-			NLM   - Cycles native non-local means denoiser, running on any compute device
 			OptiX - Use the OptiX AI denoiser with GPU acceleration, only available on NVIDIA GPUs
 			OpenImageDenoise - Use Intel OpenImageDenoise AI denoiser running on the CPU
 			""",
@@ -1776,32 +1407,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.denoiseType.value" : [
-
-			"preset:NLM", 1,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
-
-		"options.denoiseInputPasses" : [
-
-			"description",
-			"""
-			Controls which passes the Denoise AI denoiser should use as input, which can have different effects 
-			on the denoised image.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Denoise Input Passes",
-
-		],
-
-		"options.denoiseInputPasses.value" : [
-
-			"preset:Beauty", 1,
-			"preset:Beauty Albedo", 2,
-			"preset:Beauty Albedo Normal", 3,
+		"options.denoiserType.value" : [
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -1819,165 +1425,52 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.denoisingDiffuseDirect" : [
+		"options.useDenoisePassAlbedo" : [
 
 			"description",
 			"""
-			Denoise the direct diffuse lighting.
+			Use albedo pass for denoising.
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Diffuse Direct",
+			"label", "Use Denoise Pass Albedo",
 
 		],
 
-		"options.denoisingDiffuseIndirect" : [
+		"options.useDenoisePassNormal" : [
 
 			"description",
 			"""
-			Denoise the indirect diffuse lighting.
+			Use normal pass for denoising.
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Diffuse Indirect",
+			"label", "Use Denoise Pass Normal",
 
 		],
 
-		"options.denoisingGlossyDirect" : [
+		"options.denoiserPrefilter" : [
 
 			"description",
 			"""
-			Denoise the direct glossy lighting.
+			None - No prefiltering, use when guiding passes are noise-free.
+			Fast - Denoise color and guiding passes together. Improves quality when guiding passes are noisy using least amount of extra processing time.
+			Accurate - Prefilter noisy guiding passes before denoising color. Improves quality when guiding passes are noisy using extra processing time.
 			""",
 
 			"layout:section", "Denoising",
-			"label", "Glossy Direct",
+			"label", "Denoising Pre-Filter",
 
 		],
 
-		"options.denoisingGlossyIndirect" : [
+		"options.denoiserPrefilter.value" : [
 
-			"description",
-			"""
-			Denoise the indirect glossy lighting.
-			""",
+			"preset:None", "none",
+			"preset:Fast", "fast",
+			"preset:Accurate", "accurate",
 
-			"layout:section", "Denoising",
-			"label", "Glossy Indirect",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-		],
-
-		"options.denoisingTransmissionDirect" : [
-
-			"description",
-			"""
-			Denoise the direct transmission lighting.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Transmission Direct",
-
-		],
-
-		"options.denoisingTransmissionIndirect" : [
-
-			"description",
-			"""
-			Denoise the indirect transmission lighting.
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Transmission Indirect",
-
-		],
-
-		"options.denoiseStrength" : [
-
-			"description",
-			"""
-			Controls neighbor pixel weighting for the denoising filter
-			(lower values preserve more detail, but aren't as smooth).
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Denoise Strength",
-
-		],
-
-		"options.denoiseFeatureStrength" : [
-
-			"description",
-			"""
-			Controls removal of noisy image feature passes 
-			(lower values preserve more detail, but aren't as smooth).
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Denoise Feature Strength",
-
-		],
-
-		"options.denoiseRadius" : [
-
-			"description",
-			"""
-			Size of the image area that's used to denoise a pixel 
-			(higher values are smoother, but might lose detail and are slower).
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Denoise Radius",
-
-		],
-
-		"options.denoiseRelativePca" : [
-
-			"description",
-			"""
-			When removing pixels that don't carry information, use a relative
-			threshold instead of an absolute one (can help to reduce artifacts,
-			but might cause detail loss around edges).
-			""",
-
-			"layout:section", "Denoising",
-			"label", "Denoise Relative Filter",
-
-		],
-
-		"options.denoiseNeighborFrames" : [
-		
-			"description",
-			"""
-			Number of frames to use around the current frame for denoising.
-			""",
-		
-			"layout:section", "Denoising",
-			"label", "Denoise Neighbor Frames",
-		
-		],
-
-		"options.denoiseNeighborFrames" : [
-		
-			"description",
-			"""
-			Number of frames to use around the current frame for denoising.
-			""",
-		
-			"layout:section", "Denoising",
-			"label", "Denoise Neighbor Frames",
-		
-		],
-
-		"options.denoiseClampInput" : [
-		
-			"description",
-			"""
-			Denoise Clamp Input.
-			""",
-		
-			"layout:section", "Denoising",
-			"label", "Denoise Clamp Input",
-		
 		],
 
 		# Texture Cache
@@ -2153,8 +1646,11 @@ if not GafferCycles.withTextureCache :
 
 if GafferCycles.hasOptixDenoise :
 
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiseType.value", "preset:OptiX Denoiser", 2 )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiserType.value", "preset:OptiX Denoiser", "optix" )
 
 if GafferCycles.hasOpenImageDenoise :
 
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiseType.value", "preset:Open Image Denoise", 4 )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.denoiserType.value", "preset:Open Image Denoise", "openimagedenoise" )
+
+for _pass in GafferCycles.passes.keys():
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.displayPass.value", "preset:%s" % _pass.replace( "_", " " ).title(), "%s" % _pass )

@@ -568,14 +568,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_transmission" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_scatter" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "max_bounces" ) )), plugsParent, Gaffer::Plug::In ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "samples" ) )), plugsParent, Gaffer::Plug::In ) );
 #ifdef WITH_CYCLES_LIGHTGROUPS
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "lightgroup" ) )), plugsParent, Gaffer::Plug::In ) );
 #endif
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "intensity", plugsParent, Gaffer::Plug::In, 1.0f ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "exposure", plugsParent, Gaffer::Plug::In, 0.0f ) );
 		validPlugs.insert( setupTypedPlug<Color3fPlug>( "color", plugsParent, Gaffer::Plug::In, Color3f( 1.0f ) ) );
-		validPlugs.insert( setupTypedPlug<BoolPlug>( "squareSamples", plugsParent, Gaffer::Plug::In, true ) );
 	}
 
 	if( shaderName == "spot_light" )
@@ -594,11 +592,13 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	else if( shaderName == "quad_light" )
 	{
 		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spread" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "disk_light" )
 	{
 		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spread" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "background_light" )
 	{

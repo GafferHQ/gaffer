@@ -59,7 +59,8 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	// Shading parameters
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:use_holdout", new IECore::BoolData( false ), false, "useHoldout" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:is_shadow_catcher", new IECore::BoolData( false ), false, "isShadowCatcher" ) );
-	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shadow_terminator_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorOffset" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shadow_terminator_shading_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorShadingOffset" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shadow_terminator_geometry_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorGeometryOffset" ) );
 
 	// Subdivision parameters
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:max_level", new IECore::IntData( 1 ), false, "maxLevel" ) );

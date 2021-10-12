@@ -216,11 +216,22 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.shadowTerminatorOffset" : [
+		"attributes.shadowTerminatorShadingOffset" : [
 
 			"description",
 			"""
 			Push the shadow terminator towards the light to hide artifacts on low poly geometry.
+			""",
+
+			"layout:section", "Shading",
+
+		],
+
+		"attributes.shadowTerminatorGeometryOffset" : [
+
+			"description",
+			"""
+			Offset rays from the surface to reduce shadow terminator artifact on low poly geometry. Only affects triangles at grazing angles to light.
 			""",
 
 			"layout:section", "Shading",

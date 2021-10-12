@@ -167,8 +167,6 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	// Parameters we need to modify depending on other parameters found.
 	float exposure = 0.0f;
 	float intensity = 1.0f;
-	bool squareSamples = true;
-	float samples = 1.0f;
 	bool textureInput = false;
 	float coneAngle = 30.0f;
 	float penumbraAngle = 0.0f;
@@ -208,14 +206,6 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 				intensity = static_cast<const FloatPlug *>( valuePlug )->getValue();
 				// For the UI
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "squareSamples")
-			{
-				squareSamples = true;
-			}
-			else if( parameterName == "samples" )
-			{
-				samples = static_cast<const IntPlug *>( valuePlug )->getValue();
 			}
 			else if( parameterName == "color" )
 			{
@@ -268,8 +258,6 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
         lightShader->parameters()["spot_angle"] = new FloatData( spotAngle );
 		lightShader->parameters()["spot_smooth"] = new FloatData( Imath::clamp( penumbraAngle / sumAngle, 0.0f, 1.0f ) );
 	}
-
-	lightShader->parameters()["samples"] = new IntData( squareSamples ? samples * samples : samples );
 
 	if( shaderNamePlug()->getValue() == "background_light" )
 	{

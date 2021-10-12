@@ -32,6 +32,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WITH_CYCLES_POINTCLOUD
+
 #include "GafferCycles/IECoreCyclesPreview/PointsAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
@@ -281,3 +283,5 @@ ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points
 } // namespace PointsAlgo
 
 } // namespace IECoreCycles
+
+#endif // WITH_CYCLES_POINTCLOUD

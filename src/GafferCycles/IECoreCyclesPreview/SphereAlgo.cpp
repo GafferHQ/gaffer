@@ -32,6 +32,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WITH_CYCLES_POINTCLOUD
+
 #include "GafferCycles/IECoreCyclesPreview/SphereAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
@@ -126,3 +128,5 @@ ccl::Object *convert( const vector<const IECoreScene::SpherePrimitive *> &sample
 } // namespace SphereAlgo
 
 } // namespace IECoreCycles
+
+#endif // WITH_CYCLES_POINTCLOUD

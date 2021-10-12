@@ -75,14 +75,19 @@ struct MikkUserData {
 																		  mesh->attributes;
 
 		ccl::Attribute *attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
+#ifdef WITH_CYCLES_CORNER_NORMALS
 		ccl::Attribute* attr_cN = attributes.find( ccl::ATTR_STD_CORNER_NORMAL );
 		if( !attr_vN && !attr_cN )
+#else
+		if( !attr_vN )
+#endif
 		{
 			mesh->add_face_normals();
 			mesh->add_vertex_normals();
 			attr_vN = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
 		}
 
+#ifdef WITH_CYCLES_CORNER_NORMALS
 		// This preference depends on what Cycles does inside the hood.
 		// Works for now, but there should be a more clear way of knowing
 		// which normals are used for rendering.
@@ -94,6 +99,9 @@ struct MikkUserData {
 		{
 			vertex_normal = attr_vN->data_float3();
 		}
+#else
+		vertex_normal = attr_vN->data_float3();
+#endif
 
 		ccl::Attribute *attr_uv = attributes.find( ccl::ustring( layer_name ) );
 		if( attr_uv != NULL )
@@ -424,6 +432,7 @@ const IntVectorData *getFaceset( const IECoreScene::MeshPrimitive *mesh )
 
 ccl::AttributeStandard normalAttributeStandard( PrimitiveVariable::Interpolation &interpolation )
 {
+#ifdef WITH_CYCLES_CORNER_NORMALS
 	if( interpolation == PrimitiveVariable::Uniform || interpolation == PrimitiveVariable::FaceVarying )
 	{
 		return ccl::ATTR_STD_CORNER_NORMAL;
@@ -432,6 +441,9 @@ ccl::AttributeStandard normalAttributeStandard( PrimitiveVariable::Interpolation
 	{
 		return ccl::ATTR_STD_VERTEX_NORMAL;
 	}
+#else
+	return ccl::ATTR_STD_VERTEX_NORMAL;
+#endif
 }
 
 void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *normalData, ccl::Attribute *attr, PrimitiveVariable::Interpolation interpolation )
@@ -462,6 +474,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 				}
 			}
 		}
+#ifdef WITH_CYCLES_CORNER_NORMALS
 		else if( interpolation == PrimitiveVariable::FaceVarying )
 		{
 			for( size_t i = 0; i < numFaces; ++i )
@@ -472,6 +485,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 				}
 			}
 		}
+#endif // WITH_CYCLES_CORNER_NORMALS
 		else // per-vertex
 		{
 			for( size_t i = 0; i < normals.size(); ++i )
@@ -509,6 +523,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 				}
 			}
 		}
+#ifdef WITH_CYCLES_CORNER_NORMALS
 		else if( interpolation == PrimitiveVariable::FaceVarying )
 		{
 			for( size_t i = 0; i < numFaces; ++i )
@@ -519,6 +534,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 				}
 			}
 		}
+#endif // WITH_CYCLES_CORNER_NORMALS
 		else // per-vertex
 		{
 			for( size_t i = 0; i < normals.size(); ++i )
@@ -926,7 +942,7 @@ namespace MeshAlgo
 ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( convertCommon( mesh ) );
+	cobject->set_geometry( static_cast<ccl::Geometry*>( convertCommon( mesh ) ) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -1023,14 +1039,16 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
 	if( normal( meshes[0], nInterpolation ) )
 	{
-		if( nInterpolation == PrimitiveVariable::FaceVarying )
-		{
-			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_CORNER_NORMAL, ccl::ustring("motion_Nc") );
-		}
-		else if( nInterpolation == PrimitiveVariable::Vertex )
+		if( nInterpolation == PrimitiveVariable::Vertex )
 		{
 			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_NORMAL, ccl::ustring("motion_N") );
 		}
+#ifdef WITH_CYCLES_CORNER_NORMALS
+		else if( nInterpolation == PrimitiveVariable::FaceVarying )
+		{
+			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_CORNER_NORMAL, ccl::ustring("motion_Nc") );
+		}
+#endif
 		else
 		{
 			msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"N\" has unsupported interpolation type for motion steps - not generating normals." );
@@ -1083,7 +1101,7 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	}
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( cmesh );
+	cobject->set_geometry( static_cast<ccl::Geometry*>( cmesh ) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
