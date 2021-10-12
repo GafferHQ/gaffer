@@ -226,7 +226,7 @@ class TestCase( unittest.TestCase ) :
 
 			self.assertEqual( instance.getName(), cls.staticTypeName().rpartition( ":" )[2] )
 
-	def assertNodesAreDocumented( self, module, additionalTerminalPlugTypes = () ) :
+	def assertNodesAreDocumented( self, module, additionalTerminalPlugTypes = (), nodesToIgnore = None ) :
 
 		terminalPlugTypes = (
 			Gaffer.ArrayPlug,
@@ -247,6 +247,9 @@ class TestCase( unittest.TestCase ) :
 
 			cls = getattr( module, name )
 			if not inspect.isclass( cls ) or not issubclass( cls, Gaffer.Node ) :
+				continue
+
+			if nodesToIgnore is not None and cls in nodesToIgnore :
 				continue
 
 			if not cls.__module__.startswith( module.__name__ + "." ) :
@@ -288,8 +291,8 @@ class TestCase( unittest.TestCase ) :
 
 			checkPlugs( node )
 
-		self.assertEqual( undocumentedNodes, [] )
 		self.assertEqual( undocumentedPlugs, [] )
+		self.assertEqual( undocumentedNodes, [] )
 
 	## We don't serialise plug values when they're at their default, so
 	# newly constructed nodes _must_ have all their plugs be at the default value.
