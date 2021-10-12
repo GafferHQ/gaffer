@@ -1223,6 +1223,7 @@ _styleSheet = string.Template(
 		border-right-color: $backgroundRaisedLowlight;
 		padding: 0;
 		alternate-background-color: $backgroundRaisedAlt;
+		paint-alternating-row-colors-for-empty-area: 1;
 	}
 
 	QTreeView::item {
