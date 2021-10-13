@@ -256,6 +256,21 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 				return tileOrigin == rhs.tileOrigin && channelName == rhs.channelName;
 			}
 
+			struct Hash
+			{
+				size_t operator() ( const TileIndex &tileIndex ) const
+				{
+					size_t result = 0;
+					boost::hash_combine( result, tileIndex.tileOrigin.x );
+					boost::hash_combine( result, tileIndex.tileOrigin.y );
+					// This is hashing by pointer address, not string contents,
+					// and is sufficient because all equal InternedStrings are
+					// guaranteed to have the same pointers.
+					boost::hash_combine( result, tileIndex.channelName.c_str() );
+					return result;
+				}
+			};
+
 			Imath::V2i tileOrigin;
 			IECore::InternedString channelName;
 		};
@@ -295,10 +310,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 
 		};
 
-		typedef tbb::concurrent_unordered_map<TileIndex, Tile> Tiles;
+		typedef tbb::concurrent_unordered_map<TileIndex, Tile, TileIndex::Hash> Tiles;
 		mutable Tiles m_tiles;
-
-		friend size_t tbb_hasher( const ImageGadget::TileIndex &tileIndex );
 
 		// Tile update. We update tiles asynchronously from background
 		// threads.
@@ -323,8 +336,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )
-
-size_t tbb_hasher( const ImageGadget::TileIndex &tileIndex );
 
 } // namespace GafferImageUI
 
