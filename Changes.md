@@ -19,6 +19,7 @@ Improvements
 - Cancellation : Improved responsiveness of cancellation of tasks waiting on results from another thread.
 - ImageReader : Channels from EXR subimages named `rgb`, `rgba` or `depth` (either uppercase or lowercase) are now loaded into Gaffer's primary image layer.
 - PathFilter : Removed `scene:filter:inputScene` and `scene:path` variables from the context used to evaluate the `paths` plug. This improves performance in some scenarios, and prevents the creation of invalid filters where the paths themselves depend on the current scene location.
+- NodeEditor : Added option in node editor context menu to set interpolation of an animated value.
 
 Fixes
 -----
@@ -84,6 +85,7 @@ Breaking Changes
 - Removed support for linking editors (following the focus node replaces most practical uses of this feature).
 - Animation :
   - Renamed `Type` enum to `Interpolation`.
+  - Interpolation of a key now affects span to next instead of previous key.
   - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.

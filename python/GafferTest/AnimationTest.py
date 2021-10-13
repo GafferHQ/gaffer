@@ -1073,9 +1073,9 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
-		curve.addKey( Gaffer.Animation.Key( 0, 0 ) )
-		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
-		curve.addKey( Gaffer.Animation.Key( 2, 2, Gaffer.Animation.Interpolation.Step ) )
+		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
+		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Step ) )
+		curve.addKey( Gaffer.Animation.Key( 2, 2 ) )
 
 		with Gaffer.Context() as c :
 			# Linear interpolation from 0 to 1.

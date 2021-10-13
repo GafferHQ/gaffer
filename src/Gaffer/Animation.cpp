@@ -802,38 +802,46 @@ Animation::ConstKeyIterator Animation::CurvePlug::end() const
 
 float Animation::CurvePlug::evaluate( float time ) const
 {
+	// NOTE : no keys return 0
+
 	if( m_keys.empty() )
 	{
-		return 0;
+		return 0.f;
 	}
 
-	Keys::const_iterator rightIt = m_keys.lower_bound( time );
-	if( rightIt == m_keys.end() )
+	// NOTE : each key determines value at a specific time therefore only
+	//        interpolate for times which are between the keys.
+
+	Keys::const_iterator hiIt = m_keys.lower_bound( time );
+	if( hiIt == m_keys.end() )
 	{
 		return (m_keys.rbegin())->getValue();
 	}
 
-	const Key &right = *( rightIt );
-	if( right.getTime() == time || rightIt == m_keys.begin() )
+	const Key &hi = *( hiIt );
+
+	if( hi.m_time == time || hiIt == m_keys.begin() )
 	{
-		return right.getValue();
+		return hi.getValue();
 	}
 
-	const Key &left = *( std::prev( rightIt ) );
-	if( right.getInterpolation() == Interpolation::Linear )
-	{
-		const float t = ( time - left.getTime() ) / ( right.getTime() - left.getTime() );
-		return Imath::lerp( left.getValue(), right.getValue(), t );
-	}
-	else
-	{
-		// Step. We already dealt with the case where we're
-		// exactly at the time of the right keyframe, so we
-		// just return the value of the left keyframe.
-		return left.getValue();
-	}
+	const Key &lo = *( std::prev( hiIt ) );
 
-	return 0;
+	// normalise time to lo, hi key time range
+
+	const double nt = std::min( std::max(
+		static_cast< double >( time - lo.m_time ) /
+		static_cast< double >( hi.m_time - lo.m_time ), 0.0 ), 1.0 );
+
+	switch( lo.m_interpolation )
+	{
+		case Interpolation::Step:
+			return lo.m_value;
+		case Interpolation::Linear:
+			return lo.m_value * ( 1.0 - nt ) + hi.m_value * ( nt );
+		default:
+			return 0.f;
+	}
 }
 
 FloatPlug *Animation::CurvePlug::outPlug()
