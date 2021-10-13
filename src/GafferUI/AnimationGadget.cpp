@@ -820,12 +820,9 @@ void AnimationGadget::frame()
 	Box3f b;
 
 	// try to frame to selected keys
-	if( b.isEmpty() )
+	for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
 	{
-		for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
-		{
-			b.extendBy( V3f( ( *it )->getTime(), ( *it )->getValue(), 0 ) );
-		}
+		b.extendBy( V3f( ( *it )->getTime(), ( *it )->getValue(), 0 ) );
 	}
 
 	// try to frame to editable curves
