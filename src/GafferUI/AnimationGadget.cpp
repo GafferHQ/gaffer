@@ -59,6 +59,7 @@
 #include "boost/multi_index_container.hpp"
 
 #include <cmath>
+#include <cassert>
 
 using namespace Gaffer;
 using namespace GafferUI;
@@ -818,16 +819,14 @@ void AnimationGadget::frame()
 {
 	Box3f b;
 
-	// trying to frame to selected keys first
-	if( ! m_selectedKeys->empty() )
+	// try to frame to selected keys
+	for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
 	{
-		for( SelectionSet::KeyContainer::iterator it = m_selectedKeys->m_keys.begin(), itEnd = m_selectedKeys->m_keys.end(); it != itEnd; ++it )
-		{
-			b.extendBy( V3f( ( *it )->getTime(), ( *it )->getValue(), 0 ) );
-		}
+		b.extendBy( V3f( ( *it )->getTime(), ( *it )->getValue(), 0 ) );
 	}
-	// trying to frame to editable curves next
-	else if( !( m_editablePlugs->size() == 0 ) )
+
+	// try to frame to editable curves
+	if( b.isEmpty() )
 	{
 		for( const auto &runtimeTyped : *m_editablePlugs )
 		{
@@ -839,8 +838,9 @@ void AnimationGadget::frame()
 			}
 		}
 	}
-	// trying to frame to visible curves next
-	else if( !( m_visiblePlugs->size() == 0 ) )
+
+	// try to frame to visible curves
+	if( b.isEmpty() )
 	{
 		for( const auto &runtimeTyped : *m_visiblePlugs )
 		{
@@ -852,11 +852,14 @@ void AnimationGadget::frame()
 			}
 		}
 	}
-	// setting default framing as last resort
-	else
+
+	// set default framing as last resort
+	if( b.isEmpty() )
 	{
 		b = Box3f( V3f( -1, -1, 0), V3f( 1, 1, 0 ) );
 	}
+
+	assert( ! b.isEmpty() );
 
 	// add some padding in case only a single key was selected
 	Box3f bound( b.min - V3f( .1 ), b.max + V3f( .1 ) );
