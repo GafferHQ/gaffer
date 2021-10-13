@@ -54,7 +54,7 @@ namespace
 struct Edit
 {
 
-	Edit( const tbb::atomic<bool> &stop )
+	Edit( const std::atomic_bool &stop )
 		:	m_stop( stop )
 	{
 	}
@@ -72,7 +72,7 @@ struct Edit
 
 	private :
 
-		const tbb::atomic<bool> &m_stop;
+		const std::atomic_bool &m_stop;
 
 };
 
@@ -109,7 +109,7 @@ void GafferTest::testComputeNodeThreading()
 {
 	// Set up a background thread that creates and
 	// deletes node graphs.
-	tbb::atomic<bool> stop;
+	std::atomic_bool stop;
 	Edit edit( stop );
 	std::thread thread( edit );
 
