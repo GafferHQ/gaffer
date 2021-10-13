@@ -6,6 +6,11 @@ Improvements
 
 - Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
 
+API
+---
+
+- GafferTest.TestCase : Fixed `assertNodesAreDocumented()` support for Node classes with multi-inheritance.
+
 0.60.8.0 (relative to 0.60.7.1)
 ========
 
