@@ -729,7 +729,7 @@ struct TestLRUCacheUncacheableItem
 						cost = std::numeric_limits<size_t>::max();
 						// Recursive call to cache, with new key chosen to require
 						// the same bin as this key.
-						return cache->get( key + tbb::tbb_thread::hardware_concurrency() );
+						return cache->get( key + std::thread::hardware_concurrency() );
 					}
 					else
 					{

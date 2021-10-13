@@ -49,7 +49,6 @@
 
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
-#include "tbb/tbb_thread.h"
 
 #include <cassert>
 #include <iostream>
@@ -364,7 +363,7 @@ class Parallel
 
 		Parallel()
 		{
-			m_bins.resize( tbb::tbb_thread::hardware_concurrency() );
+			m_bins.resize( std::thread::hardware_concurrency() );
 			m_popBinIndex = 0;
 			m_popIterator = m_bins[0].map.begin();
 			currentCost = 0;
@@ -710,7 +709,7 @@ class TaskParallel
 
 		TaskParallel()
 		{
-			m_bins.resize( tbb::tbb_thread::hardware_concurrency() );
+			m_bins.resize( std::thread::hardware_concurrency() );
 			m_popBinIndex = 0;
 			m_popIterator = m_bins[0].map.begin();
 			currentCost = 0;
