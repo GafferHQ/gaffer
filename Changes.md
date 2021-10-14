@@ -62,6 +62,7 @@ API
   - `key.setTime()` will not remove active clashing key, instead it becomes become inactive. inactive key at old time becomes active.
   - Added `curve.removeInactiveKeys()` function, removes all the inactive keys parented to a curve.
   - Added `key.isActive()` function, returns true if key is parented to curve and is the active key at its current time.
+  - Added `curve.insertKey()` functions, insert key at specified time with optionally specified value.
 - AnimationGadget :
   - Added `selectedKeys()` function, returns current set of selected keys.
   - Added `onTimeAxis()` function, returns true if specified line is over the time axis of the gadget.

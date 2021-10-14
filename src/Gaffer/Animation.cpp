@@ -549,6 +549,112 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 	return clashingKey;
 }
 
+Animation::KeyPtr Animation::CurvePlug::insertKey( const float time )
+{
+	return insertKeyInternal( time, nullptr );
+}
+
+Animation::KeyPtr Animation::CurvePlug::insertKey( const float time, const float value )
+{
+	return insertKeyInternal( time, & value );
+}
+
+Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, const float* const value )
+{
+	// find span keys for time
+
+	KeyPtr key;
+	Key* lo = nullptr;
+	Key* hi = nullptr;
+
+	Keys::iterator hiIt = m_keys.lower_bound( time );
+	if( hiIt != m_keys.end() )
+	{
+		hi = &( *( hiIt ) );
+
+		if( hi->m_time == time )
+		{
+			key = hi;
+		}
+		else if( hiIt != m_keys.begin() )
+		{
+			lo = &( *( --hiIt ) );
+
+			if( lo->m_time == time )
+			{
+				key = lo;
+			}
+		}
+	}
+	else
+	{
+		lo = finalKey();
+	}
+
+	// if key already exists at time then return it with updated value, otherwise if time is
+	// outside existing range of keys, there is no way currently to extrapolate a value so
+	// if no value has been provided then return KeyPtr().
+
+	if( key )
+	{
+		if( value != nullptr )
+		{
+			key->setValue( *value );
+		}
+
+		return key;
+	}
+	else if( !( lo && hi ) && ( value == nullptr ) )
+	{
+		return key;
+	}
+
+	// get interpolation
+
+	Interpolation interpolation = Gaffer::Animation::defaultInterpolation();
+
+	if( lo && hi )
+	{
+		interpolation = lo->m_interpolation;
+	}
+	else if( const Key* const kf = firstKey() )
+	{
+		interpolation = kf->m_interpolation;
+	}
+
+	// create key
+
+	key.reset( new Animation::Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolation ) );
+
+	// if specified value is the same as the evaluated value of the curve then bisect span.
+
+	if( ( lo && hi ) && ( ( value == nullptr ) || ( evaluate( time ) == ( *value ) ) ) )
+	{
+		// NOTE : bisection code will replace this.
+
+		key->m_value = evaluate( time );
+
+		// add new key to curve
+
+		addKey( key );
+	}
+	else
+	{
+		// only compute auto slope when we have a valid span
+
+		if( lo && hi )
+		{
+			// NOTE : auto slope code will go here
+		}
+
+		// add new key to curve
+
+		addKey( key );
+	}
+
+	return key;
+}
+
 bool Animation::CurvePlug::hasKey( float time ) const
 {
 	return m_keys.find( time ) != m_keys.end();
@@ -773,6 +879,40 @@ const Animation::Key *Animation::CurvePlug::nextKey( float time ) const
 	return ( rightIt != m_keys.end() )
 		? &( *( rightIt ) )
 		: nullptr;
+}
+
+Animation::Key *Animation::CurvePlug::firstKey()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->firstKey() );
+}
+
+Animation::Key *Animation::CurvePlug::finalKey()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->finalKey() );
+}
+
+const Animation::Key *Animation::CurvePlug::firstKey() const
+{
+	const Key* k = 0;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.cbegin() ) );
+	}
+
+	return k;
+}
+
+const Animation::Key *Animation::CurvePlug::finalKey() const
+{
+	const Key* k = 0;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.crbegin() ) );
+	}
+
+	return k;
 }
 
 Animation::CurvePlug::TimeKey::type Animation::CurvePlug::TimeKey::operator()( const Animation::Key& key ) const
@@ -1035,4 +1175,23 @@ ValuePlug::CachePolicy Animation::computeCachePolicy( const Gaffer::ValuePlug *o
 	}
 
 	return ComputeNode::computeCachePolicy( output );
+}
+
+Animation::Interpolation Animation::defaultInterpolation()
+{
+	return Animation::Interpolation::Linear;
+}
+
+const char* Animation::toString( const Animation::Interpolation interpolation )
+{
+	switch( interpolation )
+	{
+		case Interpolation::Step:
+			return "Step";
+		case Interpolation::Linear:
+			return "Linear";
+		default:
+			assert( 0 );
+			return 0;
+	}
 }

@@ -69,6 +69,8 @@ class GAFFER_API Animation : public ComputeNode
 			/// tangents on each key.
 		};
 
+		static Interpolation defaultInterpolation();
+
 		class CurvePlug;
 
 		/// Defines a single keyframe.
@@ -77,7 +79,7 @@ class GAFFER_API Animation : public ComputeNode
 
 			public :
 
-				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Interpolation::Linear );
+				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Animation::defaultInterpolation() );
 				~Key() override;
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
@@ -173,6 +175,21 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				KeyPtr addKey( const KeyPtr &key, bool removeActiveClashing = true );
 
+				/// Inserts a key at the given time, if the specified time is outside the range of
+				/// the existing keys there is no way (currently) to extrapolate a value so KeyPtr()
+				/// is returned, otherwise the curve is bisected at the specified time. If there is
+				/// already a key at the specified time it is returned unaltered.
+				/// \undoable
+				KeyPtr insertKey( float time );
+
+				/// Inserts a key at the given time, if the specified value is equivalent to the
+				/// evaluated value of the curve at the specfied time the curve is bisected otherwise
+				/// a new key is created and added with the same interpolation as the previous or
+				/// first key of the curve. If there is already a key at the specified time its value
+				/// is adjusted if its not equivalent to the specified value.
+				/// \undoable
+				KeyPtr insertKey( float time, float value );
+
 				/// Does the curve have a key at the specified time?
 				bool hasKey( float time ) const;
 
@@ -240,6 +257,13 @@ class GAFFER_API Animation : public ComputeNode
 				friend KeyIterator;
 				friend ConstKeyIterator;
 
+				Key *firstKey();
+				Key *finalKey();
+				const Key *firstKey() const;
+				const Key *finalKey() const;
+
+				KeyPtr insertKeyInternal( float, const float* );
+
 				struct TimeKey
 				{
 					typedef float type;
@@ -257,6 +281,9 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyAddedSignal;
 				CurvePlugKeySignal m_keyRemovedSignal;
 		};
+
+		/// convert enums to strings
+		static const char* toString( Interpolation interpolation );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 

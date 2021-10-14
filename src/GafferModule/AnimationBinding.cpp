@@ -104,6 +104,18 @@ Animation::KeyPtr addKey( Animation::CurvePlug &p, const Animation::KeyPtr &k, c
 	return p.addKey( k, removeActiveClashing );
 }
 
+Animation::KeyPtr insertKey( Animation::CurvePlug &p, const float time )
+{
+	ScopedGILRelease gilRelease;
+	return p.insertKey( time );
+}
+
+Animation::KeyPtr insertKeyValue( Animation::CurvePlug &p, const float time, const float value )
+{
+	ScopedGILRelease gilRelease;
+	return p.insertKey( time, value );
+}
+
 void removeKey( Animation::CurvePlug &p, const Animation::KeyPtr &k )
 {
 	ScopedGILRelease gilRelease;
@@ -163,11 +175,13 @@ void GafferModule::bindAnimation()
 		.staticmethod( "isAnimated" )
 		.def( "acquire", &acquire )
 		.staticmethod( "acquire" )
+		.def( "defaultInterpolation", &Animation::defaultInterpolation )
+		.staticmethod( "defaultInterpolation" )
 	;
 
 	enum_<Animation::Interpolation>( "Interpolation" )
-		.value( "Step", Animation::Interpolation::Step )
-		.value( "Linear", Animation::Interpolation::Linear )
+		.value( Animation::toString( Animation::Interpolation::Step ), Animation::Interpolation::Step )
+		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
 	;
 
 	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
@@ -175,7 +189,7 @@ void GafferModule::bindAnimation()
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
-					arg( "interpolation" ) = Animation::Interpolation::Linear
+					arg( "interpolation" ) = Animation::defaultInterpolation()
 				)
 			)
 		)
@@ -208,6 +222,8 @@ void GafferModule::bindAnimation()
 		.def( "keyAddedSignal", &Animation::CurvePlug::keyAddedSignal, return_internal_reference< 1 >() )
 		.def( "keyRemovedSignal", &Animation::CurvePlug::keyRemovedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
+		.def( "insertKey", &insertKey )
+		.def( "insertKey", &insertKeyValue )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
 		.def(
 			"getKey",
