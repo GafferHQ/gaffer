@@ -613,7 +613,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 	Interpolation interpolation = Gaffer::Animation::defaultInterpolation();
 
-	if( lo && hi )
+	if( lo )
 	{
 		interpolation = lo->m_interpolation;
 	}

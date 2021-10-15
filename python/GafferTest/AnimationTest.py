@@ -482,7 +482,9 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
 		interpolation = Gaffer.Animation.Interpolation.Step
+		k0 = Gaffer.Animation.Key( 0, 3 )
 		k = Gaffer.Animation.Key( 10, 5, interpolation )
+		curve.addKey( k0 )
 		curve.addKey( k )
 
 		time = 15
