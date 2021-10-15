@@ -12,6 +12,7 @@ Features
 Improvements
 ------------
 
+- HierarchyView : Moved processing to a background thread, so that displaying slow scenes does not cause the HierarchyView to lock up the UI.
 - GraphEditor :
   - Improved drawing performance for large node graphs. Gains of about 40% are typical, with much greater gains when looking at a small region of a large graph or performing selection tests (for example when hovering over something or dragging a connection).
   - Added support for middle-drag panning while dragging nodes and connections using <kbd>G</kbd>.
@@ -24,7 +25,9 @@ Improvements
 Fixes
 -----
 
-- PathListingWidget : Fixed subtle bugs in the underlying Qt model, although they haven't been observed to cause problems in practice.
+- PathListingWidget :
+  - Fixed subtle bugs in the underlying Qt model, although they haven't been observed to cause problems in practice.
+  - Fixed potential hangs when displaying Paths which launch threaded computes.
 - Animation :
   - Fixed bug in `Key.setType()`. Previously it modified the value instead of the type.
   - Fixed crash when dragging multiple keys around in editor.
@@ -45,8 +48,11 @@ API
   - Added `gadgetsAt()` overload which returns the gadgets rather than taking an output parameter by reference.
   - Added `gadgetsAt()` overload taking a raster space region (rather than position) and an optional layer filter.
   - Add support for Gadget's double click signal.
-- PathListingWidget : `setSortable()` and `getSortable()` are no longer deprecated. The underlying bug that made them unreliable
-  has been fixed.
+- PathListingWidget :
+  - `setSortable()` and `getSortable()` are no longer deprecated. The underlying bug that made them unreliable
+    has been fixed.
+  - Path processing has been moved to a background thread. The API remains unchanged, but updates to the displayed
+    data are made asynchronously with respect to calls to methods of the PathListingWidget.
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.

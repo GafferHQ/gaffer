@@ -109,19 +109,18 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		self._qtWidget().setSortingEnabled( sortable )
 
-		self._qtWidget().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
+		# Install an empty model. We'll update the model contents shortly in setPath().
 
-		# install an empty model, so we an construct our selection model
-		# around it. we'll update the model contents shortly in setPath().
 		_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), None )
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 
-		self.__selectionModel = QtCore.QItemSelectionModel( self._qtWidget().model() )
-		self._qtWidget().setSelectionModel( self.__selectionModel )
-		self.__selectionChangedSlot = Gaffer.WeakMethod( self.__selectionChanged )
-		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
+		# Set up selection and our various signals.
+
 		if allowMultipleSelection :
 			self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.ExtendedSelection )
+
+		self._qtWidget().model().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+		self._qtWidget().model().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
@@ -185,7 +184,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	def setExpansion( self, paths ) :
 
 		assert( isinstance( paths, IECore.PathMatcher ) )
-		self._qtWidget().setExpansion( paths )
+		_GafferUI._pathListingWidgetSetExpansion( GafferUI._qtAddress( self._qtWidget() ), paths )
 
 	## Returns an `IECore.PathMatcher` object containing
 	# the currently expanded paths.
@@ -195,17 +194,17 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def setPathExpanded( self, path, expanded ) :
 
-		index = self.__indexForPath( path )
-		if index.isValid() :
-			self._qtWidget().setExpanded( index, expanded )
+		e = self.getExpansion()
+		if expanded :
+			if e.addPath( str( path ) ) :
+				self.setExpansion( e )
+		else :
+			if e.removePath( str( path ) ) :
+				self.setExpansion( e )
 
 	def getPathExpanded( self, path ) :
 
-		index = self.__indexForPath( path )
-		if index.isValid() :
-			return self._qtWidget().isExpanded( index )
-
-		return False
+		return bool( self.getExpansion().match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch )
 
 	## \deprecated Use `setExpansion()` instead
 	def setExpandedPaths( self, paths ) :
@@ -219,6 +218,9 @@ class PathListingWidget( GafferUI.Widget ) :
 	## \deprecated Use `getExpansion()` instead
 	def getExpandedPaths( self ) :
 
+		# Note : This doesn't follow the semantics of `getExpansion()` with
+		# respect to paths that are not currently in the model. It is probably
+		# time it was removed.
 		return _GafferUI._pathListingWidgetPathsForPathMatcher(
 			GafferUI._qtAddress( self._qtWidget() ),
 			self.getExpansion()
@@ -298,27 +300,10 @@ class PathListingWidget( GafferUI.Widget ) :
 	def setSelection( self, paths, scrollToFirst=True, expandNonLeaf=True ) :
 
 		assert( isinstance( paths, IECore.PathMatcher ) )
-
-		# If there are pending changes to our path model, we must perform
-		# them now, so that the model is valid with respect to the paths
-		# we're trying to select.
-		self.__updateLazily.flush( self )
-
-		assert( isinstance( paths, IECore.PathMatcher ) )
-
-		selectionModel = self._qtWidget().selectionModel()
-		selectionModel.selectionChanged.disconnect( self.__selectionChangedSlot )
-
-		selectionModel.clear()
-
 		_GafferUI._pathListingWidgetSetSelection(
 			GafferUI._qtAddress( self._qtWidget() ),
 			paths, scrollToFirst, expandNonLeaf
 		)
-
-		selectionModel.selectionChanged.connect( self.__selectionChangedSlot )
-
-		self.selectionChangedSignal()( self )
 
 	## Returns an `IECore.PathMatcher` object containing
 	# the currently selected paths.
@@ -392,7 +377,6 @@ class PathListingWidget( GafferUI.Widget ) :
 
 			_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), dirPath.copy() )
 			self.__currentDir = dirPath
-			self._qtWidget().updateColumnWidths()
 
 		self.__currentPath = str( self.__path )
 
@@ -438,10 +422,9 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return False
 
-	def __selectionChanged( self, selected, deselected ) :
+	def __selectionChanged( self ) :
 
 		self.selectionChangedSignal()( self )
-		return True
 
 	def __pathChanged( self, path ) :
 
@@ -581,15 +564,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		finally :
 			self.__emittingButtonPress = False
 
-# Private implementation - a QTreeView with some specific size behaviour, and shift
-# clicking for recursive expand/collapse.
+# Private implementation - a QTreeView with some specific size behaviour.
 class _TreeView( QtWidgets.QTreeView ) :
-
-	# This signal is called when some items are either collapsed or
-	# expanded. It can be preferable to use this over the expanded or
-	# collapsed signals as it is emitted only once when making several
-	# changes.
-	expansionChanged = QtCore.Signal()
 
 	def __init__( self ) :
 
@@ -597,9 +573,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
-
-		self.collapsed.connect( self.__collapsed )
-		self.expanded.connect( self.__expanded )
 
 		self.__recalculatingColumnWidths = False
 		# the ideal size for each column. we cache these because they're slow to compute
@@ -613,29 +586,9 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.setModel( self, model )
 
-		model.modelReset.connect( self.updateColumnWidths )
+		model.updateFinished.connect( self.updateColumnWidths )
 
 		self.updateColumnWidths()
-
-	def setExpansion( self, paths ) :
-
-		self.collapsed.disconnect( self.__collapsed )
-		self.expanded.disconnect( self.__expanded )
-
-		self.collapseAll()
-		# This call is critical to performance - without
-		# it an update is triggered for every call to
-		# setExpanded().
-		self.scheduleDelayedItemsLayout()
-
-		_GafferUI._pathListingWidgetSetExpansion( GafferUI._qtAddress( self ), paths )
-
-		self.collapsed.connect( self.__collapsed )
-		self.expanded.connect( self.__expanded )
-
-		self.updateColumnWidths()
-
-		self.expansionChanged.emit()
 
 	def sizeHint( self ) :
 
@@ -656,28 +609,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 				return True
 
 		return QtWidgets.QTreeView.event( self, event )
-
-	def mousePressEvent( self, event ) :
-
-		# we store the modifiers so that we can turn single
-		# expands/collapses into recursive ones in __propagateExpanded.
-		self.__currentEventModifiers = event.modifiers()
-		QtWidgets.QTreeView.mousePressEvent( self, event )
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
-
-	def mouseReleaseEvent( self, event ) :
-
-		# we store the modifiers so that we can turn single
-		# expands/collapses into recursive ones in __propagateExpanded.
-		self.__currentEventModifiers = event.modifiers()
-		QtWidgets.QTreeView.mouseReleaseEvent( self, event )
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
-
-	def mouseDoubleClickEvent( self, event ) :
-
-		self.__currentEventModifiers = event.modifiers()
-		QtWidgets.QTreeView.mouseDoubleClickEvent( self, event )
-		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
 	def updateColumnWidths( self ) :
 
@@ -711,48 +642,3 @@ class _TreeView( QtWidgets.QTreeView ) :
 		# we can apply it again in updateColumnWidths
 		if len( self.__idealColumnWidths ) > index :
 			self.__columnWidthAdjustments[index] = newWidth - self.__idealColumnWidths[index]
-
-	def __collapsed( self, index ) :
-
-		self.__propagateExpanded( index, False )
-		self.updateColumnWidths()
-
-		self.expansionChanged.emit()
-
-	def __expanded( self, index ) :
-
-		self.__propagateExpanded( index, True )
-		self.updateColumnWidths()
-
-		self.expansionChanged.emit()
-
-	def __propagateExpanded( self, index, expanded ) :
-
-		numLevels = 0
-		if self.__currentEventModifiers & QtCore.Qt.ShiftModifier :
-			numLevels = 10000
-		elif self.__currentEventModifiers & QtCore.Qt.ControlModifier :
-			numLevels = 1
-
-		if numLevels :
-
-			self.collapsed.disconnect( self.__collapsed )
-			self.expanded.disconnect( self.__expanded )
-
-			# This call is critical for performance. Without it,
-			# QTreeView will start doing relayout for every single
-			# call to setExpanded() that we make inside
-			# _pathListingWidgetPropagateExpanded(). With it, it
-			# waits nicely till the end and does it all at once.
-			self.scheduleDelayedItemsLayout()
-
-			# Defer to C++ to do the heavy lifting.
-			_GafferUI._pathListingWidgetPropagateExpanded(
-				GafferUI._qtAddress( self ),
-				GafferUI._qtAddress( index ),
-				expanded,
-				numLevels
-			)
-
-			self.collapsed.connect( self.__collapsed )
-			self.expanded.connect( self.__expanded )

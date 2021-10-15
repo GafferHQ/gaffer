@@ -1,6 +1,7 @@
 *.*~
 *.dylib
 *.os
+*.moc
 *.pyc
 *.swp
 *.so

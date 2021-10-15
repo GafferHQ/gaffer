@@ -70,6 +70,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getPathExpanded( p1 ), False )
 		w.setPathExpanded( p1, True )
 		self.assertEqual( w.getPathExpanded( p1 ), True )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 1 )
 		self.assertEqual( str( list( w.getExpandedPaths() )[0] ), str( p1 ) )
 
@@ -86,6 +87,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getExpandedPaths(), [ p1, p2 ] )
 
 		w.setPath( Gaffer.DictPath( {}, "/" ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 0 )
 
 	def testExpansion( self ) :
@@ -98,11 +100,8 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			d[str(i)] = dd
 
 		p = Gaffer.DictPath( d, "/" )
-
-		with GafferUI.Window() as window :
-			w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
-		window.setVisible( True )
+		w = GafferUI.PathListingWidget( p, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getExpansion().isEmpty() )
 
@@ -113,16 +112,85 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getExpansion(), e )
 		self.assertEqual( len( cs ), 1 )
 
+		# Wait for asynchronous update to expand model. Then check
+		# that the expected indices are expanded in the QTreeView.
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__expansionFromQt( w ), e )
+
+		# Delete a path that was expanded.
+		d2 = d["2"]
 		del d["2"]
-		p.pathChangedSignal()( p )
-		self.waitForIdle( 100 )
-
-		e.removePath( "/2" )
-		e.removePath( "/2/4" )
+		self.__emitPathChanged( w )
+		# We don't expect this to affect the result of `getExpansion()` because
+		# the expansion state is independent of the model contents.
 		self.assertEqual( w.getExpansion(), e )
+		# But it should affect what is mirrored in Qt.
+		e2 = IECore.PathMatcher( e )
+		e2.removePath( "/2" )
+		e2.removePath( "/2/4" )
+		self.assertEqual( self.__expansionFromQt( w ), e2 )
 
-		w.setPath( Gaffer.DictPath( {}, "/" ) )
-		self.assertTrue( w.getExpansion().isEmpty() )
+		# If we reintroduce the deleted path, it should be expanded again in Qt.
+		# This behaviour is particularly convenient when switching between
+		# different scenes in the HierarchyView, and matches the behaviour of
+		# the SceneGadget.
+		d["2"] = d2
+		self.__emitPathChanged( w )
+		self.assertEqual( self.__expansionFromQt( w ), e )
+
+		# Now try to set expansion twice in succession, so the model doesn't have
+		# chance to finish one update before starting the next.
+
+		e1 = IECore.PathMatcher( [ "/9", "/9/10", "/8/6" ] )
+		e2 = IECore.PathMatcher( [ "/9", "/9/9", "/5/6", "3" ] )
+		w.setExpansion( e1 )
+		w.setExpansion( e2 )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__expansionFromQt( w ), e2 )
+
+	def testExpansionByUser( self ) :
+
+		w = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher() )
+
+		cs = GafferTest.CapturingSlot( w.expansionChangedSignal() )
+		w._qtWidget().setExpanded( model.index( 0, 0 ), True ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/a" ] ) )
+
+		w._qtWidget().setExpanded( model.index( 0, 0 ), False ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher() )
+
+	def testSetExpansionClearsExpansionByUser( self ) :
+
+		w = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "a" : 1, "b" : 2, "c" : 3 }, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher() )
+
+		w._qtWidget().expand( model.index( 0, 0 ) ) # Equivalent to a click by the user
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/a" ] ) )
+
+		w.setExpansion( IECore.PathMatcher( [ "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( self.__expansionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
+
+		w._qtWidget().collapse( model.index( 1, 0 ) ) # Equivalent to a click by the user
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher() )
+		w.setExpansion( IECore.PathMatcher( [ "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( self.__expansionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
 
 	def testExpansionSignalFrequency( self ) :
 
@@ -148,6 +216,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setPathExpanded( Gaffer.DictPath( d, "/2" ), True )
 		self.assertEqual( len( c ), 2 )
 
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		e = w.getExpandedPaths()
 		self.assertEqual( len( e ), 2 )
 
@@ -168,12 +237,13 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		with GafferUI.Window() as window :
-			w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
-		window.setVisible( True )
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getSelection().isEmpty() )
+
+		# Set selection. This should be immediately reflected in
+		# the `selectionChangedSignal` and the result of `getSelection()`.
 
 		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
 		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5", "/3/1" ] )
@@ -182,16 +252,42 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getSelection(), s )
 		self.assertEqual( len( cs ), 1 )
 
+		# But will not have been reflected into Qt until the completion of
+		# an async update.
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__selectionFromQt( w ), s )
+
+		# Delete a path that was selected.
+		d2 = d["2"]
 		del d["2"]
-		p.pathChangedSignal()( p )
-		self.waitForIdle( 100 )
-
-		s.removePath( "/2" )
-		s.removePath( "/2/5" )
+		self.__emitPathChanged( w )
+		# We don't expect this to affect the result of `getSelection()` because
+		# the selection state is independent of the model contents.
 		self.assertEqual( w.getSelection(), s )
+		# But it should affect what is mirrored in Qt.
+		s2 = IECore.PathMatcher( s )
+		s2.removePath( "/2" )
+		s2.removePath( "/2/5" )
+		self.assertEqual( self.__selectionFromQt( w ), s2 )
 
-		w.setPath( Gaffer.DictPath( {}, "/" ) )
-		self.assertTrue( w.getSelection().isEmpty() )
+		# If we reintroduce the deleted path, it should be selected again in Qt.
+		# This behaviour is particularly convenient when switching between
+		# different scenes in the HierarchyView, and matches the behaviour of
+		# the SceneGadget.
+		d["2"] = d2
+		self.__emitPathChanged( w )
+		self.assertEqual( self.__selectionFromQt( w ), s )
+
+		# Now try to set selection twice in succession, so the model doesn't have
+		# chance to finish one update before starting the next.
+
+		s1 = IECore.PathMatcher( [ "/9", "/9/10", "/8/6" ] )
+		s2 = IECore.PathMatcher( [ "/9", "/9/9", "/5/6", "3" ] )
+		w.setSelection( s1 )
+		w.setSelection( s2 )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__selectionFromQt( w ), s2 )
 
 	def testSelectionSignalFrequency( self ) :
 
@@ -212,9 +308,91 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( c ), 0 )
 
 		w.setSelectedPaths( [ Gaffer.DictPath( d, "/a" ), Gaffer.DictPath( d, "/b" ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( set( [ str( p ) for p in w.getSelectedPaths() ] ), set( [ "/a", "/b" ] ) )
 
 		self.assertEqual( len( c ), 1 )
+
+	def testSelectionByUser( self ) :
+
+		w = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+
+		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Deselect ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 2 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+
+		# If we use the API to select a non-existent path, the next user
+		# selection should remove it, because we constructed the
+		# PathListingWidget with `allowMultipleSelection == False`.
+
+		w.setSelection( IECore.PathMatcher( [ "/nonExistent" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/nonExistent" ] ) )
+		self.assertEqual( len( cs ), 3 )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 4 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		# Likewise, if we used the API to select something valid, but it hasn't
+		# been synced to Qt yet, it should still be cleared by a user selection.
+
+		w.setSelection( IECore.PathMatcher() )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		w.setSelection( IECore.PathMatcher( [ "/a/b" ] ) )
+		self.assertEqual( len( cs ), 6 )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( len( cs ), 7 )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+	def testSetSelectionClearsSelectionByUser( self ) :
+
+		w = GafferUI.PathListingWidget(
+			Gaffer.DictPath( { "a" : 1, "b" : 2, "c" : 3 }, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		model = w._qtWidget().model()
+		model.rowCount() # Trigger population of top level of the model
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+
+		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
+		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		w.setSelection( IECore.PathMatcher( [ "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( self.__selectionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
+
+		w._qtWidget().selectionModel().select( model.index( 1, 0 ), QtCore.QItemSelectionModel.Deselect ) # Equivalent to a click by the user
+		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
+		w.setSelection( IECore.PathMatcher( [ "/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( self.__selectionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
+
+	def testChangingDirectoryClearsSelection( self ) :
+
+		path = Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" )
+		widget = GafferUI.PathListingWidget( path )
+
+		widget.setSelection( IECore.PathMatcher( [ "/a" ] ) )
+		self.assertEqual( widget.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
+
+		path.append( "a" )
+		widget._PathListingWidget__updateLazily.flush( widget ) # See comments in `__emitPathChanged`
+		self.assertEqual( widget.getSelection(), IECore.PathMatcher() )
 
 	def testExpandedPathsWhenPathChanges( self ) :
 
@@ -236,15 +414,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setPathExpanded( p1, True )
 		self.assertEqual( w.getPathExpanded( p1 ), True )
 
-		# fake a change to the path
-		p.pathChangedSignal()( p )
-
-		# because the PathListingWidget only updates on idle events, we have
-		# to run the event loop to get it to process the path changed signal.
-		self.waitForIdle( 100 )
-
-		# once it has processed things, the expansion should be exactly as it was.
+		# Fake a change to the path and check that the expansion is exactly as
+		# it was.
+		self.__emitPathChanged( w )
 		self.assertEqual( w.getPathExpanded( p1 ), True )
+		self.assertEqual( self.__expansionFromQt( w ), IECore.PathMatcher( [ "/a" ] ) )
 
 	def testExpandedPathsWhenPathChangesWithSelection( self ) :
 
@@ -270,14 +444,9 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getPathExpanded( pa ), False )
 		self.assertEqual( w.getPathExpanded( pae ), False )
 
-		# fake a change to the path
-		p.pathChangedSignal()( p )
-
-		# because the PathListingWidget only updates on idle events, we have
-		# to run the event loop to get it to process the path changed signal.
-		self.waitForIdle( 100 )
-
-		# once it has processed things, the expansion should be exactly as it was.
+		# Fake a change to the path and check that the expansion is exactly as
+		# it was.
+		self.__emitPathChanged( w )
 		self.assertEqual( w.getPathExpanded( pa ), False )
 		self.assertEqual( w.getPathExpanded( pae ), False )
 
@@ -307,9 +476,12 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.PathListingWidget( p )
 		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
-		w.setPathExpanded( p.copy().setFromString( "/a/b/c" ), True )
 
+		w.setPathExpanded( p.copy().setFromString( "/a/b/c" ), True )
 		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
+
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( self.__expansionFromQt( w ), IECore.PathMatcher( [ "/a/b/c" ] ) )
 
 	def testColumns( self ) :
 
@@ -348,6 +520,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		d["a"] = 10
 		p.pathChangedSignal()( p )
 		w.setSelectedPaths( [ p.copy().setFromString( "/a" ) ] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 
 		s = w.getSelectedPaths()
 		self.assertEqual( len( s ), 1 )
@@ -365,17 +538,16 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		root["a"] = Gaffer.GraphComponent()
 
 		path = Gaffer.GraphComponentPath( root, "/" )
-		with GafferUI.Window() as window :
-			widget = GafferUI.PathListingWidget(
-				path,
-				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
-				sortable = False,
-				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			)
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
-		window.setVisible( True )
+		widget = GafferUI.PathListingWidget(
+			path,
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+			sortable = False,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
 		model = widget._qtWidget().model()
+		self.__expandModel( model )
 		self.assertEqual( model.rowCount(), 1 )
 		self.assertEqual( model.columnCount(), 1 )
 
@@ -384,8 +556,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# should remain valid.
 		aIndex = QtCore.QPersistentModelIndex( model.index( 0, 0 ) )
 		root["b"] = Gaffer.GraphComponent()
-		path.pathChangedSignal()( path )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 
 		self.assertEqual( model.rowCount(), 2 )
 		self.assertEqual( model.columnCount(), 1 )
@@ -396,8 +567,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# persistent index to `b` should remain valid.
 		bIndex = QtCore.QPersistentModelIndex( model.index( 1, 0 ) )
 		del root["a"]
-		path.pathChangedSignal()( path )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 
 		self.assertEqual( model.rowCount(), 1 )
 		self.assertEqual( model.columnCount(), 1 )
@@ -408,23 +578,21 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# If we add a child to `b`, the model should update to reflect
 		# that too.
 		root["b"]["c"] = Gaffer.GraphComponent()
-		path.pathChangedSignal()( path )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 
 		self.assertTrue( bIndex.isValid() )
 		self.assertEqual( model.rowCount( bIndex ), 1 )
 		self.assertEqual( model.columnCount( bIndex ), 1 )
 		self.assertEqual( model.data( model.index( 0, 0, bIndex ) ), "c" )
 
-		# Likewise, we should be able to add and remove children from `c`
+		# We should be able to add and remove children from `c`
 		# and see it reflected in the model.
 		cIndex = QtCore.QPersistentModelIndex( model.index( 0, 0, bIndex ) )
 		self.assertEqual( model.data( cIndex ), "c" )
 		self.assertEqual( model.rowCount( cIndex ), 0 )
 
 		root["b"]["c"]["d"] = Gaffer.GraphComponent()
-		path.pathChangedSignal()( path )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 
 		self.assertTrue( cIndex.isValid() )
 		self.assertEqual( model.rowCount( cIndex ), 1 )
@@ -433,8 +601,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		dIndex = QtCore.QPersistentModelIndex( model.index( 0, 0, cIndex ) )
 		del root["b"]["c"]["d"]
-		path.pathChangedSignal()( path )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 		self.assertTrue( cIndex.isValid() )
 		self.assertEqual( model.rowCount( cIndex ), 0 )
 		self.assertFalse( dIndex.isValid() )
@@ -448,12 +615,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		root["b"] = Gaffer.GraphComponent()
 
 		path = Gaffer.GraphComponentPath( root, "/" )
-		with GafferUI.Window() as window :
-			widget = GafferUI.PathListingWidget( path, columns = [ GafferUI.PathListingWidget.defaultNameColumn ], sortable = True )
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
-		window.setVisible( True )
+		widget = GafferUI.PathListingWidget( path, columns = [ GafferUI.PathListingWidget.defaultNameColumn ], sortable = True )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
 		model = widget._qtWidget().model()
+		self.__expandModel( model )
 		self.assertEqual( model.rowCount(), 2 )
 		self.assertEqual( model.columnCount(), 1 )
 
@@ -467,8 +633,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# And sorting is maintained when adding another path.
 
 		root["a"] = Gaffer.GraphComponent()
-		path.pathChangedSignal()( path )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 
 		self.assertEqual( model.rowCount(), 3 )
 		self.assertEqual( model.columnCount(), 1 )
@@ -486,6 +651,8 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		aIndex = QtCore.QPersistentModelIndex( model.index( 0, 0 ) )
 		widget.setSortable( False )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+
 		self.assertEqual( model.rowCount(), 3 )
 		self.assertEqual( model.columnCount(), 1 )
 
@@ -502,19 +669,19 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 	def testModelPathSwap( self ) :
 
-		# Make a widget showing a small hierarchy.
+		# Make a model for a small hierarchy, and expand the
+		# model fully.
 
 		root1 = Gaffer.GraphComponent()
 		root1["c"] = Gaffer.GraphComponent()
 		root1["c"]["d"] = Gaffer.GraphComponent()
 
-		with GafferUI.Window() as window :
-			widget = GafferUI.PathListingWidget(
-				path = Gaffer.GraphComponentPath( root1, "/" ),
-				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
-			)
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
-		window.setVisible( True )
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.GraphComponentPath( root1, "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
 		path = Gaffer.GraphComponentPath( root1, "/" )
 		self.assertEqual( path.property( "graphComponent:graphComponent" ), root1 )
@@ -522,6 +689,9 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( path.property( "graphComponent:graphComponent" ), root1["c"] )
 		path.append( "d" )
 		self.assertEqual( path.property( "graphComponent:graphComponent" ), root1["c"]["d"] )
+
+		model = widget._qtWidget().model()
+		self.__expandModel( model )
 
 		# Get an index for `/c/d` and check that we can retrieve
 		# the right path for it.
@@ -537,7 +707,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				graphComponent
 			)
 
-		model = widget._qtWidget().model()
 		dIndex = model.index( 0, 0, model.index( 0, 0 ) )
 		assertIndexRefersTo( dIndex, root1["c"]["d"] )
 		persistentDIndex = QtCore.QPersistentModelIndex( dIndex )
@@ -550,7 +719,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		root2["c"]["d"] = Gaffer.GraphComponent()
 
 		widget.setPath( Gaffer.GraphComponentPath( root2, "/" ) )
-		self.waitForIdle()
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 
 		# Check that the model now references the new path and the
 		# new hierarchy.
@@ -567,14 +736,12 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		root["c"] = Gaffer.GraphComponent()
 		root["c"]["d"] = Gaffer.GraphComponent()
 
-		with GafferUI.Window() as window :
-			widget = GafferUI.PathListingWidget(
-				path = Gaffer.GraphComponentPath( root, "/" ),
-				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
-			)
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
-			widget.setExpansion( IECore.PathMatcher( [ "/", "/c", "/c/d" ] ) )
-		window.setVisible( True )
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.GraphComponentPath( root, "/" ),
+			columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		self.__expandModel( widget._qtWidget().model(), queryData = True )
 
 		# Fake a change to the path. Since nothing has truly changed,
 		# the model should not signal any changes.
@@ -586,41 +753,66 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		widget._qtWidget().model().layoutChanged.connect( functools.partial( changed ) )
 		widget._qtWidget().model().dataChanged.connect( functools.partial( changed ) )
 
-		widget.getPath().pathChangedSignal()( widget.getPath() )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 		self.assertEqual( changes, [] )
 
 	def testModelFirstQueryDoesntEmitDataChanged( self ) :
 
 		for sortable in ( False, True ) :
 
-			with GafferUI.Window() as window :
-				widget = GafferUI.PathListingWidget(
-					path = Gaffer.DictPath( { "c" : { "v" : 10 } }, "/" ),
-					columns = [
-						GafferUI.PathListingWidget.defaultNameColumn,
-						GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
-					],
-					sortable = sortable
-				)
-				_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
-			window.setVisible( True )
-			self.waitForIdle()
+			# Not making widget visible, so it doesn't make any
+			# queries to the model (leaving just our queries and
+			# those made by the attached tester).
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( { "v" : 10 }, "/" ),
+				columns = [
+					GafferUI.PathListingWidget.defaultNameColumn,
+					GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
+				],
+				sortable = sortable,
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+			)
+			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+
+			# Make initial child queries to populate the model with
+			# items, but without evaluating data. We should start
+			# without any rows on the root item.
+			model = widget._qtWidget().model()
+			self.assertEqual( model.rowCount(), 0 )
+			# Meaning that we can't even get an index to the first row.
+			self.assertFalse( model.index( 0, 0 ).isValid() )
+			# But if we wait for the update we've just triggered then
+			# we should see a row appear.
+			_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+			self.assertEqual( model.rowCount(), 1 )
+			self.assertTrue( model.index( 0, 0 ).isValid() )
+
+			# Set up recording for data changes.
 
 			changes = []
 			def dataChanged( *args ) :
 				changes.append( args )
 
-			model = widget._qtWidget().model()
 			model.dataChanged.connect( dataChanged )
 
-			# We are testing a nested `dict["c"]["v"]` value because
-			# the PathListingWidget will query the root items during
-			# construction, and we want to be the first to query the
-			# value.
-			valueIndex = model.index( 0, 1, model.index( 0, 0 ) )
-			self.assertEqual( model.data( valueIndex ), 10 )
-			self.assertEqual( len( changes ), 0 )
+			# We are testing the columns containing "dict:value".
+			valueIndex = model.index( 0, 1 )
+			if sortable :
+				# Data will have been generated during sorting, so
+				# we can query it immediately.
+				self.assertEqual( model.data( valueIndex ), 10 )
+				self.assertEqual( len( changes ), 0 )
+			else :
+				# Data not generated yet. The initial query will receive empty
+				# data and should not trigger `dataChanged`.
+				self.assertIsNone( model.data( valueIndex ) )
+				self.assertEqual( len( changes ), 0 )
+				# But the act of querying will have launched an async
+				# update that should update the value and signal the
+				# the change.
+				_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+				self.assertEqual( len( changes ), 1 )
+				self.assertEqual( model.data( valueIndex ), 10 )
 
 	def testModelChangingData( self ) :
 
@@ -628,19 +820,24 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			"a" : 10,
 		}
 
-		with GafferUI.Window() as window :
-			widget = GafferUI.PathListingWidget(
-				path = Gaffer.DictPath( root, "/" ),
-				columns = [
-					GafferUI.PathListingWidget.defaultNameColumn,
-					GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
-				],
-			)
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
-		window.setVisible( True )
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.DictPath( root, "/" ),
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Value", "dict:value" )
+			],
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+
+		# Do initial query and wait for async update.
 
 		model = widget._qtWidget().model()
+		self.assertEqual( model.rowCount(), 0 )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( model.rowCount(), 1 )
 		self.assertEqual( model.data( model.index( 0, 1, QtCore.QModelIndex() ) ), 10 )
+
+		# Set up change tracking.
 
 		changes = []
 		def dataChanged( *args ) :
@@ -652,16 +849,14 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# and we can query the new value.
 
 		root["a"] = 20
-		widget.getPath().pathChangedSignal()( widget.getPath() )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 		self.assertEqual( len( changes ), 1 )
 		self.assertEqual( model.data( model.index( 0, 1, QtCore.QModelIndex() ) ), 20 )
 
 		# Trigger an artificial update and assert that the data has not changed,
 		# and `dataChanged` has not been emitted.
 
-		widget.getPath().pathChangedSignal()( widget.getPath() )
-		self.waitForIdle()
+		self.__emitPathChanged( widget )
 		self.assertEqual( len( changes ), 1 )
 		self.assertEqual( model.data( model.index( 0, 1, QtCore.QModelIndex() ) ), 20 )
 
@@ -694,22 +889,17 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 				return [ InfinitePath( self[:] + [ x ], self.root(), self.getFilter(), self.visitedPaths ) for x in [ "a", "b" ] ]
 
-		# Show the window with a small set of expanded paths.
+		# Create an infinite model and expand it up to a fixed depth.
 
 		path1 = InfinitePath( "/" )
 
-		with GafferUI.Window() as window :
-			widget = GafferUI.PathListingWidget(
-				path = path1,
-				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
-			)
-			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+		widget = GafferUI.PathListingWidget(
+			path = path1,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
-		widget.setExpansion( IECore.PathMatcher( [
-			"/", "/a/b", "/a/b/b", "/a/a/a"
-		] ) )
-		window.setVisible( True )
-		self.waitForIdle()
+		self.__expandModel( widget._qtWidget().model(), depth = 4 )
 
 		# Replace with a new path, to force the PathModel into evaluating
 		# it to see if there are any changes. The PathModel should only
@@ -719,9 +909,59 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		path2 = InfinitePath( "/" )
 		widget.setPath( path2 )
-		self.waitForIdle()
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
 
 		self.assertEqual( path2.visitedPaths, path1.visitedPaths )
+
+	@staticmethod
+	def __emitPathChanged( widget ) :
+
+		widget.getPath().pathChangedSignal()( widget.getPath() )
+		# Currently it is the PathListingWidget that processes `pathChangedSignal()`,
+		# and it does so lazily. Flush the update so that the model is informed of the
+		# change.
+		## \todo It may make sense to move the change handler to the model at some point,
+		# and then we could test the model completely independently of the widget.
+		widget._PathListingWidget__updateLazily.flush( widget )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+	@classmethod
+	def __expandModel( cls, model, index = None, queryData = False, depth = 10 ) :
+
+		if depth <= 0 :
+			return
+
+		index = index if index is not None else QtCore.QModelIndex()
+		model.rowCount( index )
+		if queryData :
+			model.data( index )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+
+		for row in range( 0, model.rowCount( index ) ) :
+			cls.__expandModel( model, model.index( row, 0, index ), queryData, depth - 1 )
+
+	@staticmethod
+	def __expansionFromQt( widget ) :
+
+		result = IECore.PathMatcher()
+		for index in widget._qtWidget().model().persistentIndexList() :
+			if widget._qtWidget().isExpanded( index ) :
+				result.addPath(
+					str( widget._PathListingWidget__pathForIndex( index ) )
+				)
+
+		return result
+
+	@staticmethod
+	def __selectionFromQt( widget ) :
+
+		result = IECore.PathMatcher()
+		for index in widget._qtWidget().selectionModel().selectedIndexes() :
+			result.addPath(
+				str( widget._PathListingWidget__pathForIndex( index ) )
+			)
+
+		return result
 
 if __name__ == "__main__":
 	unittest.main()
