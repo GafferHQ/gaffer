@@ -131,7 +131,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		spanKeyOnThisFrame = spanKey is not None
 		for mode in reversed( sorted( Gaffer.Animation.Interpolation.values.values() ) ) :
 			menuDefinition.prepend(
-				"/Set Interpolation/%s" % ( mode.name ),
+				"/Interpolation/%s" % ( mode.name ),
 				{
 					"command" : functools.partial(
 						__setKeyInterpolation,

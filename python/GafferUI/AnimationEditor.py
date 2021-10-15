@@ -202,6 +202,9 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		bound = imath.Box3f( imath.V3f( -1, -1, 0 ), imath.V3f( 10, 10, 0 ) )
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
+		# connect context menu for animation gadget
+		self.__gadgetWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__animationGadgetContextMenu ), scoped = False )
+
 	def _updateFromSet( self ) :
 
 		GafferUI.NodeSetEditor._updateFromSet( self )
@@ -315,6 +318,52 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		assert( isinstance( result, Gaffer.Animation.CurvePlug ) )
 		return result
 
+	def __animationGadgetContextMenu( self, *unused ) :
+
+		import IECore
+		import functools
+
+		# convert mouse position to event line
+		line = self.__gadgetWidget.getViewportGadget().rasterToGadgetSpace(
+			imath.V2f( GafferUI.Widget.mousePosition( relativeTo = self.__gadgetWidget ) ), gadget = self.__animationGadget )
+
+		# only show context menu when mouse not above axis
+		if self.__animationGadget.onTimeAxis( line ) or self.__animationGadget.onValueAxis( line ) :
+			return False
+
+		# check there are selected keys
+		emptySelectedKeys = not self.__animationGadget.selectedKeys()
+
+		# key interpolation for selected keys
+		interpolation = None if emptySelectedKeys else self.__curveEditor.keyWidget().getInterpolationForSelectedKeys()
+
+		# build context menu
+		menuDefinition = IECore.MenuDefinition()
+
+		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
+			menuDefinition.append(
+				"/Interpolation/%s" % ( mode.name ),
+				{
+					"command" : functools.partial(
+						Gaffer.WeakMethod( self.__setSelectedKeysInterpolation ),
+						mode=mode
+					),
+					"active" : not emptySelectedKeys,
+					"checkBox" : interpolation == mode
+				}
+			)
+
+		self.__popupMenu = GafferUI.Menu( menuDefinition, title="Selected Keys" )
+		self.__popupMenu.popup( parent = self )
+
+		return True
+
+	def __setSelectedKeysInterpolation( self, unused, mode ) :
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for key in self.__animationGadget.selectedKeys() :
+				key.setInterpolation( mode )
+
 	def __repr__( self ) :
 
 		return "GafferUI.AnimationEditor( scriptNode )"
@@ -402,7 +451,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		im = IECore.MenuDefinition()
 		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
 			im.append( "%s" % ( mode.name ), {
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setKeyInterpolation ), mode=mode ),
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setInterpolation ), mode=mode ),
 				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForKeyInterpolation ), mode=mode ) } )
 		self.__interpolationEditor.setMenu( GafferUI.Menu( im ) )
 
@@ -514,7 +563,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		# set disabled when no selected keys
 		self.__interpolationEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
 
-	def __setKeyInterpolation( self, unused, mode ) :
+	def __setInterpolation( self, unused, mode ) :
 
 		# set interpolation for all selected keys
 		selectedKeys = self.parent().curveGadget().selectedKeys()
