@@ -301,6 +301,8 @@ class TestCase( unittest.TestCase ) :
 	# ones.
 	def assertNodesConstructWithDefaultValues( self, module, nodesToIgnore = None ) :
 
+		nonDefaultPlugs = []
+
 		for name in dir( module ) :
 
 			cls = getattr( module, name )
@@ -315,7 +317,7 @@ class TestCase( unittest.TestCase ) :
 			except :
 				continue
 
-			for plug in node.children( Gaffer.Plug ) :
+			for plug in Gaffer.Plug.RecursiveRange( node ) :
 
 				if plug.source().direction() != plug.Direction.In or not isinstance( plug, Gaffer.ValuePlug ) :
 					continue
@@ -323,7 +325,10 @@ class TestCase( unittest.TestCase ) :
 				if not plug.getFlags( plug.Flags.Serialisable ) :
 					continue
 
-				self.assertTrue( plug.isSetToDefault(), plug.fullName() + " not at default value following construction" )
+				if not plug.isSetToDefault() :
+					nonDefaultPlugs.append( plug.fullName() + " not at default value following construction" )
+
+		self.assertEqual( nonDefaultPlugs, [] )
 
 	def assertModuleDoesNotImportUI( self, moduleName ) :
 

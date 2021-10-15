@@ -37,6 +37,7 @@ Fixes
   - Inserting a new key in editor (Hold "Ctrl" and left click on curve) is now undone/redone as a distinct step.
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 - NameSwitch : Fixed context management bug that allowed variables such as `scene:path` to leak into the context used to evaluate the `selector` plug.
+- GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs
 
 API
 ---
