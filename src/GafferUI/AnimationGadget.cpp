@@ -60,6 +60,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <sstream>
 
 using namespace Gaffer;
 using namespace GafferUI;
@@ -690,7 +691,15 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 {
 	if( const Animation::ConstKeyPtr key = keyAt( line ) )
 	{
-		return boost::str( boost::format( "%f -> %f" ) % key->getTime() % key->getValue() );
+		const Gaffer::ScriptNode* const scriptNode =
+			IECore::assertedStaticCast< const Gaffer::ScriptNode >( key->parent()->ancestor( (IECore::TypeId) Gaffer::ScriptNodeTypeId ) );
+
+		std::ostringstream os;
+		os.precision( 4 );
+		os << "Frame: " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() );
+		os << "<br>Value: " << key->getValue();
+		os << "<br>Interpolation: " << Animation::toString( key->getInterpolation() );
+		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )
 	{
