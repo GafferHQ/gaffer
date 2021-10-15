@@ -1187,6 +1187,69 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( arnold.AiArrayGetNumElements( arnold.AiNodeGetArray( sphere, "light_group" ) ), 0 )
 			self.assertFalse( arnold.AiNodeGetBool( sphere, "use_light_group" ) )
 
+	def testLightLinkingWarnings( self ) :
+
+		# Emulate a meshlight that has been set up sloppily - it is filtered to 4 locations, some actually
+		# have meshes, some don't
+		lightSphere = GafferScene.Sphere()
+		lightInvalid = GafferScene.Group()
+
+		lightGroup = GafferScene.Group()
+		lightGroup["name"].setValue( "lightGroup" )
+		lightGroup["in"][0].setInput( lightSphere["out"] ) # Has a mesh
+		lightGroup["in"][1].setInput( lightSphere["out"] ) # Has a mesh
+		lightGroup["in"][2].setInput( lightInvalid["out"] ) # Doesn't have a mesh
+		lightGroup["in"][3].setInput( lightInvalid["out"] ) # Doesn't have a mesh
+
+		meshLightFilter = GafferScene.PathFilter()
+		meshLightFilter["paths"].setValue( IECore.StringVectorData( [ "/lightGroup/*" ] ) )
+
+		meshLight = GafferArnold.ArnoldMeshLight()
+		meshLight["in"].setInput( lightGroup["out"] )
+		meshLight["filter"].setInput( meshLightFilter["out"] )
+
+		geoSphere = GafferScene.Sphere()
+		geoGroup = GafferScene.Group()
+		geoGroup["name"].setValue( "geoGroup" )
+		for i in range( 20 ):
+			geoGroup["in"][i].setInput( geoSphere["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( geoGroup["out"] )
+		group["in"][1].setInput( meshLight["out"] )
+
+		attributeFilter = GafferScene.PathFilter()
+		attributeFilter["paths"].setValue( IECore.StringVectorData( [ "/group/geoGroup/*" ] ) )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( group["out"] )
+		attributes["filter"].setInput( attributeFilter["out"] )
+		attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		# Link some ( but not all ) lights, so we have to do actual light linking
+		attributes["attributes"]["linkedLights"]["value"].setValue(
+			"/group/lightGroup/sphere1 /group/lightGroup/group /group/lightGroup/group1"
+		)
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( attributes["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		# Don't really understand why a regular `with CapturingMessageHandler` doesn't work here
+		try :
+			defaultHandler = IECore.MessageHandler.getDefaultHandler()
+			mh = IECore.CapturingMessageHandler()
+			IECore.MessageHandler.setDefaultHandler( mh )
+			render["task"].execute()
+		finally :
+			IECore.MessageHandler.setDefaultHandler( defaultHandler )
+
+		# We want to see one message per invalid light - not repeated for each location it's referenced at
+		self.assertEqual( len( mh.messages ), 2 )
+		mm = [ m.message for m in mh.messages ]
+		self.assertTrue( "Mesh light without object at location: /group/lightGroup/group" in mm )
+		self.assertTrue( "Mesh light without object at location: /group/lightGroup/group1" in mm )
+
 	def __color4fAtUV( self, image, uv ) :
 
 		sampler = GafferImage.ImageSampler()

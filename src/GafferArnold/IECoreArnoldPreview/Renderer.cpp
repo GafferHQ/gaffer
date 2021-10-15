@@ -2314,6 +2314,7 @@ class ArnoldLight : public ArnoldObjectBase
 						else
 						{
 							// Don't output mesh lights from locations with no object
+							IECore::msg( IECore::Msg::Warning, "Arnold Render", "Mesh light without object at location: " + m_name );
 							m_lightShader = nullptr;
 						}
 					}
@@ -2366,6 +2367,11 @@ class ArnoldLight : public ArnoldObjectBase
 					// Removing `m_lightShader` would create dangling light linking pointers,
 					// so we can not make the edit - the client must rebuild instead.
 					return false;
+				}
+				else
+				{
+					// We're outputting a light that is invalid, output a warning about that
+					IECore::msg( IECore::Msg::Warning, "Arnold Render", "Light without shader at location: " + m_name );
 				}
 			}
 
@@ -2540,7 +2546,17 @@ class ArnoldObject : public ArnoldObjectBase
 					}
 					else
 					{
-						IECore::msg( IECore::Msg::Warning, "ArnoldObject::link()", "Attempt to link nonexistent light" );
+						if( !arnoldLight )
+						{
+							// Not aware of any way this could happen
+							IECore::msg( IECore::Msg::Warning, "ArnoldObject::link()", "Attempt to link nonexistent light" );
+						}
+						else
+						{
+							// We have an ArnoldLight, but with an invalid lightShader.
+							// It is the responsibility of ArnoldLight to output a warning when constructing in
+							// an invalid state, so we don't need to warn here
+						}
 					}
 				}
 

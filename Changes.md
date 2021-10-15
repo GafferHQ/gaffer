@@ -90,6 +90,19 @@ Breaking Changes
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 
+0.60.x.x (relative to 0.60.8.0)
+========
+
+Improvements
+------------
+
+- Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
+
+Fixes
+-----
+
+- GafferTest.TestCase : Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
+
 0.60.8.0 (relative to 0.60.7.1)
 ========
 
