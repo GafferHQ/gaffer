@@ -10,6 +10,7 @@ Fixes
 -----
 
 - GafferTest.TestCase : Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
+- GafferTest.TestCase : Better support for python submodules on `assertTypeNamesArePrefixed()`.
 
 0.60.8.0 (relative to 0.60.7.1)
 ========

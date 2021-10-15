@@ -203,7 +203,7 @@ class TestCase( unittest.TestCase ) :
 			if issubclass( cls, IECore.RunTimeTyped ) :
 				if cls.staticTypeName() in namesToIgnore :
 					continue
-				if cls.staticTypeName() != module.__name__ + "::" + cls.__name__ :
+				if cls.staticTypeName() != module.__name__.replace( ".", "::" ) + "::" + cls.__name__ :
 					incorrectTypeNames.append( cls.staticTypeName() )
 
 		self.assertEqual( incorrectTypeNames, [] )
