@@ -270,7 +270,7 @@ class TestCase( unittest.TestCase ) :
 			else :
 				baseNode = None
 				try :
-					baseNode = cls.__bases__[0]()
+					baseNode = [x for x in cls.__bases__ if issubclass( x, Gaffer.Node )][0]()
 				except :
 					pass
 				if baseNode is not None :
