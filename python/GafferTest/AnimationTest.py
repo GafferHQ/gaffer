@@ -341,6 +341,386 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		self.assertTrue( k not in ps )
 
+	def testInsertKeyFirstNoValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		time = 10
+		self.assertFalse( curve.hasKey( time ) )
+		k = curve.insertKey( time )
+		self.assertIsNone( k )
+		self.assertFalse( curve.hasKey( time ) )
+
+	def testInsertKeyBeforeFirstNoValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		k = Gaffer.Animation.Key( 10, 5 )
+		curve.addKey( k )
+
+		time = 5
+		self.assertFalse( curve.hasKey( time ) )
+		k = curve.insertKey( time )
+		self.assertIsNone( k )
+		self.assertFalse( curve.hasKey( time ) )
+
+	def testInsertKeyAfterFinalNoValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		k = Gaffer.Animation.Key( 10, 5 )
+		curve.addKey( k )
+
+		time = 15
+		self.assertFalse( curve.hasKey( time ) )
+		k = curve.insertKey( time )
+		self.assertIsNone( k )
+		self.assertFalse( curve.hasKey( time ) )
+
+	def testInsertKeyFirstValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		time = 10
+		value = 5
+		self.assertFalse( curve.hasKey( time ) )
+
+		with Gaffer.UndoScope( s ) :
+			k = curve.insertKey( time, value )
+
+		self.assertIsNotNone( k )
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getValue(), value )
+		self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+		s.undo()
+
+		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNone( k.parent() )
+
+		s.redo()
+
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getValue(), value )
+		self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+	def testInsertKeyBeforeFirstValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		interpolation = Gaffer.Animation.Interpolation.Step
+		k = Gaffer.Animation.Key( 10, 5, interpolation )
+		curve.addKey( k )
+
+		time = 5
+		value = 2
+		self.assertFalse( curve.hasKey( time ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time, value )
+
+		self.assertIsNotNone( ki )
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), value )
+		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+		s.undo()
+
+		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNone( ki.parent() )
+
+		s.redo()
+
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), value )
+		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+	def testInsertKeyAfterFinalValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		interpolation = Gaffer.Animation.Interpolation.Step
+		k = Gaffer.Animation.Key( 10, 5, interpolation )
+		curve.addKey( k )
+
+		time = 15
+		value = 2
+		self.assertFalse( curve.hasKey( time ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time, value )
+
+		self.assertIsNotNone( ki )
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), value )
+		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+		s.undo()
+
+		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNone( ki.parent() )
+
+		s.redo()
+
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), value )
+		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+	def testInsertKeyExistingNoValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		time = 10
+		value = 2
+		interpolation = Gaffer.Animation.Interpolation.Step
+		k = Gaffer.Animation.Key( time, value, interpolation )
+		curve.addKey( k )
+
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time )
+
+		self.assertIsNotNone( ki )
+		self.assertTrue( k.isSame( ki ) )
+
+		self.assertEqual( k.getValue(), value )
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getInterpolation(), interpolation )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+		self.assertFalse( s.undoAvailable() )
+
+	def testInsertKeyExistingValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		time = 10
+		value = 2
+		interpolation = Gaffer.Animation.Interpolation.Step
+		k = Gaffer.Animation.Key( time, value, interpolation )
+		curve.addKey( k )
+
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time, value )
+
+		self.assertIsNotNone( ki )
+		self.assertTrue( k.isSame( ki ) )
+
+		self.assertEqual( k.getValue(), value )
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getInterpolation(), interpolation )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+		self.assertFalse( s.undoAvailable() )
+
+	def testInsertKeyExistingNewValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		time = 10
+		value = 2
+		newValue = 10
+		interpolation = Gaffer.Animation.Interpolation.Step
+		k = Gaffer.Animation.Key( time, value, interpolation )
+		curve.addKey( k )
+
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time, newValue )
+
+		self.assertIsNotNone( ki )
+		self.assertTrue( k.isSame( ki ) )
+
+		self.assertEqual( k.getValue(), newValue )
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getInterpolation(), interpolation )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+		self.assertTrue( s.undoAvailable() )
+
+		s.undo()
+
+		self.assertEqual( k.getValue(), value )
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getInterpolation(), interpolation )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+		s.redo()
+
+		self.assertEqual( k.getValue(), newValue )
+		self.assertEqual( k.getTime(), time )
+		self.assertEqual( k.getInterpolation(), interpolation )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+		self.assertTrue( curve.getKey( time ).isSame( k ) )
+
+	def testInsertKeyIntoSpanNoValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		kl = Gaffer.Animation.Key( 10, 5, Gaffer.Animation.Interpolation.Step )
+		kh = Gaffer.Animation.Key( 20, 10, Gaffer.Animation.Interpolation.Linear )
+		curve.addKey( kl )
+		curve.addKey( kh )
+
+		time = 15
+		self.assertFalse( curve.hasKey( time ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time )
+
+		self.assertIsNotNone( ki )
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), kl.getValue() )
+		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+		s.undo()
+
+		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNone( ki.parent() )
+
+		s.redo()
+
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), kl.getValue() )
+		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+	def testInsertKeyIntoSpanValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		kl = Gaffer.Animation.Key( 10, 5, Gaffer.Animation.Interpolation.Step )
+		kh = Gaffer.Animation.Key( 20, 10, Gaffer.Animation.Interpolation.Linear )
+		curve.addKey( kl )
+		curve.addKey( kh )
+
+		time = 15
+		value = 12
+		self.assertFalse( curve.hasKey( time ) )
+
+		with Gaffer.UndoScope( s ) :
+			ki = curve.insertKey( time, value )
+
+		self.assertIsNotNone( ki )
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), value )
+		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
+		s.undo()
+
+		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNone( ki.parent() )
+
+		s.redo()
+
+		self.assertEqual( ki.getTime(), time )
+		self.assertEqual( ki.getValue(), value )
+		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
+		self.assertIsNotNone( ki.parent() )
+		self.assertTrue( ki.parent().isSame( curve ) )
+		self.assertTrue( curve.hasKey( time ) )
+
 	def testClosestKey( self ) :
 
 		s = Gaffer.ScriptNode()

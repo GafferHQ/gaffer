@@ -709,10 +709,10 @@ void AnimationGadget::insertKeyframe( Animation::CurvePlug *curvePlug, float tim
 
 	if( !curvePlug->closestKey( snappedTime, 0.004 ) ) // \todo: use proper ticks
 	{
-		const float value = curvePlug->evaluate( snappedTime );
-		const Animation::KeyPtr key( new Animation::Key( snappedTime, value ) );
-		curvePlug->addKey( key );
-		m_selectedKeys->add( key );
+		if( const Animation::KeyPtr key = curvePlug->insertKey( snappedTime ) )
+		{
+			m_selectedKeys->add( key );
+		}
 	}
 }
 
