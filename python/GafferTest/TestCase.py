@@ -299,7 +299,7 @@ class TestCase( unittest.TestCase ) :
 	# Use `nodesToIgnore` with caution : the only good reason for using it is to
 	# ignore compatibility stubs used to load old nodes and convert them into new
 	# ones.
-	def assertNodesConstructWithDefaultValues( self, module, nodesToIgnore = None ) :
+	def assertNodesConstructWithDefaultValues( self, module, nodesToIgnore = None, plugsToIgnore = None ) :
 
 		nonDefaultPlugs = []
 
@@ -318,6 +318,9 @@ class TestCase( unittest.TestCase ) :
 				continue
 
 			for plug in Gaffer.Plug.RecursiveRange( node ) :
+
+				if plugsToIgnore is not None and cls in plugsToIgnore and plug.relativeName( node ) in plugsToIgnore[cls] :
+					continue
 
 				if plug.source().direction() != plug.Direction.In or not isinstance( plug, Gaffer.ValuePlug ) :
 					continue
