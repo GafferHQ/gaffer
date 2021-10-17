@@ -353,7 +353,7 @@ def __devicesPreset() :
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
 
 	cudaIndex = 0
-	openclIndex = 0
+	hipIndex = 0
 	optixIndex = 0
 
 	for device in GafferCycles.devices :
@@ -364,9 +364,9 @@ def __devicesPreset() :
 		elif device["type"] == "CUDA" :
 			index = cudaIndex
 			cudaIndex += 1
-		elif device["type"] == "OPENCL" :
-			index = openclIndex
-			openclIndex += 1
+		elif device["type"] == "HIP" :
+			index = hipIndex
+			hipIndex += 1
 		elif device["type"] == "OPTIX" :
 			index = optixIndex
 			optixIndex += 1
@@ -385,13 +385,13 @@ def __devicesPreset() :
 
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All CUDA", "CUDA:*" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All OptiX", "OPTIX:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All OpenCL", "OPENCL:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All HIP", "HIP:*" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all CUDA", "CPU CUDA:*" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all OptiX", "CPU OPTIX:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all OpenCL", "CPU OPENCL:*" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all HIP", "CPU HIP:*" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first CUDA found", "CPU CUDA:00" )
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first OptiX found", "CPU OPTIX:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first OpenCL found", "CPU OPENCL:00" )
+	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first HIP found", "CPU HIP:00" )
 
 Gaffer.Metadata.registerNode(
 
