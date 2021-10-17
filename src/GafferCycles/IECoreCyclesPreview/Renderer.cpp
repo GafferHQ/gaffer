@@ -274,7 +274,7 @@ class CyclesOutput : public IECore::RefCounted
 				{
 					p["name"] = m_denoise ? new StringData( ccl::string_printf( "%s_denoised", tokens[1].c_str() ) ) : new StringData( tokens[1] );
 					p["type"] = new StringData( "lightgroup" );
-					passType = tokens[1];
+					passType = "lightgroup";
 					m_data = tokens[1];
 				}
 				else if( tokens[0] == "cryptomatte" )
@@ -3507,6 +3507,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 				ccl::PassType passType = coutput.second->m_passType;
 
+#ifdef WITH_CYCLES_LIGHTGROUPS
+				// We need to add all lightgroup passes in-order
+				if( passType == ccl::PASS_LIGHTGROUP )
+					continue;
+#endif
+
 				if( passType == ccl::PASS_CRYPTOMATTE )
 				{
 					if( coutput.second->m_data == "cryptomatte_asset" )
@@ -3603,6 +3609,34 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					layersData->writable()[pass->get_name().c_str()] = layer;
 				}
 			}
+
+#ifdef WITH_CYCLES_LIGHTGROUPS
+			// Add lightgroups on the end
+			for( auto &coutput : m_outputs )
+			{
+				if( ( m_renderType != Interactive && coutput.second->m_interactive ) ||
+					( m_renderType == Interactive && !coutput.second->m_interactive ) )
+				{
+					continue;
+				}
+
+				ccl::PassType passType = coutput.second->m_passType;
+
+				if( passType != ccl::PASS_LIGHTGROUP )
+					continue;
+
+				bool denoise = coutput.second->m_denoise;
+				hasDenoise |= denoise;
+				std::string name = denoise ? ccl::string_printf( "%s_denoised", coutput.second->m_data.c_str() ) : coutput.second->m_data;
+				ccl::Pass *pass = m_scene->create_node<ccl::Pass>();
+				pass->set_type( passType );
+				pass->set_name( ccl::ustring( name ) );
+				pass->set_mode( denoise ? ccl::PassMode::DENOISED : ccl::PassMode::NOISY );
+
+				const IECore::CompoundDataPtr layer = coutput.second->m_parameters->copy();
+				layersData->writable()[name] = layer;
+			}
+#endif
 
 			paramData->writable()["layers"] = layersData;
 
