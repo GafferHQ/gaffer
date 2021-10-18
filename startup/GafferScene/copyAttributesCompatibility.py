@@ -60,10 +60,10 @@ def __copyAttributesInGetItem( originalGetItem ) :
 
 		# We're getting a child of CopyAttributes.in.
 
-		if key in ( "in0", 0 ) :
+		if key in ( "in0", ) :
 			# First element of old ArrayPlug - redirect to self.
 			return self
-		elif key in ( "in1", 1 ) :
+		elif key in ( "in1", ) :
 			# Second element of old ArrayPlug - redirect to source.
 			return self.parent()["source"]
 		else:

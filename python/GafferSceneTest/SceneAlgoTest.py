@@ -517,8 +517,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		tweaks2["shader"].setValue( "test:surface" )
 
 		copyAttributes = GafferScene.CopyAttributes()
-		copyAttributes["in"][0].setInput( tweaks1["out"] )
-		copyAttributes["in"][1].setInput( tweaks2["out"] )
+		copyAttributes["in"].setInput( tweaks1["out"] )
+		copyAttributes["source"].setInput( tweaks2["out"] )
 
 		# No filter
 
