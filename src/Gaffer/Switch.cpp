@@ -40,6 +40,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextAlgo.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/NameValuePlug.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
@@ -299,33 +300,46 @@ void Switch::plugInputChanged( Plug *plug )
 size_t Switch::inputIndex( const Context *context ) const
 {
 	const ArrayPlug *inPlugs = this->inPlugs();
-	if( enabledPlug()->getValue() && inPlugs && inPlugs->children().size() > 1 )
+	const size_t numInputs = inPlugs ? inPlugs->children().size() : 0;
+	if( numInputs <= 1 )
 	{
-		size_t index = 0;
-		const IntPlug *indexPlug = this->indexPlug();
-		if( variesWithContext( indexPlug ) )
-		{
-			ContextAlgo::GlobalScope indexScope( context, inPlugs->getChild<Plug>( 0 ) );
-			index = indexPlug->getValue();
-		}
-		else
-		{
-			index = indexPlug->getValue();
-		}
+		return 0;
+	}
 
-		if( inPlugs->resizeWhenInputsChange() )
-		{
-			// Last input is always unconnected, so should be ignored.
-			return index % (inPlugs->children().size() - 1);
-		}
-		else
-		{
-			return index % inPlugs->children().size();
-		}
+	// Find a plug we can use to create a GlobalScope, accounting for the
+	// NameValuePlugs created by NameSwitch.
+	const Plug *globalScopePlug = inPlugs->getChild<Plug>( 0 );
+	if( auto nameValuePlug = IECore::runTimeCast<const NameValuePlug>( globalScopePlug ) )
+	{
+		globalScopePlug = nameValuePlug->valuePlug();
+	}
+
+	const BoolPlug *enabledPlug = this->enabledPlug();
+	const IntPlug *indexPlug = this->indexPlug();
+
+	// Create a GlobalScope if either the `index` or `enabled` plugs will launch
+	// an upstream compute. This avoids leakage of context variables such as
+	// `scene:path`.
+	boost::optional<ContextAlgo::GlobalScope> globalScope;
+	if( variesWithContext( enabledPlug ) || variesWithContext( indexPlug ) )
+	{
+		globalScope.emplace( context, globalScopePlug );
+	}
+
+	if( !enabledPlug->getValue() )
+	{
+		return 0;
+	}
+
+	const size_t index = indexPlug->getValue();
+	if( inPlugs->resizeWhenInputsChange() )
+	{
+		// Last input is always unconnected, so should be ignored.
+		return index % (numInputs - 1);
 	}
 	else
 	{
-		return 0;
+		return index % numInputs;
 	}
 }
 
