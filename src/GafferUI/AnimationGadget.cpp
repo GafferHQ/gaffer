@@ -259,6 +259,7 @@ struct AnimationGadget::SelectionSet : public Gaffer::Set
 	bool add( Gaffer::Animation::KeyPtr key );
 	bool remove( Gaffer::Animation::KeyPtr key );
 	void clear();
+	void clear( const Gaffer::Animation::CurvePlug* curve );
 	bool empty() const;
 
 private:
@@ -399,6 +400,32 @@ void AnimationGadget::SelectionSet::clear()
 		it->second.m_connection.disconnect();
 	}
 	m_connections.clear();
+}
+
+void AnimationGadget::SelectionSet::clear( const Gaffer::Animation::CurvePlug* const curve )
+{
+	// remove keys from selection (signaling member removal) that are parented to curve
+	for( KeyContainer::iterator it = m_keys.begin(), itEnd = m_keys.end(); it != itEnd; )
+	{
+		if( ( *it )->parent() == curve )
+		{
+			const Gaffer::Animation::KeyPtr key = *( it );
+			m_keys.erase( it++ );
+			memberRemovedSignal()( this, key.get() );
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	// disconnect curve connection
+	CurveConnectionMap::iterator cit = m_connections.find( curve );
+	if( cit != m_connections.end() )
+	{
+		cit->second.m_connection.disconnect();
+		m_connections.erase( cit );
+	}
 }
 
 bool AnimationGadget::SelectionSet::empty() const
@@ -1489,6 +1516,12 @@ void AnimationGadget::editablePlugAdded( Gaffer::Set *set, IECore::RunTimeTyped 
 
 void AnimationGadget::editablePlugRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
+	const Animation::CurvePlug* const curvePlug = IECore::runTimeCast< Animation::CurvePlug >( member );
+	if( curvePlug )
+	{
+		m_selectedKeys->clear( curvePlug );
+	}
+
 	dirty( DirtyType::Render );
 }
 
