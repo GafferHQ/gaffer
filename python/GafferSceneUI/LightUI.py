@@ -44,6 +44,15 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+def __lightTypeMatches( node, types ):
+
+	if not "__shader" in node:
+		return True
+	else:
+		lightName = node["__shader"]["type"].getValue() + ":" + node["__shader"]["name"].getValue()
+		t = Gaffer.Metadata.value( lightName, "type" )
+		return t in types
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.Light,
@@ -111,6 +120,9 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visualisation",
 			"compoundDataPlugValueWidget:editable", False,
+
+			"layout:activator:lookThroughApertureVisibility", lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant"] ),
+			"layout:activator:lookThroughClippingPlanesVisibility", lambda parentPlug : __lightTypeMatches( parentPlug.node(), ["distant", "spot"] ),
 
 		],
 
@@ -186,6 +198,28 @@ Gaffer.Metadata.registerNode(
 			"preset:Texture", "texture",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
+		],
+
+		"visualiserAttributes.lookThroughAperture" : [
+
+			"description",
+			"""
+			Specifies the aperture used when looking through this light. Overrides the Viewer's Camera Settings.
+			""",
+
+			"layout:visibilityActivator", "lookThroughApertureVisibility"
+
+		],
+
+		"visualiserAttributes.lookThroughClippingPlanes" : [
+
+			"description",
+			"""
+			Specifies the clipping planes used when looking through this light. Overrides the Viewer's Camera Settings.
+			""",
+
+			"layout:visibilityActivator", "lookThroughClippingPlanesVisibility"
+
 		]
 
 	}
