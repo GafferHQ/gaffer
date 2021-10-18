@@ -543,7 +543,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 
 			for( Animation::Key &key : *curvePlug )
 			{
-				bool isHighlighted = ( m_highlightedKey && key == *m_highlightedKey ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ));
+				bool isHighlighted = ( & key == m_highlightedKey.get() ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ) );
 				bool isSelected = m_selectedKeys->contains( &key );
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
