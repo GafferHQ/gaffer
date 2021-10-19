@@ -21,6 +21,7 @@ API
 
 - GafferTest.TestCase : Added `plugsToIgnore` argument to `assertNodesConstructWithDefaultValues()`.
 - OpenGLRenderer : gl:queryBound command now supports "omitted" paramter containing a PathMatcher with paths to skip when computing the bound
+- SceneGadget : Added new `bound( selected, omitted = nullptr )` signature, which allows omitting certain paths from the bound computation, with or without limiting to selection.  The previous `selectionBound()` method is now deprecated.
 
 0.60.8.0 (relative to 0.60.7.1)
 ========

@@ -175,6 +175,9 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "setSelection", &SceneGadget::setSelection )
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )
 		.def( "selectionBound", &SceneGadget::selectionBound )
+		.def( "bound", (Imath::Box3f (SceneGadget::*)(bool,const IECore::PathMatcher*) const)&SceneGadget::bound,
+			( arg( "selected" ), arg( "omitted" ) = object() )
+		)
 	;
 
 	enum_<SceneGadget::State>( "State" )
