@@ -1268,7 +1268,6 @@ class PathModel : public QAbstractItemModel
 								QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
 								Private::ScopedAssignment<bool> assignment( model->m_modifyingTreeViewExpansion, true );
 								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
-								m_expandedInTreeView = expanded;
 							}
 						);
 					}
@@ -1305,7 +1304,6 @@ class PathModel : public QAbstractItemModel
 									QItemSelection( index, index.sibling( index.row(), model->columnCount() - 1 ) ),
 									selected ? QItemSelectionModel::Select : QItemSelectionModel::Deselect
 								);
-								m_selectedInSelectionModel = selected;
 								if( selected )
 								{
 									if( expand )
@@ -1583,15 +1581,23 @@ class PathModel : public QAbstractItemModel
 
 		void treeViewExpanded( const QModelIndex &index )
 		{
+			// Store the expansion state in the Item, so that it can be looked
+			// up in a thread-safe way in `Item::updateExpansion(). We do this
+			// no matter the source of the change to the tree view, so that the
+			// Item has an exact mirror of the tree view state.
+			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( true );
+
 			if( m_modifyingTreeViewExpansion )
 			{
-				// When we're modifying the expansion ourselves, it's to mirror
+				// We're modifying the expansion ourselves, to mirror
 				// `m_expandedPaths` into the tree view. In this case there is
 				// no need to sync back into `m_expandedPaths`.
 				return;
 			}
 
-			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( true );
+			// The user has modified the expansion interactively. We need to
+			// reflect this back into `m_expandedPaths` and report it via
+			// `expansionChanged()`.
 
 			const Path::Names expandedPath = namesForIndex( index );
 			// It's possible for `addPath()` to return false if the path is
@@ -1644,12 +1650,11 @@ class PathModel : public QAbstractItemModel
 
 		void treeViewCollapsed( const QModelIndex &index )
 		{
+			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( false );
 			if( m_modifyingTreeViewExpansion )
 			{
 				return;
 			}
-
-			static_cast<Item *>( index.internalPointer() )->treeViewExpansionChanged( false );
 
 			const Path::Names collapsedPath = namesForIndex( index );
 			bool expandedPathsChanged = m_expandedPaths.removePath( collapsedPath );
@@ -1689,6 +1694,16 @@ class PathModel : public QAbstractItemModel
 
 		void selectionModelSelectionChanged( const QItemSelection &selected, const QItemSelection &deselected )
 		{
+			const QModelIndexList selectedIndexes = selected.indexes();
+			for( const auto &index : selectedIndexes )
+			{
+				static_cast<Item *>( index.internalPointer() )->selectionModelSelectionChanged( true );
+			}
+			for( const auto &index : deselected.indexes() )
+			{
+				static_cast<Item *>( index.internalPointer() )->selectionModelSelectionChanged( false );
+			}
+
 			if( m_modifyingSelectionModel )
 			{
 				return;
@@ -1696,7 +1711,6 @@ class PathModel : public QAbstractItemModel
 
 			bool changed = false;
 
-			const QModelIndexList selectedIndexes = selected.indexes();
 			if( !selectedIndexes.isEmpty() )
 			{
 				const QTreeView *treeView = static_cast<const QTreeView *>( QObject::parent() );
@@ -1709,7 +1723,6 @@ class PathModel : public QAbstractItemModel
 
 				for( const auto &index : selectedIndexes )
 				{
-					static_cast<Item *>( index.internalPointer() )->selectionModelSelectionChanged( true );
 					changed |= m_selectedPaths.addPath(
 						namesForIndex( index )
 					);
@@ -1718,7 +1731,6 @@ class PathModel : public QAbstractItemModel
 
 			for( const auto &index : deselected.indexes() )
 			{
-				static_cast<Item *>( index.internalPointer() )->selectionModelSelectionChanged( false );
 				changed |= m_selectedPaths.removePath(
 					namesForIndex( index )
 				);
