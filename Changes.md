@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Viewer : Added settings to control aperture and clipping planes when looking through lights. This can be customised on a per-light basis using the new visualiser settings on the Light node.
+- Viewer 
+  - Added settings to control aperture and clipping planes when looking through lights. This can be customised on a per-light basis using the new visualiser settings on the Light node.
+  - The framing the scene while looking through a light now does not try to frame the light you are looking through.
 - Light : Added visualiser settings to control aperture and clipping planes when looking through the light in the Viewer. These settings override the defaults specified in the Viewer itself.
 - LightToCamera : Added `distantAperture` and `clippingPlanes` plugs.
 - Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
