@@ -54,25 +54,25 @@ using namespace GafferBindings;
 namespace
 {
 
-Animation::CurvePlugPtr acquire( ValuePlug *plug )
+Animation::CurvePlugPtr acquire( ValuePlug* const plug )
 {
 	ScopedGILRelease gilRelease;
 	return Animation::acquire( plug );
 }
 
-Animation::KeyPtr setTime( Animation::Key &k, float time )
+Animation::KeyPtr setTime( Animation::Key &k, const float time )
 {
 	ScopedGILRelease gilRelease;
 	return k.setTime( time );
 }
 
-void setValue( Animation::Key &k, float value )
+void setValue( Animation::Key &k, const float value )
 {
 	ScopedGILRelease gilRelease;
 	k.setValue( value );
 }
 
-void setInterpolation( Animation::Key &k, Animation::Interpolation interpolation )
+void setInterpolation( Animation::Key &k, const Animation::Interpolation interpolation )
 {
 	ScopedGILRelease gilRelease;
 	k.setInterpolation( interpolation );
@@ -221,6 +221,9 @@ void GafferModule::bindAnimation()
 		)
 		.def( "keyAddedSignal", &Animation::CurvePlug::keyAddedSignal, return_internal_reference< 1 >() )
 		.def( "keyRemovedSignal", &Animation::CurvePlug::keyRemovedSignal, return_internal_reference< 1 >() )
+		.def( "keyTimeChangedSignal", &Animation::CurvePlug::keyTimeChangedSignal, return_internal_reference< 1 >() )
+		.def( "keyValueChangedSignal", &Animation::CurvePlug::keyValueChangedSignal, return_internal_reference< 1 >() )
+		.def( "keyInterpolationChangedSignal", &Animation::CurvePlug::keyInterpolationChangedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
 		.def( "insertKey", &insertKey )
 		.def( "insertKey", &insertKeyValue )

@@ -70,7 +70,12 @@ Animation::Key::~Key()
 	assert( m_parent == nullptr );
 }
 
-Animation::KeyPtr Animation::Key::setTime( float time )
+float Animation::Key::getTime() const
+{
+	return m_time;
+}
+
+Animation::KeyPtr Animation::Key::setTime( const float time )
 {
 	if( time == m_time )
 	{
@@ -180,6 +185,8 @@ Animation::KeyPtr Animation::Key::setTime( float time )
 				assert( ! key || ( key->m_active == true ) );
 				assert( ! clashingKey || ( clashingKey->m_active == false ) );
 				assert( ! clashingInactiveKey || ( clashingInactiveKey->m_active == true ) );
+
+				curve->m_keyTimeChangedSignal( key->m_parent, key.get() );
 				curve->propagateDirtiness( curve->outPlug() );
 			},
 			// Undo
@@ -256,6 +263,8 @@ Animation::KeyPtr Animation::Key::setTime( float time )
 				assert( ! key || ( key->m_active == active ) );
 				assert( ! clashingKey || ( clashingKey->m_active == true ) );
 				assert( ! clashingInactiveKey || ( clashingInactiveKey->m_active == false ) );
+
+				curve->m_keyTimeChangedSignal( key->m_parent, key.get() );
 				curve->propagateDirtiness( curve->outPlug() );
 			}
 		);
@@ -270,7 +279,12 @@ Animation::KeyPtr Animation::Key::setTime( float time )
 	return clashingKey;
 }
 
-void Animation::Key::setValue( float value )
+float Animation::Key::getValue() const
+{
+	return m_value;
+}
+
+void Animation::Key::setValue( const float value )
 {
 	if( value == m_value )
 	{
@@ -279,19 +293,21 @@ void Animation::Key::setValue( float value )
 
 	if( m_parent )
 	{
-		KeyPtr k = this;
+		KeyPtr key = this;
 		const float previousValue = m_value;
 		Action::enact(
 			m_parent,
 			// Do
-			[ k, value ] {
-				k->m_value = value;
-				k->m_parent->propagateDirtiness( k->m_parent->outPlug() );
+			[ key, value ] {
+				key->m_value = value;
+				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			},
 			// Undo
-			[ k, previousValue ] {
-				k->m_value = previousValue;
-				k->m_parent->propagateDirtiness( k->m_parent->outPlug() );
+			[ key, previousValue ] {
+				key->m_value = previousValue;
+				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			}
 		);
 	}
@@ -306,7 +322,7 @@ Animation::Interpolation Animation::Key::getInterpolation() const
 	return m_interpolation;
 }
 
-void Animation::Key::setInterpolation( Animation::Interpolation interpolation )
+void Animation::Key::setInterpolation( const Animation::Interpolation interpolation )
 {
 	if( interpolation == m_interpolation )
 	{
@@ -315,19 +331,21 @@ void Animation::Key::setInterpolation( Animation::Interpolation interpolation )
 
 	if( m_parent )
 	{
-		KeyPtr k = this;
+		KeyPtr key = this;
 		const Animation::Interpolation previousInterpolation = m_interpolation;
 		Action::enact(
 			m_parent,
 			// Do
-			[ k, interpolation ] {
-				k->m_interpolation = interpolation;
-				k->m_parent->propagateDirtiness( k->m_parent->outPlug() );
+			[ key, interpolation ] {
+				key->m_interpolation = interpolation;
+				key->m_parent->m_keyInterpolationChangedSignal( key->m_parent, key.get() );
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			},
 			// Undo
-			[ k, previousInterpolation ] {
-				k->m_interpolation = previousInterpolation;
-				k->m_parent->propagateDirtiness( k->m_parent->outPlug() );
+			[ key, previousInterpolation ] {
+				key->m_interpolation = previousInterpolation;
+				key->m_parent->m_keyInterpolationChangedSignal( key->m_parent, key.get() );
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			}
 		);
 	}
@@ -409,6 +427,9 @@ Animation::CurvePlug::CurvePlug( const std::string &name, const Direction direct
 , m_inactiveKeys()
 , m_keyAddedSignal()
 , m_keyRemovedSignal()
+, m_keyTimeChangedSignal()
+, m_keyValueChangedSignal()
+, m_keyInterpolationChangedSignal()
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
@@ -427,6 +448,21 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyAddedSignal()
 Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyRemovedSignal()
 {
 	return m_keyRemovedSignal;
+}
+
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTimeChangedSignal()
+{
+	return m_keyTimeChangedSignal;
+}
+
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyValueChangedSignal()
+{
+	return m_keyValueChangedSignal;
+}
+
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyInterpolationChangedSignal()
+{
+	return m_keyInterpolationChangedSignal;
 }
 
 Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )

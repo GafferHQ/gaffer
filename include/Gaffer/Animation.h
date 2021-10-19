@@ -85,8 +85,7 @@ class GAFFER_API Animation : public ComputeNode
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
 
 				/// Get current time of key.
-				float getTime() const { return m_time; };
-
+				float getTime() const;
 				/// Set time of key. If key is parented it will become the active key of its parent
 				/// curve at the specified time. If parent curve has an existing active key at the
 				/// specified time, that key will remain parented to curve, become inactive and be
@@ -96,11 +95,12 @@ class GAFFER_API Animation : public ComputeNode
 				Key::Ptr setTime( float time );
 
 				/// Get current value of key.
-				float getValue() const  { return m_value; };
+				float getValue() const;
 				/// Set the value of the key.
 				/// \undoable
 				void setValue( float value );
 
+				/// Get current interpolation of key.
 				Interpolation getInterpolation() const;
 				/// \undoable
 				void setInterpolation( Interpolation interpolation );
@@ -165,6 +165,9 @@ class GAFFER_API Animation : public ComputeNode
 
 				CurvePlugKeySignal& keyAddedSignal();
 				CurvePlugKeySignal& keyRemovedSignal();
+				CurvePlugKeySignal& keyTimeChangedSignal();
+				CurvePlugKeySignal& keyValueChangedSignal();
+				CurvePlugKeySignal& keyInterpolationChangedSignal();
 
 				/// Adds specified key to curve, if key is parented to another curve it is removed
 				/// from the other curve. If the key has already been added to the curve, there is
@@ -280,6 +283,9 @@ class GAFFER_API Animation : public ComputeNode
 				InactiveKeys m_inactiveKeys;
 				CurvePlugKeySignal m_keyAddedSignal;
 				CurvePlugKeySignal m_keyRemovedSignal;
+				CurvePlugKeySignal m_keyTimeChangedSignal;
+				CurvePlugKeySignal m_keyValueChangedSignal;
+				CurvePlugKeySignal m_keyInterpolationChangedSignal;
 		};
 
 		/// convert enums to strings

@@ -60,6 +60,7 @@
 
 #include <cmath>
 #include <cassert>
+#include <sstream>
 
 using namespace Gaffer;
 using namespace GafferUI;
@@ -258,6 +259,7 @@ struct AnimationGadget::SelectionSet : public Gaffer::Set
 	bool add( Gaffer::Animation::KeyPtr key );
 	bool remove( Gaffer::Animation::KeyPtr key );
 	void clear();
+	void clear( const Gaffer::Animation::CurvePlug* curve );
 	bool empty() const;
 
 private:
@@ -398,6 +400,32 @@ void AnimationGadget::SelectionSet::clear()
 		it->second.m_connection.disconnect();
 	}
 	m_connections.clear();
+}
+
+void AnimationGadget::SelectionSet::clear( const Gaffer::Animation::CurvePlug* const curve )
+{
+	// remove keys from selection (signaling member removal) that are parented to curve
+	for( KeyContainer::iterator it = m_keys.begin(), itEnd = m_keys.end(); it != itEnd; )
+	{
+		if( ( *it )->parent() == curve )
+		{
+			const Gaffer::Animation::KeyPtr key = *( it );
+			m_keys.erase( it++ );
+			memberRemovedSignal()( this, key.get() );
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	// disconnect curve connection
+	CurveConnectionMap::iterator cit = m_connections.find( curve );
+	if( cit != m_connections.end() )
+	{
+		cit->second.m_connection.disconnect();
+		m_connections.erase( cit );
+	}
 }
 
 bool AnimationGadget::SelectionSet::empty() const
@@ -690,7 +718,15 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 {
 	if( const Animation::ConstKeyPtr key = keyAt( line ) )
 	{
-		return boost::str( boost::format( "%f -> %f" ) % key->getTime() % key->getValue() );
+		const Gaffer::ScriptNode* const scriptNode =
+			IECore::assertedStaticCast< const Gaffer::ScriptNode >( key->parent()->ancestor( (IECore::TypeId) Gaffer::ScriptNodeTypeId ) );
+
+		std::ostringstream os;
+		os.precision( 4 );
+		os << "Frame: " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() );
+		os << "<br>Value: " << key->getValue();
+		os << "<br>Interpolation: " << Animation::toString( key->getInterpolation() );
+		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )
 	{
@@ -1480,6 +1516,12 @@ void AnimationGadget::editablePlugAdded( Gaffer::Set *set, IECore::RunTimeTyped 
 
 void AnimationGadget::editablePlugRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member )
 {
+	const Animation::CurvePlug* const curvePlug = IECore::runTimeCast< Animation::CurvePlug >( member );
+	if( curvePlug )
+	{
+		m_selectedKeys->clear( curvePlug );
+	}
+
 	dirty( DirtyType::Render );
 }
 
