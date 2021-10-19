@@ -79,6 +79,9 @@ Light::Light( const std::string &name )
 
 	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:drawingMode", new IECore::StringData( "texture" ), false, "lightDrawingMode" ) );
 
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:lookThroughAperture", new IECore::FloatData( 2.0f ), false, "lookThroughAperture" ) );
+	visualiserAttr->addChild( new Gaffer::NameValuePlug( "gl:light:lookThroughClippingPlanes", new IECore::V2fData( Imath::V2f( -100000, 100000 ) ), false, "lookThroughClippingPlanes" ) );
+
 	addChild( visualiserAttr  );
 }
 
