@@ -298,8 +298,13 @@ class TestCase( unittest.TestCase ) :
 	# newly constructed nodes _must_ have all their plugs be at the default value.
 	# Use `nodesToIgnore` with caution : the only good reason for using it is to
 	# ignore compatibility stubs used to load old nodes and convert them into new
-	# ones.
-	def assertNodesConstructWithDefaultValues( self, module, nodesToIgnore = None ) :
+	# ones. If you have an issue that requires ignoring, consider localizing the
+	# problem by using `plugsToIgnore` instead.
+	# Use `plugsToIgnore` with caution : the only good reason for using it is to
+	# allow existing issues to be ignored while still strictly testing the rest of
+	# a particular node. The expected format is a dict mapping node-class to python
+	# plug-identifiers (eg `{ Gaffer.ScriptNode : ( "frameRange.start", ) }` )
+	def assertNodesConstructWithDefaultValues( self, module, nodesToIgnore = None, plugsToIgnore = None ) :
 
 		for name in dir( module ) :
 
@@ -316,6 +321,9 @@ class TestCase( unittest.TestCase ) :
 				continue
 
 			for plug in node.children( Gaffer.Plug ) :
+
+				if plugsToIgnore is not None and cls in plugsToIgnore and plug.relativeName( node ) in plugsToIgnore[cls] :
+					continue
 
 				if plug.source().direction() != plug.Direction.In or not isinstance( plug, Gaffer.ValuePlug ) :
 					continue

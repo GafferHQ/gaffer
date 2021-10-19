@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
+- GafferTest.TestCase : Allow stricter testing of problematic nodes via `assertNodesConstructWithDefaultValues( plugsToIgnore )`
 
 Fixes
 -----
