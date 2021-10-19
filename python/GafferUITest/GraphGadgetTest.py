@@ -1752,10 +1752,10 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		canceller = IECore.Canceller()
 
-		t = Gaffer.ParallelAlgo.callOnBackgroundThread(
-			s["add"]["sum"], lambda : testThreadFunc( s["add"]["sum"], canceller, self )
-		)
 		with GraphGadgetTest.testActivePlugsAndNodesCancellationCondition:
+			t = Gaffer.ParallelAlgo.callOnBackgroundThread(
+				s["add"]["sum"], lambda : testThreadFunc( s["add"]["sum"], canceller, self )
+			)
 			GraphGadgetTest.testActivePlugsAndNodesCancellationCondition.wait()
 
 		canceller.cancel()
