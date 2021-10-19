@@ -5,13 +5,18 @@ Improvements
 ------------
 
 - Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
-- GafferTest.TestCase : Allow stricter testing of problematic nodes via `assertNodesConstructWithDefaultValues( plugsToIgnore )`
 
 Fixes
 -----
 
-- GafferTest.TestCase : Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
-- GafferTest.TestCase : Better support for python submodules on `assertTypeNamesArePrefixed()`.
+- GafferTest.TestCase :
+  - Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
+  - Fixed `assertTypeNamesArePrefixed()` to work for Nodes in Python submodules.
+
+API
+---
+
+- GafferTest.TestCase : Added `plugsToIgnore` argument to `assertNodesConstructWithDefaultValues()`.
 
 0.60.8.0 (relative to 0.60.7.1)
 ========
