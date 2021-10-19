@@ -37,8 +37,7 @@ Fixes
   - Inserting a new key in editor (Hold "Ctrl" and left click on curve) is now undone/redone as a distinct step.
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 - NameSwitch : Fixed context management bug that allowed variables such as `scene:path` to leak into the context used to evaluate the `selector` plug.
-- GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs
-- CopyAttributes : Relaxed compatibility shim to avoid infinite recursion when using `Gaffer.Plug.RecursiveRange`
+- GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs.
 
 API
 ---
@@ -100,6 +99,7 @@ Breaking Changes
   - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
+- CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.
 
 0.60.x.x (relative to 0.60.8.0)
 ========
