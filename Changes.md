@@ -20,6 +20,7 @@ API
 ---
 
 - GafferTest.TestCase : Added `plugsToIgnore` argument to `assertNodesConstructWithDefaultValues()`.
+- OpenGLRenderer : gl:queryBound command now supports "omitted" paramter containing a PathMatcher with paths to skip when computing the bound
 
 0.60.8.0 (relative to 0.60.7.1)
 ========
