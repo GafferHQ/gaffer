@@ -1850,7 +1850,7 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 		collapseSelection();
 		return true;
 	}
-	else if( event.key == "F" && event.modifiers == GafferUI::ModifiableEvent::Modifiers::None )
+	else if( event.key == "F" )
 	{
 		Imath::Box3f b = framingBound();
 		if( !b.isEmpty() && viewportGadget()->getCameraEditable() )
