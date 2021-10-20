@@ -139,6 +139,7 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:divider", True,
 			"toolbarLayout:label", "",
 			"layout:activator:hidden", lambda plug : False,
+			"layout:section:Light Look Through:collapsed", False,
 
 		],
 
@@ -158,6 +159,29 @@ Gaffer.Metadata.registerNode(
 			The near and far clipping planes for the viewport's default perspective camera.
 			""",
 
+		],
+
+		"camera.lightLookThroughDefaultDistantAperture" : [
+			"layout:section", "Light Look Through",
+			"label", "Default Distant Aperture",
+			"description",
+			"""
+			The orthographic aperture used when converting distant lights
+			( which are theoretically infinite in extent ).  May be overridden
+			by the visualisation setting on the light.
+			""",
+		],
+
+		"camera.lightLookThroughDefaultClippingPlanes" : [
+			"layout:section", "Light Look Through",
+			"label", "Default Clipping Planes",
+			"description",
+			"""
+			Clipping planes for cameras implied by lights.  When creating a perspective camera, a near clip
+			<= 0 is invalid, and will be replaced with 0.01.  Also, certain lights only start casting
+			light at some distance - if near clip is less than this, it will be increased.  May be overridden
+			by the visualisation setting on the light.
+			""",
 		],
 
 		"camera.lookThroughEnabled" : [

@@ -55,6 +55,12 @@ class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
 		Gaffer::IntPlug *filmFitPlug();
 		const Gaffer::IntPlug *filmFitPlug() const;
 
+		Gaffer::FloatPlug *distantAperturePlug();
+		const Gaffer::FloatPlug *distantAperturePlug() const;
+
+		Gaffer::V2fPlug *clippingPlanesPlug();
+		const Gaffer::V2fPlug *clippingPlanesPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :

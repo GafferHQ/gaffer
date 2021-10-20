@@ -39,6 +39,7 @@
 
 #include "GafferSceneUI/ContextAlgo.h"
 
+#include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteObject.h"
 #include "GafferScene/Grid.h"
@@ -1011,6 +1012,8 @@ class SceneView::Camera : public boost::signals::trackable
 			:	m_view( view ),
 				m_framed( false ),
 				m_lightToCamera( new LightToCamera ),
+				m_distantApertureAttributeQuery( new AttributeQuery ),
+				m_clippingPlanesAttributeQuery( new AttributeQuery ),
 				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
 				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
 				m_originalCenterOfInterest( m_view->viewportGadget()->getCenterOfInterest() ),
@@ -1045,6 +1048,25 @@ class SceneView::Camera : public boost::signals::trackable
 
 			plug->addChild( new BoolPlug( "lookThroughEnabled", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs ) );
 			plug->addChild( new StringPlug( "lookThroughCamera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+			plug->addChild(
+				new Gaffer::FloatPlug(
+					"lightLookThroughDefaultDistantAperture", Plug::In,
+					2.0f,
+					0.0f,
+					Imath::limits<float>::max(),
+					Plug::Default & ~Plug::AcceptsInputs
+				)
+			);
+
+			plug->addChild(
+				new Gaffer::V2fPlug(
+					"lightLookThroughDefaultClippingPlanes", Plug::In,
+					V2f( -100000, 100000 ),
+					V2f( Imath::limits<float>::min() ),
+					V2f( Imath::limits<float>::max() ),
+					Plug::Default & ~Plug::AcceptsInputs
+				)
+			);
 
 			view->addChild( plug );
 
@@ -1054,8 +1076,21 @@ class SceneView::Camera : public boost::signals::trackable
 			SetFilterPtr lightFilter = new SetFilter;
 			lightFilter->setExpressionPlug()->setValue( "__lights" );
 
+			m_distantApertureAttributeQuery->scenePlug()->setInput( view->inPlug<ScenePlug>() );
+			FloatPlugPtr defaultFloatPlug = new Gaffer::FloatPlug();
+			m_distantApertureAttributeQuery->setup( defaultFloatPlug.get() );
+			m_distantApertureAttributeQuery->attributePlug()->setValue( "gl:light:lookThroughAperture" );
+			m_distantApertureAttributeQuery->defaultPlug()->setInput( lightLookThroughDefaultDistantAperturePlug() );
+			m_clippingPlanesAttributeQuery->scenePlug()->setInput( view->inPlug<ScenePlug>() );
+			V2fPlugPtr defaultV2fPlug = new Gaffer::V2fPlug();
+			m_clippingPlanesAttributeQuery->setup( defaultV2fPlug.get() );
+			m_clippingPlanesAttributeQuery->attributePlug()->setValue( "gl:light:lookThroughClippingPlanes" );
+			m_clippingPlanesAttributeQuery->defaultPlug()->setInput( lightLookThroughDefaultClippingPlanesPlug() );
+
 			m_lightToCamera->inPlug()->setInput( view->inPlug<ScenePlug>() );
 			m_lightToCamera->filterPlug()->setInput( lightFilter->outPlug() );
+			m_lightToCamera->distantAperturePlug()->setInput( m_distantApertureAttributeQuery->valuePlug() );
+			m_lightToCamera->clippingPlanesPlug()->setInput( m_clippingPlanesAttributeQuery->valuePlug() );
 
 			m_internalNodes.push_back( lightFilter );
 
@@ -1130,6 +1165,26 @@ class SceneView::Camera : public boost::signals::trackable
 		const Gaffer::StringPlug *lookThroughCameraPlug() const
 		{
 			return plug()->getChild<StringPlug>( 3 );
+		}
+
+		const Gaffer::FloatPlug *lightLookThroughDefaultDistantAperturePlug() const
+		{
+			return plug()->getChild<FloatPlug>( 4 );
+		}
+
+		Gaffer::FloatPlug *lightLookThroughDefaultDistantAperturePlug()
+		{
+			return plug()->getChild<FloatPlug>( 4 );
+		}
+
+		const Gaffer::V2fPlug *lightLookThroughDefaultClippingPlanesPlug() const
+		{
+			return plug()->getChild<V2fPlug>( 5 );
+		}
+
+		Gaffer::V2fPlug *lightLookThroughDefaultClippingPlanesPlug()
+		{
+			return plug()->getChild<V2fPlug>( 5 );
 		}
 
 		SceneGadget *sceneGadget()
@@ -1278,6 +1333,9 @@ class SceneView::Camera : public boost::signals::trackable
 			ConstPathMatcherDataPtr cameraSet;
 			M44f cameraTransform;
 			string errorMessage;
+
+			m_clippingPlanesAttributeQuery->locationPlug()->setValue( cameraPathString );
+			m_distantApertureAttributeQuery->locationPlug()->setValue( cameraPathString );
 			try
 			{
 				globals = scenePlug()->globals();
@@ -1500,6 +1558,9 @@ class SceneView::Camera : public boost::signals::trackable
 		bool m_framed;
 
 		LightToCameraPtr m_lightToCamera;
+
+		AttributeQueryPtr m_distantApertureAttributeQuery;
+		AttributeQueryPtr m_clippingPlanesAttributeQuery;
 
 		/// Nodes used in an internal processing network.
 		/// Don't need to do anything with them once their set up, but need to hold onto a pointer
