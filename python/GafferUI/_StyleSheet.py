@@ -1222,7 +1222,7 @@ _styleSheet = string.Template(
 		border-bottom-color: $backgroundRaisedLowlight;
 		border-right-color: $backgroundRaisedLowlight;
 		padding: 0;
-		alternate-background-color: $backgroundRaisedAlt;
+		alternate-background-color: $tintDarker;
 		paint-alternating-row-colors-for-empty-area: 1;
 	}
 

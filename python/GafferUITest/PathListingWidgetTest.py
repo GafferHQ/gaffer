@@ -249,12 +249,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getSelection(), s )
 		self.assertEqual( len( cs ), 1 )
 
-		# But will not have been reflected into Qt until the completion of
-		# an async update.
-
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
-		self.assertEqual( self.__selectionFromQt( w ), s )
-
 		# Delete a path that was selected.
 		d2 = d["2"]
 		del d["2"]
@@ -262,19 +256,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# We don't expect this to affect the result of `getSelection()` because
 		# the selection state is independent of the model contents.
 		self.assertEqual( w.getSelection(), s )
-		# But it should affect what is mirrored in Qt.
-		s2 = IECore.PathMatcher( s )
-		s2.removePath( "/2" )
-		s2.removePath( "/2/5" )
-		self.assertEqual( self.__selectionFromQt( w ), s2 )
-
-		# If we reintroduce the deleted path, it should be selected again in Qt.
-		# This behaviour is particularly convenient when switching between
-		# different scenes in the HierarchyView, and matches the behaviour of
-		# the SceneGadget.
-		d["2"] = d2
-		self.__emitPathChanged( w )
-		self.assertEqual( self.__selectionFromQt( w ), s )
 
 		# Now try to set selection twice in succession, so the model doesn't have
 		# chance to finish one update before starting the next.
@@ -283,8 +264,59 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		s2 = IECore.PathMatcher( [ "/9", "/9/9", "/5/6", "3" ] )
 		w.setSelection( s1 )
 		w.setSelection( s2 )
+		self.assertEqual( w.getSelection(), s2 )
+
+	def testSelectionScrolling( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
+		self.assertTrue( w.getSelection().isEmpty() )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
+		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5" ] )
+		w.setSelection( s, expandNonLeaf = False, scrollToFirst = False )
+		self.assertEqual( w.getSelection(), s )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
-		self.assertEqual( self.__selectionFromQt( w ), s2 )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
+		s.addPath( "/3/5" )
+		w.setSelection( s, expandNonLeaf = False, scrollToFirst = True )
+		self.assertEqual( w.getSelection(), s )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/3" ] ) )
+
+	def testSelectionExpansion( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
+		self.assertTrue( w.getSelection().isEmpty() )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
+		s = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5" ] )
+		w.setSelection( s, expandNonLeaf = True, scrollToFirst = False )
+		self.assertEqual( w.getSelection(), s )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/1", "/2", "/9" ] ) )
 
 	def testSelectionSignalFrequency( self ) :
 
@@ -308,75 +340,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( set( [ str( p ) for p in w.getSelectedPaths() ] ), set( [ "/a", "/b" ] ) )
 
 		self.assertEqual( len( c ), 1 )
-
-	def testSelectionByUser( self ) :
-
-		w = GafferUI.PathListingWidget(
-			Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" ),
-			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
-		)
-		model = w._qtWidget().model()
-		model.rowCount() # Trigger population of top level of the model
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
-
-		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
-		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
-		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
-
-		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Deselect ) # Equivalent to a click by the user
-		self.assertEqual( len( cs ), 2 )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
-
-		# If we use the API to select a non-existent path, the next user
-		# selection should remove it, because we constructed the
-		# PathListingWidget with `allowMultipleSelection == False`.
-
-		w.setSelection( IECore.PathMatcher( [ "/nonExistent" ] ) )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/nonExistent" ] ) )
-		self.assertEqual( len( cs ), 3 )
-
-		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
-		self.assertEqual( len( cs ), 4 )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
-
-		# Likewise, if we used the API to select something valid, but it hasn't
-		# been synced to Qt yet, it should still be cleared by a user selection.
-
-		w.setSelection( IECore.PathMatcher() )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
-		w.setSelection( IECore.PathMatcher( [ "/a/b" ] ) )
-		self.assertEqual( len( cs ), 6 )
-
-		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
-		self.assertEqual( len( cs ), 7 )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
-
-	def testSetSelectionClearsSelectionByUser( self ) :
-
-		w = GafferUI.PathListingWidget(
-			Gaffer.DictPath( { "a" : 1, "b" : 2, "c" : 3 }, "/" ),
-			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
-		)
-		model = w._qtWidget().model()
-		model.rowCount() # Trigger population of top level of the model
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
-
-		w._qtWidget().selectionModel().select( model.index( 0, 0 ), QtCore.QItemSelectionModel.Select ) # Equivalent to a click by the user
-		self.assertEqual( w.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
-
-		w.setSelection( IECore.PathMatcher( [ "/b" ] ) )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( self.__selectionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
-
-		w._qtWidget().selectionModel().select( model.index( 1, 0 ), QtCore.QItemSelectionModel.Deselect ) # Equivalent to a click by the user
-		self.assertEqual( w.getSelection(), IECore.PathMatcher() )
-		w.setSelection( IECore.PathMatcher( [ "/b" ] ) )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
-		self.assertEqual( self.__selectionFromQt( w ), IECore.PathMatcher( [ "/b" ] ) )
 
 	def testChangingDirectoryClearsSelection( self ) :
 
@@ -936,17 +899,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				result.addPath(
 					str( widget._PathListingWidget__pathForIndex( index ) )
 				)
-
-		return result
-
-	@staticmethod
-	def __selectionFromQt( widget ) :
-
-		result = IECore.PathMatcher()
-		for index in widget._qtWidget().selectionModel().selectedIndexes() :
-			result.addPath(
-				str( widget._PathListingWidget__pathForIndex( index ) )
-			)
 
 		return result
 
