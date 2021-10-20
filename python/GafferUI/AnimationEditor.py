@@ -436,16 +436,21 @@ class _KeyWidget( GafferUI.GridContainer ) :
 
 		GafferUI.GridContainer.__init__( self, spacing=4, borderWidth=4 )
 
+		# tool tips
+		frameToolTip = "# Frame\n\nThe frame of the currently selected keys."
+		valueToolTip = "# Value\n\nThe value of the currently selected keys."
+		interpolationToolTip = "# Interpolation\n\nThe interpolation of the currently selected keys."
+
 		# create key labels
-		frameLabel = GafferUI.Label( text="Frame" )
-		valueLabel = GafferUI.Label( text="Value" )
-		interpolationLabel = GafferUI.Label( text="Interpolation" )
+		frameLabel = GafferUI.Label( text="Frame", toolTip=frameToolTip )
+		valueLabel = GafferUI.Label( text="Value", toolTip=valueToolTip )
+		interpolationLabel = GafferUI.Label( text="Interpolation", toolTip=interpolationToolTip )
 
 		# create editors
 		# NOTE: initial value type (e.g. int or float) determines validated value type of widget
-		self.__frameEditor = GafferUI.NumericWidget( value=int(0) )
-		self.__valueEditor = GafferUI.NumericWidget( value=float(0) )
-		self.__interpolationEditor = GafferUI.MenuButton()
+		self.__frameEditor = GafferUI.NumericWidget( value=int(0), toolTip=frameToolTip )
+		self.__valueEditor = GafferUI.NumericWidget( value=float(0), toolTip=valueToolTip )
+		self.__interpolationEditor = GafferUI.MenuButton( toolTip=interpolationToolTip )
 
 		# build key interpolation menu
 		im = IECore.MenuDefinition()
