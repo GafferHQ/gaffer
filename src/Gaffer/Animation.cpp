@@ -691,17 +691,17 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 	return key;
 }
 
-bool Animation::CurvePlug::hasKey( float time ) const
+bool Animation::CurvePlug::hasKey( const float time ) const
 {
 	return m_keys.find( time ) != m_keys.end();
 }
 
-Animation::Key *Animation::CurvePlug::getKey( float time )
+Animation::Key *Animation::CurvePlug::getKey( const float time )
 {
 	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKey( time ) );
 }
 
-const Animation::Key *Animation::CurvePlug::getKey( float time ) const
+const Animation::Key *Animation::CurvePlug::getKey( const float time ) const
 {
 	Keys::const_iterator it = m_keys.find( time );
 	return ( it != m_keys.end() )
@@ -709,7 +709,7 @@ const Animation::Key *Animation::CurvePlug::getKey( float time ) const
 		: nullptr;
 }
 
-void Animation::CurvePlug::removeKey( const KeyPtr &key )
+void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
 {
 	if( key->m_parent != this )
 	{
@@ -846,12 +846,12 @@ void Animation::CurvePlug::removeInactiveKeys()
 	}
 }
 
-Animation::Key *Animation::CurvePlug::closestKey( float time )
+Animation::Key *Animation::CurvePlug::closestKey( const float time )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->closestKey( time ) );
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->closestKey( time ) );
 }
 
-const Animation::Key *Animation::CurvePlug::closestKey( float time ) const
+const Animation::Key *Animation::CurvePlug::closestKey( const float time ) const
 {
 	if( m_keys.empty() )
 	{
@@ -870,20 +870,20 @@ const Animation::Key *Animation::CurvePlug::closestKey( float time ) const
 	else
 	{
 		Keys::const_iterator leftIt = std::prev( rightIt );
-		return &( *( fabs( time - leftIt->m_time ) < fabs( time - rightIt->m_time ) ? leftIt : rightIt ) );
+		return &( *( std::fabs( time - leftIt->m_time ) < std::fabs( time - rightIt->m_time ) ? leftIt : rightIt ) );
 	}
 }
 
-Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDistance )
+Animation::Key *Animation::CurvePlug::closestKey( const float time, const float maxDistance )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->closestKey( time, maxDistance ) );
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->closestKey( time, maxDistance ) );
 }
 
-const Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDistance ) const
+const Animation::Key *Animation::CurvePlug::closestKey( const float time, const float maxDistance ) const
 {
-	const Animation::Key *candidate = closestKey( time );
+	const Animation::Key* const candidate = closestKey( time );
 
-	if( !candidate || fabs( candidate->getTime() - time) > maxDistance )
+	if( !candidate || std::fabs( candidate->m_time - time ) > maxDistance )
 	{
 		return nullptr;
 	}
@@ -891,12 +891,12 @@ const Animation::Key *Animation::CurvePlug::closestKey( float time, float maxDis
 	return candidate;
 }
 
-Animation::Key *Animation::CurvePlug::previousKey( float time )
+Animation::Key *Animation::CurvePlug::previousKey( const float time )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->previousKey( time ) );
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->previousKey( time ) );
 }
 
-const Animation::Key *Animation::CurvePlug::previousKey( float time ) const
+const Animation::Key *Animation::CurvePlug::previousKey( const float time ) const
 {
 	Keys::const_iterator rightIt = m_keys.lower_bound( time );
 	return ( rightIt != m_keys.begin() )
@@ -904,12 +904,12 @@ const Animation::Key *Animation::CurvePlug::previousKey( float time ) const
 		: nullptr;
 }
 
-Animation::Key *Animation::CurvePlug::nextKey( float time )
+Animation::Key *Animation::CurvePlug::nextKey( const float time )
 {
-	return const_cast<Animation::Key *>( const_cast<const CurvePlug *>( this )->nextKey( time ) );
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->nextKey( time ) );
 }
 
-const Animation::Key *Animation::CurvePlug::nextKey( float time ) const
+const Animation::Key *Animation::CurvePlug::nextKey( const float time ) const
 {
 	Keys::const_iterator rightIt = m_keys.upper_bound( time );
 	return ( rightIt != m_keys.end() )
@@ -976,7 +976,7 @@ Animation::ConstKeyIterator Animation::CurvePlug::end() const
 	return m_keys.end();
 }
 
-float Animation::CurvePlug::evaluate( float time ) const
+float Animation::CurvePlug::evaluate( const float time ) const
 {
 	// NOTE : no keys return 0
 
@@ -991,7 +991,7 @@ float Animation::CurvePlug::evaluate( float time ) const
 	Keys::const_iterator hiIt = m_keys.lower_bound( time );
 	if( hiIt == m_keys.end() )
 	{
-		return (m_keys.rbegin())->getValue();
+		return ( m_keys.rbegin() )->getValue();
 	}
 
 	const Key &hi = *( hiIt );
@@ -1060,7 +1060,7 @@ const Plug *Animation::curvesPlug() const
 	return getChild<Plug>( g_firstPlugIndex );
 }
 
-bool Animation::canAnimate( const ValuePlug *plug )
+bool Animation::canAnimate( const ValuePlug* const plug )
 {
 	if( !plug->getFlags( Plug::AcceptsInputs ) )
 	{
@@ -1085,12 +1085,12 @@ bool Animation::canAnimate( const ValuePlug *plug )
 		runTimeCast<const BoolPlug>( plug );
 }
 
-bool Animation::isAnimated( const ValuePlug *plug )
+bool Animation::isAnimated( const ValuePlug* const plug )
 {
 	return inputCurve( plug );
 }
 
-Animation::CurvePlug *Animation::acquire( ValuePlug *plug )
+Animation::CurvePlug *Animation::acquire( ValuePlug* const plug )
 {
 	// If the plug is already driven by a curve, return it.
 	if( CurvePlug *curve = inputCurve( plug ) )
@@ -1149,7 +1149,7 @@ Animation::CurvePlug *Animation::acquire( ValuePlug *plug )
 	return curve.get();
 }
 
-Animation::CurvePlug *Animation::inputCurve( ValuePlug *plug )
+Animation::CurvePlug *Animation::inputCurve( ValuePlug* const plug )
 {
 	ValuePlug *source = plug->source<ValuePlug>();
 	if( source == plug ) // no input
@@ -1171,18 +1171,18 @@ Animation::CurvePlug *Animation::inputCurve( ValuePlug *plug )
 	return nullptr;
 }
 
-const Animation::CurvePlug *Animation::inputCurve( const ValuePlug *plug )
+const Animation::CurvePlug *Animation::inputCurve( const ValuePlug* const plug )
 {
 	// preferring cast over maintaining two near-identical methods.
 	return inputCurve( const_cast<ValuePlug *>( plug ) );
 }
 
-void Animation::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+void Animation::affects( const Plug* const input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 }
 
-void Animation::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
+void Animation::hash( const ValuePlug* const output, const Context* const context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h );
 
@@ -1192,7 +1192,7 @@ void Animation::hash( const ValuePlug *output, const Context *context, IECore::M
 	}
 }
 
-void Animation::compute( ValuePlug *output, const Context *context ) const
+void Animation::compute( ValuePlug* const output, const Context* const context ) const
 {
 	if( const CurvePlug *parent = output->parent<CurvePlug>() )
 	{
@@ -1203,7 +1203,7 @@ void Animation::compute( ValuePlug *output, const Context *context ) const
 	ComputeNode::compute( output, context );
 }
 
-ValuePlug::CachePolicy Animation::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+ValuePlug::CachePolicy Animation::computeCachePolicy( const Gaffer::ValuePlug* const output ) const
 {
 	if( output->parent<CurvePlug>() )
 	{
