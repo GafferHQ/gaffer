@@ -48,7 +48,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		k = Gaffer.Animation.Key()
 		self.assertEqual( k.getTime(), 0 )
 		self.assertEqual( k.getValue(), 0 )
-		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Linear )
+		self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
 		self.assertFalse( k.isActive() )
 		self.assertIsNone( k.parent() )
 
@@ -1077,9 +1077,9 @@ class AnimationTest( GafferTest.TestCase ) :
 		k2 = Gaffer.Animation.Key( time = 1, value = 2 )
 		k3 = Gaffer.Animation.Key( time = 1, value = 3 )
 
-		curve.addKey( k1, False )
-		curve.addKey( k2, False )
-		curve.addKey( k3, False )
+		curve.addKey( k1, removeActiveClashing = False )
+		curve.addKey( k2, removeActiveClashing = False )
+		curve.addKey( k3, removeActiveClashing = False )
 
 		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
 		self.assertTrue( k3.parent().isSame( curve ) )
@@ -1193,9 +1193,9 @@ class AnimationTest( GafferTest.TestCase ) :
 		k2 = Gaffer.Animation.Key( time = 1, value = 2 )
 		k3 = Gaffer.Animation.Key( time = 1, value = 3 )
 
-		curve.addKey( k1, False )
-		curve.addKey( k2, False )
-		curve.addKey( k3, False )
+		curve.addKey( k1, removeActiveClashing = False )
+		curve.addKey( k2, removeActiveClashing = False )
+		curve.addKey( k3, removeActiveClashing = False )
 
 		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
 		self.assertTrue( k3.parent().isSame( curve ) )
@@ -1281,9 +1281,9 @@ class AnimationTest( GafferTest.TestCase ) :
 			k = Gaffer.Animation.Key( time = i, value = 1 )
 			k1 = Gaffer.Animation.Key( time = i, value = 2 )
 			k2 = Gaffer.Animation.Key( time = i, value = 3 )
-			curve.addKey( k2, False )
-			curve.addKey( k1, False )
-			curve.addKey( k, False )
+			curve.addKey( k2, removeActiveClashing = False )
+			curve.addKey( k1, removeActiveClashing = False )
+			curve.addKey( k, removeActiveClashing = False )
 			self.assertTrue( k.parent().isSame( curve ) )
 			self.assertTrue( k1.parent().isSame( curve ) )
 			self.assertTrue( k2.parent().isSame( curve ) )
@@ -1481,7 +1481,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertFalse( k2.isActive() )
 
 		# then add second key back to same curve (first key becomes inactive)
-		curve.addKey( k2, False )
+		curve.addKey( k2, removeActiveClashing = False )
 
 		self.assertTrue( k1.parent().isSame( curve ) )
 		self.assertTrue( k2.parent().isSame( curve ) )
@@ -1590,7 +1590,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertFalse( k2.isActive() )
 
 		# add third key with same time outside undo system so that first key becomes inactive
-		curve.addKey( k3, False )
+		curve.addKey( k3, removeActiveClashing = False )
 
 		self.assertTrue( k1.parent().isSame( curve ) )
 		self.assertTrue( k2.parent().isSame( curve ) )
@@ -1655,7 +1655,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( k2.getTime(), 2 )
 
 		# add third key with same time outside undo system so that first key becomes inactive
-		curve.addKey( k3, False )
+		curve.addKey( k3, removeActiveClashing = False )
 
 		self.assertTrue( k1.parent().isSame( curve ) )
 		self.assertTrue( k2.parent().isSame( curve ) )
@@ -2143,10 +2143,10 @@ class AnimationTest( GafferTest.TestCase ) :
 		k2 = Gaffer.Animation.Key( time = 2 )
 		k3 = Gaffer.Animation.Key( time = 2 )
 
-		curve.addKey( k0, False )
-		curve.addKey( k1, False )
-		curve.addKey( k3, False )
-		curve.addKey( k2, False )
+		curve.addKey( k0, removeActiveClashing = False )
+		curve.addKey( k1, removeActiveClashing = False )
+		curve.addKey( k3, removeActiveClashing = False )
+		curve.addKey( k2, removeActiveClashing = False )
 
 		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
 		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
