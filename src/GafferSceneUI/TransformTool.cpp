@@ -738,7 +738,14 @@ Imath::M44f TransformTool::Selection::sceneToTransformSpace() const
 		}
 	}
 
-	return downstreamMatrix.inverse() * upstreamMatrix * transformSpace().inverse();
+	if( downstreamMatrix != upstreamMatrix )
+	{
+		return downstreamMatrix.inverse() * upstreamMatrix * transformSpace().inverse();
+	}
+	else
+	{
+		return transformSpace().inverse();
+	}
 }
 
 Imath::M44f TransformTool::Selection::transformToLocalSpace() const
