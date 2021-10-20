@@ -364,15 +364,13 @@ void CameraTool::viewportCameraChanged()
 		return;
 	}
 
-	const M44f offset = cameraTransform.inverse() * viewportCameraTransform;
 
 	// This offset is measured in the downstream world space.
-	// Transform it into the space the transform is applied in.
+	// We will need to transform it into the space the transform is applied in.
 	// This requires a "change of basis" because it is a transformation
 	// matrix.
 
 	const M44f sceneToTransformSpace = selection.sceneToTransformSpace();
-	const M44f transformSpaceOffset = sceneToTransformSpace.inverse() * offset * sceneToTransformSpace;
 
 	// Now apply this offset to the current value on the transform plug.
 
@@ -380,12 +378,14 @@ void CameraTool::viewportCameraChanged()
 	UndoScope undoScope( selection.editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, m_undoGroup );
 	auto edit = selection.acquireTransformEdit();
 
-	M44f plugTransform;
+	M44f editMatrix;
 	{
 		Context::Scope scopedContext( selection.upstreamContext() );
-		plugTransform = edit->matrix();
+		editMatrix = edit->matrix();
 	}
-	plugTransform = plugTransform * transformSpaceOffset;
+
+	M44f plugTransform = editMatrix * sceneToTransformSpace.inverse() * cameraTransform.inverse() * viewportCameraTransform * sceneToTransformSpace; 
+
 	const V3f t = plugTransform.translation();
 
 	Eulerf e; e.extract( plugTransform );
