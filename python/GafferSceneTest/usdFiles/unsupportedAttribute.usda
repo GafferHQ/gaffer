@@ -1,0 +1,6 @@
+#usda 1.0
+
+def Sphere "sphere"
+{
+	custom double4 test:double4 = ( 1, 2, 3, 4 )
+}

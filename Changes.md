@@ -105,7 +105,7 @@ Breaking Changes
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.
 
-0.60.x.x (relative to 0.60.8.0)
+0.60.9.0 (relative to 0.60.8.0)
 ========
 
 Improvements
@@ -119,6 +119,8 @@ Improvements
 Fixes
 -----
 
+- Viewer : Framing the scene while looking through a light no longer tries to frame the light itself.
+- SceneReader : Fixed bug attempting to read unsupported custom attribute types from USD files. This caused an obscure `Cannot compute hash from a CompoundObject will NULL data pointers!` error, but now prints a warning instead.
 - GafferTest.TestCase :
   - Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
   - Fixed `assertTypeNamesArePrefixed()` to work for Nodes in Python submodules.
@@ -127,6 +129,8 @@ API
 ---
 
 - GafferTest.TestCase : Added `plugsToIgnore` argument to `assertNodesConstructWithDefaultValues()`.
+- OpenGLRenderer : The `gl:queryBound` command now supports an `omitted` parameter containing a PathMatcher with paths to skip when computing the bound.
+- SceneGadget : Added new `bound( selected, omitted = nullptr )` signature, which allows certain paths to be omitted from the bound computation, with or without limiting to selection. The previous `selectionBound()` method is now deprecated.
 
 0.60.8.0 (relative to 0.60.7.1)
 ========

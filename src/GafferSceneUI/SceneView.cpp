@@ -1148,6 +1148,11 @@ class SceneView::Camera : public boost::signals::trackable
 			return m_overlay->getResolutionGate();
 		}
 
+		string lookThroughCameraPath() const
+		{
+			return lookThroughCameraPlug()->getValue();
+		}
+
 	private :
 
 		const GafferScene::ScenePlug *scenePlug() const
@@ -1346,7 +1351,7 @@ class SceneView::Camera : public boost::signals::trackable
 
 			Context::Scope scopedContext( m_view->getContext() );
 
-			string cameraPathString = lookThroughCameraPlug()->getValue();
+			string cameraPathString = lookThroughCameraPath();
 			ConstCompoundObjectPtr globals;
 			ConstPathMatcherDataPtr cameraSet;
 			M44f cameraTransform;
@@ -1822,13 +1827,20 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 
 Imath::Box3f SceneView::framingBound() const
 {
-	Imath::Box3f b = m_sceneGadget->selectionBound();
+	PathMatcher omitted;
+	std::string lookThroughPath = m_camera->lookThroughCameraPath();
+	if( lookThroughPath.size() )
+	{
+		omitted.addPath( lookThroughPath );
+	}
+
+	Imath::Box3f b = m_sceneGadget->bound( true, &omitted );
 	if( !b.isEmpty() )
 	{
 		return b;
 	}
 
-	b = m_sceneGadget->bound();
+	b = m_sceneGadget->bound( false, &omitted );
 	if( b.isEmpty() && m_grid->gadget()->getVisible() )
 	{
 		m_grid->gadget()->waitForCompletion();

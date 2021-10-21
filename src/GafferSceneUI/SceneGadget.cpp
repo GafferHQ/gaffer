@@ -429,7 +429,21 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 
 Imath::Box3f SceneGadget::selectionBound() const
 {
-	DataPtr d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( true ) } } );
+	return bound( true, nullptr );
+}
+
+Imath::Box3f SceneGadget::bound( bool selected, const PathMatcher *omitted ) const
+{
+	DataPtr d;
+	if( omitted )
+	{
+		d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( selected ) }, { "omitted", new PathMatcherData( *omitted ) } } );
+	}
+	else
+	{
+		d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( selected ) } } );
+	}
+
 	return static_cast<Box3fData *>( d.get() )->readable();
 }
 

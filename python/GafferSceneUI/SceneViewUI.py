@@ -874,9 +874,7 @@ def __fitClippingPlanes( view, toSelection = False ) :
 
 	viewportGadget = view.viewportGadget()
 	sceneGadget = viewportGadget.getPrimaryChild()
-	viewportGadget.fitClippingPlanes(
-		sceneGadget.bound() if not toSelection else sceneGadget.selectionBound()
-	)
+	viewportGadget.fitClippingPlanes( sceneGadget.bound( toSelection ) )
 
 def __appendClippingPlaneMenuItems( menuDefinition, prefix, view, parentWidget ) :
 
