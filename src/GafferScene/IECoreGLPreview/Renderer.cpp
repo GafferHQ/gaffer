@@ -40,6 +40,7 @@
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "IECoreGL/CachedConverter.h"
 #include "IECoreGL/Camera.h"
@@ -1099,16 +1100,23 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		{
 			const bool selected = parameter<bool>( parameters, "selection", false );
 
+			const PathMatcher omitted = parameter<PathMatcher>( parameters, "omitted", PathMatcher() );
+			const bool omittedEmpty = omitted.isEmpty();
+
 			processQueue();
 			removeDeletedObjects();
 
 			Box3f result;
 			for( const auto &o : m_objects )
 			{
-				if( selected && !o->selected( m_selection ) )
+				if(
+					( selected && !o->selected( m_selection ) ) ||
+					( !omittedEmpty && ( omitted.match( o->name() ) & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch ) ) )
+				)
 				{
 					continue;
 				}
+
 				result.extendBy( o->transformedBound() );
 			}
 			return new Box3fData( result );

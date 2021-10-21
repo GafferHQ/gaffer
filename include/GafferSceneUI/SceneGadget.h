@@ -48,6 +48,8 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ParallelAlgo.h"
 
+#include "IECore/PathMatcherData.h"
+
 #include "IECoreGL/State.h"
 
 namespace GafferSceneUI
@@ -162,7 +164,12 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		) const;
 
 		/// Returns the bounding box of all the selected objects.
+		/// Deprecated, prefer using `bound( true )` below
 		Imath::Box3f selectionBound() const;
+
+		/// Queries the bound with additional parameters - if `selected` is true, queries only
+		/// selected objects, and "omitted" is a PathMatcher with paths to specifically omit
+		Imath::Box3f bound( bool selected, const IECore::PathMatcher *omitted = nullptr ) const;
 
 		/// Implemented to return the name of the object under the mouse.
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;

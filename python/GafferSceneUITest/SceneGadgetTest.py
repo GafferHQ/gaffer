@@ -70,6 +70,27 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.waitForCompletion()
 		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
 
+		s["g"]["transform"]["translate"].setValue( imath.V3f( 0 ) )
+		s["s"] = GafferScene.Sphere()
+		s["g"]["in"][1].setInput( s["s"]["out"] )
+		s["p"]["transform"]["translate"]["z"].setValue( 10 )
+		sg.waitForCompletion()
+		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
+		# Nothing selected, so selected bound is empty
+		self.assertEqual( sg.bound( True ), imath.Box3f() )
+
+		sg.setExpandedPaths( IECore.PathMatcher( ["/group/"] ) )
+		sg.setSelection( IECore.PathMatcher( ["/group/plane"] ) )
+		sg.waitForCompletion()
+
+		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
+		# Only plane is selected
+		self.assertEqual( sg.bound( True ), s["p"]["out"].bound( "/" ) )
+		# Omitting plane takes just sphere
+		self.assertEqual( sg.bound( False, IECore.PathMatcher( ["/group/plane"]) ), s["s"]["out"].bound( "/" ) )
+		# Omitting only selected object while using selected=True leaves empty bound
+		self.assertEqual( sg.bound( True, IECore.PathMatcher( ["/group/plane"]) ), imath.Box3f() )
+
 	def assertObjectAt( self, gadget, ndcPosition, path ) :
 
 		viewportGadget = gadget.ancestor( GafferUI.ViewportGadget )
