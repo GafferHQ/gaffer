@@ -578,5 +578,23 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 				setHash
 			)
 
+	def testNullAttributes( self ) :
+
+		s = GafferScene.SceneReader()
+		s["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/usdFiles/unsupportedAttribute.usda" )
+
+		# At the time of writing, `IECoreUSD` advertises custom attributes via
+		# `USDScene::attributeNames()` even if it can't load them, and then it
+		# returns `nullptr` from `USDScene::readAttribute()`. Make sure we are
+		# robust to this.
+
+		with IECore.CapturingMessageHandler() as mh :
+			attributes = s["out"].attributes( "/sphere" )
+
+		self.assertEqual( len( attributes ), 0 )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( mh.messages[0].message, 'Failed to load attribute "test:double4" at location "/sphere"' )
+
 if __name__ == "__main__":
 	unittest.main()

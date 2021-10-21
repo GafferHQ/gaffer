@@ -309,9 +309,21 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 			continue;
 		}
 
-		// the const cast is ok, because we're only using it to put the object into a CompoundObject that will
-		// be treated as forever const after being returned from this function.
-		result->members()[ std::string( *it ) ] = boost::const_pointer_cast<Object>( s->readAttribute( *it, context->getTime() ) );
+		ConstObjectPtr attribute = s->readAttribute( *it, context->getTime() );
+		if( attribute )
+		{
+			// The const cast is ok, because we're only using it to put the object into a CompoundObject that will
+			// be treated as forever const after being returned from this function.
+			result->members()[ std::string( *it ) ] = boost::const_pointer_cast<Object>( attribute );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "SceneReader::computeAttributes",
+				boost::format( "Failed to load attribute \"%1%\" at location \"%2%\"" )
+					% *it % ScenePlug::pathToString( path )
+			);
+		}
 	}
 
 	return result;
