@@ -169,12 +169,12 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyValueChangedSignal();
 				CurvePlugKeySignal& keyInterpolationChangedSignal();
 
-				/// Adds specified key to curve, if key is parented to another curve it is removed
-				/// from the other curve. If the key has already been added to the curve, there is
-				/// no affect. If the curve already has an active key with the same time, then if
-				/// removeActiveClashing is true that key will be removed from the curve and returned
-				/// otherwise that key will remain parented to the curve, become inactive and be returned.
-				/// The new key will be the active key at its time.
+				/// Adds specified key to curve, if key is parented to another curve or already parented
+				/// to the curve and inactive it is removed from its parent curve. If the key has already
+				/// been added to the curve and is active, there is no effect. If the curve already has an
+				/// active key with the same time, then if removeActiveClashing is true that key will be
+				/// removed from the curve and returned otherwise that key will remain parented to the
+				/// curve, become inactive and be returned. The key will be the active key at its time.
 				/// \undoable
 				KeyPtr addKey( const KeyPtr &key, bool removeActiveClashing = true );
 
