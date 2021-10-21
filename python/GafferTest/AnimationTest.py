@@ -263,6 +263,122 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.parent().isSame( curve ) )
 		self.assertFalse( k1.isActive() )
 
+	def testAddInactiveKey( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		k1 = Gaffer.Animation.Key( time = 1, value = 1 )
+		k2 = Gaffer.Animation.Key( time = 1, value = 2 )
+
+		curve.addKey( k1 )
+		curve.addKey( k2, removeActiveClashing = False )
+
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertIsNotNone( k2.parent() )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertFalse( k1.isActive() )
+		self.assertTrue( k2.isActive() )
+
+		# add key (which is already parented but inactive) should promote to active
+		with Gaffer.UndoScope( s ) :
+			ck = curve.addKey( k1 )
+		self.assertTrue( k2.isSame( ck ) )
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertIsNone( k2.parent() )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertTrue( k1.isActive() )
+		self.assertFalse( k2.isActive() )
+		self.assertTrue( s.undoAvailable() )
+
+		s.undo()
+
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertIsNotNone( k2.parent() )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertFalse( k1.isActive() )
+		self.assertTrue( k2.isActive() )
+
+		s.redo()
+
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertIsNone( k2.parent() )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertTrue( k1.isActive() )
+		self.assertFalse( k2.isActive() )
+		self.assertTrue( s.undoAvailable() )
+
+	def testAddInactiveKeyRemoveActiveClashingFalse( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		k1 = Gaffer.Animation.Key( time = 1, value = 1 )
+		k2 = Gaffer.Animation.Key( time = 1, value = 2 )
+
+		curve.addKey( k1 )
+		curve.addKey( k2, removeActiveClashing = False )
+
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertIsNotNone( k2.parent() )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertFalse( k1.isActive() )
+		self.assertTrue( k2.isActive() )
+
+		# add key (which is already parented but inactive) should promote to active
+		with Gaffer.UndoScope( s ) :
+			ck = curve.addKey( k1, removeActiveClashing = False )
+		self.assertTrue( k2.isSame( ck ) )
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertIsNotNone( k2.parent() )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertTrue( k1.isActive() )
+		self.assertFalse( k2.isActive() )
+		self.assertTrue( s.undoAvailable() )
+
+		s.undo()
+
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+		self.assertIsNotNone( k2.parent() )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertFalse( k1.isActive() )
+		self.assertTrue( k2.isActive() )
+
+		s.redo()
+
+		self.assertTrue( curve.hasKey( 1 ) )
+		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+		self.assertIsNotNone( k2.parent() )
+		self.assertTrue( k2.parent().isSame( curve ) )
+		self.assertIsNotNone( k1.parent() )
+		self.assertTrue( k1.parent().isSame( curve ) )
+		self.assertTrue( k1.isActive() )
+		self.assertFalse( k2.isActive() )
+		self.assertTrue( s.undoAvailable() )
+
 	def testAddKeySignals( self ) :
 
 		ps = set()

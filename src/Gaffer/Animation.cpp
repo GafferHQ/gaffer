@@ -291,6 +291,8 @@ void Animation::Key::setValue( const float value )
 		return;
 	}
 
+	// NOTE : inactive keys remain parented and participate in undo/redo and signalling
+
 	if( m_parent )
 	{
 		KeyPtr key = this;
@@ -328,6 +330,8 @@ void Animation::Key::setInterpolation( const Animation::Interpolation interpolat
 	{
 		return;
 	}
+
+	// NOTE : inactive keys remain parented and participate in undo/redo and signalling
 
 	if( m_parent )
 	{
