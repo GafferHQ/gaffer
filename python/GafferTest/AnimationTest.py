@@ -167,24 +167,26 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve.addKey( k1 )
 
+		def assertPreconditions() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertTrue( k2.parent() is None )
+			self.assertTrue( k1.parent().isSame( curve ) )
+
+		def assertPostconditions() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k1.parent() is None )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			curve.addKey( k2 )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.parent() is None )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertTrue( k2.parent() is None )
-		self.assertTrue( k1.parent().isSame( curve ) )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.parent() is None )
+		assertPostconditions()
 
 	def testAddKeyWithExistingKeyRemove( self ) :
 
@@ -199,69 +201,55 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve.addKey( k1, removeActiveClashing = False )
 
+		def assertConditionsA() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertIsNone( k3.parent() )
+			self.assertFalse( k3.isActive() )
+			self.assertIsNone( k2.parent() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+
+		def assertConditionsB() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertIsNone( k3.parent() )
+			self.assertFalse( k3.isActive() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+
+		def assertConditionsC() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertTrue( k3.isActive() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+
+		assertConditionsA()
 		with Gaffer.UndoScope( s ) :
 			ck = curve.addKey( k2, removeActiveClashing = False )
 			self.assertTrue( k1.isSame( ck ) )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		with Gaffer.UndoScope( s ) :
 			ck = curve.addKey( k3, removeActiveClashing = False )
 			self.assertTrue( k2.isSame( ck ) )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsC()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
+		assertConditionsA()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsC()
 
 	def testAddInactiveKey( self ) :
 
@@ -276,49 +264,38 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( k1 )
 		curve.addKey( k2, removeActiveClashing = False )
 
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNotNone( k2.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		def assertPreconditions() :
+			self.assertTrue( curve.hasKey( 1 ) )
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertIsNotNone( k2.parent() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertIsNotNone( k1.parent() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
+		def assertPostconditions() :
+			self.assertTrue( curve.hasKey( 1 ) )
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertIsNone( k2.parent() )
+			self.assertIsNotNone( k1.parent() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( s.undoAvailable() )
 
 		# add key (which is already parented but inactive) should promote to active
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ck = curve.addKey( k1 )
-		self.assertTrue( k2.isSame( ck ) )
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k2.parent() )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( s.undoAvailable() )
+			self.assertTrue( k2.isSame( ck ) )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNotNone( k2.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k2.parent() )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( s.undoAvailable() )
+		assertPostconditions()
 
 	def testAddInactiveKeyRemoveActiveClashingFalse( self ) :
 
@@ -333,62 +310,48 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( k1 )
 		curve.addKey( k2, removeActiveClashing = False )
 
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNotNone( k2.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		def assertPreconditions() :
+			self.assertTrue( curve.hasKey( 1 ) )
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertIsNotNone( k2.parent() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertIsNotNone( k1.parent() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
+		def assertPostconditions() :
+			self.assertTrue( curve.hasKey( 1 ) )
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertIsNotNone( k2.parent() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertIsNotNone( k1.parent() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( s.undoAvailable() )
 
 		# add key (which is already parented but inactive) should promote to active
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ck = curve.addKey( k1, removeActiveClashing = False )
-		self.assertTrue( k2.isSame( ck ) )
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNotNone( k2.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( s.undoAvailable() )
+			self.assertTrue( k2.isSame( ck ) )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNotNone( k2.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertTrue( curve.hasKey( 1 ) )
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNotNone( k2.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertIsNotNone( k1.parent() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( s.undoAvailable() )
+		assertPostconditions()
 
 	def testAddKeySignals( self ) :
 
 		ps = set()
 
 		def added( curve, key ) :
-
 			ps.add( key )
 
 		def removed( curve, key ) :
-
 			ps.remove( key )
 
 		s = Gaffer.ScriptNode()
@@ -403,29 +366,31 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		k = Gaffer.Animation.Key( 0, 0 )
 
+		def assertPreconditions() :
+			self.assertNotIn( k, ps )
+
+		def assertPostconditions() :
+			self.assertIn( k, ps )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			curve.addKey( k )
-
-		self.assertIn( k, ps )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertNotIn( k, ps )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertIn( k, ps )
+		assertPostconditions()
 
 	def testRemoveKeySignals( self ) :
 
 		ps = set()
 
 		def added( curve, key ) :
-
 			ps.add( key )
 
 		def removed( curve, key ) :
-
 			ps.remove( key )
 
 		s = Gaffer.ScriptNode()
@@ -442,20 +407,22 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve.addKey( k )
 
-		self.assertIn( k, ps )
+		def assertPreconditions() :
+			self.assertIn( k, ps )
 
+		def assertPostconditions() :
+			self.assertNotIn( k, ps )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			curve.removeKey( k )
-
-		self.assertNotIn( k, ps )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertIn( k, ps )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertNotIn( k, ps )
+		assertPostconditions()
 
 	def testInsertKeyFirstNoValue( self ) :
 
@@ -519,32 +486,30 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		time = 10
 		value = 5
-		self.assertFalse( curve.hasKey( time ) )
 
+		def assertPreconditions() :
+			self.assertFalse( curve.hasKey( time ) )
+
+		def assertPostconditions() :
+			self.assertEqual( k.getTime(), time )
+			self.assertEqual( k.getValue(), value )
+			self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
+			self.assertIsNotNone( k.parent() )
+			self.assertTrue( k.parent().isSame( curve ) )
+			self.assertTrue( curve.hasKey( time ) )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			k = curve.insertKey( time, value )
-
-		self.assertIsNotNone( k )
-		self.assertEqual( k.getTime(), time )
-		self.assertEqual( k.getValue(), value )
-		self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
-		self.assertIsNotNone( k.parent() )
-		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+			self.assertIsNotNone( k )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertFalse( curve.hasKey( time ) )
+		assertPreconditions()
 		self.assertIsNone( k.parent() )
 
 		s.redo()
-
-		self.assertEqual( k.getTime(), time )
-		self.assertEqual( k.getValue(), value )
-		self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
-		self.assertIsNotNone( k.parent() )
-		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+		assertPostconditions()
 
 	def testInsertKeyBeforeFirstValue( self ) :
 
@@ -561,32 +526,30 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		time = 5
 		value = 2
-		self.assertFalse( curve.hasKey( time ) )
 
+		def assertPreconditions() :
+			self.assertFalse( curve.hasKey( time ) )
+
+		def assertPostconditions() :
+			self.assertEqual( ki.getTime(), time )
+			self.assertEqual( ki.getValue(), value )
+			self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
+			self.assertIsNotNone( ki.parent() )
+			self.assertTrue( ki.parent().isSame( curve ) )
+			self.assertTrue( curve.hasKey( time ) )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ki = curve.insertKey( time, value )
-
-		self.assertIsNotNone( ki )
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), value )
-		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+			self.assertIsNotNone( ki )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertFalse( curve.hasKey( time ) )
+		assertPreconditions()
 		self.assertIsNone( ki.parent() )
 
 		s.redo()
-
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), value )
-		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+		assertPostconditions()
 
 	def testInsertKeyAfterFinalValue( self ) :
 
@@ -605,32 +568,30 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		time = 15
 		value = 2
-		self.assertFalse( curve.hasKey( time ) )
 
+		def assertPreconditions() :
+			self.assertFalse( curve.hasKey( time ) )
+
+		def assertPostconditions() :
+			self.assertEqual( ki.getTime(), time )
+			self.assertEqual( ki.getValue(), value )
+			self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
+			self.assertIsNotNone( ki.parent() )
+			self.assertTrue( ki.parent().isSame( curve ) )
+			self.assertTrue( curve.hasKey( time ) )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ki = curve.insertKey( time, value )
-
-		self.assertIsNotNone( ki )
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), value )
-		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+			self.assertIsNotNone( ki )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertFalse( curve.hasKey( time ) )
+		assertPreconditions()
 		self.assertIsNone( ki.parent() )
 
 		s.redo()
-
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), value )
-		self.assertEqual( ki.getInterpolation(), k.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+		assertPostconditions()
 
 	def testInsertKeyExistingNoValue( self ) :
 
@@ -716,43 +677,37 @@ class AnimationTest( GafferTest.TestCase ) :
 		k = Gaffer.Animation.Key( time, value, interpolation )
 		curve.addKey( k )
 
-		self.assertTrue( curve.hasKey( time ) )
-		self.assertTrue( curve.getKey( time ).isSame( k ) )
+		def assertPreconditions() :
+			self.assertTrue( curve.hasKey( time ) )
+			self.assertTrue( curve.getKey( time ).isSame( k ) )
+			self.assertEqual( k.getValue(), value )
+			self.assertEqual( k.getTime(), time )
+			self.assertEqual( k.getInterpolation(), interpolation )
+			self.assertIsNotNone( k.parent() )
+			self.assertTrue( k.parent().isSame( curve ) )
 
+		def assertPostconditions() :
+			self.assertEqual( k.getValue(), newValue )
+			self.assertEqual( k.getTime(), time )
+			self.assertEqual( k.getInterpolation(), interpolation )
+			self.assertIsNotNone( k.parent() )
+			self.assertTrue( k.parent().isSame( curve ) )
+			self.assertTrue( curve.hasKey( time ) )
+			self.assertTrue( curve.getKey( time ).isSame( k ) )
+			self.assertTrue( s.undoAvailable() )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ki = curve.insertKey( time, newValue )
-
-		self.assertIsNotNone( ki )
-		self.assertTrue( k.isSame( ki ) )
-
-		self.assertEqual( k.getValue(), newValue )
-		self.assertEqual( k.getTime(), time )
-		self.assertEqual( k.getInterpolation(), interpolation )
-		self.assertIsNotNone( k.parent() )
-		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
-		self.assertTrue( curve.getKey( time ).isSame( k ) )
-		self.assertTrue( s.undoAvailable() )
+			self.assertIsNotNone( ki )
+			self.assertTrue( k.isSame( ki ) )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertEqual( k.getValue(), value )
-		self.assertEqual( k.getTime(), time )
-		self.assertEqual( k.getInterpolation(), interpolation )
-		self.assertIsNotNone( k.parent() )
-		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
-		self.assertTrue( curve.getKey( time ).isSame( k ) )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertEqual( k.getValue(), newValue )
-		self.assertEqual( k.getTime(), time )
-		self.assertEqual( k.getInterpolation(), interpolation )
-		self.assertIsNotNone( k.parent() )
-		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
-		self.assertTrue( curve.getKey( time ).isSame( k ) )
+		assertPostconditions()
 
 	def testInsertKeyIntoSpanNoValue( self ) :
 
@@ -769,32 +724,30 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( kh )
 
 		time = 15
-		self.assertFalse( curve.hasKey( time ) )
 
+		def assertPreconditions() :
+			self.assertFalse( curve.hasKey( time ) )
+
+		def assertPostconditions() :
+			self.assertEqual( ki.getTime(), time )
+			self.assertEqual( ki.getValue(), kl.getValue() )
+			self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
+			self.assertIsNotNone( ki.parent() )
+			self.assertTrue( ki.parent().isSame( curve ) )
+			self.assertTrue( curve.hasKey( time ) )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ki = curve.insertKey( time )
-
-		self.assertIsNotNone( ki )
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), kl.getValue() )
-		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+			self.assertIsNotNone( ki )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertFalse( curve.hasKey( time ) )
+		assertPreconditions()
 		self.assertIsNone( ki.parent() )
 
 		s.redo()
-
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), kl.getValue() )
-		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+		assertPostconditions()
 
 	def testInsertKeyIntoSpanValue( self ) :
 
@@ -812,32 +765,30 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		time = 15
 		value = 12
-		self.assertFalse( curve.hasKey( time ) )
 
+		def assertPreconditions() :
+			self.assertFalse( curve.hasKey( time ) )
+
+		def assertPostconditions() :
+			self.assertEqual( ki.getTime(), time )
+			self.assertEqual( ki.getValue(), value )
+			self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
+			self.assertIsNotNone( ki.parent() )
+			self.assertTrue( ki.parent().isSame( curve ) )
+			self.assertTrue( curve.hasKey( time ) )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ki = curve.insertKey( time, value )
-
-		self.assertIsNotNone( ki )
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), value )
-		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+			self.assertIsNotNone( ki )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertFalse( curve.hasKey( time ) )
+		assertPreconditions()
 		self.assertIsNone( ki.parent() )
 
 		s.redo()
-
-		self.assertEqual( ki.getTime(), time )
-		self.assertEqual( ki.getValue(), value )
-		self.assertEqual( ki.getInterpolation(), kl.getInterpolation() )
-		self.assertIsNotNone( ki.parent() )
-		self.assertTrue( ki.parent().isSame( curve ) )
-		self.assertTrue( curve.hasKey( time ) )
+		assertPostconditions()
 
 	def testKeySetValue( self ) :
 
@@ -884,7 +835,6 @@ class AnimationTest( GafferTest.TestCase ) :
 		ps = set()
 
 		def changed( curve, key ) :
-
 			ps.add( key )
 
 		s = Gaffer.ScriptNode()
@@ -906,19 +856,20 @@ class AnimationTest( GafferTest.TestCase ) :
 		k = Gaffer.Animation.Key( 1, value )
 		curve.addKey( k )
 
+		def assertPostconditions() :
+			self.assertEqual( k.getValue(), newValue )
+			self.assertTrue( s.undoAvailable() )
+			self.assertIn( k, ps )
+			self.assertNotIn( k0, ps )
+			self.assertNotIn( k1, ps )
+
 		newValue = 4
 		with Gaffer.UndoScope( s ) :
 			k.setValue( newValue )
-
-		self.assertEqual( k.getValue(), newValue )
-		self.assertTrue( s.undoAvailable() )
-		self.assertIn( k, ps )
-		self.assertNotIn( k0, ps )
-		self.assertNotIn( k1, ps )
+		assertPostconditions()
 		ps.clear()
 
 		s.undo()
-
 		self.assertEqual( k.getValue(), value )
 		self.assertTrue( s.redoAvailable() )
 		self.assertIn( k, ps )
@@ -927,11 +878,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		ps.clear()
 
 		s.redo()
-
-		self.assertEqual( k.getValue(), newValue )
-		self.assertIn( k, ps )
-		self.assertNotIn( k0, ps )
-		self.assertNotIn( k1, ps )
+		assertPostconditions()
 
 	def testKeySetInterpolation( self ) :
 
@@ -1000,6 +947,13 @@ class AnimationTest( GafferTest.TestCase ) :
 		k = Gaffer.Animation.Key( 10, 5, interpolation )
 		curve.addKey( k )
 
+		def assertPostconditions() :
+			self.assertEqual( k.getInterpolation(), newInterpolation )
+			self.assertTrue( s.undoAvailable() )
+			self.assertIn( k, ps )
+			self.assertNotIn( k0, ps )
+			self.assertNotIn( k1, ps )
+
 		self.assertTrue( k.isActive() )
 		self.assertIsNotNone( k.parent() )
 		self.assertTrue( k.parent().isSame( curve ) )
@@ -1008,16 +962,10 @@ class AnimationTest( GafferTest.TestCase ) :
 		newInterpolation = Gaffer.Animation.Interpolation.Linear
 		with Gaffer.UndoScope( s ) :
 			k.setInterpolation( newInterpolation )
-
-		self.assertEqual( k.getInterpolation(), newInterpolation )
-		self.assertTrue( s.undoAvailable() )
-		self.assertIn( k, ps )
-		self.assertNotIn( k0, ps )
-		self.assertNotIn( k1, ps )
+		assertPostconditions()
 		ps.clear()
 
 		s.undo()
-
 		self.assertEqual( k.getInterpolation(), interpolation )
 		self.assertTrue( s.redoAvailable() )
 		self.assertIn( k, ps )
@@ -1026,11 +974,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		ps.clear()
 
 		s.redo()
-
-		self.assertEqual( k.getInterpolation(), newInterpolation )
-		self.assertIn( k, ps )
-		self.assertNotIn( k0, ps )
-		self.assertNotIn( k1, ps )
+		assertPostconditions()
 
 	def testKeySetTime( self ) :
 
@@ -1104,19 +1048,20 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k.parent().isSame( curve ) )
 		self.assertEqual( k.getTime(), time )
 
+		def assertPostconditions() :
+			self.assertEqual( k.getTime(), newTime )
+			self.assertTrue( s.undoAvailable() )
+			self.assertIn( k, ps )
+			self.assertNotIn( k0, ps )
+			self.assertNotIn( k1, ps )
+
 		newTime = 12
 		with Gaffer.UndoScope( s ) :
 			k.setTime( newTime )
-
-		self.assertEqual( k.getTime(), newTime )
-		self.assertTrue( s.undoAvailable() )
-		self.assertIn( k, ps )
-		self.assertNotIn( k0, ps )
-		self.assertNotIn( k1, ps )
+		assertPostconditions()
 		ps.clear()
 
 		s.undo()
-
 		self.assertEqual( k.getTime(), time )
 		self.assertTrue( s.redoAvailable() )
 		self.assertIn( k, ps )
@@ -1125,11 +1070,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		ps.clear()
 
 		s.redo()
-
-		self.assertEqual( k.getTime(), newTime )
-		self.assertIn( k, ps )
-		self.assertNotIn( k0, ps )
-		self.assertNotIn( k1, ps )
+		assertPostconditions()
 
 	def testClosestKey( self ) :
 
@@ -1197,106 +1138,72 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( k2, removeActiveClashing = False )
 		curve.addKey( k3, removeActiveClashing = False )
 
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		def assertConditionsA() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertTrue( k3.isActive() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
 
+		def assertConditionsB() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertIsNone( k3.parent() )
+			self.assertFalse( k3.isActive() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+
+		def assertConditionsC() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertIsNone( k3.parent() )
+			self.assertFalse( k3.isActive() )
+			self.assertIsNone( k2.parent() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+
+		def assertConditionsD() :
+			self.assertIsNone( curve.getKey( 1 ) )
+			self.assertIsNone( k3.parent() )
+			self.assertFalse( k3.isActive() )
+			self.assertIsNone( k2.parent() )
+			self.assertFalse( k2.isActive() )
+			self.assertIsNone( k1.parent() )
+			self.assertFalse( k1.isActive() )
+
+		assertConditionsA()
 		with Gaffer.UndoScope( s ) :
 			curve.removeKey( k3 )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		with Gaffer.UndoScope( s ) :
 			curve.removeKey( k2 )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
+		assertConditionsC()
 
 		with Gaffer.UndoScope( s ) :
 			curve.removeKey( k1 )
-
-		self.assertIsNone( curve.getKey( 1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertIsNone( k1.parent() )
-		self.assertFalse( k1.isActive() )
+		assertConditionsD()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
+		assertConditionsC()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsA()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
+		assertConditionsC()
 
 		s.redo()
-
-		self.assertIsNone( curve.getKey( 1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertIsNone( k1.parent() )
-		self.assertFalse( k1.isActive() )
+		assertConditionsD()
 
 	def testRemoveInactiveKey( self ) :
 
@@ -1313,75 +1220,53 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( k2, removeActiveClashing = False )
 		curve.addKey( k3, removeActiveClashing = False )
 
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		def assertConditionsA() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertTrue( k3.isActive() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
 
+		def assertConditionsB() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertTrue( k3.isActive() )
+			self.assertIsNone( k2.parent() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+
+		def assertConditionsC() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertIsNone( k3.parent() )
+			self.assertFalse( k3.isActive() )
+			self.assertIsNone( k2.parent() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+
+		assertConditionsA()
 		with Gaffer.UndoScope( s ) :
 			curve.removeKey( k2 )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		with Gaffer.UndoScope( s ) :
 			curve.removeKey( k3 )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
+		assertConditionsC()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsA()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k3 ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
+		assertConditionsB()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertIsNone( k3.parent() )
-		self.assertFalse( k3.isActive() )
-		self.assertIsNone( k2.parent() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
+		assertConditionsC()
 
 	def testRemoveInactiveKeys( self ) :
 
@@ -1454,57 +1339,47 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( k1 )
 		curve.addKey( k2 )
 
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		def assertConditionsA() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
+		def assertConditionsB() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+			self.assertFalse( k2.isActive() )
+
+		def assertConditionsC() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertIsNone( k2.parent() )
+			self.assertTrue( k1.isActive() )
+			self.assertFalse( k2.isActive() )
 
 		# set time of first key so that second key becomes inactive
+		assertConditionsA()
 		with Gaffer.UndoScope( s ) :
 			ck = k1.setTime( 2 )
 			self.assertTrue( k2.isSame( ck ) )
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertConditionsB()
 
 		# remove inactive keys
 		with Gaffer.UndoScope( s ) :
 			curve.removeInactiveKeys()
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertIsNone( k2.parent() )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertConditionsC()
 
 		s.undo()
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertConditionsB()
 
 		s.undo()
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertConditionsA()
 
 		s.redo()
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertConditionsB()
 
 		s.redo()
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertIsNone( k2.parent() )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertConditionsC()
 
 	def testRemoveInactiveKeysOutsideUndoAfterSetTime( self ) :
 
@@ -1534,31 +1409,23 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.isActive() )
 		self.assertFalse( k2.isActive() )
 
+		def assertPostConditions() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertIsNone( k2.parent() )
+			self.assertTrue( k1.isActive() )
+			self.assertFalse( k2.isActive() )
+
 		# remove inactive keys outside undo system
 		curve.removeInactiveKeys()
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertIsNone( k2.parent() )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown on undo as removeKey was not captured
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertIsNone( k2.parent() )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown if we try to undo again
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is still consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertIsNone( k2.parent() )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
+		assertPostConditions()
 
 	def testRemoveInactiveKeysThenAddOutsideUndoAfterSetTime( self ) :
 
@@ -1596,31 +1463,23 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.isActive() )
 		self.assertFalse( k2.isActive() )
 
+		def assertPostConditions() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
 		# then add second key back to same curve (first key becomes inactive)
 		curve.addKey( k2, removeActiveClashing = False )
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown on undo as removeKey was not captured
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown if we try to undo again
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is still consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostConditions()
 
 	def testRemoveKeyOutsideUndoAfterSetTime( self ) :
 
@@ -1650,31 +1509,23 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.isActive() )
 		self.assertFalse( k2.isActive() )
 
+		def assertPostConditions() :
+			self.assertIsNone( k1.parent() )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
 		# remove active key outside undo system second key becomes active
 		curve.removeKey( k1 )
-
-		self.assertIsNone( k1.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown on undo as removeKey was not captured
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is consistent with state before we tried to undo
-		self.assertIsNone( k1.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown if we try to undo again
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is still consistent with state before we tried to undo
-		self.assertIsNone( k1.parent() )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostConditions()
 
 	def testAddKeyOutsideUndoAfterSetTime( self ) :
 
@@ -1705,37 +1556,25 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k1.isActive() )
 		self.assertFalse( k2.isActive() )
 
+		def assertPostConditions() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k3.isActive() )
+
 		# add third key with same time outside undo system so that first key becomes inactive
 		curve.addKey( k3, removeActiveClashing = False )
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k3.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown on undo as addKey was not captured
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k3.isActive() )
+		assertPostConditions()
 
 		# check that exception is thrown if we try to undo again
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is still consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k3.isActive() )
+		assertPostConditions()
 
 	def testSetTimeOutsideUndoAfterSetTime( self ) :
 
@@ -1783,46 +1622,28 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( k2.getTime(), 2 )
 		self.assertEqual( k3.getTime(), 2 )
 
+		def assertPostConditions() :
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+			self.assertFalse( k2.isActive() )
+			self.assertTrue( k3.isActive() )
+			self.assertEqual( k1.getTime(), 0 )
+			self.assertEqual( k2.getTime(), 2 )
+			self.assertEqual( k3.getTime(), 2 )
+
 		# then set time of first key outside undo system so that it is active but at a different time
 		k1.setTime( 0 )
-
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k3.isActive() )
-		self.assertEqual( k1.getTime(), 0 )
-		self.assertEqual( k2.getTime(), 2 )
-		self.assertEqual( k3.getTime(), 2 )
+		assertPostConditions()
 
 		# check that exception is thrown on undo as setTime was not captured
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k3.isActive() )
-		self.assertEqual( k1.getTime(), 0 )
-		self.assertEqual( k2.getTime(), 2 )
-		self.assertEqual( k3.getTime(), 2 )
+		assertPostConditions()
 
 		# check that exception is thrown if we try to undo again
 		self.assertRaises( IECore.Exception, lambda : s.undo() )
-
-		# check state is still consistent with state before we tried to undo
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertFalse( k2.isActive() )
-		self.assertTrue( k3.isActive() )
-		self.assertEqual( k1.getTime(), 0 )
-		self.assertEqual( k2.getTime(), 2 )
-		self.assertEqual( k3.getTime(), 2 )
+		assertPostConditions()
 
 	def testSingleKey( self ) :
 
@@ -2212,41 +2033,34 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve.addKey( k1 )
 		curve.addKey( k2 )
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertTrue( k2.isActive() )
 
+		def assertPreconditions() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
+		def assertPostconditions() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertTrue( curve.getKey( 2 ) is None )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertFalse( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ck = k2.setTime( 1 )
 			self.assertTrue( k1.isSame( ck ) )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertTrue( curve.getKey( 2 ) is None )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertTrue( curve.getKey( 2 ) is None )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
+		assertPostconditions()
 
 	def testModifyKeyReplacesExistingKeyWithInactiveKeys( self ) :
 
@@ -2264,57 +2078,41 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( k3, removeActiveClashing = False )
 		curve.addKey( k2, removeActiveClashing = False )
 
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
-		self.assertTrue( k0.parent().isSame( curve ) )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k0.isActive() )
-		self.assertTrue( k1.isActive() )
-		self.assertTrue( k2.isActive() )
-		self.assertFalse( k3.isActive() )
+		def assertPreconditions() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
+			self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
+			self.assertTrue( k0.parent().isSame( curve ) )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertFalse( k0.isActive() )
+			self.assertTrue( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+			self.assertFalse( k3.isActive() )
 
+		def assertPostconditions() :
+			self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
+			self.assertTrue( curve.getKey( 2 ).isSame( k3 ) )
+			self.assertTrue( k0.parent().isSame( curve ) )
+			self.assertTrue( k1.parent().isSame( curve ) )
+			self.assertTrue( k2.parent().isSame( curve ) )
+			self.assertTrue( k3.parent().isSame( curve ) )
+			self.assertFalse( k0.isActive() )
+			self.assertFalse( k1.isActive() )
+			self.assertTrue( k2.isActive() )
+			self.assertTrue( k3.isActive() )
+
+		assertPreconditions()
 		with Gaffer.UndoScope( s ) :
 			ck = k2.setTime( 1 )
 			self.assertTrue( k1.isSame( ck ) )
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertTrue( curve.getKey( 2 ).isSame( k3 ) )
-		self.assertTrue( k0.parent().isSame( curve ) )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k0.isActive() )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k3.isActive() )
+		assertPostconditions()
 
 		s.undo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k1 ) )
-		self.assertTrue( curve.getKey( 2 ).isSame( k2 ) )
-		self.assertTrue( k0.parent().isSame( curve ) )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k0.isActive() )
-		self.assertTrue( k1.isActive() )
-		self.assertTrue( k2.isActive() )
-		self.assertFalse( k3.isActive() )
+		assertPreconditions()
 
 		s.redo()
-
-		self.assertTrue( curve.getKey( 1 ).isSame( k2 ) )
-		self.assertTrue( curve.getKey( 2 ).isSame( k3 ) )
-		self.assertTrue( k0.parent().isSame( curve ) )
-		self.assertTrue( k1.parent().isSame( curve ) )
-		self.assertTrue( k2.parent().isSame( curve ) )
-		self.assertTrue( k3.parent().isSame( curve ) )
-		self.assertFalse( k0.isActive() )
-		self.assertFalse( k1.isActive() )
-		self.assertTrue( k2.isActive() )
-		self.assertTrue( k3.isActive() )
+		assertPostconditions()
 
 	def testSerialisationRoundTripsExactly( self ) :
 
