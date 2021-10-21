@@ -1,12 +1,10 @@
-0.60.x.x (relative to 0.60.8.0)
+0.60.9.0 (relative to 0.60.8.0)
 ========
 
 Improvements
 ------------
 
-- Viewer 
-  - Added settings to control aperture and clipping planes when looking through lights. This can be customised on a per-light basis using the new visualiser settings on the Light node.
-  - The framing the scene while looking through a light now does not try to frame the light you are looking through.
+- Viewer : Added settings to control aperture and clipping planes when looking through lights. This can be customised on a per-light basis using the new visualiser settings on the Light node.
 - Light : Added visualiser settings to control aperture and clipping planes when looking through the light in the Viewer. These settings override the defaults specified in the Viewer itself.
 - LightToCamera : Added `distantAperture` and `clippingPlanes` plugs.
 - Arnold Render : Changed warnings for invalid mesh lights to be one descriptive warning per light, instead of repeating an unclear warning for every surface that links to the light.
@@ -14,6 +12,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Framing the scene while looking through a light no longer tries to frame the light itself.
 - SceneReader : Fixed bug attempting to read unsupported custom attribute types from USD files. This caused an obscure `Cannot compute hash from a CompoundObject will NULL data pointers!` error, but now prints a warning instead.
 - GafferTest.TestCase :
   - Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
@@ -23,8 +22,8 @@ API
 ---
 
 - GafferTest.TestCase : Added `plugsToIgnore` argument to `assertNodesConstructWithDefaultValues()`.
-- OpenGLRenderer : gl:queryBound command now supports "omitted" paramter containing a PathMatcher with paths to skip when computing the bound
-- SceneGadget : Added new `bound( selected, omitted = nullptr )` signature, which allows omitting certain paths from the bound computation, with or without limiting to selection.  The previous `selectionBound()` method is now deprecated.
+- OpenGLRenderer : The `gl:queryBound` command now supports an `omitted` parameter containing a PathMatcher with paths to skip when computing the bound.
+- SceneGadget : Added new `bound( selected, omitted = nullptr )` signature, which allows certain paths to be omitted from the bound computation, with or without limiting to selection. The previous `selectionBound()` method is now deprecated.
 
 0.60.8.0 (relative to 0.60.7.1)
 ========
