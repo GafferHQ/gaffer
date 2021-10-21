@@ -12,6 +12,7 @@ Improvements
 Fixes
 -----
 
+- SceneReader : Fixed bug attempting to read unsupported custom attribute types from USD files. This caused an obscure `Cannot compute hash from a CompoundObject will NULL data pointers!` error, but now prints a warning instead.
 - GafferTest.TestCase :
   - Fixed `assertNodesAreDocumented()` to work for Nodes with multiple base classes.
   - Fixed `assertTypeNamesArePrefixed()` to work for Nodes in Python submodules.
