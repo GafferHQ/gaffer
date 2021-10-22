@@ -347,3 +347,8 @@ class TestCase( unittest.TestCase ) :
 			f.write( "assert( 'GafferUI' not in sys.modules )\n" )
 
 		subprocess.check_call( [ "gaffer", "python", script ] )
+
+	def assertEqualToFloatPrecision( self, value0, value1 ) :
+
+		from GafferTest import equalToFloatPrecision
+		return equalToFloatPrecision( value0, value1 )
