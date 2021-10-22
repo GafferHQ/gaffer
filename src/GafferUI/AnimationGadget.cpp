@@ -1548,9 +1548,13 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 			switch( previousKey->getInterpolation() )
 			{
-				case Gaffer::Animation::Interpolation::Step:
+				case Gaffer::Animation::Interpolation::Constant:
 					style->renderAnimationCurve( previousKeyPosition, V2f( keyPosition.x, previousKeyPosition.y ), V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
 					style->renderAnimationCurve( V2f( keyPosition.x, previousKeyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					break;
+				case Gaffer::Animation::Interpolation::ConstantNext:
+					style->renderAnimationCurve( previousKeyPosition, V2f( previousKeyPosition.x, keyPosition.y ), V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					style->renderAnimationCurve( V2f( previousKeyPosition.x, keyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
 					break;
 				case Gaffer::Animation::Interpolation::Linear:
 					style->renderAnimationCurve( previousKeyPosition, keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );

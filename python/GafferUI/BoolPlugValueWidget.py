@@ -136,7 +136,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 						Gaffer.Animation.Key(
 							time = self.getContext().getTime(),
 							value = value,
-							interpolation = Gaffer.Animation.Interpolation.Step
+							interpolation = Gaffer.Animation.Interpolation.Constant
 						)
 					)
 				else :

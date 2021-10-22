@@ -53,14 +53,14 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 		script["cube"]["sets"].setValue( "geometry" )
 
 		animY = Gaffer.Animation.acquire( script["cube"]["transform"]["translate"]["y"] )
-		animY.addKey( Gaffer.Animation.Key( 0 / 24.0, 0, Gaffer.Animation.Interpolation.Step ) )
-		animY.addKey( Gaffer.Animation.Key( 1 / 24.0, 1, Gaffer.Animation.Interpolation.Step ) )
-		animY.addKey( Gaffer.Animation.Key( 2 / 24.0, 2, Gaffer.Animation.Interpolation.Step ) )
+		animY.addKey( Gaffer.Animation.Key( 0 / 24.0, 0, Gaffer.Animation.Interpolation.Constant ) )
+		animY.addKey( Gaffer.Animation.Key( 1 / 24.0, 1, Gaffer.Animation.Interpolation.Constant ) )
+		animY.addKey( Gaffer.Animation.Key( 2 / 24.0, 2, Gaffer.Animation.Interpolation.Constant ) )
 
 		animX = Gaffer.Animation.acquire( script["cube"]["transform"]["translate"]["x"] )
-		animX.addKey( Gaffer.Animation.Key( 2 / 24.0, 0, Gaffer.Animation.Interpolation.Step ) )
-		animX.addKey( Gaffer.Animation.Key( 3 / 24.0, 1, Gaffer.Animation.Interpolation.Step ) )
-		animX.addKey( Gaffer.Animation.Key( 4 / 24.0, 2, Gaffer.Animation.Interpolation.Step ) )
+		animX.addKey( Gaffer.Animation.Key( 2 / 24.0, 0, Gaffer.Animation.Interpolation.Constant ) )
+		animX.addKey( Gaffer.Animation.Key( 3 / 24.0, 1, Gaffer.Animation.Interpolation.Constant ) )
+		animX.addKey( Gaffer.Animation.Key( 4 / 24.0, 2, Gaffer.Animation.Interpolation.Constant ) )
 
 		script["sphere"] = GafferScene.Sphere()
 		script["sphere"]["sets"].setValue( "geometry" )
@@ -220,7 +220,7 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 			bound = script["motion"]["out"].bound( "/group/cube" )
 		self.assertTrue( curve.arePrimitiveVariablesValid() )
 		self.assertEqual( curve.verticesPerCurve(), IECore.IntVectorData( [ 9 ] ) )
-		# note intermediate samples aren't interpolated only because the anim keys use Step interpolation
+		# note intermediate samples aren't interpolated only because the anim keys use Constant interpolation
 		self.assertEqual( curve["P"].data, IECore.V3fVectorData( [
 				imath.V3f( 0, 0, 0 ), imath.V3f( 0, 0, 0 ), imath.V3f( 0, 1, 0 ),
 				imath.V3f( 0, 1, 0 ), imath.V3f( 0, 2, 0 ), imath.V3f( 0, 2, 0 ),
@@ -283,7 +283,7 @@ class MotionPathTest( GafferSceneTest.SceneTestCase ) :
 			bound = script["motion"]["out"].bound( "/group/cube" )
 		self.assertTrue( curve.arePrimitiveVariablesValid() )
 		self.assertEqual( curve.verticesPerCurve(), IECore.IntVectorData( [ 9 ] ) )
-		# note intermediate samples aren't interpolated only because the anim keys use Step interpolation
+		# note intermediate samples aren't interpolated only because the anim keys use Constant interpolation
 		self.assertEqual( curve["P"].data, IECore.V3fVectorData( [
 				imath.V3f( 0, 0, 0 ), imath.V3f( 0, 0, 0 ), imath.V3f( 0, 1, 0 ),
 				imath.V3f( 0, 1, 0 ), imath.V3f( 0, 2, 0 ), imath.V3f( 0, 2, 0 ),
