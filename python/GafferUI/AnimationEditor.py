@@ -258,10 +258,15 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 					editablePlugs.add( child )
 
 		editable = self.__animationGadget.editablePlugs()
+		curves = set( self.__sourceCurvePlug( plug ) for plug in editablePlugs & visiblePlugs )
 		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
-			editable.clear()
-			for plug in editablePlugs & visiblePlugs :
-				editable.add( self.__sourceCurvePlug( plug ) )
+			for curve in list( editable ) :
+				if curve in curves :
+					curves.remove( curve )
+				else :
+					editable.remove( curve )
+			for curve in curves :
+				editable.add( curve )
 
 	def __editablePlugAdded( self, standardSet, curvePlug ) :
 
