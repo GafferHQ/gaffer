@@ -224,19 +224,19 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			)
 		)
 
-		# Trigger sychronization onto self.__animationGadget
-		self.__updateGadgetSets( self.__curveList )
+		self.__pathChangedConnection = self.__curveList.getPath().pathChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ), scoped = True )
+		self.__updateGadgetSets()
 
 	def _updateFromContext( self, modifiedItems ) :
 
 		self.__animationGadget.setContext( self.getContext() )
 
-	def __updateGadgetSets( self, pathListing ) :
-
-		assert( pathListing is self.__curveList )
+	def __updateGadgetSets( self, unused = None ) :
 
 		visiblePlugs = set()
-		for path in self.__curveList.getExpandedPaths() :
+		path = self.__curveList.getPath().copy()
+		for name in self.__curveList.getExpansion().paths() :
+			path.setFromString( name )
 			for childPath in path.children() :
 				child = childPath.property( "graphComponent:graphComponent" )
 				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
@@ -248,7 +248,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			visible.add( self.__sourceCurvePlug( plug ) )
 
 		editablePlugs = set()
-		for path in self.__curveList.getSelectedPaths() :
+		for name in self.__curveList.getSelection().paths() :
+			path.setFromString( name )
 			graphComponent = path.property( "graphComponent:graphComponent" )
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
 				editablePlugs.add( graphComponent )
