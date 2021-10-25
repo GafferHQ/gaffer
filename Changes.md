@@ -56,7 +56,7 @@ API
     has been fixed.
   - Path processing has been moved to a background thread. The API remains unchanged, but updates to the displayed
     data are made asynchronously with respect to calls to methods of the PathListingWidget.
-- GafferTest.TestCase : Added `assertEqualToFloatPrecision()` function, returns true if two values compare equal after conversion to float.
+- GafferTest.TestCase : Added `assertFloat32Equal()` function, returns true if two values compare equal after conversion to single precision float.
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.

@@ -57,8 +57,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		a = math.pi
 		b = math.e
 		k = Gaffer.Animation.Key( a, b, Gaffer.Animation.Interpolation.Step )
-		self.assertEqualToFloatPrecision( k.getTime(), a )
-		self.assertEqualToFloatPrecision( k.getValue(), b )
+		self.assertFloat32Equal( k.getTime(), a )
+		self.assertFloat32Equal( k.getValue(), b )
 		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Step )
 		self.assertFalse( k.isActive() )
 		self.assertIsNone( k.parent() )
@@ -67,8 +67,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		k.setValue( a )
 		k.setInterpolation( Gaffer.Animation.Interpolation.Linear )
 
-		self.assertEqualToFloatPrecision( k.getTime(), b )
-		self.assertEqualToFloatPrecision( k.getValue(), a )
+		self.assertFloat32Equal( k.getTime(), b )
+		self.assertFloat32Equal( k.getValue(), a )
 		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Linear )
 
 	def testKeyRepr( self ) :
@@ -812,29 +812,29 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k.isActive() )
 		self.assertIsNotNone( k.parent() )
 		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertEqualToFloatPrecision( k.getValue(), value )
+		self.assertFloat32Equal( k.getValue(), value )
 
 		with Gaffer.UndoScope( s ) :
 			k.setValue( value )
 
-		self.assertEqualToFloatPrecision( k.getValue(), value )
+		self.assertFloat32Equal( k.getValue(), value )
 		self.assertFalse( s.undoAvailable() )
 
 		newValue = math.e
 		with Gaffer.UndoScope( s ) :
 			k.setValue( newValue )
 
-		self.assertEqualToFloatPrecision( k.getValue(), newValue )
+		self.assertFloat32Equal( k.getValue(), newValue )
 		self.assertTrue( s.undoAvailable() )
 
 		s.undo()
 
-		self.assertEqualToFloatPrecision( k.getValue(), value )
+		self.assertFloat32Equal( k.getValue(), value )
 		self.assertTrue( s.redoAvailable() )
 
 		s.redo()
 
-		self.assertEqualToFloatPrecision( k.getValue(), newValue )
+		self.assertFloat32Equal( k.getValue(), newValue )
 
 	def testKeySetValueSignal( self ) :
 
@@ -1000,29 +1000,29 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k.isActive() )
 		self.assertIsNotNone( k.parent() )
 		self.assertTrue( k.parent().isSame( curve ) )
-		self.assertEqualToFloatPrecision( k.getTime(), time )
+		self.assertFloat32Equal( k.getTime(), time )
 
 		with Gaffer.UndoScope( s ) :
 			k.setTime( time )
 
-		self.assertEqualToFloatPrecision( k.getTime(), time )
+		self.assertFloat32Equal( k.getTime(), time )
 		self.assertFalse( s.undoAvailable() )
 
 		newTime = math.e
 		with Gaffer.UndoScope( s ) :
 			k.setTime( newTime )
 
-		self.assertEqualToFloatPrecision( k.getTime(), newTime )
+		self.assertFloat32Equal( k.getTime(), newTime )
 		self.assertTrue( s.undoAvailable() )
 
 		s.undo()
 
-		self.assertEqualToFloatPrecision( k.getTime(), time )
+		self.assertFloat32Equal( k.getTime(), time )
 		self.assertTrue( s.redoAvailable() )
 
 		s.redo()
 
-		self.assertEqualToFloatPrecision( k.getTime(), newTime )
+		self.assertFloat32Equal( k.getTime(), newTime )
 
 	def testKeySetTimeSignals( self ) :
 
