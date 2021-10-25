@@ -35,6 +35,7 @@ Fixes
   - Fixed bug which resulted in preview key being incorrectly drawn at the origin.
   - Fixed bug when pressing <kbd>f</kbd> to frame viewport which resulted in a blank background in certain cases (#4410).
   - Inserting a new key in editor (Hold "Ctrl" and left click on curve) is now undone/redone as a distinct step.
+  - Fixed bug when selecting curve for first time via gadget, keys appear, then disappear (#4443)
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 - NameSwitch : Fixed context management bug that allowed variables such as `scene:path` to leak into the context used to evaluate the `selector` plug.
 - GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs.

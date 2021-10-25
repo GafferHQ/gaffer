@@ -145,8 +145,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )
 		self.__curveList._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored )
-		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
-		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
+		self.__curveList.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ), scoped = False )
+		self.__selectionChangedConnection = self.__curveList.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateGadgetSets ), scoped = False )
 
 		# Set up the widget responsible for actual curve drawing
 		self.__animationGadget = GafferUI.AnimationGadget()
@@ -193,7 +193,6 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			self.__splitMain.setSizes( betterSize )
 
 		# set initial state
-		self.__editablePlugs = None
 		self._updateFromSet()
 		self._updateFromContext( [ "frame" ] )
 		self.__curveList._qtWidget().adjustSize()
@@ -226,64 +225,41 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		)
 
 		# Trigger sychronization onto self.__animationGadget
-		self.__expansionChanged( self.__curveList )
+		self.__updateGadgetSets( self.__curveList )
 
 	def _updateFromContext( self, modifiedItems ) :
 
 		self.__animationGadget.setContext( self.getContext() )
 
-	def __expansionChanged( self, pathListing ) :
+	def __updateGadgetSets( self, pathListing ) :
 
 		assert( pathListing is self.__curveList )
 
-		paths = pathListing.getExpandedPaths()
-
 		visiblePlugs = set()
-		for path in paths:
+		for path in self.__curveList.getExpandedPaths() :
 			for childPath in path.children() :
 				child = childPath.property( "graphComponent:graphComponent" )
 				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
 					visiblePlugs.add( child )
 
 		visible = self.__animationGadget.visiblePlugs()
-		editable = self.__animationGadget.editablePlugs()
-
 		visible.clear()
 		for plug in visiblePlugs :
 			visible.add( self.__sourceCurvePlug( plug ) )
 
-		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
-
-			editable.clear()
-			for plug in ( self.__editablePlugs or set() ) & visiblePlugs :
-				editable.add( self.__sourceCurvePlug( plug ) )
-
-	def __selectionChanged( self, pathListing ) :
-
-		assert( pathListing is self.__curveList )
-
-		paths = pathListing.getSelectedPaths()
-
-		plugList = []
-
-		for path in paths :
+		editablePlugs = set()
+		for path in self.__curveList.getSelectedPaths() :
 			graphComponent = path.property( "graphComponent:graphComponent" )
-
 			if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
-				plugList.append( graphComponent )
-
+				editablePlugs.add( graphComponent )
 			for child in graphComponent.children() :
 				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
-					plugList.append( child )
-
-		self.__editablePlugs = set( plugList )
+					editablePlugs.add( child )
 
 		editable = self.__animationGadget.editablePlugs()
-
 		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
-
 			editable.clear()
-			for plug in plugList :
+			for plug in editablePlugs & visiblePlugs :
 				editable.add( self.__sourceCurvePlug( plug ) )
 
 	def __editablePlugAdded( self, standardSet, curvePlug ) :
