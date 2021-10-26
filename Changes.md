@@ -1,6 +1,11 @@
 0.60.x.x (relative to 0.60.9.0)
 ========
 
+Improvements
+------------
+
+- Animation : Added compatibility for loading animation from Gaffer 0.61 where Step has been renamed to Constant.
+
 Fixes
 -----
 
