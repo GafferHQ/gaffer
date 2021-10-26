@@ -22,6 +22,7 @@ Improvements
 - PathFilter : Removed `scene:filter:inputScene` and `scene:path` variables from the context used to evaluate the `paths` plug. This improves performance in some scenarios, and prevents the creation of invalid filters where the paths themselves depend on the current scene location.
 - Switch : Removed variables such as `scene:path` and `image:channelName` from the context used to evaluate the `enabled` plug. This improves performance in some scenarios, and prevents the creation of invalid switches.
 - NodeEditor : Added option in node editor context menu to set interpolation of an animated value.
+- Animation : Added new `ConstantNext` interpolation mode, evaluates to the value of the next key for all times greater than the time of the key.
 
 Fixes
 -----
@@ -104,6 +105,7 @@ Breaking Changes
   - Renamed `Type` enum to `Interpolation`.
   - Interpolation of a key now affects span to next instead of previous key.
   - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
+  - Renamed `Step` interpolation mode to `Constant`.
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.

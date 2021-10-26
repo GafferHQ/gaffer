@@ -1015,8 +1015,10 @@ float Animation::CurvePlug::evaluate( const float time ) const
 
 	switch( lo.m_interpolation )
 	{
-		case Interpolation::Step:
+		case Interpolation::Constant:
 			return lo.m_value;
+		case Interpolation::ConstantNext:
+			return hi.m_value;
 		case Interpolation::Linear:
 			return lo.m_value * ( 1.0 - nt ) + hi.m_value * ( nt );
 		default:
@@ -1226,8 +1228,10 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 {
 	switch( interpolation )
 	{
-		case Interpolation::Step:
-			return "Step";
+		case Interpolation::Constant:
+			return "Constant";
+		case Interpolation::ConstantNext:
+			return "ConstantNext";
 		case Interpolation::Linear:
 			return "Linear";
 		default:

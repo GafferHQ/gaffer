@@ -78,23 +78,13 @@ void setInterpolation( Animation::Key &k, const Animation::Interpolation interpo
 	k.setInterpolation( interpolation );
 }
 
-const char *interpolationRepr( const Animation::Interpolation &t )
-{
-	switch( t )
-	{
-		case Animation::Interpolation::Step :
-			return "Gaffer.Animation.Interpolation.Step";
-		case Animation::Interpolation::Linear :
-			return "Gaffer.Animation.Interpolation.Linear";
-	}
-
-	throw IECore::Exception( "Unknown Animation::Interpolation" );
-}
-
 std::string keyRepr( const Animation::Key &k )
 {
-	return boost::str(
-		boost::format( "Gaffer.Animation.Key( %.9g, %.9g, %s )" ) % k.getTime() % k.getValue() % interpolationRepr( k.getInterpolation() )
+	return boost::str( boost::format(
+		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s )" )
+			% k.getTime()
+			% k.getValue()
+			% Animation::toString( k.getInterpolation() )
 	);
 };
 
@@ -180,7 +170,8 @@ void GafferModule::bindAnimation()
 	;
 
 	enum_<Animation::Interpolation>( "Interpolation" )
-		.value( Animation::toString( Animation::Interpolation::Step ), Animation::Interpolation::Step )
+		.value( Animation::toString( Animation::Interpolation::Constant ), Animation::Interpolation::Constant )
+		.value( Animation::toString( Animation::Interpolation::ConstantNext ), Animation::Interpolation::ConstantNext )
 		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
 	;
 

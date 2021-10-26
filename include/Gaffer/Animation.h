@@ -62,7 +62,8 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines the method used to interpolate between a key and the next one.
 		enum class Interpolation
 		{
-			Step,
+			Constant,
+			ConstantNext,
 			Linear,
 			/// \todo Add Smooth, implemented as
 			/// bezier curves using V2f in and out
