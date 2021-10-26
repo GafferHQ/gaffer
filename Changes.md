@@ -56,6 +56,7 @@ API
     has been fixed.
   - Path processing has been moved to a background thread. The API remains unchanged, but updates to the displayed
     data are made asynchronously with respect to calls to methods of the PathListingWidget.
+- GafferTest.TestCase : Added `assertFloat32Equal()` function, raises AssertionError if two values do not compare equal after conversion to single precision float.
 - GafferUITest.TestCase : Unexpected Qt messages are now reported as test failures.
 - Context : Modified `ChangedSignal` to use a `CatchingSignalCombiner`, which prevents exceptions from one slot preventing the execution of another.
 - Menu : callable passed as the "checkBox" parameter of a menu item can now return None.
@@ -75,7 +76,6 @@ API
   - Added `curve.keyTimeChangedSignal()` function, returns a signal that is called when a key's time has changed
   - Added `curve.keyValueChangedSignal()` function, returns a signal that is called when a key's value has changed
   - Added `curve.keyInterpolationChangedSignal()` function, returns a signal that is called when a key's interpolation has changed
-
 - AnimationGadget :
   - Added `selectedKeys()` function, returns current set of selected keys.
   - Added `onTimeAxis()` function, returns true if specified line is over the time axis of the gadget.
