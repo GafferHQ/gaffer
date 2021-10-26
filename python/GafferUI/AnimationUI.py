@@ -82,7 +82,10 @@ def __setKey( plug, context ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		curve = Gaffer.Animation.acquire( plug )
-		curve.insertKey( context.getTime(), value )
+		if isinstance( plug, Gaffer.BoolPlug ) :
+			curve.addKey( Gaffer.Animation.Key( context.getTime(), value, Gaffer.Animation.Interpolation.Constant ) )
+		else :
+			curve.insertKey( context.getTime(), value )
 
 def __removeKey( plug, key ) :
 
