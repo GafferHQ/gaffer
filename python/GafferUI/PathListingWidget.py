@@ -221,6 +221,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		# Note : This doesn't follow the semantics of `getExpansion()` with
 		# respect to paths that are not currently in the model. It is probably
 		# time it was removed.
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( self._qtWidget().model() ) )
 		return _GafferUI._pathListingWidgetPathsForPathMatcher(
 			GafferUI._qtAddress( self._qtWidget() ),
 			self.getExpansion()
@@ -314,6 +315,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	## \deprecated
 	def getSelectedPaths( self ) :
 
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( self._qtWidget().model() ) )
 		return _GafferUI._pathListingWidgetPathsForPathMatcher(
 			GafferUI._qtAddress( self._qtWidget() ),
 			self.getSelection()
@@ -380,11 +382,6 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__currentPath = str( self.__path )
 
-	@GafferUI.LazyMethod()
-	def __updateLazily( self ) :
-
-		self.__update()
-
 	def __dirPath( self ) :
 
 		p = self.__path.copy()
@@ -428,9 +425,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __pathChanged( self, path ) :
 
-		# Updates can be expensive, so we coalesce and
-		# defer them until the last minute.
-		self.__updateLazily()
+		self.__update()
 
 	def __indexForPath( self, path ) :
 
