@@ -70,9 +70,9 @@ static boost::python::tuple countContextHash32CollisionsWrapper( int entries, in
 	return boost::python::make_tuple( std::get<0>(result), std::get<1>(result), std::get<2>(result), std::get<3>(result) );
 }
 
-static bool float32Equal( const float a, const float b )
+static float asFloat32( const float value )
 {
-	return ( a == b );
+	return value;
 }
 
 BOOST_PYTHON_MODULE( _GafferTest )
@@ -87,7 +87,7 @@ BOOST_PYTHON_MODULE( _GafferTest )
 			)
 		);
 
-	def( "float32Equal", &float32Equal );
+	def( "asFloat32", &asFloat32 );
 	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
 	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
 	def( "testMetadataThreading", &testMetadataThreadingWrapper );

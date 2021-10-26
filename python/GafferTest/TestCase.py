@@ -350,5 +350,5 @@ class TestCase( unittest.TestCase ) :
 
 	def assertFloat32Equal( self, value0, value1 ) :
 
-		from GafferTest import float32Equal
-		return float32Equal( value0, value1 )
+		from GafferTest import asFloat32
+		self.assertEqual( asFloat32( value0 ), asFloat32( value1 ) )
