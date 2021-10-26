@@ -2175,5 +2175,36 @@ class AnimationTest( GafferTest.TestCase ) :
 				Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Interpolation.Linear )
 			)
 
+	def testSerialisationCreatedInVersion0_60( self ) :
+
+		import os
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/animationVersion-0.60.9.0.gfr" )
+		s.load()
+
+		def assertAnimation( script ) :
+
+			self.assertEqual( s["Animation"]["curves"]["curve0"].getKey( 0 ).getTime(), 0 )
+			self.assertEqual( s["Animation"]["curves"]["curve0"].getKey( 0 ).getValue(), 0 )
+			self.assertEqual( s["Animation"]["curves"]["curve0"].getKey( 0 ).getInterpolation(), Gaffer.Animation.Interpolation.Linear )
+			self.assertEqual( s["Animation"]["curves"]["curve0"].getKey( 1 ).getTime(), 1 )
+			self.assertEqual( s["Animation"]["curves"]["curve0"].getKey( 1 ).getValue(), 1 )
+			self.assertEqual( s["Animation"]["curves"]["curve0"].getKey( 1 ).getInterpolation(), Gaffer.Animation.Interpolation.Linear )
+
+			self.assertEqual( s["Animation"]["curves"]["curve1"].getKey( 0 ).getTime(), 0 )
+			self.assertEqual( s["Animation"]["curves"]["curve1"].getKey( 0 ).getValue(), 0 )
+			self.assertEqual( s["Animation"]["curves"]["curve1"].getKey( 0 ).getInterpolation(), Gaffer.Animation.Interpolation.Constant )
+			self.assertEqual( s["Animation"]["curves"]["curve1"].getKey( 1 ).getTime(), 1 )
+			self.assertEqual( s["Animation"]["curves"]["curve1"].getKey( 1 ).getValue(), 1 )
+			self.assertEqual( s["Animation"]["curves"]["curve1"].getKey( 1 ).getInterpolation(), Gaffer.Animation.Interpolation.Constant )
+
+		assertAnimation( s )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		assertAnimation( s2 )
+
 if __name__ == "__main__":
 	unittest.main()
