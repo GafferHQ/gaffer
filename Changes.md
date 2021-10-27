@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- Backdrop : Added a dedicated title bar for selection and moving Backdrops. This is smaller but more obvious than the previous region, reducing the likelihood of accidental movement.
 - Animation : Added compatibility for loading animation from Gaffer 0.61 where Step has been renamed to Constant.
 
 Fixes
