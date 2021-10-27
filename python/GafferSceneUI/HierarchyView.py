@@ -81,27 +81,6 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 
-			# Work around insanely slow selection of a range containing many
-			# objects (using a shift-click). The default selection behaviour
-			# is SelectRows and this triggers some terrible performance problems
-			# in Qt. Since we only have a single column, there is no difference
-			# between SelectItems and SelectRows other than the speed.
-			#
-			# This workaround isn't going to be sufficient when we come to add
-			# additional columns to the HierarchyView. What _might_ work instead
-			# is to override `QTreeView.setSelection()` in PathListingWidget.py,
-			# so that we manually expand the selected region to include full rows,
-			# and then don't have to pass the `QItemSelectionModel::Rows` flag to
-			# the subsequent `QItemSelectionModel::select()` call. This would be
-			# essentially the same method we used to speed up
-			# `PathListingWidget.setSelection()`.
-			#
-			# Alternatively we could avoid QItemSelectionModel entirely by managing
-			# the selection ourself as a persistent PathMatcher.
-			self.__pathListing._qtWidget().setSelectionBehavior(
-				self.__pathListing._qtWidget().SelectionBehavior.SelectItems
-			)
-
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
 
