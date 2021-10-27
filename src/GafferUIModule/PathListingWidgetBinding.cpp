@@ -1842,9 +1842,9 @@ IECore::PathMatcher pathsForIndexRange( uint64_t treeViewAddress, uint64_t index
 	IECore::PathMatcher result;
 	// Range is inclusive, so always includes index0 and index1, even
 	// if they are equal.
-	while( true ) {
+	while( index0.isValid() ) {
 		result.addPath( model->namesForIndex( index0 ) );
-		if( index0 == index1 )
+		if( index0.internalPointer() == index1.internalPointer() )
 		{
 			break;
 		}
