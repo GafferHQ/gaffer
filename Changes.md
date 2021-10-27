@@ -106,6 +106,7 @@ Breaking Changes
   - Interpolation of a key now affects span to next instead of previous key.
   - Renamed Key's `set/getType()` accessors to `set/getInterpolation()`.
   - Renamed `Step` interpolation mode to `Constant`.
+  - Removed customised Key equality operators, the default operators compare on object identity.
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.

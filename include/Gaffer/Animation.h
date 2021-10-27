@@ -109,9 +109,6 @@ class GAFFER_API Animation : public ComputeNode
 				/// Is the key currently active? The key is considered inactive whilst unparented.
 				bool isActive() const;
 
-				bool operator == ( const Key &rhs ) const;
-				bool operator != ( const Key &rhs ) const;
-
 				CurvePlug *parent();
 				const CurvePlug *parent() const;
 

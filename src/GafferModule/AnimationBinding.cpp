@@ -192,8 +192,6 @@ void GafferModule::bindAnimation()
 		.def( "setInterpolation", &setInterpolation )
 		.def( "isActive", &Animation::Key::isActive )
 		.def( "__repr__", &keyRepr )
-		.def( self == self )
-		.def( self != self )
 		.def(
 			"parent",
 			(Animation::CurvePlug *(Animation::Key::*)())&Animation::Key::parent,
