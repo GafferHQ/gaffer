@@ -70,7 +70,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getPathExpanded( p1 ), False )
 		w.setPathExpanded( p1, True )
 		self.assertEqual( w.getPathExpanded( p1 ), True )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 1 )
 		self.assertEqual( str( list( w.getExpandedPaths() )[0] ), str( p1 ) )
 
@@ -87,7 +86,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getExpandedPaths(), [ p1, p2 ] )
 
 		w.setPath( Gaffer.DictPath( {}, "/" ) )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( len( w.getExpandedPaths() ), 0 )
 
 	def testExpansion( self ) :
@@ -216,7 +214,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setPathExpanded( Gaffer.DictPath( d, "/2" ), True )
 		self.assertEqual( len( c ), 2 )
 
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		e = w.getExpandedPaths()
 		self.assertEqual( len( e ), 2 )
 
@@ -308,7 +305,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( c ), 0 )
 
 		w.setSelectedPaths( [ Gaffer.DictPath( d, "/a" ), Gaffer.DictPath( d, "/b" ) ] )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( set( [ str( p ) for p in w.getSelectedPaths() ] ), set( [ "/a", "/b" ] ) )
 
 		self.assertEqual( len( c ), 1 )
@@ -391,7 +387,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( widget.getSelection(), IECore.PathMatcher( [ "/a" ] ) )
 
 		path.append( "a" )
-		widget._PathListingWidget__updateLazily.flush( widget ) # See comments in `__emitPathChanged`
 		self.assertEqual( widget.getSelection(), IECore.PathMatcher() )
 
 	def testExpandedPathsWhenPathChanges( self ) :
@@ -520,8 +515,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		d["a"] = 10
 		p.pathChangedSignal()( p )
 		w.setSelectedPaths( [ p.copy().setFromString( "/a" ) ] )
-		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
-
 		s = w.getSelectedPaths()
 		self.assertEqual( len( s ), 1 )
 		self.assertEqual( str( s[0] ), "/a" )
@@ -917,12 +910,6 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 	def __emitPathChanged( widget ) :
 
 		widget.getPath().pathChangedSignal()( widget.getPath() )
-		# Currently it is the PathListingWidget that processes `pathChangedSignal()`,
-		# and it does so lazily. Flush the update so that the model is informed of the
-		# change.
-		## \todo It may make sense to move the change handler to the model at some point,
-		# and then we could test the model completely independently of the widget.
-		widget._PathListingWidget__updateLazily.flush( widget )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
 
 	@classmethod
