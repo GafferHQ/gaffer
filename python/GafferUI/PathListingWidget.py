@@ -145,6 +145,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.__dragPointer = "paths"
 
+		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
+
 		self.__path = None
 
 		self.setDisplayMode( displayMode )
@@ -654,6 +656,12 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
+
+	def __displayTransformChanged( self ) :
+
+		# The PathModel bakes the display transform into icon colours,
+		# so when the transform changes we need to trigger an update.
+		self.__path.pathChangedSignal()( self.__path )
 
 # Private implementation - a QTreeView with some specific size behaviour,
 # and knowledge of how to draw our PathMatcher selection.

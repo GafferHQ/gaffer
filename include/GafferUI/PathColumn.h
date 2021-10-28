@@ -70,6 +70,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted
 			/// value. Supported types :
 			///
 			/// - StringData (providing icon name)
+			/// - Color3fData (drawn as swatch)
 			Icon
 		};
 

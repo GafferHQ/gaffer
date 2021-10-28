@@ -178,6 +178,16 @@ IECorePreview::LRUCache<std::string, QVariant> g_iconCache(
 	/* maxCost = */ 10000
 );
 
+QColor displayColor( const Imath::Color3f &color )
+{
+	/// \todo Move `GafferUI.DisplayTransform` to C++.
+	IECorePython::ScopedGILLock gilLock;
+	object displayTransform = import( "GafferUI" ).attr( "DisplayTransform" ).attr( "get" )();
+	Imath::Color3f c = extract<Imath::Color3f>( displayTransform( color ) );
+	c *= 255.0f;
+	return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
+}
+
 // If `path` is null, returns header data.
 QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path *path, GafferUI::PathColumn::Role role, const IECore::Canceller *canceller )
 {
@@ -193,6 +203,8 @@ QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path 
 		{
 			case IECore::StringDataTypeId :
 				return g_iconCache.get( static_cast<const IECore::StringData *>( value.get() )->readable() );
+			case IECore::Color3fDataTypeId :
+				return displayColor( static_cast<const IECore::Color3fData *>( value.get() )->readable() );
 			default :
 				return QVariant();
 		}
