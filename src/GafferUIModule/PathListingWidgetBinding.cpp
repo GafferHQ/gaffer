@@ -188,6 +188,42 @@ QColor displayColor( const Imath::Color3f &color )
 	return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
 }
 
+// Equivalent to `GafferUI.NumericWidget.formatValue()`.
+QString doubleToString( double v )
+{
+	QString result = QString::number( v, 'f', 4 );
+	for( int i = result.size() - 1; i; --i )
+	{
+		const QChar c = result.at( i );
+		if( c == '.' )
+		{
+			result.truncate( i );
+			return result;
+		}
+		else if ( c != '0' )
+		{
+			result.truncate( i + 1 );
+			return result;
+		}
+	}
+	return result;
+}
+
+template<typename T>
+QString vectorToString( const T &v )
+{
+	QString result;
+	for( unsigned i = 0; i < T::dimensions(); ++i )
+	{
+		if( i )
+		{
+			result += " ";
+		}
+		result += doubleToString( v[i] );
+	}
+	return result;
+}
+
 // If `path` is null, returns header data.
 QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path *path, GafferUI::PathColumn::Role role, const IECore::Canceller *canceller )
 {
@@ -223,9 +259,17 @@ QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path 
 		case IECore::UInt64DataTypeId :
 			return (quint64)static_cast<const IECore::UInt64Data *>( value.get() )->readable();
 		case IECore::FloatDataTypeId :
-			return static_cast<const IECore::FloatData *>( value.get() )->readable();
+			return doubleToString( static_cast<const IECore::FloatData *>( value.get() )->readable() );
 		case IECore::DoubleDataTypeId :
-			return static_cast<const IECore::DoubleData *>( value.get() )->readable();
+			return doubleToString( static_cast<const IECore::DoubleData *>( value.get() )->readable() );
+		case IECore::V2fDataTypeId :
+			return vectorToString( static_cast<const IECore::V2fData *>( value.get() )->readable() );
+		case IECore::V3fDataTypeId :
+			return vectorToString( static_cast<const IECore::V3fData *>( value.get() )->readable() );
+		case IECore::Color3fDataTypeId :
+			return vectorToString( static_cast<const IECore::Color3fData *>( value.get() )->readable() );
+		case IECore::Color4fDataTypeId :
+			return vectorToString( static_cast<const IECore::Color4fData *>( value.get() )->readable() );
 		case IECore::DateTimeDataTypeId :
 		{
 			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value.get() );

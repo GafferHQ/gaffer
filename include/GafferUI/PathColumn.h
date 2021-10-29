@@ -65,6 +65,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted
 			/// - IntData, UIntData, UInt64Data
 			/// - FloatData, DoubleData
 			/// - DateTimeData
+			/// - V2fData, V3fData, Color3fData, Color4fData
 			Value,
 			/// An additional icon to be displayed next to the primary
 			/// value. Supported types :
