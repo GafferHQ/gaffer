@@ -364,19 +364,6 @@ bool Animation::Key::isActive() const
 	return m_active;
 }
 
-bool Animation::Key::operator == ( const Key &rhs ) const
-{
-	return
-		m_time == rhs.m_time &&
-		m_value == rhs.m_value &&
-		m_interpolation == rhs.m_interpolation;
-}
-
-bool Animation::Key::operator != ( const Key &rhs ) const
-{
-	return !(*this == rhs);
-}
-
 Animation::CurvePlug *Animation::Key::parent()
 {
 	return m_parent;

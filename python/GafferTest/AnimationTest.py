@@ -73,14 +73,20 @@ class AnimationTest( GafferTest.TestCase ) :
 
 	def testKeyRepr( self ) :
 
+		def assertKeysEqual( k0, k1 ) :
+
+			self.assertEqual( k0.getTime(), k1.getTime() )
+			self.assertEqual( k0.getValue(), k1.getValue() )
+			self.assertEqual( k0.getInterpolation(), k1.getInterpolation() )
+
 		k = Gaffer.Animation.Key()
-		self.assertEqual( k, eval( repr( k ) ) )
+		assertKeysEqual( k, eval( repr( k ) ) )
 
 		k = Gaffer.Animation.Key( 0, 1, Gaffer.Animation.Interpolation.Constant )
-		self.assertEqual( k, eval( repr( k ) ) )
+		assertKeysEqual( k, eval( repr( k ) ) )
 
 		k = Gaffer.Animation.Key( 10, 4, Gaffer.Animation.Interpolation.ConstantNext )
-		self.assertEqual( k, eval( repr( k ) ) )
+		assertKeysEqual( k, eval( repr( k ) ) )
 
 	def testCanAnimate( self ) :
 
@@ -1762,11 +1768,17 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
 		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
 
+		def assertKeysEqual( k0, k1 ) :
+
+			self.assertEqual( k0.getTime(), k1.getTime() )
+			self.assertEqual( k0.getValue(), k1.getValue() )
+			self.assertEqual( k0.getInterpolation(), k1.getInterpolation() )
+
 		def assertAnimation( script ) :
 
 			curve = Gaffer.Animation.acquire( script["n"]["user"]["f"] )
-			self.assertEqual( curve.getKey( 0 ),  Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
-			self.assertEqual( curve.getKey( 1 ),  Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
+			assertKeysEqual( curve.getKey( 0 ),  Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
+			assertKeysEqual( curve.getKey( 1 ),  Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
 			with Gaffer.Context() as c :
 				for i in range( 0, 10 ) :
 					c.setTime( i / 9.0 )
@@ -2168,9 +2180,15 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s2["n"]["user"]["f"] )
 
+		def assertKeysEqual( k0, k1 ) :
+
+			self.assertEqual( k0.getTime(), k1.getTime() )
+			self.assertEqual( k0.getValue(), k1.getValue() )
+			self.assertEqual( k0.getInterpolation(), k1.getInterpolation() )
+
 		for frame in range( 0, 10000 ) :
 			context.setFrame( frame )
-			self.assertEqual(
+			assertKeysEqual(
 				curve.getKey( context.getTime() ),
 				Gaffer.Animation.Key( context.getTime(), context.getTime(), Gaffer.Animation.Interpolation.Linear )
 			)
