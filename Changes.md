@@ -1,5 +1,5 @@
-0.60.x.x (relative to 0.60.9.0)
-========
+0.60.10.0 (relative to 0.60.9.0)
+=========
 
 Improvements
 ------------
@@ -11,8 +11,7 @@ Improvements
 Fixes
 -----
 
-- PrimitiveInspector : Now updates correctly when all primitive variables with a particular interpolation are removed.
-
+- PrimitiveInspector : Fixed update when all primitive variables with a particular interpolation are removed.
 
 0.60.9.0 (relative to 0.60.8.0)
 ========
