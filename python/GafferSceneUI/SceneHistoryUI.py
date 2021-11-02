@@ -67,6 +67,8 @@ def connectToEditor( editor ) :
 		editor.keyPressSignal().connect( __viewerKeyPress, scoped = False )
 	elif isinstance( editor, GafferSceneUI.HierarchyView ) :
 		editor.keyPressSignal().connect( __hierarchyViewKeyPress, scoped = False )
+	elif isinstance( editor, GafferUI.Editor ) :
+		editor.keyPressSignal().connect( __nodeEditorKeyPress, scoped = False )
 
 ##########################################################################
 # Internal implementation
@@ -104,15 +106,15 @@ def __sceneViewSelectedPath( sceneView ) :
 	else :
 		return None
 
-def __hierarchyViewSelectedPath( hierarchyView ) :
+def __contextSelectedPath( context ) :
 
-	selection = GafferSceneUI.ContextAlgo.getSelectedPaths( hierarchyView.getContext() )
+	selection = GafferSceneUI.ContextAlgo.getSelectedPaths( context )
 	if selection.size() != 1 :
 		return None
 
 	return selection.paths()[0]
 
-def __editSourceNode( context, scene, path ) :
+def __editSourceNode( context, scene, path, nodeEditor = None ) :
 
 	with context :
 		source = GafferScene.SceneAlgo.source( scene, path )
@@ -122,7 +124,10 @@ def __editSourceNode( context, scene, path ) :
 
 	node = source.node()
 	node = __ancestorWithReadOnlyChildNodes( node ) or node
-	GafferUI.NodeEditor.acquire( node, floating = True )
+	if nodeEditor is not None :
+		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
+	else :
+		GafferUI.NodeEditor.acquire( node, floating = True )
 
 def __tweaksNode( scene, path ) :
 
@@ -140,7 +145,7 @@ def __tweaksNode( scene, path ) :
 
 	return GafferScene.SceneAlgo.shaderTweaks( scene, path, shaderAttributeNames[0] )
 
-def __editTweaksNode( context, scene, path ) :
+def __editTweaksNode( context, scene, path, nodeEditor = None ) :
 
 	with context :
 		tweaks = __tweaksNode( scene, path )
@@ -149,7 +154,10 @@ def __editTweaksNode( context, scene, path ) :
 		return
 
 	node = __ancestorWithReadOnlyChildNodes( tweaks ) or tweaks
-	GafferUI.NodeEditor.acquire( node, floating = True )
+	if nodeEditor is not None :
+		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
+	else :
+		GafferUI.NodeEditor.acquire( node, floating = True )
 
 def __ancestorWithReadOnlyChildNodes( node ) :
 
@@ -189,12 +197,47 @@ def __viewerKeyPress( viewer, event ) :
 def __hierarchyViewKeyPress( hierarchyView, event ) :
 
 	if event == __editSourceKeyPress :
-		selectedPath = __hierarchyViewSelectedPath( hierarchyView )
+		selectedPath = __contextSelectedPath( hierarchyView.getContext() )
 		if selectedPath is not None :
 			__editSourceNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
 		return True
 	elif event == __editTweaksKeyPress :
-		selectedPath = __hierarchyViewSelectedPath( hierarchyView )
+		selectedPath = __contextSelectedPath( hierarchyView.getContext() )
 		if selectedPath is not None :
 			__editTweaksNode( hierarchyView.getContext(), hierarchyView.scene(), selectedPath )
+		return True
+
+def __nodeEditorKeyPress( nodeEditor, event ) :
+
+	layout = nodeEditor.ancestor( GafferUI.CompoundEditor )
+	if layout is None :
+		return False
+
+	## \todo In Gaffer 0.61, we should get the scene directly from the focus node.
+	scene = None
+	for hierarchyView in layout.editors( GafferSceneUI.HierarchyView ) :
+		if hierarchyView.scene() is not None :
+			scene = hierarchyView.scene()
+			break
+
+	if scene is None :
+		for viewer in layout.editors( GafferUI.Viewer ) :
+			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
+				scene = viewer.view()["in"]
+				break
+
+	if scene is None :
+		return False
+
+	context = layout.scriptNode().context()
+
+	if event == __editSourceKeyPress :
+		selectedPath = __contextSelectedPath( context )
+		if selectedPath is not None :
+			__editSourceNode( context, scene, selectedPath, nodeEditor )
+		return True
+	elif event == __editTweaksKeyPress :
+		selectedPath = __contextSelectedPath( context )
+		if selectedPath is not None :
+			__editTweaksNode( context, scene, selectedPath, nodeEditor )
 		return True

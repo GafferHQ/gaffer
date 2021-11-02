@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Backdrop : Added a dedicated title bar for selection and moving Backdrops. This is smaller but more obvious than the previous region, reducing the likelihood of accidental movement.
+- NodeEditor : Added <kbd>Alt</kbd>+<kbd>E</kbd> and <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> shortcuts for editing source and tweak nodes respectively. These are similar to the equivalent shortcuts in the Viewer and HierarchyView, but pin an existing NodeEditor instead of creating a new one.
 - Animation : Added compatibility for loading animation from Gaffer 0.61 where Step has been renamed to Constant.
 
 Fixes
