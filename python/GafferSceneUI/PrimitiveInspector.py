@@ -355,14 +355,14 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 				primVars[primvar.interpolation].append( conditionPrimvar( primvar ) )
 				toolTips[primvar.interpolation].append( _getPrimvarToolTip( primvarName, primvar ) )
 
-			for interpolation in primVars.keys() :
+			for interpolation in self.__dataWidgets.keys() :
 
 				pv = primVars.get( interpolation, None )
 				h = headers.get( interpolation, None )
-				t = toolTips.get( interpolation, None )
+				t = toolTips.get( interpolation, [] )
 
 				self.__tabbedContainer.setLabel( self.__tabbedChildWidgets[interpolation],
-					"{0} ({1})".format( str( interpolation ), len( pv ) ) )
+					str( interpolation ) + ( " ({0})".format( len( pv ) ) if pv else "" ) )
 
 				self.__dataWidgets[interpolation].setToolTips( t )
 				self.__dataWidgets[interpolation].setHeader( h )

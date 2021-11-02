@@ -87,6 +87,8 @@ void titleAndDescriptionFromPlugs( const StringPlug *titlePlug, const StringPlug
 }
 
 const float g_margin = 3.0f;
+const float g_titleBarHeight = 1.0f;
+const float g_titleBarMargin = 1.0f;
 IECore::InternedString g_boundPlugName( "__uiBound" );
 IECore::InternedString g_colorKey( "nodeGadget:color" );
 Box2f g_defaultBound( V2f( -10 ), V2f( 10 ) );
@@ -277,6 +279,13 @@ void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 	const Box3f titleCharacterBound = style->characterBound( Style::HeadingText );
 	const float titleBaseline = bound.max.y - g_margin - titleCharacterBound.max.y;
 
+	const float titleBarHeight = g_titleBarHeight / scale;
+	const float titleBarMargin = g_titleBarMargin / scale;
+	const Box2f titleBar(
+		V2f( bound.min.x + titleBarMargin, bound.max.y - ( titleBarHeight + titleBarMargin ) ),
+		V2f( bound.max.x - titleBarMargin, bound.max.y - titleBarMargin )
+	);
+
 	if( isSelectionRender( reason ) )
 	{
 		// when selecting we render in a simplified form.
@@ -293,7 +302,7 @@ void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 		style->renderSolidRectangle( Box2f( V2f( bound.max.x - width, bound.min.y ), bound.max ) ); // right
 		style->renderSolidRectangle( Box2f( bound.min, V2f( bound.max.x, bound.min.y + width ) ) ); // bottom
 		style->renderSolidRectangle( Box2f( V2f( bound.min.x, bound.max.y - width ), bound.max ) ); // top
-		style->renderSolidRectangle( Box2f( V2f( bound.min.x, titleBaseline - g_margin ), bound.max ) ); // heading
+		style->renderSolidRectangle( titleBar ); // title bar for movement
 	}
 	else
 	{
@@ -313,14 +322,19 @@ void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 			glPopMatrix();
 		}
 
-		if( m_hovered )
-		{
-			style->renderHorizontalRule(
-				V2f( bound.center().x, titleBaseline - g_margin / 2.0f ),
-				bound.size().x - g_margin * 2.0f,
-				Style::HighlightedState
-			);
-		}
+		/// \todo Add `Style::renderBackdropTitleBar()` method so that
+		/// we don't have to hardcode the drawing here.
+		glPushAttrib( GL_CURRENT_BIT );
+			if( m_hovered )
+			{
+				glColor4f( 0.466, 0.612, 0.741, 1.0f );
+			}
+			else
+			{
+				glColor4f( 1.0, 1.0, 1.0, 0.15f );
+			}
+			style->renderSolidRectangle( titleBar );
+		glPopAttrib();
 
 		Box2f textBound = bound;
 		textBound.min += V2f( g_margin );

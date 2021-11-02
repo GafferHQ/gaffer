@@ -111,6 +111,21 @@ Breaking Changes
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.
 
+0.60.10.0 (relative to 0.60.9.0)
+=========
+
+Improvements
+------------
+
+- Backdrop : Added a dedicated title bar for selection and moving Backdrops. This is smaller but more obvious than the previous region, reducing the likelihood of accidental movement.
+- NodeEditor : Added <kbd>Alt</kbd>+<kbd>E</kbd> and <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> shortcuts for editing source and tweak nodes respectively. These are similar to the equivalent shortcuts in the Viewer and HierarchyView, but pin an existing NodeEditor instead of creating a new one.
+- Animation : Added compatibility for loading animation from Gaffer 0.61 where Step has been renamed to Constant.
+
+Fixes
+-----
+
+- PrimitiveInspector : Fixed update when all primitive variables with a particular interpolation are removed.
+
 0.60.9.0 (relative to 0.60.8.0)
 ========
 
