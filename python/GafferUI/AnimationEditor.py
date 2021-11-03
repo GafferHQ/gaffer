@@ -423,7 +423,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		valueToolTip = "# Value\n\nThe value of the currently selected keys."
 		interpolationToolTip = "# Interpolation\n\nThe interpolation of the currently selected keys."
 
-		# create key labels
+		# create labels
 		frameLabel = GafferUI.Label( text="Frame", toolTip=frameToolTip )
 		valueLabel = GafferUI.Label( text="Value", toolTip=valueToolTip )
 		interpolationLabel = GafferUI.Label( text="Interpolation", toolTip=interpolationToolTip )
@@ -434,7 +434,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		self.__valueEditor = GafferUI.NumericWidget( value=float(0), toolTip=valueToolTip )
 		self.__interpolationEditor = GafferUI.MenuButton( toolTip=interpolationToolTip )
 
-		# build key interpolation menu
+		# build interpolation menu
 		im = IECore.MenuDefinition()
 		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
 			im.append( "%s" % ( mode.name ), {

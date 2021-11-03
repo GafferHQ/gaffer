@@ -158,7 +158,7 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 void GafferModule::bindAnimation()
 {
 
-	scope s = DependencyNodeClass<Animation>()
+	scope s = DependencyNodeClass< Animation >()
 		.def( "canAnimate", &Animation::canAnimate )
 		.staticmethod( "canAnimate" )
 		.def( "isAnimated", &Animation::isAnimated )
@@ -169,14 +169,14 @@ void GafferModule::bindAnimation()
 		.staticmethod( "defaultInterpolation" )
 	;
 
-	enum_<Animation::Interpolation>( "Interpolation" )
+	enum_< Animation::Interpolation >( "Interpolation" )
 		.value( Animation::toString( Animation::Interpolation::Constant ), Animation::Interpolation::Constant )
 		.value( Animation::toString( Animation::Interpolation::ConstantNext ), Animation::Interpolation::ConstantNext )
 		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
 	;
 
 	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
-		.def( init<float, float, Animation::Interpolation>(
+		.def( init< float, float, Animation::Interpolation >(
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
@@ -199,8 +199,8 @@ void GafferModule::bindAnimation()
 		)
 	;
 
-	PlugClass<Animation::CurvePlug>()
-		.def( init<const char *, Plug::Direction, unsigned>(
+	PlugClass< Animation::CurvePlug >()
+		.def( init< const char *, Plug::Direction, unsigned >(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<Animation::CurvePlug>(),
 					boost::python::arg_( "direction" )=Plug::In,

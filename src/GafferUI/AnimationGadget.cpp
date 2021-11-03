@@ -972,7 +972,6 @@ bool AnimationGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event 
 		if( controlHeld ) // insert a keyframe
 		{
 			m_selectedKeys->clear();
-
 			insertKeyframe( curvePlug.get(), i.x );
 			++m_mergeGroupId;
 			m_keyPreview = false;
@@ -1541,9 +1540,6 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 		if( previousKey )
 		{
-			// \todo: needs tangent computation/hand-off as soon as we support more interpolation modes
-			//        consider passing interpolation into renderCurveSegment to handle all drawing there
-
 			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
 			switch( previousKey->getInterpolation() )

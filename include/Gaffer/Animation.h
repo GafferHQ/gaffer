@@ -54,7 +54,7 @@ class GAFFER_API Animation : public ComputeNode
 
 	public :
 
-		Animation( const std::string &name=defaultName<Animation>() );
+		explicit Animation( const std::string &name=defaultName<Animation>() );
 		~Animation() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
@@ -62,7 +62,7 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines the method used to interpolate between a key and the next one.
 		enum class Interpolation
 		{
-			Constant,
+			Constant = 0,
 			ConstantNext,
 			Linear,
 			/// \todo Add Smooth, implemented as
@@ -70,6 +70,7 @@ class GAFFER_API Animation : public ComputeNode
 			/// tangents on each key.
 		};
 
+		/// Get the default interpolation mode.
 		static Interpolation defaultInterpolation();
 
 		class CurvePlug;
@@ -109,7 +110,9 @@ class GAFFER_API Animation : public ComputeNode
 				/// Is the key currently active? The key is considered inactive whilst unparented.
 				bool isActive() const;
 
+				/// Get parent curve.
 				CurvePlug *parent();
+				/// Get parent curve (const access).
 				const CurvePlug *parent() const;
 
 			private :
@@ -156,7 +159,7 @@ class GAFFER_API Animation : public ComputeNode
 
 				GAFFER_PLUG_DECLARE_TYPE( Gaffer::Animation::CurvePlug, AnimationCurvePlugTypeId, Gaffer::ValuePlug );
 
-				CurvePlug( const std::string &name = defaultName<CurvePlug>(), Direction direction = Plug::In, unsigned flags = Plug::Default );
+				explicit CurvePlug( const std::string &name = defaultName<CurvePlug>(), Plug::Direction direction = Plug::In, unsigned flags = Plug::Default );
 				~CurvePlug() override;
 
 				typedef boost::signal< void ( CurvePlug*, Key* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeySignal;
@@ -268,7 +271,7 @@ class GAFFER_API Animation : public ComputeNode
 				struct TimeKey
 				{
 					typedef float type;
-					type operator()( const Animation::Key& key ) const; // NOTE : must NEVER throw
+					type operator()( const Animation::Key& ) const; // NOTE : must NEVER throw
 				};
 
 				typedef boost::intrusive::member_hook< Key, Key::Hook, &Key::m_hook > KeyHook;

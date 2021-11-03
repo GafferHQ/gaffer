@@ -41,16 +41,12 @@
 
 #include "OpenEXR/ImathFun.h"
 
-#include "boost/bind.hpp"
-
 #include <algorithm>
 
 #include <cassert>
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace Gaffer;
+namespace Gaffer
+{
 
 //////////////////////////////////////////////////////////////////////////
 // Key implementation
@@ -99,6 +95,8 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				clashingInactiveKey = &( *it );
 			}
 		}
+
+		// time change via action
 
 		KeyPtr key = this;
 		const float previousTime = m_time;
@@ -412,7 +410,7 @@ void Animation::Key::Dispose::operator()( Animation::Key* const key ) const
 
 GAFFER_PLUG_DEFINE_TYPE( Animation::CurvePlug );
 
-Animation::CurvePlug::CurvePlug( const std::string &name, const Direction direction, const unsigned flags )
+Animation::CurvePlug::CurvePlug( const std::string &name, const Plug::Direction direction, const unsigned flags )
 : ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
 , m_keys()
 , m_inactiveKeys()
@@ -651,7 +649,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 	// create key
 
-	key.reset( new Animation::Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolation ) );
+	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolation ) );
 
 	// if specified value is the same as the evaluated value of the curve then bisect span.
 
@@ -872,9 +870,9 @@ Animation::Key *Animation::CurvePlug::closestKey( const float time, const float 
 
 const Animation::Key *Animation::CurvePlug::closestKey( const float time, const float maxDistance ) const
 {
-	const Animation::Key* const candidate = closestKey( time );
+	const Key* const candidate = closestKey( time );
 
-	if( !candidate || std::fabs( candidate->m_time - time ) > maxDistance )
+	if( !candidate || ( std::fabs( candidate->m_time - time ) > maxDistance ) )
 	{
 		return nullptr;
 	}
@@ -1073,9 +1071,9 @@ bool Animation::canAnimate( const ValuePlug* const plug )
 	}
 
 	return
-		runTimeCast<const FloatPlug>( plug ) ||
-		runTimeCast<const IntPlug>( plug ) ||
-		runTimeCast<const BoolPlug>( plug );
+		IECore::runTimeCast<const FloatPlug>( plug ) ||
+		IECore::runTimeCast<const IntPlug>( plug ) ||
+		IECore::runTimeCast<const BoolPlug>( plug );
 }
 
 bool Animation::isAnimated( const ValuePlug* const plug )
@@ -1102,7 +1100,7 @@ Animation::CurvePlug *Animation::acquire( ValuePlug* const plug )
 
 	for( Plug::RecursiveIterator it( plug->node() ); !it.done(); ++it )
 	{
-		ValuePlug *valuePlug = runTimeCast<ValuePlug>( it->get() );
+		ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
 		if( !valuePlug )
 		{
 			continue;
@@ -1110,7 +1108,7 @@ Animation::CurvePlug *Animation::acquire( ValuePlug* const plug )
 
 		if( CurvePlug *curve = inputCurve( valuePlug ) )
 		{
-			animation = runTimeCast<Animation>( curve->node() );
+			animation = IECore::runTimeCast<Animation>( curve->node() );
 			if( animation )
 			{
 				break;
@@ -1226,3 +1224,5 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 			return 0;
 	}
 }
+
+} // Gaffer

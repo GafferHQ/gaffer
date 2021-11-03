@@ -940,7 +940,6 @@ class AnimationTest( GafferTest.TestCase ) :
 		ps = set()
 
 		def changed( curve, key ) :
-
 			ps.add( key )
 
 		s = Gaffer.ScriptNode()
@@ -1038,7 +1037,6 @@ class AnimationTest( GafferTest.TestCase ) :
 		ps = set()
 
 		def changed( curve, key ) :
-
 			ps.add( key )
 
 		s = Gaffer.ScriptNode()
