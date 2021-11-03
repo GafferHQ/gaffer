@@ -78,6 +78,11 @@ void setInterpolation( Animation::Key &k, const Animation::Interpolation interpo
 	k.setInterpolation( interpolation );
 }
 
+Animation::Key* getKey( Animation::Tangent &t )
+{
+	return &( t.key() );
+}
+
 std::string keyRepr( const Animation::Key &k )
 {
 	return boost::str( boost::format(
@@ -167,6 +172,8 @@ void GafferModule::bindAnimation()
 		.staticmethod( "acquire" )
 		.def( "defaultInterpolation", &Animation::defaultInterpolation )
 		.staticmethod( "defaultInterpolation" )
+		.def( "opposite", &Animation::opposite )
+		.staticmethod( "opposite" )
 	;
 
 	enum_< Animation::Interpolation >( "Interpolation" )
@@ -174,6 +181,18 @@ void GafferModule::bindAnimation()
 		.value( Animation::toString( Animation::Interpolation::ConstantNext ), Animation::Interpolation::ConstantNext )
 		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
 	;
+
+	enum_< Animation::Direction >( "Direction" )
+		.value( Animation::toString( Animation::Direction::In ), Animation::Direction::In )
+		.value( Animation::toString( Animation::Direction::Out ), Animation::Direction::Out )
+	;
+
+	class_< Animation::Tangent, boost::noncopyable >( "Tangent", no_init )
+		.def( "key", &getKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def( "direction", &Animation::Tangent::direction )
+		;
 
 	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
 		.def( init< float, float, Animation::Interpolation >(
@@ -190,6 +209,15 @@ void GafferModule::bindAnimation()
 		.def( "setValue", &setValue )
 		.def( "getInterpolation", &Animation::Key::getInterpolation )
 		.def( "setInterpolation", &setInterpolation )
+		.def( "tangentIn",
+			(Animation::Tangent& (Animation::Key::*)())&Animation::Key::tangentIn,
+			return_internal_reference<>() )
+		.def( "tangentOut",
+			(Animation::Tangent& (Animation::Key::*)())&Animation::Key::tangentOut,
+			return_internal_reference<>() )
+		.def( "tangent",
+			(Animation::Tangent& (Animation::Key::*)( Animation::Direction ))&Animation::Key::tangent,
+			return_internal_reference<>() )
 		.def( "isActive", &Animation::Key::isActive )
 		.def( "__repr__", &keyRepr )
 		.def(

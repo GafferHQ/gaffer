@@ -70,12 +70,48 @@ class GAFFER_API Animation : public ComputeNode
 			/// tangents on each key.
 		};
 
+		/// Defines direction relative to a key.
+		enum class Direction
+		{
+			In = 0,
+			Out
+		};
+
 		/// Get the default interpolation mode.
 		static Interpolation defaultInterpolation();
 
+		/// Get the opposite direction to the specified direction
+		static Direction opposite( Direction direction );
+
+		class Key;
 		class CurvePlug;
 		class Interpolator;
 		IE_CORE_DECLAREPTR( Interpolator )
+
+		// Defines a tangent
+		class Tangent : private boost::noncopyable
+		{
+			public:
+
+				~Tangent();
+
+				/// Get parent key.
+				Key& key();
+				/// Get parent key. (const access)
+				const Key& key() const;
+
+				/// Get the direction of the tangent
+				Direction direction() const;
+
+			private:
+
+				friend class Key;
+
+				Tangent( Key& key, Direction direction );
+
+				Key* m_key;
+				Direction m_direction;
+		};
 
 		/// Defines a single keyframe.
 		class Key : public IECore::RunTimeTyped
@@ -87,6 +123,19 @@ class GAFFER_API Animation : public ComputeNode
 				~Key() override;
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
+
+				// Get in tangent
+				Tangent& tangentIn();
+				// Get in tangent (const access)
+				const Tangent& tangentIn() const;
+				// Get out tangent
+				Tangent& tangentOut();
+				// Get out tangent (const access)
+				const Tangent& tangentOut() const;
+				// Get tangent in specified direction
+				Tangent& tangent( Direction direction );
+				// Get tangent in specified direction (const access)
+				const Tangent& tangent( Direction direction ) const;
 
 				/// Get current time of key.
 				float getTime() const;
@@ -139,6 +188,8 @@ class GAFFER_API Animation : public ComputeNode
 
 				Hook m_hook;
 				CurvePlug *m_parent;
+				Tangent m_in;
+				Tangent m_out;
 				float m_time;
 				float m_value;
 				ConstInterpolatorPtr m_interpolator;
@@ -293,6 +344,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// convert enums to strings
 		static const char* toString( Interpolation interpolation );
+		static const char* toString( Direction direction );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 

@@ -187,6 +187,35 @@ Animation::ConstInterpolatorPtr Animation::Interpolator::getDefault()
 }
 
 //////////////////////////////////////////////////////////////////////////
+// Tangent implementation
+//////////////////////////////////////////////////////////////////////////
+
+Animation::Tangent::Tangent( Animation::Key& key, const Animation::Direction direction )
+: m_key( & key )
+, m_direction( direction )
+{}
+
+Animation::Tangent::~Tangent()
+{}
+
+Animation::Key& Animation::Tangent::key()
+{
+	assert( m_key );
+	return *m_key;
+}
+
+const Animation::Key& Animation::Tangent::key() const
+{
+	assert( m_key );
+	return *m_key;
+}
+
+Animation::Direction Animation::Tangent::direction() const
+{
+	return m_direction;
+}
+
+//////////////////////////////////////////////////////////////////////////
 // Key implementation
 //////////////////////////////////////////////////////////////////////////
 
@@ -194,6 +223,8 @@ IE_CORE_DEFINERUNTIMETYPED( Gaffer::Animation::Key )
 
 Animation::Key::Key( const float time, const float value, const Animation::Interpolation interpolation )
 : m_parent( nullptr )
+, m_in( *this, Direction::In )
+, m_out( *this, Direction::Out )
 , m_time( time )
 , m_value( value )
 , m_interpolator( Interpolator::get( interpolation ) )
@@ -205,6 +236,37 @@ Animation::Key::~Key()
 	// NOTE : parent reference should have been reset before the key is destructed
 
 	assert( m_parent == nullptr );
+}
+
+Animation::Tangent& Animation::Key::tangentIn()
+{
+	return m_in;
+}
+
+const Animation::Tangent& Animation::Key::tangentIn() const
+{
+	return m_in;
+}
+
+Animation::Tangent& Animation::Key::tangentOut()
+{
+	return m_out;
+}
+
+const Animation::Tangent& Animation::Key::tangentOut() const
+{
+	return m_out;
+}
+
+Animation::Tangent& Animation::Key::tangent( const Animation::Direction direction )
+{
+	return const_cast< Tangent& >(
+		static_cast< const Key* >( this )->tangent( direction ) );
+}
+
+const Animation::Tangent& Animation::Key::tangent( const Animation::Direction direction ) const
+{
+	return ( direction == Direction::In ) ? m_in : m_out;
 }
 
 float Animation::Key::getTime() const
@@ -1345,6 +1407,11 @@ Animation::Interpolation Animation::defaultInterpolation()
 	return Interpolator::getDefault()->getInterpolation();
 }
 
+Animation::Direction Animation::opposite( const Animation::Direction direction )
+{
+	return static_cast< Direction >( ( static_cast< int >( direction ) + 1 ) % 2 );
+}
+
 const char* Animation::toString( const Animation::Interpolation interpolation )
 {
 	switch( interpolation )
@@ -1355,6 +1422,20 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 			return "ConstantNext";
 		case Interpolation::Linear:
 			return "Linear";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::toString( const Animation::Direction direction )
+{
+	switch( direction )
+	{
+		case Direction::In:
+			return "In";
+		case Direction::Out:
+			return "Out";
 		default:
 			assert( 0 );
 			return 0;
