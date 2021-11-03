@@ -42,6 +42,7 @@ Fixes
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 - NameSwitch : Fixed context management bug that allowed variables such as `scene:path` to leak into the context used to evaluate the `selector` plug.
 - GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs.
+- NodeBinding : Fixed bug that could cause type queries to fail if types derived from Switch or ContextProcessor were wrapped for subclassing in Python.
 
 API
 ---

@@ -93,17 +93,6 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 		{
 		}
 
-		bool isInstanceOf( IECore::TypeId typeId ) const override
-		{
-			if( typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId )
-			{
-				// Correct for the slightly overzealous (but hugely beneficial)
-				// optimisation in NodeWrapper::isInstanceOf().
-				return true;
-			}
-			return NodeWrapper<WrappedType>::isInstanceOf( typeId );
-		}
-
 		void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const override
 		{
 			if( this->isSubclassed() && this->initialised() )
