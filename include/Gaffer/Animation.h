@@ -105,12 +105,16 @@ class GAFFER_API Animation : public ComputeNode
 
 			private:
 
+				friend class CurvePlug;
 				friend class Key;
 
 				Tangent( Key& key, Direction direction );
+				void update();
 
 				Key* m_key;
 				Direction m_direction;
+				double m_dt;
+				double m_dv;
 		};
 
 		/// Defines a single keyframe.
@@ -169,6 +173,12 @@ class GAFFER_API Animation : public ComputeNode
 			private :
 
 				friend class CurvePlug;
+				friend class Tangent;
+
+				Key *nextKey();
+				Key *prevKey();
+				const Key *nextKey() const;
+				const Key *prevKey() const;
 
 				void throwIfStateNotAsExpected( const CurvePlug*, bool, float ) const;
 

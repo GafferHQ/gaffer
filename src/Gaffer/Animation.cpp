@@ -193,6 +193,8 @@ Animation::ConstInterpolatorPtr Animation::Interpolator::getDefault()
 Animation::Tangent::Tangent( Animation::Key& key, const Animation::Direction direction )
 : m_key( & key )
 , m_direction( direction )
+, m_dt( 0.0 )
+, m_dv( 0.0 )
 {}
 
 Animation::Tangent::~Tangent()
@@ -213,6 +215,48 @@ const Animation::Key& Animation::Tangent::key() const
 Animation::Direction Animation::Tangent::direction() const
 {
 	return m_direction;
+}
+
+void Animation::Tangent::update()
+{
+	assert( m_key );
+
+	// update span time and value differences
+
+	double dt = 0.0;
+	double dv = 0.0;
+
+	if( m_key->m_parent )
+	{
+		switch( m_direction )
+		{
+			case Direction::In:
+				if( const Key* const kp = m_key->prevKey() )
+				{
+					dt = ( m_key->m_time - kp->m_time );
+					dv = ( m_key->m_value - kp->m_value );
+				}
+				break;
+			case Direction::Out:
+				if( const Key* const kn = m_key->nextKey() )
+				{
+					dt = ( kn->m_time - m_key->m_time );
+					dv = ( kn->m_value - m_key->m_value );
+				}
+				break;
+			default:
+				break;
+		}
+	}
+
+	// NOTE : when dt becomes zero either the tangent's parent key has been removed from a curve
+	//        or the tangent's direction is in and its parent key is the first key in a curve
+	//        or the tangent's direction is out and its parent key is the final key in a curve.
+	// NOTE : when dt becomes non zero either the tangent's parent key has been added to a curve
+	//        or is no longer the first or final key in a curve.
+
+	m_dv = dv;
+	m_dt = dt;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -333,6 +377,8 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				//          insert clashing key into inactive keys container
 				//        else insert key into active keys container
 				// NOTE : It is critical to the following code that the key comparison NEVER throws.
+				Key* const kpn = key->nextKey();
+				Key* const kpp = key->prevKey();
 				assert( key->m_hook.is_linked() );
 				if( ! active )
 				{
@@ -387,6 +433,33 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				assert( ! clashingKey || ( clashingKey->m_active == false ) );
 				assert( ! clashingInactiveKey || ( clashingInactiveKey->m_active == true ) );
 
+				// update keys
+				//
+				// NOTE : only update next/prev keys at old time when there is no clashing inactive
+				//        key as any clashing inactive key will replace the key whose time is being
+				//        set. only update the next/prev keys at the new time when there is no active
+				//        clashing key as the key whose time is being set will replace any active
+				//        clashing key. The key and any clashing inactive key are always updated.
+				key->m_out.update();
+				key->m_in.update();
+				if( clashingInactiveKey )
+				{
+					clashingInactiveKey->m_in.update();
+					clashingInactiveKey->m_out.update();
+				}
+				else
+				{
+					if( kpn ){ kpn->m_in.update(); }
+					if( kpp ){ kpp->m_out.update(); }
+				}
+				if( ! clashingKey )
+				{
+					Key* const kn = key->nextKey();
+					if( kn && ( kn != kpn || clashingInactiveKey ) ){ kn->m_in.update(); }
+					Key* const kp = key->prevKey();
+					if( kp && ( kp != kpp || clashingInactiveKey ) ){ kp->m_out.update(); }
+				}
+
 				curve->m_keyTimeChangedSignal( key->m_parent, key.get() );
 				curve->propagateDirtiness( curve->outPlug() );
 			},
@@ -410,6 +483,8 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				//          reinsert clashing inactive key into inactive keys container
 				//        else reinsert key into active keys container
 				// NOTE : It is critical to the following code that the key comparison NEVER throws.
+				Key* const kpn = key->nextKey();
+				Key* const kpp = key->prevKey();
 				assert( key->m_hook.is_linked() );
 				if( clashingKey )
 				{
@@ -465,6 +540,37 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				assert( ! clashingKey || ( clashingKey->m_active == true ) );
 				assert( ! clashingInactiveKey || ( clashingInactiveKey->m_active == false ) );
 
+				// update keys
+				//
+				// NOTE : only update next/prev keys at old time when there is no clashing inactive
+				//        key as key whose time is being set replaces any clashing inactive key.
+				//        only update the next/prev keys at the new time when there is no active
+				//        clashing key as any active clashing key will replace the key whose time
+				//        is being set. The active clashing key is updated as it becomes active.
+				//        The key whose time was set is updated if it was active.
+				if( active )
+				{
+					key->m_in.update();
+					key->m_out.update();
+				}
+				if( clashingKey )
+				{
+					clashingKey->m_in.update();
+					clashingKey->m_out.update();
+				}
+				else
+				{
+					if( kpn ){ kpn->m_in.update(); }
+					if( kpp ){ kpp->m_out.update(); }
+				}
+				if( ! clashingInactiveKey )
+				{
+					Key* const kn = key->nextKey();
+					if( kn && ( kn != kpn || clashingKey ) ){ kn->m_in.update(); }
+					Key* const kp = key->prevKey();
+					if( kp && ( kp != kpp || clashingKey ) ){ kp->m_out.update(); }
+				}
+
 				curve->m_keyTimeChangedSignal( key->m_parent, key.get() );
 				curve->propagateDirtiness( curve->outPlug() );
 			}
@@ -503,12 +609,20 @@ void Animation::Key::setValue( const float value )
 			// Do
 			[ key, value ] {
 				key->m_value = value;
+				key->m_out.update();
+				key->m_in.update();
+				if( Key* const kn = key->nextKey() ){ kn->m_in.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_out.update(); }
 				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			},
 			// Undo
 			[ key, previousValue ] {
 				key->m_value = previousValue;
+				key->m_out.update();
+				key->m_in.update();
+				if( Key* const kn = key->nextKey() ){ kn->m_in.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_out.update(); }
 				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			}
@@ -565,6 +679,52 @@ void Animation::Key::setInterpolation( const Animation::Interpolation interpolat
 bool Animation::Key::isActive() const
 {
 	return m_active;
+}
+
+Animation::Key *Animation::Key::nextKey()
+{
+	return const_cast< Key* >( static_cast< const Key* >( this )->nextKey() );
+}
+
+Animation::Key *Animation::Key::prevKey()
+{
+	return const_cast< Key* >( static_cast< const Key* >( this )->prevKey() );
+}
+
+const Animation::Key *Animation::Key::nextKey() const
+{
+	const Key* k = 0;
+
+	if( m_parent && m_active )
+	{
+		assert( m_hook.is_linked() );
+
+		CurvePlug::Keys::const_iterator it = m_parent->m_keys.iterator_to( *this );
+
+		if( ++it != m_parent->m_keys.end() )
+		{
+			k = &( *it );
+		}
+	}
+
+	return k;
+}
+
+const Animation::Key *Animation::Key::prevKey() const
+{
+	const Key* k = 0;
+
+	if( m_parent && m_active )
+	{
+		CurvePlug::Keys::const_iterator it = m_parent->m_keys.iterator_to( *this );
+
+		if( it-- != m_parent->m_keys.begin() )
+		{
+			k = &( *it );
+		}
+	}
+
+	return k;
 }
 
 Animation::CurvePlug *Animation::Key::parent()
@@ -726,6 +886,20 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 			key->m_parent = this; // NOTE : never throws or fails
 			key->addRef();        // NOTE : take ownership
 			key->m_active = true;
+
+			// update keys
+			//
+			// NOTE : only update the new next/prev keys when there is no active clashing key as
+			//        the key being added will replace any inactive clashing key. Always update
+			//        the key being added.
+			key->m_in.update();
+			key->m_out.update();
+			if( ! clashingKey )
+			{
+				if( Key* const kn = key->nextKey() ){ kn->m_in.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_out.update(); }
+			}
+
 			m_keyAddedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		},
@@ -741,6 +915,8 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 			//        else
 			//          remove key from active keys container
 			// NOTE : It is critical to the following code that the key comparison NEVER throws.
+			Key* const kn = key->nextKey();
+			Key* const kp = key->prevKey();
 			assert( key->m_hook.is_linked() );
 			if( clashingKey )
 			{
@@ -762,6 +938,25 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 				m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
 				ASSERTCONTAINSKEY( key, m_keys, false )
 			}
+
+			// update keys
+			//
+			// NOTE : only update the old next/prev keys when there is no inactive clashing key as
+			//        any inactive clashing key will replace the key being removed. Always update
+			//        the key being removed and the inactive clashing key as it becomes active.
+			key->m_in.update();
+			key->m_out.update();
+			if( clashingKey )
+			{
+				clashingKey->m_in.update();
+				clashingKey->m_out.update();
+			}
+			else
+			{
+				if( kn ){ kn->m_in.update(); }
+				if( kp ){ kp->m_out.update(); }
+			}
+
 			m_keyRemovedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		}
@@ -954,6 +1149,8 @@ void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
 			//        else
 			//          remove key from active keys container
 			// NOTE : It is critical to the following code that the key comparison NEVER throws.
+			Key* const kn = key->nextKey();
+			Key* const kp = key->prevKey();
 			assert( key->m_hook.is_linked() );
 			if( ! active )
 			{
@@ -980,6 +1177,25 @@ void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
 				m_keys.erase_and_dispose( m_keys.iterator_to( *key ), Key::Dispose() );
 				ASSERTCONTAINSKEY( key, m_keys, false )
 			}
+
+			// update keys
+			//
+			// NOTE : only update the old next/prev keys when there is no inactive clashing key as
+			//        any inactive clashing key will replace the key being removed. Always update
+			//        the key being removed and the inactive clashing key as it becomes active.
+			key->m_in.update();
+			key->m_out.update();
+			if( clashingKey )
+			{
+				clashingKey->m_in.update();
+				clashingKey->m_out.update();
+			}
+			else
+			{
+				if( kn ){ kn->m_in.update(); }
+				if( kp ){ kp->m_out.update(); }
+			}
+
 			m_keyRemovedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		},
@@ -1026,6 +1242,23 @@ void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
 			key->m_parent = this; // NOTE : never throws or fails
 			key->addRef();        // NOTE : take ownership
 			key->m_active = active;
+
+			// update keys
+			//
+			// NOTE : only update the new next/prev keys when there is no active clashing key as
+			//        the key being added will replace any active clashing key. only update the key
+			//        being added when it becomes active.
+			if( active )
+			{
+				key->m_in.update();
+				key->m_out.update();
+			}
+			if( ! clashingKey )
+			{
+				if( Key* const k = key->nextKey() ){ k->m_in.update(); }
+				if( Key* const k = key->prevKey() ){ k->m_out.update(); }
+			}
+
 			m_keyAddedSignal( this, key.get() );
 			propagateDirtiness( outPlug() );
 		}
@@ -1201,7 +1434,7 @@ float Animation::CurvePlug::evaluate( const float time ) const
 
 	// normalise time to lo, hi key time range
 
-	const double dt = hi.m_time - lo.m_time;
+	const double dt = lo.m_out.m_dt;
 	const double nt = Imath::clamp( ( time - lo.m_time ) / dt, 0.0, 1.0 );
 
 	// evaluate interpolator
