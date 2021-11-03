@@ -46,6 +46,8 @@
 
 #include "boost/lexical_cast.hpp"
 
+#include <cmath>
+
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
@@ -83,13 +85,34 @@ Animation::Key* getKey( Animation::Tangent &t )
 	return &( t.key() );
 }
 
+void setSlope( Animation::Tangent &t, const double slope )
+{
+	ScopedGILRelease gilRelease;
+	t.setSlope( slope );
+}
+
+void setScale( Animation::Tangent &t, const double scale )
+{
+	ScopedGILRelease gilRelease;
+	t.setScale( scale );
+}
+
+std::string slopeRepr( const double slope )
+{
+	return boost::str( boost::format( ( ( std::isinf( slope ) ) ? "float( '%.9g' )" : "%.9g" ) ) % slope );
+}
+
 std::string keyRepr( const Animation::Key &k )
 {
 	return boost::str( boost::format(
-		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s )" )
+		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s, %s, %.9g, %s, %.9g )" )
 			% k.getTime()
 			% k.getValue()
 			% Animation::toString( k.getInterpolation() )
+			% slopeRepr( k.tangentIn().getSlope() )
+			% k.tangentIn().getScale()
+			% slopeRepr( k.tangentOut().getSlope() )
+			% k.tangentOut().getScale()
 	);
 };
 
@@ -172,6 +195,10 @@ void GafferModule::bindAnimation()
 		.staticmethod( "acquire" )
 		.def( "defaultInterpolation", &Animation::defaultInterpolation )
 		.staticmethod( "defaultInterpolation" )
+		.def( "defaultSlope", &Animation::defaultSlope )
+		.staticmethod( "defaultSlope" )
+		.def( "defaultScale", &Animation::defaultScale )
+		.staticmethod( "defaultScale" )
 		.def( "opposite", &Animation::opposite )
 		.staticmethod( "opposite" )
 	;
@@ -192,14 +219,24 @@ void GafferModule::bindAnimation()
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
 		.def( "direction", &Animation::Tangent::direction )
+		.def( "setSlope", &setSlope )
+		.def( "getSlope", (double (Animation::Tangent::*)() const)&Animation::Tangent::getSlope )
+		.def( "setScale", &setScale )
+		.def( "getScale", (double (Animation::Tangent::*)() const)&Animation::Tangent::getScale )
+		.def( "slopeIsConstrained", &Animation::Tangent::slopeIsConstrained )
+		.def( "scaleIsConstrained", &Animation::Tangent::scaleIsConstrained )
 		;
 
 	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
-		.def( init< float, float, Animation::Interpolation >(
+		.def( init< float, float, Animation::Interpolation, double, double, double, double >(
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
-					arg( "interpolation" ) = Animation::defaultInterpolation()
+					arg( "interpolation" ) = Animation::defaultInterpolation(),
+					arg( "inSlope" ) = Animation::defaultSlope(),
+					arg( "inScale" ) = Animation::defaultScale(),
+					arg( "outSlope" ) = Animation::defaultSlope(),
+					arg( "outScale" ) = Animation::defaultScale()
 				)
 			)
 		)

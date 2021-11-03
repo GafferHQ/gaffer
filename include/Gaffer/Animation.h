@@ -83,6 +83,12 @@ class GAFFER_API Animation : public ComputeNode
 		/// Get the opposite direction to the specified direction
 		static Direction opposite( Direction direction );
 
+		/// Get the default slope
+		static double defaultSlope();
+
+		/// Get the default scale
+		static double defaultScale();
+
 		class Key;
 		class CurvePlug;
 		class Interpolator;
@@ -103,18 +109,49 @@ class GAFFER_API Animation : public ComputeNode
 				/// Get the direction of the tangent
 				Direction direction() const;
 
+				/// Get tangent's slope.
+				/// The slope is in range [-inf,+inf]
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true this function will return the constrained slope.
+				double getSlope() const;
+				/// \undoable
+				/// Set tangent's slope.
+				/// The slope is in range [-inf,+inf]
+				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true this function will have no effect.
+				void setSlope( double slope );
+
+				/// Get tangent's scale.
+				/// The scale is multiplied by the span width to derive the tangent's length.
+				/// If the tangent's key is parented to a curve and scaleIsConstrained() returns true this function will return the constrained scale.
+				double getScale() const;
+				/// \undoable
+				/// Set tangent's scale.
+				/// The scale is multiplied by the span width to derive the tangent's length.
+				/// If the tangent's key is parented to a curve and scaleIsConstrained() returns true this function will have no effect.
+				void setScale( double scale );
+
+				/// Is slope currently constrained by interpolation mode.
+				bool slopeIsConstrained() const;
+				/// Is scale currently constrained by interpolation mode.
+				bool scaleIsConstrained() const;
+
 			private:
 
 				friend class CurvePlug;
 				friend class Key;
 
-				Tangent( Key& key, Direction direction );
+				Tangent( Key&, Direction, double, double );
+				/// \undoable
+				void setSlope( double, bool );
+				/// \undoable
+				void setScale( double, bool );
 				void update();
 
 				Key* m_key;
 				Direction m_direction;
 				double m_dt;
 				double m_dv;
+				double m_slope;
+				double m_scale;
 		};
 
 		/// Defines a single keyframe.
@@ -123,7 +160,9 @@ class GAFFER_API Animation : public ComputeNode
 
 			public :
 
-				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Animation::defaultInterpolation() );
+				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Animation::defaultInterpolation(),
+					double inSlope = Animation::defaultSlope(), double inScale = Animation::defaultScale(),
+					double outSlope = Animation::defaultSlope(), double outScale = Animation::defaultScale() );
 				~Key() override;
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
@@ -321,6 +360,7 @@ class GAFFER_API Animation : public ComputeNode
 			private :
 
 				friend class Key;
+				friend class Tangent;
 				friend KeyIterator;
 				friend ConstKeyIterator;
 

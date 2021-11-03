@@ -43,6 +43,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <vector>
 
 namespace Gaffer
@@ -59,32 +60,54 @@ public:
 	};
 
 	Animation::Interpolation getInterpolation() const;
+	unsigned getHints() const;
 
 	static ConstInterpolatorPtr get( Animation::Interpolation interpolation );
 	static ConstInterpolatorPtr getDefault();
 
 protected:
 
-	/// construct with specified interpolation
-	Interpolator( const Animation::Interpolation interpolation );
+	// construct with specified interpolation and hints
+	explicit Interpolator( Animation::Interpolation interpolation, unsigned hints = 0 );
 
 private:
 
 	friend class CurvePlug;
+	friend class Tangent;
 
 	/// Implement to return interpolated value at specified normalised time
 	virtual double evaluate( const Key& keyLo, const Key& keyHi, double time, double dt ) const = 0;
+
+	/// Implement to compute the effective slope of the specified tangent
+	virtual double effectiveSlope( const Tangent& tangent, double dt, double dv ) const;
+
+	/// Implement to compute the effective scale of the specified tangent
+	virtual double effectiveScale( const Tangent& tangent, double dt, double dv ) const;
 
 	typedef std::vector< ConstInterpolatorPtr > Container;
 	static const Container& get();
 
 	Animation::Interpolation m_interpolation;
+	unsigned m_hints;
 };
 
 } // Gaffer
 
 namespace
 {
+
+double maxScale( const double slope )
+{
+	// NOTE : s = y/x
+	//        l = sqrt(x^2 + y^2)
+	//
+	//        When scale at maximum, x = 1, therefore,
+	//
+	//        y = s
+	//        l = sqrt(1 + s^2)
+
+	return std::sqrt( std::fma( slope, slope, 1.0 ) );
+}
 
 // constant interpolator
 
@@ -132,6 +155,11 @@ struct InterpolatorLinear
 	{
 		return keyLo.getValue() * ( 1.0 - time ) + keyHi.getValue() * ( time );
 	}
+
+	double effectiveSlope( const Gaffer::Animation::Tangent& /*tangent*/, const double dt, const double dv ) const override
+	{
+		return ( dv / dt );
+	}
 };
 
 } // namespace
@@ -143,8 +171,9 @@ namespace Gaffer
 // Interpolator implementation
 //////////////////////////////////////////////////////////////////////////
 
-Animation::Interpolator::Interpolator( const Animation::Interpolation interpolation )
+Animation::Interpolator::Interpolator( const Animation::Interpolation interpolation, const unsigned hints )
 : m_interpolation( interpolation )
+, m_hints( hints )
 {}
 
 Animation::Interpolation Animation::Interpolator::getInterpolation() const
@@ -152,9 +181,26 @@ Animation::Interpolation Animation::Interpolator::getInterpolation() const
 	return m_interpolation;
 }
 
+unsigned Animation::Interpolator::getHints() const
+{
+	return m_hints;
+}
+
 double Animation::Interpolator::evaluate(
 	const Animation::Key& /*keyLo*/, const Animation::Key& /*keyHi*/,
 	const double /*time*/, const double /*dt*/ ) const
+{
+	return 0.0;
+}
+
+double Animation::Interpolator::effectiveSlope(
+	const Animation::Tangent& /*tangent*/, const double /*dt*/, const double /*dv*/ ) const
+{
+	return 0.0;
+}
+
+double Animation::Interpolator::effectiveScale(
+	const Animation::Tangent& /*tangent*/, const double /*dt*/, const double /*dv*/ ) const
 {
 	return 0.0;
 }
@@ -183,18 +229,20 @@ Animation::ConstInterpolatorPtr Animation::Interpolator::get( const Animation::I
 
 Animation::ConstInterpolatorPtr Animation::Interpolator::getDefault()
 {
-	return Animation::Interpolator::get().front();
+	return Interpolator::get().front();
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Tangent implementation
 //////////////////////////////////////////////////////////////////////////
 
-Animation::Tangent::Tangent( Animation::Key& key, const Animation::Direction direction )
+Animation::Tangent::Tangent( Animation::Key& key, const Animation::Direction direction, const double slope, const double scale )
 : m_key( & key )
 , m_direction( direction )
 , m_dt( 0.0 )
 , m_dv( 0.0 )
+, m_slope( slope )
+, m_scale( Imath::clamp( scale, 0.0, maxScale( m_slope ) ) )
 {}
 
 Animation::Tangent::~Tangent()
@@ -215,6 +263,186 @@ const Animation::Key& Animation::Tangent::key() const
 Animation::Direction Animation::Tangent::direction() const
 {
 	return m_direction;
+}
+
+void Animation::Tangent::setSlope( const double slope )
+{
+	setSlope( slope, false );
+}
+
+void Animation::Tangent::setSlope( double slope, const bool force )
+{
+	// check that slope is unconstrained
+
+	if( ! force && slopeIsConstrained() )
+	{
+		return;
+	}
+
+	// check for no change
+
+	if( m_slope == slope )
+	{
+		return;
+	}
+
+	// clamp existing scale based on new slope
+
+	const double scale = std::min( m_scale, maxScale( slope ) );
+
+	// make change via action
+
+	if( m_key->m_parent )
+	{
+		KeyPtr key = m_key;
+		const double previousSlope = m_slope;
+		const double previousScale = m_scale;
+		Action::enact(
+			key->m_parent,
+			// Do
+			[ this, key, slope, scale ] {
+				m_slope = slope;
+				m_scale = scale;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			},
+			// Undo
+			[ this, key, previousSlope, previousScale ] {
+				m_slope = previousSlope;
+				m_scale = previousScale;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			}
+		);
+	}
+	else
+	{
+		m_slope = slope;
+		m_scale = scale;
+	}
+}
+
+double Animation::Tangent::getSlope() const
+{
+	if( slopeIsConstrained() )
+	{
+		return ( ( m_direction == Direction::Out )
+			? m_key->m_interpolator
+			: m_key->prevKey()->m_interpolator )->effectiveSlope( *this, m_dt, m_dv );
+	}
+
+	return m_slope;
+}
+
+bool Animation::Tangent::slopeIsConstrained() const
+{
+	assert( m_key );
+
+	// when unparented or inactive slope is not constrained
+
+	if( ! m_key->m_parent || ! m_key->m_active )
+	{
+		return false;
+	}
+
+	// check interpolator hints
+
+	if(
+		( ( m_direction == Direction::Out ) && ( m_key->m_parent->finalKey() != m_key ) &&
+			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) ||
+		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
+			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void Animation::Tangent::setScale( double scale )
+{
+	setScale( scale, false );
+}
+
+void Animation::Tangent::setScale( double scale, const bool force )
+{
+	// check that scale is unconstrained
+
+	if( ! force && scaleIsConstrained() )
+	{
+		return;
+	}
+
+	// clamp new scale based on existing slope
+
+	scale = Imath::clamp( scale, 0.0, maxScale( m_slope ) );
+
+	// check for no change
+
+	if( m_scale == scale )
+	{
+		return;
+	}
+
+	// make change via action
+
+	if( m_key->m_parent )
+	{
+		KeyPtr key = m_key;
+		const double previousScale = m_scale;
+		Action::enact(
+			key->m_parent,
+			// Do
+			[ this, key, scale ] {
+				m_scale = scale;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			},
+			// Undo
+			[ this, key, previousScale ] {
+				m_scale = previousScale;
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			}
+		);
+	}
+	else
+	{
+		m_scale = scale;
+	}
+}
+
+double Animation::Tangent::getScale() const
+{
+	if( scaleIsConstrained() )
+	{
+		return ( ( m_direction == Direction::Out )
+			? m_key->m_interpolator
+			: m_key->prevKey()->m_interpolator )->effectiveScale( *this, m_dt, m_dv );
+	}
+
+	return m_scale;
+}
+
+bool Animation::Tangent::scaleIsConstrained() const
+{
+	assert( m_key );
+
+	// when unparented or inactive scale is not constrained
+
+	if( ! m_key->m_parent || ! m_key->m_active )
+	{
+		return false;
+	}
+
+	// check interpolator hints
+
+	if(
+		( ( m_direction == Direction::Out ) && ( m_key->m_parent->finalKey() != m_key ) &&
+			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) ||
+		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
+			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) )
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void Animation::Tangent::update()
@@ -265,10 +493,11 @@ void Animation::Tangent::update()
 
 IE_CORE_DEFINERUNTIMETYPED( Gaffer::Animation::Key )
 
-Animation::Key::Key( const float time, const float value, const Animation::Interpolation interpolation )
+Animation::Key::Key( const float time, const float value, const Animation::Interpolation interpolation,
+	const double inSlope, const double inScale, const double outSlope, const double outScale )
 : m_parent( nullptr )
-, m_in( *this, Direction::In )
-, m_out( *this, Direction::Out )
+, m_in( *this, Direction::In, inSlope, inScale )
+, m_out( *this, Direction::Out, outSlope, outScale )
 , m_time( time )
 , m_value( value )
 , m_interpolator( Interpolator::get( interpolation ) )
@@ -1643,6 +1872,16 @@ Animation::Interpolation Animation::defaultInterpolation()
 Animation::Direction Animation::opposite( const Animation::Direction direction )
 {
 	return static_cast< Direction >( ( static_cast< int >( direction ) + 1 ) % 2 );
+}
+
+double Animation::defaultSlope()
+{
+	return 0.0;
+}
+
+double Animation::defaultScale()
+{
+	return ( 1.0 / 3.0 );
 }
 
 const char* Animation::toString( const Animation::Interpolation interpolation )
