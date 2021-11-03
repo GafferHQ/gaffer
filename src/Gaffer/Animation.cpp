@@ -42,11 +42,149 @@
 #include "OpenEXR/ImathFun.h"
 
 #include <algorithm>
-
 #include <cassert>
+#include <vector>
 
 namespace Gaffer
 {
+
+class Animation::Interpolator : public IECore::RefCounted
+{
+public:
+
+	enum Hint
+	{
+		UseSlope = 1,
+		UseScale = 2
+	};
+
+	Animation::Interpolation getInterpolation() const;
+
+	static ConstInterpolatorPtr get( Animation::Interpolation interpolation );
+	static ConstInterpolatorPtr getDefault();
+
+protected:
+
+	/// construct with specified interpolation
+	Interpolator( const Animation::Interpolation interpolation );
+
+private:
+
+	friend class CurvePlug;
+
+	/// Implement to return interpolated value at specified normalised time
+	virtual double evaluate( const Key& keyLo, const Key& keyHi, double time, double dt ) const = 0;
+
+	typedef std::vector< ConstInterpolatorPtr > Container;
+	static const Container& get();
+
+	Animation::Interpolation m_interpolation;
+};
+
+} // Gaffer
+
+namespace
+{
+
+// constant interpolator
+
+struct InterpolatorConstant
+: public Gaffer::Animation::Interpolator
+{
+	InterpolatorConstant()
+	: Gaffer::Animation::Interpolator( Gaffer::Animation::Interpolation::Constant )
+	{}
+
+	double evaluate( const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& /*keyHi*/,
+		const double /*time*/, const double /*dt*/ ) const override
+	{
+		return keyLo.getValue();
+	}
+};
+
+// constant next interpolator
+
+struct InterpolatorConstantNext
+: public Gaffer::Animation::Interpolator
+{
+	InterpolatorConstantNext()
+	: Gaffer::Animation::Interpolator( Gaffer::Animation::Interpolation::ConstantNext )
+	{}
+
+	double evaluate( const Gaffer::Animation::Key& /*keyLo*/, const Gaffer::Animation::Key& keyHi,
+		const double /*time*/, const double /*dt*/ ) const override
+	{
+		return keyHi.getValue();
+	}
+};
+
+// linear interpolator
+
+struct InterpolatorLinear
+: public Gaffer::Animation::Interpolator
+{
+	InterpolatorLinear()
+	: Gaffer::Animation::Interpolator( Gaffer::Animation::Interpolation::Linear )
+	{}
+
+	double evaluate( const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
+		const double time, const double /*dt*/ ) const override
+	{
+		return keyLo.getValue() * ( 1.0 - time ) + keyHi.getValue() * ( time );
+	}
+};
+
+} // namespace
+
+namespace Gaffer
+{
+
+//////////////////////////////////////////////////////////////////////////
+// Interpolator implementation
+//////////////////////////////////////////////////////////////////////////
+
+Animation::Interpolator::Interpolator( const Animation::Interpolation interpolation )
+: m_interpolation( interpolation )
+{}
+
+Animation::Interpolation Animation::Interpolator::getInterpolation() const
+{
+	return m_interpolation;
+}
+
+double Animation::Interpolator::evaluate(
+	const Animation::Key& /*keyLo*/, const Animation::Key& /*keyHi*/,
+	const double /*time*/, const double /*dt*/ ) const
+{
+	return 0.0;
+}
+
+const Animation::Interpolator::Container& Animation::Interpolator::get()
+{
+	static const Container container
+	{
+		ConstInterpolatorPtr( new InterpolatorLinear() ),
+		ConstInterpolatorPtr( new InterpolatorConstantNext() ),
+		ConstInterpolatorPtr( new InterpolatorConstant() )
+	};
+
+	return container;
+}
+
+Animation::ConstInterpolatorPtr Animation::Interpolator::get( const Animation::Interpolation interpolation )
+{
+	const Container& container = Interpolator::get();
+	const Container::const_iterator it =
+		std::find_if( container.begin(), container.end(),
+			[ interpolation ]( const ConstInterpolatorPtr& interpolator ) -> bool
+			{ return interpolator->getInterpolation() == interpolation; } );
+	return ( it != container.end() ) ? ( *it ) : Interpolator::getDefault();
+}
+
+Animation::ConstInterpolatorPtr Animation::Interpolator::getDefault()
+{
+	return Animation::Interpolator::get().front();
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Key implementation
@@ -54,10 +192,13 @@ namespace Gaffer
 
 IE_CORE_DEFINERUNTIMETYPED( Gaffer::Animation::Key )
 
-Animation::Key::Key( float time, float value, Animation::Interpolation interpolation )
-	:	m_parent( nullptr ), m_time( time ), m_value( value ), m_interpolation( interpolation ), m_active( false )
-{
-}
+Animation::Key::Key( const float time, const float value, const Animation::Interpolation interpolation )
+: m_parent( nullptr )
+, m_time( time )
+, m_value( value )
+, m_interpolator( Interpolator::get( interpolation ) )
+, m_active( false )
+{}
 
 Animation::Key::~Key()
 {
@@ -319,12 +460,14 @@ void Animation::Key::setValue( const float value )
 
 Animation::Interpolation Animation::Key::getInterpolation() const
 {
-	return m_interpolation;
+	return m_interpolator->getInterpolation();
 }
 
 void Animation::Key::setInterpolation( const Animation::Interpolation interpolation )
 {
-	if( interpolation == m_interpolation )
+	const ConstInterpolatorPtr interpolator = Interpolator::get( interpolation );
+
+	if( ! interpolator || ( interpolator == m_interpolator ) )
 	{
 		return;
 	}
@@ -334,18 +477,18 @@ void Animation::Key::setInterpolation( const Animation::Interpolation interpolat
 	if( m_parent )
 	{
 		KeyPtr key = this;
-		const Animation::Interpolation previousInterpolation = m_interpolation;
+		const ConstInterpolatorPtr previousInterpolator = m_interpolator;
 		Action::enact(
 			m_parent,
 			// Do
-			[ key, interpolation ] {
-				key->m_interpolation = interpolation;
+			[ key, interpolator ] {
+				key->m_interpolator = interpolator;
 				key->m_parent->m_keyInterpolationChangedSignal( key->m_parent, key.get() );
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			},
 			// Undo
-			[ key, previousInterpolation ] {
-				key->m_interpolation = previousInterpolation;
+			[ key, previousInterpolator ] {
+				key->m_interpolator = previousInterpolator;
 				key->m_parent->m_keyInterpolationChangedSignal( key->m_parent, key.get() );
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			}
@@ -353,7 +496,7 @@ void Animation::Key::setInterpolation( const Animation::Interpolation interpolat
 	}
 	else
 	{
-		m_interpolation = interpolation;
+		m_interpolator = interpolator;
 	}
 }
 
@@ -634,22 +777,24 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		return key;
 	}
 
-	// get interpolation
+	// get interpolator
 
-	Interpolation interpolation = Gaffer::Animation::defaultInterpolation();
+	ConstInterpolatorPtr interpolator = Interpolator::getDefault();
 
 	if( lo )
 	{
-		interpolation = lo->m_interpolation;
+		interpolator = lo->m_interpolator;
 	}
 	else if( const Key* const kf = firstKey() )
 	{
-		interpolation = kf->m_interpolation;
+		interpolator = kf->m_interpolator;
 	}
+
+	assert( interpolator );
 
 	// create key
 
-	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolation ) );
+	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolator->getInterpolation() ) );
 
 	// if specified value is the same as the evaluated value of the curve then bisect span.
 
@@ -994,21 +1139,12 @@ float Animation::CurvePlug::evaluate( const float time ) const
 
 	// normalise time to lo, hi key time range
 
-	const double nt = std::min( std::max(
-		static_cast< double >( time - lo.m_time ) /
-		static_cast< double >( hi.m_time - lo.m_time ), 0.0 ), 1.0 );
+	const double dt = hi.m_time - lo.m_time;
+	const double nt = Imath::clamp( ( time - lo.m_time ) / dt, 0.0, 1.0 );
 
-	switch( lo.m_interpolation )
-	{
-		case Interpolation::Constant:
-			return lo.m_value;
-		case Interpolation::ConstantNext:
-			return hi.m_value;
-		case Interpolation::Linear:
-			return lo.m_value * ( 1.0 - nt ) + hi.m_value * ( nt );
-		default:
-			return 0.f;
-	}
+	// evaluate interpolator
+
+	return lo.m_interpolator->evaluate( lo, hi, nt, dt );
 }
 
 FloatPlug *Animation::CurvePlug::outPlug()
@@ -1206,7 +1342,7 @@ ValuePlug::CachePolicy Animation::computeCachePolicy( const Gaffer::ValuePlug* c
 
 Animation::Interpolation Animation::defaultInterpolation()
 {
-	return Animation::Interpolation::Linear;
+	return Interpolator::getDefault()->getInterpolation();
 }
 
 const char* Animation::toString( const Animation::Interpolation interpolation )

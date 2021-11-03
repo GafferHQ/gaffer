@@ -74,6 +74,8 @@ class GAFFER_API Animation : public ComputeNode
 		static Interpolation defaultInterpolation();
 
 		class CurvePlug;
+		class Interpolator;
+		IE_CORE_DECLAREPTR( Interpolator )
 
 		/// Defines a single keyframe.
 		class Key : public IECore::RunTimeTyped
@@ -139,7 +141,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlug *m_parent;
 				float m_time;
 				float m_value;
-				Interpolation m_interpolation;
+				ConstInterpolatorPtr m_interpolator;
 				bool m_active;
 
 		};
