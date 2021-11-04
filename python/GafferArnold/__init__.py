@@ -63,5 +63,6 @@ finally :
 
 from .ArnoldShaderBall import ArnoldShaderBall
 from .ArnoldTextureBake import ArnoldTextureBake
+from . import Private
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnold" )

@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
-#define IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
+#ifndef IECOREARNOLD_SHADERNETWORKALGO_H
+#define IECOREARNOLD_SHADERNETWORKALGO_H
 
 #include "GafferArnold/Export.h"
 
@@ -45,7 +45,7 @@
 
 #include <vector>
 
-namespace IECoreArnoldPreview
+namespace IECoreArnold
 {
 
 namespace ShaderNetworkAlgo
@@ -64,6 +64,6 @@ GAFFERARNOLD_API bool update( std::vector<AtNode *> &nodes, const IECoreScene::S
 
 } // namespace ShaderNetworkAlgo
 
-} // namespace IECoreArnoldPreview
+} // namespace IECoreArnold
 
-#endif // IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
+#endif // IECOREARNOLD_SHADERNETWORKALGO_H

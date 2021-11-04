@@ -51,7 +51,7 @@
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/ArnoldLightFilter.h"
 #include "GafferArnold/InteractiveArnoldRender.h"
-#include "GafferArnold/Private/IECoreArnoldPreview/ShaderNetworkAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/ShaderNetworkAlgo.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -59,7 +59,7 @@
 
 using namespace boost::python;
 using namespace GafferArnold;
-using namespace IECoreArnoldPreview;
+using namespace IECoreArnold;
 
 namespace
 {
@@ -211,11 +211,11 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	;
 	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
 
-	object ieCoreArnoldPreviewModule( borrowed( PyImport_AddModule( "GafferArnold.IECoreArnoldPreview" ) ) );
-	scope().attr( "IECoreArnoldPreview" ) = ieCoreArnoldPreviewModule;
-	scope ieCoreArnoldPreviewScope( ieCoreArnoldPreviewModule );
+	object ieCoreArnoldModule( borrowed( PyImport_AddModule( "GafferArnold._IECoreArnold" ) ) );
+	scope().attr( "_IECoreArnold" ) = ieCoreArnoldModule;
+	scope ieCoreArnoldScope( ieCoreArnoldModule );
 
-	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferArnold.IECoreArnoldPreview.ShaderNetworkAlgo" ) ) );
+	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.ShaderNetworkAlgo" ) ) );
 	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
 	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
 

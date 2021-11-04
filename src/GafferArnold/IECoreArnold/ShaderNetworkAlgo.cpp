@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnoldPreview/ShaderNetworkAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/ShaderNetworkAlgo.h"
 
 #include "GafferOSL/OSLShader.h"
 
@@ -328,7 +328,7 @@ void resetNode( AtNode *node )
 
 } // namespace
 
-namespace IECoreArnoldPreview
+namespace IECoreArnold
 {
 
 namespace ShaderNetworkAlgo
@@ -414,4 +414,4 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 
 } // namespace ShaderNetworkAlgo
 
-} // namespace IECoreArnoldPreview
+} // namespace IECoreArnold

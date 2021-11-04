@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,27 +34,4 @@
 #
 ##########################################################################
 
-from .ArnoldShaderTest import ArnoldShaderTest
-from .ArnoldRenderTest import ArnoldRenderTest
-from .ArnoldOptionsTest import ArnoldOptionsTest
-from .ArnoldAttributesTest import ArnoldAttributesTest
-from .ArnoldVDBTest import ArnoldVDBTest
-from .ArnoldLightTest import ArnoldLightTest
-from .ArnoldMeshLightTest import ArnoldMeshLightTest
-from .InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from .ArnoldDisplacementTest import ArnoldDisplacementTest
-from .LightToCameraTest import LightToCameraTest
-from .IECoreArnoldTest import *
-from .ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from .ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from .ArnoldBackgroundTest import ArnoldBackgroundTest
-from .ArnoldTextureBakeTest import ArnoldTextureBakeTest
-from .ModuleTest import ModuleTest
-from .ArnoldShaderBallTest import ArnoldShaderBallTest
-from .ArnoldCameraShadersTest import ArnoldCameraShadersTest
-from .ArnoldLightFilterTest import ArnoldLightFilterTest
-from .ArnoldColorManagerTest import ArnoldColorManagerTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+from . import IECoreArnold

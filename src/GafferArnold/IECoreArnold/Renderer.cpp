@@ -36,7 +36,7 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferArnold/Private/IECoreArnoldPreview/ShaderNetworkAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/ShaderNetworkAlgo.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
@@ -88,7 +88,6 @@
 using namespace std;
 using namespace boost::filesystem;
 using namespace IECoreArnold;
-using namespace IECoreArnoldPreview;
 
 //////////////////////////////////////////////////////////////////////////
 // Utilities

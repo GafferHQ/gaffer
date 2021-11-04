@@ -46,7 +46,7 @@ import IECoreScene
 import IECoreArnold
 
 import GafferTest
-import GafferArnold.IECoreArnoldPreview as IECoreArnoldPreview
+import GafferArnold.Private.IECoreArnold as IECoreArnoldPreview
 
 class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 

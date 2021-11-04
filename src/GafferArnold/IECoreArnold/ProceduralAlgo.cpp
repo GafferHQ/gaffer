@@ -32,23 +32,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLDPREVIEW_PROCEDURALALGO_H
-#define IECOREARNOLDPREVIEW_PROCEDURALALGO_H
+#include "GafferArnold/Private/IECoreArnold/ProceduralAlgo.h"
 
-#include "IECoreScene/ExternalProcedural.h"
+#include "IECoreArnold/NodeAlgo.h"
+#include "IECoreArnold/ParameterAlgo.h"
 
-#include "ai.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/Version.h"
 
-namespace IECoreArnoldPreview
+using namespace std;
+using namespace Imath;
+using namespace IECore;
+using namespace IECoreScene;
+using namespace IECoreArnold;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+#if CORTEX_COMPATIBILITY_VERSION < 10003
+
+NodeAlgo::ConverterDescription<ExternalProcedural> g_description(
+	[] ( const IECoreScene::ExternalProcedural *procedural, const std::string &name, const AtNode *parent ) {
+		return ProceduralAlgo::convert( procedural, nullptr, name, parent );
+	}
+);
+
+#else
+
+NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
+
+#endif
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of public API
+//////////////////////////////////////////////////////////////////////////
+
+namespace IECoreArnold
 {
 
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode );
+AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
+{
+	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
+	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
+
+	return node;
+}
 
 } // namespace ProceduralAlgo
 
-} // namespace IECoreArnoldPreview
-
-#endif // IECOREARNOLDPREVIEW_PROCEDURALALGO_H
+} // namespace IECoreArnold

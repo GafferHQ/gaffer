@@ -1170,7 +1170,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# python component of python module
 
-	pythonFiles = glob.glob( "python/" + libraryName + "/*.py" ) + glob.glob( "python/" + libraryName + "/*/*.py" )
+	pythonFiles = glob.glob( "python/" + libraryName + "/*.py" ) + glob.glob( "python/" + libraryName + "/*/*.py" ) + glob.glob( "python/" + libraryName + "/*/*/*.py" )
 	for pythonFile in pythonFiles :
 		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		env.Alias( "build", pythonFileInstall )
