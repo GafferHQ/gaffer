@@ -303,6 +303,7 @@ const AtString g_subdivIterationsArnoldString( "subdiv_iterations" );
 const AtString g_subdivAdaptiveErrorArnoldString( "subdiv_adaptive_error" );
 const AtString g_subdivAdaptiveMetricArnoldString( "subdiv_adaptive_metric" );
 const AtString g_subdivAdaptiveSpaceArnoldString( "subdiv_adaptive_space" );
+const AtString g_subdivFrustumIgnoreArnoldString( "subdiv_frustum_ignore" );
 const AtString g_subdivSmoothDerivsArnoldString( "subdiv_smooth_derivs" );
 const AtString g_subdivTypeArnoldString( "subdiv_type" );
 const AtString g_subdivUVSmoothingArnoldString( "subdiv_uv_smoothing" );
@@ -795,6 +796,7 @@ IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
 IECore::InternedString g_polyMeshSubdivSmoothDerivsAttributeName( "ai:polymesh:subdiv_smooth_derivs" );
+IECore::InternedString g_polyMeshSubdivFrustumIgnoreAttributeName( "ai:polymesh:subdiv_frustum_ignore" );
 IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdivide_polygons" );
 IECore::InternedString g_polyMeshSubdivUVSmoothingAttributeName( "ai:polymesh:subdiv_uv_smoothing" );
 
@@ -1281,6 +1283,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				subdividePolygons = attributeValue<bool>( g_polyMeshSubdividePolygonsAttributeName, attributes, false );
 				subdivSmoothDerivs = attributeValue<bool>( g_polyMeshSubdivSmoothDerivsAttributeName, attributes, false );
+				subdivFrustumIgnore = attributeValue<bool>( g_polyMeshSubdivFrustumIgnoreAttributeName, attributes, false );
 			}
 
 			int subdivIterations;
@@ -1290,6 +1293,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			AtString subdivUVSmoothing;
 			bool subdividePolygons;
 			bool subdivSmoothDerivs;
+			bool subdivFrustumIgnore;
 
 			void hash( bool meshInterpolationIsLinear, IECore::MurmurHash &h ) const
 			{
@@ -1301,6 +1305,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					h.append( subdivAdaptiveSpace.c_str() );
 					h.append( subdivUVSmoothing.c_str() );
 					h.append( subdivSmoothDerivs );
+					h.append( subdivFrustumIgnore );
 				}
 			}
 
@@ -1314,6 +1319,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetStr( node, g_subdivAdaptiveSpaceArnoldString, subdivAdaptiveSpace );
 					AiNodeSetStr( node, g_subdivUVSmoothingArnoldString, subdivUVSmoothing );
 					AiNodeSetBool( node, g_subdivSmoothDerivsArnoldString, subdivSmoothDerivs );
+					AiNodeSetBool( node, g_subdivFrustumIgnoreArnoldString, subdivFrustumIgnore );
 					if( mesh->interpolation() == "linear" )
 					{
 						AiNodeSetStr( node, g_subdivTypeArnoldString, g_linearArnoldString );

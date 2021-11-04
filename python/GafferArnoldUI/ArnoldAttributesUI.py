@@ -131,6 +131,8 @@ def __subdivisionSummary( plug ) :
 		)
 	if plug["subdivSmoothDerivs"]["enabled"].getValue() :
 		info.append( "Smooth Derivs " + ( "On" if plug["subdivSmoothDerivs"]["value"].getValue() else "Off" ) )
+	if plug["subdivFrustumIgnore"]["enabled"].getValue() :
+		info.append( "Frustum Ignore " + ( "On" if plug["subdivFrustumIgnore"]["value"].getValue() else "Off" ) )
 	if plug["subdividePolygons"]["enabled"].getValue() :
 		info.append( "Subdivide Polygons " + ( "On" if plug["subdividePolygons"]["value"].getValue() else "Off" ) )
 
@@ -659,6 +661,20 @@ Gaffer.Metadata.registerNode(
 			vertex. This can be needed to remove faceting
 			from anisotropic specular and other shading effects
 			that use the derivatives.
+			""",
+
+		],
+
+		"attributes.subdivFrustumIgnore" : [
+
+			"layout:section", "Subdivision",
+			"label", "Ignore Frustum",
+
+			"description",
+			"""
+			Turns off subdivision culling on a per-object basis. This provides
+			finer control on top of the global `subdivFrustumCulling` setting
+			provided by the ArnoldOptions node.
 			""",
 
 		],

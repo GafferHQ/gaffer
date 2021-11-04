@@ -112,6 +112,14 @@ Breaking Changes
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.
 
+0.60.11.0 (relative to 0.60.10.0)
+=========
+
+Improvements
+------------
+
+- ArnoldAttributes : Added control over Arnold's `polymesh.subdiv_frustum_ignore` parameter. This is accessible from the Subdivision section in the NodeEditor.
+
 0.60.10.0 (relative to 0.60.9.0)
 =========
 
