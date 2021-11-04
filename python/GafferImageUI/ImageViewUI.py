@@ -331,12 +331,12 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			labelFont.setBold( True )
 			labelFont.setPixelSize( 10 )
 			labelFontMetrics = QtGui.QFontMetrics( labelFont )
-			self.__indexLabel._qtWidget().setMinimumWidth( labelFontMetrics.width( "99" ) )
+			self.__indexLabel._qtWidget().setMinimumWidth( labelFontMetrics.boundingRect( "99" ).width() )
 
 			self.__modeImage = GafferUI.Image( "sourceCursor.png" )
 
 			self.__positionLabel = GafferUI.Label()
-			self.__positionLabel._qtWidget().setMinimumWidth( labelFontMetrics.width( "9999 9999 -> 9999 9999" ) )
+			self.__positionLabel._qtWidget().setMinimumWidth( labelFontMetrics.boundingRect( "9999 9999 -> 9999 9999" ).width() )
 
 			self.__swatch = GafferUI.ColorSwatch()
 			self.__swatch._qtWidget().setFixedWidth( 12 )
@@ -345,13 +345,13 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__busyWidget = GafferUI.BusyWidget( size = 12 )
 
 			self.__rgbLabel = GafferUI.Label()
-			self.__rgbLabel._qtWidget().setMinimumWidth( labelFontMetrics.width( "RGBA : 99999 99999 99999 99999" ) )
+			self.__rgbLabel._qtWidget().setMinimumWidth( labelFontMetrics.boundingRect( "RGBA : 99999 99999 99999 99999" ).width() )
 
 			self.__hsvLabel = GafferUI.Label()
-			self.__hsvLabel._qtWidget().setMinimumWidth( labelFontMetrics.width( "HSV : 99999 99999 99999" ) )
+			self.__hsvLabel._qtWidget().setMinimumWidth( labelFontMetrics.boundingRect( "HSV : 99999 99999 99999" ).width() )
 
 			self.__exposureLabel = GafferUI.Label()
-			self.__exposureLabel._qtWidget().setMinimumWidth( labelFontMetrics.width( "EV : 19.9" ) )
+			self.__exposureLabel._qtWidget().setMinimumWidth( labelFontMetrics.boundingRect( "EV : 19.9" ).width() )
 
 			l.addChild( GafferUI.Spacer( size = imath.V2i( 0 ) ) )
 
