@@ -80,39 +80,39 @@ class NodeWrapper : public GraphComponentWrapper<T>
 
 		bool isInstanceOf( IECore::TypeId typeId ) const override
 		{
-			// Optimise for common queries we know should fail.
-			// The standard wrapper implementation of isInstanceOf()
-			// would have to enter Python only to discover this inevitable
-			// failure as it doesn't have knowledge of the relationships
-			// among types. Entering Python is incredibly costly for such
-			// a simple operation, and we perform these operations often,
-			// so this optimisation is well worth it.
+			// Optimise for common queries for types we know about. The standard
+			// wrapper implementation of `isInstanceOf()` would have to enter
+			// Python just in case the type was implemented there. Entering
+			// Python is incredibly costly for such a simple operation, and we
+			// perform these operations often, so these optimisations are well
+			// worth it.
+
 			if(
 				// We're a Node, so we cannot be a plug.
 				typeId == (IECore::TypeId)Gaffer::PlugTypeId ||
-				typeId == (IECore::TypeId)Gaffer::ValuePlugTypeId ||
-				// We're a wrapper, so we can't be anything that we know isn't
-				// wrapped. It's important to optimise for ContextProcessor and
-				// Switch specifically, because they are queried heavily during
-				// the `Dispatcher::dispatch()` process.
-				typeId == (IECore::TypeId)Gaffer::ContextProcessorTypeId ||
-				typeId == (IECore::TypeId)Gaffer::SwitchTypeId ||
-				// We can't actually guarantee that we're not a ScriptNode or
-				// DependencyNode, but those queries are so common that we
-				// simply must accelerate them. We adjust for this slightly
-				// overzealous optimisation in ScriptNodeWrapper and
-				// DependencyNodeWrapper where we also override `isInstanceOf()`
-				// and make the necessary correction.
-				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
-				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId
+				typeId == (IECore::TypeId)Gaffer::ValuePlugTypeId
 			)
 			{
 				return false;
 			}
 
-			// Ensure our assumptions above are not violated.
-			static_assert( !std::is_same<WrappedType, Gaffer::ContextProcessor>::value, "Wrapping not expected for type" );
-			static_assert( !std::is_same<WrappedType, Gaffer::Switch>::value, "Wrapping not expected for type" );
+			if(
+				// It's important to optimise for ContextProcessor and
+				// Switch specifically, because they are queried heavily during
+				// the `Dispatcher::dispatch()` process.
+				typeId == (IECore::TypeId)Gaffer::ContextProcessorTypeId ||
+				typeId == (IECore::TypeId)Gaffer::SwitchTypeId ||
+				// ScriptNode and DependencyNode also appear on performance
+				// critical code paths.
+				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId
+			)
+			{
+				// The types above are implemented in C++, so there is no need
+				// to consider Python overrides for `isInstanceOf()`. The base
+				// class implementation is sufficient.
+				return WrappedType::isInstanceOf( typeId );
+			}
 
 			return GraphComponentWrapper<T>::isInstanceOf( typeId );
 		}

@@ -392,17 +392,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 		}
 
-		bool isInstanceOf( IECore::TypeId typeId ) const override
-		{
-			if( typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId )
-			{
-				// Correct for the slightly overzealous (but hugely beneficial)
-				// optimisation in NodeWrapper::isInstanceOf().
-				return true;
-			}
-			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
-		}
-
 };
 
 ContextPtr context( ScriptNode &s )
