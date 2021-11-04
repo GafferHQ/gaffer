@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.10.0)
+========
+
+Improvements
+------------
+
+- ArnoldAttributes : Added control over Arnold's `polymesh.subdiv_frustum_ignore` parameter. This is accessible from the Subdivision section in the NodeEditor.
+
 0.60.10.0 (relative to 0.60.9.0)
 =========
 

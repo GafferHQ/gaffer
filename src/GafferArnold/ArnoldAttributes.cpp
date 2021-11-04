@@ -93,6 +93,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:polymesh:subdiv_adaptive_space", new StringPlug( "value", Plug::In, "raster" ), false, "subdivAdaptiveSpace" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:polymesh:subdiv_uv_smoothing", new StringPlug( "value", Plug::In, "pin_corners" ), false, "subdivUVSmoothing" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:polymesh:subdiv_smooth_derivs", new BoolPlug( "value" ), false, "subdivSmoothDerivs" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:polymesh:subdiv_frustum_ignore", new BoolPlug( "value" ), false, "subdivFrustumIgnore" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:polymesh:subdivide_polygons", new BoolPlug( "value" ), false, "subdividePolygons" ) );
 
 	// Curves parameters
