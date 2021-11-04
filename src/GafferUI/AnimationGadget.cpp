@@ -569,12 +569,55 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 		{
 			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped );
 
+			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
+			const Imath::Color4f color4( color3.x, color3.y, color3.z, 1.0 );
+
+			Animation::Key* previousKey = 0;
+			V2f previousKeyPosition = V2f( 0 );
+			bool previousKeySelected = false;
+
 			for( Animation::Key &key : *curvePlug )
 			{
 				bool isHighlighted = ( & key == m_highlightedKey.get() ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ) );
 				bool isSelected = m_selectedKeys->contains( &key );
 				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
+
+				// draw the tangents
+				//
+				// NOTE : only draw if they are unconstrained and key or adjacent key is selected
+
+				if( previousKey )
+				{
+					const Animation::Tangent& in = key.tangentIn();
+					const Animation::Tangent& out = previousKey->tangentOut();
+
+					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					{
+						const V2d outPosKey = out.getPosition();
+						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						const double outSize = 2.0;
+						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
+						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
+							1.0, &color4 );
+						style->renderRectangle( outBox );
+					}
+
+					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					{
+						const V2d inPosKey = in.getPosition();
+						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						const double inSize = 2.0;
+						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
+						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
+							1.0, &color4 );
+						style->renderRectangle( inBox );
+					}
+				}
+
+				previousKey = & key;
+				previousKeyPosition = keyPosition;
+				previousKeySelected = isSelected;
 			}
 		}
 		break;
