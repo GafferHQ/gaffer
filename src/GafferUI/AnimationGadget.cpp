@@ -450,6 +450,8 @@ AnimationGadget::AnimationGadget()
 , m_editablePlugs( new StandardSet() )
 , m_selectedKeys( new AnimationGadget::SelectionSet() )
 , m_originalKeyValues()
+, m_dragTangentKey( nullptr )
+, m_dragTangentDirection( Animation::Direction::In )
 , m_dragStartPosition( 0 )
 , m_lastDragPosition( 0 )
 , m_dragMode( DragMode::None )
@@ -898,6 +900,53 @@ void AnimationGadget::moveKeyframes( const V2f currentDragPosition )
 	}
 }
 
+void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
+{
+	if( ! m_dragTangentKey || ( m_moveAxis == MoveAxis::Undefined ) )
+	{
+		return;
+	}
+
+	// check tangent usage
+	//
+	// NOTE : when the move axis is MoveAxis::X we only change the tangent's scale.
+	//        when the move axis is MoveAxis::Y we only change the tangent's slope.
+
+	Animation::Tangent& tangent = m_dragTangentKey->tangent( m_dragTangentDirection );
+
+	if( ( m_moveAxis == MoveAxis::X ) && tangent.scaleIsConstrained() )
+	{
+		return;
+	}
+	else if( ( m_moveAxis == MoveAxis::Y ) && tangent.slopeIsConstrained() )
+	{
+		return;
+	}
+	else if( ( m_moveAxis == MoveAxis::Both ) && tangent.scaleIsConstrained() && tangent.slopeIsConstrained() )
+	{
+		return;
+	}
+
+	// NOTE : create undo scope and move the tangent
+
+	auto first = m_editablePlugs->member( 0 );
+	ScriptNode *scriptNode = IECore::runTimeCast<Animation::CurvePlug>( first )->ancestor<ScriptNode>();
+	UndoScope undoEnabled( scriptNode, UndoScope::Enabled, undoMergeGroup() );
+
+	switch( m_moveAxis )
+	{
+		case MoveAxis::X:
+		case MoveAxis::Y:
+		case MoveAxis::Both:
+			tangent.setPosition( currentDragOffset );
+			break;
+		case MoveAxis::Undefined:
+		default:
+			// NOTE : do nothing unless move axis is defined
+			break;
+	};
+}
+
 void AnimationGadget::frame()
 {
 	Box3f b;
@@ -1070,7 +1119,31 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 	case ButtonEvent::Left :
 	{
-		if( Animation::KeyPtr key = keyAt( event.line ) )
+		std::pair<Animation::KeyPtr, Animation::Direction> tangent = tangentAt( event.line );
+
+		if( tangent.first )
+		{
+			m_dragTangentKey = tangent.first;
+			m_dragTangentDirection = tangent.second;
+			m_dragMode = DragMode::MoveTangent;
+			if(
+				( event.modifiers & DragDropEvent::Control ) &&
+				( ( event.modifiers & DragDropEvent::Shift ) == DragDropEvent::None ) )
+			{
+				m_moveAxis = MoveAxis::Y;
+			}
+			else if(
+				( event.modifiers & DragDropEvent::Shift ) &&
+				( ( event.modifiers & DragDropEvent::Control ) == DragDropEvent::None ) )
+			{
+				m_moveAxis = MoveAxis::X;
+			}
+			else
+			{
+				m_moveAxis = MoveAxis::Both;
+			}
+		}
+		else if( Animation::KeyPtr key = keyAt( event.line ) )
 		{
 			// If dragging an unselected Key, the assumption is that only this Key
 			// should be moved. On the other hand, if the key was selected, we will
@@ -1288,6 +1361,11 @@ bool AnimationGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		moveKeyframes( V2f( i.x, i.y ) );
 	}
 
+	if( m_dragMode == DragMode::MoveTangent && m_dragTangentKey )
+	{
+		moveTangent( V2f( i.x, i.y ) );
+	}
+
 	if( m_dragMode == DragMode::MoveFrame )
 	{
 		m_context->setFrame( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
@@ -1336,6 +1414,12 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		removeInactiveKeyframes();
 		m_originalKeyValues.clear();
+		m_mergeGroupId++;
+		break;
+	}
+	case DragMode::MoveTangent :
+	{
+		m_dragTangentKey.reset();
 		m_mergeGroupId++;
 		break;
 	}

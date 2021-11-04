@@ -101,6 +101,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		void removeInactiveKeyframes();
 		/// \undoable
 		void moveKeyframes( const Imath::V2f currentDragOffset );
+		/// \undoable
+		void moveTangent( const Imath::V2f currentDragOffset );
 
 		void frame();
 
@@ -150,6 +152,9 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		std::map< const Gaffer::Animation::Key*, std::pair< float, float > > m_originalKeyValues;
 
+		Gaffer::Animation::KeyPtr m_dragTangentKey;
+		Gaffer::Animation::Direction m_dragTangentDirection;
+
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;
 
@@ -158,7 +163,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 			None,
 			Selecting,
 			Moving,
-			MoveFrame
+			MoveFrame,
+			MoveTangent
 		};
 
 		DragMode m_dragMode;
