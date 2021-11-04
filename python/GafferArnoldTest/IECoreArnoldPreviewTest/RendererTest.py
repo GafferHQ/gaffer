@@ -1156,6 +1156,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.25 ),
 					"ai:polymesh:subdiv_adaptive_metric" : IECore.StringData( "edge_length" ),
 					"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "raster" ),
+					"ai:polymesh:subdiv_frustum_ignore" : IECore.BoolData( True ),
 				} )
 			)
 		)
@@ -1172,6 +1173,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetFlt( node, "subdiv_adaptive_error" ), 0.25 )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
+			self.assertEqual( arnold.AiNodeGetBool( node, "subdiv_frustum_ignore" ), True )
 
 	def testSSSSetNameAttribute( self ) :
 
