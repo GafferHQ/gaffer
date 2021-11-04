@@ -44,6 +44,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <vector>
 
 namespace Gaffer
@@ -107,6 +108,28 @@ double maxScale( const double slope )
 	//        l = sqrt(1 + s^2)
 
 	return std::sqrt( std::fma( slope, slope, 1.0 ) );
+}
+
+double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::Direction direction )
+{
+	static_assert( std::numeric_limits< double >::is_iec559, "IEEE 754 required to represent negative infinity" );
+
+	// NOTE : when x and y are both 0 then slope is 0, otherwise if x is 0 slope is (+/-) infinity
+
+	if( position.x == 0.0 )
+	{
+		if( position.y == 0.0 )
+		{
+			return 0.0;
+		}
+
+		return std::copysign( std::numeric_limits< double >::infinity(),
+			position.y * ( direction == Gaffer::Animation::Direction::In ? -1.0 : 1.0 ) );
+	}
+	else
+	{
+		return position.y / position.x;
+	}
 }
 
 // constant interpolator
@@ -497,6 +520,94 @@ bool Animation::Tangent::scaleIsConstrained() const
 	return false;
 }
 
+void Animation::Tangent::setPosition( const Imath::V2d& pos, const bool relative )
+{
+	// when span width is zero position is constrained to parent key
+
+	if( m_dt == 0.0 )
+	{
+		return;
+	}
+
+	// convert relative position
+
+	Imath::V2d position( pos );
+	positionToRelative( position, relative );
+
+	// set slope and scale
+
+	setSlope( slopeFromPosition( position, m_direction ) );
+	setScale( position.length() / m_dt );
+}
+
+Imath::V2d Animation::Tangent::getPosition( const bool relative ) const
+{
+	Imath::V2d p( 0.0, 0.0 );
+
+	// when span width is zero position is that of parent key
+
+	if( m_dt != 0.0 )
+	{
+		// compute relative position
+		//
+		// NOTE : s   = y/x
+		//            = tan(angle)
+		//        x   = l * cos(angle)
+		//            = l / sqrt(1 + tan^2(angle))
+		//            = l / sqrt(1 + s^2)
+		//        y   = x * s
+		//
+		//        1/s = x/y
+		//            = tan(PI/2-angle)
+		//        y   = l * cos(PI/2-angle)
+		//            = l / sqrt(1 + tan^2(PI/2-angle))
+		//            = l / sqrt(1 + (1/s)^2)
+		//        x   = y * (1/s)
+		//
+		//        As s tends to 0, sqrt(1 + s^2) tends to 1, so x tends to l and y tends to 0, but
+		//        as s tends to (+/-) infinity, sqrt(1 + s^2) tends to infinity, so x tends to 0
+		//        and y becomes meaningless. However as s tends to (+/-) infinity, 1/s tends to 0
+		//        so sqrt(1 + (1/s)^2) tends to 1, so y tends to l and x tends to 0. So,
+		//
+		//            when |s| <  1 : x = l / sqrt(1 + s^2)
+		//                            y = x * s
+		//            when |s| >= 1 : y = l / sqrt(1 + (1/s)^2)
+		//                            x = y * (1/s)
+
+		const double slope = getSlope();
+		const double scale = getScale();
+
+		if( std::abs( slope ) < 1.0 )
+		{
+			const double s = slope;
+			p.x = std::min( ( scale * m_dt ) / std::sqrt( std::fma( s, s, 1.0 ) ), m_dt );
+			p.y = p.x * s;
+		}
+		else
+		{
+			const double s = 1.0 / slope;
+			p.y = std::copysign( ( scale * m_dt ) / std::sqrt( std::fma( s, s, 1.0 ) ), s );
+			p.x = std::min( p.y * s, m_dt );
+		}
+
+		if( m_direction == Direction::In )
+		{
+			if( p.x != 0.0 ) { p.x = -p.x; }
+			if( p.y != 0.0 ) { p.y = -p.y; }
+		}
+	}
+
+	// convert to absolute position
+
+	if( ! relative )
+	{
+		p.x += m_key->m_time;
+		p.y += m_key->m_value;
+	}
+
+	return p;
+}
+
 void Animation::Tangent::update()
 {
 	assert( m_key );
@@ -537,6 +648,25 @@ void Animation::Tangent::update()
 
 	m_dv = dv;
 	m_dt = dt;
+}
+
+void Animation::Tangent::positionToRelative( Imath::V2d& position, const bool relative ) const
+{
+	assert( m_dt != 0.0 );
+
+	// convert from absolute position
+
+	if( ! relative )
+	{
+		position.x -= m_key->m_time;
+		position.y -= m_key->m_value;
+	}
+
+	// constrain direction of tangent
+
+	position.x = ( m_direction == Direction::In )
+		? std::min( position.x, 0.0 )
+		: std::max( position.x, 0.0 );
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -135,6 +135,18 @@ class GAFFER_API Animation : public ComputeNode
 				/// Is scale currently constrained by interpolation mode.
 				bool scaleIsConstrained() const;
 
+				/// Get tangent's position.
+				/// If relative is true the position is relative to the parent key's position.
+				/// The position will be derived from the current (possibly constrained) slope and scale.
+				/// The position will be the same as the parent key when there is no adjacent key in the direction of the tangent.
+				Imath::V2d getPosition( bool relative = false ) const;
+				/// \undoable
+				/// Set tangent's position.
+				/// If relative is true the position is relative to the parent key's position.
+				/// The position will be used to derive a new slope and scale for the tangent, constrained slope and/or scale will be maintained.
+				/// The position cannot be set if there is no adjacent key in the direction of the tangent.
+				void setPosition( const Imath::V2d& position, bool relative = false );
+
 			private:
 
 				friend class CurvePlug;
@@ -146,6 +158,7 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				void setScale( double, bool );
 				void update();
+				void positionToRelative( Imath::V2d&, bool ) const;
 
 				Key* m_key;
 				Direction m_direction;

@@ -46,6 +46,7 @@ class AnimationTest( GafferTest.TestCase ) :
 	def testKey( self ) :
 
 		import math
+		import imath
 
 		k = Gaffer.Animation.Key()
 		self.assertEqual( k.getTime(), 0 )
@@ -59,6 +60,10 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( ti.getScale(), Gaffer.Animation.defaultScale() )
 		self.assertEqual( tf.getSlope(), Gaffer.Animation.defaultSlope() )
 		self.assertEqual( tf.getScale(), Gaffer.Animation.defaultScale() )
+		self.assertEqual( ti.getPosition(), imath.V2d( k.getTime(), k.getValue() ) )
+		self.assertEqual( tf.getPosition(), imath.V2d( k.getTime(), k.getValue() ) )
+		self.assertEqual( ti.getPosition( relative = True ), imath.V2d( 0.0, 0.0 ) )
+		self.assertEqual( tf.getPosition( relative = True ), imath.V2d( 0.0, 0.0 ) )
 
 		a = math.pi
 		b = math.e
@@ -68,6 +73,12 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( k.getInterpolation(), Gaffer.Animation.Interpolation.Constant )
 		self.assertFalse( k.isActive() )
 		self.assertIsNone( k.parent() )
+		ti = k.tangentIn()
+		tf = k.tangentOut()
+		self.assertEqual( ti.getPosition(), imath.V2d( k.getTime(), k.getValue() ) )
+		self.assertEqual( tf.getPosition(), imath.V2d( k.getTime(), k.getValue() ) )
+		self.assertEqual( ti.getPosition( relative = True ), imath.V2d( 0.0, 0.0 ) )
+		self.assertEqual( tf.getPosition( relative = True ), imath.V2d( 0.0, 0.0 ) )
 
 		k.setTime( b )
 		k.setValue( a )
@@ -1420,6 +1431,69 @@ class AnimationTest( GafferTest.TestCase ) :
 		# tangent scale should now revert to values before they became constrained
 		self.assertEqual( ti.getScale(), 0.2 )
 		self.assertEqual( tf.getScale(), 0.3 )
+
+	def testKeyTangentSetPosition( self ) :
+
+		import math
+		import imath
+
+		k = Gaffer.Animation.Key( time = 13, value = 5.4 )
+		ti = k.tangentIn()
+		tf = k.tangentOut()
+
+		# set relative position of in tangent (no effect as key not parented)
+		ti.setPosition( imath.V2d( 1, 1 ), relative = True )
+		self.assertEqual( ti.getSlope(), Gaffer.Animation.defaultSlope() )
+		self.assertEqual( ti.getScale(), Gaffer.Animation.defaultScale() )
+		self.assertEqual( ti.getPosition( relative = True ), imath.V2d( 0, 0 ) )
+		self.assertEqual( ti.getPosition(), imath.V2d( k.getTime(), k.getValue() ) )
+
+		# set relative position of out tangent (no effect as key not parented)
+		tf.setPosition( imath.V2d( 1, 1 ) )
+		self.assertEqual( tf.getSlope(), Gaffer.Animation.defaultSlope() )
+		self.assertEqual( tf.getScale(), Gaffer.Animation.defaultScale() )
+		self.assertEqual( tf.getPosition( relative = True ), imath.V2d( 0, 0 ) )
+		self.assertEqual( tf.getPosition(), imath.V2d( k.getTime(), k.getValue() ) )
+
+		# set slope and scale of in tangent
+		ti.setSlope( 3 )
+		ti.setScale( 1.1 )
+		self.assertEqual( ti.getSlope(), 3 )
+		self.assertEqual( ti.getScale(), 1.1 )
+
+		# set slope and scale of out tangent
+		tf.setSlope( 2 )
+		tf.setScale( 1 )
+		self.assertEqual( tf.getSlope(), 2 )
+		self.assertEqual( tf.getScale(), 1 )
+
+		# set relative position of in tangent (no effect as key not parented)
+		ti.setPosition( imath.V2d( 1, 1 ), relative = True )
+		self.assertEqual( ti.getSlope(), 3 )
+		self.assertEqual( ti.getScale(), 1.1 )
+		self.assertEqual( ti.getPosition( relative = True ), imath.V2d( 0, 0 ) )
+		self.assertEqual( ti.getPosition( relative = False ), imath.V2d( k.getTime(), k.getValue() ) )
+
+		# set absolute position of in tangent (no effect as key not parented)
+		ti.setPosition( imath.V2d( 1, 1 ) )
+		self.assertEqual( ti.getSlope(), 3 )
+		self.assertEqual( ti.getScale(), 1.1 )
+		self.assertEqual( ti.getPosition( relative = True ), imath.V2d( 0, 0 ) )
+		self.assertEqual( ti.getPosition( relative = False ), imath.V2d( k.getTime(), k.getValue() ) )
+
+		# set relative position of out tangent (no effect as key not parented)
+		tf.setPosition( imath.V2d( 1, 1 ), relative = True )
+		self.assertEqual( tf.getSlope(), 2 )
+		self.assertEqual( tf.getScale(), 1 )
+		self.assertEqual( tf.getPosition( relative = True ), imath.V2d( 0, 0 ) )
+		self.assertEqual( tf.getPosition( relative = False ), imath.V2d( k.getTime(), k.getValue() ) )
+
+		# set absolute position of out tangent (no effect as key not parented)
+		tf.setPosition( imath.V2d( 1, 1 ) )
+		self.assertEqual( tf.getSlope(), 2 )
+		self.assertEqual( tf.getScale(), 1 )
+		self.assertEqual( tf.getPosition( relative = True ), imath.V2d( 0, 0 ) )
+		self.assertEqual( tf.getPosition( relative = False ), imath.V2d( k.getTime(), k.getValue() ) )
 
 	def testClosestKey( self ) :
 
