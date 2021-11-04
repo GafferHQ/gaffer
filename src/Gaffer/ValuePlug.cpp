@@ -248,10 +248,10 @@ class ValuePlug::HashProcess : public Process
 				// Perform any pending adjustments to our thread-local cache.
 
 				ThreadData &threadData = g_threadData.local();
-				if( threadData.clearCache )
+				if( threadData.clearCache.load( std::memory_order_acquire ) )
 				{
 					threadData.cache.clear();
-					threadData.clearCache = 0;
+					threadData.clearCache.store( 0, std::memory_order_release );
 				}
 
 				if( threadData.cache.getMaxCost() != g_cacheSizeLimit )
@@ -328,7 +328,7 @@ class ValuePlug::HashProcess : public Process
 				// a graph while a computation is being performed with it, and
 				// we know that the plug requesting the clear will be removed
 				// from the cache before the next computation starts.
-				it->clearCache = 1;
+				it->clearCache.store( 1, std::memory_order_release );
 			}
 		}
 
@@ -462,11 +462,11 @@ class ValuePlug::HashProcess : public Process
 			ThreadData() : cache( localCacheGetter, g_cacheSizeLimit, Cache::RemovalCallback(), /* cacheErrors = */ false ), clearCache( 0 ) {}
 			Cache cache;
 			// Flag to request that hashCache be cleared.
-			tbb::atomic<int> clearCache;
+			std::atomic_int clearCache;
 		};
 
 		static tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance > g_threadData;
-		static tbb::atomic<size_t> g_cacheSizeLimit;
+		static std::atomic_size_t g_cacheSizeLimit;
 
 		IECore::MurmurHash m_result;
 
@@ -475,7 +475,7 @@ class ValuePlug::HashProcess : public Process
 const IECore::InternedString ValuePlug::HashProcess::staticType( "computeNode:hash" );
 tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_aligned_allocator<ValuePlug::HashProcess::ThreadData>, tbb::ets_key_per_instance > ValuePlug::HashProcess::g_threadData;
 // Default limit corresponds to a cost of roughly 25Mb per thread.
-tbb::atomic<size_t> ValuePlug::HashProcess::g_cacheSizeLimit = 128000;
+std::atomic_size_t ValuePlug::HashProcess::g_cacheSizeLimit( 128000 );
 ValuePlug::HashProcess::GlobalCache ValuePlug::HashProcess::g_globalCache( globalCacheGetter, g_cacheSizeLimit, Cache::RemovalCallback(), /* cacheErrors = */ false );
 std::atomic<uint64_t> ValuePlug::HashProcess::g_legacyGlobalDirtyCount( 0 );
 ValuePlug::HashCacheMode ValuePlug::HashProcess::g_hashCacheMode( defaultHashCacheMode() );

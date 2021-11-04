@@ -1002,15 +1002,6 @@ const IECoreGL::Texture *ImageGadget::Tile::texture( bool &active )
 	return m_texture ? m_texture.get() : blackTexture();
 }
 
-// Needed to allow TileIndex to be used as a key in concurrent_unordered_map.
-inline size_t GafferImageUI::tbb_hasher( const ImageGadget::TileIndex &tileIndex )
-{
-	return
-		tbb::tbb_hasher( tileIndex.tileOrigin.x ) ^
-		tbb::tbb_hasher( tileIndex.tileOrigin.y ) ^
-		tbb::tbb_hasher( tileIndex.channelName.c_str() );
-}
-
 void ImageGadget::updateTiles()
 {
 	if( !(m_dirtyFlags & TilesDirty) )

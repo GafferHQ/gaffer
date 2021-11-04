@@ -92,7 +92,6 @@
 #include "boost/smart_ptr/scoped_ptr.hpp"
 #include "boost/thread.hpp"
 
-#include "tbb/atomic.h"
 #include "tbb/concurrent_hash_map.h"
 
 namespace asf = foundation;
@@ -1028,7 +1027,7 @@ class InstanceMaster : public IECore::RefCounted
 
 		const string m_name;
 		asr::Assembly *m_mainAssembly;
-		tbb::atomic<int> m_numInstances;
+		std::atomic_int m_numInstances;
 
 };
 

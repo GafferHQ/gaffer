@@ -49,7 +49,6 @@
 
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
-#include "tbb/tbb_thread.h"
 
 #include <cassert>
 #include <iostream>
@@ -305,7 +304,7 @@ class Parallel
 
 		typedef typename LRUCache::CacheEntry CacheEntry;
 		typedef typename LRUCache::KeyType Key;
-		typedef tbb::atomic<typename LRUCache::Cost> AtomicCost;
+		typedef std::atomic<typename LRUCache::Cost> AtomicCost;
 
 		struct Item
 		{
@@ -318,7 +317,7 @@ class Parallel
 			typedef tbb::spin_rw_mutex Mutex;
 			mutable Mutex mutex;
 			// Flag used in second-chance algorithm.
-			mutable tbb::atomic<bool> recentlyUsed;
+			mutable std::atomic_bool recentlyUsed;
 		};
 
 		// We would love to use one of TBB's concurrent containers as
@@ -364,7 +363,7 @@ class Parallel
 
 		Parallel()
 		{
-			m_bins.resize( tbb::tbb_thread::hardware_concurrency() );
+			m_bins.resize( std::thread::hardware_concurrency() );
 			m_popBinIndex = 0;
 			m_popIterator = m_bins[0].map.begin();
 			currentCost = 0;
@@ -514,7 +513,7 @@ class Parallel
 			// in pop(), so it will not be evicted immediately.
 			// We don't need the handle to be writable to write
 			// here, because `recentlyUsed` is atomic.
-			handle.m_item->recentlyUsed = true;
+			handle.m_item->recentlyUsed.store( true, std::memory_order_release );
 		}
 
 		bool pop( Key &key, CacheEntry &cacheEntry )
@@ -570,7 +569,7 @@ class Parallel
 
 				if( itemLock.try_acquire( m_popIterator->mutex ) )
 				{
-					if( !m_popIterator->recentlyUsed )
+					if( !m_popIterator->recentlyUsed.load( std::memory_order_acquire ) )
 					{
 						// Pop this item.
 						key = m_popIterator->key;
@@ -591,7 +590,7 @@ class Parallel
 						// Item has been used recently. Flag it so we
 						// can pop it next time round, unless another
 						// thread resets the flag.
-						m_popIterator->recentlyUsed = false;
+						m_popIterator->recentlyUsed.store( false, std::memory_order_release );
 						itemLock.release();
 					}
 				}
@@ -651,7 +650,7 @@ class TaskParallel
 
 		typedef typename LRUCache::CacheEntry CacheEntry;
 		typedef typename LRUCache::KeyType Key;
-		typedef tbb::atomic<typename LRUCache::Cost> AtomicCost;
+		typedef std::atomic<typename LRUCache::Cost> AtomicCost;
 
 		struct Item
 		{
@@ -664,7 +663,7 @@ class TaskParallel
 			typedef TaskMutex Mutex;
 			mutable Mutex mutex;
 			// Flag used in second-chance algorithm.
-			mutable tbb::atomic<bool> recentlyUsed;
+			mutable std::atomic_bool recentlyUsed;
 		};
 
 		// We would love to use one of TBB's concurrent containers as
@@ -710,7 +709,7 @@ class TaskParallel
 
 		TaskParallel()
 		{
-			m_bins.resize( tbb::tbb_thread::hardware_concurrency() );
+			m_bins.resize( std::thread::hardware_concurrency() );
 			m_popBinIndex = 0;
 			m_popIterator = m_bins[0].map.begin();
 			currentCost = 0;
@@ -918,7 +917,7 @@ class TaskParallel
 			// in pop(), so it will not be evicted immediately.
 			// We don't need the handle to be writable to write
 			// here, because `recentlyUsed` is atomic.
-			handle.m_item->recentlyUsed = true;
+			handle.m_item->recentlyUsed.store( true, std::memory_order_release );
 		}
 
 		bool pop( Key &key, CacheEntry &cacheEntry )
@@ -974,7 +973,7 @@ class TaskParallel
 
 				if( itemLock.tryAcquire( m_popIterator->mutex ) )
 				{
-					if( !m_popIterator->recentlyUsed )
+					if( !m_popIterator->recentlyUsed.load( std::memory_order_acquire ) )
 					{
 						// Pop this item.
 						key = m_popIterator->key;
@@ -995,7 +994,7 @@ class TaskParallel
 						// Item has been used recently. Flag it so we
 						// can pop it next time round, unless another
 						// thread resets the flag.
-						m_popIterator->recentlyUsed = false;
+						m_popIterator->recentlyUsed.store( false, std::memory_order_release );
 						itemLock.release();
 					}
 				}
