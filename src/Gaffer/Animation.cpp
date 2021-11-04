@@ -162,6 +162,57 @@ struct InterpolatorLinear
 	}
 };
 
+// cubic interpolator
+
+struct InterpolatorCubic
+: public Gaffer::Animation::Interpolator
+{
+	InterpolatorCubic()
+	: Gaffer::Animation::Interpolator( Gaffer::Animation::Interpolation::Cubic,
+		Gaffer::Animation::Interpolator::Hint::UseSlope )
+	{}
+
+	double evaluate( const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
+		const double time, const double dt ) const override
+	{
+		double a, b, c, d;
+		computeCoeffs( keyLo, keyHi, a, b, c, d, dt );
+
+		// NOTE : v  = at^3 + bt^2 + ct + d
+
+		return std::fma( time, std::fma( time, std::fma( time, a, b ), c ), d );
+	}
+
+	double effectiveScale( const Gaffer::Animation::Tangent& tangent, const double dt, const double /*dv*/ ) const override
+	{
+		return ( 1.0 / 3.0 ) * maxScale( clampSlope( tangent.getSlope() * dt ) / dt );
+	}
+
+private:
+
+	static double clampSlope( const double slope )
+	{
+		const double maxSlope = 1.e9;
+		return Imath::clamp( slope, -maxSlope, maxSlope );
+	}
+
+	void computeCoeffs(
+		const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
+		double& a, double& b, double& c, double& d, const double dt ) const
+	{
+		// NOTE : clamp slope to prevent infs and nans in interpolated values
+
+		const double dv = keyHi.getValue() - keyLo.getValue();
+		const double sl = clampSlope( keyLo.tangentOut().getSlope() * dt );
+		const double sh = clampSlope( keyHi.tangentIn().getSlope() * dt );
+
+		a = sl + sh - dv - dv;
+		b = dv + dv + dv - sl - sl - sh;
+		c = sl;
+		d = keyLo.getValue();
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -209,6 +260,7 @@ const Animation::Interpolator::Container& Animation::Interpolator::get()
 {
 	static const Container container
 	{
+		ConstInterpolatorPtr( new InterpolatorCubic() ),
 		ConstInterpolatorPtr( new InterpolatorLinear() ),
 		ConstInterpolatorPtr( new InterpolatorConstantNext() ),
 		ConstInterpolatorPtr( new InterpolatorConstant() )
@@ -1894,6 +1946,8 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 			return "ConstantNext";
 		case Interpolation::Linear:
 			return "Linear";
+		case Interpolation::Cubic:
+			return "Cubic";
 		default:
 			assert( 0 );
 			return 0;

@@ -1164,6 +1164,24 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k.tangentIn().slopeIsConstrained() )
 		self.assertTrue( k.tangentOut().slopeIsConstrained() )
 
+		# set interpolation mode of prev key to cubic
+		kp.setInterpolation( Gaffer.Animation.Interpolation.Cubic )
+		self.assertFalse( k.tangentIn().slopeIsConstrained() )
+		self.assertTrue( k.tangentOut().slopeIsConstrained() )
+		kp.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+
+		# set interpolation mode of key to cubic
+		k.setInterpolation( Gaffer.Animation.Interpolation.Cubic )
+		self.assertTrue( k.tangentIn().slopeIsConstrained() )
+		self.assertFalse( k.tangentOut().slopeIsConstrained() )
+		k.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+
+		# set interpolation mode of prev key and key to cubic
+		kp.setInterpolation( Gaffer.Animation.Interpolation.Cubic )
+		k.setInterpolation( Gaffer.Animation.Interpolation.Cubic )
+		self.assertFalse( k.tangentIn().slopeIsConstrained() )
+		self.assertFalse( k.tangentOut().slopeIsConstrained() )
+
 	def testKeyTangentScaleIsConstrained( self ) :
 
 		s = Gaffer.ScriptNode()
