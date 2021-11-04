@@ -457,6 +457,8 @@ AnimationGadget::AnimationGadget()
 , m_snappingClosestKey( nullptr )
 , m_highlightedKey( nullptr )
 , m_highlightedCurve( nullptr )
+, m_highlightedTangentKey( nullptr )
+, m_highlightedTangentDirection( Animation::Direction::In )
 , m_mergeGroupId( 0 )
 , m_keyPreview( false )
 , m_keyPreviewLocation( 0 )
@@ -596,7 +598,8 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 					{
 						const V2d outPosKey = out.getPosition();
 						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
-						const double outSize = 2.0;
+						const bool isOutHighlighted = ( ( m_highlightedTangentKey == previousKey ) && ( m_highlightedTangentDirection == Animation::Direction::Out ) );
+						const double outSize = isOutHighlighted ? 4.0 : 2.0;
 						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
 							1.0, &color4 );
@@ -607,7 +610,8 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 					{
 						const V2d inPosKey = in.getPosition();
 						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
-						const double inSize = 2.0;
+						const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && ( m_highlightedTangentDirection == Animation::Direction::In ) );
+						const double inSize = isInHighlighted ? 4.0 : 2.0;
 						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
 							1.0, &color4 );
@@ -1161,9 +1165,19 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		m_frameIndicatorPreviewFrame = boost::none;
 	}
 
-	if( Animation::KeyPtr key = keyAt( event.line ) )
+	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
+
+	if( tangent.first )
+	{
+		m_highlightedTangentKey = tangent.first;
+		m_highlightedTangentDirection = tangent.second;
+		m_highlightedKey = nullptr;
+		m_highlightedCurve = nullptr;
+	}
+	else if( Animation::KeyPtr key = keyAt( event.line ) )
 	{
 		m_highlightedKey = key;
+		m_highlightedTangentKey = nullptr;
 		m_highlightedCurve = nullptr;
 	}
 	else
@@ -1171,6 +1185,11 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		if( m_highlightedKey )
 		{
 			m_highlightedKey = nullptr;
+		}
+
+		if( m_highlightedTangentKey )
+		{
+			m_highlightedTangentKey = nullptr;
 		}
 
 		if( Animation::CurvePlugPtr curvePlug = curveAt( event.line ) )
@@ -1466,6 +1485,87 @@ Animation::ConstKeyPtr AnimationGadget::keyAt( const IECore::LineSegment3f &posi
 	}
 
 	return keys[selection[0].name-1];
+}
+
+std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> AnimationGadget::tangentAt( const IECore::LineSegment3f &position )
+{
+	const std::pair<Animation::ConstKeyPtr, Animation::Direction> result =
+		static_cast< const AnimationGadget* >( this )->tangentAt( position );
+	return std::pair<Animation::KeyPtr, Animation::Direction>(
+		const_cast< Animation::Key* >( result.first.get() ), result.second );
+}
+
+std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> AnimationGadget::tangentAt( const IECore::LineSegment3f &position ) const
+{
+	std::pair<Animation::ConstKeyPtr, Animation::Direction> result( nullptr, Animation::Direction::In );
+
+	std::vector<IECoreGL::HitRecord> selection;
+	std::vector<Animation::ConstKeyPtr> keys;
+
+	{
+		ViewportGadget::SelectionScope selectionScope( position, this, selection, IECoreGL::Selector::IDRender );
+		IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+		const Style *style = this->style();
+		style->bind();
+		GLuint name = 0;
+
+		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+		ViewportGadget::RasterScope rasterScope( viewportGadget );
+
+		for( auto &member : *m_editablePlugs )
+		{
+			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &member );
+
+			++name; // NOTE : Name 0 is invalid, so start at 1, for each curve this skips in tangent of first key
+
+			const Animation::Key* previousKey = 0;
+			bool previousKeySelected = false;
+			for( Animation::Key &key : *curvePlug )
+			{
+				const bool isSelected = m_selectedKeys->contains( &key );
+				keys.emplace_back( &key );
+
+				if( previousKey )
+				{
+					const Animation::Tangent& in = key.tangentIn();
+					const Animation::Tangent& out = previousKey->tangentOut();
+
+					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					{
+						const V2d outPosKey = out.getPosition();
+						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						selector->loadName( name );
+						style->renderSolidRectangle( Box2f( outPosRas - V2f( 4.0 ), outPosRas + V2f( 4.0 ) ) ); // slightly bigger for easier selection
+					}
+
+					++name;
+
+					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					{
+						const V2d inPosKey = in.getPosition();
+						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						selector->loadName( name );
+						style->renderSolidRectangle( Box2f( inPosRas - V2f( 4.0 ), inPosRas + V2f( 4.0 ) ) ); // slightly bigger for easier selection
+					}
+
+					++name;
+				}
+
+				previousKey = & key;
+				previousKeySelected = isSelected;
+			}
+
+			++name; // NOTE : for each curve this skips out tangent of last key
+		}
+	}
+
+	if( ! selection.empty() )
+	{
+		result.first = keys[ ( selection[0].name ) / 2 ];
+		result.second = static_cast< Animation::Direction >( ( selection[0].name ) % 2 );
+	}
+
+	return result;
 }
 
 Animation::CurvePlugPtr AnimationGadget::curveAt( const IECore::LineSegment3f &position )

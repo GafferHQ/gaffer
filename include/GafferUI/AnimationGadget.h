@@ -121,6 +121,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		// Find elements at certain positions
 		Gaffer::Animation::ConstKeyPtr keyAt( const IECore::LineSegment3f &position ) const;
 		Gaffer::Animation::KeyPtr keyAt( const IECore::LineSegment3f &position );
+		std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> tangentAt( const IECore::LineSegment3f &position ) const;
+		std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangentAt( const IECore::LineSegment3f &position );
 		Gaffer::Animation::ConstCurvePlugPtr curveAt( const IECore::LineSegment3f &position ) const;
 		Gaffer::Animation::CurvePlugPtr curveAt( const IECore::LineSegment3f &position );
 		bool frameIndicatorUnderMouse( const IECore::LineSegment3f &position ) const;
@@ -174,6 +176,8 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		Gaffer::Animation::KeyPtr m_snappingClosestKey;
 		Gaffer::Animation::KeyPtr m_highlightedKey;
 		Gaffer::Animation::CurvePlugPtr m_highlightedCurve;
+		Gaffer::Animation::KeyPtr m_highlightedTangentKey;
+		Gaffer::Animation::Direction m_highlightedTangentDirection;
 
 		int m_mergeGroupId;
 
