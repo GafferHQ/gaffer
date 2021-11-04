@@ -1248,6 +1248,24 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertTrue( k.tangentIn().scaleIsConstrained() )
 		self.assertTrue( k.tangentOut().scaleIsConstrained() )
 
+		# set interpolation mode of prev key to bezier
+		kp.setInterpolation( Gaffer.Animation.Interpolation.Bezier )
+		self.assertFalse( k.tangentIn().scaleIsConstrained() )
+		self.assertTrue( k.tangentOut().scaleIsConstrained() )
+		kp.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+
+		# set interpolation mode of key to bezier
+		k.setInterpolation( Gaffer.Animation.Interpolation.Bezier )
+		self.assertTrue( k.tangentIn().scaleIsConstrained() )
+		self.assertFalse( k.tangentOut().scaleIsConstrained() )
+		k.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+
+		# set interpolation mode of prev key and key to bezier
+		kp.setInterpolation( Gaffer.Animation.Interpolation.Bezier )
+		k.setInterpolation( Gaffer.Animation.Interpolation.Bezier )
+		self.assertFalse( k.tangentIn().scaleIsConstrained() )
+		self.assertFalse( k.tangentOut().scaleIsConstrained() )
+
 	def testKeyTangentSetSlope( self ) :
 
 		# test set slope with tie mode manual

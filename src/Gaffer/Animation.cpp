@@ -236,6 +236,164 @@ private:
 	}
 };
 
+// bezier interpolator
+
+struct InterpolatorBezier
+: public Gaffer::Animation::Interpolator
+{
+	InterpolatorBezier()
+	: Gaffer::Animation::Interpolator( Gaffer::Animation::Interpolation::Bezier,
+		Gaffer::Animation::Interpolator::Hint::UseSlope |
+		Gaffer::Animation::Interpolator::Hint::UseScale )
+	{}
+
+	double evaluate( const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
+		const double time, const double dt ) const override
+	{
+		const Imath::V2d tl = keyLo.tangentOut().getPosition();
+		const Imath::V2d th = keyHi.tangentIn().getPosition();
+
+		// NOTE : Curve is determined by two polynomials parameterised by s,
+		//
+		//        v = a(v)s^3 +  b(v)s^2 + c(v)s + d(v)
+		//        t = a(t)s^3 +  b(t)s^2 + c(t)s + d(t)
+		//
+		//        where t is normalised time in seconds, v is value, to evaluate v at the
+		//        specified t, first need to solve the second polynomial to determine s.
+
+		const double s = solveForTime(
+			Imath::clamp( ( tl.x - keyLo.getTime() ) / dt,       0.0, 1.0 ),
+			Imath::clamp( ( th.x - keyHi.getTime() ) / dt + 1.0, 0.0, 1.0 ), time );
+
+		// compute coefficients of value polynomial
+
+		const double valueLo = keyLo.getValue();
+		const double valueHi = keyHi.getValue();
+		const double tl3 = tl.y + tl.y + tl.y;
+		const double th3 = th.y + th.y + th.y;
+		const double vl3 = valueLo + valueLo + valueLo;
+		const double av = tl3 - th3 + valueHi - valueLo;
+		const double bv = th3 + vl3 - tl3 - tl3;
+		const double cv = tl3 - vl3;
+		const double dv = valueLo;
+
+		// evaluate value polynomial
+
+		return std::fma( s, std::fma( s, std::fma( s, av, bv ), cv ), dv );
+	}
+
+private:
+
+	double solveForTime( const double tl, const double th, const double time ) const
+	{
+		if( time <= 0.0 ) return 0.0;
+		if( time >= 1.0 ) return 1.0;
+
+		// compute coeffs
+
+		const double th3 = th + th + th;
+		const double ct = tl + tl + tl;
+		const double at = ct - th3 + 1.0;
+		const double bt = th3 - ct - ct;
+		const double bt2 = bt + bt;
+		const double at3 = at + at + at;
+
+		// check that f is monotonic and therefore has one (possibly repeated) real root.
+		//
+		// NOTE : f is monotonic over the interval [0,1] when the solutions of f' either,
+		//        both lie outside the interval (0,1) or lie in the interval (0,1) and are equal
+		//        in which case the discriminant of f' is zero.
+		// NOTE : keeping tl and th in the range [0,1] ensures f is monotonic over interval [0,1].
+
+		const double discriminant = bt2 * bt2 - 4.0 * at3 * ct;
+
+		if( discriminant > 1e-13 )
+		{
+			const double q = - 0.5 * ( bt2 + std::copysign( std::sqrt( discriminant ), bt2 ) );
+			const double s1 = q / at3;
+			const double s2 = ct / q;
+
+			if( ( 0.0 < s1 && s1 < 1.0 ) || ( 0.0 < s2 && s2 < 1.0 ) )
+			{
+				throw IECore::Exception( "Animation : Bezier interpolation mode : curve segment has multiple values for given time." );
+			}
+		}
+
+		// root bracketed in interval [0,1]
+
+		double sl = 0.0;
+		double sh = 1.0;
+
+		// time is a reasonable first guess
+
+		double s = time;
+
+		// max of 10 newton-raphson iterations
+
+		for( int i = 0; i < 10; ++i )
+		{
+			// evaluate function and derivative
+			//
+			// NOTE : f   =  a(t)s^3 +  b(t)s^2 + c(t)s + d(t) - t
+			//        f'  = 3a(t)s^2 + 2b(t)s   + c(t)
+
+			const double  f = std::fma( s, std::fma( s, std::fma( s, at,  bt  ), ct ), -time );
+			const double df =              std::fma( s, std::fma( s, at3, bt2 ), ct );
+
+			// maintain bounds
+
+			if( std::abs( f ) < std::numeric_limits< double >::epsilon() )
+			{
+				break;
+			}
+			else if( f < 0.0 )
+			{
+				sl = s;
+			}
+			else
+			{
+				sh = s;
+			}
+
+			// NOTE : when derivative is zero or newton-raphson step would escape bounds use bisection step instead.
+
+			double ds;
+
+			if( df == 0.0 )
+			{
+				ds = 0.5 * ( sh - sl );
+				s = sl + ds;
+			}
+			else
+			{
+				ds = f / df;
+
+				if( ( ( s - ds ) <= sl ) || ( ( s - ds ) >= sh ) )
+				{
+					ds = 0.5 * ( sh - sl );
+					s = sl + ds;
+				}
+				else
+				{
+					s -= ds;
+				}
+			}
+
+			assert( s >= sl );
+			assert( s <= sh );
+
+			// check for convergence
+
+			if( std::abs( ds ) < std::numeric_limits< double >::epsilon() )
+			{
+				break;
+			}
+		}
+
+		return s;
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -283,6 +441,7 @@ const Animation::Interpolator::Container& Animation::Interpolator::get()
 {
 	static const Container container
 	{
+		ConstInterpolatorPtr( new InterpolatorBezier() ),
 		ConstInterpolatorPtr( new InterpolatorCubic() ),
 		ConstInterpolatorPtr( new InterpolatorLinear() ),
 		ConstInterpolatorPtr( new InterpolatorConstantNext() ),
@@ -2078,6 +2237,8 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 			return "Linear";
 		case Interpolation::Cubic:
 			return "Cubic";
+		case Interpolation::Bezier:
+			return "Bezier";
 		default:
 			assert( 0 );
 			return 0;

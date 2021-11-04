@@ -66,9 +66,7 @@ class GAFFER_API Animation : public ComputeNode
 			ConstantNext,
 			Linear,
 			Cubic,
-			/// \todo Add Smooth, implemented as
-			/// bezier curves using V2f in and out
-			/// tangents on each key.
+			Bezier
 		};
 
 		/// Defines direction relative to a key.

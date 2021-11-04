@@ -219,6 +219,7 @@ void GafferModule::bindAnimation()
 		.value( Animation::toString( Animation::Interpolation::ConstantNext ), Animation::Interpolation::ConstantNext )
 		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
 		.value( Animation::toString( Animation::Interpolation::Cubic ), Animation::Interpolation::Cubic )
+		.value( Animation::toString( Animation::Interpolation::Bezier ), Animation::Interpolation::Bezier )
 	;
 
 	enum_< Animation::Direction >( "Direction" )
