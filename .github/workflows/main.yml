@@ -41,7 +41,7 @@ jobs:
             os: ubuntu-20.04
             buildType: RELEASE
             publish: true
-            containerImage: gafferhq/build:1.2.0
+            containerImage: ghcr.io/gafferhq/build/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python2-linux.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
@@ -54,7 +54,7 @@ jobs:
             os: ubuntu-20.04
             buildType: DEBUG
             publish: false
-            containerImage: gafferhq/build:1.2.0
+            containerImage: ghcr.io/gafferhq/build/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python2-linux.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
@@ -65,7 +65,7 @@ jobs:
             os: ubuntu-20.04
             buildType: RELEASE
             publish: true
-            containerImage: gafferhq/build:1.2.0
+            containerImage: ghcr.io/gafferhq/build/build:1.2.0
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python3-linux.tar.gz
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
