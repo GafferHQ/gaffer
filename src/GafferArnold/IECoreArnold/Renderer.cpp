@@ -236,6 +236,41 @@ void hashShaderOutputParameter( const IECoreScene::ShaderNetwork *network, const
 	}
 }
 
+// Arnold does not support non-uniform sampling. It just takes a start and end
+// time, and assumes the samples are distributed evenly between them. Throw an
+// exception if given data we can't render.
+void ensureUniformTimeSamples( const std::vector<float> &times )
+{
+	if( times.size() == 0 )
+	{
+		throw IECore::Exception( "Motion block times must not be empty" );
+	}
+
+	float motionStart = times[0];
+	float motionEnd = times[ times.size() - 1 ];
+
+	for( unsigned int i = 0; i < times.size(); i++ )
+	{
+		// Use a really coarse epsilon to check if the values are uniform - if someone is sloppy with
+		// floating point precision when computing their sample times, we don't want to stop them from rendering.
+		// But we should warn someone if they are actually trying to use a feature Arnold doesn't support.
+		const float uniformity_epsilon = 0.01;
+		float expectedTime = motionStart + ( motionEnd - motionStart ) / ( times.size() - 1 ) * i;
+		if( times[i] < expectedTime - uniformity_epsilon || times[i] > expectedTime + uniformity_epsilon )
+		{
+			std::stringstream text;
+			text << "Arnold does not support non-uniform motion blocks.\n";
+			text << "Invalid motion block: [ " << times[0];
+			for( unsigned int j = 1; j < times.size(); j++ )
+			{
+				text << ", " << times[j];
+			}
+			text << " ]\n";
+			text << "( sample " << i << ", with value " << times[i] << " does not match " << expectedTime << ")\n";
+			throw IECore::Exception( text.str() );
+		}
+	}
+}
 
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
@@ -1974,7 +2009,7 @@ class InstanceCache : public IECore::RefCounted
 
 		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes, const std::string &nodeName )
 		{
-			NodeAlgo::ensureUniformTimeSamples( times );
+			ensureUniformTimeSamples( times );
 			AtNode *node = nullptr;
 			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
 			{
@@ -2099,7 +2134,7 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 			AiNodeSetArray( node, matrixParameterName, matricesArray );
 
-			NodeAlgo::ensureUniformTimeSamples( times );
+			ensureUniformTimeSamples( times );
 			AiNodeSetFlt( node, g_motionStartArnoldString, times[0] );
 			AiNodeSetFlt( node, g_motionEndArnoldString, times[times.size() - 1] );
 
