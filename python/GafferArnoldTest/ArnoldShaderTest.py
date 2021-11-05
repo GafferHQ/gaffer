@@ -43,7 +43,6 @@ import imath
 import IECore
 import IECoreScene
 import IECoreImage
-import IECoreArnold
 
 import Gaffer
 import GafferOSL

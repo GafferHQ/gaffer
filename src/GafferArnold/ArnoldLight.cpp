@@ -38,13 +38,12 @@
 
 #include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ParameterHandler.h"
+#include "GafferArnold/Private/IECoreArnold/UniverseBlock.h"
 
 #include "GafferScene/Shader.h"
 
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
-
-#include "IECoreArnold/UniverseBlock.h"
 
 #include "IECoreScene/ShaderNetworkAlgo.h"
 

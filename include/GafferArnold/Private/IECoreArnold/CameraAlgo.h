@@ -32,49 +32,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnold/ProceduralAlgo.h"
+#ifndef IECOREARNOLD_CAMERAALGO_H
+#define IECOREARNOLD_CAMERAALGO_H
 
-#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
-#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
+#include "GafferArnold/Export.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Version.h"
+#include "IECoreScene/Camera.h"
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreArnold;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
+#include "ai.h"
 
 namespace IECoreArnold
 {
 
-namespace ProceduralAlgo
+namespace CameraAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
-{
-	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
-	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
+GAFFERARNOLD_API AtNode *convert( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr );
+GAFFERARNOLD_API AtNode *convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr );
 
-	return node;
-}
-
-} // namespace ProceduralAlgo
+} // namespace CameraAlgo
 
 } // namespace IECoreArnold
+
+#endif // IECOREARNOLD_CAMERAALGO_H

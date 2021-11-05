@@ -32,19 +32,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnold/ProceduralAlgo.h"
-
 #include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
-#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Version.h"
-
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreArnold;
+#include "boost/unordered_map.hpp"
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
@@ -53,28 +43,91 @@ using namespace IECoreArnold;
 namespace
 {
 
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
+using namespace IECoreArnold;
+
+struct Converters
+{
+
+	Converters( NodeAlgo::Converter converter, NodeAlgo::MotionConverter motionConverter )
+		:	converter( converter ), motionConverter( motionConverter )
+	{
+	}
+
+	NodeAlgo::Converter converter;
+	NodeAlgo::MotionConverter motionConverter;
+
+};
+
+typedef boost::unordered_map<IECore::TypeId, Converters> Registry;
+
+Registry &registry()
+{
+	static Registry g_registry;
+	return g_registry;
+}
 
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// Implementation of public API
+// Public implementation
 //////////////////////////////////////////////////////////////////////////
 
 namespace IECoreArnold
 {
 
-namespace ProceduralAlgo
+namespace NodeAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
+AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
 {
-	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
-	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
-
-	return node;
+	const Registry &r = registry();
+	Registry::const_iterator it = r.find( object->typeId() );
+	if( it == r.end() )
+	{
+		return nullptr;
+	}
+	return it->second.converter( object, universe, nodeName, parentNode );
 }
 
-} // namespace ProceduralAlgo
+AtNode *convert( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode )
+{
+	if( samples.empty() )
+	{
+		return nullptr;
+	}
+
+	const IECore::Object *firstSample = samples.front();
+	const IECore::TypeId firstSampleTypeId = firstSample->typeId();
+	for( std::vector<const IECore::Object *>::const_iterator it = samples.begin()+1, eIt = samples.end(); it != eIt; ++it )
+	{
+		if( (*it)->typeId() != firstSampleTypeId )
+		{
+			throw IECore::Exception( "Inconsistent object types." );
+		}
+	}
+
+	const Registry &r = registry();
+	Registry::const_iterator it = r.find( firstSampleTypeId );
+	if( it == r.end() )
+	{
+		return nullptr;
+	}
+
+	if( it->second.motionConverter )
+	{
+		return it->second.motionConverter( samples, motionStart, motionEnd, universe, nodeName, parentNode );
+	}
+	else
+	{
+		return it->second.converter( firstSample, universe, nodeName, parentNode );
+	}
+}
+
+void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter )
+{
+	registry().insert( Registry::value_type( fromType, Converters( converter, motionConverter ) ) );
+}
+
+} // namespace NodeAlgo
 
 } // namespace IECoreArnold

@@ -36,6 +36,13 @@
 
 from .RendererTest import RendererTest
 from .ShaderNetworkAlgoTest import ShaderNetworkAlgoTest
+from .CameraAlgoTest import CameraAlgoTest
+from .CurvesAlgoTest import CurvesAlgoTest
+from .MeshAlgoTest import MeshAlgoTest
+from .ParameterAlgoTest import ParameterAlgoTest
+from .PointsAlgoTest import PointsAlgoTest
+from .SphereAlgoTest import SphereAlgoTest
+from .UniverseBlockTest import UniverseBlockTest
 
 if __name__ == "__main__":
 	import unittest

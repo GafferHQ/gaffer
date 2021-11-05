@@ -34,8 +34,8 @@
 
 #include "IECoreVDB/VDBObject.h"
 
-#include "IECoreArnold/NodeAlgo.h"
-#include "IECoreArnold/ParameterAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
 
 #include "IECoreScene/Renderer.h"
 
@@ -147,18 +147,6 @@ AtNode *convert( const IECoreVDB::VDBObject *vdbObject, AtUniverse *universe, co
 	return node;
 }
 
-#if CORTEX_COMPATIBILITY_VERSION < 10003
-
-NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description(
-	[] ( const IECoreVDB::VDBObject *vdbObject, const std::string &name, const AtNode *parent ) {
-		return ::convert( vdbObject, nullptr, name, parent );
-	}
-);
-
-#else
-
 NodeAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( ::convert );
-
-#endif
 
 } // namespace

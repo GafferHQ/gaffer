@@ -32,49 +32,34 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnold/ProceduralAlgo.h"
+#ifndef IECOREARNOLD_SHAPEALGO_H
+#define IECOREARNOLD_SHAPEALGO_H
 
-#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
-#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
+#include "GafferArnold/Export.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Version.h"
+#include "IECoreScene/Primitive.h"
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreArnold;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
+#include "ai.h"
 
 namespace IECoreArnold
 {
 
-namespace ProceduralAlgo
+namespace ShapeAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
-{
-	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
-	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
+GAFFERARNOLD_API void convertP( const IECoreScene::Primitive *primitive, AtNode *shape, const AtString name );
+GAFFERARNOLD_API void convertP( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape, const AtString name );
 
-	return node;
-}
+GAFFERARNOLD_API void convertRadius( const IECoreScene::Primitive *primitive, AtNode *shape );
+GAFFERARNOLD_API void convertRadius( const std::vector<const IECoreScene::Primitive *> &samples, AtNode *shape );
 
-} // namespace ProceduralAlgo
+GAFFERARNOLD_API void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const IECoreScene::PrimitiveVariable &primitiveVariable, AtNode *shape, const AtString name );
+/// Converts primitive variables from primitive into user parameters on shape, ignoring any variables
+/// whose names are present in the ignore array.
+GAFFERARNOLD_API void convertPrimitiveVariables( const IECoreScene::Primitive *primitive, AtNode *shape, const char **namesToIgnore=nullptr );
+
+} // namespace ShapeAlgo
 
 } // namespace IECoreArnold
+
+#endif // IECOREARNOLD_SHAPEALGO_H

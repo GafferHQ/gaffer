@@ -39,10 +39,11 @@ import imath
 
 import IECore
 import IECoreScene
-import IECoreArnold
 
 import GafferSceneTest
 import GafferArnold
+
+from GafferArnold.Private import IECoreArnold
 
 class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 

@@ -51,7 +51,10 @@
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/ArnoldLightFilter.h"
 #include "GafferArnold/InteractiveArnoldRender.h"
+#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
 #include "GafferArnold/Private/IECoreArnold/ShaderNetworkAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/UniverseBlock.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -148,6 +151,50 @@ AtUniverse *pythonObjectToAtUniverse( const boost::python::object &universe )
 	return reinterpret_cast<AtUniverse *>( extract<size_t>( address )() );
 }
 
+object universeWrapper( UniverseBlock &universeBlock )
+{
+	AtUniverse *universe = universeBlock.universe();
+	if( universe )
+	{
+		object arnold = import( "arnold" );
+		object ctypes = import( "ctypes" );
+		return ctypes.attr( "cast" )(
+			(uint64_t)universeBlock.universe(),
+			ctypes.attr( "POINTER" )( object( arnold.attr( "AtUniverse" ) ) )
+		);
+	}
+	else
+	{
+		// Default universe, represented as `None` in Python.
+		return object();
+	}
+}
+
+object convertWrapper( const IECore::Object *object, boost::python::object universe, const std::string &nodeName )
+{
+	return atNodeToPythonObject( NodeAlgo::convert( object, pythonObjectToAtUniverse( universe ), nodeName, nullptr ) );
+}
+
+object convertWrapper2( object pythonSamples, float motionStart, float motionEnd, boost::python::object universe, const std::string &nodeName )
+{
+	std::vector<const IECore::Object *> samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	return atNodeToPythonObject( NodeAlgo::convert( samples, motionStart, motionEnd, pythonObjectToAtUniverse( universe ), nodeName, nullptr ) );
+}
+
+void setParameter( object &pythonNode, const char *name, const IECore::Data *data )
+{
+	AtNode *node = atNodeFromPythonObject( pythonNode );
+	ParameterAlgo::setParameter( node, name, data );
+}
+
+IECore::DataPtr getParameter( object &pythonNode, const char *name )
+{
+	AtNode *node = atNodeFromPythonObject( pythonNode );
+	return ParameterAlgo::getParameter( node, name );
+}
+
 list shaderNetworkAlgoConvert( const IECoreScene::ShaderNetwork *shaderNetwork, object universe, const std::string &name )
 {
 	std::vector<AtNode *> nodes = ShaderNetworkAlgo::convert( shaderNetwork, pythonObjectToAtUniverse( universe ), name );
@@ -215,11 +262,37 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	scope().attr( "_IECoreArnold" ) = ieCoreArnoldModule;
 	scope ieCoreArnoldScope( ieCoreArnoldModule );
 
-	object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.ShaderNetworkAlgo" ) ) );
-	scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
-	scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+	// This is bound with a preceding _ and then turned into a context
+	// manager for the "with" statement in IECoreArnold/UniverseBlock.py
+	class_<UniverseBlock, boost::noncopyable>( "_UniverseBlock", init<bool>( ( arg( "writable" ) ) ) )
+		.def( "universe", &universeWrapper )
+	;
 
-	def( "convert", &shaderNetworkAlgoConvert );
-	def( "update", &shaderNetworkAlgoUpdate );
+	{
+		object nodeAlgoModule( handle<>( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.NodeAlgo" ) ) ) );
+		scope().attr( "NodeAlgo" ) = nodeAlgoModule;
+		scope nodeAlgoModuleScope( nodeAlgoModule );
+
+		def( "convert", &convertWrapper );
+		def( "convert", &convertWrapper2 );
+	}
+
+	{
+		object parameterAlgoModule( handle<>( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.ParameterAlgo" ) ) ) );
+		scope().attr( "ParameterAlgo" ) = parameterAlgoModule;
+		scope parameterAlgoModuleScope( parameterAlgoModule );
+
+		def( "setParameter", &setParameter );
+		def( "getParameter", &getParameter );
+	}
+
+	{
+		object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.ShaderNetworkAlgo" ) ) );
+		scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
+		scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+
+		def( "convert", &shaderNetworkAlgoConvert );
+		def( "update", &shaderNetworkAlgoUpdate );
+	}
 
 }

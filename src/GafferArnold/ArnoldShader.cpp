@@ -38,6 +38,7 @@
 #include "GafferArnold/ArnoldShader.h"
 
 #include "GafferArnold/ParameterHandler.h"
+#include "GafferArnold/Private/IECoreArnold/UniverseBlock.h"
 
 #include "GafferOSL/OSLShader.h"
 
@@ -45,8 +46,6 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
-
-#include "IECoreArnold/UniverseBlock.h"
 
 #include "IECore/MessageHandler.h"
 

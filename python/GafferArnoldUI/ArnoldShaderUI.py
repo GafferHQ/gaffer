@@ -43,11 +43,12 @@ import arnold
 
 import IECore
 import imath
-import IECoreArnold
 
 import Gaffer
 import GafferUI
 import GafferArnold
+
+from GafferArnold.Private import IECoreArnold
 
 ##########################################################################
 # Utilities to make it easier to work with the Arnold API, which has a

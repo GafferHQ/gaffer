@@ -32,49 +32,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnold/ProceduralAlgo.h"
+#ifndef IECOREARNOLD_PARAMETERALGO_H
+#define IECOREARNOLD_PARAMETERALGO_H
 
-#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
-#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
+#include "GafferArnold/Export.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Version.h"
+#include "IECore/CompoundData.h"
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreArnold;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
+#include "ai.h"
 
 namespace IECoreArnold
 {
 
-namespace ProceduralAlgo
+namespace ParameterAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
-{
-	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
-	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
+GAFFERARNOLD_API void setParameter( AtNode *node, const AtParamEntry *parameter, const IECore::Data *value );
+GAFFERARNOLD_API void setParameter( AtNode *node, AtString name, const IECore::Data *value );
+GAFFERARNOLD_API void setParameter( AtNode *node, const char *name, const IECore::Data *value );
+GAFFERARNOLD_API void setParameters( AtNode *node, const IECore::CompoundDataMap &values );
 
-	return node;
-}
+GAFFERARNOLD_API IECore::DataPtr getParameter( AtNode *node, const AtParamEntry *parameter );
+GAFFERARNOLD_API IECore::DataPtr getParameter( AtNode *node, const AtUserParamEntry *parameter );
+GAFFERARNOLD_API IECore::DataPtr getParameter( AtNode *node, AtString name );
+GAFFERARNOLD_API IECore::DataPtr getParameter( AtNode *node, const char *name );
+GAFFERARNOLD_API void getParameters( AtNode *node, IECore::CompoundDataMap &values );
 
-} // namespace ProceduralAlgo
+/// Returns the Arnold parameter type (AI_TYPE_INT etc) suitable for
+/// storing Cortex data of the specified type, setting array to true
+/// or false depending on whether or not the Arnold type will be an
+/// array. Returns AI_TYPE_NONE if there is no suitable Arnold type.
+GAFFERARNOLD_API int parameterType( IECore::TypeId dataType, bool &array );
+GAFFERARNOLD_API int parameterType( const IECore::Data *data, bool &array );
+
+/// If the equivalent Arnold type for the data is already known, then it may be passed directly.
+/// If not it will be inferred using parameterType().
+GAFFERARNOLD_API AtArray *dataToArray( const IECore::Data *data, int aiType = AI_TYPE_NONE );
+GAFFERARNOLD_API AtArray *dataToArray( const std::vector<const IECore::Data *> &samples, int aiType = AI_TYPE_NONE );
+
+} // namespace ParameterAlgo
 
 } // namespace IECoreArnold
+
+#endif // IECOREARNOLD_PARAMETERALGO_H

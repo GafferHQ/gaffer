@@ -43,10 +43,9 @@ import imath
 
 import IECore
 import IECoreScene
-import IECoreArnold
 
 import GafferTest
-import GafferArnold.Private.IECoreArnold as IECoreArnoldPreview
+import GafferArnold.Private.IECoreArnold as IECoreArnold
 
 class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 
@@ -65,7 +64,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, universe, "test" )
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
 
 			self.assertEqual( len( nodes ), 2 )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "noise" )
@@ -96,7 +95,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 
 			# Convert
 
-			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, universe, "test" )
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
 
 			def assertNoiseAndFlatNodes() :
 
@@ -117,7 +116,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			# Convert again with no changes at all. We want to see the same nodes reused.
 
 			originalNodes = nodes[:]
-			self.assertTrue( IECoreArnoldPreview.ShaderNetworkAlgo.update( nodes, network ) )
+			self.assertTrue( IECoreArnold.ShaderNetworkAlgo.update( nodes, network ) )
 			assertNoiseAndFlatNodes()
 
 			self.assertEqual( ctypes.addressof( nodes[0].contents ), ctypes.addressof( originalNodes[0].contents ) )
@@ -131,7 +130,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			network.setShader( "noiseHandle", noise )
 
 			originalNodes = nodes[:]
-			self.assertTrue( IECoreArnoldPreview.ShaderNetworkAlgo.update( nodes, network ) )
+			self.assertTrue( IECoreArnold.ShaderNetworkAlgo.update( nodes, network ) )
 			assertNoiseAndFlatNodes()
 
 			self.assertEqual( ctypes.addressof( nodes[0].contents ), ctypes.addressof( originalNodes[0].contents ) )
@@ -146,7 +145,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			network.addConnection( ( ( "imageHandle", "" ), ( "flatHandle", "color" ) ) )
 
 			originalNodes = nodes[:]
-			self.assertTrue( IECoreArnoldPreview.ShaderNetworkAlgo.update( nodes, network ) )
+			self.assertTrue( IECoreArnold.ShaderNetworkAlgo.update( nodes, network ) )
 
 			self.assertEqual( ctypes.addressof( nodes[1].contents ), ctypes.addressof( originalNodes[1].contents ) )
 
@@ -171,7 +170,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			network.setOutput( ( "lambertHandle", "" ) )
 
 			originalNodes = nodes[:]
-			self.assertFalse( IECoreArnoldPreview.ShaderNetworkAlgo.update( nodes, network ) )
+			self.assertFalse( IECoreArnold.ShaderNetworkAlgo.update( nodes, network ) )
 
 			self.assertEqual( ctypes.addressof( nodes[0].contents ), ctypes.addressof( originalNodes[0].contents ) )
 
@@ -210,7 +209,7 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			nodes = IECoreArnoldPreview.ShaderNetworkAlgo.convert( network, universe, "test" )
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
 
 			self.assertEqual( len( nodes ), 2 )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "noise" )

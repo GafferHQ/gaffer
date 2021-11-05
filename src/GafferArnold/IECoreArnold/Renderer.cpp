@@ -40,10 +40,10 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
-#include "IECoreArnold/CameraAlgo.h"
-#include "IECoreArnold/NodeAlgo.h"
-#include "IECoreArnold/ParameterAlgo.h"
-#include "IECoreArnold/UniverseBlock.h"
+#include "GafferArnold/Private/IECoreArnold/CameraAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
+#include "GafferArnold/Private/IECoreArnold/UniverseBlock.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/CurvesPrimitive.h"
@@ -1770,34 +1770,6 @@ IE_CORE_DECLAREPTR( ArnoldAttributes )
 //////////////////////////////////////////////////////////////////////////
 // InstanceCache
 //////////////////////////////////////////////////////////////////////////
-
-#if CORTEX_COMPATIBILITY_VERSION < 10003
-
-// Prior to Cortex 10.3, there is no AtUniverse atgument to `NodeAlgo::convert()`.
-// We define overloads with one here, to avoid #ifdefs scattered through the rest
-// of the code.
-
-namespace IECoreArnold
-{
-
-namespace NodeAlgo
-{
-
-AtNode *convert( const IECore::Object *object, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr )
-{
-	return convert( object, nodeName, parentNode );
-}
-
-AtNode *convert( const std::vector<const IECore::Object *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr )
-{
-	return convert( samples, motionStart, motionEnd, nodeName, parentNode );
-}
-
-} // namespace NodeAlgo
-
-} // namespace IECoreArnold
-
-#endif
 
 namespace
 {

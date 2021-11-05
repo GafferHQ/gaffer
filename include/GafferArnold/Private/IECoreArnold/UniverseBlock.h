@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,49 +32,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnold/ProceduralAlgo.h"
+#ifndef IECOREARNOLD_UNIVERSEBLOCK_H
+#define IECOREARNOLD_UNIVERSEBLOCK_H
 
-#include "GafferArnold/Private/IECoreArnold/NodeAlgo.h"
-#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
+#include "GafferArnold/Export.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Version.h"
+#include "boost/noncopyable.hpp"
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreArnold;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
+#include "ai_universe.h"
 
 namespace IECoreArnold
 {
 
-namespace ProceduralAlgo
+/// Manages Arnold initialisation via `AiBegin()` and creation and
+/// destruction of AtUniverse objects via `AiUniverse()` and
+/// `AiUniverseDestroy()`.
+class GAFFERARNOLD_API UniverseBlock : public boost::noncopyable
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
-{
-	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
-	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
+	public :
 
-	return node;
-}
+		/// Ensures that the Arnold API is initialised and that all plugins and
+		/// metadata files on the ARNOLD_PLUGIN_PATH have been loaded.
+		/// Constructs with a uniquely owned universe if `writable == true`, and
+		/// a potentially shared universe otherwise. The latter is useful for
+		/// making queries via the `AiNodeEntry` API.
+		UniverseBlock( bool writable );
+		/// Releases the universe created by the constructor.
+		~UniverseBlock();
 
-} // namespace ProceduralAlgo
+		AtUniverse *universe() { return m_universe; }
+
+	private :
+
+		const bool m_writable;
+		AtUniverse *m_universe;
+
+};
 
 } // namespace IECoreArnold
+
+#endif // IECOREARNOLD_UNIVERSEBLOCK_H

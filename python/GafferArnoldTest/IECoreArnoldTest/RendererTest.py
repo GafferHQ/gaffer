@@ -45,11 +45,12 @@ import imath
 
 import IECore
 import IECoreScene
-import IECoreArnold
 import IECoreImage
 
 import GafferTest
 import GafferScene
+
+from GafferArnold.Private import IECoreArnold
 
 class RendererTest( GafferTest.TestCase ) :
 
