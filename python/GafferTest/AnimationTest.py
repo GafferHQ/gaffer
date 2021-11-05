@@ -2917,5 +2917,980 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		assertAnimation( s2 )
 
+	def testKeySetTimeLastSpan( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		f7 = 7.0 / 24.0
+
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f7, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti4 = k4.tangentIn()
+		tf4 = k4.tangentOut()
+
+		# set the in tangent slope of the final key
+		ti4.setSlope( 60 )
+		self.assertEqual( ti4.getSlope(), 60 )
+		self.assertEqual( tf4.getSlope(), 60 )
+
+		# set time of second key so that key lies in final span and interpolation affects in tangent of final key
+		f6 = 6.0 / 24.0
+		k2.setTime( f6 )
+
+		# ensure in tangent slope of fourth key is now flat as its affected by step interpolation
+		self.assertEqual( ti4.getSlope(), 0 )
+
+		# set time of second key back to 5 so that final key is again affected by cubic interpolation
+		k2.setTime( f4 )
+
+		# ensure in tangent slope of fourth key has reverted to its value before being affected by step interpolation
+		self.assertEqual( ti4.getSlope(), 60 )
+
+	def testKeySetTimeWhenTwoKeysInCurve( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+
+		ti1 = k1.tangentIn()
+		tf1 = k1.tangentOut()
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# check that in tangent of first key is unconstrained
+		self.assertFalse( ti1.slopeIsConstrained() )
+		self.assertFalse( tf1.slopeIsConstrained() )
+
+		# check that out tangent of last key is unconstrained
+		self.assertFalse( ti2.slopeIsConstrained() )
+		self.assertFalse( tf2.slopeIsConstrained() )
+
+		# set out tangent slope of first key to 30
+		tf1.setSlope( 30 )
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+
+		# set in tangent slope of last key to -60
+		ti2.setSlope( -60 )
+		self.assertEqual( ti2.getSlope(), -60 )
+		self.assertEqual( tf2.getSlope(), -60 )
+
+		# now set time of first key to lower value and check slopes of tangents are the same
+		f1 = 1.0 / 24.0
+		k1.setTime( f1 )
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+		self.assertEqual( ti2.getSlope(), -60 )
+		self.assertEqual( tf2.getSlope(), -60 )
+
+		# now set time of last key to higher value and check slopes of tangents are the same
+		f6 = 6.0 / 24.0
+		k2.setTime( f6 )
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+		self.assertEqual( ti2.getSlope(), -60 )
+		self.assertEqual( tf2.getSlope(), -60 )
+
+	def testKeySetTimeJumpNextWithInterpolationConstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent slope of the third key to 60
+		ti3.setSlope( 60 )
+		self.assertEqual( ti3.getSlope(), 60 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# set time of key 1 so that key 3 in tangent affected by step interpolator
+		f4 = 4.0 / 24.0
+		k1.setTime( f4 )
+		self.assertEqual( curve.previousKey( k3.getTime() ), k1 )
+		self.assertTrue( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+
+		# ensure out tangent slope of third key not affected
+		self.assertEqual( tf3.getSlope(), 60 )
+
+	def testKeySetTimeJumpNextWithInterpolationConstrainedScaleWithTieModeScale( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Manual )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent scale of the third key to 0.87
+		ti3.setScale( 0.87 )
+		tf3.setScale( 0.87 )
+		self.assertEqual( ti3.getScale(), 0.87 )
+		self.assertEqual( tf3.getScale(), 0.87 )
+
+		# set tie mode to include scale
+		k3.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# set time of key 1 so that key 3 in tangent affected by step interpolator
+		f4 = 4.0 / 24.0
+		k1.setTime( f4 )
+		self.assertEqual( curve.previousKey( k3.getTime() ), k1 )
+		self.assertTrue( ti3.scaleIsConstrained() )
+		self.assertFalse( tf3.scaleIsConstrained() )
+
+		# ensure out tangent scale of third key not affected
+		self.assertEqual( tf3.getScale(), 0.87 )
+
+	def testKeySetTimeJumpWithInterpolationConstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f7 = 7.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f7, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the tangent slope of the second key to 60
+		ti2.setSlope( 60 )
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+		# set time of key 2 so that key 2 in tangent affected by step interpolator
+		f6 = 6.0 / 24.0
+		k2.setTime( f6 )
+		self.assertEqual( curve.previousKey( k2.getTime() ), k3 )
+		self.assertTrue( ti2.slopeIsConstrained() )
+		self.assertFalse( tf2.slopeIsConstrained() )
+
+		# ensure out tangent slope of second key not affected
+		self.assertEqual( tf2.getSlope(), 60 )
+
+	def testKeySetTimeJumpWithInterpolationUnconstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f7 = 7.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Cubic, inSlope=0, outSlope=0, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f7, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the out tangent slope of the second key to 60, in slope constrained so should not be affected
+		tf2.setSlope( 60 )
+		self.assertTrue( ti2.slopeIsConstrained() )
+		self.assertFalse( tf2.slopeIsConstrained() )
+		self.assertEqual( ti2.getSlope(), 0 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+		# set time of second key so that second key in tangent affected by cubic interpolator
+		f6 = 6.0 / 24.0
+		k2.setTime( f6 )
+		self.assertEqual( curve.previousKey( k2.getTime() ), k3 )
+		self.assertFalse( ti2.slopeIsConstrained() )
+		self.assertFalse( tf2.slopeIsConstrained() )
+
+		# ensure in tangent slope of second key has been tied correctly to out tangent slope of second key
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+	def testKeySetTimeJumpWithInterpolationUnconstrainedNextSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f7 = 7.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, inSlope=0, outSlope=0, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f7, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the out tangent slope of the third key to 60, in slope constrained so should not be affected
+		tf3.setSlope( 60 )
+		self.assertTrue( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+		self.assertEqual( ti3.getSlope(), 0 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# set time of key 1 so that key 3 in tangent affected by cubic interpolator
+		f4 = 4.0 / 24.0
+		k1.setTime( f4 )
+		self.assertEqual( curve.previousKey( k3.getTime() ), k1 )
+		self.assertFalse( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+
+		# ensure in tangent slope of third key has been tied correctly to out tangent slope of third key
+		self.assertEqual( ti3.getSlope(), 60 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+	def testKeySetTimeNextWithInterpolationConstrainedScaleWithTieModeScale( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f7 = 7.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Manual )
+		k4 = Gaffer.Animation.Key( time = f7, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the tangent scale of the second key to 0.87
+		ti2.setScale( 0.87 )
+		tf2.setScale( 0.87 )
+		self.assertEqual( ti2.getScale(), 0.87 )
+		self.assertEqual( tf2.getScale(), 0.87 )
+
+		# set tie mode to include scale
+		k2.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# set time of key 2 so that key 2 in tangent affected by step interpolator
+		f6 = 6.0 / 24.0
+		k2.setTime( f6 )
+		self.assertEqual( curve.previousKey( k2.getTime() ), k3 )
+		self.assertTrue( ti2.scaleIsConstrained() )
+		self.assertFalse( tf2.scaleIsConstrained() )
+
+		# ensure out tangent scale of second key not affected
+		self.assertEqual( tf2.getScale(), 0.87 )
+
+	def testKeySetTimeToFinalKeyThenAfter( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		kf = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		kl = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( kf )
+		curve.addKey( k )
+		curve.addKey( kl )
+
+		til = kl.tangentIn()
+		tfl = kl.tangentOut()
+
+		# check that out tangent of last key is unconstrained
+		self.assertFalse( til.slopeIsConstrained() )
+		self.assertFalse( tfl.slopeIsConstrained() )
+
+		# set in tangent slope of last key to -60
+		til.setSlope( -60 )
+		self.assertEqual( til.getSlope(), -60 )
+		self.assertEqual( tfl.getSlope(), -60 )
+
+		# now set the time of the middle key to the same time as the last key this will inactivate the last key
+		kc = k.setTime( kl.getTime() )
+		self.assertEqual( k.getTime(), kl.getTime() )
+		self.assertEqual( kl, kc )
+		self.assertFalse( kl.isActive() )
+		self.assertEqual( curve.getKey( kl.getTime() ), k )
+
+		# now set the time of the middle key to time after the last key
+		f6 = 6.0 / 24.0
+		k.setTime( f6 )
+		self.assertEqual( kl.parent(), curve )
+		self.assertEqual( curve.getKey( kl.getTime() ), kl )
+
+		# old last key is no longer final key of curve so both tangent slopes should be unconstrained and therefore tied
+		self.assertFalse( til.slopeIsConstrained() )
+		self.assertFalse( tfl.slopeIsConstrained() )
+		self.assertEqual( til.getSlope(), -60 )
+		self.assertEqual( tfl.getSlope(), -60 )
+
+	def testKeySetTimeToFirstKeyThenBefore( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		kf = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		kl = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( kf )
+		curve.addKey( k )
+		curve.addKey( kl )
+
+		tif = kf.tangentIn()
+		tff = kf.tangentOut()
+
+		# check that in tangent of first key is unconstrained
+		self.assertFalse( tif.slopeIsConstrained() )
+		self.assertFalse( tff.slopeIsConstrained() )
+
+		# set out tangent slope of first key to 30
+		tff.setSlope( 30 )
+		self.assertEqual( tif.getSlope(), 30 )
+		self.assertEqual( tff.getSlope(), 30 )
+
+		# now set the time of the middle key to the same time as the first key this will inactivate the first key
+		kc = k.setTime( kf.getTime() )
+		self.assertEqual( k.getTime(), kf.getTime() )
+		self.assertEqual( kf, kc )
+		self.assertFalse( kf.isActive() )
+		self.assertEqual( curve.getKey( kf.getTime() ), k )
+
+		# now set the time of the middle key to time before the last key
+		f1 = 1.0 / 24.0
+		k.setTime( f1 )
+		self.assertEqual( kf.parent(), curve )
+		self.assertEqual( curve.getKey( kf.getTime() ), kf )
+
+		# old first key is no longer first key of curve so both tangent slopes should be unconstrained and therefore tied
+		self.assertFalse( tif.slopeIsConstrained() )
+		self.assertFalse( tff.slopeIsConstrained() )
+		self.assertEqual( tif.getSlope(), 30 )
+		self.assertEqual( tff.getSlope(), 30 )
+
+	def testKeySetTimeRemoveThenAddBackWithInterpolationConstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent slope of second key to 30
+		ti2.setSlope( 30 )
+		self.assertEqual( ti2.getSlope(), 30 )
+		self.assertEqual( tf2.getSlope(), 30 )
+
+		# set the tangent slope of the third key to 60
+		ti3.setSlope( 60 )
+		self.assertEqual( ti3.getSlope(), 60 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# set interpolation of third key to linear (does not use slope)
+		k3.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+		self.assertFalse( ti3.slopeIsConstrained() )
+		self.assertTrue( tf3.slopeIsConstrained() )
+		self.assertEqual( ti3.getSlope(),  60 )
+
+		# now set the time of the third key to the same time as the second key this will inactivate the second key
+		kc = k3.setTime( k2.getTime() )
+		self.assertEqual( k3.getTime(), k2.getTime() )
+		self.assertEqual( k2, kc )
+		self.assertFalse( k2.isActive() )
+		self.assertEqual( curve.getKey( k2.getTime() ), k3 )
+
+		# now set the time of the third key to time before the second key
+		f3 = 3.0 / 24.0
+		k3.setTime( f3 )
+		self.assertEqual( k2.parent(), curve )
+		self.assertEqual( k3.parent(), curve )
+		self.assertEqual( curve.getKey( k2.getTime() ), k2 )
+		self.assertEqual( curve.getKey( k3.getTime() ), k3 )
+
+		# ensure in tangent slope of third key not affected
+		self.assertEqual( ti3.getSlope(), 60 )
+
+		# ensure out tangent slope of second key not affected
+		self.assertEqual( tf2.getSlope(), 30 )
+
+	def testKeySetTimeRemoveThenAddBackWithInterpolationConstrainedScaleWithTieModeScale( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent scale of second key to 0.75
+		ti2.setScale( 0.75 )
+		tf2.setScale( 0.75 )
+		self.assertEqual( ti2.getScale(), 0.75 )
+		self.assertEqual( tf2.getScale(), 0.75 )
+
+		# set the tangent scale of the third key to 0.85
+		ti3.setScale( 0.85 )
+		tf3.setScale( 0.85 )
+		self.assertEqual( ti3.getScale(), 0.85 )
+		self.assertEqual( tf3.getScale(), 0.85 )
+
+		# set tie modes to include scale
+		k2.setTieMode( Gaffer.Animation.TieMode.Scale )
+		k3.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# set interpolation of third key to linear (does not use scale)
+		k3.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+		self.assertFalse( ti3.scaleIsConstrained() )
+		self.assertTrue( tf3.scaleIsConstrained() )
+		self.assertEqual( ti3.getScale(), 0.85 )
+
+		# now set the time of the third key to the same time as the second key this will inactivate the second key
+		kc = k3.setTime( k2.getTime() )
+		self.assertEqual( k3.getTime(), k2.getTime() )
+		self.assertEqual( k2, kc )
+		self.assertFalse( k2.isActive() )
+		self.assertEqual( curve.getKey( k2.getTime() ), k3 )
+
+		# now set the time of the third key to time before the second key
+		f3 = 3.0 / 24.0
+		k3.setTime( f3 )
+		self.assertEqual( k2.parent(), curve )
+		self.assertEqual( k3.parent(), curve )
+		self.assertEqual( curve.getKey( k2.getTime() ), k2 )
+		self.assertEqual( curve.getKey( k3.getTime() ), k3 )
+
+		# ensure in tangent scale of third key not affected
+		self.assertEqual( ti3.getScale(), 0.85 )
+
+		# ensure out tangent scale of second key not affected
+		self.assertEqual( tf2.getScale(), 0.75 )
+
+	def testKeySetTimeTwoKeysFinalBeforeFirst( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+
+		ti1 = k1.tangentIn()
+		tf1 = k1.tangentOut()
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the out tangent slope of the first key
+		self.assertFalse( ti1.slopeIsConstrained() )
+		self.assertFalse( tf1.slopeIsConstrained() )
+		tf1.setSlope( 30 )
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+
+		# set the in tangent slope of the final key
+		self.assertFalse( ti2.slopeIsConstrained() )
+		self.assertFalse( tf2.slopeIsConstrained() )
+		ti2.setSlope( 60 )
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+		# set time of second key (final key) so it becomes the first key
+		f0 = 0.0 / 24.0
+		k2.setTime( f0 )
+
+		# ensure in tangent slope of key one matches out tangent slope
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+
+		# ensure out tangent slope of key two matches in tangent slope
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+	def testKeySetTimeTwoKeysFirstAfterFinal( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+
+		ti1 = k1.tangentIn()
+		tf1 = k1.tangentOut()
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the out tangent slope of the first key
+		tf1.setSlope( 30 )
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+
+		# set the in tangent slope of the final key
+		ti2.setSlope( 60 )
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+		# set time of key one (first key) so it becomes the final key
+		f6 = 6.0 / 24.0
+		k1.setTime( f6 )
+
+		# ensure in tangent slope of key one matches out tangent slope
+		self.assertEqual( ti1.getSlope(), 30 )
+		self.assertEqual( tf1.getSlope(), 30 )
+
+		# ensure out tangent slope of key two matches in tangent slope
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+	def testKeySetInterpolationToConstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the tangent slope of the middle key
+		ti2.setSlope( 60 )
+		self.assertEqual( ti2.getSlope(), 60 )
+		self.assertEqual( tf2.getSlope(), 60 )
+
+		# set interpolation of middle key to linear (does not use slope)
+		k2.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+		self.assertFalse( ti2.slopeIsConstrained() )
+		self.assertTrue( tf2.slopeIsConstrained() )
+
+		# ensure in tangent slope of middle key not affected
+		self.assertEqual( ti2.getSlope(), 60 )
+
+	def testKeySetInterpolationToConstrainedScaleWithTieModeScale( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f4 = 4.0 / 24.0
+		f5 = 5.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k2 = Gaffer.Animation.Key( time = f4, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+
+		ti2 = k2.tangentIn()
+		tf2 = k2.tangentOut()
+
+		# set the tangent scale of the middle key
+		ti2.setScale( 0.5 )
+		tf2.setScale( 0.5 )
+		self.assertEqual( ti2.getScale(), 0.5 )
+		self.assertEqual( tf2.getScale(), 0.5 )
+
+		# set tie mode to include scale
+		k2.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# set interpolation of middle key to linear (does not use scale)
+		k2.setInterpolation( Gaffer.Animation.Interpolation.Linear )
+		self.assertFalse( ti2.scaleIsConstrained() )
+		self.assertTrue( tf2.scaleIsConstrained() )
+
+		# ensure in tangent scale of middle key not affected
+		self.assertEqual( ti2.getScale(), 0.5 )
+
+	def testKeyAddWithInterpolationConstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Linear, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent slope of the third key to 60
+		ti3.setSlope( 60 )
+		self.assertEqual( ti3.getSlope(), 60 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# add key 2 with linear interpolation so that key 3 in tangent slope is no longer unconstrained
+		curve.addKey( k2 )
+		self.assertEqual( k2.parent(), curve )
+		self.assertEqual( curve.getKey( k2.getTime() ), k2 )
+		self.assertTrue( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+
+		# ensure out tangent slope of third key not affected
+		self.assertEqual( tf3.getSlope(), 60 )
+
+	def testKeyAddWithInterpolationConstrainedScaleWithTieModeScale( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Linear, tieMode = Gaffer.Animation.TieMode.Manual )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+
+		curve.addKey( k1 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent scale of the third key to 0.87
+		ti3.setScale( 0.87 )
+		tf3.setScale( 0.87 )
+		self.assertEqual( ti3.getScale(), 0.87 )
+		self.assertEqual( tf3.getScale(), 0.87 )
+
+		# set tie mode to include scale
+		k3.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# add key 2 with linear interpolation so that key 3 in tangent scale is no longer unconstrained
+		curve.addKey( k2 )
+		self.assertEqual( k2.parent(), curve )
+		self.assertEqual( curve.getKey( k2.getTime() ), k2 )
+		self.assertTrue( ti3.scaleIsConstrained() )
+		self.assertFalse( tf3.scaleIsConstrained() )
+
+		# ensure out tangent scale of third key not affected
+		self.assertEqual( tf3.getScale(), 0.87 )
+
+	def testKeyAddWithInterpolationConstrainedSlopeEnsureTieSlopeNext( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, inSlope=0.0, outSlope=0.0, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# in tangent of third key affected by step interpolation so slope should be constrained
+		self.assertTrue( ti3.slopeIsConstrained() )
+		self.assertEqual( ti3.getSlope(), 0 )
+
+		# out tangent of third key affected by cubic interpolation so slope should be unconstrained
+		self.assertFalse( tf3.slopeIsConstrained() )
+		self.assertEqual( tf3.getSlope(), 0 )
+
+		# set the out tangent slope of the third key to 60 in tangent slope should not be updated
+		tf3.setSlope( 60 )
+		self.assertEqual( ti3.getSlope(), 0 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# now add second key so that in tangent is affected by cubic interpolation and in tangent
+		# slope of third key is unconstrained
+		curve.addKey( k2 )
+		self.assertEqual( k2.parent(), curve )
+		self.assertEqual( curve.getKey( k2.getTime() ), k2 )
+		self.assertFalse( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+
+		# check that in tangent slope of third key that is now unconstrained is tied correctly to its opposite tangent
+		self.assertEqual( ti3.getSlope(), 60 )
+
+	def testKeyRemoveWithInterpolationConstrainedSlopeWithTieModeSlope( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent slope of the third key to 60
+		ti3.setSlope( 60 )
+		self.assertEqual( ti3.getSlope(), 60 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# remove key 2 so that key 3 in tangent affected by step interpolator
+		curve.removeKey( k2 )
+		self.assertIsNone( k2.parent() )
+		self.assertEqual( curve.previousKey( k3.getTime() ), k1 )
+		self.assertTrue( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+
+		# ensure out tangent slope of third key not affected
+		self.assertEqual( tf3.getSlope(), 60 )
+
+	def testKeyRemoveWithInterpolationConstrainedScaleWithTieModeScale( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Manual )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Bezier, tieMode = Gaffer.Animation.TieMode.Manual )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# set the tangent scale of the third key to 0.87
+		ti3.setScale( 0.87 )
+		tf3.setScale( 0.87 )
+		self.assertEqual( ti3.getScale(), 0.87 )
+		self.assertEqual( tf3.getScale(), 0.87 )
+
+		# set tie mode to include scale
+		k3.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# remove key 2 so that key 3 in tangent affected by step interpolator
+		curve.removeKey( k2 )
+		self.assertIsNone( k2.parent() )
+		self.assertEqual( curve.previousKey( k3.getTime() ), k1 )
+		self.assertTrue( ti3.scaleIsConstrained() )
+		self.assertFalse( tf3.scaleIsConstrained() )
+
+		# ensure out tangent scale of third key not affected
+		self.assertEqual( tf3.getScale(), 0.87 )
+
+	def testKeyRemoveWithInterpolationConstrainedSlopeEnsureTieSlopeNext( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		curve = Gaffer.Animation.acquire( s["n"]["op1"] )
+
+		f2 = 2.0 / 24.0
+		f3 = 3.0 / 24.0
+		f5 = 5.0 / 24.0
+		f6 = 6.0 / 24.0
+		k1 = Gaffer.Animation.Key( time = f2, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+		k2 = Gaffer.Animation.Key( time = f3, interpolation = Gaffer.Animation.Interpolation.Step, tieMode = Gaffer.Animation.TieMode.Slope )
+		k3 = Gaffer.Animation.Key( time = f5, interpolation = Gaffer.Animation.Interpolation.Cubic, inSlope=0.0, outSlope=0.0, tieMode = Gaffer.Animation.TieMode.Slope )
+		k4 = Gaffer.Animation.Key( time = f6, interpolation = Gaffer.Animation.Interpolation.Cubic, tieMode = Gaffer.Animation.TieMode.Slope )
+
+		curve.addKey( k1 )
+		curve.addKey( k2 )
+		curve.addKey( k3 )
+		curve.addKey( k4 )
+
+		ti3 = k3.tangentIn()
+		tf3 = k3.tangentOut()
+
+		# in tangent of third key affected by step interpolation so slope should be constrained
+		self.assertTrue( ti3.slopeIsConstrained() )
+		self.assertEqual( ti3.getSlope(), 0 )
+
+		# out tangent of third key affected by cubic interpolation so slope should be unconstrained
+		self.assertFalse( tf3.slopeIsConstrained() )
+		self.assertEqual( tf3.getSlope(), 0 )
+
+		# set the out tangent slope of the third key to 60 in tangent slope should not be updated
+		tf3.setSlope( 60 )
+		self.assertEqual( ti3.getSlope(), 0 )
+		self.assertEqual( tf3.getSlope(), 60 )
+
+		# remove second key so that in tangent of third key now affected by cubic interpolation of first key
+		curve.removeKey( k2 )
+		self.assertIsNone( k2.parent() )
+		self.assertEqual( curve.previousKey( k3.getTime() ), k1 )
+		self.assertFalse( ti3.slopeIsConstrained() )
+		self.assertFalse( tf3.slopeIsConstrained() )
+
+		# check that in tangent slope of third key that is now unconstrained is tied correctly to its opposite tangent
+		self.assertEqual( ti3.getSlope(), 60 )
+
 if __name__ == "__main__":
 	unittest.main()
