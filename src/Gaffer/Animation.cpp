@@ -80,6 +80,10 @@ private:
 	/// Implement to return interpolated value at specified normalised time
 	virtual double evaluate( const Key& keyLo, const Key& keyHi, double time, double dt ) const = 0;
 
+	/// Implement to bisect the span at the specified time, should set new key's value and slope and scale of new tangents
+	virtual void bisect( const Key& keyLo, const Key& keyHi, double time, double dt,
+		Key& newKey, Tangent& newTangentLo, Tangent& newTangentHi ) const;
+
 	/// Implement to compute the effective slope of the specified tangent
 	virtual double effectiveSlope( const Tangent& tangent, double dt, double dv ) const;
 
@@ -230,6 +234,27 @@ struct InterpolatorCubic
 		return std::fma( time, std::fma( time, std::fma( time, a, b ), c ), d );
 	}
 
+	void bisect( const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
+		const double time, const double dt, Gaffer::Animation::Key& newKey,
+		Gaffer::Animation::Tangent& newTangentLo, Gaffer::Animation::Tangent& newTangentHi ) const override
+	{
+		double a, b, c, d;
+		computeCoeffs( keyLo, keyHi, a, b, c, d, dt );
+
+		// NOTE : v  =  at^3 +  bt^2 + ct + d
+		//        v' = 3at^2 + 2bt   + c
+
+		const double v = std::fma( time, std::fma( time, std::fma( time,         a,     b ), c ), d );
+		const double s =                 std::fma( time, std::fma( time, a + a + a, b + b ), c );
+
+		newKey.setValue( v );
+		const double slope = s / dt;
+		newKey.tangentIn().setSlope( slope );
+		newKey.tangentOut().setSlope( slope );
+		newTangentLo.setSlope( keyLo.tangentOut().getSlope() );
+		newTangentHi.setSlope( keyHi.tangentIn().getSlope() );
+	}
+
 	double effectiveScale( const Gaffer::Animation::Tangent& tangent, const double dt, const double /*dv*/ ) const override
 	{
 		return ( 1.0 / 3.0 ) * maxScale( clampSlope( tangent.getSlope() * dt ) / dt );
@@ -304,6 +329,34 @@ struct InterpolatorBezier
 		// evaluate value polynomial
 
 		return std::fma( s, std::fma( s, std::fma( s, av, bv ), cv ), dv );
+	}
+
+	void bisect( const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
+		const double time, const double dt, Gaffer::Animation::Key& newKey,
+		Gaffer::Animation::Tangent& newTangentLo, Gaffer::Animation::Tangent& newTangentHi ) const override
+	{
+		const Imath::V2d p1( keyLo.getTime(), keyLo.getValue() );
+		const Imath::V2d p2 = keyLo.tangentOut().getPosition();
+		const Imath::V2d p3 = keyHi.tangentIn().getPosition();
+		const Imath::V2d p4( keyHi.getTime(), keyHi.getValue() );
+
+		const double s = solveForTime(
+			Imath::clamp( ( p2.x - keyLo.getTime() ) / dt,       0.0, 1.0 ),
+			Imath::clamp( ( p3.x - keyHi.getTime() ) / dt + 1.0, 0.0, 1.0 ), time );
+
+		// NOTE : simple geometric bisection
+
+		const Imath::V2d h  = Imath::lerp( p2, p3, s );
+		const Imath::V2d l2 = Imath::lerp( p1, p2, s );
+		const Imath::V2d l3 = Imath::lerp( l2, h,  s );
+		const Imath::V2d r3 = Imath::lerp( p3, p4, s );
+		const Imath::V2d r2 = Imath::lerp( h,  r3, s );
+
+		newKey.setValue( Imath::lerp( l3.y, r2.y, s ) );
+		newTangentLo.setPosition( l2 );
+		newKey.tangentIn().setPosition( l3 );
+		newKey.tangentOut().setPosition( r2 );
+		newTangentHi.setPosition( r3 );
 	}
 
 private:
@@ -447,6 +500,14 @@ double Animation::Interpolator::evaluate(
 	const double /*time*/, const double /*dt*/ ) const
 {
 	return 0.0;
+}
+
+void Animation::Interpolator::bisect(
+	const Animation::Key& keyLo, const Animation::Key& keyHi,
+	const double time, const double dt, Animation::Key& newKey,
+	Animation::Tangent& /*newTangentLo*/, Animation::Tangent& /*newTangentHi*/ ) const
+{
+	newKey.setValue( evaluate( keyLo, keyHi, time, dt ) );
 }
 
 double Animation::Interpolator::effectiveSlope(
@@ -1827,36 +1888,86 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		return key;
 	}
 
-	// get interpolator
+	// get interpolator and tie mode
 
 	ConstInterpolatorPtr interpolator = Interpolator::getDefault();
+	TieMode tieMode = defaultTieMode();
 
 	if( lo )
 	{
 		interpolator = lo->m_interpolator;
+		tieMode = lo->m_tieMode;
 	}
 	else if( const Key* const kf = firstKey() )
 	{
 		interpolator = kf->m_interpolator;
+		tieMode = kf->m_tieMode;
 	}
 
 	assert( interpolator );
 
 	// create key
 
-	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolator->getInterpolation() ) );
+	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolator->getInterpolation(),
+		defaultSlope(), defaultScale(), defaultSlope(), defaultScale(), TieMode::Manual ) );
 
 	// if specified value is the same as the evaluated value of the curve then bisect span.
 
 	if( ( lo && hi ) && ( ( value == nullptr ) || ( evaluate( time ) == ( *value ) ) ) )
 	{
-		// NOTE : bisection code will replace this.
+		// normalise time to lo, hi key time range
 
-		key->m_value = evaluate( time );
+		const double lt = ( time - lo->m_time );
+		const double ht = ( hi->m_time - time );
+		const double nt = std::min( std::max( lt / lo->m_out.m_dt, 0.0 ), 1.0 );
+
+		// create dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
+		// badly behaved interpolators.
+
+		KeyPtr kl( new Key( lo->m_time, lo->getValue(), interpolator->getInterpolation() ) );
+		KeyPtr kh( new Key( hi->m_time, hi->getValue(), interpolator->getInterpolation() ) );
+
+		kl->m_in.m_slope = lo->m_in.m_slope;
+		kl->m_in.m_scale = lo->m_in.m_scale;
+		kl->m_out.m_slope = lo->m_out.m_slope;
+		kl->m_out.m_scale = lo->m_out.m_scale;
+		kl->m_tieMode = TieMode::Manual;
+
+		kh->m_in.m_slope = hi->m_in.m_slope;
+		kh->m_in.m_scale = hi->m_in.m_scale;
+		kh->m_out.m_slope = hi->m_out.m_slope;
+		kh->m_out.m_scale = hi->m_out.m_scale;
+		kh->m_tieMode = TieMode::Manual;
+
+		// new tangents are in space of new spans (post-bisection)
+
+		kl->m_out.m_dt = lt;
+		key->m_in.m_dt = lt;
+		key->m_out.m_dt = ht;
+		kh->m_in.m_dt = ht;
+
+		// bisect span
+
+		interpolator->bisect( *lo, *hi, nt, lo->m_out.m_dt, *key, kl->m_out, kh->m_in );
+
+		// retrieve new tangent slope and scale
+
+		const double lfsl = kl->m_out.getSlope();
+		const double lfsc = kl->m_out.getScale();
+		const double hisl = kh->m_in.getSlope();
+		const double hisc = kh->m_in.getScale();
 
 		// add new key to curve
 
 		addKey( key );
+
+		// set new tangent slope and scale for lo and hi keys
+
+		Private::ScopedAssignment< TieMode > ltm( lo->m_tieMode, TieMode::Manual );
+		Private::ScopedAssignment< TieMode > htm( hi->m_tieMode, TieMode::Manual );
+
+		lo->m_out.setSlopeAndScale( lfsl, lfsc );
+		hi->m_in.setSlopeAndScale( hisl, hisc );
 	}
 	else
 	{
@@ -1871,6 +1982,8 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 		addKey( key );
 	}
+
+	key->setTieMode( tieMode );
 
 	return key;
 }
