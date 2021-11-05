@@ -766,7 +766,18 @@ void AnimationGadget::plugDirtied( Gaffer::Plug *plug )
 
 std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) const
 {
-	if( const Animation::ConstKeyPtr key = keyAt( line ) )
+	std::pair< Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction > keyTangent = tangentAt( line );
+	if( keyTangent.first )
+	{
+		const Gaffer::Animation::Tangent& tangent = keyTangent.first->tangent( keyTangent.second );
+		std::ostringstream os;
+		os.precision( 4 );
+		os << "Direction: " << Gaffer::Animation::toString( tangent.direction() );
+		os << "<br>Slope: " << tangent.getSlope();
+		os << "<br>Scale: " << tangent.getScale();
+		return os.str();
+	}
+	else if( const Animation::ConstKeyPtr key = keyAt( line ) )
 	{
 		const Gaffer::ScriptNode* const scriptNode =
 			IECore::assertedStaticCast< const Gaffer::ScriptNode >( key->parent()->ancestor( (IECore::TypeId) Gaffer::ScriptNodeTypeId ) );
