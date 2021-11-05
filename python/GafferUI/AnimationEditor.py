@@ -316,6 +316,9 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# check there are selected keys
 		emptySelectedKeys = not self.__animationGadget.selectedKeys()
 
+		# tie mode for selected keys
+		tieMode = None if emptySelectedKeys else self.__curveEditor.keyWidget().getTieModeForSelectedKeys()
+
 		# key interpolation for selected keys
 		interpolation = None if emptySelectedKeys else self.__curveEditor.keyWidget().getInterpolationForSelectedKeys()
 
@@ -335,6 +338,19 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 
+		for mode in sorted( Gaffer.Animation.TieMode.values.values() ) :
+			menuDefinition.append(
+				"/Tie Mode/%s" % ( mode.name ),
+				{
+					"command" : functools.partial(
+						Gaffer.WeakMethod( self.__setSelectedKeysTieMode ),
+						mode=mode
+					),
+					"active" : not emptySelectedKeys,
+					"checkBox" : tieMode == mode
+				}
+			)
+
 		self.__popupMenu = GafferUI.Menu( menuDefinition, title="Selected Keys" )
 		self.__popupMenu.popup( parent = self )
 
@@ -345,6 +361,12 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for key in self.__animationGadget.selectedKeys() :
 				key.setInterpolation( mode )
+
+	def __setSelectedKeysTieMode( self, unused, mode ) :
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for key in self.__animationGadget.selectedKeys() :
+				key.setTieMode( mode )
 
 	def __repr__( self ) :
 
@@ -519,6 +541,10 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		self.__updateKeyValue()
 		self.__updateKeyInterpolation()
 		self.__updateKeyTangents()
+
+	def getTieModeForSelectedKeys( self ) :
+		# if multiple keys selected check if all have same tie mode otherwise return None
+		return sole( key.getTieMode() for key in self.parent().curveGadget().selectedKeys() )
 
 	def getInterpolationForSelectedKeys( self ) :
 		# if multiple keys selected check if all have same interpolation otherwise return None
