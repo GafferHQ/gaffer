@@ -431,7 +431,7 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 class _KeyWidget( GafferUI.GridContainer ) :
 
 	from collections import namedtuple
-	Connections = namedtuple( "Connections", ("frame", "value", "interpolation", "tangent") )
+	Connections = namedtuple( "Connections", ("frame", "value", "interpolation", "tieMode", "tangent") )
 
 	def __init__( self ) :
 
@@ -444,6 +444,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		frameToolTip = "# Frame\n\nThe frame of the currently selected keys."
 		valueToolTip = "# Value\n\nThe value of the currently selected keys."
 		interpolationToolTip = "# Interpolation\n\nThe interpolation of the currently selected keys."
+		tieModeToolTip = "# Tie Mode\n\nThe tie mode of the currently selected keys."
 		slopeToolTip = "# Slope\n\nThe slope of the %stangents of the currently selected keys."
 		scaleToolTip = "# Scale\n\nThe scale of the %stangents of the currently selected keys."
 
@@ -451,6 +452,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		frameLabel = GafferUI.Label( text="Frame", toolTip=frameToolTip )
 		valueLabel = GafferUI.Label( text="Value", toolTip=valueToolTip )
 		interpolationLabel = GafferUI.Label( text="Interpolation", toolTip=interpolationToolTip )
+		tieModeLabel = GafferUI.Label( text="Tie Mode", toolTip=tieModeToolTip )
 		slopeLabel = GafferUI.Label( text="Slope", toolTip=( slopeToolTip % "" ) )
 		scaleLabel = GafferUI.Label( text="Scale", toolTip=( scaleToolTip % "" ) )
 
@@ -459,6 +461,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		self.__frameEditor = GafferUI.NumericWidget( value=int(0), toolTip=frameToolTip )
 		self.__valueEditor = GafferUI.NumericWidget( value=float(0), toolTip=valueToolTip )
 		self.__interpolationEditor = GafferUI.MenuButton( toolTip=interpolationToolTip )
+		self.__tieModeEditor = GafferUI.MenuButton( toolTip=tieModeToolTip )
 		self.__slopeEditor = (
 			GafferUI.NumericWidget( value=float(0), toolTip=( slopeToolTip % "in " ) ),
 			GafferUI.NumericWidget( value=float(0), toolTip=( slopeToolTip % "out " ) ) )
@@ -473,6 +476,14 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setInterpolation ), mode=mode ),
 				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForKeyInterpolation ), mode=mode ) } )
 		self.__interpolationEditor.setMenu( GafferUI.Menu( im ) )
+
+		# build tie mode menu
+		tm = IECore.MenuDefinition()
+		for mode in sorted( Gaffer.Animation.TieMode.values.values() ) :
+			tm.append( "%s" % ( mode.name ), {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setTieMode ), mode=mode ),
+				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForTieMode ), mode=mode ) } )
+		self.__tieModeEditor.setMenu( GafferUI.Menu( tm ) )
 
 		# setup editor connections
 		self.__frameConnection = self.__frameEditor.valueChangedSignal().connect(
@@ -498,6 +509,8 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		self[ 1:3, 1 ] = self.__valueEditor
 		self.addChild( interpolationLabel, index=( 0, 2 ), alignment=alignment )
 		self[ 1:3, 2 ] = self.__interpolationEditor
+		self.addChild( tieModeLabel, index=( 0, 3 ), alignment=alignment )
+		self[ 1:3, 3 ] = self.__tieModeEditor
 		self[ 0:3, 4 ] = GafferUI.Divider()
 		self.addChild( slopeLabel, index=( 0, 5 ), alignment=alignment )
 		self[ 1, 5 ] = self.__slopeEditor[ Gaffer.Animation.Direction.In ]
@@ -528,6 +541,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				frame = curve.keyTimeChangedSignal().connect( Gaffer.WeakMethod( self.__keyFrameChanged ), scoped = False ),
 				value = curve.keyValueChangedSignal().connect( Gaffer.WeakMethod( self.__keyValueChanged ), scoped = False ),
 				interpolation = curve.keyInterpolationChangedSignal().connect( Gaffer.WeakMethod( self.__keyInterpolationChanged ), scoped = False ),
+				tieMode = curve.keyTieModeChangedSignal().connect( Gaffer.WeakMethod( self.__keyTieModeChanged ), scoped = False ),
 				tangent = curve.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__keyTangentChanged ), scoped = False ) )
 
 	def disconnect( self, curve ) :
@@ -540,6 +554,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		self.__updateKeyFrame()
 		self.__updateKeyValue()
 		self.__updateKeyInterpolation()
+		self.__updateKeyTieMode()
 		self.__updateKeyTangents()
 
 	def getTieModeForSelectedKeys( self ) :
@@ -561,6 +576,10 @@ class _KeyWidget( GafferUI.GridContainer ) :
 	def __keyInterpolationChanged( self, curve, key ) :
 		if self.parent().curveGadget().selectedKeys().contains( key ) :
 			self.__updateKeyInterpolation()
+
+	def __keyTieModeChanged( self, curve, key ) :
+		if self.parent().curveGadget().selectedKeys().contains( key ) :
+			self.__updateKeyTieMode()
 
 	@GafferUI.LazyMethod()
 	def __keyTangentChanged( self, unused ) :
@@ -615,6 +634,14 @@ class _KeyWidget( GafferUI.GridContainer ) :
 
 		# set disabled when no selected keys
 		self.__interpolationEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
+
+	def __updateKeyTieMode( self ) :
+
+		mode = self.getTieModeForSelectedKeys()
+		self.__tieModeEditor.setText( "---" if mode is None else mode.name )
+
+		# set disabled when no selected keys
+		self.__tieModeEditor.setEnabled( bool( self.parent().curveGadget().selectedKeys() ) )
 
 	def __updateKeyTangents( self ) :
 
@@ -674,6 +701,17 @@ class _KeyWidget( GafferUI.GridContainer ) :
 					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].interpolation ) :
 						key.setInterpolation( mode )
 		self.__interpolationEditor.setText( mode.name )
+
+	def __setTieMode( self, unused, mode ) :
+
+		# set tie mode for all selected keys
+		selectedKeys = self.parent().curveGadget().selectedKeys()
+		if selectedKeys :
+			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ) ) :
+				for key in selectedKeys :
+					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tieMode ) :
+						key.setTieMode( mode )
+		self.__tieModeEditor.setText( mode.name )
 
 	def __setFrame( self, widget, reason ) :
 
@@ -800,6 +838,12 @@ class _KeyWidget( GafferUI.GridContainer ) :
 
 		# check if mode equals common mode of selected keys
 		commonMode = self.getInterpolationForSelectedKeys()
+		return None if commonMode is None else commonMode == mode
+
+	def __checkBoxStateForTieMode( self, mode ) :
+
+		# check if tie mode equals common tie mode of selected keys
+		commonMode = self.getTieModeForSelectedKeys()
 		return None if commonMode is None else commonMode == mode
 
 GafferUI.Editor.registerType( "AnimationEditor", AnimationEditor )
