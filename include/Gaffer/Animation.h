@@ -110,23 +110,41 @@ class GAFFER_API Animation : public ComputeNode
 
 				/// Get tangent's slope.
 				/// The slope is in range [-inf,+inf]
-				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true this function will return the constrained slope.
+				/// If slopeIsConstrained() returns true this function will return the constrained slope.
 				double getSlope() const;
 				/// \undoable
 				/// Set tangent's slope.
 				/// The slope is in range [-inf,+inf]
-				/// If the tangent's key is parented to a curve and slopeIsConstrained() returns true this function will have no effect.
+				/// If slopeIsConstrained() returns true this function will have no effect.
 				void setSlope( double slope );
+				/// \undoable
+				/// Set tangent's position from specified position whilst maintaining the current scale.
+				/// If relative is true the position is relative to the parent key's position.
+				/// If the tangent's key has tie mode set to either Slope or Scale the opposite tangents slope will be set to the same value.
+				/// If slopeIsConstrained() returns true this function will have no effect.
+				/// Slope cannot be set from a position if there is no adjacent key in the direction of the tangent.
+				void setSlopeFromPosition( const Imath::V2d& position, bool relative = false );
 
 				/// Get tangent's scale.
 				/// The scale is multiplied by the span width to derive the tangent's length.
-				/// If the tangent's key is parented to a curve and scaleIsConstrained() returns true this function will return the constrained scale.
+				/// If scaleIsConstrained() returns true this function will return the constrained scale.
 				double getScale() const;
 				/// \undoable
 				/// Set tangent's scale.
 				/// The scale is multiplied by the span width to derive the tangent's length.
-				/// If the tangent's key is parented to a curve and scaleIsConstrained() returns true this function will have no effect.
+				/// If scaleIsConstrained() returns true this function will have no effect.
 				void setScale( double scale );
+				/// \undoable
+				/// Set tangent's scale from the specified position whilst maintaining the current slope.
+				/// If relative is true the position is relative to the parent key's position.
+				/// If the tangent's key has tie mode set to Scale the opposite tangent's scale will be kept proportional.
+				/// If scaleIsConstrained() returns true this function will have no effect.
+				/// Scale cannot be set from a position if there is no adjacent key in the direction of the tangent.
+				void setScaleFromPosition( const Imath::V2d& position, bool relative = false );
+
+				/// \undoable
+				/// Set tangent's slope and scale, constrained slope and/or scale will be maintained.
+				void setSlopeAndScale( double slope, double scale );
 
 				/// Is slope currently constrained by interpolation mode.
 				bool slopeIsConstrained() const;
@@ -152,9 +170,9 @@ class GAFFER_API Animation : public ComputeNode
 
 				Tangent( Key&, Direction, double, double );
 				/// \undoable
-				void setSlope( double, bool );
-				/// \undoable
 				void setScale( double, bool );
+				/// \undoable
+				void setSlopeAndScale( double, double, bool );
 				void update();
 				void positionToRelative( Imath::V2d&, bool ) const;
 

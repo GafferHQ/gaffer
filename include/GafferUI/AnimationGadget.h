@@ -154,6 +154,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		Gaffer::Animation::KeyPtr m_dragTangentKey;
 		Gaffer::Animation::Direction m_dragTangentDirection;
+		double m_dragTangentOriginalScale;
 
 		Imath::V2f m_dragStartPosition;
 		Imath::V2f m_lastDragPosition;

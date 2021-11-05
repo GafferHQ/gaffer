@@ -452,6 +452,7 @@ AnimationGadget::AnimationGadget()
 , m_originalKeyValues()
 , m_dragTangentKey( nullptr )
 , m_dragTangentDirection( Animation::Direction::In )
+, m_dragTangentOriginalScale( 0.0 )
 , m_dragStartPosition( 0 )
 , m_lastDragPosition( 0 )
 , m_dragMode( DragMode::None )
@@ -911,6 +912,8 @@ void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
 	//
 	// NOTE : when the move axis is MoveAxis::X we only change the tangent's scale.
 	//        when the move axis is MoveAxis::Y we only change the tangent's slope.
+	//
+	// NOTE : current interpolators constrain scale or both scale and slope.
 
 	Animation::Tangent& tangent = m_dragTangentKey->tangent( m_dragTangentDirection );
 
@@ -922,7 +925,7 @@ void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
 	{
 		return;
 	}
-	else if( ( m_moveAxis == MoveAxis::Both ) && tangent.scaleIsConstrained() && tangent.slopeIsConstrained() )
+	else if( ( m_moveAxis == MoveAxis::Both ) && tangent.slopeIsConstrained() )
 	{
 		return;
 	}
@@ -936,9 +939,32 @@ void AnimationGadget::moveTangent( const Imath::V2f currentDragOffset )
 	switch( m_moveAxis )
 	{
 		case MoveAxis::X:
+		{
+			// NOTE : there may be a non-uniform zoom so transform to raster space before projecting
+			//        drag offset onto tangent.
+
+			if( tangent.getScale() == 0.0 ){ tangent.setScale( 1.0 ); }
+			const Imath::V2d tp = tangent.getPosition();
+			const ViewportGadget* const viewportGadget = ancestor<ViewportGadget>();
+			const Imath::V2f tpr = viewportGadget->worldToRasterSpace( V3f( tp.x, tp.y, 0 ) );
+			const Imath::V2f kpr = viewportGadget->worldToRasterSpace( V3f( tangent.key().getTime(), tangent.key().getValue(), 0 ) );
+			const Imath::V2f dpr = viewportGadget->worldToRasterSpace( V3f( currentDragOffset.x, currentDragOffset.y, 0.0 ) );
+			const Imath::V2f tvr = ( tpr - kpr ).normalized();
+
+			Imath::V3f dp;
+			viewportGadget->rasterToWorldSpace( kpr + ( tvr * ( ( dpr - kpr ) ^ tvr ) ) ).intersect(
+				Plane3f( V3f( 0.0, 0.0, 1.0 ), 0.0 ), dp );
+			tangent.setScaleFromPosition( Imath::V2d( dp.x, dp.y ) );
+			break;
+		}
 		case MoveAxis::Y:
+			tangent.setSlopeFromPosition( currentDragOffset );
+			tangent.setScale( m_dragTangentOriginalScale );
+			break;
 		case MoveAxis::Both:
-			tangent.setPosition( currentDragOffset );
+			( tangent.scaleIsConstrained() )
+				? tangent.setSlopeFromPosition( currentDragOffset )
+				: tangent.setPosition( currentDragOffset );
 			break;
 		case MoveAxis::Undefined:
 		default:
@@ -1123,6 +1149,8 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 
 		if( tangent.first )
 		{
+			Animation::Tangent& t = tangent.first->tangent( tangent.second );
+			m_dragTangentOriginalScale = t.getScale();
 			m_dragTangentKey = tangent.first;
 			m_dragTangentDirection = tangent.second;
 			m_dragMode = DragMode::MoveTangent;
@@ -1420,6 +1448,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	case DragMode::MoveTangent :
 	{
 		m_dragTangentKey.reset();
+		m_dragTangentOriginalScale = 0.0;
 		m_mergeGroupId++;
 		break;
 	}

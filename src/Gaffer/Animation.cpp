@@ -501,10 +501,34 @@ Animation::Direction Animation::Tangent::direction() const
 
 void Animation::Tangent::setSlope( const double slope )
 {
-	setSlope( slope, false );
+	setSlopeAndScale( slope, m_scale, false );
 }
 
-void Animation::Tangent::setSlope( double slope, const bool force )
+void Animation::Tangent::setSlopeFromPosition( const Imath::V2d& pos, const bool relative )
+{
+	// when span width is zero position is constrained to parent key
+
+	if( m_dt == 0.0 )
+	{
+		return;
+	}
+
+	// convert relative position
+
+	Imath::V2d position( pos );
+	positionToRelative( position, relative );
+
+	// set slope
+
+	setSlope( slopeFromPosition( position, m_direction ) );
+}
+
+void Animation::Tangent::setSlopeAndScale( double slope, double scale )
+{
+	setSlopeAndScale( slope, scale, false );
+}
+
+void Animation::Tangent::setSlopeAndScale( double slope, double scale, const bool force )
 {
 	// check that slope is unconstrained
 
@@ -513,16 +537,16 @@ void Animation::Tangent::setSlope( double slope, const bool force )
 		return;
 	}
 
+	// clamp scale based on slope
+
+	scale = std::min( scale, maxScale( slope ) );
+
 	// check for no change
 
-	if( m_slope == slope )
+	if( ( m_slope == slope ) && ( m_scale == scale ) )
 	{
 		return;
 	}
-
-	// clamp existing scale based on new slope
-
-	const double scale = std::min( m_scale, maxScale( slope ) );
 
 	// make change via action
 
@@ -594,6 +618,36 @@ bool Animation::Tangent::slopeIsConstrained() const
 void Animation::Tangent::setScale( double scale )
 {
 	setScale( scale, false );
+}
+
+void Animation::Tangent::setScaleFromPosition( const Imath::V2d& pos, const bool relative )
+{
+	// when span width is zero position is constrained to parent key
+
+	if( m_dt == 0.0 )
+	{
+		return;
+	}
+
+	// convert relative position
+
+	Imath::V2d position( pos );
+	positionToRelative( position, relative );
+
+	// constrain position to quadrant based on slope and direction
+
+	const double slope = getSlope();
+	position.y = ( m_direction == Direction::In )
+		? ( ( slope > 0.0 )
+			? std::min( position.y, 0.0 )
+			: std::max( position.y, 0.0 ) )
+		: ( ( slope < 0.0 )
+			? std::min( position.y, 0.0 )
+			: std::max( position.y, 0.0 ) );
+
+	// set scale
+
+	setScale( position.length() / m_dt );
 }
 
 void Animation::Tangent::setScale( double scale, const bool force )
@@ -695,8 +749,7 @@ void Animation::Tangent::setPosition( const Imath::V2d& pos, const bool relative
 
 	// set slope and scale
 
-	setSlope( slopeFromPosition( position, m_direction ) );
-	setScale( position.length() / m_dt );
+	setSlopeAndScale( slopeFromPosition( position, m_direction ), position.length() / m_dt );
 }
 
 Imath::V2d Animation::Tangent::getPosition( const bool relative ) const

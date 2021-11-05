@@ -497,6 +497,9 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		self.__mergeGroupIdSlope = [ 0, 0 ]
 		self.__mergeGroupIdScale = [ 0, 0 ]
 
+		# scale of selected keys at start of merge group
+		self.__selectedKeysMergeGroupScale = [ {}, {} ]
+
 	def connect( self, curve ) :
 		if curve not in self.__connections :
 			self.__connections[ curve ] = _KeyWidget.Connections(
@@ -715,6 +718,9 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		selectedKeys = self.parent().curveGadget().selectedKeys()
 		if not widget.changesShouldBeMerged( self.__lastChangedReasonSlope[ direction ], reason ) :
 			self.__mergeGroupIdSlope[ direction ] += 1
+			self.__selectedKeysMergeGroupScale[ direction ].clear()
+			for key in selectedKeys :
+				self.__selectedKeysMergeGroupScale[ direction ][ key ] = key.tangent( direction ).getScale()
 		self.__lastChangedReasonSlope[ direction ] = reason
 
 		# set slope for all selected keys in specified direction
@@ -726,7 +732,8 @@ class _KeyWidget( GafferUI.GridContainer ) :
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
 				for key in selectedKeys :
 					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
-						key.tangent( direction ).setSlope( value )
+						key.tangent( direction ).setSlopeAndScale( value,
+							self.__selectedKeysMergeGroupScale[ direction ][ key ] )
 			widget.clearUndo()
 
 		# ensure editors are up to date

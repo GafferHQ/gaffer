@@ -91,10 +91,28 @@ void setSlope( Animation::Tangent &t, const double slope )
 	t.setSlope( slope );
 }
 
+void setSlopeFromPosition( Animation::Tangent &t, const Imath::V2d& position, const bool relative )
+{
+	ScopedGILRelease gilRelease;
+	t.setSlopeFromPosition( position, relative );
+}
+
+void setSlopeAndScale( Animation::Tangent &t, const double slope, const double scale )
+{
+	ScopedGILRelease gilRelease;
+	t.setSlopeAndScale( slope, scale );
+}
+
 void setScale( Animation::Tangent &t, const double scale )
 {
 	ScopedGILRelease gilRelease;
 	t.setScale( scale );
+}
+
+void setScaleFromPosition( Animation::Tangent &t, const Imath::V2d& position, const bool relative )
+{
+	ScopedGILRelease gilRelease;
+	t.setScaleFromPosition( position, relative );
 }
 
 Imath::V2d getPosition( Animation::Tangent &t, const bool relative )
@@ -233,9 +251,12 @@ void GafferModule::bindAnimation()
 		)
 		.def( "direction", &Animation::Tangent::direction )
 		.def( "setSlope", &setSlope )
+		.def( "setSlopeFromPosition", setSlopeFromPosition, ( arg( "position" ), arg( "relative" ) = false ) )
 		.def( "getSlope", (double (Animation::Tangent::*)() const)&Animation::Tangent::getSlope )
 		.def( "setScale", &setScale )
+		.def( "setScaleFromPosition", setScaleFromPosition, ( arg( "position" ), arg( "relative" ) = false ) )
 		.def( "getScale", (double (Animation::Tangent::*)() const)&Animation::Tangent::getScale )
+		.def( "setSlopeAndScale", &setSlopeAndScale )
 		.def( "setPosition", &setPosition, ( arg( "position" ), arg( "relative" ) = false ) )
 		.def( "getPosition", &getPosition, arg( "relative" ) = false )
 		.def( "slopeIsConstrained", &Animation::Tangent::slopeIsConstrained )
