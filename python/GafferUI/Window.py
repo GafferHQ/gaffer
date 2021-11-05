@@ -290,9 +290,9 @@ class Window( GafferUI.ContainerWidget ) :
 		# possible. Sadly Qt keeps their implementation of this private.
 		# Qt documents that for a window, move() is really pos and includes frame geometry
 
-		desktop = QtWidgets.QApplication.desktop()
-		screenNumber = desktop.screenNumber( position )
-		screenRect = desktop.availableGeometry( screenNumber )
+		screen = QtWidgets.QApplication.screenAt( position )
+		screen = screen if screen is not None else QtWidgets.QApplication.primaryScreen()
+		screenRect = screen.availableGeometry()
 
 		# Find what our window's rect would be on that screen
 		windowRect = self._qtWidget().frameGeometry()
