@@ -38,6 +38,7 @@
 
 #include "Gaffer/Action.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Private/ScopedAssignment.h"
 
 #include "OpenEXR/ImathFun.h"
 
@@ -130,6 +131,29 @@ double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::D
 	{
 		return position.y / position.x;
 	}
+}
+
+bool tieSlopeActive( const Gaffer::Animation::TieMode tieMode )
+{
+	return
+		( tieMode == Gaffer::Animation::TieMode::Slope ) ||
+		( tieMode == Gaffer::Animation::TieMode::Scale );
+}
+
+bool tieScaleActive( const Gaffer::Animation::TieMode tieMode )
+{
+	return
+		( tieMode == Gaffer::Animation::TieMode::Scale );
+}
+
+double tieScaleRatio( const double inScale, const double outScale )
+{
+	return ( inScale == outScale ) ? 1.0 : ( ( outScale == 0.0 ) ? 0.0 : ( inScale / outScale ) );
+}
+
+double tieScaleOpposite( const Gaffer::Animation::Direction direction, const double scale, const double ratio )
+{
+	return ( direction == Gaffer::Animation::Direction::In ) ? ( scale / ratio ) : ( scale * ratio );
 }
 
 // constant interpolator
@@ -504,6 +528,11 @@ void Animation::Tangent::setSlope( const double slope )
 	setSlopeAndScale( slope, m_scale, false );
 }
 
+void Animation::Tangent::setSlope( const double slope, const bool force )
+{
+	setSlopeAndScale( slope, m_scale, force );
+}
+
 void Animation::Tangent::setSlopeFromPosition( const Imath::V2d& pos, const bool relative )
 {
 	// when span width is zero position is constrained to parent key
@@ -540,6 +569,36 @@ void Animation::Tangent::setSlopeAndScale( double slope, double scale, const boo
 	// clamp scale based on slope
 
 	scale = std::min( scale, maxScale( slope ) );
+
+	// tie slope and scale of opposite tangent
+	//
+	// NOTE : ensure that if both slope and scale of opposite tangent need to be tied we call
+	//        setSlopeAndScale() to limit the number of additional actions.
+
+	bool const tsl = tieSlopeActive( m_key->m_tieMode );
+	bool const tsc = tieScaleActive( m_key->m_tieMode ) && ( m_key->m_tieScaleRatio != 0.0 );
+
+	if( tsl || tsc )
+	{
+		// set tie mode of the parent key to manual whilst we call set[Slope|Scale] on the opposite
+		// tangent to avoid ping-ponging back and forth setting each other in infinite recursion.
+
+		Private::ScopedAssignment< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
+		Tangent& ot = m_key->tangent( opposite( m_direction ) );
+
+		if( tsc )
+		{
+			const double oppositeScale = tieScaleOpposite( m_direction, scale, m_key->m_tieScaleRatio );
+
+			( tsl )
+				? ot.setSlopeAndScale( slope, oppositeScale, /* force = */ true )
+				: ot.setScale( oppositeScale, /* force = */ true );
+		}
+		else
+		{
+			ot.setSlope( slope, /* force = */ true );
+		}
+	}
 
 	// check for no change
 
@@ -693,6 +752,18 @@ void Animation::Tangent::setScale( double scale, const bool force )
 	else
 	{
 		m_scale = scale;
+	}
+
+	// tie scale of opposite tangent
+
+	if( tieScaleActive( m_key->m_tieMode ) && ( m_key->m_tieScaleRatio != 0.0 ) )
+	{
+		// set tie mode of the parent key to manual whilst we call setScale on the opposite
+		// tangent to avoid ping-ponging back and forth setting each other in infinite recursion.
+
+		Private::ScopedAssignment< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
+		Tangent& ot = m_key->tangent( opposite( m_direction ) );
+		ot.setScale( tieScaleOpposite( m_direction, scale, m_key->m_tieScaleRatio ), /* force = */ true );
 	}
 }
 
@@ -888,15 +959,22 @@ void Animation::Tangent::positionToRelative( Imath::V2d& position, const bool re
 IE_CORE_DEFINERUNTIMETYPED( Gaffer::Animation::Key )
 
 Animation::Key::Key( const float time, const float value, const Animation::Interpolation interpolation,
-	const double inSlope, const double inScale, const double outSlope, const double outScale )
+	const double inSlope, const double inScale, const double outSlope, const double outScale,
+	const Animation::TieMode tieMode )
 : m_parent( nullptr )
 , m_in( *this, Direction::In, inSlope, inScale )
 , m_out( *this, Direction::Out, outSlope, outScale )
 , m_time( time )
 , m_value( value )
 , m_interpolator( Interpolator::get( interpolation ) )
+, m_tieScaleRatio( 0.0 )
+, m_tieMode( TieMode::Manual )
 , m_active( false )
-{}
+{
+	// set specified tie mode which will ensure that slope and scale are consistent.
+
+	setTieMode( tieMode );
+}
 
 Animation::Key::~Key()
 {
@@ -934,6 +1012,92 @@ Animation::Tangent& Animation::Key::tangent( const Animation::Direction directio
 const Animation::Tangent& Animation::Key::tangent( const Animation::Direction direction ) const
 {
 	return ( direction == Direction::In ) ? m_in : m_out;
+}
+
+Animation::TieMode Animation::Key::getTieMode() const
+{
+	return m_tieMode;
+}
+
+void Animation::Key::setTieMode( const Animation::TieMode tieMode )
+{
+	// check for no change
+
+	if( tieMode == m_tieMode )
+	{
+		return;
+	}
+
+	// ensure that slope of tangents is consistent with new tie mode
+	//
+	// NOTE : slopes are set via setSlope() which will record any change in the undo/redo system.
+
+	if( ! tieSlopeActive( m_tieMode ) && tieSlopeActive( tieMode ) )
+	{
+		const double si = m_in.m_slope;
+		const double so = m_out.m_slope;
+
+		if( si != so )
+		{
+			// ensure that tangent slopes are equal.
+			//
+			// NOTE : If only one tangent's slope is constrained or the tangent protrudes beyond the
+			//        start/end of the curve, preserve the opposite slope, otherwise take average.
+
+			const bool inConstrainedOrProtrudes = m_in.slopeIsConstrained() || ( prevKey() == nullptr );
+			const bool outConstrainedOrProtrudes = m_out.slopeIsConstrained() || ( nextKey() == nullptr );
+
+			const double s = ( inConstrainedOrProtrudes == outConstrainedOrProtrudes )
+				? std::tan(
+					std::atan( si ) * 0.5 +
+					std::atan( so ) * 0.5 )
+				: ( ( outConstrainedOrProtrudes ) ? si : so );
+
+			// set tie mode of the parent key to manual whilst we call setSlope on the tangents
+			// to avoid ping-ponging back and forth setting each other in infinite recursion.
+
+			Private::ScopedAssignment< TieMode > tmGuard( m_tieMode, TieMode::Manual );
+			m_in.setSlope( s, /* force = */ true );
+			m_out.setSlope( s, /* force = */ true );
+		}
+	}
+
+	// capture scale ratio when scale becomes tied.
+
+	const double previousTieScaleRatio = m_tieScaleRatio;
+	const double newTieScaleRatio = ( ! tieScaleActive( m_tieMode ) && tieScaleActive( tieMode ) )
+		? tieScaleRatio( m_in.m_scale, m_out.m_scale )
+		: m_tieScaleRatio;
+
+	// make change via action
+
+	if( m_parent )
+	{
+		KeyPtr key = this;
+		TieMode previousTieMode = m_tieMode;
+		Action::enact(
+			m_parent,
+			// Do
+			[ key, tieMode, newTieScaleRatio ] {
+				key->m_tieMode = tieMode;
+				key->m_tieScaleRatio = newTieScaleRatio;
+				key->m_parent->m_keyTieModeChangedSignal( key->m_parent, key.get() );
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			},
+			// Undo
+			[ key, previousTieMode, previousTieScaleRatio ] {
+				key->m_tieMode = previousTieMode;
+				key->m_tieScaleRatio = previousTieScaleRatio;
+				key->m_parent->m_keyTieModeChangedSignal( key->m_parent, key.get() );
+				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
+			}
+		);
+	}
+	else
+	{
+		m_tieMode = tieMode;
+		m_tieScaleRatio = newTieScaleRatio;
+	}
 }
 
 float Animation::Key::getTime() const
@@ -1407,6 +1571,7 @@ Animation::CurvePlug::CurvePlug( const std::string &name, const Plug::Direction 
 , m_keyTimeChangedSignal()
 , m_keyValueChangedSignal()
 , m_keyInterpolationChangedSignal()
+, m_keyTieModeChangedSignal()
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
@@ -1440,6 +1605,11 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyValueChangedS
 Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyInterpolationChangedSignal()
 {
 	return m_keyInterpolationChangedSignal;
+}
+
+Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTieModeChangedSignal()
+{
+	return m_keyTieModeChangedSignal;
 }
 
 Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )
@@ -2263,6 +2433,11 @@ Animation::Interpolation Animation::defaultInterpolation()
 	return Interpolator::getDefault()->getInterpolation();
 }
 
+Animation::TieMode Animation::defaultTieMode()
+{
+	return TieMode::Scale;
+}
+
 Animation::Direction Animation::opposite( const Animation::Direction direction )
 {
 	return static_cast< Direction >( ( static_cast< int >( direction ) + 1 ) % 2 );
@@ -2306,6 +2481,23 @@ const char* Animation::toString( const Animation::Direction direction )
 			return "In";
 		case Direction::Out:
 			return "Out";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+
+const char* Animation::toString( const Animation::TieMode mode )
+{
+	switch( mode )
+	{
+		case TieMode::Manual:
+			return "Manual";
+		case TieMode::Slope:
+			return "Slope";
+		case TieMode::Scale:
+			return "Scale";
 		default:
 			assert( 0 );
 			return 0;

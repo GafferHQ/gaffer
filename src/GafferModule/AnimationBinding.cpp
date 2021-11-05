@@ -131,10 +131,16 @@ std::string slopeRepr( const double slope )
 	return boost::str( boost::format( ( ( std::isinf( slope ) ) ? "float( '%.9g' )" : "%.9g" ) ) % slope );
 }
 
+void setTieMode( Animation::Key &k, const Animation::TieMode mode )
+{
+	ScopedGILRelease gilRelease;
+	k.setTieMode( mode );
+}
+
 std::string keyRepr( const Animation::Key &k )
 {
 	return boost::str( boost::format(
-		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s, %s, %.9g, %s, %.9g )" )
+		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s, %s, %.9g, %s, %.9g, Gaffer.Animation.TieMode.%s )" )
 			% k.getTime()
 			% k.getValue()
 			% Animation::toString( k.getInterpolation() )
@@ -142,6 +148,7 @@ std::string keyRepr( const Animation::Key &k )
 			% k.tangentIn().getScale()
 			% slopeRepr( k.tangentOut().getSlope() )
 			% k.tangentOut().getScale()
+			% Animation::toString( k.getTieMode() )
 	);
 };
 
@@ -224,6 +231,8 @@ void GafferModule::bindAnimation()
 		.staticmethod( "acquire" )
 		.def( "defaultInterpolation", &Animation::defaultInterpolation )
 		.staticmethod( "defaultInterpolation" )
+		.def( "defaultTieMode", &Animation::defaultTieMode )
+		.staticmethod( "defaultTieMode" )
 		.def( "defaultSlope", &Animation::defaultSlope )
 		.staticmethod( "defaultSlope" )
 		.def( "defaultScale", &Animation::defaultScale )
@@ -245,6 +254,12 @@ void GafferModule::bindAnimation()
 		.value( Animation::toString( Animation::Direction::Out ), Animation::Direction::Out )
 	;
 
+	enum_< Animation::TieMode >( "TieMode" )
+		.value( Animation::toString( Animation::TieMode::Manual ), Animation::TieMode::Manual )
+		.value( Animation::toString( Animation::TieMode::Slope ), Animation::TieMode::Slope )
+		.value( Animation::toString( Animation::TieMode::Scale ), Animation::TieMode::Scale )
+	;
+
 	class_< Animation::Tangent, boost::noncopyable >( "Tangent", no_init )
 		.def( "key", &getKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
@@ -264,7 +279,7 @@ void GafferModule::bindAnimation()
 		;
 
 	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
-		.def( init< float, float, Animation::Interpolation, double, double, double, double >(
+		.def( init< float, float, Animation::Interpolation, double, double, double, double, Animation::TieMode >(
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
@@ -272,7 +287,8 @@ void GafferModule::bindAnimation()
 					arg( "inSlope" ) = Animation::defaultSlope(),
 					arg( "inScale" ) = Animation::defaultScale(),
 					arg( "outSlope" ) = Animation::defaultSlope(),
-					arg( "outScale" ) = Animation::defaultScale()
+					arg( "outScale" ) = Animation::defaultScale(),
+					arg( "tieMode" ) = Animation::defaultTieMode()
 				)
 			)
 		)
@@ -291,6 +307,8 @@ void GafferModule::bindAnimation()
 		.def( "tangent",
 			(Animation::Tangent& (Animation::Key::*)( Animation::Direction ))&Animation::Key::tangent,
 			return_internal_reference<>() )
+		.def( "setTieMode", &setTieMode )
+		.def( "getTieMode", &Animation::Key::getTieMode )
 		.def( "isActive", &Animation::Key::isActive )
 		.def( "__repr__", &keyRepr )
 		.def(
@@ -314,6 +332,7 @@ void GafferModule::bindAnimation()
 		.def( "keyTimeChangedSignal", &Animation::CurvePlug::keyTimeChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyValueChangedSignal", &Animation::CurvePlug::keyValueChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyInterpolationChangedSignal", &Animation::CurvePlug::keyInterpolationChangedSignal, return_internal_reference< 1 >() )
+		.def( "keyTieModeChangedSignal", &Animation::CurvePlug::keyTieModeChangedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
 		.def( "insertKey", &insertKey )
 		.def( "insertKey", &insertKeyValue )

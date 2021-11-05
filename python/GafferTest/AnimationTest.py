@@ -52,6 +52,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( k.getTime(), 0 )
 		self.assertEqual( k.getValue(), 0 )
 		self.assertEqual( k.getInterpolation(), Gaffer.Animation.defaultInterpolation() )
+		self.assertEqual( k.getTieMode(), Gaffer.Animation.defaultTieMode() )
 		self.assertFalse( k.isActive() )
 		self.assertIsNone( k.parent() )
 		ti = k.tangentIn()
@@ -1120,6 +1121,153 @@ class AnimationTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions()
 
+	def testKeySetTieMode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		tieMode = Gaffer.Animation.TieMode.Manual
+		k = Gaffer.Animation.Key( 10, 5, tieMode = tieMode )
+		curve.addKey( k )
+
+		self.assertTrue( k.isActive() )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertEqual( k.getTieMode(), tieMode )
+
+		with Gaffer.UndoScope( s ) :
+			k.setTieMode( tieMode )
+
+		self.assertEqual( k.getTieMode(), tieMode )
+		self.assertFalse( s.undoAvailable() )
+
+		newTieMode = Gaffer.Animation.TieMode.Slope
+		with Gaffer.UndoScope( s ) :
+			k.setTieMode( newTieMode )
+
+		self.assertEqual( k.getTieMode(), newTieMode )
+		self.assertTrue( s.undoAvailable() )
+
+		s.undo()
+
+		self.assertEqual( k.getTieMode(), tieMode )
+		self.assertTrue( s.redoAvailable() )
+
+		s.redo()
+
+		self.assertEqual( k.getTieMode(), newTieMode )
+
+	def testKeySetTieModeSlopeInCurve( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		tieMode = Gaffer.Animation.TieMode.Manual
+		interpolation = Gaffer.Animation.Interpolation.Cubic
+		inSlope = 20
+		outSlope = 50
+		k = Gaffer.Animation.Key( 10, 5, interpolation, inSlope = inSlope, outSlope = outSlope, tieMode = tieMode )
+		curve.addKey( k )
+
+		k0 = Gaffer.Animation.Key( 0, 1, interpolation )
+		k1 = Gaffer.Animation.Key( 12, 8, interpolation )
+
+		curve.addKey( k0 )
+		curve.addKey( k1 )
+
+		ti = k.tangentIn()
+		tf = k.tangentOut()
+
+		def assertPreconditions() :
+			self.assertEqual( k.getTieMode(), tieMode )
+			self.assertFalse( ti.slopeIsConstrained() )
+			self.assertFalse( tf.slopeIsConstrained() )
+			self.assertEqual( ti.getSlope(), inSlope )
+			self.assertEqual( tf.getSlope(), outSlope )
+			self.assertNotEqual( ti.getSlope(), tf.getSlope() )
+
+		def assertPostconditions() :
+			self.assertEqual( k.getTieMode(), newTieMode )
+			self.assertFalse( ti.slopeIsConstrained() )
+			self.assertFalse( tf.slopeIsConstrained() )
+			self.assertEqual( ti.getSlope(), tf.getSlope() )
+			self.assertTrue( s.undoAvailable() )
+
+		newTieMode = Gaffer.Animation.TieMode.Slope
+		assertPreconditions()
+		with Gaffer.UndoScope( s ) :
+			k.setTieMode( newTieMode )
+		assertPostconditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostconditions()
+
+	def testKeySetTieModeSignals( self ) :
+
+		ps = set()
+
+		def changed( curve, key ) :
+			ps.add( key )
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		c = curve.keyTieModeChangedSignal().connect( changed )
+
+		k0 = Gaffer.Animation.Key( 0, 1 )
+		k1 = Gaffer.Animation.Key( 12, 8 )
+
+		curve.addKey( k0 )
+		curve.addKey( k1 )
+
+		tieMode = Gaffer.Animation.TieMode.Manual
+		k = Gaffer.Animation.Key( 10, 5, tieMode = tieMode )
+		curve.addKey( k )
+
+		self.assertTrue( k.isActive() )
+		self.assertIsNotNone( k.parent() )
+		self.assertTrue( k.parent().isSame( curve ) )
+		self.assertEqual( k.getTieMode(), tieMode )
+
+		def assertPostconditions() :
+			self.assertEqual( k.getTieMode(), newTieMode )
+			self.assertTrue( s.undoAvailable() )
+			self.assertIn( k, ps )
+			self.assertNotIn( k0, ps )
+			self.assertNotIn( k1, ps )
+
+		newTieMode = Gaffer.Animation.TieMode.Slope
+		with Gaffer.UndoScope( s ) :
+			k.setTieMode( newTieMode )
+		assertPostconditions()
+		ps.clear()
+
+		s.undo()
+		self.assertEqual( k.getTieMode(), tieMode )
+		self.assertTrue( s.redoAvailable() )
+		self.assertIn( k, ps )
+		self.assertNotIn( k0, ps )
+		self.assertNotIn( k1, ps )
+		ps.clear()
+
+		s.redo()
+		assertPostconditions()
+
 	def testKeyTangentSlopeIsConstrained( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1269,7 +1417,7 @@ class AnimationTest( GafferTest.TestCase ) :
 	def testKeyTangentSetSlope( self ) :
 
 		# test set slope with tie mode manual
-		k = Gaffer.Animation.Key()
+		k = Gaffer.Animation.Key( tieMode = Gaffer.Animation.TieMode.Manual )
 		ti = k.tangentIn()
 		tf = k.tangentOut()
 
@@ -1280,6 +1428,40 @@ class AnimationTest( GafferTest.TestCase ) :
 			self.assertEqual( ti.getSlope(), slope )
 			self.assertEqual( tf.getSlope(), slope )
 
+		# test set slope with tie mode slope
+		k = Gaffer.Animation.Key( tieMode = Gaffer.Animation.TieMode.Slope )
+		ti = k.tangentIn()
+		tf = k.tangentOut()
+
+		step = 10
+		for slope in range( -100, 100 + step, step ) :
+			ti.setSlope( slope )
+			self.assertEqual( ti.getSlope(), slope )
+			self.assertEqual( tf.getSlope(), slope )
+
+		step = 10
+		for slope in range( -100, 100 + step, step ) :
+			tf.setSlope( slope )
+			self.assertEqual( tf.getSlope(), slope )
+			self.assertEqual( ti.getSlope(), slope )
+
+		# test set slope with tie mode slope and scale
+		k = Gaffer.Animation.Key( tieMode = Gaffer.Animation.TieMode.Scale )
+		ti = k.tangentIn()
+		tf = k.tangentOut()
+
+		step = 10
+		for slope in range( -100, 100 + step, step ) :
+			ti.setSlope( slope )
+			self.assertEqual( ti.getSlope(), slope )
+			self.assertEqual( tf.getSlope(), slope )
+
+		step = 10
+		for slope in range( -100, 100 + step, step ) :
+			tf.setSlope( slope )
+			self.assertEqual( tf.getSlope(), slope )
+			self.assertEqual( ti.getSlope(), slope )
+
 	def testKeyTangentSetSlopeClampsScale( self ) :
 
 		import math
@@ -1287,7 +1469,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		# test set slope clamps scale, initial slopes set to +/- infinity with infinite scale
 		k = Gaffer.Animation.Key(
 			inSlope = float( 'inf' ), inScale = float( 'inf' ),
-			outSlope = float( '-inf' ), outScale = float( 'inf' ) )
+			outSlope = float( '-inf' ), outScale = float( 'inf' ),
+			tieMode = Gaffer.Animation.TieMode.Manual )
 		ti = k.tangentIn()
 		tf = k.tangentOut()
 
@@ -1328,7 +1511,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		# create key (manual tie mode) and get its tangents
 		k = Gaffer.Animation.Key(
 			time = 0,
-			interpolation = Gaffer.Animation.Interpolation.Linear )
+			interpolation = Gaffer.Animation.Interpolation.Linear,
+			tieMode = Gaffer.Animation.TieMode.Manual )
 		ti = k.tangentIn()
 		tf = k.tangentOut()
 
@@ -1354,11 +1538,48 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( ti.getSlope(), 30 )
 		self.assertEqual( tf.getSlope(), 45 )
 
+		# add key back to curve
+		curve.addKey( k )
+
+		# now set tieMode of key to Slope
+		k.setTieMode( Gaffer.Animation.TieMode.Slope )
+
+		# slope of both tangents should now be effective as both tangent's slope is constrained
+		self.assertTrue( ti.slopeIsConstrained() )
+		self.assertEqual( ti.getSlope(), tis )
+		self.assertTrue( tf.slopeIsConstrained() )
+		self.assertEqual( tf.getSlope(), tfs )
+
+		# remove key from curve
+		curve.removeKey( k )
+
+		# tangent slopes should be tied and therefore have same magnitude
+		self.assertEqual( ti.getSlope(), tf.getSlope() )
+		tiedSlope = ti.getSlope()
+
+		# add key back to curve
+		curve.addKey( k )
+
+		# try to set tangent slope (should have no affect as slopes are constrained)
+		self.assertTrue( ti.slopeIsConstrained() )
+		ti.setSlope( 10 )
+		self.assertEqual( ti.getSlope(), tis )
+		self.assertTrue( tf.slopeIsConstrained() )
+		tf.setSlope( 35 )
+		self.assertEqual( tf.getSlope(), tfs )
+
+		# remove key from curve
+		curve.removeKey( k )
+
+		# tangent slopes should still be tied and same as before they became constrained
+		self.assertEqual( ti.getSlope(), tiedSlope )
+		self.assertEqual( tf.getSlope(), tiedSlope )
+
 	def testKeyTangentSetScale( self ) :
 
 		import math
 
-		k = Gaffer.Animation.Key( time = 0, inSlope = 0, outSlope = 0 )
+		k = Gaffer.Animation.Key( time = 0, inSlope = 0, outSlope = 0, tieMode = Gaffer.Animation.TieMode.Manual )
 		ti = k.tangentIn()
 		tf = k.tangentOut()
 
@@ -1424,7 +1645,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		# create key (manual tie mode) and get its tangents
 		k = Gaffer.Animation.Key(
 			time = 0,
-			interpolation = Gaffer.Animation.Interpolation.Linear )
+			interpolation = Gaffer.Animation.Interpolation.Linear,
+			tieMode = Gaffer.Animation.TieMode.Manual )
 		ti = k.tangentIn()
 		tf = k.tangentOut()
 
@@ -1450,12 +1672,59 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( ti.getScale(), 0.2 )
 		self.assertEqual( tf.getScale(), 0.3 )
 
+		# add key back to curve
+		curve.addKey( k )
+
+		# now set tieMode of key to include scale
+		k.setTieMode( Gaffer.Animation.TieMode.Scale )
+
+		# scale of both tangents should now be constrained
+		self.assertTrue( ti.scaleIsConstrained() )
+		self.assertEqual( ti.getScale(), tis )
+		self.assertTrue( tf.scaleIsConstrained() )
+		self.assertEqual( tf.getScale(), tfs )
+
+		# remove key from curve
+		curve.removeKey( k )
+
+		# tangent should have same scales (tying scale keeps them in proportion)
+		self.assertEqual( ti.getScale(), 0.2 )
+		self.assertEqual( tf.getScale(), 0.3 )
+
+		# add key back to curve
+		curve.addKey( k )
+
+		# try setting tangent scales (whilst key in curve and scales constrained) should have no effect
+		self.assertTrue( ti.scaleIsConstrained() )
+		ti.setScale( 0.6 )
+		self.assertEqual( ti.getScale(), tis )
+		self.assertTrue( tf.scaleIsConstrained() )
+		tf.setScale( 0.7 )
+		self.assertEqual( tf.getScale(), tfs )
+
+		# remove key from curve
+		curve.removeKey( k )
+
+		# tangent should be same as before they became constrained (setting scale whilst key in curve and scales constrained has no affect)
+		self.assertEqual( ti.getScale(), 0.2 )
+		self.assertEqual( tf.getScale(), 0.3 )
+
+		# try setting tangent scales (whilst key not in curve) should have effect of keeping in proportion
+		self.assertFalse( ti.scaleIsConstrained() )
+		ti.setScale( 0.4 )
+		self.assertEqual( ti.getScale(), 0.4 )
+		self.assertEqual( tf.getScale(), 0.6 )
+		self.assertFalse( tf.scaleIsConstrained() )
+		tf.setScale( 0.75 )
+		self.assertEqual( tf.getScale(), 0.75 )
+		self.assertEqual( ti.getScale(), 0.5 )
+
 	def testKeyTangentSetPosition( self ) :
 
 		import math
 		import imath
 
-		k = Gaffer.Animation.Key( time = 13, value = 5.4 )
+		k = Gaffer.Animation.Key( time = 13, value = 5.4, tieMode = Gaffer.Animation.TieMode.Manual )
 		ti = k.tangentIn()
 		tf = k.tangentOut()
 

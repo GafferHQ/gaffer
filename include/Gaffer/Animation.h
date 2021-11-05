@@ -76,8 +76,19 @@ class GAFFER_API Animation : public ComputeNode
 			Out
 		};
 
+		/// Defines whether slope and scale are tied.
+		enum class TieMode
+		{
+			Manual = 0,
+			Slope,
+			Scale
+		};
+
 		/// Get the default interpolation mode.
 		static Interpolation defaultInterpolation();
+
+		/// Get the default tie mode.
+		static TieMode defaultTieMode();
 
 		/// Get the opposite direction to the specified direction
 		static Direction opposite( Direction direction );
@@ -115,6 +126,7 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				/// Set tangent's slope.
 				/// The slope is in range [-inf,+inf]
+				/// If the tangent's key has tie mode set to either Slope or Scale the opposite tangents slope will be set to the same value.
 				/// If slopeIsConstrained() returns true this function will have no effect.
 				void setSlope( double slope );
 				/// \undoable
@@ -132,6 +144,7 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				/// Set tangent's scale.
 				/// The scale is multiplied by the span width to derive the tangent's length.
+				/// If the tangent's key has tie mode set to Scale the opposite tangent's scale will be kept proportional.
 				/// If scaleIsConstrained() returns true this function will have no effect.
 				void setScale( double scale );
 				/// \undoable
@@ -170,6 +183,8 @@ class GAFFER_API Animation : public ComputeNode
 
 				Tangent( Key&, Direction, double, double );
 				/// \undoable
+				void setSlope( double, bool );
+				/// \undoable
 				void setScale( double, bool );
 				/// \undoable
 				void setSlopeAndScale( double, double, bool );
@@ -192,7 +207,8 @@ class GAFFER_API Animation : public ComputeNode
 
 				explicit Key( float time = 0.0f, float value = 0.0f, Interpolation interpolation = Animation::defaultInterpolation(),
 					double inSlope = Animation::defaultSlope(), double inScale = Animation::defaultScale(),
-					double outSlope = Animation::defaultSlope(), double outScale = Animation::defaultScale() );
+					double outSlope = Animation::defaultSlope(), double outScale = Animation::defaultScale(),
+					TieMode tieMode = Animation::defaultTieMode() );
 				~Key() override;
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation::Key, AnimationKeyTypeId, IECore::RunTimeTyped )
@@ -209,6 +225,17 @@ class GAFFER_API Animation : public ComputeNode
 				Tangent& tangent( Direction direction );
 				// Get tangent in specified direction (const access)
 				const Tangent& tangent( Direction direction ) const;
+
+				/// Get current tie mode of key.
+				TieMode getTieMode() const;
+				/// Set tie mode of key. If tie mode is Slope or Scale the slope of the in and
+				/// out tangents with be made equal. If only one tangent's slope is constrained
+				/// or protrudes beyond the start or end of the parent curve, the opposite tangent's
+				/// slope will be preserved, otherwise the slopes are averaged. If tie mode is Scale
+				/// the ratio between the in and out tangent's scales is captured and changes to
+				/// either tangent's scale preserve the proportionality of the opposite tangent's scale.
+				/// \undoable
+				void setTieMode( TieMode mode );
 
 				/// Get current time of key.
 				float getTime() const;
@@ -272,6 +299,8 @@ class GAFFER_API Animation : public ComputeNode
 				float m_time;
 				float m_value;
 				ConstInterpolatorPtr m_interpolator;
+				double m_tieScaleRatio;
+				TieMode m_tieMode;
 				bool m_active;
 
 		};
@@ -301,6 +330,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyTimeChangedSignal();
 				CurvePlugKeySignal& keyValueChangedSignal();
 				CurvePlugKeySignal& keyInterpolationChangedSignal();
+				CurvePlugKeySignal& keyTieModeChangedSignal();
 
 				/// Adds specified key to curve, if key is parented to another curve or already parented
 				/// to the curve and inactive it is removed from its parent curve. If the key has already
@@ -420,11 +450,13 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyTimeChangedSignal;
 				CurvePlugKeySignal m_keyValueChangedSignal;
 				CurvePlugKeySignal m_keyInterpolationChangedSignal;
+				CurvePlugKeySignal m_keyTieModeChangedSignal;
 		};
 
 		/// convert enums to strings
 		static const char* toString( Interpolation interpolation );
 		static const char* toString( Direction direction );
+		static const char* toString( TieMode mode );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 
