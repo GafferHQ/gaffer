@@ -155,9 +155,35 @@ double tieScaleRatio( const double inScale, const double outScale )
 	return ( inScale == outScale ) ? 1.0 : ( ( outScale == 0.0 ) ? 0.0 : ( inScale / outScale ) );
 }
 
-double tieScaleOpposite( const Gaffer::Animation::Direction direction, const double scale, const double ratio )
+double tieScaleOpposite( const Gaffer::Animation::Direction direction, const double ratio, const double oppositeSlope, double& scale )
 {
-	return ( direction == Gaffer::Animation::Direction::In ) ? ( scale / ratio ) : ( scale * ratio );
+	// NOTE : to maintain proportionality the scale may need to be constrained if the opposite
+	//        tangent's scale needs to be clamped based on its slope.
+
+	double oppositeScale = 0.0;
+
+	if( direction == Gaffer::Animation::Direction::In )
+	{
+		oppositeScale = scale / ratio;
+		const double maxOppositeScale = maxScale( oppositeSlope );
+		if( oppositeScale > maxOppositeScale )
+		{
+			oppositeScale = maxOppositeScale;
+			scale = std::min( oppositeScale * ratio, scale );
+		}
+	}
+	else
+	{
+		oppositeScale = scale * ratio;
+		const double maxOppositeScale = maxScale( oppositeSlope );
+		if( oppositeScale > maxOppositeScale )
+		{
+			oppositeScale = maxOppositeScale;
+			scale = std::min( oppositeScale / ratio, scale );
+		}
+	}
+
+	return oppositeScale;
 }
 
 // constant interpolator
@@ -649,7 +675,10 @@ void Animation::Tangent::setSlopeAndScale( double slope, double scale, const boo
 
 		if( tsc )
 		{
-			const double oppositeScale = tieScaleOpposite( m_direction, scale, m_key->m_tieScaleRatio );
+			// NOTE : the opposite tangent's slope will be set so pass the new slope to tieScaleOpposite()
+			//        so scale clamp is based on new slope rather than existing slope of opposite tangent.
+
+			const double oppositeScale = tieScaleOpposite( m_direction, m_key->m_tieScaleRatio, slope, scale );
 
 			( tsl )
 				? ot.setSlopeAndScale( slope, oppositeScale, /* force = */ true )
@@ -783,6 +812,18 @@ void Animation::Tangent::setScale( double scale, const bool force )
 
 	scale = Imath::clamp( scale, 0.0, maxScale( m_slope ) );
 
+	// tie scale of opposite tangent
+
+	if( tieScaleActive( m_key->m_tieMode ) && ( m_key->m_tieScaleRatio != 0.0 ) )
+	{
+		// set tie mode of the parent key to manual whilst we call setScale on the opposite
+		// tangent to avoid ping-ponging back and forth setting each other in infinite recursion.
+
+		Private::ScopedAssignment< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
+		Tangent& ot = m_key->tangent( opposite( m_direction ) );
+		ot.setScale( tieScaleOpposite( m_direction, m_key->m_tieScaleRatio, ot.getSlope(), scale ), /* force = */ true );
+	}
+
 	// check for no change
 
 	if( m_scale == scale )
@@ -813,18 +854,6 @@ void Animation::Tangent::setScale( double scale, const bool force )
 	else
 	{
 		m_scale = scale;
-	}
-
-	// tie scale of opposite tangent
-
-	if( tieScaleActive( m_key->m_tieMode ) && ( m_key->m_tieScaleRatio != 0.0 ) )
-	{
-		// set tie mode of the parent key to manual whilst we call setScale on the opposite
-		// tangent to avoid ping-ponging back and forth setting each other in infinite recursion.
-
-		Private::ScopedAssignment< TieMode > tmGuard( m_key->m_tieMode, TieMode::Manual );
-		Tangent& ot = m_key->tangent( opposite( m_direction ) );
-		ot.setScale( tieScaleOpposite( m_direction, scale, m_key->m_tieScaleRatio ), /* force = */ true );
 	}
 }
 
