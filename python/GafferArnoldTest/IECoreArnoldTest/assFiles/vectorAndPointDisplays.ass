@@ -1,0 +1,45 @@
+options
+{
+	name options
+	outputs 3 1 STRING
+		"P POINT filter display"
+		"N VECTOR filter display"
+		"RGBA RGBA filter display"
+	xres 640
+	yres 480
+	camera camera
+}
+
+gaussian_filter
+{
+	name filter
+}
+
+ieDisplay
+{
+	name display
+	driverType "ClientDisplayDriver"
+	declare displayHost CONSTANT STRING
+	displayHost "localhost"
+	declare displayPort CONSTANT STRING
+	displayPort "1559"
+	declare remoteDisplayType CONSTANT STRING
+	remoteDisplayType "ImageDisplayDriver"
+	declare handle CONSTANT STRING
+	handle "vectorAndPointImage"
+}
+
+persp_camera
+{
+	name camera
+}
+
+sphere
+{
+	name lovelySphere
+	matrix
+	1 0 0 0
+	0 1 0 0
+	0 0 1 0
+	0 0 -3 1
+}

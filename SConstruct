@@ -859,7 +859,7 @@ libraries = {
 	},
 
 	"GafferArnoldTest" : {
-		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + [ "python/GafferArnoldTest/IECoreArnoldTest/metadata" ],
+		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + [ "python/GafferArnoldTest/IECoreArnoldTest/metadata", "python/GafferArnoldTest/IECoreArnoldTest/assFiles" ],
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
 
@@ -877,6 +877,19 @@ libraries = {
 
 	"GafferArnoldUITest" : {
 		"additionalFiles" : glob.glob( "python/GafferArnoldUITest/metadata/*" ),
+		"requiredOptions" : [ "ARNOLD_ROOT" ],
+	},
+
+	"GafferArnoldPlugin" : {
+		"envAppends" : {
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			"LIBS" : [ "GafferArnold" ],
+			"CXXFLAGS" : [ "-isystem", "$ARNOLD_ROOT/include", "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+		},
+		"envReplacements" : {
+			"SHLIBPREFIX" : "",
+		},
+		"installName" : "arnold/plugins/Gaffer",
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
 
@@ -1070,16 +1083,21 @@ for libraryName, libraryDef in libraries.items() :
 	libEnv = baseLibEnv.Clone()
 	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName ) )
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
+	libEnv.Replace( **(libraryDef.get( "envReplacements", {} )) )
 
 	# library
 
 	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) )
 	if librarySource :
 
-		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
+		libraryInstallName = libraryDef.get( "installName", "lib/" + libraryName )
+		library = libEnv.SharedLibrary( libraryInstallName, librarySource )
 		libEnv.Default( library )
 
-		libraryInstall = libEnv.Install( "$BUILD_DIR/lib", library )
+		libraryInstall = libEnv.Install(
+			os.path.join( "$BUILD_DIR", os.path.dirname( libraryInstallName ) ),
+			library
+		)
 		libEnv.Alias( "build", libraryInstall )
 
 	# header install

@@ -43,6 +43,7 @@ from .ParameterAlgoTest import ParameterAlgoTest
 from .PointsAlgoTest import PointsAlgoTest
 from .SphereAlgoTest import SphereAlgoTest
 from .UniverseBlockTest import UniverseBlockTest
+from .OutputDriverTest import OutputDriverTest
 
 if __name__ == "__main__":
 	import unittest
