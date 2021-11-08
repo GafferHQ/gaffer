@@ -40,7 +40,11 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/tokenizer.hpp"
 
-#include "ai.h"
+#include "ai_metadata.h"
+#include "ai_msg.h"
+#include "ai_plugins.h"
+#include "ai_render.h"
+#include "ai_universe.h"
 
 #include "tbb/spin_mutex.h"
 

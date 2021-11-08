@@ -38,6 +38,9 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "ai_array.h"
+#include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreArnold;

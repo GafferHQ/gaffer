@@ -870,12 +870,14 @@ libraries = {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "GafferOSL" ],
-			"CXXFLAGS" : [ "-isystem", "$ARNOLD_ROOT/include", "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX" ],
-			"CXXFLAGS" : [ "-isystem", "$ARNOLD_ROOT/include", "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"additionalFiles" : [ "arnoldPlugins/gaffer.mtd" ],
@@ -892,7 +894,8 @@ libraries = {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
 			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "Gaffer", "GafferScene", "GafferOSL", "GafferSceneUI", "ai" ],
-			"CXXFLAGS" : [ "-isystem", "$ARNOLD_ROOT/include", "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferArnoldUI", "GafferSceneUI", "IECoreScene$CORTEX_LIB_SUFFIX" ],
@@ -911,7 +914,8 @@ libraries = {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
 			"LIBS" : [ "GafferArnold" ],
-			"CXXFLAGS" : [ "-isystem", "$ARNOLD_ROOT/include", "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
 		"envReplacements" : {
 			"SHLIBPREFIX" : "",

@@ -41,7 +41,7 @@
 
 #include "IECoreScene/ShaderNetwork.h"
 
-#include "ai.h"
+#include "ai_nodes.h"
 
 #include <vector>
 

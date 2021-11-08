@@ -44,7 +44,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "ai.h"
+#include "ai_array.h"
+#include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
 
 #include <algorithm>
 

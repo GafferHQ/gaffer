@@ -73,6 +73,14 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/optional.hpp"
 
+#include "ai_array.h"
+#include "ai_msg.h"
+#include "ai_procedural.h"
+#include "ai_ray.h"
+#include "ai_render.h"
+#include "ai_scene.h"
+#include "ai_stats.h"
+
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_vector.h"
 #include "tbb/partitioner.h"

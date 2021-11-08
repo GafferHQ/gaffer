@@ -39,7 +39,7 @@
 
 #include "IECore/Object.h"
 
-#include "ai.h"
+#include "ai_nodes.h"
 
 namespace IECoreArnold
 {

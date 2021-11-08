@@ -50,6 +50,8 @@
 
 #include "boost/container/flat_set.hpp"
 
+#include "ai_metadata.h"
+
 using namespace std;
 using namespace Imath;
 using namespace boost;

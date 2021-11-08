@@ -40,8 +40,6 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "ai.h"
-
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;

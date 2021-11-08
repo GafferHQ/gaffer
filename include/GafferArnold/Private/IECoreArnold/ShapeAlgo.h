@@ -39,7 +39,7 @@
 
 #include "IECoreScene/Primitive.h"
 
-#include "ai.h"
+#include "ai_nodes.h"
 
 namespace IECoreArnold
 {

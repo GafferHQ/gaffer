@@ -37,7 +37,7 @@
 
 #include "IECoreScene/ExternalProcedural.h"
 
-#include "ai.h"
+#include "ai_nodes.h"
 
 namespace IECoreArnold
 {

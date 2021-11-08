@@ -42,6 +42,9 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "ai_drivers.h"
+#include "ai_metadata.h"
+#include "ai_plugins.h"
+#include "ai_universe.h"
 #include "ai_version.h"
 
 #include <stdio.h>

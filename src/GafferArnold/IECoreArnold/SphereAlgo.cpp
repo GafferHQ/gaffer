@@ -39,8 +39,6 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "ai.h"
-
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;

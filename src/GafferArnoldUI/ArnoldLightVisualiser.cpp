@@ -50,8 +50,6 @@
 #include "IECore/TypedData.h"
 #include "IECore/VectorTypedData.h"
 
-#include "ai.h"
-
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreGLPreview;

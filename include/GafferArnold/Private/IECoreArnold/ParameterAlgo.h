@@ -39,7 +39,7 @@
 
 #include "IECore/CompoundData.h"
 
-#include "ai.h"
+#include "ai_nodes.h"
 
 namespace IECoreArnold
 {
