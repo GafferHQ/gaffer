@@ -57,36 +57,54 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = False ) :
 
-			self.assertTrue( arnold.AiUniverseIsActive() )
+			if not self.__usingMultipleUniverses :
+				self.assertTrue( arnold.AiUniverseIsActive() )
 
 			with IECoreArnold.UniverseBlock( writable = False ) :
 
-				self.assertTrue( arnold.AiUniverseIsActive() )
+				if not self.__usingMultipleUniverses :
+					self.assertTrue( arnold.AiUniverseIsActive() )
 
-			self.assertTrue( arnold.AiUniverseIsActive() )
+			if not self.__usingMultipleUniverses :
+				self.assertTrue( arnold.AiUniverseIsActive() )
 
 	def testWritable( self ) :
 
-		def createBlock( writable ) :
+		def createBlock( writable, expectedUniverse = None ) :
 
-			with IECoreArnold.UniverseBlock( writable ) :
+			with IECoreArnold.UniverseBlock( writable ) as universe :
 
+				if not self.__usingMultipleUniverses :
+					self.assertTrue( arnold.AiUniverseIsActive() )
+				else :
+					self.assertIsNotNone( universe )
+
+				if expectedUniverse is not None :
+					self.assertEqual(
+						ctypes.addressof( universe.contents ),
+						ctypes.addressof( expectedUniverse.contents )
+					)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			if not self.__usingMultipleUniverses :
 				self.assertTrue( arnold.AiUniverseIsActive() )
-
-		with IECoreArnold.UniverseBlock( writable = True ) :
-
-			self.assertTrue( arnold.AiUniverseIsActive() )
+			else :
+				self.assertIsNotNone( universe )
 
 			createBlock( False )
 			if not self.__usingMultipleUniverses :
 				six.assertRaisesRegex( self, RuntimeError, "Arnold is already in use", createBlock, True )
 
-		with IECoreArnold.UniverseBlock( writable = False ) :
+		with IECoreArnold.UniverseBlock( writable = False ) as universe :
 
-			self.assertTrue( arnold.AiUniverseIsActive() )
+			if not self.__usingMultipleUniverses :
+				self.assertTrue( arnold.AiUniverseIsActive() )
+			else :
+				self.assertIsNotNone( universe )
 
 			createBlock( True )
-			createBlock( False )
+			createBlock( False, expectedUniverse = universe )
 
 	def testMetadataLoading( self ) :
 

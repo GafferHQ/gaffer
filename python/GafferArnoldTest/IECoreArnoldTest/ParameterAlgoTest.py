@@ -55,9 +55,9 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testSetParameter( self ) :
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			n = arnold.AiNode( "standard_surface" )
+			n = arnold.AiNode( universe, "standard_surface" )
 
 			IECoreArnold.ParameterAlgo.setParameter( n, "base", IECore.FloatData( 0.25 ) )
 			IECoreArnold.ParameterAlgo.setParameter( n, "customString", IECore.StringData( "test" ) )
@@ -67,9 +67,9 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testGetParameter( self ) :
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			n = arnold.AiNode( "standard_surface" )
+			n = arnold.AiNode( universe, "standard_surface" )
 
 			self.assertEqual(
 				IECoreArnold.ParameterAlgo.getParameter( n, "base" ),
@@ -84,9 +84,9 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testIntData( self ) :
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			n = arnold.AiNode( "standard_surface" )
+			n = arnold.AiNode( universe, "standard_surface" )
 			IECoreArnold.ParameterAlgo.setParameter( n, "customInt", IECore.IntData( 42 ) )
 			IECoreArnold.ParameterAlgo.setParameter( n, "customUInt", IECore.UIntData( 43 ) )
 			IECoreArnold.ParameterAlgo.setParameter( n, "customIntVectorData", IECore.IntVectorData( [ 5, 6, 7 ] ) )
@@ -106,9 +106,9 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testDoubleData( self ) :
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			n = arnold.AiNode( "standard_surface" )
+			n = arnold.AiNode( universe, "standard_surface" )
 
 			IECoreArnold.ParameterAlgo.setParameter( n, "base", IECore.DoubleData( 0.25 ) )
 			self.assertEqual( arnold.AiNodeGetFlt( n, "base" ), 0.25 )
@@ -125,9 +125,9 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testStringArray( self ) :
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			n = arnold.AiNode( "polymesh" )
+			n = arnold.AiNode( universe, "polymesh" )
 			IECoreArnold.ParameterAlgo.setParameter( n, "trace_sets", IECore.StringVectorData( [ "a", "b" ] ) )
 
 			a = arnold.AiNodeGetArray( n, "trace_sets" )
@@ -137,9 +137,9 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testVectorIntData( self ) :
 
-		with IECoreArnold.UniverseBlock( writable = True ) :
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			n = arnold.AiNode( "standard_surface" )
+			n = arnold.AiNode( universe, "standard_surface" )
 
 			IECoreArnold.ParameterAlgo.setParameter( n, "customV2i", IECore.V2iData( imath.V2i( 3, 4 ) ) )
 			self.assertEqual( arnold.AiNodeGetVec2( n, "customV2i" ), arnold.AtVector2( 3, 4 ) )
