@@ -40,6 +40,7 @@
 
 #include "ai_array.h"
 #include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
+#include "ai_version.h"
 
 using namespace std;
 using namespace IECore;
@@ -227,15 +228,46 @@ IECore::DataPtr arrayToDataInternal( AtArray *array, F f )
 	v.reserve( AiArrayGetNumElements(array) );
 	for( size_t i = 0; i < AiArrayGetNumElements(array); ++i )
 	{
-		v.push_back( f( array, i, __AI_FILE__, __AI_LINE__ ) );
+		v.push_back( f( array, i ) );
 	}
 
 	return data;
 }
 
-const char* getStrWrapperFunc( const AtArray* a, uint32_t i, const char* file, int line )
+#if ARNOLD_VERSION_NUM < 70000
+
+// Prior to Arnold 7, `AiArrayGet*` is implemented using macros.
+// Replace them with function equivalent to the ones in Arnold 7.
+
+#undef AiArrayGetBool
+bool AiArrayGetBool( const AtArray *a, uint32_t i )
 {
-	return AiArrayGetStrFunc( a, i, file, line ).c_str();
+	return AiArrayGetBoolFunc( a, i, __AI_FILE__, __AI_LINE__ );
+}
+
+#undef AiArrayGetInt
+int AiArrayGetInt( const AtArray *a, uint32_t i )
+{
+	return AiArrayGetIntFunc( a, i, __AI_FILE__, __AI_LINE__ );
+}
+
+#undef AiArrayGetUInt
+uint32_t AiArrayGetUInt( const AtArray *a, uint32_t i )
+{
+	return AiArrayGetUIntFunc( a, i, __AI_FILE__, __AI_LINE__ );
+}
+
+#undef AiArrayGetFlt
+float AiArrayGetFlt( const AtArray *a, uint32_t i )
+{
+	return AiArrayGetFltFunc( a, i, __AI_FILE__, __AI_LINE__ );
+}
+
+#endif
+
+const char* getStrWrapper( const AtArray* a, uint32_t i )
+{
+	return AiArrayGetStr( a, i ).c_str();
 }
 
 IECore::DataPtr arrayToData( AtArray *array )
@@ -251,15 +283,15 @@ IECore::DataPtr arrayToData( AtArray *array )
 	switch( AiArrayGetType( array ) )
 	{
 		case AI_TYPE_BOOLEAN :
-			return arrayToDataInternal<bool>( array, AiArrayGetBoolFunc );
+			return arrayToDataInternal<bool>( array, AiArrayGetBool );
 		case AI_TYPE_INT :
-			return arrayToDataInternal<int>( array, AiArrayGetIntFunc );
+			return arrayToDataInternal<int>( array, AiArrayGetInt );
 		case AI_TYPE_UINT :
-			return arrayToDataInternal<uint32_t>( array, AiArrayGetUIntFunc );
+			return arrayToDataInternal<uint32_t>( array, AiArrayGetUInt );
 		case AI_TYPE_FLOAT :
-			return arrayToDataInternal<float>( array, AiArrayGetFltFunc );
+			return arrayToDataInternal<float>( array, AiArrayGetFlt );
 		case AI_TYPE_STRING :
-			return arrayToDataInternal<string>( array, getStrWrapperFunc );
+			return arrayToDataInternal<string>( array, getStrWrapper );
 		default :
 			return nullptr;
 	}

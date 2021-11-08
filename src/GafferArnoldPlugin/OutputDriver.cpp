@@ -145,7 +145,11 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 	CompoundDataPtr parameters = new CompoundData();
 	ParameterAlgo::getParameters( node, parameters->writable() );
 
-	const char *name = nullptr;
+#if ARNOLD_VERSION_NUM >= 70000
+	AtString name;
+#else
+	const char *name;
+#endif
 	int pixelType = 0;
 	while( AiOutputIteratorGetNext( iterator, &name, &pixelType, nullptr ) )
 	{
@@ -177,7 +181,11 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 				break;
 			case AI_TYPE_FLOAT :
 				// no need for prefix because it's not a compound type
+#if ARNOLD_VERSION_NUM >= 70000
+				channelNames.push_back( name.c_str() );
+#else
 				channelNames.push_back( name );
+#endif
 				break;
 		}
 		localData->numOutputs += 1;
