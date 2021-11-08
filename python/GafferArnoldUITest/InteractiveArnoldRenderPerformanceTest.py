@@ -73,7 +73,7 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 
 		script["ImageShader"] = GafferArnold.ArnoldShader()
 		script["ImageShader"].loadShader( "image" )
-		script["ImageShader"]["parameters"]["filename"].setValue( os.path.dirname( __file__ ) + "/../GafferImageTest/images/GafferChecker.exr" )
+		script["ImageShader"]["parameters"]["filename"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/GafferChecker.exr" )
 		script["ImageShader"]["parameters"]["sscale"].setValue( 16 )
 		script["ImageShader"]["parameters"]["tscale"].setValue( 16 )
 

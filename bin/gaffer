@@ -233,9 +233,9 @@ fi
 # Set up Arnold
 ##########################################################################
 
-prependToPath "$GAFFER_ROOT/arnold/plugins" ARNOLD_PLUGIN_PATH
-
 if [[ $ARNOLD_ROOT ]] ; then
+
+	# Put Arnold's own libs and binaries on the appropriate paths.
 
 	if [[ `uname` = "Linux" ]] ; then
 		appendToPath "$ARNOLD_ROOT/bin" LD_LIBRARY_PATH
@@ -245,6 +245,25 @@ if [[ $ARNOLD_ROOT ]] ; then
 
 	appendToPath "$ARNOLD_ROOT/bin" PATH
 	appendToPath "$ARNOLD_ROOT/python" PYTHONPATH
+
+	# Figure out the Arnold version, and set up the matching Gaffer extension.
+
+	if [[ -f "$ARNOLD_ROOT/include/ai_version.h" ]] ; then
+
+		arnoldVersion=`awk \
+			'$1=="#define" && $2=="AI_VERSION_ARCH_NUM"{arch = $3}; \$1=="#define" && $2=="AI_VERSION_MAJOR_NUM"{print arch "." $3}' \
+			"$ARNOLD_ROOT/include/ai_version.h"`
+
+		if [[ -d "$GAFFER_ROOT/arnold/$arnoldVersion" ]] ; then
+			prependToPath "$GAFFER_ROOT/arnold/$arnoldVersion" GAFFER_EXTENSION_PATHS
+			prependToPath "$GAFFER_ROOT/arnold/$arnoldVersion/arnoldPlugins" ARNOLD_PLUGIN_PATH
+		else
+			echo "WARNING : GafferArnold extension not available for Arnold $arnoldVersion" >&2
+		fi
+
+	else
+		echo "WARNING : Unable to determine Arnold version" >&2
+	fi
 
 fi
 

@@ -682,6 +682,29 @@ else :
 	)
 
 ###############################################################################################
+# Arnold configuration
+###############################################################################################
+
+arnoldInstallRoot = ""
+if env["ARNOLD_ROOT"] :
+	arnoldHeader = env.subst( "$ARNOLD_ROOT/include/ai_version.h" )
+	if not os.path.exists( arnoldHeader ) :
+		sys.stderr.write( "ERROR : unable to find \"{}\".\n".format( arnoldHeader ) )
+		Exit( 1 )
+
+	arnoldVersions = {}
+	for line in open( arnoldHeader ) :
+		m = re.match( "^#define AI_VERSION_(ARCH|MAJOR)_NUM\s*([0-9]+)", line )
+		if m :
+			arnoldVersions[m.group(1)] = m.group( 2 )
+
+	if set( arnoldVersions.keys() ) != { "ARCH", "MAJOR" } :
+		sys.stderr.write( "ERROR : unable to parse \"{}\".\n".format( arnoldHeader ) )
+		Exit( 1 )
+
+	arnoldInstallRoot = "${{BUILD_DIR}}/arnold/{ARCH}.{MAJOR}".format( **arnoldVersions )
+
+###############################################################################################
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
@@ -855,12 +878,14 @@ libraries = {
 			"CXXFLAGS" : [ "-isystem", "$ARNOLD_ROOT/include", "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
-		"additionalFiles" : [ "arnold/plugins/gaffer.mtd" ],
+		"additionalFiles" : [ "arnoldPlugins/gaffer.mtd" ],
+		"installRoot" : arnoldInstallRoot,
 	},
 
 	"GafferArnoldTest" : {
 		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + [ "python/GafferArnoldTest/IECoreArnoldTest/metadata", "python/GafferArnoldTest/IECoreArnoldTest/assFiles" ],
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"installRoot" : arnoldInstallRoot,
 	},
 
 	"GafferArnoldUI" : {
@@ -873,11 +898,13 @@ libraries = {
 			"LIBS" : [ "GafferArnoldUI", "GafferSceneUI", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"installRoot" : arnoldInstallRoot,
 	},
 
 	"GafferArnoldUITest" : {
 		"additionalFiles" : glob.glob( "python/GafferArnoldUITest/metadata/*" ),
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"installRoot" : arnoldInstallRoot,
 	},
 
 	"GafferArnoldPlugin" : {
@@ -889,8 +916,9 @@ libraries = {
 		"envReplacements" : {
 			"SHLIBPREFIX" : "",
 		},
-		"installName" : "arnold/plugins/Gaffer",
+		"installName" : "arnoldPlugins/Gaffer",
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"installRoot" : arnoldInstallRoot,
 	},
 
 	"GafferOSL" : {
@@ -1085,6 +1113,8 @@ for libraryName, libraryDef in libraries.items() :
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
 	libEnv.Replace( **(libraryDef.get( "envReplacements", {} )) )
 
+	installRoot = libraryDef.get( "installRoot", "$BUILD_DIR" )
+
 	# library
 
 	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) )
@@ -1095,7 +1125,7 @@ for libraryName, libraryDef in libraries.items() :
 		libEnv.Default( library )
 
 		libraryInstall = libEnv.Install(
-			os.path.join( "$BUILD_DIR", os.path.dirname( libraryInstallName ) ),
+			os.path.join( installRoot, os.path.dirname( libraryInstallName ) ),
 			library
 		)
 		libEnv.Alias( "build", libraryInstall )
@@ -1115,7 +1145,7 @@ for libraryName, libraryDef in libraries.items() :
 	)
 
 	for header in headers :
-		headerInstall = env.Command( "$BUILD_DIR/" + header, header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		headerInstall = env.Command( os.path.join( installRoot, header ), header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		libEnv.Alias( "build", headerInstall )
 
 	# bindings library
@@ -1132,7 +1162,7 @@ for libraryName, libraryDef in libraries.items() :
 		bindingsLibrary = bindingsEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
 		bindingsEnv.Default( bindingsLibrary )
 
-		bindingsLibraryInstall = bindingsEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
+		bindingsLibraryInstall = bindingsEnv.Install( os.path.join( installRoot, "lib" ), bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
 
 	# bindings header install
@@ -1143,7 +1173,7 @@ for libraryName, libraryDef in libraries.items() :
 	)
 
 	for header in bindingsHeaders :
-		headerInstall = env.Command( "$BUILD_DIR/" + header, header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		headerInstall = env.Command( os.path.join( installRoot, header ), header, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		bindingsEnv.Alias( "build", headerInstall )
 
 	# python module binary component
@@ -1172,7 +1202,7 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
 		pythonModuleEnv.Default( pythonModule )
 
-		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
+		moduleInstall = pythonModuleEnv.Install( os.path.join( installRoot, "python", libraryName ), pythonModule )
 		pythonModuleEnv.Alias( "build", moduleInstall )
 
 	# Moc preprocessing, for QObject derived classes. SCons does include a "qt" tool that
@@ -1190,20 +1220,20 @@ for libraryName, libraryDef in libraries.items() :
 
 	pythonFiles = glob.glob( "python/" + libraryName + "/*.py" ) + glob.glob( "python/" + libraryName + "/*/*.py" ) + glob.glob( "python/" + libraryName + "/*/*/*.py" )
 	for pythonFile in pythonFiles :
-		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
+		pythonFileInstall = env.Command( os.path.join( installRoot, pythonFile ), pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		env.Alias( "build", pythonFileInstall )
 
 	# apps
 
 	for app in libraryDef.get( "apps", [] ) :
-		appInstall = env.InstallAs("$BUILD_DIR/apps/{app}/{app}-1.py".format( app=app ), "apps/{app}/{app}-1.py".format( app=app ) )
+		appInstall = env.InstallAs( os.path.join( installRoot, "apps", app, "{app}-1.py".format( app=app ) ), "apps/{app}/{app}-1.py".format( app=app ) )
 		env.Alias( "build", appInstall )
 
 	# startup files
 
 	for startupDir in libraryDef.get( "apps", [] ) + [ libraryName ] :
 		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) :
-			startupFileInstall = env.InstallAs( "$BUILD_DIR/" + startupFile, startupFile )
+			startupFileInstall = env.InstallAs( os.path.join( installRoot, startupFile ), startupFile )
 			env.Alias( "build", startupFileInstall )
 
 	# additional files
@@ -1211,13 +1241,13 @@ for libraryName, libraryDef in libraries.items() :
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
 		if additionalFile in pythonFiles :
 			continue
-		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
+		additionalFileInstall = env.InstallAs( os.path.join( installRoot, additionalFile ), additionalFile )
 		env.Alias( "build", additionalFileInstall )
 
 	# osl headers
 
 	for oslHeader in libraryDef.get( "oslHeaders", [] ) :
-		oslHeaderInstall = env.InstallAs( "$BUILD_DIR/" + oslHeader, oslHeader )
+		oslHeaderInstall = env.InstallAs( os.path.join( installRoot, oslHeader ), oslHeader )
 		env.Alias( "oslHeaders", oslHeaderInstall )
 		env.Alias( "build", oslHeaderInstall )
 
@@ -1229,7 +1259,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		env.Alias( "build", oslShader )
-		compiledFile = commandEnv.Command( "$BUILD_DIR/" + os.path.splitext( oslShader )[0] + ".oso", oslShader, buildOSL )
+		compiledFile = commandEnv.Command( os.path.join( installRoot, os.path.splitext( oslShader )[0] + ".oso" ), oslShader, buildOSL )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 
@@ -1248,7 +1278,7 @@ for libraryName, libraryDef in libraries.items() :
 		f.write( env.subst( "from $GAFFER_STUB_MODULE import $GAFFER_STUB_CLASS as %s" % classLoadableName ) )
 
 	for classStub in libraryDef.get( "classStubs", [] ) :
-		stubFileName = "$BUILD_DIR/" + classStub[1] + "/" + classStub[1].rpartition( "/" )[2] + "-1.py"
+		stubFileName = os.path.join( installRoot, classStub[1], classStub[1].rpartition( "/" )[2] + "-1.py" )
 		stubEnv = env.Clone(
 			GAFFER_STUB_MODULE = libraryName,
 			GAFFER_STUB_CLASS = classStub[0],
