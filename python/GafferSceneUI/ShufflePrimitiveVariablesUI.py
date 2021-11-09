@@ -47,9 +47,9 @@ Gaffer.Metadata.registerNode(
 	at the filtered locations. The deleteSource plugs may be used to remove the original source
 	primitive variable(s) after the shuffling has been completed.
 
-	An additional context variable \"${source}\" can be used on the destination plugs to insert
-	the name of each source primitive variable. For example, to prefix all primitive variables
-	with \"user:\" set the source to \"*\" and the destination to \"user:${source}\").
+	An additional context variable `${source}` can be used on the destination plugs to insert
+	the name of each source primitive variable. For example, to append `ref` to all primitive variables
+	set the source to `*` and the destination to `${source}ref`.
 	""",
 
 	plugs = {
