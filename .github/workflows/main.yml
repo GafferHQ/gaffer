@@ -139,9 +139,13 @@ jobs:
       # below.
       run: |
         echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
-        ./.github/workflows/main/installArnold.sh
+        # Remove old IECoreArnold components from Cortex build,
+        # as we will be replacing them with our own.
+        ## \todo Remove when we update to Cortex 10.3.
+        rm ${{ env.GAFFER_BUILD_DIR }}/lib/libIECoreArnold.*
+        rm -r ${{ env.GAFFER_BUILD_DIR }}/python/IECoreArnold
+        rm -r ${{ env.GAFFER_BUILD_DIR }}/include/IECoreArnold
         ./.github/workflows/main/installDelight.sh
-        echo ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot >> $GITHUB_ENV
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
 
     - name: Cache
@@ -165,6 +169,24 @@ jobs:
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test"
         echo "::remove-matcher owner=unittest::"
+
+    - name: Build and test Arnold extension
+      run: |
+        for arnoldVersion in 6.2.0.1 7.0.0.0
+        do
+          # Install Arnold
+          ./.github/workflows/main/installArnold.sh $arnoldVersion
+          export ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot/$arnoldVersion
+          # Build Arnold extension
+          scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+          # Test Arnold extension
+          echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
+          ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test GafferArnoldTest GafferArnoldUITest"
+          echo "::remove-matcher owner=unittest::"
+          # Publish ARNOLD_ROOT to the environment for subsequent steps,
+          # so we can build the docs for GafferArnold.
+          echo ARNOLD_ROOT=$ARNOLD_ROOT >> $GITHUB_ENV
+        done
 
     - name: Build Docs and Package
       # We currently experience sporadic hangs in the docs builds (mac), this

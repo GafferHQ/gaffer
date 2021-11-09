@@ -37,7 +37,12 @@
 
 set -e
 
-arnoldVersion=6.2.0.1
+if [ -z $1 ] ; then
+	echo "Usage : installArnold.sh arnoldVersion" >&2
+	exit 1
+fi
+
+arnoldVersion=$1
 
 if [[ `uname` = "Linux" ]] ; then
 	arnoldPlatform=linux
@@ -53,7 +58,7 @@ if [ ! -z "${ARNOLD_LOGIN}" ] && [ ! -z "${ARNOLD_PASSWORD}" ] ; then
 	login="${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@"
 fi
 
-mkdir -p arnoldRoot && cd arnoldRoot
+mkdir -p arnoldRoot/$arnoldVersion && cd arnoldRoot/$arnoldVersion
 
 echo Downloading Arnold "https://${url}"
 curl -L https://${login}${url} -o Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
