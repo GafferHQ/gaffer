@@ -618,7 +618,7 @@ Gaffer.Metadata.registerNode(
 			via the \"attributes\" plug.
 			""",
 
-			"userDefault", "user:",
+			"userDefault", "render:",
 			"layout:section", "Settings.Attributes",
 
 		],
