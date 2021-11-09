@@ -2331,7 +2331,11 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertTrue( "Permission denied" in mh.messages[0].message )
 
+	# This test runs OK in isolation, but previous uses of ArnoldRenderer seem
+	# to stop Arnold from writing the profile file.
+	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] == [ 7, 0, 0 ], "Profiling broken in Arnold 7" )
 	def testStatsAndLog( self ) :
+
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
@@ -2427,6 +2431,10 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
 	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] < [ 7, 0, 0 ], "Two renders not supported" )
+	# Arnold's message handling is broken. The errors from `AiNodeSetInt()` are sent
+	# to the render session for the default universe instead of the render session for
+	# the universe the node is in.
+	@unittest.expectedFailure
 	def testMessageHandlersForTwoRenders( self ) :
 
 		# Make two renderers, each with a different message handler.
