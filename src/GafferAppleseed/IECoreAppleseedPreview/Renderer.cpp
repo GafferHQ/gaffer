@@ -2799,8 +2799,9 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				return;
 			}
 
-			// Write directly user options to the configs.
-			if( boost::starts_with( name.c_str(), "user:" ) )
+			// Write directly render options to the configs.
+			/// \todo: Deprecate user: prefix after some reasonable transition period
+			if( boost::starts_with( name.c_str(), "render:" ) || boost::starts_with( name.c_str(), "user:" ) )
 			{
 				string optName( name.c_str() );
 				replace( optName.begin(), optName.end(), ':', '.' );
