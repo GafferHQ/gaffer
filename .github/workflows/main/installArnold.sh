@@ -49,8 +49,7 @@ url=forgithubci.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.
 
 # Configure the login information, if this has been supplied.
 login=""
-# TODO: Remove the extra var checks (!= $) once we no longer need Azure support.
-if [ ! -z "${ARNOLD_LOGIN}" ] && [ "${ARNOLD_LOGIN:0:1}" != "$" ] && [ -z "${ARNOLD_PASSWORD}" ] && [ "${ARNOLD_PASSWORD:0:1}" != "$" ]; then
+if [ ! -z "${ARNOLD_LOGIN}" ] && [ ! -z "${ARNOLD_PASSWORD}" ] ; then
 	login="${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@"
 fi
 

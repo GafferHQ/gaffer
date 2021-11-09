@@ -139,8 +139,8 @@ jobs:
       # below.
       run: |
         echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
-        ./config/installArnold.sh
-        ./config/installDelight.sh
+        ./.github/workflows/main/installArnold.sh
+        ./.github/workflows/main/installDelight.sh
         echo ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot >> $GITHUB_ENV
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
 
