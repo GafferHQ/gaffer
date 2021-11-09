@@ -629,6 +629,10 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 						params.add( m.first.c_str() + 3, d );
 					}
 				}
+				else if( boost::starts_with( m.first.string(), "render:" ) )
+				{
+					msg( Msg::Warning, "DelightRenderer", boost::format( "Render attribute \"%s\" not supported" ) % m.first.string() );
+				}
 				else if( boost::starts_with( m.first.string(), "user:" ) )
 				{
 					msg( Msg::Warning, "DelightRenderer", boost::format( "User attribute \"%s\" not supported" ) % m.first.string() );
@@ -1113,6 +1117,10 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				{
 					NSIDeleteAttribute( m_context, NSI_SCENE_GLOBAL, name.c_str() + 3 );
 				}
+			}
+			else if( boost::starts_with( name.string(), "render:" ) )
+			{
+				msg( Msg::Warning, "DelightRenderer::option", boost::format( "Render option \"%s\" not supported" ) % name.string() );
 			}
 			else if( boost::starts_with( name.string(), "user:" ) )
 			{
