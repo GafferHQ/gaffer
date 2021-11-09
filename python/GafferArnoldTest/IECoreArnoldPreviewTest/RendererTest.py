@@ -1246,6 +1246,20 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		r.object(
+			"plane3",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"user:testInt" : IECore.IntData( 3 ),
+					"user:testFloat" : IECore.FloatData( 3.5 ),
+					"user:testV3f" : IECore.V3fData( imath.V3f( 3, 2, 1 ) ),
+					"user:testColor3f" : IECore.Color3fData( imath.Color3f( 0, 0.5, 1 ) ),
+					"user:testString" : IECore.StringData( "i dunno about that" ),
+				} )
+			)
+		)
+
 		r.render()
 		del r
 
@@ -1266,6 +1280,13 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetVec( plane2, "render:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
 			self.assertEqual( arnold.AiNodeGetRGB( plane2, "render:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
 			self.assertEqual( arnold.AiNodeGetStr( plane2, "render:testString" ), "indeed" )
+
+			plane3 = arnold.AiNodeLookUpByName( universe, "plane3" )
+			self.assertEqual( arnold.AiNodeGetInt( plane3, "user:testInt" ), 3 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane3, "user:testFloat" ), 3.5 )
+			self.assertEqual( arnold.AiNodeGetVec( plane3, "user:testV3f" ), arnold.AtVector( 3, 2, 1 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane3, "user:testColor3f" ), arnold.AtRGB( 0, 0.5, 1 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane3, "user:testString" ), "i dunno about that" )
 
 	def testDisplacementAttributes( self ) :
 
