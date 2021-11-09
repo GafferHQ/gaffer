@@ -136,12 +136,12 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 		node = GafferOSL.OSLLight()
 		node.loadShader( shader )
 
-		m = Gaffer.NameValuePlug( "user:test", 10 )
+		m = Gaffer.NameValuePlug( "render:test", 10 )
 		node["attributes"].addChild( m )
-		self.assertEqual( node["out"].attributes( "/light" )["user:test"].value, 10 )
+		self.assertEqual( node["out"].attributes( "/light" )["render:test"].value, 10 )
 
 		m["value"].setValue( 20 )
-		self.assertEqual( node["out"].attributes( "/light" )["user:test"].value, 20 )
+		self.assertEqual( node["out"].attributes( "/light" )["render:test"].value, 20 )
 
 		node["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
 		node["visualiserAttributes"]["maxTextureResolution"]["value"].setValue( 512 )

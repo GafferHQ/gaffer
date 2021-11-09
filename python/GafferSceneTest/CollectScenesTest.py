@@ -129,23 +129,23 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 	def testGlobals( self ) :
 
 		options = GafferScene.CustomOptions()
-		options["options"].addChild( Gaffer.NameValuePlug( "user:test", "${collect:rootName}" ) )
-		self.assertTrue( "option:user:test" in options["out"]["globals"].getValue() )
+		options["options"].addChild( Gaffer.NameValuePlug( "render:test", "${collect:rootName}" ) )
+		self.assertTrue( "option:render:test" in options["out"]["globals"].getValue() )
 
 		collect = GafferScene.CollectScenes()
 		collect["in"].setInput( options["out"] )
 		collect["rootNames"].setValue( IECore.StringVectorData( [ "a", "b" ] ) )
 
-		self.assertEqual( collect["out"]["globals"].getValue()["option:user:test"], IECore.StringData( "a" ) )
+		self.assertEqual( collect["out"]["globals"].getValue()["option:render:test"], IECore.StringData( "a" ) )
 
 	def testMergeGlobals( self ) :
 
 		script = Gaffer.ScriptNode()
 
 		script["options"] = GafferScene.CustomOptions()
-		script["options"]["options"]["test1"] = Gaffer.NameValuePlug( "user:test1", "${collect:rootName}", True )
-		script["options"]["options"]["test2"] = Gaffer.NameValuePlug( "user:test2", "${collect:rootName}", True )
-		script["options"]["options"]["test3"] = Gaffer.NameValuePlug( "user:test3", "${collect:rootName}", True )
+		script["options"]["options"]["test1"] = Gaffer.NameValuePlug( "render:test1", "${collect:rootName}", True )
+		script["options"]["options"]["test2"] = Gaffer.NameValuePlug( "render:test2", "${collect:rootName}", True )
+		script["options"]["options"]["test3"] = Gaffer.NameValuePlug( "render:test3", "${collect:rootName}", True )
 
 		script["spreadsheet"] = Gaffer.Spreadsheet()
 		script["spreadsheet"]["selector"].setValue( "${collect:rootName}" )
@@ -169,8 +169,8 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			script["collect"]["out"].globals(),
 			IECore.CompoundObject( {
-				"option:user:test1" : IECore.StringData( "a" ),
-				"option:user:test2" : IECore.StringData( "a" ),
+				"option:render:test1" : IECore.StringData( "a" ),
+				"option:render:test2" : IECore.StringData( "a" ),
 			} )
 		)
 
@@ -181,9 +181,9 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			script["collect"]["out"].globals(),
 			IECore.CompoundObject( {
-				"option:user:test1" : IECore.StringData( "a" ),
-				"option:user:test2" : IECore.StringData( "b" ),
-				"option:user:test3" : IECore.StringData( "b" ),
+				"option:render:test1" : IECore.StringData( "a" ),
+				"option:render:test2" : IECore.StringData( "b" ),
+				"option:render:test3" : IECore.StringData( "b" ),
 			} )
 		)
 

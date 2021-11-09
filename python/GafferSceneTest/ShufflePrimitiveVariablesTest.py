@@ -74,21 +74,21 @@ class ShufflePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		# shuffle with wildcards
 		shuffles["shuffles"][1]["source"].setValue( "t*n*" )
-		shuffles["shuffles"][1]["destination"].setValue( "user:${source}" )
+		shuffles["shuffles"][1]["destination"].setValue( "render:${source}" )
 		result = shuffles["out"].object( "/sphere" )
-		self.assertEqual( set( result.keys() ), set( original.keys() ) | { "Pref", "user:ten", "user:twenty" } )
+		self.assertEqual( set( result.keys() ), set( original.keys() ) | { "Pref", "render:ten", "render:twenty" } )
 		self.assertEqual( result["Pref"], result["P"] )
-		self.assertEqual( result["user:ten"], result["ten"] )
-		self.assertEqual( result["user:twenty"], result["twenty"] )
+		self.assertEqual( result["render:ten"], result["ten"] )
+		self.assertEqual( result["render:twenty"], result["twenty"] )
 
 		# delete source primvars
 		shuffles["shuffles"][0]["deleteSource"].setValue( True )
 		shuffles["shuffles"][1]["deleteSource"].setValue( True )
 		result = shuffles["out"].object( "/sphere" )
-		self.assertEqual( set( result.keys() ), { "Pref", "N", "uv", "user:ten", "user:twenty" } )
+		self.assertEqual( set( result.keys() ), { "Pref", "N", "uv", "render:ten", "render:twenty" } )
 		self.assertEqual( result["Pref"], original["P"] )
-		self.assertEqual( result["user:ten"], original["ten"] )
-		self.assertEqual( result["user:twenty"], original["twenty"] )
+		self.assertEqual( result["render:ten"], original["ten"] )
+		self.assertEqual( result["render:twenty"], original["twenty"] )
 
 	def testBoundUpdate( self ) :
 

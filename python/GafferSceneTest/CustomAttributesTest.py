@@ -113,12 +113,12 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		a["in"].setInput( input["out"] )
 
 		a["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( 0.25 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		a["attributes"].addChild( Gaffer.NameValuePlug( "user:something", IECore.IntData( 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "render:something", IECore.IntData( 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual(
 			a["out"].attributes( "/ball1" ),
 			IECore.CompoundObject( {
 				"ri:shadingRate" : IECore.FloatData( 0.25 ),
-				"user:something" : IECore.IntData( 1 ),
+				"render:something" : IECore.IntData( 1 ),
 			} )
 		)
 
@@ -129,19 +129,19 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			a2["out"].attributes( "/ball1" ),
 			IECore.CompoundObject( {
 				"ri:shadingRate" : IECore.FloatData( 0.25 ),
-				"user:something" : IECore.IntData( 1 ),
+				"render:something" : IECore.IntData( 1 ),
 			} )
 		)
 
 		a2["attributes"].addChild( Gaffer.NameValuePlug( "ri:shadingRate", IECore.FloatData( .5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		a2["attributes"].addChild( Gaffer.NameValuePlug( "user:somethingElse", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		a2["attributes"].addChild( Gaffer.NameValuePlug( "render:somethingElse", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		self.assertEqual(
 			a2["out"].attributes( "/ball1" ),
 			IECore.CompoundObject( {
 				"ri:shadingRate" : IECore.FloatData( 0.5 ),
-				"user:something" : IECore.IntData( 1 ),
-				"user:somethingElse" : IECore.IntData( 10 ),
+				"render:something" : IECore.IntData( 1 ),
+				"render:somethingElse" : IECore.IntData( 10 ),
 			} )
 		)
 
@@ -235,15 +235,15 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s["p"] = GafferScene.Plane()
 		s["f"] = GafferScene.PathFilter()
 		s["a"] = GafferScene.CustomAttributes()
-		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "user:test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "render:test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
-		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertTrue( "render:test" in s["a"]["out"].attributes( "/plane" ) )
 
 		s["a"]["filter"].setInput( s["f"]["out"] )
-		self.assertFalse( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertFalse( "render:test" in s["a"]["out"].attributes( "/plane" ) )
 
 		s["a"]["filter"].setInput( None )
-		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertTrue( "render:test" in s["a"]["out"].attributes( "/plane" ) )
 
 	def testCopyPasteDoesntRetainFilterValue( self ) :
 
@@ -252,13 +252,13 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s["p"] = GafferScene.Plane()
 		s["f"] = GafferScene.PathFilter()
 		s["a"] = GafferScene.CustomAttributes()
-		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "user:test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["a"]["attributes"].addChild( Gaffer.NameValuePlug( "render:test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
-		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertTrue( "render:test" in s["a"]["out"].attributes( "/plane" ) )
 
 		s["a"]["filter"].setInput( s["f"]["out"] )
 
-		self.assertFalse( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertFalse( "render:test" in s["a"]["out"].attributes( "/plane" ) )
 
 		ss = s.serialise( filter = Gaffer.StandardSet( [ s["p"], s["a"] ] ) )
 
@@ -266,7 +266,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s.execute( ss )
 
 		self.assertTrue( "f" not in s )
-		self.assertTrue( "user:test" in s["a"]["out"].attributes( "/plane" ) )
+		self.assertTrue( "render:test" in s["a"]["out"].attributes( "/plane" ) )
 
 	def testOutPlugNotSerialised( self ) :
 
@@ -281,7 +281,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["a"] = GafferScene.CustomAttributes()
-		p = Gaffer.NameValuePlug( "user:test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		p = Gaffer.NameValuePlug( "render:test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["a"]["attributes"].addChild( p )
 		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
 		self.assertEqual( set( s["a"].affects( s["a"]["extraAttributes"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )

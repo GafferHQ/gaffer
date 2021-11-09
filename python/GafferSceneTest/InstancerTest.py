@@ -1453,14 +1453,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		instancer["attributePrefix"].setValue( "user:" )
+		instancer["attributePrefix"].setValue( "render:" )
 
 		self.assertEqual(
 			instancer["out"].attributes( "/object/instances/sphere/0" ),
 			IECore.CompoundObject( {
-				"user:testFloat" : IECore.FloatData( 0.0 ),
-				"user:testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
-				"user:testPoint" : IECore.V3fData(
+				"render:testFloat" : IECore.FloatData( 0.0 ),
+				"render:testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
+				"render:testPoint" : IECore.V3fData(
 					imath.V3f( 0 ),
 					IECore.GeometricData.Interpretation.Point
 				)
@@ -1470,9 +1470,9 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			instancer["out"].attributes( "/object/instances/sphere/1" ),
 			IECore.CompoundObject( {
-				"user:testFloat" : IECore.FloatData( 1.0 ),
-				"user:testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
-				"user:testPoint" : IECore.V3fData(
+				"render:testFloat" : IECore.FloatData( 1.0 ),
+				"render:testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
+				"render:testPoint" : IECore.V3fData(
 					imath.V3f( 1 ),
 					IECore.GeometricData.Interpretation.Point
 				)

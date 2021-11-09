@@ -144,16 +144,16 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.CustomAttributes()
 		a["in"].setInput( d["out"] )
-		a["attributes"].addChild( Gaffer.NameValuePlug( "user:a", 10 ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "render:a", 10 ) )
 		a["filter"].setInput( f["out"] )
 
 		# We haven't deleted the set yet, so we should get
 		# the attribute.
-		self.assertTrue( "user:a" in a["out"].attributes( "/plane" ) )
+		self.assertTrue( "render:a" in a["out"].attributes( "/plane" ) )
 
 		# Delete the set, and the attribute should go away.
 		d["names"].setValue( "test" )
-		self.assertFalse( "user:a" in a["out"].attributes( "/plane" ) )
+		self.assertFalse( "render:a" in a["out"].attributes( "/plane" ) )
 
 	def testCantDeleteInternalSets( self ) :
 

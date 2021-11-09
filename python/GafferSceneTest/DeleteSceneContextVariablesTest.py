@@ -51,7 +51,7 @@ class DeleteSceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		a = GafferScene.Attributes()
 		a["in"].setInput( p["out"] )
-		a["attributes"].addChild( Gaffer.NameValuePlug( "user:something", IECore.StringData( "$a" ) ) )
+		a["attributes"].addChild( Gaffer.NameValuePlug( "render:something", IECore.StringData( "$a" ) ) )
 
 		d = Gaffer.DeleteContextVariables()
 		d.setup( GafferScene.ScenePlug() )
@@ -62,11 +62,11 @@ class DeleteSceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
 		c["in"].setInput( d["out"] )
 		c["variables"].addChild( Gaffer.NameValuePlug( "a", IECore.StringData( "aardvark" ) ) )
 
-		self.assertEqual( a["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
-		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "aardvark" ) )
+		self.assertEqual( a["out"].attributes( "/plane" )["render:something"], IECore.StringData( "" ) )
+		self.assertEqual( c["out"].attributes( "/plane" )["render:something"], IECore.StringData( "aardvark" ) )
 
 		d["variables"].setValue( "a" )
-		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
+		self.assertEqual( c["out"].attributes( "/plane" )["render:something"], IECore.StringData( "" ) )
 
 if __name__ == "__main__":
 	unittest.main()

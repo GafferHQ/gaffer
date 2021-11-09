@@ -389,7 +389,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		sphereSet["in"].setInput( options["out"] )
 
 		globalAttr = GafferScene.CustomAttributes()
-		globalAttrPlug = Gaffer.NameValuePlug( "user:globalAttr", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		globalAttrPlug = Gaffer.NameValuePlug( "render:globalAttr", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		globalAttr["attributes"].addChild( globalAttrPlug )
 		globalAttr["global"].setValue( True )
 
@@ -401,7 +401,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		groupAttrFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
 		sphereAttr = GafferScene.CustomAttributes()
-		sphereAttrPlug = Gaffer.NameValuePlug( "user:localAttr2", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		sphereAttrPlug = Gaffer.NameValuePlug( "render:localAttr2", IECore.IntData( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		sphereAttr["attributes"].addChild( sphereAttrPlug )
 		sphereAttrFilter = GafferScene.PathFilter()
 		sphereAttr["filter"].setInput( sphereAttrFilter["out"] )
@@ -422,9 +422,9 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			capturedSphere.capturedAttributes().attributes(),
 			IECore.CompoundObject( {
-				"user:globalAttr" : IECore.IntData( 0 ),
+				"render:globalAttr" : IECore.IntData( 0 ),
 				"localAttr1" : IECore.IntData( 0 ),
-				"user:localAttr2" : IECore.IntData( 0 ),
+				"render:localAttr2" : IECore.IntData( 0 ),
 				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
 			} )
 		)
@@ -436,9 +436,9 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			capturedSphere.capturedAttributes().attributes(),
 			IECore.CompoundObject( {
-				"user:globalAttr" : IECore.IntData( 0 ),
+				"render:globalAttr" : IECore.IntData( 0 ),
 				"localAttr1" : IECore.IntData( 0 ),
-				"user:localAttr2" : IECore.IntData( 1 ),
+				"render:localAttr2" : IECore.IntData( 1 ),
 				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
 			} )
 		)
@@ -450,9 +450,9 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			capturedSphere.capturedAttributes().attributes(),
 			IECore.CompoundObject( {
-				"user:globalAttr" : IECore.IntData( 0 ),
+				"render:globalAttr" : IECore.IntData( 0 ),
 				"localAttr1" : IECore.IntData( 2 ),
-				"user:localAttr2" : IECore.IntData( 1 ),
+				"render:localAttr2" : IECore.IntData( 1 ),
 				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
 			} )
 		)
@@ -464,9 +464,9 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			capturedSphere.capturedAttributes().attributes(),
 			IECore.CompoundObject( {
-				"user:globalAttr" : IECore.IntData( 3 ),
+				"render:globalAttr" : IECore.IntData( 3 ),
 				"localAttr1" : IECore.IntData( 2 ),
-				"user:localAttr2" : IECore.IntData( 1 ),
+				"render:localAttr2" : IECore.IntData( 1 ),
 				"sets" : IECore.InternedStringVectorData( [ "spheres" ] )
 			} )
 		)
@@ -478,9 +478,9 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			capturedSphere.capturedAttributes().attributes(),
 			IECore.CompoundObject( {
-				"user:globalAttr" : IECore.IntData( 3 ),
+				"render:globalAttr" : IECore.IntData( 3 ),
 				"localAttr1" : IECore.IntData( 2 ),
-				"user:localAttr2" : IECore.IntData( 1 ),
+				"render:localAttr2" : IECore.IntData( 1 ),
 				"sets" : IECore.InternedStringVectorData( [ ] )
 			} )
 		)

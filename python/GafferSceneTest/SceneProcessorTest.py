@@ -86,13 +86,13 @@ class SceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 
 				self["__red"] = GafferScene.StandardAttributes()
 				self["__red"]["in"].setInput( self["in"] )
-				self["__red"]["attributes"].addChild( Gaffer.NameValuePlug( "user:matteColor", imath.Color3f( 1, 0, 0 ) ) )
+				self["__red"]["attributes"].addChild( Gaffer.NameValuePlug( "render:matteColor", imath.Color3f( 1, 0, 0 ) ) )
 				self["redFilter"] = self["__red"]["filter"].createCounterpart( "redFilter", Gaffer.Plug.Direction.In )
 				self["__red"]["filter"].setInput( self["redFilter"] )
 
 				self["__green"] = GafferScene.StandardAttributes()
 				self["__green"]["in"].setInput( self["__red"]["out"] )
-				self["__green"]["attributes"].addChild( Gaffer.NameValuePlug( "user:matteColor", imath.Color3f( 0, 1, 0 ) ) )
+				self["__green"]["attributes"].addChild( Gaffer.NameValuePlug( "render:matteColor", imath.Color3f( 0, 1, 0 ) ) )
 				self["greenFilter"] = self["__green"]["filter"].createCounterpart( "greenFilter", Gaffer.Plug.Direction.In )
 				self["__green"]["filter"].setInput( self["greenFilter"] )
 
@@ -118,8 +118,8 @@ class SceneProcessorTest( GafferSceneTest.SceneTestCase ) :
 		a["greenFilter"].setInput( f2["out"] )
 
 		self.assertEqual( a["out"].attributes( "/group" ), IECore.CompoundObject() )
-		self.assertEqual( a["out"].attributes( "/group/sphere" )["user:matteColor"].value, imath.Color3f( 1, 0, 0 ) )
-		self.assertEqual( a["out"].attributes( "/group/sphere1" )["user:matteColor"].value, imath.Color3f( 0, 1, 0 ) )
+		self.assertEqual( a["out"].attributes( "/group/sphere" )["render:matteColor"].value, imath.Color3f( 1, 0, 0 ) )
+		self.assertEqual( a["out"].attributes( "/group/sphere1" )["render:matteColor"].value, imath.Color3f( 0, 1, 0 ) )
 
 	def testScriptedSubGraph( self ) :
 

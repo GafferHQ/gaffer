@@ -115,7 +115,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		# create node inheriting from SceneNode:
 		node = GafferScene.CustomAttributes()
-		node["attributes"].addChild( Gaffer.NameValuePlug( "user:foobar", True, True ) )
+		node["attributes"].addChild( Gaffer.NameValuePlug( "render:foobar", True, True ) )
 
 		# scene nodes always have passthrough behaviour for attributes at the root, so this particular one should return an empty compound object:
 		context = Gaffer.Context()
@@ -126,7 +126,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		# unless the caching system is misbehaving, it should return the attribute values we asked for at other locations:
 		context.set( "scene:path", IECore.InternedStringVectorData(["yup"]) )
 		with context:
-			self.assertEqual( node["out"]["attributes"].getValue(), IECore.CompoundObject({'user:foobar':IECore.BoolData( 1 )}) )
+			self.assertEqual( node["out"]["attributes"].getValue(), IECore.CompoundObject({'render:foobar':IECore.BoolData( 1 )}) )
 
 	def testRootObject( self ):
 
