@@ -49,7 +49,7 @@ Gaffer.Metadata.registerNode(
 
 	An additional context variable \"${source}\" can be used on the destination plugs to insert
 	the name of each source primitive variable. For example, to prefix all primitive variables
-	with \"user:\" set the source to \"*\" and the destination to \"user:${source}\").
+	with \"render:\" set the source to \"*\" and the destination to \"render:${source}\").
 	""",
 
 	plugs = {

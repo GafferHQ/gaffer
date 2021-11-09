@@ -125,7 +125,7 @@ Gaffer.Metadata.registerValue( Gaffer.ShufflePlug,
 	"description",
 	"""
 	The name(s) of the destination data to be created. Use \"${source}\" to insert the name of the source data.\n
-	For example, to prefix all data with \"user:\" set the destination to \"user:${source}\").
+	For example, to prefix all data with \"render:\" set the destination to \"render:${source}\").
 	"""
 )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "deleteSource", "description", "Enable to delete the source data after shuffling to the destination(s)." )
