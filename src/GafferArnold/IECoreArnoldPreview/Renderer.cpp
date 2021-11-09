@@ -815,6 +815,15 @@ IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
 IECore::InternedString g_filteredLights( "filteredLights" );
 
+IECore::InternedString g_renderPrefix( "render:" );
+IECore::InternedString g_userPrefix( "user:" );
+
+bool isRenderAttribute( const char *name )
+{
+	/// \todo: Deprecate user: prefix after some reasonable transition period
+	return boost::starts_with( name, g_renderPrefix.c_str() ) || boost::starts_with( name, g_userPrefix.c_str() );
+}
+
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -879,11 +888,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
-				if( boost::starts_with( it->first.string(), "user:" ) )
+				if( isRenderAttribute( it->first.c_str() ) )
 				{
 					if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
 					{
-						m_user[it->first] = data;
+						m_renderAttributes[it->first] = data;
 					}
 				}
 
@@ -1084,9 +1093,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				const AtUserParamEntry *param = AiUserParamIteratorGetNext( it );
 				const char *name = AiUserParamGetName( param );
-				if( boost::starts_with( name, "user:" ) )
+				if( isRenderAttribute( name ) )
 				{
-					if( m_user.find( name ) == m_user.end() )
+					if( m_renderAttributes.find( name ) == m_renderAttributes.end() )
 					{
 						AiNodeResetParameter( node, name );
 					}
@@ -1096,9 +1105,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			// Add user parameters we do want.
 
-			for( ArnoldAttributes::UserAttributes::const_iterator it = m_user.begin(), eIt = m_user.end(); it != eIt; ++it )
+			for( const auto &attr : m_renderAttributes )
 			{
-				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
+				ParameterAlgo::setParameter( node, attr.first.c_str(), attr.second.get() );
 			}
 
 			// Early out for IECoreScene::Procedurals. Arnold's inheritance rules for procedurals are back
@@ -1712,8 +1721,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstStringDataPtr m_sssSetName;
 		// When adding fields, please update `hashProceduralGeometry()`!
 
-		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
-		UserAttributes m_user;
+		using RenderAttributes = boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr>;
+		RenderAttributes m_renderAttributes;
 
 		// The original attributes we were contructed from. We stash
 		// these so that they can be inherited manually when expanding
@@ -2624,7 +2633,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			IECore::CompoundObjectPtr fullAttributes = new IECore::CompoundObject;
 			for( const auto &a : m_attributesToInherit->members() )
 			{
-				if( !boost::starts_with( a.first.c_str(), "user:" ) )
+				if( !isRenderAttribute( a.first.c_str() ) )
 				{
 					// We ignore user attributes because they follow normal inheritance
 					// in Arnold anyway. They will be written onto the `ginstance` node
@@ -3388,7 +3397,7 @@ class ArnoldGlobals
 					return;
 				}
 			}
-			else if( boost::starts_with( name.c_str(), "user:" ) )
+			else if( isRenderAttribute( name.c_str() ) )
 			{
 				AtString arnoldName( name.c_str() );
 				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
