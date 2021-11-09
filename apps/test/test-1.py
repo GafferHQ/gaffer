@@ -166,7 +166,8 @@ class test( Gaffer.Application ) :
 
 		result = set()
 		for path in sys.path :
-			for m in glob.glob( os.path.join( path, "Gaffer*Test" ) ) :
+			modules = glob.glob( os.path.join( path, "Gaffer*Test" ) ) + glob.glob( os.path.join( path, "IECore*Test" ) )
+			for m in modules :
 				result.add( os.path.basename( m ) )
 
 		return sorted( result )

@@ -181,7 +181,7 @@ jobs:
           scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
           # Test Arnold extension
           echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-          ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test GafferArnoldTest GafferArnoldUITest"
+          ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest"
           echo "::remove-matcher owner=unittest::"
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.

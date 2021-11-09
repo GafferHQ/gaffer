@@ -33,7 +33,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnold/ParameterAlgo.h"
+#include "IECoreArnold/ParameterAlgo.h"
 
 #include "IECoreImage/DisplayDriver.h"
 

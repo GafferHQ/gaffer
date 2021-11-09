@@ -48,6 +48,7 @@ import six
 import IECore
 import IECoreImage
 import IECoreScene
+import IECoreArnold
 
 import Gaffer
 import GafferTest
@@ -58,8 +59,6 @@ import GafferSceneTest
 import GafferOSL
 import GafferArnold
 import GafferArnoldTest
-
-from GafferArnold.Private import IECoreArnold
 
 class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 

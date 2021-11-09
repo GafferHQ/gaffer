@@ -866,10 +866,35 @@ libraries = {
 		},
 	},
 
+	"IECoreArnold" : {
+		"envAppends" : {
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			## \todo Remove GafferScene. We need it at present to get access to `IECoreScenePreview::Renderer`,
+			# but IECoreArnold must never depend on Gaffer code; logically it is in the layer below Gaffer.
+			"LIBS" : [ "GafferScene", "ai", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX" ],
+			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
+			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
+			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
+			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
+		},
+		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"installRoot" : arnoldInstallRoot,
+	},
+
+	"IECoreArnoldTest" : {
+		"additionalFiles" : [ "python/IECoreArnoldTest/metadata", "python/IECoreArnoldTest/assFiles" ],
+		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"installRoot" : arnoldInstallRoot,
+	},
+
 	"GafferArnold" : {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "GafferOSL" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreArnold", "GafferOSL" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
@@ -885,7 +910,7 @@ libraries = {
 	},
 
 	"GafferArnoldTest" : {
-		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ) + [ "python/GafferArnoldTest/IECoreArnoldTest/metadata", "python/GafferArnoldTest/IECoreArnoldTest/assFiles" ],
+		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ) + glob.glob( "python/GafferArnoldTest/images/*" ),
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"installRoot" : arnoldInstallRoot,
 	},
@@ -913,7 +938,7 @@ libraries = {
 	"GafferArnoldPlugin" : {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "GafferArnold" ],
+			"LIBS" : [ "IECoreArnold" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},

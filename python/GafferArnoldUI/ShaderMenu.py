@@ -41,11 +41,10 @@ import collections
 import arnold
 
 import IECore
+import IECoreArnold
 
 import GafferUI
 import GafferArnold
-
-from GafferArnold.Private import IECoreArnold
 
 ## \todo Rename. This isn't about loading shaders, it's about loading all sorts
 # of Arnold node definitions.
