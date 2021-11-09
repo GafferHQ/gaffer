@@ -1210,7 +1210,7 @@ class RendererTest( GafferTest.TestCase ) :
 			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
 
-	def testUserAttributes( self ) :
+	def testRenderAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
@@ -1223,11 +1223,11 @@ class RendererTest( GafferTest.TestCase ) :
 			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
-					"user:testInt" : IECore.IntData( 1 ),
-					"user:testFloat" : IECore.FloatData( 2.5 ),
-					"user:testV3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
-					"user:testColor3f" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ),
-					"user:testString" : IECore.StringData( "we're all doomed" ),
+					"render:testInt" : IECore.IntData( 1 ),
+					"render:testFloat" : IECore.FloatData( 2.5 ),
+					"render:testV3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+					"render:testColor3f" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ),
+					"render:testString" : IECore.StringData( "we're all doomed" ),
 				} )
 			)
 		)
@@ -1237,11 +1237,11 @@ class RendererTest( GafferTest.TestCase ) :
 			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
-					"user:testInt" : IECore.IntData( 2 ),
-					"user:testFloat" : IECore.FloatData( 25 ),
-					"user:testV3f" : IECore.V3fData( imath.V3f( 0, 1, 0 ) ),
-					"user:testColor3f" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0 ) ),
-					"user:testString" : IECore.StringData( "indeed" ),
+					"render:testInt" : IECore.IntData( 2 ),
+					"render:testFloat" : IECore.FloatData( 25 ),
+					"render:testV3f" : IECore.V3fData( imath.V3f( 0, 1, 0 ) ),
+					"render:testColor3f" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0 ) ),
+					"render:testString" : IECore.StringData( "indeed" ),
 				} )
 			)
 		)
@@ -1254,18 +1254,18 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( universe, self.temporaryDirectory() + "/test.ass" )
 
 			plane1 = arnold.AiNodeLookUpByName( universe, "plane1" )
-			self.assertEqual( arnold.AiNodeGetInt( plane1, "user:testInt" ), 1 )
-			self.assertEqual( arnold.AiNodeGetFlt( plane1, "user:testFloat" ), 2.5 )
-			self.assertEqual( arnold.AiNodeGetVec( plane1, "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
-			self.assertEqual( arnold.AiNodeGetRGB( plane1, "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
-			self.assertEqual( arnold.AiNodeGetStr( plane1, "user:testString" ), "we're all doomed" )
+			self.assertEqual( arnold.AiNodeGetInt( plane1, "render:testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane1, "render:testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( plane1, "render:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane1, "render:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane1, "render:testString" ), "we're all doomed" )
 
 			plane2 = arnold.AiNodeLookUpByName( universe, "plane2" )
-			self.assertEqual( arnold.AiNodeGetInt( plane2, "user:testInt" ), 2 )
-			self.assertEqual( arnold.AiNodeGetFlt( plane2, "user:testFloat" ), 25 )
-			self.assertEqual( arnold.AiNodeGetVec( plane2, "user:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
-			self.assertEqual( arnold.AiNodeGetRGB( plane2, "user:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
-			self.assertEqual( arnold.AiNodeGetStr( plane2, "user:testString" ), "indeed" )
+			self.assertEqual( arnold.AiNodeGetInt( plane2, "render:testInt" ), 2 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane2, "render:testFloat" ), 25 )
+			self.assertEqual( arnold.AiNodeGetVec( plane2, "render:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane2, "render:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane2, "render:testString" ), "indeed" )
 
 	def testDisplacementAttributes( self ) :
 
@@ -2599,8 +2599,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Because we have to manually emulate attribute inheritance for procedural contents,
 		# we have to be careful not to instance identical procedurals if they have different
-		# attributes. We must make an exception for "user:" attributes though, since Arnold
-		# does support those properly, and it is very common to vary user attributes on
+		# attributes. We must make an exception for "render:" attributes though, since Arnold
+		# does support those properly, and it is very common to vary render attributes on
 		# otherwise identical procedurals (think GafferScene::Instancer).
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -2612,12 +2612,12 @@ class RendererTest( GafferTest.TestCase ) :
 			"defaultAttributes" : IECore.CompoundObject(),
 			"cameraOnAttributes" : IECore.CompoundObject( { "ai:visibility:camera" : IECore.BoolData( True ) } ),
 			"cameraOffAttributes" : IECore.CompoundObject( { "ai:visibility:camera" : IECore.BoolData( False ) } ),
-			"userAttributes" : IECore.CompoundObject( { "user:a" : IECore.IntData( 10 ) } ),
-			"userAttributes2" : IECore.CompoundObject( { "user:a" : IECore.IntData( 11 ), "user:b" : IECore.IntData( 12 ) } ),
+			"renderAttributes" : IECore.CompoundObject( { "render:a" : IECore.IntData( 10 ) } ),
+			"renderAttributes2" : IECore.CompoundObject( { "render:a" : IECore.IntData( 11 ), "render:b" : IECore.IntData( 12 ) } ),
 		}
 
-		attributeVariants["cameraOffUserAttributes"] = attributeVariants["userAttributes"].copy()
-		attributeVariants["cameraOffUserAttributes"].update( attributeVariants["cameraOffAttributes"] )
+		attributeVariants["cameraOffRenderAttributes"] = attributeVariants["renderAttributes"].copy()
+		attributeVariants["cameraOffRenderAttributes"].update( attributeVariants["cameraOffAttributes"] )
 
 		objectVariants = {}
 		for name, attributes in attributeVariants.items() :
@@ -2635,10 +2635,10 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( self.__allNodes( universe, nodeEntryName = "ginstance" ) ), len( attributeVariants ) )
 
 		instanceSharers = [
-			# All the same because camera visibility is on, and user attributes arent' relevant.
-			( "defaultAttributes", "cameraOnAttributes", "userAttributes", "userAttributes2" ),
+			# All the same because camera visibility is on, and render attributes arent' relevant.
+			( "defaultAttributes", "cameraOnAttributes", "renderAttributes", "renderAttributes2" ),
 			# All the same because camera visibility is off.
-			( "cameraOffAttributes", "cameraOffUserAttributes" ),
+			( "cameraOffAttributes", "cameraOffRenderAttributes" ),
 		]
 
 		for sharers in instanceSharers :
@@ -2651,13 +2651,13 @@ class RendererTest( GafferTest.TestCase ) :
 					arnold.AiNodeGetPtr( firstNode, "node" ),
 				)
 
-		# Check that the user attributes are applied on the `ginstance` nodes.
+		# Check that the render attributes are applied on the `ginstance` nodes.
 
 		for name, attributes in attributeVariants.items() :
 
 			node = arnold.AiNodeLookUpByName( universe, name )
 			for attributeName, attributeValue in attributes.items() :
-				if attributeName.startswith( "user:" ) :
+				if attributeName.startswith( "render:" ) :
 					self.assertEqual(
 						arnold.AiNodeGetInt( node, attributeName ),
 						attributeValue.value
@@ -2678,7 +2678,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		# Check that the user attributes are not applied to the child nodes
+		# Check that the render attributes are not applied to the child nodes
 		# generated by the procedurals.
 
 		renderer.output(
@@ -2695,8 +2695,8 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 
 		for sphere in self.__allNodes( universe, nodeEntryName = "sphere" ) :
-			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:a" ) )
-			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "user:b" ) )
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "render:a" ) )
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( sphere, "render:b" ) )
 
 	def testProceduralWithCurves( self ) :
 

@@ -190,11 +190,11 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 
 		flat = IECoreScene.Shader( "flat" )
 		flat.blindData().update( {
-				"user:testInt" : IECore.IntData( 1 ),
-				"user:testFloat" : IECore.FloatData( 2.5 ),
-				"user:testV3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
-				"user:testColor3f" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ),
-				"user:testString" : IECore.StringData( "we're all doomed" ),
+				"render:testInt" : IECore.IntData( 1 ),
+				"render:testFloat" : IECore.FloatData( 2.5 ),
+				"render:testV3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+				"render:testColor3f" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ),
+				"render:testString" : IECore.StringData( "we're all doomed" ),
 		} )
 
 		network = IECoreScene.ShaderNetwork(
@@ -219,11 +219,11 @@ class ShaderNetworkAlgoTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetName( nodes[0] ), "test:noiseHandle" )
 			self.assertEqual( arnold.AiNodeGetName( nodes[1] ), "test" )
 
-			self.assertEqual( arnold.AiNodeGetInt( nodes[1], "user:testInt" ), 1 )
-			self.assertEqual( arnold.AiNodeGetFlt( nodes[1], "user:testFloat" ), 2.5 )
-			self.assertEqual( arnold.AiNodeGetVec( nodes[1], "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
-			self.assertEqual( arnold.AiNodeGetRGB( nodes[1], "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
-			self.assertEqual( arnold.AiNodeGetStr( nodes[1], "user:testString" ), "we're all doomed" )
+			self.assertEqual( arnold.AiNodeGetInt( nodes[1], "render:testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( nodes[1], "render:testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( nodes[1], "render:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( nodes[1], "render:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( nodes[1], "render:testString" ), "we're all doomed" )
 
 if __name__ == "__main__":
 	unittest.main()
