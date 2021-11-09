@@ -732,7 +732,7 @@ __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SwitchColor"]["paramete
 __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SwitchColor"]["parameters"]["input4"].setValue( imath.Color3f( 1.79999995, 0.358559966, 0.161999956 ) )
 __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SwitchColor"]["parameters"]["input5"].setValue( imath.Color3f( 0.129999995, 0.129999995, 0.129999995 ) )
 __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SwitchColor"]["__uiPosition"].setValue( imath.V2f( 74.058403, 108.172836 ) )
-__children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["InInt"]["parameters"]["name"].setValue( 'user:seed' )
+__children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["InInt"]["parameters"]["name"].setValue( 'render:seed' )
 __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["InInt"]["__uiPosition"].setValue( imath.V2f( 62.4734421, 109.972824 ) )
 __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SpecWeighting"]["parameters"]["r"].setValue( 0.30000001192092896 )
 __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SpecWeighting"]["parameters"]["g"].setInput( __children["Assets"]["Gaffy"]["GaffyArnold"]["LookDev"]["SpecWeighting"]["parameters"]["r"] )
