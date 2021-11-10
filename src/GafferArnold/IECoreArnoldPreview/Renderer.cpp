@@ -3397,7 +3397,7 @@ class ArnoldGlobals
 					return;
 				}
 			}
-			else if( isRenderAttribute( name.c_str() ) )
+			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
 				AtString arnoldName( name.c_str() );
 				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
