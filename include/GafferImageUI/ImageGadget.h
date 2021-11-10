@@ -58,6 +58,8 @@
 
 #include "OpenColorIO/OpenColorIO.h"
 
+#include "boost/functional/hash.hpp"
+
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/spin_mutex.h"
 
