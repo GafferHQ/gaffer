@@ -2424,8 +2424,13 @@ class RendererTest( GafferTest.TestCase ) :
 				del r
 
 				# We should have at least 1 message from our invalid option plus
-				# _something_ from the renderers own output stream.
-				self.assertGreater( len(handler.messages), 1, msg=str(renderType) )
+				# _something_ from the renderer's own output stream.
+				if renderType == RenderType.SceneDescription and arnold.AiGetVersion()[:3] == [ '7', '0', '0' ] :
+					# A bug in Arnold associates the `[ ass ] Writing...` message with the wrong render session
+					# in the message callback.
+					pass
+				else :
+					self.assertGreater( len(handler.messages), 1, msg=str(renderType) )
 
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
