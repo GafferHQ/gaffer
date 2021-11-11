@@ -256,7 +256,7 @@ if [[ $ARNOLD_ROOT ]] ; then
 
 		if [[ -d "$GAFFER_ROOT/arnold/$arnoldVersion" ]] ; then
 			prependToPath "$GAFFER_ROOT/arnold/$arnoldVersion" GAFFER_EXTENSION_PATHS
-			prependToPath "$GAFFER_ROOT/arnold/$arnoldVersion/arnoldPlugins" ARNOLD_PLUGIN_PATH
+			prependToPath "$ARNOLD_ROOT/plugins:$GAFFER_ROOT/arnold/$arnoldVersion/arnoldPlugins" ARNOLD_PLUGIN_PATH
 		else
 			echo "WARNING : GafferArnold extension not available for Arnold $arnoldVersion" >&2
 		fi
