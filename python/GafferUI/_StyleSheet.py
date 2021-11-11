@@ -317,9 +317,19 @@ _styleSheet = string.Template(
 	}
 
 	QMenu::indicator {
+		width: 15px;
 		padding: 0px 0px 0px 3px;
+		/*
+		Work around https://bugreports.qt.io/browse/QTBUG-90242. In Qt 5.12,
+		indicators are not accounted for in the text layout, instead they are
+		rendered into the space reserved by the left padding of `QMenu::item`. In
+		Qt 5.15.2, indicators are accounted for in the layout, shunting
+		the text to the right. This _is_ logical, but it causes misalignment
+		between checkable and non-checkable items. This negative margin negates
+		the shunt in Qt 5.15 and has no effect in Qt 5.12.
+		*/
+		margin-right: -18px;
 	}
-
 
 	QMenu::indicator:non-exclusive:checked {
 		image: url($GAFFER_ROOT/graphics/menuChecked.png);
@@ -1413,7 +1423,7 @@ _styleSheet = string.Template(
 		border: 1px solid rgb( 46, 75, 107 );
 		border-top-color: rgb( 75, 113, 155 );
 		border-left-color: rgb( 75, 113, 155 );
-		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb( 69, 113, 161 ), stop: 0.1 rgb( 48, 99, 153 ), stop: 0.90 rgb( 54, 88, 125 ));
 	}
 
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] QPushButton[gafferWithFrame="true"] {
