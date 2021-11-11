@@ -116,12 +116,6 @@ class ArnoldAPIScope
 {
 	public :
 
-		ArnoldAPIScope()
-			:	m_sharedUniverse( nullptr )
-		{
-			begin();
-		}
-
 		~ArnoldAPIScope()
 		{
 			if( m_sharedUniverse )
@@ -145,12 +139,26 @@ class ArnoldAPIScope
 			return m_sharedUniverse;
 		}
 
+		// Called to initalise the Arnold API on first use.
+		// We then keep the API alive until shutdown, as
+		// starting and stopping it has overhead we want to
+		// avoid.
+		static ArnoldAPIScope &acquire()
+		{
+			static ArnoldAPIScope g_apiScope;
+			return g_apiScope;
+		}
+
 	private :
+
+		ArnoldAPIScope()
+			:	m_sharedUniverse( nullptr )
+		{
+			begin();
+		}
 
 		AtUniverse *m_sharedUniverse;
 };
-
-static ArnoldAPIScope g_apiScope;
 
 #else
 
@@ -166,7 +174,8 @@ UniverseBlock::UniverseBlock( bool writable )
 	:	m_writable( writable )
 {
 #ifdef IECOREARNOLD_MULTIPLE_UNIVERSES
-	m_universe = m_writable ? AiUniverse() : g_apiScope.sharedUniverse();
+	ArnoldAPIScope &apiScope = ArnoldAPIScope::acquire();
+	m_universe = m_writable ? AiUniverse() : apiScope.sharedUniverse();
 #else
 	// Careful management of the default universe, so that there
 	// can be multiple readers but only one writer.

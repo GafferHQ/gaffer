@@ -158,5 +158,18 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeLookUpByName( "test" ), None )
 
+	def testKickNodes( self ) :
+
+		# Running `kick -nodes` will load any plugins that might link to
+		# `libIECoreArnold`. If UniverseBlock tries to reinitialise Arnold
+		# in this situation, very bad things occur, so we must avoid it.
+
+		output = subprocess.check_output( [ "kick", "-nodes" ], universal_newlines=True )
+		self.assertNotIn( "AiBegin", output )
+		self.assertNotIn( "AiEnd", output )
+		self.assertNotIn( "is already installed", output )
+		self.assertNotIn( "Node entry does not exist", output )
+		self.assertIn( "ieDisplay", output )
+
 if __name__ == "__main__":
 	unittest.main()
