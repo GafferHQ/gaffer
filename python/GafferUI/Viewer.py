@@ -147,6 +147,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
+		self.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updateViewportMessage ), scoped = False )
 
 		self._updateFromSet()
 
@@ -213,7 +214,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.__currentView is not None :
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 		else :
-			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			self.__updateViewportMessage()
 
 		self.__primaryToolChanged()
 
@@ -253,6 +254,22 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__viewContextMenu.popup( self )
 
 		return True
+
+	def __updateViewportMessage( self, unused = None ) :
+
+		if self.view() is not None :
+			return
+
+		messageGadget = None
+		if self.getNodeSet() == self.scriptNode().focusSet() :
+			messageGadget = GafferUI.TextGadget( "Focus a node to view" )
+		elif self.getNodeSet() == self.scriptNode().selection() :
+			messageGadget = GafferUI.TextGadget( "Select a node to view" )
+		viewport = GafferUI.ViewportGadget( messageGadget )
+		if messageGadget is not None :
+			viewport.frame( messageGadget.bound() )
+		viewport.setCameraEditable( False )
+		self.__gadgetWidget.setViewportGadget( viewport )
 
 GafferUI.Editor.registerType( "Viewer", Viewer )
 
