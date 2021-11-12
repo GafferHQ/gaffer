@@ -310,6 +310,9 @@ class GAFFER_API Animation : public ComputeNode
 		class KeyIterator;
 		class ConstKeyIterator;
 
+		class Extrapolator;
+		IE_CORE_DECLAREPTR( Extrapolator )
+
 		/// Defines a curve as a collection of keyframes and methods
 		/// for editing them. Provides methods for evaluating the
 		/// interpolated curve at arbitrary positions.
@@ -409,6 +412,7 @@ class GAFFER_API Animation : public ComputeNode
 				/// iterator to end of range of active keys. (const access)
 				ConstKeyIterator end() const;
 
+				/// Evaluate the curve at the specified time
 				float evaluate( float time ) const;
 
 				/// Output plug for evaluating the curve
@@ -423,6 +427,8 @@ class GAFFER_API Animation : public ComputeNode
 				friend class Tangent;
 				friend KeyIterator;
 				friend ConstKeyIterator;
+
+				typedef boost::signal< void ( CurvePlug*, Animation::Direction ), Gaffer::CatchingSignalCombiner< void > > CurvePlugDirectionSignal;
 
 				Key *firstKey();
 				Key *finalKey();
@@ -443,6 +449,8 @@ class GAFFER_API Animation : public ComputeNode
 				typedef boost::intrusive::avl_set< Key, KeyHook, KeyOfValue > Keys;
 				typedef boost::intrusive::avl_multiset< Key, KeyHook, KeyOfValue > InactiveKeys;
 
+				static ConstExtrapolatorPtr CurvePlug::* const m_extrapolators[ 2 ];
+
 				Keys m_keys;
 				InactiveKeys m_inactiveKeys;
 				CurvePlugKeySignal m_keyAddedSignal;
@@ -451,6 +459,9 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal m_keyValueChangedSignal;
 				CurvePlugKeySignal m_keyInterpolationChangedSignal;
 				CurvePlugKeySignal m_keyTieModeChangedSignal;
+				CurvePlugDirectionSignal m_extrapolationChangedSignal;
+				ConstExtrapolatorPtr m_extrapolatorIn;
+				ConstExtrapolatorPtr m_extrapolatorOut;
 		};
 
 		/// convert enums to strings

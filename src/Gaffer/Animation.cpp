@@ -97,6 +97,9 @@ private:
 	unsigned m_hints;
 };
 
+class Animation::Extrapolator : public IECore::RefCounted
+{};
+
 } // Gaffer
 
 namespace
@@ -1652,6 +1655,12 @@ void Animation::Key::Dispose::operator()( Animation::Key* const key ) const
 
 GAFFER_PLUG_DEFINE_TYPE( Animation::CurvePlug );
 
+Animation::ConstExtrapolatorPtr Animation::CurvePlug::* const Animation::CurvePlug::m_extrapolators[ 2 ] =
+{
+	& Animation::CurvePlug::m_extrapolatorIn,
+	& Animation::CurvePlug::m_extrapolatorOut
+};
+
 Animation::CurvePlug::CurvePlug( const std::string &name, const Plug::Direction direction, const unsigned flags )
 : ValuePlug( name, direction, flags & ~Plug::AcceptsInputs )
 , m_keys()
@@ -1662,6 +1671,9 @@ Animation::CurvePlug::CurvePlug( const std::string &name, const Plug::Direction 
 , m_keyValueChangedSignal()
 , m_keyInterpolationChangedSignal()
 , m_keyTieModeChangedSignal()
+, m_extrapolationChangedSignal()
+, m_extrapolatorIn()
+, m_extrapolatorOut()
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
