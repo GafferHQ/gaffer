@@ -347,5 +347,31 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( plane.numObjectSamples(), 1 )
 				self.assertEqual( plane.objectSampleTime( 0 ), context.getTime() )
 
+	def testUSDConstantPrimitiveVariables( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( plane["out"] )
+		primitiveVariables["filter"].setInput( planeFilter["out"] )
+		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
+
+		self.assertEqual( primitiveVariables["out"].object( "/plane" )["test"].data.value, 10 )
+		self.assertEqual( primitiveVariables["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
+		sceneWriter = GafferScene.SceneWriter()
+		sceneWriter["in"].setInput( primitiveVariables["out"] )
+		sceneWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.usda" ) )
+		sceneWriter["task"].execute()
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setInput( sceneWriter["fileName"] )
+
+		self.assertEqual( sceneReader["out"].object( "/plane" )["test"].data.value, 10 )
+		self.assertEqual( sceneReader["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
 if __name__ == "__main__":
 	unittest.main()
