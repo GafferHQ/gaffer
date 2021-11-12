@@ -355,6 +355,8 @@
 		'scrollToBottom',
 		'searchFocusOn',
 		'searchFocusOff',
+		'viewerSelectPrompt',
+		'viewerFocusPrompt',
 		'clearSearch',
 		'lutGPU',
 		'lutCPU',

@@ -38,6 +38,8 @@
 import functools
 import collections
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -147,6 +149,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
+		self.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updateViewportMessage ), scoped = False )
 
 		self._updateFromSet()
 
@@ -213,7 +216,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.__currentView is not None :
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 		else :
-			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			self.__updateViewportMessage()
 
 		self.__primaryToolChanged()
 
@@ -253,6 +256,46 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__viewContextMenu.popup( self )
 
 		return True
+
+	def __updateViewportMessage( self, unused = None ) :
+
+		if self.view() is not None :
+			return
+
+		text = None
+		icon = None
+		if self.getNodeSet() == self.scriptNode().focusSet() :
+			text = "Focus a node to view"
+			icon = "viewerFocusPrompt.png"
+		elif self.getNodeSet() == self.scriptNode().selection() :
+			text = "Select a node to view"
+			icon = "viewerSelectPrompt.png"
+		else :
+			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			return
+
+		image = GafferUI.ImageGadget( icon )
+		image.setTransform( imath.M44f().setScale( imath.V3f( 3.0 ) / image.bound().size().y ) )
+
+		message = GafferUI.TextGadget( text )
+		messageStyle = GafferUI.StandardStyle()
+		messageStyle.setColor( GafferUI.StandardStyle.Color.ForegroundColor, imath.Color3f( 94 / 255.0 ) )
+		message.setStyle( messageStyle )
+
+		column = GafferUI.LinearContainer(
+			"column",
+			GafferUI.LinearContainer.Orientation.Y,
+			GafferUI.LinearContainer.Alignment.Centre,
+			spacing = 0.5
+		)
+		column.addChild( GafferUI.IndividualContainer( message ) )
+		column.addChild( GafferUI.IndividualContainer( image ) )
+		column.setPadding( imath.Box3f( imath.V3f( -10 ), imath.V3f( 10 ) ) )
+
+		viewport = GafferUI.ViewportGadget( column )
+		viewport.frame( column.bound() )
+		viewport.setCameraEditable( False )
+		self.__gadgetWidget.setViewportGadget( viewport )
 
 GafferUI.Editor.registerType( "Viewer", Viewer )
 
