@@ -1,3 +1,11 @@
+0.60.x.x (relative to 0.60.11.0)
+========
+
+Improvements
+------------
+
+- Animation : Added basic support for loading animation saved from Gaffer 0.61. Caution : `Bezier` and `Cubic` interpolation will be converted to `Linear`, because they are features available Gaffer 0.61 only.
+
 0.60.11.0 (relative to 0.60.10.0)
 ========
 
