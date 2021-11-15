@@ -260,14 +260,33 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.view() is not None :
 			return
 
-		messageGadget = None
+		text = None
+		icon = None
 		if self.getNodeSet() == self.scriptNode().focusSet() :
-			messageGadget = GafferUI.TextGadget( "Focus a node to view" )
+			text = "Focus a node to view"
+			icon = "nodeSetFocusNode.png"
 		elif self.getNodeSet() == self.scriptNode().selection() :
-			messageGadget = GafferUI.TextGadget( "Select a node to view" )
-		viewport = GafferUI.ViewportGadget( messageGadget )
-		if messageGadget is not None :
-			viewport.frame( messageGadget.bound() )
+			text = "Select a node to view"
+			icon = "nodeSetNodeSelection.png"
+		else :
+			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
+			return
+
+		import imath
+		image = GafferUI.ImageGadget( icon )
+		image.setTransform( imath.M44f().setScale( imath.V3f( 1.0 ) / image.bound().size().y ) )
+		message = GafferUI.TextGadget( text )
+		row = GafferUI.LinearContainer( "row",
+			GafferUI.LinearContainer.Orientation.X,
+			GafferUI.LinearContainer.Alignment.Centre,
+			0.5, GafferUI.LinearContainer.Direction.Increasing )
+		imageContainer = GafferUI.IndividualContainer()
+		imageContainer.addChild( image )
+		row.addChild( imageContainer )
+		row.addChild( message )
+
+		viewport = GafferUI.ViewportGadget( row )
+		viewport.frame( row.bound() )
 		viewport.setCameraEditable( False )
 		self.__gadgetWidget.setViewportGadget( viewport )
 
