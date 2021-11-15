@@ -35,6 +35,7 @@
 ##########################################################################
 
 import Gaffer
+import IECore
 
 # Patch to allow loading of gaffer scenes and ensure forward compatibility of code
 # written with Animation.Type renamed to Animation.Interpolation (0.61 onwards)
@@ -45,3 +46,14 @@ Gaffer.Animation.Key.getInterpolation = Gaffer.Animation.Key.getType
 # Patch to allow loading of gaffer scenes and ensure forward compatibility of code
 # written with Animation.Interpolation.Step renamed to Animation.Interpolation.Constant (0.61 onwards)
 Gaffer.Animation.Interpolation.Constant = Gaffer.Animation.Interpolation.Step
+
+# Patch to allow loading of gaffer scenes and ensure forward compatibility of code
+# written with Animation.Key representation that includes in/out tangent slope, scale and tieMode
+Gaffer.Animation.Interpolation.ConstantNext = Gaffer.Animation.Interpolation.Constant
+Gaffer.Animation.Interpolation.Cubic = Gaffer.Animation.Interpolation.Linear
+Gaffer.Animation.Interpolation.Bezier = Gaffer.Animation.Interpolation.Linear
+Gaffer.Animation.TieMode = IECore.Enum.create( "Manual", "Slope", "Scale" )
+Gaffer.Animation.Key = type( "KeyCompatibility_0_61", tuple( [ Gaffer.Animation.Key ] ),
+{ "__init__" : lambda self, time = 0.0, value = 0.0, type = Gaffer.Animation.Type.Linear,
+	inSlope = None, inScale = None, outSlope = None, outScale = None, tieMode = None :
+		super( Gaffer.Animation.Key, self ).__init__( time, value, type ) } )
