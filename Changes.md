@@ -4,6 +4,7 @@
 Features
 --------
 
+- Arnold : Added support for Arnold 7, including multiple simultaneous interactive renders. This is in addition to continuing support for Arnold 6.2 - the appropriate version of GafferArnold is chosen automatically on startup based on the `$ARNOLD_ROOT` environment variable.
 - GraphEditor :
   - Added new "Focus Node" concept. Clicking on the top right of a node tags it as the focus node, and editors and viewers can be set to follow the focus node. This is useful when you have several viewers that you want to view the same node, but you don't want them to follow selection.
   - Nodes and connections which don't contribute to computing the Focus Node are now dimmed. This helps see what part of the graph is active, taking into account the current context.

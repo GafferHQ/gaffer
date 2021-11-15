@@ -1,7 +1,6 @@
-#! /bin/bash
 ##########################################################################
 #
-#  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -16,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -35,28 +34,19 @@
 #
 ##########################################################################
 
-set -e
+try :
 
-arnoldVersion=6.2.0.1
+	# See comments in `GafferArnold/__init__.py`
+	import sys
+	import ctypes
+	originalDLOpenFlags = sys.getdlopenflags()
+	sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
 
-if [[ `uname` = "Linux" ]] ; then
-	arnoldPlatform=linux
-else
-	arnoldPlatform=darwin
-fi
+	from ._IECoreArnold import *
 
-url=forgithubci.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
+finally :
 
-# Configure the login information, if this has been supplied.
-login=""
-# TODO: Remove the extra var checks (!= $) once we no longer need Azure support.
-if [ ! -z "${ARNOLD_LOGIN}" ] && [ "${ARNOLD_LOGIN:0:1}" != "$" ] && [ -z "${ARNOLD_PASSWORD}" ] && [ "${ARNOLD_PASSWORD:0:1}" != "$" ]; then
-	login="${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@"
-fi
+	sys.setdlopenflags( originalDLOpenFlags )
+	del sys, ctypes, originalDLOpenFlags
 
-mkdir -p arnoldRoot && cd arnoldRoot
-
-echo Downloading Arnold "https://${url}"
-curl -L https://${login}${url} -o Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
-
-tar -xzf Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
+from .UniverseBlock import UniverseBlock

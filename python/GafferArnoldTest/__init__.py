@@ -44,7 +44,6 @@ from .ArnoldMeshLightTest import ArnoldMeshLightTest
 from .InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
 from .ArnoldDisplacementTest import ArnoldDisplacementTest
 from .LightToCameraTest import LightToCameraTest
-from .IECoreArnoldPreviewTest import *
 from .ArnoldAOVShaderTest import ArnoldAOVShaderTest
 from .ArnoldAtmosphereTest import ArnoldAtmosphereTest
 from .ArnoldBackgroundTest import ArnoldBackgroundTest

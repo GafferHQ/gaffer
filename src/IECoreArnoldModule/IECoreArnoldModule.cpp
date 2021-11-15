@@ -36,66 +36,18 @@
 
 #include "boost/python.hpp"
 
-#include "GafferArnold/ArnoldAOVShader.h"
-#include "GafferArnold/ArnoldAtmosphere.h"
-#include "GafferArnold/ArnoldAttributes.h"
-#include "GafferArnold/ArnoldBackground.h"
-#include "GafferArnold/ArnoldCameraShaders.h"
-#include "GafferArnold/ArnoldColorManager.h"
-#include "GafferArnold/ArnoldDisplacement.h"
-#include "GafferArnold/ArnoldLight.h"
-#include "GafferArnold/ArnoldMeshLight.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldRender.h"
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldVDB.h"
-#include "GafferArnold/ArnoldLightFilter.h"
-#include "GafferArnold/InteractiveArnoldRender.h"
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
 #include "IECoreArnold/ShaderNetworkAlgo.h"
 #include "IECoreArnold/UniverseBlock.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 using namespace boost::python;
-using namespace GafferArnold;
 using namespace IECoreArnold;
 
 namespace
 {
-
-void loadColorManagerWrapper( ArnoldColorManager &c, const std::string &name, bool keepExistingValues )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	c.loadColorManager( name, keepExistingValues );
-}
-
-class ArnoldColorManagerSerialiser : public GafferBindings::NodeSerialiser
-{
-
-	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, GafferBindings::Serialisation &serialisation ) const override
-	{
-		std::string result = GafferBindings::NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
-
-		const std::string name = static_cast<const ArnoldColorManager *>( graphComponent )->getChild<ArnoldShader>( "__shader" )->namePlug()->getValue();
-		if( name.size() )
-		{
-			result += boost::str( boost::format( "\n%s.loadColorManager( \"%s\" )\n" ) % identifier % name );
-		}
-
-		return result;
-	}
-
-};
-
-void flushCaches( int flags )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	InteractiveArnoldRender::flushCaches( flags );
-}
 
 boost::python::object atNodeToPythonObject( AtNode *node )
 {
@@ -227,40 +179,8 @@ bool shaderNetworkAlgoUpdate( list pythonNodes, const IECoreScene::ShaderNetwork
 
 } // namespace
 
-BOOST_PYTHON_MODULE( _GafferArnold )
+BOOST_PYTHON_MODULE( _IECoreArnold )
 {
-
-	GafferBindings::DependencyNodeClass<ArnoldShader>();
-	GafferBindings::DependencyNodeClass<ArnoldAtmosphere>();
-	GafferBindings::DependencyNodeClass<ArnoldBackground>();
-
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
-
-	GafferBindings::DependencyNodeClass<ArnoldColorManager>()
-		.def( "loadColorManager", &loadColorManagerWrapper, ( arg( "name" ), arg( "keepExistingValues" ) = false ) )
-	;
-
-	GafferBindings::Serialisation::registerSerialiser( ArnoldColorManager::staticTypeId(), new ArnoldColorManagerSerialiser() );
-
-	GafferBindings::DependencyNodeClass<ArnoldLightFilter>();
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
-	GafferBindings::DependencyNodeClass<ArnoldVDB>();
-	GafferBindings::DependencyNodeClass<ArnoldDisplacement>();
-	GafferBindings::DependencyNodeClass<ArnoldCameraShaders>();
-	GafferBindings::DependencyNodeClass<ArnoldMeshLight>();
-	GafferBindings::DependencyNodeClass<ArnoldAOVShader>();
-	GafferBindings::NodeClass<InteractiveArnoldRender>()
-		.def( "flushCaches", &flushCaches )
-		.staticmethod( "flushCaches" )
-	;
-	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
-
-	object ieCoreArnoldModule( borrowed( PyImport_AddModule( "GafferArnold._IECoreArnold" ) ) );
-	scope().attr( "_IECoreArnold" ) = ieCoreArnoldModule;
-	scope ieCoreArnoldScope( ieCoreArnoldModule );
 
 	// This is bound with a preceding _ and then turned into a context
 	// manager for the "with" statement in IECoreArnold/UniverseBlock.py
@@ -269,7 +189,7 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	;
 
 	{
-		object nodeAlgoModule( handle<>( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.NodeAlgo" ) ) ) );
+		object nodeAlgoModule( handle<>( borrowed( PyImport_AddModule( "IECoreArnold.NodeAlgo" ) ) ) );
 		scope().attr( "NodeAlgo" ) = nodeAlgoModule;
 		scope nodeAlgoModuleScope( nodeAlgoModule );
 
@@ -278,7 +198,7 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	}
 
 	{
-		object parameterAlgoModule( handle<>( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.ParameterAlgo" ) ) ) );
+		object parameterAlgoModule( handle<>( borrowed( PyImport_AddModule( "IECoreArnold.ParameterAlgo" ) ) ) );
 		scope().attr( "ParameterAlgo" ) = parameterAlgoModule;
 		scope parameterAlgoModuleScope( parameterAlgoModule );
 
@@ -287,7 +207,7 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	}
 
 	{
-		object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferArnold.Private.IECoreArnold.ShaderNetworkAlgo" ) ) );
+		object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "IECoreArnold.ShaderNetworkAlgo" ) ) );
 		scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
 		scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
 

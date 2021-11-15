@@ -41,7 +41,7 @@
 
 #include "Gaffer/Plug.h"
 
-#include "ai.h"
+#include "ai_node_entry.h"
 
 namespace GafferArnold
 {

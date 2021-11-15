@@ -1,0 +1,44 @@
+options
+{
+	name options
+	outputs 2 1 STRING
+		"RGBA RGBA filter display"
+		"direct_diffuse RGB filter display"
+	xres 640
+	yres 480
+	camera camera
+}
+
+gaussian_filter
+{
+	name filter
+}
+
+ieDisplay
+{
+	name display
+	driverType "ClientDisplayDriver"
+	declare displayHost CONSTANT STRING
+	displayHost "localhost"
+	declare displayPort CONSTANT STRING
+	displayPort "1559"
+	declare remoteDisplayType CONSTANT STRING
+	remoteDisplayType "ImageDisplayDriver"
+	declare handle CONSTANT STRING
+	handle "mergedImage"
+}
+
+persp_camera
+{
+	name camera
+}
+
+sphere
+{
+	name lovelySphere
+	matrix
+	1 0 0 0
+	0 1 0 0
+	0 0 1 0
+	0 0 -3 1
+}

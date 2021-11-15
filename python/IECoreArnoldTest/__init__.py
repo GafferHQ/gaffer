@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,32 +34,17 @@
 #
 ##########################################################################
 
-__import__( "GafferScene" )
+from .RendererTest import RendererTest
+from .ShaderNetworkAlgoTest import ShaderNetworkAlgoTest
+from .CameraAlgoTest import CameraAlgoTest
+from .CurvesAlgoTest import CurvesAlgoTest
+from .MeshAlgoTest import MeshAlgoTest
+from .ParameterAlgoTest import ParameterAlgoTest
+from .PointsAlgoTest import PointsAlgoTest
+from .SphereAlgoTest import SphereAlgoTest
+from .UniverseBlockTest import UniverseBlockTest
+from .OutputDriverTest import OutputDriverTest
 
-# GafferArnold makes use of OSL closure plugs, this ensures that the bindings
-# are always loaded for these, even if people only import GafferArnold
-__import__( "GafferOSL" )
-
-try :
-
-	# Make sure we import _GafferArnold _without_ RTLD_GLOBAL. This prevents
-	# clashes between the LLVM symbols in libai.so and the Mesa OpenGL driver.
-	# Ideally we wouldn't use RTLD_GLOBAL anywhere - see
-	# https://github.com/ImageEngine/cortex/pull/810.
-
-	import sys
-	import ctypes
-	originalDLOpenFlags = sys.getdlopenflags()
-	sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
-
-	from ._GafferArnold import *
-
-finally :
-
-	sys.setdlopenflags( originalDLOpenFlags )
-	del sys, ctypes, originalDLOpenFlags
-
-from .ArnoldShaderBall import ArnoldShaderBall
-from .ArnoldTextureBake import ArnoldTextureBake
-
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnold" )
+if __name__ == "__main__":
+	import unittest
+	unittest.main()

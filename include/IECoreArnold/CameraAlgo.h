@@ -32,23 +32,26 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLDPREVIEW_PROCEDURALALGO_H
-#define IECOREARNOLDPREVIEW_PROCEDURALALGO_H
+#ifndef IECOREARNOLD_CAMERAALGO_H
+#define IECOREARNOLD_CAMERAALGO_H
 
-#include "IECoreScene/ExternalProcedural.h"
+#include "IECoreArnold/Export.h"
 
-#include "ai.h"
+#include "IECoreScene/Camera.h"
 
-namespace IECoreArnoldPreview
+#include "ai_nodes.h"
+
+namespace IECoreArnold
 {
 
-namespace ProceduralAlgo
+namespace CameraAlgo
 {
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode );
+IECOREARNOLD_API AtNode *convert( const IECoreScene::Camera *camera, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr );
+IECOREARNOLD_API AtNode *convert( const std::vector<const IECoreScene::Camera *> &samples, float motionStart, float motionEnd, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode = nullptr );
 
-} // namespace ProceduralAlgo
+} // namespace CameraAlgo
 
-} // namespace IECoreArnoldPreview
+} // namespace IECoreArnold
 
-#endif // IECOREARNOLDPREVIEW_PROCEDURALALGO_H
+#endif // IECOREARNOLD_CAMERAALGO_H

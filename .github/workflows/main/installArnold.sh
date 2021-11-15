@@ -1,6 +1,7 @@
+#! /bin/bash
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2019, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +16,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Cinesite VFX Ltd. nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,32 +35,32 @@
 #
 ##########################################################################
 
-__import__( "GafferScene" )
+set -e
 
-# GafferArnold makes use of OSL closure plugs, this ensures that the bindings
-# are always loaded for these, even if people only import GafferArnold
-__import__( "GafferOSL" )
+if [ -z $1 ] ; then
+	echo "Usage : installArnold.sh arnoldVersion" >&2
+	exit 1
+fi
 
-try :
+arnoldVersion=$1
 
-	# Make sure we import _GafferArnold _without_ RTLD_GLOBAL. This prevents
-	# clashes between the LLVM symbols in libai.so and the Mesa OpenGL driver.
-	# Ideally we wouldn't use RTLD_GLOBAL anywhere - see
-	# https://github.com/ImageEngine/cortex/pull/810.
+if [[ `uname` = "Linux" ]] ; then
+	arnoldPlatform=linux
+else
+	arnoldPlatform=darwin
+fi
 
-	import sys
-	import ctypes
-	originalDLOpenFlags = sys.getdlopenflags()
-	sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
+url=forgithubci.solidangle.com/arnold/Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
 
-	from ._GafferArnold import *
+# Configure the login information, if this has been supplied.
+login=""
+if [ ! -z "${ARNOLD_LOGIN}" ] && [ ! -z "${ARNOLD_PASSWORD}" ] ; then
+	login="${ARNOLD_LOGIN}:${ARNOLD_PASSWORD}@"
+fi
 
-finally :
+mkdir -p arnoldRoot/$arnoldVersion && cd arnoldRoot/$arnoldVersion
 
-	sys.setdlopenflags( originalDLOpenFlags )
-	del sys, ctypes, originalDLOpenFlags
+echo Downloading Arnold "https://${url}"
+curl -L https://${login}${url} -o Arnold-${arnoldVersion}-${arnoldPlatform}.tgz
 
-from .ArnoldShaderBall import ArnoldShaderBall
-from .ArnoldTextureBake import ArnoldTextureBake
-
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnold" )
+tar -xzf Arnold-${arnoldVersion}-${arnoldPlatform}.tgz

@@ -52,7 +52,7 @@
 
 #include "boost/format.hpp"
 
-#include "ai.h"
+#include "ai_metadata.h"
 
 using namespace std;
 using namespace boost;

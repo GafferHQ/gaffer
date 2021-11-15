@@ -42,8 +42,8 @@ import collections
 import arnold
 
 import IECore
-import imath
 import IECoreArnold
+import imath
 
 import Gaffer
 import GafferUI

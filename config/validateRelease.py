@@ -71,7 +71,8 @@ sys.stdout.flush()
 # Validate the release contains our mandatory components
 
 requiredPaths = [
-	os.path.join( "resources", "examples" )
+	os.path.join( "resources", "examples" ),
+	"arnold",
 ]
 
 if args.skipDocs :
@@ -80,7 +81,7 @@ else :
 	requiredPaths.append( os.path.join( "doc", "gaffer", "html", "index.html" ) )
 
 for module in (
-	"Gaffer", "GafferAppleseed", "GafferArnold", "GafferDelight",
+	"Gaffer", "GafferAppleseed", "GafferDelight",
 	"GafferDispatch", "GafferImage", "GafferOSL", "GafferScene",
 	"GafferTractor", "GafferVDB"
 ) :

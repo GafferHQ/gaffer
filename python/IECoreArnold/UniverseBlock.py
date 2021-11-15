@@ -1,24 +1,22 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
 #
-#      * Redistributions of source code must retain the above
-#        copyright notice, this list of conditions and the following
-#        disclaimer.
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
 #
-#      * Redistributions in binary form must reproduce the above
-#        copyright notice, this list of conditions and the following
-#        disclaimer in the documentation and/or other materials provided with
-#        the distribution.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
-#        any other contributors to this software may be used to endorse or
-#        promote products derived from this software without specific prior
-#        written permission.
+#     * Neither the name of Image Engine Design nor the names of any
+#       other contributors to this software may be used to endorse or
+#       promote products derived from this software without specific prior
+#       written permission.
 #
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -34,18 +32,19 @@
 #
 ##########################################################################
 
-import os
+from ._IECoreArnold import _UniverseBlock
 
-ENV_VARS_TO_IMPORT = "PATH"
+class UniverseBlock :
 
-BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
+	def __init__( self, writable ) :
 
-ARNOLD_ROOT = os.environ.get( "ARNOLD_ROOT", "" )
-DELIGHT_ROOT = os.environ["DELIGHT"]
+		self.__writable = writable
 
-BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
-INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
+	def __enter__( self ) :
 
-PACKAGE_FILE = "%s.tar.gz" % os.environ["GAFFER_BUILD_NAME"]
+		self.__universeBlock = _UniverseBlock( self.__writable )
+		return self.__universeBlock.universe()
 
-SPHINX = os.environ["GAFFER_SPHINX"]
+	def __exit__( self, type, value, traceBack ) :
+
+		self.__universeBlock = None

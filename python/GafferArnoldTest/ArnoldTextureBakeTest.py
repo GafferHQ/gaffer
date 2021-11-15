@@ -312,7 +312,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 			self.assertGreater( l, 2 )
 			self.assertLess( l, 8 )
 
-	@unittest.skipIf( GafferTest.inCI(), "Arnold license not available" )
+	@unittest.skipIf( GafferTest.inCI() or os.environ.get( "ARNOLD_LICENSE_ORDER" ) == "none", "Arnold license not available" )
 	def testMerging( self ):
 
 		allFilter = GafferScene.PathFilter()

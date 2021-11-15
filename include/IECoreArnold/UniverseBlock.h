@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,62 +32,44 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/Private/IECoreArnoldPreview/ProceduralAlgo.h"
+#ifndef IECOREARNOLD_UNIVERSEBLOCK_H
+#define IECOREARNOLD_UNIVERSEBLOCK_H
 
-#include "IECoreArnold/NodeAlgo.h"
-#include "IECoreArnold/ParameterAlgo.h"
+#include "IECoreArnold/Export.h"
 
-#include "IECore/SimpleTypedData.h"
-#include "IECore/Version.h"
+#include "boost/noncopyable.hpp"
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreArnold;
-using namespace IECoreArnoldPreview;
+#include "ai_universe.h"
 
-//////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
+namespace IECoreArnold
 {
 
-#if CORTEX_COMPATIBILITY_VERSION < 10003
-
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description(
-	[] ( const IECoreScene::ExternalProcedural *procedural, const std::string &name, const AtNode *parent ) {
-		return ProceduralAlgo::convert( procedural, nullptr, name, parent );
-	}
-);
-
-#else
-
-NodeAlgo::ConverterDescription<ExternalProcedural> g_description( ProceduralAlgo::convert );
-
-#endif
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreArnoldPreview
+/// Manages Arnold initialisation via `AiBegin()` and creation and
+/// destruction of AtUniverse objects via `AiUniverse()` and
+/// `AiUniverseDestroy()`.
+class IECOREARNOLD_API UniverseBlock : public boost::noncopyable
 {
 
-namespace ProceduralAlgo
-{
+	public :
 
-AtNode *convert( const IECoreScene::ExternalProcedural *procedural, AtUniverse *universe, const std::string &nodeName, const AtNode *parentNode  )
-{
-	AtNode *node = AiNode( universe, AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
-	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
+		/// Ensures that the Arnold API is initialised and that all plugins and
+		/// metadata files on the ARNOLD_PLUGIN_PATH have been loaded.
+		/// Constructs with a uniquely owned universe if `writable == true`, and
+		/// a potentially shared universe otherwise. The latter is useful for
+		/// making queries via the `AiNodeEntry` API.
+		UniverseBlock( bool writable );
+		/// Releases the universe created by the constructor.
+		~UniverseBlock();
 
-	return node;
-}
+		AtUniverse *universe() { return m_universe; }
 
-} // namespace ProceduralAlgo
+	private :
 
-} // namespace IECoreArnoldPreview
+		const bool m_writable;
+		AtUniverse *m_universe;
+
+};
+
+} // namespace IECoreArnold
+
+#endif // IECOREARNOLD_UNIVERSEBLOCK_H

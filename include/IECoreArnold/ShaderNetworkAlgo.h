@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
-#define IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
+#ifndef IECOREARNOLD_SHADERNETWORKALGO_H
+#define IECOREARNOLD_SHADERNETWORKALGO_H
 
-#include "GafferArnold/Export.h"
+#include "IECoreArnold/Export.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
-#include "ai.h"
+#include "ai_nodes.h"
 
 #include <vector>
 
-namespace IECoreArnoldPreview
+namespace IECoreArnold
 {
 
 namespace ShaderNetworkAlgo
@@ -55,15 +55,15 @@ namespace ShaderNetworkAlgo
 /// to Arnold. The output shader is the last node in the returned vector,
 /// and is given the specified `name`. All other nodes will be named
 /// uniquely using `name` as a prefix.
-GAFFERARNOLD_API std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode = nullptr );
+IECOREARNOLD_API std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode = nullptr );
 /// Updates a previously converted set of nodes to reflect changes in `shaderNetwork`,
 /// reusing AtNodes where possible. The `nodes` vector is updated in place, newly created
 /// nodes use the same parent as the original nodes, and unused nodes are destroyed with
 /// `AiNodeDestroy`. Returns true if the output shader node is reused.
-GAFFERARNOLD_API bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork );
+IECOREARNOLD_API bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork );
 
 } // namespace ShaderNetworkAlgo
 
-} // namespace IECoreArnoldPreview
+} // namespace IECoreArnold
 
-#endif // IECOREARNOLDPREVIEW_SHADERNETWORKALGO_H
+#endif // IECOREARNOLD_SHADERNETWORKALGO_H
