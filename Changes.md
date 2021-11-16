@@ -9,6 +9,10 @@ Features
   - Added new "Focus Node" concept. Clicking on the top right of a node tags it as the focus node, and editors and viewers can be set to follow the focus node. This is useful when you have several viewers that you want to view the same node, but you don't want them to follow selection.
   - Nodes and connections which don't contribute to computing the Focus Node are now dimmed. This helps see what part of the graph is active, taking into account the current context.
 - Image Viewer : Added Luminance option to the channel selection menu.
+- Animation :
+  - Added new "Cubic" and "Bezier" interpolation modes which will smoothly interpolate between key values. The shape of the interpolated curves can
+    be controlled by adjusting the slope and scale of key tangents, which are displayed and can be interactively manipulated in the Animation Editor.
+  - Added new user interface panel in the Animation Editor with controls for key value, time, interpolation mode and tangent slope, scale and tie mode.
 
 Improvements
 ------------
@@ -82,6 +86,7 @@ API
   - Added `curve.keyTimeChangedSignal()` function, returns a signal that is called when a key's time has changed
   - Added `curve.keyValueChangedSignal()` function, returns a signal that is called when a key's value has changed
   - Added `curve.keyInterpolationChangedSignal()` function, returns a signal that is called when a key's interpolation has changed
+  - Added new api for cubic interpolation modes, key tangents and tie mode (see header `Animation.h` for full details)
 - AnimationGadget :
   - Added `selectedKeys()` function, returns current set of selected keys.
   - Added `onTimeAxis()` function, returns true if specified line is over the time axis of the gadget.

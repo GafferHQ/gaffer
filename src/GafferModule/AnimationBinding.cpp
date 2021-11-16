@@ -46,6 +46,8 @@
 
 #include "boost/lexical_cast.hpp"
 
+#include <cmath>
+
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
@@ -78,13 +80,75 @@ void setInterpolation( Animation::Key &k, const Animation::Interpolation interpo
 	k.setInterpolation( interpolation );
 }
 
+Animation::Key* getKey( Animation::Tangent &t )
+{
+	return &( t.key() );
+}
+
+void setSlope( Animation::Tangent &t, const double slope )
+{
+	ScopedGILRelease gilRelease;
+	t.setSlope( slope );
+}
+
+void setSlopeFromPosition( Animation::Tangent &t, const Imath::V2d& position, const bool relative )
+{
+	ScopedGILRelease gilRelease;
+	t.setSlopeFromPosition( position, relative );
+}
+
+void setSlopeAndScale( Animation::Tangent &t, const double slope, const double scale )
+{
+	ScopedGILRelease gilRelease;
+	t.setSlopeAndScale( slope, scale );
+}
+
+void setScale( Animation::Tangent &t, const double scale )
+{
+	ScopedGILRelease gilRelease;
+	t.setScale( scale );
+}
+
+void setScaleFromPosition( Animation::Tangent &t, const Imath::V2d& position, const bool relative )
+{
+	ScopedGILRelease gilRelease;
+	t.setScaleFromPosition( position, relative );
+}
+
+Imath::V2d getPosition( Animation::Tangent &t, const bool relative )
+{
+	return t.getPosition( relative );
+}
+
+void setPosition( Animation::Tangent &t, const Imath::V2d& position, const bool relative )
+{
+	ScopedGILRelease gilRelease;
+	t.setPosition( position, relative );
+}
+
+std::string slopeRepr( const double slope )
+{
+	return boost::str( boost::format( ( ( std::isinf( slope ) ) ? "float( '%.9g' )" : "%.9g" ) ) % slope );
+}
+
+void setTieMode( Animation::Key &k, const Animation::TieMode mode )
+{
+	ScopedGILRelease gilRelease;
+	k.setTieMode( mode );
+}
+
 std::string keyRepr( const Animation::Key &k )
 {
 	return boost::str( boost::format(
-		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s )" )
+		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s, %s, %.9g, %s, %.9g, Gaffer.Animation.TieMode.%s )" )
 			% k.getTime()
 			% k.getValue()
 			% Animation::toString( k.getInterpolation() )
+			% slopeRepr( k.tangentIn().getSlope() )
+			% k.tangentIn().getScale()
+			% slopeRepr( k.tangentOut().getSlope() )
+			% k.tangentOut().getScale()
+			% Animation::toString( k.getTieMode() )
 	);
 };
 
@@ -158,7 +222,7 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 void GafferModule::bindAnimation()
 {
 
-	scope s = DependencyNodeClass<Animation>()
+	scope s = DependencyNodeClass< Animation >()
 		.def( "canAnimate", &Animation::canAnimate )
 		.staticmethod( "canAnimate" )
 		.def( "isAnimated", &Animation::isAnimated )
@@ -167,20 +231,64 @@ void GafferModule::bindAnimation()
 		.staticmethod( "acquire" )
 		.def( "defaultInterpolation", &Animation::defaultInterpolation )
 		.staticmethod( "defaultInterpolation" )
+		.def( "defaultTieMode", &Animation::defaultTieMode )
+		.staticmethod( "defaultTieMode" )
+		.def( "defaultSlope", &Animation::defaultSlope )
+		.staticmethod( "defaultSlope" )
+		.def( "defaultScale", &Animation::defaultScale )
+		.staticmethod( "defaultScale" )
+		.def( "opposite", &Animation::opposite )
+		.staticmethod( "opposite" )
 	;
 
-	enum_<Animation::Interpolation>( "Interpolation" )
+	enum_< Animation::Interpolation >( "Interpolation" )
 		.value( Animation::toString( Animation::Interpolation::Constant ), Animation::Interpolation::Constant )
 		.value( Animation::toString( Animation::Interpolation::ConstantNext ), Animation::Interpolation::ConstantNext )
 		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
+		.value( Animation::toString( Animation::Interpolation::Cubic ), Animation::Interpolation::Cubic )
+		.value( Animation::toString( Animation::Interpolation::Bezier ), Animation::Interpolation::Bezier )
 	;
 
+	enum_< Animation::Direction >( "Direction" )
+		.value( Animation::toString( Animation::Direction::In ), Animation::Direction::In )
+		.value( Animation::toString( Animation::Direction::Out ), Animation::Direction::Out )
+	;
+
+	enum_< Animation::TieMode >( "TieMode" )
+		.value( Animation::toString( Animation::TieMode::Manual ), Animation::TieMode::Manual )
+		.value( Animation::toString( Animation::TieMode::Slope ), Animation::TieMode::Slope )
+		.value( Animation::toString( Animation::TieMode::Scale ), Animation::TieMode::Scale )
+	;
+
+	class_< Animation::Tangent, boost::noncopyable >( "Tangent", no_init )
+		.def( "key", &getKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def( "direction", &Animation::Tangent::direction )
+		.def( "setSlope", &setSlope )
+		.def( "setSlopeFromPosition", setSlopeFromPosition, ( arg( "position" ), arg( "relative" ) = false ) )
+		.def( "getSlope", (double (Animation::Tangent::*)() const)&Animation::Tangent::getSlope )
+		.def( "setScale", &setScale )
+		.def( "setScaleFromPosition", setScaleFromPosition, ( arg( "position" ), arg( "relative" ) = false ) )
+		.def( "getScale", (double (Animation::Tangent::*)() const)&Animation::Tangent::getScale )
+		.def( "setSlopeAndScale", &setSlopeAndScale )
+		.def( "setPosition", &setPosition, ( arg( "position" ), arg( "relative" ) = false ) )
+		.def( "getPosition", &getPosition, arg( "relative" ) = false )
+		.def( "slopeIsConstrained", &Animation::Tangent::slopeIsConstrained )
+		.def( "scaleIsConstrained", &Animation::Tangent::scaleIsConstrained )
+		;
+
 	IECorePython::RunTimeTypedClass< Animation::Key >( "Key" )
-		.def( init<float, float, Animation::Interpolation>(
+		.def( init< float, float, Animation::Interpolation, double, double, double, double, Animation::TieMode >(
 				(
 					arg( "time" ) = 0.0f,
 					arg( "value" ) = 0.0f,
-					arg( "interpolation" ) = Animation::defaultInterpolation()
+					arg( "interpolation" ) = Animation::defaultInterpolation(),
+					arg( "inSlope" ) = Animation::defaultSlope(),
+					arg( "inScale" ) = Animation::defaultScale(),
+					arg( "outSlope" ) = Animation::defaultSlope(),
+					arg( "outScale" ) = Animation::defaultScale(),
+					arg( "tieMode" ) = Animation::defaultTieMode()
 				)
 			)
 		)
@@ -190,6 +298,17 @@ void GafferModule::bindAnimation()
 		.def( "setValue", &setValue )
 		.def( "getInterpolation", &Animation::Key::getInterpolation )
 		.def( "setInterpolation", &setInterpolation )
+		.def( "tangentIn",
+			(Animation::Tangent& (Animation::Key::*)())&Animation::Key::tangentIn,
+			return_internal_reference<>() )
+		.def( "tangentOut",
+			(Animation::Tangent& (Animation::Key::*)())&Animation::Key::tangentOut,
+			return_internal_reference<>() )
+		.def( "tangent",
+			(Animation::Tangent& (Animation::Key::*)( Animation::Direction ))&Animation::Key::tangent,
+			return_internal_reference<>() )
+		.def( "setTieMode", &setTieMode )
+		.def( "getTieMode", &Animation::Key::getTieMode )
 		.def( "isActive", &Animation::Key::isActive )
 		.def( "__repr__", &keyRepr )
 		.def(
@@ -199,8 +318,8 @@ void GafferModule::bindAnimation()
 		)
 	;
 
-	PlugClass<Animation::CurvePlug>()
-		.def( init<const char *, Plug::Direction, unsigned>(
+	PlugClass< Animation::CurvePlug >()
+		.def( init< const char *, Plug::Direction, unsigned >(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<Animation::CurvePlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
@@ -213,6 +332,7 @@ void GafferModule::bindAnimation()
 		.def( "keyTimeChangedSignal", &Animation::CurvePlug::keyTimeChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyValueChangedSignal", &Animation::CurvePlug::keyValueChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyInterpolationChangedSignal", &Animation::CurvePlug::keyInterpolationChangedSignal, return_internal_reference< 1 >() )
+		.def( "keyTieModeChangedSignal", &Animation::CurvePlug::keyTieModeChangedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
 		.def( "insertKey", &insertKey )
 		.def( "insertKey", &insertKeyValue )
