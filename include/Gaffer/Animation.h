@@ -292,10 +292,12 @@ class GAFFER_API Animation : public ComputeNode
 					void operator()( Key* ) const;
 				};
 
+				static Tangent Key::* const m_tangents[ 2 ];
+
 				Hook m_hook;
 				CurvePlug *m_parent;
-				Tangent m_in;
-				Tangent m_out;
+				Tangent m_tangentIn;
+				Tangent m_tangentOut;
 				float m_time;
 				float m_value;
 				ConstInterpolatorPtr m_interpolator;

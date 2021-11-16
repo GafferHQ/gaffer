@@ -1051,12 +1051,18 @@ void Animation::Tangent::positionToRelative( Imath::V2d& position, const bool re
 
 IE_CORE_DEFINERUNTIMETYPED( Gaffer::Animation::Key )
 
+Animation::Tangent Animation::Key::* const Animation::Key::m_tangents[ 2 ] =
+{
+	& Animation::Key::m_tangentIn,
+	& Animation::Key::m_tangentOut
+};
+
 Animation::Key::Key( const float time, const float value, const Animation::Interpolation interpolation,
 	const double inSlope, const double inScale, const double outSlope, const double outScale,
 	const Animation::TieMode tieMode )
 : m_parent( nullptr )
-, m_in( *this, Direction::In, inSlope, inScale )
-, m_out( *this, Direction::Out, outSlope, outScale )
+, m_tangentIn( *this, Direction::In, inSlope, inScale )
+, m_tangentOut( *this, Direction::Out, outSlope, outScale )
 , m_time( time )
 , m_value( value )
 , m_interpolator( Interpolator::get( interpolation ) )
@@ -1078,22 +1084,22 @@ Animation::Key::~Key()
 
 Animation::Tangent& Animation::Key::tangentIn()
 {
-	return m_in;
+	return m_tangentIn;
 }
 
 const Animation::Tangent& Animation::Key::tangentIn() const
 {
-	return m_in;
+	return m_tangentIn;
 }
 
 Animation::Tangent& Animation::Key::tangentOut()
 {
-	return m_out;
+	return m_tangentOut;
 }
 
 const Animation::Tangent& Animation::Key::tangentOut() const
 {
-	return m_out;
+	return m_tangentOut;
 }
 
 Animation::Tangent& Animation::Key::tangent( const Animation::Direction direction )
@@ -1104,7 +1110,7 @@ Animation::Tangent& Animation::Key::tangent( const Animation::Direction directio
 
 const Animation::Tangent& Animation::Key::tangent( const Animation::Direction direction ) const
 {
-	return ( direction == Direction::In ) ? m_in : m_out;
+	return this->*m_tangents[ static_cast< int >( direction ) ];
 }
 
 Animation::TieMode Animation::Key::getTieMode() const
@@ -1127,8 +1133,8 @@ void Animation::Key::setTieMode( const Animation::TieMode tieMode )
 
 	if( ! tieSlopeActive( m_tieMode ) && tieSlopeActive( tieMode ) )
 	{
-		const double si = m_in.m_slope;
-		const double so = m_out.m_slope;
+		const double si = m_tangentIn.m_slope;
+		const double so = m_tangentOut.m_slope;
 
 		if( si != so )
 		{
@@ -1137,8 +1143,8 @@ void Animation::Key::setTieMode( const Animation::TieMode tieMode )
 			// NOTE : If only one tangent's slope is constrained or the tangent protrudes beyond the
 			//        start/end of the curve, preserve the opposite slope, otherwise take average.
 
-			const bool inConstrainedOrProtrudes = m_in.slopeIsConstrained() || ( prevKey() == nullptr );
-			const bool outConstrainedOrProtrudes = m_out.slopeIsConstrained() || ( nextKey() == nullptr );
+			const bool inConstrainedOrProtrudes = m_tangentIn.slopeIsConstrained() || ( prevKey() == nullptr );
+			const bool outConstrainedOrProtrudes = m_tangentOut.slopeIsConstrained() || ( nextKey() == nullptr );
 
 			const double s = ( inConstrainedOrProtrudes == outConstrainedOrProtrudes )
 				? std::tan(
@@ -1150,8 +1156,8 @@ void Animation::Key::setTieMode( const Animation::TieMode tieMode )
 			// to avoid ping-ponging back and forth setting each other in infinite recursion.
 
 			Private::ScopedAssignment< TieMode > tmGuard( m_tieMode, TieMode::Manual );
-			m_in.setSlope( s, /* force = */ true );
-			m_out.setSlope( s, /* force = */ true );
+			m_tangentIn.setSlope( s, /* force = */ true );
+			m_tangentOut.setSlope( s, /* force = */ true );
 		}
 	}
 
@@ -1159,7 +1165,7 @@ void Animation::Key::setTieMode( const Animation::TieMode tieMode )
 
 	const double previousTieScaleRatio = m_tieScaleRatio;
 	const double newTieScaleRatio = ( ! tieScaleActive( m_tieMode ) && tieScaleActive( tieMode ) )
-		? tieScaleRatio( m_in.m_scale, m_out.m_scale )
+		? tieScaleRatio( m_tangentIn.m_scale, m_tangentOut.m_scale )
 		: m_tieScaleRatio;
 
 	// make change via action
@@ -1320,24 +1326,24 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				//        set. only update the next/prev keys at the new time when there is no active
 				//        clashing key as the key whose time is being set will replace any active
 				//        clashing key. The key and any clashing inactive key are always updated.
-				key->m_out.update();
-				key->m_in.update();
+				key->m_tangentOut.update();
+				key->m_tangentIn.update();
 				if( clashingInactiveKey )
 				{
-					clashingInactiveKey->m_in.update();
-					clashingInactiveKey->m_out.update();
+					clashingInactiveKey->m_tangentIn.update();
+					clashingInactiveKey->m_tangentOut.update();
 				}
 				else
 				{
-					if( kpn ){ kpn->m_in.update(); }
-					if( kpp ){ kpp->m_out.update(); }
+					if( kpn ){ kpn->m_tangentIn.update(); }
+					if( kpp ){ kpp->m_tangentOut.update(); }
 				}
 				if( ! clashingKey )
 				{
 					Key* const kn = key->nextKey();
-					if( kn && ( kn != kpn || clashingInactiveKey ) ){ kn->m_in.update(); }
+					if( kn && ( kn != kpn || clashingInactiveKey ) ){ kn->m_tangentIn.update(); }
 					Key* const kp = key->prevKey();
-					if( kp && ( kp != kpp || clashingInactiveKey ) ){ kp->m_out.update(); }
+					if( kp && ( kp != kpp || clashingInactiveKey ) ){ kp->m_tangentOut.update(); }
 				}
 
 				curve->m_keyTimeChangedSignal( key->m_parent, key.get() );
@@ -1430,25 +1436,25 @@ Animation::KeyPtr Animation::Key::setTime( const float time )
 				//        The key whose time was set is updated if it was active.
 				if( active )
 				{
-					key->m_in.update();
-					key->m_out.update();
+					key->m_tangentIn.update();
+					key->m_tangentOut.update();
 				}
 				if( clashingKey )
 				{
-					clashingKey->m_in.update();
-					clashingKey->m_out.update();
+					clashingKey->m_tangentIn.update();
+					clashingKey->m_tangentOut.update();
 				}
 				else
 				{
-					if( kpn ){ kpn->m_in.update(); }
-					if( kpp ){ kpp->m_out.update(); }
+					if( kpn ){ kpn->m_tangentIn.update(); }
+					if( kpp ){ kpp->m_tangentOut.update(); }
 				}
 				if( ! clashingInactiveKey )
 				{
 					Key* const kn = key->nextKey();
-					if( kn && ( kn != kpn || clashingKey ) ){ kn->m_in.update(); }
+					if( kn && ( kn != kpn || clashingKey ) ){ kn->m_tangentIn.update(); }
 					Key* const kp = key->prevKey();
-					if( kp && ( kp != kpp || clashingKey ) ){ kp->m_out.update(); }
+					if( kp && ( kp != kpp || clashingKey ) ){ kp->m_tangentOut.update(); }
 				}
 
 				curve->m_keyTimeChangedSignal( key->m_parent, key.get() );
@@ -1489,20 +1495,20 @@ void Animation::Key::setValue( const float value )
 			// Do
 			[ key, value ] {
 				key->m_value = value;
-				key->m_out.update();
-				key->m_in.update();
-				if( Key* const kn = key->nextKey() ){ kn->m_in.update(); }
-				if( Key* const kp = key->prevKey() ){ kp->m_out.update(); }
+				key->m_tangentOut.update();
+				key->m_tangentIn.update();
+				if( Key* const kn = key->nextKey() ){ kn->m_tangentIn.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_tangentOut.update(); }
 				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			},
 			// Undo
 			[ key, previousValue ] {
 				key->m_value = previousValue;
-				key->m_out.update();
-				key->m_in.update();
-				if( Key* const kn = key->nextKey() ){ kn->m_in.update(); }
-				if( Key* const kp = key->prevKey() ){ kp->m_out.update(); }
+				key->m_tangentOut.update();
+				key->m_tangentIn.update();
+				if( Key* const kn = key->nextKey() ){ kn->m_tangentIn.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_tangentOut.update(); }
 				key->m_parent->m_keyValueChangedSignal( key->m_parent, key.get() );
 				key->m_parent->propagateDirtiness( key->m_parent->outPlug() );
 			}
@@ -1787,12 +1793,12 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 			// NOTE : only update the new next/prev keys when there is no active clashing key as
 			//        the key being added will replace any inactive clashing key. Always update
 			//        the key being added.
-			key->m_in.update();
-			key->m_out.update();
+			key->m_tangentIn.update();
+			key->m_tangentOut.update();
 			if( ! clashingKey )
 			{
-				if( Key* const kn = key->nextKey() ){ kn->m_in.update(); }
-				if( Key* const kp = key->prevKey() ){ kp->m_out.update(); }
+				if( Key* const kn = key->nextKey() ){ kn->m_tangentIn.update(); }
+				if( Key* const kp = key->prevKey() ){ kp->m_tangentOut.update(); }
 			}
 
 			m_keyAddedSignal( this, key.get() );
@@ -1839,17 +1845,17 @@ Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, co
 			// NOTE : only update the old next/prev keys when there is no inactive clashing key as
 			//        any inactive clashing key will replace the key being removed. Always update
 			//        the key being removed and the inactive clashing key as it becomes active.
-			key->m_in.update();
-			key->m_out.update();
+			key->m_tangentIn.update();
+			key->m_tangentOut.update();
 			if( clashingKey )
 			{
-				clashingKey->m_in.update();
-				clashingKey->m_out.update();
+				clashingKey->m_tangentIn.update();
+				clashingKey->m_tangentOut.update();
 			}
 			else
 			{
-				if( kn ){ kn->m_in.update(); }
-				if( kp ){ kp->m_out.update(); }
+				if( kn ){ kn->m_tangentIn.update(); }
+				if( kp ){ kp->m_tangentOut.update(); }
 			}
 
 			m_keyRemovedSignal( this, key.get() );
@@ -1960,7 +1966,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 		const double lt = ( time - lo->m_time );
 		const double ht = ( hi->m_time - time );
-		const double nt = std::min( std::max( lt / lo->m_out.m_dt, 0.0 ), 1.0 );
+		const double nt = std::min( std::max( lt / lo->m_tangentOut.m_dt, 0.0 ), 1.0 );
 
 		// create dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
 		// badly behaved interpolators.
@@ -1968,35 +1974,35 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		KeyPtr kl( new Key( lo->m_time, lo->getValue(), interpolator->getInterpolation() ) );
 		KeyPtr kh( new Key( hi->m_time, hi->getValue(), interpolator->getInterpolation() ) );
 
-		kl->m_in.m_slope = lo->m_in.m_slope;
-		kl->m_in.m_scale = lo->m_in.m_scale;
-		kl->m_out.m_slope = lo->m_out.m_slope;
-		kl->m_out.m_scale = lo->m_out.m_scale;
+		kl->m_tangentIn.m_slope = lo->m_tangentIn.m_slope;
+		kl->m_tangentIn.m_scale = lo->m_tangentIn.m_scale;
+		kl->m_tangentOut.m_slope = lo->m_tangentOut.m_slope;
+		kl->m_tangentOut.m_scale = lo->m_tangentOut.m_scale;
 		kl->m_tieMode = TieMode::Manual;
 
-		kh->m_in.m_slope = hi->m_in.m_slope;
-		kh->m_in.m_scale = hi->m_in.m_scale;
-		kh->m_out.m_slope = hi->m_out.m_slope;
-		kh->m_out.m_scale = hi->m_out.m_scale;
+		kh->m_tangentIn.m_slope = hi->m_tangentIn.m_slope;
+		kh->m_tangentIn.m_scale = hi->m_tangentIn.m_scale;
+		kh->m_tangentOut.m_slope = hi->m_tangentOut.m_slope;
+		kh->m_tangentOut.m_scale = hi->m_tangentOut.m_scale;
 		kh->m_tieMode = TieMode::Manual;
 
 		// new tangents are in space of new spans (post-bisection)
 
-		kl->m_out.m_dt = lt;
-		key->m_in.m_dt = lt;
-		key->m_out.m_dt = ht;
-		kh->m_in.m_dt = ht;
+		kl->m_tangentOut.m_dt = lt;
+		key->m_tangentIn.m_dt = lt;
+		key->m_tangentOut.m_dt = ht;
+		kh->m_tangentIn.m_dt = ht;
 
 		// bisect span
 
-		interpolator->bisect( *lo, *hi, nt, lo->m_out.m_dt, *key, kl->m_out, kh->m_in );
+		interpolator->bisect( *lo, *hi, nt, lo->m_tangentOut.m_dt, *key, kl->m_tangentOut, kh->m_tangentIn );
 
 		// retrieve new tangent slope and scale
 
-		const double lfsl = kl->m_out.getSlope();
-		const double lfsc = kl->m_out.getScale();
-		const double hisl = kh->m_in.getSlope();
-		const double hisc = kh->m_in.getScale();
+		const double lfsl = kl->m_tangentOut.getSlope();
+		const double lfsc = kl->m_tangentOut.getScale();
+		const double hisl = kh->m_tangentIn.getSlope();
+		const double hisc = kh->m_tangentIn.getScale();
 
 		// add new key to curve
 
@@ -2007,8 +2013,8 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		Private::ScopedAssignment< TieMode > ltm( lo->m_tieMode, TieMode::Manual );
 		Private::ScopedAssignment< TieMode > htm( hi->m_tieMode, TieMode::Manual );
 
-		lo->m_out.setSlopeAndScale( lfsl, lfsc );
-		hi->m_in.setSlopeAndScale( hisl, hisc );
+		lo->m_tangentOut.setSlopeAndScale( lfsl, lfsc );
+		hi->m_tangentIn.setSlopeAndScale( hisl, hisc );
 	}
 	else
 	{
@@ -2130,17 +2136,17 @@ void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
 			// NOTE : only update the old next/prev keys when there is no inactive clashing key as
 			//        any inactive clashing key will replace the key being removed. Always update
 			//        the key being removed and the inactive clashing key as it becomes active.
-			key->m_in.update();
-			key->m_out.update();
+			key->m_tangentIn.update();
+			key->m_tangentOut.update();
 			if( clashingKey )
 			{
-				clashingKey->m_in.update();
-				clashingKey->m_out.update();
+				clashingKey->m_tangentIn.update();
+				clashingKey->m_tangentOut.update();
 			}
 			else
 			{
-				if( kn ){ kn->m_in.update(); }
-				if( kp ){ kp->m_out.update(); }
+				if( kn ){ kn->m_tangentIn.update(); }
+				if( kp ){ kp->m_tangentOut.update(); }
 			}
 
 			m_keyRemovedSignal( this, key.get() );
@@ -2197,13 +2203,13 @@ void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
 			//        being added when it becomes active.
 			if( active )
 			{
-				key->m_in.update();
-				key->m_out.update();
+				key->m_tangentIn.update();
+				key->m_tangentOut.update();
 			}
 			if( ! clashingKey )
 			{
-				if( Key* const k = key->nextKey() ){ k->m_in.update(); }
-				if( Key* const k = key->prevKey() ){ k->m_out.update(); }
+				if( Key* const k = key->nextKey() ){ k->m_tangentIn.update(); }
+				if( Key* const k = key->prevKey() ){ k->m_tangentOut.update(); }
 			}
 
 			m_keyAddedSignal( this, key.get() );
@@ -2381,7 +2387,7 @@ float Animation::CurvePlug::evaluate( const float time ) const
 
 	// normalise time to lo, hi key time range
 
-	const double dt = lo.m_out.m_dt;
+	const double dt = lo.m_tangentOut.m_dt;
 	const double nt = Imath::clamp( ( time - lo.m_time ) / dt, 0.0, 1.0 );
 
 	// evaluate interpolator
