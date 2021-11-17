@@ -855,6 +855,29 @@ IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
 IECore::InternedString g_filteredLights( "filteredLights" );
 
+const char *customAttributeName( const std::string &attributeName, bool *hasPrecedence = nullptr )
+{
+	if( boost::starts_with( attributeName, "user:" ) )
+	{
+		if( hasPrecedence )
+		{
+			*hasPrecedence = false;
+		}
+		return attributeName.c_str();
+	}
+	else if( boost::starts_with( attributeName, "render:" ) )
+	{
+		if( hasPrecedence )
+		{
+			*hasPrecedence = true;
+		}
+		return attributeName.c_str() + 7;
+	}
+
+	// Not a custom attribute
+	return nullptr;
+}
+
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -919,11 +942,16 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
-				if( boost::starts_with( it->first.string(), "user:" ) )
+				bool hasPrecedence;
+				if( const char *name = customAttributeName( it->first.string(), &hasPrecedence ) )
 				{
 					if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
 					{
-						m_user[it->first] = data;
+						auto inserted = m_custom.insert( CustomAttributes::value_type( name, nullptr ) );
+						if( hasPrecedence || inserted.second )
+						{
+							inserted.first->second = data;
+						}
 					}
 				}
 
@@ -1117,28 +1145,38 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			// Remove old user parameters we don't want any more.
+			// Remove old custom parameters.
 
-			AtUserParamIterator *it= AiNodeGetUserParamIterator( node );
-			while( !AiUserParamIteratorFinished( it ) )
+			const AtNodeEntry *nodeEntry = AiNodeGetNodeEntry( node );
+			if( previousAttributes )
 			{
-				const AtUserParamEntry *param = AiUserParamIteratorGetNext( it );
-				const char *name = AiUserParamGetName( param );
-				if( boost::starts_with( name, "user:" ) )
+				for( const auto &attr : previousAttributes->m_custom )
 				{
-					if( m_user.find( name ) == m_user.end() )
+					if( AiNodeEntryLookUpParameter( nodeEntry, attr.first ) )
 					{
-						AiNodeResetParameter( node, name );
+						// Be careful not to reset a parameter we wouldn't
+						// have set in the first place.
+						continue;
 					}
+					AiNodeResetParameter( node, attr.first );
 				}
 			}
-			AiUserParamIteratorDestroy( it );
 
-			// Add user parameters we do want.
+			// Add new custom parameters.
 
-			for( ArnoldAttributes::UserAttributes::const_iterator it = m_user.begin(), eIt = m_user.end(); it != eIt; ++it )
+			for( const auto &attr : m_custom )
 			{
-				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
+				if( AiNodeEntryLookUpParameter( nodeEntry, attr.first ) )
+				{
+					IECore::msg(
+						IECore::Msg::Warning,
+						"Renderer::attributes",
+						boost::format( "Custom attribute \"%s\" will be ignored because it clashes with Arnold's built-in parameters" ) % attr.first.c_str()
+					);
+					continue;
+				}
+
+				ParameterAlgo::setParameter( node, attr.first, attr.second.get() );
 			}
 
 			// Early out for IECoreScene::Procedurals. Arnold's inheritance rules for procedurals are back
@@ -1701,7 +1739,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		void hashProceduralGeometry( IECore::MurmurHash &h ) const
 		{
-			// Everything except user attributes affects procedurals,
+			// Everything except custom attributes affects procedurals,
 			// because we have to manually inherit attributes by
 			// applying them to the child nodes of the procedural.
 			h.append( m_visibility );
@@ -1752,8 +1790,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstStringDataPtr m_sssSetName;
 		// When adding fields, please update `hashProceduralGeometry()`!
 
-		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
-		UserAttributes m_user;
+		// AtString defines implicit cast to a (uniquefied) `const char *`,
+		// and that is sufficient for the default `std::less<AtString>`
+		// comparison.
+		using CustomAttributes = boost::container::flat_map<AtString, IECore::ConstDataPtr>;
+		CustomAttributes m_custom;
 
 		// The original attributes we were contructed from. We stash
 		// these so that they can be inherited manually when expanding
@@ -2636,9 +2677,9 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			IECore::CompoundObjectPtr fullAttributes = new IECore::CompoundObject;
 			for( const auto &a : m_attributesToInherit->members() )
 			{
-				if( !boost::starts_with( a.first.c_str(), "user:" ) )
+				if( !customAttributeName( a.first.string() ) )
 				{
-					// We ignore user attributes because they follow normal inheritance
+					// We ignore custom attributes because they follow normal inheritance
 					// in Arnold anyway. They will be written onto the `ginstance` node
 					// referring to the procedural instead.
 					fullAttributes->members()[a.first] = a.second;
