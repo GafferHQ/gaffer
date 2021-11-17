@@ -66,8 +66,10 @@ defaultCompilerVersion = IEEnv.registry["platformDefaults"][platform]["compilerV
 
 cortexInfo = { x : IEEnv.registry["libraries"]["cortex"][x][platform] for x in IEEnv.activeVersions( IEEnv.registry["libraries"]["cortex"] ) }
 
+# find all Arnold versions
+arnoldVersions = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )
+
 # fetch at least one active version of each renderer
-aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
 dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
 
 # find a specific appleseed version per compiler per cortex version
@@ -97,11 +99,13 @@ if platform in ( "cent7.x86_64" ) :
 			"COMPILER_VERSION={}".format( compilerVersion ),
 			"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
 			"APPLESEED_VERSION={}".format( appleseedVersion ),
-			"ARNOLD_VERSION={}".format( aiVersion ),
 			"DL_VERSION={}".format( dlVersion ),
 		]
-		for variant, variantArgs in variantReg.items() :
-			build( baseArgs + [ "GAFFER_BUILD_VARIANT={}".format( variant ) ] + [ "=".join( x ) for x in variantArgs.items() ] )
+		for variant, variantInfo in variantReg.items() :
+			for arnoldVersion in arnoldVersions :
+				variantArgs = [ "GAFFER_BUILD_VARIANT={}".format( variant ) ] + [ "=".join( x ) for x in variantInfo.items() ]
+				arnoldArgs = [ "ARNOLD_VERSION={}".format( arnoldVersion ) ]
+				build( baseArgs + variantArgs + arnoldArgs )
 
 		# app specific builds
 		for app, minimumVersion in (
@@ -112,14 +116,15 @@ if platform in ( "cent7.x86_64" ) :
 			for appVersion in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
 				compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
 				appleseedVersion = appleseedCompilerMap[compilerVersion][cortexCompatibilityVersion]
-				build( [
-					"APP={}".format( app ),
-					"APP_VERSION={}".format( appVersion ),
-					"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
-					"APPLESEED_VERSION={}".format( appleseedVersion ),
-					"ARNOLD_VERSION={}".format( aiVersion ),
-					"DL_VERSION={}".format( dlVersion ),
-				] )
+				for arnoldVersion in arnoldVersions :
+					build( [
+						"APP={}".format( app ),
+						"APP_VERSION={}".format( appVersion ),
+						"CORTEX_VERSION={}".format( cortexCompatibilityVersion ),
+						"APPLESEED_VERSION={}".format( appleseedVersion ),
+						"ARNOLD_VERSION={}".format( arnoldVersion ),
+						"DL_VERSION={}".format( dlVersion ),
+					] )
 
 else :
 
