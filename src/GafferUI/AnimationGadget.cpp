@@ -89,6 +89,29 @@ void tieModeToBools( const Animation::TieMode mode, bool& tieSlope, bool& tieSca
 	}
 }
 
+void renderCurveSpan( const Animation::CurvePlug* const curvePlug,
+	const float tmin, const float tmax, const double unitPerPx,
+	const ViewportGadget* const viewportGadget,
+	const Style* const style, const Style::State styleState, const Imath::Color3f& color )
+{
+	// NOTE : draw span with one sample per pixel in time dimension so curve appears smooth at all zoom levels.
+	double count;
+	const double fract = std::modf( ( tmax - tmin ) / unitPerPx, & count );
+	const int steps = static_cast< int >( count ) + ( ( fract == 0.0 ) ? 0 : 1 );
+	V2f p0 = viewportGadget->worldToRasterSpace( V3f( tmin, curvePlug->evaluate( tmin ), 0 ) );
+
+	for( int i = 1; i < steps; ++i )
+	{
+		const double time = tmin + ( static_cast< double >( i ) * unitPerPx );
+		const V2f p1 = viewportGadget->worldToRasterSpace( V3f( time, curvePlug->evaluate( time ), 0 ) );
+		style->renderAnimationCurve( p0, p1, V2f( 0 ), V2f( 0 ), styleState, &color );
+		p0 = p1;
+	}
+
+	const V2f p1 = viewportGadget->worldToRasterSpace( V3f( tmax, curvePlug->evaluate( tmax ), 0 ) );
+	style->renderAnimationCurve( p0, p1, V2f( 0 ), V2f( 0 ), styleState, &color );
+}
+
 /// Aliases that define the intended use of each
 /// Gadget::Layer by the AnimationGadget components.
 namespace AnimationLayer
@@ -1821,50 +1844,42 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
 	ViewportGadget::RasterScope rasterScope( viewportGadget );
 
+	// compute viewport time bounds in gadget space
+	const int rx = viewportGadget->getViewport().x;
+	const float tmin = viewportGadget->rasterToWorldSpace( V2f( m_xMargin, 0.f ) ).p0.x;
+	const float tmax = viewportGadget->rasterToWorldSpace( V2f( rx, 0.f ) ).p0.x;
+	const float unitPerPx = ( tmax - tmin ) / ( rx - m_xMargin );
+
 	Animation::ConstKeyPtr previousKey = nullptr;
-	V2f previousKeyPosition = V2f( 0 );
+	V2f previousKeyPosition( 0 );
 
-	bool isHighlighted = curvePlug == m_highlightedCurve;
+	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
+	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
+	// draw curve spans between keys
 	for( const auto &key : *curvePlug )
 	{
 		V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 
-		if( previousKey )
+		if( previousKey && ( keyPosition.x >= m_xMargin ) && ( previousKeyPosition.x <= rx ) )
 		{
-			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
-
 			switch( previousKey->getInterpolation() )
 			{
 				case Gaffer::Animation::Interpolation::Constant:
-					style->renderAnimationCurve( previousKeyPosition, V2f( keyPosition.x, previousKeyPosition.y ), V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
-					style->renderAnimationCurve( V2f( keyPosition.x, previousKeyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					style->renderAnimationCurve( previousKeyPosition, V2f( keyPosition.x, previousKeyPosition.y ), V2f( 0 ), V2f( 0 ), styleState, &color3 );
+					style->renderAnimationCurve( V2f( keyPosition.x, previousKeyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), styleState, &color3 );
 					break;
 				case Gaffer::Animation::Interpolation::ConstantNext:
-					style->renderAnimationCurve( previousKeyPosition, V2f( previousKeyPosition.x, keyPosition.y ), V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
-					style->renderAnimationCurve( V2f( previousKeyPosition.x, keyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					style->renderAnimationCurve( previousKeyPosition, V2f( previousKeyPosition.x, keyPosition.y ), V2f( 0 ), V2f( 0 ), styleState, &color3 );
+					style->renderAnimationCurve( V2f( previousKeyPosition.x, keyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), styleState, &color3 );
 					break;
 				case Gaffer::Animation::Interpolation::Linear:
-					style->renderAnimationCurve( previousKeyPosition, keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					style->renderAnimationCurve( previousKeyPosition, keyPosition, V2f( 0 ), V2f( 0 ), styleState, &color3 );
 					break;
 				default:
-				{
-					V2f p0 = previousKeyPosition;
-					const double range = ( key.getTime() - previousKey->getTime() );
-
-					for( int i = 1; i < 50; ++ i )
-					{
-						const double scale = static_cast< double >( i ) / 50.0;
-						const double time = previousKey->getTime() + ( range * scale );
-						double value = curvePlug->evaluate( time );
-						V2f p1 = viewportGadget->worldToRasterSpace( V3f( time, value, 0 ) );
-						style->renderAnimationCurve( p0, p1, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
-						p0 = p1;
-					}
-
-					style->renderAnimationCurve( p0, keyPosition, V2f( 0 ), V2f( 0 ), isHighlighted ? Style::HighlightedState : Style::NormalState, &color3 );
+					renderCurveSpan( curvePlug, std::max( tmin, previousKey->getTime() ), std::min( tmax, key.getTime() ),
+						unitPerPx, viewportGadget, style, styleState, color3 );
 					break;
-				}
 			}
 		}
 
