@@ -1221,7 +1221,7 @@ class RendererTest( GafferTest.TestCase ) :
 			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
 
-	def testUserAttributes( self ) :
+	def testCustomAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
@@ -1229,8 +1229,10 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
+		# Current convention : attributes prefixed with "user:"
+
 		r.object(
-			"plane1",
+			"userPlane1",
 			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
@@ -1244,7 +1246,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		r.object(
-			"plane2",
+			"userPlane2",
 			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
@@ -1257,6 +1259,36 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		# Convention we are transitioning to : attributes prefixed with "render:"
+
+		r.object(
+			"renderPlane1",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"render:testInt" : IECore.IntData( 1 ),
+					"render:testFloat" : IECore.FloatData( 2.5 ),
+					"render:testV3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+					"render:testColor3f" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ),
+					"render:testString" : IECore.StringData( "we're all doomed" ),
+				} )
+			)
+		)
+
+		r.object(
+			"renderPlane2",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"render:testInt" : IECore.IntData( 2 ),
+					"render:testFloat" : IECore.FloatData( 25 ),
+					"render:testV3f" : IECore.V3fData( imath.V3f( 0, 1, 0 ) ),
+					"render:testColor3f" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0 ) ),
+					"render:testString" : IECore.StringData( "indeed" ),
+				} )
+			)
+		)
+
 		r.render()
 		del r
 
@@ -1264,19 +1296,215 @@ class RendererTest( GafferTest.TestCase ) :
 
 			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
 
-			plane1 = arnold.AiNodeLookUpByName( universe, "plane1" )
-			self.assertEqual( arnold.AiNodeGetInt( plane1, "user:testInt" ), 1 )
-			self.assertEqual( arnold.AiNodeGetFlt( plane1, "user:testFloat" ), 2.5 )
-			self.assertEqual( arnold.AiNodeGetVec( plane1, "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
-			self.assertEqual( arnold.AiNodeGetRGB( plane1, "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
-			self.assertEqual( arnold.AiNodeGetStr( plane1, "user:testString" ), "we're all doomed" )
+			# Test "user:". We expect the prefix to be included in the Arnold
+			# parameter name.
 
-			plane2 = arnold.AiNodeLookUpByName( universe, "plane2" )
-			self.assertEqual( arnold.AiNodeGetInt( plane2, "user:testInt" ), 2 )
-			self.assertEqual( arnold.AiNodeGetFlt( plane2, "user:testFloat" ), 25 )
-			self.assertEqual( arnold.AiNodeGetVec( plane2, "user:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
-			self.assertEqual( arnold.AiNodeGetRGB( plane2, "user:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
-			self.assertEqual( arnold.AiNodeGetStr( plane2, "user:testString" ), "indeed" )
+			userPlane1 = arnold.AiNodeLookUpByName( universe, "userPlane1" )
+			self.assertEqual( arnold.AiNodeGetInt( userPlane1, "user:testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( userPlane1, "user:testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( userPlane1, "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( userPlane1, "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( userPlane1, "user:testString" ), "we're all doomed" )
+
+			userPlane2 = arnold.AiNodeLookUpByName( universe, "userPlane2" )
+			self.assertEqual( arnold.AiNodeGetInt( userPlane2, "user:testInt" ), 2 )
+			self.assertEqual( arnold.AiNodeGetFlt( userPlane2, "user:testFloat" ), 25 )
+			self.assertEqual( arnold.AiNodeGetVec( userPlane2, "user:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( userPlane2, "user:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
+			self.assertEqual( arnold.AiNodeGetStr( userPlane2, "user:testString" ), "indeed" )
+
+			# Test "render:". We expect the prefix to have been stripped from
+			# the Arnold parameter name.
+
+			renderPlane1 = arnold.AiNodeLookUpByName( universe, "renderPlane1" )
+			self.assertEqual( arnold.AiNodeGetInt( renderPlane1, "testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( renderPlane1, "testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( renderPlane1, "testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( renderPlane1, "testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( renderPlane1, "testString" ), "we're all doomed" )
+
+			renderPlane2 = arnold.AiNodeLookUpByName( universe, "renderPlane2" )
+			self.assertEqual( arnold.AiNodeGetInt( renderPlane2, "testInt" ), 2 )
+			self.assertEqual( arnold.AiNodeGetFlt( renderPlane2, "testFloat" ), 25 )
+			self.assertEqual( arnold.AiNodeGetVec( renderPlane2, "testV3f" ), arnold.AtVector( 0, 1, 0 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( renderPlane2, "testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
+			self.assertEqual( arnold.AiNodeGetStr( renderPlane2, "testString" ), "indeed" )
+
+	def testCustomAttributePrecedence( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		# Mix of attributes where `render:` clashes with `user:`
+
+		r.object(
+			"plane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"user:test" : IECore.StringData( "user" ),
+					"render:user:test" : IECore.StringData( "render" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			# We expect the `render:` attribute to have taken precedence over
+			# the `user:` one.
+
+			plane = arnold.AiNodeLookUpByName( universe, "plane" )
+			self.assertEqual( arnold.AiNodeGetStr( plane, "user:test" ), "render" )
+
+	def testAddAndRemoveCustomAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		# Start with one set of attributes.
+
+		o = r.object(
+			"plane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"render:toReplace" : IECore.StringData( "original" ),
+					"render:toRemove" : IECore.StringData( "original" ),
+					"render:toChangeType" : IECore.StringData( "original" ),
+				} )
+			)
+		)
+
+		# Replace with another set.
+
+		o.attributes(
+			r.attributes(
+				IECore.CompoundObject( {
+					"render:toReplace" : IECore.StringData( "new" ),
+					"render:new" : IECore.StringData( "new" ),
+					"render:toChangeType" : IECore.IntData( 101 ),
+				} )
+			)
+		)
+
+		r.render()
+		del o
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			plane = arnold.AiNodeLookUpByName( universe, "plane" )
+
+			self.assertEqual( arnold.AiNodeGetStr( plane, "toReplace" ), "new" )
+			self.assertEqual( arnold.AiNodeGetStr( plane, "new" ), "new" )
+			self.assertEqual( arnold.AiNodeGetInt( plane, "toChangeType" ), 101 )
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( plane, "toRemove" ) )
+
+	def testCustomAttributesCantSetStandardParameters( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		# Try to set `motion_start` on the sly, via a `render:` attribute.
+		# We don't want to allow this because we need to manage Arnold's
+		# built in parameters via the official renderer API.
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			r.object(
+				"plane",
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+				r.attributes(
+					IECore.CompoundObject( {
+						"render:motion_start" : IECore.FloatData( -1 ),
+					} )
+				)
+			)
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual(
+			mh.messages[0].message,
+			"Custom attribute \"motion_start\" will be ignored because it clashes with Arnold's built-in parameters"
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			plane = arnold.AiNodeLookUpByName( universe, "plane" )
+			self.assertEqual( arnold.AiNodeGetFlt( plane, "motion_start" ), 0 )
+
+	def testRemovingCustomAttributesCantResetStandardParameters( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		# Try to set `matrix` on the sly, via a `render:` attribute.
+		# We don't want to allow this because we need to manage it
+		# via `ObjectInterface:transform()`.
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			o = r.object(
+				"plane",
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+				r.attributes(
+					IECore.CompoundObject( {
+						"render:matrix" : IECore.M44fData(
+							imath.M44f().translate( imath.V3f( 1, 2, 3 ) ),
+						)
+					} )
+				)
+			)
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual(
+			mh.messages[0].message,
+			"Custom attribute \"matrix\" will be ignored because it clashes with Arnold's built-in parameters"
+		)
+
+		# Now set `matrix` via the official route.
+		o.transform( imath.M44f().translate( imath.V3f( 4, 5, 6 ) ) )
+		# And remove the dodgy custom attribute. If it's not implemented
+		# carefuly, the code for removing attributes could reset the
+		# matrix, which is definitely not what we want.
+		o.attributes( r.attributes( IECore.CompoundObject( {} ) ) )
+
+		r.render()
+		del o
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			plane = arnold.AiNodeLookUpByName( universe, "plane" )
+			self.assertEqual(
+				self.__m44f( arnold.AiNodeGetMatrix( plane, "matrix" ) ),
+				imath.M44f().translate( imath.V3f( 4, 5, 6 ) )
+			)
 
 	def testDisplacementAttributes( self ) :
 

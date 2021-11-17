@@ -28,6 +28,7 @@ Improvements
 - Switch : Removed variables such as `scene:path` and `image:channelName` from the context used to evaluate the `enabled` plug. This improves performance in some scenarios, and prevents the creation of invalid switches.
 - NodeEditor : Added option in node editor context menu to set interpolation of an animated value.
 - Animation : Added new `ConstantNext` interpolation mode, evaluates to the value of the next key for all times greater than the time of the key.
+- Arnold : Added support for `render:` prefixed attributes. For example, a Color3f attribute called `render:displayColor` will be readable as `displayColor` from a `user_data_rgb` shader.
 
 Fixes
 -----
@@ -48,6 +49,7 @@ Fixes
 - NameSwitch : Fixed context management bug that allowed variables such as `scene:path` to leak into the context used to evaluate the `selector` plug.
 - GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs.
 - NodeBinding : Fixed bug that could cause type queries to fail if types derived from Switch or ContextProcessor were wrapped for subclassing in Python.
+- Arnold : Fixed bug that prevented the type of a `user:` attribute from being changed during an interactive render.
 
 API
 ---
