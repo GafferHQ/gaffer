@@ -76,7 +76,8 @@ class GAFFER_API Animation : public ComputeNode
 			Linear,
 			Repeat,
 			RepeatOffset,
-			Mirror
+			Mirror,
+			Oscillate
 		};
 
 		/// Defines direction relative to a key.

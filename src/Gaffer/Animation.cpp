@@ -662,6 +662,43 @@ struct ExtrapolatorMirror
 	}
 };
 
+// oscillate extrapolator
+
+struct ExtrapolatorOscillate
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorOscillate()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Oscillate )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		const Gaffer::Animation::Key* const key = curve.getKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		// NOTE : clamp time passed to curve evaluate in range of keys to prevent infinite recursion.
+		const double value = curve.evaluate( Imath::clamp(
+			static_cast< float >( keyOpposite->getTime() + remainder ),
+			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+
+		return ( ( static_cast< int >( count ) % 2 ) == 0 )
+			? ( static_cast< double >( curve.getKeyOut()->getValue() ) +
+				static_cast< double >( curve.getKeyIn()->getValue() ) - value )
+			: value;
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -769,7 +806,8 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
 		ConstExtrapolatorPtr( new ExtrapolatorRepeat() ),
 		ConstExtrapolatorPtr( new ExtrapolatorRepeatOffset() ),
-		ConstExtrapolatorPtr( new ExtrapolatorMirror() )
+		ConstExtrapolatorPtr( new ExtrapolatorMirror() ),
+		ConstExtrapolatorPtr( new ExtrapolatorOscillate() )
 	};
 
 	return container;
@@ -2936,6 +2974,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "RepeatOffset";
 		case Extrapolation::Mirror:
 			return "Mirror";
+		case Extrapolation::Oscillate:
+			return "Oscillate";
 		default:
 			assert( 0 );
 			return 0;
