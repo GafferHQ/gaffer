@@ -293,6 +293,7 @@ void GafferModule::bindAnimation()
 		.value( Animation::toString( Animation::Extrapolation::Linear ), Animation::Extrapolation::Linear )
 		.value( Animation::toString( Animation::Extrapolation::Repeat ), Animation::Extrapolation::Repeat )
 		.value( Animation::toString( Animation::Extrapolation::RepeatOffset ), Animation::Extrapolation::RepeatOffset )
+		.value( Animation::toString( Animation::Extrapolation::Mirror ), Animation::Extrapolation::Mirror )
 	;
 
 	enum_< Animation::Direction >( "Direction" )
