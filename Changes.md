@@ -6,6 +6,20 @@ Improvements
 
 - Animation : Added basic support for loading animation saved from Gaffer 0.61. Caution : `Bezier` and `Cubic` interpolation will be converted to `Linear`, because they are features available in Gaffer 0.61 only.
 
+Fixes
+-----
+
+- SceneReader :
+  - Fixed loading of indexed UVs from Alembic curves.
+  - Fixed loading of custom attributes from USD files.
+- SceneWriter : Fixed writing of indexed primitive variables to Alembic caches.
+
+Build
+-----
+
+- Updated to GafferHQ/dependencies 3.2.0 :
+  - Cortex : Updated to version 10.2.3.0.
+
 0.60.11.0 (relative to 0.60.10.0)
 ========
 

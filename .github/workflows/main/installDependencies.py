@@ -47,7 +47,7 @@ else :
 # Determine default archive URL.
 
 platform = "osx" if sys.platform == "darwin" else "linux"
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python2-" + platform + ".tar.gz"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/3.2.0/gafferDependencies-3.2.0-Python2-" + platform + ".tar.gz"
 
 # Parse command line arguments.
 
