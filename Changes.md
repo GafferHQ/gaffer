@@ -12,7 +12,9 @@ Features
 - Animation :
   - Added new "Cubic" and "Bezier" interpolation modes which will smoothly interpolate between key values. The shape of the interpolated curves can
     be controlled by adjusting the slope and scale of key tangents, which are displayed and can be interactively manipulated in the Animation Editor.
-  - Added new user interface panel in the Animation Editor with controls for key value, time, interpolation mode and tangent slope, scale and tie mode.
+  - Added new curve extrapolation mode concept, which determines how values are extrapolated beyond the in and out keys of a curve.
+  - Added new user interface panel in the Animation Editor with controls for key value, time, interpolation mode and tangent slope, scale and tie mode
+    and curve extrapolation modes.
 
 Improvements
 ------------
@@ -44,8 +46,8 @@ Fixes
   - Fixed bug that cleared key selection when selecting multiple curves via path listing or gadget.
   - Fixed bug when pressing <kbd>f</kbd> to frame viewport which resulted in a blank background in certain cases (#4410).
   - Inserting a new key in editor (Hold "Ctrl" and left click on curve) is now undone/redone as a distinct step.
-  - Fixed bug when selecting curve for first time via gadget, keys appear, then disappear (#4443)
-  - Fixed bug where curves would not become visible in gadget until the path listing expansion was changed (#4408)
+  - Fixed bug when selecting curve for first time via gadget, keys appear, then disappear (#4443).
+  - Fixed bug where curves would not become visible in gadget until the path listing expansion was changed (#4408).
 - ParallelAlgo : Fixed deadlock in `callOnUIThread()`.
 - NameSwitch : Fixed context management bug that allowed variables such as `scene:path` to leak into the context used to evaluate the `selector` plug.
 - GafferTest.TestCase : Fixed `assertNodesConstructWithDefaultValues()` to recurse through all plugs.
@@ -86,10 +88,12 @@ API
   - Added `curve.removeInactiveKeys()` function, removes all the inactive keys parented to a curve.
   - Added `key.isActive()` function, returns true if key is parented to curve and is the active key at its current time.
   - Added `curve.insertKey()` functions, insert key at specified time with optionally specified value.
-  - Added `curve.keyTimeChangedSignal()` function, returns a signal that is called when a key's time has changed
-  - Added `curve.keyValueChangedSignal()` function, returns a signal that is called when a key's value has changed
-  - Added `curve.keyInterpolationChangedSignal()` function, returns a signal that is called when a key's interpolation has changed
-  - Added new api for cubic interpolation modes, key tangents and tie mode (see header `Animation.h` for full details)
+  - Added `curve.keyTimeChangedSignal()` function, returns a signal that is called when a key's time has changed.
+  - Added `curve.keyValueChangedSignal()` function, returns a signal that is called when a key's value has changed.
+  - Added `curve.keyInterpolationChangedSignal()` function, returns a signal that is called when a key's interpolation has changed.
+  - Added `curve.extrapolationChangedSignal()` function, returns a signal that is called when a curve's extrapolation has changed.
+  - Added new api for cubic interpolation modes, key tangents and tie mode (see header `Animation.h` for full details).
+  - Added new api for curve extrapolation modes (see header `Animation.h` for full details).
 - AnimationGadget :
   - Added `selectedKeys()` function, returns current set of selected keys.
   - Added `onTimeAxis()` function, returns true if specified line is over the time axis of the gadget.
