@@ -362,10 +362,10 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				KeyPtr addKey( const KeyPtr &key, bool removeActiveClashing = true );
 
-				/// Inserts a key at the given time, if the specified time is outside the range of
-				/// the existing keys there is no way (currently) to extrapolate a value so KeyPtr()
-				/// is returned, otherwise the curve is bisected at the specified time. If there is
-				/// already a key at the specified time it is returned unaltered.
+				/// Inserts a key at the given time, if the specified time is outside the range of the
+				/// existing keys the extrapolated value of the curve will be used, otherwise the curve
+				/// is bisected at the specified time. If there is already a key at the specified time
+				/// it is returned unaltered.
 				/// \undoable
 				KeyPtr insertKey( float time );
 

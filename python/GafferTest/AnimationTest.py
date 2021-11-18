@@ -530,9 +530,11 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		time = 10
 		self.assertFalse( curve.hasKey( time ) )
+		value = curve.evaluate( time )
 		k = curve.insertKey( time )
-		self.assertIsNone( k )
-		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNotNone( k )
+		self.assertEqual( k.getValue(), value )
+		self.assertTrue( curve.hasKey( time ) )
 
 	def testInsertKeyBeforeFirstNoValue( self ) :
 
@@ -543,14 +545,16 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		k = Gaffer.Animation.Key( 10, 5 )
+		k = Gaffer.Animation.Key( 10, 2 )
 		curve.addKey( k )
 
 		time = 5
 		self.assertFalse( curve.hasKey( time ) )
+		value = curve.evaluate( time )
 		k = curve.insertKey( time )
-		self.assertIsNone( k )
-		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNotNone( k )
+		self.assertEqual( k.getValue(), value )
+		self.assertTrue( curve.hasKey( time ) )
 
 	def testInsertKeyAfterFinalNoValue( self ) :
 
@@ -561,14 +565,16 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		k = Gaffer.Animation.Key( 10, 5 )
+		k = Gaffer.Animation.Key( 10, 6 )
 		curve.addKey( k )
 
 		time = 15
 		self.assertFalse( curve.hasKey( time ) )
+		value = curve.evaluate( time )
 		k = curve.insertKey( time )
-		self.assertIsNone( k )
-		self.assertFalse( curve.hasKey( time ) )
+		self.assertIsNotNone( k )
+		self.assertEqual( k.getValue(), value )
+		self.assertTrue( curve.hasKey( time ) )
 
 	def testInsertKeyFirstValue( self ) :
 
