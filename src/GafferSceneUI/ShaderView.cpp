@@ -100,6 +100,13 @@ SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
 	return s;
 }
 
+typedef boost::signal<void ()> RendererRegistrationChangedSignal;
+RendererRegistrationChangedSignal &rendererRegistrationChangedSignal()
+{
+	static RendererRegistrationChangedSignal s;
+	return s;
+}
+
 IECoreImage::DisplayDriverServer *displayDriverServer()
 {
 	static IECoreImage::DisplayDriverServerPtr g_server = new IECoreImage::DisplayDriverServer();
@@ -118,7 +125,7 @@ GAFFER_NODE_DEFINE_TYPE( ShaderView );
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 
 ShaderView::ShaderView( const std::string &name )
-	:	ImageView( name ), m_framed( false )
+	:	ImageView( name ), m_framed( false ), m_registryUpdated( false )
 {
 	// Create a converter to generate an image
 	// from the input shader.
@@ -162,6 +169,7 @@ ShaderView::ShaderView( const std::string &name )
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
+	rendererRegistrationChangedSignal().connect( boost::bind( &ShaderView::rendererRegistrationChanged, this ) );
 	Display::driverCreatedSignal().connect( boost::bind( &ShaderView::driverCreated, this, ::_1, ::_2 ) );
 	imageGadget()->stateChangedSignal().connect( boost::bind( &ShaderView::imageGadgetStateChanged, this ) );
 }
@@ -275,6 +283,12 @@ void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
 	}
 }
 
+void ShaderView::rendererRegistrationChanged()
+{
+	m_registryUpdated = true;
+	plugDirtied( inPlug() );
+}
+
 void ShaderView::idleUpdate()
 {
 	// We only need to run once.
@@ -295,12 +309,13 @@ void ShaderView::idleUpdate()
 void ShaderView::updateRenderer()
 {
 	const std::string shaderPrefix = this->shaderPrefix();
-	if( m_renderer && shaderPrefix == m_rendererShaderPrefix )
+	if( !m_registryUpdated && m_renderer && shaderPrefix == m_rendererShaderPrefix )
 	{
 		return;
 	}
 
 	m_renderer = nullptr;
+	m_registryUpdated = false;
 	m_rendererShaderPrefix = shaderPrefix;
 	if( !inPlug()->getInput() )
 	{
@@ -435,6 +450,13 @@ void ShaderView::imageGadgetStateChanged()
 void ShaderView::registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator )
 {
 	renderers()[shaderPrefix] = rendererCreator;
+	rendererRegistrationChangedSignal()();
+}
+
+void ShaderView::deregisterRenderer( const std::string &shaderPrefix )
+{
+	renderers().erase(shaderPrefix);
+	rendererRegistrationChangedSignal()();
 }
 
 void ShaderView::registerScene( const std::string &shaderPrefix, const std::string &name, const std::string &fileName )
