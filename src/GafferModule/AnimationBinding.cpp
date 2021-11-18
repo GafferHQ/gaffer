@@ -381,11 +381,20 @@ void GafferModule::bindAnimation()
 		.def( "insertKey", &insertKey )
 		.def( "insertKey", &insertKeyValue )
 		.def( "hasKey", &Animation::CurvePlug::hasKey )
-		.def(
-			"getKey",
+		.def( "getKey",
 			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::getKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
+		.def( "getKey",
+			(Animation::Key *(Animation::CurvePlug::*)( Animation::Direction ))&Animation::CurvePlug::getKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.def( "getKeyIn",
+			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::getKeyIn,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "getKeyOut",
+			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::getKeyOut,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "removeKey", &removeKey )
 		.def( "removeInactiveKeys", &removeInactiveKeys )
 		.def(

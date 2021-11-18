@@ -381,6 +381,18 @@ class GAFFER_API Animation : public ComputeNode
 				/// Get the active key at the specified time, returns nullptr if no key with specified
 				/// time. (const access)
 				const Key *getKey( float time ) const;
+				/// Get the active in key, return nullptr if curve has no keys.
+				Key *getKeyIn();
+				/// Get the active in key, return nullptr if curve has no keys. (const access)
+				const Key *getKeyIn() const;
+				/// Get the active out key, return nullptr if curve has no keys.
+				Key *getKeyOut();
+				/// Get the active out key, return nullptr if curve has no keys. (const access)
+				const Key *getKeyOut() const;
+				/// Get the active key in the specified direction, return nullptr if curve has no keys.
+				Key *getKey( Animation::Direction direction );
+				/// Get the active key in the specified direction, return nullptr if curve has no keys. (const access)
+				const Key *getKey( Animation::Direction direction ) const;
 
 				/// Removes specified key from curve, if key is not parented to curve an exception
 				/// is thrown. If key is active, after it has been removed from curve, the inactive
@@ -456,11 +468,6 @@ class GAFFER_API Animation : public ComputeNode
 				friend class Tangent;
 				friend KeyIterator;
 				friend ConstKeyIterator;
-
-				Key *firstKey();
-				Key *finalKey();
-				const Key *firstKey() const;
-				const Key *finalKey() const;
 
 				KeyPtr insertKeyInternal( float, const float* );
 

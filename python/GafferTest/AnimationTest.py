@@ -471,6 +471,54 @@ class AnimationTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions()
 
+	def testGetKeyDirection( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f1"] )
+
+		# curve with no keys has no "In" and "Out" keys
+		self.assertIsNone( curve.getKeyIn() )
+		self.assertIsNone( curve.getKeyOut() )
+		self.assertIsNone( curve.getKey( Gaffer.Animation.Direction.In ) )
+		self.assertIsNone( curve.getKey( Gaffer.Animation.Direction.Out ) )
+
+		# curve with single key. key is both "In" and "Out" key
+		key = Gaffer.Animation.Key( 4, 5 )
+		curve.addKey( key )
+		self.assertIsNotNone( curve.getKeyIn() )
+		self.assertTrue( curve.getKeyIn().isSame( key ) )
+		self.assertIsNotNone( curve.getKeyOut() )
+		self.assertTrue( curve.getKeyOut().isSame( key ) )
+		self.assertIsNotNone( curve.getKey( Gaffer.Animation.Direction.In ) )
+		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.In ).isSame( key ) )
+		self.assertIsNotNone( curve.getKey( Gaffer.Animation.Direction.Out ) )
+		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.Out ).isSame( key ) )
+
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f2"] )
+
+		# curve with multiple keys. "In" key has min time, "Out" key has max time
+		keys = []
+		import random
+		r = random.Random( 0 )
+		for i in range( 0, 11 ) :
+			k = Gaffer.Animation.Key( r.uniform( -100.0, 100.0 ) )
+			curve.addKey( k )
+			keys.append( k )
+		kmin = sorted( keys, key=lambda k : k.getTime(), reverse=False )[ 0 ]
+		kmax = sorted( keys, key=lambda k : k.getTime(), reverse=True  )[ 0 ]
+		self.assertIsNotNone( curve.getKeyIn() )
+		self.assertTrue( curve.getKeyIn().isSame( kmin ) )
+		self.assertIsNotNone( curve.getKey( Gaffer.Animation.Direction.In ) )
+		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.In ).isSame( kmin ) )
+		self.assertIsNotNone( curve.getKeyOut() )
+		self.assertTrue( curve.getKeyOut().isSame( kmax ) )
+		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.Out ).isSame( kmax ) )
+
 	def testInsertKeyFirstNoValue( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -2613,6 +2661,33 @@ class AnimationTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions( curve3 )
 		assertSignaled( curve3 )
+
+	def testExtrapolationConstant( self ) :
+
+		import math
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		curve.setExtrapolationIn( Gaffer.Animation.Extrapolation.Constant )
+		curve.setExtrapolationOut( Gaffer.Animation.Extrapolation.Constant )
+
+		valueIn = math.pi
+		valueOut = math.e
+		keyIn = Gaffer.Animation.Key( -5, value = valueIn )
+		keyOut = Gaffer.Animation.Key( 5, value = valueOut )
+		curve.addKey( keyIn )
+		curve.addKey( keyOut )
+
+		import random
+		r = random.Random( 0 )
+		for i in range( 0, 11 ) :
+			time = r.uniform( 0.0, 1000.0 )
+			self.assertFloat32Equal( valueIn, curve.evaluate( keyIn.getTime() - time ) )
+			self.assertFloat32Equal( valueOut, curve.evaluate( keyOut.getTime() + time ) )
 
 	def testAffects( self ) :
 

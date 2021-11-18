@@ -532,6 +532,12 @@ struct ExtrapolatorConstant
 	ExtrapolatorConstant()
 	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Constant )
 	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double /*time*/ ) const override
+	{
+		return curve.getKey( direction )->getValue();
+	}
 };
 
 } // namespace
@@ -834,9 +840,9 @@ bool Animation::Tangent::slopeIsConstrained() const
 	// check interpolator hints
 
 	if(
-		( ( m_direction == Direction::Out ) && ( m_key->m_parent->finalKey() != m_key ) &&
+		( ( m_direction == Direction::Out ) && ( m_key->m_parent->getKeyOut() != m_key ) &&
 			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) ||
-		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
+		( ( m_direction == Direction::In ) && ( m_key->m_parent->getKeyIn() != m_key ) &&
 			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) )
 	{
 		return true;
@@ -964,9 +970,9 @@ bool Animation::Tangent::scaleIsConstrained() const
 	// check interpolator hints
 
 	if(
-		( ( m_direction == Direction::Out ) && ( m_key->m_parent->finalKey() != m_key ) &&
+		( ( m_direction == Direction::Out ) && ( m_key->m_parent->getKeyOut() != m_key ) &&
 			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) ||
-		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
+		( ( m_direction == Direction::In ) && ( m_key->m_parent->getKeyIn() != m_key ) &&
 			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) )
 	{
 		return true;
@@ -1997,7 +2003,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 	}
 	else
 	{
-		lo = finalKey();
+		lo = getKeyOut();
 	}
 
 	// if key already exists at time then return it with updated value, otherwise if time is
@@ -2028,10 +2034,10 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		interpolator = lo->m_interpolator;
 		tieMode = lo->m_tieMode;
 	}
-	else if( const Key* const kf = firstKey() )
+	else if( const Key* const ki = getKeyIn() )
 	{
-		interpolator = kf->m_interpolator;
-		tieMode = kf->m_tieMode;
+		interpolator = ki->m_interpolator;
+		tieMode = ki->m_tieMode;
 	}
 
 	assert( interpolator );
@@ -2134,6 +2140,50 @@ const Animation::Key *Animation::CurvePlug::getKey( const float time ) const
 	return ( it != m_keys.end() )
 		? &( *it )
 		: nullptr;
+}
+
+Animation::Key *Animation::CurvePlug::getKeyIn()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKeyIn() );
+}
+
+const Animation::Key *Animation::CurvePlug::getKeyIn() const
+{
+	const Key* k = 0;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.cbegin() ) );
+	}
+
+	return k;
+}
+
+Animation::Key *Animation::CurvePlug::getKeyOut()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKeyOut() );
+}
+
+const Animation::Key *Animation::CurvePlug::getKeyOut() const
+{
+	const Key* k = 0;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.crbegin() ) );
+	}
+
+	return k;
+}
+
+Animation::Key *Animation::CurvePlug::getKey( const Animation::Direction direction )
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKey( direction ) );
+}
+
+const Animation::Key *Animation::CurvePlug::getKey( const Animation::Direction direction ) const
+{
+	return ( direction == Animation::Direction::In ) ? getKeyIn() : getKeyOut();
 }
 
 void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
@@ -2380,40 +2430,6 @@ const Animation::Key *Animation::CurvePlug::nextKey( const float time ) const
 	return ( rightIt != m_keys.end() )
 		? &( *( rightIt ) )
 		: nullptr;
-}
-
-Animation::Key *Animation::CurvePlug::firstKey()
-{
-	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->firstKey() );
-}
-
-Animation::Key *Animation::CurvePlug::finalKey()
-{
-	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->finalKey() );
-}
-
-const Animation::Key *Animation::CurvePlug::firstKey() const
-{
-	const Key* k = 0;
-
-	if( ! m_keys.empty() )
-	{
-		k = &( *( m_keys.cbegin() ) );
-	}
-
-	return k;
-}
-
-const Animation::Key *Animation::CurvePlug::finalKey() const
-{
-	const Key* k = 0;
-
-	if( ! m_keys.empty() )
-	{
-		k = &( *( m_keys.crbegin() ) );
-	}
-
-	return k;
 }
 
 Animation::CurvePlug::TimeKey::type Animation::CurvePlug::TimeKey::operator()( const Animation::Key& key ) const
