@@ -1870,6 +1870,8 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 						V2f( 0 ), V2f( 0 ), styleState, &color3 );
 				break;
 			default:
+				renderCurveSpan( curvePlug, tmin, std::min( tmax, keyIn->getTime() ),
+					unitPerPx, viewportGadget, style, styleState, color3 );
 				break;
 		}
 	}
@@ -1919,6 +1921,8 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 						V2f( 0 ), V2f( 0 ), styleState, &color3 );
 				break;
 			default:
+				renderCurveSpan( curvePlug, std::max( tmin, keyOut->getTime() ), tmax,
+					unitPerPx, viewportGadget, style, styleState, color3 );
 				break;
 		}
 	}
