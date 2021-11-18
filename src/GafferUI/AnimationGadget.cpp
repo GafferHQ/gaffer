@@ -1856,6 +1856,23 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
 	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
+	// draw curve extrapolated beyond in key
+	const Gaffer::Animation::Key* const keyIn = curvePlug->getKeyIn();
+	if( keyIn && ( keyIn->getTime() > tmin ) )
+	{
+		switch( curvePlug->getExtrapolationIn() )
+		{
+			case Gaffer::Animation::Extrapolation::Constant:
+				style->renderAnimationCurve(
+					viewportGadget->worldToRasterSpace( V3f( tmin, curvePlug->evaluate( tmin ), 0 ) ),
+					viewportGadget->worldToRasterSpace( V3f( keyIn->getTime(), keyIn->getValue(), 0 ) ),
+						V2f( 0 ), V2f( 0 ), styleState, &color3 );
+				break;
+			default:
+				break;
+		}
+	}
+
 	// draw curve spans between keys
 	for( const auto &key : *curvePlug )
 	{
@@ -1885,6 +1902,23 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 
 		previousKey = &key;
 		previousKeyPosition = keyPosition;
+	}
+
+	// draw curve extrapolated beyond out key
+	const Gaffer::Animation::Key* const keyOut = curvePlug->getKeyOut();
+	if( keyOut && ( keyOut->getTime() < tmax ) )
+	{
+		switch( curvePlug->getExtrapolationOut() )
+		{
+			case Gaffer::Animation::Extrapolation::Constant:
+				style->renderAnimationCurve(
+					viewportGadget->worldToRasterSpace( V3f( keyOut->getTime(), keyOut->getValue(), 0 ) ),
+					viewportGadget->worldToRasterSpace( V3f( tmax, curvePlug->evaluate( tmax ), 0 ) ),
+						V2f( 0 ), V2f( 0 ), styleState, &color3 );
+				break;
+			default:
+				break;
+		}
 	}
 }
 
