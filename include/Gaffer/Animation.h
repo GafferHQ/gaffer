@@ -69,6 +69,12 @@ class GAFFER_API Animation : public ComputeNode
 			Bezier
 		};
 
+		/// Defines the method used to extrapolate before the in key and after the out key.
+		enum class Extrapolation
+		{
+			Constant = 0
+		};
+
 		/// Defines direction relative to a key.
 		enum class Direction
 		{
@@ -86,6 +92,9 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// Get the default interpolation mode.
 		static Interpolation defaultInterpolation();
+
+		/// Get the default extrapolation mode.
+		static Extrapolation defaultExtrapolation();
 
 		/// Get the default tie mode.
 		static TieMode defaultTieMode();
@@ -329,6 +338,7 @@ class GAFFER_API Animation : public ComputeNode
 				~CurvePlug() override;
 
 				typedef boost::signal< void ( CurvePlug*, Key* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeySignal;
+				typedef boost::signal< void ( CurvePlug*, Animation::Direction ), Gaffer::CatchingSignalCombiner< void > > CurvePlugDirectionSignal;
 
 				CurvePlugKeySignal& keyAddedSignal();
 				CurvePlugKeySignal& keyRemovedSignal();
@@ -336,6 +346,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyValueChangedSignal();
 				CurvePlugKeySignal& keyInterpolationChangedSignal();
 				CurvePlugKeySignal& keyTieModeChangedSignal();
+				CurvePlugDirectionSignal& extrapolationChangedSignal();
 
 				/// Adds specified key to curve, if key is parented to another curve or already parented
 				/// to the curve and inactive it is removed from its parent curve. If the key has already
@@ -414,6 +425,22 @@ class GAFFER_API Animation : public ComputeNode
 				/// iterator to end of range of active keys. (const access)
 				ConstKeyIterator end() const;
 
+				/// Get in extrapolation.
+				Extrapolation getExtrapolationIn() const;
+				/// Get out extrapolation.
+				Extrapolation getExtrapolationOut() const;
+				/// Get extrapolation in specified direction.
+				Extrapolation getExtrapolation( Animation::Direction direction ) const;
+				/// Set in extrapolation.
+				/// \undoable
+				void setExtrapolationIn( Extrapolation extrapolation );
+				/// Set out extrapolation.
+				/// \undoable
+				void setExtrapolationOut( Extrapolation extrapolation );
+				/// Set extrapolation in specified direction.
+				/// \undoable
+				void setExtrapolation( Animation::Direction direction, Extrapolation extrapolation );
+
 				/// Evaluate the curve at the specified time
 				float evaluate( float time ) const;
 
@@ -429,8 +456,6 @@ class GAFFER_API Animation : public ComputeNode
 				friend class Tangent;
 				friend KeyIterator;
 				friend ConstKeyIterator;
-
-				typedef boost::signal< void ( CurvePlug*, Animation::Direction ), Gaffer::CatchingSignalCombiner< void > > CurvePlugDirectionSignal;
 
 				Key *firstKey();
 				Key *finalKey();
@@ -468,6 +493,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// convert enums to strings
 		static const char* toString( Interpolation interpolation );
+		static const char* toString( Extrapolation extrapolation );
 		static const char* toString( Direction direction );
 		static const char* toString( TieMode mode );
 

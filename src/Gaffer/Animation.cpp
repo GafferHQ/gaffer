@@ -98,7 +98,31 @@ private:
 };
 
 class Animation::Extrapolator : public IECore::RefCounted
-{};
+{
+public:
+
+	Animation::Extrapolation getExtrapolation() const;
+
+	static ConstExtrapolatorPtr get( Animation::Extrapolation extrapolation );
+	static ConstExtrapolatorPtr getDefault();
+
+protected:
+
+	// construct with specified extrapolation
+	explicit Extrapolator( Animation::Extrapolation extrapolation );
+
+private:
+
+	friend class CurvePlug;
+
+	/// Implement to return extrapolated value at specified time
+	virtual double evaluate( const CurvePlug& curve, Animation::Direction direction, double time ) const;
+
+	typedef std::vector< ConstExtrapolatorPtr > Container;
+	static const Container& get();
+
+	Animation::Extrapolation m_extrapolation;
+};
 
 } // Gaffer
 
@@ -500,6 +524,16 @@ private:
 	}
 };
 
+// constant extrapolator
+
+struct ExtrapolatorConstant
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorConstant()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Constant )
+	{}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -578,6 +612,50 @@ Animation::ConstInterpolatorPtr Animation::Interpolator::get( const Animation::I
 Animation::ConstInterpolatorPtr Animation::Interpolator::getDefault()
 {
 	return Interpolator::get().front();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Extrapolator implementation
+//////////////////////////////////////////////////////////////////////////
+
+Animation::Extrapolator::Extrapolator( const Animation::Extrapolation extrapolation )
+: m_extrapolation( extrapolation )
+{}
+
+Animation::Extrapolation Animation::Extrapolator::getExtrapolation() const
+{
+	return m_extrapolation;
+}
+
+double Animation::Extrapolator::evaluate(
+	const Animation::CurvePlug& /*curve*/, const Animation::Direction /*direction*/, const double /*time*/ ) const
+{
+	return 0.0;
+}
+
+const Animation::Extrapolator::Container& Animation::Extrapolator::get()
+{
+	static const Container container
+	{
+		ConstExtrapolatorPtr( new ExtrapolatorConstant() )
+	};
+
+	return container;
+}
+
+Animation::ConstExtrapolatorPtr Animation::Extrapolator::get( const Animation::Extrapolation extrapolation )
+{
+	const Container& container = Extrapolator::get();
+	const Container::const_iterator it =
+		std::find_if( container.begin(), container.end(),
+			[ extrapolation ]( const ConstExtrapolatorPtr& extrapolator ) -> bool
+			{ return extrapolator->getExtrapolation() == extrapolation; } );
+	return ( it != container.end() ) ? ( *it ) : Extrapolator::getDefault();
+}
+
+Animation::ConstExtrapolatorPtr Animation::Extrapolator::getDefault()
+{
+	return Extrapolator::get().front();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1678,8 +1756,8 @@ Animation::CurvePlug::CurvePlug( const std::string &name, const Plug::Direction 
 , m_keyInterpolationChangedSignal()
 , m_keyTieModeChangedSignal()
 , m_extrapolationChangedSignal()
-, m_extrapolatorIn()
-, m_extrapolatorOut()
+, m_extrapolatorIn( Extrapolator::getDefault() )
+, m_extrapolatorOut( Extrapolator::getDefault() )
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
@@ -1718,6 +1796,11 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyInterpolation
 Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTieModeChangedSignal()
 {
 	return m_keyTieModeChangedSignal;
+}
+
+Animation::CurvePlug::CurvePlugDirectionSignal& Animation::CurvePlug::extrapolationChangedSignal()
+{
+	return m_extrapolationChangedSignal;
 }
 
 Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )
@@ -2358,6 +2441,60 @@ Animation::ConstKeyIterator Animation::CurvePlug::end() const
 	return m_keys.end();
 }
 
+Animation::Extrapolation Animation::CurvePlug::getExtrapolationIn() const
+{
+	return m_extrapolatorIn->getExtrapolation();
+}
+
+Animation::Extrapolation Animation::CurvePlug::getExtrapolationOut() const
+{
+	return m_extrapolatorOut->getExtrapolation();
+}
+
+Animation::Extrapolation Animation::CurvePlug::getExtrapolation( const Animation::Direction direction ) const
+{
+	return ( this->*m_extrapolators[ static_cast< int >( direction ) ] )->getExtrapolation();
+}
+
+void Animation::CurvePlug::setExtrapolationIn( const Animation::Extrapolation extrapolation )
+{
+	setExtrapolation( Animation::Direction::In, extrapolation );
+}
+
+void Animation::CurvePlug::setExtrapolationOut( const Animation::Extrapolation extrapolation )
+{
+	setExtrapolation( Animation::Direction::Out, extrapolation );
+}
+
+void Animation::CurvePlug::setExtrapolation( const Animation::Direction direction, const Animation::Extrapolation extrapolation )
+{
+	const ConstExtrapolatorPtr extrapolator = Extrapolator::get( extrapolation );
+	const ConstExtrapolatorPtr previousExtrapolator = this->*m_extrapolators[ static_cast< int >( direction ) ];
+
+	if( ! extrapolator || ( extrapolator == previousExtrapolator ) )
+	{
+		return;
+	}
+
+	// NOTE : inactive keys remain parented and participate in undo/redo and signalling
+
+	Action::enact(
+		this,
+		// Do
+		[ this, extrapolator, direction ] {
+			this->*m_extrapolators[ static_cast< int >( direction ) ] = extrapolator;
+			this->m_extrapolationChangedSignal( this, direction );
+			this->propagateDirtiness( this->outPlug() );
+		},
+		// Undo
+		[ this, previousExtrapolator, direction ] {
+			this->*m_extrapolators[ static_cast< int >( direction ) ] = previousExtrapolator;
+			this->m_extrapolationChangedSignal( this, direction );
+			this->propagateDirtiness( this->outPlug() );
+		}
+	);
+}
+
 float Animation::CurvePlug::evaluate( const float time ) const
 {
 	// NOTE : no keys return 0
@@ -2373,14 +2510,19 @@ float Animation::CurvePlug::evaluate( const float time ) const
 	Keys::const_iterator hiIt = m_keys.lower_bound( time );
 	if( hiIt == m_keys.end() )
 	{
-		return ( m_keys.rbegin() )->getValue();
+		return m_extrapolatorOut->evaluate( *this, Animation::Direction::Out, time );
 	}
 
 	const Key &hi = *( hiIt );
 
-	if( hi.m_time == time || hiIt == m_keys.begin() )
+	if( hi.m_time == time )
 	{
 		return hi.getValue();
+	}
+
+	if( hiIt == m_keys.begin() )
+	{
+		return m_extrapolatorIn->evaluate( *this, Animation::Direction::In, time );
 	}
 
 	const Key &lo = *( std::prev( hiIt ) );
@@ -2593,6 +2735,11 @@ Animation::Interpolation Animation::defaultInterpolation()
 	return Interpolator::getDefault()->getInterpolation();
 }
 
+Animation::Extrapolation Animation::defaultExtrapolation()
+{
+	return Extrapolator::getDefault()->getExtrapolation();
+}
+
 Animation::TieMode Animation::defaultTieMode()
 {
 	return TieMode::Scale;
@@ -2627,6 +2774,18 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 			return "Cubic";
 		case Interpolation::Bezier:
 			return "Bezier";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::toString( const Animation::Extrapolation extrapolation )
+{
+	switch( extrapolation )
+	{
+		case Extrapolation::Constant:
+			return "Constant";
 		default:
 			assert( 0 );
 			return 0;
