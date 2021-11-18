@@ -72,7 +72,8 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines the method used to extrapolate before the in key and after the out key.
 		enum class Extrapolation
 		{
-			Constant = 0
+			Constant = 0,
+			Linear
 		};
 
 		/// Defines direction relative to a key.

@@ -2689,6 +2689,33 @@ class AnimationTest( GafferTest.TestCase ) :
 			self.assertFloat32Equal( valueIn, curve.evaluate( keyIn.getTime() - time ) )
 			self.assertFloat32Equal( valueOut, curve.evaluate( keyOut.getTime() + time ) )
 
+	def testExtrapolationLinear( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		curve.setExtrapolationIn( Gaffer.Animation.Extrapolation.Linear )
+		curve.setExtrapolationOut( Gaffer.Animation.Extrapolation.Linear )
+
+		valueIn = 4.567
+		valueOut = -7.564
+		slopeIn = 1.234
+		slopeOut = -0.3245
+		keyIn = Gaffer.Animation.Key( -5, value = valueIn, inSlope = slopeIn, tieMode = Gaffer.Animation.TieMode.Manual )
+		keyOut = Gaffer.Animation.Key( 5, value = valueOut, outSlope = slopeOut, tieMode = Gaffer.Animation.TieMode.Manual )
+		curve.addKey( keyIn )
+		curve.addKey( keyOut )
+
+		import random
+		r = random.Random( 0 )
+		for i in range( 0, 11 ) :
+			time = r.uniform( 0.0, 100.0 )
+			self.assertAlmostEqual( valueIn - time * slopeIn, curve.evaluate( keyIn.getTime() - time ), places = 5 )
+			self.assertAlmostEqual( valueOut + time * slopeOut, curve.evaluate( keyOut.getTime() + time ), places = 5 )
+
 	def testAffects( self ) :
 
 		s = Gaffer.ScriptNode()

@@ -1863,6 +1863,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 		switch( curvePlug->getExtrapolationIn() )
 		{
 			case Gaffer::Animation::Extrapolation::Constant:
+			case Gaffer::Animation::Extrapolation::Linear:
 				style->renderAnimationCurve(
 					viewportGadget->worldToRasterSpace( V3f( tmin, curvePlug->evaluate( tmin ), 0 ) ),
 					viewportGadget->worldToRasterSpace( V3f( keyIn->getTime(), keyIn->getValue(), 0 ) ),
@@ -1911,6 +1912,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 		switch( curvePlug->getExtrapolationOut() )
 		{
 			case Gaffer::Animation::Extrapolation::Constant:
+			case Gaffer::Animation::Extrapolation::Linear:
 				style->renderAnimationCurve(
 					viewportGadget->worldToRasterSpace( V3f( keyOut->getTime(), keyOut->getValue(), 0 ) ),
 					viewportGadget->worldToRasterSpace( V3f( tmax, curvePlug->evaluate( tmax ), 0 ) ),

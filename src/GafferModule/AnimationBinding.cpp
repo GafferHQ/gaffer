@@ -290,6 +290,7 @@ void GafferModule::bindAnimation()
 
 	enum_< Animation::Extrapolation >( "Extrapolation" )
 		.value( Animation::toString( Animation::Extrapolation::Constant ), Animation::Extrapolation::Constant )
+		.value( Animation::toString( Animation::Extrapolation::Linear ), Animation::Extrapolation::Linear )
 	;
 
 	enum_< Animation::Direction >( "Direction" )
