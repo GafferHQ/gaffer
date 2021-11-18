@@ -74,7 +74,8 @@ class GAFFER_API Animation : public ComputeNode
 		{
 			Constant = 0,
 			Linear,
-			Repeat
+			Repeat,
+			RepeatOffset
 		};
 
 		/// Defines direction relative to a key.

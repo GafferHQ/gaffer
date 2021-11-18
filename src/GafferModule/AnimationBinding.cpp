@@ -292,6 +292,7 @@ void GafferModule::bindAnimation()
 		.value( Animation::toString( Animation::Extrapolation::Constant ), Animation::Extrapolation::Constant )
 		.value( Animation::toString( Animation::Extrapolation::Linear ), Animation::Extrapolation::Linear )
 		.value( Animation::toString( Animation::Extrapolation::Repeat ), Animation::Extrapolation::Repeat )
+		.value( Animation::toString( Animation::Extrapolation::RepeatOffset ), Animation::Extrapolation::RepeatOffset )
 	;
 
 	enum_< Animation::Direction >( "Direction" )

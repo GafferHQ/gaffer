@@ -592,6 +592,42 @@ struct ExtrapolatorRepeat
 	}
 };
 
+// repeat offset extrapolator
+
+struct ExtrapolatorRepeatOffset
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorRepeatOffset()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::RepeatOffset )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		const Gaffer::Animation::Key* const key = curve.getKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		// NOTE : clamp time passed to curve evaluate in range of keys to prevent infinite recursion.
+		const double value = curve.evaluate( Imath::clamp( ( remainder == 0.0 )
+				? key->getTime()
+				: static_cast< float >( keyOpposite->getTime() + remainder ),
+			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+
+		const double dv = static_cast< double >( key->getValue() ) - static_cast< double >( keyOpposite->getValue() );
+		return std::fma( std::abs( count ) + ( ( remainder == 0.0 ) ? 0.0 : 1.0 ), dv, value );
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -697,7 +733,8 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 	{
 		ConstExtrapolatorPtr( new ExtrapolatorConstant() ),
 		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
-		ConstExtrapolatorPtr( new ExtrapolatorRepeat() )
+		ConstExtrapolatorPtr( new ExtrapolatorRepeat() ),
+		ConstExtrapolatorPtr( new ExtrapolatorRepeatOffset() )
 	};
 
 	return container;
@@ -2860,6 +2897,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "Linear";
 		case Extrapolation::Repeat:
 			return "Repeat";
+		case Extrapolation::RepeatOffset:
+			return "RepeatOffset";
 		default:
 			assert( 0 );
 			return 0;
