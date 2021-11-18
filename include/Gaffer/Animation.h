@@ -73,7 +73,8 @@ class GAFFER_API Animation : public ComputeNode
 		enum class Extrapolation
 		{
 			Constant = 0,
-			Linear
+			Linear,
+			Repeat
 		};
 
 		/// Defines direction relative to a key.

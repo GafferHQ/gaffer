@@ -558,6 +558,40 @@ struct ExtrapolatorLinear
 	}
 };
 
+// repeat extrapolator
+
+struct ExtrapolatorRepeat
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorRepeat()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Repeat )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		const Gaffer::Animation::Key* const key = curve.getKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		// NOTE : use modf instead of fmod to match implementation of ExtrapolatorRepeatOffset.
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		// NOTE : clamp time passed to curve evaluate in range of keys to prevent infinite recursion.
+		return curve.evaluate( Imath::clamp( ( remainder == 0.0 )
+				? key->getTime()
+				: static_cast< float >( keyOpposite->getTime() + remainder ),
+			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -662,7 +696,8 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 	static const Container container
 	{
 		ConstExtrapolatorPtr( new ExtrapolatorConstant() ),
-		ConstExtrapolatorPtr( new ExtrapolatorLinear() )
+		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
+		ConstExtrapolatorPtr( new ExtrapolatorRepeat() )
 	};
 
 	return container;
@@ -2823,6 +2858,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "Constant";
 		case Extrapolation::Linear:
 			return "Linear";
+		case Extrapolation::Repeat:
+			return "Repeat";
 		default:
 			assert( 0 );
 			return 0;
