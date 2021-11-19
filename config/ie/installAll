@@ -67,8 +67,8 @@ defaultCompilerVersion = IEEnv.registry["platformDefaults"][platform]["compilerV
 cortexInfo = { x : IEEnv.registry["libraries"]["cortex"][x][platform] for x in IEEnv.activeVersions( IEEnv.registry["libraries"]["cortex"] ) }
 
 # fetch at least one active version of each renderer
-aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
-dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
+aiVersion = IEEnv.activeAppVersions( "arnold", maximumVersion = "6" )[-1]
+dlVersion = "UNDEFINED"
 
 # find a specific appleseed version per compiler per cortex version
 appleseedCompilerMap = { x : {} for x in IEEnv.activeVersions( IEEnv.registry["compilers"]["gcc"] ) }
