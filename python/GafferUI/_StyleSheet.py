@@ -134,7 +134,8 @@ _themeVariables = {
 	"widgetCornerRadius" : "4px",
 	"controlCornerRadius" : "2px",
 	"toolOverlayInset" : "44px",
-	"monospaceFontFamily" : '"SFMono-Regular", "Consolas", "Liberation Mono", "Menlo", monospace'
+	## \todo Use a font that we bundle with Gaffer, so that it's the same on all platforms.
+	"monospaceFontFamily" : '"Menlo", "SFMono-Regular", "Consolas", "Liberation Mono", monospace'
 }
 
 substitutions = {
