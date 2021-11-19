@@ -52,8 +52,11 @@ Gaffer.Animation.Interpolation.Constant = Gaffer.Animation.Interpolation.Step
 Gaffer.Animation.Interpolation.ConstantNext = Gaffer.Animation.Interpolation.Constant
 Gaffer.Animation.Interpolation.Cubic = Gaffer.Animation.Interpolation.Linear
 Gaffer.Animation.Interpolation.Bezier = Gaffer.Animation.Interpolation.Linear
+Gaffer.Animation.Extrapolation = IECore.Enum.create( "Constant", "Linear", "Repeat", "RepeatOffset", "Mirror", "Oscillate" )
 Gaffer.Animation.TieMode = IECore.Enum.create( "Manual", "Slope", "Scale" )
 Gaffer.Animation.Key = type( "KeyCompatibility_0_61", tuple( [ Gaffer.Animation.Key ] ),
 { "__init__" : lambda self, time = 0.0, value = 0.0, type = Gaffer.Animation.Type.Linear,
 	inSlope = None, inScale = None, outSlope = None, outScale = None, tieMode = None :
 		super( Gaffer.Animation.Key, self ).__init__( time, value, type ) } )
+Gaffer.Animation.CurvePlug.setExtrapolationIn = lambda self, extrapolation : None
+Gaffer.Animation.CurvePlug.setExtrapolationOut = lambda self, extrapolation : None
