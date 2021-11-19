@@ -120,6 +120,28 @@ Breaking Changes
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.
 
+0.60.12.0 (relative to 0.60.11.0)
+=========
+
+Improvements
+------------
+
+- Animation : Added basic support for loading animation saved from Gaffer 0.61. Caution : `Bezier` and `Cubic` interpolation will be converted to `Linear`, because they are features available in Gaffer 0.61 only.
+
+Fixes
+-----
+
+- SceneReader :
+  - Fixed loading of indexed UVs from Alembic curves.
+  - Fixed loading of custom attributes from USD files.
+- SceneWriter : Fixed writing of indexed primitive variables to Alembic caches.
+
+Build
+-----
+
+- Updated to GafferHQ/dependencies 3.2.0 :
+  - Cortex : Updated to version 10.2.3.0.
+
 0.60.11.0 (relative to 0.60.10.0)
 =========
 
