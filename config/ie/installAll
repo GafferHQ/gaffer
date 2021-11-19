@@ -53,6 +53,9 @@ def build( extraArgs = [] ) :
 	buildArgs.extend( sys.argv[1:] )
 
 	print( " ".join( buildArgs ) )
+	if "DRYRUN=1" in sys.argv :
+		return
+
 	if subprocess.call( buildArgs ) != 0 :
 		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
 	print( "Build succeeded: " + " ".join( buildArgs ) + "\n" )
