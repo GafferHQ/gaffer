@@ -28,6 +28,7 @@ Improvements
 - Switch : Removed variables such as `scene:path` and `image:channelName` from the context used to evaluate the `enabled` plug. This improves performance in some scenarios, and prevents the creation of invalid switches.
 - NodeEditor : Added option in node editor context menu to set interpolation of an animated value.
 - Animation : Added new `ConstantNext` interpolation mode, evaluates to the value of the next key for all times greater than the time of the key.
+- USD : Added support for loading constant primvars from non-geometric prims. These are represented in Gaffer as attributes with a `render:` prefix.
 - Arnold : Added support for `render:` prefixed attributes. For example, a Color3f attribute called `render:displayColor` will be readable as `displayColor` from a `user_data_rgb` shader.
 
 Fixes
@@ -119,6 +120,16 @@ Breaking Changes
 - Path : Added `canceller` arguments to virtual methods. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - PathFilter : Added `canceller` argument to `doFilter()` method. Note that Python subclasses can be made compatible with both Gaffer 0.60 and 0.61 simply by adding a `canceller = None` argument.
 - CopyAttributes : Removed backwards compatibility for accessing input and source scenes as `in[0]` and `in[1]` respectively. Use `in` and `source` instead.
+
+Build
+-----
+
+- Updated to GafferHQ/dependencies 4.0.0 :
+  - OpenVDB : Updated to version 8.1.0.
+  - TBB : Updated to version 2020.2.
+  - Qt : Updated to version 5.15.2.
+  - PySide : Updated to version 5.15.2.
+  - Cortex : Updated to version 10.3.0.0.
 
 0.60.12.0 (relative to 0.60.11.0)
 =========

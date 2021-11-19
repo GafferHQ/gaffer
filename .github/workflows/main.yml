@@ -42,7 +42,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage: ghcr.io/gafferhq/build/build:1.2.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python2-linux.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/4.0.0/gafferDependencies-4.0.0-Python2-linux.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -55,7 +55,7 @@ jobs:
             buildType: DEBUG
             publish: false
             containerImage: ghcr.io/gafferhq/build/build:1.2.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python2-linux.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/4.0.0/gafferDependencies-4.0.0-Python2-linux.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -66,7 +66,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage: ghcr.io/gafferhq/build/build:1.2.0
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python3-linux.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/4.0.0/gafferDependencies-4.0.0-Python3-linux.tar.gz
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
@@ -75,7 +75,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage:
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/3.1.0/gafferDependencies-3.1.0-Python2-osx.tar.gz
+            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/4.0.0/gafferDependencies-4.0.0-Python2-osx.tar.gz
             testRunner: bash -c
             sconsCacheMegabytes: 400
 
@@ -108,6 +108,11 @@ jobs:
 
     - name: Install toolchain (Linux)
       run: |
+        # Install xcb libs necessary for running Qt 5.15.
+        # Todo : Update to the `ghcr.io/gafferhq/build/build:1.3.0`
+        # image, which provides the libs by default. We can't do that
+        # currently because it breaks `sphinx-build`.
+        yum install -y xcb-util-wm xcb-util-image xcb-util-keysyms xcb-util-renderutil
         echo /opt/rh/devtoolset-6/root/bin >> $GITHUB_PATH
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity&
@@ -139,12 +144,6 @@ jobs:
       # below.
       run: |
         echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
-        # Remove old IECoreArnold components from Cortex build,
-        # as we will be replacing them with our own.
-        ## \todo Remove when we update to Cortex 10.3.
-        rm ${{ env.GAFFER_BUILD_DIR }}/lib/libIECoreArnold.*
-        rm -r ${{ env.GAFFER_BUILD_DIR }}/python/IECoreArnold
-        rm -r ${{ env.GAFFER_BUILD_DIR }}/include/IECoreArnold
         ./.github/workflows/main/installDelight.sh
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
 
