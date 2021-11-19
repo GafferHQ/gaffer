@@ -2434,6 +2434,186 @@ class AnimationTest( GafferTest.TestCase ) :
 				c.setTime( 1 + i / 10.0 )
 				self.assertEqual( s["n"]["user"]["f"].getValue(), 2 )
 
+	def testSetExtrapolationIn( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f3"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		ps = set()
+
+		def changed( curve, direction ) :
+			ps.add( ( curve, direction ) )
+
+		def assertPreconditions( curve ) :
+			self.assertEqual( curve.getExtrapolationIn(), extrapolationIn )
+			self.assertEqual( curve.getExtrapolationOut(), extrapolationOut )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.In ), extrapolationIn )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.Out ), extrapolationOut )
+
+		def assertPostconditions( curve ) :
+			self.assertEqual( curve.getExtrapolationIn(), newExtrapolationIn )
+			self.assertEqual( curve.getExtrapolationOut(), extrapolationOut )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.In ), newExtrapolationIn )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.Out ), extrapolationOut )
+
+		def assertSignaled( curve ) :
+			self.assertIn( ( curve, Gaffer.Animation.Direction.In ), ps )
+			self.assertNotIn( ( curve, Gaffer.Animation.Direction.Out ), ps )
+
+		extrapolationIn = Gaffer.Animation.defaultExtrapolation()
+		extrapolationOut = Gaffer.Animation.defaultExtrapolation()
+		newExtrapolationIn = Gaffer.Animation.Extrapolation.Repeat
+
+		curve1 = Gaffer.Animation.acquire( s["n"]["user"]["f1"] )
+		connection = curve1.extrapolationChangedSignal().connect( changed )
+
+		with Gaffer.UndoScope( s ) :
+			curve1.setExtrapolationIn( extrapolationIn )
+		assertPreconditions( curve1 )
+		self.assertFalse( s.undoAvailable() )
+		self.assertEqual( len( ps ), 0 )
+
+		with Gaffer.UndoScope( s ) :
+			curve1.setExtrapolation( Gaffer.Animation.Direction.In, extrapolationIn )
+		assertPreconditions( curve1 )
+		self.assertFalse( s.undoAvailable() )
+		self.assertEqual( len( ps ), 0 )
+
+		curve2 = Gaffer.Animation.acquire( s["n"]["user"]["f2"] )
+		connection = curve2.extrapolationChangedSignal().connect( changed )
+
+		with Gaffer.UndoScope( s ) :
+			curve2.setExtrapolationIn( newExtrapolationIn )
+		assertPostconditions( curve2 )
+		self.assertTrue( s.undoAvailable() )
+		assertSignaled( curve2 )
+		ps.clear()
+
+		s.undo()
+		assertPreconditions( curve2 )
+		self.assertTrue( s.redoAvailable() )
+		assertSignaled( curve2 )
+		ps.clear()
+
+		s.redo()
+		assertPostconditions( curve2 )
+		assertSignaled( curve2 )
+		ps.clear()
+
+		curve3 = Gaffer.Animation.acquire( s["n"]["user"]["f3"] )
+		connection = curve3.extrapolationChangedSignal().connect( changed )
+
+		with Gaffer.UndoScope( s ) :
+			curve3.setExtrapolation( Gaffer.Animation.Direction.In, newExtrapolationIn )
+		assertPostconditions( curve3 )
+		self.assertTrue( s.undoAvailable() )
+		assertSignaled( curve3 )
+		ps.clear()
+
+		s.undo()
+		assertPreconditions( curve3 )
+		self.assertTrue( s.redoAvailable() )
+		assertSignaled( curve3 )
+		ps.clear()
+
+		s.redo()
+		assertPostconditions( curve3 )
+		assertSignaled( curve3 )
+
+	def testSetExtrapolationOut( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f3"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		ps = set()
+
+		def changed( curve, direction ) :
+			ps.add( ( curve, direction ) )
+
+		def assertPreconditions( curve ) :
+			self.assertEqual( curve.getExtrapolationIn(), extrapolationIn )
+			self.assertEqual( curve.getExtrapolationOut(), extrapolationOut )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.In ), extrapolationIn )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.Out ), extrapolationOut )
+
+		def assertPostconditions( curve ) :
+			self.assertEqual( curve.getExtrapolationIn(), extrapolationIn )
+			self.assertEqual( curve.getExtrapolationOut(), newExtrapolationOut )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.In ), extrapolationIn )
+			self.assertEqual( curve.getExtrapolation( Gaffer.Animation.Direction.Out ), newExtrapolationOut )
+
+		def assertSignaled( curve ) :
+			self.assertNotIn( ( curve, Gaffer.Animation.Direction.In ), ps )
+			self.assertIn( ( curve, Gaffer.Animation.Direction.Out ), ps )
+
+		extrapolationIn = Gaffer.Animation.defaultExtrapolation()
+		extrapolationOut = Gaffer.Animation.defaultExtrapolation()
+		newExtrapolationOut = Gaffer.Animation.Extrapolation.RepeatOffset
+
+		curve1 = Gaffer.Animation.acquire( s["n"]["user"]["f1"] )
+		connection = curve1.extrapolationChangedSignal().connect( changed )
+
+		with Gaffer.UndoScope( s ) :
+			curve1.setExtrapolationOut( extrapolationOut )
+		assertPreconditions( curve1 )
+		self.assertFalse( s.undoAvailable() )
+		self.assertEqual( len( ps ), 0 )
+
+		with Gaffer.UndoScope( s ) :
+			curve1.setExtrapolation( Gaffer.Animation.Direction.Out, extrapolationOut )
+		assertPreconditions( curve1 )
+		self.assertFalse( s.undoAvailable() )
+		self.assertEqual( len( ps ), 0 )
+
+		curve2 = Gaffer.Animation.acquire( s["n"]["user"]["f2"] )
+		connection = curve2.extrapolationChangedSignal().connect( changed )
+
+		with Gaffer.UndoScope( s ) :
+			curve2.setExtrapolationOut( newExtrapolationOut )
+		assertPostconditions( curve2 )
+		self.assertTrue( s.undoAvailable() )
+		assertSignaled( curve2 )
+		ps.clear()
+
+		s.undo()
+		assertPreconditions( curve2 )
+		self.assertTrue( s.redoAvailable() )
+		assertSignaled( curve2 )
+		ps.clear()
+
+		s.redo()
+		assertPostconditions( curve2 )
+		assertSignaled( curve2 )
+		ps.clear()
+
+		curve3 = Gaffer.Animation.acquire( s["n"]["user"]["f3"] )
+		connection = curve3.extrapolationChangedSignal().connect( changed )
+
+		with Gaffer.UndoScope( s ) :
+			curve3.setExtrapolation( Gaffer.Animation.Direction.Out, newExtrapolationOut )
+		assertPostconditions( curve3 )
+		self.assertTrue( s.undoAvailable() )
+		assertSignaled( curve3 )
+		ps.clear()
+
+		s.undo()
+		assertPreconditions( curve3 )
+		self.assertTrue( s.redoAvailable() )
+		assertSignaled( curve3 )
+		ps.clear()
+
+		s.redo()
+		assertPostconditions( curve3 )
+		assertSignaled( curve3 )
+
 	def testAffects( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -2460,6 +2640,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 		curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
 		curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
+		curve.setExtrapolationIn( Gaffer.Animation.Extrapolation.Oscillate )
+		curve.setExtrapolationOut( Gaffer.Animation.Extrapolation.Mirror )
 
 		def assertKeysEqual( k0, k1 ) :
 
@@ -2472,6 +2654,8 @@ class AnimationTest( GafferTest.TestCase ) :
 			curve = Gaffer.Animation.acquire( script["n"]["user"]["f"] )
 			assertKeysEqual( curve.getKey( 0 ),  Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Interpolation.Linear ) )
 			assertKeysEqual( curve.getKey( 1 ),  Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Interpolation.Linear ) )
+			self.assertEqual( curve.getExtrapolationIn(), Gaffer.Animation.Extrapolation.Oscillate )
+			self.assertEqual( curve.getExtrapolationOut(), Gaffer.Animation.Extrapolation.Mirror )
 			with Gaffer.Context() as c :
 				for i in range( 0, 10 ) :
 					c.setTime( i / 9.0 )
