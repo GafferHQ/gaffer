@@ -100,6 +100,11 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 	def __convertEvent( self, widget, event ) :
 
+		# Convert data to a string that will be recognised by VectorDataWidget's native drag handling.
+		## \todo This is questionable as `event` is `const` in C++, and the drag may just be transitioning across this 
+		# widget en-route to another where the conversion is not warranted. Consider VectorDataPlugValueWidget extensions 
+		# to provide a more legitimate point of conversion, perhaps along the lines of `PlugValueWidget._convertValue()`.
+
 		if isinstance( event.data, IECore.Color4fData ) :
 			event.data = IECore.StringVectorData( self.__dataToManifestValue( event.data ) )
 
