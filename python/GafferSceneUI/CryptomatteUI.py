@@ -52,26 +52,26 @@ def _idToManifestKey( value ) :
 	# Cryptomatte images store the hash as a float so this converts a float pixel id to a manifest key
 	return str( struct.Struct("=I").unpack( struct.Struct("=f").pack( value ) )[0] )
 
-## Supported plug metadata :
-#
-# - "cryptomatteNamesPlugValueWidget:imagePlugName", the image plug to choose a channel from
-#   Will be passed to node().descendant.  Defaults to "in"
+def _findCryptomatteNode( sourcePlug ) :
+
+	def walk( plug ) :
+
+		if isinstance( plug.parent(), GafferScene.Cryptomatte ) :
+			return plug.parent()
+
+		for output in plug.outputs() :
+			r = walk( output )
+			if r is not None :
+				return r
+
+		return None
+
+	return walk( sourcePlug )
+
 class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 		GafferUI.VectorDataPlugValueWidget.__init__( self, plug, **kw )
-
-		node = plug.node()
-
-		imagePlugName = Gaffer.Metadata.value( self.getPlug(), "cryptomatteNamesPlugValueWidget:imagePlugName" )
-		if imagePlugName :
-			self.__imagePlug = node.descendant( imagePlugName )
-		else :
-			self.__imagePlug = node["in"]
-
-		assert( isinstance( self.__imagePlug, GafferImage.ImagePlug ) )
-		
-		self.__manifestPlug = node["__manifest"]
 
 		addButton = self.vectorDataWidget().addButton()
 		removeButton = self.vectorDataWidget().removeButton()
@@ -81,20 +81,28 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		removeButton.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
 		self.vectorDataWidget().dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
 
+	def __getManifest( self ) :
+
+		cryptomatteNode = _findCryptomatteNode( self.getPlug() )
+		if cryptomatteNode :
+			with self.getContext() :
+				with IECore.IgnoredExceptions( Exception ) :
+					return cryptomatteNode["__manifest"].getValue()
+		
+		return None
+
 	def __dataToManifestValue( self, data ) :
 
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Exception ) :
-				manifest = self.__manifestPlug.getValue()
-				if isinstance( data, IECore.Color4fData ) :
-					# we expect the first channel of the event data to contain the value to convert to a manifest key
-					manifestValueData = manifest.get( _idToManifestKey( data.value[0] ) )
-					if manifestValueData :
-						value = [ manifestValueData.value ]
-					else :
-						value = [ "<{}>".format( data.value[0] ) ]
+		if isinstance( data, IECore.Color4fData ) :
+			manifest = self.__getManifest()
+			# we expect the first channel of the event data to contain the value to convert to a manifest key
+			manifestValueData = manifest.get( _idToManifestKey( data.value[0] ) )
+			if manifestValueData :
+				value = [ manifestValueData.value ]
+			else :
+				value = [ "<{}>".format( data.value[0] ) ]
 
-					return value
+			return value
 
 		return None
 
@@ -120,7 +128,7 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 def __cryptomatteLayerNames( plug ) :
 
-	node = plug.node()
+	node = _findCryptomatteNode( plug )
 	imagePlug = node["in"]
 	
 	imageMetadata = imagePlug["metadata"].getValue()
