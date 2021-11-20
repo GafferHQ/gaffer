@@ -78,49 +78,49 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 	def compareValues( self, c, layers ) :
 
-		s = GafferImage.ImageSampler()
-		s["image"].setInput( c["out"] )
-		s["pixel"].setValue( imath.V2f( 36, 108 ) )
+		cowSampler = GafferImage.ImageSampler()
+		cowSampler["image"].setInput( c["out"] )
+		cowSampler["pixel"].setValue( imath.V2f( 94, 106 ) )
 
-		s1 = GafferImage.ImageSampler()
-		s1["image"].setInput( c["out"] )
-		s1["pixel"].setValue( imath.V2f( 94, 106 ) )
+		cow1Sampler = GafferImage.ImageSampler()
+		cow1Sampler["image"].setInput( c["out"] )
+		cow1Sampler["pixel"].setValue( imath.V2f( 36, 108 ) )
 
 		if "crypto_object" in layers :
 			c["layer"].setValue( "crypto_object" )
 			m = c["__manifest"].getValue()
 
 			self.assertTrue( IECore.StringData( "/cow" ) in m.values() )
-			self.assertEqual( s["color"].getValue()[3], 0.0 )
-			self.assertEqual( s1["color"].getValue()[3], 0.0 )
+			self.assertEqual( cowSampler["color"].getValue()[3], 0.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 0.0 )
 
 			c["matteNames"].setValue( IECore.StringVectorData( [ "/cow" ] ) )
-			self.assertEqual( s["color"].getValue()[3], 0.0 )
-			self.assertEqual( s1["color"].getValue()[3], 1.0 )
+			self.assertEqual( cowSampler["color"].getValue()[3], 1.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 0.0 )
 
 			c["matteNames"].setValue( IECore.StringVectorData( [ "/cow1" ] ) )
-			self.assertEqual( s["color"].getValue()[3], 1.0 )
-			self.assertEqual( s1["color"].getValue()[3], 0.0 )
+			self.assertEqual( cowSampler["color"].getValue()[3], 0.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 1.0 )
 
 			c["matteNames"].setValue( IECore.StringVectorData( [ "/cow*" ] ) )
-			self.assertEqual( s["color"].getValue()[3], 1.0 )
-			self.assertEqual( s1["color"].getValue()[3], 1.0 )
+			self.assertEqual( cowSampler["color"].getValue()[3], 1.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 1.0 )
 
 		if "crypto_material" in layers :
 			c["layer"].setValue( "crypto_material" )
 			m = c["__manifest"].getValue()
 
 			self.assertTrue( IECore.StringData( "shader:db33c6a440a2dcf4a92383d8ae16c33a" ) in m.values() )
-			self.assertEqual( s["color"].getValue()[3], 0.0 )
-			self.assertEqual( s1["color"].getValue()[3], 0.0 )
+			self.assertEqual( cowSampler["color"].getValue()[3], 0.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 0.0 )
 
 			c["matteNames"].setValue( IECore.StringVectorData( [ "shader:db33c6a440a2dcf4a92383d8ae16c33a" ] ) )
-			self.assertEqual( s["color"].getValue()[3], 1.0 )
-			self.assertEqual( s1["color"].getValue()[3], 0.0 )
+			self.assertEqual( cowSampler["color"].getValue()[3], 0.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 1.0 )
 
 			c["matteNames"].setValue( IECore.StringVectorData( [ "shader:b0d1fe5b982bcae64d6329033cbadc70" ] ) )
-			self.assertEqual( s["color"].getValue()[3], 0.0 )
-			self.assertEqual( s1["color"].getValue()[3], 1.0 )		
+			self.assertEqual( cowSampler["color"].getValue()[3], 1.0 )
+			self.assertEqual( cow1Sampler["color"].getValue()[3], 0.0 )
 
 	def testManifestFromMetadata( self ) :
 
