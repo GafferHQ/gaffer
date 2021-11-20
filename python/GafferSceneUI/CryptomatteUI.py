@@ -201,7 +201,7 @@ Gaffer.Metadata.registerNode(
 			This can be a path to a manifest file, or a path to a directory.
 			
 			When a directory is specified, the value of the `manif_file` metadata
-			key for the current Cryptomatte layer will be appened.
+			key for the current Cryptomatte layer will be appended.
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
@@ -229,7 +229,7 @@ Gaffer.Metadata.registerNode(
 			   match /robotD or /robota.
 
 			Cryptomatte manifest entries containing '/' characters will be
-			treated as heirarchical paths and a matte will be extracted for any
+			treated as hierarchical paths and a matte will be extracted for any
 			entry that is matched or has an ancestor that is matched.
 
 			 - /robot extracts mattes for /robot, /robot/leftArm and
