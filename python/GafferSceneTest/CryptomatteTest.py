@@ -348,6 +348,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		
 		c["matteNames"].setValue( IECore.StringVectorData( keys ) )
 
+		# Pre-compute input to remove cost of file loading from performance test
+		GafferImageTest.processTiles( c["in"] )
+
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( c["out"] )
 
