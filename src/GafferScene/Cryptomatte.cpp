@@ -618,7 +618,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
         {
             for( const auto &manifestEntry : manifest->readable() )
             {
-                const std::string matteName = IECore::runTimeCast<IECore::StringData>( manifestEntry.second.get() )->readable();
+                const std::string &matteName = static_cast<IECore::StringData *>( manifestEntry.second.get() )->readable();
                 if( pathMatcher.match( matteName ) & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
                 {
                     matteValues.insert( matteNameToValue( matteName ) );
@@ -647,7 +647,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
         {
             for( const auto &manifestEntry : manifest->readable() )
             {
-                pathMatcher.addPath( IECore::runTimeCast<IECore::StringData>( manifestEntry.second.get() )->readable() );
+                pathMatcher.addPath( static_cast<IECore::StringData *>( manifestEntry.second.get() )->readable() );
             }
         }
 
