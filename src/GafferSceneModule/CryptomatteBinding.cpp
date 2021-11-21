@@ -56,6 +56,8 @@ void GafferSceneModule::bindCryptomatte()
 		enum_<Cryptomatte::ManifestSource>( "ManifestSource" )
  			.value( "Metadata", Cryptomatte::ManifestSource::Metadata )
  			.value( "Sidecar", Cryptomatte::ManifestSource::Sidecar )
+			.value( "None", Cryptomatte::ManifestSource::None )
+			.value( "None_", Cryptomatte::ManifestSource::None )
  		;
 	}
 }

@@ -197,10 +197,12 @@ Gaffer.Metadata.registerNode(
 
 			 - Metadata: The image metadata `manifest` key for the Cryptomatte layer.
 			 - Sidecar: An external JSON file specified on the `sidecarManifestPath` plug.
+			 - None: No manifest will be loaded.
 			""",
 
 			"preset:Metadata", GafferScene.Cryptomatte.ManifestSource.Metadata,
 			"preset:Sidecar", GafferScene.Cryptomatte.ManifestSource.Sidecar,
+			"preset:None", GafferScene.Cryptomatte.ManifestSource.None_,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],
@@ -283,7 +285,7 @@ __DropMode = IECore.Enum.create( "None_", "Add", "Remove", "Replace" )
 __originalDragPointer = None
 
 def __namesPlug( node ) :
-
+	##/todo handle matteNames plug with input
 	return node["matteNames"]
 
 def __dropMode( nodeGadget, event ) :

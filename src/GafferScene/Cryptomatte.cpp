@@ -280,7 +280,7 @@ Cryptomatte::Cryptomatte( const std::string &name )
 {
     storeIndexOfNextChild( g_firstPlugIndex );
     addChild( new StringPlug( "layer", Gaffer::Plug::In, "" ) );
-    addChild( new IntPlug( "manifestSource", Gaffer::Plug::In, (int)ManifestSource::Metadata, /* min */ (int)ManifestSource::Metadata, /* max */ (int)ManifestSource::Sidecar ) );
+    addChild( new IntPlug( "manifestSource", Gaffer::Plug::In, (int)ManifestSource::Metadata, /* min */ (int)ManifestSource::Metadata, /* max */ (int)ManifestSource::None ) );
     addChild( new StringPlug( "sidecarManifestPath", Gaffer::Plug::In, "") );
     addChild( new StringPlug( "outputChannel", Gaffer::Plug::In, "A") );
     addChild( new StringVectorDataPlug( "matteNames", Gaffer::Plug::In, new StringVectorData() ) );
@@ -548,6 +548,10 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
                 {
                     throw IECore::Exception( boost::str( boost::format( "Invalid manifest path: %s" ) % manifestPath ) );
                 }
+                break;
+            }
+            case ManifestSource::None :
+            {
                 break;
             }
         }
