@@ -587,7 +587,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
         IECore::PathMatcher pathMatcher;
         for( const auto &name : matteNames->readable() )
         {
-            if( name.front() == '<' && name.back() == '>' )
+            if( name.size() > 0 && name.front() == '<' && name.back() == '>' )
             {
                 try 
                 {
