@@ -858,24 +858,26 @@ void Cryptomatte::hashChannelData( const GafferImage::ImagePlug *output, const G
 
 IECore::ConstFloatVectorDataPtr Cryptomatte::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {
-    const std::string alphaChannel = outputChannelPlug()->getValue();
-    
+    std::string cryptomatteLayer;
+    std::string alphaChannel;
+    ConstStringVectorDataPtr channelNamesData;
+    {
+        GafferImage::ImagePlug::GlobalScope globalScope( context );
+        channelNamesData = inPlug()->channelNamesPlug()->getValue();
+        cryptomatteLayer = layerPlug()->getValue();
+        alphaChannel = outputChannelPlug()->getValue();
+    }
+
     if( channelName != "R" && channelName != "G" && channelName != "B" && channelName != alphaChannel )
     {
         return inPlug()->channelDataPlug()->getValue();
     }
-    
-    ConstStringVectorDataPtr channelNamesData;
-    {
-        GafferImage::ImagePlug::GlobalScope c( context );
-        channelNamesData = inPlug()->channelNamesPlug()->getValue();
-    }
+
     const std::vector<std::string> &channelNames = channelNamesData->readable();
-    
-    const std::string cryptomatteLayer = layerPlug()->getValue();
+
     if( cryptomatteLayer == "" )
     {
-        if( find( channelNames.begin(), channelNames.end(), channelName ) != channelNames.end() )
+        if( GafferImage::ImageAlgo::channelExists( channelNames, channelName ) )
         {
             return inPlug()->channelDataPlug()->getValue();
         }
