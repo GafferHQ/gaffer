@@ -396,14 +396,13 @@ def __selectAffected( node, context ) :
 	
 	scene = node["__manifestScene"]
 	
-	pathMatcher = IECore.PathMatcher()
-	for path in node["matteNames"].getValue() :
-		if path[0] != '<' and path[-1] != '>' :
-			pathMatcher.addPath( path )
-
-	pathMatcherResult = IECore.PathMatcher()
-
 	with context :
+		pathMatcher = IECore.PathMatcher()
+		for path in node["matteNames"].getValue() :
+			if path[0] != '<' and path[-1] != '>' :
+				pathMatcher.addPath( path )
+
+		pathMatcherResult = IECore.PathMatcher()
 		GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, pathMatcherResult )
 
 	GafferSceneUI.ContextAlgo.setSelectedPaths( context, pathMatcherResult )
