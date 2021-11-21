@@ -255,7 +255,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferSceneUI.CryptomatteUI._CryptomatteNamesPlugValueWidget",
-			"ui:image:acceptsNames", True,
 		],
 
 		"outputChannel" : [
@@ -285,11 +284,7 @@ __originalDragPointer = None
 
 def __namesPlug( node ) :
 
-	for plug in node.children( Gaffer.Plug ) :
-		if Gaffer.Metadata.value( plug, "ui:image:acceptsNames" ) :
-			return plug
-
-	return None
+	return node["matteNames"]
 
 def __dropMode( nodeGadget, event ) :
 
@@ -374,7 +369,7 @@ def __drop( nodeGadget, event ) :
 
 	return True
 
-def addNamesDropTarget( nodeGadget ) :
+def __addNamesDropTarget( nodeGadget ) :
 
 	nodeGadget.dragEnterSignal().connect( __dragEnter, scoped = False )
 	nodeGadget.dragLeaveSignal().connect( __dragLeave, scoped = False )
@@ -384,7 +379,7 @@ def addNamesDropTarget( nodeGadget ) :
 def __nodeGadget( pathFilter ) :
 
 	nodeGadget = GafferUI.StandardNodeGadget( pathFilter )
-	addNamesDropTarget( nodeGadget )
+	__addNamesDropTarget( nodeGadget )
 
 	return nodeGadget
 
