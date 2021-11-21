@@ -870,10 +870,6 @@ IECore::ConstFloatVectorDataPtr Cryptomatte::computeChannelData( const std::stri
 
     if( channelName == "R" || channelName == "G" || channelName == "B" )
     {
-        FloatVectorDataPtr resultData = new FloatVectorData;
-        std::vector<float> &result = resultData->writable();
-        result.resize( GafferImage::ImagePlug::tilePixels(), 0.0f );
-
         const std::string &firstDataChannel = cryptomatteLayer + g_firstDataChannelSuffix;
         if( !GafferImage::ImageAlgo::channelExists( channelNames, firstDataChannel ) )
         {
@@ -889,6 +885,10 @@ IECore::ConstFloatVectorDataPtr Cryptomatte::computeChannelData( const std::stri
         }
         else if( channelName == "G" || channelName == "B" )
         {
+            FloatVectorDataPtr resultData = new FloatVectorData;
+            std::vector<float> &result = resultData->writable();
+            result.resize( GafferImage::ImagePlug::tilePixels(), 0.0f );
+
             ConstFloatVectorDataPtr valueData = inPlug()->channelDataPlug()->getValue();
             const std::vector<float> &values = valueData->readable();
 
@@ -907,9 +907,9 @@ IECore::ConstFloatVectorDataPtr Cryptomatte::computeChannelData( const std::stri
                 std::memcpy( &h, &(*vIt), sizeof( uint32_t ) );
                 *it = (float)(h << shift) / (float)UINT32_MAX * 0.3f + *aIt * mult;
             }
-        }
 
-        return resultData;
+            return resultData;
+        }
     }
     else if( channelName == alphaChannel )
     {
