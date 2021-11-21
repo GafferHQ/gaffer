@@ -790,43 +790,70 @@ IECore::ConstStringVectorDataPtr Cryptomatte::computeChannelNames( const Gaffer:
 
 void Cryptomatte::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-    FlatImageProcessor::hashChannelData( output, context, h );
+    std::string alphaChannel;
+    {
+        GafferImage::ImagePlug::GlobalScope globalScope( context );
+        alphaChannel = outputChannelPlug()->getValue();
+    }
 
-    inPlug()->channelDataPlug()->hash( h );
+    const std::string channelName = context->get<std::string>( GafferImage::ImagePlug::channelNameContextName );
+    if( channelName != "R" && channelName != "G" && channelName != "B" && channelName != alphaChannel )
+    {
+        h = inPlug()->channelDataPlug()->hash(); 
+        return;
+    }
 
     std::string cryptomatteLayer;
-    std::string alphaChannel;
     ConstStringVectorDataPtr channelNamesData;
     {
         GafferImage::ImagePlug::GlobalScope globalScope( context );
         channelNamesData = inPlug()->channelNamesPlug()->getValue();
         cryptomatteLayer = layerPlug()->getValue();
-        alphaChannel = outputChannelPlug()->getValue();
+    }
 
-        outputChannelPlug()->hash( h );
+    if( cryptomatteLayer == "" )
+    {
+        if( GafferImage::ImageAlgo::channelExists( channelNamesData->readable(), channelName ) )
+        {
+            h = inPlug()->channelDataPlug()->hash(); 
+            return;
+        }
+        else
+        {
+            h = GafferImage::ImagePlug::blackTile()->Object::hash();
+            return;
+        }
+    }
+
+    const std::string &firstDataChannel = cryptomatteLayer + g_firstDataChannelSuffix;
+    if( !GafferImage::ImageAlgo::channelExists( channelNamesData->readable(), firstDataChannel ) )
+    {
+        h = GafferImage::ImagePlug::blackTile()->Object::hash();
+        return;
+    }
+
+    h.append( channelName );
+
+    {
+        GafferImage::ImagePlug::GlobalScope globalScope( context );
         layerPlug()->hash( h );
         matteValuesPlug()->hash( h );
         inPlug()->metadataPlug()->hash( h );
+
+        if( channelName == alphaChannel )
+        {
+            outputChannelPlug()->hash( h );
+        }
     }
 
-    const std::string channelName = context->get<std::string>( GafferImage::ImagePlug::channelNameContextName );
-    
-    if( channelName == "R" || channelName == "G" || channelName == "B" || channelName == alphaChannel )
+    if( channelName != "R" )
     {
-        if( channelName != "R" )
-        {
-            matteChannelDataPlug()->hash( h );
-        }
-
-        GafferImage::ImagePlug::ChannelDataScope channelDataScope( context );
-        const std::string &firstDataChannel = cryptomatteLayer + g_firstDataChannelSuffix;
-        if( GafferImage::ImageAlgo::channelExists( channelNamesData->readable(), firstDataChannel ) )
-        {
-            channelDataScope.setChannelName( &firstDataChannel );
-            inPlug()->channelDataPlug()->hash( h );
-        }
-        h.append( channelName );
+        matteChannelDataPlug()->hash( h );
     }
+
+    GafferImage::ImagePlug::ChannelDataScope channelDataScope( context );
+    channelDataScope.setChannelName( &firstDataChannel );
+    inPlug()->channelDataPlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr Cryptomatte::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
