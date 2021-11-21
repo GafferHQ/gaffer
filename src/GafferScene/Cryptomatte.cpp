@@ -510,8 +510,6 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
     
     if( output == manifestPlug() )
     {
-        GafferImage::ImagePlug::GlobalScope globalScope( context );
-
         const std::string cryptomatteLayer = layerPlug()->getValue();
         if( cryptomatteLayer == "" )
         {
@@ -569,19 +567,15 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
         std::vector<float> &result = resultData->writable();
         std::unordered_set<float> matteValues;
 
-        ConstStringVectorDataPtr matteNames;
+        ConstStringVectorDataPtr matteNames = matteNamesPlug()->getValue();
         ConstCompoundDataPtr manifest;
+        try
+        { 
+            manifest = manifestPlug()->getValue();
+        }
+        catch( const std::exception &e )
         {
-            GafferImage::ImagePlug::GlobalScope globalScope( context );
-            matteNames = matteNamesPlug()->getValue();
-            try
-            { 
-                manifest = manifestPlug()->getValue();
-            }
-            catch( const std::exception &e )
-            {
-                IECore::msg( IECore::Msg::Error, "Cryptomatte::matteValues", boost::format( "Error reading manifest: %s" ) % e.what() );
-            }
+            IECore::msg( IECore::Msg::Error, "Cryptomatte::matteValues", boost::format( "Error reading manifest: %s" ) % e.what() );
         }
 
         IECore::PathMatcher pathMatcher;
@@ -637,11 +631,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
         PathMatcherDataPtr resultData = new PathMatcherData;
         PathMatcher &pathMatcher = resultData->writable();
 
-        ConstCompoundDataPtr manifest;
-        {
-            GafferImage::ImagePlug::GlobalScope globalScope( context );
-            manifest = manifestPlug()->getValue(); 
-        }
+        ConstCompoundDataPtr manifest = manifestPlug()->getValue(); 
         
         if( manifest )
         {
@@ -660,7 +650,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 
         ConstPathMatcherDataPtr manifestPathData;
         {
-            GafferImage::ImagePlug::GlobalScope globalScope( context );
+            ScenePlug::GlobalScope globalScope( context );
             manifestPathData = manifestPathDataPlug()->getValue();
         }
          
