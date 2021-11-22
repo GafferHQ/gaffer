@@ -876,5 +876,45 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			IECore.InternedStringVectorData( [ "sphere", "cube", "childrenOfRoundThings", "childrenOfSquareThings" ] )
 		)
 
+	def testNoUnwantedBoundEvaluations( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
+
+		group = GafferScene.Group()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( reader["out"] )
+		parent["children"][0].setInput( group["out"] )
+		parent["parent"].setValue( "/" )
+		parent["destination"].setValue( "/children" )
+
+		# Computing the root bound should not require more than the bounds
+		# of `/` and `/GAFFERBOT` to be queried from the input scene.
+
+		with Gaffer.ContextMonitor( reader["out"]["bound"] ) as contextMonitor :
+			parent["out"].bound( "/" )
+
+		self.assertEqual( contextMonitor.combinedStatistics().numUniqueContexts(), 2 )
+
+		# If we parent to `/GAFFERBOT/children` then computing the bound of `/GAFFERBOT`
+		# should only query `/GAFFERBOT` and `/GAFFERBOT/C_torso_GRP` from the input.
+
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache()
+
+		parent["destination"].setValue( "/GAFFERBOT/children" )
+		with Gaffer.ContextMonitor( reader["out"]["bound"] ) as contextMonitor :
+			parent["out"].bound( "/GAFFERBOT" )
+
+		self.assertEqual( contextMonitor.combinedStatistics().numUniqueContexts(), 2 )
+
+		# The bounds for children of `/GAFFERBOT` should be perfect pass throughs.
+
+		self.assertEqual(
+			parent["out"].boundHash( "/GAFFERBOT/C_torso_GRP" ),
+			parent["in"].boundHash( "/GAFFERBOT/C_torso_GRP" )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
