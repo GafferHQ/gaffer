@@ -2650,8 +2650,6 @@ void Animation::CurvePlug::setExtrapolation( const Animation::Direction directio
 		return;
 	}
 
-	// NOTE : inactive keys remain parented and participate in undo/redo and signalling
-
 	Action::enact(
 		this,
 		// Do
