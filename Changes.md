@@ -1,3 +1,11 @@
+0.62.x.x
+========
+
+Build
+-----
+
+- Moved minimum required C++ standard to C++17.
+
 0.61.0.0
 ========
 
