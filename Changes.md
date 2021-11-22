@@ -1,3 +1,11 @@
+0.60.12.x (relative to 0.60.12.0)
+=========
+
+Fixes
+-----
+
+- BranchCreator : Fixed bug in bounding box computation which could cause excessive evaluation of the input scene.
+
 0.60.12.0 (relative to 0.60.11.0)
 =========
 
