@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.0.0)
+========
+
+Improvements
+------------
+
+- OSLCode : Improved error reporting for cases where empty `.oso` files are produced.
+
 0.61.0.0
 ========
 
