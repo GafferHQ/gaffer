@@ -192,8 +192,7 @@ IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &cryptomatt
 
     if( metadata->readable().find( manifestKey ) == metadata->readable().end() )
     {
-        IECore::msg( IECore::Msg::Error, "Cryptomatte", boost::format( "Manifest metadata key not found: %s" ) % manifestKey );
-        return nullptr;
+        throw IECore::Exception( boost::str( boost::format( "Manifest metadata key not found: %s" ) % manifestKey ) );
     }
 
     const StringData *manifest = metadata->member<StringData>( manifestKey );
@@ -206,8 +205,7 @@ IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &cryptomatt
     }
     catch( const boost::property_tree::json_parser::json_parser_error &e )
     {
-        IECore::msg( IECore::Msg::Error, "Cryptomatte", boost::format( "Error parsing manifest metadata: %s" ) % e.what() );
-        return nullptr;
+        throw IECore::Exception( boost::str( boost::format( "Error parsing manifest metadata: %s" ) % e.what() ) );
     }
 
     return propertyTreeToCompoundData( pt );
@@ -228,8 +226,7 @@ IECore::CompoundDataPtr parseManifestFromFile( const std::string &manifestFile )
     }
     catch( const boost::property_tree::json_parser::json_parser_error &e )
     {
-        IECore::msg( IECore::Msg::Error, "Cryptomatte", boost::format( "Error parsing manifest file: %s" ) % e.what() );
-        return nullptr;
+        throw IECore::Exception( boost::str( boost::format( "Error parsing manifest file: %s" ) % e.what() ) );
     }
 
    return propertyTreeToCompoundData( pt );
