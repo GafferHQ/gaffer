@@ -3,11 +3,11 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
       - '*_maintenance'
   pull_request:
     branches:
-      - master
+      - main
       - '*_maintenance'
   release:
       types: [published]
@@ -209,7 +209,7 @@ jobs:
       with:
         name: ${{ env.GAFFER_BUILD_NAME }}
         path: ${{ env.GAFFER_BUILD_NAME }}.tar.gz
-      if: matrix.publish && env.GAFFER_GITHUB_RELEASEID == ''
+      if: matrix.publish
 
     - name: Publish Release
       run: |

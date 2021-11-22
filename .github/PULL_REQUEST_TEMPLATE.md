@@ -16,7 +16,7 @@ Generally describe what this PR will do, and why it is needed
 
 ### Checklist ###
 
-- [ ] I have read the [contribution guidelines](https://github.com/GafferHQ/gaffer/blob/master/CONTRIBUTING.md).
+- [ ] I have read the [contribution guidelines](https://github.com/GafferHQ/gaffer/blob/main/CONTRIBUTING.md).
 - [ ] I have updated the documentation, if applicable.
 - [ ] I have tested my change(s) in the test suite, and added new test cases where necessary.
 - [ ] My code follows the Gaffer project's prevailing coding style and conventions.
