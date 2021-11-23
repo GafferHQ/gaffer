@@ -1317,63 +1317,8 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		return false;
 	}
 
-	if( onTimeAxis( event.line ) && ! onValueAxis( event.line ) )
-	{
-		m_frameIndicatorPreviewFrame = static_cast<int>( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
-	}
-	else
-	{
-		m_frameIndicatorPreviewFrame = std::nullopt;
-	}
+	updateHighlightingAndPreview( event );
 
-	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
-
-	if( tangent.first )
-	{
-		m_highlightedTangentKey = tangent.first;
-		m_highlightedTangentDirection = tangent.second;
-		m_highlightedKey = nullptr;
-		m_highlightedCurve = nullptr;
-	}
-	else if( Animation::KeyPtr key = keyAt( event.line ) )
-	{
-		m_highlightedKey = key;
-		m_highlightedTangentKey = nullptr;
-		m_highlightedCurve = nullptr;
-	}
-	else
-	{
-		if( m_highlightedKey )
-		{
-			m_highlightedKey = nullptr;
-		}
-
-		if( m_highlightedTangentKey )
-		{
-			m_highlightedTangentKey = nullptr;
-		}
-
-		if( Animation::CurvePlugPtr curvePlug = curveAt( event.line ) )
-		{
-			m_highlightedCurve = curvePlug;
-
-			bool controlHeld = event.modifiers & DragDropEvent::Control;
-			if( controlHeld )
-			{
-				m_keyPreview = true;
-			}
-		}
-		else
-		{
-			if( m_highlightedCurve )
-			{
-				m_highlightedCurve = nullptr;
-				m_keyPreview = false;
-			}
-		}
-	}
-
-	updateKeyPreviewLocation( m_highlightedCurve.get(), i.x );
 	dirty( DirtyType::Render );
 
 	return true;
@@ -1524,6 +1469,8 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	m_dragMode = DragMode::None;
 	m_moveAxis = MoveAxis::Both;
 	Pointer::setCurrent( "" );
+
+	updateHighlightingAndPreview( event );
 
 	dirty( DirtyType::Render );
 
@@ -1938,4 +1885,73 @@ void AnimationGadget::updateKeyPreviewLocation( const Gaffer::Animation::CurvePl
 	float snappedTime = snapTimeToFrame( m_context->getFramesPerSecond(), time );
 	float value = curvePlug->evaluate( snappedTime );
 	m_keyPreviewLocation = V3f( snappedTime, value, 0 );
+}
+
+void AnimationGadget::updateHighlightingAndPreview( const ButtonEvent &event )
+{
+	V3f i;
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return;
+	}
+
+	if( onTimeAxis( event.line ) && ! onValueAxis( event.line ) )
+	{
+		m_frameIndicatorPreviewFrame = static_cast<int>( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
+	}
+	else
+	{
+		m_frameIndicatorPreviewFrame = std::nullopt;
+	}
+
+	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
+
+	if( tangent.first )
+	{
+		m_highlightedTangentKey = tangent.first;
+		m_highlightedTangentDirection = tangent.second;
+		m_highlightedKey = nullptr;
+		m_highlightedCurve = nullptr;
+	}
+	else if( Animation::KeyPtr key = keyAt( event.line ) )
+	{
+		m_highlightedKey = key;
+		m_highlightedTangentKey = nullptr;
+		m_highlightedCurve = nullptr;
+	}
+	else
+	{
+		if( m_highlightedKey )
+		{
+			m_highlightedKey = nullptr;
+		}
+
+		if( m_highlightedTangentKey )
+		{
+			m_highlightedTangentKey = nullptr;
+		}
+
+		if( Animation::CurvePlugPtr curvePlug = curveAt( event.line ) )
+		{
+			m_highlightedCurve = curvePlug;
+
+			bool controlHeld = event.modifiers & DragDropEvent::Control;
+			if( controlHeld )
+			{
+				m_keyPreview = true;
+			}
+		}
+		else
+		{
+			if( m_highlightedCurve )
+			{
+				m_highlightedCurve = nullptr;
+				m_keyPreview = false;
+			}
+		}
+	}
+
+	updateKeyPreviewLocation( m_highlightedCurve.get(), i.x );
+
+	return;
 }
