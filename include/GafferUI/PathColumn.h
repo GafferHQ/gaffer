@@ -72,7 +72,15 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted
 			///
 			/// - StringData (providing icon name)
 			/// - Color3fData (drawn as swatch)
-			Icon
+			Icon,
+			/// The background colour for the cell. Supported types :
+			///
+			/// - Color3fData
+			/// - Color4fData
+			Background,
+			/// Tip to be displayed on hover. Supports the same types
+			/// as `Value`.
+			ToolTip
 		};
 
 		/// Returns a value used to draw a cell within the column.

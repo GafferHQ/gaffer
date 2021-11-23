@@ -144,6 +144,10 @@ boost::optional<GafferUI::PathColumn::Role> pathColumnRole( int qtRole )
 			return GafferUI::PathColumn::Role::Value;
 		case Qt::DecorationRole :
 			return GafferUI::PathColumn::Role::Icon;
+		case Qt::BackgroundRole :
+			return GafferUI::PathColumn::Role::Background;
+		case Qt::ToolTipRole :
+			return GafferUI::PathColumn::Role::ToolTip;
 		default :
 			return boost::none;
 	}
@@ -246,7 +250,24 @@ QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path 
 		}
 	}
 
-	assert( role == GafferUI::PathColumn::Role::Display );
+	if( role == GafferUI::PathColumn::Role::Background )
+	{
+		switch( value->typeId() )
+		{
+			case IECore::Color3fDataTypeId : {
+				const Imath::Color3f c = static_cast<const IECore::Color3fData *>( value.get() )->readable() * 255.0f;
+				return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
+			}
+			case IECore::Color4fDataTypeId : {
+				const Imath::Color4f c = static_cast<const IECore::Color4fData *>( value.get() )->readable() * 255.0f;
+				return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ), Imath::clamp( c[3], 0.0f, 255.0f ) );
+			}
+			default :
+				return QVariant();
+		}
+	}
+
+	assert( role == GafferUI::PathColumn::Role::Value || role == GafferUI::PathColumn::Role::ToolTip );
 
 	switch( value->typeId() )
 	{
@@ -956,7 +977,7 @@ class PathModel : public QAbstractItemModel
 					const_cast<PathModel *>( model )->scheduleUpdate();
 				}
 
-				if( column >= (int)m_displayData.size() )
+				if( column >= (int)m_data.size() )
 				{
 					// We haven't computed any data yet.
 					if( column < (int)model->m_columns.size() && role == Qt::DisplayRole )
@@ -978,14 +999,13 @@ class PathModel : public QAbstractItemModel
 					return QVariant();
 				}
 
-				switch( role )
+				if( auto r = pathColumnRole( role ) )
 				{
-					case Qt::DisplayRole :
-						return m_displayData[column];
-					case Qt::DecorationRole :
-						return m_decorationData[column];
-					default :
-						return QVariant();
+					return m_data[column][int(*r)];
+				}
+				else
+				{
+					return QVariant();
 				}
 			}
 
@@ -1001,6 +1021,8 @@ class PathModel : public QAbstractItemModel
 			}
 
 			private :
+
+				using ColumnData = std::array<QVariant, (int)GafferUI::PathColumn::Role::ToolTip+1>;
 
 				void dirtyWalk()
 				{
@@ -1039,43 +1061,42 @@ class PathModel : public QAbstractItemModel
 					}
 				}
 
-				static QVariant dataForSort( const std::vector<QVariant> &displayData, PathModel *model )
+				static QVariant dataForSort( const std::vector<ColumnData> &data, PathModel *model )
 				{
-					if( model->m_sortColumn < 0 || model->m_sortColumn >= (int)displayData.size() )
+					if( model->m_sortColumn < 0 || model->m_sortColumn >= (int)data.size() )
 					{
 						return QVariant();
 					}
-					return displayData[model->m_sortColumn];
+					return data[model->m_sortColumn][(int)GafferUI::PathColumn::Role::Value];
 				}
 
 				// Updates data and returns the value that should be used for sorting.
-				// This value is returned because the actual edit to `m_displayData` will not be
+				// This value is returned because the actual edit to `m_data` will not be
 				// complete until the queued edit is processed by the UI thread.
 				QVariant updateData( PathModel *model, const Path *path, const IECore::Canceller *canceller )
 				{
 					if( m_dataState == State::Clean || m_dataState == State::Unrequested )
 					{
-						return dataForSort( m_displayData, model );
+						return dataForSort( m_data, model );
 					}
 
 					// We generate data for all columns and roles at once, on the
 					// assumption that access to one is likely to indicate upcoming
 					// accesses to the others.
 
-					std::vector<QVariant> newDisplayData;
-					std::vector<QVariant> newDecorationData;
+					std::vector<ColumnData> newData;
 
-					newDisplayData.reserve( model->m_columns.size() );
-					newDecorationData.reserve( model->m_columns.size() );
+					newData.reserve( model->m_columns.size() );
 
 					for( int i = 0, e = model->m_columns.size(); i < e; ++i )
 					{
-						QVariant displayData;
-						QVariant decorationData;
+						ColumnData columnData;
 						try
 						{
-							displayData = valueToVariant( *model->m_columns[i], path, GafferUI::PathColumn::Role::Value, canceller );
-							decorationData = valueToVariant( *model->m_columns[i], path, GafferUI::PathColumn::Role::Icon, canceller );
+							for( int r = (int)GafferUI::PathColumn::Role::Value; r <= (int)GafferUI::PathColumn::Role::ToolTip; ++r )
+							{
+								columnData[r] = valueToVariant( *model->m_columns[i], path, (GafferUI::PathColumn::Role)r, canceller );
+							}
 						}
 						catch( const IECore::Cancelled &e )
 						{
@@ -1092,15 +1113,14 @@ class PathModel : public QAbstractItemModel
 							IECore::msg( IECore::Msg::Warning, "PathListingWidget", "Unknown error" );
 						}
 
-						newDisplayData.push_back( displayData );
-						newDecorationData.push_back( decorationData );
+						newData.push_back( columnData );
 					}
 
-					if( newDisplayData == m_displayData && newDecorationData == m_decorationData )
+					if( newData == m_data )
 					{
 						// No update necessary.
 						m_dataState = State::Clean;
-						return dataForSort( m_displayData, model );
+						return dataForSort( m_data, model );
 					}
 
 					if( m_row == -1 )
@@ -1108,10 +1128,9 @@ class PathModel : public QAbstractItemModel
 						// We have just been created in `updateChildItems()` and haven't
 						// been made visible to Qt yet. No need to emit `dataChanged` or
 						// worry about concurrent access from the UI thread.
-						m_displayData.swap( newDisplayData );
-						m_decorationData.swap( newDecorationData );
+						m_data.swap( newData );
 						m_dataState = State::Clean;
-						return dataForSort( m_displayData, model );
+						return dataForSort( m_data, model );
 					}
 
 					// Mark clean _now_, to avoid a double update if we are
@@ -1121,14 +1140,13 @@ class PathModel : public QAbstractItemModel
 					m_dataState = State::Clean;
 
 					// Get result before we move `newDisplayData` into the lambda.
-					const QVariant result = dataForSort( newDisplayData, model );
+					const QVariant result = dataForSort( newData, model );
 
 					model->queueEdit(
 
-						[this, model, newDisplayData = std::move( newDisplayData ), newDecorationData = std::move( newDecorationData )] () mutable {
+						[this, model, newData = std::move( newData )] () mutable {
 
-							m_displayData.swap( newDisplayData );
-							m_decorationData.swap( newDecorationData );
+							m_data.swap( newData );
 							model->dataChanged( model->createIndex( m_row, 0, this ), model->createIndex( m_row, model->m_columns.size() - 1, this ) );
 
 						}
@@ -1429,8 +1447,7 @@ class PathModel : public QAbstractItemModel
 				}
 
 				std::atomic<State> m_dataState;
-				std::vector<QVariant> m_displayData;
-				std::vector<QVariant> m_decorationData;
+				std::vector<ColumnData> m_data;
 
 				std::atomic<State> m_childItemsState;
 				// Children are held by `shared_ptr` in order to support
