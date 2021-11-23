@@ -647,7 +647,8 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						tieModeToBools( previousKey->getTieMode(), tieSlope, tieScale );
 						const V2d outPosKey = out.getPosition();
 						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
-						const bool isOutHighlighted = ( ( m_highlightedTangentKey == previousKey ) && ( m_highlightedTangentDirection == Animation::Direction::Out ) );
+						const bool isOutHighlighted = ( ( m_highlightedTangentKey == previousKey ) && (
+							( m_highlightedTangentDirection == Animation::Direction::Out ) || ( tieSlope || tieScale ) ) );
 						const double outSize = isOutHighlighted ? 4.0 : 2.0;
 						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
@@ -661,7 +662,8 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 						tieModeToBools( key.getTieMode(), tieSlope, tieScale );
 						const V2d inPosKey = in.getPosition();
 						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
-						const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && ( m_highlightedTangentDirection == Animation::Direction::In ) );
+						const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && (
+							( m_highlightedTangentDirection == Animation::Direction::In ) || ( tieSlope || tieScale ) ) );
 						const double inSize = isInHighlighted ? 4.0 : 2.0;
 						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
