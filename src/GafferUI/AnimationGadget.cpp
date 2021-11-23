@@ -1213,6 +1213,8 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			m_dragTangentOriginalScale = t.getScale();
 			m_dragTangentKey = tangent.first;
 			m_dragTangentDirection = tangent.second;
+			m_highlightedTangentKey = m_dragTangentKey;
+			m_highlightedTangentDirection = m_dragTangentDirection;
 			m_dragMode = DragMode::MoveTangent;
 			if(
 				( event.modifiers & DragDropEvent::Control ) &&
@@ -1453,6 +1455,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	case DragMode::MoveTangent :
 	{
 		m_dragTangentKey.reset();
+		m_highlightedTangentKey.reset();
 		m_dragTangentOriginalScale = 0.0;
 		m_mergeGroupId++;
 		break;
