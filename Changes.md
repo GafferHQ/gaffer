@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.1.1)
+========
+
+API
+---
+
+- PlugPopup : Added new class for editing plugs in a popup window.
+
 0.61.1.1 (relative to 0.61.1.0)
 ========
 

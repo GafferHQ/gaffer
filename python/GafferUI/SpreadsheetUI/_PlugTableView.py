@@ -53,7 +53,6 @@ from . import _Algo
 from . import _ClipboardAlgo
 from . import _ProxyModels
 from ._CellPlugValueWidget import _CellPlugValueWidget
-from ._EditWindow import _EditWindow
 from ._PlugTableDelegate import _PlugTableDelegate
 from ._PlugTableModel import _PlugTableModel
 from ._ProxySelectionModel import _ProxySelectionModel
@@ -977,7 +976,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __showEditor( self, plugs, plugBound, allowDirectEditing ) :
 
-		self.__lastPresetsMenuWidget = None
+		self.__editorWidget = None
 
 		if allowDirectEditing :
 			# Show a presets menu directly to avoid an unnecessary interaction step
@@ -987,11 +986,12 @@ class _PlugTableView( GafferUI.Widget ) :
 				valuePlugValueWidget = plugValueWidget.childPlugValueWidget( next( iter( plugs ) )["value"] )
 				if isinstance( valuePlugValueWidget, GafferUI.PresetsPlugValueWidget ) :
 					if not Gaffer.Metadata.value( next( iter( valuePlugValueWidget.getPlugs() ) ), "presetsPlugValueWidget:isCustom" ) :
-						self.__lastPresetsMenuWidget = plugValueWidget
+						self.__editorWidget = plugValueWidget
 						valuePlugValueWidget.menu().popup( position = plugBound.center() )
 						return
 
-		_EditWindow.popupEditor( plugs, plugBound )
+		self.__editorWidget = GafferUI.PlugPopup( plugs, title = "" )
+		self.__editorWidget.popup( plugBound.center() )
 
 	# Clears and selects a non-contiguous list of indexes if they're not already selected.
 	def __selectIndexes( self, indexes ) :
