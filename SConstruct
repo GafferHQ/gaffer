@@ -39,12 +39,9 @@ import os
 import re
 import sys
 import glob
-import shutil
-import fnmatch
-import functools
 import platform
-import py_compile
 import subprocess
+import distutils.dir_util
 
 ###############################################################################################
 # Version
@@ -1584,7 +1581,7 @@ for f in exampleFiles :
 
 def installer( target, source, env ) :
 
-	shutil.copytree( str( source[0] ), str( target[0] ), symlinks=True )
+	distutils.dir_util.copy_tree( str( source[0] ), str( target[0] ), preserve_symlinks=True, update=True )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 
