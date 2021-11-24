@@ -11,6 +11,11 @@ Fixes
 
 - Viewer : Fixed scroll wheel handling for overlay widgets. In particular this means that the mouse wheel can now be used to scroll through the parameters of the scene inspector.
 
+API
+---
+
+- PathListingWidget : Added `columnAt()` method.
+
 0.61.0.0
 ========
 
