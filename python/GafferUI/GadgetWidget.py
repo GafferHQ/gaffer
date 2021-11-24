@@ -291,6 +291,11 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		if not self._makeCurrent() :
 			return False
 
+		# We get given wheel events before they're given to the overlay items,
+		# so we must ignore them so they can be used by the overlay.
+		if self._qtWidget().itemAt( event.line.p0.x, event.line.p0.y ) is not None :
+			return False
+
 		return self.__viewportGadget.wheelSignal()( self.__viewportGadget, event )
 
 	def __visibilityChanged( self, widget ) :
