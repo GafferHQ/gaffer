@@ -40,6 +40,8 @@
 
 #include "GafferUI/PathColumn.h"
 
+#include "GafferBindings/SignalBinding.h"
+
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
@@ -47,6 +49,7 @@
 using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferBindings;
 using namespace GafferUI;
 
 namespace
@@ -110,7 +113,22 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 
 			throw IECore::Exception( "PathColumn::headerValue() python method not defined" );
 		}
+};
 
+struct ChangedSignalSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, PathColumnPtr c )
+	{
+		try
+		{
+			slot( c );
+		}
+		catch( const error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
 };
 
 } // namespace
@@ -120,12 +138,15 @@ void GafferUIModule::bindPathColumn()
 	{
 		scope s = IECorePython::RefCountedClass<PathColumn, IECore::RefCounted, PathColumnWrapper>( "PathColumn" )
 			.def( init<>() )
+			.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
 		;
 
 		enum_<PathColumn::Role>( "Role" )
 			.value( "Value", PathColumn::Role::Value )
 			.value( "Icon", PathColumn::Role::Icon )
 		;
+
+		SignalClass<PathColumn::PathColumnSignal, DefaultSignalCaller<PathColumn::PathColumnSignal>, ChangedSignalSlotCaller>( "PathColumnSignal" );
 	}
 
 	IECorePython::RefCountedClass<StandardPathColumn, PathColumn>( "StandardPathColumn" )

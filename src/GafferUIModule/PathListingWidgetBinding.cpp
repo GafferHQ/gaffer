@@ -346,6 +346,7 @@ class PathModel : public QAbstractItemModel
 			// No need to flush pending edits, because Qt won't deliver the events
 			// to us after we're destructed anyway.
 			cancelUpdate( /* flushPendingEdits = */ false );
+			disconnectColumnChanged();
 		}
 
 		///////////////////////////////////////////////////////////////////
@@ -362,7 +363,14 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 
 			beginResetModel();
+
+			disconnectColumnChanged();
 			m_columns = columns;
+			for( const auto &c : m_columns )
+			{
+				c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) );
+			}
+
 			m_rootItem = new Item( IECore::InternedString(), nullptr );
 			endResetModel();
 		}
@@ -1604,6 +1612,25 @@ class PathModel : public QAbstractItemModel
 				collapseDescendants( treeView, childIndex );
 			}
 		}
+
+		// Column change handling
+
+		void columnChanged()
+		{
+			// Force update.
+			/// \todo Only dirty the data, not the child items.
+			setRoot( getRoot() );
+		}
+
+		void disconnectColumnChanged()
+		{
+			for( const auto &c : m_columns )
+			{
+				c->changedSignal().disconnect( boost::bind( &PathModel::columnChanged, this ) );
+			}
+		}
+
+		// Member data
 
 		Gaffer::PathPtr m_rootPath;
 

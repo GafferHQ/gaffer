@@ -39,6 +39,7 @@
 
 #include "GafferUI/Export.h"
 
+#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Path.h"
 
 #include "IECore/SimpleTypedData.h"
@@ -49,7 +50,7 @@ namespace GafferUI
 /// Abstract class for extracting properties from a Path in a form
 /// suitable for display in a table column. Primarily intended for
 /// use in the PathListingWidget.
-class GAFFERUI_API PathColumn : public IECore::RefCounted
+class GAFFERUI_API PathColumn : public IECore::RefCounted, public boost::signals::trackable
 {
 
 	public :
@@ -87,6 +88,16 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted
 		virtual IECore::ConstRunTimeTypedPtr cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller = nullptr ) const = 0;
 		/// Returns a value used to draw the header for the column.
 		virtual IECore::ConstRunTimeTypedPtr headerValue( Role role, const IECore::Canceller *canceller = nullptr ) const = 0;
+
+		using PathColumnSignal = boost::signal<void ( PathColumn * ), Gaffer::CatchingSignalCombiner<void>>;
+		/// Subclasses should emit this signal when something changes
+		/// in a way that would affect the results of `cellValue()`
+		/// or `headerValue()`.
+		PathColumnSignal &changedSignal();
+
+	private :
+
+		PathColumnSignal m_changedSignal;
 
 };
 
