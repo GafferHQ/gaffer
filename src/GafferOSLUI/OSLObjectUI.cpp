@@ -266,7 +266,7 @@ struct Registration
 {
 		Registration()
 		{
-			NoduleLayout::registerCustomGadget( "GafferOSLUI.OSLObjectUI.PlugAdder", boost::bind( &create, ::_1 ) );
+			NoduleLayout::registerCustomGadget( "GafferOSLUI.OSLObjectUI.PlugAdder", &create );
 		}
 
 	private :

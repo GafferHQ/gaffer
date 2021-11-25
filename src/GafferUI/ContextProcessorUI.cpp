@@ -110,7 +110,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.ContextProcessorUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.ContextProcessorUI.PlugAdder", &create );
 	}
 
 	private :

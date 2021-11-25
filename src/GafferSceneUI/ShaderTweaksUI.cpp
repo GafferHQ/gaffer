@@ -222,7 +222,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferSceneUI.ShaderTweaksUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferSceneUI.ShaderTweaksUI.PlugAdder", &create );
 	}
 
 	private :
