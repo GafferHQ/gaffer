@@ -276,6 +276,8 @@ void GafferModule::bindAnimation()
 		.staticmethod( "defaultSlope" )
 		.def( "defaultScale", &Animation::defaultScale )
 		.staticmethod( "defaultScale" )
+		.def( "description", (const char* (*)( Animation::Extrapolation ))&Animation::description )
+		.staticmethod( "description" )
 		.def( "opposite", &Animation::opposite )
 		.staticmethod( "opposite" )
 	;

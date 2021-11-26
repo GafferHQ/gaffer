@@ -509,6 +509,9 @@ class GAFFER_API Animation : public ComputeNode
 		static const char* toString( Direction direction );
 		static const char* toString( TieMode mode );
 
+		/// convert enums to descriptions
+		static const char* description( Extrapolation extrapolation );
+
 		IE_CORE_DECLAREPTR( CurvePlug );
 
 		/// Parent for all the curves belonging to this

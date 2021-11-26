@@ -3005,4 +3005,26 @@ const char* Animation::toString( const Animation::TieMode mode )
 	}
 }
 
+const char* Animation::description( const Animation::Extrapolation extrapolation )
+{
+	switch( extrapolation )
+	{
+		case Extrapolation::Constant:
+			return "Curve is extended as a flat line.";
+		case Extrapolation::Linear:
+			return "Curve is extended as a line with slope of tangent in direction of extrapolation.";
+		case Extrapolation::Repeat:
+			return "Curve is repeated indefinitely.";
+		case Extrapolation::RepeatOffset:
+			return "Curve is repeated indefinitely with each repetition offset from the previous.";
+		case Extrapolation::Mirror:
+			return "Curve is alternately mirrored in time.";
+		case Extrapolation::Oscillate:
+			return "Curve is alternately inverted in value with each repetition offset from the last.";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
 } // Gaffer

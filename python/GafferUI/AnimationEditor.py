@@ -880,7 +880,8 @@ class _CurveWidget( GafferUI.GridContainer ) :
 			for mode in sorted( Gaffer.Animation.Extrapolation.values.values() ) :
 				em.append( "%s" % ( mode.name ), {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setExtrapolation ), direction=direction, mode=mode ),
-					"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForExtrapolation ), direction=direction, mode=mode ) } )
+					"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForExtrapolation ), direction=direction, mode=mode ),
+					"description" : Gaffer.Animation.description( mode ) } )
 			self.__extrapolationEditor[ direction ].setMenu( GafferUI.Menu( em ) )
 
 		# layout widgets
