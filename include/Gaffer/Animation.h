@@ -59,28 +59,38 @@ class GAFFER_API Animation : public ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Animation, AnimationTypeId, ComputeNode );
 
+		/// Defines the direction that time flows relative to a key, curve or curve span.
+		enum class Direction
+		{
+			/// Time flows "In" to key, curve or curve span.
+			In = 0,
+			/// Time flows "Out" from key, curve or curve span.
+			Out
+		};
+
 		/// Defines the method used to interpolate between a key and the next one.
 		enum class Interpolation
 		{
+			/// Curve span has in key's value.
 			Constant = 0,
+			/// Curve span has out key's value.
 			ConstantNext,
+			/// Curve span is linearly interpolated between values of in key and out key.
 			Linear,
+			/// Curve span is smoothly interpolated between values of in key and out key using tangent slope.
 			Cubic,
+			/// Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale.
 			Bezier
-		};
-
-		/// Defines direction relative to a key.
-		enum class Direction
-		{
-			In = 0,
-			Out
 		};
 
 		/// Defines whether slope and scale are tied.
 		enum class TieMode
 		{
+			/// Tangent slope and scale can be independently adjusted.
 			Manual = 0,
+			/// Tangent slopes are kept equal.
 			Slope,
+			/// Tangent slopes are kept equal and scales are kept proportional.
 			Scale
 		};
 
@@ -470,6 +480,10 @@ class GAFFER_API Animation : public ComputeNode
 		static const char* toString( Interpolation interpolation );
 		static const char* toString( Direction direction );
 		static const char* toString( TieMode mode );
+
+		/// convert enums to descriptions
+		static const char* description( Interpolation interpolation );
+		static const char* description( TieMode mode );
 
 		IE_CORE_DECLAREPTR( CurvePlug );
 

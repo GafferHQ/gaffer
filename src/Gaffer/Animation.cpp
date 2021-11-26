@@ -2667,4 +2667,40 @@ const char* Animation::toString( const Animation::TieMode mode )
 	}
 }
 
+const char* Animation::description( const Animation::Interpolation interpolation )
+{
+	switch( interpolation )
+	{
+		case Interpolation::Constant:
+			return "Curve span has in key's value.";
+		case Interpolation::ConstantNext:
+			return "Curve span has out key's value.";
+		case Interpolation::Linear:
+			return "Curve span is linearly interpolated between values of in key and out key.";
+		case Interpolation::Cubic:
+			return "Curve span is smoothly interpolated between values of in key and out key using tangent slope.";
+		case Interpolation::Bezier:
+			return "Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale.";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
+const char* Animation::description( const Animation::TieMode mode )
+{
+	switch( mode )
+	{
+		case TieMode::Manual:
+			return "Tangent slope and scale can be independently adjusted.";
+		case TieMode::Slope:
+			return "Tangent slopes are kept equal.";
+		case TieMode::Scale:
+			return "Tangent slopes are kept equal and scales are kept proportional.";
+		default:
+			assert( 0 );
+			return 0;
+	}
+}
+
 } // Gaffer

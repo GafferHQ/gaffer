@@ -10,6 +10,11 @@ Fixes
   - Fixed glitch when dragging tangent handle with opposite tangent with (+/-) inf slope.
   - Fixed bug that caused exception to be raised when parent node of editable curve removed.
 
+Improvements
+------------
+
+- Animation Editor : Add tooltips to menu items for TieMode and Interpolation.
+
 0.61.14.1 (relative to 0.61.14.0)
 =========
 
