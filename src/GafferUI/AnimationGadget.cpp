@@ -635,40 +635,44 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 				// draw the tangents
 				//
 				// NOTE : only draw if they are unconstrained and key or adjacent key is selected
+				//        or opposite tangent is being moved or highlighted. The opposite tangent
+				//        is always highlighted whilst being moved so just check highlighting.
 
 				if( previousKey )
 				{
 					const Animation::Tangent& in = key.tangentIn();
 					const Animation::Tangent& out = previousKey->tangentOut();
 
-					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					bool tieSlopeOut, tieScaleOut;
+					tieModeToBools( previousKey->getTieMode(), tieSlopeOut, tieScaleOut );
+					const bool isOutHighlighted = ( m_highlightedTangentKey == previousKey ) && (
+						( m_highlightedTangentDirection == Animation::Direction::Out ) || tieSlopeOut || tieScaleOut );
+
+					if( ( isSelected || previousKeySelected || isOutHighlighted ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
 					{
-						bool tieSlope, tieScale;
-						tieModeToBools( previousKey->getTieMode(), tieSlope, tieScale );
 						const V2d outPosKey = out.getPosition();
 						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
-						const bool isOutHighlighted = ( ( m_highlightedTangentKey == previousKey ) && (
-							( m_highlightedTangentDirection == Animation::Direction::Out ) || ( tieSlope || tieScale ) ) );
 						const double outSize = isOutHighlighted ? 4.0 : 2.0;
 						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
-							tieSlope ? 2.0 : 1.0, &color4 );
-						( tieScale ) ? style->renderSolidRectangle( outBox ) : style->renderRectangle( outBox );
+							tieSlopeOut ? 2.0 : 1.0, &color4 );
+						( tieScaleOut ) ? style->renderSolidRectangle( outBox ) : style->renderRectangle( outBox );
 					}
 
-					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					bool tieSlopeIn, tieScaleIn;
+					tieModeToBools( key.getTieMode(), tieSlopeIn, tieScaleIn );
+					const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && (
+						( m_highlightedTangentDirection == Animation::Direction::In ) || tieSlopeIn || tieScaleIn ) );
+
+					if( ( isSelected || previousKeySelected || isInHighlighted ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
 					{
-						bool tieSlope, tieScale;
-						tieModeToBools( key.getTieMode(), tieSlope, tieScale );
 						const V2d inPosKey = in.getPosition();
 						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
-						const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && (
-							( m_highlightedTangentDirection == Animation::Direction::In ) || ( tieSlope || tieScale ) ) );
 						const double inSize = isInHighlighted ? 4.0 : 2.0;
 						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
-							tieSlope ? 2.0 : 1.0, &color4 );
-						( tieScale ) ? style->renderSolidRectangle( inBox ) : style->renderRectangle( inBox );
+							tieSlopeIn ? 2.0 : 1.0, &color4 );
+						( tieScaleIn ) ? style->renderSolidRectangle( inBox ) : style->renderRectangle( inBox );
 					}
 				}
 
