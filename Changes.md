@@ -1,3 +1,11 @@
+1.1.x.x (relative to 1.1.0.0)
+=======
+
+Improvements
+------------
+
+- Animation Editor : Added tooltips to menu items for TieMode and Interpolation.
+
 1.1.0.0
 =======
 
