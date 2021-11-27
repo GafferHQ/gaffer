@@ -208,6 +208,11 @@ class FocusGadget : public Gadget
 					if( g_pendingHoveredFocus )
 					{
 						StandardNodeGadget* parentNodeGadget = static_cast<StandardNodeGadget*>( g_pendingHoveredFocus->parent() );
+						if( !parentNodeGadget )
+						{
+							IECore::msg( IECore::Msg::Error, "FocusGadget::nodeMouseEntered", "Focus gadget hover timer triggered on unparented FocusGadget" );
+							return;
+						}
 						g_hoveredFocus = g_pendingHoveredFocus;
 						g_hoveredFocusNodePosition = parentNodeGadget->getTransform();
 						g_pendingHoveredFocus->dirty( DirtyType::Render );
