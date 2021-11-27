@@ -310,7 +310,9 @@ void activeWalkOutput(
 	{
 		if( connectionStart->direction() != Gaffer::Plug::Direction::Out )
 		{
-			// An input plug with no input connections isn't affected by anything
+			// The only possible connections to an input plug with no input connections is if its
+			// children are connected
+			activeWalkInput( connectionStart, true, context, canceller, activePlugs, activeNodes, plugContextsVisited );
 			return;
 		}
 	}
