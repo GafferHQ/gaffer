@@ -3012,15 +3012,15 @@ const char* Animation::description( const Animation::Extrapolation extrapolation
 		case Extrapolation::Constant:
 			return "Curve is extended as a flat line.";
 		case Extrapolation::Linear:
-			return "Curve is extended as a line with slope of tangent in direction of extrapolation.";
+			return "Curve is extended as a line with slope matching tangent in direction of extrapolation.";
 		case Extrapolation::Repeat:
 			return "Curve is repeated indefinitely.";
 		case Extrapolation::RepeatOffset:
-			return "Curve is repeated indefinitely with each repetition offset from the previous.";
+			return "Curve is repeated indefinitely with each repetition offset relative to the last.";
 		case Extrapolation::Mirror:
 			return "Curve is alternately mirrored in time.";
 		case Extrapolation::Oscillate:
-			return "Curve is alternately inverted in value with each repetition offset from the last.";
+			return "Curve is alternately inverted in value with each repetition offset relative to the last.";
 		default:
 			assert( 0 );
 			return 0;
