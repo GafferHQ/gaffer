@@ -10,6 +10,7 @@ Fixes
 -----
 
 - Viewer : Fixed scroll wheel handling for overlay widgets. In particular this means that the mouse wheel can now be used to scroll through the parameters of the scene inspector.
+- GraphEditor : Fixed highlighting of input connections for promoted ArrayPlugs.
 
 API
 ---
