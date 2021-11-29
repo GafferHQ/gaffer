@@ -592,7 +592,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if not selected :
 			self._qtWidget().setCurrentIndex( index )
-			self.setSelection( IECore.PathMatcher( [ path ] ) )
+			self.setSelection( IECore.PathMatcher( [ path ] ), scrollToFirst=False, expandNonLeaf=False )
 			return True
 
 		# The item is selected, Return True so that we have the option of

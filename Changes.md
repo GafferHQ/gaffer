@@ -9,6 +9,7 @@ Improvements
 Fixes
 -----
 
+- HierarchyView : Fixed unwanted expansion when an item is selected.
 - Viewer : Fixed scroll wheel handling for overlay widgets. In particular this means that the mouse wheel can now be used to scroll through the parameters of the scene inspector.
 
 API
