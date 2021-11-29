@@ -187,6 +187,17 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__pathForIndex( index )
 
+	## Returns the column being displayed at the specified
+	# position within the widget.
+	def columnAt( self, position ) :
+
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( position.x, position.y )
+		)
+
+		return self.getColumns()[self._qtWidget().columnAt( point.x())]
+
 	## Sets which paths are currently expanded
 	# using an `IECore.PathMatcher` object.
 	def setExpansion( self, paths ) :
@@ -581,7 +592,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if not selected :
 			self._qtWidget().setCurrentIndex( index )
-			self.setSelection( IECore.PathMatcher( [ path ] ) )
+			self.setSelection( IECore.PathMatcher( [ path ] ), scrollToFirst=False, expandNonLeaf=False )
 			return True
 
 		# The item is selected, Return True so that we have the option of

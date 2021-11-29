@@ -42,11 +42,10 @@ def __link( source, target ) :
 	if source == target :
 		return
 
-	if os.path.isdir( target ) :
-		if os.path.islink( target ) :
-			os.unlink( target )
-		else :
-			shutil.rmtree( target )
+	if os.path.islink( target ) :
+		os.unlink( target )
+	elif os.path.isdir( target ) :
+		shutil.rmtree( target )
 
 	os.symlink(
 		os.path.relpath( source, os.path.dirname( target ) ),

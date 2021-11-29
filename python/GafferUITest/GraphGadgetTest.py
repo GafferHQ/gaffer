@@ -1631,6 +1631,18 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( set( nodes ), set( [ box, s["add2"], box["BoxOut1"]["__switch"], box["BoxOut1"] ] ) )
 
 
+		# Test a box with promoted array plug
+		s["add7"] = GafferTest.AddNode()
+		s["add1"]["op1"].setInput( s["add7"]["sum"] )
+		box2 = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["add7"] ] ) )
+		box2["add7"]["arrayInput"] = Gaffer.ArrayPlug( "arrayInput", Gaffer.Plug.Direction.In, Gaffer.FloatPlug() )
+		box2.promotePlug( box2["add7"]["arrayInput"] )
+		box2["arrayInput"][0].setInput( s["add5"]["sum"] )
+		box2["arrayInput"][1].setInput( s["add6"]["sum"] )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes( s["add1"]["sum"], c )
+		self.assertEqual( set( plugs ), set( [ s["add1"]["op1"], box2["sum"], box2["add7"]["arrayInput"], box2["arrayInput"][0], box2["arrayInput"][1] ] ) )
+		self.assertEqual( set( nodes ), set( [ s["add1"], box2, box2["add7"], s["add5"], s["add6"] ] ) )
+
 		# Test Loop
 
 		s["loopSwitch"] = Gaffer.Switch()

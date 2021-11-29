@@ -6,6 +6,27 @@ Build
 
 - Moved minimum required C++ standard to C++17.
 
+0.61.1.0 (relative to 0.61.0.0)
+========
+
+Improvements
+------------
+
+- OSLCode : Improved error reporting for cases where empty `.oso` files are produced.
+
+Fixes
+-----
+
+- HierarchyView : Fixed unwanted expansion when an item is selected.
+- Viewer : Fixed scroll wheel handling for overlay widgets. In particular this means that the mouse wheel can now be used to scroll through the parameters of the scene inspector.
+- GraphEditor : Fixed highlighting of input connections for promoted ArrayPlugs.
+- BranchCreator : Fixed bug in bounding box computation which could cause excessive evaluation of the input scene.
+
+API
+---
+
+- PathListingWidget : Added `columnAt()` method.
+
 0.61.0.0
 ========
 
@@ -138,6 +159,14 @@ Build
   - Qt : Updated to version 5.15.2.
   - PySide : Updated to version 5.15.2.
   - Cortex : Updated to version 10.3.0.0.
+
+0.60.12.1 (relative to 0.60.12.0)
+=========
+
+Fixes
+-----
+
+- BranchCreator : Fixed bug in bounding box computation which could cause excessive evaluation of the input scene.
 
 0.60.12.0 (relative to 0.60.11.0)
 =========

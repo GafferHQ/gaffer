@@ -306,9 +306,25 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 		}
 	}
 
+	if( !boost::filesystem::file_size( tempOSLFileName ) )
+	{
+		// Belt and braces. `compiler.compile()` should be reporting all errors,
+		// but on rare occasions we have still seen empty `.oso` files being
+		// produced. Detect this and warn so we can get to the bottom of it.
+		throw IECore::Exception( "Empty file after compilation : \"" + tempOSLFileName + "\"" );
+	}
+
 	// Move temp file where we really want it, and clean up.
 
 	boost::filesystem::rename( tempOSOFileName, osoFileName );
+
+	if( !boost::filesystem::file_size( osoFileName ) )
+	{
+		// Belt and braces. `rename()` should be reporting all errors,
+		// but on rare occasions we have still seen empty `.oso` files being
+		// produced. Detect this and warn so we can get to the bottom of it.
+		throw IECore::Exception( "Empty file after rename : \"" + osoFileName.string() + "\"" );
+	}
 
 	return osoFileName;
 }
