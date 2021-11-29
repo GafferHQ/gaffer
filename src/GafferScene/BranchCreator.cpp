@@ -1218,13 +1218,13 @@ BranchCreator::LocationType BranchCreator::sourceAndBranchPaths( const ScenePath
 		}
 	}
 
-	if( location->children.empty() )
+	if( path.size() == location->depth && !location->children.empty() )
 	{
-		return PassThrough;
+		return location->exists ? Ancestor : NewAncestor;
 	}
 	else
 	{
-		return location->exists ? Ancestor : NewAncestor;
+		return PassThrough;
 	}
 }
 
