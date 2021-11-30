@@ -37,7 +37,7 @@
 import appleseed
 
 import Gaffer
-import GafferUI
+import GafferSceneUI
 import GafferAppleseed
 
 # Get the light and environments metadata dictionaries from appleseed
@@ -113,3 +113,42 @@ Gaffer.Metadata.registerNode(
 	},
 
 )
+
+# Register parameters with LightEditor. Appleseed doesn't define any useful
+# section metadata, so we add some ourselves. And we only add some lights to
+# the menus in LightMenu.py, so skip the ones we don't add.
+
+__sections = {
+	"inner_angle" : "Shape",
+	"outer_angle" : "Shape",
+	"tilt_angle" : "Shape",
+	"decay_start" : "Shape",
+	"decay_exponent" : "Shape",
+	"light_near_start" : "Shape",
+	"cast_indirect_light" : "Contribution",
+	"importance_multiplier" : "Sampling",
+	"radiance_map" : "Map",
+	"horizontal_shift" : "Map",
+	"vertical_shift" : "Map",
+	"sun_theta" : "Sky",
+	"sun_phi" : "Sky",
+	"turbidity" : "Sky",
+	"turbidity_multiplier" : "Sky",
+	"luminance_multiplier" : "Sky",
+	"luminance_gamma" : "Sky",
+	"saturation_multiplier" : "Sky",
+	"horizon_shift" : "Sky",
+	"ground_albedo" : "Sky",
+}
+
+for light in [
+		"diffuse_edf",
+		"spot_light",
+		"point_light",
+		"directional_light",
+		"latlong_map_environment_edf",
+		"hosek_environment_edf",
+	] :
+
+	for parameter in __inputMetadata[light].keys() :
+		GafferSceneUI.LightEditor.registerParameter( "as:light", parameter, __sections.get( parameter ) )
