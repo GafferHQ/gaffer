@@ -23,6 +23,7 @@ API
 - ColorChooserPlugValueWidget : Added a new class to allow colours to be edited directly using a ColorChooser.
 - ColorChooser : Added `setSwatchesVisible()` and `getSwatchesVisible()` methods.
 - PathColumn : Added new class for adding custom columns to PathListingWidget.
+- CatalogueUI : Column subclasses may now define background colours and tooltips.
 
 0.61.1.1 (relative to 0.61.1.0)
 ========

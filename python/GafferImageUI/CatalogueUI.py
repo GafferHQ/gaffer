@@ -77,32 +77,63 @@ import GafferImageUI
 __registeredColumns = OrderedDict()
 _columnsMetadataKey = "catalogue:columns"
 
-# The Column class defines a single column in the Catalogue UI.
-# The column class is responsible for providing its header title, and the
-# displayed value for each image in the Catalogue.
-class Column :
+## The Column class extends the PathColumn class to simplify the process of
+# creating a custom column for the Catalogue. Subclasses must implement
+# `_imageCellValue()`.
+class Column( GafferUI.PathColumn ) :
 
 	def __init__( self, title ) :
 
-		self.__title = title
+		GafferUI.PathColumn.__init__( self )
+
+		self.__title = IECore.StringData( title )
 
 	def title( self ) :
 
-		return self.__title
+		return self.__title.value
 
-	# Must be implemented by all column classes. It should return basic-typed
-	# IECore.Data (incl. DateTimeData) which will be presented as a string in
-	# the Catalogue UI. The method is called with:
+	## Calls `_imageCellValue()`.
+	def cellValue( self, path, role, canceller ) :
+
+		image = path.property( "catalogue:image" )
+		catalogue = path.property( "catalogue" )
+
+		# Suppress error. The GraphEditor will be displaying the
+		# error anyway, as will the standard type column, and we're
+		# not in a position to do anything more helpful.
+		with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+
+			# Call `_imageCellValue()` in a context which causes the Catalogue
+			# to output the image of interest.
+			with Gaffer.Context( catalogue.scriptNode().context() ) as context :
+				context["catalogue:imageName"] = image.getName()
+				try :
+					return self._imageCellValue( image, catalogue, role )
+				except NotImplementedError :
+					# Backwards compatibility for deprecated API.
+					if isinstance( self, IconColumn ) :
+						if role == self.Role.Icon :
+							return self.value( image, catalogue ) + ".png"
+					else :
+						if role == self.Role.Value :
+							return self.value( image, catalogue )
+
+	def headerValue( self, role, canceller ) :
+
+		if role == self.Role.Value :
+			return self.__title
+
+	## Called to generate a cell value from an image in
+	# the Catalogue. Must be implemented by derived classes.
+	# Arguments :
 	#
-	#  - image : A GafferImage.Catalogue.Image plug (not to be confused with
-	#      a standard ImagePlug).
+	# - `image` : The `GafferImage.Catalogue.Image` plug for the cell
+	#   (not to be confused with a standard ImagePlug).
+	# - `catalogue` : The `GafferImage.Catalogue` being displayed.
 	#
-	#  - catalogue: The GafferImage.Catalogue instance attached to the UI.
-	#
-	#  A suitable context is scoped around the call such that catalogue["out"] will
-	#  provide the image for the row the value is being generated for, rather than
-	#  the user's current selection.
-	def value( self, image, catalogue ) :
+	# Called in a context where `catalogue["out"]` provides the
+	# correct image for the cell.
+	def _imageCellValue( self, image, catalogue, role ) :
 
 		raise NotImplementedError
 
@@ -523,31 +554,16 @@ class _ImagesPath( Gaffer.Path ) :
 
 	def propertyNames( self, canceller = None ) :
 
-		return Gaffer.Path.propertyNames( self ) + registeredColumns()
+		return Gaffer.Path.propertyNames( self ) + [ "catalogue", "catalogue:image" ]
 
 	def property( self, name, canceller = None ) :
 
-		if name not in registeredColumns() :
+		if name == "catalogue" :
+			return self.__catalogue
+		elif name == "catalogue:image" :
+			return self.__images[self[-1]]
+		else :
 			return Gaffer.Path.property( self, name )
-
-		definition = column( name )
-
-		imageName = self[ -1 ]
-		image = self.__images[ imageName ]
-
-		# The Catalog API supports overriding the active image
-		# via a context variable, this allows the value provider
-		# to just use catalog["out"] to get to the correct image
-		# without needing to understand the internal workings.
-		with Gaffer.Context(  self.__catalogue.scriptNode().context() ) as context :
-			context[ "catalogue:imageName" ] = imageName
-			try :
-				return definition.value( image, self.__catalogue )
-			except Gaffer.ProcessException :
-				# Suppress error. The GraphEditor will be displaying the
-				# error anyway, as will the standard type column, and we're
-				# not in a position to do anything more helpful.
-				return None
 
 	def cancellationSubject( self ) :
 
@@ -631,11 +647,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		with self.__column :
 
-			columns = self.__listingColumns()
-
 			self.__pathListing = GafferUI.PathListingWidget(
 				_ImagesPath( self.__images(), [] ),
-				columns = columns,
+				columns = self.__listingColumns(),
 				allowMultipleSelection = True,
 				sortable = False,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
@@ -769,21 +783,14 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		for name in self.__getColumns() :
 
-			definition = column( name )
-
-			if not definition :
+			c = column( name )
+			if c is not None :
+				columns.append( c )
+			else :
 				IECore.msg(
 					IECore.Msg.Level.Error,
 					"GafferImageUI.CatalogueUI", "No column registered with name '%s'" % name
 				)
-				continue
-
-			if isinstance( definition, IconColumn ) :
-				c = GafferUI.PathListingWidget.IconColumn( definition.title(), "", name )
-			else :
-				c = GafferUI.PathListingWidget.StandardColumn( definition.title(), name )
-
-			columns.append( c )
 
 		return columns
 
