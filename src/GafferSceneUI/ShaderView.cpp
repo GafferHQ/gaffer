@@ -125,7 +125,7 @@ GAFFER_NODE_DEFINE_TYPE( ShaderView );
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 
 ShaderView::ShaderView( const std::string &name )
-	:	ImageView( name ), m_framed( false ), m_registryUpdated( false )
+	:	ImageView( name ), m_framed( false )
 {
 	// Create a converter to generate an image
 	// from the input shader.
@@ -285,7 +285,7 @@ void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
 
 void ShaderView::rendererRegistrationChanged()
 {
-	m_registryUpdated = true;
+	m_rendererShaderPrefix = "";
 	plugDirtied( inPlug() );
 }
 
@@ -309,13 +309,12 @@ void ShaderView::idleUpdate()
 void ShaderView::updateRenderer()
 {
 	const std::string shaderPrefix = this->shaderPrefix();
-	if( !m_registryUpdated && m_renderer && shaderPrefix == m_rendererShaderPrefix )
+	if( m_renderer && shaderPrefix == m_rendererShaderPrefix )
 	{
 		return;
 	}
 
 	m_renderer = nullptr;
-	m_registryUpdated = false;
 	m_rendererShaderPrefix = shaderPrefix;
 	if( !inPlug()->getInput() )
 	{

@@ -122,7 +122,6 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		Gaffer::NodePtr m_scene;
 		PrefixAndName m_scenePrefixAndName;
 		SceneChangedSignal m_sceneChangedSignal;
-		bool m_registryUpdated;
 
 		static ViewDescription<ShaderView> g_viewDescription;
 
