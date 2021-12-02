@@ -13,6 +13,7 @@ Improvements
 - Spreadsheet/SceneViewInspector : Added embedded colour choosers to popup editor windows.
 - CopyPrimitiveVariables : Added `prefix` plug, which applies a prefix to the names of the copied primitive variables.
 - Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
+- PathListingWidget : Added subtle lines between columns.
 
 Fixes
 -----
