@@ -106,33 +106,6 @@ class Column :
 
 		raise NotImplementedError
 
-# A abstract base column type for Columns that wish to present an image rather
-# than a text value
-class IconColumn( Column ) :
-
-	# Columns that derive from IconColumn should instead return the name of an
-	# image on Gaffer's image path, see Column.value for details on the arguments
-	# passed to this method, and the calling context.
-	def value( self, image, catalogue ) :
-
-		raise NotImplementedError
-
-# An abstract base column type for Columns that can derive their value with
-# simple callables or lamdas, eg:
-#
-#   column = SimpleColumn( "Name", lambda image, _ : image.getName() ) )
-#
-class SimpleColumn( Column ) :
-
-	def __init__( self, title, valueProvider ) :
-
-		Column.__init__( self, title )
-		self.__valueProvider = valueProvider
-
-	def value( self, image, catalogue ) :
-
-		return self.__valueProvider( image, catalogue )
-
 # Register a new column or overwrite an existing column. Registered columns
 # appear in the Catalogue header context menu, and can be set as default
 # columns in the "catalogue:columns" metadata on Catalogue's `imageIndex` plug.
@@ -161,9 +134,35 @@ def registeredColumns() :
 
 	return __registeredColumns.keys()
 
+# Convenience Column subclasses
+# =============================
+
+# A abstract base column type for Columns that wish to present an image rather
+# than a text value
+class IconColumn( Column ) :
+
+	# Columns that derive from IconColumn should instead return the name of an
+	# image on Gaffer's image path, see Column.value for details on the arguments
+	# passed to this method, and the calling context.
+	def value( self, image, catalogue ) :
+
+		raise NotImplementedError
+
+# An abstract base column type for Columns that can derive their value with
+# simple callables or lamdas, eg:
 #
-# Convenience Column classes
+#   column = SimpleColumn( "Name", lambda image, _ : image.getName() ) )
 #
+class SimpleColumn( Column ) :
+
+	def __init__( self, title, valueProvider ) :
+
+		Column.__init__( self, title )
+		self.__valueProvider = valueProvider
+
+	def value( self, image, catalogue ) :
+
+		return self.__valueProvider( image, catalogue )
 
 # A Columns class that retrieves its value from the catalogue item's image
 # metadata. If multiple names are provided, the first one present will be used,
@@ -206,9 +205,8 @@ class ContextVariableColumn( ImageMetadataColumn ) :
 		names = [ "gaffer:context:%s" % name for name in nameOrNames ]
 		ImageMetadataColumn.__init__( self, title, names, defaultValue )
 
-#
 # Standard Columns
-#
+# ================
 
 class __StatusIconColumn( IconColumn ) :
 
