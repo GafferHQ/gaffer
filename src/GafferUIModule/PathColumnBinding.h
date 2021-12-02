@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,61 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUIMODULE_PATHCOLUMNBINDING_H
+#define GAFFERUIMODULE_PATHCOLUMNBINDING_H
 
-#include "AnimationGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "EventBinding.h"
-#include "GLWidgetBinding.h"
-#include "GadgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "HandleBinding.h"
-#include "ImageGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "NodeGadgetBinding.h"
-#include "NoduleBinding.h"
-#include "PathColumnBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "PlugAdderBinding.h"
-#include "PlugGadgetBinding.h"
-#include "PointerBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "StyleBinding.h"
-#include "TextGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "WidgetSignalBinding.h"
-
-using namespace GafferUIModule;
-
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace GafferUIModule
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
-	bindAnimationGadget();
-	bindPathColumn();
+void bindPathColumn();
 
-}
+} // namespace GafferUIModule
+
+#endif // GAFFERUIMODULE_PATHCOLUMNBINDING_H

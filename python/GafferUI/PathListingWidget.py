@@ -56,15 +56,15 @@ from Qt import QtWidgets
 # allows customisable column listings, and supports both single and multiple selection.
 class PathListingWidget( GafferUI.Widget ) :
 
-	Column = _GafferUI._PathListingWidgetColumn
-	StandardColumn = _GafferUI._PathListingWidgetStandardColumn
-	IconColumn = _GafferUI._PathListingWidgetIconColumn
+	Column = _GafferUI.PathColumn
+	StandardColumn = _GafferUI.StandardPathColumn
+	IconColumn = _GafferUI.IconPathColumn
 
 	## A collection of handy column definitions for FileSystemPaths
 	defaultNameColumn = StandardColumn( "Name", "name" )
 	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
 	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
-	defaultFileSystemIconColumn = _GafferUI._PathListingWidgetFileIconColumn()
+	defaultFileSystemIconColumn = GafferUI.FileIconPathColumn()
 
 	defaultFileSystemColumns = (
 		defaultNameColumn,
