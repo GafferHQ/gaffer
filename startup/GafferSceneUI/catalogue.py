@@ -53,26 +53,29 @@ imageNameMap = {
 statusIconColumn = CatalogueUI.column( "Status" )
 if statusIconColumn :
 
-	class __ExtendedStatusIconColumn( CatalogueUI.IconColumn ) :
+	class __ExtendedStatusIconColumn( CatalogueUI.Column ) :
 
 		def __init__( self ) :
 
 			CatalogueUI.IconColumn.__init__( self, "" )
 
-		def value( self, image, catalogue ) :
+		def _imageCellValue( self, image, catalogue, role ) :
 
-			iconName = statusIconColumn.value( image, catalogue )
+			if role != self.Role.Icon :
+				return None
+
+			iconName = statusIconColumn._imageCellValue( image, catalogue, role )
 
 			try :
 				scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
 				if not scenePlug :
 					return iconName
 			except Gaffer.ProcessException :
-				return "errorSmall"
+				return "errorSmall.png"
 
 			for type_ in imageNameMap.keys() :
 				if isinstance( scenePlug.node(), type_ ) :
-					suffix = "Complete" if image["fileName"].getValue() else "Running"
+					suffix = "Complete.png" if image["fileName"].getValue() else "Running.png"
 					return imageNameMap[type_] + suffix
 
 			return iconName

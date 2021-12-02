@@ -168,21 +168,16 @@ def registeredColumns() :
 # Convenience Column subclasses
 # =============================
 
-# A abstract base column type for Columns that wish to present an image rather
-# than a text value
+## \deprecated. Derive from Column and implement `_imageCellValue()`
+# for `role == Icon` instead.
 class IconColumn( Column ) :
 
-	# Columns that derive from IconColumn should instead return the name of an
-	# image on Gaffer's image path, see Column.value for details on the arguments
-	# passed to this method, and the calling context.
-	def value( self, image, catalogue ) :
+	pass
 
-		raise NotImplementedError
-
-# An abstract base column type for Columns that can derive their value with
-# simple callables or lamdas, eg:
+# Convenience class for simple columns that derive the cell value
+# from a callable. e.g.
 #
-#   column = SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+#   `SimpleColumn( "Name", lambda image, catalogue : image.getName() ) )`
 #
 class SimpleColumn( Column ) :
 
@@ -191,9 +186,10 @@ class SimpleColumn( Column ) :
 		Column.__init__( self, title )
 		self.__valueProvider = valueProvider
 
-	def value( self, image, catalogue ) :
+	def _imageCellValue( self, image, catalogue, role ) :
 
-		return self.__valueProvider( image, catalogue )
+		if role == self.Role.Value :
+			return self.__valueProvider( image, catalogue )
 
 # A Columns class that retrieves its value from the catalogue item's image
 # metadata. If multiple names are provided, the first one present will be used,
@@ -211,15 +207,17 @@ class ImageMetadataColumn( Column ) :
 		self.__names = nameOrNames
 		self.__defaultValue = defaultValue
 
-	def value( self, image, catalogue ) :
+	def _imageCellValue( self, image, catalogue, role ) :
 
-		metadata = catalogue["out"].metadata()
-		for name in self.__names :
-			value = metadata.get( name, None )
-			if value is not None :
-				return value
+		if role == self.Role.Value :
 
-		return self.__defaultValue
+			metadata = catalogue["out"].metadata()
+			for name in self.__names :
+				value = metadata.get( name, None )
+				if value is not None :
+					return value
+
+			return self.__defaultValue
 
 # A Column class that retrieves its value from render-time context variable
 # values passed through the catalogue item's image metadata.  If multiple names
@@ -239,14 +237,16 @@ class ContextVariableColumn( ImageMetadataColumn ) :
 # Standard Columns
 # ================
 
-class __StatusIconColumn( IconColumn ) :
+class __StatusIconColumn( Column ) :
 
 	def __init__( self ) :
 
-		IconColumn.__init__( self, "" )
+		Column.__init__( self, "" )
 
-	def value( self, image, catalogue ) :
+	def _imageCellValue( self, image, catalogue, role ) :
 
+		if role != self.Role.Icon :
+			return None
 
 		fileName = image["fileName"].getValue()
 		if fileName :
@@ -255,10 +255,10 @@ class __StatusIconColumn( IconColumn ) :
 			try :
 				catalogue["out"].metadata()
 			except Gaffer.ProcessException :
-				return "errorSmall"
-			return "catalogueStatusDisk"
+				return "errorSmall.png"
+			return "catalogueStatusDisk.png"
 
-		return "catalogueStatusDisplay"
+		return "catalogueStatusDisplay.png"
 
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
