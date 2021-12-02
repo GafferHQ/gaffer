@@ -261,7 +261,7 @@ class __StatusIconColumn( Column ) :
 		return "catalogueStatusDisplay.png"
 
 registerColumn( "Status", __StatusIconColumn() )
-registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+registerColumn( "Name", GafferUI.PathListingWidget.defaultNameColumn )
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
 registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription" ) )
 
