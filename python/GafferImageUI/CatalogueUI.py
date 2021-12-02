@@ -62,7 +62,7 @@ import GafferImageUI
 # names or re-registration of existing ones.
 #
 # The columns displayed by a Catalogue are controlled by the
-# "catalogue:columns" [StringVectorData] metadata on it's `imageIndex` plug.
+# "catalogue:columns" [StringVectorData] metadata on its `imageIndex` plug.
 # Default columns are stored via a class registration, ie:
 #
 #   Gaffer.Metadata.registerValue(
@@ -106,7 +106,7 @@ class Column :
 
 		raise NotImplementedError
 
-# Register a new column or overwrite an existing column. Registered columns
+# Registers a new column or overwrites an existing column. Registered columns
 # appear in the Catalogue header context menu, and can be set as default
 # columns in the "catalogue:columns" metadata on Catalogue's `imageIndex` plug.
 # The registered name is used for the menu path when presenting available columns
