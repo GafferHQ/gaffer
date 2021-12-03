@@ -149,6 +149,11 @@ class PlugPopup( _PopupWindow ) :
 					self.__plugValueWidget = None
 					GafferUI.Label( "Unable to edit plugs with mixed types" )
 
+		# If we have a ColorPlugValueWidget, expand it to show the chooser.
+		colorPlugValueWidget = self.__colorPlugValueWidget( self.__plugValueWidget )
+		if colorPlugValueWidget is not None :
+			colorPlugValueWidget.setColorChooserVisible( True )
+
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
 	def popup( self, center = None ) :
@@ -217,5 +222,23 @@ class PlugPopup( _PopupWindow ) :
 				childTextWidget = cls.__firstTextWidget( childWidget )
 				if childTextWidget is not None :
 					return childTextWidget
+
+		return None
+
+	@classmethod
+	def __colorPlugValueWidget( cls, plugValueWidget ) :
+
+		if plugValueWidget is None :
+			return None
+
+		if isinstance( plugValueWidget, GafferUI.ColorPlugValueWidget ) :
+			return plugValueWidget
+
+		for childPlug in Gaffer.Plug.Range( next( iter( plugValueWidget.getPlugs() ) ) ) :
+			childWidget = cls.__colorPlugValueWidget(
+				plugValueWidget.childPlugValueWidget( childPlug )
+			)
+			if childWidget is not None :
+				return childWidget
 
 		return None

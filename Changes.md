@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - NodeEditor : Added embedded colour choosers for all colour plugs. These can be shown and hidden by clicking on the slider icon.
+- Spreadsheet/SceneViewInspector : Added embedded colour choosers to popup editor windows.
 - Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
 
 Fixes
