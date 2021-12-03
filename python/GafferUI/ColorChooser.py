@@ -164,7 +164,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 		self.__updateUIFromColor()
 
-	## The default color starts as the value passed when creating the dialogue.
+	## The default color starts as the value passed when creating the widget.
 	# It is represented with a swatch which when clicked will revert the current
 	# selection back to the original.
 	def setInitialColor( self, color ) :
