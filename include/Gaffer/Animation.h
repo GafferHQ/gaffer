@@ -72,11 +72,17 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines the method used to extrapolate before the in key and after the out key.
 		enum class Extrapolation
 		{
+			/// Curve is extended as a flat line.
 			Constant = 0,
+			/// Curve is extended as a line with slope matching tangent in direction of extrapolation.
 			Linear,
+			/// Curve is repeated indefinitely.
 			Repeat,
+			/// Curve is repeated indefinitely with each repetition offset relative to the last.
 			RepeatOffset,
+			/// Curve is alternately mirrored in time.
 			Mirror,
+			/// Curve is alternately inverted in value with each repetition offset relative to the last.
 			Oscillate
 		};
 
