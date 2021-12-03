@@ -235,6 +235,7 @@ from .StandardNodeUI import StandardNodeUI
 from .NodeToolbar import NodeToolbar
 from .StandardNodeToolbar import StandardNodeToolbar
 from .Viewer import Viewer
+from .ColorChooserPlugValueWidget import ColorChooserPlugValueWidget
 from .ColorSwatchPlugValueWidget import ColorSwatchPlugValueWidget
 from .ColorPlugValueWidget import ColorPlugValueWidget
 from .AboutWindow import AboutWindow

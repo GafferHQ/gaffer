@@ -17,6 +17,7 @@ API
 ---
 
 - PlugPopup : Added new class for editing plugs in a popup window.
+- ColorChooserPlugValueWidget : Added a new class to allow colours to be edited directly using a ColorChooser.
 
 0.61.1.1 (relative to 0.61.1.0)
 ========
