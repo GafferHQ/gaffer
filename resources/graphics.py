@@ -277,6 +277,19 @@
 
 		},
 
+		"plugValueWidgetIcons" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"colorPlugValueWidgetSlidersOff",
+				"colorPlugValueWidgetSlidersOn",
+			]
+
+		},
+
 	},
 
 	"ids" : [

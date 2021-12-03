@@ -40,41 +40,104 @@ import weakref
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 from Qt import QtCore
 
-class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
+class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, **kw ) :
 
-		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plugs, **kw )
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
-		self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plugs )
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plugs, **kw )
 
-		self._row().append( self.__swatch, expand=True )
+		with self.__column :
 
-		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				self.__compoundNumericWidget = GafferUI.CompoundNumericPlugValueWidget( plugs )
+
+				self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plugs, parenting = { "expand" : True } )
+				self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__swatchButtonRelease ), scoped = False )
+
+				self.__chooserButton = GafferUI.Button( image = "colorPlugValueWidgetSlidersOff.png", hasFrame = False )
+				self.__chooserButton.clickedSignal().connect( Gaffer.WeakMethod( self.__chooserButtonClicked ), scoped = False )
+
+			self.__colorChooser = GafferUI.ColorChooserPlugValueWidget( plugs )
+
+		self.setColorChooserVisible(
+			sole( Gaffer.Metadata.value( plug, "colorPlugValueWidget:colorChooserVisible" ) for plug in self.getPlugs() )
+		)
 
 		self.__blinkBehaviour = None
 
+	def setColorChooserVisible( self, visible ) :
+
+		self.__colorChooser.setVisible( visible )
+		self.__swatch.setVisible( not visible )
+		self.__chooserButton.setImage(
+			"colorPlugValueWidgetSliders{}.png".format( "On" if visible else "Off" )
+		)
+
+	def getColorChooserVisible( self ) :
+
+		return self.__colorChooser.getVisible()
+
 	def setPlugs( self, plugs ) :
 
-		GafferUI.CompoundNumericPlugValueWidget.setPlugs( self, plugs )
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
 
+		self.__compoundNumericWidget.setPlugs( plugs )
+		self.__colorChooser.setPlugs( plugs )
 		self.__swatch.setPlugs( plugs )
 
-	def __buttonRelease( self, widget, event ) :
+	def setHighlighted( self, highlighted ) :
+
+		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
+		self.__compoundNumericWidget.setHighlighted( highlighted )
+
+	def setReadOnly( self, readOnly ) :
+
+		if readOnly == self.getReadOnly() :
+			return
+
+		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
+		self.__compoundNumericWidget.setReadOnly( readOnly )
+		self.__swatch.setReadOnly( readOnly )
+
+	def childPlugValueWidget( self, childPlug ) :
+
+		return self.__compoundNumericWidget.childPlugValueWidget( childPlug )
+
+	def __swatchButtonRelease( self, widget, event ) :
 
 		if not self._editable() :
 
-			# the swatch will have been unable to display a colour chooser, so we
+			# The swatch will have been unable to display a colour chooser, so we
 			# draw the user's attention to the components which are preventing that.
 			if self.__blinkBehaviour is not None :
 				self.__blinkBehaviour.stop()
-			widgets = [ w for w in self._row() if isinstance( w, GafferUI.NumericPlugValueWidget ) and not w._editable() ]
+
+			widgets = [
+				self.__compoundNumericWidget.childPlugValueWidget( p )
+				for p in Gaffer.Plug.Range( next( iter( self.getPlugs() ) ) )
+			]
+			widgets = [ w for w in widgets if not w._editable() ]
 			self.__blinkBehaviour = _BlinkBehaviour( widgets )
 			self.__blinkBehaviour.start()
 
 			return False
+
+	def __chooserButtonClicked( self, widget ) :
+
+		visible = not self.getColorChooserVisible()
+		self.setColorChooserVisible( visible )
+
+		# Remember the user's choice so we can match it next time
+		# we construct a widget for one of these plugs.
+		for plug in self.getPlugs() :
+			Gaffer.Metadata.registerValue( plug, "colorPlugValueWidget:colorChooserVisible", visible, persistent = False )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Color3fPlug, ColorPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.Color4fPlug, ColorPlugValueWidget )

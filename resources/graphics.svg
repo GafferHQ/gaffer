@@ -23,6 +23,14 @@
   <defs
      id="defs4">
     <linearGradient
+       id="linearGradient1896"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1894" />
+    </linearGradient>
+    <linearGradient
        id="nodeBorder"
        osb:paint="solid">
       <stop
@@ -41,7 +49,8 @@
     </linearGradient>
     <linearGradient
        id="boundsTemplate"
-       osb:paint="solid">
+       osb:paint="solid"
+       gradientTransform="matrix(1.4488738,0,0,1.25,24.465856,49.36218)">
       <stop
          style="stop-color:#ff0101;stop-opacity:0.0787037;"
          offset="0"
@@ -236,18 +245,19 @@
      showguides="false"
      inkscape:guide-bbox="true"
      inkscape:object-paths="false"
-     inkscape:bbox-paths="true"
+     inkscape:bbox-paths="false"
      inkscape:bbox-nodes="true"
-     showgrid="false"
-     inkscape:zoom="0.45664722"
-     inkscape:cx="1498.9798"
-     inkscape:cy="499.01051"
-     inkscape:window-width="1712"
+     showgrid="true"
+     inkscape:zoom="27.8816"
+     inkscape:cx="56.249013"
+     inkscape:cy="-1503.6269"
+     inkscape:window-width="1711"
      inkscape:window-height="870"
-     inkscape:window-x="203"
+     inkscape:window-x="204"
      inkscape:window-y="123"
      inkscape:window-maximized="0"
-     inkscape:current-layer="layer1">
+     inkscape:current-layer="layer1"
+     inkscape:snap-bbox="true">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
@@ -1324,7 +1334,29 @@
            height="54.25"
            width="343.75" /></flowRegion><flowPara
          id="flowPara1966"
-         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381">GraphEditor</flowPara></flowRoot>  </g>
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381">GraphEditor</flowPara></flowRoot>    <path
+       id="path1880"
+       inkscape:label="hr1"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0"
+       d="M -6,2485.0003 H 743.99999"
+       style="fill:none;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <flowRoot
+       id="flowRoot1888"
+       inkscape:label="docTitle"
+       transform="matrix(1,0,0,1.0000138,288.10156,1473.8477)"
+       style="font-style:normal;font-weight:normal;font-size:24px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:1.00000381"
+       xml:space="preserve"><flowRegion
+         id="flowRegion1884"
+         style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"><rect
+           id="rect1882"
+           style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
+           y="983"
+           x="-295"
+           height="54.25"
+           width="343.75" /></flowRegion><flowPara
+         id="flowPara1886"
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381">PlugValueWidgets</flowPara></flowRoot>  </g>
   <g
      inkscape:groupmode="layer"
      id="layer4"
@@ -6870,5 +6902,39 @@
        x="1331.4436"
        y="476.42526"
        ry="24.088617" />
+    <rect
+       y="2544.3623"
+       x="10"
+       height="20"
+       width="20"
+       id="rect1890"
+       style="display:inline;opacity:1;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.74701792;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+       inkscape:label="sizeGuide" />
+    <path
+       style="display:inline;opacity:1;fill:#787878;fill-opacity:1;stroke:#434343;stroke-width:0.99999988;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:normal"
+       d="M 41 2494.5 A 2.5 2.4998784 0 0 0 39.003906 2495.5 L 35 2495.5 C 34.169 2495.5 33.5 2496.169 33.5 2497 C 33.5 2497.831 34.169 2498.5 35 2498.5 L 39.001953 2498.5 A 2.5 2.4998784 0 0 0 41 2499.5 A 2.5 2.4998784 0 0 0 42.996094 2498.5 L 49 2498.5 C 49.831 2498.5 50.5 2497.831 50.5 2497 C 50.5 2496.169 49.831 2495.5 49 2495.5 L 42.998047 2495.5 A 2.5 2.4998784 0 0 0 41 2494.5 z M 45.5 2499.5 A 2.5 2.4998784 0 0 0 43.503906 2500.5 L 35 2500.5 C 34.169 2500.5 33.5 2501.169 33.5 2502 C 33.5 2502.831 34.169 2503.5 35 2503.5 L 43.501953 2503.5 A 2.5 2.4998784 0 0 0 45.5 2504.5 A 2.5 2.4998784 0 0 0 47.496094 2503.5 L 49 2503.5 C 49.831 2503.5 50.5 2502.831 50.5 2502 C 50.5 2501.169 49.831 2500.5 49 2500.5 L 47.498047 2500.5 A 2.5 2.4998784 0 0 0 45.5 2499.5 z M 39 2504.5 A 2.5 2.4998784 0 0 0 37.003906 2505.5 L 35 2505.5 C 34.169 2505.5 33.5 2506.169 33.5 2507 C 33.5 2507.831 34.169 2508.5 35 2508.5 L 37.001953 2508.5 A 2.5 2.4998784 0 0 0 39 2509.5 A 2.5 2.4998784 0 0 0 40.996094 2508.5 L 49 2508.5 C 49.831 2508.5 50.5 2507.831 50.5 2507 C 50.5 2506.169 49.831 2505.5 49 2505.5 L 40.998047 2505.5 A 2.5 2.4998784 0 0 0 39 2504.5 z "
+       transform="translate(0,52.362183)"
+       id="rect1959" />
+    <rect
+       inkscape:label="sizeGuide"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.74701792;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+       id="colorPlugValueWidgetSlidersOff"
+       width="18"
+       height="20"
+       x="33"
+       y="2544.3623" />
+    <path
+       id="path2050"
+       d="m 61,2546.8622 a 2.5,2.4998784 0 0 0 -1.996094,1 H 55 c -0.831,0 -1.5,0.669 -1.5,1.5 0,0.831 0.669,1.5 1.5,1.5 h 4.001953 a 2.5,2.4998784 0 0 0 1.998047,1 2.5,2.4998784 0 0 0 1.996094,-1 H 69 c 0.831,0 1.5,-0.669 1.5,-1.5 0,-0.831 -0.669,-1.5 -1.5,-1.5 h -6.001953 a 2.5,2.4998784 0 0 0 -1.998047,-1 z m 4.5,5 a 2.5,2.4998784 0 0 0 -1.996094,1 H 55 c -0.831,0 -1.5,0.669 -1.5,1.5 0,0.831 0.669,1.5 1.5,1.5 h 8.501953 a 2.5,2.4998784 0 0 0 1.998047,1 2.5,2.4998784 0 0 0 1.996094,-1 H 69 c 0.831,0 1.5,-0.669 1.5,-1.5 0,-0.831 -0.669,-1.5 -1.5,-1.5 h -1.501953 a 2.5,2.4998784 0 0 0 -1.998047,-1 z m -6.5,5 a 2.5,2.4998784 0 0 0 -1.996094,1 H 55 c -0.831,0 -1.5,0.669 -1.5,1.5 0,0.831 0.669,1.5 1.5,1.5 h 2.001953 a 2.5,2.4998784 0 0 0 1.998047,1 2.5,2.4998784 0 0 0 1.996094,-1 H 69 c 0.831,0 1.5,-0.669 1.5,-1.5 0,-0.831 -0.669,-1.5 -1.5,-1.5 h -8.001953 a 2.5,2.4998784 0 0 0 -1.998047,-1 z"
+       style="display:inline;opacity:1;fill:#e0e0e0;fill-opacity:1;stroke:#434343;stroke-width:0.99999988;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:normal"
+       inkscape:connector-curvature="0" />
+    <rect
+       y="2544.3623"
+       x="53"
+       height="20"
+       width="18"
+       id="colorPlugValueWidgetSlidersOn"
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.74701792;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+       inkscape:label="sizeGuide" />
   </g>
 </svg>
