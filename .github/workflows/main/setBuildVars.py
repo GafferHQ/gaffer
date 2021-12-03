@@ -113,6 +113,23 @@ if tag :
 			releaseId = r.id
 			break
 
+if releaseId :
+
+	# Check that the version specified by the SConstruct matches the
+	# version in the tag.
+	versions = {}
+	versionRe = re.compile( r"^gaffer(.*)Version = (\d+)")
+	with open( "SConstruct" ) as sconstruct :
+		for line in sconstruct.readlines() :
+			versionMatch = versionRe.match( line )
+			if versionMatch :
+				versions[versionMatch.group( 1 )] = versionMatch.group( 2 )
+
+	version = "{Milestone}.{Major}.{Minor}.{Patch}".format( **versions )
+	if version != tag :
+		sys.stderr.write( "Tag \"{}\" does not match SConstruct version \"{}\"\n".format( tag, version ) )
+		sys.exit( 1 )
+
 ## Build Name
 
 # We have a couple of naming conventions for builds, depending on the nature of the trigger.
