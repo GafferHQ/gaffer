@@ -2636,29 +2636,9 @@ Animation::ConstKeyIterator Animation::CurvePlug::end() const
 	return m_keys.end();
 }
 
-Animation::Extrapolation Animation::CurvePlug::getExtrapolationIn() const
-{
-	return m_extrapolatorIn->getExtrapolation();
-}
-
-Animation::Extrapolation Animation::CurvePlug::getExtrapolationOut() const
-{
-	return m_extrapolatorOut->getExtrapolation();
-}
-
 Animation::Extrapolation Animation::CurvePlug::getExtrapolation( const Animation::Direction direction ) const
 {
 	return ( this->*m_extrapolators[ static_cast< int >( direction ) ] )->getExtrapolation();
-}
-
-void Animation::CurvePlug::setExtrapolationIn( const Animation::Extrapolation extrapolation )
-{
-	setExtrapolation( Animation::Direction::In, extrapolation );
-}
-
-void Animation::CurvePlug::setExtrapolationOut( const Animation::Extrapolation extrapolation )
-{
-	setExtrapolation( Animation::Direction::Out, extrapolation );
 }
 
 void Animation::CurvePlug::setExtrapolation( const Animation::Direction direction, const Animation::Extrapolation extrapolation )

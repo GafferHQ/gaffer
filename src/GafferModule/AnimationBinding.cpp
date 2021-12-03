@@ -182,18 +182,6 @@ void removeInactiveKeys( Animation::CurvePlug &p )
 	p.removeInactiveKeys();
 }
 
-void setExtrapolationIn( Animation::CurvePlug &p, const Animation::Extrapolation extrapolation )
-{
-	ScopedGILRelease gilRelease;
-	p.setExtrapolationIn( extrapolation );
-}
-
-void setExtrapolationOut( Animation::CurvePlug &p, const Animation::Extrapolation extrapolation )
-{
-	ScopedGILRelease gilRelease;
-	p.setExtrapolationOut( extrapolation );
-}
-
 void setExtrapolation( Animation::CurvePlug &p, const Animation::Direction direction, const Animation::Extrapolation extrapolation )
 {
 	ScopedGILRelease gilRelease;
@@ -243,8 +231,12 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const Animation::CurvePlug* const curve = static_cast<const Animation::CurvePlug *>( graphComponent );
-			result += identifier + ".setExtrapolationIn( Gaffer.Animation.Extrapolation." + Animation::toString( curve->getExtrapolationIn() ) + " )\n";
-			result += identifier + ".setExtrapolationOut( Gaffer.Animation.Extrapolation." + Animation::toString( curve->getExtrapolationOut() ) + " )\n";
+			result += identifier
+				+ ".setExtrapolation( Gaffer.Animation.Direction.In, Gaffer.Animation.Extrapolation."
+				+ Animation::toString( curve->getExtrapolation( Gaffer::Animation::Direction::In ) ) + " )\n";
+			result += identifier
+				+ ".setExtrapolation( Gaffer.Animation.Direction.Out, Gaffer.Animation.Extrapolation."
+				+ Animation::toString( curve->getExtrapolation( Gaffer::Animation::Direction::Out ) ) + " )\n";
 			for( const auto &key : *curve )
 			{
 				result += identifier + ".addKey( " + keyRepr( key ) + " )\n";
@@ -420,10 +412,6 @@ void GafferModule::bindAnimation()
 		.def( "lastKey",
 			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::lastKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "getExtrapolationIn", &Animation::CurvePlug::getExtrapolationIn )
-		.def( "setExtrapolationIn", &setExtrapolationIn )
-		.def( "getExtrapolationOut", &Animation::CurvePlug::getExtrapolationOut )
-		.def( "setExtrapolationOut", &setExtrapolationOut )
 		.def( "getExtrapolation", &Animation::CurvePlug::getExtrapolation )
 		.def( "setExtrapolation", &setExtrapolation )
 		.def( "evaluate", &Animation::CurvePlug::evaluate )

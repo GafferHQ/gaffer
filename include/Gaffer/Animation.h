@@ -445,18 +445,8 @@ class GAFFER_API Animation : public ComputeNode
 				/// iterator to end of range of active keys. (const access)
 				ConstKeyIterator end() const;
 
-				/// Get in extrapolation.
-				Extrapolation getExtrapolationIn() const;
-				/// Get out extrapolation.
-				Extrapolation getExtrapolationOut() const;
 				/// Get extrapolation in specified direction.
 				Extrapolation getExtrapolation( Animation::Direction direction ) const;
-				/// Set in extrapolation.
-				/// \undoable
-				void setExtrapolationIn( Extrapolation extrapolation );
-				/// Set out extrapolation.
-				/// \undoable
-				void setExtrapolationOut( Extrapolation extrapolation );
 				/// Set extrapolation in specified direction.
 				/// \undoable
 				void setExtrapolation( Animation::Direction direction, Extrapolation extrapolation );

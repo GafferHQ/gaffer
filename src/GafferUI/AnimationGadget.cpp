@@ -1860,7 +1860,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const Gaffer::Animation::Key* const keyIn = curvePlug->firstKey();
 	if( keyIn && ( keyIn->getTime() > tmin ) )
 	{
-		switch( curvePlug->getExtrapolationIn() )
+		switch( curvePlug->getExtrapolation( Gaffer::Animation::Direction::In ) )
 		{
 			case Gaffer::Animation::Extrapolation::Constant:
 			case Gaffer::Animation::Extrapolation::Linear:
@@ -1911,7 +1911,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const Gaffer::Animation::Key* const keyOut = curvePlug->lastKey();
 	if( keyOut && ( keyOut->getTime() < tmax ) )
 	{
-		switch( curvePlug->getExtrapolationOut() )
+		switch( curvePlug->getExtrapolation( Gaffer::Animation::Direction::Out ) )
 		{
 			case Gaffer::Animation::Extrapolation::Constant:
 			case Gaffer::Animation::Extrapolation::Linear:
