@@ -1857,7 +1857,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
 	// draw curve extrapolated beyond in key
-	const Gaffer::Animation::Key* const keyIn = curvePlug->getKeyIn();
+	const Gaffer::Animation::Key* const keyIn = curvePlug->firstKey();
 	if( keyIn && ( keyIn->getTime() > tmin ) )
 	{
 		switch( curvePlug->getExtrapolationIn() )
@@ -1908,7 +1908,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	}
 
 	// draw curve extrapolated beyond out key
-	const Gaffer::Animation::Key* const keyOut = curvePlug->getKeyOut();
+	const Gaffer::Animation::Key* const keyOut = curvePlug->lastKey();
 	if( keyOut && ( keyOut->getTime() < tmax ) )
 	{
 		switch( curvePlug->getExtrapolationOut() )

@@ -392,18 +392,6 @@ class GAFFER_API Animation : public ComputeNode
 				/// Get the active key at the specified time, returns nullptr if no key with specified
 				/// time. (const access)
 				const Key *getKey( float time ) const;
-				/// Get the active in key, return nullptr if curve has no keys.
-				Key *getKeyIn();
-				/// Get the active in key, return nullptr if curve has no keys. (const access)
-				const Key *getKeyIn() const;
-				/// Get the active out key, return nullptr if curve has no keys.
-				Key *getKeyOut();
-				/// Get the active out key, return nullptr if curve has no keys. (const access)
-				const Key *getKeyOut() const;
-				/// Get the active key in the specified direction, return nullptr if curve has no keys.
-				Key *getKey( Animation::Direction direction );
-				/// Get the active key in the specified direction, return nullptr if curve has no keys. (const access)
-				const Key *getKey( Animation::Direction direction ) const;
 
 				/// Removes specified key from curve, if key is not parented to curve an exception
 				/// is thrown. If key is active, after it has been removed from curve, the inactive
@@ -437,6 +425,15 @@ class GAFFER_API Animation : public ComputeNode
 				Key *nextKey( float time );
 				/// Get the closest active key with time greater than the specified time. (const access)
 				const Key *nextKey( float time ) const;
+
+				/// Get the active key with the lowest time value in the curve.
+				Key *firstKey();
+				/// Get the active key with the lowest time value in the curve. (const access)
+				const Key *firstKey() const;
+				/// Get the active key with the highest time value in the curve.
+				Key *lastKey();
+				/// Get the active key with the highest time value in the curve. (const access)
+				const Key *lastKey() const;
 
 				/// iterator to start of range of active keys
 				KeyIterator begin();

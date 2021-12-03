@@ -481,27 +481,23 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f1"] )
 
-		# curve with no keys has no "In" and "Out" keys
-		self.assertIsNone( curve.getKeyIn() )
-		self.assertIsNone( curve.getKeyOut() )
+		# curve with no keys has no first and last keys
+		self.assertIsNone( curve.firstKey() )
+		self.assertIsNone( curve.lastKey() )
 		self.assertIsNone( curve.getKey( Gaffer.Animation.Direction.In ) )
 		self.assertIsNone( curve.getKey( Gaffer.Animation.Direction.Out ) )
 
-		# curve with single key. key is both "In" and "Out" key
+		# curve with single key. key is both first and last key
 		key = Gaffer.Animation.Key( 4, 5 )
 		curve.addKey( key )
-		self.assertIsNotNone( curve.getKeyIn() )
-		self.assertTrue( curve.getKeyIn().isSame( key ) )
-		self.assertIsNotNone( curve.getKeyOut() )
-		self.assertTrue( curve.getKeyOut().isSame( key ) )
-		self.assertIsNotNone( curve.getKey( Gaffer.Animation.Direction.In ) )
-		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.In ).isSame( key ) )
-		self.assertIsNotNone( curve.getKey( Gaffer.Animation.Direction.Out ) )
-		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.Out ).isSame( key ) )
+		self.assertIsNotNone( curve.firstKey() )
+		self.assertTrue( curve.firstKey().isSame( key ) )
+		self.assertIsNotNone( curve.lastKey() )
+		self.assertTrue( curve.lastKey().isSame( key ) )
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f2"] )
 
-		# curve with multiple keys. "In" key has min time, "Out" key has max time
+		# curve with multiple keys. first key has min time, last key has max time
 		keys = []
 		import random
 		r = random.Random( 0 )
@@ -511,13 +507,10 @@ class AnimationTest( GafferTest.TestCase ) :
 			keys.append( k )
 		kmin = sorted( keys, key=lambda k : k.getTime(), reverse=False )[ 0 ]
 		kmax = sorted( keys, key=lambda k : k.getTime(), reverse=True  )[ 0 ]
-		self.assertIsNotNone( curve.getKeyIn() )
-		self.assertTrue( curve.getKeyIn().isSame( kmin ) )
-		self.assertIsNotNone( curve.getKey( Gaffer.Animation.Direction.In ) )
-		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.In ).isSame( kmin ) )
-		self.assertIsNotNone( curve.getKeyOut() )
-		self.assertTrue( curve.getKeyOut().isSame( kmax ) )
-		self.assertTrue( curve.getKey( Gaffer.Animation.Direction.Out ).isSame( kmax ) )
+		self.assertIsNotNone( curve.firstKey() )
+		self.assertTrue( curve.firstKey().isSame( kmin ) )
+		self.assertIsNotNone( curve.lastKey() )
+		self.assertTrue( curve.lastKey().isSame( kmax ) )
 
 	def testInsertKeyFirstNoValue( self ) :
 

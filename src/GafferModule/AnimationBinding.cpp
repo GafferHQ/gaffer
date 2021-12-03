@@ -392,16 +392,6 @@ void GafferModule::bindAnimation()
 			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::getKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
-		.def( "getKey",
-			(Animation::Key *(Animation::CurvePlug::*)( Animation::Direction ))&Animation::CurvePlug::getKey,
-			return_value_policy<IECorePython::CastToIntrusivePtr>()
-		)
-		.def( "getKeyIn",
-			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::getKeyIn,
-			return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "getKeyOut",
-			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::getKeyOut,
-			return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "removeKey", &removeKey )
 		.def( "removeInactiveKeys", &removeInactiveKeys )
 		.def(
@@ -424,6 +414,12 @@ void GafferModule::bindAnimation()
 			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::nextKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
+		.def( "firstKey",
+			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::firstKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "lastKey",
+			(Animation::Key *(Animation::CurvePlug::*)())&Animation::CurvePlug::lastKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "getExtrapolationIn", &Animation::CurvePlug::getExtrapolationIn )
 		.def( "setExtrapolationIn", &setExtrapolationIn )
 		.def( "getExtrapolationOut", &Animation::CurvePlug::getExtrapolationOut )

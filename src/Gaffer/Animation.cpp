@@ -536,7 +536,11 @@ struct ExtrapolatorConstant
 	double evaluate( const Gaffer::Animation::CurvePlug& curve,
 		const Gaffer::Animation::Direction direction, const double /*time*/ ) const override
 	{
-		return curve.getKey( direction )->getValue();
+		// NOTE : return value of key in direction of extrapolation
+
+		return ( ( direction == Gaffer::Animation::Direction::In )
+			? curve.firstKey()
+			: curve.lastKey() )->getValue();
 	}
 };
 
@@ -552,9 +556,15 @@ struct ExtrapolatorLinear
 	double evaluate( const Gaffer::Animation::CurvePlug& curve,
 		const Gaffer::Animation::Direction direction, const double time ) const override
 	{
-		const Gaffer::Animation::Key* const key = curve.getKey( direction );
-		const double s = clampSlope( key->tangent( direction ).getSlope() );
-		return std::fma( s, ( time - key->getTime() ), key->getValue() );
+		// NOTE : extrapolate line with slope matching tangent in direction
+		//        of extrapolation from key in direction of extrapolation.
+
+		const Gaffer::Animation::Key* const key =
+			( direction == Gaffer::Animation::Direction::In )
+				? curve.firstKey()
+				: curve.lastKey();
+
+		return std::fma( clampSlope( key->tangent( direction ).getSlope() ), ( time - key->getTime() ), key->getValue() );
 	}
 };
 
@@ -570,8 +580,13 @@ struct ExtrapolatorRepeat
 	double evaluate( const Gaffer::Animation::CurvePlug& curve,
 		const Gaffer::Animation::Direction direction, const double time ) const override
 	{
-		const Gaffer::Animation::Key* const key = curve.getKey( direction );
-		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+		// NOTE : repeat the curve indefinitely
+
+		const Gaffer::Animation::Key* const kf = curve.firstKey();
+		const Gaffer::Animation::Key* const kl = curve.lastKey();
+
+		const Gaffer::Animation::Key* const key = ( ( direction == Gaffer::Animation::Direction::In ) ? kf : kl );
+		const Gaffer::Animation::Key* const keyOpposite = ( ( direction == Gaffer::Animation::Direction::In ) ? kl : kf );
 
 		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
 		if( dt == 0.0 )
@@ -588,7 +603,7 @@ struct ExtrapolatorRepeat
 		return curve.evaluate( Imath::clamp( ( remainder == 0.0 )
 				? key->getTime()
 				: static_cast< float >( keyOpposite->getTime() + remainder ),
-			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+			kf->getTime(), kl->getTime() ) );
 	}
 };
 
@@ -604,8 +619,13 @@ struct ExtrapolatorRepeatOffset
 	double evaluate( const Gaffer::Animation::CurvePlug& curve,
 		const Gaffer::Animation::Direction direction, const double time ) const override
 	{
-		const Gaffer::Animation::Key* const key = curve.getKey( direction );
-		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+		// NOTE : repeat the curve indefinitely with each repetition offset to be relative in value to the last.
+
+		const Gaffer::Animation::Key* const kf = curve.firstKey();
+		const Gaffer::Animation::Key* const kl = curve.lastKey();
+
+		const Gaffer::Animation::Key* const key = ( ( direction == Gaffer::Animation::Direction::In ) ? kf : kl );
+		const Gaffer::Animation::Key* const keyOpposite = ( ( direction == Gaffer::Animation::Direction::In ) ? kl : kf );
 
 		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
 		if( dt == 0.0 )
@@ -621,7 +641,7 @@ struct ExtrapolatorRepeatOffset
 		const double value = curve.evaluate( Imath::clamp( ( remainder == 0.0 )
 				? key->getTime()
 				: static_cast< float >( keyOpposite->getTime() + remainder ),
-			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+			kf->getTime(), kl->getTime() ) );
 
 		const double dv = static_cast< double >( key->getValue() ) - static_cast< double >( keyOpposite->getValue() );
 		return std::fma( std::abs( count ) + ( ( remainder == 0.0 ) ? 0.0 : 1.0 ), dv, value );
@@ -640,8 +660,13 @@ struct ExtrapolatorMirror
 	double evaluate( const Gaffer::Animation::CurvePlug& curve,
 		const Gaffer::Animation::Direction direction, const double time ) const override
 	{
-		const Gaffer::Animation::Key* const key = curve.getKey( direction );
-		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+		// NOTE : mirror the curve in time indefinitely.
+
+		const Gaffer::Animation::Key* const kf = curve.firstKey();
+		const Gaffer::Animation::Key* const kl = curve.lastKey();
+
+		const Gaffer::Animation::Key* const key = ( ( direction == Gaffer::Animation::Direction::In ) ? kf : kl );
+		const Gaffer::Animation::Key* const keyOpposite = ( ( direction == Gaffer::Animation::Direction::In ) ? kl : kf );
 
 		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
 		if( dt == 0.0 )
@@ -658,7 +683,7 @@ struct ExtrapolatorMirror
 				( ( static_cast< int >( count ) % 2 ) != 0 )
 					? ( keyOpposite->getTime() + remainder )
 					: ( key->getTime() - remainder ) ),
-			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+			kf->getTime(), kl->getTime() ) );
 	}
 };
 
@@ -674,8 +699,14 @@ struct ExtrapolatorOscillate
 	double evaluate( const Gaffer::Animation::CurvePlug& curve,
 		const Gaffer::Animation::Direction direction, const double time ) const override
 	{
-		const Gaffer::Animation::Key* const key = curve.getKey( direction );
-		const Gaffer::Animation::Key* const keyOpposite = curve.getKey( Gaffer::Animation::opposite( direction ) );
+		// NOTE : repeat the curve indefinitely, alternately inverting the value of the curve
+		//        with each repetition offset to be relative in value to the last.
+
+		const Gaffer::Animation::Key* const kf = curve.firstKey();
+		const Gaffer::Animation::Key* const kl = curve.lastKey();
+
+		const Gaffer::Animation::Key* const key = ( ( direction == Gaffer::Animation::Direction::In ) ? kf : kl );
+		const Gaffer::Animation::Key* const keyOpposite = ( ( direction == Gaffer::Animation::Direction::In ) ? kl : kf );
 
 		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
 		if( dt == 0.0 )
@@ -690,11 +721,11 @@ struct ExtrapolatorOscillate
 		// NOTE : clamp time passed to curve evaluate in range of keys to prevent infinite recursion.
 		const double value = curve.evaluate( Imath::clamp(
 			static_cast< float >( keyOpposite->getTime() + remainder ),
-			curve.getKeyIn()->getTime(), curve.getKeyOut()->getTime() ) );
+			kf->getTime(), kl->getTime() ) );
 
 		return ( ( static_cast< int >( count ) % 2 ) == 0 )
-			? ( static_cast< double >( curve.getKeyOut()->getValue() ) +
-				static_cast< double >( curve.getKeyIn()->getValue() ) - value )
+			? ( static_cast< double >( kl->getValue() ) +
+				static_cast< double >( kf->getValue() ) - value )
 			: value;
 	}
 };
@@ -1004,9 +1035,9 @@ bool Animation::Tangent::slopeIsConstrained() const
 	// check interpolator hints
 
 	if(
-		( ( m_direction == Direction::Out ) && ( m_key->m_parent->getKeyOut() != m_key ) &&
+		( ( m_direction == Direction::Out ) && ( m_key->m_parent->lastKey() != m_key ) &&
 			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) ||
-		( ( m_direction == Direction::In ) && ( m_key->m_parent->getKeyIn() != m_key ) &&
+		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
 			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) )
 	{
 		return true;
@@ -1134,9 +1165,9 @@ bool Animation::Tangent::scaleIsConstrained() const
 	// check interpolator hints
 
 	if(
-		( ( m_direction == Direction::Out ) && ( m_key->m_parent->getKeyOut() != m_key ) &&
+		( ( m_direction == Direction::Out ) && ( m_key->m_parent->lastKey() != m_key ) &&
 			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) ||
-		( ( m_direction == Direction::In ) && ( m_key->m_parent->getKeyIn() != m_key ) &&
+		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
 			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) )
 	{
 		return true;
@@ -2167,7 +2198,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 	}
 	else
 	{
-		lo = getKeyOut();
+		lo = lastKey();
 	}
 
 	// if key already exists at time then return it with updated value
@@ -2192,10 +2223,10 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		interpolator = lo->m_interpolator;
 		tieMode = lo->m_tieMode;
 	}
-	else if( const Key* const ki = getKeyIn() )
+	else if( const Key* const kf = firstKey() )
 	{
-		interpolator = ki->m_interpolator;
-		tieMode = ki->m_tieMode;
+		interpolator = kf->m_interpolator;
+		tieMode = kf->m_tieMode;
 	}
 
 	assert( interpolator );
@@ -2298,50 +2329,6 @@ const Animation::Key *Animation::CurvePlug::getKey( const float time ) const
 	return ( it != m_keys.end() )
 		? &( *it )
 		: nullptr;
-}
-
-Animation::Key *Animation::CurvePlug::getKeyIn()
-{
-	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKeyIn() );
-}
-
-const Animation::Key *Animation::CurvePlug::getKeyIn() const
-{
-	const Key* k = 0;
-
-	if( ! m_keys.empty() )
-	{
-		k = &( *( m_keys.cbegin() ) );
-	}
-
-	return k;
-}
-
-Animation::Key *Animation::CurvePlug::getKeyOut()
-{
-	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKeyOut() );
-}
-
-const Animation::Key *Animation::CurvePlug::getKeyOut() const
-{
-	const Key* k = 0;
-
-	if( ! m_keys.empty() )
-	{
-		k = &( *( m_keys.crbegin() ) );
-	}
-
-	return k;
-}
-
-Animation::Key *Animation::CurvePlug::getKey( const Animation::Direction direction )
-{
-	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getKey( direction ) );
-}
-
-const Animation::Key *Animation::CurvePlug::getKey( const Animation::Direction direction ) const
-{
-	return ( direction == Animation::Direction::In ) ? getKeyIn() : getKeyOut();
 }
 
 void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
@@ -2588,6 +2575,40 @@ const Animation::Key *Animation::CurvePlug::nextKey( const float time ) const
 	return ( rightIt != m_keys.end() )
 		? &( *( rightIt ) )
 		: nullptr;
+}
+
+Animation::Key *Animation::CurvePlug::firstKey()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->firstKey() );
+}
+
+const Animation::Key *Animation::CurvePlug::firstKey() const
+{
+	const Key* k = 0;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.cbegin() ) );
+	}
+
+	return k;
+}
+
+Animation::Key *Animation::CurvePlug::lastKey()
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->lastKey() );
+}
+
+const Animation::Key *Animation::CurvePlug::lastKey() const
+{
+	const Key* k = 0;
+
+	if( ! m_keys.empty() )
+	{
+		k = &( *( m_keys.crbegin() ) );
+	}
+
+	return k;
 }
 
 Animation::CurvePlug::TimeKey::type Animation::CurvePlug::TimeKey::operator()( const Animation::Key& key ) const
