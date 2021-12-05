@@ -450,28 +450,23 @@ void Cryptomatte::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 
     if( output == manifestPlug() )
     {
-        GafferImage::ImagePlug::GlobalScope globalScope( context );
-        layerPlug()->hash( h );
-        manifestPathPlug()->hash( h );
         manifestSourcePlug()->hash( h );
         inPlug()->metadataPlug()->hash( h );
     }
     else if( output == matteValuesPlug() )
     {
-        GafferImage::ImagePlug::GlobalScope globalScope( context );
         manifestPlug()->hash( h );
         matteNamesPlug()->hash( h );
     }
     else if( output == manifestPathDataPlug() )
     {
-        GafferImage::ImagePlug::GlobalScope globalScope( context );
         manifestPlug()->hash( h );
     }
     else if( output == manifestScenePlug()->childNamesPlug() )
     {
-        GafferImage::ImagePlug::GlobalScope globalScope( context );
         const GafferScene::ScenePlug::ScenePath &scenePath = context->get<GafferScene::ScenePlug::ScenePath>( GafferScene::ScenePlug::scenePathContextName );
         h.append( &scenePath.front(), scenePath.size() );
+        ScenePlug::GlobalScope globalScope( context );
         manifestPathDataPlug()->hash(h);
     }
     else if( output == matteChannelDataPlug() )
