@@ -102,7 +102,11 @@ class Button( GafferUI.Widget ) :
 		assert( isinstance( imageOrImageFileName, ( six.string_types, GafferUI.Image, type( None ) ) ) )
 
 		if isinstance( imageOrImageFileName, six.string_types ) :
+			# Avoid our image getting parented to the wrong thing
+			# if our caller is in a `with container` block.
+			GafferUI.Widget._pushParent( None )
 			self.__image = GafferUI.Image( imageOrImageFileName )
+			GafferUI.Widget._popParent()
 		else :
 			self.__image = imageOrImageFileName
 
