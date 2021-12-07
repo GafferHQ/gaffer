@@ -10,6 +10,7 @@ Fixes
 -----
 
 - PathListingWidget : Fixed the deprecated `getSelectedPaths()` and `getExpandedPaths()` methods in the case that the PathListingWidget's root isn't `/` (#4510).
+- NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 
 API

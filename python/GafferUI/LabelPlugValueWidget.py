@@ -47,6 +47,8 @@ from Qt import QtWidgets
 #  - "renameable"
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
+	## \todo Remove alignment arguments. Vertically the only alignment that looks good is `Center`, and
+	# horizontally we have standardised on `Right`.
 	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, **kw ) :
 
 		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QWidget(), plug, **kw )
@@ -63,6 +65,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			formatter = self.__formatter,
 		)
 		self.__label._qtWidget().setObjectName( "gafferPlugLabel" )
+		# Fix the height to match common PlugValueWidgets, so that our text
+		# aligns nicely with theirs. Ideally this should be done purely in the
+		# stylesheet, but that has proved difficult. See comments in
+		# 764eb379d99ff8418fbf2bb79a8231dafc57d8f1 for more details.
+		self.__label._qtWidget().setFixedHeight( 20 )
 		layout.addWidget( self.__label._qtWidget() )
 
 		self.__editableLabel = None # we'll make this lazily as needed
