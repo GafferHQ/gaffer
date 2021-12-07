@@ -3106,6 +3106,7 @@ class ArnoldGlobals
 			// Delete nodes we own before universe is destroyed.
 			m_shaderCache.reset();
 			m_outputs.clear();
+			m_aovShaders.clear();
 			m_colorManager.reset();
 			m_atmosphere.reset();
 			m_background.reset();
