@@ -50,8 +50,6 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from Qt import QtCore
-from Qt import QtGui
 from Qt import QtWidgets
 
 __all__ = [ "_SceneViewInspector", "_ParameterInspector" ]
@@ -776,159 +774,10 @@ class _ParameterWidget( GafferUI.Widget ) :
 				# We still allow viewing of read-only plugs to people can inspect the nature of an edit
 				warnings.append( "'{}' is locked.".format( r.relativeName( r.ancestor( Gaffer.ScriptNode ) ) ) )
 
-		self.__editWindow = _EditWindow( plugs, warning = "\n".join( warnings ) )
-		self.__editWindow.resizeToFitChild()
+		self.__editWindow = GafferUI.PlugPopup( plugs, warning = "\n".join( warnings ) )
+		if isinstance( self.__editWindow.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
+			self.__editWindow.plugValueWidget().setNameVisible( False )
 		self.__editWindow.popup( self.bound().center() + imath.V2i( 0, 45 ) )
-
-## \todo How does this relate to PopupWindow and SpreadsheetUI._EditWindow?
-class _EditWindow( GafferUI.Window ) :
-
-	def __init__( self, plugs, warning=None, **kw ) :
-
-		assert( len(plugs) > 0 )
-
-		container = GafferUI.ListContainer( spacing = 4 )
-		GafferUI.Window.__init__( self, "", child = container, borderWidth = 8, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
-
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-
-		for p in plugs :
-			## \todo Figure out when/if this is about to happen, and disable
-			# editing beforehand.
-			assert( isinstance( p, plugs[0].__class__ ) )
-
-		self._qtWidget().setWindowFlags( QtCore.Qt.Popup )
-		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
-		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
-
-		with container :
-
-			# Label to tell folks what they're editing.
-			# TODO: This could do with some of the niceties TransformToolUI applies finding
-			# common ancestors, as well as more general beautifying.
-
-			script = plugs[0].ancestor( Gaffer.ScriptNode )
-			labels = { p.relativeName( script ) for p in plugs }
-			label = GafferUI.Label()
-
-			if len( labels ) == 1 :
-				message = next( iter( labels ) )
-				toolTip = ""
-			else :
-				editScope = self.__commonEditScope( plugs )
-				if editScope is not None :
-					message ="{} ({} plugs)".format( editScope.relativeName( script ), len( plugs ) )
-				else :
-					message ="{} plugs".format( len( plugs ) )
-				toolTip = "\n".join( "- " + l for l in labels )
-
-			label.setText( "<h4>{}</h4>".format( message ) )
-			label.setToolTip( toolTip )
-
-			with GafferUI.ListContainer( spacing = 4, orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
-
-				# An alert (if required)
-
-				if warning :
-					warningBadge = GafferUI.Image( "warningSmall.png" )
-					warningBadge.setToolTip( warning )
-
-				# Widget for editing plugs
-
-				self.__plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
-				if isinstance( self.__plugValueWidget, GafferSceneUI.TweakPlugValueWidget ) :
-					## \todo We have this same hack in SpreadsheetUI. Should we instead
-					# do something with metadata when we add the column to the spreadsheet?
-					self.__plugValueWidget.setNameVisible( False )
-
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-
-	def __commonEditScope( self, plugs ) :
-
-		scopes = { p.ancestor( Gaffer.EditScope ) for p in plugs }
-		if len(scopes) == 1 :
-			return next( iter( scopes ) )
-		return None
-
-	def popup( self, position ) :
-
-		self.setVisible( True )
-
-		# Attempt to focus the first text widget. This is done after making
-		# the window visible, as we check child widget visibility to avoid
-		# attempting to focus upon hidden widgets.
-
-		size = self._qtWidget().sizeHint()
-		self.setPosition( position - imath.V2i( size.width() / 2, size.height() / 2 ) )
-
-		textWidget = self.__textWidget( self.__plugValueWidget )
-		if textWidget is not None :
-			if isinstance( textWidget, GafferUI.TextWidget ) :
-				textWidget.grabFocus()
-				textWidget.setSelection( 0, len( textWidget.getText() ) )
-			else :
-				textWidget.setFocussed( True )
-
-	def __visibilityChanged( self, unused ) :
-
-		if self.visible() :
-			return
-
-		# The modal popup will hide the window without de-focusing the
-		# current widget. Ultimately this results in un-committed edits
-		# from being lost. Force the active widget to resign focus.
-		focusWidget = QtWidgets.QApplication.focusWidget()
-		if focusWidget is not None :
-			gafferWidget = GafferUI.Widget._owner( focusWidget )
-			if gafferWidget is not None and self.isAncestorOf( gafferWidget ) :
-				gafferWidget._qtWidget().clearFocus()
-
-	def __paintEvent( self, event ) :
-
-		painter = QtGui.QPainter( self._qtWidget() )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-
-		painter.setBrush( QtGui.QColor( 35, 35, 35 ) )
-		painter.setPen( QtGui.QColor( 0, 0, 0, 0 ) )
-
-		radius = self._qtWidget().layout().contentsMargins().left()
-		size = self.size()
-		painter.drawRoundedRect( QtCore.QRectF( 0, 0, size.x, size.y ), radius, radius )
-
-	def __keyPress( self, widget, event ) :
-
-		if event.key == "Return" :
-			self.close()
-
-	# \todo This is duplicated from SpreadsheetUI, is this something we can generalise?
-	@classmethod
-	def __textWidget( cls, plugValueWidget ) :
-
-		def widgetUsable( w ) :
-			return w.visible() and w.enabled() and w.getEditable()
-
-		widget = None
-
-		if isinstance( plugValueWidget, GafferUI.StringPlugValueWidget ) :
-			widget = plugValueWidget.textWidget()
-		elif isinstance( plugValueWidget, GafferUI.NumericPlugValueWidget ) :
-			widget = plugValueWidget.numericWidget()
-		elif isinstance( plugValueWidget, GafferUI.PathPlugValueWidget ) :
-			widget = plugValueWidget.pathWidget()
-		elif isinstance( plugValueWidget, GafferUI.MultiLineStringPlugValueWidget ) :
-			widget = plugValueWidget.textWidget()
-
-		if widget is not None and widgetUsable( widget ) :
-			return widget
-
-		for childPlug in Gaffer.Plug.Range( next( iter( plugValueWidget.getPlugs() ) ) ) :
-			childWidget = plugValueWidget.childPlugValueWidget( childPlug )
-			if childWidget is not None :
-				childTextWidget = cls.__textWidget( childWidget )
-				if childTextWidget is not None :
-					return childTextWidget
-
-		return None
 
 # Widget for displaying any value type.
 ## \todo Figure out relationship with SceneInspector's Diff widgets.

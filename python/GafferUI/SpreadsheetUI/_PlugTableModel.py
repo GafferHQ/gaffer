@@ -283,7 +283,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 		# We use Qt's built-in direct editing of check states
 		# as it is convenient, but all other editing is done
-		# separately via `_EditWindow`.
+		# separately via `PlugPopup`.
 
 		assert( role == QtCore.Qt.CheckStateRole )
 		plug = self.__checkStatePlug( index )
