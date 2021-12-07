@@ -580,7 +580,7 @@ class _Widget( QtWidgets.QWidget ) :
 
 		QtWidgets.QWidget.__init__( self, parent )
 
-		self.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum ) )
+		self.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed ) )
 		self.setFocusPolicy( QtCore.Qt.ClickFocus )
 
 	def sizeHint( self ) :
