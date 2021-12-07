@@ -111,7 +111,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.ArrayPlugUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.ArrayPlugUI.PlugAdder", &create );
 		Gaffer::Metadata::registerValue(
 			ArrayPlug::staticTypeId(), "noduleLayout:customGadget:addButton:gadgetType",
 			[]( const GraphComponent *plug ) -> ConstDataPtr {

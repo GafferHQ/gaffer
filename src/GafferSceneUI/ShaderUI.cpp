@@ -193,7 +193,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferSceneUI.ShaderUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferSceneUI.ShaderUI.PlugAdder", &create );
 	}
 
 	private :

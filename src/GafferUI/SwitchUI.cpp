@@ -148,7 +148,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder", &create );
 	}
 
 	private :

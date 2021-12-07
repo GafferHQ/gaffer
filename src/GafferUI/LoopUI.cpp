@@ -121,7 +121,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.LoopUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.LoopUI.PlugAdder", &create );
 	}
 
 	private :

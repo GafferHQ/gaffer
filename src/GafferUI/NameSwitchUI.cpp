@@ -130,7 +130,7 @@ struct Registration
 
 	Registration()
 	{
-		NoduleLayout::registerCustomGadget( "GafferUI.NameSwitchUI.PlugAdder", boost::bind( &create, ::_1 ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.NameSwitchUI.PlugAdder", &create );
 	}
 
 	private :
