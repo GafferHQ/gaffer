@@ -47,7 +47,7 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from ._SceneViewInspector import *
+from ._SceneViewInspector import _SceneViewInspector
 
 Gaffer.Metadata.registerNode(
 

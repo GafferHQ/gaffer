@@ -14,6 +14,7 @@ Improvements
 - CopyPrimitiveVariables : Added `prefix` plug, which applies a prefix to the names of the copied primitive variables.
 - Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
 - PathListingWidget : Added subtle lines between columns.
+- SceneViewInspector : Updated to align colour scheme and interaction patterns with the LightEditor.
 
 Fixes
 -----

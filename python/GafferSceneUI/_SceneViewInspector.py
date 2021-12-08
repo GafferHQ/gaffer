@@ -52,44 +52,13 @@ import GafferSceneUI
 
 from Qt import QtWidgets
 
-__all__ = [ "_SceneViewInspector", "_ParameterInspector" ]
-
-# Conceptually this is an embedded context-sensitive SceneInspector for
-# the SceneView. In practice it is implemented completely separately from
-# the SceneInspector though, because the SceneInspector doesn't yet support
-# editing and/or EditScopes. Our intention is to unify the two so that the
-# SceneInspector gains editing features and this can become just a thin
-# wrapper to do the configuration and embedding for the Viewer. We also
-# intend to move many of the components into GafferUI, so that they can
-# be used in the development of an ImageInspector too.
-#
-# Future development should consider the following :
-#
-# - It may be better for the inspector classes to track their
-#   own dirtiness, rather than rely on the outer code for that.
-#   And it may be better for each `_ParameterWidget/DiffRow` to manage
-#   its own background updates based on inspector dirtiness.
-#   This would allow individual widgets to be used standalone in
-#   any other UI.
-# - Moving tracking and updates to individual widgets/inspectors
-#   would make it harder to share work. All parameter inspectors
-#   need the same `AttributeHistory` to work from, and we don't
-#   want to compute that more than once. The SceneInspector uses
-#   an inspector hierarchy, so maybe this would allow us to cache
-#   shared values on a parent inspector?
-# - We want to extend our inspection/editing features into the
-#   HierarchyView and a new LightEditor panel. This will likely
-#   mean coupling inspectors with PathListingWidget somehow. Or
-#   perhaps we should be using Path properties to provide values
-#   for all UIs, and the editing functionality should be provided
-#   separately?
-# - It's not clear how the SceneInspector's `Target` class fits
-#   into a general scheme that could include images, because it
-#   contains scene-specific data. Perhaps we should ditch
-#   `Target` entirely, and instead say that inspectors always
-#   operate on the plug they are constructed with and in the
-#   Context they are invoked in.
-#
+# Conceptually this is an embedded context-sensitive SceneInspector for the
+# SceneView. In practice it is implemented completely separately from the
+# SceneInspector though, because the SceneInspector doesn't yet support editing
+# and/or EditScopes. Our intention is to unify the two by refactoring the
+# SceneInspector to use the same Inspector framework used here and in the
+# LightEditor. We also intend to move many of the components into GafferUI, so
+# that they can be used in the development of an ImageInspector too.
 
 # \todo Create a central renderer/attribute registry that we can
 # query for this information, this is also duplicated in EditScopeAlgo.cpp
@@ -140,6 +109,7 @@ class _SceneViewInspector( GafferUI.Widget ) :
 
 		self.__attachToView( sceneView )
 
+		self.__pendingUpdates = set()
 		with self.__frame :
 
 			with GafferUI.ListContainer( spacing = 8 ) :
@@ -148,9 +118,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 					orientation = GafferUI.ListContainer.Orientation.Horizontal,
 					spacing = 8
 				) :
-					GafferUI.Spacer( imath.V2i( 12 ), imath.V2i( 12 ) ) # hideButton
-					GafferUI.Spacer( imath.V2i( 20 ), imath.V2i( 20 ) ) # BusyWidget
-					GafferUI.Spacer( imath.V2i( 1 ) )
 					GafferUI.Label( "<h4 style=\"color: rgba( 255, 255, 255, 120 );\">Inspector</h4>" )
 					GafferUI.Spacer( imath.V2i( 1 ) )
 					self.__busyWidget = GafferUI.BusyWidget( size = 20, busy = False )
@@ -158,8 +125,16 @@ class _SceneViewInspector( GafferUI.Widget ) :
 					hideButton.clickedSignal().connect( Gaffer.WeakMethod( self.__closeButtonClicked ), scoped = False )
 
 				with GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrollMode.Never ) :
-					with GafferUI.ListContainer( spacing = 20 ) :
-						self.__groups = { a : _ParameterGroup(a) for a in _registeredShaderAttributes() }
+					with GafferUI.ListContainer( spacing = 20 ) as self.__sections :
+						for a in _registeredShaderAttributes() :
+							_InspectorSection(
+								self.__attributeLabel( a ),
+								[
+									GafferSceneUI.Private.ParameterInspector( sceneView["in"], sceneView["editScope"], a, ( "", p ) )
+									for p in _registeredShaderParameters( a )
+								],
+								sceneView.getContext()
+							)
 
 		# We want to hide ourselves when we have nothing to show, and then show
 		# ourselves again when an update discovers something relevant. But
@@ -169,8 +144,11 @@ class _SceneViewInspector( GafferUI.Widget ) :
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False)
 
-		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False )
-		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+	def _scheduleUpdate( self, inspectorWidget ) :
+
+		if inspectorWidget not in self.__pendingUpdates :
+			self.__pendingUpdates.add( inspectorWidget )
+			self.__updateLazily()
 
 	def __attachToView( self, sceneView ) :
 
@@ -179,8 +157,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		sceneView["inspector"].addChild( Gaffer.BoolPlug( "visible", Gaffer.Plug.Direction.In, True ) )
 		Gaffer.NodeAlgo.applyUserDefaults( sceneView["inspector"] )
 
-		sceneView.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
-		sceneView.getContext().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
 		sceneView.viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		self.__sceneView = sceneView
@@ -188,38 +164,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 	def __closeButtonClicked( self, *unused ) :
 
 		self.__sceneView["inspector"]["visible"].setValue( False )
-
-	def __plugDirtied( self, plug ) :
-
-		if plug in ( self.__sceneView["in"]["attributes"], self.__sceneView["editScope"] ) :
-			self.__updateLazily()
-
-	def __contextChanged( self, context, name ) :
-
-		if GafferSceneUI.ContextAlgo.affectsSelectedPaths( name ) or not name.startswith( "ui:" ) :
-			self.__updateLazily()
-
-	def __plugMetadataChanged( self, typeId, plugPath, key, plug  ) :
-
-		# As we don't fully understand which nodes/plugs affect our ability to edit (as the network
-		# inside the edit scope is effectively opaque to us), we only need to know if the plugs
-		# node was affected.
-		self.__nodeMetadataChanged( typeId, key, plug.node() if plug is not None else None )
-
-	def __nodeMetadataChanged( self, typeId, key, node ) :
-
-		# Early out with an easy comparison if we can
-		if not Gaffer.MetadataAlgo.readOnlyAffectedByChange( key ) :
-			return
-
-		scope = self.__sceneView.editScope()
-		if scope is None :
-			# The ability to add an edit is only enabled if we have an edit scope, in all other
-			# cases we always show plugs, whether they're read only or not.
-			return
-
-		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( scope, typeId, key, node ) or scope.isAncestorOf( node ) :
-			self.__updateLazily()
 
 	def __keyPress( self, gadget, event ) :
 
@@ -230,32 +174,45 @@ class _SceneViewInspector( GafferUI.Widget ) :
 
 		return False
 
+	@staticmethod
+	def __attributeLabel( attribute ) :
+
+		prefix, name = attribute.split( ":", 1 )
+		prefix = _rendererAttributePrefixes.get( prefix, prefix )
+		name = " ".join( [ IECore.CamelCase.toSpaced( n ) for n in name.split( ":" ) ] )
+		return "{} {}".format( prefix, name )
+
 	@GafferUI.LazyMethod()
 	def __updateLazily( self ) :
 
-		with self.__sceneView.getContext() :
-			self.__backgroundUpdate()
+		widgets = self.__pendingUpdates
+		self.__pendingUpdates = set()
+
+		# We copy the contexts so they can be safely used in
+		# the background thread without fear of them being
+		# modified on the foreground thread.
+		self.__backgroundUpdate( {
+			w : Gaffer.Context( w.context() )
+			for w in widgets
+		} )
 
 	@GafferUI.BackgroundMethod()
-	def __backgroundUpdate( self ) :
+	def __backgroundUpdate( self, pendingUpdates ) :
 
-		selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( Gaffer.Context.current() )
+		canceller = Gaffer.Context.current().canceller()
+		result = {}
+		for widget, context in pendingUpdates.items() :
+			try :
+				with Gaffer.Context( context, canceller ) :
+					widgetResult = widget._backgroundUpdate()
+			except Exception as e :
+				widgetResult = sys.exc_info()[1]
+				# Avoid circular references that would prevent this
+				# stack frame (and therefore `widget`) from dying.
+				widgetResult.__traceback__ = None
+			result[widget] = widgetResult
 
-		parameterInspectors = {}
-
-		for path in selectedPaths.paths() :
-			if not self.__sceneView["in"].exists( path ) :
-				continue
-			history = GafferScene.SceneAlgo.history( self.__sceneView["in"]["attributes"], path )
-			for attribute, group in self.__groups.items() :
-				attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, attribute )
-				if attributeHistory is not None :
-					for parameter in group.parameters() :
-						parameterInspectors.setdefault( attribute, {} ).setdefault( parameter, [] ).append(
-							_ParameterInspector( attributeHistory, parameter, self.__sceneView.editScope() )
-						)
-
-		return parameterInspectors
+		return result
 
 	@__backgroundUpdate.plug
 	def __backgroundUpdatePlug( self ) :
@@ -270,496 +227,217 @@ class _SceneViewInspector( GafferUI.Widget ) :
 	@__backgroundUpdate.postCall
 	def __backgroundUpdatePostCall( self, backgroundResult ) :
 
-		if isinstance( backgroundResult, IECore.Cancelled ) or backgroundResult is None :
-			# Cancellation or some other exception
-			self.__updateLazily()
-		elif isinstance( backgroundResult, Gaffer.ProcessException ) :
-			# Computation error. Rest of the UI can deal with
-			# displaying this.
-			self.__frame.setVisible( False )
-		elif isinstance( backgroundResult, Exception ) :
-			# Possible error in our code.
-			IECore.msg(
-				IECore.Msg.Level.Error, "_SceneViewInspector",
-				"".join( traceback.format_exception_only( type( backgroundResult ), backgroundResult ) )
-			)
-		else :
-			# Success.
-			visible = False
-			for attribute, group in self.__groups.items() :
-				visible = group.update( backgroundResult.get( attribute, {} ) ) or visible
-			self.__frame.setVisible( visible )
+		# Pass results to individual inspector widgets.
+
+		for widget, widgetResult in backgroundResult.items() :
+			widget._backgroundUpdatePostCall( widgetResult )
 
 		self.__busyWidget.setBusy( False )
 
+		# Hide sections that have nothing to show, and hide
+		# ourselves if no sections are visible.
+
+		for section in self.__sections :
+			section.update()
+
+		self.__frame.setVisible( any( s.getVisible() for s in self.__sections ) )
 
 # \todo Check how this relates to DiffColumn in the SceneInspector
-class _ParameterGroup( GafferUI.ListContainer ) :
+class _InspectorSection( GafferUI.ListContainer ) :
 
-	def __init__( self, attribute, **kwargs ) :
+	def __init__( self, label, inspectors, context, **kwargs ) :
 
-		GafferUI.ListContainer.__init__( self, spacing = 8, **kwargs )
-		self.__attribute = attribute
-		self.__widgets = {}
+		GafferUI.ListContainer.__init__( self, spacing = 4, **kwargs )
 
 		with self :
 
-			self.__label = GafferUI.Label( self.__attributeLabel( attribute ) )
-
+			self.__labelText = label
+			self.__label = GafferUI.Label()
 			GafferUI.Divider()
 
-			for parameter in _registeredShaderParameters( self.__attribute ) :
-				self.__widgets[ parameter ] = _ParameterWidget( parameter )
+			self.__inspectorWidgets = [
+				_InspectorWidget( inspector, context )
+				for inspector in inspectors
+			]
 
-	def parameters( self ) :
+	# Called by _SceneViewInspector to update our label and
+	# visibility after the _InspectorWidgets are updated.
+	def update( self ) :
 
-		return self.__widgets.keys()
-
-	def update( self, parameterInspectors ) :
-
-		numValues = 0
-
-		for parameter, inspectors in parameterInspectors.items() :
-			self.__widgets[ parameter ].update( inspectors )
-			numValues = max( numValues, len( [ i for i in inspectors if i.value() is not None ] ) )
-
+		numValues = max( len( w.valueWidget().getValues() ) for w in self.__inspectorWidgets )
 		visible = numValues > 0
 
 		self.setVisible( visible )
 		if visible :
 			self.__label.setText( "{} {}{}".format(
 				numValues,
-				self.__attributeLabel( self.__attribute ),
+				self.__labelText,
 				"s" if numValues != 1 else ""
 			) )
 
-		return visible
-
-	def __attributeLabel( self, attribute ) :
-
-		prefix, name = attribute.split( ":", 1 )
-		prefix = _rendererAttributePrefixes.get( prefix, prefix )
-		name = " ".join( [ IECore.CamelCase.toSpaced( n ) for n in name.split( ":" ) ] )
-		return "{} {}".format( prefix, name )
-
-# EditType defines discrete parameter edit types. The inspector UI assumes that all
-# locations with the same edit type can be edited simultaneously using a single
-# PlugValueWidget set to hold all applicable plugs.
-_EditType = IECore.Enum.create( "Source", "Tweak" )
-
-# Defines a (potential) edit for a single location.
-#  - acquireEdit [callable] will return the plug that performs the edit, creating it if necessary.
-#  - editType [_EditType] the type of edit (or potential edit if one doesn't exist yet) facilitated by the plug.
-#  - inEditScope [Bool] True if the node affecting the edit is a child of an EditScope.
-#  - hasEdit [Bool] True if the plugs for the edit already exist, and in the case of tweaks,
-#       if they are enabled.
-_EditInfo = namedtuple( "_EditInfo", [ "acquireEdit", "editType", "inEditScope", "hasEdit" ] )
-
-## \todo Figure out how this relates to the inspectors in the SceneInspector.
-## \see _EditInfo for the meaning of the various accessors.
-class _ParameterInspector( object ) :
-
-	def __init__( self, attributeHistory, parameter, editScope ) :
-
-		self.__parameter = parameter
-		self.__errorMessage = None
-		self.__warningMessages = []
-
-		shader = attributeHistory.attributeValue.outputShader()
-		self.__value = shader.parameters.get( parameter )
-		if self.__value is not None :
-			if hasattr( self.__value, "value" ) :
-				self.__value = self.__value.value
-			self.__editInfo = self.__findEdit( attributeHistory, editScope )
-		else :
-			self.__editInfo = None
-
-	def value( self ) :
-
-		return self.__value
-
-	def editable( self ) :
-
-		return self.__editInfo is not None
-
-	def acquireEdit( self ) :
-
-		return self.__editInfo.acquireEdit() if self.__editInfo else None
-
-	def editType( self ) :
-
-		return self.__editInfo.editType  if self.__editInfo else None
-
-	def hasEdit( self ) :
-
-		return self.__editInfo.hasEdit if self.__editInfo else None
-
-	def inEditScope( self ) :
-
-		return self.__editInfo.inEditScope if self.__editInfo else False
-
-	def warningMessage( self ) :
-
-		return "\n".join( self.__warningMessages )
-
-	def errorMessage( self ) :
-
-		return self.__errorMessage if self.__errorMessage is not None else ""
-
-	## \todo This is a modified copy of TransformTool::spreadsheetAwareSource,
-	# and is eerily similar to Dispatcher::computedSource and others. This needs
-	# factoring out into some general contextAwareSource method that can be
-	# shared by all these.
-	# In this case, we also need to make sure we never return an output plug,
-	# such as when it is connected to an anim curve.
-	def __spreadsheetAwareSource( self, plug ) :
-
-		source = plug.source()
-		spreadsheet = source.node()
-
-		if not isinstance( spreadsheet, Gaffer.Spreadsheet ) :
-			return sourceInput( plug )
-
-		if not spreadsheet["out"].isAncestorOf( source ) :
-			return sourceInput( plug )
-
-		valuePlug = spreadsheet.activeInPlug( source )
-		if valuePlug.ancestor( Gaffer.Spreadsheet.RowPlug ).isSame( spreadsheet["rows"].defaultRow() ) :
-			return None
-
-		return sourceInput( valuePlug )
-
-	def __sourceShader( self, plug ) :
-
-		node = plug.source().node()
-		if isinstance( node, Gaffer.Switch ) :
-			node = node.activeInPlug().source().node()
-		return node if isinstance( node, GafferScene.Shader ) else None
-
-	def __editFromSceneNode( self, attributeHistory ) :
-
-		node = attributeHistory.scene.node()
-		if not isinstance( node, ( GafferScene.ShaderTweaks, GafferScene.Light, GafferScene.LightFilter, GafferScene.ShaderAssignment ) ) :
-			return None
-
-		if attributeHistory.scene != node["out"] :
-			return None
-
-		with attributeHistory.context :
-
-			if not node["enabled"].getValue() :
-				return None
-
-			if "filter" in node and not ( node["filter"].match( attributeHistory.scene ) & IECore.PathMatcher.Result.ExactMatch ) :
-				return None
-
-			if isinstance( node, ( GafferScene.Light, GafferScene.LightFilter ) ) :
-
-				plug = self.__spreadsheetAwareSource( node["parameters"][ self.__parameter ] )
-				if plug is not None :
-					return _EditInfo(
-						acquireEdit = lambda : plug,
-						editType = _EditType.Source,
-						inEditScope = node.ancestor( Gaffer.EditScope ) is not None,
-						hasEdit = True
-					)
-				return None
-
-			elif isinstance( node, GafferScene.ShaderAssignment ) :
-
-				# \todo use `computedSource` or similar when we have it to consider switches, etc...
-				shader = self.__sourceShader( node["shader"] )
-				if shader is not None :
-					plug = shader["parameters"].getChild( self.__parameter )
-					if plug is not None :
-						return _EditInfo(
-							acquireEdit = lambda : plug,
-							editType = _EditType.Source,
-							inEditScope = node.ancestor( Gaffer.EditScope ) is not None,
-							hasEdit = True
-						)
-				return None
-
-			elif isinstance( node, GafferScene.ShaderTweaks ) :
-
-				for tweak in node["tweaks"] :
-					if tweak["name"].getValue() == self.__parameter :
-						tweak = self.__spreadsheetAwareSource( tweak )
-						if tweak is not None :
-							return _EditInfo(
-								acquireEdit = lambda : tweak,
-								editType = _EditType.Tweak,
-								inEditScope = node.ancestor( Gaffer.EditScope ) is not None,
-								hasEdit = tweak["enabled"].getValue()
-							)
-						return None
-
-		return None
-
-	def __editFromEditScope( self, attributeHistory ) :
-
-		editScope = attributeHistory.scene.node()
-
-		# \todo This misses cases where the processor has been disabled.
-		# Migrate to EditScopeAlgo functionality once it's available.
-		with attributeHistory.context :
-
-			if not editScope["enabled"].getValue() :
-				self.__error( "The target Edit Scope '{}' is disabled.", editScope )
-				return None
-
-			readOnlyReason = GafferScene.EditScopeAlgo.parameterEditReadOnlyReason(
-				editScope,
-				attributeHistory.context["scene:path"],
-				attributeHistory.attributeName,
-				IECoreScene.ShaderNetwork.Parameter( "", self.__parameter )
-			)
-			if readOnlyReason is not None :
-				# If we don't have an edit and the scope is locked, we error,
-				# as we can't add an edit. Other cases where we already _have_
-				# an edit will have been found by _editFromSceneNode).
-				self.__error( "'{}' is locked.", readOnlyReason )
-				return None
-
-		def editScopeEdit( attributeHistory, parameter ) :
-
-			with attributeHistory.context :
-				return GafferScene.EditScopeAlgo.acquireParameterEdit(
-					editScope,
-					attributeHistory.context["scene:path"],
-					attributeHistory.attributeName,
-					IECoreScene.ShaderNetwork.Parameter( "", parameter )
-				)
-
-		return _EditInfo(
-			acquireEdit = functools.partial( editScopeEdit, attributeHistory, self.__parameter ),
-			editType = _EditType.Tweak,
-			inEditScope = True,
-			hasEdit = self.__editScopeHasEdit( attributeHistory )
-		)
-
-	def __editScopeHasEdit( self, attributeHistory ) :
-
-		with attributeHistory.context :
-
-			tweak = GafferScene.EditScopeAlgo.acquireParameterEdit(
-				attributeHistory.scene.node(),
-				attributeHistory.context["scene:path"],
-				attributeHistory.attributeName,
-				IECoreScene.ShaderNetwork.Parameter( "", self.__parameter ),
-				createIfNecessary = False
-			)
-
-			if tweak is None :
-				return False
-
-			return tweak["enabled"].getValue()
-
-	def __findEdit( self, attributeHistory, editScope ) :
-
-		# Walk through the attributeHistory, looking for a suitable edit, based on the user's chosen editScope.
-
-		node = attributeHistory.scene.node()
-
-		if isinstance( node, Gaffer.EditScope ) and attributeHistory.scene == node["in"] :
-
-			# We are leaving an EditScope. We consider EditScopes on the way out to allow other
-			# nodes within the scope to take precedence. An existing edit in the scope will
-			# be picked up via __editFromSceneNode, which is spreadsheet aware.
-			if node.isSame( editScope ) :
-				return self.__editFromEditScope( attributeHistory )
-
-		else :
-
-			# Some other node affecting a change, see if we understand it.
-
-			edit = self.__editFromSceneNode( attributeHistory )
-			if edit is not None :
-
-				# We can potentially make use of this node
-
-				# Check the first parent scope of the edit, as they may be nested
-				parentEditScope = attributeHistory.scene.ancestor( Gaffer.EditScope )
-
-				if edit.hasEdit and ( editScope is None or editScope.isSame( parentEditScope ) ) :
-					# If no editScope has been specified, or we're inside the target edit scope,
-					# then we can safely use this edit if we have one.
-					# The hasEdit check is deliberate to ensure that we don't include 'potential' targets, such
-					# as disabled tweak nodes. Our semantics for editScope == None is that we only consider nodes
-					# actually making a change to the scene at the time.
-					if edit.hasEdit and isinstance( node, GafferScene.ShaderAssignment ) :
-						self.__warn( "Edits to '{}' may affect other locations in the scene.", edit.acquireEdit().node() )
-					return edit
-
-				elif edit.hasEdit and editScope is not None :
-					# If an edit scope has been specified, but we're not inside of it, then we shouldn't
-					# use this node. We are downstream of any potential edit though, so do however need
-					# to warn people that any edits they do make may be overridden by this node.
-					displayNode = node.ancestor( Gaffer.EditScope ) or node
-					self.__warn( "Parameter has edits downstream in '{}'.", displayNode )
-
-		# If we haven't found an edit here, walk up the history
-		for p in attributeHistory.predecessors :
-			edit = self.__findEdit( p, editScope )
-			if edit is not None :
-				return edit
-
-		if editScope is not None and not self.__errorMessage:
-			# If we've not been able to find an edit, and we have a scope
-			# specified, then we musn't have passed through the edit scope
-			self.__error( "The target Edit Scope '{}' is not in the scene history.", editScope )
-
-		return None
-
-	def __warn( self, message, node ) :
-
-		self.__warningMessages.append( message.format( self.__displayName( node ) ) )
-
-	def __error( self, message, node ) :
-
-		self.__errorMessage = message.format( self.__displayName( node ) )
-		# We clear out the warnings in the case of an error to prevent confusion in the UI
-		self.__warningMessages = []
-
-	@staticmethod
-	def __displayName( node ) :
-
-		return node.relativeName( node.ancestor( Gaffer.ScriptNode ) )
-
 ## \todo Figure out how this relates to the DiffRow in the SceneInspector.
-class _ParameterWidget( GafferUI.Widget ) :
+class _InspectorWidget( GafferUI.Widget ) :
 
-	def __init__( self, parameter ) :
+	def __init__( self, inspector, context ) :
 
-		self.__parameter = parameter
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
+		GafferUI.Widget.__init__( self, column )
 
-		grid = GafferUI.GridContainer( spacing = 2 )
-		GafferUI.Widget.__init__( self, grid )
+		self.__inspector = inspector
+		self.__context = context
+		self.__locations = []
 
-		self.__inspectors = []
+		with column :
 
-		with grid :
+			name = self.__inspector.name()
+			if "_" in name :
+				name = IECore.CamelCase.fromSpaced( name.replace( "_", " " ) )
+			name = IECore.CamelCase.toSpaced( name )
 
-			label = GafferUI.Label(
-				## \todo Prettify label text (remove snake case)
-				text = "<h5>" + IECore.CamelCase.toSpaced( parameter ) + "</h5>",
-				parenting = { "index" : ( slice( 0, 2 ), 0 ) }
-			)
+			label = GafferUI.Label( text = "<h5>{}</h5>".format( name ) )
 			label._qtWidget().setMaximumWidth( 140 )
 
-			self.__editButton = GafferUI.Button( image = "editOff.png", hasFrame = False,
-				parenting = {
-					"index" : ( 0, 1 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Center )
-				}
+			self.__valueWidget = _ValueWidget()
+			self.__valueWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__valueDoubleClick ), scoped = False )
+
+		self.__inspectorResults = []
+		self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
+		self.__inspector.dirtiedSignal().connect( Gaffer.WeakMethod( self.__inspectorDirtied ), scoped = False )
+
+	def context( self ) :
+
+		return self.__context
+
+	def valueWidget( self ) :
+
+		return self.__valueWidget
+
+	def _backgroundUpdate( self ) :
+
+		inspectorResults = []
+
+		with Gaffer.Context( Gaffer.Context.current() ) as context :
+			for path in GafferSceneUI.ContextAlgo.getSelectedPaths( context ).paths() :
+				context.set( "scene:path", IECore.InternedStringVectorData( path[1:].split( "/" ) ) )
+				inspectorResult = self.__inspector.inspect()
+				if inspectorResult is not None :
+					inspectorResults.append( inspectorResult )
+
+		return inspectorResults
+
+	def _backgroundUpdatePostCall( self, backgroundResult ) :
+
+		if isinstance( backgroundResult, IECore.Cancelled ) :
+			# Cancellation - schedule a later update.
+			self.__scheduleUpdate()
+		elif isinstance( backgroundResult, Gaffer.ProcessException ) :
+			# Computation error. Rest of the UI can deal with
+			# displaying this.
+			self.setVisible( False )
+		elif isinstance( backgroundResult, Exception ) :
+			# Possible error in our code.
+			IECore.msg(
+				IECore.Msg.Level.Error, "_InspectorWidget",
+				"".join( traceback.format_exception_only( type( backgroundResult ), backgroundResult ) )
 			)
-			self.__editButton.clickedSignal().connect( Gaffer.WeakMethod( self.__editButtonClicked ), scoped = False )
-
-			self.__valueWidget = _ValueWidget( parenting = { "index" : ( 1, 1 ) } )
-			self.__valueWidget.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__valueWidgetClicked ), scoped = False )
-
-		self.update( [] )
-
-	def update( self, inspectors ) :
-
-		# The somewhat intricate logic here attempts to determine whether we should present the user
-		# with an edit button for the parameter for the selected locations. This needs to consider:
-		#
-		# - Is the whole selection editable, we deliberately don't allow any edits, if any locations aren't.
-		# - Is there only on type of edit. We can't concurrently edit tweaks and standard numeric node plugs.
-		# - Do all locations currently have edits. We allow editing in this case, but only if we can create the edits.
-		# - In 'Automatic' Edit Scope mode, is an existing edit in a scope or not.
-		#
-		# Based on this, we update the styling of the UI to attempt to clue the user into the current state.
-
-		inspectors = [ i for i in inspectors if i.value() is not None ]
-
-		# Only show something if we have any inspectors for this parameter
-		self.setVisible( inspectors )
-
-		# Display the current values
-		self.__valueWidget.setValues( [ i.value() for i in inspectors ] )
-
-		# We can only edit if all of them are editable
-		self.__editable = bool( inspectors ) and all( i.editable() for i in inspectors )
-
-		errors = [ i.errorMessage() for i in inspectors if i.errorMessage() ]
-		warnings = [ i.warningMessage() for i in inspectors if i.warningMessage() ]
-
-		# Ensure we aren't trying to present multiple types of edit
-		editType = sole( i.editType() for i in inspectors if i.editable() )
-		if self.__editable and editType is None :
-			# None implies there are multiple edit types, disable editing.
-			errors.append( "Selected locations have mixed Tweak and Source edits, the Inspector can only edit one kind at once." )
-			self.__editable = False
-
-		# Will be None if there are a mixture of edited and unedited locations. We won't be visible if there are none.
-		hasEdit = sole( i.hasEdit() for i in inspectors )
-
-		warningStr = "\n" + "\n".join( warnings ) if warnings and not errors else ""
-
-		if self.__editable:
-			self.__editButton.setToolTip( ( "Click to edit" if hasEdit else "Click to add an edit" ) + warningStr )
 		else :
-			self.__editButton.setToolTip( "\n".join( errors ) if errors else "" )
+			# Success.
+			self.__inspectorResults = backgroundResult
+			self.__valueWidget.setValues( [ r.value() for r in self.__inspectorResults ] )
+			# Set background to reflect the source type for each of the inspector results.
+			sourceTypes = { r.sourceType() for r in self.__inspectorResults }
+			if GafferSceneUI.Private.Inspector.Result.SourceType.Other in sourceTypes :
+				# We don't draw any visual distinction between Upstream and Other.
+				sourceTypes.add( GafferSceneUI.Private.Inspector.Result.SourceType.Upstream )
+				sourceTypes.remove( GafferSceneUI.Private.Inspector.Result.SourceType.Other )
 
-		# We don't disable the button, as we need more control over the disabled icon.
-		# We just don't do anything when clicked if we're not editable.
-		image = "editDisabled.png"
-		if self.__editable :
-			image = "editOn.png" if hasEdit else "editOff.png"
-		self.__editButton.setImage( image )
+			self.__valueWidget._qtWidget().setProperty( "gafferInspectorSourceType", "|".join( sorted( str( s ) for s in sourceTypes ) ) )
+			self.__valueWidget._repolish()
+			self.setVisible( len( self.__inspectorResults ) > 0 )
 
-		self.__valueWidget.setToolTip( "\n".join( errors ) if errors else ( ( "Click to Edit" if hasEdit else "The current value" ) + warningStr )  )
+	def __contextChanged( self, context, variableName ) :
 
-		# Determine the logical state of the UI element, so we can apply appropriate styling
-		valueState = "Uneditable"
-		if self.__editable :
-			if hasEdit is None :
-				# A mix of edited and unedited.
-				# We can only make edits for the user if we are using an EditScope, so self.__editable will be
-				# False for any unedited locations when Automatic is set. As such we'll only get here if there
-				# the user has chosen EditScope, so we show a mixed state of Editable + EditScopeEdit decoration.
-				valueState = "SomeEdited"
-			elif hasEdit == False :
-				valueState = "Editable"
-			else :
-				# Every location has edits, but they may be a mixture of GenericEdits and EditScopeEdits
-				allInEditScopes = sole( i.inEditScope() for i in inspectors )
-				valueState = "MixedEdits" if allInEditScopes is None else "{}Edit".format( "EditScope" if allInEditScopes else "Generic" )
+		if variableName.startswith( "ui:" ) and not GafferSceneUI.ContextAlgo.affectsSelectedPaths( variableName ) :
+			return
 
-		self.__valueWidget._qtWidget().setProperty( "inspectorValueState", valueState )
-		self.__valueWidget._qtWidget().setProperty( "inspectorValueHasWarnings", warnings and not errors )
-		self.__valueWidget._repolish()
+		self.__scheduleUpdate()
 
-		self.__inspectors = inspectors
+	def __inspectorDirtied( self, inspector ) :
 
-	def __editButtonClicked( self, button ) :
+		self.__scheduleUpdate()
 
-		if self.__editable :
-			self.__edit()
+	def __scheduleUpdate( self ) :
 
-	def __valueWidgetClicked( self, *unused ) :
+		# Avoid `Internal C++ object (PySide2.QtWidgets.QWidget) already deleted`
+		# warnings when Gaffer is closed while we are in `_backgroundUpdate()`.
+		# In this case, the main UI has been deleted, but we have been kept alive
+		# by the BackgroundMethod.
+		if not GafferUI._qtObjectIsValid( self._qtWidget() ) :
+			return
 
-		# Only edit via the value label all locations already have edits to help avoid accidental edit creation
-		if self.__editable and bool( self.__inspectors ) and all( i.hasEdit() for i in self.__inspectors ) :
-			self.__edit()
+		# Ideally, _InspectorWidget would be a completely standalone component
+		# that managed its own updates internally via a BackgroundMethod. But
+		# if many _InspectorWidgets launched their own background updates
+		# concurrently, all but one would end up spinning while one thread
+		# computed the cached attribute history that was needed by all. So for
+		# now we coordinate updates centrally via the _SceneViewInspector so
+		# that they are all performed together on the same thread.
+		#
+		# \todo Improve this situation. Possibilities include :
+		#
+		# - Using `tbb::task::suspend` to free threads that would otherwise
+		#   have to wait for the cached history.
+		# - Using a different `task_arena` to limit the concurrency of the
+		#   background updates.
 
-	def __edit( self ) :
+		self.ancestor( _SceneViewInspector )._scheduleUpdate( self )
 
-		plugs = [ i.acquireEdit() for i in self.__inspectors ]
-		warnings = [ i.warningMessage() for i in self.__inspectors if i.warningMessage() ]
+	def __valueDoubleClick( self, widget, event ) :
 
-		for p in plugs :
-			r = Gaffer.MetadataAlgo.readOnlyReason( p )
-			if r is not None :
-				# We still allow viewing of read-only plugs to people can inspect the nature of an edit
-				warnings.append( "'{}' is locked.".format( r.relativeName( r.ancestor( Gaffer.ScriptNode ) ) ) )
+		if event.button != event.Buttons.Left :
+			return False
 
-		self.__editWindow = GafferUI.PlugPopup( plugs, warning = "\n".join( warnings ) )
-		if isinstance( self.__editWindow.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
-			self.__editWindow.plugValueWidget().setNameVisible( False )
-		self.__editWindow.popup( self.bound().center() + imath.V2i( 0, 45 ) )
+		if not self.__inspectorResults :
+			return False
+
+		if all( r.editable() for r in self.__inspectorResults ) :
+
+			self.__popup = GafferUI.PlugPopup(
+				list( { r.acquireEdit() for r in self.__inspectorResults } ),
+				warning = self.__formatWarnings(
+					[ r.editWarning() for r in self.__inspectorResults ]
+				)
+			)
+			if isinstance( self.__popup.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
+				self.__popup.plugValueWidget().setNameVisible( False )
+			self.__popup.popup()
+
+		else :
+
+			# See todo in `PlugPopup._PopupWindow`
+			PopupWindow = GafferUI.PlugPopup.__bases__[0]
+
+			with PopupWindow() as self.__popup :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>{}</h4>".format(
+						self.__formatWarnings( [ r.nonEditableReason() for r in self.__inspectorResults ] )
+					) )
+
+			self.__popup.popup()
+
+		return True
+
+	@staticmethod
+	def __formatWarnings( strings ) :
+
+		strings = { s for s in strings if s }
+		if len( strings ) > 1 :
+			return "\n".join( [ "- {}".format( w ) for s in strings ] )
+		elif len( strings ) == 1 :
+			return next( iter( strings ) )
+		else :
+			return ""
 
 # Widget for displaying any value type.
 ## \todo Figure out relationship with SceneInspector's Diff widgets.
@@ -826,7 +504,9 @@ class _ValueWidget( GafferUI.Widget ) :
 	@classmethod
 	def __formatValue( cls, value ) :
 
-		if isinstance( value, ( int, float ) ) :
+		if isinstance( value, IECore.Data ) and hasattr( value, "value" ) :
+			return cls.__formatValue( value.value )
+		elif isinstance( value, ( int, float ) ) :
 			return GafferUI.NumericWidget.valueToString( value )
 		elif isinstance( value, imath.Color3f ) :
 			color = GafferUI.Widget._qtColor( GafferUI.DisplayTransform.get()( value ) ).name()
@@ -872,29 +552,3 @@ class _ValueWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
-
-# Determines the source _input_ to an input plug. Plug.source() may give us an
-# output in the case of an animation node, etc.
-## \todo Factor in when implementing contextAwareSource.
-def sourceInput( plug ) :
-
-	result = plug
-	while plug is not None :
-		if plug.direction() is Gaffer.Plug.Direction.In :
-			result = plug
-		plug = plug.getInput()
-	return result
-
-# Utility in the spirit of `all()` and `any()`. If all values in `sequence`
-# are equal, returns that value, otherwise returns `None`.
-## \todo Copied from Gaffer.PlugValueWidget. Is there somewhere more sensible we can put this? Cortex perhaps?
-def sole( sequence ) :
-
-	result = None
-	for i, v in enumerate( sequence ) :
-		if i == 0 :
-			result = v
-		elif v != result :
-			return None
-
-	return result
