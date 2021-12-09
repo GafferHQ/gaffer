@@ -484,8 +484,6 @@ class AnimationTest( GafferTest.TestCase ) :
 		# curve with no keys has no first and last keys
 		self.assertIsNone( curve.firstKey() )
 		self.assertIsNone( curve.lastKey() )
-		self.assertIsNone( curve.getKey( Gaffer.Animation.Direction.In ) )
-		self.assertIsNone( curve.getKey( Gaffer.Animation.Direction.Out ) )
 
 		# curve with single key. key is both first and last key
 		key = Gaffer.Animation.Key( 4, 5 )
@@ -549,7 +547,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( k.getValue(), value )
 		self.assertTrue( curve.hasKey( time ) )
 
-	def testInsertKeyAfterFinalNoValue( self ) :
+	def testInsertKeyAfterLastNoValue( self ) :
 
 		s = Gaffer.ScriptNode()
 
@@ -645,7 +643,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions()
 
-	def testInsertKeyAfterFinalValue( self ) :
+	def testInsertKeyAfterLastValue( self ) :
 
 		s = Gaffer.ScriptNode()
 
@@ -2612,19 +2610,19 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.setExtrapolation( Gaffer.Animation.Direction.In, Gaffer.Animation.Extrapolation.Constant )
 		curve.setExtrapolation( Gaffer.Animation.Direction.Out, Gaffer.Animation.Extrapolation.Constant )
 
-		valueIn = math.pi
-		valueOut = math.e
-		keyIn = Gaffer.Animation.Key( -5, value = valueIn )
-		keyOut = Gaffer.Animation.Key( 5, value = valueOut )
-		curve.addKey( keyIn )
-		curve.addKey( keyOut )
+		v0 = math.pi
+		v1 = math.e
+		k0 = Gaffer.Animation.Key( -5, value = v0 )
+		k1 = Gaffer.Animation.Key( 5, value = v1 )
+		curve.addKey( k0 )
+		curve.addKey( k1 )
 
 		import random
 		r = random.Random( 0 )
 		for i in range( 0, 11 ) :
 			time = r.uniform( 0.0, 1000.0 )
-			self.assertFloat32Equal( valueIn, curve.evaluate( keyIn.getTime() - time ) )
-			self.assertFloat32Equal( valueOut, curve.evaluate( keyOut.getTime() + time ) )
+			self.assertFloat32Equal( v0, curve.evaluate( k0.getTime() - time ) )
+			self.assertFloat32Equal( v1, curve.evaluate( k1.getTime() + time ) )
 
 	def testExtrapolationLinear( self ) :
 
@@ -2637,21 +2635,21 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.setExtrapolation( Gaffer.Animation.Direction.In, Gaffer.Animation.Extrapolation.Linear )
 		curve.setExtrapolation( Gaffer.Animation.Direction.Out, Gaffer.Animation.Extrapolation.Linear )
 
-		valueIn = 4.567
-		valueOut = -7.564
-		slopeIn = 1.234
-		slopeOut = -0.3245
-		keyIn = Gaffer.Animation.Key( -5, value = valueIn, inSlope = slopeIn, tieMode = Gaffer.Animation.TieMode.Manual )
-		keyOut = Gaffer.Animation.Key( 5, value = valueOut, outSlope = slopeOut, tieMode = Gaffer.Animation.TieMode.Manual )
-		curve.addKey( keyIn )
-		curve.addKey( keyOut )
+		v0 = 4.567
+		v1 = -7.564
+		s0 = 1.234
+		s1 = -0.3245
+		k0 = Gaffer.Animation.Key( -5, value = v0, inSlope = s0, tieMode = Gaffer.Animation.TieMode.Manual )
+		k1 = Gaffer.Animation.Key( 5, value = v1, outSlope = s1, tieMode = Gaffer.Animation.TieMode.Manual )
+		curve.addKey( k0 )
+		curve.addKey( k1 )
 
 		import random
 		r = random.Random( 0 )
 		for i in range( 0, 11 ) :
 			time = r.uniform( 0.0, 100.0 )
-			self.assertAlmostEqual( valueIn - time * slopeIn, curve.evaluate( keyIn.getTime() - time ), places = 5 )
-			self.assertAlmostEqual( valueOut + time * slopeOut, curve.evaluate( keyOut.getTime() + time ), places = 5 )
+			self.assertAlmostEqual( v0 - time * s0, curve.evaluate( k0.getTime() - time ), places = 5 )
+			self.assertAlmostEqual( v1 + time * s1, curve.evaluate( k1.getTime() + time ), places = 5 )
 
 	def testExtrapolationRepeat( self ) :
 
@@ -2664,17 +2662,17 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.setExtrapolation( Gaffer.Animation.Direction.In, Gaffer.Animation.Extrapolation.Repeat )
 		curve.setExtrapolation( Gaffer.Animation.Direction.Out, Gaffer.Animation.Extrapolation.Repeat )
 
-		keyIn = Gaffer.Animation.Key( 23, value = 1, interpolation = Gaffer.Animation.Interpolation.Linear )
-		keyOut = Gaffer.Animation.Key( 25, value = 3, interpolation = Gaffer.Animation.Interpolation.Linear )
-		curve.addKey( keyIn )
-		curve.addKey( keyOut )
+		k0 = Gaffer.Animation.Key( 23, value = 1, interpolation = Gaffer.Animation.Interpolation.Linear )
+		k1 = Gaffer.Animation.Key( 25, value = 3, interpolation = Gaffer.Animation.Interpolation.Linear )
+		curve.addKey( k0 )
+		curve.addKey( k1 )
 
 		# NOTE : At exact multiple of [in|out] key the curve repeats. ensure that the extrapolated
 		#        value is equal to the value of the key in the direction of extrapolation.
 		for i in range( 1, 22, 2 ) :
-			self.assertEqual( keyIn.getValue(), curve.evaluate( float( i ) ) )
+			self.assertEqual( k0.getValue(), curve.evaluate( float( i ) ) )
 		for i in range( 27, 45, 2 ) :
-			self.assertEqual( keyOut.getValue(), curve.evaluate( float( i ) ) )
+			self.assertEqual( k1.getValue(), curve.evaluate( float( i ) ) )
 
 	def testAffects( self ) :
 
@@ -3187,19 +3185,19 @@ class AnimationTest( GafferTest.TestCase ) :
 		ti4 = k4.tangentIn()
 		tf4 = k4.tangentOut()
 
-		# set the in tangent slope of the final key
+		# set the in tangent slope of the last key
 		ti4.setSlope( 60 )
 		self.assertEqual( ti4.getSlope(), 60 )
 		self.assertEqual( tf4.getSlope(), 60 )
 
-		# set time of second key so that key lies in final span and interpolation affects in tangent of final key
+		# set time of second key so that key lies in last span and interpolation affects in tangent of last key
 		f6 = 6.0 / 24.0
 		k2.setTime( f6 )
 
 		# ensure in tangent slope of fourth key is now flat as its affected by step interpolation
 		self.assertEqual( ti4.getSlope(), 0 )
 
-		# set time of second key back to 5 so that final key is again affected by cubic interpolation
+		# set time of second key back to 5 so that last key is again affected by cubic interpolation
 		k2.setTime( f4 )
 
 		# ensure in tangent slope of fourth key has reverted to its value before being affected by step interpolation
@@ -3500,7 +3498,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		# ensure out tangent scale of second key not affected
 		self.assertEqual( tf2.getScale(), 0.87 )
 
-	def testKeySetTimeToFinalKeyThenAfter( self ) :
+	def testKeySetTimeToLastKeyThenAfter( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
@@ -3542,7 +3540,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( kl.parent(), curve )
 		self.assertEqual( curve.getKey( kl.getTime() ), kl )
 
-		# old last key is no longer final key of curve so both tangent slopes should be unconstrained and therefore tied
+		# old last key is no longer last key of curve so both tangent slopes should be unconstrained and therefore tied
 		self.assertFalse( til.slopeIsConstrained() )
 		self.assertFalse( tfl.slopeIsConstrained() )
 		self.assertEqual( til.getSlope(), -60 )
@@ -3728,7 +3726,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		# ensure out tangent scale of second key not affected
 		self.assertEqual( tf2.getScale(), 0.75 )
 
-	def testKeySetTimeTwoKeysFinalBeforeFirst( self ) :
+	def testKeySetTimeTwoKeysLastBeforeFirst( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
@@ -3756,14 +3754,14 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( ti1.getSlope(), 30 )
 		self.assertEqual( tf1.getSlope(), 30 )
 
-		# set the in tangent slope of the final key
+		# set the in tangent slope of the last key
 		self.assertFalse( ti2.slopeIsConstrained() )
 		self.assertFalse( tf2.slopeIsConstrained() )
 		ti2.setSlope( 60 )
 		self.assertEqual( ti2.getSlope(), 60 )
 		self.assertEqual( tf2.getSlope(), 60 )
 
-		# set time of second key (final key) so it becomes the first key
+		# set time of second key (last key) so it becomes the first key
 		f0 = 0.0 / 24.0
 		k2.setTime( f0 )
 
@@ -3775,7 +3773,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( ti2.getSlope(), 60 )
 		self.assertEqual( tf2.getSlope(), 60 )
 
-	def testKeySetTimeTwoKeysFirstAfterFinal( self ) :
+	def testKeySetTimeTwoKeysFirstAfterLast( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
@@ -3801,12 +3799,12 @@ class AnimationTest( GafferTest.TestCase ) :
 		self.assertEqual( ti1.getSlope(), 30 )
 		self.assertEqual( tf1.getSlope(), 30 )
 
-		# set the in tangent slope of the final key
+		# set the in tangent slope of the last key
 		ti2.setSlope( 60 )
 		self.assertEqual( ti2.getSlope(), 60 )
 		self.assertEqual( tf2.getSlope(), 60 )
 
-		# set time of key one (first key) so it becomes the final key
+		# set time of key one (first key) so it becomes the last key
 		f6 = 6.0 / 24.0
 		k1.setTime( f6 )
 
