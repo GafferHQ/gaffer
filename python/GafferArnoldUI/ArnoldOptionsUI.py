@@ -79,6 +79,8 @@ def __samplingSummary( plug ) :
 		info.append( "Indirect Clamp {0}".format( GafferUI.NumericWidget.valueToString( plug["indirectSampleClamp"]["value"].getValue() ) ) )
 	if plug["lowLightThreshold"]["enabled"].getValue() :
 		info.append( "Low Light {0}".format( GafferUI.NumericWidget.valueToString( plug["lowLightThreshold"]["value"].getValue() ) ) )
+	if plug["dielectricPriorities"]["enabled"].getValue() :
+		info.append( "Dielectric Priorities {0}".format( GafferUI.NumericWidget.valueToString( plug["dielectricPriorities"]["value"].getValue() ) ) )
 	return ", ".join( info )
 
 def __adaptiveSamplingSummary( plug ) :
@@ -488,6 +490,17 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Sampling",
 			"label", "Low Light Threshold",
 
+		],
+
+		"options.dielectricPriorities" : [
+
+			"description",
+			"""
+			Enable or disable dielectric priorities for surface shaders
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Dielectric Priorities",
 		],
 
 		# Adaptive Sampling

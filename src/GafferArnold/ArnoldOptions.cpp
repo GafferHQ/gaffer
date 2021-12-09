@@ -67,6 +67,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), false, "aaSampleClampAffectsAOVs" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:indirect_sample_clamp", new IECore::FloatData( 10 ), false, "indirectSampleClamp" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:low_light_threshold", new IECore::FloatData( 0.001 ), false, "lowLightThreshold" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:dielectric_priorities", new IECore::BoolData( true ), false, "dielectricPriorities" ) );
 
 	// Adaptive sampling parameters
 

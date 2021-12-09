@@ -290,6 +290,7 @@ const AtString g_catclarkArnoldString("catclark");
 const AtString g_colorManagerArnoldString( "color_manager" );
 const AtString g_customAttributesArnoldString( "custom_attributes" );
 const AtString g_curvesArnoldString("curves");
+const AtString g_dielectricPrioritiesArnoldString( "dielectric_priorities" );
 const AtString g_dispMapArnoldString( "disp_map" );
 const AtString g_dispHeightArnoldString( "disp_height" );
 const AtString g_dispPaddingArnoldString( "disp_padding" );
@@ -2874,6 +2875,7 @@ IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
 IECore::InternedString g_backgroundOptionName( "ai:background" );
 IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
 IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
+IECore::InternedString g_dielectricPrioritiesOptionsName( "ai:dielectric_priorities" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -3374,6 +3376,19 @@ class ArnoldGlobals
 					}
 				}
 				AiNodeSetPtr( options, g_backgroundArnoldString, m_background ? m_background->root() : nullptr );
+				return;
+			}
+			else if( name == g_dielectricPrioritiesOptionsName )
+			{
+				bool dielectricPriorities = true;
+				if( value )
+				{
+					if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+					{
+						dielectricPriorities = d->readable();
+					}
+				}
+				AiNodeSetBool( options, g_dielectricPrioritiesArnoldString, dielectricPriorities );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
