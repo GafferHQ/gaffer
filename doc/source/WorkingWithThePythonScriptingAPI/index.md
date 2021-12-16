@@ -29,7 +29,7 @@ Do not confuse scripts with active node graphs or expressions: when a node graph
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :titlesonly:
     :hidden:

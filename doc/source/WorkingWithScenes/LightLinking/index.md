@@ -19,7 +19,7 @@ From the light side of things, by default, each light is a member of a set named
 
 From the object side of things, by default, an object is lit by all lights belonging to the "defaultLights" set. To bring about any other behaviour, such as having the object only lit by one light, a `linkedLights` attribute must be added to the object's location in the hierarchy, and the attribute must specify one or more lights, or sets of lights. The `linkedLights` attribute follows standard [inheritance rules for attributes](../../../AnatomyOfAScene/index.html#attributes) in the hierarchy, so if the object doesn't have the `linkedLights` attribute, but one of its ancestors does, it will inherit the attribute.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/interfaceLinkedLightsAttribute.png
     :scale: 100%
     :alt: The linkedLights attribute of an object as it appears in the Scene Inspector.
@@ -93,30 +93,22 @@ Let's consider a possible light link setup for this scene, with the goal of achi
 
 ### Lights ###
 
-```eval_rst
-=============================== =============================== ===============================
-Location                        Default Light plug value        Special light sets
-=============================== =============================== ===============================
-/lights/sky                     :code:`True`
-/lights/moon                    :code:`True`
-/lights/eyes                    :code:`False`                   "lights:eyes"
-/lights/logo                    :code:`False`                   "lights:logo"
-=============================== =============================== ===============================
-```
+Location     | Default Light plug value  | Special light sets
+-------------|---------------------------|-------------------
+/lights/sky  | `True`                    |
+/lights/moon | `True`                    |
+/lights/eyes | `False`                   | "lights:eyes"
+/lights/logo | `False`                   | "lights:logo"
 
 
 ### Objects ###
 
-```eval_rst
-============================================================== ===============================
-Location                                                       `Linked Lights` expression
-============================================================== ===============================
-/assets/...                                                    –
-/assets/GAFFERBOT/[etc]/L_eyeLens001_REN                       :code:`defaultLights lights:eyes`
-/assets/GAFFERBOT/[etc]/R_eyeLens001_REN                       :code:`defaultLights lights:eyes`
-/assets/GAFFERBOT/[etc]/C_torso009_REN                         :code:`defaultLights lights:logo`
-============================================================== ===============================
-```
+Location                                 | `Linked Lights` expression
+-----------------------------------------|---------------------------
+/assets/...                              | -
+/assets/GAFFERBOT/[etc]/L_eyeLens001_REN | `defaultLights lights:eyes`
+/assets/GAFFERBOT/[etc]/R_eyeLens001_REN | `defaultLights lights:eyes`
+/assets/GAFFERBOT/[etc]/C_torso009_REN   | `defaultLights lights:logo`
 
 
 ### Results ###
@@ -125,26 +117,18 @@ The above set expressions link the special lights and sets. The eyes are linked 
 
 ![](images/exampleGaffyAttacksResults.png "The resulting render of the example scenario with the correct light links")
 
-```eval_rst
-=============================== ==============================================================
-Set name                        Set members
-=============================== ==============================================================
-"defaultLights"                 /lights/sky /lights/moon
-"lights:eyes"                   /lights/eyes
-"lights:logo"                   /lights/logo
-=============================== ==============================================================
-```
+Set name        | Set members
+----------------|------------
+"defaultLights" | /lights/sky /lights/moon
+"lights:eyes"   | /lights/eyes
+"lights:logo"   | /lights/logo
 
-```eval_rst
-============================================================== ===============================
-Object                                                         Linked lights
-============================================================== ===============================
-/assets/...                                                    –
-/assets/GAFFERBOT/[etc]/L_eyeLens001_REN                       /lights/sky /lights/moon /lights/eyes
-/assets/GAFFERBOT/[etc]/R_eyeLens001_REN                       /lights/sky /lights/moon /lights/eye
-/assets/GAFFERBOT/[etc]/C_torso009_REN                         /lights/sky /lights/moon /lights/logo
-============================================================== ===============================
-```
+Object                                   |Linked lights
+-----------------------------------------|---------------
+/assets/...                              | –
+/assets/GAFFERBOT/[etc]/L_eyeLens001_REN | /lights/sky /lights/moon /lights/eyes
+/assets/GAFFERBOT/[etc]/R_eyeLens001_REN | /lights/sky /lights/moon /lights/eye
+/assets/GAFFERBOT/[etc]/C_torso009_REN   | /lights/sky /lights/moon /lights/logo
 
 
 ## Example graphs ##

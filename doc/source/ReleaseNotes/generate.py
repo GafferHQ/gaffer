@@ -30,13 +30,13 @@ for line in changes :
 index = open( "./index.md", "w" )
 
 index.write( inspect.cleandoc(
-	
+
 	"""
 	<!-- !NO_SCROLLSPY -->
 
 	# Release Notes #
 
-	```eval_rst
+	```{{eval-rst}}
 	.. toctree::
 	    :titlesonly:
 	{0}

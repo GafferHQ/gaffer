@@ -20,7 +20,7 @@ After you have installed Gaffer, we recommend that you familiarize yourself with
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :hidden:
     :titlesonly:

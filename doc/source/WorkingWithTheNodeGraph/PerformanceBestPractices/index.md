@@ -105,7 +105,7 @@ The main performance pitfall you want to avoid is **leakage**, which is when nod
 
 An example case of Context leakage would be a network that iterates on a scene:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsViewer.png
     :width: 100%
     :alt: A scene with multiple cowboy robots rotated along the x-axis.
@@ -113,7 +113,7 @@ An example case of Context leakage would be a network that iterates on a scene:
 
 If we look at the graph, we can see that the `collect:rootName` Context Variable is used to vary the object's rotations. However, when the network is computed, `collect:rootName` is passed to the SceneReader, even though it doesn't use it:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsGraphEditor.png
     :width: 100%
     :alt: The graph for the prior scene, using a CollectScenes node to duplicate the robots.
@@ -123,13 +123,13 @@ Despite being unaffected by `collect:rootName`, the SceneReader node will noneth
 
 The more optimal solution would be to delete the Context Variable with a DeleteContextVariables node above the last node that uses it. We can directly compare the effect this has on the number of Contexts used by running the stats app, by [annotating](../UsingThePerformanceMonitor/index.html#annotating-scripts-with-performance-data) the script with the `-contextMonitor` and `-annotatedScript` options:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsStats.png
     :width: 100%
     :alt: The graph, but with annotated performance stats.
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsImprovedStats.png
     :width: 100%
     :alt: The graph with stats again, but a DeleteContextVariables node inserted, greatly reducing the number of Contexts used in the scene generation.

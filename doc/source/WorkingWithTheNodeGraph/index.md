@@ -6,7 +6,7 @@ Here you can learn the fundamentals of constructing and editing node graphs in G
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :titlesonly:
     :maxdepth: 1

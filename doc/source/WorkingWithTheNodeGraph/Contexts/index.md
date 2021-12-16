@@ -22,7 +22,7 @@ Let's consider a 3D scene. Keeping in mind [how scenes are structured](../../Wor
 
 This is where Contexts come in. In Gaffer, at no point does a node operate on the entire scene/image. Contexts break the scene/image down into digestible fragments, so each node only generates the parts that they were told to, while deferring the rest. Each computing thread has its own Context, so multiple threads may be processing different parts of the scene/image in parallel, greatly improving efficiency and performance.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/illustrationContextsSlices.png
     :scale: 100%
     :alt: A scene file being sliced up by location.
@@ -39,7 +39,7 @@ Computation begins when a node is queried to compute a value for its output plug
 
 The Context then passes up to any plugs that contribute to the output value. When an input plug on the queried node is connected to a plug on an upstream node, it pulls on that upstream plug to retrieve its value. If necessary, the upstream node may need to compute in turn, to produce the upstream plug's value. This pull-compute reaction occurs up through the graph until all required plug values have been calculated to create an output value for the original queried node.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/illustrationContextsFlow.png
     :scale: 100%
     :alt: Illustration of Contexts flowing through a network.
@@ -110,7 +110,7 @@ Let's work through a series of practical examples of wielding Contexts in scene 
 
 ### Reading a Context Variable with a string plug ###
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsReadingContextVariable.png
     :width: 100%
     :alt: A basic scene network where a string plug substitutes a Context Variable.
@@ -125,7 +125,7 @@ Let's put Context flow into practice, and examine how editor focus can trip you 
 
 Let's reuse the above network, which we demonstrated by focusing the editors on the ContextVariables node. As we mentioned earlier, focusing an editor on a node queries it. Let's see what happens when we focus on the Text node, instead.
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsEditorFocus.png
     :width: 100%
     :alt: The prior network, but the scene hasn't computed.
@@ -144,7 +144,7 @@ Like any other plug, when an Expression node drives a plug, that plug will pass 
 
 In this network, we drive the vertical translation of a cube primitive with the frame number. The frame will produce a different height result when the provided Context contains a different frame value.
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsContextVariablesInExpressions.png
     :width: 100%
     :alt: A basic scene network, where an expression uses a Context Variable to drive a plug.
@@ -152,7 +152,7 @@ In this network, we drive the vertical translation of a cube primitive with the 
 
 When the node calculates its Transform plug, for the y value of its translation, it queries the Expression node. The Expression node, in turn, calculates the frame number from the Context:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsContextVariablesInExpressionsNodeEditor.png
     :alt: The Expression node's code from the prior network.
 ```
@@ -162,7 +162,7 @@ When the node calculates its Transform plug, for the y value of its translation,
 
 ### Context Variables and the Random node ###
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsRandomNode1.png
     :width: 100%
     :alt: A scene with duplicated cubes in a line, without any randomization.
@@ -170,13 +170,13 @@ When the node calculates its Transform plug, for the y value of its translation,
 
 In this next example, a cube has been duplicated several times, with each copy translated further to the side. We want to apply a random vertical translation to each cube by adjusting a Transform node. To do this, we must drive the Transform node's plug with a Random node, and the Random node will map a unique value to each of the scene's paths.
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsRandomNode2.png
     :width: 100%
     :alt: The same scene, with random height translation.
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsRandomNode2NodeEditor.png
     :alt: The plugs of the Random node, with the Context Entry referencing `scene:path` to vary the translation per location.
 ```
@@ -192,7 +192,7 @@ We should note that for this network to function properly, the connected PathFil
 
 ### Querying results with Contexts ###
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsQueryingResults.png
     :width: 100%
     :alt: The same randomly-translated cube graph.
@@ -208,7 +208,7 @@ First, let's try querying the _y_-translate value for the Transform node from th
 print( root["Transform"]["transform"]["translate"]["y"].getValue() )
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsQueryingResultsPythonEditor.png
     :alt: When a Python plug query occurs on its own, the return value is based on the Global context.
 ```
@@ -222,14 +222,14 @@ with context:
     print( root["Transform"]["transform"]["translate"]["y"].getValue() )
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsQueryingResultsFixedPythonEditor.png
     :alt: When a Python plug query occurs inside of an appropriate Context, the return value matches what occurs in the computed graph.
 ```
 
 The translate value of the plug matches the cube's height as seen in the Scene Inspector:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsQueryingResultsSceneInspector.png
     :alt: The queried location in the Scene Inspector.
 ```
@@ -241,13 +241,13 @@ Observe that we first established `scene:path`, which uses the `InternedStringVe
 
 When two plugs in parallel branches are driven by a shared input plug, their Contexts are not shared with that input plug. During computation, each branch is processed in isolation. Take, for example, the following network:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsInParallelBranches.png
     :width: 100%
     :alt: A network that splits into two branches at the top. Nodes in the separate branches are connected to the same upstream Expression node.
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsInParallelBranchesNodeEditor.png
     :alt: The expression code drives a plug in each respective node.
 ```
@@ -256,13 +256,13 @@ The Text plug of both branch's Text node is driven by a single Expression node. 
 
 The same principle applies when the branches are split at the bottom. In this next image network, the image is overlaid with author and description text if `versionAuthor` or `versionDescription` Context Variables are defined.
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsInParallelBranchesDownstream.png
     :width: 100%
     :alt: A network that splits into two branches at the bottom.
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptContextsInParallelBranchesDownstreamNodeEditor.png
     :alt: The expression code drives a plug in the main branch, but will be empty if the appropriate Context Variables haven't been assigned.
 ```

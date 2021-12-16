@@ -44,7 +44,7 @@ With all that out of the way, onto the first startup config.
 
 Copy this code to a new a `customVariables.py` file in `~/gaffer/startup/gui`:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :linenos:
 
@@ -71,7 +71,7 @@ Let's break down what's going on here.
 
 After `import`ing the necessary modules, we declare a function that we will use to modify the current graph:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 4
 
@@ -82,7 +82,7 @@ Both the keyword arguments we pass are implicit, and particular to the signal th
 
 Inside the function, we grab the `variables` plug, which contains all of the graph's global Context Variables. Then, we add a new Context Variable using the `addMember()` method.
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 6
 
@@ -112,7 +112,7 @@ Notice that in the value we provided, we used the `${GAFFER_ROOT}` substitution 
 
 We then finish the function by setting the variable's name to read-only, to protect it from accidentally being renamed by the user:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 15
 
@@ -121,7 +121,7 @@ We then finish the function by setting the variable's name to read-only, to prot
 
 We wrap up the config by adding our function to an event signal that fires when node graphs are opened and created in the main application:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 17
 

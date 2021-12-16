@@ -15,7 +15,7 @@ We hope that you can use this config as a springboard for adding other custom en
 
 As with the other startup configs in this tutorial, this one will run in the GUI app. Copy this code to a new `customNodes.py` file in `~/gaffer/startup/gui`:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :linenos:
 
@@ -49,7 +49,7 @@ There are three parts to this simple config: a function for adding a node, a fun
 
 After `import`ing the necessary modules, the first and simplest step is to declare the menu function. When the user selects the custom entry from the node menu, this is the function that the menu calls. All this function must do is return a node type. It has no relevant arguments for us here.
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 5
 
@@ -65,7 +65,7 @@ There is one small detail we should note. On load, references can modify their c
 
 Next, onto the post-creation function, which modifies the recently-created node. It requires two implicit keyword arguments, `node` and `menu`. The first simply refers to the node. The second refers to the node menu, which we will cover in the next section. For this entry, all we need to do is load a reference script into our new Reference node:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 9
 
@@ -76,7 +76,7 @@ Next, onto the post-creation function, which modifies the recently-created node.
     	)
 ```
 
-```eval_rst
+```{eval-rst}
 .. tip::
 
     You may have noticed that on line 12 we use ``os.path.expandvars`` to expand ``$GAFFER_ROOT``. If you kept the startup config from Part 1 of this tutorial, you can instead use:
@@ -97,7 +97,7 @@ In this particular example of a node menu function, we don't modify any of the n
 
 To finish the config, we add both functions to the node menu. This part is as simple as grabbing calling `append()` on the node menu itself:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 15
 

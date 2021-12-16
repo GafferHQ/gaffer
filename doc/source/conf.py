@@ -316,6 +316,7 @@ tractor_path_osx = '/Applications/pixar/Tractor-{0}'.format( tractor_version )
 # Add the `myst_parser` extension, which adds a parser
 # for MarkDown files with a `.md` extension.
 extensions = [ "myst_parser" ]
+myst_enable_extensions = [ "substitution" ]
 
 class GafferTransform( docutils.transforms.Transform ) :
 

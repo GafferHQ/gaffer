@@ -40,7 +40,7 @@ Pixel aspect ratio is a floating-point value that specifies the ratio between th
 
 The data window differs from the display window in that only the pixels inside it are processed during a node computation. Its position and size are independent of the display window. There are useful rendering applications in making it bigger (overscan rendering, blurring, lens distortion, and camera shake) and smaller (isolating a sub-region of pixels for performance, or cropping out negative space) than the display window.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/gafferImageWindows.png
     :scale: 100%
     :alt: A sample of an image with non-identical data window and display window, with annotated corner coordinate values
@@ -78,7 +78,7 @@ Channel data contains no positional information. When an image's pixel data is p
 
 ### Image coordinate system ###
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/gafferImageCoordinates.png
     :scale: 100%
     :alt: A checkerboard pattern on a cartesian graph, with a standout pixel and non-overlapping data and display windows

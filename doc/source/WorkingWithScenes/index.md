@@ -6,7 +6,7 @@ Here you can find information on how to read, manipulate, and construct 3D scene
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :titlesonly:
     :maxdepth: 1
