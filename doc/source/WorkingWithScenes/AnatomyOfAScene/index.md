@@ -3,7 +3,7 @@
 > Tip :
 > In this article, if a term is vital to describing scenes in Gaffer, its first occurence will be highlighted in **bold**.
 
-A scene **node** in Gaffer outputs data structured to describe a 3D scene. In this article we will describe this structure and the terminology associated with it. 
+A scene **node** in Gaffer outputs data structured to describe a 3D scene. In this article we will describe this structure and the terminology associated with it.
 
 The structure of a scene can be broken down into two main areas:
 - Hierarchy

@@ -33,7 +33,7 @@ To create the `ARNOLD_ROOT` environment variable in Linux:
 2. Add the line `export ARNOLD_ROOT=!ARNOLD_PATH_LINUX!` and save.
 
 3. In a terminal, test that the variable is set:
-    
+
     ```bash
     user@desktop ~ $ echo $ARNOLD_ROOT
     # !ARNOLD_PATH_LINUX!
@@ -54,7 +54,7 @@ To create the `ARNOLD_ROOT` environment variable in macOS:
 3. Open a terminal (Finder > Go > Utilities > Terminal).
 
 4. Test that the variable is set:
-    
+
     ```bash
     MacBook:~ user$ echo $ARNOLD_ROOT
     # !ARNOLD_PATH_OSX!
@@ -85,7 +85,7 @@ To create the `DELIGHT` environment variable in Linux:
 2. Add the line `export DELIGHT=!DELIGHT_PATH_LINUX!` and save.
 
 3. In a terminal, test that the variable is set:
-    
+
     ```shell
     user@desktop ~ $ echo $DELIGHT
     # !DELIGHT_PATH_LINUX!
@@ -106,7 +106,7 @@ To create the `DELIGHT` environment variable in macOS:
 3. Open a terminal (Finder > Go > Utilities > Terminal).
 
 4. Test that the variable is set:
-    
+
     ```bash
     MacBook:~ user$ echo $DELIGHT
     # !DELIGHT_PATH_OSX!
@@ -137,7 +137,7 @@ To add the Tractor python module to the `PYTHONPATH` environment variable in Lin
 2. Add the line `export PYTHONPATH=$PYTHONPATH\:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages` and save.
 
 3. In a terminal, test that the variable is set:
-    
+
     ```shell
     user@desktop ~ $ echo $PYTHONPATH
     # /usr/bin/python2.7:/usr/lib/python2.7:!TRACTOR_PATH_LINUX!/lib/python2.7/site-packages
@@ -161,12 +161,12 @@ To add the Tractor python module to the `PYTHONPATH` environment variable in mac
 3. Open a terminal (Finder > Go > Utilities > Terminal).
 
 4. Test that the variable is set:
-    
+
     ```shell
     MacBook:~ user$ echo $PYTHONPATH
     # /Library/Frameworks/Python.framework/Versions/2.7/bin:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages
     ```
-    
+
 > Note :
 > Depending on your system's configuration, your `PYTHONPATH` variable might not appear exactly as above. What's important is whether `:!TRACTOR_PATH_OSX!/lib/python2.7/site-packages` appears in the path.
 

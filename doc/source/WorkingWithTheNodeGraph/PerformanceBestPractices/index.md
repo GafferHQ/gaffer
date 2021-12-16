@@ -7,7 +7,7 @@ Here we will discuss the performance implications of various choices you might m
 
 ## Scene complexity and node graph structure ##
 
-Gaffer is designed to gracefully handle very large scenes by deferring the generation of each location until requested by the user or the renderer. It is also designed to be flexible, affording the user a great deal of control in how scenes are generated. These two goals can sometimes be at odds. 
+Gaffer is designed to gracefully handle very large scenes by deferring the generation of each location until requested by the user or the renderer. It is also designed to be flexible, affording the user a great deal of control in how scenes are generated. These two goals can sometimes be at odds.
 
 A very rough estimate for the complexity of a scene can be made by considering the number of its locations, and the number of nodes through which each location passes. For instance, we might say that 10 locations passing through 10 nodes – `10 * 10 = 100` – is roughly equivalent to 20 locations passing through 5 nodes – `20 * 5 = 100`. When you consider that most scenes are comprised of a number of assets, each with an associated shader look, you can use this knowledge to structure your node graphs for the best performance.
 
@@ -58,7 +58,7 @@ This can be very useful, but it comes at a price. Certain operations in Gaffer r
 > Caution :
 > Limit the use of `'...'` in path expressions.
 
-The most expensive expression possible is `'/.../something'`, because it instructs Gaffer to "search **every** location of the whole scene." While this can be necessary at times, it is likely that a more precise wildcard search will provide the same results, with better performance. 
+The most expensive expression possible is `'/.../something'`, because it instructs Gaffer to "search **every** location of the whole scene." While this can be necessary at times, it is likely that a more precise wildcard search will provide the same results, with better performance.
 
 For instance, if you know that all the matching results are within a single asset, an expression such as `/AssetA/.../something` will limit the search to that asset only. Alternatively, if you know that all the matches are at a specific depth, expressions such as `/*/something` or `/*/*/something` would yield the same result without needing to visit deeper locations. Small changes such as this can have a significant impact on scene performance, so it is always worth your time to make your expressions as precise as possible.
 

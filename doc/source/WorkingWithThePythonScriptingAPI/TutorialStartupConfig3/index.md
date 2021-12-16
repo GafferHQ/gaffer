@@ -1,4 +1,4 @@
-# Tutorial: Startup Config 3; Custom Node Menu Entries # 
+# Tutorial: Startup Config 3; Custom Node Menu Entries #
 
 In this final part of the multi-part startup config tutorial, we will demonstrate a startup config that adds a custom entry to the node menu.
 
@@ -22,17 +22,17 @@ As with the other startup configs in this tutorial, this one will run in the GUI
     import Gaffer
     import GafferUI
     import os
-    
+
     def __macbethTexture() :
-    
+
     	return Gaffer.Reference( "MacbethTexture" )
-    
+
     def __macbethTexturePostCreator( node, menu ) :
-    
+
     	node.load(
     		os.path.expandvars( "$GAFFER_ROOT/resources/examples/references/macbethTexture.grf" )
     	)
-    
+
     nodeMenu = GafferUI.NodeMenu.acquire( application )
     nodeMenu.append(
     	path = "/Custom/MacbethTexture",
@@ -52,9 +52,9 @@ After `import`ing the necessary modules, the first and simplest step is to decla
 ```eval_rst
 .. code-block:: python
     :lineno-start: 5
-    
+
     def __macbethTexture() :
-    
+
     	return Gaffer.Reference( "MacbethTexture" )
 ```
 
@@ -68,9 +68,9 @@ Next, onto the post-creation function, which modifies the recently-created node.
 ```eval_rst
 .. code-block:: python
     :lineno-start: 9
-    
+
     def __macbethTexturePostCreator( node, menu ) :
-    
+
     	node.load(
     		os.path.expandvars( "$GAFFER_ROOT/resources/examples/references/macbethTexture.grf" )
     	)

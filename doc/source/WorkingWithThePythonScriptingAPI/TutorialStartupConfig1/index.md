@@ -40,7 +40,7 @@ One advantage of employing global Context Variables is that they are portable be
 With all that out of the way, onto the first startup config.
 
 
-## customVariables.py ## 
+## customVariables.py ##
 
 Copy this code to a new a `customVariables.py` file in `~/gaffer/startup/gui`:
 
@@ -50,20 +50,20 @@ Copy this code to a new a `customVariables.py` file in `~/gaffer/startup/gui`:
 
     import IECore
     import Gaffer
-    
+
     def __scriptAdded( container, script ) :
-    
+
     	variables = script["variables"]
-    
+
     	if "projectResources" not in variables :
     		projectResources = variables.addMember(
     			"project:resources",
     			IECore.StringData( "${GAFFER_ROOT}/resources/" ),
     			"projectResources"
     		)
-    
+
     	Gaffer.MetadataAlgo.setReadOnly( variables["projectResources"]["name"], True )
-    
+
     application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
 ```
 
@@ -87,7 +87,7 @@ Inside the function, we grab the `variables` plug, which contains all of the gra
     :lineno-start: 6
 
     	variables = script["variables"]
-    
+
     	if "projectResources" not in variables :
     		projectResources = variables.addMember(
     			"project:resources",

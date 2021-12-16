@@ -50,7 +50,7 @@ temporaryDirectory = tempfile.mkdtemp( prefix = "gafferDocs" )
 
 def __getTempFilePath( fileName, directory = temporaryDirectory ) :
 	filePath = "/".join( ( directory, fileName ) )
-	
+
 	return filePath
 
 def __dispatchScript( script, tasks, settings ) :
@@ -270,7 +270,7 @@ actionWidget = __selectPlugContextMenuAction(
 	targetActionName = "Add to Spreadsheet"
 	)
 # Screengrab the menu and submenu, get submenu position
-submenuOrigin = __grabPlugContextSubmenu( 
+submenuOrigin = __grabPlugContextSubmenu(
 	plugWidget = plugWidget,
 	contextMenuWidget = contextMenuWidget,
 	submenuWidget = actionWidget,
@@ -314,7 +314,7 @@ actionWidget = __selectPlugContextMenuAction(
 	targetActionName = "Add to Spreadsheet"
 	)
 # Screengrab the menu and submenu, get submenu position
-submenuOrigin = __grabPlugContextSubmenu( 
+submenuOrigin = __grabPlugContextSubmenu(
 	plugWidget = plugWidget,
 	contextMenuWidget = contextMenuWidget,
 	submenuWidget = actionWidget,
@@ -358,7 +358,7 @@ actionWidget = __selectPlugContextMenuAction(
 	targetActionName = "Add to Spreadsheet"
 	)
 # Screengrab the menu and submenu, get submenu position
-submenuOrigin = __grabPlugContextSubmenu( 
+submenuOrigin = __grabPlugContextSubmenu(
 	plugWidget = plugWidget,
 	contextMenuWidget = contextMenuWidget,
 	submenuWidget = actionWidget,
@@ -402,7 +402,7 @@ actionWidget = __selectPlugContextMenuAction(
 	targetActionName = "Add to Spreadsheet (Transform)"
 	)
 # Screengrab the menu and submenu, get submenu position
-submenuOrigin = __grabPlugContextSubmenu( 
+submenuOrigin = __grabPlugContextSubmenu(
 	plugWidget = plugWidget,
 	contextMenuWidget = contextMenuWidget,
 	submenuWidget = actionWidget,
@@ -495,7 +495,7 @@ actionWidget = __selectPlugContextMenuAction(
 	targetActionName = "Add to Spreadsheet (Tweak)"
 	)
 # Screengrab the menu and submenu, get submenu position
-submenuOrigin = __grabPlugContextSubmenu( 
+submenuOrigin = __grabPlugContextSubmenu(
 	plugWidget = plugWidget,
 	contextMenuWidget = contextMenuWidget,
 	submenuWidget = actionWidget,

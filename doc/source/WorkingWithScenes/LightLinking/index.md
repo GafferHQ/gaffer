@@ -39,7 +39,7 @@ In a graph, in order to actually link a light to an object, you must connect a S
 Once the Linked Lights plug is toggled on, the `linkedLights` attribute is added to the object's location. The value of the Linked Lights plug is a [set expression](../../Reference/ScriptingReference/SetExpressions/index.md), which can consist of individual light locations, set names, or both. We will cover how to filter for both types below.
 
 > Important :
-> The Linked Lights plug is an exclusive list. If you toggle the plug and leave the list blank, the object will not be illuminated by any lights **at all**. 
+> The Linked Lights plug is an exclusive list. If you toggle the plug and leave the list blank, the object will not be illuminated by any lights **at all**.
 > In order to link a particular light **in addition to** all default lights to an object, you must include `defaultLights` in the set expression, for example `defaultLights /group/light`.
 
 

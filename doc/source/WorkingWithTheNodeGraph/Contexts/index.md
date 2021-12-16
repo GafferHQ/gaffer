@@ -26,7 +26,7 @@ This is where Contexts come in. In Gaffer, at no point does a node operate on th
 .. figure:: images/illustrationContextsSlices.png
     :scale: 100%
     :alt: A scene file being sliced up by location.
-    
+
     **Figure A:** Contexts allow a scene file to be processed in slices, one location at a time.
 ```
 
@@ -43,7 +43,7 @@ The Context then passes up to any plugs that contribute to the output value. Whe
 .. figure:: images/illustrationContextsFlow.png
     :scale: 100%
     :alt: Illustration of Contexts flowing through a network.
-    
+
     **Figure B:** A visualization of Context and computation flow:
 ```
 

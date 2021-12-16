@@ -57,9 +57,9 @@ Action                                Control or shortcut
 ===================================== =============================================
 Pan                                   :kbd:`Alt` + |M1| and drag
 Zoom                                  :kbd:`Alt` + |M2| and drag
-                                      
+
                                       or
-                                      
+
                                       |MW|
 Pan/Zoom, fine precision              Hold :kbd:`Shift` during action
 Frame selected nodes                  :kbd:`F`
@@ -88,14 +88,14 @@ Frame to focus node                   :raw-html:`<kbd>&#96;</kbd>`
 Action                                Control or shortcut
 ===================================== =============================================
 Show node menu                        |M2|
-                                      
+
                                       or
-                                      
+
                                       :kbd:`Tab`
 Insert `Dot` at connection            :kbd:`Ctrl` + |M1| connection
-                                      
+
                                       or
-                                      
+
                                       |M2| connection > *Insert Dot*
 ===================================== =============================================
 ```
@@ -113,7 +113,7 @@ Select node                           |M1|
 Add node to selection                 :kbd:`Shift` + |M1|
 Add/remove node from selection        :kbd:`Ctrl` + |M1|
 Select nodes                          |M1| and drag marquee, then release
-Add nodes                             :kbd:`Shift` + |M1| and drag marquee, then 
+Add nodes                             :kbd:`Shift` + |M1| and drag marquee, then
                                       release
 Deselect nodes                        :kbd:`Ctrl` + |M1| and drag marquee, then
                                       release
@@ -150,9 +150,9 @@ Cut node(s)                           :kbd:`Ctrl` + :kbd:`X`
 Copy node(s)                          :kbd:`Ctrl` + :kbd:`C`
 Paste node(s)                         :kbd:`Ctrl` + :kbd:`V`
 Delete node(s)                        :kbd:`Backspace`
-                                      
+
                                       or
-                                      
+
                                       :kbd:`Delete`
 Enable/disable node(s)                :kbd:`D`
 ===================================== =============================================
@@ -169,7 +169,7 @@ Connect plug                          |M1| and drag plug to another plug
 Disconnect plug                       |M1| and drag connection to background
 Insert node onto connection           |M1| and drag node onto connection
 Auto-arrange selected nodes           :kbd:`Ctrl` + :kbd:`L`
-Duplicate outgoing connection         :kbd:`Shift`-|M1| and drag connection just 
+Duplicate outgoing connection         :kbd:`Shift`-|M1| and drag connection just
                                       before in plug
 ===================================== =============================================
 ```
@@ -181,9 +181,9 @@ Duplicate outgoing connection         :kbd:`Shift`-|M1| and drag connection just
 Action                                Control or shortcut
 ===================================== =============================================
 Jump to focus node                    Hover cursor over editor, :raw-html:`<kbd>&#96;</kbd>`
-                                      
+
                                       or
-                                      
+
                                       |M1| |focusMenu|, select *Focus Node* > ...
 Assign focus to selected node         Hover cursor over node graph, :kbd:`Ctrl` + :raw-html:`<kbd>&#96;</kbd>`
 
@@ -207,9 +207,9 @@ Connect to bookmarked node            |M2| plug > *Connect Bookmark* > select
                                       node
 Jump to bookmarked node               Hover cursor over editor, :kbd:`Ctrl` +
                                       :kbd:`B` > select bookmarked node
-                                      
+
                                       or
-                                      
+
                                       |M1| |focusMenu|, select *Bookmark* > ...
 Assign numeric bookmark               :kbd:`Ctrl` + :kbd:`1` … :kbd:`9`
 Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
@@ -229,7 +229,7 @@ Remove numeric bookmark               :kbd:`Ctrl` + :kbd:`0`
 ============================================== ===============================================
 Action                                         Control or shorcut
 ============================================== ===============================================
-Increment/decrement value, specific precision  Position cursor next to a number position in 
+Increment/decrement value, specific precision  Position cursor next to a number position in
                                                plug field, then hit :kbd:`↑` / :kbd:`↓`
 Scrub value, coarse precision                  :kbd:`Ctrl` + |M1| and drag the field
                                                left/right
@@ -253,7 +253,7 @@ Autocomplete path component          :kbd:`Tab`
 Path-level contents menu             Select path component
 
                                      or
-                                     
+
                                      Position text cursor in path component, then hit
                                      :kbd:`↓`
 Path hierarchy menu                  Select all
@@ -285,9 +285,9 @@ Action                                Control or shortcut
 ===================================== =============================================
 Pan                                   :kbd:`Alt` + |M1| and drag
 Zoom/dolly                            :kbd:`Alt` + |M2| and drag
-                                      
+
                                       or
-                                      
+
                                       |MW|
 Pan/Zoom, fine precision              Hold :kbd:`Shift` during action
 Frame view to contents                :kbd:`F`
@@ -323,14 +323,14 @@ Edit source node of selection                          :kbd:`Alt` + :kbd:`E`
 Edit tweaks node for selection                         :kbd:`Alt` + :kbd:`Shift` + :kbd:`E`
 Fit clipping planes to scene                           |M2| > *Clipping Planes* > *Fit
                                                        To Scene*
-Fit clipping planes to selection                       |M2| > *Clipping Planes* > *Fit 
+Fit clipping planes to selection                       |M2| > *Clipping Planes* > *Fit
                                                        To Selection*
 
                                                        or
 
                                                        :kbd:`Ctrl` + :kbd:`K`
 Frame view, and fit clipping planes to scene/selection :kbd:`Ctrl` + :kbd:`F`
-Reset clipping planes                                  |M2| > *Clipping Planes* > 
+Reset clipping planes                                  |M2| > *Clipping Planes* >
                                                        *Default*
 Toggle Inspector                                       :kbd:`I`
 ====================================================== =====================================
@@ -412,9 +412,9 @@ Action                                             Control or shortcut
 ================================================== ================================================
 Drop node into *Python Editor*                     |M3| and drag node from Node Graph
 Drop plug into *Python Editor*                     |M3| and drag plug from Node Graph
-                                      
+
                                                    or
-                                      
+
                                                    |M1| and drag plug label from Node Editor
 Drop plug value into Python Editor                 :kbd:`Shift` + |M1| and drag plug label from
                                                    Node Editor
@@ -456,7 +456,7 @@ Pan                                             :kbd:`Alt` + |M1| and drag
 Zoom                                            :kbd:`Alt` + |M2| and drag
 
                                                 or
-                                                
+
                                                 |MW|
 Zoom x/y axes independently                     Hold :kbd:`Ctrl` during action
 Pan/Zoom, fine precision                        Hold :kbd:`Shift` during action
@@ -471,7 +471,7 @@ Add key to all selected curves at current frame :kbd:`I`
 Delete selected key(s)                          :kbd:`Delete`
 
                                                 or
-                                                
+
                                                 :kbd:`Backspace`
 Adjust selected key(s)                          |M1| and drag
 Adjust frame(s) of selected key(s)              :kbd:`Shift` + |M1| and drag left/right

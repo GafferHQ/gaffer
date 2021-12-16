@@ -84,7 +84,7 @@ The fStop and focalDistance parameters are identical to f-number and focus dista
 
 The third parameter, focalLengthWorldScale, sets the scale between the camera's unit of measure and the world space's unit of measure. Because the circle occupies 3D space, the circle must be measured in world space units. Complicating things is the fact that the world space units might not be measured in millimeters. The scene could use any scale – centimeter, meter, foot, kilometer, etc. Therefore, the scale factor between them must be defined.
 
-For depth of field, lens aperture is calculated with the formula: 
+For depth of field, lens aperture is calculated with the formula:
 
 ```
 lens aperture = (focalLength × focalLengthWorldScale) / fStop
