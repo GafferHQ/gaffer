@@ -421,5 +421,5 @@ def setup( app ) :
 	app.connect( "source-read", thirdPartySourceSubtitutions )
 
 	# Add the custom stylesheet; used in all .md and .rst files in source
-	app.add_stylesheet( 'gaffer.css' )
-	app.add_javascript( 'scrollspy.js' )
+	app.add_css_file( 'gaffer.css' )
+	app.add_js_file( 'scrollspy.js' )
