@@ -1,5 +1,3 @@
-![](_static/GafferLogo.svg "Gaffer Logo")
-
 # Introduction #
 
 Welcome to the Gaffer user guide, API manual, and reference documentation.
