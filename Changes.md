@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.1.1)
 ========
 
+Improvements
+------------
+
+- Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
+
 API
 ---
 

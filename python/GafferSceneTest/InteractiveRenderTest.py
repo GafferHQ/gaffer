@@ -147,6 +147,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		headers = image.blindData()
+		self.assertEqual( headers["gaffer:version"], IECore.StringData( Gaffer.About.versionString() ) )
 		self.assertEqual( headers["gaffer:sourceScene"], IECore.StringData( "r.__adaptedIn" ) )
 		self.assertEqual( headers["gaffer:context:a"], IECore.StringData( "A" ) )
 
