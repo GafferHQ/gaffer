@@ -26,7 +26,7 @@ With the built-in Python Editor, you can build and modify the node graph, test A
 
 The bottom-half of the Python Editor is the code input field. The top-half is the code output log. Try executing a "Hello, World!" command:
 
-1. Type `print "Hello, World!"` into the input field.
+1. Type `print( "Hello, World!" )` into the input field.
 2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to execute the code.
 
 ![](images/pythonEditorHelloWorld.png "The Python Editor with “Hello, World!”")
