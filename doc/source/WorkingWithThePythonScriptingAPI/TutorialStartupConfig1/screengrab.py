@@ -1,7 +1,5 @@
-# BuildTarget: images/illustrationStartupConfigDirectoryTree.png
 # BuildTarget: images/tutorialSettingsWindowCustomContextVariable.png
 # BuildTarget: images/tutorialSettingsWindowDefaultContextVariables.png
-# BuildTarget: images/tutorialVariableSubstitutionExpression.png
 # BuildTarget: images/tutorialVariableSubstitutionInStringPlug.png
 # BuildTarget: images/tutorialVariableSubstitutionTest.png
 
