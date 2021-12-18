@@ -186,16 +186,14 @@ IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::
     return resultData;
 }
 
-IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &cryptomatteLayer, ConstCompoundDataPtr metadata ) 
+IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &metadataKey, ConstCompoundDataPtr metadata ) 
 {
-    const std::string manifestKey = boost::str( boost::format( "cryptomatte/%.7s/manifest" ) % hashLayerName( cryptomatteLayer ) );
-
-    if( metadata->readable().find( manifestKey ) == metadata->readable().end() )
+    if( metadata->readable().find( metadataKey ) == metadata->readable().end() )
     {
-        throw IECore::Exception( boost::str( boost::format( "Manifest metadata key not found: %s" ) % manifestKey ) );
+        throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % metadataKey ) );
     }
 
-    const StringData *manifest = metadata->member<StringData>( manifestKey );
+    const StringData *manifest = metadata->member<StringData>( metadataKey );
     boost::iostreams::stream<boost::iostreams::array_source> stream( manifest->readable().c_str(), manifest->readable().size() );
     boost::property_tree::ptree pt;
 
@@ -211,11 +209,15 @@ IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &cryptomatt
     return propertyTreeToCompoundData( pt );
 }
 
-IECore::CompoundDataPtr parseManifestFromFile( const std::string &manifestFile ) 
+IECore::CompoundDataPtr parseManifestFromSidecarFile( const std::string &manifestFile ) 
 {
-    if( manifestFile == "" || !boost::filesystem::is_regular_file( manifestFile ) )
+    if( manifestFile == "" )
     {
-        return nullptr;
+        throw IECore::Exception( "No manifest file provided." );
+    }
+    else if( !boost::filesystem::is_regular_file( manifestFile ) )
+    {
+        throw IECore::Exception( boost::str( boost::format( "Manifest file not found: %s" ) % manifestFile ) );
     }
 
     boost::property_tree::ptree pt;
@@ -232,26 +234,79 @@ IECore::CompoundDataPtr parseManifestFromFile( const std::string &manifestFile )
    return propertyTreeToCompoundData( pt );
 }
 
-IECore::CompoundDataPtr parseSidecarManifestFromMetadata( const std::string &cryptomatteLayer, ConstCompoundDataPtr metadata, const std::string &sidecarDirectory ) 
+IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &metadataKey, ConstCompoundDataPtr metadata, const std::string &manifestDirectory ) 
 {
-    if( sidecarDirectory == "" || !boost::filesystem::is_directory( sidecarDirectory ) )
+    if( metadata->readable().find( metadataKey ) == metadata->readable().end() )
     {
-        return nullptr;
+        throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % metadataKey ) );
     }
 
-    const std::string manifestFileKey = boost::str( boost::format( "cryptomatte/%.7s/manif_file" ) % hashLayerName( cryptomatteLayer ) );
-
-    if( metadata->readable().find( manifestFileKey ) == metadata->readable().end() )
+    if( manifestDirectory == "" )
     {
-        return nullptr;
+        throw IECore::Exception( "No manifest directory provided. A directory is required to locate the manifest." );
+    }
+    else if( !boost::filesystem::is_directory( manifestDirectory ) )
+    {
+        throw IECore::Exception( boost::str( boost::format( "Manifest directory not found: %s") % manifestDirectory ) );
     }
 
-    const StringData *manifestFile = metadata->member<StringData>( manifestFileKey );
-    boost::filesystem::path p( sidecarDirectory );
-    // append manifest file metadata to sidecar directory path
+    const StringData *manifestFile = metadata->member<StringData>( metadataKey );
+    boost::filesystem::path p( manifestDirectory );
+    // append manifest file to directory path
     p /= manifestFile->readable();
     
-    return parseManifestFromFile( p.string() );
+    return parseManifestFromSidecarFile( p.string() );
+}
+
+IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &cryptomatteLayer, ConstCompoundDataPtr metadata, const std::string &manifestDirectory ) 
+{
+    // The Cryptomatte specification suggests metadata entries stored for each layer based on a key generated from the first 7 characters of the hashed layer name.
+    const std::string layerPrefix = boost::str( boost::format( "cryptomatte/%.7s" ) % hashLayerName( cryptomatteLayer ) );
+    
+    // A "conversion" metadata entry is required, specifying the conversion method used to convert hash values to pixel values. 
+    // As per the Cryptomatte specification, "uint32_to_float32" is the only currently supported conversion type.
+    const std::string manifestConversion = layerPrefix + "/conversion";
+
+    if( metadata->readable().find( manifestConversion ) == metadata->readable().end() )
+    {
+        throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % manifestConversion ) );
+    }
+    else if( metadata->member<StringData>( manifestConversion )->readable() != "uint32_to_float32" )
+    {
+        throw IECore::Exception( "Unsupported manifest conversion. Only \"uint32_to_float32\" is supported." );
+    }
+
+    // A "hash" metadata entry is required, specifying the type of hash used to generate the manifest. 
+    // As per the Cryptomatte specification, "MurmurHash3_32" is the only currently supported hash type.
+    const std::string manifestHash = layerPrefix + "/hash";
+
+    if( metadata->readable().find( manifestHash ) == metadata->readable().end() )
+    {
+        throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % manifestHash ) );
+    }
+    else if( metadata->member<StringData>( manifestHash )->readable() != "MurmurHash3_32" )
+    {
+        throw IECore::Exception( "Unsupported manifest hash. Only \"MurmurHash3_32\" is supported." );
+    }
+
+    // The manifest is defined by the existence of one of two metadata entries representing either the manifest data, or the filename of a sidecar manifest.
+    const std::string manifestKey = layerPrefix + "/manifest";
+    const std::string manifestFileKey = layerPrefix + "/manif_file";
+
+    if( metadata->readable().find( manifestKey ) != metadata->readable().end() )
+    {
+        // This "manifest" entry contains the manifest as JSON data.
+        return parseManifestFromMetadata( manifestKey, metadata );
+    }
+    else if( metadata->readable().find( manifestFileKey ) != metadata->readable().end() )
+    {
+        // This "manif_file" entry contains a filename of a sidecar JSON manifest file. We also require a directory to locate the file within.
+        return parseManifestFromMetadataAndSidecar( manifestFileKey, metadata, manifestDirectory );
+    }
+    else
+    {
+        throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found. One of the following entries expected: %s %s" ) % manifestKey % manifestFileKey ) );
+    }
 }
 
 } // namespace
@@ -278,7 +333,8 @@ Cryptomatte::Cryptomatte( const std::string &name )
     storeIndexOfNextChild( g_firstPlugIndex );
     addChild( new StringPlug( "layer", Gaffer::Plug::In, "" ) );
     addChild( new IntPlug( "manifestSource", Gaffer::Plug::In, (int)ManifestSource::Metadata, /* min */ (int)ManifestSource::Metadata, /* max */ (int)ManifestSource::None ) );
-    addChild( new StringPlug( "sidecarManifestPath", Gaffer::Plug::In, "") );
+    addChild( new StringPlug( "manifestDirectory", Gaffer::Plug::In, "") );
+    addChild( new StringPlug( "sidecarFile", Gaffer::Plug::In, "") );
     addChild( new StringPlug( "outputChannel", Gaffer::Plug::In, "A") );
     addChild( new StringVectorDataPlug( "matteNames", Gaffer::Plug::In, new StringVectorData() ) );
     addChild( new FloatVectorDataPlug( "__matteValues", Gaffer::Plug::Out, new FloatVectorData() ) );
@@ -316,84 +372,94 @@ const Gaffer::IntPlug *Cryptomatte::manifestSourcePlug() const
     return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::StringPlug *Cryptomatte::manifestPathPlug()
+Gaffer::StringPlug *Cryptomatte::manifestDirectoryPlug()
 {
     return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::StringPlug *Cryptomatte::manifestPathPlug() const
+const Gaffer::StringPlug *Cryptomatte::manifestDirectoryPlug() const
 {
     return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *Cryptomatte::sidecarFilePlug()
+{
+    return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Cryptomatte::sidecarFilePlug() const
+{
+    return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::StringPlug *Cryptomatte::outputChannelPlug()
 {
-    return getChild<StringPlug>( g_firstPlugIndex + 3 );
+    return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::StringPlug *Cryptomatte::outputChannelPlug() const
 {
-    return getChild<StringPlug>( g_firstPlugIndex + 3 );
+    return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::StringVectorDataPlug *Cryptomatte::matteNamesPlug()
 {
-    return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+    return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::StringVectorDataPlug *Cryptomatte::matteNamesPlug() const
 {
-    return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
+    return getChild<StringVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::FloatVectorDataPlug *Cryptomatte::matteValuesPlug()
 {
-    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 5 );
+    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::FloatVectorDataPlug *Cryptomatte::matteValuesPlug() const
 {
-    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 5 );
+    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Cryptomatte::manifestPlug()
 {
-    return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 6 );
+    return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Cryptomatte::manifestPlug() const
 {
-    return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 6 );
+    return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 7 );
 }
 
 Gaffer::PathMatcherDataPlug *Cryptomatte::manifestPathDataPlug()
 {
-    return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 7 );
+    return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::PathMatcherDataPlug *Cryptomatte::manifestPathDataPlug() const
 {
-    return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 7 );
+    return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 8 );
 }
 
 GafferScene::ScenePlug *Cryptomatte::manifestScenePlug()
 {
-    return getChild<GafferScene::ScenePlug>( g_firstPlugIndex + 8 );
+    return getChild<GafferScene::ScenePlug>( g_firstPlugIndex + 9 );
 }
 
 const GafferScene::ScenePlug *Cryptomatte::manifestScenePlug() const
 {
-    return getChild<GafferScene::ScenePlug>( g_firstPlugIndex + 8 );
+    return getChild<GafferScene::ScenePlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::FloatVectorDataPlug *Cryptomatte::matteChannelDataPlug()
 {
-    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 9 );
+    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 10 );
 }
 
 const Gaffer::FloatVectorDataPlug *Cryptomatte::matteChannelDataPlug() const
 {
-    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 9 );
+    return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 10 );
 }
 
 void Cryptomatte::affects(const Gaffer::Plug *input, AffectedPlugsContainer &outputs) const
@@ -420,7 +486,8 @@ void Cryptomatte::affects(const Gaffer::Plug *input, AffectedPlugsContainer &out
     }
 
     if( input == layerPlug() ||
-        input == manifestPathPlug() ||
+        input == manifestDirectoryPlug() ||
+        input == sidecarFilePlug() ||
         input == manifestSourcePlug() ||
         input == inPlug()->metadataPlug() )
     {
@@ -451,7 +518,28 @@ void Cryptomatte::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
     if( output == manifestPlug() )
     {
         manifestSourcePlug()->hash( h );
-        inPlug()->metadataPlug()->hash( h );
+        switch( (ManifestSource)manifestSourcePlug()->getValue() )
+        {
+            case ManifestSource::Metadata :
+            {
+                layerPlug()->hash( h );
+                if( !layerPlug()->isSetToDefault() ) 
+                {
+                    inPlug()->metadataPlug()->hash( h );
+                    manifestDirectoryPlug()->hash( h );
+                }
+                break;
+            }
+            case ManifestSource::Sidecar :
+            {
+                sidecarFilePlug()->hash( h );
+                break;
+            }
+            case ManifestSource::None :
+            {
+                break;
+            }
+        }
     }
     else if( output == matteValuesPlug() )
     {
@@ -502,44 +590,26 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
     
     if( output == manifestPlug() )
     {
-        const std::string cryptomatteLayer = layerPlug()->getValue();
-        if( cryptomatteLayer == "" )
-        {
-            static_cast<AtomicCompoundDataPlug *>( output )->setToDefault();
-            return;
-        }
-
         IECore::CompoundDataPtr resultData = nullptr;
 
         switch( (ManifestSource)manifestSourcePlug()->getValue() )
         {
             case ManifestSource::Metadata :
             {
-                ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
-                resultData = parseManifestFromMetadata( cryptomatteLayer, metadata );
+                const std::string cryptomatteLayer = layerPlug()->getValue();
+                if( cryptomatteLayer != "" )
+                {
+                    ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
+                    const std::string manifestDirectory = manifestDirectoryPlug()->getValue();
+                    resultData = parseManifestFromFirstMetadataEntry( cryptomatteLayer, metadata, manifestDirectory );
+                }
+
                 break;
             }
             case ManifestSource::Sidecar :
             {
-                const std::string manifestPath = manifestPathPlug()->getValue();
-
-                if( manifestPath == "" )
-                {
-                    break;
-                }
-                else if( boost::filesystem::is_regular_file( manifestPath ) )
-                {
-                    resultData = parseManifestFromFile( manifestPath );
-                }
-                else if( boost::filesystem::is_directory( manifestPath ) )
-                {
-                    ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
-                    resultData = parseSidecarManifestFromMetadata( cryptomatteLayer, metadata, manifestPath ); 
-                }
-                else
-                {
-                    throw IECore::Exception( boost::str( boost::format( "Invalid manifest path: %s" ) % manifestPath ) );
-                }
+                const std::string sidecarFile = sidecarFilePlug()->getValue();
+                resultData = parseManifestFromSidecarFile( sidecarFile );
                 break;
             }
             case ManifestSource::None :
@@ -564,15 +634,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
         std::unordered_set<float> matteValues;
 
         ConstStringVectorDataPtr matteNames = matteNamesPlug()->getValue();
-        ConstCompoundDataPtr manifest;
-        try
-        { 
-            manifest = manifestPlug()->getValue();
-        }
-        catch( const std::exception &e )
-        {
-            IECore::msg( IECore::Msg::Error, "Cryptomatte::matteValues", boost::format( "Error reading manifest: %s" ) % e.what() );
-        }
+        ConstCompoundDataPtr manifest = manifestPlug()->getValue();
 
         IECore::PathMatcher pathMatcher;
         for( const auto &name : matteNames->readable() )

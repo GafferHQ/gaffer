@@ -154,6 +154,7 @@ Gaffer.Metadata.registerNode(
 	Outputs a matte channel generated from IDs selected from Cryptomatte AOVs.
 	""",
 
+	"layout:activator:metadataManifest", lambda node : node["manifestSource"].getValue() == GafferScene.Cryptomatte.ManifestSource.Metadata,
 	"layout:activator:sidecarManifest", lambda node : node["manifestSource"].getValue() == GafferScene.Cryptomatte.ManifestSource.Sidecar,
 
 	plugs = {
@@ -195,8 +196,12 @@ Gaffer.Metadata.registerNode(
 			"""
 			The source of the Cryptomatte manifest.
 
-			 - Metadata: The image metadata `manifest` key for the Cryptomatte layer.
-			 - Sidecar: An external JSON file specified on the `sidecarManifestPath` plug.
+			 - Metadata: From the first of the following image metadata entries that
+			 exist for the selected Cryptomatte layer :
+			   - `manifest` : The manifest data.
+			   - `manif_file` : The name of a JSON manifest file stored in a
+			   directory specified on the `manifestDirectory` plug.
+			 - Sidecar: From a JSON file specified on the `sidecarFile` plug.
 			 - None: No manifest will be loaded.
 			""",
 
@@ -207,20 +212,37 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],
 
-		"sidecarManifestPath" : [
+		"manifestDirectory" : [
 
 			"description",
 			"""	
-			The filesystem path of a JSON file containing a Cryptomatte manifest.
+			A directory of JSON files containing Cryptomatte manifests.
 			
-			This can be a path to a manifest file, or a path to a directory.
-			
-			When a directory is specified, the value of the `manif_file` metadata
-			key for the current Cryptomatte layer will be appended.
+			If a `manif_file` metadata entry exists for the selected Cryptomatte
+			layer, it will be appended to this directory. The manifest is read from
+			the file at the resulting path.
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			
+			"path:leaf", False,
+			"layout:visibilityActivator", "metadataManifest",
+		],
+
+		"sidecarFile" : [
+
+			"description",
+			"""	
+			A JSON file containing a Cryptomatte manifest.
+
+			File sequences with arbitrary padding may be specified using the '#' character
+			as a placeholder for the frame numbers.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", True,
+			"fileSystemPath:extensions", "json",
+			"fileSystemPath:extensionsLabel", "Show only JSON files",
+			"fileSystemPath:includeSequences", True,
 			"layout:visibilityActivator", "sidecarManifest",
 		],
 

@@ -73,8 +73,11 @@ class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
         Gaffer::IntPlug *manifestSourcePlug();
         const Gaffer::IntPlug *manifestSourcePlug() const;
 
-        Gaffer::StringPlug *manifestPathPlug();
-        const Gaffer::StringPlug *manifestPathPlug() const;
+        Gaffer::StringPlug *manifestDirectoryPlug();
+        const Gaffer::StringPlug *manifestDirectoryPlug() const;
+
+        Gaffer::StringPlug *sidecarFilePlug();
+        const Gaffer::StringPlug *sidecarFilePlug() const;
 
         Gaffer::StringVectorDataPlug *matteNamesPlug();
         const Gaffer::StringVectorDataPlug *matteNamesPlug() const;

@@ -39,6 +39,7 @@ import unittest
 import os
 import imath
 import json
+import six
 
 import IECore
 
@@ -66,6 +67,8 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		}
 
 		i = GafferImage.ImageMetadata()
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/conversion", "uint32_to_float32" ) )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/hash", "MurmurHash3_32" ) )
 		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", json.dumps( manifest ) ) )
 
 		c = GafferScene.Cryptomatte()
@@ -132,7 +135,16 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		self.compareValues( c, ["crypto_object", "crypto_material"] )
 
-	def testManifestFromSidecarAbsolute( self ) :
+		i = GafferImage.ImageMetadata()
+		i["in"].setInput( r["out"] )
+		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", "{broken}" ) )
+		
+		c["in"].setInput( i["out"] )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Error parsing manifest metadata:' ) as raised :
+			self.compareValues( c, ["crypto_object"] )
+
+	def testManifestFromSidecarFile( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.testImage )
@@ -140,24 +152,58 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cryptomatte()
 		c["in"].setInput( r["out"] )
 		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Sidecar )
-		c["sidecarManifestPath"].setValue( os.path.join( self.testImagePath, "crypto_object.json" ) )
+		c["sidecarFile"].setValue( os.path.join( self.testImagePath, "crypto_object.json" ) )
 		self.compareValues( c, ["crypto_object"] )
 
-		c["sidecarManifestPath"].setValue( os.path.join( self.testImagePath, "crypto_material.json" ) )
+		c["sidecarFile"].setValue( os.path.join( self.testImagePath, "crypto_material.json" ) )
 		self.compareValues( c, ["crypto_material"] )
 
-	def testManifestFromSidecarRelative( self ) :
+		c["sidecarFile"].setValue( "" )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'No manifest file provided.' ) as raised :
+			self.compareValues( c, ["crypto_object"] )
+
+		invalidPath = os.path.dirname( self.testImage ) + "/not/a/valid/path.json"
+		c["sidecarFile"].setValue( invalidPath )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Manifest file not found: {}'.format( invalidPath ) ) as raised :
+			self.compareValues( c, ["crypto_object"] )
+
+	def testManifestFromSidecarMetadata( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.testImage )
 
+		# our test image contains both manifest and manif_file metadata entries
+		# manifest takes precedence over manif_file, so delete to ensure that
+		# we read from the sidecar file specified by manif_file
+		d = GafferImage.DeleteImageMetadata()
+		d["in"].setInput( r["out"] )
+		d["names"].setValue( "cryptomatte/*/manifest" )
+
 		c = GafferScene.Cryptomatte()
-		c["in"].setInput( r["out"] )
-		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Sidecar )
-		c["sidecarManifestPath"].setValue( os.path.dirname( self.testImage ) )
+		c["in"].setInput( d["out"] )
+		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Metadata )
+		c["manifestDirectory"].setValue( os.path.dirname( self.testImage ) )
 
 		self.compareValues( c, ["crypto_object", "crypto_material"] )
-	
+
+		c["manifestDirectory"].setValue( "" )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'No manifest directory provided.' ) as raised :
+			self.compareValues( c, ["crypto_object"] )
+
+		invalidPath = os.path.dirname( self.testImage ) + "/not/a/valid/path"
+		c["manifestDirectory"].setValue( invalidPath )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Manifest directory not found: {}'.format( invalidPath ) ) as raised :
+			self.compareValues( c, ["crypto_object"] )
+
+		d["names"].setValue( "cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file" )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Image metadata entry not found. One of the following entries expected: cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file' ) as raised :
+			self.compareValues( c, ["crypto_material"] )
+		
 	def testPreviewChannels( self ) :
 
 		r = GafferImage.ImageReader()
