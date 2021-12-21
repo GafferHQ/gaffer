@@ -464,6 +464,10 @@ class _OverlayProxyWidget( QtWidgets.QGraphicsProxyWidget ) :
 			self.__shape = QtGui.QPainterPath()
 			if self.widget() :
 				pixmap = self.widget().grab()
+				if pixmap.size() != self.widget().size() :
+					# Account for the widget being grabbed at a higher resolution
+					# when using high resolution displays.
+					pixmap = pixmap.scaled( self.widget().size() )
 				self.__shape.addRegion( QtGui.QRegion( pixmap.mask() ) )
 
 		return self.__shape
