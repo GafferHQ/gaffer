@@ -196,18 +196,18 @@ Gaffer.Metadata.registerNode(
 			"""
 			The source of the Cryptomatte manifest.
 
+			 - None: No manifest will be loaded.			 
 			 - Metadata: From the first of the following image metadata entries that
 			 exist for the selected Cryptomatte layer :
 			   - `manifest` : The manifest data.
 			   - `manif_file` : The name of a JSON manifest file stored in a
 			   directory specified on the `manifestDirectory` plug.
 			 - Sidecar: From a JSON file specified on the `sidecarFile` plug.
-			 - None: No manifest will be loaded.
 			""",
 
+			"preset:None", GafferScene.Cryptomatte.ManifestSource.None_,
 			"preset:Metadata", GafferScene.Cryptomatte.ManifestSource.Metadata,
 			"preset:Sidecar", GafferScene.Cryptomatte.ManifestSource.Sidecar,
-			"preset:None", GafferScene.Cryptomatte.ManifestSource.None_,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],

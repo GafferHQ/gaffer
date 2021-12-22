@@ -332,7 +332,7 @@ Cryptomatte::Cryptomatte( const std::string &name )
 {
     storeIndexOfNextChild( g_firstPlugIndex );
     addChild( new StringPlug( "layer", Gaffer::Plug::In, "" ) );
-    addChild( new IntPlug( "manifestSource", Gaffer::Plug::In, (int)ManifestSource::Metadata, /* min */ (int)ManifestSource::Metadata, /* max */ (int)ManifestSource::None ) );
+    addChild( new IntPlug( "manifestSource", Gaffer::Plug::In, (int)ManifestSource::Metadata, /* min */ (int)ManifestSource::None, /* max */ (int)ManifestSource::Sidecar ) );
     addChild( new StringPlug( "manifestDirectory", Gaffer::Plug::In, "") );
     addChild( new StringPlug( "sidecarFile", Gaffer::Plug::In, "") );
     addChild( new StringPlug( "outputChannel", Gaffer::Plug::In, "A") );

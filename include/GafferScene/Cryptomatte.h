@@ -58,9 +58,9 @@ class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
 
         enum class ManifestSource
         {
-            Metadata = 0,
+            None = 0,
+            Metadata,
             Sidecar,
-            None
         };
 
         //! @name Plug Accessors

@@ -54,10 +54,10 @@ void GafferSceneModule::bindCryptomatte()
 	{
 		scope s = GafferBindings::DependencyNodeClass<Cryptomatte>();
 		enum_<Cryptomatte::ManifestSource>( "ManifestSource" )
- 			.value( "Metadata", Cryptomatte::ManifestSource::Metadata )
- 			.value( "Sidecar", Cryptomatte::ManifestSource::Sidecar )
 			.value( "None", Cryptomatte::ManifestSource::None )
 			.value( "None_", Cryptomatte::ManifestSource::None )
+ 			.value( "Metadata", Cryptomatte::ManifestSource::Metadata )
+ 			.value( "Sidecar", Cryptomatte::ManifestSource::Sidecar )
  		;
 	}
 }
