@@ -32,8 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef WITH_CYCLES_POINTCLOUD
-
 #include "GafferCycles/IECoreCyclesPreview/PointsAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
@@ -65,7 +63,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	ccl::PointCloud *pointcloud = new ccl::PointCloud();
 
 	PrimitiveVariableMap variablesToConvert = points->variables;
-
+/*
 	pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
 	if( const StringData *typeData = points->variableData<StringData>( "type", PrimitiveVariable::Constant ) )
 	{
@@ -83,7 +81,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 			}
 		}
 	}
-
+*/
 	size_t numPoints = points->getNumPoints();
 	pointcloud->reserve( numPoints );
 
@@ -283,5 +281,3 @@ ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points
 } // namespace PointsAlgo
 
 } // namespace IECoreCycles
-
-#endif // WITH_CYCLES_POINTCLOUD

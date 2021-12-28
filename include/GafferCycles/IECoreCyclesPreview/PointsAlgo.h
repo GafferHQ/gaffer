@@ -35,8 +35,6 @@
 #ifndef IECORECYCLES_POINTSALGO_H
 #define IECORECYCLES_POINTSALGO_H
 
-#ifdef WITH_CYCLES_POINTCLOUD
-
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 #include "IECoreScene/PointsPrimitive.h"
@@ -61,7 +59,5 @@ IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreScene::Poin
 } // namespace PointsAlgo
 
 } // namespace IECoreCycles
-
-#endif // WITH_CYCLES_POINTCLOUD
 
 #endif // IECORECYCLES_POINTSALGO_H

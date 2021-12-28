@@ -32,8 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef WITH_CYCLES_POINTCLOUD
-
 #include "GafferCycles/IECoreCyclesPreview/SphereAlgo.h"
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
@@ -81,7 +79,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 	warnIfUnsupported( sphere );
 	ccl::PointCloud *pointcloud = new ccl::PointCloud();
 
-	pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
+	//pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
 	pointcloud->reserve( 1 );
 	pointcloud->add_point( ccl::make_float3( 0.0f, 0.0f, 0.0f ), sphere->radius(), 0);
 
@@ -128,5 +126,3 @@ ccl::Object *convert( const vector<const IECoreScene::SpherePrimitive *> &sample
 } // namespace SphereAlgo
 
 } // namespace IECoreCycles
-
-#endif // WITH_CYCLES_POINTCLOUD

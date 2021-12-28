@@ -3479,13 +3479,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-#ifndef WITH_CYCLES_POINTCLOUD
-			if( object->typeId() == IECoreScene::PointsPrimitive::staticTypeId() )
-			{
-				return nullptr;
-			}
-#endif
-
 			Instance instance = m_instanceCache->get( object, attributes, name );
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
