@@ -4171,6 +4171,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			int indexCuda = 0;
 			int indexHIP = 0;
 			int indexOptiX = 0;
+			int indexMetal = 0;
 			for( const ccl::DeviceInfo &device : IECoreCycles::devices() ) 
 			{
 				if( device.type == ccl::DEVICE_CPU )
@@ -4198,6 +4199,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					auto optionName = boost::format( "OPTIX:%02i" ) % indexOptiX;
 					m_deviceMap[optionName.str()] = device;
 					++indexOptiX;
+					continue;
+				}
+				if( device.type == ccl::DEVICE_METAL )
+				{
+					auto optionName = boost::format( "METAL:%02i" ) % indexMetal;
+					m_deviceMap[optionName.str()] = device;
+					++indexMetal;
 					continue;
 				}
 			}
