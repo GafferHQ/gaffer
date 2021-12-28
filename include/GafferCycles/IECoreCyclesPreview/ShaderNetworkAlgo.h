@@ -42,10 +42,10 @@
 #include "IECoreScene/ShaderNetwork.h"
 
 // Cycles
-#include "render/graph.h"
-#include "render/light.h"
-#include "render/shader.h"
-#include "render/scene.h"
+#include "scene/shader_graph.h"
+#include "scene/light.h"
+#include "scene/shader.h"
+#include "scene/scene.h"
 
 namespace IECoreCycles
 {
@@ -56,10 +56,21 @@ namespace ShaderNetworkAlgo
 IECORECYCLES_API ccl::ShaderInput  *input( ccl::ShaderNode *node, IECore::InternedString name );
 IECORECYCLES_API ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name );
 
-IECORECYCLES_API ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
+
+IECORECYCLES_API ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader, 
+                                                 const IECoreScene::ShaderNetwork *displacementShader,
+                                                 const IECoreScene::ShaderNetwork *volumeShader,  
+                                                 ccl::ShaderManager *shaderManager, 
+                                                 const std::string &namePrefix = "" );
+
+IECORECYCLES_API ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader, 
+                                       const IECoreScene::ShaderNetwork *displacementShader,
+                                       const IECoreScene::ShaderNetwork *volumeShader,  
+                                       ccl::ShaderManager *shaderManager, 
+                                       const std::string &namePrefix = "" );
 IECORECYCLES_API ccl::Light  *convert( const IECoreScene::ShaderNetwork *shaderNetwork );
-IECORECYCLES_API ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
-IECORECYCLES_API ccl::Shader *setSingleSided( ccl::Shader *cshader );
+IECORECYCLES_API void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
+IECORECYCLES_API void setSingleSided( ccl::ShaderGraph *graph );
 IECORECYCLES_API ccl::Shader *createDefaultShader();
 IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
 

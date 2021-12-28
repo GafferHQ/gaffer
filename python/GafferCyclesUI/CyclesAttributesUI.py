@@ -48,7 +48,7 @@ def __visibilitySummary( plug ) :
 
 	return ", ".join( info )
 
-def __shadingSummary( plug ) :
+def __renderingSummary( plug ) :
 
 	info = []
 	for childName in ( "useHoldout", "isShadowCatcher", "color", "dupliGenerated", "dupliUV", "lightGroup" ) :
@@ -69,12 +69,9 @@ def __subdivisionSummary( plug ) :
 def __volumeSummary( plug ) :
 
 	info = []
-	if plug["volumeClipping"]["enabled"].getValue() :
-		info.append( IECore.CamelCase.toSpaced( "volumeClipping" ) + ( " On" if plug["volumeClipping"]["value"].getValue() else " Off" ) )
-	if plug["volumeStepSize"]["enabled"].getValue() :
-		info.append( IECore.CamelCase.toSpaced( "volumeStepSize" ) + ( " On" if plug["volumeStepSize"]["value"].getValue() else " Off" ) )
-	if plug["volumeObjectSpace"]["enabled"].getValue() :
-		info.append( IECore.CamelCase.toSpaced( "volumeObjectSpace" ) + ( " On" if plug["volumeObjectSpace"]["value"].getValue() else " Off" ) )
+	for childName in ( "volumeClipping", "volumeStepSize", "volumeObjectSpace" ) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
@@ -83,6 +80,15 @@ def __objectSummary( plug ) :
 	info = []
 	if plug["assetName"]["enabled"].getValue() :
 		info.append( IECore.CamelCase.toSpaced( "assetName" ) + ( " On" if plug["assetName"]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
+def __shaderSummary( plug ) :
+
+	info = []
+	for childName in ( "useMis", "useTransparentShadow", "heterogeneousVolume", "volumeSamplingMethod", "volumeInterpolationMethod", "volumeStepRate", "displacementMethod" ) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
@@ -102,10 +108,11 @@ Gaffer.Metadata.registerNode(
 		"attributes" : [
 
 			"layout:section:Visibility:summary", __visibilitySummary,
-			"layout:section:Shading:summary", __shadingSummary,
+			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Volume:summary", __volumeSummary,
 			"layout:section:Object:summary", __objectSummary,
+			"layout:section:Shader:summary", __shaderSummary,
 
 		],
 
@@ -191,7 +198,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Shading
+		# Rendering
 
 		"attributes.useHoldout" : [
 
@@ -201,7 +208,7 @@ Gaffer.Metadata.registerNode(
 			This only affects primary (camera) rays.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 
 		],
 
@@ -212,7 +219,7 @@ Gaffer.Metadata.registerNode(
 			Turns the object into a shadow catcher.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 
 		],
 
@@ -223,7 +230,7 @@ Gaffer.Metadata.registerNode(
 			Push the shadow terminator towards the light to hide artifacts on low poly geometry.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 
 		],
 
@@ -234,7 +241,7 @@ Gaffer.Metadata.registerNode(
 			Offset rays from the surface to reduce shadow terminator artifact on low poly geometry. Only affects triangles at grazing angles to light.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 
 		],
 
@@ -247,7 +254,7 @@ Gaffer.Metadata.registerNode(
 			shader, even if the object is being instanced.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 		],
 
 		"attributes.dupliGenerated" : [
@@ -258,7 +265,7 @@ Gaffer.Metadata.registerNode(
 			via the generated output plug and from_dupli enabled.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 		],
 
 		"attributes.dupliUV" : [
@@ -269,7 +276,7 @@ Gaffer.Metadata.registerNode(
 			or uv_map node via the UV output plug and from_dupli enabled.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 		],
 
 		"attributes.lightGroup" : [
@@ -279,7 +286,7 @@ Gaffer.Metadata.registerNode(
 			Set the lightgroup of an object with emission.
 			""",
 
-			"layout:section", "Shading",
+			"layout:section", "Rendering",
 		],
 
 		# Subdivision
@@ -354,6 +361,119 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Object",
+
+		],
+
+		# Shader
+
+		"attributes.useMis" : [
+
+			"description",
+			"""
+			Use multiple importance sampling for this material,
+			disabling may reduce overall noise for large
+			objects that emit little light compared to other light sources.
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.useTransparentShadow" : [
+
+			"description",
+			"""
+			Use transparent shadows for this material if it contains a Transparent BSDF, 
+			disabling will render faster but not give accurate shadows.
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.heterogeneousVolume" : [
+
+			"description",
+			"""
+			Disabling this when using volume rendering, assume volume has the same density 
+			everywhere (not using any textures), for faster rendering.
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.volumeSamplingMethod" : [
+
+			"description",
+			"""
+			Sampling method to use for volumes.
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.volumeSamplingMethod.value" : [
+
+			"preset:Distance", "distance",
+			"preset:Equiangular", "equiangular",
+			"preset:Multiple-Importance", "multiple_importance",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"attributes.volumeInterpolationMethod" : [
+
+			"description",
+			"""
+			Interpolation method to use for volumes.
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.volumeInterpolationMethod.value" : [
+
+			"preset:Linear", "linear",
+			"preset:Cubic", "cubic",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"attributes.volumeStepRate" : [
+
+			"description",
+			"""
+			Scale the distance between volume shader samples when rendering the volume
+            (lower values give more accurate and detailed results, but also increased render time).
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.displacementMethod" : [
+
+			"description",
+			"""
+			Method to use for the displacement.
+			""",
+
+			"layout:section", "Shader",
+
+		],
+
+		"attributes.displacementMethod.value" : [
+
+			"preset:Bump", "bump",
+			"preset:True", "true",
+			"preset:Both", "both",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

@@ -83,6 +83,15 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 
 	// Asset name for cryptomatte
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:asset_name", new IECore::StringData( "" ), false, "assetName" ) );
+
+	// Shader-specific
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:use_mis", new IECore::BoolData( true ), false, "useMis" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:use_transparent_shadow", new IECore::BoolData( true ), false, "useTransparentShadow" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:heterogeneous_volume", new IECore::BoolData( true ), false, "heterogeneousVolume" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:volume_sampling_method", new IECore::StringData( "multiple_importance" ), false, "volumeSamplingMethod" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:volume_interpolation_method", new IECore::StringData( "linear" ), false, "volumeInterpolationMethod" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:volume_step_rate", new IECore::FloatData( 1.0f ), false, "volumeStepRate" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ccl:shader:displacement_method", new IECore::StringData( "bump" ), false, "displacementMethod" ) );
 }
 
 CyclesAttributes::~CyclesAttributes()

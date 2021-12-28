@@ -40,8 +40,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/particles.h"
-#include "util/util_array.h"
+#include "scene/particles.h"
+#include "util/array.h"
 
 using namespace std;
 using namespace Imath;

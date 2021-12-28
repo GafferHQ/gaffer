@@ -44,8 +44,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/geometry.h"
-#include "render/hair.h"
+#include "scene/geometry.h"
+#include "scene/hair.h"
 
 using namespace std;
 using namespace Imath;

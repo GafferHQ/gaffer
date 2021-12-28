@@ -57,7 +57,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:device", new IECore::StringData( "CPU" ), false, "device" ) );
 
 	// Session and scene
-	options->addChild( new Gaffer::NameValuePlug( "ccl:shadingsystem", new IECore::StringData( "SVM" ), false, "shadingSystem" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ccl:shadingsystem", new IECore::StringData( "OSL" ), false, "shadingSystem" ) );
 
 	// Session/Render
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:experimental", new IECore::BoolData( false ), false, "featureSet" ) );

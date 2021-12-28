@@ -36,9 +36,9 @@
 
 #include "OIIOOutputDriver.h"
 
-#include "render/pass.h"
-#include "util/util_murmurhash.h"
-#include "util/util_string.h"
+#include "scene/pass.h"
+#include "util/murmurhash.h"
+#include "util/string.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"

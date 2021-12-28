@@ -38,10 +38,10 @@
 #include "IECore/VectorTypedData.h"
 
 // Cycles
-#include "kernel/kernel_types.h" // for RAMP_TABLE_SIZE
-#include "util/util_transform.h"
-#include "util/util_types.h"
-#include "util/util_vector.h"
+#include "kernel/types.h" // for RAMP_TABLE_SIZE
+#include "util/transform.h"
+#include "util/types.h"
+#include "util/vector.h"
 
 using namespace std;
 using namespace Imath;

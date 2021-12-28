@@ -42,9 +42,9 @@
 #include <vector>
 
 // Cycles
-#include "render/object.h"
+#include "scene/object.h"
 // Currently only VDBs need scene to get to the image manager
-#include "render/scene.h"
+#include "scene/scene.h"
 
 namespace IECoreCycles
 {

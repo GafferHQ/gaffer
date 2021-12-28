@@ -42,7 +42,7 @@
 #include <vector>
 
 // Cycles
-#include "render/camera.h"
+#include "scene/camera.h"
 
 namespace IECoreCycles
 {

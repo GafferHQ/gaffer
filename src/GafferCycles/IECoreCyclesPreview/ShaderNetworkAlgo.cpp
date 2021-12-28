@@ -58,9 +58,9 @@
 #include "boost/unordered_map.hpp"
 
 // Cycles
-#include "render/nodes.h"
-#include "render/osl.h"
-#include "util/util_path.h"
+#include "scene/shader_nodes.h"
+#include "scene/osl.h"
+#include "util/path.h"
 
 using namespace std;
 using namespace IECore;
@@ -183,10 +183,11 @@ ccl::ShaderNode *getShaderNode( ccl::ShaderGraph *graph, const std::string &name
 	MAP_NODE( "displacement", ccl::DisplacementNode );
 	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode );
 	MAP_NODE( "aov_output", ccl::OutputAOVNode );
+	MAP_NODE( "set_normal", ccl::SetNormalNode );
 #if WITH_CYCLES_SDF
-	MAP_NODE( "sdf_primitives", ccl::SdfPrimitivesNode );
-	MAP_NODE( "sdf_texture_ops", ccl::SdfOpsNode );
-	MAP_NODE( "sdf_mod", ccl::SdfModNode );
+	MAP_NODE( "sdf_primitive", ccl::SdfPrimitiveNode );
+	MAP_NODE( "sdf_op", ccl::SdfOpNode );
+	MAP_NODE( "sdf_vector_op", ccl::SdfVectorOpNode );
 #endif
 #undef MAP_NODE
 	return nullptr;
@@ -307,7 +308,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	else if( isOSLShader )
 	{
 #ifdef WITH_OSL
-		if( shaderManager )
+		if( shaderManager && shaderManager->use_osl() )
 		{
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
@@ -397,11 +398,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 				string pathFileName( stringData->readable() );
 				string fileName = ccl::path_filename( pathFileName );
 				size_t offset = fileName.find( "<UDIM>" );
+				ccl::ImageTextureNode *imgTexNode = (ccl::ImageTextureNode*)node;
 				if( offset != string::npos )
 				{
 					// Workaround to find all available tiles
-					ccl::ImageTextureNode *imgTexNode = (ccl::ImageTextureNode*)node;
-
 					string baseFileName = fileName.substr( 0, offset );
 					vector<string> files;
 					boost::filesystem::path path( ccl::path_dirname( pathFileName ) );
@@ -424,7 +424,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 					}
 					imgTexNode->set_tiles( tiles );
 				}
-				SocketAlgo::setSocket( node, parameterName, namedParameter.second.get() );
+				imgTexNode->set_filename( ccl::ustring( pathFileName ) );
 			}
 		}
 		else
@@ -567,32 +567,31 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	return nullptr;
 }
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
+ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader, 
+								const IECoreScene::ShaderNetwork *displacementShader, 
+								const IECoreScene::ShaderNetwork *volumeShader, 
+								ccl::ShaderManager *shaderManager, 
+								const std::string &namePrefix )
 {
-	ShaderNetworkPtr networkCopy;
-	if( true ) // todo : make conditional on OSL < 1.10
-	{
-		networkCopy = shaderNetwork->copy();
-		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
-		shaderNetwork = networkCopy.get();
-	}
-
-	ShaderMap converted;
-	ccl::Shader *result = new ccl::Shader();
 	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
-	const InternedString output = shaderNetwork->getOutput().shader;
-	if( output.string().empty() )
+	if( surfaceShader && surfaceShader->getOutput().shader.string().empty() )
+	{
+		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
+	}
+	else if( volumeShader && volumeShader->getOutput().shader.string().empty() )
 	{
 		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
 	}
 	else
 	{
-		if( shaderNetwork->outputShader()->getType() == "ccl:light" )
+		if( surfaceShader && surfaceShader->outputShader()->getType() == "ccl:light" )
 		{
+			const InternedString output = surfaceShader->getOutput().shader;
+			ShaderMap converted;
 			// The first shader is either an emission node or background node
-			for( const auto &connection : shaderNetwork->inputConnections( output ) )
+			for( const auto &connection : surfaceShader->inputConnections( output ) )
 			{
-				ccl::ShaderNode *outputNode = convertWalk( connection.source, shaderNetwork, namePrefix, shaderManager, graph, converted );
+				ccl::ShaderNode *outputNode = convertWalk( connection.source, surfaceShader, namePrefix, shaderManager, graph, converted );
 				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)graph->output();
 				InternedString sourceName = connection.source.name;
 				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, sourceName ) )
@@ -607,22 +606,41 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shad
 		}
 		else
 		{
-			// First we get the settings on the output shader and pass them to the actual shader node, not ccl::output which only has the connections
-			const IECoreScene::Shader *shader = shaderNetwork->outputShader();
-			if( boost::starts_with( shader->getType(), "ccl:" ) && ( shader->getName() == "output" ) )
+			if( surfaceShader )
 			{
-				for( const auto &namedParameter : shader->parameters() )
-				{
-					SocketAlgo::setSocket( result, namedParameter.first.string(), namedParameter.second.get() );
-				}
+				ShaderMap converted;
+				convertWalk( surfaceShader->getOutput(), surfaceShader, namePrefix, shaderManager, graph, converted );
 			}
-			convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
+			if( displacementShader )
+			{
+				ShaderMap converted;
+				convertWalk( displacementShader->getOutput(), displacementShader, namePrefix, shaderManager, graph, converted );
+			}
+			if( volumeShader )
+			{
+				ShaderMap converted;
+				convertWalk( volumeShader->getOutput(), volumeShader, namePrefix, shaderManager, graph, converted );
+			}
 		}
 	}
+
+	return graph;
+}
+
+ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader, 
+					  const IECoreScene::ShaderNetwork *displacementShader, 
+					  const IECoreScene::ShaderNetwork *volumeShader, 
+					  ccl::ShaderManager *shaderManager, 
+					  const std::string &namePrefix )
+{
 	string shaderName(
 		namePrefix +
-		shaderNetwork->getOutput().shader.string()
+		surfaceShader->getOutput().shader.string()
 	);
+
+	ccl::ShaderGraph *graph = convertGraph( surfaceShader, displacementShader, volumeShader, shaderManager, namePrefix );
+
+	ccl::Shader *result = new ccl::Shader();
 	result->name = ccl::ustring( shaderName.c_str() );
 	result->set_graph( graph );
 
@@ -679,19 +697,17 @@ ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
 	return result;
 }
 
-ccl::Shader *convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::Shader *cshader, ccl::ShaderManager *shaderManager, const std::string &namePrefix  )
+void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
 {
 	ShaderMap converted;
-	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, cshader->graph, converted );
-	return cshader;
+	convertWalk( shaderNetwork->getOutput(), shaderNetwork, namePrefix, shaderManager, graph, converted );
 }
 
-ccl::Shader *setSingleSided( ccl::Shader *cshader )
+void setSingleSided( ccl::ShaderGraph *graph )
 {
 	// Cycles doesn't natively support setting single-sided on objects, however we can build
 	// a shader which does it for us by checking for backfaces and using a transparentBSDF
 	// to emulate the effect.
-	ccl::ShaderGraph *graph = cshader->graph;
 	ccl::ShaderNode *mixClosure = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::MixClosureNode>() );
 	ccl::ShaderNode *transparentBSDF = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::TransparentBsdfNode>() );
 	ccl::ShaderNode *geometry = graph->add( (ccl::ShaderNode*)graph->create_node<ccl::GeometryNode>() );
@@ -719,8 +735,6 @@ ccl::Shader *setSingleSided( ccl::Shader *cshader )
 				graph->connect( shaderOutput2, shaderInput );
 		}
 	}
-
-	return cshader;
 }
 
 ccl::Shader *createDefaultShader()

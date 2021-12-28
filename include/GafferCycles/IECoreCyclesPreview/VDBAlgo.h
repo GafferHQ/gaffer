@@ -40,7 +40,7 @@
 #include "IECoreVDB/VDBObject.h"
 
 // Cycles
-#include "render/object.h"
+#include "scene/object.h"
 
 namespace IECoreCycles
 {
@@ -50,6 +50,9 @@ namespace VDBAlgo
 
 /// Converts the specified IECoreVDB::VDBObject into a ccl::Object.
 IECORECYCLES_API ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene );//, const float frame );
+
+/// Converts the specified IECoreVDB::VDBObject into a ccl::Object.
+IECORECYCLES_API ccl::Object *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene = nullptr );
 
 } // namespace VDBAlgo
 

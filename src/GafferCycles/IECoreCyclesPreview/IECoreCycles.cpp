@@ -35,9 +35,9 @@
 #include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
 
 // Cycles
-#include "util/util_logging.h"
-#include "util/util_path.h"
-#include "util/util_version.h"
+#include "util/log.h"
+#include "util/path.h"
+#include "util/version.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"

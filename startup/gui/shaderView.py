@@ -50,6 +50,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 		# Reserve some cores for the rest of the UI
 		result["threads"]["enabled"].setValue( True )
 		result["threads"]["value"].setValue( -3 )
+		
+		# Less issues when mixing around OSL shaders
+		result["shadingSystem"]["enabled"].setValue( True )
+		result["shadingSystem"]["value"].setValue( "OSL" )
 
 		return result
 

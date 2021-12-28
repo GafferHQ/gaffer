@@ -47,8 +47,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/geometry.h"
-#include "render/pointcloud.h"
+#include "scene/geometry.h"
+#include "scene/pointcloud.h"
 
 using namespace std;
 using namespace Imath;

@@ -35,7 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 // Cycles
-#include "render/output_driver.h"
+#include "session/output_driver.h"
 
 // Cortex
 #include "IECore/CompoundData.h"

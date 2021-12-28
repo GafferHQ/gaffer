@@ -56,7 +56,7 @@
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
-#include "util/util_openimagedenoise.h"
+#include "util/openimagedenoise.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -83,7 +83,6 @@ static py::list getDevices()
 		d["num"] = device.num;
 		d["display_device"] = device.display_device;
 		d["has_nanovdb"] = device.has_nanovdb;
-		d["has_half_images"] = device.has_half_images;
 		d["has_osl"] = device.has_osl;
 		d["has_profiling"] = device.has_profiling;
 		d["has_peer_memory"] = device.has_peer_memory;
@@ -171,35 +170,14 @@ static py::dict getNodes()
 			if( cNodeType->type == ccl::NodeType::SHADER )
 				continue;
 
+			// The shader node we skip
+			if( nodeType.first == "shader" )
+				continue;
+
 			py::dict d;
 			d["in"] = getSockets( cNodeType, false );
 			d["out"] = getSockets( cNodeType, true );
-			
-			// The "Shader" type is the main shader interface, not to be
-			// confused with "ShaderNode" types which plug into this main
-			// one. We combine the "Output" ShaderNode's inputs to this one
-			// to simplify things.
-			if( nodeType.first == "shader" )
-			{
-				py::dict output;
-				const ccl::NodeType *outputNodeType = ccl::NodeType::find( ccl::ustring( "output" ) );
-				if( outputNodeType )
-				{
-					output["in"] = getSockets( outputNodeType, false );
-				}
-				d["in"]["surface"] = output["in"]["surface"];
-				d["in"]["volume"] = output["in"]["volume"];
-				d["in"]["displacement"] = output["in"]["displacement"];
-				d["in"]["normal"] = output["in"]["normal"];
-				d["type"] = "surface";
-				d["category"] = "Shader";
-
-				result["shader"] = d;
-			}
-			else
-			{
-				result[nodeType.first.c_str()] = d;
-			}
+			result[nodeType.first.c_str()] = d;
 		}
 	}
 	return result;

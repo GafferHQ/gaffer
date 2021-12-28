@@ -39,10 +39,10 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "kernel/kernel_types.h"
-#include "render/mesh.h"
-#include "util/util_param.h"
-#include "util/util_types.h"
+#include "kernel/types.h"
+#include "scene/mesh.h"
+#include "util/param.h"
+#include "util/types.h"
 
 using namespace std;
 using namespace Imath;

@@ -45,7 +45,7 @@
 // Cycles
 #include "graph/node.h"
 #include "graph/node_type.h"
-#include "util/util_transform.h"
+#include "util/transform.h"
 
 namespace IECoreCycles
 {

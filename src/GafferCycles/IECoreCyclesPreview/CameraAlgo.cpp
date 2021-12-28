@@ -41,8 +41,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/camera.h"
-#include "kernel/kernel_types.h"
+#include "scene/camera.h"
+#include "kernel/types.h"
 
 using namespace std;
 using namespace Imath;

@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 // Cycles (for ustring)
-#include "util/util_param.h"
+#include "util/param.h"
 #undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
 
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
