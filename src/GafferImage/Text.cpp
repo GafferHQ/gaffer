@@ -45,6 +45,9 @@
 #include "IECore/SearchPath.h"
 
 #include "tbb/enumerable_thread_specific.h"
+#ifdef SearchPath
+#undef SearchPath
+#endif
 
 #include "boost/locale/encoding_utf.hpp"
 
