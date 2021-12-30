@@ -265,7 +265,7 @@ class CyclesOutput : public IECore::RefCounted
 	public :
 
 		CyclesOutput( const ccl::Session *session, const IECore::InternedString &name, const IECoreScene::Output *output )
-			: m_passType( ccl::PASS_NONE ), m_denoise( false ), m_interactive( false )
+			: m_passType( ccl::PASS_NONE ), m_denoise( false ), m_interactive( false ), m_lightgroup( false )
 		{
 			m_parameters = output->parametersData()->copy();
 			CompoundDataMap &p = m_parameters->writable();
@@ -321,6 +321,7 @@ class CyclesOutput : public IECore::RefCounted
 					p["type"] = new StringData( "lightgroup" );
 					passType = "lightgroup";
 					m_data = tokens[1];
+					m_lightgroup = true;
 				}
 				else if( tokens[0] == "cryptomatte" )
 				{
@@ -342,6 +343,7 @@ class CyclesOutput : public IECore::RefCounted
 		std::string m_data;
 		bool m_denoise;
 		bool m_interactive;
+		bool m_lightgroup;
 };
 
 IE_CORE_DECLAREPTR( CyclesOutput )
@@ -3860,11 +3862,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 				ccl::PassType passType = coutput.second->m_passType;
 
-#ifdef WITH_CYCLES_LIGHTGROUPS
 				// We need to add all lightgroup passes in-order
-				if( passType == ccl::PASS_LIGHTGROUP )
+				if( coutput.second->m_lightgroup )
 					continue;
-#endif
 
 				if( passType == ccl::PASS_CRYPTOMATTE )
 				{
@@ -3975,7 +3975,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 				ccl::PassType passType = coutput.second->m_passType;
 
-				if( passType != ccl::PASS_LIGHTGROUP )
+				if( !coutput.second->m_lightgroup )
 					continue;
 
 				bool denoise = coutput.second->m_denoise;
@@ -3985,6 +3985,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				pass->set_type( passType );
 				pass->set_name( ccl::ustring( name ) );
 				pass->set_mode( denoise ? ccl::PassMode::DENOISED : ccl::PassMode::NOISY );
+				pass->set_lightgroup( ccl::ustring( coutput.second->m_data ) );
 
 				const IECore::CompoundDataPtr layer = coutput.second->m_parameters->copy();
 				layersData->writable()[name] = layer;
