@@ -82,6 +82,8 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 		{
 			if( m_ieVolume )
 				return ccl::VDBImageLoader::load_pixels( metadata, pixels, pixel_size, associate_alpha );
+			else
+				return false;
 		}
 
 		bool equals(const ccl::ImageLoader &other) const override
