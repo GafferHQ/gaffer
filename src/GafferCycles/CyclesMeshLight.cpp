@@ -67,7 +67,7 @@ CyclesMeshLight::CyclesMeshLight( const std::string &name )
 	CyclesAttributesPtr attributes = new CyclesAttributes( "__attributes" );
 	attributes->inPlug()->setInput( inPlug() );
 	attributes->filterPlug()->setInput( filterPlug() );
-	for( NameValuePlugIterator it( attributes->attributesPlug() ); !it.done(); ++it )
+	for( NameValuePlug::Iterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
 		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) && (*it)->getName() != "cameraVisibility" )
 		{
@@ -98,7 +98,7 @@ CyclesMeshLight::CyclesMeshLight( const std::string &name )
 
 	PlugPtr parametersPlug = shader->parametersPlug()->createCounterpart( "parameters", Plug::In );
 	addChild( parametersPlug );
-	for( PlugIterator srcIt( parametersPlug.get() ), dstIt( shader->parametersPlug() ); !srcIt.done(); ++srcIt, ++dstIt )
+	for( Plug::Iterator srcIt( parametersPlug.get() ), dstIt( shader->parametersPlug() ); !srcIt.done(); ++srcIt, ++dstIt )
 	{
 		(*dstIt)->setInput( *srcIt );
 		// We don't need the parameters to be dynamic, because we create the

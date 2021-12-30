@@ -85,7 +85,7 @@ void CyclesLight::loadShader( const std::string &shaderName )
 
 void CyclesLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
+	for( ValuePlug::Iterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
 		{
@@ -171,7 +171,7 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	float coneAngle = 30.0f;
 	float penumbraAngle = 0.0f;
 	Imath::Color3f color = Imath::Color3f( 1.0f );
-	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
+	for( Plug::Iterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
 		{
