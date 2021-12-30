@@ -66,7 +66,7 @@ bool init( const char *path )
 	// If a path was specified, use that
 	if( path )
 		paths = path;
-	const char *kernelFile = "source/kernel/kernel_globals.h";
+	const char *kernelFile = "source/kernel/types.h";
 	IECore::SearchPath searchPath( paths );
 	boost::filesystem::path filepath = searchPath.find( kernelFile );
 	if( filepath.empty() )
