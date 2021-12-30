@@ -124,8 +124,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 					continue
 				data = "lg lightgroup"
 				label = "Light_Group"
-				interactiveOutput["instances"] = 8
-				batchOutput["instances"] = 8
 
 			if data == "aov_color" :
 				data = "aovc aov_color"
@@ -213,5 +211,5 @@ with IECore.IgnoredExceptions( ImportError ) :
 		)
 	)
 
-	__registerOutputs( lightPasses, True, True )
+	__registerOutputs( lightPasses, True )
 	__registerOutputs( dataPasses )
