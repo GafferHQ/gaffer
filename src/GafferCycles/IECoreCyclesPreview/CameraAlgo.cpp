@@ -41,8 +41,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/camera.h"
-#include "kernel/kernel_types.h"
+#include "scene/camera.h"
+#include "kernel/types.h"
 
 using namespace std;
 using namespace Imath;
@@ -63,69 +63,66 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 	const string &projection = camera->getProjection();
 	if( projection == "perspective" )
 	{
-		ccam->type = ccl::CAMERA_PERSPECTIVE;
-		ccam->fov = M_PI_2;
+		ccam->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
+		ccam->set_fov( M_PI_2 );
 		if( camera->getFStop() > 0.0f )
 		{
-			ccam->aperturesize = 0.5f * camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop();
-			ccam->focaldistance = camera->getFocusDistance();
+			ccam->set_aperturesize( 0.5f * camera->getFocalLength() * camera->getFocalLengthWorldScale() / camera->getFStop() );
+			ccam->set_focaldistance( camera->getFocusDistance() );
 		}
 	}
 	else if( projection == "orthographic" )
 	{
-		ccam->type = ccl::CAMERA_ORTHOGRAPHIC;
+		ccam->set_camera_type( ccl::CameraType::CAMERA_ORTHOGRAPHIC );
 	}
 	else
 	{
-		ccam->type = ccl::CAMERA_PERSPECTIVE;
-		ccam->fov = M_PI_2;
+		ccam->set_camera_type( ccl::CameraType::CAMERA_PERSPECTIVE );
+		ccam->set_fov( M_PI_2 );
 	}
 
 	// Screen window/resolution TODO: full_ might be something to do with cropping?
 	const Imath::Box2f &frustum = camera->frustum();
 	const Imath::V2i &resolution = camera->renderResolution();
 	const float pixelAspectRatio = camera->getPixelAspectRatio();
-	ccam->width = resolution[0];
-	ccam->height = resolution[1];
-	ccam->full_width = resolution[0];
-	ccam->full_height = resolution[1];
-	ccam->viewplane.left = frustum.min.x;
-	ccam->viewplane.right = frustum.max.x;
+	ccam->set_full_width( resolution[0] );
+	ccam->set_full_height( resolution[1] );
+	ccam->set_viewplane_left( frustum.min.x );
+	ccam->set_viewplane_right( frustum.max.x );
 	// Invert the viewplane in Y so Gaffer's aperture offsets and overscan are applied in the correct direction
-	ccam->viewplane.bottom = -frustum.max.y;
-	ccam->viewplane.top = -frustum.min.y;
-	ccam->aperture_ratio = pixelAspectRatio; // This is more for the bokeh, maybe it should be a separate parameter?
+	ccam->set_viewplane_bottom( -frustum.max.y );
+	ccam->set_viewplane_top( -frustum.min.y );
+	ccam->set_aperture_ratio( pixelAspectRatio ); // This is more for the bokeh, maybe it should be a separate parameter?
 
 	// Clipping planes
 	const Imath::V2f &clippingPlanes = camera->getClippingPlanes();
-	ccam->nearclip = clippingPlanes.x;
-	ccam->farclip = clippingPlanes.y;
+	ccam->set_nearclip( clippingPlanes.x );
+	ccam->set_farclip( clippingPlanes.y );
 	
 	// Crop window
 	if ( camera->hasCropWindow() )
 	{
 		const Imath::Box2f &cropWindow = camera->getCropWindow();
-		ccam->border.left = cropWindow.min.x;
-		ccam->border.right = cropWindow.max.x;
-		ccam->border.top = cropWindow.max.y;
-		ccam->border.bottom = cropWindow.min.y;
-		ccam->border.clamp();
+		ccam->set_border_left( cropWindow.min.x );
+		ccam->set_border_right( cropWindow.max.x );
+		ccam->set_border_top( cropWindow.max.y );
+		ccam->set_border_bottom( cropWindow.min.y );
 	}
 	
 	// Shutter TODO: Need to see if this is correct or not, cycles also has a shutter curve...
 	const Imath::V2f &shutter = camera->getShutter();
-	ccam->shuttertime = abs(shutter.x) + abs(shutter.y);
+	ccam->set_shuttertime( abs(shutter.x) + abs(shutter.y) );
 	if( (shutter.x == 0.0) && (shutter.y > shutter.x) )
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_START;
+		ccam->set_motion_position( ccl::Camera::MOTION_POSITION_START );
 	}
 	else if( (shutter.x < shutter.y) && (shutter.y == 0.0) )
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_END;
+		ccam->set_motion_position( ccl::Camera::MOTION_POSITION_END );
 	}
 	else
 	{
-		ccam->motion_position = ccl::MOTION_POSITION_CENTER;
+		ccam->set_motion_position( ccl::Camera::MOTION_POSITION_CENTER );
 	}
 
 	for( CompoundDataMap::const_iterator it = camera->parameters().begin(), eIt = camera->parameters().end(); it != eIt; ++it )
@@ -138,23 +135,23 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 
 				if( panoType == "equirectangular" )
 				{
-					ccam->type = ccl::CAMERA_PANORAMA;
-					ccam->panorama_type = ccl::PANORAMA_EQUIRECTANGULAR;
+					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
+					ccam->set_panorama_type( ccl::PANORAMA_EQUIRECTANGULAR );
 				}
 				else if( panoType == "mirrorball" )
 				{
-					ccam->type = ccl::CAMERA_PANORAMA;
-					ccam->panorama_type = ccl::PANORAMA_MIRRORBALL;
+					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
+					ccam->set_panorama_type( ccl::PANORAMA_MIRRORBALL );
 				}
 				else if( panoType == "fisheyeEquidistant" )
 				{
-					ccam->type = ccl::CAMERA_PANORAMA;
-					ccam->panorama_type = ccl::PANORAMA_FISHEYE_EQUIDISTANT;
+					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
+					ccam->set_panorama_type( ccl::PANORAMA_FISHEYE_EQUIDISTANT );
 				}
 				else if( panoType == "fisheyeEquisolid" )
 				{
-					ccam->type = ccl::CAMERA_PANORAMA;
-					ccam->panorama_type = ccl::PANORAMA_FISHEYE_EQUISOLID;
+					ccam->set_camera_type( ccl::CAMERA_PANORAMA );
+					ccam->set_panorama_type( ccl::PANORAMA_FISHEYE_EQUISOLID );
 				}
 			}
 		}

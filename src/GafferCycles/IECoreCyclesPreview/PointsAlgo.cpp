@@ -45,8 +45,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/geometry.h"
-#include "render/pointcloud.h"
+#include "scene/geometry.h"
+#include "scene/pointcloud.h"
 
 using namespace std;
 using namespace Imath;
@@ -63,8 +63,8 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	ccl::PointCloud *pointcloud = new ccl::PointCloud();
 
 	PrimitiveVariableMap variablesToConvert = points->variables;
-
-	pointcloud->point_style = ccl::POINT_CLOUD_POINT_SPHERE;
+/*
+	pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
 	if( const StringData *typeData = points->variableData<StringData>( "type", PrimitiveVariable::Constant ) )
 	{
 		std::string type = typeData->readable();
@@ -73,15 +73,15 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 			if( variablesToConvert.find("N") != variablesToConvert.end() &&
 				points->variableData<V3fVectorData>( "N", PrimitiveVariable::Vertex ) )
 			{
-				pointcloud->point_style = ccl::POINT_CLOUD_POINT_DISC_ORIENTED;
+				pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_DISC_ORIENTED );
 			}
 			else
 			{
-				pointcloud->point_style = ccl::POINT_CLOUD_POINT_DISC;
+				pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_DISC );
 			}
 		}
 	}
-
+*/
 	size_t numPoints = points->getNumPoints();
 	pointcloud->reserve( numPoints );
 
@@ -159,7 +159,7 @@ namespace PointsAlgo
 ccl::Object *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)convertCommon(points);
+	cobject->set_geometry( (ccl::Geometry*)convertCommon(points) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -229,8 +229,8 @@ ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points
 	}
 
 	// Add the motion position/normal attributes
-	pointcloud->use_motion_blur = true;
-	pointcloud->motion_steps = samples.size() + 1;
+	pointcloud->set_use_motion_blur( true );
+	pointcloud->set_motion_steps( samples.size() + 1 );
 	ccl::Attribute *attr_mP = pointcloud->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
 
@@ -256,22 +256,24 @@ ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points
 				else
 				{
 					msg( Msg::Warning, "IECoreCycles::PointsAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					pointcloud->attributes.remove(attr_mP);
-					pointcloud->motion_steps = 0;
+					pointcloud->attributes.remove( attr_mP );
+					pointcloud->set_motion_steps( 0 );
+					pointcloud->set_use_motion_blur( false );
 				}
 			}
 			else
 			{
 				msg( Msg::Warning, "IECoreCycles::PointsAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
-				pointcloud->attributes.remove(attr_mP);
-				pointcloud->motion_steps = 0;
+				pointcloud->attributes.remove( attr_mP );
+				pointcloud->set_motion_steps( 0 );
+				pointcloud->set_use_motion_blur( false );
 			}
 		}
 	}
 	mP = attr_mP->data_float3();
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)pointcloud;
+	cobject->set_geometry( pointcloud );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }

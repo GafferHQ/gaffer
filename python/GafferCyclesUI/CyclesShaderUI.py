@@ -75,7 +75,7 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 	flags = value["flags"]
 	if socketType == "enum" :
 		presetNames = IECore.StringVectorData()
-		presetValues = IECore.IntVectorData()
+		presetValues = IECore.StringVectorData()
 		for enumName, enumValues in value["enum_values"].items() :
 			presetNames.append(enumName)
 			presetValues.append(enumValues)
@@ -101,11 +101,6 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 		for c in childComponents :
 			__metadata["{}.{}".format( paramPath, c )]["noduleLayout:label"] = "{}.{}".format( label, c )
 
-def __translateShaderMetadata() :
-
-	for socketName, value in GafferCycles.nodes["shader"]["in"].items() :
-		__translateParamMetadata( "output", socketName, value )
-
 def __translateNodesMetadata( nodeTypes ) :
 
 	for nodeTypeName, nodeType in nodeTypes.items() :
@@ -113,7 +108,6 @@ def __translateNodesMetadata( nodeTypes ) :
 		for socketName, value in nodeType["in"].items() :
 			__translateParamMetadata( nodeTypeName, socketName, value )
 
-__translateShaderMetadata() # For the main interfacing 'shader' node
 __translateNodesMetadata( GafferCycles.lights )
 __translateNodesMetadata( GafferCycles.shaders )
 

@@ -50,89 +50,168 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# and we won't add any unnecessary output definitions.
 	import GafferCycles
 
-	for aov in [
-		"depth",
-		"normal",
-		"uv",
-		"object_id",
-		"material_id",
-		"motion",
-		"motion_weight",
-		"render_time",
-		"mist",
+	lightPasses = [
 		"emission",
 		"background",
 		"ao",
 		"shadow",
 		"diffuse_direct",
 		"diffuse_indirect",
-		"diffuse_color",
 		"glossy_direct",
 		"glossy_indirect",
-		"glossy_color",
+		"transmission",
 		"transmission_direct",
 		"transmission_indirect",
-		"transmission_color",
 		"volume_direct",
 		"volume_indirect",
+		"lightgroup",
+	]
+
+	dataPasses = [
+		"depth",
+		"position",
+		"normal",
+		"roughness",
+		"uv",
+		"object_id",
+		"material_id",
+		"motion",
+		"motion_weight",
+		"render_time",
 		"cryptomatte_asset",
 		"cryptomatte_object",
 		"cryptomatte_material",
-		"noisy_rgba",
-		"denoise_normal",
-		"denoise_albedo",
-		"denoise_depth",
-		"denoise_shadowing",
-		"denoise_variance",
-		"denoise_intensity",
-		"denoise_clean",
 		"aov_color",
 		"aov_value",
-		"lightgroups",
-	] :
+		"adaptive_aux_buffer",
+		"sample_count",
+		"diffuse_color",
+		"glossy_color",
+		"transmission_color",
+		"mist",
+		"denoising_normal",
+		"denoising_albedo",
 
-		label = aov.replace( "_", " " ).title().replace( " ", "_" )
+		"shadow_catcher",
+		"shadow_catcher_sample_count",
+		"shadow_catcher_matte",
 
-		data = aov
+		"bake_primitive",
+		"bake_differential",
+	]
 
-		interactiveOutput = {
-			"driverType" : "ClientDisplayDriver",
-			"displayHost" : "localhost",
-			"displayPort" : "${image:catalogue:port}",
-			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
-		}
-		batchOutput = { "quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ) }
+	def __registerOutputs( aovs, halfFloat = False, denoise = False ) :
+		for aov in aovs :
 
-		if data == "lightgroups":
-			if not GafferCycles.withLightGroups :
-				continue
-			data = "lightgroup"
-			interactiveOutput["instances"] = 8
-			batchOutput["instances"] = 8
+			label = aov.replace( "_", " " ).title().replace( " ", "_" )
 
-		if data == "aov_color" :
-			data = "AOVC aov_color"
+			data = aov
 
-		if data == "aov_value" :
-			data = "AOVV aov_value"
+			interactiveOutput = {
+				"driverType" : "ClientDisplayDriver",
+				"displayHost" : "localhost",
+				"displayPort" : "${image:catalogue:port}",
+				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+			}
+			batchOutput = { 
+				"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				"halfFloat" : halfFloat
+			}
 
-		GafferScene.Outputs.registerOutput(
-			"Interactive/Cycles/" + label,
-			IECoreScene.Output(
-				aov,
-				"ieDisplay",
-				data,
-				interactiveOutput
+			if data == "lightgroup":
+				if not GafferCycles.withLightGroups :
+					continue
+				data = "lg lightgroup"
+				label = "Light_Group"
+				interactiveOutput["instances"] = 8
+				batchOutput["instances"] = 8
+
+			if data == "aov_color" :
+				data = "aovc aov_color"
+
+			if data == "aov_value" :
+				data = "aovv aov_value"
+
+			if data.startswith( "cryptomatte" ) :
+				data = data.replace( "_", " " )
+
+			GafferScene.Outputs.registerOutput(
+				"Interactive/Cycles/" + label,
+				IECoreScene.Output(
+					aov,
+					"ieDisplay",
+					data,
+					interactiveOutput
+				)
 			)
-		)
 
-		GafferScene.Outputs.registerOutput(
-			"Batch/Cycles/" + label,
-			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, data ),
-				"exr",
-				data,
-				batchOutput
+			GafferScene.Outputs.registerOutput(
+				"Batch/Cycles/" + label,
+				IECoreScene.Output(
+					"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+					"exr",
+					data,
+					batchOutput
+				)
 			)
+
+			if denoise:
+				interactiveOutput["denoise"] = True
+				batchOutput["denoise"] = True
+
+				# Denoised variants
+				GafferScene.Outputs.registerOutput(
+					"Interactive/Cycles/" + label + "_Denoised",
+					IECoreScene.Output(
+						aov + "_denoised",
+						"ieDisplay",
+						data,
+						interactiveOutput
+					)
+				)
+
+				GafferScene.Outputs.registerOutput(
+					"Batch/Cycles/" + label + "_Denoised",
+					IECoreScene.Output(
+						"${project:rootDirectory}/renders/${script:name}/%s/%s_denoised.####.exr" % ( aov, aov ),
+						"exr",
+						data,
+						batchOutput
+					)
+				)
+
+
+	GafferScene.Outputs.registerOutput(
+		"Interactive/Cycles/Beauty_Denoised",
+		IECoreScene.Output(
+			"beauty_denoised",
+			"ieDisplay",
+			"rgba",
+			{
+				"driverType" : "ClientDisplayDriver",
+				"displayHost" : "localhost",
+				"displayPort" : "${image:catalogue:port}",
+				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				"denoise" : True
+			}
 		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/Cycles/Beauty_Denoised",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/beauty/beauty_denoised.####.exr",
+			"exr",
+			"rgba",
+			{
+				"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				"denoise" : True,
+				"halfFloat" : True
+			}
+		)
+	)
+
+	__registerOutputs( lightPasses, True, True )
+	__registerOutputs( dataPasses )

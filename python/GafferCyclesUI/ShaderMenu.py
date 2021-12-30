@@ -51,13 +51,6 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 
 	menuItems = []
 
-	shaderName = "output"
-	displayName = "Output"
-	menuPath = "Shader"
-
-	nodeCreator = functools.partial( __shaderCreator, shaderName, GafferCycles.CyclesShader )
-	menuItems.append( MenuItem( "%s/%s" % ( menuPath, displayName ), nodeCreator ) ) 
-
 	for shader in GafferCycles.shaders :
 		shaderName = str( shader )
 		displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )

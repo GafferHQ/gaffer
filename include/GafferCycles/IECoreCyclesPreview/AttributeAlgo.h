@@ -40,7 +40,7 @@
 #include "IECoreScene/Primitive.h"
 
 // Cycles
-#include "render/attribute.h"
+#include "scene/attribute.h"
 
 namespace IECoreCycles
 {

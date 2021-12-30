@@ -44,8 +44,8 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
-#include "render/geometry.h"
-#include "render/hair.h"
+#include "scene/geometry.h"
+#include "scene/hair.h"
 
 using namespace std;
 using namespace Imath;
@@ -139,7 +139,7 @@ namespace CurvesAlgo
 ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)convertCommon(curve);
+	cobject->set_geometry( convertCommon( curve ) );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }
@@ -209,8 +209,8 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 	}
 
 	// Add the motion position/normal attributes
-	hair->use_motion_blur = true;
-	hair->motion_steps = samples.size() + 1;
+	hair->set_use_motion_blur( true );
+	hair->set_motion_steps( samples.size() + 1 );
 	ccl::Attribute *attr_mP = hair->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
 
@@ -236,22 +236,24 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 				else
 				{
 					msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", "Variable \"Position\" has unsupported interpolation type - not generating sampled Position." );
-					hair->attributes.remove(attr_mP);
-					hair->motion_steps = 0;
+					hair->attributes.remove( attr_mP );
+					hair->set_motion_steps( 0 );
+					hair->set_use_motion_blur( false );
 				}
 			}
 			else
 			{
 				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
-				hair->attributes.remove(attr_mP);
-				hair->motion_steps = 0;
+				hair->attributes.remove( attr_mP );
+				hair->set_motion_steps( 0 );
+				hair->set_use_motion_blur( false );
 			}
 		}
 	}
 	mP = attr_mP->data_float3();
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->geometry = (ccl::Geometry*)hair;
+	cobject->set_geometry( hair );
 	cobject->name = ccl::ustring(nodeName.c_str());
 	return cobject;
 }

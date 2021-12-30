@@ -40,12 +40,12 @@
 #include "openvdb/openvdb.h"
 
 // Cycles
-#include "kernel/kernel_types.h"
-#include "render/image.h"
-#include "render/image_vdb.h"
-#include "render/mesh.h"
-#include "util/util_param.h"
-#include "util/util_types.h"
+#include "kernel/types.h"
+#include "scene/image.h"
+#include "scene/image_vdb.h"
+#include "scene/volume.h"
+#include "util/param.h"
+#include "util/types.h"
 
 using namespace std;
 using namespace Imath;
@@ -82,6 +82,8 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 		{
 			if( m_ieVolume )
 				return ccl::VDBImageLoader::load_pixels( metadata, pixels, pixel_size, associate_alpha );
+			else
+				return false;
 		}
 
 		bool equals(const ccl::ImageLoader &other) const override
@@ -114,17 +116,15 @@ namespace VDBAlgo
 
 {
 
-ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string & name, ccl::Scene *scene )//, const float frame )
+ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )//, const float frame )
 {
 	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
 
 	ccl::Object *cobject = new ccl::Object();
-	cobject->name = ccl::ustring( name.c_str() );
-	ccl::Mesh *mesh = new ccl::Mesh();
+	cobject->name = ccl::ustring( nodeName.c_str() );
+	ccl::Volume *volume = new ccl::Volume();
 
-	mesh->volume_clipping = 0.001f;
-	mesh->volume_step_size = 0.0f;
-	mesh->volume_object_space = true;
+	volume->set_object_space( true );
 
 	std::vector<std::string> gridNames = vdbObject->gridNames();
 
@@ -194,8 +194,8 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 		}
 
 		ccl::Attribute *attr = ( std != ccl::ATTR_STD_NONE ) ?
-							mesh->attributes.add( std ) :
-							mesh->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
+							volume->attributes.add( std ) :
+							volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
 
 		ccl::ImageLoader *loader = new GafferVolumeLoader( vdbObject, gridName );
 		ccl::ImageParams params;
@@ -204,9 +204,14 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 		attr->data_voxel() = scene->image_manager->add_image( loader, params );
 	}
 
-	cobject->geometry = mesh;
+	cobject->set_geometry( volume );
 
 	return cobject;
+}
+
+ccl::Object *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+{
+	return convert( samples.front(), nodeName, scene );
 }
 
 } // namespace VDBAlgo

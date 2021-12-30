@@ -56,7 +56,7 @@
 // Cycles
 #include "device/device.h"
 #include "graph/node.h"
-#include "util/util_openimagedenoise.h"
+#include "util/openimagedenoise.h"
 
 namespace py = boost::python;
 using namespace GafferBindings;
@@ -82,14 +82,12 @@ static py::list getDevices()
 		d["id"] = device.id;
 		d["num"] = device.num;
 		d["display_device"] = device.display_device;
-		d["has_half_images"] = device.has_half_images;
-		d["has_volume_decoupled"] = device.has_volume_decoupled;
-		d["has_adaptive_stop_per_sample"] = device.has_adaptive_stop_per_sample;
+		d["has_nanovdb"] = device.has_nanovdb;
 		d["has_osl"] = device.has_osl;
-		d["use_split_kernel"] = device.use_split_kernel;
 		d["has_profiling"] = device.has_profiling;
-		d["cpu_threads"] = device.cpu_threads;
 		d["has_peer_memory"] = device.has_peer_memory;
+		d["has_gpu_queue"] = device.has_gpu_queue;
+		d["cpu_threads"] = device.cpu_threads;
 		d["denoisers"] = device.denoisers;
 
 		if( device.type == ccl::DEVICE_OPTIX )
@@ -127,7 +125,11 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 				py::dict enumDict;
 				for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
 				{
-					enumDict[it->first.c_str()] = it->second;
+					std::string uiEnumName( it->first.c_str() );
+					uiEnumName[0] = toupper( uiEnumName[0] );
+					boost::replace_all( uiEnumName, "_", " " );
+
+					enumDict[uiEnumName.c_str()] = it->first.c_str();
 				}
 				d["enum_values"] = enumDict;
 			}
@@ -168,35 +170,14 @@ static py::dict getNodes()
 			if( cNodeType->type == ccl::NodeType::SHADER )
 				continue;
 
+			// The shader node we skip
+			if( nodeType.first == "shader" )
+				continue;
+
 			py::dict d;
 			d["in"] = getSockets( cNodeType, false );
 			d["out"] = getSockets( cNodeType, true );
-			
-			// The "Shader" type is the main shader interface, not to be
-			// confused with "ShaderNode" types which plug into this main
-			// one. We combine the "Output" ShaderNode's inputs to this one
-			// to simplify things.
-			if( nodeType.first == "shader" )
-			{
-				py::dict output;
-				const ccl::NodeType *outputNodeType = ccl::NodeType::find( ccl::ustring( "output" ) );
-				if( outputNodeType )
-				{
-					output["in"] = getSockets( outputNodeType, false );
-				}
-				d["in"]["surface"] = output["in"]["surface"];
-				d["in"]["volume"] = output["in"]["volume"];
-				d["in"]["displacement"] = output["in"]["displacement"];
-				d["in"]["normal"] = output["in"]["normal"];
-				d["type"] = "surface";
-				d["category"] = "Shader";
-
-				result["shader"] = d;
-			}
-			else
-			{
-				result[nodeType.first.c_str()] = d;
-			}
+			result[nodeType.first.c_str()] = d;
 		}
 	}
 	return result;
@@ -372,7 +353,7 @@ static py::dict getLights()
 		py::dict _in;
 		_in = getSockets( cNodeType, false );
 
-		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "type" ) );
+		const ccl::SocketType *socketType = cNodeType->find_input( ccl::ustring( "light_type" ) );
 		const ccl::NodeEnum *enums = socketType->enum_values;
 
 		for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
@@ -390,7 +371,6 @@ static py::dict getLights()
 			in["use_transmission"] = _in["use_transmission"];
 			in["use_scatter"] = _in["use_scatter"];
 			in["max_bounces"] = _in["max_bounces"];
-			in["samples"] = _in["samples"];
 			in["strength"] = _in["strength"];
 #ifdef WITH_CYCLES_LIGHTGROUPS
 			in["lightgroup"] = _in["lightgroup"];
@@ -409,6 +389,7 @@ static py::dict getLights()
 				in["axisv"] = _in["axisv"];
 				in["sizeu"] = _in["sizeu"];
 				in["sizev"] = _in["sizev"];
+				in["spread"] = _in["spread"];
 				d["in"] = in;
 				d["enum"] = it->second;
 				result["disk_light"] = d;
@@ -441,6 +422,31 @@ static py::dict getLights()
 	return result;
 }
 
+static py::dict getPasses()
+{
+	py::dict result;
+
+	const ccl::NodeEnum *enums = ccl::Pass::get_type_enum();
+
+	for( auto it = enums->begin(), eIt = enums->end(); it != eIt; ++it )
+	{
+		py::dict info;
+		ccl::PassInfo passInfo = ccl::Pass::get_info( static_cast<ccl::PassType>( it->second ) );
+
+		info["num_components"] = passInfo.num_components;
+		info["use_filter"] = passInfo.use_filter;
+		info["use_exposure"] = passInfo.use_exposure;
+		info["is_written"] = passInfo.is_written;
+		info["use_compositing"] = passInfo.use_compositing;
+		info["use_denoising_albedo"] = passInfo.use_denoising_albedo;
+		info["support_denoise"] = passInfo.support_denoise;
+
+		result[it->first.c_str()] = info;
+	}
+
+	return result;
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferCycles )
@@ -452,6 +458,7 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "nodes" ) = getNodes();
 	py::scope().attr( "shaders" ) = getShaders();
 	py::scope().attr( "lights" ) = getLights();
+	py::scope().attr( "passes" ) = getPasses();
 
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 	py::scope().attr( "withTextureCache" ) = true;

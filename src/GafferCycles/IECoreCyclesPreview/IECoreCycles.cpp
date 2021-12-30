@@ -35,9 +35,9 @@
 #include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
 
 // Cycles
-#include "util/util_logging.h"
-#include "util/util_path.h"
-#include "util/util_version.h"
+#include "util/log.h"
+#include "util/path.h"
+#include "util/version.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
@@ -87,7 +87,7 @@ bool init( const char *path )
 	ccl::util_logging_verbosity_set( 0 );
 
 	// Get devies
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_OPENCL | ccl::DEVICE_MASK_CUDA
+	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_HIP | ccl::DEVICE_MASK_CUDA | ccl::DEVICE_MASK_METAL
 #ifdef WITH_OPTIX
 	| ccl::DEVICE_MASK_OPTIX
 #endif

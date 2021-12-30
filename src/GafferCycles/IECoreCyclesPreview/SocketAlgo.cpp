@@ -38,10 +38,10 @@
 #include "IECore/VectorTypedData.h"
 
 // Cycles
-#include "kernel/kernel_types.h" // for RAMP_TABLE_SIZE
-#include "util/util_transform.h"
-#include "util/util_types.h"
-#include "util/util_vector.h"
+#include "kernel/types.h" // for RAMP_TABLE_SIZE
+#include "util/transform.h"
+#include "util/types.h"
+#include "util/vector.h"
 
 using namespace std;
 using namespace Imath;
@@ -264,13 +264,25 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::CLOSURE:
 			break;
 		case ccl::SocketType::STRING:
-			if( const StringData *data = static_cast<const StringData *>( value ) )
+			if( const StringData *data = runTimeCast<const StringData>( value ) )
 			{
 				node->set( *socket, data->readable().c_str() );
 			}
 			break;
 		case ccl::SocketType::ENUM:
-			convert<IntData>( node, socket, value );
+			if( const StringData *data = runTimeCast<const StringData>( value ) )
+			{
+				ccl::ustring enumName( data->readable().c_str() );
+				const ccl::NodeEnum &enums = *socket->enum_values;
+				if( enums.exists( enumName ) )
+				{
+					node->set( *socket, enums[enumName] );
+				}
+			}
+			else
+			{
+				convert<IntData>( node, socket, value );
+			}
 			break;
 		case ccl::SocketType::TRANSFORM:
 			if( const M44fData *data = static_cast<const M44fData *>( value ) )
@@ -417,7 +429,7 @@ IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket 
 		case ccl::SocketType::STRING:
 			return new StringData( string( node->get_string( *socket ).c_str() ) );
 		case ccl::SocketType::ENUM:
-			return new IntData( node->get_int( *socket ) );
+			return new StringData( string( node->get_string( *socket ).c_str() ) );
 		case ccl::SocketType::TRANSFORM:
 		{
 			return new M44fData( getTransform( node->get_transform( *socket ) ) );
