@@ -55,10 +55,10 @@
 #include "boost/container/flat_set.hpp"
 
 // Cycles
-#include "kernel/kernel_types.h"
-#include "util/util_transform.h"
-#include "util/util_types_float2.h"
-#include "util/util_types_float3.h"
+#include "kernel/types.h"
+#include "util/transform.h"
+#include "util/types_float2.h"
+#include "util/types_float3.h"
 
 using namespace std;
 using namespace Imath;
