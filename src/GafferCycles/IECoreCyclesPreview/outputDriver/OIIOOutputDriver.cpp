@@ -85,6 +85,8 @@ void applyCryptomatteMetadata( OIIO::ImageSpec &spec, std::string name, IECore::
 	spec.attribute( prefix + "manifest", cryptomatte->member<IECore::StringData>( prefix + "manifest", true )->readable() );
 }
 
+std::array<IECore::InternedString, 4> g_channels = { { "R", "G", "B", "A" } };
+
 } // namespace
 
 namespace IECoreCycles
@@ -109,7 +111,12 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 		const IECore::StringData *passTypeData = layerData->member<IECore::StringData>( "type", true );
 		ccl::ustring passType( passTypeData->readable() );
 		layer.passType = ccl::PASS_NONE;
-		if( typeEnum.exists( passType ) )
+		if( passType == ccl::ustring( "lightgroup" ) )
+		{
+			layer.passType = ccl::PASS_COMBINED;
+			layer.numChannels = 3;
+		}
+		else if( typeEnum.exists( passType ) )
 		{
 			layer.passType = static_cast<ccl::PassType>( typeEnum[passType] );
 			ccl::PassInfo passInfo = ccl::Pass::get_info( layer.passType );
@@ -204,10 +211,10 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 		}
 		else
 		{
-			spec.channelnames.push_back( "R" );
-			spec.channelnames.push_back( "G" );
-			spec.channelnames.push_back( "B" );
-			spec.channelnames.push_back( "A" );
+			for( int i = 0; i < layer.numChannels; ++i )
+			{
+				spec.channelnames.push_back( g_channels[i] );
+			}
 		}
 		//spec.full_x = m_displayWindow.min.x;
 		//spec.full_y = m_displayWindow.min.y;

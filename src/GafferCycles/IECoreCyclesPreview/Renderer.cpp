@@ -319,7 +319,7 @@ class CyclesOutput : public IECore::RefCounted
 				{
 					p["name"] = m_denoise ? new StringData( ccl::string_printf( "%s_denoised", tokens[1].c_str() ) ) : new StringData( tokens[1] );
 					p["type"] = new StringData( "lightgroup" );
-					passType = "lightgroup";
+					passType = "combined";
 					m_data = tokens[1];
 					m_lightgroup = true;
 				}

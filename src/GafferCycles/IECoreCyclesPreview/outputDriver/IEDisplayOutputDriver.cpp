@@ -106,7 +106,11 @@ IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow,
 
 		const IECore::StringData *passTypeData = layerData->member<IECore::StringData>( "type", true );
 		ccl::ustring passType( passTypeData->readable() );
-		if( typeEnum.exists( passType ) )
+		if( passType == ccl::ustring( "lightgroup" ) )
+		{
+			layer.numChannels = 3;
+		}
+		else if( typeEnum.exists( passType ) )
 		{
 			ccl::PassInfo passInfo = ccl::Pass::get_info( static_cast<ccl::PassType>( typeEnum[passType] ) );
 			layer.numChannels = passInfo.num_components;
