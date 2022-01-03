@@ -48,8 +48,6 @@
 #ifdef __APPLE__
 #include <crt_externs.h>
 static char **environ = *_NSGetEnviron();
-#else
-#include <unistd.h>
 #endif
 
 using namespace Gaffer;
