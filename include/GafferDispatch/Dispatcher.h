@@ -222,7 +222,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		/// All tasks within a batch are from the same plug
 		/// and have identical contexts except for the frame
 		/// number.
-		class TaskBatch : public IECore::RefCounted
+		class GAFFERDISPATCH_API TaskBatch : public IECore::RefCounted
 		{
 			public :
 
