@@ -669,7 +669,7 @@ class PathModel : public QAbstractItemModel
 				return result;
 			}
 
-			indicesForPathsWalk( m_rootItem.get(), Path::Names(), QModelIndex(), paths, result );
+			indicesForPathsWalk( m_rootItem.get(), m_rootPath->names(), QModelIndex(), paths, result );
 			return result;
 		}
 
