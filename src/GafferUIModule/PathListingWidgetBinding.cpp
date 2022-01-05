@@ -1307,7 +1307,7 @@ class PathModel : public QAbstractItemModel
 					if( model->m_expandNonLeafSelection )
 					{
 						// OK to read `m_selectedPaths` from background thread, because write on UI
-						// thread is preceded by `cancelUpdate().
+						// thread is preceded by `cancelUpdate()`.
 						const unsigned selectionMatch = model->m_selectedPaths.match( path->names() );
 						/// \todo I don't understand the purpose of this logic. It seems it might be
 						/// more useful to expand all ancestors of the selection (even if they're not
@@ -1334,7 +1334,6 @@ class PathModel : public QAbstractItemModel
 
 					m_expansionDirty = false;
 				}
-
 
 				// Returns the updated ChildContainer. This will not be visible in the model
 				// until the queued edit is executed. It is returned so that we can update
