@@ -869,6 +869,21 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( path2.visitedPaths, path1.visitedPaths )
 
+	def testLegacySelectionWithNonEmptyRootPath( self ) :
+
+		d = { "a" : { "b" : 10 } }
+		p = Gaffer.DictPath( d, "/a" )
+
+		w = GafferUI.PathListingWidget( p )
+		w.setSelectedPaths( [ p.copy().setFromString( "/a/b" ) ] )
+		self.assertEqual( { str( s ) for s in w.getSelectedPaths() }, { "/a/b" } )
+
+		d["a"]["c"] = 20
+		p.pathChangedSignal()( p )
+
+		w.setSelectedPaths( [ p.copy().setFromString( "/a/c" ) ] )
+		self.assertEqual( { str( s ) for s in w.getSelectedPaths() }, { "/a/c" } )
+
 	@staticmethod
 	def __emitPathChanged( widget ) :
 
