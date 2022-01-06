@@ -1,3 +1,11 @@
+0.60.12.x (relative to 0.60.12.1)
+=========
+
+Fixes
+-----
+
+- ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
+
 0.60.12.1 (relative to 0.60.12.0)
 =========
 

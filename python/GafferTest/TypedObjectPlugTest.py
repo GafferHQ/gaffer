@@ -329,5 +329,11 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		s2.execute( s.serialise() )
 		self.assertEqual( s2["n"]["p"].getValue(), s["n"]["p"].getValue() )
 
+	def testRepr( self ) :
+
+		plug = Gaffer.CompoundObjectPlug( defaultValue = IECore.CompoundObject( { "a" : IECore.IntData( 10 ) } ) )
+		plug2 = eval( repr( plug ) )
+		self.assertEqual( plug2.defaultValue(), plug.defaultValue() )
+
 if __name__ == "__main__":
 	unittest.main()
