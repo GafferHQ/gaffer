@@ -6,6 +6,11 @@ Improvements
 
 - Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
 
+Fixes
+-----
+
+- ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
+
 API
 ---
 
@@ -172,6 +177,14 @@ Build
   - Qt : Updated to version 5.15.2.
   - PySide : Updated to version 5.15.2.
   - Cortex : Updated to version 10.3.0.0.
+
+0.60.12.x (relative to 0.60.12.1)
+=========
+
+Fixes
+-----
+
+- ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 
 0.60.12.1 (relative to 0.60.12.0)
 =========
