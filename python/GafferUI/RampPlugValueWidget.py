@@ -78,7 +78,10 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__lastPositionChangedReason = None
 			self.__positionsMergeGroupId = 0
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			with GafferUI.ListContainer(
+				orientation = GafferUI.ListContainer.Orientation.Horizontal if isinstance( plug.pointYPlug( 0 ), Gaffer.FloatPlug ) else GafferUI.ListContainer.Orientation.Vertical,
+				spacing = 4
+			) :
 
 				self.__positionLabel = GafferUI.LabelPlugValueWidget(
 					plug.pointXPlug( 0 ),
