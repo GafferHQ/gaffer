@@ -162,6 +162,33 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			],
 		)
 
+	def testParameterValuesWhenConnected( self ) :
+
+		n1 = GafferSceneTest.TestShader( "n1" )
+		n2 = GafferSceneTest.TestShader( "n2" )
+		n3 = GafferSceneTest.TestShader( "n3" )
+		n3["type"].setValue( "test:surface" )
+
+		n3["parameters"]["i"].setInput( n1["out"]["r"] )
+		n3["parameters"]["c"].setValue( imath.Color3f( 2, 3, 4 ) )
+		n3["parameters"]["c"].setInput( n2["out"] )
+
+		network = n3.attributes()["test:surface"]
+		self.assertEqual( len( network ), 3 )
+		self.assertEqual(
+			network.inputConnections( "n3" ), [
+				network.Connection( network.Parameter( "n2", "", ), network.Parameter( "n3", "c" ) ),
+				network.Connection( network.Parameter( "n1", "r", ), network.Parameter( "n3", "i" ) )
+			]
+		)
+
+		# The values set on the parameters don't come through, but we get the default value from the
+		# connected shader's output as the correct type
+		self.assertEqual(
+			network.getShader( "n3" ).parameters,
+			IECore.CompoundData( { "i" : IECore.IntData( 0 ), "c" : IECore.Color3fData( imath.Color3f( 0 ) ) } )
+		)
+
 	def testDetectCyclicConnections( self ) :
 
 		n1 = GafferSceneTest.TestShader()
