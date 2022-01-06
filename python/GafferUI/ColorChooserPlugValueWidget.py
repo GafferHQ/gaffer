@@ -47,6 +47,8 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__colorChooser, plugs, **kw )
 
+		self.__colorChooser.setSwatchesVisible( False )
+
 		self.__colorChangedConnection = self.__colorChooser.colorChangedSignal().connect(
 			Gaffer.WeakMethod( self.__colorChanged ), scoped = False
 		)

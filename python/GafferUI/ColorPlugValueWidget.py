@@ -75,7 +75,6 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def setColorChooserVisible( self, visible ) :
 
 		self.__colorChooser.setVisible( visible )
-		self.__swatch.setVisible( not visible )
 		self.__chooserButton.setImage(
 			"colorPlugValueWidgetSliders{}.png".format( "On" if visible else "Off" )
 		)
