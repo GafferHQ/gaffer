@@ -46,7 +46,6 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
 #include "IECore/VectorTypedData.h"
 
 #include "OSL/genclosure.h"
@@ -865,61 +864,10 @@ struct ThreadInfo
 namespace
 {
 
-template<typename Spline>
-void declareSpline( const InternedString &name, const Spline &spline, ShadingSystem *shadingSystem )
-{
-	vector<typename Spline::XType> positions;
-	vector<typename Spline::YType> values;
-	positions.reserve( spline.points.size() );
-	values.reserve( spline.points.size() );
-	for( typename Spline::PointContainer::const_iterator it = spline.points.begin(), eIt = spline.points.end(); it != eIt; ++it )
-	{
-		positions.push_back( it->first );
-		values.push_back( it->second );
-	}
-
-	const char *basis = "catmull-rom";
-	if( spline.basis == Spline::Basis::bezier() )
-	{
-		basis = "bezier";
-	}
-	else if( spline.basis == Spline::Basis::bSpline() )
-	{
-		basis = "bspline";
-	}
-	else if( spline.basis == Spline::Basis::linear() )
-	{
-		basis = "linear";
-	}
-
-	OSLShader::prepareSplineCVsForOSL( positions, values, basis );
-
-	TypeDesc positionsType = TypeDescFromType<typename Spline::XType>::typeDesc();
-	TypeDesc valuesType = TypeDescFromType<typename Spline::YType>::typeDesc();
-	positionsType.arraylen = positions.size();
-	valuesType.arraylen = values.size();
-
-	shadingSystem->Parameter( name.string() + "Positions", positionsType, &positions.front() );
-	shadingSystem->Parameter( name.string() + "Values", valuesType, &values.front() );
-	shadingSystem->Parameter( name.string() + "Basis", TypeDesc::TypeString, &basis );
-
-}
-
 void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
 {
 	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
 	{
-		if( const SplinefColor3fData *spline = runTimeCast<const SplinefColor3fData>( it->second.get() ) )
-		{
-			declareSpline( it->first, spline->readable(), shadingSystem );
-			continue;
-		}
-		else if( const SplineffData *spline = runTimeCast<const SplineffData>( it->second.get() ) )
-		{
-			declareSpline( it->first, spline->readable(), shadingSystem );
-			continue;
-		}
-
 		IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
@@ -1008,7 +956,11 @@ ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 
 				// Declare this shader along with its parameters and connections.
 
-				declareParameters( shader->parameters(), shadingSystem );
+				IECore::ConstCompoundDataPtr expandedParameters =
+					IECoreScene::ShaderNetworkAlgo::expandSplineParameters(
+						shader->parametersData()
+					);
+				declareParameters( expandedParameters->readable(), shadingSystem );
 				shadingSystem->Shader( "surface", shader->getName().c_str(), handle.c_str() );
 
 				for( const auto &c : shaderNetwork->inputConnections( handle ) )

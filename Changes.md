@@ -6,6 +6,11 @@ Features
 
 - Viewer : Added FPS counter option to Gadget menu.
 
+Breaking Changes
+----------------
+
+- Removed OSLShader::prepareSplineCVsForOSL.  Use IECoreScene::ShaderNetworkAlgo::expandSplineParameters instead.
+
 0.62.0.0a1
 ==========
 
