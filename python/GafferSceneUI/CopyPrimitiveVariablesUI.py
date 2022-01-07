@@ -84,6 +84,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"prefix" : [
+
+			"description",
+			"""
+			A prefix applied to the names of the copied primitive variables.
+			""",
+
+		],
+
 	}
 
 )

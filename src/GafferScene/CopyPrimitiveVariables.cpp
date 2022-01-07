@@ -59,6 +59,7 @@ CopyPrimitiveVariables::CopyPrimitiveVariables( const std::string &name )
 	addChild( new ScenePlug( "source" ) );
 	addChild( new StringPlug( "primitiveVariables", Plug::In, "" ) );
 	addChild( new StringPlug( "sourceLocation" ) );
+	addChild( new StringPlug( "prefix" ) );
 }
 
 CopyPrimitiveVariables::~CopyPrimitiveVariables()
@@ -95,11 +96,22 @@ const Gaffer::StringPlug *CopyPrimitiveVariables::sourceLocationPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::StringPlug *CopyPrimitiveVariables::prefixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *CopyPrimitiveVariables::prefixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
 bool CopyPrimitiveVariables::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return Deformer::affectsProcessedObject( input ) ||
 		input == sourcePlug()->objectPlug() ||
 		input == primitiveVariablesPlug() ||
+		input == prefixPlug() ||
 		input == sourceLocationPlug() ||
 		input == sourcePlug()->existsPlug()
 	;
@@ -109,6 +121,7 @@ void CopyPrimitiveVariables::hashProcessedObject( const ScenePath &path, const G
 {
 	Deformer::hashProcessedObject( path, context, h );
 	primitiveVariablesPlug()->hash( h );
+	prefixPlug()->hash( h );
 
 	boost::optional<ScenePath> sourceLocationPath;
 	const string sourceLocation = sourceLocationPlug()->getValue();
@@ -150,6 +163,8 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 	{
 		return inputObject;
 	}
+
+	const string prefix = prefixPlug()->getValue();
 
 	boost::optional<ScenePath> sourceLocationPath;
 	const string sourceLocation = sourceLocationPlug()->getValue();
@@ -199,7 +214,7 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 					% variable.first % destinationPath % sourcePath
 			) );
 		}
-		result->variables[variable.first] = variable.second;
+		result->variables[prefix + variable.first] = variable.second;
 	}
 
 	return result;
@@ -212,5 +227,5 @@ bool CopyPrimitiveVariables::adjustBounds() const
 		return false;
 	}
 
-	return StringAlgo::matchMultiple( "P", primitiveVariablesPlug()->getValue() );
+	return StringAlgo::matchMultiple( "P", primitiveVariablesPlug()->getValue() ) && prefixPlug()->isSetToDefault();
 }
