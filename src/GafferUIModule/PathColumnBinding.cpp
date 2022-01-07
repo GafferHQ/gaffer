@@ -40,6 +40,7 @@
 
 #include "GafferUI/PathColumn.h"
 
+#include "GafferBindings/DataBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "IECorePython/ExceptionAlgo.h"
@@ -65,19 +66,19 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 		{
 		}
 
-		IECore::ConstRunTimeTypedPtr cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller = nullptr ) const override
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "cellValue" );
+					object f = this->methodOverride( "cellData" );
 					if( f )
 					{
-						return extract<ConstRunTimeTypedPtr>(
+						return extract<CellData>(
 							// See note of caution about `ptr( canceller )` in PathWrapper.
-							f( PathPtr( const_cast<Path *>( &path ) ), role, boost::python::ptr( canceller ) )
+							f( PathPtr( const_cast<Path *>( &path ) ), boost::python::ptr( canceller ) )
 						);
 					}
 				}
@@ -87,21 +88,21 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 				}
 			}
 
-			throw IECore::Exception( "PathColumn::cellValue() python method not defined" );
+			throw IECore::Exception( "PathColumn::cellData() python method not defined" );
 		}
 
-		IECore::ConstRunTimeTypedPtr headerValue( Role role, const IECore::Canceller *canceller = nullptr ) const override
+		CellData headerData( const IECore::Canceller *canceller = nullptr ) const override
 		{
 			if( isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					object f = this->methodOverride( "headerValue" );
+					object f = this->methodOverride( "headerData" );
 					if( f )
 					{
-						return extract<ConstRunTimeTypedPtr>(
-							f( role, boost::python::ptr( canceller ) )
+						return extract<CellData>(
+							f( boost::python::ptr( canceller ) )
 						);
 					}
 				}
@@ -111,9 +112,49 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 				}
 			}
 
-			throw IECore::Exception( "PathColumn::headerValue() python method not defined" );
+			throw IECore::Exception( "PathColumn::headerData() python method not defined" );
 		}
 };
+
+object cellDataGetValue( PathColumn::CellData &cellData )
+{
+	return dataToPython( cellData.value.get(), /* copy = */ false );
+}
+
+void cellDataSetValue( PathColumn::CellData &cellData, const ConstDataPtr &data )
+{
+	cellData.value = data;
+}
+
+object cellDataGetIcon( PathColumn::CellData &cellData )
+{
+	return dataToPython( cellData.icon.get(), /* copy = */ false );
+}
+
+void cellDataSetIcon( PathColumn::CellData &cellData, const ConstDataPtr &data )
+{
+	cellData.icon = data;
+}
+
+object cellDataGetBackground( PathColumn::CellData &cellData )
+{
+	return dataToPython( cellData.background.get(), /* copy = */ false );
+}
+
+void cellDataSetBackground( PathColumn::CellData &cellData, const ConstDataPtr &data )
+{
+	cellData.background = data;
+}
+
+object cellDataGetToolTip( PathColumn::CellData &cellData )
+{
+	return dataToPython( cellData.toolTip.get(), /* copy = */ false );
+}
+
+void cellDataSetToolTip( PathColumn::CellData &cellData, const ConstDataPtr &data )
+{
+	cellData.toolTip = data;
+}
 
 struct ChangedSignalSlotCaller
 {
@@ -141,9 +182,29 @@ void GafferUIModule::bindPathColumn()
 			.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
 		;
 
-		enum_<PathColumn::Role>( "Role" )
-			.value( "Value", PathColumn::Role::Value )
-			.value( "Icon", PathColumn::Role::Icon )
+		class_<PathColumn::CellData>( "CellData" )
+			.def(
+				init<const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &,const IECore::ConstDataPtr &>(
+					(
+						arg( "value" ) = object(),
+						arg( "icon" ) = object(),
+						arg( "background" ) = object(),
+						arg( "toolTip" ) = object()
+					)
+				)
+			)
+			.add_property(
+				"value", &cellDataGetValue, &cellDataSetValue
+			)
+			.add_property(
+				"icon", &cellDataGetIcon, &cellDataSetIcon
+			)
+			.add_property(
+				"background", &cellDataGetBackground, &cellDataSetBackground
+			)
+			.add_property(
+				"toolTip", &cellDataGetToolTip, &cellDataSetToolTip
+			)
 		;
 
 		SignalClass<PathColumn::PathColumnSignal, DefaultSignalCaller<PathColumn::PathColumnSignal>, ChangedSignalSlotCaller>( "PathColumnSignal" );

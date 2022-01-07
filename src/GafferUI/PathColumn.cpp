@@ -71,26 +71,14 @@ IECore::InternedString StandardPathColumn::property() const
 	return m_property;
 }
 
-IECore::ConstRunTimeTypedPtr StandardPathColumn::cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller ) const
+PathColumn::CellData StandardPathColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	switch( role )
-	{
-		case Role::Value :
-			return path.property( m_property, canceller );
-		default :
-			return nullptr;
-	}
+	return CellData( runTimeCast<const IECore::Data>( path.property( m_property, canceller ) ) );
 }
 
-IECore::ConstRunTimeTypedPtr StandardPathColumn::headerValue( Role role, const IECore::Canceller *canceller ) const
+PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *canceller ) const
 {
-	switch( role )
-	{
-		case Role::Value :
-			return m_label;
-		default :
-			return nullptr;
-	}
+	return CellData( m_label );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -102,17 +90,14 @@ IconPathColumn::IconPathColumn( const std::string &label, const std::string &pre
 {
 }
 
-IECore::ConstRunTimeTypedPtr IconPathColumn::cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller ) const
+PathColumn::CellData IconPathColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	if( role != Role::Icon )
-	{
-		return nullptr;
-	}
+	CellData result;
 
 	ConstRunTimeTypedPtr property = path.property( m_property, canceller );
 	if( !property )
 	{
-		return nullptr;
+		return result;
 	}
 
 	std::string fileName = m_prefix;
@@ -132,21 +117,16 @@ IECore::ConstRunTimeTypedPtr IconPathColumn::cellValue( const Gaffer::Path &path
 			break;
 		default :
 			IECore::msg( IECore::Msg::Warning, "IconPathColumn", boost::str( boost::format( "Unsupported property type \"%s\"" ) % property->typeName() ) );
-			return nullptr;
+			return result;
 	}
 
-	return new IECore::StringData( fileName += ".png" );
+	result.icon = new IECore::StringData( fileName += ".png" );
+	return result;
 }
 
-IECore::ConstRunTimeTypedPtr IconPathColumn::headerValue( Role role, const IECore::Canceller *canceller ) const
+PathColumn::CellData IconPathColumn::headerData( const IECore::Canceller *canceller ) const
 {
-	switch( role )
-	{
-		case Role::Value :
-			return m_label;
-		default :
-			return nullptr;
-	}
+	return CellData( m_label );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -158,13 +138,8 @@ FileIconPathColumn::FileIconPathColumn()
 {
 }
 
-IECore::ConstRunTimeTypedPtr FileIconPathColumn::cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller ) const
+PathColumn::CellData FileIconPathColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	if( role != Role::Icon )
-	{
-		return nullptr;
-	}
-
 	std::string s = path.string();
 	if( const FileSystemPath *fileSystemPath = runTimeCast<const FileSystemPath>( &path ) )
 	{
@@ -180,16 +155,10 @@ IECore::ConstRunTimeTypedPtr FileIconPathColumn::cellValue( const Gaffer::Path &
 		}
 	}
 
-	return new StringData( "fileIcon:" + s );
+	return CellData( /* value = */ nullptr, /* icon = */ new StringData( "fileIcon:" + s ) );
 }
 
-IECore::ConstRunTimeTypedPtr FileIconPathColumn::headerValue( Role role, const IECore::Canceller *canceller ) const
+PathColumn::CellData FileIconPathColumn::headerData( const IECore::Canceller *canceller ) const
 {
-	switch( role )
-	{
-		case Role::Value :
-			return m_label;
-		default :
-			return nullptr;
-	}
+	return CellData( m_label );
 }

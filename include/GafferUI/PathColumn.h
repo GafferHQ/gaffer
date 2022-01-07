@@ -57,8 +57,16 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public boost::signals
 
 		IE_CORE_DECLAREMEMBERPTR( PathColumn )
 
-		enum class Role
+		struct CellData
 		{
+			CellData(
+				const IECore::ConstDataPtr &value = nullptr,
+				const IECore::ConstDataPtr &icon = nullptr,
+				const IECore::ConstDataPtr &background = nullptr,
+				const IECore::ConstDataPtr &toolTip = nullptr
+			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ) {}
+			CellData( const CellData &other ) = default;
+
 			/// The primary value to be displayed in a cell or header.
 			/// Supported types :
 			///
@@ -67,27 +75,34 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public boost::signals
 			/// - FloatData, DoubleData
 			/// - DateTimeData
 			/// - V2fData, V3fData, Color3fData, Color4fData
-			Value,
+			IECore::ConstDataPtr value;
 			/// An additional icon to be displayed next to the primary
 			/// value. Supported types :
 			///
 			/// - StringData (providing icon name)
 			/// - Color3fData (drawn as swatch)
-			Icon,
+			IECore::ConstDataPtr icon;
 			/// The background colour for the cell. Supported types :
 			///
 			/// - Color3fData
 			/// - Color4fData
-			Background,
-			/// Tip to be displayed on hover. Supports the same types
-			/// as `Value`.
-			ToolTip
+			IECore::ConstDataPtr background;
+			/// Tip to be displayed on hover. Supported types :
+			///
+			/// - StringData
+			IECore::ConstDataPtr toolTip;
+
+			private :
+
+				IECore::ConstDataPtr m_reserved1;
+				IECore::ConstDataPtr m_reserved2;
+
 		};
 
-		/// Returns a value used to draw a cell within the column.
-		virtual IECore::ConstRunTimeTypedPtr cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller = nullptr ) const = 0;
-		/// Returns a value used to draw the header for the column.
-		virtual IECore::ConstRunTimeTypedPtr headerValue( Role role, const IECore::Canceller *canceller = nullptr ) const = 0;
+		/// Returns the data needed to draw a column cell.
+		virtual CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller = nullptr ) const = 0;
+		/// Returns the data needed to draw a column header.
+		virtual CellData headerData( const IECore::Canceller *canceller = nullptr ) const = 0;
 
 		using PathColumnSignal = boost::signal<void ( PathColumn * ), Gaffer::CatchingSignalCombiner<void>>;
 		/// Subclasses should emit this signal when something changes
@@ -115,8 +130,8 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 
 		IECore::InternedString property() const;
 
-		IECore::ConstRunTimeTypedPtr cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller ) const override;
-		IECore::ConstRunTimeTypedPtr headerValue( Role role, const IECore::Canceller *canceller ) const override;
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
+		CellData headerData( const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -143,8 +158,8 @@ class GAFFERUI_API IconPathColumn : public PathColumn
 		/// - BoolData
 		IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property );
 
-		IECore::ConstRunTimeTypedPtr cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller ) const override;
-		IECore::ConstRunTimeTypedPtr headerValue( Role role, const IECore::Canceller *canceller ) const override;
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
+		CellData headerData( const IECore::Canceller *canceller ) const override;
 
 	private :
 
@@ -167,8 +182,8 @@ class GAFFERUI_API FileIconPathColumn : public PathColumn
 
 		FileIconPathColumn();
 
-		IECore::ConstRunTimeTypedPtr cellValue( const Gaffer::Path &path, Role role, const IECore::Canceller *canceller ) const override;
-		IECore::ConstRunTimeTypedPtr headerValue( Role role, const IECore::Canceller *canceller ) const override;
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
+		CellData headerData( const IECore::Canceller *canceller ) const override;
 
 	private :
 

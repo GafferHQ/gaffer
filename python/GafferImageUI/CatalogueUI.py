@@ -79,7 +79,7 @@ _columnsMetadataKey = "catalogue:columns"
 
 ## The Column class extends the PathColumn class to simplify the process of
 # creating a custom column for the Catalogue. Subclasses must implement
-# `_imageCellValue()`.
+# `_imageCellData()`.
 class Column( GafferUI.PathColumn ) :
 
 	def __init__( self, title ) :
@@ -92,8 +92,8 @@ class Column( GafferUI.PathColumn ) :
 
 		return self.__title.value
 
-	## Calls `_imageCellValue()`.
-	def cellValue( self, path, role, canceller ) :
+	## Calls `_imageCellData()`.
+	def cellData( self, path, canceller ) :
 
 		image = path.property( "catalogue:image" )
 		catalogue = path.property( "catalogue" )
@@ -103,28 +103,26 @@ class Column( GafferUI.PathColumn ) :
 		# not in a position to do anything more helpful.
 		with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
 
-			# Call `_imageCellValue()` in a context which causes the Catalogue
+			# Call `_imageCellData()` in a context which causes the Catalogue
 			# to output the image of interest.
 			with Gaffer.Context( catalogue.scriptNode().context() ) as context :
 				context["catalogue:imageName"] = image.getName()
 				try :
-					return self._imageCellValue( image, catalogue, role )
+					return self._imageCellData( image, catalogue )
 				except NotImplementedError :
 					# Backwards compatibility for deprecated API.
 					if isinstance( self, IconColumn ) :
-						if role == self.Role.Icon :
-							return self.value( image, catalogue ) + ".png"
+						return self.CellData( icon = self.value( image, catalogue ) + ".png" )
 					else :
-						if role == self.Role.Value :
-							return self.value( image, catalogue )
+						return self.CellData( value = self.value( image, catalogue ) )
 
-	def headerValue( self, role, canceller ) :
+	def headerData( self, canceller ) :
 
-		if role == self.Role.Value :
-			return self.__title
+		return self.CellData( value = self.__title )
 
-	## Called to generate a cell value from an image in
-	# the Catalogue. Must be implemented by derived classes.
+	## Called to generate a cell from an image in
+	# the Catalogue. Must be implemented by derived classes to return
+	# `PathColumn.CellData`.
 	# Arguments :
 	#
 	# - `image` : The `GafferImage.Catalogue.Image` plug for the cell
@@ -133,7 +131,7 @@ class Column( GafferUI.PathColumn ) :
 	#
 	# Called in a context where `catalogue["out"]` provides the
 	# correct image for the cell.
-	def _imageCellValue( self, image, catalogue, role ) :
+	def _imageCellData( self, image, catalogue ) :
 
 		raise NotImplementedError
 
@@ -168,8 +166,8 @@ def registeredColumns() :
 # Convenience Column subclasses
 # =============================
 
-## \deprecated. Derive from Column and implement `_imageCellValue()`
-# for `role == Icon` instead.
+## \deprecated. Derive from Column and implement `_imageCellData()`
+# instead.
 class IconColumn( Column ) :
 
 	pass
@@ -186,10 +184,9 @@ class SimpleColumn( Column ) :
 		Column.__init__( self, title )
 		self.__valueProvider = valueProvider
 
-	def _imageCellValue( self, image, catalogue, role ) :
+	def _imageCellData( self, image, catalogue ) :
 
-		if role == self.Role.Value :
-			return self.__valueProvider( image, catalogue )
+		return self.CellData( value = self.__valueProvider( image, catalogue ) )
 
 # A Columns class that retrieves its value from the catalogue item's image
 # metadata. If multiple names are provided, the first one present will be used,
@@ -207,17 +204,18 @@ class ImageMetadataColumn( Column ) :
 		self.__names = nameOrNames
 		self.__defaultValue = defaultValue
 
-	def _imageCellValue( self, image, catalogue, role ) :
+	def _imageCellData( self, image, catalogue ) :
 
-		if role == self.Role.Value :
+		value = self.__defaultValue
 
-			metadata = catalogue["out"].metadata()
-			for name in self.__names :
-				value = metadata.get( name, None )
-				if value is not None :
-					return value
+		metadata = catalogue["out"].metadata()
+		for name in self.__names :
+			metadataValue = metadata.get( name, None )
+			if metadataValue is not None :
+				value = metadataValue
+				break
 
-			return self.__defaultValue
+		return self.CellData( value = value )
 
 # A Column class that retrieves its value from render-time context variable
 # values passed through the catalogue item's image metadata.  If multiple names
@@ -243,22 +241,21 @@ class __StatusIconColumn( Column ) :
 
 		Column.__init__( self, "" )
 
-	def _imageCellValue( self, image, catalogue, role ) :
+	def _imageCellData( self, image, catalogue ) :
 
-		if role != self.Role.Icon :
-			return None
+		icon = "catalogueStatusDisplay.png"
 
 		fileName = image["fileName"].getValue()
 		if fileName :
+			icon = "catalogueStatusDisk.png"
 			# Attempt to read the metadata to check the image is loadable. Given other columns
 			# are going to do this anyway, we're not adding too much overhead here.
 			try :
 				catalogue["out"].metadata()
 			except Gaffer.ProcessException :
-				return "errorSmall.png"
-			return "catalogueStatusDisk.png"
+				icon = "errorSmall.png"
 
-		return "catalogueStatusDisplay.png"
+		return self.CellData( icon = icon )
 
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", GafferUI.PathListingWidget.defaultNameColumn )

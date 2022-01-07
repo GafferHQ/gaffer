@@ -136,23 +136,6 @@ bool variantLess( const QVariant &left, const QVariant &right )
 	}
 }
 
-boost::optional<GafferUI::PathColumn::Role> pathColumnRole( int qtRole )
-{
-	switch( qtRole )
-	{
-		case Qt::DisplayRole :
-			return GafferUI::PathColumn::Role::Value;
-		case Qt::DecorationRole :
-			return GafferUI::PathColumn::Role::Icon;
-		case Qt::BackgroundRole :
-			return GafferUI::PathColumn::Role::Background;
-		case Qt::ToolTipRole :
-			return GafferUI::PathColumn::Role::ToolTip;
-		default :
-			return boost::none;
-	}
-}
-
 IECorePreview::LRUCache<std::string, QVariant> g_iconCache(
 	// Getter
 	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) -> QVariant
@@ -228,38 +211,36 @@ QString vectorToString( const T &v )
 	return result;
 }
 
-// If `path` is null, returns header data.
-QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path *path, GafferUI::PathColumn::Role role, const IECore::Canceller *canceller )
+QVariant dataToVariant( const IECore::Data *value, int role )
 {
-	IECore::ConstRunTimeTypedPtr value = path ? column.cellValue( *path, role, canceller ) : column.headerValue( role, canceller );
 	if( !value )
 	{
 		return QVariant();
 	}
 
-	if( role == GafferUI::PathColumn::Role::Icon )
+	if( role == Qt::DecorationRole )
 	{
 		switch( value->typeId() )
 		{
 			case IECore::StringDataTypeId :
-				return g_iconCache.get( static_cast<const IECore::StringData *>( value.get() )->readable() );
+				return g_iconCache.get( static_cast<const IECore::StringData *>( value )->readable() );
 			case IECore::Color3fDataTypeId :
-				return displayColor( static_cast<const IECore::Color3fData *>( value.get() )->readable() );
+				return displayColor( static_cast<const IECore::Color3fData *>( value )->readable() );
 			default :
 				return QVariant();
 		}
 	}
 
-	if( role == GafferUI::PathColumn::Role::Background )
+	if( role == Qt::BackgroundRole )
 	{
 		switch( value->typeId() )
 		{
 			case IECore::Color3fDataTypeId : {
-				const Imath::Color3f c = static_cast<const IECore::Color3fData *>( value.get() )->readable() * 255.0f;
+				const Imath::Color3f c = static_cast<const IECore::Color3fData *>( value )->readable() * 255.0f;
 				return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
 			}
 			case IECore::Color4fDataTypeId : {
-				const Imath::Color4f c = static_cast<const IECore::Color4fData *>( value.get() )->readable() * 255.0f;
+				const Imath::Color4f c = static_cast<const IECore::Color4fData *>( value )->readable() * 255.0f;
 				return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ), Imath::clamp( c[3], 0.0f, 255.0f ) );
 			}
 			default :
@@ -267,33 +248,31 @@ QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path 
 		}
 	}
 
-	assert( role == GafferUI::PathColumn::Role::Value || role == GafferUI::PathColumn::Role::ToolTip );
-
 	switch( value->typeId() )
 	{
 		case IECore::StringDataTypeId :
-			return static_cast<const IECore::StringData *>( value.get() )->readable().c_str();
+			return static_cast<const IECore::StringData *>( value )->readable().c_str();
 		case IECore::IntDataTypeId :
-			return static_cast<const IECore::IntData *>( value.get() )->readable();
+			return static_cast<const IECore::IntData *>( value )->readable();
 		case IECore::UIntDataTypeId :
-			return static_cast<const IECore::UIntData *>( value.get() )->readable();
+			return static_cast<const IECore::UIntData *>( value )->readable();
 		case IECore::UInt64DataTypeId :
-			return (quint64)static_cast<const IECore::UInt64Data *>( value.get() )->readable();
+			return (quint64)static_cast<const IECore::UInt64Data *>( value )->readable();
 		case IECore::FloatDataTypeId :
-			return doubleToString( static_cast<const IECore::FloatData *>( value.get() )->readable() );
+			return doubleToString( static_cast<const IECore::FloatData *>( value )->readable() );
 		case IECore::DoubleDataTypeId :
-			return doubleToString( static_cast<const IECore::DoubleData *>( value.get() )->readable() );
+			return doubleToString( static_cast<const IECore::DoubleData *>( value )->readable() );
 		case IECore::V2fDataTypeId :
-			return vectorToString( static_cast<const IECore::V2fData *>( value.get() )->readable() );
+			return vectorToString( static_cast<const IECore::V2fData *>( value )->readable() );
 		case IECore::V3fDataTypeId :
-			return vectorToString( static_cast<const IECore::V3fData *>( value.get() )->readable() );
+			return vectorToString( static_cast<const IECore::V3fData *>( value )->readable() );
 		case IECore::Color3fDataTypeId :
-			return vectorToString( static_cast<const IECore::Color3fData *>( value.get() )->readable() );
+			return vectorToString( static_cast<const IECore::Color3fData *>( value )->readable() );
 		case IECore::Color4fDataTypeId :
-			return vectorToString( static_cast<const IECore::Color4fData *>( value.get() )->readable() );
+			return vectorToString( static_cast<const IECore::Color4fData *>( value )->readable() );
 		case IECore::DateTimeDataTypeId :
 		{
-			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value.get() );
+			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
 			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
 			return QVariant( QDateTime::fromTime_t( t ) );
 		}
@@ -303,12 +282,63 @@ QVariant valueToVariant( const GafferUI::PathColumn &column, const Gaffer::Path 
 			// used types within large hierarchies falling through to here, we will need to give
 			// them their own special case above, for improved performance.
 			IECorePython::ScopedGILLock gilLock;
-			object pythonValue( boost::const_pointer_cast<IECore::RunTimeTyped>( value ) );
+			object pythonValue( IECore::DataPtr( const_cast<IECore::Data *>( value ) ) );
 			boost::python::str pythonString( pythonValue );
 			return QVariant( boost::python::extract<const char *>( pythonString ) );
 		}
 	}
 }
+
+/// Equivalent to PathModel::CellData, but converted into the form needed by Qt.
+struct CellVariants
+{
+
+	CellVariants( const GafferUI::PathColumn::CellData &cellData )
+		:	m_display( dataToVariant( cellData.value.get(), Qt::DisplayRole ) ),
+			m_decoration( dataToVariant( cellData.icon.get(), Qt::DecorationRole ) ),
+			m_background( dataToVariant( cellData.background.get(), Qt::BackgroundRole ) ),
+			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) )
+	{
+	}
+
+	CellVariants() = default;
+	CellVariants( const CellVariants &other ) = default;
+
+	QVariant variant( int qtRole ) const
+	{
+		switch( qtRole )
+		{
+			case Qt::DisplayRole :
+				return m_display;
+			case Qt::DecorationRole :
+				return m_decoration;
+			case Qt::BackgroundRole :
+				return m_background;
+			case Qt::ToolTipRole :
+				return m_toolTip;
+			default :
+				return QVariant();
+		}
+	}
+
+	bool operator== ( const CellVariants &rhs ) const
+	{
+		return
+			m_display == rhs.m_display &&
+			m_decoration == rhs.m_decoration &&
+			m_background == rhs.m_background &&
+			m_toolTip == m_toolTip
+		;
+	}
+
+	private :
+
+		QVariant m_display;
+		QVariant m_decoration;
+		QVariant m_background;
+		QVariant m_toolTip;
+
+};
 
 IECore::InternedString g_nameProperty( "name" );
 IECore::InternedString g_childPlaceholder( "childPlaceholder" );
@@ -640,14 +670,8 @@ class PathModel : public QAbstractItemModel
 				return QVariant();
 			}
 
-			if( auto r = pathColumnRole( role ) )
-			{
-				return valueToVariant( *m_columns[section], nullptr, *r, nullptr );
-			}
-			else
-			{
-				return QVariant();
-			}
+			const CellVariants v = CellVariants( m_columns[section]->headerData() );
+			return v.variant( role );
 		}
 
 		QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const override
@@ -1007,14 +1031,7 @@ class PathModel : public QAbstractItemModel
 					return QVariant();
 				}
 
-				if( auto r = pathColumnRole( role ) )
-				{
-					return m_data[column][int(*r)];
-				}
-				else
-				{
-					return QVariant();
-				}
+				return m_data[column].variant( role );
 			}
 
 			using ChildContainer = std::vector<Ptr>;
@@ -1029,8 +1046,6 @@ class PathModel : public QAbstractItemModel
 			}
 
 			private :
-
-				using ColumnData = std::array<QVariant, (int)GafferUI::PathColumn::Role::ToolTip+1>;
 
 				void dirtyWalk()
 				{
@@ -1069,13 +1084,13 @@ class PathModel : public QAbstractItemModel
 					}
 				}
 
-				static QVariant dataForSort( const std::vector<ColumnData> &data, PathModel *model )
+				static QVariant dataForSort( const std::vector<CellVariants> &data, PathModel *model )
 				{
 					if( model->m_sortColumn < 0 || model->m_sortColumn >= (int)data.size() )
 					{
 						return QVariant();
 					}
-					return data[model->m_sortColumn][(int)GafferUI::PathColumn::Role::Value];
+					return data[model->m_sortColumn].variant( Qt::DisplayRole );
 				}
 
 				// Updates data and returns the value that should be used for sorting.
@@ -1092,19 +1107,16 @@ class PathModel : public QAbstractItemModel
 					// assumption that access to one is likely to indicate upcoming
 					// accesses to the others.
 
-					std::vector<ColumnData> newData;
+					std::vector<CellVariants> newData;
 
 					newData.reserve( model->m_columns.size() );
 
 					for( int i = 0, e = model->m_columns.size(); i < e; ++i )
 					{
-						ColumnData columnData;
+						CellVariants cellVariants;
 						try
 						{
-							for( int r = (int)GafferUI::PathColumn::Role::Value; r <= (int)GafferUI::PathColumn::Role::ToolTip; ++r )
-							{
-								columnData[r] = valueToVariant( *model->m_columns[i], path, (GafferUI::PathColumn::Role)r, canceller );
-							}
+							cellVariants = CellVariants( model->m_columns[i]->cellData( *path, canceller ) );
 						}
 						catch( const IECore::Cancelled &e )
 						{
@@ -1121,7 +1133,7 @@ class PathModel : public QAbstractItemModel
 							IECore::msg( IECore::Msg::Warning, "PathListingWidget", "Unknown error" );
 						}
 
-						newData.push_back( columnData );
+						newData.push_back( cellVariants );
 					}
 
 					if( newData == m_data )
@@ -1455,7 +1467,7 @@ class PathModel : public QAbstractItemModel
 				}
 
 				std::atomic<State> m_dataState;
-				std::vector<ColumnData> m_data;
+				std::vector<CellVariants> m_data;
 
 				std::atomic<State> m_childItemsState;
 				// Children are held by `shared_ptr` in order to support

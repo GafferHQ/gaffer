@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Limited. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,49 +34,53 @@
 #
 ##########################################################################
 
-import os
+import unittest
 
-import Gaffer
-import GafferScene
-import GafferImageUI
+import imath
 
-from GafferImageUI import CatalogueUI
+import IECore
 
-# We provide extended info in the Catalogue's status column
-# to reflect interactive/batch renders triggered from the UI.
+import GafferUI
+import GafferUITest
 
-imageNameMap = {
-	GafferScene.InteractiveRender : "catalogueStatusInteractiveRender",
-	GafferScene.Render : "catalogueStatusBatchRender",
-}
+class PathColumnTest( GafferUITest.TestCase ) :
 
-statusIconColumn = CatalogueUI.column( "Status" )
-if statusIconColumn :
+	def testCellDataDefaultConstructor( self ) :
 
-	class __ExtendedStatusIconColumn( CatalogueUI.Column ) :
+		d = GafferUI.PathColumn.CellData()
+		self.assertIsNone( d.value )
+		self.assertIsNone( d.icon )
+		self.assertIsNone( d.background )
+		self.assertIsNone( d.toolTip )
 
-		def __init__( self ) :
+	def testCellDataKeywordConstructor( self ) :
 
-			CatalogueUI.IconColumn.__init__( self, "" )
+		d = GafferUI.PathColumn.CellData(
+			value = 10,
+			icon = "test.png",
+			background = imath.Color3f( 1 ),
+			toolTip = "help!"
+		)
+		self.assertEqual( d.value, 10 )
+		self.assertEqual( d.icon, "test.png" )
+		self.assertEqual( d.background, imath.Color3f( 1 ) )
+		self.assertEqual( d.toolTip, "help!" )
 
-		def _imageCellData( self, image, catalogue ) :
+	def testCellDataSetters( self ) :
 
-			result = statusIconColumn._imageCellData( image, catalogue )
+		d = GafferUI.PathColumn.CellData()
 
-			try :
-				scenePlug = GafferScene.SceneAlgo.sourceScene( catalogue["out"] )
-				if not scenePlug :
-					return result
-			except Gaffer.ProcessException :
-				result.icon = "errorSmall.png"
-				return result
+		d.value = "test"
+		self.assertEqual( d.value, "test" )
 
-			for type_ in imageNameMap.keys() :
-				if isinstance( scenePlug.node(), type_ ) :
-					suffix = "Complete.png" if image["fileName"].getValue() else "Running.png"
-					result.icon = imageNameMap[type_] + suffix
-					break
+		d.icon = "test.png"
+		self.assertEqual( d.icon, "test.png" )
 
-			return result
+		d.background = imath.Color4f( 1 )
+		self.assertEqual( d.background, imath.Color4f( 1 ) )
 
-	CatalogueUI.registerColumn( "Status", __ExtendedStatusIconColumn() )
+		d.toolTip = "help!"
+		self.assertEqual( d.toolTip, "help!" )
+
+if __name__ == "__main__":
+	unittest.main()

@@ -124,48 +124,48 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		# Header value provider
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom A", "customHeaderA" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "A" ) )
+		self.assertEqual( c.cellData( path, None ).value, "A" )
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom C", "customHeaderC" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), None )
+		self.assertEqual( c.cellData( path, None ).value, None )
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom A", [ "customHeaderA" ] )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "A" ) )
+		self.assertEqual( c.cellData( path, None ).value, "A" )
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom A", "customHeaderA", "X" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "A" ) )
+		self.assertEqual( c.cellData( path, None ).value, "A" )
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom C", "customHeaderC", "C" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), "C" )
+		self.assertEqual( c.cellData( path, None ).value, "C" )
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom", [ "customHeaderC", "customHeaderB", "customHeaderA" ] )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "B" ) )
+		self.assertEqual( c.cellData( path, None ).value, "B" )
 
 		c = CatalogueUI.ImageMetadataColumn( "Custom", [ "customHeaderC", "customHeaderD" ], "X"  )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), "X" )
+		self.assertEqual( c.cellData( path, None ).value, "X" )
 
 		# Context value provider
 
 		c = CatalogueUI.ContextVariableColumn( "Shot", "shot" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "G100" ) )
+		self.assertEqual( c.cellData( path, None ).value, "G100" )
 
 		c = CatalogueUI.ContextVariableColumn( "Layer", "layer" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), None )
+		self.assertEqual( c.cellData( path, None ).value, None )
 
 		c = CatalogueUI.ContextVariableColumn( "Shot", [ "shot" ] )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "G100" ) )
+		self.assertEqual( c.cellData( path, None ).value, "G100" )
 
 		c = CatalogueUI.ContextVariableColumn( "Shot", "shot", "X" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "G100" ) )
+		self.assertEqual( c.cellData( path, None ).value, "G100" )
 
 		c = CatalogueUI.ContextVariableColumn( "Layer", "layer", "L" )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), "L" )
+		self.assertEqual( c.cellData( path, None ).value, "L" )
 
 		c = CatalogueUI.ContextVariableColumn( "Layer", [ "layer", "shot", "sequence" ] )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), IECore.StringData( "G100" ) )
+		self.assertEqual( c.cellData( path, None ).value, "G100" )
 
 		c = CatalogueUI.ContextVariableColumn( "Layer", [ "subLayer", "layer" ], "X"  )
-		self.assertEqual( c.cellValue( path, GafferUI.PathColumn.Role.Value, None ), "X" )
+		self.assertEqual( c.cellData( path, None ).value, "X" )
 
 if __name__ == "__main__":
 	unittest.main()
