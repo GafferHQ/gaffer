@@ -63,6 +63,14 @@ struct LocationWriter
 	{
 	}
 
+	~LocationWriter()
+	{
+		// Some implementations of SceneInterface may perform writing when we release the SceneInterface,
+		// so we need to hold the lock while freeing it
+		tbb::mutex::scoped_lock scopedLock( m_mutex );
+		m_output.reset();
+	}
+
 	/// first half of this function can be lock free reading data from ScenePlug
 	/// once all the data has been read then we take a global lock and write
 	/// into the SceneInterface

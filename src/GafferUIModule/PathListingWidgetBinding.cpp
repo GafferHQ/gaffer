@@ -38,6 +38,8 @@
 
 #include "PathListingWidgetBinding.h"
 
+#include "GafferUI/PathColumn.h"
+
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/FileSystemPath.h"
@@ -134,272 +136,212 @@ bool variantLess( const QVariant &left, const QVariant &right )
 	}
 }
 
-IECore::InternedString g_namePropertyName( "name" );
+IECorePreview::LRUCache<std::string, QVariant> g_iconCache(
+	// Getter
+	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) -> QVariant
+	{
+		cost = 1;
 
-// Abstract class for extracting QVariants from Path objects
-// in order to populate columns in the PathMode. Column
-// objects only do the extraction, they are not responsible
-// for storage at all.
-class Column : public IECore::RefCounted
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( Column )
-
-		virtual QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const = 0;
-		virtual QVariant headerData( int role = Qt::DisplayRole ) const = 0;
-
-};
-
-IE_CORE_DECLAREPTR( Column )
-
-class StandardColumn : public Column
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( StandardColumn )
-
-		StandardColumn( const std::string &label, IECore::InternedString propertyName )
-			:	m_label( label.c_str() ), m_propertyName( propertyName )
+		// Contrived code path to allow us to use QFileIconProvider for
+		// FileIconColumn, without exposing Qt in the PathColumn API.
+		static const std::string g_fileIconPrefix( "fileIcon:" );
+		if( boost::starts_with( fileName, g_fileIconPrefix ) )
 		{
+			static QFileIconProvider g_provider;
+			return g_provider.icon( QFileInfo( fileName.c_str() + g_fileIconPrefix.size() ) );
 		}
 
-		IECore::InternedString propertyName() const
+		// Standard code path - load icon from file.
+		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
+		IECore::SearchPath sp( s ? s : "" );
+		boost::filesystem::path path = sp.find( fileName );
+		if( path.empty() )
 		{
-			return m_propertyName;
-		}
-
-		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
-		{
-			switch( role )
-			{
-				case Qt::DisplayRole :
-					return variantFromProperty( path, canceller );
-				default :
-					return QVariant();
-			}
-		}
-
-		QVariant headerData( int role = Qt::DisplayRole ) const override
-		{
-			if( role == Qt::DisplayRole )
-			{
-				return m_label;
-			}
+			IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Could not find file \"%s\"" ) % fileName ) );
 			return QVariant();
 		}
+		return QPixmap( QString( path.string().c_str() ) );
+	},
+	/* maxCost = */ 10000
+);
 
-	private :
+QColor displayColor( const Imath::Color3f &color )
+{
+	/// \todo Move `GafferUI.DisplayTransform` to C++.
+	IECorePython::ScopedGILLock gilLock;
+	object displayTransform = import( "GafferUI" ).attr( "DisplayTransform" ).attr( "get" )();
+	Imath::Color3f c = extract<Imath::Color3f>( displayTransform( color ) );
+	c *= 255.0f;
+	return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
+}
 
-		QVariant variantFromProperty( const Path *path, const IECore::Canceller *canceller ) const
+// Equivalent to `GafferUI.NumericWidget.formatValue()`.
+QString doubleToString( double v )
+{
+	QString result = QString::number( v, 'f', 4 );
+	for( int i = result.size() - 1; i; --i )
+	{
+		const QChar c = result.at( i );
+		if( c == '.' )
 		{
-			// shortcut for getting the name property directly
-			if( m_propertyName == g_namePropertyName )
-			{
-				if( path->names().size() )
-				{
-					return QVariant( path->names().back().c_str() );
-				}
-				else
-				{
-					return QVariant();
-				}
-			}
+			result.truncate( i );
+			return result;
+		}
+		else if ( c != '0' )
+		{
+			result.truncate( i + 1 );
+			return result;
+		}
+	}
+	return result;
+}
 
-			IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName, canceller );
+template<typename T>
+QString vectorToString( const T &v )
+{
+	QString result;
+	for( unsigned i = 0; i < T::dimensions(); ++i )
+	{
+		if( i )
+		{
+			result += " ";
+		}
+		result += doubleToString( v[i] );
+	}
+	return result;
+}
 
-			if( !property )
-			{
+QVariant dataToVariant( const IECore::Data *value, int role )
+{
+	if( !value )
+	{
+		return QVariant();
+	}
+
+	if( role == Qt::DecorationRole )
+	{
+		switch( value->typeId() )
+		{
+			case IECore::StringDataTypeId :
+				return g_iconCache.get( static_cast<const IECore::StringData *>( value )->readable() );
+			case IECore::Color3fDataTypeId :
+				return displayColor( static_cast<const IECore::Color3fData *>( value )->readable() );
+			default :
 				return QVariant();
-			}
-
-			switch( property->typeId() )
-			{
-				case IECore::StringDataTypeId :
-					return static_cast<const IECore::StringData *>( property.get() )->readable().c_str();
-				case IECore::IntDataTypeId :
-					return static_cast<const IECore::IntData *>( property.get() )->readable();
-				case IECore::UIntDataTypeId :
-					return static_cast<const IECore::UIntData *>( property.get() )->readable();
-				case IECore::UInt64DataTypeId :
-					return (quint64)static_cast<const IECore::UInt64Data *>( property.get() )->readable();
-				case IECore::FloatDataTypeId :
-					return static_cast<const IECore::FloatData *>( property.get() )->readable();
-				case IECore::DoubleDataTypeId :
-					return static_cast<const IECore::DoubleData *>( property.get() )->readable();
-				case IECore::DateTimeDataTypeId :
-				{
-					const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( property.get() );
-					time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
-					return QVariant( QDateTime::fromTime_t( t ) );
-				}
-				default :
-				{
-					// Fall back to using `str()` in python, to emulate old behaviour. If we find commonly
-					// used types within large hierarchies falling through to here, we will need to give
-					// them their own special case above, for improved performance.
-					IECorePython::ScopedGILLock gilLock;
-					object pythonProperty( boost::const_pointer_cast<IECore::RunTimeTyped>( property ) );
-					boost::python::str pythonString( pythonProperty );
-					return QVariant( boost::python::extract<const char *>( pythonString ) );
-				}
-			}
 		}
+	}
 
-		QVariant m_label;
-		IECore::InternedString m_propertyName;
-
-};
-
-IE_CORE_DECLAREPTR( StandardColumn )
-
-class IconColumn : public Column
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( IconColumn )
-
-		IconColumn( const std::string &label, const std::string &prefix, IECore::InternedString propertyName )
-			:	m_label( label.c_str() ), m_prefix( prefix ), m_propertyName( propertyName )
+	if( role == Qt::BackgroundRole )
+	{
+		switch( value->typeId() )
 		{
-		}
-
-		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
-		{
-			if( role == Qt::DecorationRole )
-			{
-				IECore::ConstRunTimeTypedPtr property = path->property( m_propertyName, canceller );
-				if( !property )
-				{
-					return QVariant();
-				}
-
-				std::string fileName = m_prefix;
-				switch( property->typeId() )
-				{
-					case IECore::StringDataTypeId :
-						fileName += static_cast<const IECore::StringData *>( property.get() )->readable();
-						break;
-					case IECore::IntDataTypeId :
-						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::IntData *>( property.get() )->readable() );
-						break;
-					case IECore::UInt64DataTypeId :
-						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::UInt64Data *>( property.get() )->readable() );
-						break;
-					case IECore::BoolDataTypeId :
-						fileName += boost::lexical_cast<std::string>( static_cast<const IECore::BoolData *>( property.get() )->readable() );
-						break;
-					default :
-						IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Unsupported property type \"%s\"" ) % property->typeName() ) );
-						return QVariant();
-				}
-
-				fileName += ".png";
-				return g_iconCache.get( fileName );
+			case IECore::Color3fDataTypeId : {
+				const Imath::Color3f c = static_cast<const IECore::Color3fData *>( value )->readable() * 255.0f;
+				return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
 			}
-			return QVariant();
-		}
-
-		QVariant headerData( int role = Qt::DisplayRole ) const override
-		{
-			if( role == Qt::DisplayRole )
-			{
-				return m_label;
+			case IECore::Color4fDataTypeId : {
+				const Imath::Color4f c = static_cast<const IECore::Color4fData *>( value )->readable() * 255.0f;
+				return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ), Imath::clamp( c[3], 0.0f, 255.0f ) );
 			}
-			return QVariant();
-		}
-
-	private :
-
-		QVariant m_label;
-		std::string m_prefix;
-		IECore::InternedString m_propertyName;
-
-		static QVariant iconGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
-		{
-			const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-			IECore::SearchPath sp( s ? s : "" );
-
-			boost::filesystem::path path = sp.find( fileName );
-			if( path.empty() )
-			{
-				IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Could not find file \"%s\"" ) % fileName ) );
+			default :
 				return QVariant();
-			}
-
-			cost = 1;
-			return QPixmap( QString( path.string().c_str() ) );
 		}
+	}
 
-		typedef IECorePreview::LRUCache<std::string, QVariant> IconCache;
-		static IconCache g_iconCache;
+	switch( value->typeId() )
+	{
+		case IECore::StringDataTypeId :
+			return static_cast<const IECore::StringData *>( value )->readable().c_str();
+		case IECore::IntDataTypeId :
+			return static_cast<const IECore::IntData *>( value )->readable();
+		case IECore::UIntDataTypeId :
+			return static_cast<const IECore::UIntData *>( value )->readable();
+		case IECore::UInt64DataTypeId :
+			return (quint64)static_cast<const IECore::UInt64Data *>( value )->readable();
+		case IECore::FloatDataTypeId :
+			return doubleToString( static_cast<const IECore::FloatData *>( value )->readable() );
+		case IECore::DoubleDataTypeId :
+			return doubleToString( static_cast<const IECore::DoubleData *>( value )->readable() );
+		case IECore::V2fDataTypeId :
+			return vectorToString( static_cast<const IECore::V2fData *>( value )->readable() );
+		case IECore::V3fDataTypeId :
+			return vectorToString( static_cast<const IECore::V3fData *>( value )->readable() );
+		case IECore::Color3fDataTypeId :
+			return vectorToString( static_cast<const IECore::Color3fData *>( value )->readable() );
+		case IECore::Color4fDataTypeId :
+			return vectorToString( static_cast<const IECore::Color4fData *>( value )->readable() );
+		case IECore::DateTimeDataTypeId :
+		{
+			const IECore::DateTimeData *d = static_cast<const IECore::DateTimeData *>( value );
+			time_t t = ( d->readable() - from_time_t( 0 ) ).total_seconds();
+			return QVariant( QDateTime::fromTime_t( t ) );
+		}
+		default :
+		{
+			// Fall back to using `str()` in python, to emulate old behaviour. If we find commonly
+			// used types within large hierarchies falling through to here, we will need to give
+			// them their own special case above, for improved performance.
+			IECorePython::ScopedGILLock gilLock;
+			object pythonValue( IECore::DataPtr( const_cast<IECore::Data *>( value ) ) );
+			boost::python::str pythonString( pythonValue );
+			return QVariant( boost::python::extract<const char *>( pythonString ) );
+		}
+	}
+}
 
-};
-
-IconColumn::IconCache IconColumn::g_iconCache( IconColumn::iconGetter, 10000 );
-
-IE_CORE_DECLAREPTR( IconColumn )
-
-class FileIconColumn : public Column
+/// Equivalent to PathModel::CellData, but converted into the form needed by Qt.
+struct CellVariants
 {
 
-	public :
+	CellVariants( const GafferUI::PathColumn::CellData &cellData )
+		:	m_display( dataToVariant( cellData.value.get(), Qt::DisplayRole ) ),
+			m_decoration( dataToVariant( cellData.icon.get(), Qt::DecorationRole ) ),
+			m_background( dataToVariant( cellData.background.get(), Qt::BackgroundRole ) ),
+			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) )
+	{
+	}
 
-		IE_CORE_DECLAREMEMBERPTR( FileIconColumn )
+	CellVariants() = default;
+	CellVariants( const CellVariants &other ) = default;
 
-		FileIconColumn()
-			:	m_label( "Type" )
+	QVariant variant( int qtRole ) const
+	{
+		switch( qtRole )
 		{
+			case Qt::DisplayRole :
+				return m_display;
+			case Qt::DecorationRole :
+				return m_decoration;
+			case Qt::BackgroundRole :
+				return m_background;
+			case Qt::ToolTipRole :
+				return m_toolTip;
+			default :
+				return QVariant();
 		}
+	}
 
-		QVariant data( const Path *path, int role = Qt::DisplayRole, const IECore::Canceller *canceller = nullptr ) const override
-		{
-			if( role == Qt::DecorationRole )
-			{
-				std::string s = path->string();
-
-				if( const FileSystemPath *fileSystemPath = IECore::runTimeCast<const FileSystemPath>( path ) )
-				{
-					if( fileSystemPath->getIncludeSequences() )
-					{
-						IECore::FileSequencePtr seq = fileSystemPath->fileSequence();
-						if( seq )
-						{
-							std::vector<IECore::FrameList::Frame> frames;
-							seq->getFrameList()->asList( frames );
-							s = seq->fileNameForFrame( *frames.begin() );
-						}
-					}
-				}
-
-				QString qs( s.c_str() );
-				return m_iconProvider.icon( QFileInfo( qs ) );
-			}
-			return QVariant();
-		}
-
-		QVariant headerData( int role = Qt::DisplayRole ) const override
-		{
-			if( role == Qt::DisplayRole )
-			{
-				return m_label;
-			}
-			return QVariant();
-		}
+	bool operator== ( const CellVariants &rhs ) const
+	{
+		return
+			m_display == rhs.m_display &&
+			m_decoration == rhs.m_decoration &&
+			m_background == rhs.m_background &&
+			m_toolTip == m_toolTip
+		;
+	}
 
 	private :
 
-		QVariant m_label;
-		QFileIconProvider m_iconProvider;
+		QVariant m_display;
+		QVariant m_decoration;
+		QVariant m_background;
+		QVariant m_toolTip;
 
 };
 
-IE_CORE_DECLAREPTR( FileIconColumn )
-
-static IECore::InternedString g_childPlaceholder( "childPlaceholder" );
+IECore::InternedString g_nameProperty( "name" );
+IECore::InternedString g_childPlaceholder( "childPlaceholder" );
 
 // A QAbstractItemModel for the navigation of Gaffer::Paths.
 // This allows us to view Paths in QTreeViews. This forms part
@@ -434,13 +376,14 @@ class PathModel : public QAbstractItemModel
 			// No need to flush pending edits, because Qt won't deliver the events
 			// to us after we're destructed anyway.
 			cancelUpdate( /* flushPendingEdits = */ false );
+			disconnectColumnChanged();
 		}
 
 		///////////////////////////////////////////////////////////////////
 		// Our public methods - these don't mean anything to Qt
 		///////////////////////////////////////////////////////////////////
 
-		void setColumns( const std::vector<ColumnPtr> columns )
+		void setColumns( const std::vector<GafferUI::PathColumnPtr> columns )
 		{
 			/// \todo Maintain persistent indices etc
 			/// using `m_rootItem->update()`.
@@ -450,12 +393,19 @@ class PathModel : public QAbstractItemModel
 			cancelUpdate();
 
 			beginResetModel();
+
+			disconnectColumnChanged();
 			m_columns = columns;
+			for( const auto &c : m_columns )
+			{
+				c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) );
+			}
+
 			m_rootItem = new Item( IECore::InternedString(), nullptr );
 			endResetModel();
 		}
 
-		const std::vector<ColumnPtr> &getColumns() const
+		const std::vector<GafferUI::PathColumnPtr> &getColumns() const
 		{
 			return m_columns;
 		}
@@ -669,7 +619,7 @@ class PathModel : public QAbstractItemModel
 				return result;
 			}
 
-			indicesForPathsWalk( m_rootItem.get(), Path::Names(), QModelIndex(), paths, result );
+			indicesForPathsWalk( m_rootItem.get(), m_rootPath->names(), QModelIndex(), paths, result );
 			return result;
 		}
 
@@ -719,7 +669,9 @@ class PathModel : public QAbstractItemModel
 			{
 				return QVariant();
 			}
-			return m_columns[section]->headerData( role );
+
+			const CellVariants v = CellVariants( m_columns[section]->headerData() );
+			return v.variant( role );
 		}
 
 		QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const override
@@ -1057,14 +1009,14 @@ class PathModel : public QAbstractItemModel
 					const_cast<PathModel *>( model )->scheduleUpdate();
 				}
 
-				if( column >= (int)m_displayData.size() )
+				if( column >= (int)m_data.size() )
 				{
 					// We haven't computed any data yet.
 					if( column < (int)model->m_columns.size() && role == Qt::DisplayRole )
 					{
-						if( auto *standardColumn = dynamic_cast<const StandardColumn *>( model->m_columns[column].get() ) )
+						if( auto *standardColumn = dynamic_cast<const GafferUI::StandardPathColumn *>( model->m_columns[column].get() ) )
 						{
-							if( standardColumn->propertyName() == g_namePropertyName )
+							if( standardColumn->property() == g_nameProperty )
 							{
 								// Optimisation for standard name column. We
 								// know the name already, so there is no need to
@@ -1079,15 +1031,7 @@ class PathModel : public QAbstractItemModel
 					return QVariant();
 				}
 
-				switch( role )
-				{
-					case Qt::DisplayRole :
-						return m_displayData[column];
-					case Qt::DecorationRole :
-						return m_decorationData[column];
-					default :
-						return QVariant();
-				}
+				return m_data[column].variant( role );
 			}
 
 			using ChildContainer = std::vector<Ptr>;
@@ -1140,43 +1084,39 @@ class PathModel : public QAbstractItemModel
 					}
 				}
 
-				static QVariant dataForSort( const std::vector<QVariant> &displayData, PathModel *model )
+				static QVariant dataForSort( const std::vector<CellVariants> &data, PathModel *model )
 				{
-					if( model->m_sortColumn < 0 || model->m_sortColumn >= (int)displayData.size() )
+					if( model->m_sortColumn < 0 || model->m_sortColumn >= (int)data.size() )
 					{
 						return QVariant();
 					}
-					return displayData[model->m_sortColumn];
+					return data[model->m_sortColumn].variant( Qt::DisplayRole );
 				}
 
 				// Updates data and returns the value that should be used for sorting.
-				// This value is returned because the actual edit to `m_displayData` will not be
+				// This value is returned because the actual edit to `m_data` will not be
 				// complete until the queued edit is processed by the UI thread.
 				QVariant updateData( PathModel *model, const Path *path, const IECore::Canceller *canceller )
 				{
 					if( m_dataState == State::Clean || m_dataState == State::Unrequested )
 					{
-						return dataForSort( m_displayData, model );
+						return dataForSort( m_data, model );
 					}
 
 					// We generate data for all columns and roles at once, on the
 					// assumption that access to one is likely to indicate upcoming
 					// accesses to the others.
 
-					std::vector<QVariant> newDisplayData;
-					std::vector<QVariant> newDecorationData;
+					std::vector<CellVariants> newData;
 
-					newDisplayData.reserve( model->m_columns.size() );
-					newDecorationData.reserve( model->m_columns.size() );
+					newData.reserve( model->m_columns.size() );
 
 					for( int i = 0, e = model->m_columns.size(); i < e; ++i )
 					{
-						QVariant displayData;
-						QVariant decorationData;
+						CellVariants cellVariants;
 						try
 						{
-							displayData = model->m_columns[i]->data( path, Qt::DisplayRole, canceller );
-							decorationData = model->m_columns[i]->data( path, Qt::DecorationRole, canceller );
+							cellVariants = CellVariants( model->m_columns[i]->cellData( *path, canceller ) );
 						}
 						catch( const IECore::Cancelled &e )
 						{
@@ -1193,15 +1133,14 @@ class PathModel : public QAbstractItemModel
 							IECore::msg( IECore::Msg::Warning, "PathListingWidget", "Unknown error" );
 						}
 
-						newDisplayData.push_back( displayData );
-						newDecorationData.push_back( decorationData );
+						newData.push_back( cellVariants );
 					}
 
-					if( newDisplayData == m_displayData && newDecorationData == m_decorationData )
+					if( newData == m_data )
 					{
 						// No update necessary.
 						m_dataState = State::Clean;
-						return dataForSort( m_displayData, model );
+						return dataForSort( m_data, model );
 					}
 
 					if( m_row == -1 )
@@ -1209,10 +1148,9 @@ class PathModel : public QAbstractItemModel
 						// We have just been created in `updateChildItems()` and haven't
 						// been made visible to Qt yet. No need to emit `dataChanged` or
 						// worry about concurrent access from the UI thread.
-						m_displayData.swap( newDisplayData );
-						m_decorationData.swap( newDecorationData );
+						m_data.swap( newData );
 						m_dataState = State::Clean;
-						return dataForSort( m_displayData, model );
+						return dataForSort( m_data, model );
 					}
 
 					// Mark clean _now_, to avoid a double update if we are
@@ -1222,14 +1160,13 @@ class PathModel : public QAbstractItemModel
 					m_dataState = State::Clean;
 
 					// Get result before we move `newDisplayData` into the lambda.
-					const QVariant result = dataForSort( newDisplayData, model );
+					const QVariant result = dataForSort( newData, model );
 
 					model->queueEdit(
 
-						[this, model, newDisplayData = std::move( newDisplayData ), newDecorationData = std::move( newDecorationData )] () mutable {
+						[this, model, newData = std::move( newData )] () mutable {
 
-							m_displayData.swap( newDisplayData );
-							m_decorationData.swap( newDecorationData );
+							m_data.swap( newData );
 							model->dataChanged( model->createIndex( m_row, 0, this ), model->createIndex( m_row, model->m_columns.size() - 1, this ) );
 
 						}
@@ -1307,7 +1244,7 @@ class PathModel : public QAbstractItemModel
 					if( model->m_expandNonLeafSelection )
 					{
 						// OK to read `m_selectedPaths` from background thread, because write on UI
-						// thread is preceded by `cancelUpdate().
+						// thread is preceded by `cancelUpdate()`.
 						const unsigned selectionMatch = model->m_selectedPaths.match( path->names() );
 						/// \todo I don't understand the purpose of this logic. It seems it might be
 						/// more useful to expand all ancestors of the selection (even if they're not
@@ -1334,7 +1271,6 @@ class PathModel : public QAbstractItemModel
 
 					m_expansionDirty = false;
 				}
-
 
 				// Returns the updated ChildContainer. This will not be visible in the model
 				// until the queued edit is executed. It is returned so that we can update
@@ -1531,8 +1467,7 @@ class PathModel : public QAbstractItemModel
 				}
 
 				std::atomic<State> m_dataState;
-				std::vector<QVariant> m_displayData;
-				std::vector<QVariant> m_decorationData;
+				std::vector<CellVariants> m_data;
 
 				std::atomic<State> m_childItemsState;
 				// Children are held by `shared_ptr` in order to support
@@ -1690,11 +1625,30 @@ class PathModel : public QAbstractItemModel
 			}
 		}
 
+		// Column change handling
+
+		void columnChanged()
+		{
+			// Force update.
+			/// \todo Only dirty the data, not the child items.
+			setRoot( getRoot() );
+		}
+
+		void disconnectColumnChanged()
+		{
+			for( const auto &c : m_columns )
+			{
+				c->changedSignal().disconnect( boost::bind( &PathModel::columnChanged, this ) );
+			}
+		}
+
+		// Member data
+
 		Gaffer::PathPtr m_rootPath;
 
 		Item::Ptr m_rootItem;
 		bool m_flat;
-		std::vector<ColumnPtr> m_columns;
+		std::vector<GafferUI::PathColumnPtr> m_columns;
 		int m_sortColumn;
 		Qt::SortOrder m_sortOrder;
 		std::unique_ptr<QAbstractItemModelTester> m_tester;
@@ -1718,7 +1672,7 @@ void setColumns( uint64_t treeViewAddress, object pythonColumns )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	std::vector<ColumnPtr> columns;
+	std::vector<GafferUI::PathColumnPtr> columns;
 	boost::python::container_utils::extend_container( columns, pythonColumns );
 	IECorePython::ScopedGILRelease gilRelease;
 	model->setColumns( columns );
@@ -1728,11 +1682,10 @@ list getColumns( uint64_t treeViewAddress )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	const std::vector<ColumnPtr> &columns = model->getColumns();
 	list result;
-	for( std::vector<ColumnPtr>::const_iterator it = columns.begin(), eIt = columns.end(); it != eIt; ++it )
+	for( const auto &column : model->getColumns() )
 	{
-		result.append( *it );
+		result.append( column );
 	}
 	return result;
 }
@@ -1921,20 +1874,6 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
 	def( "_pathListingWidgetAttachTester", &attachTester );
 	def( "_pathModelWaitForPendingUpdates", &waitForPendingUpdates );
-
-	IECorePython::RefCountedClass<Column, IECore::RefCounted>( "_PathListingWidgetColumn" );
-
-	IECorePython::RefCountedClass<StandardColumn, Column>( "_PathListingWidgetStandardColumn" )
-		.def( init<const std::string &, IECore::InternedString>() )
-	;
-
-	IECorePython::RefCountedClass<IconColumn, Column>( "_PathListingWidgetIconColumn" )
-		.def( init<const std::string &, const std::string &, IECore::InternedString>() )
-	;
-
-	IECorePython::RefCountedClass<FileIconColumn, Column>( "_PathListingWidgetFileIconColumn" )
-		.def( init<>() )
-	;
 }
 
 #include "PathListingWidgetBinding.moc"

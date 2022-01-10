@@ -6,6 +6,36 @@ Build
 
 - Moved minimum required C++ standard to C++17.
 
+0.61.x.x (relative to 0.61.1.1)
+========
+
+Improvements
+------------
+
+- NodeEditor : Added embedded colour choosers for all colour plugs. These can be shown and hidden by clicking on the slider icon.
+- Spreadsheet/SceneViewInspector : Added embedded colour choosers to popup editor windows.
+- CopyPrimitiveVariables : Added `prefix` plug, which applies a prefix to the names of the copied primitive variables.
+- Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
+
+Fixes
+-----
+
+- PathListingWidget : Fixed the deprecated `getSelectedPaths()` and `getExpandedPaths()` methods in the case that the PathListingWidget's root isn't `/` (#4510).
+- NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
+- ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
+- Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
+
+API
+---
+
+- PlugPopup : Added new class for editing plugs in a popup window.
+- ColorChooserPlugValueWidget : Added a new class to allow colours to be edited directly using a ColorChooser.
+- ColorChooser : Added `setSwatchesVisible()` and `getSwatchesVisible()` methods.
+- PathColumn : Added new class for adding custom columns to PathListingWidget.
+- CatalogueUI :
+  - Column subclasses may now define background colours and tooltips.
+  - Deprecated IconColumn class.
+
 0.61.1.1 (relative to 0.61.1.0)
 ========
 
@@ -167,6 +197,14 @@ Build
   - Qt : Updated to version 5.15.2.
   - PySide : Updated to version 5.15.2.
   - Cortex : Updated to version 10.3.0.0.
+
+0.60.12.x (relative to 0.60.12.1)
+=========
+
+Fixes
+-----
+
+- ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 
 0.60.12.1 (relative to 0.60.12.0)
 =========

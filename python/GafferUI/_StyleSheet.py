@@ -223,13 +223,22 @@ _styleSheet = string.Template(
 		color: #b0d8fb;
 	}
 
+	QLabel#gafferPlugLabel {
+		/*
+		QLabel's text layout seems to lurch from one approach
+		to another in the presence of non-zero padding. So we
+		need some padding here so that we get a layout that
+		matches the `gafferValueChanged="true"` styling below.
+		*/
+		padding-left: 1px;
+	}
+
 	QLabel#gafferPlugLabel[gafferValueChanged="true"] {
 		background-image: url($GAFFER_ROOT/graphics/valueChanged.png);
 		background-repeat: no-repeat;
 		background-position: left;
-		padding-left: 20px;
+		padding-left: 16px;
 	}
-
 
 	QLabel[gafferItemName="true"] {
 		font-weight: bold;

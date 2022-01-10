@@ -51,6 +51,7 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		## \todo How do set maximum height with a public API?
 		self.__swatch._qtWidget().setMaximumHeight( 20 )
+		self.__swatch._qtWidget().setFixedWidth( 40 )
 
 		self._addPopupMenu( self.__swatch )
 

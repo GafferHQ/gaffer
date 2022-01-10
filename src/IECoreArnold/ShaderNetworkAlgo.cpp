@@ -254,6 +254,15 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			sourceName = partitionEnd( sourceName, '.' );
 		}
 
+		if( parameterName == "color" && ( shader->getName() == "quad_light" || shader->getName() == "skydome_light" ) )
+		{
+			// In general, Arnold should be able to form a connection onto a parameter even if the
+			// parameter already has a value.  Something weird happens with the "color" parameter
+			// on "quad_light" and "skydome_light" though, where the connection is not evaluated
+			// properly unless the parameter is reset first ( possibly due to some special importance
+			// map building that needs to happen when a connection is made to the color parameter )
+			AiNodeResetParameter( node, "color" );
+		}
 		AiNodeLinkOutput( sourceNode, sourceName.c_str(), node, parameterName.c_str() );
 	}
 

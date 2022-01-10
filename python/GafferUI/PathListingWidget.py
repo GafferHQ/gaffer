@@ -56,15 +56,15 @@ from Qt import QtWidgets
 # allows customisable column listings, and supports both single and multiple selection.
 class PathListingWidget( GafferUI.Widget ) :
 
-	Column = _GafferUI._PathListingWidgetColumn
-	StandardColumn = _GafferUI._PathListingWidgetStandardColumn
-	IconColumn = _GafferUI._PathListingWidgetIconColumn
+	Column = _GafferUI.PathColumn
+	StandardColumn = _GafferUI.StandardPathColumn
+	IconColumn = _GafferUI.IconPathColumn
 
 	## A collection of handy column definitions for FileSystemPaths
 	defaultNameColumn = StandardColumn( "Name", "name" )
 	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
 	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
-	defaultFileSystemIconColumn = _GafferUI._PathListingWidgetFileIconColumn()
+	defaultFileSystemIconColumn = GafferUI.FileIconPathColumn()
 
 	defaultFileSystemColumns = (
 		defaultNameColumn,
@@ -144,6 +144,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.__dragPointer = "paths"
+
+		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
 
 		self.__path = None
 
@@ -654,6 +656,12 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
+
+	def __displayTransformChanged( self ) :
+
+		# The PathModel bakes the display transform into icon colours,
+		# so when the transform changes we need to trigger an update.
+		self.__path.pathChangedSignal()( self.__path )
 
 # Private implementation - a QTreeView with some specific size behaviour,
 # and knowledge of how to draw our PathMatcher selection.

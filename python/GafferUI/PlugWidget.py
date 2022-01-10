@@ -40,6 +40,7 @@ import warnings
 import Gaffer
 import GafferUI
 
+from Qt import QtCore
 from Qt import QtWidgets
 
 ## The PlugWidget combines a LabelPlugValueWidget with a second PlugValueWidget
@@ -71,7 +72,6 @@ class PlugWidget( GafferUI.Widget ) :
 		self.__label = GafferUI.LabelPlugValueWidget(
 			plug,
 			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
 
 		## \todo Decide how we allow this sort of tweak using the public
@@ -94,7 +94,7 @@ class PlugWidget( GafferUI.Widget ) :
 			)
 			self.__label.label().setToolTip( description )
 
-		layout.addWidget( self.__label._qtWidget() )
+		layout.addWidget( self.__label._qtWidget(), alignment = QtCore.Qt.AlignTop )
 		layout.addWidget( self.__valueWidget._qtWidget() )
 
 		# The plugValueWidget() may have smarter drop behaviour than the labelPlugValueWidget(),

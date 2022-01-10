@@ -151,20 +151,20 @@ class ColorChooser( GafferUI.Widget ) :
 					)
 
 			# initial and current colour swatches
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, parenting = { "expand" : True } ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
 
 				self.__initialColorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
+				self.__initialColorSwatch._qtWidget().setFixedHeight( 40 )
 				self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ), scoped = False )
 
-				GafferUI.Spacer( imath.V2i( 4, 40 ) )
-
 				self.__colorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
+				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
 		self.__colorChangedSignal = Gaffer.Signal2()
 
 		self.__updateUIFromColor()
 
-	## The default color starts as the value passed when creating the dialogue.
+	## The default color starts as the value passed when creating the widget.
 	# It is represented with a swatch which when clicked will revert the current
 	# selection back to the original.
 	def setInitialColor( self, color ) :
@@ -182,6 +182,14 @@ class ColorChooser( GafferUI.Widget ) :
 	def getColor( self ) :
 
 		return self.__color
+
+	def setSwatchesVisible( self, visible ) :
+
+		self.__swatchRow.setVisible( False )
+
+	def getSwatchesVisible( self ) :
+
+		return self.__swatchRow.getVisible()
 
 	## A signal emitted whenever the color is changed. Slots should
 	# have the signature slot( ColorChooser, reason ). The reason

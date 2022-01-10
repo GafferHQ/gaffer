@@ -62,7 +62,7 @@ import GafferImageUI
 # names or re-registration of existing ones.
 #
 # The columns displayed by a Catalogue are controlled by the
-# "catalogue:columns" [StringVectorData] metadata on it's `imageIndex` plug.
+# "catalogue:columns" [StringVectorData] metadata on its `imageIndex` plug.
 # Default columns are stored via a class registration, ie:
 #
 #   Gaffer.Metadata.registerValue(
@@ -77,63 +77,65 @@ import GafferImageUI
 __registeredColumns = OrderedDict()
 _columnsMetadataKey = "catalogue:columns"
 
-# The Column class defines a single column in the Catalogue UI.
-# The column class is responsible for providing its header title, and the
-# displayed value for each image in the Catalogue.
-class Column :
+## The Column class extends the PathColumn class to simplify the process of
+# creating a custom column for the Catalogue. Subclasses must implement
+# `_imageCellData()`.
+class Column( GafferUI.PathColumn ) :
 
 	def __init__( self, title ) :
 
-		self.__title = title
+		GafferUI.PathColumn.__init__( self )
+
+		self.__title = IECore.StringData( title )
 
 	def title( self ) :
 
-		return self.__title
+		return self.__title.value
 
-	# Must be implemented by all column classes. It should return basic-typed
-	# IECore.Data (incl. DateTimeData) which will be presented as a string in
-	# the Catalogue UI. The method is called with:
+	## Calls `_imageCellData()`.
+	def cellData( self, path, canceller ) :
+
+		image = path.property( "catalogue:image" )
+		catalogue = path.property( "catalogue" )
+
+		# Suppress error. The GraphEditor will be displaying the
+		# error anyway, as will the standard type column, and we're
+		# not in a position to do anything more helpful.
+		with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+
+			# Call `_imageCellData()` in a context which causes the Catalogue
+			# to output the image of interest.
+			with Gaffer.Context( catalogue.scriptNode().context() ) as context :
+				context["catalogue:imageName"] = image.getName()
+				try :
+					return self._imageCellData( image, catalogue )
+				except NotImplementedError :
+					# Backwards compatibility for deprecated API.
+					if isinstance( self, IconColumn ) :
+						return self.CellData( icon = self.value( image, catalogue ) + ".png" )
+					else :
+						return self.CellData( value = self.value( image, catalogue ) )
+
+	def headerData( self, canceller ) :
+
+		return self.CellData( value = self.__title )
+
+	## Called to generate a cell from an image in
+	# the Catalogue. Must be implemented by derived classes to return
+	# `PathColumn.CellData`.
+	# Arguments :
 	#
-	#  - image : A GafferImage.Catalogue.Image plug (not to be confused with
-	#      a standard ImagePlug).
+	# - `image` : The `GafferImage.Catalogue.Image` plug for the cell
+	#   (not to be confused with a standard ImagePlug).
+	# - `catalogue` : The `GafferImage.Catalogue` being displayed.
 	#
-	#  - catalogue: The GafferImage.Catalogue instance attached to the UI.
-	#
-	#  A suitable context is scoped around the call such that catalogue["out"] will
-	#  provide the image for the row the value is being generated for, rather than
-	#  the user's current selection.
-	def value( self, image, catalogue ) :
+	# Called in a context where `catalogue["out"]` provides the
+	# correct image for the cell.
+	def _imageCellData( self, image, catalogue ) :
 
 		raise NotImplementedError
 
-# A abstract base column type for Columns that wish to present an image rather
-# than a text value
-class IconColumn( Column ) :
-
-	# Columns that derive from IconColumn should instead return the name of an
-	# image on Gaffer's image path, see Column.value for details on the arguments
-	# passed to this method, and the calling context.
-	def value( self, image, catalogue ) :
-
-		raise NotImplementedError
-
-# An abstract base column type for Columns that can derive their value with
-# simple callables or lamdas, eg:
-#
-#   column = SimpleColumn( "Name", lambda image, _ : image.getName() ) )
-#
-class SimpleColumn( Column ) :
-
-	def __init__( self, title, valueProvider ) :
-
-		Column.__init__( self, title )
-		self.__valueProvider = valueProvider
-
-	def value( self, image, catalogue ) :
-
-		return self.__valueProvider( image, catalogue )
-
-# Register a new column or overwrite an existing column. Registered columns
+# Registers a new column or overwrites an existing column. Registered columns
 # appear in the Catalogue header context menu, and can be set as default
 # columns in the "catalogue:columns" metadata on Catalogue's `imageIndex` plug.
 # The registered name is used for the menu path when presenting available columns
@@ -161,9 +163,30 @@ def registeredColumns() :
 
 	return __registeredColumns.keys()
 
+# Convenience Column subclasses
+# =============================
+
+## \deprecated. Derive from Column and implement `_imageCellData()`
+# instead.
+class IconColumn( Column ) :
+
+	pass
+
+# Convenience class for simple columns that derive the cell value
+# from a callable. e.g.
 #
-# Convenience Column classes
+#   `SimpleColumn( "Name", lambda image, catalogue : image.getName() ) )`
 #
+class SimpleColumn( Column ) :
+
+	def __init__( self, title, valueProvider ) :
+
+		Column.__init__( self, title )
+		self.__valueProvider = valueProvider
+
+	def _imageCellData( self, image, catalogue ) :
+
+		return self.CellData( value = self.__valueProvider( image, catalogue ) )
 
 # A Columns class that retrieves its value from the catalogue item's image
 # metadata. If multiple names are provided, the first one present will be used,
@@ -181,15 +204,18 @@ class ImageMetadataColumn( Column ) :
 		self.__names = nameOrNames
 		self.__defaultValue = defaultValue
 
-	def value( self, image, catalogue ) :
+	def _imageCellData( self, image, catalogue ) :
+
+		value = self.__defaultValue
 
 		metadata = catalogue["out"].metadata()
 		for name in self.__names :
-			value = metadata.get( name, None )
-			if value is not None :
-				return value
+			metadataValue = metadata.get( name, None )
+			if metadataValue is not None :
+				value = metadataValue
+				break
 
-		return self.__defaultValue
+		return self.CellData( value = value )
 
 # A Column class that retrieves its value from render-time context variable
 # values passed through the catalogue item's image metadata.  If multiple names
@@ -206,33 +232,33 @@ class ContextVariableColumn( ImageMetadataColumn ) :
 		names = [ "gaffer:context:%s" % name for name in nameOrNames ]
 		ImageMetadataColumn.__init__( self, title, names, defaultValue )
 
-#
 # Standard Columns
-#
+# ================
 
-class __StatusIconColumn( IconColumn ) :
+class __StatusIconColumn( Column ) :
 
 	def __init__( self ) :
 
-		IconColumn.__init__( self, "" )
+		Column.__init__( self, "" )
 
-	def value( self, image, catalogue ) :
+	def _imageCellData( self, image, catalogue ) :
 
+		icon = "catalogueStatusDisplay.png"
 
 		fileName = image["fileName"].getValue()
 		if fileName :
+			icon = "catalogueStatusDisk.png"
 			# Attempt to read the metadata to check the image is loadable. Given other columns
 			# are going to do this anyway, we're not adding too much overhead here.
 			try :
 				catalogue["out"].metadata()
 			except Gaffer.ProcessException :
-				return "errorSmall"
-			return "catalogueStatusDisk"
+				icon = "errorSmall.png"
 
-		return "catalogueStatusDisplay"
+		return self.CellData( icon = icon )
 
 registerColumn( "Status", __StatusIconColumn() )
-registerColumn( "Name", SimpleColumn( "Name", lambda image, _ : image.getName() ) )
+registerColumn( "Name", GafferUI.PathListingWidget.defaultNameColumn )
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
 registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription" ) )
 
@@ -525,31 +551,16 @@ class _ImagesPath( Gaffer.Path ) :
 
 	def propertyNames( self, canceller = None ) :
 
-		return Gaffer.Path.propertyNames( self ) + registeredColumns()
+		return Gaffer.Path.propertyNames( self ) + [ "catalogue", "catalogue:image" ]
 
 	def property( self, name, canceller = None ) :
 
-		if name not in registeredColumns() :
+		if name == "catalogue" :
+			return self.__catalogue
+		elif name == "catalogue:image" :
+			return self.__images[self[-1]]
+		else :
 			return Gaffer.Path.property( self, name )
-
-		definition = column( name )
-
-		imageName = self[ -1 ]
-		image = self.__images[ imageName ]
-
-		# The Catalog API supports overriding the active image
-		# via a context variable, this allows the value provider
-		# to just use catalog["out"] to get to the correct image
-		# without needing to understand the internal workings.
-		with Gaffer.Context(  self.__catalogue.scriptNode().context() ) as context :
-			context[ "catalogue:imageName" ] = imageName
-			try :
-				return definition.value( image, self.__catalogue )
-			except Gaffer.ProcessException :
-				# Suppress error. The GraphEditor will be displaying the
-				# error anyway, as will the standard type column, and we're
-				# not in a position to do anything more helpful.
-				return None
 
 	def cancellationSubject( self ) :
 
@@ -633,11 +644,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		with self.__column :
 
-			columns = self.__listingColumns()
-
 			self.__pathListing = GafferUI.PathListingWidget(
 				_ImagesPath( self.__images(), [] ),
-				columns = columns,
+				columns = self.__listingColumns(),
 				allowMultipleSelection = True,
 				sortable = False,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
@@ -771,21 +780,14 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		for name in self.__getColumns() :
 
-			definition = column( name )
-
-			if not definition :
+			c = column( name )
+			if c is not None :
+				columns.append( c )
+			else :
 				IECore.msg(
 					IECore.Msg.Level.Error,
 					"GafferImageUI.CatalogueUI", "No column registered with name '%s'" % name
 				)
-				continue
-
-			if isinstance( definition, IconColumn ) :
-				c = GafferUI.PathListingWidget.IconColumn( definition.title(), "", name )
-			else :
-				c = GafferUI.PathListingWidget.StandardColumn( definition.title(), name )
-
-			columns.append( c )
 
 		return columns
 

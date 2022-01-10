@@ -185,6 +185,7 @@ from .SplineWidget import SplineWidget
 from .Bookmarks import Bookmarks
 from . import WidgetAlgo
 from .CodeWidget import CodeWidget
+from .PlugPopup import PlugPopup
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
@@ -234,6 +235,7 @@ from .StandardNodeUI import StandardNodeUI
 from .NodeToolbar import NodeToolbar
 from .StandardNodeToolbar import StandardNodeToolbar
 from .Viewer import Viewer
+from .ColorChooserPlugValueWidget import ColorChooserPlugValueWidget
 from .ColorSwatchPlugValueWidget import ColorSwatchPlugValueWidget
 from .ColorPlugValueWidget import ColorPlugValueWidget
 from .AboutWindow import AboutWindow

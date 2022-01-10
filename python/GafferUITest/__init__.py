@@ -125,6 +125,7 @@ from .SpreadsheetUITest import SpreadsheetUITest
 from .NodeUITest import NodeUITest
 from .AuxiliaryNodeGadgetTest import AuxiliaryNodeGadgetTest
 from .CodeWidgetTest import CodeWidgetTest
+from .PathColumnTest import PathColumnTest
 
 if __name__ == "__main__":
 	unittest.main()

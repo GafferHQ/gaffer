@@ -252,5 +252,50 @@ class CopyPrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		prune["filter"].setInput( sphereFilter["out"] )
 		self.assertScenesEqual( copy["out"], sphere1["out"] )
 
+	def testPrefix( self ) :
+
+		sphere1 = GafferScene.Sphere()
+		sphere2 = GafferScene.Sphere()
+		sphere2["radius"].setValue( 2 )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		copy = GafferScene.CopyPrimitiveVariables()
+		copy["in"].setInput( sphere1["out"] )
+		copy["source"].setInput( sphere2["out"] )
+		copy["filter"].setInput( sphereFilter["out"] )
+		copy["primitiveVariables"].setValue( "*" )
+
+		# Unprefixed
+
+		self.assertScenesEqual( copy["out"], sphere2["out"] )
+
+		# Prefixed
+
+		copy["prefix"].setValue( "copied:" )
+
+		self.assertEqual(
+			copy["out"].object( "/sphere")["P"],
+			sphere1["out"].object( "/sphere")["P"],
+		)
+
+		self.assertEqual(
+			copy["out"].object( "/sphere")["copied:P"],
+			sphere2["out"].object( "/sphere")["P"],
+		)
+
+		for location in ( "/", "/sphere" ) :
+
+			self.assertEqual(
+				copy["out"].bound( location ),
+				sphere1["out"].bound( location )
+			)
+
+			self.assertEqual(
+				copy["out"].boundHash( location ),
+				sphere1["out"].boundHash( location )
+			)
+
 if __name__ == "__main__":
 	unittest.main()

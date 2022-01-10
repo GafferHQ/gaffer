@@ -469,7 +469,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		for p in self.__plugs :
 			if (
-				p == plug or
+				p == plug or p.isAncestorOf( plug ) or
 				Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, plug, key )
 			) :
 				self._updateFromPlugs()

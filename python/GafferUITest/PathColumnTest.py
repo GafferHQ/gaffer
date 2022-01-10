@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Limited. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,65 +34,53 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferScene
+import unittest
 
-Gaffer.Metadata.registerNode(
+import imath
 
-	GafferScene.CopyPrimitiveVariables,
+import IECore
 
-	"description",
-	"""
-	Copies primitive variables from a source scene, adding them to the objects
-	of the main input scene.
-	""",
+import GafferUI
+import GafferUITest
 
-	plugs = {
+class PathColumnTest( GafferUITest.TestCase ) :
 
-		"source" : [
+	def testCellDataDefaultConstructor( self ) :
 
-			"description",
-			"""
-			The scene from which the primitive variables are copied.
-			""",
+		d = GafferUI.PathColumn.CellData()
+		self.assertIsNone( d.value )
+		self.assertIsNone( d.icon )
+		self.assertIsNone( d.background )
+		self.assertIsNone( d.toolTip )
 
-		],
+	def testCellDataKeywordConstructor( self ) :
 
-		"primitiveVariables" : [
+		d = GafferUI.PathColumn.CellData(
+			value = 10,
+			icon = "test.png",
+			background = imath.Color3f( 1 ),
+			toolTip = "help!"
+		)
+		self.assertEqual( d.value, 10 )
+		self.assertEqual( d.icon, "test.png" )
+		self.assertEqual( d.background, imath.Color3f( 1 ) )
+		self.assertEqual( d.toolTip, "help!" )
 
-			"description",
-			"""
-			The names of the primitive variables to be copied. These should be
-			separated by spaces and can use Gaffer's standard wildcards
-			to match multiple variables.
-			""",
+	def testCellDataSetters( self ) :
 
-		],
+		d = GafferUI.PathColumn.CellData()
 
-		"sourceLocation" : [
+		d.value = "test"
+		self.assertEqual( d.value, "test" )
 
-			"description",
-			"""
-			The location in the source scene that primitive variables are copied from.
-			By default, variables are copied from the location equivalent to the one
-			they are being copied to. It is not an error if the location to be copied from
-			does not exist; instead, no variables are copied.
-			""",
+		d.icon = "test.png"
+		self.assertEqual( d.icon, "test.png" )
 
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "source",
+		d.background = imath.Color4f( 1 )
+		self.assertEqual( d.background, imath.Color4f( 1 ) )
 
-		],
+		d.toolTip = "help!"
+		self.assertEqual( d.toolTip, "help!" )
 
-		"prefix" : [
-
-			"description",
-			"""
-			A prefix applied to the names of the copied primitive variables.
-			""",
-
-		],
-
-	}
-
-)
+if __name__ == "__main__":
+	unittest.main()

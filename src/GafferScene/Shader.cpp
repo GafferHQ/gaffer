@@ -426,6 +426,7 @@ class Shader::NetworkBuilder
 			}
 			else
 			{
+				static_cast<const Shader *>( parameter->node() )->parameterHash( parameter, h );
 				assert( isOutputParameter( effectiveParameter ) );
 				h.append( shaderHash( effectiveShader ) );
 				if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
@@ -447,14 +448,37 @@ class Shader::NetworkBuilder
 			const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
 			if( isInputParameter( effectiveParameter ) )
 			{
+				// We aren't driven by a live connection to a shader node, but we could be picking up an input
+				// from a different node, due to the passthrough for disabled nodes.  Note that the input we are
+				// finding here could be of a different type than the parameter we are writing a value for, which
+				// may cause problems.
+				//
+				// The best solution I can think of is:
+				// * always use ( parameter->node() )->parameterValue( parameter ) regardless of the inputs
+				// * modify the shader compute to pass through the input value when the shader is disabled
+				//   ( matching the behaviour of correspondingInput )
+				// * replace effectiveParameter with drivingParameter, which only returns outputs representing
+				//   actual shader connections, and otherwise null, simplifying logic in this class
+				//
+				// I'm now feeling like this is a pretty good solution, but it's more of a change, so we're
+				// not worrying about it for now.
 				if( IECore::DataPtr value = effectiveShader->parameterValue( effectiveParameter ) )
 				{
 					shader->parameters()[parameterName] = value;
 				}
+
+				// The children may be driven by actual connections
 				addParameterComponentConnections( parameter, parameterName, connections );
 			}
 			else
 			{
+				// Store the local value of the parameter even if we have a connection.
+				// The value will not be used, but it still lets us track the type of the connection.
+				if( IECore::DataPtr value = static_cast<const Shader *>( parameter->node() )->parameterValue( parameter ) )
+				{
+					shader->parameters()[parameterName] = value;
+				}
+
 				IECore::InternedString outputName;
 				if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
 				{

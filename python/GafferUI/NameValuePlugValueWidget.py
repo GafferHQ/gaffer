@@ -65,15 +65,8 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 			nameWidget = GafferUI.LabelPlugValueWidget(
 				self.getPlugs(),
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-				verticalAlignment = GafferUI.Label.VerticalAlignment.Center,
 			)
 			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-			# cheat to get the height of the label to match the height of a line edit
-			# so the label and plug widgets align nicely. ideally we'd get the stylesheet
-			# sorted for the QLabel so that that happened naturally, but QLabel sizing appears
-			# somewhat unpredictable (and is sensitive to HTML in the text as well), making this
-			# a tricky task.
-			nameWidget.label()._qtWidget().setFixedHeight( 20 )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( { plug["name"] for plug in self.getPlugs() } )
 			nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
