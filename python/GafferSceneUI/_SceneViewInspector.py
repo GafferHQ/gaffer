@@ -161,10 +161,10 @@ class _SceneViewInspector( GafferUI.Widget ) :
 					with GafferUI.ListContainer( spacing = 20 ) :
 						self.__groups = { a : _ParameterGroup(a) for a in _registeredShaderAttributes() }
 
-		# The on/off state of the Inspector is managed by setVisible, which also disables lazy updates when
-		# we're turned off. We desire to hide ourselves when we have nothing to show, but still need background
-		# updates so we can re-appear as needed. We achieve this by managing the visibility of our frame,
-		# independently of the widget.
+		# We want to hide ourselves when we have nothing to show, and then show
+		# ourselves again when an update discovers something relevant. But
+		# `__updateLazily()` won't run if `self` is hidden, so we instead hide
+		# this frame which holds all our contents.
 		self.__frame.setVisible( False )
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False)
@@ -172,25 +172,9 @@ class _SceneViewInspector( GafferUI.Widget ) :
 		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False )
 		Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
-	def setVisible( self, visible ) :
-
-		# The view.inspector.visible plug is the authority on whether the
-		# inspector should be visible. setVisible may be called by our parent
-		# layout as its visibility changes. We need to ensure we don't appear
-		# if the user has disabled us. Considering the plug state here allows
-		# allows us to take advantage of @lazymethod deferring updates whilst
-		# we have been turned off.
-		if visible == self.__sceneView["inspector"]["visible"].getValue() :
-			GafferUI.Widget.setVisible( self, visible )
-			if visible :
-				self.__updateLazily()
-		else :
-			GafferUI.Widget.setVisible( self, False )
-
 	def __attachToView( self, sceneView ) :
 
-		# We add plugs to manage our visibility as per grid/gnomon. This plug is the
-		# authoritative source for visibility, and is checked in setVisible.
+		# Add a plug used to manage our visibility from an activator in SceneViewUI.py.
 		sceneView.addChild( Gaffer.ValuePlug( "inspector" ) )
 		sceneView["inspector"].addChild( Gaffer.BoolPlug( "visible", Gaffer.Plug.Direction.In, True ) )
 		Gaffer.NodeAlgo.applyUserDefaults( sceneView["inspector"] )
@@ -209,8 +193,6 @@ class _SceneViewInspector( GafferUI.Widget ) :
 
 		if plug in ( self.__sceneView["in"]["attributes"], self.__sceneView["editScope"] ) :
 			self.__updateLazily()
-		elif plug.isSame( self.__sceneView["inspector"]["visible"] ) :
-			self.setVisible( plug.getValue() )
 
 	def __contextChanged( self, context, name ) :
 
