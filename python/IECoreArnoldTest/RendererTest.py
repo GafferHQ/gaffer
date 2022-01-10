@@ -1872,19 +1872,33 @@ class RendererTest( GafferTest.TestCase ) :
 						"spline" : IECore.SplinefColor3f(
 							IECore.CubicBasisf.bSpline(),
 							[
-								( 0, imath.Color3f( 0.25 ) ),
-								( 0, imath.Color3f( 0.25 ) ),
-								( 1, imath.Color3f( 0.5 ) ),
-								( 1, imath.Color3f( 0.5 ) ),
+								( 0, imath.Color3f( 0 ) ),
+								( 0.25, imath.Color3f( 0.25 ) ),
+								( 0.5, imath.Color3f( 0.5 ) ),
+								( 1, imath.Color3f( 1 ) ),
 							]
 						),
 					}
 				),
-				"output" : IECoreScene.Shader( "add", "ai:surface" ),
+				"floatSplineHandle" : IECoreScene.Shader(
+					"Pattern/FloatSpline",
+					"osl:shader",
+					{
+						"spline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 1, 0.5 ),
+							]
+						),
+					}
+				),
+				"output" : IECoreScene.Shader( "switch_rgba", "ai:surface" ),
 			},
 			connections = [
 				( ( "splineHandle", "" ), ( "output", "input1" ) ),
 				( ( "noiseHandle", "" ), ( "output", "input2" ) ),
+				( ( "floatSplineHandle", "" ), ( "output", "input3" ) ),
 			],
 			output = "output"
 		)
@@ -1908,27 +1922,44 @@ class RendererTest( GafferTest.TestCase ) :
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
-			add = arnold.AiNodeGetPtr( n, "shader" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( add ) ), "add" )
+			switch = arnold.AiNodeGetPtr( n, "shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( switch ) ), "switch_rgba" )
 
-			spline = arnold.AiNodeGetLink( add, "input1" )
+			spline = arnold.AiNodeGetLink( switch, "input1" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
 
 			splinePositions = arnold.AiNodeGetArray( spline, "param_splinePositions" )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 0 ), 0 )
-			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 1 ), 0 )
-			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 2 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 1 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 2 ), 0.5 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 3 ), 1 )
 
 			splineValues = arnold.AiNodeGetArray( spline, "param_splineValues" )
-			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 0 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 0 ), arnold.AtRGB( 0, 0, 0 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 1 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
-			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 1, 1, 1 ) )
 
-			noise = arnold.AiNodeGetLink( add, "input2" )
+			floatSpline = arnold.AiNodeGetLink( switch, "input3" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( floatSpline ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( floatSpline, "shadername" ), "Pattern/FloatSpline" )
+			self.assertEqual( arnold.AiNodeGetStr( floatSpline, "param_splineBasis" ), "linear" )
+
+			floatSplinePositions = arnold.AiNodeGetArray( floatSpline, "param_splinePositions" )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 1 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 2 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplinePositions, 3 ), 1 )
+
+			floatSplineValues = arnold.AiNodeGetArray( floatSpline, "param_splineValues" )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 0 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 1 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 2 ), 0.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( floatSplineValues, 3 ), 0.5 )
+
+			noise = arnold.AiNodeGetLink( switch, "input2" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
