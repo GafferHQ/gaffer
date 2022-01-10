@@ -12,13 +12,6 @@ on:
   release:
       types: [published]
 
-defaults:
-  run:
-    # Using bash because it supports the BASH_ENV
-    # variable that the GafferHQ/build Docker image
-    # uses to set up software packages.
-    shell: bash
-
 jobs:
 
   build:
@@ -40,6 +33,7 @@ jobs:
           linux-python2-debug,
           linux-python3,
           macos-python2,
+          windows-python3,
         ]
 
         include:
@@ -86,6 +80,14 @@ jobs:
             testRunner: bash -c
             sconsCacheMegabytes: 400
 
+          - name: windows-python3
+            os: windows-2016
+            buildType: RELEASE
+            variant: windows-python3
+            publish: false
+            containerImage:
+            dependenciesURL: https://github.com/hypothetical-inc/gafferDependencies/releases/download/5.0.0/gafferDependencies-5.0.0-Python3-windows.zip
+
     runs-on: ${{ matrix.os }}
 
     container: ${{ matrix.containerImage }}
@@ -95,11 +97,22 @@ jobs:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
-      LD_PRELOAD: libSegFault.so
 
     steps:
 
     - uses: actions/checkout@v2
+
+    - uses: ilammy/msvc-dev-cmd@v1.10.0
+      with:
+        sdk: 10.0.17763.0
+
+    - name: Install toolchain (Windows)
+      run: |
+        python -m pip install scons
+        Invoke-WebRequest -Uri "https://inkscape.org/gallery/item/18067/inkscape-0.92.5-x64.exe" -OutFile "inkscape.exe"
+        Start-Process .\inkscape.exe /S -NoNewWindow -Wait
+      shell: pwsh
+      if: runner.os == 'Windows'
 
     - name: Install toolchain (MacOS)
       # Prefer `pip install` where possible because it is faster
@@ -123,6 +136,20 @@ jobs:
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity&
         useradd -m testUser
+        echo LD_PRELOAD=libSegFault.so >> $GITHUB_ENV
+
+        # The Docker container configures bash shells such that they enable the
+        # software collections we want. If we could set GitHub's
+        # `defaults.run.shell` to `bash` then all our build steps would pick up
+        # this environment automatically. But we can't do that because it
+        # breaks the build on Windows, and we can't configure a different shell
+        # per platform because GitHub won't allow it. But we can run _this_
+        # Linux-only step in bash, and transfer the environment out to be used
+        # in later steps.
+        echo $PATH > $GITHUB_PATH
+        echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
+        echo DISPLAY=$DISPLAY >> $GITHUB_ENV
+      shell: bash
       if: runner.os == 'Linux'
 
     - name: 'Install Python Modules'
@@ -137,6 +164,7 @@ jobs:
       env:
        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        GAFFER_BUILD_VARIANT: ${{ matrix.name }}
+      shell: bash
 
     - name: Disable macOS PR Docs
       run: |
@@ -152,6 +180,7 @@ jobs:
         echo GAFFER_DEPENDENCIES_HASH=`python .github/workflows/main/installDependencies.py --archiveURL ${{ matrix.dependenciesURL }} --dependenciesDir ${{ env.GAFFER_BUILD_DIR }} --outputFormat "{archiveDigest}"` >> $GITHUB_ENV
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
+      shell: bash
 
     - name: Cache
       uses: actions/cache@v1
@@ -174,6 +203,7 @@ jobs:
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
         ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test"
         echo "::remove-matcher owner=unittest::"
+      if: runner.os == 'macOS' || runner.os == 'Linux'
 
     - name: Build and test Arnold extension
       run: |
