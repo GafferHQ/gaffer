@@ -100,6 +100,7 @@ class GLWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, graphicsView, **kw )
 
 		self.__overlays = set()
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
 
 	## Adds a widget to be overlaid on top of the GL rendering,
 	# stretched to fill the frame.
@@ -206,6 +207,16 @@ class GLWidget( GafferUI.Widget ) :
 			self._draw()
 		except Exception as e :
 			IECore.msg( IECore.Msg.Level.Error, "GLWidget", str( e ) )
+
+	def __visibilityChanged( self, widget ) :
+
+		# Transfer our visibility to our overlay widgets, so that
+		# their `visibilityChangedSignal()` is emitted as well (Qt
+		# doesn't handle this for us). This is particularly important
+		# for overlays which use LazyMethod and BackgroundMethod, both
+		# of which react to visibility changes.
+		for overlay in self.__overlays :
+			overlay._qtWidget().setVisible( self.visible() )
 
 class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
