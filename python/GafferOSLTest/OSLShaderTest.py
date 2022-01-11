@@ -694,7 +694,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n = GafferOSL.OSLShader()
 		n.loadShader( s )
 
-		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline" ] )
+		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline", "checkLinearSpline" ] )
 
 		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
 		self.assertEqual(
@@ -725,6 +725,21 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				]
 			)
 		)
+
+		# Just adding documentation that this is currently broken, but I'm not supposed to be worrying about
+		# the parameter import path at the moment ( it's not using
+		# IECoreScene::ShaderNetworkAlgo::collapseSplineParameters yet )
+		"""self.assertTrue( isinstance( n["parameters"]["checkLinearSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["checkLinearSpline"].getValue().spline(),
+			IECore.Splineff(
+				IECore.CubicBasisf.linear(),
+				[
+					( 2, 3 ),
+					( 4, 5 ),
+				]
+			)
+		)"""
 
 		shader = n.attributes()["osl:shader"].outputShader()
 
