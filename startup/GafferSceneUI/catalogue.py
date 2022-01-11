@@ -57,7 +57,7 @@ if statusIconColumn :
 
 		def __init__( self ) :
 
-			CatalogueUI.IconColumn.__init__( self, "" )
+			CatalogueUI.Column.__init__( self, "" )
 
 		def _imageCellData( self, image, catalogue ) :
 
