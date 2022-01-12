@@ -24,6 +24,7 @@ Fixes
 - NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 - Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
+- ArnoldRender : Stopped instancing of polygon meshes when both `ai:subdivide_polygons` and adaptive subdivision are on.
 - GLWidget : Fixed bug which made overlays unresponsive on high resolution displays.
 
 API

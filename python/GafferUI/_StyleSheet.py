@@ -1618,26 +1618,6 @@ _styleSheet = string.Template(
 
 	/* PinningWidget */
 
-	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"][linkGroup="0"] {
-		/* border-color: rgb( 181, 110, 120 ); */
-		background: rgba( 181, 110, 120, 0.4 );
-	}
-
-	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"][linkGroup="1"] {
-		/* border-color: rgb( 217, 204, 122 ); */
-		background: rgba( 217, 204, 122, 0.4 );
-	}
-
-	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"][linkGroup="2"] {
-		/* border-color: rgb( 89, 140, 71 ); */
-		background: rgba( 89, 140, 71, 0.4 );
-	}
-
-	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"][linkGroup="3"] {
-		/* border-color: rgb( 145, 110, 181 ); */
-		background: rgba( 145, 110, 181, 0.4 );
-	}
-
 	QFrame[gafferClass="GafferUI.CompoundEditor._PinningWidget"] #menuDownArrow {
 		margin-top: 1px;
 		margin-left: 2px;

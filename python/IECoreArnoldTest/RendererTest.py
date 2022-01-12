@@ -1034,6 +1034,17 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "object" ),
 			} )
 		)
+		subdivideLinear = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdivide_polygons" : IECore.BoolData( True )
+			} )
+		)
+		subdivideLinearAdaptive = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdivide_polygons" : IECore.BoolData( True ),
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
+			} )
+		)
 		smoothDerivsTrueAttributes = r.attributes(
 			IECore.CompoundObject( {
 				"ai:polymesh:subdiv_smooth_derivs" : IECore.BoolData( True )
@@ -1070,6 +1081,14 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "subdivAdaptiveObjectSpaceAttributes1", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 
+		# With subdivide_polygons on, poly meshes need the same behaviour as subdivs, breaking instancing
+		# when adaptive is on
+		r.object( "polySubdivideLinearAttributes1", polyPlane.copy(), subdivideLinear )
+		r.object( "polySubdivideLinearAttributes2", polyPlane.copy(), subdivideLinear )
+
+		r.object( "polyAdaptiveSubdivideLinearAttributes1", polyPlane.copy(), subdivideLinearAdaptive )
+		r.object( "polyAdaptiveSubdivideLinearAttributes2", polyPlane.copy(), subdivideLinearAdaptive )
+
 		# If smooth derivatives are required, that'll require creating a separate polymesh and an instance of it
 
 		r.object( "subdivSmoothDerivsAttributes1", subdivPlane.copy(), smoothDerivsTrueAttributes )
@@ -1086,8 +1105,8 @@ class RendererTest( GafferTest.TestCase ) :
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 
-			self.assertEqual( numPolyMeshes, 6 )
-			self.assertEqual( numInstances, 11 )
+			self.assertEqual( numPolyMeshes, 9 )
+			self.assertEqual( numInstances, 13 )
 
 			self.__assertInstanced(
 				universe,
@@ -1115,6 +1134,18 @@ class RendererTest( GafferTest.TestCase ) :
 				universe,
 				"subdivAdaptiveObjectSpaceAttributes1",
 				"subdivAdaptiveObjectSpaceAttributes2",
+			)
+
+			self.__assertInstanced(
+				universe,
+				"polySubdivideLinearAttributes1",
+				"polySubdivideLinearAttributes2",
+			)
+
+			self.__assertNotInstanced(
+				universe,
+				"polyAdaptiveSubdivideLinearAttributes1",
+				"polyAdaptiveSubdivideLinearAttributes2",
 			)
 
 	def testTransformTypeAttribute( self ) :
