@@ -1049,7 +1049,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
 			{
-				if( mesh->interpolation() == "linear" )
+				if( mesh->interpolation() == "linear" && !m_polyMesh.subdividePolygons )
 				{
 					return true;
 				}
