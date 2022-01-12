@@ -16,6 +16,7 @@ Fixes
 - NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 - Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
+- IECoreArnold : Don't instance poly meshes using subdivide_polygons and adaptive subdivision
 
 API
 ---
