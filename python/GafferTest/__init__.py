@@ -154,6 +154,7 @@ from .EditScopeTest import EditScopeTest
 from .RandomChoiceTest import RandomChoiceTest
 from .ContextQueryTest import ContextQueryTest
 from .TweakPlugTest import TweakPlugTest
+from .HiddenFilePathFilterTest import HiddenFilePathFilterTest
 
 from .IECorePreviewTest import *
 
