@@ -39,6 +39,7 @@
 
 #include "Gaffer/CompoundPathFilter.h"
 #include "Gaffer/FileSequencePathFilter.h"
+#include "Gaffer/HiddenFilePathFilter.h"
 #include "Gaffer/MatchPatternPathFilter.h"
 #include "Gaffer/PathFilter.h"
 
@@ -546,8 +547,7 @@ PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::strin
 
 	// Filter for hidden files
 
-	std::vector<std::string> hiddenFilePatterns; hiddenFilePatterns.push_back( ".*" );
-	MatchPatternPathFilterPtr hiddenFilesFilter = new MatchPatternPathFilter( hiddenFilePatterns, "name", /* leafOnly = */ false );
+	HiddenFilePathFilterPtr hiddenFilesFilter = new HiddenFilePathFilter();
 	hiddenFilesFilter->setInverted( true );
 
 	CompoundDataPtr hiddenFilesUIUserData = new CompoundData;
