@@ -40,7 +40,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"
 
-#include "IECoreGL/PerspectiveCamera.h"
+#include "IECoreGL/Camera.h"
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/ToGLCameraConverter.h"
@@ -1911,7 +1911,12 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	camera->setTransform( viewportGadget->getCameraTransform() );
 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
 	/// we don't have access to that information right now.
-	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
+
+	/// \todo Resolve when to sort or not. For historical reasons this is
+	/// currently hardcoded to `false` and to-sort or not-to-sort is handled by clients
+	/// of `SceneGadget::objectAt()`. For context, see :
+	/// https://github.com/GafferHQ/gaffer/pull/4570#issuecomment-1044709782
+	m_depthSort = false;
 	camera->render( nullptr );
 
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
