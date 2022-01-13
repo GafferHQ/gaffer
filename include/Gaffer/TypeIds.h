@@ -147,6 +147,7 @@ enum TypeId
 	TweakPlugTypeId = 110100,
 	TweaksPlugTypeId = 110101,
 	FilePathPlugTypeId = 110102,
+	HiddenFilePathFilterTypeId = 110103,
 
 	LastTypeId = 110159,
 

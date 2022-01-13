@@ -44,6 +44,7 @@
 
 #include "Gaffer/CompoundPathFilter.h"
 #include "Gaffer/FileSequencePathFilter.h"
+#include "Gaffer/HiddenFilePathFilter.h"
 #include "Gaffer/LeafPathFilter.h"
 #include "Gaffer/MatchPatternPathFilter.h"
 #include "Gaffer/Path.h"
@@ -282,6 +283,14 @@ void GafferModule::bindPathFilter()
 		.def( "removeFilter", &CompoundPathFilter::removeFilter )
 		.def( "setFilters", &setFilters )
 		.def( "getFilters", &getFilters )
+	;
+
+	// HiddenFilePathFilter
+
+	RunTimeTypedClass<HiddenFilePathFilter>()
+		.def( init<CompoundDataPtr>( ( arg( "userData" ) = object() ) ) )
+		.def( "setInverted", &HiddenFilePathFilter::setInverted )
+		.def( "getInverted", &HiddenFilePathFilter::getInverted )
 	;
 
 }

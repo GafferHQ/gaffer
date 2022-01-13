@@ -169,6 +169,7 @@ from .ContextQueryTest import ContextQueryTest
 from .TweakPlugTest import TweakPlugTest
 from .FilePathInOutNode import FilePathInOutNode
 from .FilePathPlugTest import FilePathPlugTest
+from .HiddenFilePathFilterTest import HiddenFilePathFilterTest
 
 from .IECorePreviewTest import *
 
