@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import stat
 import unittest
 import imath
 
@@ -101,6 +102,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		a.savePreferences( self.__preferencesFile )
 		os.chmod( self.__preferencesFile, 0 )
 		self.assertRaises( RuntimeError, a.savePreferences, self.__preferencesFile )
+		os.chmod( self.__preferencesFile, stat.S_IWRITE)
 
 	def testPreferencesLocation( self ) :
 
