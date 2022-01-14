@@ -1287,9 +1287,21 @@ if env["PLATFORM"] == "win32" :
 						os.path.dirname(filePath ),
 						sourceFile
 					) ) ):
-						fileOrigin[ os.path.join( env.subst( "$BUILD_DIR" ), filePath ) ]= os.path.abspath(
+						fileOrigin[ filePath ] = os.path.abspath(
 							os.path.join( os.path.dirname( filePath ), sourceFile ) 
-						)
+						).replace( os.getcwd(), "" ).lstrip( os.path.sep )
+
+	def customInstaller( dest, source, env ) :
+
+		source = fileOrigin.get( source, source )
+		shutil.copy2( source, dest )
+
+		if env["PLATFORM"] != "win32" :
+			
+			st = os.stat( source )
+			os.chown( dest, st.st_uid, st.st_gid )
+
+	env["INSTALL"] = customInstaller
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules
@@ -1444,24 +1456,14 @@ for libraryName, libraryDef in libraries.items() :
 	# apps
 
 	for app in libraryDef.get( "apps", [] ) :
-		destinationFile = env.subst( os.path.join( installRoot, "apps", app, "{app}-1.py".format( app=app ) ) )
-		appInstall = env.InstallAs(
-			destinationFile,
-			fileOrigin.get(destinationFile, os.path.join( "apps", app, "{app}-1.py".format( app=app ) ) )
-		)
+		appInstall = env.InstallAs( os.path.join( installRoot, "apps", app, "{app}-1.py".format( app=app ) ), "apps/{app}/{app}-1.py".format( app=app ) )
 		env.Alias( "build", appInstall )
 
 	# startup files
 
 	for startupDir in libraryDef.get( "apps", [] ) + [ libraryName ] :
-		for startupFile in glob.glob(
-			os.path.join( "startup", "{startupDir}".format( startupDir=startupDir ), "*.py" )
-		) :
-			destinationFile = env.subst( os.path.join( installRoot, startupFile ) )
-			startupFileInstall = env.InstallAs(
-				destinationFile,
-				fileOrigin.get( destinationFile, startupFile )
-			)
+		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) :
+			startupFileInstall = env.InstallAs( os.path.join( installRoot, startupFile ), startupFile )
 			env.Alias( "build", startupFileInstall )
 
 	# additional files
@@ -1469,21 +1471,13 @@ for libraryName, libraryDef in libraries.items() :
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
 		if additionalFile in pythonFiles :
 			continue
-		destinationFile = env.subst( os.path.join( installRoot, additionalFile ) )
-		additionalFileInstall = env.InstallAs(
-			destinationFile,
-			fileOrigin.get( destinationFile, additionalFile)
-		)
+		additionalFileInstall = env.InstallAs( os.path.join( installRoot, additionalFile ), additionalFile )
 		env.Alias( "build", additionalFileInstall )
 
 	# osl headers
 
 	for oslHeader in libraryDef.get( "oslHeaders", [] ) :
-		destinationFile = env.subst( os.path.join( installRoot, oslHeader ) )
-		oslHeaderInstall = env.InstallAs(
-			destinationFile,
-			fileOrigin.get( destinationFile, oslHeader )
-		)
+		oslHeaderInstall = env.InstallAs( os.path.join( installRoot, oslHeader ), oslHeader )
 		env.Alias( "oslHeaders", oslHeaderInstall )
 		env.Alias( "build", oslHeaderInstall )
 
