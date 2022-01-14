@@ -845,7 +845,7 @@ if os.path.exists( vTuneRoot ):
 		"envAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$VTUNE_ROOT/include", "-DGAFFER_VTUNE"],
 			"LIBPATH" : [ "$VTUNE_ROOT/lib64" ],
-			"LIBS" : [ "ittnotify" ]
+			"LIBS" : [ "ittnotify" ] + gafferLib.get( "envAppends", {} ).get( "LIBS", [] )
 		},
 		"pythonEnvAppends" : {
 			"CXXFLAGS" : [ "-DGAFFER_VTUNE"]
