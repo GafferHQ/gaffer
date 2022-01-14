@@ -425,11 +425,11 @@ if env["PLATFORM"] != "win32" :
 		if "g++" in os.path.basename( env["CXX"] ) :
 
 			# Get GCC version.
-			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"] ).decode().strip()
+			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"], universal_newlines=True ).strip()
 			if "." not in gccVersion :
 				# GCC 7 onwards requires `-dumpfullversion` to get minor/patch, but this
 				# flag does not exist on earlier GCCs, where minor/patch was provided by `-dumpversion`.
-				gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"] ).decode().strip()
+				gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"], universal_newlines=True ).strip()
 			gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
 
 			# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
@@ -692,7 +692,7 @@ def runCommand( command ) :
 
 	command = commandEnv.subst( command )
 	sys.stderr.write( command + "\n" )
-	return subprocess.check_output( command, shell=True, env=commandEnv["ENV"] ).decode()
+	return subprocess.check_output( command, shell=True, env=commandEnv["ENV"], universal_newlines=True )
 
 ###############################################################################################
 # The basic environment for building libraries
