@@ -1525,9 +1525,6 @@ for libraryName, libraryDef in libraries.items() :
 # Graphics
 #########################################################################################################
 
-def inkscapeCmd():
-	return env["INKSCAPE"] if env["PLATFORM"] != "win32" else "\"{}\"".format( env["INKSCAPE"] )	# Quote command string to support spaces in path on Windows
-
 def buildImageCommand( source, target, env ) :
 
 	# Requires env to have buildImageOptions set, containing, at minimum:
@@ -1542,19 +1539,15 @@ def buildImageCommand( source, target, env ) :
 	if not os.path.isdir( outputDirectory ) :
 		os.makedirs( outputDirectory )
 
-	args = " ".join( [
-		"--export-png={filePath}",
-		"--export-id={id}",
-		"--export-width={width:d}",
-		"--export-height={height:d}",
+	args = [
+		"--export-png={}".format( os.path.abspath( filename ) ),
+		"--export-id={}".format( substitutions["id"] ),
+		"--export-width={:d}".format( substitutions["width"] ),
+		"--export-height={:d}".format( substitutions["height"] ),
 		"--export-background-opacity=0",
-		"{svgPath}"
-	] ).format(
-		filePath = os.path.abspath( filename ),
-		svgPath = os.path.abspath( svgFilename ),
-		**substitutions
-	)
-	subprocess.check_call( inkscapeCmd() + " " + args, shell = True )
+		os.path.abspath( svgFilename )
+	]
+	subprocess.check_call( [ env["INKSCAPE"] ] + args )
 
 def validateAndFlattenImageOptions( imageOptions, svg ) :
 
@@ -1604,8 +1597,7 @@ def svgQuery( svgFile, id_ ) :
 
 		objects = {}
 
-		queryCommand = inkscapeCmd() + " --query-all \"" + filepath + "\""
-		output = subprocess.check_output( queryCommand, shell=True ).decode()
+		output = subprocess.check_output( [ env["INKSCAPE"], "--query-all", filepath ], universal_newlines=True )
 		for line in output.split( "\n" ) :
 			tokens = line.split( "," )
 			# <id>,<x>,<y>,<width>,<height>
