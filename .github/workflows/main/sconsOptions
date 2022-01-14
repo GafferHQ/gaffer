@@ -58,30 +58,7 @@ PACKAGE_FILE = "{}.{}".format(
 
 SPHINX = os.environ["GAFFER_SPHINX"]
 
-if sys.platform == "win32" :
-
-    # It would be nice to get this from the command line, but I don't know of any way
-    # to do that. It will need to be changed when upgrading Visual Studio versions.
-    toolSetVersion = "141"
-
-    # Get the Boost version from the include directory.
-    # It is named "boost-<majorVersion>_<minorVersion>"
-    boostInclude = glob.glob( os.path.join( os.environ["GAFFER_BUILD_DIR"], "include", "boost-*" ) )
-    if len( boostInclude ) > 0 :
-        boostVersion = os.path.split( boostInclude[0] )[-1].split( '-' )[1]
-
-        # Get the Python version, as in SConstruct but without the '.' separating major from minor version
-        pythonVersion = subprocess.check_output(
-            [ "python", "-c", "import sys; print( '{}{}'.format( *sys.version_info[:2] ) )" ],
-            universal_newlines=True
-        ).strip()
-
-        BOOST_LIB_SUFFIX = "-vc" + toolSetVersion + "-mt-x64-" + boostVersion
-        BOOST_PYTHON_LIB_SUFFIX = pythonVersion + "-vc" + toolSetVersion + "-mt-x64-" + boostVersion
-        LOCATE_DEPENDENCY_SYSTEMPATH = [
-            os.path.join( os.environ["GAFFER_BUILD_DIR"], "include", "boost-" + boostVersion )
-        ]
-    
+if sys.platform == "win32" :    
     LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
     LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
     GLEW_LIB_SUFFIX = "32"
