@@ -36,6 +36,7 @@
 import sys
 import argparse
 import os
+import subprocess
 import urllib
 import zipfile
 
@@ -72,7 +73,7 @@ print( "Downloading Arnold \"{}\"".format( url ) )
 archiveFile, headers = urlretrieve( url )
 
 if format == "tgz" :
-    os.system( "tar -xzf {}".format( archiveFile ) )
+    subprocess.check_call( [ "tar", "-xzf", archiveFile ] )
 elif format == "zip":
     with zipfile.ZipFile( archiveFile ) as f :
         f.extractall()
