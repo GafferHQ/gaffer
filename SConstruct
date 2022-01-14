@@ -41,6 +41,7 @@ import re
 import sys
 import glob
 import platform
+import shutil
 import subprocess
 import distutils.dir_util
 
@@ -1925,6 +1926,8 @@ def packager( target, source, env ) :
 
 	if target.endswith( ".dmg" ) :
 		runCommand( "hdiutil create -volname '%s' -srcfolder '%s' -ov -format UDZO '%s'" % ( os.path.basename( target ), source, target ) )
+	elif target.endswith( ".zip" ) :
+		shutil.make_archive( os.path.splitext( target )[0], "zip", root_dir=d, base_dir=b )
 	else :
 		runCommand( "tar -czf %s -C %s %s" % ( target, d, b ) )
 
