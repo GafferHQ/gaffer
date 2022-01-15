@@ -39,6 +39,7 @@ import unittest
 import threading
 import collections
 import six
+import os
 
 import IECore
 
@@ -691,7 +692,10 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertEqual( mh.messages[0].context, "BadAffects::affects()" )
-		self.assertEqual( mh.messages[0].message, "TypeError: No registered converter was able to extract a C++ reference to type Gaffer::Plug from this Python object of type NoneType\n" )
+		m = "TypeError: No registered converter was able to extract a C++ reference to type Gaffer::Plug from this Python object of type NoneType\n"
+		if os.name == "nt" :
+			m = "TypeError: No registered converter was able to extract a C++ reference to type class Gaffer::Plug from this Python object of type NoneType\n"
+		self.assertEqual( mh.messages[0].message, m )
 
 	def testDependencyCyclesDontStopPlugsDirtying( self ) :
 
