@@ -1471,7 +1471,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["e"].setExpression( "import math; parent['n']['user']['p'] = math" )
 		self.assertRaisesRegex(
 			Gaffer.ProcessException,
-			".*TypeError: Unsupported type for result \"<module 'math' from .*\" for expression output \"n.user.p\"",
+			".*TypeError: Unsupported type for result \"<module 'math' .* for expression output \"n.user.p\"",
 			s["n"]["user"]["p"].getValue
 		)
 
