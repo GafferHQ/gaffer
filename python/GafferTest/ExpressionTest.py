@@ -1469,11 +1469,11 @@ class ExpressionTest( GafferTest.TestCase ) :
 		)
 
 		s["e"].setExpression( "import math; parent['n']['user']['p'] = math" )
-		six.assertRaisesRegex( self,
-			Gaffer.ProcessException,
-			".*TypeError: Unsupported type for result \"<module 'math' from .*\" for expression output \"n.user.p\"",
-			s["n"]["user"]["p"].getValue
-		)
+
+		r = ".*TypeError: Unsupported type for result \"<module 'math' from .*\" for expression output \"n.user.p\""
+		if os.name == "nt" :
+			r = ".*TypeError: Unsupported type for result \"<module 'math' \\(built-in\\)>\" for expression output \"n.user.p\""
+		six.assertRaisesRegex( self, Gaffer.ProcessException, r, s["n"]["user"]["p"].getValue )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testParallelPerformance( self ):
