@@ -690,7 +690,10 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertEqual( mh.messages[0].context, "BadAffects::affects()" )
-		self.assertEqual( mh.messages[0].message, "TypeError: No registered converter was able to extract a C++ reference to type Gaffer::Plug from this Python object of type NoneType\n" )
+		self.assertRegex(
+			mh.messages[0].message,
+			r"TypeError: No registered converter was able to extract a C\+\+ reference to type.* Gaffer::Plug from this Python object of type NoneType\n"
+		)
 
 	def testDependencyCyclesDontStopPlugsDirtying( self ) :
 
