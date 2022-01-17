@@ -762,11 +762,6 @@ class Instancer::EngineData : public Data
 
 					m_indices = view->indices();
 					rootStrings = &view->data();
-					if( rootStrings->empty() )
-					{
-						throw IECore::Exception( boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must specify at least one root location" ) % rootsVariable ) );
-					}
-
 					break;
 				}
 			}

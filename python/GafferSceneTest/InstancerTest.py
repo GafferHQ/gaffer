@@ -1072,13 +1072,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 			points = script["objectToScene"]["object"].getValue()
 			points["root"] = IECoreScene.PrimitiveVariable( points["root"].interpolation, roots, indices )
+			self.assertTrue( points.arePrimitiveVariablesValid() )
 			script["objectToScene"]["object"].setValue( points )
-
-		updateRoots( IECore.StringVectorData( [] ), IECore.IntVectorData( [] ) )
-		six.assertRaisesRegex( self,
-			Gaffer.ProcessException, ".*must specify at least one root location.*",
-			script["instancer"]["out"].childNames, "/object/instances",
-		)
 
 		updateRoots( IECore.StringVectorData( [ "", ] ), IECore.IntVectorData( [ 0, 0, 0, 0 ] ) )
 		self.assertUnderspecifiedRoots( script )
@@ -2189,6 +2184,47 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# Test passthrough when disabled
 		instancer["enabled"].setValue( False )
 		self.assertScenesEqual( instancer["in"], instancer["out"] )
+
+	def testRootPerVertexWithEmptyPoints( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData() )
+		self.assertEqual( points.numPoints, 0 )
+
+		points["prototypeRoots"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			# OK to have no values to index, because we have no vertices that
+			# need to index them. One common way to end up with data like this
+			# is to use DeletePoints, which will remove any values that aren't
+			# indexed after deletion.
+			IECore.StringVectorData(),
+			# Empty index list, because the primitive has no vertices.
+			IECore.IntVectorData(),
+		)
+		self.assertTrue( points.arePrimitiveVariablesValid() )
+
+		pointsScene = GafferScene.ObjectToScene()
+		pointsScene["object"].setValue( points )
+		pointsScene["name"].setValue( "points" )
+
+		sphere = GafferScene.Sphere()
+		cube = GafferScene.Cube()
+
+		prototypes = GafferScene.Group()
+		prototypes["in"][0].setInput( sphere["out"] )
+		prototypes["in"][1].setInput( cube["out"] )
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ "/points" ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( pointsScene["out"] )
+		instancer["prototypes"].setInput( prototypes["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypeMode"].setValue( instancer.PrototypeMode.RootPerVertex )
+
+		self.assertEqual( instancer["out"].childNames( "/points" ), IECore.InternedStringVectorData( [ "instances" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/points/instances" ), IECore.InternedStringVectorData() )
+		self.assertSceneValid( instancer["out"] )
 
 	def runTestContextSetPerf( self, useContexts, parallelEvaluate ):
 
