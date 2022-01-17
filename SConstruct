@@ -829,28 +829,7 @@ if env["ARNOLD_ROOT"] :
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
-vTuneRoot = env.subst("$VTUNE_ROOT")
-
-if env["PLATFORM"] == "win32" : 
-	gafferLib = {
-		"envAppends" : {
-			"LIBS" : [ "Advapi32" ]
-		}
-	}
-else:
-	gafferLib = {}
-
-if os.path.exists( vTuneRoot ):
-	gafferLib = {
-		"envAppends" : {
-			"CXXFLAGS" : [ systemIncludeArgument, "$VTUNE_ROOT/include", "-DGAFFER_VTUNE"],
-			"LIBPATH" : [ "$VTUNE_ROOT/lib64" ],
-			"LIBS" : [ "ittnotify" ] + gafferLib.get( "envAppends", {} ).get( "LIBS", [] )
-		},
-		"pythonEnvAppends" : {
-			"CXXFLAGS" : [ "-DGAFFER_VTUNE"]
-		}
-	}
+gafferLib = {}
 
 libraries = {
 
@@ -1248,6 +1227,39 @@ for library in ( "GafferUI", ) :
 	addQtLibrary( library, "Test" )
 	if int( env["QT_VERSION"] ) > 4 :
 		addQtLibrary( library, "Widgets" )
+
+# Add required libraries for Windows
+
+if env["PLATFORM"] == "win32" :
+
+	for library in ( "Gaffer", ) :
+
+		if "envAppends" not in libraries[library] :
+			libraries[library]["envAppends"] = {}
+
+		libraries[library]["envAppends"]["LIBS"] = libraries[library]["envAppends"].get( "LIBS", [] ) + [ "Advapi32" ]
+
+# Optionally add vTune requirements
+
+if os.path.exists( env.subst("$VTUNE_ROOT") ):
+
+	for library in ( "Gaffer", ) :
+
+		if "envAppends" not in libraries[library] :
+			libraries[library]["envAppends"] = {}
+
+		libraries[library]["envAppends"]["CXXFLAGS"] = libraries[library]["envAppends"].get( "CXXFLAGS", [] ) + [
+			systemIncludeArgument,
+			"$VTUNE_ROOT/include",
+			"-DGAFFER_VTUNE"
+		]
+		libraries[library]["envAppends"]["LIBPATH"] = libraries[library]["envAppends"].get( "LIBPATH", [] )  + [ "$VTUNE_ROOT/lib64" ]
+		libraries[library]["envAppends"]["LIBS"] = libraries[library]["envAppends"].get( "LIBS", [] ) + [ "ittnotify" ]
+
+		if "pythonEnvAppends" not in libraries[library] :
+			libraries[library]["pythonEnvAppends"] = {}
+
+		libraries[library]["pythonEnvAppends"]["CXXFLAGS"] = libraries[library]["pythonEnvAppends"].get( "CXXFLAGS", [] ) + [ "-DGAFFER_VTUNE" ]
 
 #########################################################################################################
 # Repair Symlinks on Windows
