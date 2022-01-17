@@ -50,6 +50,7 @@
 #include "TaskMutexTest.h"
 #include "ValuePlugTest.h"
 #include "MessagesTest.h"
+#include "SignalsTest.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -109,5 +110,6 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	bindLRUCacheTest();
 	bindValuePlugTest();
 	bindMessagesTest();
+	bindSignalsTest();
 
 }

@@ -156,6 +156,7 @@ class SignalsTest( GafferTest.TestCase ) :
 		del c
 		self.assertEqual( s( 1 ), -1 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testMany( self ) :
 
 		class S( imath.V3f ) :
@@ -244,7 +245,6 @@ class SignalsTest( GafferTest.TestCase ) :
 		s = Gaffer.Signal0()
 
 		c = s.connect( one )
-
 		self.assertEqual( s(), 1 )
 
 	def testGenericPythonSignals( self ) :
@@ -448,6 +448,151 @@ class SignalsTest( GafferTest.TestCase ) :
 		self.assertFalse( c.connected() )
 
 		s() # Would throw if an expired WeakMethod remained connected
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testConstructionPerformance( self ) :
+
+		GafferTest.testSignalConstructionPerformance()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testConnectionPerformance( self ) :
+
+		GafferTest.testSignalConnectionPerformance()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testCallPerformance( self ) :
+
+		GafferTest.testSignalCallPerformance()
+
+	def testQueryConnectionCopy( self ) :
+
+		s = Gaffer.Signal0()
+
+		c1 = s.connect( lambda : None )
+		self.assertTrue( c1.connected() )
+		c2 = Gaffer.Connection( c1 )
+		self.assertTrue( c2.connected() )
+
+		c1.disconnect()
+		self.assertFalse( c1.connected() )
+		self.assertFalse( c2.connected() )
+
+	def testDisconnectFreesSlot( self ) :
+
+		def f() :
+			pass
+
+		s = Gaffer.Signal0()
+		c = s.connect( f, scoped = False )
+
+		# If we drop our reference to the slot,
+		# it should still be alive because the
+		# signal is referencing it (because it
+		# is connected).
+		w = weakref.ref( f )
+		del f
+		self.assertIsNotNone( w() )
+
+		# And when we disconnect, the reference
+		# to the slot should be dropped, even if
+		# a copy of the connection exists.
+		c2 = Gaffer.Connection( c )
+		c.disconnect()
+		self.assertIsNone( w() )
+
+	def testDisconnectFromSlot( self ) :
+
+		signal = Gaffer.Signal1()
+		connection = None
+		slotCalls = []
+
+		def slot( arg ) :
+			slotCalls.append( arg )
+			self.assertEqual( signal.num_slots(), 1 )
+			connection.disconnect()
+			self.assertEqual( signal.num_slots(), 0 )
+
+		connection = signal.connect( slot, scoped = False )
+
+		signal( 1 )
+		self.assertEqual( slotCalls, [ 1 ] )
+		signal( 2 )
+		self.assertEqual( slotCalls, [ 1 ] )
+
+	def testDisconnectionOrder( self ) :
+
+		s = Gaffer.Signal0()
+		c1 = s.connect( lambda : None )
+		c2 = s.connect( lambda : None )
+
+		c1.disconnect()
+		c2.disconnect()
+
+	def testCallEmptySignal( self ) :
+
+		s = Gaffer.Signal0()
+		self.assertEqual( s(), None )
+
+		c = s.connect( lambda : 10 )
+		self.assertEqual( s(), 10 )
+
+		c.disconnect()
+		self.assertEqual( s(), None )
+
+	def testDisconnectAllSlots( self ) :
+
+		s = Gaffer.Signal0()
+		self.assertTrue( s.empty() )
+
+		capturingSlots = [
+			GafferTest.CapturingSlot( s )
+			for i in range( 0, 10 )
+		]
+		self.assertEqual( s.num_slots(), 10 )
+		self.assertFalse( s.empty() )
+
+		s.disconnect_all_slots()
+		self.assertEqual( s.num_slots(), 0 )
+		self.assertTrue( s.empty() )
+
+		s()
+		self.assertFalse( any( len( cs ) for cs in capturingSlots ) )
+
+	def testSlotReferencingConnection( self ) :
+
+		signal = Gaffer.Signal0()
+
+		# Make a slot that holds a ScopedConnection for the connection
+		# to itself. This is actually a fairly common pattern, used by
+		# classes to manage connections to their methods.
+
+		slot = lambda : None
+		connection = signal.connect( slot, scoped = False )
+		slot.connection = Gaffer.ScopedConnection( connection )
+
+		# Now, disconnect the connection, which should release the slot.
+		# Releasing the slot will release the ScopedConnection, which in
+		# turn will call `disconnect()`, while the first call to `disconnect()`
+		# _is still running_.
+
+		del slot
+		connection.disconnect()
+
+		# If we've got here, we haven't crashed, and all is well :)
+
+		self.assertFalse( connection.connected() )
+
+	def testDisconnectMatchingLambda( self ) :
+
+		GafferTest.testSignalDisconnectMatchingLambda()
+
+	def testDisconnectMatchingBind( self ) :
+
+		GafferTest.testSignalDisconnectMatchingBind()
+
+	def testSelfDisconnectingSlot( self ) :
+
+		GafferTest.testSignalSelfDisconnectingSlot()
 
 if __name__ == "__main__":
 	unittest.main()
