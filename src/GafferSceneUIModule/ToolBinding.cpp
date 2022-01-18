@@ -78,7 +78,7 @@ Gaffer::BoolPlugPtr cropWindowToolEnabledPlugWrapper( CropWindowTool &tool )
 
 struct StatusChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, CropWindowTool &t )
+	void operator()( boost::python::object slot, CropWindowTool &t )
 	{
 		try
 		{
@@ -88,7 +88,6 @@ struct StatusChangedSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 
@@ -116,7 +115,7 @@ bool selectionEditable( const TransformTool &tool )
 
 struct SelectionChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, TransformTool &t )
+	void operator()( boost::python::object slot, TransformTool &t )
 	{
 		try
 		{
@@ -126,7 +125,6 @@ struct SelectionChangedSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

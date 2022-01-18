@@ -58,10 +58,9 @@ namespace
 
 struct VisibilityChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, GadgetPtr g )
+	void operator()( boost::python::object slot, GadgetPtr g )
 	{
 		slot( g );
-		return boost::signals::detail::unusable();
 	}
 };
 
@@ -83,17 +82,15 @@ struct ButtonSlotCaller
 
 struct EnterLeaveSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, GadgetPtr g, const ButtonEvent &event )
+	void operator()( boost::python::object slot, GadgetPtr g, const ButtonEvent &event )
 	{
 		try
 		{
 			slot( g, event );
-			return boost::signals::detail::unusable();
 		}
 		catch( const boost::python::error_already_set &e )
 		{
 			PyErr_PrintEx( 0 ); // also clears the python error status
-			return boost::signals::detail::unusable();
 		}
 	}
 };

@@ -158,7 +158,7 @@ void cellDataSetToolTip( PathColumn::CellData &cellData, const ConstDataPtr &dat
 
 struct ChangedSignalSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, PathColumnPtr c )
+	void operator()( boost::python::object slot, PathColumnPtr c )
 	{
 		try
 		{
@@ -168,7 +168,6 @@ struct ChangedSignalSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

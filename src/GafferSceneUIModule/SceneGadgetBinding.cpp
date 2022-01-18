@@ -99,7 +99,7 @@ void waitForCompletion( SceneGadget &g )
 
 struct SceneGadgetSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, SceneGadgetPtr g )
+	void operator()( boost::python::object slot, SceneGadgetPtr g )
 	{
 		try
 		{
@@ -109,7 +109,6 @@ struct SceneGadgetSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

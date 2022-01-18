@@ -57,7 +57,7 @@ namespace
 
 struct DriverCreatedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )
+	void operator()( boost::python::object slot, IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )
 	{
 		try
 		{
@@ -67,7 +67,6 @@ struct DriverCreatedSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

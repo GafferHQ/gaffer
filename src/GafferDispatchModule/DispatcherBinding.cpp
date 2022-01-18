@@ -307,7 +307,7 @@ struct PreDispatchSlotCaller
 
 struct DispatchSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
+	void operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
 	{
 		try
 		{
@@ -323,13 +323,12 @@ struct DispatchSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 
 struct PostDispatchSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes, bool success )
+	void operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes, bool success )
 	{
 		try
 		{
@@ -345,7 +344,6 @@ struct PostDispatchSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

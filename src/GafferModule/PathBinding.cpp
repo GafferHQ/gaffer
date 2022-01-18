@@ -435,10 +435,9 @@ void delSlice( Path &p, boost::python::slice s )
 
 struct PathChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, PathPtr p )
+	void operator()( boost::python::object slot, PathPtr p )
 	{
 		slot( p );
-		return boost::signals::detail::unusable();
 	}
 };
 

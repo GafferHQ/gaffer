@@ -226,18 +226,16 @@ boost::python::list registeredScenes( const IECore::InternedString &shaderPrefix
 
 struct SceneChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, ShaderViewPtr v )
+	void operator()( boost::python::object slot, ShaderViewPtr v )
 	{
 		try
 		{
 			slot( v );
-			return boost::signals::detail::unusable();
 		}
 		catch( const boost::python::error_already_set &e )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 
@@ -258,7 +256,7 @@ void setPaused( UVView &v, bool paused )
 
 struct UVViewSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, UVViewPtr g )
+	void operator()( boost::python::object slot, UVViewPtr g )
 	{
 		try
 		{
@@ -268,7 +266,6 @@ struct UVViewSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

@@ -66,7 +66,7 @@ namespace
 
 struct NoduleSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, NodeGadget *nodeGadget, Nodule *nodule )
+	void operator()( boost::python::object slot, NodeGadget *nodeGadget, Nodule *nodule )
 	{
 		try
 		{
@@ -76,7 +76,6 @@ struct NoduleSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

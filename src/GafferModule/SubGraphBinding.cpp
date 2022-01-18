@@ -261,7 +261,7 @@ namespace
 
 struct ReferenceLoadedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, ReferencePtr r )
+	void operator()( boost::python::object slot, ReferencePtr r )
 	{
 		try
 		{
@@ -271,7 +271,6 @@ struct ReferenceLoadedSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

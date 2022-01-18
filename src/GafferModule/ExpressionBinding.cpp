@@ -92,7 +92,7 @@ struct ExpressionEngineCreator
 
 struct ExpressionChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, ExpressionPtr e )
+	void operator()( boost::python::object slot, ExpressionPtr e )
 	{
 		try
 		{
@@ -102,7 +102,6 @@ struct ExpressionChangedSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 
