@@ -338,18 +338,27 @@ void StandardConnectionGadget::renderLayer( Layer layer, const Style *style, Ren
 	}
 	else
 	{
-		style->renderConnection( minimisedSrcPos, minimisedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
+		style->renderConnection(
+			minimisedSrcPos, minimisedSrcTangent, m_dstPos, m_dstTangent,
+			state, m_userColor ? &m_userColor.value() : nullptr
+		);
 	}
 
 	if(m_addingConnection)
 	{
-		style->renderConnection( m_srcPos, m_srcTangent, m_dstPosOrig, m_dstTangentOrig, state, m_userColor.get_ptr() );
+		style->renderConnection(
+			m_srcPos, m_srcTangent, m_dstPosOrig, m_dstTangentOrig,
+			state, m_userColor ? &m_userColor.value() : nullptr
+		);
 	}
 
 	if( m_dotPreview )
 	{
 		Imath::Box2f bounds = Imath::Box2f( V2f( m_dotPreviewLocation.x, m_dotPreviewLocation.y ) );
-		style->renderNodeFrame(bounds, 1.0, state, m_userColor.get_ptr()  );
+		style->renderNodeFrame(
+			bounds, 1.0, state,
+			m_userColor ? &m_userColor.value() : nullptr
+		);
 	}
 }
 
@@ -710,7 +719,7 @@ void StandardConnectionGadget::plugMetadataChanged( const Gaffer::Plug *plug, IE
 
 bool StandardConnectionGadget::updateUserColor()
 {
-	boost::optional<Color3f> c;
+	std::optional<Color3f> c;
 	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( dstNodule()->plug(), g_colorKey ) )
 	{
 		c = d->readable();

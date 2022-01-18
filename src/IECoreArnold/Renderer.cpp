@@ -69,7 +69,6 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
-#include "boost/optional.hpp"
 
 #include "ai_array.h"
 #include "ai_msg.h"
@@ -1527,11 +1526,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			IECore::ConstStringVectorDataPtr volumeGrids;
 			IECore::ConstStringVectorDataPtr velocityGrids;
-			boost::optional<float> velocityScale;
-			boost::optional<float> velocityFPS;
-			boost::optional<float> velocityOutlierThreshold;
-			boost::optional<float> stepSize;
-			boost::optional<float> stepScale;
+			std::optional<float> velocityScale;
+			std::optional<float> velocityFPS;
+			std::optional<float> velocityOutlierThreshold;
+			std::optional<float> stepSize;
+			std::optional<float> stepScale;
 
 			void hash( IECore::MurmurHash &h ) const
 			{
@@ -1545,11 +1544,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					velocityGrids->hash( h );
 				}
 
-				h.append( velocityScale.get_value_or( 1.0f ) );
-				h.append( velocityFPS.get_value_or( 24.0f ) );
-				h.append( velocityOutlierThreshold.get_value_or( 0.001f ) );
-				h.append( stepSize.get_value_or( 0.0f ) );
-				h.append( stepScale.get_value_or( 1.0f ) );
+				h.append( velocityScale.value_or( 1.0f ) );
+				h.append( velocityFPS.value_or( 24.0f ) );
+				h.append( velocityOutlierThreshold.value_or( 0.001f ) );
+				h.append( stepSize.value_or( 0.0f ) );
+				h.append( stepScale.value_or( 1.0f ) );
 			}
 
 			void apply( AtNode *node ) const
@@ -1566,7 +1565,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetArray( node, g_velocityGridsArnoldString, array );
 				}
 
-				if( !velocityScale || velocityScale.get() > 0 )
+				if( !velocityScale || velocityScale.value() > 0 )
 				{
 					AtNode *options = AiUniverseGetOptions( AiNodeGetUniverse( node ) );
 					const AtNode *arnoldCamera = static_cast<const AtNode *>( AiNodeGetPtr( options, g_cameraArnoldString ) );
@@ -1587,26 +1586,26 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( velocityScale )
 				{
-					AiNodeSetFlt( node, g_velocityScaleArnoldString, velocityScale.get() );
+					AiNodeSetFlt( node, g_velocityScaleArnoldString, velocityScale.value() );
 				}
 
 				if( velocityFPS )
 				{
-					AiNodeSetFlt( node, g_velocityFPSArnoldString, velocityFPS.get() );
+					AiNodeSetFlt( node, g_velocityFPSArnoldString, velocityFPS.value() );
 				}
 
 				if( velocityOutlierThreshold )
 				{
-					AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.get() );
+					AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.value() );
 				}
 
 				if ( stepSize )
 				{
-					AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.get() * stepScale.get_value_or( 1.0f ) );
+					AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.value() * stepScale.value_or( 1.0f ) );
 				}
 				else if ( stepScale )
 				{
-					AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.get() );
+					AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.value() );
 				}
 			}
 		};
@@ -1641,11 +1640,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		}
 
 		template<typename T>
-		static boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
+		static std::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 		{
 			typedef IECore::TypedData<T> DataType;
 			const DataType *data = attribute<DataType>( name, attributes );
-			return data ? data->readable() : boost::optional<T>();
+			return data ? data->readable() : std::optional<T>();
 		}
 
 		static void updateVisibility( unsigned char &visibility, const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
@@ -3131,7 +3130,7 @@ class ArnoldGlobals
 			{
 				if( value == nullptr )
 				{
-					m_frame = boost::none;
+					m_frame = std::nullopt;
 				}
 				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
 				{
@@ -3288,7 +3287,7 @@ class ArnoldGlobals
 			{
 				if( value == nullptr )
 				{
-					m_progressiveMinAASamples = boost::none;
+					m_progressiveMinAASamples = std::nullopt;
 				}
 				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
 				{
@@ -3300,7 +3299,7 @@ class ArnoldGlobals
 			{
 				if( value == nullptr )
 				{
-					m_aaSeed = boost::none;
+					m_aaSeed = std::nullopt;
 				}
 				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
 				{
@@ -3498,7 +3497,7 @@ class ArnoldGlobals
 
 			AiNodeSetInt(
 				options, g_aaSeedArnoldString,
-				m_aaSeed.get_value_or( m_frame.get_value_or( 1 ) )
+				m_aaSeed.value_or( m_frame.value_or( 1 ) )
 			);
 
 			AtNode *dicingCamera = nullptr;
@@ -3577,7 +3576,7 @@ class ArnoldGlobals
 					// two different versions of "progressive". Instead we enable #1 only when #2
 					// is enabled.
 
-					const int minAASamples = m_progressiveMinAASamples.get_value_or( -4 );
+					const int minAASamples = m_progressiveMinAASamples.value_or( -4 );
 					// Must never set `progressive_min_AA_samples > -1`, as it'll get stuck and
 					// Arnold will never let us set it back.
 					AiRenderSetHintInt( m_renderSession.get(), AtString( "progressive_min_AA_samples" ), std::min( minAASamples, -1 ) );
@@ -3914,7 +3913,7 @@ class ArnoldGlobals
 		std::unique_ptr<UniverseBlock> m_universeBlock;
 		std::unique_ptr<AtRenderSession, decltype(&AiRenderSessionDestroy)> m_renderSession;
 		IECore::MessageHandlerPtr m_messageHandler;
-		boost::optional<unsigned> m_messageCallbackId;
+		std::optional<unsigned> m_messageCallbackId;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
@@ -3935,10 +3934,10 @@ class ArnoldGlobals
 
 		int m_logFileFlags;
 		int m_consoleFlags;
-		boost::optional<int> m_frame;
-		boost::optional<int> m_aaSeed;
+		std::optional<int> m_frame;
+		std::optional<int> m_aaSeed;
 		bool m_enableProgressiveRender;
-		boost::optional<int> m_progressiveMinAASamples;
+		std::optional<int> m_progressiveMinAASamples;
 		ShaderCachePtr m_shaderCache;
 
 		bool m_renderBegun;

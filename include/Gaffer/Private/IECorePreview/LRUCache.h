@@ -122,7 +122,7 @@ class LRUCache : private boost::noncopyable
 
 		/// Retrieves an item from the cache if it has been computed or set
 		/// previously. Throws if a previous call to `get()` failed.
-		boost::optional<Value> getIfCached( const Key &key );
+		std::optional<Value> getIfCached( const Key &key );
 
 		/// Adds an item to the cache directly, bypassing the GetterFunction.
 		/// Returns true for success and false on failure - failure can occur

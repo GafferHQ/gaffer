@@ -254,7 +254,7 @@ bool EditScopeAlgo::TransformEdit::operator != ( const TransformEdit &rhs ) cons
 	return !(*this == rhs);
 }
 
-boost::optional<GafferScene::EditScopeAlgo::TransformEdit> GafferScene::EditScopeAlgo::acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary )
+std::optional<GafferScene::EditScopeAlgo::TransformEdit> GafferScene::EditScopeAlgo::acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary )
 {
 	string pathString;
 	ScenePlug::pathToString( path, pathString );
@@ -262,7 +262,7 @@ boost::optional<GafferScene::EditScopeAlgo::TransformEdit> GafferScene::EditScop
 	auto *processor = scope->acquireProcessor<SceneProcessor>( "TransformEdits", createIfNecessary );
 	if( !processor )
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 
 	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
@@ -271,7 +271,7 @@ boost::optional<GafferScene::EditScopeAlgo::TransformEdit> GafferScene::EditScop
 	{
 		if( !createIfNecessary )
 		{
-			return boost::none;
+			return std::nullopt;
 		}
 		row = rows->addRow();
 		row->namePlug()->setValue( pathString );

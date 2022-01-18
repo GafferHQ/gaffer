@@ -484,7 +484,7 @@ struct UVIndexer
 private:
 
 	const std::vector< int >* m_indices;
-	boost::optional< IECoreScene::PrimitiveVariable::IndexedView< Imath::V2f > > m_view;
+	std::optional<IECoreScene::PrimitiveVariable::IndexedView<Imath::V2f>> m_view;
 };
 
 void computePrimitiveVertexLocalFrame( const IECoreScene::Primitive& primitive, Imath::M44f& m, const int vertexId, const bool throwOnError )
@@ -1050,12 +1050,12 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 	return fullConstrainedTransform * parentTransform.inverse();
 }
 
-boost::optional<Constraint::Target> Constraint::target() const
+std::optional<Constraint::Target> Constraint::target() const
 {
 	std::string targetPathAsString = targetPlug()->getValue();
 	if( targetPathAsString == "" )
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 
 	ScenePath targetPath;
@@ -1073,7 +1073,7 @@ boost::optional<Constraint::Target> Constraint::target() const
 	{
 		if( ignoreMissingTargetPlug()->getValue() )
 		{
-			return boost::none;
+			return std::nullopt;
 		}
 		else
 		{

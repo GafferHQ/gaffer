@@ -188,7 +188,7 @@ class TaskMutex : boost::noncopyable
 						}
 					};
 
-					boost::optional<tbb::task_group_status> status;
+					std::optional<tbb::task_group_status> status;
 					m_mutex->m_executionState->arena.execute(
 						[this, &fWrapper, &status] {
 							// Prior to TBB 2018 Update 3, `run_and_wait()` is buggy,

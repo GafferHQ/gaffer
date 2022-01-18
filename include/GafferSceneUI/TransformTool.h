@@ -132,7 +132,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 			/// Returns the plugs to edit. Throws if `status() != Editable`.
 			/// > Caution : When using EditScopes, this may edit the graph
 			/// > to create the plug unless `createIfNecessary == false`.
-			boost::optional<TransformEdit> acquireTransformEdit( bool createIfNecessary = true ) const;
+			std::optional<TransformEdit> acquireTransformEdit( bool createIfNecessary = true ) const;
 			/// The EditScope passed to the constructor.
 			const Gaffer::EditScope *editScope() const;
 			/// Returns the GraphComponent that will be edited.
@@ -193,7 +193,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 				bool m_editable;
 				std::string m_warning;
 				Gaffer::EditScopePtr m_editScope;
-				mutable boost::optional<TransformEdit> m_transformEdit;
+				mutable std::optional<TransformEdit> m_transformEdit;
 				Imath::M44f m_transformSpace;
 				bool m_aimConstraint;
 

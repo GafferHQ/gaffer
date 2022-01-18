@@ -102,7 +102,7 @@ class GAFFERUI_API StandardNodule : public Nodule
 		bool m_draggingConnection;
 		Imath::V3f m_dragPosition;
 		Imath::V3f m_dragTangent;
-		boost::optional<Imath::Color3f> m_userColor;
+		std::optional<Imath::Color3f> m_userColor;
 
 		static NoduleTypeDescription<StandardNodule> g_noduleTypeDescription;
 

@@ -96,7 +96,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 
 				// Initialised lazily when we first
 				// acquire the transform plug.
-				boost::optional<Imath::V3f> m_origin;
+				std::optional<Imath::V3f> m_origin;
 
 		};
 

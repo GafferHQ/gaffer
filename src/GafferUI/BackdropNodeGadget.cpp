@@ -308,7 +308,11 @@ void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 	{
 		// normal drawing mode
 
-		style->renderBackdrop( bound, getHighlighted() ? Style::HighlightedState : Style::NormalState, m_userColor.get_ptr() );
+		style->renderBackdrop(
+			bound,
+			getHighlighted() ? Style::HighlightedState : Style::NormalState,
+			m_userColor ? &m_userColor.value() : nullptr
+		);
 
 		std::string title, description;
 		titleAndDescriptionFromPlugs( backdrop->titlePlug(), backdrop->descriptionPlug(), title, description );
@@ -573,7 +577,7 @@ void BackdropNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 
 bool BackdropNodeGadget::updateUserColor()
 {
-	boost::optional<Color3f> c;
+	std::optional<Color3f> c;
 	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( node(), g_colorKey ) )
 	{
 		c = d->readable();

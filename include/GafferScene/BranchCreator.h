@@ -44,8 +44,6 @@
 
 #include "IECore/CompoundData.h"
 
-#include "boost/optional.hpp"
-
 namespace Gaffer
 {
 
@@ -183,7 +181,7 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 
 		/// Returns the path specified by `parentPlug()`, only if it is non-empty
 		/// and is valid within the input scene.
-		boost::optional<ScenePlug::ScenePath> parentPlugPath() const;
+		std::optional<ScenePlug::ScenePath> parentPlugPath() const;
 
 		/// BranchesData telling us what branches we need to make.
 		Gaffer::ObjectPlug *branchesPlug();

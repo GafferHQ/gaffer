@@ -512,7 +512,7 @@ AnimationGadget::AnimationGadget()
 , m_yMargin( 20 )
 , m_textScale( 10 )
 , m_labelPadding( 5 )
-, m_frameIndicatorPreviewFrame( boost::none )
+, m_frameIndicatorPreviewFrame( std::nullopt )
 {
 	buttonPressSignal().connect( boost::bind( &AnimationGadget::buttonPress, this, ::_1,  ::_2 ) );
 	buttonReleaseSignal().connect( boost::bind( &AnimationGadget::buttonRelease, this, ::_1,  ::_2 ) );
@@ -684,7 +684,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 
 		if( m_frameIndicatorPreviewFrame )
 		{
-			renderFrameIndicator( m_frameIndicatorPreviewFrame.get(), style, /* preview = */ true );
+			renderFrameIndicator( m_frameIndicatorPreviewFrame.value(), style, /* preview = */ true );
 		}
 
 		renderFrameIndicator( static_cast<int>( m_context->getFrame() ), style );
@@ -1103,8 +1103,8 @@ bool AnimationGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 	if( event.button == ButtonEvent::Left && m_frameIndicatorPreviewFrame )
 	{
-		m_context->setFrame( m_frameIndicatorPreviewFrame.get() );
-		m_frameIndicatorPreviewFrame = boost::none;
+		m_context->setFrame( m_frameIndicatorPreviewFrame.value() );
+		m_frameIndicatorPreviewFrame = std::nullopt;
 	}
 
 	return true;
@@ -1247,7 +1247,7 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 		else if( ( onTimeAxis( event.line ) && ! onValueAxis( event.line ) ) || frameIndicatorUnderMouse( event.line ) )
 		{
 			m_dragMode = DragMode::MoveFrame;
-			m_frameIndicatorPreviewFrame = boost::none;
+			m_frameIndicatorPreviewFrame = std::nullopt;
 		}
 		else // treating everything else as background and start selection
 		{
@@ -1322,7 +1322,7 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	}
 	else
 	{
-		m_frameIndicatorPreviewFrame = boost::none;
+		m_frameIndicatorPreviewFrame = std::nullopt;
 	}
 
 	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
@@ -1533,7 +1533,7 @@ bool AnimationGadget::leave()
 {
 	if( m_frameIndicatorPreviewFrame )
 	{
-		m_frameIndicatorPreviewFrame = boost::none;
+		m_frameIndicatorPreviewFrame = std::nullopt;
 		dirty( DirtyType::Render );
 	}
 	return true;

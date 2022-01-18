@@ -222,7 +222,7 @@ PrimitiveVariable inAim( const Primitive *inputPrimitive, Primitive *outputPrimi
 {
 	ViewSpec spec;
 
-	using OptionalVector = boost::optional<PrimitiveVariable::IndexedView<V3f>>;
+	using OptionalVector = std::optional<PrimitiveVariable::IndexedView<V3f>>;
 	OptionalVector xAxis, yAxis, zAxis;
 
 	if( xAxisName != "" )

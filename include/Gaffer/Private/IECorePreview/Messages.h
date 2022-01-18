@@ -40,9 +40,8 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/MurmurHash.h"
 
-#include <boost/optional.hpp>
-
 #include <array>
+#include <optional>
 #include <vector>
 
 namespace IECorePreview
@@ -94,11 +93,11 @@ class GAFFER_API Messages
 		size_t count( const IECore::MessageHandler::Level &level ) const;
 
 		/// The index of the first message that differs to the messages in
-		/// the other container. boost::none is returned if:
+		/// the other container. std::nullopt is returned if :
 		///  - This container is empty.
-		///  - This containers messages match those in others, and others
+		///  - This container's messages match those in others, and others
 		///    is of equal or greater size.
-		boost::optional<size_t> firstDifference( const Messages &others ) const;
+		std::optional<size_t> firstDifference( const Messages &others ) const;
 
 		/// The hash of all messages in the container.  Messages are hashed
 		/// when they are added, so this is cheap.

@@ -177,7 +177,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		// the user with a bigger drag target that is easier
 		// to hit.
 		ConnectionCreator *m_dragDestination;
-		boost::optional<Imath::Color3f> m_userColor;
+		std::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
 		bool m_auxiliary;
 

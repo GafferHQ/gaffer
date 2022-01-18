@@ -69,7 +69,7 @@ class GAFFER_API GlobalScope : boost::noncopyable
 
 	private :
 
-		boost::optional<Context::EditableScope> m_scope;
+		std::optional<Context::EditableScope> m_scope;
 
 };
 

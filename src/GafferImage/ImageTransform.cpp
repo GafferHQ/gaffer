@@ -154,7 +154,7 @@ class ImageTransform::ChainingScope : boost::noncopyable
 
 		// We use `optional` here to avoid the expense of constructing
 		// an EditableScope when we don't need one.
-		boost::optional<Context::EditableScope> m_scope;
+		std::optional<Context::EditableScope> m_scope;
 		bool m_chained;
 		bool m_true;
 
@@ -190,7 +190,7 @@ class ImageTransform::CleanScope : boost::noncopyable
 	private :
 
 		const Context *m_context;
-		boost::optional<Context::EditableScope> m_scope;
+		std::optional<Context::EditableScope> m_scope;
 
 };
 

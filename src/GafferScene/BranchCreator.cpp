@@ -519,12 +519,12 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-boost::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
+std::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
 {
 	const string parentAsString = parentPlug()->getValue();
 	if( parentAsString.empty() )
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 
 	ScenePlug::ScenePath parent;
@@ -534,7 +534,7 @@ boost::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
 		return parent;
 	}
 
-	return boost::none;
+	return std::nullopt;
 }
 
 void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

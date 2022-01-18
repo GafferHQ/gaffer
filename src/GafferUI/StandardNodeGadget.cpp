@@ -699,7 +699,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 				Box2f( V2f( b.min.x, b.min.y ) + V2f( borderWidth ), V2f( b.max.x, b.max.y ) - V2f( borderWidth ) ),
 				borderWidth,
 				state,
-				m_userColor.get_ptr()
+				userColor()
 			);
 
 			break;
@@ -801,7 +801,7 @@ Imath::Box3f StandardNodeGadget::renderBound() const
 
 const Imath::Color3f *StandardNodeGadget::userColor() const
 {
-	return m_userColor.get_ptr();
+	return m_userColor ? &m_userColor.value() : nullptr;
 }
 
 Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
@@ -1214,7 +1214,7 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 
 bool StandardNodeGadget::updateUserColor()
 {
-	boost::optional<Color3f> c;
+	std::optional<Color3f> c;
 	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( node(), g_colorKey ) )
 	{
 		c = d->readable();

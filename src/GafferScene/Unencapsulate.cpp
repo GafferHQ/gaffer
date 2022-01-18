@@ -131,7 +131,7 @@ class CapsuleScope : boost::noncopyable
 
 		// We use `optional` here to avoid the expense of constructing
 		// an EditableScope when we don't need one.
-		boost::optional<Context::EditableScope> m_scope;
+		std::optional<Context::EditableScope> m_scope;
 		IECore::ConstObjectPtr m_object;
 		const Capsule* m_capsule;
 		ScenePlug::ScenePath m_capsulePath;

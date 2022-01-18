@@ -221,7 +221,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			/// raster scope bit manually? Maybe that would let us write more reusable
 			/// gadgets, which could be used in any space, and we wouldn't need
 			/// eventPosition().
-			boost::optional<ViewportGadget::RasterScope> rasterScope;
+			std::optional<ViewportGadget::RasterScope> rasterScope;
 			if( m_rasterSpace )
 			{
 				rasterScope.emplace( ancestor<ViewportGadget>() );

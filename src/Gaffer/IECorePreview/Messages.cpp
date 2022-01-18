@@ -119,11 +119,11 @@ size_t Messages::count( const IECore::MessageHandler::Level &level ) const
 	return m_counts[ int(level) ];
 }
 
-boost::optional<size_t> Messages::firstDifference( const Messages &other ) const
+std::optional<size_t> Messages::firstDifference( const Messages &other ) const
 {
 	if( size() == 0 )
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 
 	if( other.size() == 0 )
@@ -170,7 +170,7 @@ boost::optional<size_t> Messages::firstDifference( const Messages &other ) const
 		return numComparableMessages;
 	}
 
-	return boost::none;
+	return std::nullopt;
 }
 
 IECore::MurmurHash Messages::hash() const
