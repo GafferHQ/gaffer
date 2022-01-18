@@ -543,8 +543,7 @@ class Instancer::EngineData : public Data
 				totalHashAccumulate.insert( totalHash );
 			}
 
-			// \todo - should use make_unique once we standardize on C++14
-			std::unique_ptr<PrototypeHashes> result( new PrototypeHashes() );
+			auto result = std::make_unique<PrototypeHashes>();
 			for( unsigned int j = 0; j < m_prototypeContextVariables.size(); j++ )
 			{
 				(*result)[ m_prototypeContextVariables[j].name ] = variableHashAccumulate[j];

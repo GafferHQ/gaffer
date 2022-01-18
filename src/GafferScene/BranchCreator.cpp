@@ -48,8 +48,6 @@
 
 #include "tbb/spin_mutex.h"
 
-#include "boost/make_unique.hpp"
-
 #include <unordered_map>
 
 using namespace std;
@@ -334,7 +332,7 @@ class BranchCreator::BranchesData : public IECore::Data
 				if( inserted.second )
 				{
 					const bool exists = location->depth < existing.size();
-					inserted.first->second = boost::make_unique<Location>( location->depth + 1, exists );
+					inserted.first->second = std::make_unique<Location>( location->depth + 1, exists );
 					if( !exists )
 					{
 						if( !location->newChildNames )
