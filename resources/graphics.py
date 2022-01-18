@@ -290,6 +290,28 @@
 
 		},
 
+		"lightEditor" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"pointLight",
+				"diskLight",
+				"quadLight",
+				"cylinderLight",
+				"spotLight",
+				"distantLight",
+				"environmentLight",
+				"meshLight",
+				"photometricLight",
+				"emptyLocation",
+			]
+		},
+
 	},
 
 	"ids" : [

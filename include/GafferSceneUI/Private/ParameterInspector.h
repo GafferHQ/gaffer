@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,31 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEUI_PARAMETERINSPECTOR_H
+#define GAFFERSCENEUI_PARAMETERINSPECTOR_H
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "InspectorBinding.h"
-#include "SceneGadgetBinding.h"
-#include "LightEditorBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
-#include "QueryBinding.h"
+#include "GafferSceneUI/Export.h"
 
-using namespace GafferSceneUIModule;
+#include "GafferSceneUI/Private/Inspector.h"
 
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+#include "IECoreScene/ShaderNetwork.h"
+
+namespace GafferSceneUI
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
-	bindQueries();
-	bindInspector();
-	bindLightEditor();
+namespace Private
+{
 
-}
+class GAFFERSCENEUI_API ParameterInspector : public Inspector
+{
+
+	public :
+
+		ParameterInspector(
+			const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
+			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
+		);
+
+		IE_CORE_DECLAREMEMBERPTR( ParameterInspector );
+
+	private :
+
+		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
+		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
+		EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
+
+		void plugDirtied( Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
+
+		const GafferScene::ScenePlugPtr m_scene;
+		const IECore::InternedString m_attribute;
+		const IECoreScene::ShaderNetwork::Parameter m_parameter;
+
+};
+
+IE_CORE_DECLAREPTR( ParameterInspector )
+
+} // namespace Private
+
+} // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_PARAMETERINSPECTOR_H

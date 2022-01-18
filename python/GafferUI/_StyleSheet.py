@@ -123,10 +123,10 @@ _styleColors = {
 
 	# Value Inspectors
 
-	"genericEditTint" : ( 255, 255, 255, 20 ),
-	"editScopeEditTint" : ( 48, 100, 153, 60 ),
-	"editableTint" : ( 0, 0, 0, 20 ),
-	"warningTint" : ( 76, 61, 31 )
+	"inspectorSourceUpstream" : ( 255, 255, 255, 20 ),
+	"inspectorSourceEditScope" : ( 48, 100, 153, 60 ),
+	"inspectorSourceDownstream" : ( 239, 198, 24, 104 ),
+
 }
 
 _themeVariables = {
@@ -1576,44 +1576,34 @@ _styleSheet = string.Template(
 		margin-right: 1px;
 	}
 
-	*[gafferClass="GafferSceneUI._SceneViewInspector._AttributeGroup"] > QLabel
-	{
-		font-weight: bold;
-	}
-
 	*[gafferClass="GafferSceneUI._SceneViewInspector._ValueWidget"] {
 		font-family: $monospaceFontFamily;
 		border-radius: 10px;
-		background-color: $tintDarkerSubtle;
+		background-color: $inspectorSourceUpstream;
 	}
 
-	QLabel[inspectorValueState="EditScopeEdit"] {
-		background-color: $editScopeEditTint;
-		font-weight: bold;
+	QLabel[gafferInspectorSourceType="EditScope"] {
+		background-color: $inspectorSourceEditScope;
 	}
 
-	QLabel[inspectorValueState="GenericEdit"] {
-		background-color : $genericEditTint;
-		font-weight: bold;
+	QLabel[gafferInspectorSourceType="Downstream"] {
+		background-color : $inspectorSourceDownstream;
 	}
 
-	QLabel[inspectorValueState="Editable" ] {
-		background-color: $editableTint;
+	QLabel[gafferInspectorSourceType="EditScope|Upstream"] {
+		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0.49 $inspectorSourceUpstream, stop:0.51 $inspectorSourceEditScope);
 	}
 
-	QLabel[inspectorValueHasWarnings="true" ] {
-		border: 2px solid $warningTint;
+	QLabel[gafferInspectorSourceType="Downstream|EditScope"] {
+		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0.49 $inspectorSourceEditScope, stop:0.51 $inspectorSourceDownstream);
 	}
 
-	/* Some locations don't yet have edits in the chosen Edit Scope */
-	/* This should be a mix of EditScopeEdit and Editable appearances */
-	QLabel[inspectorValueState="SomeEdited" ] {
-		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 $editScopeEditTint, stop:0.49 $editScopeEditTint, stop:0.51 $editableTint, stop:1 $editableTint);
+	QLabel[gafferInspectorSourceType="Downstream|EditScope|Upstream"] {
+		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 $inspectorSourceUpstream, stop:0.32 $inspectorSourceUpstream, stop:0.34 $inspectorSourceEditScope, stop:0.65 $inspectorSourceEditScope, stop:0.67 $inspectorSourceDownstream);
 	}
 
-	/* Mix of NodeEdit and EditScopeEdit */
-	QLabel[inspectorValueState="MixedEdits" ] {
-		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 $editScopeEditTint, stop:0.49 $editScopeEditTint, stop:0.51 $genericEditTint, stop:1 $genericEditTint);
+	QLabel[gafferInspectorSourceType="Downstream|Upstream"] {
+		background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0.49 $inspectorSourceUpstream, stop:0.51 $inspectorSourceDownstream);
 	}
 
 	/* PinningWidget */

@@ -47,6 +47,7 @@ import imath
 
 import Gaffer
 import GafferUI
+import GafferSceneUI
 import GafferArnold
 
 ##########################################################################
@@ -297,6 +298,14 @@ def __translateNodeMetadata( nodeEntry ) :
 			if collapsed == False :
 				parent = paramPath.rsplit( '.', 1 )[0]
 				__metadata[parent]["layout:section:%s:collapsed" % page] = collapsed
+
+		if (
+			arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_LIGHT and
+			__aiMetadataGetStr( nodeEntry, paramName, "gaffer.plugType" ) != ""
+		) :
+			GafferSceneUI.LightEditor.registerParameter(
+				"ai:light", paramName, page
+			)
 
 		# Label from OSL "label"
 		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )

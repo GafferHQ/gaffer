@@ -47,7 +47,7 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-from ._SceneViewInspector import *
+from ._SceneViewInspector import _SceneViewInspector
 
 Gaffer.Metadata.registerNode(
 
@@ -74,8 +74,10 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:InspectorTopSpacer:widgetType", "GafferSceneUI.SceneViewUI._InspectorTopSpacer",
 	"toolbarLayout:customWidget:InspectorTopSpacer:section", "Right",
 
+	"toolbarLayout:activator:inspectorVisible", lambda node : node["inspector"]["visible"].getValue(),
 	"toolbarLayout:customWidget:Inspector:widgetType", "GafferSceneUI.SceneViewUI._SceneViewInspector",
 	"toolbarLayout:customWidget:Inspector:section", "Right",
+	"toolbarLayout:customWidget:Inspector:visibilityActivator", "inspectorVisible",
 
 	"toolbarLayout:customWidget:InspectorBottomSpacer:widgetType", "GafferSceneUI.SceneViewUI._InspectorBottomSpacer",
 	"toolbarLayout:customWidget:InspectorBottomSpacer:section", "Right",

@@ -327,7 +327,7 @@ struct CellVariants
 			m_display == rhs.m_display &&
 			m_decoration == rhs.m_decoration &&
 			m_background == rhs.m_background &&
-			m_toolTip == m_toolTip
+			m_toolTip == rhs.m_toolTip
 		;
 	}
 

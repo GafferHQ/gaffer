@@ -102,10 +102,11 @@ class NodeWrapper : public GraphComponentWrapper<T>
 				// the `Dispatcher::dispatch()` process.
 				typeId == (IECore::TypeId)Gaffer::ContextProcessorTypeId ||
 				typeId == (IECore::TypeId)Gaffer::SwitchTypeId ||
-				// ScriptNode and DependencyNode also appear on performance
-				// critical code paths.
+				// ScriptNode, DependencyNode and EditScope also appear on
+				// performance critical code paths.
 				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
-				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId
+				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::EditScopeTypeId
 			)
 			{
 				// The types above are implemented in C++, so there is no need

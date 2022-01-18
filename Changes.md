@@ -9,6 +9,11 @@ Build
 0.61.x.x (relative to 0.61.1.1)
 ========
 
+Features
+--------
+
+- LightEditor : Added a new editor UI for inspecting and editing lights. This can be found in the tab next to the GraphEditor in the standard layouts.
+
 Improvements
 ------------
 
@@ -16,12 +21,17 @@ Improvements
 - Spreadsheet/SceneViewInspector : Added embedded colour choosers to popup editor windows.
 - CopyPrimitiveVariables : Added `prefix` plug, which applies a prefix to the names of the copied primitive variables.
 - Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
+- PathListingWidget : Added subtle lines between columns.
+- SceneViewInspector :
+  - Updated to align colour scheme and interaction patterns with the LightEditor.
+  - Reduced overhead when the Viewer is not visible in the UI.
 
 Fixes
 -----
 
 - PathListingWidget : Fixed the deprecated `getSelectedPaths()` and `getExpandedPaths()` methods in the case that the PathListingWidget's root isn't `/` (#4510).
 - NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
+- Instancer : Fixed RootsPerVertex mode in the case that the input object has no vertices. Previously an empty `prototypeRoots` variable would cause an unnecessary error in this case, which was incompatible with the output from DeletePoints.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 - Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
 - ArnoldRender : Stopped instancing of polygon meshes when both `ai:subdivide_polygons` and adaptive subdivision are on.
@@ -206,6 +216,7 @@ Build
 Fixes
 -----
 
+- Instancer : Fixed RootsPerVertex mode in the case that the input object has no vertices. Previously an empty `prototypeRoots` variable would cause an unnecessary error in this case, which was incompatible with the output from DeletePoints.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 
 0.60.12.1 (relative to 0.60.12.0)
