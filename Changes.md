@@ -23,6 +23,7 @@ Fixes
 
 - PathListingWidget : Fixed the deprecated `getSelectedPaths()` and `getExpandedPaths()` methods in the case that the PathListingWidget's root isn't `/` (#4510).
 - NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
+- Instancer : Fixed RootsPerVertex mode in the case that the input object has no vertices. Previously an empty `prototypeRoots` variable would cause an unnecessary error in this case, which was incompatible with the output from DeletePoints.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 - Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
 - ArnoldRender : Stopped instancing of polygon meshes when both `ai:subdivide_polygons` and adaptive subdivision are on.
@@ -207,6 +208,7 @@ Build
 Fixes
 -----
 
+- Instancer : Fixed RootsPerVertex mode in the case that the input object has no vertices. Previously an empty `prototypeRoots` variable would cause an unnecessary error in this case, which was incompatible with the output from DeletePoints.
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 
 0.60.12.1 (relative to 0.60.12.0)
