@@ -37,11 +37,11 @@
 #ifndef GAFFERUI_POINTER_H
 #define GAFFERUI_POINTER_H
 
+#include "Gaffer/Signals.h"
+
 #include "GafferUI/Export.h"
 
 #include "IECoreImage/ImagePrimitive.h"
-
-#include "boost/signals.hpp"
 
 namespace GafferUI
 {
@@ -79,7 +79,7 @@ class GAFFERUI_API Pointer : public IECore::RefCounted
 		static void registerPointer( const std::string &name, ConstPointerPtr pointer );
 
 		/// A signal emitted whenever the pointer is changed.
-		typedef boost::signal<void ()> ChangedSignal;
+		using ChangedSignal = Gaffer::Signals::Signal<void ()>;
 		static ChangedSignal &changedSignal();
 
 	private :

@@ -170,7 +170,7 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
-		self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		self.__currentDragTarget = None
 

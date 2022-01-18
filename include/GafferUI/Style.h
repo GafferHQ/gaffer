@@ -41,6 +41,8 @@
 #include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
 
+#include "Gaffer/Signals.h"
+
 #include "IECoreGL/GL.h"
 
 #include "IECore/Export.h"
@@ -50,8 +52,6 @@
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathBox.h"
 IECORE_POP_DEFAULT_VISIBILITY
-
-#include "boost/signal.hpp"
 
 namespace IECoreGL
 {
@@ -164,7 +164,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		virtual void renderAnimationKey( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const = 0;
 		//@}
 
-		typedef boost::signal<void (Style *)> UnarySignal;
+		using UnarySignal = Gaffer::Signals::Signal<void (Style *)>;
 		/// Emitted when the style has changed in a way which
 		/// would necessitate a redraw.
 		UnarySignal &changedSignal();

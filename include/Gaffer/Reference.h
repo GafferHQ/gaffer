@@ -61,7 +61,7 @@ class GAFFER_API Reference : public SubGraph
 		/// Returns the name of the script currently being referenced.
 		const std::string &fileName() const;
 
-		typedef boost::signal<void ( Reference * )> ReferenceLoadedSignal;
+		using ReferenceLoadedSignal = Signals::Signal<void ( Reference * )>;
 		/// Emitted when a reference is loaded (or unloaded following an undo).
 		ReferenceLoadedSignal &referenceLoadedSignal();
 

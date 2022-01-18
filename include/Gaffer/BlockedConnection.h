@@ -38,9 +38,9 @@
 #define GAFFER_BLOCKEDCONNECTION_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/Signals.h"
 
 #include "boost/noncopyable.hpp"
-#include "boost/signals.hpp"
 
 namespace Gaffer
 {
@@ -53,13 +53,13 @@ class GAFFER_API BlockedConnection : boost::noncopyable
 	public :
 
 		/// Calls connection.block() if block is true, otherwise does nothing.
-		BlockedConnection( boost::signals::connection &connection, bool block = true );
+		BlockedConnection( Signals::Connection &connection, bool block = true );
 		/// Unblocks the connection if it was blocked by the constructor.
 		~BlockedConnection();
 
 	private :
 
-		boost::signals::connection *m_connection;
+		Signals::Connection *m_connection;
 
 };
 

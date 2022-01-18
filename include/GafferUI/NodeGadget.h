@@ -73,7 +73,7 @@ class GAFFERUI_API NodeGadget : public Gadget
 		/// purposes of drawing connections.
 		virtual Imath::V3f connectionTangent( const ConnectionCreator *creator ) const;
 
-		typedef boost::signal<void ( NodeGadget *, Nodule * )> NoduleSignal;
+		using NoduleSignal = Gaffer::Signals::Signal<void ( NodeGadget *, Nodule * )>;
 		/// Emitted when a nodule is added. It is the responsibility
 		/// of derived classes and compound nodules to emit this when
 		/// appropriate.

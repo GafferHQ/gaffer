@@ -91,7 +91,7 @@ void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
 	processTiles( imagePlug );
 }
 
-boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
+Signals::Connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
 {
 	const Node *node = image->node();
 	if( !node )

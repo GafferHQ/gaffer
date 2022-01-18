@@ -343,7 +343,7 @@ class SignalsTest( GafferTest.TestCase ) :
 		self.assertEqual( len( exceptions ), 1 )
 		self.assertIsInstance( exceptions[0], RuntimeError )
 
-	def testGroupingAndOrdering( self ) :
+	def testConnectFront( self ) :
 
 		values = []
 		def f( value ) :
@@ -359,16 +359,16 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		del values[:]
 
-		c1 = s.connect( 1, functools.partial( f, "one" ) )
-		c2 = s.connect( 0, functools.partial( f, "two" ) )
+		c1 = s.connect( functools.partial( f, "one" ) )
+		c2 = s.connectFront( functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "two", "one" ] )
 
 		del values[:]
 
-		c1 = s.connect( functools.partial( f, "one" ) )
-		c2 = s.connect( 0, functools.partial( f, "two" ) )
+		c1 = s.connectFront( functools.partial( f, "one" ) )
+		c2 = s.connectFront( functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "two", "one" ] )
@@ -380,15 +380,15 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		s = Gaffer.Signal0()
 		self.assertTrue( s.empty() )
-		self.assertEqual( s.num_slots(), 0 )
+		self.assertEqual( s.numSlots(), 0 )
 
 		c = s.connect( f )
 		self.assertFalse( s.empty() )
-		self.assertEqual( s.num_slots(), 1 )
+		self.assertEqual( s.numSlots(), 1 )
 
 		del c
 		self.assertTrue( s.empty() )
-		self.assertEqual( s.num_slots(), 0 )
+		self.assertEqual( s.numSlots(), 0 )
 
 	def testNonScopedConnection( self ) :
 
@@ -508,9 +508,9 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		def slot( arg ) :
 			slotCalls.append( arg )
-			self.assertEqual( signal.num_slots(), 1 )
+			self.assertEqual( signal.numSlots(), 1 )
 			connection.disconnect()
-			self.assertEqual( signal.num_slots(), 0 )
+			self.assertEqual( signal.numSlots(), 0 )
 
 		connection = signal.connect( slot, scoped = False )
 
@@ -548,11 +548,11 @@ class SignalsTest( GafferTest.TestCase ) :
 			GafferTest.CapturingSlot( s )
 			for i in range( 0, 10 )
 		]
-		self.assertEqual( s.num_slots(), 10 )
+		self.assertEqual( s.numSlots(), 10 )
 		self.assertFalse( s.empty() )
 
-		s.disconnect_all_slots()
-		self.assertEqual( s.num_slots(), 0 )
+		s.disconnectAllSlots()
+		self.assertEqual( s.numSlots(), 0 )
 		self.assertTrue( s.empty() )
 
 		s()

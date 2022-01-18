@@ -144,8 +144,8 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		Imath::V3f m_dstPosOrig;
 		Imath::V3f m_dstTangentOrig;
 
-		boost::signals::scoped_connection m_keyPressConnection;
-		boost::signals::scoped_connection m_keyReleaseConnection;
+		Gaffer::Signals::ScopedConnection m_keyPressConnection;
+		Gaffer::Signals::ScopedConnection m_keyReleaseConnection;
 };
 
 } // namespace GafferUI

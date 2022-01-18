@@ -11,6 +11,10 @@ API
 Breaking Changes
 ----------------
 
+- Signals :
+  - Replaced all usage of `boost::signals` with `Gaffer::Signals`. These are largely source-compatible, with the following changes :
+    - Boost `snake_case` naming has been replaced with `CamelCase`.
+    - Connection groups are not supported. Use `connectFront()` to connect in front of existing slots.
 - Replaced all usage of `boost::optional` with `std::optional`.
 
 Build

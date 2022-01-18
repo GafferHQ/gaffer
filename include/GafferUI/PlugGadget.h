@@ -84,9 +84,9 @@ class GAFFERUI_API PlugGadget : public ContainerGadget
 		void contextChanged( const Gaffer::Context *context, const IECore::InternedString &name );
 		void updateContextConnection();
 
-		boost::signals::scoped_connection m_plugDirtiedConnection;
-		boost::signals::scoped_connection m_plugInputChangedConnection;
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
+		Gaffer::Signals::ScopedConnection m_plugInputChangedConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 		Gaffer::PlugPtr m_plug;
 		Gaffer::ContextPtr m_context;
 

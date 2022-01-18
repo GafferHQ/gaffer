@@ -39,25 +39,25 @@
 
 #include "ConnectionBinding.h"
 
-#include "boost/signals.hpp"
+#include "Gaffer/Signals.h"
 
-using namespace boost::signals;
+using namespace Gaffer::Signals;
 using namespace boost::python;
 
 void GafferModule::bindConnection()
 {
 
-	class_<connection>( "Connection", no_init )
-		.def( init<const connection &>() )
-		.def( "disconnect", &connection::disconnect )
-		.def( "connected", &connection::connected )
-		.def( "block", &connection::block, ( arg( "should_block" ) = true ) )
-		.def( "unblock", &connection::unblock )
-		.def( "blocked", &connection::blocked )
+	class_<Connection>( "Connection", no_init )
+		.def( init<const Connection &>() )
+		.def( "disconnect", &Connection::disconnect )
+		.def( "connected", &Connection::connected )
+		.def( "block", &Connection::block, ( arg( "shouldBlock" ) = true ) )
+		.def( "unblock", &Connection::unblock )
+		.def( "blocked", &Connection::blocked )
 	;
 
-	class_<scoped_connection, bases<connection> >( "ScopedConnection", no_init )
-		.def( init<const connection &>() )
+	class_<ScopedConnection, bases<Connection> >( "ScopedConnection", no_init )
+		.def( init<const Connection &>() )
 	;
 
 }

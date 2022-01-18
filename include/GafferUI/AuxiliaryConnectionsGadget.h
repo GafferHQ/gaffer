@@ -120,15 +120,15 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 
 		struct Connections
 		{
-			boost::signals::scoped_connection plugInputChangedConnection;
-			boost::signals::scoped_connection noduleAddedConnection;
-			boost::signals::scoped_connection noduleRemovedConnection;
-			boost::signals::scoped_connection childRemovedConnection;
+			Gaffer::Signals::ScopedConnection plugInputChangedConnection;
+			Gaffer::Signals::ScopedConnection noduleAddedConnection;
+			Gaffer::Signals::ScopedConnection noduleRemovedConnection;
+			Gaffer::Signals::ScopedConnection childRemovedConnection;
 			bool dirty = true;
 		};
 
-		boost::signals::scoped_connection m_graphGadgetChildAddedConnection;
-		boost::signals::scoped_connection m_graphGadgetChildRemovedConnection;
+		Gaffer::Signals::ScopedConnection m_graphGadgetChildAddedConnection;
+		Gaffer::Signals::ScopedConnection m_graphGadgetChildRemovedConnection;
 
 		// Key is the NodeGadget at the destination end of the connections
 		// tracked by `Connections.dirty`.

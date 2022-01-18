@@ -70,7 +70,7 @@ class GAFFERIMAGE_API Display : public ImageNode
 		/// Emitted when a new driver has been created. This can
 		/// then be passed to `Display::setDriver()` to populate
 		/// a Display with an incoming image.
-		typedef boost::signal<void ( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )> DriverCreatedSignal;
+		using DriverCreatedSignal = Gaffer::Signals::Signal<void ( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )>;
 		static DriverCreatedSignal &driverCreatedSignal();
 
 		/// Emitted when a complete image has been received.

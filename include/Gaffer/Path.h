@@ -39,13 +39,12 @@
 #define GAFFER_PATH_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/Signals.h"
 #include "Gaffer/TypeIds.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/InternedString.h"
 #include "IECore/RunTimeTyped.h"
-
-#include "boost/signals.hpp"
 
 namespace GafferModule
 {
@@ -132,7 +131,7 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 		PathFilter *getFilter();
 		const PathFilter *getFilter() const;
 
-		typedef boost::signal<void ( Path *path )> PathChangedSignal;
+		using PathChangedSignal = Signals::Signal<void ( Path *path )>;
 		PathChangedSignal &pathChangedSignal();
 
 		/// Sets the path root and names from the other

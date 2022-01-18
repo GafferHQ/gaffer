@@ -86,7 +86,7 @@ using namespace GafferSceneUI;
 // SceneView::SelectionMask implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::SelectionMask : public boost::signals::trackable
+class SceneView::SelectionMask : public Signals::Trackable
 {
 
 	public :
@@ -140,7 +140,7 @@ class SceneView::SelectionMask : public boost::signals::trackable
 // SceneView::DrawingMode implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::DrawingMode : public boost::signals::trackable
+class SceneView::DrawingMode : public Signals::Trackable
 {
 
 	public :
@@ -300,7 +300,7 @@ class SceneView::DrawingMode : public boost::signals::trackable
 // SceneView::ShadingMode implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::ShadingMode : public boost::signals::trackable
+class SceneView::ShadingMode : public Signals::Trackable
 {
 
 	public :
@@ -413,7 +413,7 @@ class SceneView::ShadingMode : public boost::signals::trackable
 // SceneView::Grid implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::Grid : public boost::signals::trackable
+class SceneView::Grid : public Signals::Trackable
 {
 
 	public :
@@ -644,7 +644,7 @@ class GnomonPlane : public GnomonGadget
 
 } // namespace
 
-class SceneView::Gnomon : public boost::signals::trackable
+class SceneView::Gnomon : public Signals::Trackable
 {
 
 	public :
@@ -1021,7 +1021,7 @@ IE_CORE_DECLAREPTR( CameraOverlay )
 
 } // namespace
 
-class SceneView::Camera : public boost::signals::trackable
+class SceneView::Camera : public Signals::Trackable
 {
 
 	public :
@@ -1590,8 +1590,8 @@ class SceneView::Camera : public boost::signals::trackable
 		/// so they don't get destroyed
 		std::vector< Gaffer::ConstNodePtr > m_internalNodes;
 
-		boost::signals::scoped_connection m_plugSetConnection;
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Signals::ScopedConnection m_plugSetConnection;
+		Signals::ScopedConnection m_contextChangedConnection;
 
 		/// The default viewport camera - we store this so we can
 		/// return to it after looking through a scene camera.

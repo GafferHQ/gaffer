@@ -43,8 +43,6 @@
 
 #include "IECorePython/ScopedGILLock.h"
 
-#include "boost/signals.hpp"
-
 using namespace boost::python;
 using namespace GafferBindings;
 
@@ -154,7 +152,7 @@ void bind( const char *name )
 	;
 
 	// bind the appropriate result range type so the custom result combiner can get the slot results.
-	typedef SlotCallRange<typename Signal::slot_call_iterator> Range;
+	typedef SlotCallRange<typename Signal::SlotCallIterator> Range;
 	boost::python::class_<Range>( "__SignalResultRange", no_init )
 		.def( "__iter__", &Range::iter, return_self<>() )
 #if PY_MAJOR_VERSION >= 3
@@ -171,12 +169,12 @@ void bind( const char *name )
 void GafferModule::bindSignal()
 {
 
-	class_<GafferBindings::Detail::Trackable, boost::noncopyable>( "Trackable" );
+	class_<Gaffer::Signals::Trackable, boost::noncopyable>( "Trackable" );
 
-	typedef boost::signal<object (), PythonResultCombiner > Signal0;
-	typedef boost::signal<object ( object ), PythonResultCombiner > Signal1;
-	typedef boost::signal<object ( object, object ), PythonResultCombiner > Signal2;
-	typedef boost::signal<object ( object, object, object ), PythonResultCombiner > Signal3;
+	using Signal0 = Gaffer::Signals::Signal<object (), PythonResultCombiner>;
+	using Signal1 = Gaffer::Signals::Signal<object ( object ), PythonResultCombiner>;
+	using Signal2 = Gaffer::Signals::Signal<object ( object, object ), PythonResultCombiner>;
+	using Signal3 = Gaffer::Signals::Signal<object ( object, object, object ), PythonResultCombiner>;
 
 	bind<Signal0>( "Signal0" );
 	bind<Signal1>( "Signal1" );

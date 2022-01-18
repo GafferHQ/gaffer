@@ -282,13 +282,13 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 			return tile->cachedTile;
 		}
 
-		typedef boost::signal<void ( GafferDisplayDriver *, const Imath::Box2i & )> DataReceivedSignal;
+		using DataReceivedSignal = Signals::Signal<void ( GafferDisplayDriver *, const Imath::Box2i & )>;
 		DataReceivedSignal &dataReceivedSignal()
 		{
 			return m_dataReceivedSignal;
 		}
 
-		typedef boost::signal<void ( GafferDisplayDriver * )> ImageReceivedSignal;
+		using ImageReceivedSignal = Signals::Signal<void ( GafferDisplayDriver * )>;
 		ImageReceivedSignal &imageReceivedSignal()
 		{
 			return m_imageReceivedSignal;

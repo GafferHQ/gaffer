@@ -119,7 +119,7 @@ class GAFFERCORTEX_API ParameterisedHolder : public BaseType
 		IECore::RunTimeTypedPtr m_parameterised;
 		CompoundParameterHandlerPtr m_parameterHandler;
 
-		boost::signals::connection m_plugSetConnection;
+		Gaffer::Signals::Connection m_plugSetConnection;
 
 };
 

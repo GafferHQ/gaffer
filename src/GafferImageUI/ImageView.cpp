@@ -89,7 +89,7 @@ using namespace GafferImageUI;
 /// Implementation of ImageView::ChannelChooser
 //////////////////////////////////////////////////////////////////////////
 
-class ImageView::ChannelChooser : public boost::signals::trackable
+class ImageView::ChannelChooser : public Signals::Trackable
 {
 
 	public :
@@ -454,7 +454,7 @@ class Box2iGadget : public GafferUI::Gadget
 			return m_plug.get();
 		}
 
-		typedef boost::signal<void ( Plug * )> DeleteClickedSignal;
+		using DeleteClickedSignal = Signals::Signal<void ( Plug * )>;
 		DeleteClickedSignal &deleteClickedSignal()
 		{
 			return m_deleteClickedSignal;
@@ -870,7 +870,7 @@ class V2iGadget : public GafferUI::Gadget
 			return m_plug.get();
 		}
 
-		typedef boost::signal<void ( Plug * )> DeleteClickedSignal;
+		using DeleteClickedSignal = Signals::Signal<void ( Plug * )>;
 		DeleteClickedSignal &deleteClickedSignal()
 		{
 			return m_deleteClickedSignal;
@@ -1206,7 +1206,7 @@ Gaffer::PlugPtr ImageView::ColorInspectorPlug::createCounterpart( const std::str
 	return new ColorInspectorPlug( name, direction, getFlags() );
 }
 
-class ImageView::ColorInspector : public boost::signals::trackable
+class ImageView::ColorInspector : public Signals::Trackable
 {
 
 	public :
@@ -1494,8 +1494,8 @@ ImageView::~ImageView()
 	//
 	// This shouldn't be necessary once we come up with a more general solution to:
 	// https://github.com/GafferHQ/gaffer/issues/4221
-	plugInputChangedSignal().disconnect_all_slots();
-	plugDirtiedSignal().disconnect_all_slots();
+	plugInputChangedSignal().disconnectAllSlots();
+	plugDirtiedSignal().disconnectAllSlots();
 }
 
 Gaffer::BoolPlug *ImageView::clippingPlug()

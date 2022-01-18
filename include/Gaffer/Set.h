@@ -55,7 +55,7 @@ class SetIterator;
 /// Set provides an abstract base class for an arbitrary collection
 /// of IECore::RunTimeTyped objects.
 /// \todo Provide an iterator wrapping member().
-class GAFFER_API Set : public IECore::RunTimeTyped, public boost::signals::trackable
+class GAFFER_API Set : public IECore::RunTimeTyped, public Signals::Trackable
 {
 
 	public :
@@ -78,7 +78,7 @@ class GAFFER_API Set : public IECore::RunTimeTyped, public boost::signals::track
 		/// Returns true if the object is a member of the set.
 		virtual bool contains( const Member *object ) const = 0;
 
-		typedef boost::signal< void ( Set *, Member * ), Gaffer::CatchingSignalCombiner< void > > MemberSignal;
+		using MemberSignal = Signals::Signal<void ( Set *, Member * ), Gaffer::CatchingSignalCombiner<void>>;
 
 		/// A signal emitted when a new member is added to the Set. It is
 		/// the responsibility of derived classes to emit this when appropriate.

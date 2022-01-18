@@ -137,7 +137,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
 		bool visible( Gadget *relativeTo = nullptr ) const;
-		typedef boost::signal<void ( Gadget * )> VisibilityChangedSignal;
+		using VisibilityChangedSignal = Gaffer::Signals::Signal<void ( Gadget * )>;
 		/// Emitted when the result of `Gadget::visible()` changes.
 		VisibilityChangedSignal &visibilityChangedSignal();
 		/// Sets whether or not this Gadget is enabled. Disabled gadgets
@@ -209,7 +209,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// A signal used to represent button related events.
-		typedef boost::signal<bool ( Gadget *, const ButtonEvent &event ), EventSignalCombiner<bool> > ButtonSignal;
+		using ButtonSignal = Gaffer::Signals::Signal<bool ( Gadget *, const ButtonEvent &event ), EventSignalCombiner<bool>>;
 		/// The signal triggered by a button press event.
 		ButtonSignal &buttonPressSignal();
 		/// The signal triggered by a button release event.
@@ -219,7 +219,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// The signal triggered by the mouse wheel.
 		ButtonSignal &wheelSignal();
 
-		typedef boost::signal<void ( Gadget *, const ButtonEvent &event )> EnterLeaveSignal;
+		using EnterLeaveSignal = Gaffer::Signals::Signal<void ( Gadget *, const ButtonEvent &event )>;
 		/// The signal triggered when the mouse enters the Gadget.
 		EnterLeaveSignal &enterSignal();
 		/// The signal triggered when the mouse leaves the Gadget.
@@ -227,8 +227,8 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// A signal emitted whenever the mouse moves within a Gadget.
 		ButtonSignal &mouseMoveSignal();
 
-		typedef boost::signal<IECore::RunTimeTypedPtr ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr> > DragBeginSignal;
-		typedef boost::signal<bool ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<bool> > DragDropSignal;
+		using DragBeginSignal = Gaffer::Signals::Signal<IECore::RunTimeTypedPtr ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<IECore::RunTimeTypedPtr>>;
+		using DragDropSignal = Gaffer::Signals::Signal<bool ( Gadget *, const DragDropEvent &event ), EventSignalCombiner<bool>>;
 
 		/// This signal is emitted if a previous buttonPressSignal() returned true, and the
 		/// user has subsequently moved the mouse with the button down. To initiate a drag
@@ -251,7 +251,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		/// A signal used to represent key related events.
 		/// \todo We need some sort of focus model to say who gets the events.
-		typedef boost::signal<bool ( Gadget *, const KeyEvent &key ), EventSignalCombiner<bool> > KeySignal;
+		using KeySignal = Gaffer::Signals::Signal<bool ( Gadget *, const KeyEvent &key ), EventSignalCombiner<bool>>;
 		/// The signal triggered by a key press event.
 		KeySignal &keyPressSignal();
 		/// The signal triggered by a key release event.
@@ -260,7 +260,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// A signal emitted when the host event loop is idle. Connections
 		/// to this should be limited in duration because idle events consume
 		/// CPU when the program would otherwise be inactive.
-		typedef boost::signal<void ()> IdleSignal;
+		using IdleSignal = Gaffer::Signals::Signal<void ()>;
 		static IdleSignal &idleSignal();
 		//@}
 

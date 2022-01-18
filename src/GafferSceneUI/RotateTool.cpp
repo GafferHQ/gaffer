@@ -80,8 +80,8 @@ RotateTool::RotateTool( SceneView *view, const std::string &name )
 		RotateHandlePtr handle = new RotateHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
-		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &RotateTool::handleDragBegin, this ) );
+		// Connect at front, so we get called before the Handle's slot does.
+		handle->dragBeginSignal().connectFront( boost::bind( &RotateTool::handleDragBegin, this ) );
 		handle->dragMoveSignal().connect( boost::bind( &RotateTool::handleDragMove, this, ::_1, ::_2 ) );
 		handle->dragEndSignal().connect( boost::bind( &RotateTool::handleDragEnd, this ) );
 	}
@@ -91,7 +91,7 @@ RotateTool::RotateTool( SceneView *view, const std::string &name )
 	sg->keyReleaseSignal().connect( boost::bind( &RotateTool::keyRelease, this, ::_2 ) );
 	sg->leaveSignal().connect( boost::bind( &RotateTool::sceneGadgetLeave, this, ::_2 ) );
 	// We have to insert this before the underlying SelectionTool connections or it starts an object drag.
-	sg->buttonPressSignal().connect( 0, boost::bind( &RotateTool::buttonPress, this, ::_2 ) );
+	sg->buttonPressSignal().connectFront( boost::bind( &RotateTool::buttonPress, this, ::_2 ) );
 
 	// We need to track the tool state/view visibility so we don't leave a lingering target cursor
 	sg->visibilityChangedSignal().connect( boost::bind( &RotateTool::visibilityChanged, this, ::_1 ) );

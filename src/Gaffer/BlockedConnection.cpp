@@ -38,7 +38,7 @@
 
 using namespace Gaffer;
 
-BlockedConnection::BlockedConnection( boost::signals::connection &connection, bool block )
+BlockedConnection::BlockedConnection( Signals::Connection &connection, bool block )
 	:	m_connection( nullptr )
 {
 	if( block && connection.connected() )

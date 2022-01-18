@@ -206,7 +206,7 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		/// and every item is editable.
 		bool selectionEditable() const;
 
-		using SelectionChangedSignal = boost::signal<void (TransformTool &)>;
+		using SelectionChangedSignal = Gaffer::Signals::Signal<void (TransformTool &)>;
 		SelectionChangedSignal &selectionChangedSignal();
 
 		/// Returns the transform of the handles. Throws
@@ -263,8 +263,8 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 		void preRender();
 		bool keyPress( const GafferUI::KeyEvent &event );
 
-		boost::signals::scoped_connection m_contextChangedConnection;
-		boost::signals::scoped_connection m_preRenderConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_preRenderConnection;
 
 		GafferUI::GadgetPtr m_handles;
 		bool m_handlesDirty;

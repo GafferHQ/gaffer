@@ -152,7 +152,7 @@ const InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
 // been applied to plugs following loading.
 //////////////////////////////////////////////////////////////////////////
 
-class Reference::PlugEdits : public boost::signals::trackable
+class Reference::PlugEdits : public Signals::Trackable
 {
 
 	public :
@@ -236,7 +236,7 @@ class Reference::PlugEdits : public boost::signals::trackable
 	private :
 
 		Reference *m_reference;
-		boost::signals::scoped_connection m_connection;
+		Signals::ScopedConnection m_connection;
 
 		// Struct for tracking all edits to a plug, where an edit is conceptually
 		// any change the user makes to the plug after it has been loaded by

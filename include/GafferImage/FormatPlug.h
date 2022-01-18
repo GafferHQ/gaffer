@@ -129,7 +129,7 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void plugDirtied( Gaffer::Plug *plug );
 
-		boost::signals::scoped_connection m_plugDirtiedConnection;
+		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
 
 };
 

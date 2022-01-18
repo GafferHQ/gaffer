@@ -74,10 +74,10 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__editableLabel = None # we'll make this lazily as needed
 
-		# connecting at group 0 so we're called before the slots
+		# Connecting at front so we're called before the slots
 		# connected by the NameLabel class.
-		self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
-		self.__label.dragEndSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
+		self.__label.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
+		self.__label.dragEndSignal().connectFront( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 
 		self._addPopupMenu( self.__label )
 
@@ -211,8 +211,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )
 			self.__editableLabel._qtWidget().setMinimumSize( self.label()._qtWidget().minimumSize() )
 			self.__editableLabel._qtWidget().setMaximumSize( self.label()._qtWidget().maximumSize() )
-			# Connect at group 0 so we're called before the NameWidget's own slots.
-			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( 0, Gaffer.WeakMethod( self.__labelEditingFinished ) )
+			# Connect at front so we're called before the NameWidget's own slots.
+			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connectFront( Gaffer.WeakMethod( self.__labelEditingFinished ) )
 			self._qtWidget().layout().insertWidget( 0, self.__editableLabel._qtWidget() )
 
 		self.__label.setVisible( False )

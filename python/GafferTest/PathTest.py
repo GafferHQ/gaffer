@@ -211,27 +211,27 @@ class PathTest( GafferTest.TestCase ) :
 
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		f2 = Gaffer.FileNamePathFilter( [ "*.grf" ] )
-		self.assertEqual( f1.changedSignal().num_slots(), 0 )
-		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+		self.assertEqual( f1.changedSignal().numSlots(), 0 )
+		self.assertEqual( f2.changedSignal().numSlots(), 0 )
 
 		# The Path shouldn't connect to the filter changed signal
 		# until it really needs to - when something is connected
 		# to the path's own changed signal.
 		p.setFilter( f1 )
-		self.assertEqual( f1.changedSignal().num_slots(), 0 )
-		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+		self.assertEqual( f1.changedSignal().numSlots(), 0 )
+		self.assertEqual( f2.changedSignal().numSlots(), 0 )
 
 		cs = GafferTest.CapturingSlot( p.pathChangedSignal() )
-		self.assertEqual( f1.changedSignal().num_slots(), 1 )
-		self.assertEqual( f2.changedSignal().num_slots(), 0 )
+		self.assertEqual( f1.changedSignal().numSlots(), 1 )
+		self.assertEqual( f2.changedSignal().numSlots(), 0 )
 		self.assertEqual( len( cs ), 0 )
 
 		f1.setEnabled( False )
 		self.assertEqual( len( cs ), 1 )
 
 		p.setFilter( f2 )
-		self.assertEqual( f1.changedSignal().num_slots(), 0 )
-		self.assertEqual( f2.changedSignal().num_slots(), 1 )
+		self.assertEqual( f1.changedSignal().numSlots(), 0 )
+		self.assertEqual( f2.changedSignal().numSlots(), 1 )
 		self.assertEqual( len( cs ), 2 )
 
 		f1.setEnabled( True )

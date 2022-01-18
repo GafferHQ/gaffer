@@ -601,8 +601,8 @@ void GraphGadget::setFilter( Gaffer::SetPtr filter )
 	}
 	else
 	{
-		m_filterMemberAddedConnection = boost::signals::connection();
-		m_filterMemberRemovedConnection = boost::signals::connection();
+		m_filterMemberAddedConnection = Gaffer::Signals::Connection();
+		m_filterMemberRemovedConnection = Gaffer::Signals::Connection();
 	}
 
 	updateGraph();
@@ -1338,7 +1338,7 @@ void GraphGadget::focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node )
 	}
 	else
 	{
-		m_focusPlugDirtiedConnection = boost::signals::scoped_connection();
+		m_focusPlugDirtiedConnection = Gaffer::Signals::ScopedConnection();
 	}
 
 	dirtyActive();

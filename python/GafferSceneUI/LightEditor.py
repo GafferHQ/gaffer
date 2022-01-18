@@ -112,7 +112,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
-			self.__pathListing.buttonDoubleClickSignal().connect( 0, Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 
 		self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 

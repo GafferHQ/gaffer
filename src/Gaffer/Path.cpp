@@ -80,11 +80,13 @@ Path::~Path()
 {
 	if( havePathChangedSignal() && m_filter )
 	{
-		// In an ideal world, we'd derive from boost::signals::trackable, and wouldn't
+		// In an ideal world, we'd derive from Signals::Trackable, and wouldn't
 		// need to do this manual connection management. But we construct a lot of Path
 		// instances and trackable has significant overhead so we must avoid it. We must
 		// disconnect somehow though, otherwise when the filter changes, filterChanged()
 		// will be called on a dead Path instance.
+		/// \todo Review this decision - it was made when we were using `boost::signals::trackable`
+		/// and may not longer be valid.
 		m_filter->changedSignal().disconnect( boost::bind( &Path::filterChanged, this ) );
 	}
 	delete m_pathChangedSignal;

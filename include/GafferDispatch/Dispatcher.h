@@ -42,13 +42,12 @@
 
 #include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/Signals.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/FrameList.h"
 #include "IECore/RunTimeTyped.h"
 #include "IECore/StringAlgo.h"
-
-#include "boost/signals.hpp"
 
 #include <functional>
 #include <map>
@@ -107,9 +106,9 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
-		typedef boost::signal<bool (const Dispatcher *, const std::vector<TaskNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
-		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &), Gaffer::CatchingSignalCombiner<void> > DispatchSignal;
-		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &, bool), Gaffer::CatchingSignalCombiner<void> > PostDispatchSignal;
+		using PreDispatchSignal = Gaffer::Signals::Signal<bool (const Dispatcher *, const std::vector<TaskNodePtr> &), Detail::PreDispatchSignalCombiner>;
+		using DispatchSignal = Gaffer::Signals::Signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &), Gaffer::CatchingSignalCombiner<void>>;
+		using PostDispatchSignal = Gaffer::Signals::Signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &, bool), Gaffer::CatchingSignalCombiner<void>>;
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////

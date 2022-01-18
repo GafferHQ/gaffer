@@ -77,8 +77,8 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 		HandlePtr handle = new TranslateHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
-		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &TranslateTool::handleDragBegin, this ) );
+		// Connect at front, so we get called before the Handle's slot does.
+		handle->dragBeginSignal().connectFront( boost::bind( &TranslateTool::handleDragBegin, this ) );
 		handle->dragMoveSignal().connect( boost::bind( &TranslateTool::handleDragMove, this, ::_1, ::_2 ) );
 		handle->dragEndSignal().connect( boost::bind( &TranslateTool::handleDragEnd, this ) );
 	}
@@ -88,7 +88,7 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 	sg->keyReleaseSignal().connect( boost::bind( &TranslateTool::keyRelease, this, ::_2 ) );
 	sg->leaveSignal().connect( boost::bind( &TranslateTool::sceneGadgetLeave, this, ::_2 ) );
 	// We have to insert this before the underlying SelectionTool connections or it starts an object drag.
-	sg->buttonPressSignal().connect( 0, boost::bind( &TranslateTool::buttonPress, this, ::_2 ) );
+	sg->buttonPressSignal().connectFront( boost::bind( &TranslateTool::buttonPress, this, ::_2 ) );
 
 	// We need to track the tool state/view visibility so we don't leave a lingering target cursor
 	sg->visibilityChangedSignal().connect( boost::bind( &TranslateTool::visibilityChanged, this, ::_1 ) );

@@ -355,7 +355,6 @@ env = Environment(
 	CPPFLAGS = [
 		"-DBOOST_FILESYSTEM_VERSION=3",
 		"-DBOOST_FILESYSTEM_NO_DEPRECATED",
-		"-DBOOST_SIGNALS_NO_DEPRECATION_WARNING",
 	],
 
 	LIBPATH = [
@@ -485,7 +484,6 @@ else:
 			"/D__PRETTY_FUNCTION__=__FUNCSIG__",
 			"/DBOOST_ALL_DYN_LINK",
 			"/DBOOST_FILESYSTEM_NO_DEPRECATED",
-			"/DBOOST_SIGNALS_NO_DEPRECATION_WARNING",
 			"/DBOOST_PYTHON_MAX_ARITY=20",
 			"/W4",  # Warning level 4, one level less than all warnings
 			"/experimental:external",  # Allow use of /external:I
@@ -703,7 +701,6 @@ baseLibEnv = env.Clone()
 baseLibEnv.Append(
 
 	LIBS = [
-		"boost_signals$BOOST_LIB_SUFFIX",
 		"boost_iostreams$BOOST_LIB_SUFFIX",
 		"boost_filesystem$BOOST_LIB_SUFFIX",
 		"boost_date_time$BOOST_LIB_SUFFIX",

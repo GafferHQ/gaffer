@@ -39,6 +39,7 @@
 
 #include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/Signals.h"
 #include "Gaffer/ThreadState.h"
 
 #include "IECore/Canceller.h"
@@ -48,7 +49,6 @@
 #include "IECore/StringAlgo.h"
 
 #include "boost/container/flat_map.hpp"
-#include "boost/signals.hpp"
 
 namespace Gaffer
 {
@@ -93,7 +93,7 @@ class GAFFER_API Context : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( Context )
 
-		typedef boost::signal<void ( const Context *context, const IECore::InternedString & ), CatchingSignalCombiner<void>> ChangedSignal;
+		using ChangedSignal = Signals::Signal<void ( const Context *context, const IECore::InternedString & ), CatchingSignalCombiner<void>>;
 
 		/// Sets a variable to the specified value. A copy is taken so that
 		/// subsequent changes to `value` do not affect the context.

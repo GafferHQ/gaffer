@@ -40,22 +40,23 @@
 
 #include "GafferTest/Assert.h"
 
-#include "boost/signals.hpp"
+#include "Gaffer/Signals.h"
 
 using namespace boost::python;
+using namespace Gaffer;
 
 namespace
 {
 
 void testConstructionPerformance()
 {
-	std::vector<boost::signal<void()>> signals( 1000000 );
+	std::vector<Signals::Signal<void()>> signals( 1000000 );
 	GAFFERTEST_ASSERTEQUAL( signals.size(), 1000000 );
 }
 
 void testConnectionPerformance()
 {
-	boost::signal<void()> signal;
+	Signals::Signal<void()> signal;
 	auto slot = [](){};
 
 	for( int i = 0; i < 1000000; ++i )
@@ -63,12 +64,12 @@ void testConnectionPerformance()
 		signal.connect( slot );
 	}
 
-	GAFFERTEST_ASSERT( signal.num_slots() );
+	GAFFERTEST_ASSERT( signal.numSlots() );
 }
 
 void testCallPerformance()
 {
-	boost::signal<void( int )> signal;
+	Signals::Signal<void( int )> signal;
 
 	int callsMade = 0;
 	signal.connect( [&callsMade]( int i ){ callsMade += i; } );
@@ -84,22 +85,22 @@ void testCallPerformance()
 
 void testDisconnectMatchingLambda()
 {
-	boost::signal<void()> signal;
+	Signals::Signal<void()> signal;
 
 	auto slot1 = [](){};
 	auto slot2 = [](){};
 
 	auto connection1 = signal.connect( slot1 );
 	auto connection2 = signal.connect( slot2 );
-	GAFFERTEST_ASSERTEQUAL( signal.num_slots(), 2 );
+	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 2 );
 
 	signal.disconnect( slot1 );
-	GAFFERTEST_ASSERTEQUAL( signal.num_slots(), 1 );
+	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 1 );
 	GAFFERTEST_ASSERT( !connection1.connected() );
 	GAFFERTEST_ASSERT( connection2.connected() );
 
 	signal.disconnect( slot2 );
-	GAFFERTEST_ASSERTEQUAL( signal.num_slots(), 0 );
+	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 0 );
 	GAFFERTEST_ASSERT( signal.empty() );
 	GAFFERTEST_ASSERT( !connection1.connected() );
 	GAFFERTEST_ASSERT( !connection2.connected() );
@@ -112,19 +113,19 @@ void testSlot( const char *arg1 )
 
 void testDisconnectMatchingBind()
 {
-	boost::signal<void()> signal;
+	Signals::Signal<void()> signal;
 
 	auto connection1 = signal.connect( boost::bind( testSlot, "hello" ) );
 	auto connection2 = signal.connect( boost::bind( testSlot, "there" ) );
-	GAFFERTEST_ASSERTEQUAL( signal.num_slots(), 2 );
+	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 2 );
 
 	signal.disconnect( boost::bind( testSlot, "there" ) );
-	GAFFERTEST_ASSERTEQUAL( signal.num_slots(), 1 );
+	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 1 );
 	GAFFERTEST_ASSERT( connection1.connected() );
 	GAFFERTEST_ASSERT( !connection2.connected() );
 
 	signal.disconnect( boost::bind( testSlot, "hello" ) );
-	GAFFERTEST_ASSERTEQUAL( signal.num_slots(), 0 );
+	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 0 );
 	GAFFERTEST_ASSERT( signal.empty() );
 	GAFFERTEST_ASSERT( !connection1.connected() );
 	GAFFERTEST_ASSERT( !connection2.connected() );
@@ -142,13 +143,13 @@ void testSelfDisconnectingSlot()
 
 	static auto weakSentinel = std::weak_ptr<bool>( sentinel );
 	static int callCount = 0;
-	static boost::signals::connection connection;
+	static Signals::Connection connection;
 
 	// Connect a lambda that owns the `sentinel` value, and asserts
 	// that it remains alive for the duration of the slot call. Even
 	// though the slot disconnects in the middle of the call.
 
-	boost::signal<void()> signal;
+	Signals::Signal<void()> signal;
 	connection = signal.connect(
 		[sentinel]() {
 			GAFFERTEST_ASSERTEQUAL( callCount, 0 );

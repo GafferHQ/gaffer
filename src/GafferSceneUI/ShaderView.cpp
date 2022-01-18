@@ -93,14 +93,14 @@ SceneCreators &sceneCreators()
 	return *sc;
 }
 
-typedef boost::signal<void ( const PrefixAndName & )> SceneRegistrationChangedSignal;
+using SceneRegistrationChangedSignal = Signals::Signal<void ( const PrefixAndName & )>;
 SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
 {
 	static SceneRegistrationChangedSignal s;
 	return s;
 }
 
-typedef boost::signal<void ()> RendererRegistrationChangedSignal;
+typedef Gaffer::Signals::Signal<void ()> RendererRegistrationChangedSignal;
 RendererRegistrationChangedSignal &rendererRegistrationChangedSignal()
 {
 	static RendererRegistrationChangedSignal s;
