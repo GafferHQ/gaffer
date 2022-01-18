@@ -1268,48 +1268,49 @@ if os.path.exists( env.subst("$VTUNE_ROOT") ):
 # file with the symlink target as its content. 'fileOrigin' is a dictionary of the form
 # fileSource: fileTarget used by installers to check for overriding the file's origin.
 
-fileOrigin = {}
-
 if env["PLATFORM"] == "win32" :
 
-	fileList = runCommand( "git ls-files -s" )
+	def customInstaller( dest, source, env ) :
 
-	for file in fileList.split( '\n' ) :
-
-		fileInfo = file.split()
+		fileInfo = runCommand( "git ls-files -s {}".format( source ) ).split()
 
 		if len( fileInfo ) == 4 or len( fileInfo ) == 5:
-
+	
 			# ls-files output format: [<tag> ]<mode> <object> <stage> <file>
 			# The magic code for symlinks in git is file mode 120000
 
 			fileMode = fileInfo[1] if len( fileInfo ) == 5 else fileInfo[0]
 			filePath = fileInfo[4] if len( fileInfo ) == 5 else fileInfo[3]
 			filePath = filePath.replace( "/", "\\" )  # filePath comes in from git with /
+
 			if fileMode == "120000" and os.path.exists( filePath ):
 
 				with open( filePath, "r" ) as f :
 
 					sourceFile = f.readline().replace( "/", "\\" )
 
-					if os.path.isfile( os.path.abspath( os.path.join(
-						os.getcwd(),
-						os.path.dirname(filePath ),
-						sourceFile
-					) ) ):
-						fileOrigin[ filePath ] = os.path.abspath(
-							os.path.join( os.path.dirname( filePath ), sourceFile ) 
-						).replace( os.getcwd(), "" ).lstrip( os.path.sep )
+					linkSource = os.path.abspath(
+						os.path.join(
+							os.getcwd(),
+							os.path.dirname(filePath ),
+							sourceFile
+						)
+					)
 
-	def customInstaller( dest, source, env ) :
+					# If running with priveleges that allow symlinks, the file content will
+					# already be correct (`linkSource` will likely be the first line of
+					# the license). Don't copy those files by checking if the linked file exists.
+					if os.path.isfile( linkSource ) :
+						source = os.path.abspath( os.path.join( os.path.dirname( linkSource ), sourceFile )  )
+						
+						# Make the source relative to the current directory as SCons expects
+						source = source.replace( os.getcwd(), "" ).lstrip( os.path.sep )
 
-		source = fileOrigin.get( source, source )
+						shutil.copy2( source, dest )
+
+						return
+
 		shutil.copy2( source, dest )
-
-		if env["PLATFORM"] != "win32" :
-			
-			st = os.stat( source )
-			os.chown( dest, st.st_uid, st.st_gid )
 
 	env["INSTALL"] = customInstaller
 
