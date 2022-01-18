@@ -991,7 +991,7 @@ libraries = {
 	},
 
 	"IECoreArnoldTest" : {
-		"additionalFiles" : [ "python/IECoreArnoldTest/metadata", "python/IECoreArnoldTest/assFiles" ],
+		"additionalFiles" : glob.glob( "python/IECoreArnoldTest/metadata/*" ) + glob.glob( "python/IECoreArnoldTest/assFiles/*" ),
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"installRoot" : arnoldInstallRoot,
 	},
@@ -1264,6 +1264,9 @@ if os.path.exists( env.subst("$VTUNE_ROOT") ):
 if env["PLATFORM"] == "win32" :
 
 	def customInstaller( dest, source, env ) :
+
+		if os.path.isdir( source ) or os.path.isdir( dest ) :
+			raise RuntimeError( "Cannot copy {} to {}. Source and destination cannot be directories.".format( source, dest ) )
 
 		fileInfo = runCommand( "git ls-files -s {}".format( source ) ).split()
 
