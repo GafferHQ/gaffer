@@ -1232,10 +1232,8 @@ if env["PLATFORM"] == "win32" :
 
 	for library in ( "Gaffer", ) :
 
-		if "envAppends" not in libraries[library] :
-			libraries[library]["envAppends"] = {}
-
-		libraries[library]["envAppends"]["LIBS"] = libraries[library]["envAppends"].get( "LIBS", [] ) + [ "Advapi32" ]
+		libraries[library].setdefault( "envAppends", {} )
+		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
 
 # Optionally add vTune requirements
 
@@ -1243,21 +1241,16 @@ if os.path.exists( env.subst("$VTUNE_ROOT") ):
 
 	for library in ( "Gaffer", ) :
 
-		if "envAppends" not in libraries[library] :
-			libraries[library]["envAppends"] = {}
+		libraries[library].setdefault( "envAppends", {} )
+		libraries[library]["envAppends"].setdefault( "CXXFLAGS", [] ).extend(
+			[ systemIncludeArgument, "$VTUNE_ROOT/include", "-DGAFFER_VTUNE" ]
+		)
+		libraries[library]["envAppends"].setdefault( "LIBPATH", [] ).extend( [ "$VTUNE_ROOT/lib64" ] )
+		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "ittnotify" ] )
 
-		libraries[library]["envAppends"]["CXXFLAGS"] = libraries[library]["envAppends"].get( "CXXFLAGS", [] ) + [
-			systemIncludeArgument,
-			"$VTUNE_ROOT/include",
-			"-DGAFFER_VTUNE"
-		]
-		libraries[library]["envAppends"]["LIBPATH"] = libraries[library]["envAppends"].get( "LIBPATH", [] )  + [ "$VTUNE_ROOT/lib64" ]
-		libraries[library]["envAppends"]["LIBS"] = libraries[library]["envAppends"].get( "LIBS", [] ) + [ "ittnotify" ]
-
-		if "pythonEnvAppends" not in libraries[library] :
-			libraries[library]["pythonEnvAppends"] = {}
-
-		libraries[library]["pythonEnvAppends"]["CXXFLAGS"] = libraries[library]["pythonEnvAppends"].get( "CXXFLAGS", [] ) + [ "-DGAFFER_VTUNE" ]
+		
+		libraries[library].setdefault( "pythonEnvAppends", {} )
+		libraries[library]["pythonEnvAppends"].setdefault( "CXXFLAGS", [] ).extend( [ "-DGAFFER_VTUNE" ] )
 
 #########################################################################################################
 # Repair Symlinks on Windows
