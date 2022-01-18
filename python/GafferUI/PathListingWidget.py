@@ -732,6 +732,20 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		self.__recalculatingColumnWidths = False
 
+	def paintEvent( self, event ) :
+
+		QtWidgets.QTreeView.paintEvent( self, event )
+
+		painter = QtGui.QPainter( self.viewport() )
+		painter.setPen( QtGui.QColor( *GafferUI._StyleSheet._styleColors["tintDarker"] ) )
+
+		header = self.header()
+		height = self.viewport().height()
+
+		for i in range( 1, header.count() ) :
+			x = header.sectionViewportPosition( i ) - 1
+			painter.drawLine( x, 0, x, height )
+
 	def drawRow( self, painter, option, index ) :
 
 		# Because we're handling selection ourselves using a PathMatcher, we

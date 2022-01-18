@@ -48,6 +48,7 @@ from .UVInspector import UVInspector
 from .FilterPlugValueWidget import FilterPlugValueWidget
 from .ScenePathPlugValueWidget import ScenePathPlugValueWidget
 from .TweakPlugValueWidget import TweakPlugValueWidget
+from .LightEditor import LightEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 

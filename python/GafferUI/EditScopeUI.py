@@ -181,11 +181,15 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 
 		node = self.getPlug().node()
-		if isinstance( node, GafferUI.View ) and self.getPlug() == node["editScope"] :
-			if node["in"].getInput() is None :
-				return
-			else :
-				node = node["in"].getInput().node()
+		# We assume that our plug is on a node dedicated to holding settings for the
+		# UI, and that it has an `in` plug that is connected to the node in the graph
+		# that is being viewed. We start our node graph traversal at the viewed node
+		# (we can't start at _this_ node, as then we will visit our own input connection
+		# which may no longer be upstream of the viewed node).
+		if node["in"].getInput() is not None :
+			node = node["in"].getInput().node()
+		else :
+			node = None
 
 		currentEditScope = None
 		if self.getPlug().getInput() is not None :
@@ -205,9 +209,12 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
-		upstream = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
-		if self.__editScopePredicate( node ) :
-			upstream.insert( 0, node )
+		if node is not None :
+			upstream = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
+			if self.__editScopePredicate( node ) :
+				upstream.insert( 0, node )
+		else :
+			upstream = []
 
 		result.append( "/__UpstreamDivider__", { "divider" : True, "label" : "Upstream" } )
 		if upstream :
@@ -216,11 +223,12 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			result.append( "/None Available", { "active" : False } )
 
-		downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
-		if downstream :
-			result.append( "/__DownstreamDivider__", { "divider" : True, "label" : "Downstream" } )
-			for editScope in downstream :
-				addItem( editScope, enabled = False )
+		if node is not None :
+			downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
+			if downstream :
+				result.append( "/__DownstreamDivider__", { "divider" : True, "label" : "Downstream" } )
+				for editScope in downstream :
+					addItem( editScope, enabled = False )
 
 		result.append( "/__NoneDivider__", { "divider" : True } )
 		result.append(

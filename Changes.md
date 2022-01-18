@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.1.1)
 ========
 
+Features
+--------
+
+- LightEditor : Added a new editor UI for inspecting and editing lights. This can be found in the tab next to the GraphEditor in the standard layouts.
+
 Improvements
 ------------
 
@@ -8,6 +13,10 @@ Improvements
 - Spreadsheet/SceneViewInspector : Added embedded colour choosers to popup editor windows.
 - CopyPrimitiveVariables : Added `prefix` plug, which applies a prefix to the names of the copied primitive variables.
 - Rendering : Added `gaffer:version` metadata to the headers of all rendered images.
+- PathListingWidget : Added subtle lines between columns.
+- SceneViewInspector :
+  - Updated to align colour scheme and interaction patterns with the LightEditor.
+  - Reduced overhead when the Viewer is not visible in the UI.
 
 Fixes
 -----
