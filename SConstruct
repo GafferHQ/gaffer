@@ -829,11 +829,9 @@ if env["ARNOLD_ROOT"] :
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
-gafferLib = {}
-
 libraries = {
 
-	"Gaffer" : gafferLib,
+	"Gaffer" : {},
 
 	"GafferTest" : {
 		"envAppends" : {
