@@ -1256,10 +1256,10 @@ if os.path.exists( env.subst("$VTUNE_ROOT") ):
 # Repair Symlinks on Windows
 #########################################################################################################
 
-# Windows does not support symlinks except with special (non-default) privileges.
-# When cloning the repository git will create symlink source files as a text
-# file with the symlink target as its content. 'fileOrigin' is a dictionary of the form
-# fileSource: fileTarget used by installers to check for overriding the file's origin.
+# Windows does not support symlinks except with special (non-default)
+# privileges. When cloning the repository, git will create symlink source files
+# as a text file with the symlink target as its content. We override the
+# `Install()` builder to detect such files and install the target instead.
 
 if env["PLATFORM"] == "win32" :
 
@@ -1293,7 +1293,7 @@ if env["PLATFORM"] == "win32" :
 						)
 					)
 
-					# If running with priveleges that allow symlinks, the file content will
+					# If running with privileges that allow symlinks, the file content will
 					# already be correct (`linkSource` will likely be the first line of
 					# the license). Don't copy those files by checking if the linked file exists.
 					if os.path.isfile( linkSource ) :
