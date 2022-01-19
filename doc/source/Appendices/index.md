@@ -5,7 +5,7 @@ Appendices
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :titlesonly:
 

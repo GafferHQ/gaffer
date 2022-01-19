@@ -95,11 +95,11 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 			with open( "%s/%s/index.md" % ( directory, module.__name__ ), "w" ) as f :
 				f.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 				f.write( __heading( module.__name__ ) )
-				f.write( __tocString( ).format( moduleIndex ) )
+				f.write( __tocString().format( moduleIndex ) )
 
 			tocIndex += "\n{}{}/index.md".format( " " * 4, module.__name__ )
 
-	index.write( __tocString( ).format( tocIndex ) )
+	index.write( __tocString().format( tocIndex ) )
 
 def exportLicenseReference( directory, about ) :
 
@@ -193,7 +193,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 
 			f.write( __appDocumentation( classLoader.load( appName )() ) )
 
-	index.write( __tocString( ).format( tocIndex ) )
+	index.write( __tocString().format( tocIndex ) )
 
 def markdownToHTML( markdown ) :
 
@@ -278,12 +278,12 @@ def __makeDirs( directory ) :
 		if not os.path.isdir( directory ) :
 			raise
 
-def __tocString( ) :
+def __tocString() :
 
 	tocString = inspect.cleandoc(
 
 		"""
-		```eval_rst
+		```{{eval-rst}}
 		.. toctree::
 		    :titlesonly:
 		    :maxdepth: 1

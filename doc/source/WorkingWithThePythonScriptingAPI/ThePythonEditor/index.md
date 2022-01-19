@@ -1,7 +1,11 @@
-```eval_rst
-.. role:: raw-html(raw)
-    :format: html
-```
+---
+substitutions :
+  nodes : "![Nodes](images/nodes.png)"
+  plug : "![Plug](images/plug.png)"
+  values : "![Values](images/values.png)"
+  objects : "![Objects](images/objects.png)"
+  editorFocusMenu : "![Editor focus menu](images/editorFocusMenuNodeSelection.png)"
+---
 
 # The Python Editor #
 
@@ -45,28 +49,14 @@ The Python Editor can access the same graph elements (nodes and plugs) and scene
 
 The specific shortcut for dragging depends on the source editor:
 
-
-```eval_rst
-======================== ================= ====================== ============ ============================
-Element                  Source editor     Shortcut               Cursor       Example code result
-======================== ================= ====================== ============ ============================
-Node(s)                  Graph Editor      Middle-click and drag  |nodes|      ``root['Sphere']``
-Plug                     Node Editor       Click and drag         |plug|       ``root['Sphere']['radius']``
-Plug value               Node Editor       Middle-click and drag  |values|     ``2.7``
-Object(s)                Viewer            Click and drag         |objects|    ``['/sphere']``
-Scene location(s)        Hierarchy View    Click and drag         |objects|    ``['/sphere']``
-Scene data               Scene Inspector   Click and drag         |values|     ``V3f(1.5, 2.7, 3.9)``
-======================== ================= ====================== ============ ============================
-
-.. |nodes| image:: images/nodes.png
-    :alt: Nodes
-.. |plug| image:: images/plug.png
-    :alt: Plug
-.. |values| image:: images/values.png
-    :alt: Values
-.. |objects| image:: images/objects.png
-    :alt: Objects
-```
+Element                | Source editor   | Shortcut              | Cursor      | Example code result
+-----------------------|-----------------|-----------------------|-------------|--------------------
+Node(s)                | Graph Editor    | Middle-click and drag | {{nodes}}   | `root['Sphere']`
+Plug                   | Node Editor     | Click and drag        | {{plug}}    | `root['Sphere']['radius']`
+Plug value             | Node Editor     | Middle-click and drag | {{values}}  | `2.7`
+Object(s)              | Viewer          | Click and drag        | {{objects}} | `['/sphere']`
+Scene location(s)      | Hierarchy View  | Click and drag        | {{objects}} | `['/sphere']`
+Scene data             | Scene Inspector | Click and drag        | {{values}}  | `V3f(1.5, 2.7, 3.9)`
 
 > Note :
 > When pulling scene data, remember to consider the evaluated node's effect on the scene hierarchy, because an object's location in the hierarchy can vary from node to node. For example, if a Group node puts a sphere in `/group/sphere`, but you query the Group node using the original `/sphere` path, you will have queried a location that no longer exists, as far as that node is concerned.

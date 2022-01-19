@@ -1,7 +1,5 @@
-# BuildTarget: images/illustrationStartupConfigDirectoryTree.png
 # BuildTarget: images/tutorialSettingsWindowCustomContextVariable.png
 # BuildTarget: images/tutorialSettingsWindowDefaultContextVariables.png
-# BuildTarget: images/tutorialVariableSubstitutionExpression.png
 # BuildTarget: images/tutorialVariableSubstitutionInStringPlug.png
 # BuildTarget: images/tutorialVariableSubstitutionTest.png
 
@@ -32,7 +30,7 @@ __temporaryDirectory = tempfile.mkdtemp( prefix = "gafferDocs" )
 
 def __getTempFilePath( fileName, directory = __temporaryDirectory ) :
 	filePath = "/".join( ( directory, fileName ) )
-	
+
 	return filePath
 
 def __dispatchScript( script, tasks, settings ) :

@@ -1,5 +1,3 @@
-![](_static/GafferLogo.svg "Gaffer Logo")
-
 # Introduction #
 
 Welcome to the Gaffer user guide, API manual, and reference documentation.
@@ -28,7 +26,7 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :hidden:
     :titlesonly:
@@ -43,7 +41,7 @@ If you are are looking to automate VFX processes or develop with Gaffer's API, y
     Interface/index.md
 ```
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :hidden:
     :titlesonly:

@@ -7,7 +7,7 @@ Here we will discuss the performance implications of various choices you might m
 
 ## Scene complexity and node graph structure ##
 
-Gaffer is designed to gracefully handle very large scenes by deferring the generation of each location until requested by the user or the renderer. It is also designed to be flexible, affording the user a great deal of control in how scenes are generated. These two goals can sometimes be at odds. 
+Gaffer is designed to gracefully handle very large scenes by deferring the generation of each location until requested by the user or the renderer. It is also designed to be flexible, affording the user a great deal of control in how scenes are generated. These two goals can sometimes be at odds.
 
 A very rough estimate for the complexity of a scene can be made by considering the number of its locations, and the number of nodes through which each location passes. For instance, we might say that 10 locations passing through 10 nodes – `10 * 10 = 100` – is roughly equivalent to 20 locations passing through 5 nodes – `20 * 5 = 100`. When you consider that most scenes are comprised of a number of assets, each with an associated shader look, you can use this knowledge to structure your node graphs for the best performance.
 
@@ -58,7 +58,7 @@ This can be very useful, but it comes at a price. Certain operations in Gaffer r
 > Caution :
 > Limit the use of `'...'` in path expressions.
 
-The most expensive expression possible is `'/.../something'`, because it instructs Gaffer to "search **every** location of the whole scene." While this can be necessary at times, it is likely that a more precise wildcard search will provide the same results, with better performance. 
+The most expensive expression possible is `'/.../something'`, because it instructs Gaffer to "search **every** location of the whole scene." While this can be necessary at times, it is likely that a more precise wildcard search will provide the same results, with better performance.
 
 For instance, if you know that all the matching results are within a single asset, an expression such as `/AssetA/.../something` will limit the search to that asset only. Alternatively, if you know that all the matches are at a specific depth, expressions such as `/*/something` or `/*/*/something` would yield the same result without needing to visit deeper locations. Small changes such as this can have a significant impact on scene performance, so it is always worth your time to make your expressions as precise as possible.
 
@@ -105,7 +105,7 @@ The main performance pitfall you want to avoid is **leakage**, which is when nod
 
 An example case of Context leakage would be a network that iterates on a scene:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsViewer.png
     :width: 100%
     :alt: A scene with multiple cowboy robots rotated along the x-axis.
@@ -113,7 +113,7 @@ An example case of Context leakage would be a network that iterates on a scene:
 
 If we look at the graph, we can see that the `collect:rootName` Context Variable is used to vary the object's rotations. However, when the network is computed, `collect:rootName` is passed to the SceneReader, even though it doesn't use it:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsGraphEditor.png
     :width: 100%
     :alt: The graph for the prior scene, using a CollectScenes node to duplicate the robots.
@@ -123,13 +123,13 @@ Despite being unaffected by `collect:rootName`, the SceneReader node will noneth
 
 The more optimal solution would be to delete the Context Variable with a DeleteContextVariables node above the last node that uses it. We can directly compare the effect this has on the number of Contexts used by running the stats app, by [annotating](../UsingThePerformanceMonitor/index.html#annotating-scripts-with-performance-data) the script with the `-contextMonitor` and `-annotatedScript` options:
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsStats.png
     :width: 100%
     :alt: The graph, but with annotated performance stats.
 ```
 
-```eval_rst
+```{eval-rst}
 .. image:: images/conceptPerformanceBestPracticesContextsImprovedStats.png
     :width: 100%
     :alt: The graph with stats again, but a DeleteContextVariables node inserted, greatly reducing the number of Contexts used in the scene generation.

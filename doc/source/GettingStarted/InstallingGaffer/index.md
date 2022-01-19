@@ -17,7 +17,7 @@ To install Gaffer in Linux:
 2. Open a terminal.
 
 3. Extract the archive:
-    
+
     ```bash
     user@desktop ~ $ cd ~/Downloads
     user@desktop ~/Downloads $ sudo tar -xzf gaffer-!GAFFER_VERSION!-linux.tar.gz -C /opt/
@@ -35,7 +35,7 @@ To install Gaffer in macOS:
 2. Open the terminal (Finder > Go > Utilities > Terminal).
 
 3. Extract the archive:
-    
+
     ```bash
     MacBook:~ user$ cd ~/Downloads
     MacBook:~/Downloads user$ tar -xzf gaffer-!GAFFER_VERSION!-macos.tar.gz -C /opt/

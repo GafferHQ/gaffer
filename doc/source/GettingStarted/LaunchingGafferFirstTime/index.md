@@ -7,7 +7,7 @@ Once Gaffer has been installed, you will probably want to try it out right away 
 > Note :
 > For these instructions, we will assume you have Gaffer installed to the `/opt/` directory. If you have installed it elsewhere, replace `/opt/` with the directory you installed it to.
 
-> Caution : 
+> Caution :
 > When you run Gaffer from a terminal, its continued operation is dependent on that terminal window. If you close the terminal, it will also close Gaffer, and you may lose any unsaved data.
 
 

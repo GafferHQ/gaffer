@@ -23,7 +23,7 @@ In more advanced uses, Boxes serve to export (and occasionally import) saved sub
 
 ## Box data flow ##
 
-Like any other node, a Box can have in and out plugs. It can take plugs from the main graph, make their data available to the sub-graph, and then output them back into the main graph. 
+Like any other node, a Box can have in and out plugs. It can take plugs from the main graph, make their data available to the sub-graph, and then output them back into the main graph.
 
 
 ### BoxIn and BoxOut nodes ###
@@ -38,7 +38,7 @@ While you can connect the nodes inside a Box to the main graph, you cannot view 
 When boxing up portions of your node graph, the in plugs of the top-most node(s) and out plugs of the bottom-most node(s) are promoted up to the Box. These **promoted plugs** pass data between the main graph and the sub-graph. This is not limited to main in and out plugs: any plug in the sub-graph can be promoted to the Box.
 
 ![](images/illustrationPromotedPlug.png "A promoted plug in the Node Editor, and how it appears on the Box in the Graph Editor")
-In the sub-graph, promoted plugs are read-only (they appear greyed out in the Node Editor). They can only be edited on the Box in the main graph. 
+In the sub-graph, promoted plugs are read-only (they appear greyed out in the Node Editor). They can only be edited on the Box in the main graph.
 
 
 ## Instructions ##
@@ -202,7 +202,7 @@ To rename a plug:
 To relabel a plug:
 
 1. Select the node with the plug.
-2. In the Node Editor, double-click the plug label, 
+2. In the Node Editor, double-click the plug label,
 3. Type a new label.
 
 

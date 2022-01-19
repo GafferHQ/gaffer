@@ -6,7 +6,7 @@ Here you can learn about Gaffer's interface and controls.
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :titlesonly:
 

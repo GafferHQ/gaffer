@@ -20,8 +20,6 @@ import inspect
 import docutils
 
 import sphinx_rtd_theme
-import recommonmark.parser
-import recommonmark.transform
 
 # To avoid needing to maintain a working sphinx install for the matrix
 # of Gaffer python versions, we dump out version information into a
@@ -127,8 +125,8 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'logo_only': True,
-    'collapse_navigation': False
+	'logo_only': True,
+	'collapse_navigation': False
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -240,8 +238,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Gaffer.tex', u'Gaffer Documentation',
-     u'John Haddon', 'manual'),
+	(master_doc, 'Gaffer.tex', u'Gaffer Documentation',
+	u'John Haddon', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -270,8 +268,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'gaffer', u'Gaffer Documentation',
-     [author], 1)
+	(master_doc, 'gaffer', u'Gaffer Documentation',
+	[author], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -284,9 +282,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Gaffer', u'Gaffer Documentation',
-     author, 'Gaffer', 'One line description of project.',
-     'Miscellaneous'),
+	(master_doc, 'Gaffer', u'Gaffer Documentation',
+	author, 'Gaffer', 'One line description of project.',
+	'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -300,15 +298,6 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
-
-# Set up recommonmark - this parses Markdown to allow it
-# to be used with Sphinx.
-
-source_parsers = {
-    '.md': recommonmark.parser.CommonMarkParser,
-}
-
-source_suffix = ['.rst', '.md']
 
 # Variables for string replacement functions
 
@@ -324,102 +313,73 @@ tractor_version = '2.2'
 tractor_path_linux = '/opt/pixar/Tractor-{0}'.format( tractor_version )
 tractor_path_osx = '/Applications/pixar/Tractor-{0}'.format( tractor_version )
 
-## \Todo See if the recommonmark folks would accept a patch with this
-#  functionality.
-class GafferTransform( recommonmark.transform.AutoStructify ) :
+# Add the `myst_parser` extension, which adds a parser
+# for MarkDown files with a `.md` extension.
+extensions = [ "myst_parser" ]
+myst_enable_extensions = [ "substitution" ]
 
-    def auto_admonition( self, node ) :
+class GafferTransform( docutils.transforms.Transform ) :
 
-        """
-        Replace blockquotes beginning with "admonitionType :"
-        with the equivalent admonition.
-        """
+	default_priority = 1
+	suffix_set = { "md" }
 
-        if not len( node ) :
-            return None
+	def apply( self, *kw ) :
 
-        if not isinstance( node[0], docutils.nodes.paragraph ) :
-            return None
+		for node in self.document.traverse( docutils.nodes.block_quote ) :
 
-        if not isinstance( node[0][0], docutils.nodes.Text ) :
-           return None
+			# Convert block quotes beginning with "admonitionType :" to real
+			# admonitions. This allows us to create admonitions in pure
+			# Markdown, without resorting to `{eval-rst}` directives.
 
-        partition = node[0][0].partition( ":" )
-        if not partition[1] :
-            return None
+			if not len( node ) :
+				continue
 
-        admonitions = dict( inspect.getmembers( docutils.nodes, lambda x : inspect.isclass( x ) and issubclass( x, docutils.nodes.Admonition ) ) )
+			if not isinstance( node[0], docutils.nodes.paragraph ) :
+				continue
 
-        admonition = partition[0].strip().lower()
-        if admonition not in admonitions :
-            return None
+			if not isinstance( node[0][0], docutils.nodes.Text ) :
+				continue
 
-        node[0][0] = docutils.nodes.Text( partition[2] ) # Remove "admonition : " prefix
-        return admonitions[admonition]( "", *node.children )
+			partition = node[0][0].partition( ":" )
+			if not partition[1] :
+				continue
 
-    def auto_nbsp( self, node ) :
+			admonitions = dict( inspect.getmembers( docutils.nodes, lambda x : inspect.isclass( x ) and issubclass( x, docutils.nodes.Admonition ) ) )
 
-        """
-        Insert non-breaking spaces where appropriate
-        to improve line wrapping. Currently deals with
-        " :" at the end of a paragraph so that the colon
-        is not detached from the space.
-        """
+			admonition = partition[0].strip().lower()
+			if admonition not in admonitions :
+				continue
 
-        if not isinstance( node.parent, docutils.nodes.paragraph ) :
-            return None
-
-        if node is not node.parent[-1] :
-            return None
-
-        return docutils.nodes.Text( re.sub( u" :\s*$", u"\xa0:", node.astext(), ) )
-
-    def find_replace( self, node ) :
-
-        if isinstance( node, docutils.nodes.block_quote ) :
-            return self.auto_admonition( node )
-        elif isinstance( node, docutils.nodes.Text ) :
-            return self.auto_nbsp( node )
-        else :
-            return recommonmark.transform.AutoStructify.find_replace( self, node )
+			node[0][0] = docutils.nodes.Text( partition[2] ) # Remove "admonition : " prefix
+			node.replace_self( admonitions[admonition]( "", *node.children ) )
 
 def gafferSourceSubstitutions( app, docName, source ) :
 
-    source[0] = source[0].replace( "!GAFFER_VERSION!", gaffer["versionString"] )
-    source[0] = source[0].replace( "!GAFFER_MILESTONE_VERSION!", str( gaffer["milestoneVersion"] ) )
-    source[0] = source[0].replace( "!GAFFER_MAJOR_VERSION!", str( gaffer["majorVersion"] ) )
-    source[0] = source[0].replace( "!GAFFER_MINOR_VERSION!", str( gaffer["minorVersion"] ) )
-    source[0] = source[0].replace( "!GAFFER_PATCH_VERSION!", str( gaffer["patchVersion"] ) )
+	source[0] = source[0].replace( "!GAFFER_VERSION!", gaffer["versionString"] )
+	source[0] = source[0].replace( "!GAFFER_MILESTONE_VERSION!", str( gaffer["milestoneVersion"] ) )
+	source[0] = source[0].replace( "!GAFFER_MAJOR_VERSION!", str( gaffer["majorVersion"] ) )
+	source[0] = source[0].replace( "!GAFFER_MINOR_VERSION!", str( gaffer["minorVersion"] ) )
+	source[0] = source[0].replace( "!GAFFER_PATCH_VERSION!", str( gaffer["patchVersion"] ) )
 
 def thirdPartySourceSubtitutions( app, docName, source) :
 
-    source[0] = source[0].replace( "!ARNOLD_VERSION!", arnold_version )
-    source[0] = source[0].replace( "!ARNOLD_PATH_LINUX!", arnold_path_linux )
-    source[0] = source[0].replace( "!ARNOLD_PATH_OSX!", arnold_path_osx )
-    source[0] = source[0].replace( "!DELIGHT_VERSION!", delight_version )
-    source[0] = source[0].replace( "!DELIGHT_PATH_LINUX!", delight_path_linux )
-    source[0] = source[0].replace( "!DELIGHT_PATH_OSX!", delight_path_osx )
-    source[0] = source[0].replace( "!TRACTOR_VERSION!", tractor_version )
-    source[0] = source[0].replace( "!TRACTOR_PATH_LINUX!", tractor_path_linux )
-    source[0] = source[0].replace( "!TRACTOR_PATH_OSX!", tractor_path_osx )
+	source[0] = source[0].replace( "!ARNOLD_VERSION!", arnold_version )
+	source[0] = source[0].replace( "!ARNOLD_PATH_LINUX!", arnold_path_linux )
+	source[0] = source[0].replace( "!ARNOLD_PATH_OSX!", arnold_path_osx )
+	source[0] = source[0].replace( "!DELIGHT_VERSION!", delight_version )
+	source[0] = source[0].replace( "!DELIGHT_PATH_LINUX!", delight_path_linux )
+	source[0] = source[0].replace( "!DELIGHT_PATH_OSX!", delight_path_osx )
+	source[0] = source[0].replace( "!TRACTOR_VERSION!", tractor_version )
+	source[0] = source[0].replace( "!TRACTOR_PATH_LINUX!", tractor_path_linux )
+	source[0] = source[0].replace( "!TRACTOR_PATH_OSX!", tractor_path_osx )
 
 def setup( app ) :
 
-    app.add_config_value(
-    	'recommonmark_config',
-    	{
-            # Disable general automatic TOC parsing. Prevents Autostructify
-            # from turning all Markdown list items with links into TOC items
-            'enable_auto_toc_tree': False
-        },
-        True
-    )
+	app.add_transform( GafferTransform )
 
-    app.add_transform( GafferTransform )
+	app.connect( "source-read", gafferSourceSubstitutions )
+	app.connect( "source-read", thirdPartySourceSubtitutions )
 
-    app.connect( "source-read", gafferSourceSubstitutions )
-    app.connect( "source-read", thirdPartySourceSubtitutions )
-    
-    # Add the custom stylesheet; used in all .md and .rst files in source
-    app.add_stylesheet( 'gaffer.css' )
-    app.add_javascript( 'scrollspy.js' )
+	# Add the custom stylesheet; used in all .md and .rst files in source
+	app.add_css_file( 'gaffer.css' )
+	app.add_js_file( 'scrollspy.js' )

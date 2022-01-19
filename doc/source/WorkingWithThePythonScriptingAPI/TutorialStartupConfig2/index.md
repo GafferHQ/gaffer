@@ -16,7 +16,7 @@ With GUI again as our target app, this config will:
 
 Copy this code to a new a `customBookmarks.py` file in `~/gaffer/startup/gui`:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :linenos:
 
@@ -40,7 +40,7 @@ Let's break down what this config does.
 
 Path bookmarks exist separately in each application instance, so we must first acquire the bookmarks from the the correct Gaffer window. We do this by passing the special `application` variable to the `acquire` method:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 5
 
@@ -54,7 +54,7 @@ Then, we simply pass a name for the bookmark and a file system path using the `a
 
 Since we're targeting the Gaffer installation directory, we use the `$GAFFER_ROOT` variable substitution to stand in for the `GAFFER_ROOT` environment variable, and expand it using a standard Python method:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 6
 
@@ -82,7 +82,7 @@ The next section of the code adds another default bookmark, but this time to a s
 
 To add a bookmark to a category, we acquire all of the application's the bookmarks like before, only we provide a string as the `category` keyword argument. The category keyword for the default image nodes is simply image`.
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 9
 
@@ -110,7 +110,7 @@ Since the `bookmarks` variable we declared earlier only contains bookmarks belon
 
 Add the following to the end of the config:
 
-```eval_rst
+```{eval-rst}
 .. code-block:: python
     :lineno-start: 12
 

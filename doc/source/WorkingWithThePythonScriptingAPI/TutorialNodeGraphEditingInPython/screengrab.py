@@ -39,7 +39,7 @@ def __delay( delay ) :
 
 # "Hello World" in Python Editor
 pythonEditor.reveal()
-pythonEditor.inputWidget().setText( 'print "Hello World!"' )
+pythonEditor.inputWidget().setText( 'print( "Hello World!" )' )
 pythonEditor.execute()
 GafferUI.WidgetAlgo.grab( widget = pythonEditor.parent(), imagePath = "images/pythonEditorHelloWorld.png" )
 

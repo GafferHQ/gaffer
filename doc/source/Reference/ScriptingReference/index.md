@@ -5,7 +5,7 @@ Scripting Reference
 
 <!-- TOC -->
 
-```eval_rst
+```{eval-rst}
 .. toctree::
     :titlesonly:
     :maxdepth: 1

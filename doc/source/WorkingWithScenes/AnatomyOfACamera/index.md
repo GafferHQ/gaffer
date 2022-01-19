@@ -25,7 +25,7 @@ Three parameters determine camera projection:
 - **aperture**
 - **focalLength**
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/illustrationPerspectiveOrthographic.png
     :scale: 100%
     :alt: Perspective and orthographic cameras in Gaffer
@@ -48,7 +48,7 @@ Keep in mind that even though the scene describes projection with optical analog
 
 The **apertureOffset** parameter represents the amount by which the aperture is shifted parallel to the image plane.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/illustrationApertureOffset.png
     :scale: 100%
     :alt: Aperture offset in Gaffer
@@ -69,7 +69,7 @@ Four parameters determine depth of field blur:
 
 In order to simulate depth of field blur, the camera needs a virtual opening: a circle in 3D space on a plane perpendicular to the camera's direction. In effect, this is a **lens aperture**. From this circle, Gaffer calculates the angle of incidence of light coming from objects at a distance greater or less than the focalDistance. The larger the circle, the stronger the depth of field blur. The smaller the circle, the weaker.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/illustrationDepthOfField.png
     :scale: 100%
     :alt: Depth of field blur in Gaffer
@@ -84,7 +84,7 @@ The fStop and focalDistance parameters are identical to f-number and focus dista
 
 The third parameter, focalLengthWorldScale, sets the scale between the camera's unit of measure and the world space's unit of measure. Because the circle occupies 3D space, the circle must be measured in world space units. Complicating things is the fact that the world space units might not be measured in millimeters. The scene could use any scale – centimeter, meter, foot, kilometer, etc. Therefore, the scale factor between them must be defined.
 
-For depth of field, lens aperture is calculated with the formula: 
+For depth of field, lens aperture is calculated with the formula:
 
 ```
 lens aperture = (focalLength × focalLengthWorldScale) / fStop
@@ -112,7 +112,7 @@ Within the [scene paradigm](../../../AnatomyOfAScene/index.html#scene-hierarchy)
 
 Like geometry, cameras are represented as objects at locations in the scene hierarchy. To actually look through a camera (either in a Viewer, or during a render), Gaffer needs additional information, such as the resolution and film fit. This information is provided in the scene globals as render options, and combined with the camera's data at the point of use. Below is a description of this data flow, with a demonstration of how a camera can optionally override these render options.
 
-```eval_rst
+```{eval-rst}
 .. figure:: images/illustrationCameraDataFlow.png
     :scale: 100%
     :alt: Camera data flow in a node graph

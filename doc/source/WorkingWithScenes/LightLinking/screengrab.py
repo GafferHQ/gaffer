@@ -2,9 +2,7 @@
 # BuildTarget: images/interfaceLightLinkSetupGraphEditor.png
 # BuildTarget: images/interfaceLightSetGraphEditor.png
 # BuildTarget: images/interfaceLightSetNodeEditor.png
-# BuildTarget: images/interfaceLinkedLightsAttribute.png
 # BuildTarget: images/interfaceLinkedLightsPlug.png
-# BuildTarget: images/interfactLinkedLightsAttribute.png
 # BuildTarget: images/taskLightLinkingSetExpressionLocation.png
 # BuildTarget: images/taskLightLinkingSetExpressionSet.png
 
@@ -38,7 +36,7 @@ script["StandardAttributes"] = GafferScene.StandardAttributes()
 script["StandardAttributes"]["in"].setInput( script["Group"]["out"] )
 script["StandardAttributes"]["filter"].setInput( script["PathFilter"]["out"] )
 script["StandardAttributes"]["attributes"]["linkedLights"]["enabled"].setValue( True )
-script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "/group/light" ) 
+script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "/group/light" )
 script.addChild( script["Sphere"] )
 script.addChild( script["Light"] )
 script.addChild( script["Group"] )
@@ -54,7 +52,7 @@ GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/interfa
 nodeEditorWindow.parent().close()
 del nodeEditorWindow
 
-# Interface: the linkedLights attribute in the Scene Inspector 
+# Interface: the linkedLights attribute in the Scene Inspector
 script.selection().clear()
 script.selection().add( script["StandardAttributes"] )
 __path = "/group/sphere"
@@ -87,7 +85,7 @@ graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/interfaceLightLinkSetupGraphEditor.png" )
 
 # Interface: the empty Linked Lights plug of a StandardAttributes node in the Node Editor
-script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" ) 
+script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "" )
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardAttributes"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 GafferUI.PlugValueWidget.acquire( script["StandardAttributes"]["attributes"]["linkedLights"] )
@@ -96,7 +94,7 @@ nodeEditorWindow.parent().close()
 del nodeEditorWindow
 
 # Task: the light linking set expression with a location
-script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "/group/light" ) 
+script["StandardAttributes"]["attributes"]["linkedLights"]["value"].setValue( "/group/light" )
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["StandardAttributes"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/taskLightLinkingSetExpressionLocation.png" )

@@ -26,7 +26,7 @@ With the built-in Python Editor, you can build and modify the node graph, test A
 
 The bottom-half of the Python Editor is the code input field. The top-half is the code output log. Try executing a "Hello, World!" command:
 
-1. Type `print "Hello, World!"` into the input field.
+1. Type `print( "Hello, World!" )` into the input field.
 2. Hit <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to execute the code.
 
 ![](images/pythonEditorHelloWorld.png "The Python Editor with “Hello, World!”")
@@ -102,7 +102,7 @@ mySphere['radius']
 > Because Python dictionaries do not have built-in overwrite protection, you can accidentally and irrecoverably replace nodes and plugs with assignments that use existing node names, like `root['Sphere'] = ...`. Use dictionary syntax with care.
 
 Just like with nodes, you can insert a reference to a plug by dragging. Try inserting a reference to Radius plug of the Sphere node:
- 
+
 1. Select the Sphere node in the Graph Editor.
 2. Click and drag the **label** of the Radius plug from the Node Editor (the cursor will change to ![](images/plug.png "a plug")).
 3. Release it onto the input field of the Python Editor.
@@ -179,7 +179,7 @@ The above code is more advanced than what we have shown so far, but you will lik
 
 ## Connecting nodes ##
 
-Nodes do not connect together: their plugs do. The `setInput()` method connects a destination plug to a source plug. 
+Nodes do not connect together: their plugs do. The `setInput()` method connects a destination plug to a source plug.
 
 The input and output plugs on scene nodes that are visible in the Graph Editor follow this naming scheme:
 - Output (bottom edge of node): out
@@ -230,7 +230,7 @@ Here is the final graph:
 
 ## Deleting nodes ##
 
-There's one final common operation you may want to perform on nodes using Python: deletion. Nodes and plugs both have a `removeChild()` method. Try removing the Sphere node: 
+There's one final common operation you may want to perform on nodes using Python: deletion. Nodes and plugs both have a `removeChild()` method. Try removing the Sphere node:
 
 ```python
 root.removeChild( mySphere )
