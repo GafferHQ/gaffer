@@ -113,7 +113,7 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		/// on Serialiser and adding to the methods on Serialisation. The logical conclusion
 		/// may be a single `Serialiser::serialise()` method and various `Serialisation::add*()`
 		/// methods.
-		class Serialiser : public IECore::RefCounted
+		class GAFFERBINDINGS_API Serialiser : public IECore::RefCounted
 		{
 
 			public :

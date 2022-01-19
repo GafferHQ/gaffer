@@ -40,6 +40,7 @@
 
 #include "boost/python.hpp"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/NodeBinding.h"
 
 #include "Gaffer/Context.h"
@@ -64,7 +65,7 @@ class DependencyNodeClass : public NodeClass<T, TWrapper>
 
 };
 
-class GAFFER_API DependencyNodeWrapperBase
+class GAFFERBINDINGS_API DependencyNodeWrapperBase
 {
 
 	protected :
