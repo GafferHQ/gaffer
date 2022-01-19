@@ -504,7 +504,7 @@ else:
 
 	if env["WARNINGS_AS_ERRORS"] :
 		env.Append(
-			CXXFLAGS = [ 
+			CXXFLAGS = [
 				"/WX",  # Treat warnings as errors
 				"/wd4100",  # Suppress warning about unused parameters
 				"/wd4706",	# Suppress warning about using assignment in conditionals
@@ -517,7 +517,7 @@ else:
 
 	if env["BUILD_TYPE"] == "DEBUG" :
 		env.Append(
-			CXXFLAGS = 
+			CXXFLAGS =
 			[
 				"/O0",
 				"/Zi",
@@ -525,7 +525,7 @@ else:
 				"/DBOOST_DISABLE_ASSERTS",
 				"/bigobj",
 			],
-			CCPDBFLAGS= 
+			CCPDBFLAGS=
 			[
 				"/Zi",
 				"/Fd${TARGET}.pdb",
@@ -533,32 +533,32 @@ else:
 		)
 	elif env["BUILD_TYPE"] == "RELEASE" :
 		env.Append(
-			CXXFLAGS = 
+			CXXFLAGS =
 			[
-				"/DNDEBUG",  
+				"/DNDEBUG",
 				"/MD",	# create multithreaded DLL
-				"/DBOOST_DISABLE_ASSERTS", 
+				"/DBOOST_DISABLE_ASSERTS",
 				"/O2",
-				# /Og optimization (included via /O2) generates lots of unreachable 
+				# /Og optimization (included via /O2) generates lots of unreachable
 				# code warnings from boost::intrusive_ptr. Disabled in release build only.
 				"/wd4702"
-			] 
+			]
 		)
 	elif env["BUILD_TYPE"] == "RELWITHDEBINFO" :
-		env.Append( 
-			CXXFLAGS = 
+		env.Append(
+			CXXFLAGS =
 			[
 				"/DNDEBUG",
 				"/MD",
 				"/bigobj",
-				"/DBOOST_DISABLE_ASSERTS", 
+				"/DBOOST_DISABLE_ASSERTS",
 				"/Zi",
 			],
 			LINKFLAGS =
 			[
 				"/DEBUG",
 			],
-			CCPDBFLAGS= 
+			CCPDBFLAGS=
 			[
 				"/Zi",
 				"/Fd${TARGET}.pdb",
@@ -1248,7 +1248,7 @@ if os.path.exists( env.subst("$VTUNE_ROOT") ):
 		libraries[library]["envAppends"].setdefault( "LIBPATH", [] ).extend( [ "$VTUNE_ROOT/lib64" ] )
 		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "ittnotify" ] )
 
-		
+
 		libraries[library].setdefault( "pythonEnvAppends", {} )
 		libraries[library]["pythonEnvAppends"].setdefault( "CXXFLAGS", [] ).extend( [ "-DGAFFER_VTUNE" ] )
 
@@ -1271,7 +1271,7 @@ if env["PLATFORM"] == "win32" :
 		fileInfo = runCommand( "git ls-files -s {}".format( source ) ).split()
 
 		if len( fileInfo ) == 4 or len( fileInfo ) == 5:
-	
+
 			# ls-files output format: [<tag> ]<mode> <object> <stage> <file>
 			# The magic code for symlinks in git is file mode 120000
 
@@ -1298,7 +1298,7 @@ if env["PLATFORM"] == "win32" :
 					# the license). Don't copy those files by checking if the linked file exists.
 					if os.path.isfile( linkSource ) :
 						source = os.path.abspath( os.path.join( os.path.dirname( linkSource ), sourceFile )  )
-						
+
 						# Make the source relative to the current directory as SCons expects
 						source = source.replace( os.getcwd(), "" ).lstrip( os.path.sep )
 
@@ -1372,7 +1372,7 @@ for libraryName, libraryDef in libraries.items() :
 			header,
 			SUBST_DICT = fileSubstitutions
 		)
-		
+
 		libEnv.Alias( "build", headerInstall )
 
 	# bindings library
@@ -1490,7 +1490,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# osl shaders
 
-	def buildOSL( target, source, env ) :	
+	def buildOSL( target, source, env ) :
 		subprocess.check_call(
 			[
 				shutil.which( "oslc", path = env["ENV"]["PATH"] ) if env["PLATFORM"] == "win32" else "oslc",
