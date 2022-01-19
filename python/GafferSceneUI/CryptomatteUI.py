@@ -202,12 +202,12 @@ Gaffer.Metadata.registerNode(
 			   - `manifest` : The manifest data.
 			   - `manif_file` : The name of a JSON manifest file stored in a
 			   directory specified on the `manifestDirectory` plug.
-			 - Sidecar: From a JSON file specified on the `sidecarFile` plug.
+			 - Sidecar File: From a JSON file specified on the `sidecarFile` plug.
 			""",
 
 			"preset:None", GafferScene.Cryptomatte.ManifestSource.None_,
 			"preset:Metadata", GafferScene.Cryptomatte.ManifestSource.Metadata,
-			"preset:Sidecar", GafferScene.Cryptomatte.ManifestSource.Sidecar,
+			"preset:Sidecar File", GafferScene.Cryptomatte.ManifestSource.Sidecar,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],
@@ -307,7 +307,7 @@ __DropMode = IECore.Enum.create( "None_", "Add", "Remove", "Replace" )
 __originalDragPointer = None
 
 def __namesPlug( node ) :
-	##/todo handle matteNames plug with input
+	## \todo Handle matteNames plug with input connection
 	return node["matteNames"]
 
 def __dropMode( nodeGadget, event ) :
