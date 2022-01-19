@@ -97,7 +97,7 @@ struct GAFFERSCENE_API TransformEdit
 };
 
 GAFFERSCENE_API bool hasTransformEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
-GAFFERSCENE_API boost::optional<TransformEdit> acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary = true );
+GAFFERSCENE_API std::optional<TransformEdit> acquireTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, bool createIfNecessary = true );
 GAFFERSCENE_API void removeTransformEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 GAFFERSCENE_API const Gaffer::GraphComponent *transformEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );
 

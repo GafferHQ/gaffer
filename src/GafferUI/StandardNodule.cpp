@@ -173,7 +173,7 @@ void StandardNodule::renderLayer( Layer layer, const Style *style, RenderReason 
 
 			if( !getHighlighted() )
 			{
-				style->renderNodule( 0.5f, Style::NormalState, m_userColor.get_ptr() );
+				style->renderNodule( 0.5f, Style::NormalState, m_userColor ? &m_userColor.value() : nullptr );
 			}
 			break;
 
@@ -181,7 +181,7 @@ void StandardNodule::renderLayer( Layer layer, const Style *style, RenderReason 
 
 			if( getHighlighted() )
 			{
-				style->renderNodule( 1.0f, Style::HighlightedState, m_userColor.get_ptr() );
+				style->renderNodule( 1.0f, Style::HighlightedState, m_userColor ? &m_userColor.value() : nullptr );
 			}
 			break;
 
@@ -498,7 +498,7 @@ void StandardNodule::plugMetadataChanged( const Gaffer::Plug *plug, IECore::Inte
 
 bool StandardNodule::updateUserColor()
 {
-	boost::optional<Color3f> c;
+	std::optional<Color3f> c;
 	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( plug(), g_colorKey ) )
 	{
 		c = d->readable();

@@ -320,7 +320,7 @@ size_t Switch::inputIndex( const Context *context ) const
 	// Create a GlobalScope if either the `index` or `enabled` plugs will launch
 	// an upstream compute. This avoids leakage of context variables such as
 	// `scene:path`.
-	boost::optional<ContextAlgo::GlobalScope> globalScope;
+	std::optional<ContextAlgo::GlobalScope> globalScope;
 	if( variesWithContext( enabledPlug ) || variesWithContext( indexPlug ) )
 	{
 		globalScope.emplace( context, globalScopePlug );

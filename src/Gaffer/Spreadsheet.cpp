@@ -333,7 +333,7 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 	private :
 
 		const Context *m_context;
-		mutable boost::optional<Context::EditableScope> m_scope;
+		mutable std::optional<Context::EditableScope> m_scope;
 		RowsMap::Selector m_selector;
 
 };

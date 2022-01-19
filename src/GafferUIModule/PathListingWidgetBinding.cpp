@@ -1655,12 +1655,12 @@ class PathModel : public QAbstractItemModel
 
 		IECore::PathMatcher m_expandedPaths;
 		bool m_modifyingTreeViewExpansion;
-		boost::optional<Path::Names> m_recursiveExpansionPath;
+		std::optional<Path::Names> m_recursiveExpansionPath;
 
 		IECore::PathMatcher m_selectedPaths;
 		// Parameters used to control expansion update following call to
 		// `setSelection()`.
-		boost::optional<IECore::PathMatcher> m_scrollToCandidates;
+		std::optional<IECore::PathMatcher> m_scrollToCandidates;
 		bool m_expandNonLeafSelection;
 
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;

@@ -49,7 +49,6 @@
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
-#include "boost/optional.hpp"
 
 #include "tbb/tbb.h"
 
@@ -327,7 +326,7 @@ InstanceValues *instanceMetadata( const GraphComponent *instance, bool createIfM
 // It's valid to register null as an instance value and expect it to override
 // any non-null registration. We use OptionalData as a way of distinguishing
 // between an explicit registration of null and no registration at all.
-typedef boost::optional<ConstDataPtr> OptionalData;
+typedef std::optional<ConstDataPtr> OptionalData;
 
 OptionalData instanceValue( const GraphComponent *instance, InternedString key, bool *persistent = nullptr )
 {

@@ -584,7 +584,7 @@ const std::string &TransformTool::Selection::warning() const
 	return m_warning;
 }
 
-boost::optional<TransformTool::Selection::TransformEdit> TransformTool::Selection::acquireTransformEdit( bool createIfNecessary ) const
+std::optional<TransformTool::Selection::TransformEdit> TransformTool::Selection::acquireTransformEdit( bool createIfNecessary ) const
 {
 	throwIfNotEditable();
 	if( !m_transformEdit && createIfNecessary )

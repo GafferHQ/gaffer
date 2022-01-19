@@ -115,7 +115,7 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 			const ScenePlug *scene;
 		};
 
-		boost::optional<Target> target() const;
+		std::optional<Target> target() const;
 
 		static size_t g_firstPlugIndex;
 

@@ -88,7 +88,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 
 				// Initialised lazily when we first
 				// acquire the transform plug.
-				boost::optional<Imath::V3f> m_originalScale;
+				std::optional<Imath::V3f> m_originalScale;
 
 		};
 

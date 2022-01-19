@@ -42,8 +42,6 @@
 #include "Gaffer/Animation.h"
 #include "Gaffer/StandardSet.h"
 
-#include "boost/optional.hpp"
-
 namespace Gaffer
 {
 
@@ -197,7 +195,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		int m_textScale;
 		int m_labelPadding;
 
-		boost::optional<int> m_frameIndicatorPreviewFrame;
+		std::optional<int> m_frameIndicatorPreviewFrame;
 
 };
 

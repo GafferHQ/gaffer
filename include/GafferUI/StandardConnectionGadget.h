@@ -135,7 +135,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 		/// classes so we can show which end is being
 		/// hovered.
 		bool m_hovering;
-		boost::optional<Imath::Color3f> m_userColor;
+		std::optional<Imath::Color3f> m_userColor;
 
 		bool m_dotPreview;
 		Imath::V3f m_dotPreviewLocation;

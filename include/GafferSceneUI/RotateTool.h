@@ -98,7 +98,7 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 
 				// Initialised lazily when we first
 				// acquire the transform plug.
-				mutable boost::optional<Imath::Eulerf> m_originalRotation; // Radians
+				mutable std::optional<Imath::Eulerf> m_originalRotation; // Radians
 
 		};
 

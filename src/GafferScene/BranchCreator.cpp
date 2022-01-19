@@ -48,8 +48,6 @@
 
 #include "tbb/spin_mutex.h"
 
-#include "boost/make_unique.hpp"
-
 #include <unordered_map>
 
 using namespace std;
@@ -334,7 +332,7 @@ class BranchCreator::BranchesData : public IECore::Data
 				if( inserted.second )
 				{
 					const bool exists = location->depth < existing.size();
-					inserted.first->second = boost::make_unique<Location>( location->depth + 1, exists );
+					inserted.first->second = std::make_unique<Location>( location->depth + 1, exists );
 					if( !exists )
 					{
 						if( !location->newChildNames )
@@ -521,12 +519,12 @@ void BranchCreator::affects( const Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
-boost::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
+std::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
 {
 	const string parentAsString = parentPlug()->getValue();
 	if( parentAsString.empty() )
 	{
-		return boost::none;
+		return std::nullopt;
 	}
 
 	ScenePlug::ScenePath parent;
@@ -536,7 +534,7 @@ boost::optional<ScenePlug::ScenePath> BranchCreator::parentPlugPath() const
 		return parent;
 	}
 
-	return boost::none;
+	return std::nullopt;
 }
 
 void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

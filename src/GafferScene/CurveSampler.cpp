@@ -103,8 +103,8 @@ PrimitiveSampler::SamplingFunction CurveSampler::computeSamplingFunction( const 
 	const std::string curveIndex = curveIndexPlug()->getValue();
 	const std::string v = vPlug()->getValue();
 
-	boost::optional<PrimitiveVariable::IndexedView<int>> curveIndexView;
-	boost::optional<PrimitiveVariable::IndexedView<float>> vView;
+	std::optional<PrimitiveVariable::IndexedView<int>> curveIndexView;
+	std::optional<PrimitiveVariable::IndexedView<float>> vView;
 
 	if( !curveIndex.empty() )
 	{

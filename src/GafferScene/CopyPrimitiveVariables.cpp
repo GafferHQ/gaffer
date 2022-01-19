@@ -123,15 +123,11 @@ void CopyPrimitiveVariables::hashProcessedObject( const ScenePath &path, const G
 	primitiveVariablesPlug()->hash( h );
 	prefixPlug()->hash( h );
 
-	boost::optional<ScenePath> sourceLocationPath;
+	std::optional<ScenePath> sourceLocationPath;
 	const string sourceLocation = sourceLocationPlug()->getValue();
 	if( !sourceLocation.empty() )
 	{
-		/// \todo When we can use `std::optional` from C++17, `emplace()`
-		/// will return a reference, allowing us to call
-		/// `stringToPath( sourceLocation, sourceLocationPath.emplace() )`.
-		sourceLocationPath.emplace();
-		ScenePlug::stringToPath( sourceLocation, *sourceLocationPath );
+		ScenePlug::stringToPath( sourceLocation, sourceLocationPath.emplace() );
 	}
 
 	if( !sourcePlug()->exists( sourceLocationPath ? *sourceLocationPath : path ) )
@@ -166,15 +162,11 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 
 	const string prefix = prefixPlug()->getValue();
 
-	boost::optional<ScenePath> sourceLocationPath;
+	std::optional<ScenePath> sourceLocationPath;
 	const string sourceLocation = sourceLocationPlug()->getValue();
 	if( !sourceLocation.empty() )
 	{
-		/// \todo When we can use `std::optional` from C++17, `emplace()`
-		/// will return a reference, allowing us to call
-		/// `stringToPath( sourceLocation, copyFromPath.emplace() )`.
-		sourceLocationPath.emplace();
-		ScenePlug::stringToPath( sourceLocation, *sourceLocationPath );
+		ScenePlug::stringToPath( sourceLocation, sourceLocationPath.emplace() );
 	}
 
 	if( !sourcePlug()->exists( sourceLocationPath ? *sourceLocationPath : path ) )
