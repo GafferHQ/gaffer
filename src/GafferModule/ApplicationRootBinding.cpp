@@ -114,7 +114,7 @@ IECore::ObjectPtr getClipboardContents( ApplicationRoot &a )
 
 struct ClipboardSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, ApplicationRootPtr a )
+	void operator()( boost::python::object slot, ApplicationRootPtr a )
 	{
 		try
 		{
@@ -124,7 +124,6 @@ struct ClipboardSlotCaller
 		{
 			PyErr_PrintEx( 0 ); // clears the error status
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

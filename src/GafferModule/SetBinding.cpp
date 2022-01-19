@@ -103,7 +103,7 @@ boost::python::list getSlice( Set &s, boost::python::slice sl )
 
 struct MemberSignalSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, const SetPtr s, const Set::MemberPtr m )
+	void operator()( boost::python::object slot, const SetPtr s, const Set::MemberPtr m )
 	{
 		try
 		{
@@ -113,7 +113,6 @@ struct MemberSignalSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

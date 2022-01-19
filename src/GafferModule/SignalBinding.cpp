@@ -166,36 +166,6 @@ void bind( const char *name )
 
 }
 
-// If a boost::signal has a return type of void, it gets converted
-// to a return type of boost::signals::detail::unusable. We register
-// this converter so that we can accept a None return from a python
-// slot where boost::signals::detail::unusable is expected.
-struct UnusableFromNone
-{
-
-	UnusableFromNone()
-	{
-		boost::python::converter::registry::push_back(
-			&convertible,
-			&construct,
-			boost::python::type_id<boost::signals::detail::unusable>()
-		);
-	}
-
-	static void *convertible( PyObject *obj )
-	{
-		return obj == Py_None ? obj : nullptr;
-	}
-
-	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
-	{
-		void *storage = (( converter::rvalue_from_python_storage<boost::signals::detail::unusable>* ) data )->storage.bytes;
-		boost::signals::detail::unusable *unusable = new( storage ) boost::signals::detail::unusable();
-		data->convertible = unusable;
-	}
-
-};
-
 } // namespace
 
 void GafferModule::bindSignal()
@@ -212,7 +182,5 @@ void GafferModule::bindSignal()
 	bind<Signal1>( "Signal1" );
 	bind<Signal2>( "Signal2" );
 	bind<Signal3>( "Signal3" );
-
-	UnusableFromNone();
 
 }

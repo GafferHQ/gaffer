@@ -76,10 +76,9 @@ void setFilter( GraphGadget &graphGadget, Gaffer::SetPtr filter )
 
 struct RootChangedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, GraphGadgetPtr g, Gaffer::NodePtr n )
+	void operator()( boost::python::object slot, GraphGadgetPtr g, Gaffer::NodePtr n )
 	{
 		slot( g , n );
-		return boost::signals::detail::unusable();
 	}
 };
 

@@ -82,7 +82,7 @@ Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGad
 
 struct ImageGadgetSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, ImageGadgetPtr g )
+	void operator()( boost::python::object slot, ImageGadgetPtr g )
 	{
 		try
 		{
@@ -92,7 +92,6 @@ struct ImageGadgetSlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

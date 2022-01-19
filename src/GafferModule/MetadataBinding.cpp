@@ -248,34 +248,29 @@ void registerPlugValue( IECore::TypeId nodeTypeId, const char *plugPath, IECore:
 struct ValueChangedSlotCaller
 {
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::InternedString target, IECore::InternedString key )
+	void operator()( boost::python::object slot, IECore::InternedString target, IECore::InternedString key )
 	{
 		slot( target.c_str(), key.c_str() );
-		return boost::signals::detail::unusable();
 	}
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, Node *node, IECore::InternedString key, Metadata::ValueChangedReason reason )
+	void operator()( boost::python::object slot, Node *node, IECore::InternedString key, Metadata::ValueChangedReason reason )
 	{
 		slot( NodePtr( node ), key.c_str(), reason );
-		return boost::signals::detail::unusable();
 	}
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, Plug *plug, IECore::InternedString key, Metadata::ValueChangedReason reason )
+	void operator()( boost::python::object slot, Plug *plug, IECore::InternedString key, Metadata::ValueChangedReason reason )
 	{
 		slot( PlugPtr( plug ), key.c_str(), reason );
-		return boost::signals::detail::unusable();
 	}
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key, Node *node )
+	void operator()( boost::python::object slot, IECore::TypeId nodeTypeId, IECore::InternedString key, Node *node )
 	{
 		slot( nodeTypeId, key.c_str(), NodePtr( node ) );
-		return boost::signals::detail::unusable();
 	}
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Plug *plug )
+	void operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Plug *plug )
 	{
 		slot( nodeTypeId, plugPath.c_str(), key.c_str(), PlugPtr( plug ) );
-		return boost::signals::detail::unusable();
 	}
 
 };

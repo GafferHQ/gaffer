@@ -184,8 +184,7 @@ void removeInactiveKeys( Animation::CurvePlug &p )
 
 struct CurvePlugKeySlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot,
-		const Animation::CurvePlugPtr c, const Animation::KeyPtr k )
+	void operator()( boost::python::object slot, const Animation::CurvePlugPtr c, const Animation::KeyPtr k )
 	{
 		try
 		{
@@ -195,7 +194,6 @@ struct CurvePlugKeySlotCaller
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 

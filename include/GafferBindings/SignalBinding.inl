@@ -70,14 +70,19 @@ struct Slot<boost::signal<Result( Args... ), Combiner>, Caller>
 		m_slot.reset();
 	}
 
-	using Signal = boost::signal<Result( Args... ), Combiner>;
-
-	typename Signal::slot_result_type operator()( Args&&... args )
+	Result operator()( Args&&... args )
 	{
 		IECorePython::ScopedGILLock gilLock;
 		try
 		{
-			return Caller()( boost::python::object( m_slot ), std::forward<Args>( args )... );
+			if constexpr( std::is_void_v<Result> )
+			{
+				Caller()( boost::python::object( m_slot ), std::forward<Args>( args )... );
+			}
+			else
+			{
+				return Caller()( boost::python::object( m_slot ), std::forward<Args>( args )... );
+			}
 		}
 		catch( const boost::python::error_already_set &e )
 		{
@@ -160,11 +165,16 @@ template<typename Result, typename... Args, typename Combiner>
 struct DefaultSlotCaller<boost::signal<Result( Args... ), Combiner>>
 {
 
-	using Signal = boost::signal<Result ( Args... )>;
-
-	typename Signal::slot_result_type operator()( boost::python::object slot, Args&&... args )
+	Result operator()( boost::python::object slot, Args&&... args )
 	{
-		return boost::python::extract<typename Signal::slot_result_type>( slot( std::forward<Args>( args )... ) )();
+		if constexpr( std::is_void_v<Result> )
+		{
+			slot( std::forward<Args>( args )... );
+		}
+		else
+		{
+			return boost::python::extract<Result>( slot( std::forward<Args>( args )... ) )();
+		}
 	}
 
 };

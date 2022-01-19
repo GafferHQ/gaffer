@@ -488,7 +488,7 @@ bool importFile( ScriptNode &s, const std::string &fileName, Node *parent, bool 
 struct ActionSlotCaller
 {
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr script, ConstActionPtr action, Action::Stage stage )
+	void operator()( boost::python::object slot, ScriptNodePtr script, ConstActionPtr action, Action::Stage stage )
 	{
 		try
 		{
@@ -498,7 +498,6 @@ struct ActionSlotCaller
 		{
 			PyErr_PrintEx( 0 ); // clears the error status
 		}
-		return boost::signals::detail::unusable();
 	}
 
 };
@@ -506,7 +505,7 @@ struct ActionSlotCaller
 struct UndoAddedSlotCaller
 {
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr script )
+	void operator()( boost::python::object slot, ScriptNodePtr script )
 	{
 		try
 		{
@@ -516,7 +515,6 @@ struct UndoAddedSlotCaller
 		{
 			PyErr_PrintEx( 0 ); // clears the error status
 		}
-		return boost::signals::detail::unusable();
 	}
 
 };
@@ -524,7 +522,7 @@ struct UndoAddedSlotCaller
 struct FocusChangedSlotCaller
 {
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr script, NodePtr node )
+	void operator()( boost::python::object slot, ScriptNodePtr script, NodePtr node )
 	{
 		try
 		{
@@ -534,7 +532,6 @@ struct FocusChangedSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 
 };

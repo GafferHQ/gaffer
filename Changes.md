@@ -1,6 +1,11 @@
 0.62.x.x
 ========
 
+API
+---
+
+- Signals : Removed usage of `boost::signals::detail::unusable` as a substitute for the `void` return type in the Signal bindings. Custom SlotCallers may now use a standard `void` return type.
+
 Build
 -----
 
