@@ -76,7 +76,7 @@ Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Resu
 
 struct DirtiedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, InspectorPtr inspector )
+	void operator()( boost::python::object slot, InspectorPtr inspector )
 	{
 		try
 		{
@@ -86,7 +86,6 @@ struct DirtiedSlotCaller
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
-		return boost::signals::detail::unusable();
 	}
 };
 
