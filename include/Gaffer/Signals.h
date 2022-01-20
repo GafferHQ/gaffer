@@ -40,6 +40,7 @@
 #include "Gaffer/Private/SlotBase.h"
 
 #include "boost/callable_traits/return_type.hpp"
+#include "boost/compressed_pair.hpp"
 #include "boost/last_value.hpp"
 #include "boost/noncopyable.hpp"
 
@@ -151,6 +152,10 @@ class Signal<Result( Args... ), Combiner> : boost::noncopyable
 		template<typename SlotFunctor>
 		Connection connectInternal( const SlotFunctor &slot, bool front );
 
+		Private::SlotBase::Ptr &lastSlot();
+		const Private::SlotBase::Ptr &lastSlot() const;
+		const Combiner &combiner() const;
+
 		// Type derived from SlotBase, holding a FunctionType
 		// object to be called when the signal is emitted.
 		struct Slot;
@@ -162,8 +167,12 @@ class Signal<Result( Args... ), Combiner> : boost::noncopyable
 		using ArgsTuple = std::tuple<Args...>;
 
 		Private::SlotBase::Ptr m_firstSlot;
-		Private::SlotBase::Ptr m_lastSlot;
-		Combiner m_combiner;
+		/// The combiner will often have no data members, and using
+		/// `compressed_pair` means that in this case it won't contribute
+		/// anything to `sizeof( Signal )`.
+		/// \todo In c++20 this can be simplified with `[[no_unique_address]]`
+		/// and we can remove the `lastSlot()` and `combiner()` accessors.
+		boost::compressed_pair<Private::SlotBase::Ptr, Combiner> m_lastSlotAndCombiner;
 
 };
 

@@ -95,7 +95,7 @@ inline bool Connection::connected() const
 
 template<typename Result, typename... Args, typename Combiner>
 Signal<Result( Args... ), Combiner>::Signal( const Combiner &combiner )
-	:	m_combiner( combiner )
+	:	m_lastSlotAndCombiner( nullptr, combiner )
 {
 }
 
@@ -123,14 +123,14 @@ template<typename Result, typename... Args, typename Combiner>
 template<typename SlotFunctor>
 Connection Signal<Result( Args... ), Combiner>::connectInternal( const SlotFunctor &slot, bool front )
 {
-	if( !m_lastSlot )
+	if( !lastSlot() )
 	{
 		assert( !m_firstSlot );
-		m_lastSlot = new Slot( m_firstSlot );
+		lastSlot() = new Slot( m_firstSlot );
 	}
 
 	Private::SlotBase::Ptr s = new Slot(
-		front ? m_firstSlot : *(m_lastSlot->previous), slot
+		front ? m_firstSlot : *(lastSlot()->previous), slot
 	);
 
 	const Connection result = Connection( s );
@@ -143,7 +143,7 @@ template<typename SlotFunctor>
 void Signal<Result( Args... ), Combiner>::disconnect( const SlotFunctor &slotFunctor )
 {
 	Private::SlotBase::Ptr slot = m_firstSlot;
-	while( slot != m_lastSlot )
+	while( slot != lastSlot() )
 	{
 		if( static_cast<Slot *>( slot.get() )->function == slotFunctor )
 		{
@@ -157,20 +157,20 @@ template<typename Result, typename... Args, typename Combiner>
 Result Signal<Result( Args... ), Combiner>::operator() ( Args... args ) const
 {
 	ArgsTuple argsTuple( args... ); /// \todo : Capture by reference? Or forward_as_tuple?
-	return m_combiner(
-		SlotCallIterator( m_firstSlot, m_lastSlot, argsTuple ),
-		SlotCallIterator( m_lastSlot, m_lastSlot, argsTuple )
+	return combiner()(
+		SlotCallIterator( m_firstSlot, lastSlot(), argsTuple ),
+		SlotCallIterator( lastSlot(), lastSlot(), argsTuple )
 	);
 }
 
 template<typename Result, typename... Args, typename Combiner>
 void Signal<Result( Args... ), Combiner>::disconnectAllSlots()
 {
-	while( m_firstSlot != m_lastSlot )
+	while( m_firstSlot != lastSlot() )
 	{
 		m_firstSlot->disconnect();
 	}
-	assert( m_firstSlot == m_lastSlot );
+	assert( m_firstSlot == lastSlot() );
 };
 
 template<typename Result, typename... Args, typename Combiner>
@@ -178,7 +178,7 @@ size_t Signal<Result( Args... ), Combiner>::numSlots() const
 {
 	size_t result = 0;
 	const Private::SlotBase *s = m_firstSlot.get();
-	while( s != m_lastSlot.get() )
+	while( s != lastSlot().get() )
 	{
 		result++;
 		s = s->next.get();
@@ -189,7 +189,25 @@ size_t Signal<Result( Args... ), Combiner>::numSlots() const
 template<typename Result, typename... Args, typename Combiner>
 bool Signal<Result( Args... ), Combiner>::empty() const
 {
-	return m_firstSlot == m_lastSlot;
+	return m_firstSlot == lastSlot();
+}
+
+template<typename Result, typename... Args, typename Combiner>
+Private::SlotBase::Ptr &Signal<Result( Args... ), Combiner>::lastSlot()
+{
+	return m_lastSlotAndCombiner.first();
+}
+
+template<typename Result, typename... Args, typename Combiner>
+const Private::SlotBase::Ptr &Signal<Result( Args... ), Combiner>::lastSlot() const
+{
+	return m_lastSlotAndCombiner.first();
+}
+
+template<typename Result, typename... Args, typename Combiner>
+const Combiner &Signal<Result( Args... ), Combiner>::combiner() const
+{
+	return m_lastSlotAndCombiner.second();
 }
 
 //////////////////////////////////////////////////////////////////////////
