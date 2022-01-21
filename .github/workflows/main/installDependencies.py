@@ -87,7 +87,10 @@ os.makedirs( args.dependenciesDir )
 if platform != "windows":
 	subprocess.check_call( [ "tar", "xf", archiveFileName, "-C", args.dependenciesDir, "--strip-components=1" ] )
 else:
-	subprocess.check_call( [ "7z", "x", archiveFileName, "-o{}".format( args.dependenciesDir ), "-aoa", "-y" ] )
+	subprocess.check_call(
+		[ "7z", "x", archiveFileName, "-o{}".format( args.dependenciesDir ), "-aoa", "-y" ],
+		stdout = sys.stderr,
+	)
 	# 7z (and zip extractors generally) don't have an equivalent of --strip-components=1
 	# Copy the files up one directory level to compensate
 	for p in glob.glob(
