@@ -155,7 +155,7 @@ AttributeHistoryCache g_attributeHistoryCache(
 	[] ( const AttributeHistoryCacheKey &key, size_t &cost, const IECore::Canceller *canceller ) {
 		assert( canceller == Context::current()->canceller() );
 		cost = 1;
-		SceneAlgo::History::ConstPtr attributesHistory = g_historyCache.get( key );
+		SceneAlgo::History::ConstPtr attributesHistory = g_historyCache.get( key, canceller );
 		return SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute );
 	},
 	// Max cost
@@ -205,7 +205,7 @@ GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
 		return nullptr;
 	}
 
-	return g_attributeHistoryCache.get( AttributeHistoryCacheKey( m_scene.get(), m_attribute ) );
+	return g_attributeHistoryCache.get( AttributeHistoryCacheKey( m_scene.get(), m_attribute ), Context::current()->canceller() );
 }
 
 IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::History *history ) const
