@@ -383,7 +383,7 @@ class CapturingMonitor : public Monitor
 
 	public :
 
-		CapturingMonitor()
+		CapturingMonitor( IECore::InternedString scenePlugChildName ) : m_scenePlugChildName( scenePlugChildName )
 		{
 		}
 
@@ -402,14 +402,35 @@ class CapturingMonitor : public Monitor
 
 		void processStarted( const Process *process ) override
 		{
+			const Plug *p = process->plug();
+			if( !p->parent<ScenePlug>() || p->getName() != m_scenePlugChildName )
+			{
+				// Need to hold a lock while inserting a nullptr sentinel in m_processMap
+				// so child Process's can tell they're not being monitored
+				Mutex::scoped_lock lock( m_mutex );
+				m_processMap.insert( ProcessMap::value_type( process, nullptr ) );
+				return;
+			}
+
+			{
+				// Need a lock while checking if our parent is null ( which would mean we're
+				// not being monitored ).  This is terrible for perf, hopefully an improvement will come soon
+				Mutex::scoped_lock lock( m_mutex );
+				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+				if( it != m_processMap.end() && !it->second )
+				{
+					m_processMap[process] = nullptr;
+					return;
+				}
+			}
+
 			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
 			capturedProcess->type = process->type();
-			capturedProcess->plug = process->plug();
+			capturedProcess->plug = p;
 			capturedProcess->destinationPlug = process->destinationPlug();
 			capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
 
 			Mutex::scoped_lock lock( m_mutex );
-
 			m_processMap[process] = capturedProcess.get();
 
 			ProcessMap::const_iterator it = m_processMap.find( process->parent() );
@@ -439,6 +460,7 @@ class CapturingMonitor : public Monitor
 		typedef boost::unordered_map<const Process *, CapturedProcess *> ProcessMap;
 		ProcessMap m_processMap;
 		CapturedProcess::PtrVector m_rootProcesses;
+		IECore::InternedString m_scenePlugChildName;
 
 };
 
@@ -680,7 +702,7 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 		) );
 	}
 
-	CapturingMonitorPtr monitor = new CapturingMonitor;
+	CapturingMonitorPtr monitor = new CapturingMonitor( scenePlugChild->getName() );
 	{
 		ScenePlug::PathScope pathScope( Context::current(), &path );
 		uint64_t historyID = g_historyID++;
