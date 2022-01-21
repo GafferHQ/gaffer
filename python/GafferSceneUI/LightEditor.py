@@ -350,12 +350,12 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			text = self.getPlug().getValue()
 
-		text = "" if text == "Main" else text
+		text = "Main" if text == "" else text
 		for i in range( 0, self._qtWidget().count() ) :
 			if self._qtWidget().tabText( i ) == text :
 				try :
 					self.__ignoreCurrentChanged = True
-					self._qtWidget.setCurrent( i )
+					self._qtWidget().setCurrentIndex( i )
 				finally :
 					self.__ignoreCurrentChanged = False
 				break
