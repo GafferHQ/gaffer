@@ -80,13 +80,13 @@ namespace
 // very little contention anyway, so just use a simple `std::unordered_map`
 // protected by a mutex.
 
-struct Signals
+struct NodeSignals
 {
 	Metadata::NodeValueChangedSignal nodeSignal;
 	Metadata::PlugValueChangedSignal plugSignal;
 };
 
-using SignalsMap = std::unordered_map<Node *, unique_ptr<Signals>>;
+using SignalsMap = std::unordered_map<Node *, unique_ptr<NodeSignals>>;
 using SignalsMapLock = tbb::recursive_mutex::scoped_lock;
 
 // Access to the signals requires the passing of a scoped_lock that
@@ -100,7 +100,7 @@ SignalsMap &signalsMap( SignalsMapLock &lock )
 	return *g_signalsMap;
 }
 
-Signals *nodeSignals( Node *node, bool createIfMissing )
+NodeSignals *nodeSignals( Node *node, bool createIfMissing )
 {
 	SignalsMapLock lock;
 	auto &m = signalsMap( lock );
@@ -112,7 +112,7 @@ Signals *nodeSignals( Node *node, bool createIfMissing )
 		{
 			return nullptr;
 		}
-		it = m.emplace( node, std::make_unique<Signals>() ).first;
+		it = m.emplace( node, std::make_unique<NodeSignals>() ).first;
 	}
 	return it->second.get();
 }
@@ -384,7 +384,7 @@ void registerInstanceValueAction( GraphComponent *instance, InternedString key, 
 	if( Node *node = runTimeCast<Node>( instance ) )
 	{
 		Metadata::nodeValueChangedSignal()( node->typeId(), key, node );
-		if( Signals *s = nodeSignals( node, /* createIfMissing = */ false ) )
+		if( NodeSignals *s = nodeSignals( node, /* createIfMissing = */ false ) )
 		{
 			s->nodeSignal( node, key, reason );
 		}
@@ -394,7 +394,7 @@ void registerInstanceValueAction( GraphComponent *instance, InternedString key, 
 		if( Node *node = plug->node() )
 		{
 			Metadata::plugValueChangedSignal()( node->typeId(), plug->relativeName( node ), key, plug );
-			if( Signals *s = nodeSignals( node, /* createIfMissing = */ false ) )
+			if( NodeSignals *s = nodeSignals( node, /* createIfMissing = */ false ) )
 			{
 				s->plugSignal( plug, key, reason );
 			}

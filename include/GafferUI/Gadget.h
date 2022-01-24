@@ -339,9 +339,9 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 		IECore::InternedString m_toolTip;
 
-		struct Signals;
-		Signals *signals();
-		std::unique_ptr<Signals> m_signals;
+		struct MemberSignals;
+		MemberSignals *signals();
+		std::unique_ptr<MemberSignals> m_signals;
 
 		// used by the bindings to know when the idleSignal()
 		// has been accessed, and only use an idle timer

@@ -64,7 +64,7 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( Gadget );
 // instances they are never actually used.
 //////////////////////////////////////////////////////////////////////////
 
-struct Gadget::Signals : boost::noncopyable
+struct Gadget::MemberSignals : boost::noncopyable
 {
 
 	VisibilityChangedSignal visibilityChangedSignal;
@@ -91,7 +91,7 @@ struct Gadget::Signals : boost::noncopyable
 	// Utility to emit a signal if it has been created, but do nothing
 	// if it hasn't.
 	template<typename SignalMemberPointer, typename... Args>
-	static void emitLazily( Signals *signals, SignalMemberPointer signalMemberPointer, Args&&... args )
+	static void emitLazily( MemberSignals *signals, SignalMemberPointer signalMemberPointer, Args&&... args )
 	{
 		if( !signals )
 		{
@@ -172,7 +172,7 @@ void Gadget::setVisible( bool visible )
 	if( !p || p->visible() )
 	{
 		emitDescendantVisibilityChanged();
-		Signals::emitLazily( m_signals.get(), &Signals::visibilityChangedSignal, this );
+		MemberSignals::emitLazily( m_signals.get(), &MemberSignals::visibilityChangedSignal, this );
 	}
 	if( p )
 	{
@@ -191,7 +191,7 @@ void Gadget::emitDescendantVisibilityChanged()
 			continue;
 		}
 		(*it)->emitDescendantVisibilityChanged();
-		Signals::emitLazily( (*it)->m_signals.get(), &Signals::visibilityChangedSignal, it->get() );
+		MemberSignals::emitLazily( (*it)->m_signals.get(), &MemberSignals::visibilityChangedSignal, it->get() );
 	}
 }
 
@@ -458,11 +458,11 @@ Gadget::KeySignal &Gadget::keyReleaseSignal()
 	return signals()->keyReleaseSignal;
 }
 
-Gadget::Signals *Gadget::signals()
+Gadget::MemberSignals *Gadget::signals()
 {
 	if( !m_signals )
 	{
-		m_signals.reset( new Signals );
+		m_signals = std::make_unique<MemberSignals>();
 	}
 	return m_signals.get();
 }

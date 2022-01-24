@@ -296,10 +296,10 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		void removeChildInternal( GraphComponentPtr child, bool emitParentChanged );
 		size_t index() const;
 
-		struct Signals;
-		Signals *signals();
+		struct MemberSignals;
+		MemberSignals *signals();
 
-		std::unique_ptr<Signals> m_signals;
+		std::unique_ptr<MemberSignals> m_signals;
 		IECore::InternedString m_name;
 		GraphComponent *m_parent;
 		ChildContainer m_children;
