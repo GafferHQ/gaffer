@@ -105,10 +105,12 @@ void visit_each( Visitor &visitor, const Slot<Signal, Caller> &slot, int )
 	// Check to see if slot contains a WeakMethod referring to a trackable
 	// object. There is no point checking for regular methods, because they
 	// prevent the trackable object from dying until it has been disconnected
-	// manually.
-	boost::python::object gaffer = boost::python::import( "Gaffer" );
-	boost::python::object weakMethod = gaffer.attr( "WeakMethod" );
-	if( PyObject_IsInstance( slot.m_slot.get(), weakMethod.ptr() ) )
+	// manually. We deliberately "leak" the static variables because doing
+	// otherwise would cause the destruction of PyObjects _after_ Python has
+	// been shut down (during application exit).
+	static boost::python::object *g_gaffer = new boost::python::object( boost::python::import( "Gaffer" ) );
+	static boost::python::object *g_weakMethod = new boost::python::object( g_gaffer->attr( "WeakMethod" ) );
+	if( PyObject_IsInstance( slot.m_slot.get(), g_weakMethod->ptr() ) )
 	{
 		boost::python::object self = boost::python::object( slot.m_slot ).attr( "instance" )();
 		boost::python::extract<Gaffer::Signals::Trackable &> e( self );
