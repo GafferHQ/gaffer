@@ -48,7 +48,6 @@
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
 
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
@@ -803,7 +802,7 @@ void CropWindowTool::preRender()
 			flipNDCOrigin( cropWindow );
 		}
 
-		BlockedConnection blockedConnection( m_overlayRectangleChangedConnection );
+		Signals::BlockedConnection blockedConnection( m_overlayRectangleChangedConnection );
 		m_overlay->setRectangle(
 			Box2f(
 				V2f(

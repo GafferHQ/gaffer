@@ -192,6 +192,24 @@ class ScopedConnection : public Connection
 
 };
 
+/// The BlockedConnection class allows connections to be blocked and unblocked
+/// in an exception-safe manner.
+class BlockedConnection : boost::noncopyable
+{
+
+	public :
+
+		/// Calls connection.block() if block is true, otherwise does nothing.
+		BlockedConnection( Signals::Connection &connection, bool block = true );
+		/// Unblocks the connection if it was blocked by the constructor.
+		~BlockedConnection();
+
+	private :
+
+		Signals::Connection *m_connection;
+
+};
+
 /// Utility base class for objects which connect member functions to signals,
 /// and therefore need to disconnect automatically when they are destroyed.
 ///

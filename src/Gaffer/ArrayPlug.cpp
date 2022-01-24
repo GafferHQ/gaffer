@@ -36,7 +36,6 @@
 
 #include "Gaffer/ArrayPlug.h"
 
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -120,7 +119,7 @@ void ArrayPlug::setInput( PlugPtr input )
 	// Plug::setInput() will be managing the inputs of our children,
 	// and we don't want to be fighting with it in inputChanged(), so
 	// we disable our connection while it does its work.
-	BlockedConnection blockedConnection( m_inputChangedConnection );
+	Signals::BlockedConnection blockedConnection( m_inputChangedConnection );
 	Plug::setInput( input );
 }
 

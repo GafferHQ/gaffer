@@ -53,7 +53,6 @@
 #include "GafferUI/Pointer.h"
 #include "GafferUI/Style.h"
 
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
@@ -1302,7 +1301,7 @@ class SceneView::Camera : public Signals::Trackable
 		{
 			if( !lookThroughEnabledPlug()->getValue() )
 			{
-				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
+				Signals::BlockedConnection plugValueSetBlocker( m_plugSetConnection );
 
 				IECoreScene::ConstCameraPtr camera = m_view->viewportGadget()->getCamera();
 				clippingPlanesPlug()->setValue( camera->getClippingPlanes() );

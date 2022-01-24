@@ -15,6 +15,7 @@ Breaking Changes
   - Replaced all usage of `boost::signals` with `Gaffer::Signals`. These are largely source-compatible, with the following changes :
     - Boost `snake_case` naming has been replaced with `CamelCase`.
     - Connection groups are not supported. Use `connectFront()` to connect in front of existing slots.
+  - Removed the `Gaffer/BlockedConnection.h` header file. BlockedConnection can now be found in the Signals namespace provided by `Gaffer/Signals.h`.
 - Replaced all usage of `boost::optional` with `std::optional`.
 
 Build

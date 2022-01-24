@@ -433,6 +433,28 @@ inline ScopedConnection &ScopedConnection::operator=( const Connection &connecti
 	return *this;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// BlockedConnection
+//////////////////////////////////////////////////////////////////////////
+
+inline BlockedConnection::BlockedConnection( Signals::Connection &connection, bool block )
+	:	m_connection( nullptr )
+{
+	if( block && connection.connected() )
+	{
+		m_connection = &connection;
+		m_connection->block();
+	}
+}
+
+inline BlockedConnection::~BlockedConnection()
+{
+	if( m_connection )
+	{
+		m_connection->unblock();
+	}
+}
+
 } // namespace Gaffer::Signals
 
 #endif // GAFFER_SIGNALS_INL

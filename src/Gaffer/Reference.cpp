@@ -36,7 +36,6 @@
 
 #include "Gaffer/Reference.h"
 
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
@@ -230,7 +229,7 @@ class Reference::PlugEdits : public Signals::Trackable
 				PlugEdits *m_plugEdits;
 				// Changes made during loading aren't user edits and mustn't be
 				// tracked, so we block the connection.
-				Gaffer::BlockedConnection m_blockedConnection;
+				Signals::BlockedConnection m_blockedConnection;
 		};
 
 	private :
