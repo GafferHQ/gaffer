@@ -62,8 +62,8 @@ class Playback( object ) :
 		self.__playTimer = QtCore.QTimer()
 		self.__playTimer.timeout.connect( Gaffer.WeakMethod( self.__timerCallback ) )
 
-		self.__stateChangedSignal = Gaffer.Signal1()
-		self.__frameRangeChangedSignal = Gaffer.Signal1()
+		self.__stateChangedSignal = Gaffer.Signals.Signal1()
+		self.__frameRangeChangedSignal = Gaffer.Signals.Signal1()
 
 	__instances = []
 	## Acquires the Playback instance for the specified

@@ -46,7 +46,7 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtWidgets
 
-class _EditorMetaclass( Gaffer.Trackable.__class__ ) :
+class _EditorMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
 	def __call__( cls, *args, **kw ) :
 
@@ -153,7 +153,7 @@ class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
 			self._updateFromContext( modifiedItems )
 
 	## May be implemented by derived classes to update state based on a change of context.
-	# To temporarily suspend calls to this function, use Gaffer.BlockedConnection( self._contextChangedConnection() ).
+	# To temporarily suspend calls to this function, use Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ).
 	def _updateFromContext( self, modifiedItems ) :
 
 		pass
@@ -200,7 +200,7 @@ class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
 		if s is not None :
 			return s
 
-		s = Gaffer.Signal1()
+		s = Gaffer.Signals.Signal1()
 		setattr( cls, "__instanceCreatedSignal", s )
 		return s
 

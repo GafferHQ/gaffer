@@ -42,7 +42,6 @@
 #include "BoxPlugBinding.h"
 #include "CompoundDataPlugBinding.h"
 #include "CompoundNumericPlugBinding.h"
-#include "ConnectionBinding.h"
 #include "ContextBinding.h"
 #include "ContextProcessorBinding.h"
 #include "DirtyPropagationScopeBinding.h"
@@ -66,7 +65,7 @@
 #include "ScriptNodeBinding.h"
 #include "SerialisationBinding.h"
 #include "SetBinding.h"
-#include "SignalBinding.h"
+#include "SignalsBinding.h"
 #include "SplinePlugBinding.h"
 #include "SpreadsheetBinding.h"
 #include "StringPlugBinding.h"
@@ -194,8 +193,7 @@ __attribute__( ( section( ".init_array" ) ) ) decltype( storeArgcArgv ) *g_initA
 BOOST_PYTHON_MODULE( _Gaffer )
 {
 
-	bindConnection();
-	bindSignal();
+	bindSignals();
 	bindGraphComponent();
 	bindContext();
 	bindSerialisation();

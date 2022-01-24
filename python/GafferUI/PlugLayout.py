@@ -692,7 +692,7 @@ class _TabLayout( _Layout ) :
 			updatedTabs[name] = tab
 
 		if existingTabs.keys() != updatedTabs.keys() :
-			with Gaffer.BlockedConnection( self.__currentTabChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__currentTabChangedConnection ) :
 				del self.__tabbedContainer[:]
 				for name, tab in updatedTabs.items() :
 					self.__tabbedContainer.append( tab, label = name )

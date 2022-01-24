@@ -56,7 +56,7 @@ class PathFilterWidget( GafferUI.Widget ) :
 
 	## Must be implemented by subclasses to update the UI when the filter
 	# changes in some way. To temporarily suspend calls to this function, use
-	# Gaffer.BlockedConnection( self._pathFilterChangedConnection() ).
+	# Gaffer.Signals.BlockedConnection( self._pathFilterChangedConnection() ).
 	def _updateFromPathFilter( self ) :
 
 		raise NotImplementedError

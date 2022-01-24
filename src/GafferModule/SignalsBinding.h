@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,29 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERMODULE_SIGNALSBINDING_H
+#define GAFFERMODULE_SIGNALSBINDING_H
 
-#include "ConnectionBinding.h"
-
-#include "Gaffer/Signals.h"
-
-using namespace Gaffer::Signals;
-using namespace boost::python;
-
-void GafferModule::bindConnection()
+namespace GafferModule
 {
 
-	class_<Connection>( "Connection", no_init )
-		.def( init<const Connection &>() )
-		.def( "disconnect", &Connection::disconnect )
-		.def( "connected", &Connection::connected )
-		.def( "block", &Connection::block, ( arg( "shouldBlock" ) = true ) )
-		.def( "unblock", &Connection::unblock )
-		.def( "blocked", &Connection::blocked )
-	;
+void bindSignals();
 
-	class_<ScopedConnection, bases<Connection> >( "ScopedConnection", no_init )
-		.def( init<const Connection &>() )
-	;
+} // namespace GafferModule
 
-}
+#endif // GAFFERMODULE_SIGNALSBINDING_H

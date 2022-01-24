@@ -238,7 +238,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		header = self._qtWidget().horizontalHeader()
 
 		with Gaffer.UndoScope( model.rowsPlug().ancestor( Gaffer.ScriptNode ) ) :
-			with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__plugMetadataChangedConnection ) :
 				for logicalIndex in range( 0, header.count() ) :
 					plug = model.plugForIndex( model.index( 0, logicalIndex ) )
 					Gaffer.Metadata.registerValue( plug, "spreadsheet:columnIndex", header.visualIndex( logicalIndex ) )
@@ -252,7 +252,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		plug = model.plugForIndex( model.index( 0, logicalIndex ) )
 
 		with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ), mergeGroup = "_PlugTableView{}{}".format( id( self ), logicalIndex ) ) :
-			with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__plugMetadataChangedConnection ) :
 				Gaffer.Metadata.registerValue( plug, "spreadsheet:columnWidth", newSize )
 
 	def __applyColumnWidthMetadata( self, cellPlug = None ) :

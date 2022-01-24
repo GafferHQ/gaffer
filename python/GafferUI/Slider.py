@@ -126,7 +126,7 @@ class Slider( GafferUI.Widget ) :
 		try :
 			return self.__valueChangedSignal
 		except :
-			self.__valueChangedSignal = Gaffer.Signal2()
+			self.__valueChangedSignal = Gaffer.Signals.Signal2()
 
 		return self.__valueChangedSignal
 

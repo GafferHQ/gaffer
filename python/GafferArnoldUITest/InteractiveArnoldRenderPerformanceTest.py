@@ -176,7 +176,7 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 					h.waitFor( 2 )
 				arnoldStartupErrors = mh.messages
 
-				tc = Gaffer.ScopedConnection( GafferImageTest.connectProcessTilesToPlugDirtiedSignal( watchNode["out"] ) )
+				tc = Gaffer.Signals.ScopedConnection( GafferImageTest.connectProcessTilesToPlugDirtiedSignal( watchNode["out"] ) )
 
 				with GafferTest.TestRunner.PerformanceScope() as ps:
 					with Gaffer.PerformanceMonitor() as m:

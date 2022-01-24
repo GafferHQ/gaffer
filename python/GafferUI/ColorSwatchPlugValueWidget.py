@@ -173,7 +173,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	def __plugSet( self, plug ) :
 
 		if plug in self.__plugs :
-			with Gaffer.BlockedConnection( self.__colorChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__colorChangedConnection ) :
 				self.colorChooser().setColor( _colorFromPlugs( self.__plugs ) )
 
 	def __colorChanged( self, colorChooser, reason ) :
@@ -187,7 +187,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			mergeGroup = "ColorPlugValueDialogue%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
 
-			with Gaffer.BlockedConnection( self.__plugSetConnections ) :
+			with Gaffer.Signals.BlockedConnection( self.__plugSetConnections ) :
 				for plug in self.__plugs :
 					plug.setValue( self.colorChooser().getColor() )
 

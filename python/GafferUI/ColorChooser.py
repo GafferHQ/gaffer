@@ -160,7 +160,7 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__colorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
-		self.__colorChangedSignal = Gaffer.Signal2()
+		self.__colorChangedSignal = Gaffer.Signals.Signal2()
 
 		self.__updateUIFromColor()
 
@@ -262,7 +262,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 	def __updateUIFromColor( self ) :
 
-		with Gaffer.BlockedConnection( self.__componentValueChangedConnections ) :
+		with Gaffer.Signals.BlockedConnection( self.__componentValueChangedConnections ) :
 
 			c = self.getColor()
 

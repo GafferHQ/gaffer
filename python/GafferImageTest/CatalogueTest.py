@@ -464,7 +464,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# Arrange to generate the resulting image from C++
 		# threads whenever it is dirtied.
 
-		processTilesConnection = Gaffer.ScopedConnection( GafferImageTest.connectProcessTilesToPlugDirtiedSignal( s["merge"]["out"] ) )
+		processTilesConnection = Gaffer.Signals.ScopedConnection( GafferImageTest.connectProcessTilesToPlugDirtiedSignal( s["merge"]["out"] ) )
 
 		# Send an image to the catalogue to demonstrate that
 		# we do not deadlock on the GIL.

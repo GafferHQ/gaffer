@@ -64,7 +64,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		return cls.__preSpoolSignal
 
-	__preSpoolSignal = Gaffer.Signal2()
+	__preSpoolSignal = Gaffer.Signals.Signal2()
 
 	def _doDispatch( self, rootBatch ) :
 

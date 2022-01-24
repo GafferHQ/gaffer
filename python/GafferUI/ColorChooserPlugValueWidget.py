@@ -68,7 +68,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlugs( self ) :
 
-		with Gaffer.BlockedConnection( self.__colorChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__colorChangedConnection ) :
 			self.__colorChooser.setColor( self.__colorFromPlugs() )
 
 		self.__colorChooser.setEnabled( self.__allComponentsEditable() )
@@ -84,7 +84,7 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			mergeGroup = "ColorPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
 
-			with Gaffer.BlockedConnection( self._plugConnections() ) :
+			with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
 				for plug in self.getPlugs() :
 					plug.setValue( self.__colorChooser.getColor() )
 

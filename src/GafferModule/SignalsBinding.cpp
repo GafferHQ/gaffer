@@ -37,13 +37,14 @@
 
 #include "boost/python.hpp"
 
-#include "SignalBinding.h"
+#include "SignalsBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
 
 #include "IECorePython/ScopedGILLock.h"
 
 using namespace boost::python;
+using namespace Gaffer::Signals;
 using namespace GafferBindings;
 
 namespace
@@ -166,8 +167,25 @@ void bind( const char *name )
 
 } // namespace
 
-void GafferModule::bindSignal()
+void GafferModule::bindSignals()
 {
+
+	object module( borrowed( PyImport_AddModule( "Gaffer.Signals" ) ) );
+	scope().attr( "Signals" ) = module;
+	scope moduleScope( module );
+
+	class_<Connection>( "Connection", no_init )
+		.def( init<const Connection &>() )
+		.def( "disconnect", &Connection::disconnect )
+		.def( "connected", &Connection::connected )
+		.def( "block", &Connection::block, ( arg( "shouldBlock" ) = true ) )
+		.def( "unblock", &Connection::unblock )
+		.def( "blocked", &Connection::blocked )
+	;
+
+	class_<ScopedConnection, bases<Connection> >( "ScopedConnection", no_init )
+		.def( init<const Connection &>() )
+	;
 
 	class_<Gaffer::Signals::Trackable, boost::noncopyable>( "Trackable" );
 

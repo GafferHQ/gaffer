@@ -37,11 +37,15 @@
 
 import Gaffer
 
+## \todo This differs from the C++ BlockedConnection class in that it deals
+# with multiple blockers by using `__blockCount`. Now that we've replaced
+# `boost::signals` with `Gaffer::Signals` we could make this a core feature
+# of the C++ class instead.
 class BlockedConnection( object ) :
 
 	def __init__( self, connectionOrConnections ) :
 
-		if isinstance( connectionOrConnections, Gaffer.Connection ) :
+		if isinstance( connectionOrConnections, Gaffer.Signals.Connection ) :
 			self.__connections = [ connectionOrConnections ]
 		else :
 			self.__connections = connectionOrConnections
@@ -62,3 +66,5 @@ class BlockedConnection( object ) :
 			c.__blockCount -= 1
 			if c.__blockCount == 0 :
 				c.unblock()
+
+Gaffer.Signals.BlockedConnection = BlockedConnection

@@ -68,7 +68,7 @@ class ParameterValueWidget( GafferUI.Widget ) :
 
 		return self.__plugValueWidget
 
-	__popupMenuSignal = Gaffer.Signal2()
+	__popupMenuSignal = Gaffer.Signals.Signal2()
 	## This signal is emitted whenever a popup menu for a parameter is about
 	# to be shown. This provides an opportunity to customise the menu from
 	# external code. The signature for slots is ( menuDefinition, parameterValueWidget ),

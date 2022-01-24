@@ -149,7 +149,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 			for i in range( 0, plug.numPoints() ) :
 				positions.append( plug.pointXPlug( i ).getValue() )
 
-			with Gaffer.BlockedConnection( self.__positionsChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__positionsChangedConnection ) :
 				self.__slider.setValues( positions )
 
 	def __positionsChanged( self, slider, reason ) :

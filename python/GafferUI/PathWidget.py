@@ -233,7 +233,7 @@ class PathWidget( GafferUI.TextWidget ) :
 	def __textChanged( self, widget ) :
 
 		text = self.getText()
-		with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__pathChangedConnection ) :
 			try :
 				self.__path.setFromString( self.getText() )
 			except :

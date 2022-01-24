@@ -161,24 +161,24 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			contextCopy = Gaffer.Context( self.getContext() )
 			for f in self.__filter.getFilters() :
 				f.setContext( contextCopy )
-			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 				self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
 		else :
-			with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 				self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
 
 	def __expansionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
+		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
 			ContextAlgo.setExpandedPaths( self.getContext(), pathListing.getExpansion() )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
+		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
 			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
 
 	def __keyPressSignal( self, widget, event ) :
@@ -225,14 +225,14 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 		if expandedPaths is None :
 			return
 
-		with Gaffer.BlockedConnection( self.__expansionChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__expansionChangedConnection ) :
 			self.__pathListing.setExpansion( expandedPaths )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
 		selection = ContextAlgo.getSelectedPaths( self.getContext() )
-		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
 GafferUI.Editor.registerType( "HierarchyView", HierarchyView )

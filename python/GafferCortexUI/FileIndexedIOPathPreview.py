@@ -101,7 +101,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 		pathCopy = path.copy()
 		pathCopy.truncateUntilValid()
 
-		with Gaffer.BlockedConnection( self.__pathListingSelectionChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__pathListingSelectionChangedConnection ) :
 			## \todo This functionality might be nice in the PathChooserWidget. We could
 			# maybe even use a PathChooserWidget here anyway.
 			self.__pathListing.setSelection( IECore.PathMatcher( [ str( pathCopy ) ] ), expandNonLeaf=False )
@@ -120,7 +120,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 
 		selection = pathListing.getSelection()
 		if not selection.isEmpty() :
-			with Gaffer.BlockedConnection( self.__indexedIOPathChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__indexedIOPathChangedConnection ) :
 				self.__indexedIOPath.setFromString( selection.paths()[0] )
 
 GafferUI.PathPreviewWidget.registerType( "Indexed IO", FileIndexedIOPathPreview )

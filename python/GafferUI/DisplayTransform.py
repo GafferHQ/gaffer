@@ -61,7 +61,7 @@ class DisplayTransform( object ) :
 
 		return cls.__linearToDisplay[0]
 
-	__changedSignal = Gaffer.Signal0()
+	__changedSignal = Gaffer.Signals.Signal0()
 	@classmethod
 	def changedSignal( cls ) :
 

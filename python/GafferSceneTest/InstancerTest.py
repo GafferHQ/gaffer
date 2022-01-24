@@ -459,7 +459,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# python on another thread to evaluate the expression. We increment the frame
 		# between each test to ensure the expression result is not cached and
 		# we do truly enter python.
-		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["outputs"]["out"] ) )
+		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["outputs"]["out"] ) )
 		with Gaffer.Context() as c :
 
 			c.setFrame( 1 )
@@ -528,7 +528,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["attributes"] = GafferScene.CustomAttributes()
 		script["attributes"]["in"].setInput( script["reference"]["out"] )
 
-		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["attributes"]["out"] ) )
+		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["attributes"]["out"] ) )
 		with Gaffer.Context() as c :
 
 			script["reference"].load( self.temporaryDirectory() + "/test.grf" )
@@ -551,7 +551,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		context = Gaffer.Context()
-		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToContextChangedSignal( script["instancer"]["out"], context ) )
+		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToContextChangedSignal( script["instancer"]["out"], context ) )
 		with context :
 
 			context.setFrame( 10 )
@@ -578,7 +578,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			context["b"] = imath.Color3f()
 			context["b"] = IECore.BoolData( True )
 
-			with Gaffer.BlockedConnection( traverseConnection ) :
+			with Gaffer.Signals.BlockedConnection( traverseConnection ) :
 				# Must add it with the connection disabled, otherwise
 				# the addition causes a traversal, and then remove() gets
 				# all its results from the cache.
@@ -586,7 +586,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 			context.remove( "minRadius" )
 
-			with Gaffer.BlockedConnection( traverseConnection ) :
+			with Gaffer.Signals.BlockedConnection( traverseConnection ) :
 				context["minRadius"] = 0.3
 
 			del context["minRadius"]
@@ -611,7 +611,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["pythonCommand"] = GafferDispatch.PythonCommand()
 		script["pythonCommand"]["command"].setValue( "pass" )
 
-		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPreDispatchSignal( script["instancer"]["out"] ) )
+		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPreDispatchSignal( script["instancer"]["out"] ) )
 
 		dispatcher = GafferDispatch.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )

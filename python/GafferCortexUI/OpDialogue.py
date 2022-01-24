@@ -195,8 +195,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton = self._addButton( "Forward" )
 
 		self.__preExecuteSignal = GafferUI.WidgetSignal()
-		self.__postExecuteSignal = Gaffer.Signal2()
-		self.__opExecutedSignal = Gaffer.Signal1()
+		self.__postExecuteSignal = Gaffer.Signals.Signal2()
+		self.__opExecutedSignal = Gaffer.Signals.Signal1()
 		self.__haveResizedToFitParameters = False
 
 		if executeImmediately :

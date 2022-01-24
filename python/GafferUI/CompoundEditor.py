@@ -135,7 +135,7 @@ class CompoundEditor( GafferUI.Editor ) :
 
 		self.__splitContainer.addEditor( editor )
 
-	__nodeSetMenuSignal = Gaffer.Signal2()
+	__nodeSetMenuSignal = Gaffer.Signals.Signal2()
 	## A signal emitted to populate a menu for manipulating the node set of a
 	# NodeSetEditor - the signature is `slot( nodeSetEditor, menuDefinition )`.
 	@classmethod

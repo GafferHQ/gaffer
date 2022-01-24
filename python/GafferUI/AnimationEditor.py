@@ -259,7 +259,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 		editable = self.__animationGadget.editablePlugs()
 		curves = set( self.__sourceCurvePlug( plug ) for plug in editablePlugs & visiblePlugs )
-		with Gaffer.BlockedConnection( self.__editablePlugsConnections ) :
+		with Gaffer.Signals.BlockedConnection( self.__editablePlugsConnections ) :
 			for curve in list( editable ) :
 				if curve in curves :
 					curves.remove( curve )
@@ -278,7 +278,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				output.relativeName( root ).replace( ".", "/" )
 			)
 
-		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__curveList.setSelection( selection )
 
 	def __editablePlugRemoved( self, standardSet, curvePlug ) :
@@ -291,7 +291,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				output.relativeName( root ).replace( ".", "/" )
 			)
 
-		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__curveList.setSelection( selection )
 
 	def __sourceCurvePlug( self, plug ) :
@@ -594,10 +594,10 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		if time is not None :
 			context = selectedKeys[ 0 ].parent().ancestor( Gaffer.ScriptNode ).context()
 			frame = int( round( time * context.getFramesPerSecond() ) )
-			with Gaffer.BlockedConnection( self.__frameConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__frameConnection ) :
 				self.__frameEditor.setValue( frame )
 		else :
-			with Gaffer.BlockedConnection( self.__frameConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__frameConnection ) :
 				self.__frameEditor.setText( "" )
 				self.__frameEditor._qtWidget().setPlaceholderText( "---" )
 
@@ -617,10 +617,10 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		selectedKeys = self.parent().curveGadget().selectedKeys()
 		value = sole( key.getValue() for key in selectedKeys )
 		if value is not None :
-			with Gaffer.BlockedConnection( self.__valueConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__valueConnection ) :
 				self.__valueEditor.setValue( value )
 		else :
-			with Gaffer.BlockedConnection( self.__valueConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__valueConnection ) :
 				self.__valueEditor.setText( "" )
 				self.__valueEditor._qtWidget().setPlaceholderText( "---" )
 
@@ -655,10 +655,10 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		selectedKeys = self.parent().curveGadget().selectedKeys()
 		value = sole( key.tangent( direction ).getSlope() for key in selectedKeys )
 		if value is not None :
-			with Gaffer.BlockedConnection( self.__slopeConnection[ direction ] ) :
+			with Gaffer.Signals.BlockedConnection( self.__slopeConnection[ direction ] ) :
 				self.__slopeEditor[ direction ].setValue( value )
 		else :
-			with Gaffer.BlockedConnection( self.__slopeConnection[ direction ] ) :
+			with Gaffer.Signals.BlockedConnection( self.__slopeConnection[ direction ] ) :
 				self.__slopeEditor[ direction ].setText( "" )
 				self.__slopeEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
 
@@ -676,10 +676,10 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		selectedKeys = self.parent().curveGadget().selectedKeys()
 		value = sole( key.tangent( direction ).getScale() for key in selectedKeys )
 		if value is not None :
-			with Gaffer.BlockedConnection( self.__scaleConnection[ direction ] ) :
+			with Gaffer.Signals.BlockedConnection( self.__scaleConnection[ direction ] ) :
 				self.__scaleEditor[ direction ].setValue( value )
 		else :
-			with Gaffer.BlockedConnection( self.__scaleConnection[ direction ] ) :
+			with Gaffer.Signals.BlockedConnection( self.__scaleConnection[ direction ] ) :
 				self.__scaleEditor[ direction ].setText( "" )
 				self.__scaleEditor[ direction ]._qtWidget().setPlaceholderText( "---" )
 
@@ -698,7 +698,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		if selectedKeys :
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].interpolation ) :
+					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].interpolation ) :
 						key.setInterpolation( mode )
 		self.__interpolationEditor.setText( mode.name )
 
@@ -709,7 +709,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		if selectedKeys :
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tieMode ) :
+					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].tieMode ) :
 						key.setTieMode( mode )
 		self.__tieModeEditor.setText( mode.name )
 
@@ -742,7 +742,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 			time = value / scriptNode.context().getFramesPerSecond()
 			with Gaffer.UndoScope( scriptNode, mergeGroup=str( self.__mergeGroupIdFrame ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].frame ) :
+					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].frame ) :
 						key.setTime( time )
 			widget.clearUndo()
 
@@ -767,7 +767,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				return
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdValue ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].value ) :
+					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].value ) :
 						key.setValue( value )
 			widget.clearUndo()
 
@@ -795,7 +795,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				return
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
+					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
 						key.tangent( direction ).setSlopeAndScale( value,
 							self.__selectedKeysMergeGroupScale[ direction ][ key ] )
 			widget.clearUndo()
@@ -826,7 +826,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				return
 			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdScale[ direction ] ) ) :
 				for key in selectedKeys :
-					with Gaffer.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
+					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
 						key.tangent( direction ).setScale( value )
 			widget.clearUndo()
 
