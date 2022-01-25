@@ -88,7 +88,6 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__applyColumnWidthMetadata()
 			self.__applyColumnOrderMetadata()
 
-			tableView.horizontalHeader().setSectionsMovable( True )
 			tableView.horizontalHeader().sectionResized.connect( Gaffer.WeakMethod( self.__columnResized ) )
 			tableView.horizontalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__columnMoved ) )
 
@@ -99,7 +98,6 @@ class _PlugTableView( GafferUI.Widget ) :
 
 			if self.__canReorderRows() :
 				tableView.verticalHeader().setVisible( True )
-				tableView.verticalHeader().setSectionsMovable( True )
 				tableView.verticalHeader().sectionMoved.connect( Gaffer.WeakMethod( self.__rowMoved ) )
 				self.__ignoreRowMoved = False
 
@@ -114,6 +112,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( tableView.model().rowsPlug().node() ).connect(
 			Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False
 		)
+		Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False )
 
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
@@ -122,6 +121,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		if mode != self.Mode.Defaults :
 			tableView.horizontalHeader().setVisible( False )
+
+		self.__applyReadOnlyMetadata()
 
 		# Column visibility
 
@@ -255,6 +256,23 @@ class _PlugTableView( GafferUI.Widget ) :
 			with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
 				Gaffer.Metadata.registerValue( plug, "spreadsheet:columnWidth", newSize )
 
+	def __applyReadOnlyMetadata( self ) :
+
+		readOnly = Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() )
+
+		if self.__mode in ( self.Mode.Cells, self.Mode.Defaults ) :
+
+			self._qtWidget().horizontalHeader().setSectionsMovable( not readOnly )
+			QtCompat.setSectionResizeMode(
+				self._qtWidget().horizontalHeader(),
+				QtWidgets.QHeaderView.Fixed if readOnly else QtWidgets.QHeaderView.Interactive
+			)
+
+		else :
+
+			# Rows mode
+			self._qtWidget().verticalHeader().setSectionsMovable( not readOnly )
+
 	def __applyColumnWidthMetadata( self, cellPlug = None ) :
 
 		if self.__mode == self.Mode.RowNames :
@@ -322,9 +340,6 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __canReorderRows( self ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
-		if Gaffer.MetadataAlgo.readOnly( rowsPlug ) :
-			return False
-
 		if isinstance( rowsPlug.node(), Gaffer.Reference ) :
 			reference = rowsPlug.node()
 			# Default row (`[0]`) is irrelevant because it is always
@@ -378,9 +393,17 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		self.__applyColumnOrderMetadata()
 
+	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
+
+		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( self._qtWidget().model().rowsPlug(), nodeTypeId, key, node ) :
+			self.__applyReadOnlyMetadata()
+
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
+
+		if Gaffer.MetadataAlgo.readOnlyAffectedByChange( rowsPlug, plug, key ) :
+			self.__applyReadOnlyMetadata()
 
 		if self.__mode == self.Mode.RowNames :
 
@@ -1113,7 +1136,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __toggleBooleans( self, plugs ) :
 
-		if not plugs :
+		if not plugs or any( Gaffer.MetadataAlgo.readOnly( p ) for p in plugs ) :
 			return
 
 		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
