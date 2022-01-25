@@ -185,7 +185,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 				# connect to the collapsible state change so we can increase the window
 				# size when the details pane is first shown.
 				self.__messageCollapsibleStateChangedConnection = self.__messageCollapsible.stateChangedSignal().connect(
-					Gaffer.WeakMethod( self.__messageCollapsibleStateChanged )
+					Gaffer.WeakMethod( self.__messageCollapsibleStateChanged ), scoped = True
 				)
 
 		# add buttons. our buttons mean different things depending on our current state,
@@ -261,7 +261,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
 		self.__backButton.setVisible( True )
-		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__close ) )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__close ), scoped = True )
 
 		executeLabel = "OK"
 		with IECore.IgnoredExceptions( KeyError ) :
@@ -270,7 +270,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton.setText( executeLabel )
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButton.setVisible( True )
-		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateExecution ) )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateExecution ), scoped = True )
 
 		self.__frame.setChild( self.__parameterEditingUI )
 
@@ -367,12 +367,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setVisible( True )
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
-		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )
 
 		self.__forwardButton.setVisible( True )
 		self.__forwardButton.setText( "Retry" )
 		self.__forwardButton.setEnabled( True )
-		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ), scoped = True )
 
 		self.__messageWidget.messageHandler().handle(
 			IECore.Msg.Level.Debug,
@@ -432,12 +432,12 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setText( "Close" )
 		self.__backButton.setEnabled( True )
 		self.__backButton.setVisible( True )
-		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )
 
 		self.__forwardButton.setText( "Again!" )
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButton.setVisible( True )
-		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ) )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( Gaffer.WeakMethod( self.__initiateParameterEditing ), scoped = True )
 
 		if self.__postExecuteBehaviour in ( self.PostExecuteBehaviour.DisplayResultAndClose, self.PostExecuteBehaviour.Close ) :
 			self.__forwardButton.setVisible( False )

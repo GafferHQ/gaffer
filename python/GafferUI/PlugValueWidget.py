@@ -503,15 +503,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__plugs = plugs
 
 		self.__plugDirtiedConnections = [
-			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
+			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True )
 			for node in nodes
 		]
 		self.__plugInputChangedConnections = [
-			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
+			node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ), scoped = True )
 			for node in nodes
 		]
 		self.__plugMetadataChangedConnections = [
-			Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
 			for node in nodes
 		]
 
@@ -532,7 +532,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			context = None
 
 		if context is not None :
-			self.__contextChangedConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+			self.__contextChangedConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		else :
 			self.__contextChangedConnection = None
 

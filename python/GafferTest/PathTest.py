@@ -89,7 +89,7 @@ class PathTest( GafferTest.TestCase ) :
 			changedPaths.append( str( path ) )
 
 		p = Gaffer.Path( "/" )
-		c = p.pathChangedSignal().connect( f )
+		p.pathChangedSignal().connect( f, scoped = False )
 
 		p.append( "hello" )
 		p.append( "goodbye" )
@@ -107,7 +107,7 @@ class PathTest( GafferTest.TestCase ) :
 		def f( path ) :
 			changedPaths.append( str( path ) )
 
-		c = p.pathChangedSignal().connect( f )
+		p.pathChangedSignal().connect( f, scoped = False )
 		self.assertEqual( len( changedPaths ), 0 )
 
 		filter = Gaffer.FileNamePathFilter( [ "*.gfr" ] )

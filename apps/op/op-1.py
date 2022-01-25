@@ -187,7 +187,7 @@ class op( Gaffer.Application ) :
 			# create a ui to display everything.
 
 			self.__dialogue = GafferCortexUI.OpDialogue( self.root()["scripts"]["script1"]["op"], executeInBackground=True )
-			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
+			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ), scoped = True )
 			self.__dialogue.setVisible( True )
 			GafferUI.EventLoop.mainEventLoop().start()
 

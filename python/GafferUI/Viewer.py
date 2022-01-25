@@ -116,8 +116,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			) :
 
 				self.__toolChooser = _ToolChooser()
-				self.__primaryToolChangedConnection = self.__toolChooser.primaryToolChangedSignal().connect(
-					Gaffer.WeakMethod( self.__primaryToolChanged )
+				self.__toolChooser.primaryToolChangedSignal().connect(
+					Gaffer.WeakMethod( self.__primaryToolChanged ), scoped = False
 				)
 
 				for toolbarContainer in [ self.__viewToolbars, self.__nodeToolbars, self.__toolToolbars ] :
@@ -461,7 +461,7 @@ class _ToolChooser( GafferUI.Frame ) :
 		self.__primaryToolChangedConnection = None
 		if viewTools is not None :
 			self.__primaryToolChangedConnection = viewTools.primaryToolChangedSignal.connect(
-				Gaffer.WeakMethod( self.__primaryToolChanged )
+				Gaffer.WeakMethod( self.__primaryToolChanged ), scoped = True
 			)
 
 		self.__view = view

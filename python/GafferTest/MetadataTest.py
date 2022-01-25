@@ -498,8 +498,8 @@ class MetadataTest( GafferTest.TestCase ) :
 
 			self.__goodSlotExecuted = True
 
-		badConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( badSlot )
-		goodConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( goodSlot )
+		badConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( badSlot, scoped = True )
+		goodConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( goodSlot, scoped = True )
 
 		n = Gaffer.Node()
 		with IECore.CapturingMessageHandler() as mh :

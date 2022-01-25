@@ -219,7 +219,7 @@ class dispatch( Gaffer.Application ) :
 			import GafferDispatchUI
 
 			self.__dialogue = GafferDispatchUI.DispatchDialogue( tasks, dispatchers, nodesToShow )
-			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ) )
+			self.__dialogueClosedConnection = self.__dialogue.closedSignal().connect( Gaffer.WeakMethod( self.__dialogueClosed ), scoped = True )
 			self.__dialogue.setVisible( True )
 
 			GafferUI.EventLoop.mainEventLoop().start()

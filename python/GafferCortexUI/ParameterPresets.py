@@ -74,7 +74,7 @@ class PresetDialogue( GafferUI.Dialogue ) :
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				allowMultipleSelection = allowMultipleSelection,
 			)
-			self.__locationMenuChangedConnection = self._locationMenu().currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__locationChanged ) )
+			self.__locationMenuChangedConnection = self._locationMenu().currentIndexChangedSignal().connect( Gaffer.WeakMethod( self.__locationChanged ), scoped = True )
 			self._updatePresetListing()
 
 		return self.__presetListing
@@ -157,10 +157,10 @@ class SavePresetDialogue( PresetDialogue ) :
 				)
 				self.__presetNameWidget = GafferUI.TextWidget( self.__defaultName, parenting = { "index" : ( 1, 1 ) } )
 				self.__presetNameWidget.setSelection( None, None ) # select all
-				self.__presetNameChangedConnection = self.__presetNameWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__presetNameChanged ) )
+				self.__presetNameChangedConnection = self.__presetNameWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__presetNameChanged ), scoped = True )
 
 				self.__loadAutomaticallyWidget = GafferUI.BoolWidget( "Load automatically", parenting = { "index" : ( 2, 1 ) } )
-				self.__loadAutomaticallyChangedConnection = self.__loadAutomaticallyWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__loadAutomaticallyChanged ) )
+				self.__loadAutomaticallyChangedConnection = self.__loadAutomaticallyWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__loadAutomaticallyChanged ), scoped = True )
 
 				GafferUI.Label(
 					"<h3>Description</h3>",
@@ -174,7 +174,7 @@ class SavePresetDialogue( PresetDialogue ) :
 				)
 
 				self.__presetDescriptionWidget = GafferUI.MultiLineTextWidget( parenting = { "index" : ( slice( 1, 3 ), 2 ) } )
-				self.__presetDescriptionChangedConnection = self.__presetDescriptionWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__updateSaveButton ) )
+				self.__presetDescriptionChangedConnection = self.__presetDescriptionWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__updateSaveButton ), scoped = True )
 
 			with GafferUI.Collapsible( "Parameters To Save", collapsed=True ) as cl :
 
@@ -190,7 +190,7 @@ class SavePresetDialogue( PresetDialogue ) :
 				self.__parameterListing.setSelectedPaths( self.__allPaths( parameterPath ) )
 				self.__haveSelectedParameters = True
 				self.__selectionChangedConnection = self.__parameterListing.selectionChangedSignal().connect(
-					Gaffer.WeakMethod( self.__selectionChanged )
+					Gaffer.WeakMethod( self.__selectionChanged ), scoped = True
 				)
 
 		self._setWidget( column )
@@ -335,7 +335,7 @@ class LoadPresetDialogue( PresetDialogue ) :
 					self._locationMenu()
 
 				presetListing = self._presetListing()
-				self.__selectionChangedConnection = presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+				self.__selectionChangedConnection = presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = True )
 
 			with GafferUI.ListContainer( spacing=4 ) :
 				self.__presetDetailsLabel = GafferUI.Label( "<h3>Description</h3>" )
@@ -399,14 +399,14 @@ class DeletePresetsDialogue( PresetDialogue ) :
 				self._locationMenu( owned=True )
 
 			presetListing = self._presetListing( allowMultipleSelection=True )
-			self.__selectionChangedConnection = presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
+			self.__selectionChangedConnection = presetListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = True )
 
 		self._setWidget( column )
 
 		self._addButton( "Close" )
 		self.__deleteButton = self._addButton( "Delete" )
 		self.__deleteButton.setEnabled( False )
-		self.__deleteButtonPressedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__delete ) )
+		self.__deleteButtonPressedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__delete ), scoped = True )
 
 	def waitForClose( self, **kw ) :
 

@@ -632,13 +632,17 @@ class _PlugListing( GafferUI.Widget ) :
 
 		if self.__parent is not None :
 
-			self.__childAddedConnection = self.__parent.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
-			self.__childRemovedConnection = self.__parent.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+			self.__childAddedConnection = self.__parent.childAddedSignal().connect(
+				Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True
+			)
+			self.__childRemovedConnection = self.__parent.childRemovedSignal().connect(
+				Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True
+			)
 
 			node = self.__parent if isinstance( self.__parent, Gaffer.Node ) else self.__parent.node()
 			self.__metadataChangedConnections = [
-				Gaffer.Metadata.nodeValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ) ),
-				Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+				Gaffer.Metadata.nodeValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = True ),
+				Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
 			]
 
 			for child in self.__parent.children() :
@@ -800,7 +804,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 		if self.__parent.isSame( child.parent() ) :
 			if child not in self.__childNameChangedConnections :
-				self.__childNameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__childNameChanged ) )
+				self.__childNameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__childNameChanged ), scoped = True )
 		else :
 			if child in self.__childNameChangedConnections :
 				del self.__childNameChangedConnections[child]
@@ -1112,7 +1116,9 @@ class _PresetsEditor( GafferUI.Widget ) :
 		# We make a UI for editing preset values by copying the plug
 		# onto this node and then making a PlugValueWidget for it.
 		self.__valueNode = Gaffer.Node( "PresetEditor" )
-		self.__valuePlugSetConnection = self.__valueNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__valuePlugSet ) )
+		self.__valuePlugSetConnection = self.__valueNode.plugSetSignal().connect(
+			Gaffer.WeakMethod( self.__valuePlugSet ), scoped = False
+		)
 
 	def setPlug( self, plug ) :
 
@@ -1123,7 +1129,10 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		plugValueWidget = None
 		if self.__plug is not None :
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect(
+				Gaffer.WeakMethod( self.__plugMetadataChanged ),
+				scoped = True
+			)
 			self.__valueNode["presetValue"] = plug.createCounterpart( "presetValue", plug.Direction.In )
 			if hasattr( self.__plug, "getValue" ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True )
@@ -1410,7 +1419,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		self.__plugMetadataChangedConnection = None
 		if self.__plug is not None :
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__plug.node() ).connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged )
+				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True
 			)
 
 		self.__updateWidgetMenuText()

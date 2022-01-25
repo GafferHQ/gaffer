@@ -595,11 +595,11 @@ class _ImagesPath( Gaffer.Path ) :
 		# Connect to all the signals we need to in order
 		# to emit pathChangedSignal at the appropriate times.
 
-		self.__childAddedConnection = self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ) )
-		self.__childRemovedConnection = self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ) )
-		self.__cataloguePlugDirtiedConnection = self.__catalogue.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__cataloguePlugDirtied ) )
+		self.__childAddedConnection = self.__images.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAdded ), scoped = True )
+		self.__childRemovedConnection = self.__images.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childRemoved ), scoped = True )
+		self.__cataloguePlugDirtiedConnection = self.__catalogue.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__cataloguePlugDirtied ), scoped = True )
 		self.__nameChangedConnections = {
-			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+			image : image.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
 			for image in self.__images
 		}
 
@@ -612,7 +612,7 @@ class _ImagesPath( Gaffer.Path ) :
 	def __childAdded( self, parent, child ) :
 
 		assert( parent.isSame( self.__images ) )
-		self.__nameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+		self.__nameChangedConnections[child] = child.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
 		self._emitPathChanged()
 
 	def __childRemoved( self, parent, child ) :

@@ -164,7 +164,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		node = GafferImage.Display()
 		server = IECoreImage.DisplayDriverServer()
-		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
+		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
 
 		dataWindow = imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 303, 557 ) )
 		driver = self.Driver(
@@ -318,7 +318,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		node = GafferImage.Display()
 		server = IECoreImage.DisplayDriverServer()
-		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
+		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
 
 		self.assertEqual( len( imagesReceived ), 0 )
 

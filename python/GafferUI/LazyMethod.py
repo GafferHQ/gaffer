@@ -89,7 +89,8 @@ class LazyMethod( object ) :
 					widget,
 					method.__name__ + "__VisibilityChangedConnection",
 					widget.visibilityChangedSignal().connect(
-						functools.partial( self.__visibilityChanged, method = method )
+						functools.partial( self.__visibilityChanged, method = method ),
+						scoped = True
 					)
 				)
 
@@ -99,7 +100,8 @@ class LazyMethod( object ) :
 					widget,
 					method.__name__ + "__PlaybackStateChangedConnection",
 					self.__playback( widget ).stateChangedSignal().connect(
-						functools.partial( self.__playbackStateChanged, widgetWeakref = weakref.ref( widget ), method = method )
+						functools.partial( self.__playbackStateChanged, widgetWeakref = weakref.ref( widget ), method = method ),
+						scoped = True
 					)
 				)
 

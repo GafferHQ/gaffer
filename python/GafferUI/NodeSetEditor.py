@@ -100,7 +100,9 @@ class NodeSetEditor( GafferUI.Editor ) :
 			self.__nameChangedConnections = []
 			for n in self.__titleFormat :
 				if isinstance( n, Gaffer.GraphComponent ) :
-					self.__nameChangedConnections.append( n.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) ) )
+					self.__nameChangedConnections.append(
+						n.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
+					)
 
 		result = ""
 		for t in self.__titleFormat :
@@ -243,8 +245,12 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		prevSet = self.__nodeSet
 		self.__nodeSet = nodeSet
-		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
-		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
+		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect(
+			Gaffer.WeakMethod( self.__membersChanged ), scoped = True
+		)
+		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect(
+			Gaffer.WeakMethod( self.__membersChanged ), scoped = True
+		)
 		self.__dirtyTitle()
 
 		if isinstance( nodeSet, Gaffer.StandardSet ) :

@@ -131,7 +131,10 @@ class gui( Gaffer.Application ) :
 
 		from Qt import QtWidgets
 
-		self.__clipboardContentsChangedConnection = self.root().clipboardContentsChangedSignal().connect( Gaffer.WeakMethod( self.__clipboardContentsChanged ) )
+		self.__clipboardContentsChangedConnection = self.root().clipboardContentsChangedSignal().connect(
+			Gaffer.WeakMethod( self.__clipboardContentsChanged ),
+			scoped = True
+		)
 		QtWidgets.QApplication.clipboard().dataChanged.connect( Gaffer.WeakMethod( self.__qtClipboardContentsChanged ) )
 		self.__ignoreQtClipboardContentsChanged = False
 		self.__qtClipboardContentsChanged() # Trigger initial sync

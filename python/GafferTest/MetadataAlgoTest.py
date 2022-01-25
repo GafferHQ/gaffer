@@ -222,7 +222,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			ancestorAffected.append( Gaffer.MetadataAlgo.ancestorAffectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
 			childAffected.append( Gaffer.MetadataAlgo.childAffectedByChange( n["p"], nodeTypeId, plugPath, plug ) )
 
-		c = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged )
+		c = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged, scoped = True )
 
 		Gaffer.Metadata.registerValue( Gaffer.Node, "user", "test", 1 )
 		self.assertEqual( affected, [ False ] )
@@ -274,7 +274,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 			affected.append( Gaffer.MetadataAlgo.affectedByChange( n, nodeTypeId, node ) )
 			childAffected.append( Gaffer.MetadataAlgo.childAffectedByChange( n, nodeTypeId, node ) )
 
-		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
+		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged, scoped = True )
 
 		Gaffer.Metadata.registerValue( Gaffer.Node, "metadataAlgoTest", 1 )
 		self.assertEqual( affected, [ True ] )
@@ -310,7 +310,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 			affected.append( a )
 
-		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
+		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged, scoped = True )
 
 		Gaffer.Metadata.registerValue( s["b"]["n"], "metadataAlgoTest", "test" )
 		self.assertEqual( len( affected ), 1 )
@@ -436,7 +436,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 			affected.append( a )
 
-		c1 = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
+		c1 = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged, scoped = True )
 
 		def plugValueChanged( nodeTypeId, plugPath, key, plug ) :
 
@@ -447,7 +447,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 			affected.append( a )
 
-		c2 = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged )
+		c2 = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged, scoped = True )
 
 		Gaffer.Metadata.registerValue( s["b"]["n"]["op1"], "metadataAlgoTest", "test" )
 		self.assertEqual( len( affected ), 1 )

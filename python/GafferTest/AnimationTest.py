@@ -408,8 +408,8 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		c1 = curve.keyAddedSignal().connect( added )
-		c2 = curve.keyRemovedSignal().connect( removed )
+		c1 = curve.keyAddedSignal().connect( added, scoped = True )
+		c2 = curve.keyRemovedSignal().connect( removed, scoped = True )
 
 		k = Gaffer.Animation.Key( 0, 0 )
 
@@ -447,8 +447,8 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		c1 = curve.keyAddedSignal().connect( added )
-		c2 = curve.keyRemovedSignal().connect( removed )
+		c1 = curve.keyAddedSignal().connect( added, scoped = True )
+		c2 = curve.keyRemovedSignal().connect( removed, scoped = True )
 
 		k = Gaffer.Animation.Key( 0, 0 )
 
@@ -893,7 +893,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		c = curve.keyValueChangedSignal().connect( changed )
+		c = curve.keyValueChangedSignal().connect( changed, scoped = True )
 
 		k0 = Gaffer.Animation.Key( 0, 1 )
 		k1 = Gaffer.Animation.Key( 2, 8 )
@@ -983,7 +983,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		c = curve.keyInterpolationChangedSignal().connect( changed )
+		c = curve.keyInterpolationChangedSignal().connect( changed, scoped = True )
 
 		k0 = Gaffer.Animation.Key( 0, 1 )
 		k1 = Gaffer.Animation.Key( 12, 8 )
@@ -1080,7 +1080,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		c = curve.keyTimeChangedSignal().connect( changed )
+		c = curve.keyTimeChangedSignal().connect( changed, scoped = True )
 
 		k0 = Gaffer.Animation.Key( 0, 1 )
 		k1 = Gaffer.Animation.Key( 12, 8 )
@@ -1227,7 +1227,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 
-		c = curve.keyTieModeChangedSignal().connect( changed )
+		c = curve.keyTieModeChangedSignal().connect( changed, scoped = True )
 
 		k0 = Gaffer.Animation.Key( 0, 1 )
 		k1 = Gaffer.Animation.Key( 12, 8 )

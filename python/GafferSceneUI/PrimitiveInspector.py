@@ -238,8 +238,8 @@ class PrimitiveInspector( GafferUI.NodeSetEditor ) :
 		if node :
 			self.__scenePlug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
 			if self.__scenePlug :
-				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
-				self.__parentChangedConnections.append( self.__scenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) ) )
+				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ) )
+				self.__parentChangedConnections.append( self.__scenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True ) )
 
 		self.__updateLazily()
 

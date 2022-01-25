@@ -56,7 +56,7 @@ class OpMode( GafferUI.BrowserEditor.Mode ) :
 
 		GafferUI.BrowserEditor.Mode.connect( self )
 
-		self.__pathSelectedConnection = self.browser().pathChooser().pathListingWidget().pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ) )
+		self.__pathSelectedConnection = self.browser().pathChooser().pathListingWidget().pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ), scoped = True )
 
 	def disconnect( self ) :
 

@@ -571,7 +571,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 			previousRoots.append( previousRoot )
 
 		g = GafferUI.GraphGadget( s )
-		c = g.rootChangedSignal().connect( f )
+		g.rootChangedSignal().connect( f, scoped = False )
 
 		self.assertEqual( len( roots ), 0 )
 		self.assertEqual( len( previousRoots ), 0 )

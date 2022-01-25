@@ -68,7 +68,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 			jobs.append( job )
 
-		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f )
+		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
 
 		if dispatcher is None :
 			dispatcher = self.__dispatcher()
@@ -89,7 +89,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 			spooled.append( ( dispatcher, job ) )
 
-		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f )
+		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
 
 		dispatcher = self.__dispatcher()
 		dispatcher.dispatch( [ s["n"] ] )

@@ -67,7 +67,8 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
 		c = s["n"].plugSetSignal().connect(
-			lambda plug : operations.append( "set" )
+			lambda plug : operations.append( "set" ),
+			scoped = True
 		)
 
 		def f( canceller ) :
@@ -103,7 +104,8 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 					IECore.Canceller.check( canceller )
 
 		c = s["n"].plugSetSignal().connect(
-			lambda plug : operations.append( "undo" )
+			lambda plug : operations.append( "undo" ),
+			scoped = True
 		)
 		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
 		time.sleep( 0.01 ) # Give task a chance to start before we cancel it
@@ -113,7 +115,8 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 
 		del operations[:]
 		c = s["n"].plugSetSignal().connect(
-			lambda plug : operations.append( "redo" )
+			lambda plug : operations.append( "redo" ),
+			scoped = True
 		)
 		t = Gaffer.BackgroundTask( s["n"]["sum"], f )
 		time.sleep( 0.01 ) # Give task a chance to start before we cancel it

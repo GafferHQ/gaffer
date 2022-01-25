@@ -81,8 +81,8 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 
-			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )
-			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ) )
+			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
+			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
 
 			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
@@ -109,7 +109,9 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 		if node is not None :
 			self.__plug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
 			if self.__plug is not None :
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
+				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect(
+					Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True
+				)
 
 		# call base class update - this will trigger a call to _titleFormat(),
 		# hence the need for already figuring out the plug.

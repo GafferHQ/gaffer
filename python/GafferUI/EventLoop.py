@@ -309,7 +309,7 @@ class EventLoop( object ) :
 		for thrust in range( 0, thrusts ) :
 			self.__qtEventLoop.processEvents()
 
-_gadgetIdleSignalAccessedConnection = GafferUI.Gadget._idleSignalAccessedSignal().connect( EventLoop._gadgetIdleSignalAccessed )
+GafferUI.Gadget._idleSignalAccessedSignal().connect( EventLoop._gadgetIdleSignalAccessed, scoped = False )
 
 # Internal implementation for `EventLoop.executeOnUIThread()`. There are
 # multiple ways of achieving this in Qt, but they all boil down to scheduling an

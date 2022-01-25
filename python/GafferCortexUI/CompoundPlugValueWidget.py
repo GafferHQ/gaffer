@@ -76,7 +76,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
 			# way of controlling size behaviours for all widgets in the public API.
 			self.__collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
-			self.__collapseStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapseStateChanged ) )
+			self.__collapseStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapseStateChanged ), scoped = True )
 
 		GafferUI.PlugValueWidget.__init__(
 			self,
@@ -85,8 +85,8 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			**kw
 		)
 
-		self.__plugAddedConnection = plug.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
-		self.__plugRemovedConnection = plug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )
+		self.__plugAddedConnection = plug.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True )
+		self.__plugRemovedConnection = plug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ), scoped = True )
 		self.__childrenChangedPending = False
 
 		# arrange to build the rest of the ui in a deferred fashion. this means that we will be
@@ -97,11 +97,11 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# allows the top level window to get the sizing right, and for collapsed uis we build when the
 		# the ui first becomes visible due to being opened.
 		if collapsed == True :
-			self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+			self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = True )
 		else :
-			self.__parentChangedConnection = self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+			self.__parentChangedConnection = self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ), scoped = True )
 
-		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = True )
 
 		self.__childPlugUIs = {} # mapping from child plug to PlugWidget
 

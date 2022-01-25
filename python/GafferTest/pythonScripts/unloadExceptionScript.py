@@ -44,9 +44,9 @@ class TestNode( Gaffer.Node ) :
 
 	def __init__( self, name = "TestNode" ):
 		super( TestNode, self ).__init__( name=name )
-		self._nodeValueChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeValueChanged ) )
-		self._plugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-		self._valueChangedConnection = Gaffer.Metadata.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueMetadataChanged ) )
+		self._nodeValueChangedConnection = Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__nodeValueChanged ), scoped = True )
+		self._plugValueChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
+		self._valueChangedConnection = Gaffer.Metadata.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueMetadataChanged ), scoped = True )
 
 	def __nodeValueChanged( self, nodeTypeId, key, node ) :
 		pass

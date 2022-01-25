@@ -236,8 +236,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			outputScenePlug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
 			if outputScenePlug :
 				self.__scenePlugs.append( outputScenePlug )
-				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) ) )
-				self.__parentChangedConnections.append( outputScenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) ) )
+				self.__plugDirtiedConnections.append( node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True ) )
+				self.__parentChangedConnections.append( outputScenePlug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True ) )
 
 		self.__updateLazily()
 

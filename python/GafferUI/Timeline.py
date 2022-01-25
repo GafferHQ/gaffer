@@ -118,8 +118,12 @@ class Timeline( GafferUI.Editor ) :
 		if self.__playback is None or not self.__playback.context().isSame( self.getContext() ) :
 			self.__playback = GafferUI.Playback.acquire( self.getContext() )
 			self.__playback.setFrameRange( self.__sliderRangeStart.getValue(), self.__sliderRangeEnd.getValue() )
-			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect( Gaffer.WeakMethod( self.__playbackStateChanged ) )
-			self.__playbackFrameRangeChangedConnection = self.__playback.frameRangeChangedSignal().connect( Gaffer.WeakMethod( self.__playbackFrameRangeChanged ) )
+			self.__playbackStateChangedConnection = self.__playback.stateChangedSignal().connect(
+				Gaffer.WeakMethod( self.__playbackStateChanged ), scoped = True
+			)
+			self.__playbackFrameRangeChangedConnection = self.__playback.frameRangeChangedSignal().connect(
+				Gaffer.WeakMethod( self.__playbackFrameRangeChanged ), scoped = True
+			)
 
 		if "frame" not in modifiedItems :
 			return

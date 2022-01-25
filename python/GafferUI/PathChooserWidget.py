@@ -155,9 +155,15 @@ class PathChooserWidget( GafferUI.Widget ) :
 			self.__previewWidget.setPath( self.__path )
 
 		# set up the signals we need to keep everything glued together
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
-		self.__dirPathChangedConnection = self.__dirPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__dirPathChanged ) )
-		self.__listingPathChangedConnection = self.__listingPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__listingPathChanged ) )
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect(
+			Gaffer.WeakMethod( self.__pathChanged ), scoped = True
+		)
+		self.__dirPathChangedConnection = self.__dirPath.pathChangedSignal().connect(
+			Gaffer.WeakMethod( self.__dirPathChanged ), scoped = True
+		)
+		self.__listingPathChangedConnection = self.__listingPath.pathChangedSignal().connect(
+			Gaffer.WeakMethod( self.__listingPathChanged ), scoped = True
+		)
 
 		self.__updateFilter()
 		self.__pathChanged( self.__path )

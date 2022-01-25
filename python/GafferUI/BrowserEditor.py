@@ -143,7 +143,9 @@ class BrowserEditor( GafferUI.Editor ) :
 				)
 			)
 
-			self.__contextMenuConnection = self.browser().pathChooser().pathListingWidget().contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) )
+			self.__contextMenuConnection = self.browser().pathChooser().pathListingWidget().contextMenuSignal().connect(
+				Gaffer.WeakMethod( self.__contextMenu ), scoped = True
+			)
 
 			splitContainer = self.browser().pathChooser().pathListingWidget().ancestor( GafferUI.SplitContainer )
 			splitContainer.setSizes( ( self.__splitPosition, 1.0 - self.__splitPosition ) )

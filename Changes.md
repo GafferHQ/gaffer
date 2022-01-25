@@ -19,6 +19,7 @@ Breaking Changes
   - Removed the `Gaffer/BlockedConnection.h` header file. BlockedConnection can now be found in the Signals namespace provided by `Gaffer/Signals.h`.
   - Remove the `Gaffer/CatchingSignalCombiner.h` header file. CatchingSignalCombiner can now be found as `Signals::CatchingCombiner` in `Gaffer/Signals.h`.
   - Moved all Python classes into the `Gaffer.Signals` submodule.
+  - Deprecated the default value for the `scoped` argument to `Signal.connect()`. Pass `scoped = True` to maintain the previous behaviour, or consider using an unscoped connection.
 - Replaced all usage of `boost::optional` with `std::optional`.
 
 Build

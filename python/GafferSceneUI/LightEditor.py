@@ -110,7 +110,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
-				Gaffer.WeakMethod( self.__selectionChanged )
+				Gaffer.WeakMethod( self.__selectionChanged ), scoped = False
 			)
 			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 

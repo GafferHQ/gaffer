@@ -121,16 +121,16 @@ void visit_each( Visitor &visitor, const Slot<Signal, Caller> &slot, int )
 	}
 }
 
-GAFFERBINDINGS_API boost::python::object pythonConnection( const Gaffer::Signals::Connection &connection, bool scoped );
+GAFFERBINDINGS_API boost::python::object pythonConnection( const Gaffer::Signals::Connection &connection, const boost::python::object &scoped );
 
 template<typename Signal, typename SlotCaller>
-boost::python::object connect( Signal &s, boost::python::object &slot, bool scoped )
+boost::python::object connect( Signal &s, boost::python::object &slot, const boost::python::object &scoped )
 {
 	return pythonConnection( s.connect( Slot<Signal, SlotCaller>( slot ) ), scoped );
 }
 
 template<typename Signal, typename SlotCaller>
-boost::python::object connectFront( Signal &s, boost::python::object &slot, bool scoped )
+boost::python::object connectFront( Signal &s, boost::python::object &slot, const boost::python::object &scoped )
 {
 	return pythonConnection( s.connectFront( Slot<Signal, SlotCaller>( slot ) ), scoped );
 }
@@ -179,8 +179,8 @@ template<typename Signal, typename SignalCaller, typename SlotCaller>
 SignalClass<Signal, SignalCaller, SlotCaller>::SignalClass( const char *className, const char *docString )
 	:	boost::python::class_<Signal, boost::noncopyable>( className, docString )
 {
-	this->def( "connect", &Detail::connect<Signal, SlotCaller>, ( boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
-	this->def( "connectFront", &Detail::connectFront<Signal, SlotCaller>, (boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
+	this->def( "connect", &Detail::connect<Signal, SlotCaller>, ( boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = boost::python::object() ) );
+	this->def( "connectFront", &Detail::connectFront<Signal, SlotCaller>, (boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = boost::python::object() ) );
 	this->def( "disconnectAllSlots", &Signal::disconnectAllSlots );
 	this->def( "numSlots", &Signal::numSlots );
 	this->def( "empty", &Signal::empty );

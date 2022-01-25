@@ -198,7 +198,9 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if renameable != True :
 			return
 
-		self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )
+		self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect(
+			Gaffer.WeakMethod( self.__labelDoubleClicked ), scoped = True
+		)
 
 	def __labelDoubleClicked( self, label, event ) :
 
@@ -212,7 +214,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editableLabel._qtWidget().setMinimumSize( self.label()._qtWidget().minimumSize() )
 			self.__editableLabel._qtWidget().setMaximumSize( self.label()._qtWidget().maximumSize() )
 			# Connect at front so we're called before the NameWidget's own slots.
-			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connectFront( Gaffer.WeakMethod( self.__labelEditingFinished ) )
+			self.__editableLabel.editingFinishedSignal().connectFront( Gaffer.WeakMethod( self.__labelEditingFinished ), scoped = False )
 			self._qtWidget().layout().insertWidget( 0, self.__editableLabel._qtWidget() )
 
 		self.__label.setVisible( False )
@@ -242,7 +244,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		nodes = { plug.node() for plug in self.getPlugs() }
 		self.__plugMetadataChangedConnections = [
-			Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+			Gaffer.Metadata.plugValueChangedSignal( node ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
 			for node in nodes
 		]
 

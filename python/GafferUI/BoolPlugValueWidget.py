@@ -64,7 +64,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__boolWidget )
 
-		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
+		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
 
 		self._updateFromPlugs()
 

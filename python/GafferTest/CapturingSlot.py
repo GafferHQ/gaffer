@@ -42,7 +42,7 @@ class CapturingSlot( list ) :
 
 		self.__connections = []
 		for s in signals :
-			self.__connections.append( s.connect( Gaffer.WeakMethod( self.__slot ) ) )
+			self.__connections.append( s.connect( Gaffer.WeakMethod( self.__slot ), scoped = True ) )
 
 	def __slot( self, *args ) :
 

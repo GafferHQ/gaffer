@@ -169,7 +169,7 @@ class execute( Gaffer.Application ) :
 
 		with context :
 			for node in nodes :
-				errorConnection = node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
+				node.errorSignal().connect( Gaffer.WeakMethod( self.__error ), scoped = False )
 				try :
 					node["task"].executeSequence( frames )
 				except Exception as exception :

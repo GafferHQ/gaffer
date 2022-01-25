@@ -59,11 +59,11 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 			self.__widget = ww
 			return True
 
-		c = s.connect( f )
+		s.connect( f, scoped = False )
 		self.assertEqual( s( w ), True )
 		self.assertTrue( self.__widget is w )
 
-	def testDeletionOfConnectionDisconnects( self ) :
+	def testDeletionOfScopedConnectionDisconnects( self ) :
 
 		w = GafferUI.TabbedContainer()
 
@@ -74,7 +74,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 
 			return True
 
-		c = s.connect( f )
+		c = s.connect( f, scoped = True )
 
 		self.assertEqual( s( w ), True )
 
@@ -104,7 +104,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 		a = A()
 		self.assertEqual( a.signal( a ), False )
 
-		a.c = a.signal.connect( A.f )
+		a.c = a.signal.connect( A.f, scoped = True )
 		self.assertEqual( a.signal( a ), True )
 
 		w = weakref.ref( a )
@@ -117,7 +117,7 @@ class WidgetSignalTest( GafferUITest.TestCase ) :
 
 		# it is imperative to connect to a WeakMethod to prevent
 		# unbreakable circular references from forming.
-		a2.c = a2.signal.connect( Gaffer.WeakMethod( a2.ff ) )
+		a2.c = a2.signal.connect( Gaffer.WeakMethod( a2.ff ), scoped = True )
 		self.assertEqual( a2.signal( a2 ), True )
 
 		w = weakref.ref( a2 )

@@ -67,7 +67,7 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 				else :
 					break
 
-		self.__plugInputChangedConnections = [ node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) ) for node in selection ]
+		self.__plugInputChangedConnections = [ node.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ), scoped = True ) for node in selection ]
 		self.__nameChangedConnections = []
 
 	def _filter( self, paths, canceller ) :
@@ -98,7 +98,7 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 			# Hack to report name changes on paths we keep. Really this
 			# should be dealt with for us by GraphComponentPath.
 			self.__nameChangedConnections.append(
-				path.property( "graphComponent:graphComponent" ).nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+				path.property( "graphComponent:graphComponent" ).nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
 			)
 
 		return result

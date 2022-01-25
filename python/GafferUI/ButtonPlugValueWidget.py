@@ -65,9 +65,9 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__nameChangedConnection = None
 		self.__plugMetadataChangedConnection = None
 		if plug is not None :
-			self.__nameChangedConnection = plug.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ) )
+			self.__nameChangedConnection = plug.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
 			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged )
+				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True
 			)
 
 		self.__updateLabel()

@@ -188,12 +188,12 @@ class _StateWidget( GafferUI.Widget ) :
 
 		self.__uvView = uvView
 
-		self.__buttonClickedConnection = self.__button.clickedSignal().connect(
-			Gaffer.WeakMethod( self.__buttonClick )
+		self.__button.clickedSignal().connect(
+			Gaffer.WeakMethod( self.__buttonClick ), scoped = False
 		)
 
-		self.__stateChangedConnection = self.__uvView.stateChangedSignal().connect(
-			Gaffer.WeakMethod( self.__stateChanged )
+		self.__uvView.stateChangedSignal().connect(
+			Gaffer.WeakMethod( self.__stateChanged ), scoped = False
 		)
 
 		self.__update()

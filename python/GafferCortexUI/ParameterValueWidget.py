@@ -175,7 +175,7 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 	for name in parameterHandler.parameter().presetNames() :
 		menuDefinition.append( "/" + name, { "command" : IECore.curry( __setValue, parameterHandler, name ) } )
 
-__parameterPopupMenuConnection = ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu )
+__parameterPopupMenuConnection = ParameterValueWidget.popupMenuSignal().connect( __parameterPopupMenu, scoped = True )
 
 def __setValue( parameterHandler, value ) :
 

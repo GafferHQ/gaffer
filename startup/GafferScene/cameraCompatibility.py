@@ -70,7 +70,7 @@ def __initWrapper( originalInit, defaultName ):
 
 	def init( self, name = defaultName ):
 		originalInit( self, name )
-		self.__compatibilityCallback = self.parentChangedSignal().connect( __compatibilityFunc )
+		self.__compatibilityCallback = self.parentChangedSignal().connect( __compatibilityFunc, scoped = True )
 
 	return init
 
