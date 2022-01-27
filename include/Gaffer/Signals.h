@@ -41,7 +41,6 @@
 
 #include "boost/callable_traits/return_type.hpp"
 #include "boost/compressed_pair.hpp"
-#include "boost/last_value.hpp"
 #include "boost/noncopyable.hpp"
 
 #include <memory>
@@ -85,6 +84,11 @@ class Connection
 
 };
 
+/// Calls all slots in order, returning the result from the last
+/// slot. If not slots are connected, returns a default-constructed `T`.
+template<typename T>
+struct DefaultCombiner;
+
 /// Primary signal template. Example declaration :
 ///
 /// ```
@@ -93,7 +97,7 @@ class Connection
 /// ```
 ///
 /// See specialisation below for full details.
-template<typename Signature, typename Combiner = boost::last_value<boost::callable_traits::return_type_t<Signature>>>
+template<typename Signature, typename Combiner = DefaultCombiner<boost::callable_traits::return_type_t<Signature>>>
 class Signal;
 
 /// Specialisation that implements the primary template

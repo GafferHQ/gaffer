@@ -90,6 +90,39 @@ inline bool Connection::connected() const
 }
 
 //////////////////////////////////////////////////////////////////////////
+// DefaultCombiner
+//////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+struct DefaultCombiner
+{
+
+	template<typename InputIterator>
+	T operator()( InputIterator first, InputIterator last ) const
+	{
+		if constexpr( std::is_void_v<T> )
+		{
+			while( first != last )
+			{
+				*first;
+				++first;
+			}
+		}
+		else
+		{
+			T r = T();
+			while( first != last )
+			{
+				r = *first;
+				++first;
+			}
+			return r;
+		}
+	}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 // Signal
 //////////////////////////////////////////////////////////////////////////
 
