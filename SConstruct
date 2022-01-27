@@ -345,16 +345,13 @@ env = Environment(
 		( "GAFFER_MAJOR_VERSION", "$GAFFER_MAJOR_VERSION" ),
 		( "GAFFER_MINOR_VERSION", "$GAFFER_MINOR_VERSION" ),
 		( "GAFFER_PATCH_VERSION", "$GAFFER_PATCH_VERSION" ),
+		( "BOOST_FILESYSTEM_VERSION", "3" ),
+		"BOOST_FILESYSTEM_NO_DEPRECATED",
 	],
 
 	CPPPATH = [
 		"include",
 		"$LOCATE_DEPENDENCY_CPPPATH",
-	],
-
-	CPPFLAGS = [
-		"-DBOOST_FILESYSTEM_VERSION=3",
-		"-DBOOST_FILESYSTEM_NO_DEPRECATED",
 	],
 
 	LIBPATH = [
@@ -483,8 +480,6 @@ else:
 			"/DNOMINMAX",  # Suppress compiler definition of `min` and `max`
 			"/D__PRETTY_FUNCTION__=__FUNCSIG__",
 			"/DBOOST_ALL_DYN_LINK",
-			"/DBOOST_FILESYSTEM_NO_DEPRECATED",
-			"/DBOOST_PYTHON_MAX_ARITY=20",
 			"/W4",  # Warning level 4, one level less than all warnings
 			"/experimental:external",  # Allow use of /external:I
 			"/external:W0",  # Suppress warnings for headers included with /external:I
@@ -769,8 +764,8 @@ if boostPythonLibSuffix is None :
 
 basePythonEnv.Append(
 
-	CPPFLAGS = [
-		"-DBOOST_PYTHON_MAX_ARITY=20",
+	CPPDEFINES = [
+		( "BOOST_PYTHON_MAX_ARITY", "20" ),
 	],
 
 	LIBS = [
