@@ -193,8 +193,8 @@ Result Signal<Result( Args... ), Combiner>::operator() ( Args... args ) const
 {
 	ArgsTuple argsTuple( args... ); /// \todo : Capture by reference? Or forward_as_tuple?
 	return combiner()(
-		SlotCallIterator( m_firstSlot, lastSlot(), argsTuple ),
-		SlotCallIterator( lastSlot(), lastSlot(), argsTuple )
+		SlotCallIterator( m_firstSlot, argsTuple ),
+		SlotCallIterator( nullptr, argsTuple )
 	);
 }
 
@@ -327,10 +327,10 @@ class Signal<Result( Args... ), Combiner>::SlotCallIterator : public boost::iter
 >
 {
 
-	public:
+	public :
 
-		SlotCallIterator( const Private::SlotBase::Ptr &slot, const Private::SlotBase::Ptr &end, const ArgsTuple &args )
-			:	m_slot( slot ), m_end( end ), m_args( args )
+		SlotCallIterator( const Private::SlotBase::Ptr &slot, const ArgsTuple &args )
+			:	m_slot( slot ), m_args( args )
 		{
 			skipBlocked();
 		}
@@ -358,26 +358,38 @@ class Signal<Result( Args... ), Combiner>::SlotCallIterator : public boost::iter
 
 		void increment()
 		{
+			assert( !atEnd() );
 			m_slot = m_slot->next;
 			m_value.reset();
 			skipBlocked();
 		}
 
+		bool atEnd() const
+		{
+			return !m_slot || !m_slot->next;
+		}
+
 		bool equal( const SlotCallIterator &other ) const
 		{
-			return m_slot == other.m_slot;
+			if( atEnd() )
+			{
+				return other.atEnd();
+			}
+			else
+			{
+				return m_slot == other.m_slot;
+			}
 		}
 
 		void skipBlocked()
 		{
-			while( m_slot && m_slot != m_end && static_cast<Slot *>( m_slot.get() )->blocked )
+			while( !atEnd() && static_cast<Slot *>( m_slot.get() )->blocked )
 			{
 				m_slot = m_slot->next;
 			}
 		}
 
 		Private::SlotBase::Ptr m_slot;
-		Private::SlotBase::Ptr m_end;
 		const ArgsTuple &m_args;
 
 		mutable std::optional<SlotCallIteratorValueType> m_value;
