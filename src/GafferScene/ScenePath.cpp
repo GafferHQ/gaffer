@@ -50,8 +50,9 @@
 #include "Gaffer/StringPlug.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;

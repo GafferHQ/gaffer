@@ -41,7 +41,7 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Metadata.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

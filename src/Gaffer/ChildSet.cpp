@@ -37,9 +37,10 @@
 
 #include "Gaffer/ChildSet.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 
 ChildSet::ChildSet( GraphComponentPtr parent )

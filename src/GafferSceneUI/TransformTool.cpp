@@ -58,13 +58,14 @@
 #include "OpenEXR/ImathMatrixAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/unordered_map.hpp"
 
 #include <memory>
 #include <unordered_set>
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;

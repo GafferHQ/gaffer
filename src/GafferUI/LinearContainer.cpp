@@ -41,7 +41,7 @@
 
 #include "IECore/Exception.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace std;
 using namespace Imath;

@@ -39,7 +39,7 @@
 
 #include "Gaffer/ContextProcessor.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

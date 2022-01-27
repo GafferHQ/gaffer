@@ -43,10 +43,11 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;

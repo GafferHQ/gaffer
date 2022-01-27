@@ -46,10 +46,11 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathQuat.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 #include "math.h"
 
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace GafferUI;

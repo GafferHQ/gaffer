@@ -41,12 +41,13 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 #include "tbb/blocked_range.h"
 #include "tbb/parallel_reduce.h"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace tbb;
 using namespace Imath;
 using namespace IECore;

@@ -75,13 +75,14 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathPlane.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/unordered_set.hpp"
 #include "boost/bind/placeholders.hpp"
 
 using namespace GafferUI;
 using namespace Imath;
 using namespace IECore;
+using namespace boost::placeholders;
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////

@@ -43,7 +43,7 @@
 #include "IECore/Exception.h"
 #include "IECore/StringAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"

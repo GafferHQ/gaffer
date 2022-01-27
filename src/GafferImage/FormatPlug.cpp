@@ -42,8 +42,9 @@
 #include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferImage;
 

@@ -42,7 +42,7 @@
 
 #include "IECore/NullObject.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/container/small_vector.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_index/member.hpp"
@@ -54,6 +54,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 

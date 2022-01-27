@@ -50,13 +50,13 @@
 #include "IECore/SearchPath.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/container/flat_set.hpp"
 
 #include <unordered_map>
 
-
 using namespace std;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 

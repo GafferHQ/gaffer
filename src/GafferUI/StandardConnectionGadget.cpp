@@ -52,10 +52,11 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathFun.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace Gaffer;
 using namespace GafferUI;

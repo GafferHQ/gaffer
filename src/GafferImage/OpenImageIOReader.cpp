@@ -57,7 +57,7 @@
 #include "OpenImageIO/deepdata.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/regex.hpp"
 
@@ -68,6 +68,7 @@
 OIIO_NAMESPACE_USING
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace tbb;
 using namespace Imath;
 using namespace IECore;

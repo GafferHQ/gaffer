@@ -39,9 +39,10 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace GafferUI;
 using namespace Gaffer;
 

@@ -55,12 +55,13 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
 #include <chrono>
 #include <cmath>
 
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;

@@ -41,11 +41,11 @@
 
 #include "IECore/Exception.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
-
 
 NumericBookmarkSet::NumericBookmarkSet( ScriptNodePtr script, int bookmark )
 	: m_bookmark( 0 )

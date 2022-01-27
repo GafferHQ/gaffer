@@ -69,7 +69,7 @@
 
 #include "OpenEXR/ImathColorAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
@@ -77,6 +77,7 @@
 #include <cmath>
 
 using namespace boost;
+using namespace boost::placeholders;
 using namespace IECoreGL;
 using namespace IECore;
 using namespace Imath;

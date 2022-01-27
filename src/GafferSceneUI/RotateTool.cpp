@@ -53,9 +53,10 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathMatrixAlgo.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;

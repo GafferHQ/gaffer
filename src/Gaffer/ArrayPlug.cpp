@@ -39,10 +39,11 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
 using namespace boost;
+using namespace boost::placeholders;
 using namespace Gaffer;
 
 namespace

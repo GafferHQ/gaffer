@@ -60,6 +60,7 @@
 #include <nsi.h>
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;

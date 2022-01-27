@@ -46,9 +46,10 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 

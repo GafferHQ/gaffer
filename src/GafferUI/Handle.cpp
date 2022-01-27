@@ -51,9 +51,10 @@ IECORE_POP_DEFAULT_VISIBILITY
 #include "OpenEXR/ImathMatrixAlgo.h"
 #include "OpenEXR/ImathVecAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;

@@ -52,8 +52,9 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;

@@ -47,9 +47,10 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/UndoScope.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;

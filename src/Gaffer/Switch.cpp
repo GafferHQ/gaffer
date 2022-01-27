@@ -42,9 +42,10 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 
 static IECore::InternedString g_inPlugsName( "in" );
