@@ -38,7 +38,6 @@
 #ifndef GAFFER_SET_H
 #define GAFFER_SET_H
 
-#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
 
@@ -78,7 +77,7 @@ class GAFFER_API Set : public IECore::RunTimeTyped, public Signals::Trackable
 		/// Returns true if the object is a member of the set.
 		virtual bool contains( const Member *object ) const = 0;
 
-		using MemberSignal = Signals::Signal<void ( Set *, Member * ), Gaffer::CatchingSignalCombiner<void>>;
+		using MemberSignal = Signals::Signal<void ( Set *, Member * ), Signals::CatchingCombiner<void>>;
 
 		/// A signal emitted when a new member is added to the Set. It is
 		/// the responsibility of derived classes to emit this when appropriate.

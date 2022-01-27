@@ -37,6 +37,8 @@
 #ifndef GAFFER_SIGNALS_INL
 #define GAFFER_SIGNALS_INL
 
+#include "IECore/MessageHandler.h"
+
 #include "boost/function.hpp"
 #include "boost/iterator/iterator_facade.hpp"
 #include "boost/visit_each.hpp"
@@ -379,6 +381,61 @@ class Signal<Result( Args... ), Combiner>::SlotCallIterator : public boost::iter
 		const ArgsTuple &m_args;
 
 		mutable std::optional<SlotCallIteratorValueType> m_value;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// CatchingCombiner
+//////////////////////////////////////////////////////////////////////////
+
+template<typename T>
+struct CatchingCombiner
+{
+
+	template<typename InputIterator>
+	T operator()( InputIterator first, InputIterator last ) const
+	{
+		if constexpr( std::is_void_v<T> )
+		{
+			while( first != last )
+			{
+				try
+				{
+					*first;
+				}
+				catch( const std::exception &e )
+				{
+					IECore::msg( IECore::Msg::Error, "Emitting signal", e.what() );
+				}
+				catch( ... )
+				{
+					IECore::msg( IECore::Msg::Error, "Emitting signal", "Unknown error" );
+				}
+				++first;
+			}
+		}
+		else
+		{
+			T r = T();
+			while( first != last )
+			{
+				try
+				{
+					r = *first;
+				}
+				catch( const std::exception &e )
+				{
+					IECore::msg( IECore::Msg::Error, "Emitting signal", e.what() );
+				}
+				catch( ... )
+				{
+					IECore::msg( IECore::Msg::Error, "Emitting signal", "Unknown error" );
+				}
+				++first;
+			}
+			return r;
+		}
+	}
 
 };
 

@@ -110,7 +110,7 @@ class GAFFER_API ScriptNode : public Node
 		/// for use with NodeSetEditor.setNodeSet().
 		////////////////////////////////////////////////////////////////////
 		//@{
-		using FocusChangedSignal = Signals::Signal<void ( ScriptNode *, Node * ), Gaffer::CatchingSignalCombiner<void>>;
+		using FocusChangedSignal = Signals::Signal<void ( ScriptNode *, Node * ), Signals::CatchingCombiner<void>>;
 		void setFocus( Node *node );
 		Node *getFocus();
 		const Node *getFocus() const;

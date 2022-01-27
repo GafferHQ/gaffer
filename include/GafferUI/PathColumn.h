@@ -39,7 +39,6 @@
 
 #include "GafferUI/Export.h"
 
-#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Path.h"
 
 #include "IECore/SimpleTypedData.h"
@@ -104,7 +103,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		/// Returns the data needed to draw a column header.
 		virtual CellData headerData( const IECore::Canceller *canceller = nullptr ) const = 0;
 
-		using PathColumnSignal = Gaffer::Signals::Signal<void ( PathColumn * ), Gaffer::CatchingSignalCombiner<void>>;
+		using PathColumnSignal = Gaffer::Signals::Signal<void ( PathColumn * ), Gaffer::Signals::CatchingCombiner<void>>;
 		/// Subclasses should emit this signal when something changes
 		/// in a way that would affect the results of `cellValue()`
 		/// or `headerValue()`.

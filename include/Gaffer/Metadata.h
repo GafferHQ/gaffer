@@ -37,7 +37,6 @@
 #ifndef GAFFER_METADATA_H
 #define GAFFER_METADATA_H
 
-#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
 
@@ -150,9 +149,9 @@ class GAFFER_API Metadata
 			InstanceDeregistration
 		};
 
-		using ValueChangedSignal = Signals::Signal<void ( IECore::InternedString target, IECore::InternedString key ), CatchingSignalCombiner<void>>;
-		using NodeValueChangedSignal = Signals::Signal<void ( Node *node, IECore::InternedString key, ValueChangedReason reason ), CatchingSignalCombiner<void>>;
-		using PlugValueChangedSignal = Signals::Signal<void ( Plug *plug, IECore::InternedString key, ValueChangedReason reason ), CatchingSignalCombiner<void>>;
+		using ValueChangedSignal = Signals::Signal<void ( IECore::InternedString target, IECore::InternedString key ), Signals::CatchingCombiner<void>>;
+		using NodeValueChangedSignal = Signals::Signal<void ( Node *node, IECore::InternedString key, ValueChangedReason reason ), Signals::CatchingCombiner<void>>;
+		using PlugValueChangedSignal = Signals::Signal<void ( Plug *plug, IECore::InternedString key, ValueChangedReason reason ), Signals::CatchingCombiner<void>>;
 
 		static ValueChangedSignal &valueChangedSignal();
 		/// Returns a signal that will be emitted when metadata has changed for `node`.
@@ -167,8 +166,8 @@ class GAFFER_API Metadata
 		/// plug. Their usage leads to performance bottlenecks whereby all observers
 		/// are triggered by all edits. They will be removed in future.
 
-		using LegacyNodeValueChangedSignal = Signals::Signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node ), CatchingSignalCombiner<void>>;
-		using LegacyPlugValueChangedSignal = Signals::Signal<void ( IECore::TypeId typeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void>>;
+		using LegacyNodeValueChangedSignal = Signals::Signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node ), Signals::CatchingCombiner<void>>;
+		using LegacyPlugValueChangedSignal = Signals::Signal<void ( IECore::TypeId typeId, const IECore::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), Signals::CatchingCombiner<void>>;
 
 		/// Deprecated, but currently necessary for tracking inherited
 		/// changes to read-only metadata.

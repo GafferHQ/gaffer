@@ -214,6 +214,13 @@ class BlockedConnection : boost::noncopyable
 
 };
 
+/// Equivalent to the DefaultCombiner, except that exceptions thrown from slots
+/// are caught and reported via `IECore::MessageHandler`. This is useful for
+/// situations where an error in a slot should not affect the calling of other
+/// slots, or the emitter of the signal.
+template<typename T>
+struct CatchingCombiner;
+
 /// Utility base class for objects which connect member functions to signals,
 /// and therefore need to disconnect automatically when they are destroyed.
 ///

@@ -38,7 +38,6 @@
 #ifndef GAFFER_GRAPHCOMPONENT_H
 #define GAFFER_GRAPHCOMPONENT_H
 
-#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
 #include "Gaffer/TypeIds.h"
@@ -90,7 +89,7 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 
 		using UnarySignal = Signals::Signal<void (GraphComponent *)>;
 		using BinarySignal = Signals::Signal<void (GraphComponent *, GraphComponent *)>;
-		using ChildrenReorderedSignal = Signals::Signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), CatchingSignalCombiner<void>>;
+		using ChildrenReorderedSignal = Signals::Signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), Signals::CatchingCombiner<void>>;
 
 		/// @name Naming
 		/// All GraphComponents have a name, which must be unique among
