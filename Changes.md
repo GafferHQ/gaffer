@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Instancer : Fixed RootsPerVertex mode in the case that the input object has no vertices. Previously an empty `prototypeRoots` variable would cause an unnecessary error in this case, which was incompatible with the output from DeletePoints.
+- Viewer/HierarchyView : Fixed "Edit Source" operation when the source node is inside a Reference. Previously the Reference node was shown, but now the node itself will be (albeit in read-only form).
 - ValuePlugSerialiser : Fixed crash if `valueRepr()` was called with a CompoundObject value and a null `serialisation`.
 
 0.60.12.1 (relative to 0.60.12.0)
