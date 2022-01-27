@@ -347,6 +347,12 @@ env = Environment(
 		( "GAFFER_PATCH_VERSION", "$GAFFER_PATCH_VERSION" ),
 		( "BOOST_FILESYSTEM_VERSION", "3" ),
 		"BOOST_FILESYSTEM_NO_DEPRECATED",
+		# Boost has deprecated `boost/bind.hpp` in favour of
+		# `boost/bind/bind.hpp`, and we have updated our code accordingly. But
+		# `boost::python` and others are still using the deprecated header,
+		# so we define BOOST_BIND_GLOBAL_PLACEHOLDERS to silence the reams of
+		# warnings triggered by that.
+		"BOOST_BIND_GLOBAL_PLACEHOLDERS",
 	],
 
 	CPPPATH = [
