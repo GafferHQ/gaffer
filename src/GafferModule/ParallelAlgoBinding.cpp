@@ -47,6 +47,8 @@
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
 
+#include "boost/mpl/vector.hpp"
+
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace boost::python;
