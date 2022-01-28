@@ -40,6 +40,7 @@ API
 - CatalogueUI :
   - Column subclasses may now define background colours and tooltips.
   - Deprecated IconColumn class.
+- ShaderView : Added `deregisterRenderer()` method.
 
 0.61.1.1 (relative to 0.61.1.0)
 ========
