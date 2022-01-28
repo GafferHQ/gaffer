@@ -44,7 +44,8 @@
 
 #include "boost/tuple/tuple.hpp"
 
-#include "tbb/tbb.h"
+#include "tbb/pipeline.h"
+#include "tbb/task_scheduler_init.h"
 
 namespace GafferImage
 {
