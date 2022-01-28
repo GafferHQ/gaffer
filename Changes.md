@@ -24,6 +24,7 @@ Features
 --------
 
 - LightEditor : Added a new editor UI for inspecting and editing lights. This can be found in the tab next to the GraphEditor in the standard layouts.
+- Cryptomatte : Added a new node to output a matte generated from IDs selected from Cryptomatte AOVs.
 
 Improvements
 ------------
