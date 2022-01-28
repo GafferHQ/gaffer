@@ -100,6 +100,13 @@ SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
 	return s;
 }
 
+typedef boost::signal<void ()> RendererRegistrationChangedSignal;
+RendererRegistrationChangedSignal &rendererRegistrationChangedSignal()
+{
+	static RendererRegistrationChangedSignal s;
+	return s;
+}
+
 IECoreImage::DisplayDriverServer *displayDriverServer()
 {
 	static IECoreImage::DisplayDriverServerPtr g_server = new IECoreImage::DisplayDriverServer();
@@ -162,6 +169,7 @@ ShaderView::ShaderView( const std::string &name )
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
+	rendererRegistrationChangedSignal().connect( boost::bind( &ShaderView::rendererRegistrationChanged, this ) );
 	Display::driverCreatedSignal().connect( boost::bind( &ShaderView::driverCreated, this, ::_1, ::_2 ) );
 	imageGadget()->stateChangedSignal().connect( boost::bind( &ShaderView::imageGadgetStateChanged, this ) );
 }
@@ -273,6 +281,12 @@ void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
 		m_scenes.erase( prefixAndName );
 		updateScene();
 	}
+}
+
+void ShaderView::rendererRegistrationChanged()
+{
+	m_rendererShaderPrefix = "";
+	plugDirtied( inPlug() );
 }
 
 void ShaderView::idleUpdate()
@@ -435,6 +449,13 @@ void ShaderView::imageGadgetStateChanged()
 void ShaderView::registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator )
 {
 	renderers()[shaderPrefix] = rendererCreator;
+	rendererRegistrationChangedSignal()();
+}
+
+void ShaderView::deregisterRenderer( const std::string &shaderPrefix )
+{
+	renderers().erase(shaderPrefix);
+	rendererRegistrationChangedSignal()();
 }
 
 void ShaderView::registerScene( const std::string &shaderPrefix, const std::string &name, const std::string &fileName )
