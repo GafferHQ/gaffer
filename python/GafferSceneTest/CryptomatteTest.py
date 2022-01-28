@@ -56,7 +56,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 	testImage = os.path.join( testImagePath, "cryptomatte.exr" )
 
 	def testCryptomatteHash( self ) :
-		
+
 		manifest = {
 			"hello": 6.0705627102400005616e-17,
 			"cube": -4.08461912519e+15,
@@ -138,7 +138,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		i = GafferImage.ImageMetadata()
 		i["in"].setInput( r["out"] )
 		i["metadata"].addChild( Gaffer.NameValuePlug( "cryptomatte/f834d0a/manifest", "{broken}" ) )
-		
+
 		c["in"].setInput( i["out"] )
 
 		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Error parsing manifest metadata:' ) as raised :
@@ -203,7 +203,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Image metadata entry not found. One of the following entries expected: cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file' ) as raised :
 			self.compareValues( c, ["crypto_material"] )
-		
+
 	def testPreviewChannels( self ) :
 
 		r = GafferImage.ImageReader()
@@ -224,7 +224,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["color"].getValue(), imath.Color4f(-7.18267809e-20, 0.448745549, 0.928857431, 1) )
 
 	def testWildcardMatch( self ) :
-		
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.testImage )
 
@@ -235,7 +235,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferImage.ImageSampler()
 		s["image"].setInput( c["out"] )
 		s["pixel"].setValue( imath.V2f( 32, 108 ) )
-		
+
 		s2 = GafferImage.ImageSampler()
 		s2["image"].setInput( c["out"] )
 		s2["pixel"].setValue( imath.V2f( 106, 78 ) )
@@ -272,7 +272,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferImage.ImageSampler()
 		s["image"].setInput( c["out"] )
 		s["pixel"].setValue( imath.V2f( 32, 108 ) )
-		
+
 		s2 = GafferImage.ImageSampler()
 		s2["image"].setInput( c["out"] )
 		s2["pixel"].setValue( imath.V2f( 106, 78 ) )
@@ -297,7 +297,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferImage.ImageSampler()
 		s["image"].setInput( c["out"] )
 		s["pixel"].setValue( imath.V2f( 32, 108 ) )
-		
+
 		s2 = GafferImage.ImageSampler()
 		s2["image"].setInput( c["out"] )
 		s2["pixel"].setValue( imath.V2f( 106, 78 ) )
@@ -333,9 +333,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( r["out"]["format"].getValue(), c["out"]["format"].getValue() )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
 		self.assertEqual( r["out"]["metadata"].getValue(), c["out"]["metadata"].getValue() )
-	
+
 	def testKeyedResult( self ) :
-		
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.testImage )
 
@@ -348,12 +348,12 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		d["channels"].setValue( "A" )
 
 		c["layer"].setValue( "crypto_object" )
-		c["matteNames"].setValue( IECore.StringVectorData( [ 	
+		c["matteNames"].setValue( IECore.StringVectorData( [
 			"/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT/L_ear001_REN",
 			"/GAFFERBOT/C_torso_GRP/C_torso_CPT/C_torso002_REN",
 			"/GAFFERBOT/C_torso_GRP/R_armUpper_GRP/R_armLower_GRP/R_clawBottom_GRP/R_clawBottom_CPT/R_clawBottom001_REN",
 			"/GAFFERBOT/C_torso_GRP/R_legUpper_GRP/R_legLower_GRP/R_foot_GRP/R_foot_CPT/R_foot002_REN",
-			"/cow1" 
+			"/cow1"
 		] )	)
 
 		resultImage = os.path.join( self.testImagePath, "cryptomatteKeyed.exr" )
@@ -371,7 +371,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( c["out"]["channelNames"] in set( [ x[0] for x in cs ] ) )
 
 	def testOutputChannelName( self ) :
-		
+
 		c = GafferScene.Cryptomatte()
 		self.assertIn( "A", c["out"]["channelNames"].getValue() )
 
@@ -389,9 +389,9 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c["in"].setInput( r["out"] )
 
 		c["layer"].setValue( "crypto_object" )
-		
+
 		keys = [ "/..." ]
-		
+
 		c["matteNames"].setValue( IECore.StringVectorData( keys ) )
 
 		# Pre-compute input to remove cost of file loading from performance test
@@ -412,7 +412,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( c["__manifestScene"] )
 
 	def testChildNames( self ) :
-		
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.testImage )
 
@@ -423,10 +423,10 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c["layer"].setValue( "crypto_object" )
 		self.assertTrue( c["__manifestScene"]["childNames"] in [ x[0] for x in cs ] )
 
-		self.assertEqual( 
-			c["__manifestScene"].childNames( "/GAFFERBOT/C_torso_GRP" ), 
-			IECore.InternedStringVectorData( [ "C_head_GRP", "C_key_GRP", "C_torso_CPT", "L_armUpper_GRP", "L_legUpper_GRP", "R_armUpper_GRP", "R_legUpper_GRP" ] ) 
+		self.assertEqual(
+			c["__manifestScene"].childNames( "/GAFFERBOT/C_torso_GRP" ),
+			IECore.InternedStringVectorData( [ "C_head_GRP", "C_key_GRP", "C_torso_CPT", "L_armUpper_GRP", "L_legUpper_GRP", "R_armUpper_GRP", "R_legUpper_GRP" ] )
 		)
-		
+
 if __name__ == "__main__":
 	unittest.main()

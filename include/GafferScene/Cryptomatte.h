@@ -7,7 +7,7 @@
 //  met:
 //
 //      * Redistributions of source code must retain the above
-//       copyright notice, this list of conditions and the following
+//        copyright notice, this list of conditions and the following
 //        disclaimer.
 //
 //      * Redistributions in binary form must reproduce the above
@@ -50,72 +50,72 @@ namespace GafferScene
 class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
 {
 
-    public:
-        Cryptomatte(const std::string &name = defaultName<Cryptomatte>());
-        ~Cryptomatte() override;
+	public:
+		Cryptomatte(const std::string &name = defaultName<Cryptomatte>());
+		~Cryptomatte() override;
 
-        IE_CORE_DECLARERUNTIMETYPEDEXTENSION(GafferScene::Cryptomatte, CryptomatteTypeId, GafferImage::FlatImageProcessor);
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION(GafferScene::Cryptomatte, CryptomatteTypeId, GafferImage::FlatImageProcessor);
 
-        enum class ManifestSource
-        {
-            None = 0,
-            Metadata,
-            Sidecar,
-        };
+		enum class ManifestSource
+		{
+			None = 0,
+			Metadata,
+			Sidecar,
+		};
 
-        //! @name Plug Accessors
-        /// Returns a pointer to the node's plugs.
-        //////////////////////////////////////////////////////////////
-        //@{
-        Gaffer::StringPlug *layerPlug();
-        const Gaffer::StringPlug *layerPlug() const;
+		//! @name Plug Accessors
+		/// Returns a pointer to the node's plugs.
+		//////////////////////////////////////////////////////////////
+		//@{
+		Gaffer::StringPlug *layerPlug();
+		const Gaffer::StringPlug *layerPlug() const;
 
-        Gaffer::IntPlug *manifestSourcePlug();
-        const Gaffer::IntPlug *manifestSourcePlug() const;
+		Gaffer::IntPlug *manifestSourcePlug();
+		const Gaffer::IntPlug *manifestSourcePlug() const;
 
-        Gaffer::StringPlug *manifestDirectoryPlug();
-        const Gaffer::StringPlug *manifestDirectoryPlug() const;
+		Gaffer::StringPlug *manifestDirectoryPlug();
+		const Gaffer::StringPlug *manifestDirectoryPlug() const;
 
-        Gaffer::StringPlug *sidecarFilePlug();
-        const Gaffer::StringPlug *sidecarFilePlug() const;
+		Gaffer::StringPlug *sidecarFilePlug();
+		const Gaffer::StringPlug *sidecarFilePlug() const;
 
-        Gaffer::StringVectorDataPlug *matteNamesPlug();
-        const Gaffer::StringVectorDataPlug *matteNamesPlug() const;
+		Gaffer::StringVectorDataPlug *matteNamesPlug();
+		const Gaffer::StringVectorDataPlug *matteNamesPlug() const;
 
-        Gaffer::StringPlug *outputChannelPlug();
-        const Gaffer::StringPlug *outputChannelPlug() const;
-        //@}
+		Gaffer::StringPlug *outputChannelPlug();
+		const Gaffer::StringPlug *outputChannelPlug() const;
+		//@}
 
-        void affects(const Gaffer::Plug *input, AffectedPlugsContainer &outputs) const override;
+		void affects(const Gaffer::Plug *input, AffectedPlugsContainer &outputs) const override;
 
-    protected:
-        void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-        void compute(Gaffer::ValuePlug *output, const Gaffer::Context *context) const override;
-        Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
+	protected:
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute(Gaffer::ValuePlug *output, const Gaffer::Context *context) const override;
+		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
-        void hashChannelNames(const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h) const override;
-        IECore::ConstStringVectorDataPtr computeChannelNames(const Gaffer::Context *context, const GafferImage::ImagePlug *parent) const override;
+		void hashChannelNames(const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h) const override;
+		IECore::ConstStringVectorDataPtr computeChannelNames(const Gaffer::Context *context, const GafferImage::ImagePlug *parent) const override;
 
-        void hashChannelData(const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h) const override;
-        IECore::ConstFloatVectorDataPtr computeChannelData(const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent) const override;
+		void hashChannelData(const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h) const override;
+		IECore::ConstFloatVectorDataPtr computeChannelData(const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent) const override;
 
-    private:
-        Gaffer::FloatVectorDataPlug *matteValuesPlug();
-        const Gaffer::FloatVectorDataPlug *matteValuesPlug() const;
+	private:
+		Gaffer::FloatVectorDataPlug *matteValuesPlug();
+		const Gaffer::FloatVectorDataPlug *matteValuesPlug() const;
 
-        Gaffer::AtomicCompoundDataPlug *manifestPlug();
-        const Gaffer::AtomicCompoundDataPlug *manifestPlug() const;
+		Gaffer::AtomicCompoundDataPlug *manifestPlug();
+		const Gaffer::AtomicCompoundDataPlug *manifestPlug() const;
 
-        Gaffer::PathMatcherDataPlug *manifestPathDataPlug();
-        const Gaffer::PathMatcherDataPlug *manifestPathDataPlug() const;
+		Gaffer::PathMatcherDataPlug *manifestPathDataPlug();
+		const Gaffer::PathMatcherDataPlug *manifestPathDataPlug() const;
 
-        GafferScene::ScenePlug *manifestScenePlug();
-        const GafferScene::ScenePlug *manifestScenePlug() const;
+		GafferScene::ScenePlug *manifestScenePlug();
+		const GafferScene::ScenePlug *manifestScenePlug() const;
 
-        Gaffer::FloatVectorDataPlug *matteChannelDataPlug();
-        const Gaffer::FloatVectorDataPlug *matteChannelDataPlug() const;
+		Gaffer::FloatVectorDataPlug *matteChannelDataPlug();
+		const Gaffer::FloatVectorDataPlug *matteChannelDataPlug() const;
 
-        static size_t g_firstPlugIndex;
+		static size_t g_firstPlugIndex;
 };
 
 IE_CORE_DECLAREPTR(Cryptomatte);

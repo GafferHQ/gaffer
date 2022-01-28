@@ -47,7 +47,7 @@ import GafferImage
 import GafferScene
 import GafferSceneUI
 
-def _idToManifestKey( value ) :	
+def _idToManifestKey( value ) :
 	# Cryptomatte manifest keys are stored as strings containing the uint32 representation of the hashed name
 	# Cryptomatte images store the hash as a float so this converts a float pixel id to a manifest key
 	return str( struct.Struct("=I").unpack( struct.Struct("=f").pack( value ) )[0] )
@@ -88,7 +88,7 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 			with self.getContext() :
 				with IECore.IgnoredExceptions( Exception ) :
 					return cryptomatteNode["__manifest"].getValue()
-		
+
 		return None
 
 	def __dataToManifestValue( self, data ) :
@@ -109,15 +109,15 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 	def __convertEvent( self, widget, event ) :
 
 		# Convert data to a string that will be recognised by VectorDataWidget's native drag handling.
-		## \todo This is questionable as `event` is `const` in C++, and the drag may just be transitioning across this 
-		# widget en-route to another where the conversion is not warranted. Consider VectorDataPlugValueWidget extensions 
+		## \todo This is questionable as `event` is `const` in C++, and the drag may just be transitioning across this
+		# widget en-route to another where the conversion is not warranted. Consider VectorDataPlugValueWidget extensions
 		# to provide a more legitimate point of conversion, perhaps along the lines of `PlugValueWidget._convertValue()`.
 
 		if isinstance( event.data, IECore.Color4fData ) :
 			event.data = IECore.StringVectorData( self.__dataToManifestValue( event.data ) )
 
 		return False
-		
+
 	def _convertValue( self, value ) :
 
 		plugValueType = type( self.getPlug().defaultValue() )
@@ -130,12 +130,12 @@ def __cryptomatteLayerNames( plug ) :
 
 	node = _findCryptomatteNode( plug )
 	imagePlug = node["in"]
-	
+
 	imageMetadata = imagePlug["metadata"].getValue()
 	cryptomatteNameRegex = re.compile( "^cryptomatte/[0-9a-f]{7}/name$" )
 	availableLayers = [ imageMetadata[k].value for k in imageMetadata.keys() if cryptomatteNameRegex.match( k ) ]
 
-	return availableLayers	
+	return availableLayers
 
 def __layerPresetNames( plug ) :
 
@@ -159,31 +159,31 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-        "in" : [
+		"in" : [
 
-            "description",
-            """
-            The input image containing Cryptomatte image layers and optional metadata.
-            """,
+			"description",
+			"""
+			The input image containing Cryptomatte image layers and optional metadata.
+			""",
 
-        ],
+		],
 
-        "out" : [
+		"out" : [
 
-            "description",
-            """
-            The resulting image.
-            """,
+			"description",
+			"""
+			The resulting image.
+			""",
 
-        ],
-		
+		],
+
 		"layer" : [
 
 			"description",
 			"""
 			The name of the Cryptomatte layer to use.
 			""",
-			
+
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"presetNames", __layerPresetNames,
 			"presetValues", __layerPresetValues,
@@ -191,12 +191,12 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"manifestSource" : [
-			
+
 			"description",
 			"""
 			The source of the Cryptomatte manifest.
 
-			 - None: No manifest will be loaded.			 
+			 - None: No manifest will be loaded.
 			 - Metadata: From the first of the following image metadata entries that
 			 exist for the selected Cryptomatte layer :
 			   - `manifest` : The manifest data.
@@ -215,9 +215,9 @@ Gaffer.Metadata.registerNode(
 		"manifestDirectory" : [
 
 			"description",
-			"""	
+			"""
 			A directory of JSON files containing Cryptomatte manifests.
-			
+
 			If a `manif_file` metadata entry exists for the selected Cryptomatte
 			layer, it will be appended to this directory. The manifest is read from
 			the file at the resulting path.
@@ -231,7 +231,7 @@ Gaffer.Metadata.registerNode(
 		"sidecarFile" : [
 
 			"description",
-			"""	
+			"""
 			A JSON file containing a Cryptomatte manifest.
 
 			File sequences with arbitrary padding may be specified using the '#' character
@@ -255,7 +255,7 @@ Gaffer.Metadata.registerNode(
 			Names are matched against entries in the Cryptomatte manifest and
 			Gaffer's standard wildcard characters can be used to match multiple
 			names.
-			
+
  			 - /robot/*Arm matches /robot/leftArm, /robot/rightArm and
 			   /robot/Arm. But does not match /robot/limbs/leftArm or
 			   /robot/arm.
@@ -271,10 +271,10 @@ Gaffer.Metadata.registerNode(
 
 			 - /robot extracts mattes for /robot, /robot/leftArm and
 			   /robot/rightArm. But does not extract /robotA or /robotLeftArm.
-			
+
 			ID values can be specified directly by wrapping a float ID value in
-			angle brackets. 
-			
+			angle brackets.
+
 			 - `<value>`.
 			""",
 
@@ -417,9 +417,9 @@ def __selectAffected( node, context ) :
 
 	if not isinstance( node, GafferScene.Cryptomatte ) :
 		return
-	
+
 	scene = node["__manifestScene"]
-	
+
 	with context :
 		pathMatcher = IECore.PathMatcher()
 		for path in node["matteNames"].getValue() :

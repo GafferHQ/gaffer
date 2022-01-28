@@ -166,7 +166,7 @@ enum TypeId
 	AttributeQueryTypeId = 110621,
 	UVSamplerTypeId = 110622,
 	CryptomatteTypeId = 110623,
-	
+
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
 
