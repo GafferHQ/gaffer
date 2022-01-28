@@ -116,6 +116,8 @@ class Column( GafferUI.PathColumn ) :
 					else :
 						return self.CellData( value = self.value( image, catalogue ) )
 
+		return self.CellData()
+
 	def headerData( self, canceller ) :
 
 		return self.CellData( value = self.__title )
@@ -244,6 +246,7 @@ class __StatusIconColumn( Column ) :
 	def _imageCellData( self, image, catalogue ) :
 
 		icon = "catalogueStatusDisplay.png"
+		toolTip = None
 
 		fileName = image["fileName"].getValue()
 		if fileName :
@@ -252,10 +255,11 @@ class __StatusIconColumn( Column ) :
 			# are going to do this anyway, we're not adding too much overhead here.
 			try :
 				catalogue["out"].metadata()
-			except Gaffer.ProcessException :
+			except Gaffer.ProcessException as e :
 				icon = "errorSmall.png"
+				toolTip = str( e )
 
-		return self.CellData( icon = icon )
+		return self.CellData( icon = icon, toolTip = toolTip )
 
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", GafferUI.PathListingWidget.defaultNameColumn )
