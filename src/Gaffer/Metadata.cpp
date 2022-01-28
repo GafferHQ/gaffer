@@ -51,7 +51,8 @@
 #include "boost/multi_index_container.hpp"
 #include "boost/optional.hpp"
 
-#include "tbb/tbb.h"
+#include "tbb/concurrent_hash_map.h"
+#include "tbb/recursive_mutex.h"
 
 #include <unordered_map>
 

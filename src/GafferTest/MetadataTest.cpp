@@ -44,7 +44,7 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "tbb/tbb.h"
+#include "tbb/parallel_for.h"
 
 using namespace tbb;
 using namespace IECore;

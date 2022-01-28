@@ -41,7 +41,7 @@
 
 #include "IECore/Timer.h"
 
-#include "tbb/tbb.h"
+#include "tbb/parallel_for.h"
 
 #include <thread>
 
@@ -66,7 +66,7 @@ struct Edit
 			GafferTest::MultiplyNodePtr m = new GafferTest::MultiplyNode;
 			m->op1Plug()->setValue( 10 );
 			m->op1Plug()->setValue( 20 );
-			tbb::this_tbb_thread::yield();
+			std::this_thread::yield();
 		}
 	}
 
