@@ -1,14 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2021, Murray Stevenson. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
 //  met:
 //
 //      * Redistributions of source code must retain the above
-//        copyright notice, this list of conditions and the following
+//       copyright notice, this list of conditions and the following
 //        disclaimer.
 //
 //      * Redistributions in binary form must reproduce the above
@@ -35,60 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEMODULE_CRYPTOMATTEBINDING_H
+#define GAFFERSCENEMODULE_CRYPTOMATTEBINDING_H
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
-#include "QueryBinding.h"
-#include "CryptomatteBinding.h"
-
-using namespace boost::python;
-using namespace GafferSceneModule;
-
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace GafferSceneModule
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
-	bindQueries();
-	bindCryptomatte();
+void bindCryptomatte();
 
-}
+} // namespace GafferSceneModule
+
+#endif // GAFFERSCENEMODULE_CRYPTOMATTEBINDING_H
