@@ -45,6 +45,7 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/noncopyable.hpp"
 
+#include <atomic>
 #include <cassert>
 
 namespace Gaffer::Signals::Private
@@ -94,6 +95,7 @@ struct SlotBase : private boost::noncopyable
 
 	virtual ~SlotBase()
 	{
+		assert( m_referenceCount.load() == 0 );
 	}
 
 	// Removes slot from list. Virtual so that Signal::Slot
@@ -127,14 +129,20 @@ struct SlotBase : private boost::noncopyable
 	Ptr next;
 
 	// Reference count. We don't derive from IECore::RefCounted or
-	// `boost::intrusive_ref_counter` for several reasons :
+	// `boost::intrusive_ref_counter` for two reasons :
 	//
-	// - We don't need an atomic reference count, because signals are not
-	//   intended to be threadsafe. Using a non-atomic count gives us
-	//   significantly improved performance.
 	// - We don't need a 64 bit count, and using a smaller type stored _after_
 	//   our pointer fields lets us minimise `sizeof( SlotBase )`.
-	uint32_t m_referenceCount;
+	// - We don't want an atomic reference count, because signals are not
+	//   intended to be threadsafe and a non-atomic count yields significantly
+	//   improved performance, particularly in
+	//   `SignalsTest.testCallPerformance()`.
+	//
+	// > Note : We currently _do_ use an atomic count so we can support legacy
+	// > code which unthinkingly performed concurrent emission of a signal from
+	// > multiple threads. See comments in MetadataTest.cpp and documentation
+	// > for `Node::errorSignal()`.
+	std::atomic_uint32_t m_referenceCount;
 	bool blocked;
 	// True when currently in `Slot::operator()`. Used to defer destruction
 	// of self-disconnecting functions.
@@ -144,15 +152,12 @@ struct SlotBase : private boost::noncopyable
 
 inline void intrusive_ptr_add_ref( SlotBase *r )
 {
-	r->m_referenceCount++;
-	assert( r->m_referenceCount );
+	r->m_referenceCount.fetch_add( 1, std::memory_order_relaxed );
 }
 
 inline void intrusive_ptr_release( SlotBase *r )
 {
-	assert( r->m_referenceCount );
-	r->m_referenceCount--;
-	if( !r->m_referenceCount )
+	if( r->m_referenceCount.fetch_sub( 1, std::memory_order_acq_rel ) == 1 )
 	{
 		delete r;
 	}

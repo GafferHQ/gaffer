@@ -157,6 +157,10 @@ class GAFFER_API Node : public GraphComponent
 		///
 		/// \threading Since node graph processing may occur on any thread, it is
 		/// important to note that this signal may also be emitted on any thread.
+		/// \todo Signals are not intended to be threadsafe, and we shouldn't be
+		/// emitting them concurrently - see comments in SlotBase. Perhaps we
+		/// should use `ParallelAlgo::callOnUIThread()` to schedule later emission
+		/// on the UI thread?
 		ErrorSignal &errorSignal();
 		const ErrorSignal &errorSignal() const;
 

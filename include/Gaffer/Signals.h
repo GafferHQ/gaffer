@@ -97,6 +97,11 @@ struct DefaultCombiner;
 /// ```
 ///
 /// See specialisation below for full details.
+///
+/// > Caution : Signals are not thread-safe. Limited support for concurrent
+/// > emission (but not connection/disconnection) is currently provided to
+/// > support legacy code, but it will be removed in future. Do not become
+/// > dependent on it!
 template<typename Signature, typename Combiner = DefaultCombiner<boost::callable_traits::return_type_t<Signature>>>
 class Signal;
 

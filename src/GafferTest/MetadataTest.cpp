@@ -75,9 +75,41 @@ struct TestThreading
 
 void GafferTest::testMetadataThreading()
 {
-	// this test simulates many different scripts being loaded
-	// concurrently in separate threads, with each script registering
-	// per-instance metadata for its members.
+	// This test simulates many different scripts being loaded concurrently in
+	// separate threads, with each script registering per-instance metadata for
+	// its members. This is similar to what happens on a smaller scale when the
+	// UI loads a script on a background thread to provide cancellable loading.
+	//
+	// As a side-effect, we are also testing a historical issue with the
+	// signalling of metadata changes. Our Signal class is not intended to be
+	// thread-safe (and neither was its `boost::signals` predecessor). This is
+	// OK for the newer `Metadata::NodeValueChangedSignal` where each node
+	// instance has its own signal - signalling will occur on the loading
+	// thread, and other threads have not had a chance to connect yet. But
+	// `Metadata::LegacyNodeValueChangedSignal` is another matter; it is global,
+	// emitted for all nodes, and connected to many UI components. This leads to
+	// multiple threads emitting the _same_ non-empty signal concurrently, which
+	// is not something we intend to support.
+	//
+	// Here we use `legacyConnection` to assert that such concurrent signalling
+	// is currently reliable (see details in SlotBase). Note that there is no
+	// such guarantee for connection/disconnection on one thread while the
+	// signal is being emitted on another - we are relying on this being
+	// a vanishingly rare event.
+	//
+	/// \todo Rid ourselves of `Metadata::LegacyNodeValueChangedSignal`.
+
+	std::atomic_size_t callCount = 0;
+	Signals::ScopedConnection legacyConnection = Metadata::nodeValueChangedSignal().connect(
+		[&callCount]( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node ) {
+			GAFFERTEST_ASSERT( node );
+			callCount++;
+		}
+	);
+
 	TestThreading t;
-	parallel_for( blocked_range<size_t>( 0, 10000 ), t );
+	const size_t iterations = 100000;
+	parallel_for( blocked_range<size_t>( 0, iterations ), t );
+
+	GAFFERTEST_ASSERTEQUAL( callCount.load(), iterations );
 }
