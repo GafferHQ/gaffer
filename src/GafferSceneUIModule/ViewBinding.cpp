@@ -201,6 +201,11 @@ void registerRenderer( const std::string &shaderPrefix, object creator )
 	ShaderView::registerRenderer( shaderPrefix, CreatorWrapper<InteractiveRender>( creator ) );
 }
 
+void deregisterRenderer( const std::string &shaderPrefix)
+{
+	ShaderView::deregisterRenderer( shaderPrefix );
+}
+
 void registerScene( const std::string &shaderPrefix, const std::string &name, object creator )
 {
 	ShaderView::registerScene( shaderPrefix, name, CreatorWrapper<Node>( creator ) );
@@ -294,6 +299,8 @@ void GafferSceneUIModule::bindViews()
 		.def( "sceneChangedSignal", &ShaderView::sceneChangedSignal, return_internal_reference<1>() )
 		.def( "registerRenderer", &registerRenderer )
 		.staticmethod( "registerRenderer" )
+		.def( "deregisterRenderer", &deregisterRenderer )
+		.staticmethod( "deregisterRenderer" )
 		.def( "registerScene", &registerScene )
 		.def( "registerScene", &registerReferenceScene )
 		.staticmethod( "registerScene" )

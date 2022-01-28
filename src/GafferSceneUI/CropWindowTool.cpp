@@ -277,9 +277,11 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 		Imath::Box3f renderBound() const override
 		{
-			if( m_rasterSpace )
+			if( m_rasterSpace || m_editable || m_masked )
 			{
-				// We draw in raster space so don't have a sensible bound
+				// We don't have a sensible bound when we're drawing
+				// in raster space or drawing an "infinite" mask outside
+				// the rectangle.
 				Box3f b;
 				b.makeInfinite();
 				return b;

@@ -123,7 +123,7 @@ def __editSourceNode( context, scene, path, nodeEditor = None ) :
 		return
 
 	node = source.node()
-	node = __ancestorWithReadOnlyChildNodes( node ) or node
+	node = __ancestorWithNonViewableChildNodes( node ) or node
 	if nodeEditor is not None :
 		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 	else :
@@ -153,17 +153,17 @@ def __editTweaksNode( context, scene, path, nodeEditor = None ) :
 	if tweaks is None :
 		return
 
-	node = __ancestorWithReadOnlyChildNodes( tweaks ) or tweaks
+	node = __ancestorWithNonViewableChildNodes( tweaks ) or tweaks
 	if nodeEditor is not None :
 		nodeEditor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 	else :
 		GafferUI.NodeEditor.acquire( node, floating = True )
 
-def __ancestorWithReadOnlyChildNodes( node ) :
+def __ancestorWithNonViewableChildNodes( node ) :
 
 	result = None
 	while isinstance( node, Gaffer.Node ) :
-		if Gaffer.MetadataAlgo.getChildNodesAreReadOnly( node ) :
+		if Gaffer.Metadata.value( node, "graphEditor:childrenViewable" ) == False :
 			result = node
 		node = node.parent()
 
