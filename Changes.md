@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.2.0)
 ========
 
+Features
+--------
+
+- RandomChoice : Added new node for choosing a random value from a list of weighted choices.
+
 Improvements
 ------------
 
