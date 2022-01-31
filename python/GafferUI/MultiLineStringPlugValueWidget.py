@@ -84,7 +84,7 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			role = getattr( self.__textWidget.Role, role.capitalize() ) if role else self.__textWidget.Role.Text
 			self.__textWidget.setRole( role )
 
-			self.__textChangedConnection.block(
+			self.__textChangedConnection.setBlocked(
 				not Gaffer.Metadata.value( self.getPlug(), "multiLineStringPlugValueWidget:continuousUpdate" )
 			)
 

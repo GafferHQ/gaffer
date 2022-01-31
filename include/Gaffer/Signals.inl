@@ -55,23 +55,15 @@ inline Connection::Connection( const Private::SlotBase::Ptr &slot )
 {
 }
 
-inline void Connection::block( bool shouldBlock )
+inline void Connection::setBlocked( bool blocked )
 {
 	if( m_slot )
 	{
-		m_slot->blocked = shouldBlock;
+		m_slot->blocked = blocked;
 	}
 }
 
-inline void Connection::unblock()
-{
-	if( m_slot )
-	{
-		m_slot->blocked = false;
-	}
-}
-
-inline bool Connection::blocked() const
+inline bool Connection::getBlocked() const
 {
 	return m_slot && m_slot->blocked;
 };
@@ -545,7 +537,8 @@ inline BlockedConnection::BlockedConnection( Signals::Connection &connection, bo
 	if( block && connection.connected() )
 	{
 		m_connection = &connection;
-		m_connection->block();
+		m_previouslyBlocked = m_connection->getBlocked();
+		m_connection->setBlocked( true );
 	}
 }
 
@@ -553,7 +546,7 @@ inline BlockedConnection::~BlockedConnection()
 {
 	if( m_connection )
 	{
-		m_connection->unblock();
+		m_connection->setBlocked( m_previouslyBlocked );
 	}
 }
 

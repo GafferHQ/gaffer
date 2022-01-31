@@ -59,14 +59,10 @@ class Connection
 		Connection() = default;
 		Connection( const Connection &other ) = default;
 
-		/// If `shouldBlock` is true, blocks the connection so that the slot
+		/// When a connection is blocked, the corresponding slot
 		/// will not be called when the signal is emitted.
-		void block( bool shouldBlock = true );
-		/// Unblocks the connection, so that the slot will be called when the
-		/// signal is emitted.
-		void unblock();
-		/// Returns true if the connection is blocked.
-		bool blocked() const;
+		void setBlocked( bool blocked );
+		bool getBlocked() const;
 
 		/// Removes the connection from the signal, and frees the slot.
 		void disconnect();
@@ -208,14 +204,16 @@ class BlockedConnection : boost::noncopyable
 
 	public :
 
-		/// Calls connection.block() if block is true, otherwise does nothing.
+		/// Calls `connection.setBlocked( true )` if `block` is true, otherwise
+		/// does nothing.
 		BlockedConnection( Signals::Connection &connection, bool block = true );
-		/// Unblocks the connection if it was blocked by the constructor.
+		/// Restores the connection's blocking to its previous state.
 		~BlockedConnection();
 
 	private :
 
 		Signals::Connection *m_connection;
+		bool m_previouslyBlocked;
 
 };
 

@@ -37,10 +37,11 @@
 
 import Gaffer
 
-## \todo This differs from the C++ BlockedConnection class in that it deals
-# with multiple blockers by using `__blockCount`. Now that we've replaced
-# `boost::signals` with `Gaffer::Signals` we could make this a core feature
-# of the C++ class instead.
+# This isn't a direct binding of the C++ class because
+# binding C++ scopes as Python context managers isn't
+# completely straightforward, and in Python it is useful
+# to provide the additional functionality of passing multiple
+# connections.
 class BlockedConnection( object ) :
 
 	def __init__( self, connectionOrConnections ) :
@@ -50,21 +51,21 @@ class BlockedConnection( object ) :
 		else :
 			self.__connections = connectionOrConnections
 
+		self.__previouslyBlocked = None
+
 	def __enter__( self ) :
 
+		assert( self.__previouslyBlocked is None )
+
+		self.__previouslyBlocked = [ c.getBlocked() for c in self.__connections ]
 		for c in self.__connections :
-			try :
-				c.__blockCount += 1
-			except AttributeError :
-				c.__blockCount = 1
-			if c.__blockCount == 1 :
-				c.block()
+			c.setBlocked( True )
 
 	def __exit__( self, type, value, traceBack ) :
 
-		for c in self.__connections :
-			c.__blockCount -= 1
-			if c.__blockCount == 0 :
-				c.unblock()
+		for c, b in zip( self.__connections, self.__previouslyBlocked ) :
+			c.setBlocked( b )
+
+		self.__previouslyBlocked = None
 
 Gaffer.Signals.BlockedConnection = BlockedConnection

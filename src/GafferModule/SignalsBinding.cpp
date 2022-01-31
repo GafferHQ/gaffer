@@ -176,11 +176,10 @@ void GafferModule::bindSignals()
 
 	class_<Connection>( "Connection", no_init )
 		.def( init<const Connection &>() )
+		.def( "setBlocked", &Connection::setBlocked, ( arg( "blocked" ) ) )
+		.def( "getBlocked", &Connection::getBlocked )
 		.def( "disconnect", &Connection::disconnect )
 		.def( "connected", &Connection::connected )
-		.def( "block", &Connection::block, ( arg( "shouldBlock" ) = true ) )
-		.def( "unblock", &Connection::unblock )
-		.def( "blocked", &Connection::blocked )
 	;
 
 	class_<ScopedConnection, bases<Connection> >( "ScopedConnection", no_init )

@@ -15,6 +15,7 @@ Breaking Changes
   - Replaced all usage of `boost::signals` with `Gaffer::Signals`. These are largely source-compatible, with the following changes :
     - Boost `snake_case` naming has been replaced with `CamelCase`.
     - Connection groups are not supported. Use `connectFront()` to connect in front of existing slots.
+    - The Connection class has simple `setBlocked()/getBlocked()` accessors, rather than `block()/unblock()/blocked()` methods.
   - Removed the `Gaffer/BlockedConnection.h` header file. BlockedConnection can now be found in the Signals namespace provided by `Gaffer/Signals.h`.
   - Remove the `Gaffer/CatchingSignalCombiner.h` header file. CatchingSignalCombiner can now be found as `Signals::CatchingCombiner` in `Gaffer/Signals.h`.
   - Moved all Python classes into the `Gaffer.Signals` submodule.

@@ -59,14 +59,14 @@ class SignalsTest( GafferTest.TestCase ) :
 		s = Gaffer.Signals.Signal1()
 		c = s.connect( f )
 		self.assertEqual( c.connected(), True )
-		self.assertEqual( c.blocked(), False )
+		self.assertEqual( c.getBlocked(), False )
 
 		self.assertEqual( s( 5.5 ), 5 )
 
-		c.block()
-		self.assertEqual( c.blocked(), True )
-		c.unblock()
-		self.assertEqual( c.blocked(), False )
+		c.setBlocked( True )
+		self.assertEqual( c.getBlocked(), True )
+		c.setBlocked( False )
+		self.assertEqual( c.getBlocked(), False )
 		c.disconnect()
 		self.assertEqual( c.connected(), False )
 
@@ -403,10 +403,10 @@ class SignalsTest( GafferTest.TestCase ) :
 		s()
 		self.assertEqual( self.numCalls, 1 )
 
-		c.block( True )
+		c.setBlocked( True )
 		s()
 		self.assertEqual( self.numCalls, 1 )
-		c.block( False )
+		c.setBlocked( False )
 		s()
 		self.assertEqual( self.numCalls, 2 )
 

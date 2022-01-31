@@ -258,7 +258,7 @@ void CameraTool::preRenderBegin()
 	// trying to reflect that update back into the graph.
 	/// \todo Should we have a more explicit synchronisation between
 	/// SceneView::Camera and CameraTool?
-	m_viewportCameraChangedConnection.block();
+	m_viewportCameraChangedConnection.setBlocked( true );
 }
 
 void CameraTool::preRenderEnd()
@@ -300,7 +300,7 @@ void CameraTool::preRenderEnd()
 		view()->viewportGadget()->setCenterOfInterest(
 			getCameraCenterOfInterest( selection.path() )
 		);
-		m_viewportCameraChangedConnection.unblock();
+		m_viewportCameraChangedConnection.setBlocked( false );
 	}
 }
 
