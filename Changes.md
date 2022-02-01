@@ -20,6 +20,7 @@ Improvements
   - Updated to align colour scheme and interaction patterns with the LightEditor.
   - Reduced overhead when the Viewer is not visible in the UI.
 - Spreadsheet : Improved interaction with read-only spreadsheets. Previously it was impossible to switch between sections or scroll the cells (#4529).
+- Focus Node : Added <kbd>Alt+1</kbd>-<kbd>Alt+9</kbd> hotkeys for setting focus to a bookmark (also available in the "Edit/Assign Focus" menu).
 
 Fixes
 -----
