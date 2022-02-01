@@ -9,6 +9,11 @@ Improvements
 - StandardAttributes : Added `attributes.displayColor` plug, for controlling the colour of objects in the Viewer.
 - UI : The UI is now scaled automatically for high-resolution monitors on Linux (#2157). Set the `QT_ENABLE_HIGHDPI_SCALING` environment variable to `0` to disable.
 
+Fixes
+-----
+
+- VectorDataWidget : Fixed header visibility when `setHeader()` is called after construction.
+
 0.61.2.0 (relative to 0.61.1.1)
 ========
 
