@@ -280,6 +280,7 @@ from . import AnnotationsUI
 from . import DependencyNodeUI
 from . import ComputeNodeUI
 from . import RandomUI
+from . import RandomChoiceUI
 from . import SpreadsheetUI
 from . import ExpressionUI
 from . import BoxUI
