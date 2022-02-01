@@ -14,6 +14,11 @@ Fixes
 
 - VectorDataWidget : Fixed header visibility when `setHeader()` is called after construction.
 
+API
+---
+
+- VectorDataPlugValueWidget : Added support for showing plugs with children, with each child forming a column in the UI.
+
 0.61.2.0 (relative to 0.61.1.1)
 ========
 

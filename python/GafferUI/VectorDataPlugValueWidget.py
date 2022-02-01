@@ -35,19 +35,36 @@
 #
 ##########################################################################
 
+import sys
+
+import IECore
+
 import Gaffer
 import GafferUI
 
-## Supported plug metadata :
+# Supported plug metadata :
 #
-# "vectorDataPlugValueWidget:dragPointer"
+# - "vectorDataPlugValueWidget:dragPointer"
+# - "vectorDataPlugValueWidget:index" : Used to order child plugs
+# - "vectorDataPlugValueWidget:header" : Provides custom headers for child plugs
 class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
+	# If `plug` has children, then they will be used to form
+	# the columns of the VectorDataWidget. If `plug` has no
+	# children, it will be shown as a single column.
 	def __init__( self, plug, **kw ) :
 
 		self.__dataWidget = GafferUI.VectorDataWidget()
 
 		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
+
+		dataPlugs = self.__dataPlugs()
+		if len( dataPlugs ) > 1 :
+			self.__dataWidget.setHeader( [
+				Gaffer.Metadata.value( p, "vectorDataPlugValueWidget:header" ) or IECore.CamelCase.toSpaced( p.getName() )
+				for p in dataPlugs
+			] )
+			self.__dataWidget.setToolTips( [ Gaffer.Metadata.value( p, "description" ) or "" for p in dataPlugs ] )
 
 		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
 
@@ -67,12 +84,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		plug = self.getPlug()
 		if plug is not None :
 			with self.getContext() :
-				plugValue = plug.getValue()
-				if plugValue is None :
-					# the VectorDataWidget isn't so keen on not having data to work with,
-					# so we'll make an empty data of the right type.
-					plugValue = plug.ValueType()
-				self.__dataWidget.setData( plugValue )
+				self.__dataWidget.setData( [ p.getValue() for p in self.__dataPlugs() ] )
 
 			dragPointer = Gaffer.Metadata.value( plug, "vectorDataPlugValueWidget:dragPointer" )
 			if dragPointer is not None :
@@ -80,13 +92,29 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__dataWidget.setEditable( self._editable() )
 
+	def __dataPlugs( self ) :
+
+		if not len( self.getPlug() ) :
+			return [ self.getPlug() ]
+
+		indicesAndPlugs = [ list( x ) for x in enumerate( self.getPlug() ) ]
+		for indexAndPlug in indicesAndPlugs :
+			index = Gaffer.Metadata.value( indexAndPlug[1], "vectorDataPlugValueWidget:index" )
+			if index is not None :
+				indexAndPlug[0] = index if index >= 0 else sys.maxsize + index
+
+		indicesAndPlugs.sort( key = lambda x : x[0] )
+		return [ x[1] for x in indicesAndPlugs ]
+
 	def __dataChanged( self, widget ) :
 
 		assert( widget is self.__dataWidget )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			with Gaffer.BlockedConnection( self._plugConnections() ) :
-				self.getPlug().setValue( self.__dataWidget.getData()[0] )
+				data = self.__dataWidget.getData()
+				for plug, value in zip( self.__dataPlugs(), self.__dataWidget.getData() ) :
+					plug.setValue( value )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug, VectorDataPlugValueWidget )
