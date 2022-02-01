@@ -18,6 +18,7 @@ Improvements
 - SceneViewInspector :
   - Updated to align colour scheme and interaction patterns with the LightEditor.
   - Reduced overhead when the Viewer is not visible in the UI.
+- Added <kbd>Shift+1</kbd>-<kbd>Shift+9</kbd> hotkeys for setting focus to a bookmark ( also available in the "Edit/Assign Focus" menu )
 
 Fixes
 -----
