@@ -30,8 +30,8 @@ Fixes
 - Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
 - ArnoldRender : Stopped instancing of polygon meshes when both `ai:subdivide_polygons` and adaptive subdivision are on.
 - GLWidget : Fixed bug which made overlays unresponsive on high resolution displays.
-- CropWindowTool : Fixed bug (introduced in 0.61.0.0) which prevented the free drawing of a new crop region outside the current one. (#4530).
-- SceneAlgo::history ( used in SceneInspector and Viewer Inspector ): Fixed massive memory usage when viewing an attribute triggers a massive scene evaluation
+- CropWindowTool : Fixed bug (introduced in 0.61.0.0) which prevented the free drawing of a new crop region outside the current one (#4530).
+- SceneViewInspector : Fixed excessive memory usage when viewing complex scenes.
 
 API
 ---
