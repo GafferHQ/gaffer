@@ -161,7 +161,9 @@ class PlugLayout( GafferUI.Widget ) :
 	def setContext( self, context ) :
 
 		self.__context = context
-		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.__contextChangedConnection = self.__context.changedSignal().connect(
+			Gaffer.WeakMethod( self.__contextChanged ), scoped = True
+		)
 
 		for widget in self.__widgets.values() :
 			self.__applyContext( widget, context )
@@ -661,7 +663,8 @@ class _TabLayout( _Layout ) :
 					self.__tabbedContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Expanding ) )
 
 		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
-			Gaffer.WeakMethod( self.__currentTabChanged )
+			Gaffer.WeakMethod( self.__currentTabChanged ),
+			scoped = False
 		)
 
 	def update( self, section ) :

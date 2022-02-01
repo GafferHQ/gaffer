@@ -68,11 +68,13 @@ class MetadataWidget( GafferUI.Widget ) :
 
 		if isinstance( self.__target, Gaffer.Node ) :
 			self.__metadataChangedConnection = Gaffer.Metadata.nodeValueChangedSignal( self.__target ).connect(
-				Gaffer.WeakMethod( self.__metadataChanged )
+				Gaffer.WeakMethod( self.__metadataChanged ),
+				scoped = True
 			)
 		elif isinstance( self.__target, Gaffer.Plug ) :
 			self.__metadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( self.__target.node() ).connect(
-				Gaffer.WeakMethod( self.__metadataChanged )
+				Gaffer.WeakMethod( self.__metadataChanged ),
+				scoped = True
 			)
 		else :
 			self.__metadataChangedConnection = None

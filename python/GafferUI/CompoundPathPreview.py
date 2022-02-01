@@ -58,7 +58,9 @@ class CompoundPathPreview( GafferUI.PathPreviewWidget ) :
 			widget = GafferUI.PathPreviewWidget.create( type, path )
 			self.__labelsAndTabs.append( ( type, widget ) )
 
-		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
+		self.__currentTabChangedConnection = self.__tabbedContainer.currentChangedSignal().connect(
+			Gaffer.WeakMethod( self.__currentTabChanged ), scoped = False
+		)
 
 		self.__preferredTab = None
 

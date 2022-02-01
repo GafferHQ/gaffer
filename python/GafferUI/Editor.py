@@ -138,7 +138,7 @@ class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
 		previousContext = self.__context
 		self.__context = context
 		if self.__context is not None :
-			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		else :
 			## \todo I'm not sure why this code allows a None context - surely we
 			# should always have a valid one?

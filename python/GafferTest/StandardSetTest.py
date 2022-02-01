@@ -163,8 +163,8 @@ class StandardSetTest( GafferTest.TestCase ) :
 
 		s = Gaffer.StandardSet()
 
-		c1 = s.memberAddedSignal().connect( added )
-		c2 = s.memberRemovedSignal().connect( removed )
+		s.memberAddedSignal().connect( added, scoped = False )
+		s.memberRemovedSignal().connect( removed, scoped = False )
 
 		n1 = Gaffer.Node()
 		n2 = Gaffer.Node()
@@ -220,7 +220,7 @@ class StandardSetTest( GafferTest.TestCase ) :
 
 			return m.isInstanceOf( Gaffer.Plug.staticTypeId() )
 
-		c = s.memberAcceptanceSignal().connect(	f )
+		s.memberAcceptanceSignal().connect(	f, scoped = False )
 
 		n = Gaffer.Node()
 		p = Gaffer.Plug()
@@ -268,7 +268,7 @@ class StandardSetTest( GafferTest.TestCase ) :
 
 			pass
 
-		c = s.memberRemovedSignal().connect( f )
+		s.memberRemovedSignal().connect( f, scoped = False )
 
 		s.clear()
 

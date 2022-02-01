@@ -90,7 +90,7 @@ class view( Gaffer.Application ) :
 			)
 		)
 
-		self.__closedConnection = self.__window.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
+		self.__closedConnection = self.__window.closedSignal().connect( Gaffer.WeakMethod( self.__closed ), scoped = True )
 
 		## \todo The window doesn't appear without this naughtiness. I think we either need to
 		# add a similar method in the public interface, or maybe make a SizeConstraintContainer

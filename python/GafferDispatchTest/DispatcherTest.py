@@ -218,7 +218,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			return False
 
-		preConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce )
+		preConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect( onlyRunOnce, scoped = True )
 		connection = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
@@ -246,7 +246,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 			def __init__( self, signal ) :
 
-				self.__connection = signal.connect( Gaffer.WeakMethod( self.__slot ) )
+				self.__connection = signal.connect( Gaffer.WeakMethod( self.__slot ), scoped = True )
 
 			def __slot( self, *args ) :
 

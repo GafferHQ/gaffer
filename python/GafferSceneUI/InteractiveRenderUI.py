@@ -113,7 +113,7 @@ class _ViewRenderControlUI( GafferUI.Widget ) :
 			if not statePlug.isSame( self.__stateWidget.getPlug() ) :
 				self.__stateWidget.setPlug( statePlug )
 				self.__messagesWidget.setPlug( renderNode["messages"] )
-				self.__renderNodePlugDirtiedConnection = renderNode.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__renderNodePlugDirtied ) )
+				self.__renderNodePlugDirtiedConnection = renderNode.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__renderNodePlugDirtied ), scoped = True )
 
 			# We disable the controls if a render is in progress, but not being viewed
 			with self.__view.getContext() :

@@ -72,8 +72,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 	def testShortCutting( self ) :
 
 		s = GafferUI.Gadget.ButtonSignal()
-		c1 = s.connect( self.trueSlot )
-		c2 = s.connect( self.falseSlot )
+		s.connect( self.trueSlot, scoped = False )
+		s.connect( self.falseSlot, scoped = False )
 
 		self.assertEqual( self.trueSlotCalled, False )
 		self.assertEqual( self.falseSlotCalled, False )
@@ -86,8 +86,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 	def testNoShortCutting( self ) :
 
 		s = GafferUI.Gadget.ButtonSignal()
-		c1 = s.connect( self.falseSlot )
-		c2 = s.connect( self.trueSlot )
+		s.connect( self.falseSlot, scoped = False )
+		s.connect( self.trueSlot, scoped = False )
 
 		self.assertEqual( self.trueSlotCalled, False )
 		self.assertEqual( self.falseSlotCalled, False )
@@ -104,8 +104,8 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 		# those slots being printed to stderr.
 
 		s = GafferUI.Gadget.ButtonSignal()
-		c1 = s.connect( self.exceptionSlot )
-		c2 = s.connect( self.trueSlot )
+		s.connect( self.exceptionSlot, scoped = False )
+		s.connect( self.trueSlot, scoped = False )
 
 		self.assertEqual( self.exceptionSlotCalled, False )
 		self.assertEqual( self.trueSlotCalled, False )

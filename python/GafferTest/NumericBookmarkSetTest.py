@@ -102,8 +102,8 @@ class NumericBookmarkSetTest( GafferTest.TestCase ) :
 
 		b = Gaffer.NumericBookmarkSet( s, 1 )
 
-		ca = b.memberAddedSignal().connect( added )
-		cr = b.memberRemovedSignal().connect( removed )
+		b.memberAddedSignal().connect( added, scoped = False )
+		b.memberRemovedSignal().connect( removed, scoped = False )
 
 		self.assertEqual( set(b), mirror )
 
@@ -131,7 +131,7 @@ class NumericBookmarkSetTest( GafferTest.TestCase ) :
 			if set(b) != set() :
 				callbackFailures["removed"] += 1
 
-		cr = b.memberRemovedSignal().connect( removed )
+		cr = b.memberRemovedSignal().connect( removed, scoped = True )
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["a"] )
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["b"] )
@@ -143,7 +143,7 @@ class NumericBookmarkSetTest( GafferTest.TestCase ) :
 			if set(b) != { s["a"] } :
 				callbackFailures["added"] += 1
 
-		ca = b.memberAddedSignal().connect( added )
+		ca = b.memberAddedSignal().connect( added, scoped = True )
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["a"] )
 		self.assertEqual( callbackFailures["added"], 0 )

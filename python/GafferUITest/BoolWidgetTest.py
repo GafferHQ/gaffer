@@ -60,7 +60,7 @@ class BoolWidgetTest( GafferUITest.TestCase ) :
 			self.emissions += 1
 
 		w = GafferUI.BoolWidget()
-		c = w.stateChangedSignal().connect( f )
+		w.stateChangedSignal().connect( f, scoped = False )
 
 		w.setState( True )
 		self.assertEqual( w.getState(), True )

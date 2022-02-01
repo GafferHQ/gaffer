@@ -489,7 +489,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 					self.assertTrue( state.s is None )
 					self.assertTrue( state.f is None )
 
-		c = n3.plugDirtiedSignal().connect( plugDirtied )
+		n3.plugDirtiedSignal().connect( plugDirtied, scoped = False )
 
 		n3["p"].setInput( n1["o"] )
 		assertStatesValid()
@@ -546,7 +546,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 				valuesWhenDirtied.append( plug.getValue() )
 
 		n = DynamicAddNode()
-		c = n.plugDirtiedSignal().connect( plugDirtied )
+		n.plugDirtiedSignal().connect( plugDirtied, scoped = False )
 
 		n["in"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.assertEqual( valuesWhenDirtied, [ 1 ] )
@@ -628,7 +628,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 			del s["n3"]
 			del s["n4"]
 
-		c = s["n2"].plugInputChangedSignal().connect( inputChanged )
+		c = s["n2"].plugInputChangedSignal().connect( inputChanged, scoped = True )
 
 		s["n2"]["op1"].setInput( s["n1"]["product"] )
 

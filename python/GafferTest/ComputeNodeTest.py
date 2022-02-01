@@ -443,7 +443,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 			self.fRan = True
 
 		n = GafferTest.BadNode()
-		c = n.errorSignal().connect( f )
+		c = n.errorSignal().connect( f, scoped = True )
 
 		with IECore.IgnoredExceptions( Exception ) :
 			n["out1"].getValue()

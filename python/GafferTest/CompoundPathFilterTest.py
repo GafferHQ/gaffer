@@ -80,7 +80,7 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		f2 = Gaffer.FileNamePathFilter( [ "*.tif" ] )
 
-		c = cf.changedSignal().connect( f )
+		cf.changedSignal().connect( f, scoped = False )
 		self.assertEqual( self.__numChanges, 0 )
 
 		cf.addFilter( f1 )
@@ -118,7 +118,7 @@ class CompoundPathFilterTest( GafferTest.TestCase ) :
 		f1 = Gaffer.FileNamePathFilter( [ "*.gfr" ] )
 		f2 = Gaffer.FileNamePathFilter( [ "*.tif" ] )
 
-		c = cf.changedSignal().connect( f )
+		cf.changedSignal().connect( f, scoped = False )
 		self.assertEqual( self.__numChanges, 0 )
 
 		cf.setFilters( [ f1, f2 ] )

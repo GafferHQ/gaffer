@@ -57,7 +57,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		def f( c ) :
 			GraphComponentTest.name = c.getName()
 
-		con = c.nameChangedSignal().connect( f )
+		con = c.nameChangedSignal().connect( f, scoped = True )
 		GraphComponentTest.name = "xxx"
 		c.setName( "newName" )
 		self.assertEqual( GraphComponentTest.name, "newName" )
@@ -79,7 +79,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( child1.getName(), "GraphComponent" )
 		self.assertEqual( child1.fullName(), "newName.GraphComponent" )
 
-		con = child2.nameChangedSignal().connect( f )
+		con = child2.nameChangedSignal().connect( f, scoped = True )
 		GraphComponentTest.name = "xxx"
 		c.addChild( child2 )
 		self.assertEqual( child2.getName(), "GraphComponent1" )
@@ -123,8 +123,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 			GraphComponentTest.parenting = ( p, c )
 
-		c1 = child.parentChangedSignal().connect( f )
-		c2 = parent.childAddedSignal().connect( ff )
+		c1 = child.parentChangedSignal().connect( f, scoped = True )
+		c2 = parent.childAddedSignal().connect( ff, scoped = True )
 
 		GraphComponentTest.newParent = None
 		GraphComponentTest.oldParent = None
@@ -138,7 +138,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		GraphComponentTest.newParent = "xxx"
 		GraphComponentTest.oldParent = None
 		GraphComponentTest.parenting = None
-		c2 = parent.childRemovedSignal().connect( ff )
+		c2 = parent.childRemovedSignal().connect( ff, scoped = True )
 		parent.removeChild( child )
 		self.assertIsNone( GraphComponentTest.newParent )
 		self.assertTrue( GraphComponentTest.oldParent.isSame( parent ) )
@@ -166,7 +166,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		p1["c"] = c
 
-		connection = c.parentChangedSignal().connect( f )
+		c.parentChangedSignal().connect( f, scoped = False )
 
 		p2["c"] = c
 
@@ -186,7 +186,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			GraphComponentTest.newParent = child.parent()
 			GraphComponentTest.previousParent = previousParent
 
-		c = child.parentChangedSignal().connect( f )
+		child.parentChangedSignal().connect( f, scoped = False )
 
 		GraphComponentTest.newParent = "XXX"
 		GraphComponentTest.previousParent = "XXX"
@@ -216,8 +216,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		def f( a, b=None ) :
 			GraphComponentTest.numSignals += 1
 
-		c1 = child.parentChangedSignal().connect( f )
-		c2 = parent.childAddedSignal().connect( f )
+		child.parentChangedSignal().connect( f, scoped = False )
+		parent.childAddedSignal().connect( f, scoped = False )
 
 		parent.addChild( child )
 
@@ -535,10 +535,10 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		def f( *args ) :
 			GraphComponentTest.numSignals += 1
 
-		c1 = child.parentChangedSignal().connect( f )
-		c2 = parent.childAddedSignal().connect( f )
-		c3 = parent.childRemovedSignal().connect( f )
-		c4 = child.nameChangedSignal().connect( f )
+		child.parentChangedSignal().connect( f, scoped = False )
+		parent.childAddedSignal().connect( f, scoped = False )
+		parent.childRemovedSignal().connect( f, scoped = False )
+		child.nameChangedSignal().connect( f, scoped = False )
 
 		parent.setChild( "c", child )
 

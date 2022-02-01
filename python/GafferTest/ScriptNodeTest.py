@@ -944,7 +944,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		def f( plug ) :
 			values.append( plug.getValue() )
 
-		c = s["n"].plugSetSignal().connect( f )
+		s["n"].plugSetSignal().connect( f, scoped = False )
 
 		with Gaffer.UndoScope( s ) :
 			s["n"]["p"].setValue( 10 )
@@ -1061,7 +1061,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 				self.assertFalse( s.undoAvailable() )
 				self.assertFalse( s.redoAvailable() )
 
-		c = s["n"].plugSetSignal().connect( f )
+		s["n"].plugSetSignal().connect( f, scoped = False )
 
 		self.assertEqual( s.currentActionStage(), Gaffer.Action.Stage.Invalid )
 		self.assertEqual( len( actionStages ), 0 )
@@ -1339,7 +1339,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		def f( script, child ) :
 			self.__wasExecuting.append( script.isExecuting() )
 
-		c = s.childAddedSignal().connect( f )
+		s.childAddedSignal().connect( f, scoped = False )
 
 		s["n"] = GafferTest.AddNode()
 

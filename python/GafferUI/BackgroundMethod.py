@@ -154,7 +154,8 @@ class BackgroundMethod( object ) :
 					widget,
 					method.__name__ + "__VisibilityChangedConnection",
 					widget.visibilityChangedSignal().connect(
-						functools.partial( self.__visibilityChanged, method = method, foregroundFunction = foregroundFunction )
+						functools.partial( self.__visibilityChanged, method = method, foregroundFunction = foregroundFunction ),
+						scoped = True
 					)
 				)
 

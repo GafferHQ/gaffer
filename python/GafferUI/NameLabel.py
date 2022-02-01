@@ -177,11 +177,17 @@ class NameLabel( GafferUI.Label ) :
 			if reuse :
 				updatedConnections.extend( self.__connections[ component ][ n*2 : n*2+2 ] )
 			else :
-				updatedConnections.append( g.nameChangedSignal().connect( Gaffer.WeakMethod( self.__setText ) ) )
+				updatedConnections.append(
+					g.nameChangedSignal().connect(
+						Gaffer.WeakMethod( self.__setText ),
+						scoped = True
+					)
+				)
 				if n < self.__numComponents - 1 :
 					updatedConnections.append(
 						g.parentChangedSignal().connect(
-							functools.partial( Gaffer.WeakMethod( self.__parentChanged ), component )
+							functools.partial( Gaffer.WeakMethod( self.__parentChanged ), component ),
+							scoped = True
 						)
 					)
 

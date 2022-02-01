@@ -102,7 +102,7 @@ class PlugTest( GafferTest.TestCase ) :
 		p2 = Gaffer.Plug( direction=Gaffer.Plug.Direction.In )
 		n2.addChild( p2 )
 
-		c = n2.plugInputChangedSignal().connect( f )
+		n2.plugInputChangedSignal().connect( f, scoped = False )
 		p2.setInput( p1 )
 		self.assertTrue( PlugTest.__connection[0].isSame( p2 ) )
 		self.assertTrue( PlugTest.__connection[1].isSame( p1 ) )

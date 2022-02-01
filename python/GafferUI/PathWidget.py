@@ -75,7 +75,10 @@ class PathWidget( GafferUI.TextWidget ) :
 	def setPath( self, path ) :
 
 		self.__path = path
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged, fallbackResult = None ) )
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect(
+			Gaffer.WeakMethod( self.__pathChanged, fallbackResult = None ),
+			scoped = True
+		)
 		self.setText( str( self.__path ) )
 
 	def getPath( self ) :

@@ -178,7 +178,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 			WidgetTest.signalsEmitted += 1
 
-		c = w.buttonPressSignal().connect( f )
+		w.buttonPressSignal().connect( f, scoped = False )
 
 		WidgetTest.signalsEmitted = 0
 

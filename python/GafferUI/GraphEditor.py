@@ -63,7 +63,7 @@ class GraphEditor( GafferUI.Editor ) :
 		GafferUI.Editor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
-		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
+		graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ), scoped = False )
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( graphGadget )
 		self.__gadgetWidget.getViewportGadget().setDragTracking( GafferUI.ViewportGadget.DragTracking.XDragTracking | GafferUI.ViewportGadget.DragTracking.YDragTracking )
@@ -559,8 +559,8 @@ class GraphEditor( GafferUI.Editor ) :
 			# We have to track the root _and_ its ancestors
 			node = graphGadget.getRoot()
 			while node and not isinstance( node, Gaffer.ScriptNode ) :
-				self.__changeConnections.append( node.nameChangedSignal().connect( Gaffer.WeakMethod( self.__rootNameChanged ) ) )
-				self.__changeConnections.append( node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__rootParentChanged ) ) )
+				self.__changeConnections.append( node.nameChangedSignal().connect( Gaffer.WeakMethod( self.__rootNameChanged ), scoped = True ) )
+				self.__changeConnections.append( node.parentChangedSignal().connect( Gaffer.WeakMethod( self.__rootParentChanged ), scoped = True ) )
 				node = node.parent()
 
 		self.titleChangedSignal()( self )

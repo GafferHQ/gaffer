@@ -119,7 +119,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 			self.assertTrue( app.isSame( a ) )
 			d.append( app.getClipboardContents() )
 
-		c = a.clipboardContentsChangedSignal().connect( f )
+		c = a.clipboardContentsChangedSignal().connect( f, scoped = True )
 
 		self.assertEqual( len( d ), 0 )
 		self.assertEqual( a.getClipboardContents(), None )

@@ -63,7 +63,7 @@ class ObjectWriter( GafferDispatch.TaskNode ) :
 		self.__parameterHandler = GafferCortex.CompoundParameterHandler( self.__exposedParameters )
 		self.__parameterHandler.setupPlug( self )
 
-		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ) )
+		self.__plugSetConnection = self.plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = True )
 
 	def parameterHandler( self ) :
 

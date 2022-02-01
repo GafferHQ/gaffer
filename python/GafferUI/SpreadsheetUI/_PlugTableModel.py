@@ -59,14 +59,14 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 		self.__rowsPlug = rowsPlug
 		self.__context = context
 
-		self.__plugDirtiedConnection = rowsPlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
-		self.__rowAddedConnection = rowsPlug.childAddedSignal().connect( Gaffer.WeakMethod( self.__rowAdded ) )
-		self.__rowRemovedConnection = rowsPlug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__rowRemoved ) )
-		self.__rowsReorderedConnection = rowsPlug.childrenReorderedSignal().connect( Gaffer.WeakMethod( self.__rowsReordered ) )
-		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ) )
-		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ) )
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
+		self.__plugDirtiedConnection = rowsPlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = True )
+		self.__rowAddedConnection = rowsPlug.childAddedSignal().connect( Gaffer.WeakMethod( self.__rowAdded ), scoped = True )
+		self.__rowRemovedConnection = rowsPlug.childRemovedSignal().connect( Gaffer.WeakMethod( self.__rowRemoved ), scoped = True )
+		self.__rowsReorderedConnection = rowsPlug.childrenReorderedSignal().connect( Gaffer.WeakMethod( self.__rowsReordered ), scoped = True )
+		self.__columnAddedConnection = rowsPlug.defaultRow()["cells"].childAddedSignal().connect( Gaffer.WeakMethod( self.__columnAdded ), scoped = True )
+		self.__columnRemovedConnection = rowsPlug.defaultRow()["cells"].childRemovedSignal().connect( Gaffer.WeakMethod( self.__columnRemoved ), scoped = True )
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( rowsPlug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True )
+		self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 
 	# Methods of our own
 	# ------------------

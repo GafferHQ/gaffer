@@ -67,7 +67,7 @@ class ContextTest( GafferTest.TestCase ) :
 			self.assertTrue( context.isSame( c ) )
 			changes.append( ( name, context.get( name, None ), context.hash() ) )
 
-		cn = c.changedSignal().connect( f )
+		c.changedSignal().connect( f, scoped = False )
 
 		c["a"] = 2
 		hash1 = c.hash()

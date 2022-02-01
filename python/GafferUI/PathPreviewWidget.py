@@ -58,7 +58,9 @@ class PathPreviewWidget( GafferUI.Widget ) :
 		prevPath = self.__path
 		self.__path = path
 		self.__currentPath = None
-		self.__pathChangedConnection = self.__path.pathChangedSignal().connect( Gaffer.WeakMethod( self.__pathChanged ) )
+		self.__pathChangedConnection = self.__path.pathChangedSignal().connect(
+			Gaffer.WeakMethod( self.__pathChanged ), scoped = True
+		)
 
 		if prevPath != None :
 			# we don't call _updateFromPath when setPath is called from __init__,

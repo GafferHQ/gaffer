@@ -85,7 +85,7 @@ class Dialogue( GafferUI.Window ) :
 			self._qtWidget().setWindowModality( QtCore.Qt.ApplicationModal )
 			self.setVisible( True )
 
-			self.__closeConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__close ) )
+			self.__closeConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )
 
 			self.__modalEventLoop = GafferUI.EventLoop()
 			self.__modalEventLoop.start()
@@ -124,7 +124,7 @@ class Dialogue( GafferUI.Window ) :
 		self.__resultOfWait = None
 		self.__buttonConnections = []
 		for button in self.__buttonRow :
-			self.__buttonConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) ) )
+			self.__buttonConnections.append( button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = True ) )
 
 		self.setModal( True, parentWindow )
 

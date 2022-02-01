@@ -351,7 +351,7 @@ def importFile( menu ) :
 	with Gaffer.UndoScope( scope.script ), errorHandler :
 
 		newChildren = []
-		c = scope.parent.childAddedSignal().connect( lambda parent, child : newChildren.append( child ) )
+		c = scope.parent.childAddedSignal().connect( lambda parent, child : newChildren.append( child ), scoped = True )
 
 		scope.script.importFile( str( path ), parent = scope.parent, continueOnError = True )
 

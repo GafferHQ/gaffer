@@ -132,7 +132,7 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 			self.assertTrue( t is tc )
 			self.__current = c
 
-		c = tc.currentChangedSignal().connect( s )
+		c = tc.currentChangedSignal().connect( s, scoped = True )
 		self.__current = None
 
 		self.assertIsNone( tc.getCurrent() )

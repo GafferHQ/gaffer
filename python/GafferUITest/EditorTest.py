@@ -94,12 +94,12 @@ class EditorTest( GafferUITest.TestCase ) :
 		editorsCreated = []
 		def editorCreated( editor ) :
 			editorsCreated.append( editor )
-		editorCreatedConnection = GafferUI.Editor.instanceCreatedSignal().connect( editorCreated )
+		editorCreatedConnection = GafferUI.Editor.instanceCreatedSignal().connect( editorCreated, scoped = True )
 
 		pythonEditorsCreated = []
 		def pythonEditorCreated( editor ) :
 			pythonEditorsCreated.append( editor )
-		pythonEditorCreatedConnection = GafferUI.PythonEditor.instanceCreatedSignal().connect( pythonEditorCreated )
+		pythonEditorCreatedConnection = GafferUI.PythonEditor.instanceCreatedSignal().connect( pythonEditorCreated, scoped = True )
 
 		s = Gaffer.ScriptNode()
 

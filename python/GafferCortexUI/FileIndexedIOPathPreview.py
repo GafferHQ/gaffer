@@ -86,7 +86,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 	def _deferredUpdate( self, indexedIO ) :
 
 		self.__indexedIOPath = GafferCortex.IndexedIOPath( indexedIO, "/" )
-		self.__indexedIOPathChangedConnection = self.__indexedIOPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__indexedIOPathChanged ) )
+		self.__indexedIOPathChangedConnection = self.__indexedIOPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__indexedIOPathChanged ), scoped = True )
 
 		self.__pathWidget.setPath( self.__indexedIOPath )
 		self.__pathPreview.setPath( self.__indexedIOPath )
@@ -94,7 +94,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 		# we use a separate path for the listing so it'll always be rooted at the start
 		listingPath = GafferCortex.IndexedIOPath( indexedIO, "/" )
 		self.__pathListing.setPath( listingPath )
-		self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__pathListingSelectionChanged ) )
+		self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__pathListingSelectionChanged ), scoped = True )
 
 	def __indexedIOPathChanged( self, path ) :
 

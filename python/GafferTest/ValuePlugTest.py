@@ -429,7 +429,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			if plug.isSame( c ) :
 				self.set = True
 
-		cn = n.plugSetSignal().connect( setCallback )
+		n.plugSetSignal().connect( setCallback, scoped = False )
 
 		self.set = False
 
@@ -450,7 +450,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 			self.setPlugs.append( plug.getName() )
 
-		cn = n.plugSetSignal().connect( setCallback )
+		n.plugSetSignal().connect( setCallback, scoped = False )
 
 		self.setPlugs = []
 
@@ -471,7 +471,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 			self.setPlugs.append( plug.getName() )
 
-		cn = n.plugSetSignal().connect( setCallback )
+		n.plugSetSignal().connect( setCallback, scoped = False )
 
 		self.setPlugs = []
 

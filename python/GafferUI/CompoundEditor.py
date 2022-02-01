@@ -165,14 +165,14 @@ class CompoundEditor( GafferUI.Editor ) :
 	def _createDetachedPanel( self, *args, **kwargs ) :
 
 		panel = _DetachedPanel( self,  *args, **kwargs )
-		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ) )
+		panel.__removeOnCloseConnection = panel.closedSignal().connect( lambda w : w.parent()._removeDetachedPanel( w ), scoped = True )
 		panel.keyPressSignal().connect( CompoundEditor.__keyPress, scoped = False )
 
 		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
 		if scriptWindow :
 			panel.setTitle( scriptWindow.getTitle() )
 			weakSetTitle = Gaffer.WeakMethod( panel.setTitle )
-			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ) )
+			panel.__titleChangedConnection = scriptWindow.titleChangedSignal().connect( lambda w, t : weakSetTitle( t ), scoped = True )
 			# It's not directly in the qt hierarchy so shortcut events don't make it to the MenuBar
 			scriptWindow.menuBar().addShortcutTarget( panel )
 
@@ -567,10 +567,10 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		cornerWidget._qtWidget().setObjectName( "gafferCompoundEditorTools" )
 		self.setCornerWidget( cornerWidget )
 
-		self.__currentTabChangedConnection = self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ) )
-		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
-		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
-		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.currentChangedSignal().connect( Gaffer.WeakMethod( self.__currentTabChanged ), scoped = False )
+		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		tabBar = self._qtWidget().tabBar()
 		tabBar.setProperty( "gafferHasTabCloseButtons", GafferUI._Variant.toVariant( True ) )
@@ -602,8 +602,8 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.setCurrent( editor )
 
 		self.setLabel( editor, editor.getTitle() )
-		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ) )
-		editor.__keyPressConnection = editor.keyPressSignal().connect( self.__pinningWidget.editorKeyPress )
+		editor.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__titleChanged ), scoped = True )
+		editor.__keyPressConnection = editor.keyPressSignal().connect( self.__pinningWidget.editorKeyPress, scoped = True )
 
 		self.__updateStyles()
 
@@ -653,10 +653,13 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		button._qtWidget().setFixedSize( 11, 11 )
 
 		editor.__removeButton = button
-		editor.__removeButtonConnection = button.clickedSignal().connect( functools.partial(
-			lambda editor, container, _ : container().removeEditor( editor() ),
-			weakref.ref( editor ), weakref.ref( self )
-		) )
+		button.clickedSignal().connect(
+			functools.partial(
+				lambda editor, container, _ : container().removeEditor( editor() ),
+				weakref.ref( editor ), weakref.ref( self )
+			),
+			scoped = False
+		)
 
 		tabIndex = self.index( editor )
 		self._qtWidget().tabBar().setTabButton( tabIndex, QtWidgets.QTabBar.RightSide, button._qtWidget() )
@@ -725,7 +728,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
 
 		if isinstance( currentEditor, GafferUI.NodeSetEditor ) :
-			self.__nodeSetChangedConnection = currentEditor.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updatePinningWidget ) )
+			self.__nodeSetChangedConnection = currentEditor.nodeSetChangedSignal().connect( Gaffer.WeakMethod( self.__updatePinningWidget ), scoped = True )
 		else :
 			self.__nodeSetChangedConnection = None
 

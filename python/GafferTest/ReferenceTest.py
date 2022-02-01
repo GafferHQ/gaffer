@@ -914,7 +914,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		def referenceLoaded( node ) :
 			states.append( State( keys = node.keys(), fileName = node.fileName() ) )
 
-		c = s["r"].referenceLoadedSignal().connect( referenceLoaded )
+		s["r"].referenceLoadedSignal().connect( referenceLoaded, scoped = False )
 
 		with Gaffer.UndoScope( s ) :
 			s["r"].load( self.temporaryDirectory() + "/test.grf" )

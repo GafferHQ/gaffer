@@ -67,7 +67,10 @@ class MenuButton( GafferUI.Button ) :
 		self.__menu = menu
 
 		if self.__menu is not None :
-			self.__menuVisibilityChangedConnection = self.__menu.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__menuVisibilityChanged ) )
+			self.__menuVisibilityChangedConnection = self.__menu.visibilityChangedSignal().connect(
+				Gaffer.WeakMethod( self.__menuVisibilityChanged ),
+				scoped = True
+			)
 		else :
 			self.__menuVisibilityChangedConnection = None
 
