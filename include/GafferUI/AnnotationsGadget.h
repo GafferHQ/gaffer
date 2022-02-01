@@ -108,8 +108,8 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 			bool renderable = false;
 		};
 
-		boost::signals::scoped_connection m_graphGadgetChildAddedConnection;
-		boost::signals::scoped_connection m_graphGadgetChildRemovedConnection;
+		Gaffer::Signals::ScopedConnection m_graphGadgetChildAddedConnection;
+		Gaffer::Signals::ScopedConnection m_graphGadgetChildRemovedConnection;
 
 		using AnnotationsContainer = std::unordered_map<const NodeGadget *, Annotations>;
 		mutable AnnotationsContainer m_annotations;

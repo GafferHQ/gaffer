@@ -74,7 +74,7 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton = self._addButton( confirmLabel )
 		self.__confirmButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
-		self.__pathSelectedSignal = Gaffer.Signal1()
+		self.__pathSelectedSignal = Gaffer.Signals.Signal1()
 
 		self.__updateButtonState()
 

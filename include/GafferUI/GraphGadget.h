@@ -101,7 +101,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		Gaffer::Node *getRoot();
 		const Gaffer::Node *getRoot() const;
 		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = nullptr );
-		typedef boost::signal<void ( GraphGadget *, Gaffer::Node * )> RootChangedSignal;
+		using RootChangedSignal = Gaffer::Signals::Signal<void ( GraphGadget *, Gaffer::Node * )>;
 		/// A signal emitted when the root has been changed - the signature
 		/// of the signal is ( graphGadget, previousRoot ).
 		RootChangedSignal &rootChangedSignal();
@@ -269,25 +269,25 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		Gaffer::ScriptNodePtr m_scriptNode;
 		RootChangedSignal m_rootChangedSignal;
 		IECore::MurmurHash m_scriptContextHash;
-		boost::signals::scoped_connection m_rootChildAddedConnection;
-		boost::signals::scoped_connection m_rootChildRemovedConnection;
-		boost::signals::scoped_connection m_selectionMemberAddedConnection;
-		boost::signals::scoped_connection m_selectionMemberRemovedConnection;
-		boost::signals::scoped_connection m_focusChangedConnection;
-		boost::signals::scoped_connection m_focusPlugDirtiedConnection;
-		boost::signals::scoped_connection m_scriptContextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_rootChildAddedConnection;
+		Gaffer::Signals::ScopedConnection m_rootChildRemovedConnection;
+		Gaffer::Signals::ScopedConnection m_selectionMemberAddedConnection;
+		Gaffer::Signals::ScopedConnection m_selectionMemberRemovedConnection;
+		Gaffer::Signals::ScopedConnection m_focusChangedConnection;
+		Gaffer::Signals::ScopedConnection m_focusPlugDirtiedConnection;
+		Gaffer::Signals::ScopedConnection m_scriptContextChangedConnection;
 
 		Gaffer::SetPtr m_filter;
-		boost::signals::scoped_connection m_filterMemberAddedConnection;
-		boost::signals::scoped_connection m_filterMemberRemovedConnection;
+		Gaffer::Signals::ScopedConnection m_filterMemberAddedConnection;
+		Gaffer::Signals::ScopedConnection m_filterMemberRemovedConnection;
 
 		struct NodeGadgetEntry
 		{
 			NodeGadget *gadget;
-			boost::signals::scoped_connection inputChangedConnection;
-			boost::signals::scoped_connection plugSetConnection;
-			boost::signals::scoped_connection noduleAddedConnection;
-			boost::signals::scoped_connection noduleRemovedConnection;
+			Gaffer::Signals::ScopedConnection inputChangedConnection;
+			Gaffer::Signals::ScopedConnection plugSetConnection;
+			Gaffer::Signals::ScopedConnection noduleAddedConnection;
+			Gaffer::Signals::ScopedConnection noduleRemovedConnection;
 		};
 		typedef std::map<const Gaffer::Node *, NodeGadgetEntry> NodeGadgetMap;
 		NodeGadgetMap m_nodeGadgets;

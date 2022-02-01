@@ -42,7 +42,7 @@ from .import _Range
 from .About import About
 from .Application import Application
 from .WeakMethod import WeakMethod
-from .BlockedConnection import BlockedConnection
+from . import _BlockedConnection
 from .FileNamePathFilter import FileNamePathFilter
 from .UndoScope import UndoScope
 from .Context import Context

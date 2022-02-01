@@ -87,7 +87,7 @@ class GAFFER_API StandardSet : public Gaffer::Set
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StandardSet, StandardSetTypeId, Gaffer::Set );
 
-		typedef boost::signal<bool ( const StandardSet *, const Member * ), Detail::MemberAcceptanceCombiner> MemberAcceptanceSignal;
+		using MemberAcceptanceSignal = Signals::Signal<bool ( const StandardSet *, const Member * ), Detail::MemberAcceptanceCombiner>;
 		/// This signal is emitted to determine whether or not a member is eligible
 		/// to be in the StandardSet. Members are only added if all slots of the signal
 		/// return true, or if no slots have been connected - otherwise an exception is thrown.

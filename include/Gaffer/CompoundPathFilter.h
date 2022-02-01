@@ -39,6 +39,8 @@
 
 #include "Gaffer/PathFilter.h"
 
+#include <list>
+
 namespace Gaffer
 {
 
@@ -75,7 +77,7 @@ class GAFFER_API CompoundPathFilter : public Gaffer::PathFilter
 		struct Filter
 		{
 			PathFilterPtr filter;
-			boost::signals::scoped_connection filterChangedConnection;
+			Signals::ScopedConnection filterChangedConnection;
 		};
 
 		// Using a list rather than a vector, because

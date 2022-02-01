@@ -39,7 +39,6 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/CatchingSignalCombiner.h"
 
 #include "boost/intrusive/avl_set.hpp"
 #include "boost/intrusive/avl_set_hook.hpp"
@@ -328,7 +327,7 @@ class GAFFER_API Animation : public ComputeNode
 				explicit CurvePlug( const std::string &name = defaultName<CurvePlug>(), Plug::Direction direction = Plug::In, unsigned flags = Plug::Default );
 				~CurvePlug() override;
 
-				typedef boost::signal< void ( CurvePlug*, Key* ), Gaffer::CatchingSignalCombiner< void > > CurvePlugKeySignal;
+				using CurvePlugKeySignal = Signals::Signal<void ( CurvePlug*, Key* ), Signals::CatchingCombiner<void>>;
 
 				CurvePlugKeySignal& keyAddedSignal();
 				CurvePlugKeySignal& keyRemovedSignal();
@@ -430,7 +429,7 @@ class GAFFER_API Animation : public ComputeNode
 				friend KeyIterator;
 				friend ConstKeyIterator;
 
-				typedef boost::signal< void ( CurvePlug*, Animation::Direction ), Gaffer::CatchingSignalCombiner< void > > CurvePlugDirectionSignal;
+				using CurvePlugDirectionSignal = Signals::Signal<void ( CurvePlug*, Animation::Direction ), Signals::CatchingCombiner<void>>;
 
 				Key *firstKey();
 				Key *finalKey();

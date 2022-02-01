@@ -118,7 +118,7 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setChannels( const Channels &channels );
 		const Channels &getChannels() const;
 
-		typedef boost::signal<void (ImageGadget *)> ImageGadgetSignal;
+		using ImageGadgetSignal = Gaffer::Signals::Signal<void (ImageGadget *)>;
 		ImageGadgetSignal &channelsChangedSignal();
 
 		/// Chooses a channel to show in isolation.
@@ -182,8 +182,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		GafferImage::ImagePlugPtr m_image;
 		Gaffer::ContextPtr m_context;
 
-		boost::signals::scoped_connection m_plugDirtiedConnection;
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 		// Settings to control how the image is displayed.
 

@@ -64,7 +64,7 @@ class GAFFEROSL_API OSLCode : public OSLShader
 		/// to give to it.
 		std::string source( const std::string shaderName = "" ) const;
 
-		typedef boost::signal<void ()> ShaderCompiledSignal;
+		using ShaderCompiledSignal = Gaffer::Signals::Signal<void ()>;
 		/// Signal emitted when a shader is compiled successfully.
 		/// \todo This exists only so the UI knows when to clear
 		/// the error indicator. When we compile shaders on demand,

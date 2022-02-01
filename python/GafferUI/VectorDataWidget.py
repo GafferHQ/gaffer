@@ -162,7 +162,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		# final setup
 
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
-		self.__editSignal = Gaffer.Signal3()
+		self.__editSignal = Gaffer.Signals.Signal3()
 
 		self.setHeader( header )
 

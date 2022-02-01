@@ -285,7 +285,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plugs. To temporarily suspend calls to this function, use
-	# `Gaffer.BlockedConnection( self._plugConnections() )`.
+	# `Gaffer.Signals.BlockedConnection( self._plugConnections() )`.
 	def _updateFromPlugs( self ) :
 
 		# Default implementation falls back to legacy update for a single plug.
@@ -768,11 +768,11 @@ def sole( sequence ) :
 # Signal with custom result combiner to prevent bad slots blocking the
 # execution of others, and to ease the transition from single plug to multiple
 # plug support.
-class _PopupMenuSignal( Gaffer.Signal2 ) :
+class _PopupMenuSignal( Gaffer.Signals.Signal2 ) :
 
 	def __init__( self ) :
 
-		Gaffer.Signal2.__init__( self, self.__combiner )
+		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
 
 	@staticmethod
 	def __combiner( results ) :

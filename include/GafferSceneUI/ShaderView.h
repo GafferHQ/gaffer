@@ -71,7 +71,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		Gaffer::Node *scene();
 		const Gaffer::Node *scene() const;
 
-		typedef boost::signal<void ( ShaderView * )> SceneChangedSignal;
+		using SceneChangedSignal = Gaffer::Signals::Signal<void ( ShaderView * )>;
 		SceneChangedSignal &sceneChangedSignal();
 
 		void setContext( Gaffer::ContextPtr context ) override;
@@ -113,7 +113,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 		bool m_framed;
 		Gaffer::NodePtr m_imageConverter;
 
-		boost::signals::scoped_connection m_idleConnection;
+		Gaffer::Signals::ScopedConnection m_idleConnection;
 
 		GafferScene::InteractiveRenderPtr m_renderer;
 		std::string m_rendererShaderPrefix;

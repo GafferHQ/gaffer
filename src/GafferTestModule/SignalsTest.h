@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,35 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BLOCKEDCONNECTION_H
-#define GAFFER_BLOCKEDCONNECTION_H
+#ifndef GAFFERTESTMODULE_SIGNALSTEST_H
+#define GAFFERTESTMODULE_SIGNALSTEST_H
 
-#include "Gaffer/Export.h"
-
-#include "boost/noncopyable.hpp"
-#include "boost/signals.hpp"
-
-namespace Gaffer
+namespace GafferTestModule
 {
 
-/// The BlockedConnection class allows connections to be blocked and unblocked
-/// in an exception-safe manner.
-class GAFFER_API BlockedConnection : boost::noncopyable
-{
+void bindSignalsTest();
 
-	public :
+} // namespace GafferTestModule
 
-		/// Calls connection.block() if block is true, otherwise does nothing.
-		BlockedConnection( boost::signals::connection &connection, bool block = true );
-		/// Unblocks the connection if it was blocked by the constructor.
-		~BlockedConnection();
-
-	private :
-
-		boost::signals::connection *m_connection;
-
-};
-
-} // namespace Gaffer
-
-#endif // GAFFER_BLOCKEDCONNECTION_H
+#endif // GAFFERTESTMODULE_SIGNALSTEST_H

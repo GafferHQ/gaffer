@@ -122,12 +122,12 @@ CameraTool::CameraTool( SceneView *view, const std::string &name )
 	view->plugDirtiedSignal().connect( boost::bind( &CameraTool::plugDirtied, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &CameraTool::plugDirtied, this, ::_1 ) );
 
-	// Snoop on the signals used for interaction with the viewport. We connect with group 0
+	// Snoop on the signals used for interaction with the viewport. We connect at the front
 	// so that we are called before everything else.
-	view->viewportGadget()->dragBeginSignal().connect( 0, boost::bind( &CameraTool::viewportDragBegin, this, ::_2 ) );
-	view->viewportGadget()->wheelSignal().connect( 0, boost::bind( &CameraTool::viewportWheel, this, ::_2 ) );
-	view->viewportGadget()->keyPressSignal().connect( 0, boost::bind( &CameraTool::viewportKeyPress, this, ::_2 ) );
-	view->viewportGadget()->buttonPressSignal().connect( 0, boost::bind( &CameraTool::viewportButtonPress, this, ::_2 ) );
+	view->viewportGadget()->dragBeginSignal().connectFront( boost::bind( &CameraTool::viewportDragBegin, this, ::_2 ) );
+	view->viewportGadget()->wheelSignal().connectFront( boost::bind( &CameraTool::viewportWheel, this, ::_2 ) );
+	view->viewportGadget()->keyPressSignal().connectFront( boost::bind( &CameraTool::viewportKeyPress, this, ::_2 ) );
+	view->viewportGadget()->buttonPressSignal().connectFront( boost::bind( &CameraTool::viewportButtonPress, this, ::_2 ) );
 	// Connect to `cameraChangedSignal()` so we can turn the viewport interaction into
 	// camera edits in the node graph itself.
 	m_viewportCameraChangedConnection = view->viewportGadget()->cameraChangedSignal().connect(
@@ -136,7 +136,7 @@ CameraTool::CameraTool( SceneView *view, const std::string &name )
 
 	// Connect to the preRender signal so we can coordinate ourselves with the work
 	// that the SceneView::Camera class does to look through the camera we will be editing.
-	view->viewportGadget()->preRenderSignal().connect( 0, boost::bind( &CameraTool::preRenderBegin, this ) );
+	view->viewportGadget()->preRenderSignal().connectFront( boost::bind( &CameraTool::preRenderBegin, this ) );
 	view->viewportGadget()->preRenderSignal().connect( boost::bind( &CameraTool::preRenderEnd, this ) );
 }
 
@@ -258,7 +258,7 @@ void CameraTool::preRenderBegin()
 	// trying to reflect that update back into the graph.
 	/// \todo Should we have a more explicit synchronisation between
 	/// SceneView::Camera and CameraTool?
-	m_viewportCameraChangedConnection.block();
+	m_viewportCameraChangedConnection.setBlocked( true );
 }
 
 void CameraTool::preRenderEnd()
@@ -300,7 +300,7 @@ void CameraTool::preRenderEnd()
 		view()->viewportGadget()->setCenterOfInterest(
 			getCameraCenterOfInterest( selection.path() )
 		);
-		m_viewportCameraChangedConnection.unblock();
+		m_viewportCameraChangedConnection.setBlocked( false );
 	}
 }
 

@@ -45,17 +45,18 @@
 #include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferUI;
 
 void GafferUIModule::bindWidgetSignal()
 {
-	typedef boost::signal<bool ( object ), EventSignalCombiner<bool> > WidgetSignal;
+	using WidgetSignal = Signals::Signal<bool ( object ), EventSignalCombiner<bool>>;
 	SignalClass<WidgetSignal>( "WidgetSignal" );
 
-	typedef boost::signal<bool ( object, object ), EventSignalCombiner<bool> > WidgetEventSignal;
+	using WidgetEventSignal = Signals::Signal<bool ( object, object ), EventSignalCombiner<bool>>;
 	SignalClass<WidgetEventSignal>( "WidgetEventSignal" );
 
-	typedef boost::signal<IECore::RunTimeTypedPtr ( object, object ), EventSignalCombiner<IECore::RunTimeTypedPtr> > WidgetDragBeginSignal;
+	using WidgetDragBeginSignal = Signals::Signal<IECore::RunTimeTypedPtr ( object, object ), EventSignalCombiner<IECore::RunTimeTypedPtr>>;
 	SignalClass<WidgetDragBeginSignal>( "WidgetDragBeginSignal" );
 }

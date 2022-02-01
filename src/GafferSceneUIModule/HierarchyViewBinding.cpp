@@ -198,8 +198,8 @@ class HierarchyViewFilter : public Gaffer::PathFilter
 		ConstScenePlugPtr m_scene;
 		ConstContextPtr m_context;
 
-		boost::signals::scoped_connection m_plugDirtiedConnection;
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Signals::ScopedConnection m_plugDirtiedConnection;
+		Signals::ScopedConnection m_contextChangedConnection;
 
 };
 

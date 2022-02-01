@@ -54,7 +54,7 @@ class _SectionChooser( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, tabBar, **kw )
 
 		self.__rowsPlug = rowsPlug
-		self.__currentSectionChangedSignal = Gaffer.Signal1()
+		self.__currentSectionChangedSignal = Gaffer.Signals.Signal1()
 
 		tabBar.setDrawBase( False )
 		tabBar.setMovable( True )
@@ -218,7 +218,7 @@ class _SectionChooser( GafferUI.Widget ) :
 
 	def __tabMoved( self, fromIndex, toIndex ) :
 
-		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__plugMetadataChangedConnection ) :
 			with Gaffer.UndoScope( self.__rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
 				for i in range( 0, self._qtWidget().count() ) :
 					sectionName = self._qtWidget().tabText( i )

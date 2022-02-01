@@ -121,7 +121,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 				self.__messageCollapsibleConneciton = self.__messageCollapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__messageCollapsibleChanged ) )
 
 		self.__backButton = self._addButton( "Back" )
-		self.__backButtonConnection = self.__backButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateSettings ) )
+		self.__backButtonConnection = self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateSettings ) )
 
 		self.__primaryButton = self._addButton( "Dispatch" )
 
@@ -200,7 +200,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__primaryButton.setText( "Dispatch" )
 		self.__primaryButton.setEnabled( True )
 		self.__primaryButton.setVisible( True )
-		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateDispatch ) )
+		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateDispatch ) )
 
 		self.__tabs.setCurrent( self.__tabs[0] )
 		self._getWidget().setChild( self.__settings )

@@ -56,17 +56,17 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return int( a )
 
-		s = Gaffer.Signal1()
+		s = Gaffer.Signals.Signal1()
 		c = s.connect( f )
 		self.assertEqual( c.connected(), True )
-		self.assertEqual( c.blocked(), False )
+		self.assertEqual( c.getBlocked(), False )
 
 		self.assertEqual( s( 5.5 ), 5 )
 
-		c.block()
-		self.assertEqual( c.blocked(), True )
-		c.unblock()
-		self.assertEqual( c.blocked(), False )
+		c.setBlocked( True )
+		self.assertEqual( c.getBlocked(), True )
+		c.setBlocked( False )
+		self.assertEqual( c.getBlocked(), False )
 		c.disconnect()
 		self.assertEqual( c.connected(), False )
 
@@ -76,7 +76,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return int( a )
 
-		s = Gaffer.Signal1()
+		s = Gaffer.Signals.Signal1()
 		c = s.connect( f )
 		self.assertTrue( c.connected() )
 		del s
@@ -88,7 +88,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return a * b
 
-		s = Gaffer.Signal2()
+		s = Gaffer.Signals.Signal2()
 		c = s.connect( f )
 		self.assertEqual( s( 2.0, 4.0 ), 8.0 )
 
@@ -103,7 +103,7 @@ class SignalsTest( GafferTest.TestCase ) :
 			def __init__( self ) :
 
 				imath.V3f.__init__( self )
-				self.signal = Gaffer.Signal1()
+				self.signal = Gaffer.Signals.Signal1()
 
 			def f( self, n ) :
 
@@ -146,7 +146,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return int( a * 10 )
 
-		s = Gaffer.Signal1()
+		s = Gaffer.Signals.Signal1()
 		dc = s.connect( default )
 		self.assertEqual( s( 1 ), -1 )
 
@@ -156,6 +156,7 @@ class SignalsTest( GafferTest.TestCase ) :
 		del c
 		self.assertEqual( s( 1 ), -1 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testMany( self ) :
 
 		class S( imath.V3f ) :
@@ -170,7 +171,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 				self.children = []
 				self.numConnections = 0
-				self.signal = Gaffer.Signal1()
+				self.signal = Gaffer.Signals.Signal1()
 				if parent :
 					self.c = parent.signal.connect( self.f )
 					parent.numConnections += 1
@@ -241,10 +242,9 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return 1
 
-		s = Gaffer.Signal0()
+		s = Gaffer.Signals.Signal0()
 
 		c = s.connect( one )
-
 		self.assertEqual( s(), 1 )
 
 	def testGenericPythonSignals( self ) :
@@ -255,7 +255,7 @@ class SignalsTest( GafferTest.TestCase ) :
 		def two() :
 			return "two"
 
-		s = Gaffer.Signal0()
+		s = Gaffer.Signals.Signal0()
 		c1 = s.connect( one )
 		c2 = s.connect( two )
 
@@ -279,7 +279,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return a * b
 
-		s = Gaffer.Signal2( myCombiner )
+		s = Gaffer.Signals.Signal2( myCombiner )
 		addConnection = s.connect( add )
 		multConnection = s.connect( mult )
 
@@ -305,7 +305,7 @@ class SignalsTest( GafferTest.TestCase ) :
 			self.numCalls += 1
 			return False
 
-		s = Gaffer.Signal0( myCombiner )
+		s = Gaffer.Signals.Signal0( myCombiner )
 		c1 = s.connect( slot1 )
 		c2 = s.connect( slot2 )
 
@@ -333,7 +333,7 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			raise RuntimeError()
 
-		s = Gaffer.Signal0( myCombiner )
+		s = Gaffer.Signals.Signal0( myCombiner )
 		s.connect( lambda : 10, scoped = False )
 		s.connect( badSlot, scoped = False )
 		s.connect( lambda : 20, scoped = False )
@@ -343,14 +343,14 @@ class SignalsTest( GafferTest.TestCase ) :
 		self.assertEqual( len( exceptions ), 1 )
 		self.assertIsInstance( exceptions[0], RuntimeError )
 
-	def testGroupingAndOrdering( self ) :
+	def testConnectFront( self ) :
 
 		values = []
 		def f( value ) :
 
 			values.append( value )
 
-		s = Gaffer.Signal0()
+		s = Gaffer.Signals.Signal0()
 		c1 = s.connect( functools.partial( f, "one" ) )
 		c2 = s.connect( functools.partial( f, "two" ) )
 		s()
@@ -359,16 +359,16 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		del values[:]
 
-		c1 = s.connect( 1, functools.partial( f, "one" ) )
-		c2 = s.connect( 0, functools.partial( f, "two" ) )
+		c1 = s.connect( functools.partial( f, "one" ) )
+		c2 = s.connectFront( functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "two", "one" ] )
 
 		del values[:]
 
-		c1 = s.connect( functools.partial( f, "one" ) )
-		c2 = s.connect( 0, functools.partial( f, "two" ) )
+		c1 = s.connectFront( functools.partial( f, "one" ) )
+		c2 = s.connectFront( functools.partial( f, "two" ) )
 		s()
 
 		self.assertEqual( values, [ "two", "one" ] )
@@ -378,17 +378,17 @@ class SignalsTest( GafferTest.TestCase ) :
 		def f() :
 			pass
 
-		s = Gaffer.Signal0()
+		s = Gaffer.Signals.Signal0()
 		self.assertTrue( s.empty() )
-		self.assertEqual( s.num_slots(), 0 )
+		self.assertEqual( s.numSlots(), 0 )
 
 		c = s.connect( f )
 		self.assertFalse( s.empty() )
-		self.assertEqual( s.num_slots(), 1 )
+		self.assertEqual( s.numSlots(), 1 )
 
 		del c
 		self.assertTrue( s.empty() )
-		self.assertEqual( s.num_slots(), 0 )
+		self.assertEqual( s.numSlots(), 0 )
 
 	def testNonScopedConnection( self ) :
 
@@ -396,17 +396,17 @@ class SignalsTest( GafferTest.TestCase ) :
 		def f() :
 			self.numCalls += 1
 
-		s = Gaffer.Signal0()
+		s = Gaffer.Signals.Signal0()
 		c = s.connect( f, scoped = False )
 
 		self.assertEqual( self.numCalls, 0 )
 		s()
 		self.assertEqual( self.numCalls, 1 )
 
-		c.block( True )
+		c.setBlocked( True )
 		s()
 		self.assertEqual( self.numCalls, 1 )
-		c.block( False )
+		c.setBlocked( False )
 		s()
 		self.assertEqual( self.numCalls, 2 )
 
@@ -430,13 +430,13 @@ class SignalsTest( GafferTest.TestCase ) :
 
 	def testTrackable( self ) :
 
-		class TrackableTest( Gaffer.Trackable ) :
+		class TrackableTest( Gaffer.Signals.Trackable ) :
 
 			def f( self ) :
 
 				pass
 
-		s = Gaffer.Signal0()
+		s = Gaffer.Signals.Signal0()
 		t = TrackableTest()
 		w = weakref.ref( t )
 
@@ -448,6 +448,151 @@ class SignalsTest( GafferTest.TestCase ) :
 		self.assertFalse( c.connected() )
 
 		s() # Would throw if an expired WeakMethod remained connected
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testConstructionPerformance( self ) :
+
+		GafferTest.testSignalConstructionPerformance()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testConnectionPerformance( self ) :
+
+		GafferTest.testSignalConnectionPerformance()
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testCallPerformance( self ) :
+
+		GafferTest.testSignalCallPerformance()
+
+	def testQueryConnectionCopy( self ) :
+
+		s = Gaffer.Signals.Signal0()
+
+		c1 = s.connect( lambda : None )
+		self.assertTrue( c1.connected() )
+		c2 = Gaffer.Signals.Connection( c1 )
+		self.assertTrue( c2.connected() )
+
+		c1.disconnect()
+		self.assertFalse( c1.connected() )
+		self.assertFalse( c2.connected() )
+
+	def testDisconnectFreesSlot( self ) :
+
+		def f() :
+			pass
+
+		s = Gaffer.Signals.Signal0()
+		c = s.connect( f, scoped = False )
+
+		# If we drop our reference to the slot,
+		# it should still be alive because the
+		# signal is referencing it (because it
+		# is connected).
+		w = weakref.ref( f )
+		del f
+		self.assertIsNotNone( w() )
+
+		# And when we disconnect, the reference
+		# to the slot should be dropped, even if
+		# a copy of the connection exists.
+		c2 = Gaffer.Signals.Connection( c )
+		c.disconnect()
+		self.assertIsNone( w() )
+
+	def testDisconnectFromSlot( self ) :
+
+		signal = Gaffer.Signals.Signal1()
+		connection = None
+		slotCalls = []
+
+		def slot( arg ) :
+			slotCalls.append( arg )
+			self.assertEqual( signal.numSlots(), 1 )
+			connection.disconnect()
+			self.assertEqual( signal.numSlots(), 0 )
+
+		connection = signal.connect( slot, scoped = False )
+
+		signal( 1 )
+		self.assertEqual( slotCalls, [ 1 ] )
+		signal( 2 )
+		self.assertEqual( slotCalls, [ 1 ] )
+
+	def testDisconnectionOrder( self ) :
+
+		s = Gaffer.Signals.Signal0()
+		c1 = s.connect( lambda : None )
+		c2 = s.connect( lambda : None )
+
+		c1.disconnect()
+		c2.disconnect()
+
+	def testCallEmptySignal( self ) :
+
+		s = Gaffer.Signals.Signal0()
+		self.assertEqual( s(), None )
+
+		c = s.connect( lambda : 10 )
+		self.assertEqual( s(), 10 )
+
+		c.disconnect()
+		self.assertEqual( s(), None )
+
+	def testDisconnectAllSlots( self ) :
+
+		s = Gaffer.Signals.Signal0()
+		self.assertTrue( s.empty() )
+
+		capturingSlots = [
+			GafferTest.CapturingSlot( s )
+			for i in range( 0, 10 )
+		]
+		self.assertEqual( s.numSlots(), 10 )
+		self.assertFalse( s.empty() )
+
+		s.disconnectAllSlots()
+		self.assertEqual( s.numSlots(), 0 )
+		self.assertTrue( s.empty() )
+
+		s()
+		self.assertFalse( any( len( cs ) for cs in capturingSlots ) )
+
+	def testSlotReferencingConnection( self ) :
+
+		signal = Gaffer.Signals.Signal0()
+
+		# Make a slot that holds a ScopedConnection for the connection
+		# to itself. This is actually a fairly common pattern, used by
+		# classes to manage connections to their methods.
+
+		slot = lambda : None
+		connection = signal.connect( slot, scoped = False )
+		slot.connection = Gaffer.Signals.ScopedConnection( connection )
+
+		# Now, disconnect the connection, which should release the slot.
+		# Releasing the slot will release the ScopedConnection, which in
+		# turn will call `disconnect()`, while the first call to `disconnect()`
+		# _is still running_.
+
+		del slot
+		connection.disconnect()
+
+		# If we've got here, we haven't crashed, and all is well :)
+
+		self.assertFalse( connection.connected() )
+
+	def testDisconnectMatchingLambda( self ) :
+
+		GafferTest.testSignalDisconnectMatchingLambda()
+
+	def testDisconnectMatchingBind( self ) :
+
+		GafferTest.testSignalDisconnectMatchingBind()
+
+	def testSelfDisconnectingSlot( self ) :
+
+		GafferTest.testSignalSelfDisconnectingSlot()
 
 if __name__ == "__main__":
 	unittest.main()

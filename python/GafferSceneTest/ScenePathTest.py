@@ -104,16 +104,16 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 
 		context = Gaffer.Context()
-		self.assertEqual( context.changedSignal().num_slots(), 0 )
+		self.assertEqual( context.changedSignal().numSlots(), 0 )
 
 		p = GafferScene.ScenePath( plane["out"], context, "/" )
 
 		# The path shouldn't connect to the context changed signal
 		# until it really need to - when something is connected
 		# to the path's own changed signal.
-		self.assertEqual( context.changedSignal().num_slots(), 0 )
+		self.assertEqual( context.changedSignal().numSlots(), 0 )
 		cs = GafferTest.CapturingSlot( p.pathChangedSignal() )
-		self.assertEqual( context.changedSignal().num_slots(), 1 )
+		self.assertEqual( context.changedSignal().numSlots(), 1 )
 		self.assertEqual( len( cs ), 0 )
 
 		context["test"] = 10
@@ -122,11 +122,11 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		# Changing the context should disconnect from the old one
 		# and reconnect to the new one.
 		context2 = Gaffer.Context()
-		self.assertEqual( context2.changedSignal().num_slots(), 0 )
+		self.assertEqual( context2.changedSignal().numSlots(), 0 )
 
 		p.setContext( context2 )
-		self.assertEqual( context.changedSignal().num_slots(), 0 )
-		self.assertEqual( context2.changedSignal().num_slots(), 1 )
+		self.assertEqual( context.changedSignal().numSlots(), 0 )
+		self.assertEqual( context2.changedSignal().numSlots(), 1 )
 
 		context["test"] = 20
 		self.assertTrue( len( cs ), 1 )

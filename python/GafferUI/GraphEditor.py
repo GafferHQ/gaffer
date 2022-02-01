@@ -131,7 +131,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return result
 
-	__plugContextMenuSignal = Gaffer.Signal3()
+	__plugContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# plug in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
@@ -142,7 +142,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return cls.__plugContextMenuSignal
 
-	__connectionContextMenuSignal = Gaffer.Signal3()
+	__connectionContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# connection in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is
@@ -184,7 +184,7 @@ class GraphEditor( GafferUI.Editor ) :
 		__append( destinationPlug.getInput(), "Source Node" )
 		__append( destinationPlug, "Destination Node" )
 
-	__nodeContextMenuSignal = Gaffer.Signal3()
+	__nodeContextMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create a context menu for a
 	# node in the graph. Slots may connect to this signal to edit the
 	# menu definition on the fly - the signature for the signal is

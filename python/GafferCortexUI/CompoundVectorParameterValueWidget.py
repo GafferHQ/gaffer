@@ -163,7 +163,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 
 		data = vectorDataWidget.getData()
 
-		with Gaffer.BlockedConnection( self._plugConnections() ) :
+		with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				for d, p in zip( data, self._parameterHandler().plug().children() ) :
 					p.setValue( d )

@@ -122,7 +122,7 @@ void validateName( const InternedString &name )
 // instances they are never actually used.
 //////////////////////////////////////////////////////////////////////////
 
-struct GraphComponent::Signals : boost::noncopyable
+struct GraphComponent::MemberSignals : boost::noncopyable
 {
 
 	UnarySignal nameChangedSignal;
@@ -134,7 +134,7 @@ struct GraphComponent::Signals : boost::noncopyable
 	// Utility to emit a signal if it has been created, but do nothing
 	// if it hasn't.
 	template<typename SignalMemberPointer, typename... Args>
-	static void emitLazily( Signals *signals, SignalMemberPointer signalMemberPointer, Args&&... args )
+	static void emitLazily( MemberSignals *signals, SignalMemberPointer signalMemberPointer, Args&&... args )
 	{
 		if( !signals )
 		{
@@ -170,7 +170,7 @@ GraphComponent::~GraphComponent()
 		(*it)->m_parent = nullptr;
 		(*it)->parentChanging( nullptr );
 		(*it)->parentChanged( nullptr );
-		Signals::emitLazily( (*it)->m_signals.get(), &Signals::parentChangedSignal, (*it).get(), nullptr );
+		MemberSignals::emitLazily( (*it)->m_signals.get(), &MemberSignals::parentChangedSignal, (*it).get(), nullptr );
 	}
 	m_children.clear();
 }
@@ -243,7 +243,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 void GraphComponent::setNameInternal( const IECore::InternedString &name )
 {
 	m_name = name;
-	Signals::emitLazily( m_signals.get(), &Signals::nameChangedSignal, this );
+	MemberSignals::emitLazily( m_signals.get(), &MemberSignals::nameChangedSignal, this );
 }
 
 const IECore::InternedString &GraphComponent::getName() const
@@ -400,9 +400,9 @@ void GraphComponent::addChildInternal( GraphComponentPtr child, size_t index )
 	m_children.insert( m_children.begin() + min( index, m_children.size() ), child );
 	child->m_parent = this;
 	child->setName( child->m_name.value() ); // to force uniqueness
-	Signals::emitLazily( m_signals.get(), &Signals::childAddedSignal, this, child.get() );
+	MemberSignals::emitLazily( m_signals.get(), &MemberSignals::childAddedSignal, this, child.get() );
 	child->parentChanged( previousParent );
-	Signals::emitLazily( child->m_signals.get(), &Signals::parentChangedSignal, child.get(), previousParent );
+	MemberSignals::emitLazily( child->m_signals.get(), &MemberSignals::parentChangedSignal, child.get(), previousParent );
 }
 
 void GraphComponent::removeChild( GraphComponentPtr child )
@@ -453,11 +453,11 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 	}
 	m_children.erase( it );
 	child->m_parent = nullptr;
-	Signals::emitLazily( m_signals.get(), &Signals::childRemovedSignal, this, child.get() );
+	MemberSignals::emitLazily( m_signals.get(), &MemberSignals::childRemovedSignal, this, child.get() );
 	if( emitParentChanged )
 	{
 		child->parentChanged( this );
-		Signals::emitLazily( child->m_signals.get(), &Signals::parentChangedSignal, child.get(), this );
+		MemberSignals::emitLazily( child->m_signals.get(), &MemberSignals::parentChangedSignal, child.get(), this );
 	}
 }
 
@@ -533,7 +533,7 @@ void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 			}
 			m_children = children;
 			childrenReordered( *indices );
-			Signals::emitLazily( m_signals.get(), &Signals::childrenReorderedSignal, this, *indices );
+			MemberSignals::emitLazily( m_signals.get(), &MemberSignals::childrenReorderedSignal, this, *indices );
 		},
 		// Undo
 		[this, indices] () {
@@ -548,7 +548,7 @@ void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 			}
 			m_children = children;
 			childrenReordered( signalIndices );
-			Signals::emitLazily( m_signals.get(), &Signals::childrenReorderedSignal, this, signalIndices );
+			MemberSignals::emitLazily( m_signals.get(), &MemberSignals::childrenReorderedSignal, this, signalIndices );
 		}
 	);
 }
@@ -688,11 +688,11 @@ std::string GraphComponent::unprefixedTypeName( const char *typeName )
 	return result;
 }
 
-GraphComponent::Signals *GraphComponent::signals()
+GraphComponent::MemberSignals *GraphComponent::signals()
 {
 	if( !m_signals )
 	{
-		m_signals.reset( new Signals );
+		m_signals = std::make_unique<MemberSignals>();
 	}
 	return m_signals.get();
 }

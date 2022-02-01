@@ -38,14 +38,12 @@
 #ifndef GAFFER_GRAPHCOMPONENT_H
 #define GAFFER_GRAPHCOMPONENT_H
 
-#include "Gaffer/CatchingSignalCombiner.h"
 #include "Gaffer/Export.h"
+#include "Gaffer/Signals.h"
 #include "Gaffer/TypeIds.h"
 
 #include "IECore/InternedString.h"
 #include "IECore/RunTimeTyped.h"
-
-#include "boost/signals.hpp"
 
 #include <memory>
 
@@ -79,7 +77,7 @@ class FilteredRecursiveChildRange;
 #define GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( TYPE ) \
 	IE_CORE_DEFINERUNTIMETYPED( TYPE )
 
-class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::signals::trackable
+class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::Trackable
 {
 
 	public :
@@ -89,9 +87,9 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
-		using UnarySignal = boost::signal<void (GraphComponent *)>;
-		using BinarySignal = boost::signal<void (GraphComponent *, GraphComponent *)>;
-		using ChildrenReorderedSignal = boost::signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), CatchingSignalCombiner<void>>;
+		using UnarySignal = Signals::Signal<void (GraphComponent *)>;
+		using BinarySignal = Signals::Signal<void (GraphComponent *, GraphComponent *)>;
+		using ChildrenReorderedSignal = Signals::Signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), Signals::CatchingCombiner<void>>;
 
 		/// @name Naming
 		/// All GraphComponents have a name, which must be unique among
@@ -296,10 +294,10 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::sig
 		void removeChildInternal( GraphComponentPtr child, bool emitParentChanged );
 		size_t index() const;
 
-		struct Signals;
-		Signals *signals();
+		struct MemberSignals;
+		MemberSignals *signals();
 
-		std::unique_ptr<Signals> m_signals;
+		std::unique_ptr<MemberSignals> m_signals;
 		IECore::InternedString m_name;
 		GraphComponent *m_parent;
 		ChildContainer m_children;

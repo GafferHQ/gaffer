@@ -80,7 +80,7 @@ class GAFFER_API ApplicationRoot : public GraphComponent
 		/// Sets the clipboard contents - a copy of clip is taken.
 		void setClipboardContents( const IECore::Object *clip );
 		/// A signal emitted when the clipboard contents have changed.
-		typedef boost::signal<void (ApplicationRoot *)> ClipboardSignal;
+		using ClipboardSignal = Signals::Signal<void (ApplicationRoot *)>;
 		ClipboardSignal &clipboardContentsChangedSignal();
 		//@}
 

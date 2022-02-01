@@ -326,7 +326,7 @@ class MessageSummaryWidget( GafferUI.Widget ) :
 		self.__hideUnusedLevels = hideUnusedLevels
 
 		# Keep in a local too to allow us to capture the signal in a lambda without dragging in self
-		buttonSignal = Gaffer.Signal1()
+		buttonSignal = Gaffer.Signals.Signal1()
 		self.__levelButtonClickedSignal = buttonSignal
 
 		self.__buttons = {}

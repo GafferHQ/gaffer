@@ -78,7 +78,7 @@ namespace Private
 ///   This has additional requirements such as knowing the `transformSpace` that a node
 ///   works in. We think this information can be stored in a dedicated TransformHistory
 ///   class provided by SceneAlgo, avoiding any need to specialise Inspector::Result.
-class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::signals::trackable
+class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Signals::Trackable
 {
 
 	public :
@@ -94,7 +94,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::sig
 		/// Called by the UI to inspect the property in the current context.
 		ResultPtr inspect() const;
 
-		using InspectorSignal = boost::signal<void ( Inspector * )>;
+		using InspectorSignal = Gaffer::Signals::Signal<void ( Inspector * )>;
 		/// Emitted when the property queried by the inspector has changed.
 		/// The UI should use this to schedule a refresh.
 		InspectorSignal &dirtiedSignal();

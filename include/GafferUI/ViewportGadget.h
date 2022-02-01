@@ -60,7 +60,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 	public :
 
-		typedef boost::signal<void (ViewportGadget *)> UnarySignal;
+		using UnarySignal = Gaffer::Signals::Signal<void (ViewportGadget *)>;
 
 		ViewportGadget( GadgetPtr primaryChild = nullptr );
 		~ViewportGadget() override;
@@ -243,7 +243,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// the viewport or its children.
 		UnarySignal &preRenderSignal();
 
-		typedef boost::signal<void ( ViewportGadget * )> RenderRequestSignal;
+		using RenderRequestSignal = Gaffer::Signals::Signal<void ( ViewportGadget * )>;
 		RenderRequestSignal &renderRequestSignal();
 
 	private :
@@ -325,7 +325,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		GadgetPtr m_gadgetUnderMouse;
 
 		unsigned m_dragTracking;
-		boost::signals::connection m_dragTrackingIdleConnection;
+		Gaffer::Signals::Connection m_dragTrackingIdleConnection;
 		DragDropEvent m_dragTrackingEvent;
 		float m_dragTrackingThreshold;
 		Imath::V2f m_dragTrackingVelocity;

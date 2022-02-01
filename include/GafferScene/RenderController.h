@@ -37,12 +37,12 @@
 #ifndef GAFFERSCENE_RENDERCONTROLLER_H
 #define GAFFERSCENE_RENDERCONTROLLER_H
 
+#include "Gaffer/Signals.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
 
 #include "Gaffer/BackgroundTask.h"
-
-#include "boost/signals.hpp"
 
 #include <atomic>
 #include <functional>
@@ -53,7 +53,7 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
 /// Utility class used to make interactive updates to a Renderer.
-class GAFFERSCENE_API RenderController : public boost::signals::trackable
+class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 {
 
 	public :
@@ -75,7 +75,7 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
 
-		typedef boost::signal<void (RenderController &)> UpdateRequiredSignal;
+		using UpdateRequiredSignal = Gaffer::Signals::Signal<void (RenderController &)>;
 		UpdateRequiredSignal &updateRequiredSignal();
 
 		bool updateRequired() const;
@@ -129,8 +129,8 @@ class GAFFERSCENE_API RenderController : public boost::signals::trackable
 		IECore::PathMatcher m_expandedPaths;
 		size_t m_minimumExpansionDepth;
 
-		boost::signals::scoped_connection m_plugDirtiedConnection;
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 		UpdateRequiredSignal m_updateRequiredSignal;
 		bool m_updateRequired;

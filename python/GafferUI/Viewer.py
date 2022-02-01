@@ -161,7 +161,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		return self.__gadgetWidget
 
-	__viewContextMenuSignal = Gaffer.Signal3()
+	__viewContextMenuSignal = Gaffer.Signals.Signal3()
 
 	## Returns a signal emitted to generate a context menu for a view.
 	# The signature for connected slots is `slot( viewer, view, menuDefiniton )`.
@@ -379,7 +379,7 @@ class _ToolChooser( GafferUI.Frame ) :
 			GafferUI.WidgetAlgo.joinEdges( self.widgets )
 
 			self.primaryTool = None
-			self.primaryToolChangedSignal = Gaffer.Signal0()
+			self.primaryToolChangedSignal = Gaffer.Signals.Signal0()
 
 			if len( self.tools ) :
 				autoActivate = Gaffer.Metadata.value( self.tools[0], "viewer:shouldAutoActivate" )

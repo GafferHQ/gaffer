@@ -373,9 +373,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__jobs = []
 			self.__failedJobs = []
-			self.__jobAddedSignal = Gaffer.Signal1()
-			self.__jobRemovedSignal = Gaffer.Signal1()
-			self.__jobFailedSignal = Gaffer.Signal1()
+			self.__jobAddedSignal = Gaffer.Signals.Signal1()
+			self.__jobRemovedSignal = Gaffer.Signals.Signal1()
+			self.__jobFailedSignal = Gaffer.Signals.Signal1()
 
 		def jobs( self ) :
 

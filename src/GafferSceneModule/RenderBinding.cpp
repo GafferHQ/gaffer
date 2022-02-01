@@ -322,7 +322,7 @@ list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vect
 	std::vector<IECore::ConstObjectPtr> samples;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples );
+		GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples );
 	}
 
 	list pythonSamples;
@@ -341,10 +341,10 @@ list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vect
 	return pythonSamples;
 }
 
-void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
+void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	Private::RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
+	GafferScene::Private::RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
 }
 
 
@@ -387,7 +387,7 @@ void GafferSceneModule::bindRender()
 
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "_copy" ) = true ) );
 
-			class_<Private::RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
+			class_<GafferScene::Private::RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
 				.def( init<const ScenePlug *>() )
 			;
 

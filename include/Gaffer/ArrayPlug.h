@@ -99,7 +99,7 @@ class GAFFER_API ArrayPlug : public Plug
 		size_t m_maxSize;
 		bool m_resizeWhenInputsChange;
 
-		boost::signals::scoped_connection m_inputChangedConnection;
+		Signals::ScopedConnection m_inputChangedConnection;
 
 };
 

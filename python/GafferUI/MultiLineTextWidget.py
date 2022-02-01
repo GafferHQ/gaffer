@@ -305,7 +305,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		try :
 			return self.__dropTextSignal
 		except :
-			self.__dropTextSignal = Gaffer.Signal2()
+			self.__dropTextSignal = Gaffer.Signals.Signal2()
 
 		return self.__dropTextSignal
 

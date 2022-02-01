@@ -74,8 +74,8 @@ class GAFFER_API Node : public GraphComponent
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Node, NodeTypeId, GraphComponent );
 
-		typedef boost::signal<void (Plug *)> UnaryPlugSignal;
-		typedef boost::signal<void (Plug *, Plug *)> BinaryPlugSignal;
+		using UnaryPlugSignal = Signals::Signal<void (Plug *)>;
+		using BinaryPlugSignal = Signals::Signal<void (Plug *, Plug *)>;
 
 		/// @name Plug signals
 		/// These signals are emitted on events relating to child Plugs
@@ -143,7 +143,7 @@ class GAFFER_API Node : public GraphComponent
 		/// specifies the original source of the error, since it may be being
 		/// propagated downstream from an original upstream error. The error
 		/// argument is a description of the problem.
-		typedef boost::signal<void ( const Plug *plug, const Plug *source, const std::string &error )> ErrorSignal;
+		using ErrorSignal = Signals::Signal<void ( const Plug *plug, const Plug *source, const std::string &error )>;
 		/// Signal emitted when an error occurs while processing this node.
 		/// This is intended to allow UI elements to display errors that occur
 		/// during processing triggered by other parts of the UI.
@@ -157,6 +157,10 @@ class GAFFER_API Node : public GraphComponent
 		///
 		/// \threading Since node graph processing may occur on any thread, it is
 		/// important to note that this signal may also be emitted on any thread.
+		/// \todo Signals are not intended to be threadsafe, and we shouldn't be
+		/// emitting them concurrently - see comments in SlotBase. Perhaps we
+		/// should use `ParallelAlgo::callOnUIThread()` to schedule later emission
+		/// on the UI thread?
 		ErrorSignal &errorSignal();
 		const ErrorSignal &errorSignal() const;
 

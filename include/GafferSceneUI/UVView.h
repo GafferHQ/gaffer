@@ -89,7 +89,7 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 
 		State state() const;
 
-		typedef boost::signal<void (UVView *)> UVViewSignal;
+		using UVViewSignal = Gaffer::Signals::Signal<void (UVView *)>;
 		UVViewSignal &stateChangedSignal();
 
 	protected :

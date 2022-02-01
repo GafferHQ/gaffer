@@ -200,7 +200,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		if selection.isEmpty() :
 			return
 
-		with Gaffer.BlockedConnection( self.__pathChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__pathChangedConnection ) :
 			self.__path.setFromString( selection.paths()[0] )
 
 	# This slot is connected to the pathSelectedSignals of the children and just forwards
@@ -230,7 +230,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		# the new filter, but with the additional removal
 		# of leaf paths. block the signal because otherwise
 		# we'd end up truncating the main path in __dirPathChanged.
-		with Gaffer.BlockedConnection( self.__dirPathChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__dirPathChangedConnection ) :
 			if newFilter is not None :
 				self.__dirPath.setFilter(
 					Gaffer.CompoundPathFilter(
@@ -264,7 +264,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 			if pathCopy.isLeaf() :
 				del pathCopy[-1]
 			pathCopy.truncateUntilValid()
-			with Gaffer.BlockedConnection( ( self.__dirPathChangedConnection, self.__listingPathChangedConnection ) ) :
+			with Gaffer.Signals.BlockedConnection( ( self.__dirPathChangedConnection, self.__listingPathChangedConnection ) ) :
 				self.__dirPath.setFromPath( pathCopy )
 				self.__listingPath.setFromPath( pathCopy )
 		else :
@@ -282,7 +282,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		# update the main path and the listing path
 		dirPathCopy = dirPath.copy()
 		dirPathCopy.truncateUntilValid()
-		with Gaffer.BlockedConnection( ( self.__pathChangedConnection, self.__listingPathChangedConnection ) ) :
+		with Gaffer.Signals.BlockedConnection( ( self.__pathChangedConnection, self.__listingPathChangedConnection ) ) :
 			self.__path.setFromPath( dirPathCopy )
 			self.__listingPath.setFromPath( dirPathCopy )
 
@@ -291,7 +291,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		assert( listingPath.isSame( self.__listingPath ) )
 
 		# update the directory path and the main path
-		with Gaffer.BlockedConnection( ( self.__pathChangedConnection, self.__dirPathChangedConnection ) ) :
+		with Gaffer.Signals.BlockedConnection( ( self.__pathChangedConnection, self.__dirPathChangedConnection ) ) :
 			self.__dirPath[:] = listingPath[:]
 			self.__path[:] = listingPath[:]
 

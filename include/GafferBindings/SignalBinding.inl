@@ -38,11 +38,12 @@
 #ifndef GAFFERBINDINGS_SIGNALBINDING_INL
 #define GAFFERBINDINGS_SIGNALBINDING_INL
 
+#include "Gaffer/Signals.h"
+
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "boost/signals.hpp"
 #include "boost/version.hpp"
 
 namespace GafferBindings
@@ -55,7 +56,7 @@ template<typename Signal, typename Caller>
 struct Slot;
 
 template<typename Result, typename... Args, typename Combiner, typename Caller>
-struct Slot<boost::signal<Result( Args... ), Combiner>, Caller>
+struct Slot<Gaffer::Signals::Signal<Result( Args... ), Combiner>, Caller>
 {
 
 	Slot( boost::python::object slot )
@@ -94,30 +95,25 @@ struct Slot<boost::signal<Result( Args... ), Combiner>, Caller>
 
 };
 
-// Ideally we would bind `boost::signals::trackable` to Python
-// directly, but its protected destructor prevents that. So we
-// bind this little derived class instead.
-struct Trackable : public boost::signals::trackable
-{
-};
-
 // Overload boost's `visit_each()` function for all our Slot types.
-// Boost will call this to discover slots which refer to trackable
+// Signal will call this to discover slots which refer to `Trackable`
 // objects, and will use it to automatically remove the connection
-// when the `trackable` object dies.
+// when the `Trackable` object dies.
 template<typename Visitor, typename Signal, typename Caller>
 void visit_each( Visitor &visitor, const Slot<Signal, Caller> &slot, int )
 {
 	// Check to see if slot contains a WeakMethod referring to a trackable
 	// object. There is no point checking for regular methods, because they
 	// prevent the trackable object from dying until it has been disconnected
-	// manually.
-	boost::python::object gaffer = boost::python::import( "Gaffer" );
-	boost::python::object weakMethod = gaffer.attr( "WeakMethod" );
-	if( PyObject_IsInstance( slot.m_slot.get(), weakMethod.ptr() ) )
+	// manually. We deliberately "leak" the static variables because doing
+	// otherwise would cause the destruction of PyObjects _after_ Python has
+	// been shut down (during application exit).
+	static boost::python::object *g_gaffer = new boost::python::object( boost::python::import( "Gaffer" ) );
+	static boost::python::object *g_weakMethod = new boost::python::object( g_gaffer->attr( "WeakMethod" ) );
+	if( PyObject_IsInstance( slot.m_slot.get(), g_weakMethod->ptr() ) )
 	{
 		boost::python::object self = boost::python::object( slot.m_slot ).attr( "instance" )();
-		boost::python::extract<Trackable &> e( self );
+		boost::python::extract<Gaffer::Signals::Trackable &> e( self );
 		if( e.check() )
 		{
 			boost::visit_each( visitor, e(), 0 );
@@ -125,7 +121,7 @@ void visit_each( Visitor &visitor, const Slot<Signal, Caller> &slot, int )
 	}
 }
 
-GAFFERBINDINGS_API boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped );
+GAFFERBINDINGS_API boost::python::object pythonConnection( const Gaffer::Signals::Connection &connection, bool scoped );
 
 template<typename Signal, typename SlotCaller>
 boost::python::object connect( Signal &s, boost::python::object &slot, bool scoped )
@@ -134,9 +130,9 @@ boost::python::object connect( Signal &s, boost::python::object &slot, bool scop
 }
 
 template<typename Signal, typename SlotCaller>
-boost::python::object connectInGroup( Signal &s, int group, boost::python::object &slot, bool scoped )
+boost::python::object connectFront( Signal &s, boost::python::object &slot, bool scoped )
 {
-	return pythonConnection( s.connect( group, Slot<Signal, SlotCaller>( slot ) ), scoped );
+	return pythonConnection( s.connectFront( Slot<Signal, SlotCaller>( slot ) ), scoped );
 }
 
 } // namespace Detail
@@ -145,10 +141,10 @@ template<typename Signal>
 struct DefaultSignalCaller;
 
 template<typename Result, typename... Args, typename Combiner>
-struct DefaultSignalCaller<boost::signal<Result( Args... ), Combiner>>
+struct DefaultSignalCaller<Gaffer::Signals::Signal<Result( Args... ), Combiner>>
 {
 
-	using Signal = boost::signal<Result( Args... ), Combiner>;
+	using Signal = Gaffer::Signals::Signal<Result( Args... ), Combiner>;
 
 	static Result call( Signal &s, Args... args )
 	{
@@ -162,7 +158,7 @@ template<typename Signal>
 struct DefaultSlotCaller;
 
 template<typename Result, typename... Args, typename Combiner>
-struct DefaultSlotCaller<boost::signal<Result( Args... ), Combiner>>
+struct DefaultSlotCaller<Gaffer::Signals::Signal<Result( Args... ), Combiner>>
 {
 
 	Result operator()( boost::python::object slot, Args&&... args )
@@ -184,8 +180,9 @@ SignalClass<Signal, SignalCaller, SlotCaller>::SignalClass( const char *classNam
 	:	boost::python::class_<Signal, boost::noncopyable>( className, docString )
 {
 	this->def( "connect", &Detail::connect<Signal, SlotCaller>, ( boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
-	this->def( "connect", &Detail::connectInGroup<Signal, SlotCaller>, ( boost::python::arg( "group" ), boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
-	this->def( "num_slots", &Signal::num_slots );
+	this->def( "connectFront", &Detail::connectFront<Signal, SlotCaller>, (boost::python::arg( "slot" ), boost::python::arg( "scoped" ) = true ) );
+	this->def( "disconnectAllSlots", &Signal::disconnectAllSlots );
+	this->def( "numSlots", &Signal::numSlots );
 	this->def( "empty", &Signal::empty );
 	this->def( "__call__", &SignalCaller::call );
 }

@@ -195,8 +195,8 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton = self._addButton( "Forward" )
 
 		self.__preExecuteSignal = GafferUI.WidgetSignal()
-		self.__postExecuteSignal = Gaffer.Signal2()
-		self.__opExecutedSignal = Gaffer.Signal1()
+		self.__postExecuteSignal = Gaffer.Signals.Signal2()
+		self.__opExecutedSignal = Gaffer.Signals.Signal1()
 		self.__haveResizedToFitParameters = False
 
 		if executeImmediately :
@@ -261,7 +261,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setText( "Cancel" )
 		self.__backButton.setEnabled( True )
 		self.__backButton.setVisible( True )
-		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__close ) )
+		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__close ) )
 
 		executeLabel = "OK"
 		with IECore.IgnoredExceptions( KeyError ) :
@@ -270,7 +270,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__forwardButton.setText( executeLabel )
 		self.__forwardButton.setEnabled( True )
 		self.__forwardButton.setVisible( True )
-		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connect( 0, Gaffer.WeakMethod( self.__initiateExecution ) )
+		self.__forwardButtonClickedConnection = self.__forwardButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__initiateExecution ) )
 
 		self.__frame.setChild( self.__parameterEditingUI )
 

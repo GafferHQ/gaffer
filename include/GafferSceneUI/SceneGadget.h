@@ -126,7 +126,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		State state() const;
 
-		typedef boost::signal<void (SceneGadget *)> SceneGadgetSignal;
+		using SceneGadgetSignal = Gaffer::Signals::Signal<void (SceneGadget *)>;
 		SceneGadgetSignal &stateChangedSignal();
 
 		/// Blocks until the update is completed. This is primarily of

@@ -412,11 +412,11 @@ GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugVal
 
 # Signal with custom result combiner to prevent bad
 # slots blocking the execution of others.
-class _AddButtonMenuSignal( Gaffer.Signal2 ) :
+class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
 
 	def __init__( self ) :
 
-		Gaffer.Signal2.__init__( self, self.__combiner )
+		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
 
 	@staticmethod
 	def __combiner( results ) :

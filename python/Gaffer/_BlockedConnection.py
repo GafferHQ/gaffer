@@ -37,28 +37,35 @@
 
 import Gaffer
 
+# This isn't a direct binding of the C++ class because
+# binding C++ scopes as Python context managers isn't
+# completely straightforward, and in Python it is useful
+# to provide the additional functionality of passing multiple
+# connections.
 class BlockedConnection( object ) :
 
 	def __init__( self, connectionOrConnections ) :
 
-		if isinstance( connectionOrConnections, Gaffer.Connection ) :
+		if isinstance( connectionOrConnections, Gaffer.Signals.Connection ) :
 			self.__connections = [ connectionOrConnections ]
 		else :
 			self.__connections = connectionOrConnections
 
+		self.__previouslyBlocked = None
+
 	def __enter__( self ) :
 
+		assert( self.__previouslyBlocked is None )
+
+		self.__previouslyBlocked = [ c.getBlocked() for c in self.__connections ]
 		for c in self.__connections :
-			try :
-				c.__blockCount += 1
-			except AttributeError :
-				c.__blockCount = 1
-			if c.__blockCount == 1 :
-				c.block()
+			c.setBlocked( True )
 
 	def __exit__( self, type, value, traceBack ) :
 
-		for c in self.__connections :
-			c.__blockCount -= 1
-			if c.__blockCount == 0 :
-				c.unblock()
+		for c, b in zip( self.__connections, self.__previouslyBlocked ) :
+			c.setBlocked( b )
+
+		self.__previouslyBlocked = None
+
+Gaffer.Signals.BlockedConnection = BlockedConnection

@@ -110,7 +110,7 @@ class GAFFER_API ScriptNode : public Node
 		/// for use with NodeSetEditor.setNodeSet().
 		////////////////////////////////////////////////////////////////////
 		//@{
-		typedef boost::signal<void ( ScriptNode *, Node * ), Gaffer::CatchingSignalCombiner<void> > FocusChangedSignal;
+		using FocusChangedSignal = Signals::Signal<void ( ScriptNode *, Node * ), Signals::CatchingCombiner<void>>;
 		void setFocus( Node *node );
 		Node *getFocus();
 		const Node *getFocus() const;
@@ -129,8 +129,8 @@ class GAFFER_API ScriptNode : public Node
 		/// be active while those operations are being performed.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		typedef boost::signal<void ( ScriptNode *, const Action *, Action::Stage stage )> ActionSignal;
-		typedef boost::signal<void ( ScriptNode * )> UndoAddedSignal;
+		using ActionSignal = Signals::Signal<void ( ScriptNode *, const Action *, Action::Stage stage )>;
+		using UndoAddedSignal = Signals::Signal<void ( ScriptNode * )> ;
 		bool undoAvailable() const;
 		void undo();
 		bool redoAvailable() const;

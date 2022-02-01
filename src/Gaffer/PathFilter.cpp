@@ -88,7 +88,7 @@ void PathFilter::filter( std::vector<PathPtr> &paths, const IECore::Canceller *c
 	doFilter( paths, canceller );
 }
 
-typedef boost::signal<void ( PathFilter * )> ChangedSignal;
+using ChangedSignal = Signals::Signal<void ( PathFilter * )>;
 ChangedSignal &PathFilter::changedSignal()
 {
 	return m_changedSignal;

@@ -39,8 +39,6 @@
 
 #include "GafferBindings/SignalBinding.h"
 
-#include "boost/signals.hpp"
-
 using namespace boost::python;
 
 namespace GafferBindings
@@ -49,7 +47,7 @@ namespace GafferBindings
 namespace Detail
 {
 
-boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped )
+boost::python::object pythonConnection( const Gaffer::Signals::Connection &connection, bool scoped )
 {
 	if( scoped )
 	{
@@ -59,7 +57,7 @@ boost::python::object pythonConnection( const boost::signals::connection &connec
 		// we construct via the python-bound copy constructor which
 		// avoids the problem.
 		PyTypeObject *type = boost::python::converter::registry::query(
-			boost::python::type_info( typeid( boost::signals::scoped_connection ) )
+			boost::python::type_info( typeid( Gaffer::Signals::ScopedConnection ) )
 		)->get_class_object();
 
 		boost::python::object oType( boost::python::handle<>( boost::python::borrowed( type ) ) );

@@ -107,7 +107,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			except :
 				errored = True
 
-		with Gaffer.BlockedConnection( self.__valueChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__valueChangedConnection ) :
 
 			# Always give the widget a value, even if we have multiple, because
 			# the _type_ (int or float) is important, and affects interaction
@@ -172,7 +172,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
 
-			with Gaffer.BlockedConnection( self._plugConnections() ) :
+			with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
 
 				for plug in self.getPlugs() :
 

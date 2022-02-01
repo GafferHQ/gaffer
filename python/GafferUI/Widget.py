@@ -100,7 +100,7 @@ from Qt import QtWidgets
 # have identical signatures in as many places as possible, with the possibility of perhaps having
 # a common base class in the future. Right now the signatures are the same for the event signals and
 # for the tool tips.
-class Widget( Gaffer.Trackable ) :
+class Widget( Gaffer.Signals.Trackable ) :
 
 	## All GafferUI.Widget instances must hold a corresponding QtWidgets.QWidget instance
 	# which provides the top level implementation for the widget, and to which other
@@ -116,7 +116,7 @@ class Widget( Gaffer.Trackable ) :
 	# automatic `parent.addChild()` call.
 	def __init__( self, topLevelWidget, toolTip="", parenting = None ) :
 
-		Gaffer.Trackable.__init__( self )
+		Gaffer.Signals.Trackable.__init__( self )
 
 		assert( isinstance( topLevelWidget, ( QtWidgets.QWidget, Widget ) ) )
 
@@ -809,7 +809,7 @@ class Widget( Gaffer.Trackable ) :
 			self._qtWidget().setMouseTracking( True )
 
 
-	__focusChangedSignal = Gaffer.Signal2()
+	__focusChangedSignal = Gaffer.Signals.Signal2()
 	__focusChangedConnected = False
 	@classmethod
 	def __ensureFocusChangedConnection( cls ) :

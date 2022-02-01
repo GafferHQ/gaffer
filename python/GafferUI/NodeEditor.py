@@ -113,7 +113,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		return self.__readOnly
 
-	__toolMenuSignal = Gaffer.Signal3()
+	__toolMenuSignal = Gaffer.Signals.Signal3()
 	## Returns a signal which is emitted to create the
 	# tool menu for a node in the editor. Slots may connect
 	# to this signal to edit the menu definition on the fly -

@@ -611,7 +611,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 		self.__parent = None # the parent of the plugs we're listing
 		self.__dragItem = None
-		self.__selectionChangedSignal = Gaffer.Signal1()
+		self.__selectionChangedSignal = Gaffer.Signals.Signal1()
 
 		self.__pathListing.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.__pathListing.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ), scoped = False )
@@ -774,7 +774,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 			return index
 
-		with Gaffer.BlockedConnection( self.__metadataChangedConnections ) :
+		with Gaffer.Signals.BlockedConnection( self.__metadataChangedConnections ) :
 			walk( self.__pathListing.getPath().copy().setFromString( "/" ).item() )
 			Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySections", emptySections )
 			Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySectionIndices", emptySectionIndices )
@@ -1162,7 +1162,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		self.__nameWidget.setText( selectedPaths[0][0] if selectedPaths else "" )
 		if selectedPaths :
-			with Gaffer.BlockedConnection( self.__valuePlugSetConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__valuePlugSetConnection ) :
 				self.__valueNode["presetValue"].setValue(
 					Gaffer.Metadata.value( self.getPlug(), "preset:" + selectedPaths[0][0] )
 				)
@@ -1210,7 +1210,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 	def __dragEnd( self, listing, event ) :
 
 		d = self.__pathListing.getPath().dict()
-		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__plugMetadataChangedConnection ) :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				# reorder by removing everything and reregistering in the order we want
 				for item in d.items() :
@@ -1283,7 +1283,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 		newName = newName.translate( maketrans( "/*?\\[", "_____" ) )
 
 		items = self.__pathListing.getPath().dict().items()
-		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__plugMetadataChangedConnection ) :
 			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				# retain order by removing and reregistering everything
 				for item in items :
@@ -1631,7 +1631,7 @@ class _SectionEditor( GafferUI.Widget ) :
 
 		self.__section = ""
 		self.__plugParent = None
-		self.__nameChangedSignal = Gaffer.Signal3()
+		self.__nameChangedSignal = Gaffer.Signals.Signal3()
 
 	def setPlugParent( self, plugParent ) :
 

@@ -328,8 +328,8 @@ private:
 
 	struct ConnectionData
 	{
-		explicit ConnectionData( boost::signals::connection connection = boost::signals::connection() );
-		boost::signals::connection m_connection;
+		explicit ConnectionData( Signals::Connection connection = Signals::Connection() );
+		Signals::Connection m_connection;
 		unsigned int m_count;
 	};
 
@@ -476,7 +476,7 @@ bool AnimationGadget::SelectionSet::empty() const
 	return m_keys.empty();
 }
 
-AnimationGadget::SelectionSet::ConnectionData::ConnectionData( const boost::signals::connection connection )
+AnimationGadget::SelectionSet::ConnectionData::ConnectionData( const Signals::Connection connection )
 : m_connection( connection )
 , m_count( 0u )
 {}

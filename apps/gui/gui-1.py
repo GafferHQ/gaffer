@@ -159,7 +159,7 @@ class gui( Gaffer.Application ) :
 
 		text = QtWidgets.QApplication.clipboard().text().encode( "utf-8" )
 		if text :
-			with Gaffer.BlockedConnection( self.__clipboardContentsChangedConnection ) :
+			with Gaffer.Signals.BlockedConnection( self.__clipboardContentsChangedConnection ) :
 				self.root().setClipboardContents( IECore.StringData( text ) )
 
 IECore.registerRunTimeTyped( gui )

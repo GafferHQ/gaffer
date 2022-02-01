@@ -589,9 +589,9 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__settingsWindow = None
 
-		# Must connect with group 0 so we get called before PlugValueWidget's default handlers
-		self.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
-		self.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ), scoped = False )
+		# Must connect at front so we get called before PlugValueWidget's default handlers
+		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 		self._updateFromPlug()
 

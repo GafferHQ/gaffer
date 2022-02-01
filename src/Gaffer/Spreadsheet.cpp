@@ -520,8 +520,8 @@ class Spreadsheet::RowsPlug::RowNameMap
 
 		RowsPlug *m_rowsPlug;
 
-		boost::signals::scoped_connection m_plugSetConnection;
-		boost::signals::scoped_connection m_plugInputChangedConnection;
+		Signals::ScopedConnection m_plugSetConnection;
+		Signals::ScopedConnection m_plugInputChangedConnection;
 
 		struct Row
 		{

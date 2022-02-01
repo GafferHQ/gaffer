@@ -132,7 +132,7 @@ class InteractiveRender::RenderMessageHandler : public MessageHandler
 			messagesChangedSignal();
 		}
 
-		boost::signal<void ()> messagesChangedSignal;
+		Signals::Signal<void ()> messagesChangedSignal;
 
 	private :
 

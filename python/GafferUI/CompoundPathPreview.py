@@ -66,7 +66,7 @@ class CompoundPathPreview( GafferUI.PathPreviewWidget ) :
 
 	def _updateFromPath( self ) :
 
-		with Gaffer.BlockedConnection( self.__currentTabChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__currentTabChangedConnection ) :
 
 			del self.__tabbedContainer[:]
 			for label, tab in self.__labelsAndTabs :

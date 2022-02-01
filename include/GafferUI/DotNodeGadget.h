@@ -81,7 +81,7 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 		bool dragEnter( const DragDropEvent &event );
 		bool drop( const DragDropEvent &event );
 
-		boost::signals::scoped_connection m_upstreamNameChangedConnection;
+		Gaffer::Signals::ScopedConnection m_upstreamNameChangedConnection;
 
 		std::string m_label;
 		Imath::V2f m_labelPosition;

@@ -76,10 +76,10 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		addButton = self.vectorDataWidget().addButton()
 		removeButton = self.vectorDataWidget().removeButton()
 
-		# connect with group 0 so we get called before the default handlers
-		addButton.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
-		removeButton.dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
-		self.vectorDataWidget().dragEnterSignal().connect( 0, Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
+		# Connect at front so we get called before the default handlers
+		addButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
+		removeButton.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
+		self.vectorDataWidget().dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__convertEvent ), scoped = False )
 
 	def __getManifest( self ) :
 

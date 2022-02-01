@@ -125,7 +125,7 @@ class Timeline( GafferUI.Editor ) :
 			return
 
 		# update the frame counter and slider position
-		with Gaffer.BlockedConnection( [ self.__frameChangedConnection, self.__sliderValueChangedConnection ] ) :
+		with Gaffer.Signals.BlockedConnection( [ self.__frameChangedConnection, self.__sliderValueChangedConnection ] ) :
 			self.__frame.setValue( self.getContext().getFrame() )
 			self.__slider.setValue( self.getContext().getFrame() )
 
@@ -231,7 +231,7 @@ class Timeline( GafferUI.Editor ) :
 
 		minValue, maxValue = playback.getFrameRange()
 
-		with Gaffer.BlockedConnection( ( self.__sliderRangeStartChangedConnection, self.__sliderRangeEndChangedConnection ) ) :
+		with Gaffer.Signals.BlockedConnection( ( self.__sliderRangeStartChangedConnection, self.__sliderRangeEndChangedConnection ) ) :
 			self.__slider.setRange( minValue, maxValue )
 			self.__sliderRangeStart.setValue( minValue )
 			self.__sliderRangeEnd.setValue( maxValue )

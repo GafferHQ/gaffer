@@ -37,15 +37,14 @@
 
 #include "boost/python.hpp"
 
-#include "SignalBinding.h"
+#include "SignalsBinding.h"
 
 #include "GafferBindings/SignalBinding.h"
 
 #include "IECorePython/ScopedGILLock.h"
 
-#include "boost/signals.hpp"
-
 using namespace boost::python;
+using namespace Gaffer::Signals;
 using namespace GafferBindings;
 
 namespace
@@ -154,7 +153,7 @@ void bind( const char *name )
 	;
 
 	// bind the appropriate result range type so the custom result combiner can get the slot results.
-	typedef SlotCallRange<typename Signal::slot_call_iterator> Range;
+	typedef SlotCallRange<typename Signal::SlotCallIterator> Range;
 	boost::python::class_<Range>( "__SignalResultRange", no_init )
 		.def( "__iter__", &Range::iter, return_self<>() )
 #if PY_MAJOR_VERSION >= 3
@@ -168,15 +167,31 @@ void bind( const char *name )
 
 } // namespace
 
-void GafferModule::bindSignal()
+void GafferModule::bindSignals()
 {
 
-	class_<GafferBindings::Detail::Trackable, boost::noncopyable>( "Trackable" );
+	object module( borrowed( PyImport_AddModule( "Gaffer.Signals" ) ) );
+	scope().attr( "Signals" ) = module;
+	scope moduleScope( module );
 
-	typedef boost::signal<object (), PythonResultCombiner > Signal0;
-	typedef boost::signal<object ( object ), PythonResultCombiner > Signal1;
-	typedef boost::signal<object ( object, object ), PythonResultCombiner > Signal2;
-	typedef boost::signal<object ( object, object, object ), PythonResultCombiner > Signal3;
+	class_<Connection>( "Connection", no_init )
+		.def( init<const Connection &>() )
+		.def( "setBlocked", &Connection::setBlocked, ( arg( "blocked" ) ) )
+		.def( "getBlocked", &Connection::getBlocked )
+		.def( "disconnect", &Connection::disconnect )
+		.def( "connected", &Connection::connected )
+	;
+
+	class_<ScopedConnection, bases<Connection> >( "ScopedConnection", no_init )
+		.def( init<const Connection &>() )
+	;
+
+	class_<Gaffer::Signals::Trackable, boost::noncopyable>( "Trackable" );
+
+	using Signal0 = Gaffer::Signals::Signal<object (), PythonResultCombiner>;
+	using Signal1 = Gaffer::Signals::Signal<object ( object ), PythonResultCombiner>;
+	using Signal2 = Gaffer::Signals::Signal<object ( object, object ), PythonResultCombiner>;
+	using Signal3 = Gaffer::Signals::Signal<object ( object, object, object ), PythonResultCombiner>;
 
 	bind<Signal0>( "Signal0" );
 	bind<Signal1>( "Signal1" );

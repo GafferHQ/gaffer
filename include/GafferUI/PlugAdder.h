@@ -61,11 +61,11 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 		/// When emitted, shows a menu containing the specified plugs, and returns
 		/// the chosen plug. Implemented as a signal so the menu can be implemented
 		/// externally in Python code.
-		typedef boost::signal<Gaffer::Plug *( const std::string &title, const std::vector<Gaffer::Plug *> & )> PlugMenuSignal;
+		using PlugMenuSignal = Gaffer::Signals::Signal<Gaffer::Plug *( const std::string &title, const std::vector<Gaffer::Plug *> & )>;
 		static PlugMenuSignal &plugMenuSignal();
 
 		/// A simpler menu that just shows a list of strings.  Should the previous form be deprecated?
-		typedef boost::signal<std::string ( const std::string &title, const std::vector<std::string> & )> MenuSignal;
+		using MenuSignal = Gaffer::Signals::Signal<std::string ( const std::string &title, const std::vector<std::string> & )>;
 		static MenuSignal &menuSignal();
 
 	protected :

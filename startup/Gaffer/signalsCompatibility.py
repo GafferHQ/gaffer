@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,66 +34,13 @@
 #
 ##########################################################################
 
-import unittest
-
 import Gaffer
-import GafferTest
 
-class BlockedConnectionTest( GafferTest.TestCase ) :
-
-	def test( self ) :
-
-		self.numCalls = 0
-		def f() :
-			self.numCalls += 1
-
-		s = Gaffer.Signals.Signal0()
-		c = s.connect( f )
-
-		s()
-		self.assertEqual( self.numCalls, 1 )
-
-		with Gaffer.Signals.BlockedConnection( c ) :
-			s()
-
-		self.assertEqual( self.numCalls, 1 )
-
-		s()
-		self.assertEqual( self.numCalls, 2 )
-
-	def testReentrant( self ) :
-
-		self.numCalls = 0
-		def f() :
-			self.numCalls += 1
-
-		s = Gaffer.Signals.Signal0()
-		c = s.connect( f )
-
-		s()
-		self.assertEqual( self.numCalls, 1 )
-
-		with Gaffer.Signals.BlockedConnection( c ) :
-			s()
-			self.assertEqual( self.numCalls, 1 )
-			with Gaffer.Signals.BlockedConnection( c ) :
-				s()
-
-		self.assertEqual( self.numCalls, 1 )
-
-		s()
-		self.assertEqual( self.numCalls, 2 )
-
-		with Gaffer.Signals.BlockedConnection( c ) :
-			s()
-			self.assertEqual( self.numCalls, 2 )
-			with Gaffer.Signals.BlockedConnection( c ) :
-				s()
-
-		self.assertEqual( self.numCalls, 2 )
-
-		s()
-		self.assertEqual( self.numCalls, 3 )
-
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Connection = Gaffer.Signals.Connection
+Gaffer.ScopedConnection = Gaffer.Signals.ScopedConnection
+Gaffer.BlockedConnection = Gaffer.Signals.BlockedConnection
+Gaffer.Trackable = Gaffer.Signals.Trackable
+Gaffer.Signal0 = Gaffer.Signals.Signal0
+Gaffer.Signal1 = Gaffer.Signals.Signal1
+Gaffer.Signal2 = Gaffer.Signals.Signal2
+Gaffer.Signal3 = Gaffer.Signals.Signal3

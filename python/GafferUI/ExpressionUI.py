@@ -169,7 +169,7 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 		return self.__textWidget
 
-	__expressionContextMenuSignal = Gaffer.Signal2()
+	__expressionContextMenuSignal = Gaffer.Signals.Signal2()
 	## This signal is emitted whenever a popup menu
 	# for an ExpressionWidget is about to be shown.
 	# This provides an opportunity to customise the

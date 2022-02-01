@@ -70,7 +70,7 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 		void connectToViewContext();
 		void contextChanged( const IECore::InternedString &name );
 
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 		void plugDirtied( const Gaffer::Plug *plug );
 		GafferScene::ScenePlug::ScenePath cameraPath() const;
@@ -91,7 +91,7 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 
 		void viewportCameraChanged();
 
-		boost::signals::connection m_viewportCameraChangedConnection;
+		Gaffer::Signals::Connection m_viewportCameraChangedConnection;
 
 		void setCameraCenterOfInterest( const GafferScene::ScenePlug::ScenePath &camera, float centerOfInterest );
 		float getCameraCenterOfInterest( const GafferScene::ScenePlug::ScenePath &camera ) const;

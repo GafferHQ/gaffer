@@ -112,7 +112,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
-			self.__pathListing.buttonDoubleClickSignal().connect( 0, Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 
 		self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 
@@ -226,14 +226,14 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		assert( pathListing is self.__pathListing )
 
-		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
+		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
 			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
 		selection = ContextAlgo.getSelectedPaths( self.getContext() )
-		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
@@ -367,7 +367,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		index = self._qtWidget().currentIndex()
 		text = self._qtWidget().tabText( index )
-		with Gaffer.BlockedConnection( self._plugConnections() ) :
+		with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
 			self.getPlug().setValue(
 				text if text != "Main" else ""
 			)

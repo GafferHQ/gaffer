@@ -101,7 +101,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		with IECore.IgnoredExceptions( KeyError ) :
 			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 
-		with Gaffer.BlockedConnection( self._pathFilterChangedConnection() ) :
+		with Gaffer.Signals.BlockedConnection( self._pathFilterChangedConnection() ) :
 			self.pathFilter().setEnabled( widget.getState() is not invertEnabled )
 
 	def __patternEditingFinished( self, textWidget ) :
@@ -127,7 +127,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 				pattern = "*" + pattern + "*"
 			patterns.append( pattern )
 
-		with Gaffer.BlockedConnection( self._pathFilterChangedConnection() ) :
+		with Gaffer.Signals.BlockedConnection( self._pathFilterChangedConnection() ) :
 			self.pathFilter().setMatchPatterns( patterns )
 			self.pathFilter().setEnabled( len( patterns ) )
 
@@ -153,7 +153,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def __setPropertyName( self, property, checked ) :
 
-		with Gaffer.BlockedConnection( self._pathFilterChangedConnection() ) :
+		with Gaffer.Signals.BlockedConnection( self._pathFilterChangedConnection() ) :
 			self.pathFilter().setPropertyName( property )
 
 GafferUI.PathFilterWidget.registerType( Gaffer.MatchPatternPathFilter, MatchPatternPathFilterWidget )

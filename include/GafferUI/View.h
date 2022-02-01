@@ -168,7 +168,7 @@ class GAFFERUI_API View : public Gaffer::Node
 		/// Returns the connection used to trigger the call to contextChanged(). Derived
 		/// classes may block this temporarily if they want to prevent the triggering -
 		/// this can be useful when modifying the context.
-		boost::signals::connection &contextChangedConnection();
+		Gaffer::Signals::Connection &contextChangedConnection();
 
 		template<class T>
 		struct ViewDescription
@@ -183,7 +183,7 @@ class GAFFERUI_API View : public Gaffer::Node
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
-		boost::signals::scoped_connection m_contextChangedConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 		typedef std::map<IECore::TypeId, ViewCreator> CreatorMap;
 		static CreatorMap &creators();

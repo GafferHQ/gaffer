@@ -89,7 +89,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 			except :
 				errored = True
 
-		with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
+		with Gaffer.Signals.BlockedConnection( self.__stateChangedConnection ) :
 			self.__boolWidget.setState( value if value is not None else self.__boolWidget.State.Indeterminate )
 
 		self.__boolWidget.setErrored( errored )

@@ -38,8 +38,7 @@
 #define GAFFER_PARALLELALGO_H
 
 #include "Gaffer/Export.h"
-
-#include "boost/signals.hpp"
+#include "Gaffer/Signals.h"
 
 #include <functional>
 #include <memory>
