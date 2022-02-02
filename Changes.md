@@ -6,6 +6,7 @@ Features
 
 - LightEditor : Added a new editor UI for inspecting and editing lights. This can be found in the tab next to the GraphEditor in the standard layouts.
 - Cryptomatte : Added a new node to output a matte generated from IDs selected from Cryptomatte AOVs.
+- USD : Added support for reading and writing shader assignments via UsdShade.
 
 Improvements
 ------------
@@ -44,6 +45,11 @@ API
   - Column subclasses may now define background colours and tooltips.
   - Deprecated IconColumn class.
 - ShaderView : Added `deregisterRenderer()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.3.2.0.
 
 0.61.1.1 (relative to 0.61.1.0)
 ========
