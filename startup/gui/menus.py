@@ -502,6 +502,7 @@ nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = 
 nodeMenu.append( "/Utility/Expression", Gaffer.Expression )
 nodeMenu.append( "/Utility/Node", Gaffer.Node )
 nodeMenu.append( "/Utility/Random", Gaffer.Random )
+nodeMenu.append( "/Utility/RandomChoice", Gaffer.RandomChoice )
 nodeMenu.append( "/Utility/Box", GafferUI.BoxUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Utility/BoxIn", Gaffer.BoxIn )
 nodeMenu.append( "/Utility/BoxOut", Gaffer.BoxOut )
