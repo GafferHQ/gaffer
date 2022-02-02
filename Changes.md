@@ -217,7 +217,7 @@ Build
   - PySide : Updated to version 5.15.2.
   - Cortex : Updated to version 10.3.0.0.
 
-0.60.12.x (relative to 0.60.12.1)
+0.60.12.2 (relative to 0.60.12.1)
 =========
 
 Fixes
