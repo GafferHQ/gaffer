@@ -17,7 +17,10 @@ Fixes
 API
 ---
 
-- VectorDataPlugValueWidget : Added support for showing plugs with children, with each child forming a column in the UI.
+- VectorDataPlugValueWidget :
+  - Added support for showing plugs with children, with each child forming a column in the UI.
+  - Added `vectorDataPlugValueWidget:elementDefaultValue` metadata, used to provide the initial
+    value for newly added rows.
 
 0.61.2.0 (relative to 0.61.1.1)
 ========

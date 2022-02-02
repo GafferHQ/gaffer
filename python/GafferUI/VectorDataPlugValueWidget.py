@@ -47,6 +47,8 @@ import GafferUI
 # - "vectorDataPlugValueWidget:dragPointer"
 # - "vectorDataPlugValueWidget:index" : Used to order child plugs
 # - "vectorDataPlugValueWidget:header" : Provides custom headers for child plugs
+# - "vectorDataPlugValueWidget:elementDefaultValue" : Default
+#   value for elements in newly added rows.
 class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	# If `plug` has children, then they will be used to form
@@ -54,7 +56,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	# children, it will be shown as a single column.
 	def __init__( self, plug, **kw ) :
 
-		self.__dataWidget = GafferUI.VectorDataWidget()
+		self.__dataWidget = _VectorDataWidget()
 
 		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
@@ -115,6 +117,25 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 				data = self.__dataWidget.getData()
 				for plug, value in zip( self.__dataPlugs(), self.__dataWidget.getData() ) :
 					plug.setValue( value )
+
+class _VectorDataWidget( GafferUI.VectorDataWidget ) :
+
+	def __init__( self, **kw ) :
+
+		GafferUI.VectorDataWidget.__init__( self, **kw )
+
+	def _createRows( self ) :
+
+		plugValueWidget = self.ancestor( VectorDataPlugValueWidget )
+		plugs = plugValueWidget._VectorDataPlugValueWidget__dataPlugs()
+		rows = GafferUI.VectorDataWidget._createRows( self )
+
+		for row, plug in zip( rows, plugs ) :
+			value = Gaffer.Metadata.value( plug, "vectorDataPlugValueWidget:elementDefaultValue" )
+			if value is not None :
+				row[0] = value
+
+		return rows
 
 GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug, VectorDataPlugValueWidget )
