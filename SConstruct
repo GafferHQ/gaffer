@@ -49,8 +49,8 @@ import distutils.dir_util
 
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 61 # backwards-incompatible changes
-gafferMinorVersion = 1 # new backwards-compatible features
-gafferPatchVersion = 1 # bug fixes
+gafferMinorVersion = 2 # new backwards-compatible features
+gafferPatchVersion = 0 # bug fixes
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
