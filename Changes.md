@@ -19,6 +19,7 @@ Improvements
 - SceneViewInspector :
   - Updated to align colour scheme and interaction patterns with the LightEditor.
   - Reduced overhead when the Viewer is not visible in the UI.
+- Spreadsheet : Improved interaction with read-only spreadsheets. Previously it was impossible to switch between sections or scroll the cells (#4529).
 
 Fixes
 -----
