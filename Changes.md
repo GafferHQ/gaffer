@@ -28,7 +28,7 @@ Build
 - Moved minimum required C++ standard to C++17.
 - Updated to GCC 9.3.1 for Linux builds.
 
-0.61.x.x (relative to 0.61.1.1)
+0.61.2.0 (relative to 0.61.1.1)
 ========
 
 Features
@@ -36,6 +36,7 @@ Features
 
 - LightEditor : Added a new editor UI for inspecting and editing lights. This can be found in the tab next to the GraphEditor in the standard layouts.
 - Cryptomatte : Added a new node to output a matte generated from IDs selected from Cryptomatte AOVs.
+- USD : Added support for reading and writing shader assignments via UsdShade.
 
 Improvements
 ------------
@@ -48,11 +49,15 @@ Improvements
 - SceneViewInspector :
   - Updated to align colour scheme and interaction patterns with the LightEditor.
   - Reduced overhead when the Viewer is not visible in the UI.
+- Spreadsheet : Improved interaction with read-only spreadsheets. Previously it was impossible to switch between sections or scroll the cells (#4529).
+- Focus Node : Added <kbd>Alt+1</kbd>-<kbd>Alt+9</kbd> hotkeys for setting focus to a bookmark (also available in the "Edit/Assign Focus" menu).
 
 Fixes
 -----
 
-- PathListingWidget : Fixed the deprecated `getSelectedPaths()` and `getExpandedPaths()` methods in the case that the PathListingWidget's root isn't `/` (#4510).
+- PathListingWidget :
+  - Fixed the <kbd>Ctrl</kbd>+<kbd>A</kbd> shortcut for selecting all visible paths. This was broken since Gaffer 0.61.0.0.
+  - Fixed the deprecated `getSelectedPaths()` and `getExpandedPaths()` methods in the case that the PathListingWidget's root isn't `/` (#4510).
 - NodeEditor : Fixed subtle label alignment differences between plugs with default and non-default values.
 - Instancer : Fixed RootsPerVertex mode in the case that the input object has no vertices. Previously an empty `prototypeRoots` variable would cause an unnecessary error in this case, which was incompatible with the output from DeletePoints.
 - Viewer/HierarchyView : Fixed "Edit Source" operation when the source node is inside a Reference. Previously the Reference node was shown, but now the node itself will be (albeit in read-only form).
@@ -60,8 +65,8 @@ Fixes
 - Button : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
 - ArnoldRender : Stopped instancing of polygon meshes when both `ai:subdivide_polygons` and adaptive subdivision are on.
 - GLWidget : Fixed bug which made overlays unresponsive on high resolution displays.
-- CropWindowTool : Fixed bug (introduced in 0.61.0.0) which prevented the free drawing of a new crop region outside the current one. (#4530).
-- SceneAlgo::history ( used in SceneInspector and Viewer Inspector ): Fixed massive memory usage when viewing an attribute triggers a massive scene evaluation
+- CropWindowTool : Fixed bug (introduced in 0.61.0.0) which prevented the free drawing of a new crop region outside the current one (#4530).
+- SceneViewInspector : Fixed excessive memory usage when viewing complex scenes.
 
 API
 ---
@@ -74,6 +79,11 @@ API
   - Column subclasses may now define background colours and tooltips.
   - Deprecated IconColumn class.
 - ShaderView : Added `deregisterRenderer()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.3.2.0.
 
 0.61.1.1 (relative to 0.61.1.0)
 ========
@@ -237,7 +247,7 @@ Build
   - PySide : Updated to version 5.15.2.
   - Cortex : Updated to version 10.3.0.0.
 
-0.60.12.x (relative to 0.60.12.1)
+0.60.12.2 (relative to 0.60.12.1)
 =========
 
 Fixes

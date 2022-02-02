@@ -107,13 +107,13 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( 1, 4 ), maximumSize = imath.V2i( 1, 4 ) )
 
-				addColumnButton = GafferUI.MenuButton(
+				self.__addColumnButton = GafferUI.MenuButton(
 					image="plus.png", hasFrame=False, toolTip = "Click to add column, or drop plug to connect",
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addColumnMenuDefinition ) )
 				)
-				addColumnButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragEnter ), scoped = False )
-				addColumnButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragLeave ), scoped = False )
-				addColumnButton.dropSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDrop ), scoped = False )
+				self.__addColumnButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragEnter ), scoped = False )
+				self.__addColumnButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDragLeave ), scoped = False )
+				self.__addColumnButton.dropSignal().connect( Gaffer.WeakMethod( self.__addColumnButtonDrop ), scoped = False )
 
 			self.__rowNamesTable = _PlugTableView(
 				selectionModel, _PlugTableView.Mode.RowNames,
@@ -144,16 +144,16 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
-			addRowButton = GafferUI.Button(
+			self.__addRowButton = GafferUI.Button(
 				image="plus.png", hasFrame=False, toolTip = "Click to add row, or drop new row names",
 				parenting = {
 					"index" : ( 0, 4 )
 				}
 			)
-			addRowButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRowButtonClicked ), scoped = False )
-			addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ), scoped = False )
-			addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ), scoped = False )
-			addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ), scoped = False )
+			self.__addRowButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addRowButtonClicked ), scoped = False )
+			self.__addRowButton.dragEnterSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragEnter ), scoped = False )
+			self.__addRowButton.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDragLeave ), scoped = False )
+			self.__addRowButton.dropSignal().connect( Gaffer.WeakMethod( self.__addRowButtonDrop ), scoped = False )
 
 			if isinstance( plug.node(), Gaffer.Reference ) :
 				# Currently we only allow new rows to be added to references
@@ -163,14 +163,14 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# features in future.
 				for row in plug.children()[1:] :
 					if not plug.node().isChildEdit( row ) :
-						addRowButton.setVisible( False )
+						self.__addRowButton.setVisible( False )
 						break
 
 			# Because dragging plugs to the add button involves making
 			# an output connection from the spreadsheet, it doesn't make
 			# sense to allow it on promoted plugs.
 			if not isinstance( plug.node(), Gaffer.Spreadsheet ) :
-				addColumnButton.setVisible( False )
+				self.__addColumnButton.setVisible( False )
 
 			self.__statusLabel = GafferUI.Label(
 				"",
@@ -184,7 +184,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# otherwise large status labels can force cells off the screen.
 			self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
-		for widget in [ addRowButton, addColumnButton ] :
+		for widget in [ self.__addRowButton, self.__addColumnButton ] :
 			widget.enterSignal().connect( Gaffer.WeakMethod( self.__enterToolTippedWidget ), scoped = False )
 			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__leaveToolTippedWidget ), scoped = False )
 
@@ -229,9 +229,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlug( self ) :
 
-		self.__grid.setEnabled(
-			self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
-		)
+		editable = self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
+		self.__addRowButton.setEnabled( editable )
+		self.__addColumnButton.setEnabled( editable )
 
 	def __addRowButtonClicked( self, *unused ) :
 

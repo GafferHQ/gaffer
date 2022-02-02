@@ -354,17 +354,21 @@ class _SectionChooser( GafferUI.Widget ) :
 
 		m.append( "/__EditDivider__", { "divider" : True } )
 
+		readOnly = Gaffer.MetadataAlgo.readOnly( self.__rowsPlug )
+
 		m.append(
 			"/Rename...",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__renameSection ), sectionName )
+				"command" : functools.partial( Gaffer.WeakMethod( self.__renameSection ), sectionName ),
+				"active" : not readOnly,
 			}
 		)
 
 		m.append(
 			"/Set Description...",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setSectionDescription ), sectionName )
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setSectionDescription ), sectionName ),
+				"active" : not readOnly,
 			}
 		)
 
@@ -374,7 +378,7 @@ class _SectionChooser( GafferUI.Widget ) :
 				"/Move Columns To/{}".format( toSectionName ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__moveSection ), sectionName, toSectionName ),
-					"active" : toSectionName != sectionName,
+					"active" : toSectionName != sectionName and not readOnly,
 				}
 			)
 
@@ -383,7 +387,8 @@ class _SectionChooser( GafferUI.Widget ) :
 		m.append(
 			"/Delete",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteSection ), sectionName )
+				"command" : functools.partial( Gaffer.WeakMethod( self.__deleteSection ), sectionName ),
+				"active" : not readOnly,
 			}
 		)
 
@@ -392,7 +397,8 @@ class _SectionChooser( GafferUI.Widget ) :
 		m.append(
 			"/Remove Sectioning",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__removeSectioning ) )
+				"command" : functools.partial( Gaffer.WeakMethod( self.__removeSectioning ) ),
+				"active" : not readOnly,
 			}
 		)
 

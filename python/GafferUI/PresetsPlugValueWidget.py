@@ -118,6 +118,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Build menu. We'll list every preset we found, but disable
 		# any which aren't available for all plugs.
+		readOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in self.getPlugs() )
 		for preset in presets :
 
 			menuPath = preset if preset.startswith( "/" ) else "/" + preset
@@ -126,7 +127,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = preset ),
 					"checkBox" : preset == currentPreset and not isCustom,
-					"active" : presetCounts[preset] == len( self.getPlugs() )
+					"active" : ( presetCounts[preset] == len( self.getPlugs() ) ) and not readOnly
 				}
 			)
 
@@ -137,6 +138,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"command" : Gaffer.WeakMethod( self.__applyCustomPreset ),
 					"checkBox" : isCustom,
+					"active" : not readOnly,
 				}
 			)
 

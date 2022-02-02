@@ -145,6 +145,22 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 			"checkBox" : isCurrent,
 		} )
 
+def appendScriptWindowMenuDefinitions( menuDefinition, prefix="" ) :
+
+	# Follow bookmarks
+
+	def assignFocus( i, menu ) :
+		script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+		script.setFocus( Gaffer.MetadataAlgo.getNumericBookmark( script, i ) )
+
+	menuDefinition.append( prefix + "/AssignFocusDivider", { "divider" : True } )
+
+	for i in range( 1, 10 ) :
+		menuDefinition.append( prefix + "/Assign Focus/Bookmark %i" % i, {
+			"command" : functools.partial( assignFocus, i ),
+			"shortCut" : "Alt+%i" % i
+		} )
+
 def connectToEditor( editor ) :
 
 	editor.keyPressSignal().connect( __editorKeyPress, scoped = False )
@@ -327,6 +343,8 @@ def __editorKeyPress( editor, event ) :
 			if node is not None :
 				__assignNumericBookmark( node, numericBookmark )
 
+			return True
+
 		elif not event.modifiers :
 
 			# Find
@@ -339,6 +357,6 @@ def __editorKeyPress( editor, event ) :
 			elif isinstance( editor, GafferUI.NodeSetEditor ) :
 				editor.setNodeSet( editor.scriptNode().selection() )
 
-		return True
+			return True
 
 

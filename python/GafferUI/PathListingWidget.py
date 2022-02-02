@@ -513,6 +513,20 @@ class PathListingWidget( GafferUI.Widget ) :
 			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
 			return True
 
+		elif event.key == "A" and event.modifiers == event.Modifiers.Control :
+
+			lastVisibleIndex = self._qtWidget().lastVisibleIndex()
+			if lastVisibleIndex.isValid() :
+				selection = self.__pathsForIndexRange(
+					self._qtWidget().model().index( 0, 0 ),
+					lastVisibleIndex
+				)
+			else :
+				selection = IECore.PathMatcher()
+
+			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
+			return True
+
 		return False
 
 	# Handles interactions for selection and expansion. Done at the level
@@ -709,6 +723,21 @@ class _TreeView( QtWidgets.QTreeView ) :
 				return True
 
 		return QtWidgets.QTreeView.event( self, event )
+
+	def lastVisibleIndex( self, parentIndex = None ) :
+
+		if parentIndex is None :
+			# Root
+			parentIndex = QtCore.QModelIndex()
+		elif not self.isExpanded( parentIndex ) :
+			return parentIndex
+
+		model = self.model()
+		rowCount = model.rowCount( parentIndex )
+		if rowCount :
+			return self.lastVisibleIndex( model.index( rowCount - 1, 0, parentIndex ) )
+		else :
+			return parentIndex
 
 	def updateColumnWidths( self ) :
 
