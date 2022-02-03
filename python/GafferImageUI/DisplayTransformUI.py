@@ -48,27 +48,27 @@ def __displayPresetNames( plug ) :
 
 	config = PyOpenColorIO.GetCurrentConfig()
 
-	return IECore.StringVectorData( [ "None" ] + config.getDisplays() )
+	return IECore.StringVectorData( [ "None" ] + list( config.getDisplays() ) )
 
 def __displayPresetValues( plug ) :
 
 	config = PyOpenColorIO.GetCurrentConfig()
 
-	return IECore.StringVectorData( [ "" ] + config.getDisplays() )
+	return IECore.StringVectorData( [ "" ] + list( config.getDisplays() ) )
 
 def __viewPresetNames( plug ) :
 
 	config = PyOpenColorIO.GetCurrentConfig()
 	display = plug.parent()["display"].getValue()
 
-	return IECore.StringVectorData( [ "None" ] + config.getViews( display ) )
+	return IECore.StringVectorData( [ "None" ] + list( config.getViews( display ) ) )
 
 def __viewPresetValues( plug ) :
 
 	config = PyOpenColorIO.GetCurrentConfig()
 	display = plug.parent()["display"].getValue()
 
-	return IECore.StringVectorData( [ "" ] + config.getViews( display ) )
+	return IECore.StringVectorData( [ "" ] + list( config.getViews( display ) ) )
 
 Gaffer.Metadata.registerNode(
 

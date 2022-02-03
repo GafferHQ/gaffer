@@ -1,3 +1,5 @@
+import six
+
 import PyOpenColorIO
 
 import GafferImage
@@ -6,9 +8,9 @@ def defaultColorSpace( fileName, fileFormat, dataType, metadata ) :
 
 	config = PyOpenColorIO.GetCurrentConfig()
 
-	linear = config.getColorSpace(PyOpenColorIO.Constants.ROLE_SCENE_LINEAR).getName()
-	log = config.getColorSpace(PyOpenColorIO.Constants.ROLE_COMPOSITING_LOG).getName()
-	display = config.getColorSpace(PyOpenColorIO.Constants.ROLE_COLOR_PICKING).getName()
+	linear = config.getColorSpace( PyOpenColorIO.ROLE_SCENE_LINEAR ).getName()
+	log = config.getColorSpace( PyOpenColorIO.ROLE_COMPOSITING_LOG ).getName()
+	display = config.getColorSpace( PyOpenColorIO.ROLE_COLOR_PICKING ).getName()
 
 	colorSpaces = {
 
@@ -57,7 +59,7 @@ def defaultColorSpace( fileName, fileFormat, dataType, metadata ) :
 	}
 
 	s = colorSpaces[fileFormat]
-	if isinstance( s, str ) :
+	if isinstance( s, six.string_types ) :
 		return s
 	else :
 		return s[dataType]
