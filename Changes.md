@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- Viewer : Improved accuracy of OpenColorIO display transforms when applied using the GPU.
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes, by improving cache usage during history queries.
 - Node menu : Removed unsupported Arnold shaders `ramp_rgb` and `ramp_float`. The OSL `ColorSpline` and `FloatSpline` shaders should be used instead.
 

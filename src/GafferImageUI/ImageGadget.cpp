@@ -112,6 +112,109 @@ void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 }
 
 uint64_t g_tileUpdateCount;
+
+bool getOcioGLLegacyMode()
+{
+	if( const char *e = getenv( "GAFFER_OCIO_GL_MODE" ) )
+	{
+		if( !strcmp( e, "Legacy" ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const bool g_ocioGLLegacyMode( getOcioGLLegacyMode() );
+
+
+/// These 3 functions are copied from: OpenColorIO/blob/main/src/libutils/oglapphelpers/glsl.cpp
+/// in order to match how OpenColorIO expects textures to be loaded
+void SetTextureParameters(GLenum textureType, OCIO_NAMESPACE::Interpolation interpolation)
+{
+	if(interpolation==OCIO_NAMESPACE::INTERP_NEAREST)
+	{
+		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	}
+	else
+	{
+		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+
+	glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+void AllocateTexture3D(
+	unsigned index, unsigned & texId,
+	OCIO_NAMESPACE::Interpolation interpolation,
+	unsigned edgelen, const float * values
+)
+{
+	if(values==0x0)
+	{
+		throw Exception("Missing texture data");
+	}
+
+	glGenTextures(1, &texId);
+
+	glActiveTexture(GL_TEXTURE0 + index);
+
+	glBindTexture(GL_TEXTURE_3D, texId);
+
+	SetTextureParameters(GL_TEXTURE_3D, interpolation);
+
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
+					edgelen, edgelen, edgelen, 0, GL_RGB, GL_FLOAT, values);
+}
+
+void AllocateTexture2D(
+	unsigned index, unsigned & texId,
+	unsigned width, unsigned height,
+	OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
+	OCIO_NAMESPACE::Interpolation interpolation, const float * values
+)
+{
+	if (values == nullptr)
+	{
+		throw Exception("Missing texture data.");
+	}
+
+	GLint internalformat = GL_RGB32F_ARB;
+	GLenum format = GL_RGB;
+
+	if (channel == OCIO_NAMESPACE::GpuShaderCreator::TEXTURE_RED_CHANNEL)
+	{
+		internalformat = GL_R32F;
+		format = GL_RED;
+	}
+
+	glGenTextures(1, &texId);
+
+	glActiveTexture(GL_TEXTURE0 + index);
+
+	if (height > 1)
+	{
+		glBindTexture(GL_TEXTURE_2D, texId);
+
+		SetTextureParameters(GL_TEXTURE_2D, interpolation);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_FLOAT, values);
+	}
+	else
+	{
+		glBindTexture(GL_TEXTURE_1D, texId);
+
+		SetTextureParameters(GL_TEXTURE_1D, interpolation);
+
+		glTexImage1D(GL_TEXTURE_1D, 0, internalformat, width, 0, format, GL_FLOAT, values);
+	}
+}
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -126,34 +229,42 @@ class ImageGadget::TileShader : public IECore::RefCounted
 	public :
 
 		TileShader( const ImageProcessor *displayTransform )
-			:	m_lut3dTextureID( 0 ), m_hash( staticHash( displayTransform ) )
+			:	m_hash( staticHash( displayTransform ) )
 		{
-			// Get GLSL code and LUT for OCIO transform if we have one.
 
-			const int LUT3D_EDGE_SIZE = 128;
 			std::string colorTransformCode;
-			std::vector<float> lut3d;
+			OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc;
 			if( displayTransform )
 			{
 				auto ocioDisplayTransform = static_cast<const OpenColorIOTransform *>( displayTransform );
-				OpenColorIO::ConstProcessorRcPtr processor = ocioDisplayTransform->processor();
+				OCIO_NAMESPACE::ConstProcessorRcPtr processor = ocioDisplayTransform->processor();
 
-				OpenColorIO::GpuShaderDesc shaderDesc;
-				shaderDesc.setLanguage( OpenColorIO::GPU_LANGUAGE_GLSL_1_3 );
-				shaderDesc.setFunctionName( "OCIODisplay" );
-				shaderDesc.setLut3DEdgeLen( LUT3D_EDGE_SIZE );
+				shaderDesc = OCIO_NAMESPACE::GpuShaderDesc::CreateShaderDesc();
+				shaderDesc->setLanguage( OCIO_NAMESPACE::GPU_LANGUAGE_GLSL_1_3 );
+				shaderDesc->setFunctionName( "OCIODisplay" );
 
-				lut3d.resize( 3 * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE );
-				processor->getGpuLut3D( &lut3d[0], shaderDesc );
-				colorTransformCode =  processor->getGpuShaderText( shaderDesc );
+
+				OCIO_NAMESPACE::ConstGPUProcessorRcPtr gpuProc;
+				if( g_ocioGLLegacyMode )
+				{
+					const int LUT3D_EDGE_SIZE = 128;
+					gpuProc = processor->getOptimizedLegacyGPUProcessor( OCIO_NAMESPACE::OPTIMIZATION_VERY_GOOD, LUT3D_EDGE_SIZE );
+				}
+				else
+				{
+					gpuProc = processor->getOptimizedGPUProcessor( OCIO_NAMESPACE::OPTIMIZATION_VERY_GOOD );
+				}
+				gpuProc->extractGpuShaderInfo(shaderDesc);
+
+				colorTransformCode = shaderDesc->getShaderText();
 			}
 			else
 			{
-				colorTransformCode = "vec4 OCIODisplay(vec4 inPixel, sampler3D lut3d) { return inPixel; }\n";
+				colorTransformCode = "vec4 OCIODisplay(vec4 inPixel) { return inPixel; }\n";
+
 			}
 
 			// Build and compile GLSL shader
-
 			std::string combinedFragmentCode;
 			if( glslVersion() >= 330 )
 			{
@@ -171,34 +282,98 @@ class ImageGadget::TileShader : public IECore::RefCounted
 			m_channelTextureUnits[1] = m_shader->uniformParameter( "greenTexture" )->textureUnit;
 			m_channelTextureUnits[2] = m_shader->uniformParameter( "blueTexture" )->textureUnit;
 			m_channelTextureUnits[3] = m_shader->uniformParameter( "alphaTexture" )->textureUnit;
+
 			m_activeParameterLocation = m_shader->uniformParameter( "activeParam" )->location;
 
-			// If we have a LUT, load it into an OpenGL texture
+			// If we have a LUT, load any required OpenGL textures
 
-			if( lut3d.size() && m_shader->uniformParameter( "lutTexture" ) )
+			if( shaderDesc )
 			{
-				GLenum monochromeTextureFormat, colorTextureFormat;
-				findUsableTextureFormats( monochromeTextureFormat, colorTextureFormat );
-				glGenTextures( 1, &m_lut3dTextureID );
-				glActiveTexture( GL_TEXTURE0 + m_shader->uniformParameter( "lutTexture" )->textureUnit );
-				glBindTexture( GL_TEXTURE_3D, m_lut3dTextureID );
-				glTexImage3D(
-					GL_TEXTURE_3D, 0, colorTextureFormat, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-					0, GL_RGB, GL_FLOAT, &lut3d[0]
-				);
-				glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-				glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) ;
-				glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-				glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-				glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
+				const unsigned maxTexture3D = shaderDesc->getNum3DTextures();
+				for(unsigned idx=0; idx<maxTexture3D; ++idx)
+				{
+					// 1. Get the information of the 3D LUT.
+
+					const char * textureName = nullptr; // textureName is unused, we load the data using get3DTextureValues
+					const char * samplerName = nullptr;
+					unsigned edgelen = 0;
+					OCIO_NAMESPACE::Interpolation interpolation = OCIO_NAMESPACE::INTERP_LINEAR;
+					shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, interpolation);
+
+					if(!textureName || !*textureName
+						|| !samplerName || !*samplerName
+						|| edgelen==0)
+					{
+						throw Exception("The texture data is corrupted");
+					}
+
+					const float * values = nullptr;
+					shaderDesc->get3DTextureValues(idx, values);
+					if(!values)
+					{
+						throw Exception("The texture values are missing");
+					}
+
+					// 2. Allocate the 3D LUT.
+
+					GLuint currIndex = m_shader->uniformParameter( samplerName )->textureUnit;
+					unsigned texId = 0;
+					AllocateTexture3D(currIndex, texId, interpolation, edgelen, values);
+
+					// 3. Keep the texture id & name for the later enabling.
+
+					m_lutTextures.push_back( { texId, samplerName, GL_TEXTURE_3D, currIndex } );
+
+				}
+
+				// Process the 1D LUTs.
+
+				const unsigned maxTexture2D = shaderDesc->getNumTextures();
+				for(unsigned idx=0; idx<maxTexture2D; ++idx)
+				{
+					// 1. Get the information of the 1D LUT.
+
+					const char * textureName = nullptr; // textureName is unused, we load the data using get1DTextureValues
+					const char * samplerName = nullptr;
+					unsigned width = 0;
+					unsigned height = 0;
+					OCIO_NAMESPACE::GpuShaderDesc::TextureType channel = OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
+					OCIO_NAMESPACE::Interpolation interpolation = OCIO_NAMESPACE::INTERP_LINEAR;
+					shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, interpolation);
+
+					if (!textureName || !*textureName
+						|| !samplerName || !*samplerName
+						|| width==0)
+					{
+						throw Exception("The texture data is corrupted");
+					}
+
+					const float * values = 0x0;
+					shaderDesc->getTextureValues(idx, values);
+					if(!values)
+					{
+						throw Exception("The texture values are missing");
+					}
+
+					// 2. Allocate the 1D LUT (a 2D texture is needed to hold large LUTs).
+
+					GLuint currIndex = m_shader->uniformParameter( samplerName )->textureUnit;
+					unsigned texId = 0;
+					AllocateTexture2D(currIndex, texId, width, height, channel, interpolation, values);
+
+					// 3. Keep the texture id & name for the later enabling.
+
+					unsigned type = (height > 1) ? GL_TEXTURE_2D : GL_TEXTURE_1D;
+					m_lutTextures.push_back( { texId, samplerName, type, currIndex } );
+				}
 			}
 		}
 
 		~TileShader() override
 		{
-			if( m_lut3dTextureID )
+			for( auto &t : m_lutTextures )
 			{
-				glDeleteTextures( 1, &m_lut3dTextureID );
+				glDeleteTextures( 1, &t.textureID );
 			}
 		}
 
@@ -237,6 +412,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 			{
 				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
 				glUseProgram( m_tileShader.m_shader->program() );
+
 				glEnable( GL_TEXTURE_2D );
 				glEnable( GL_BLEND );
 				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
@@ -251,12 +427,11 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				glUniform1i( tileShader.m_shader->uniformParameter( "blueTexture" )->location, tileShader.m_channelTextureUnits[2] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "alphaTexture" )->location, tileShader.m_channelTextureUnits[3] );
 
-				if( tileShader.m_shader->uniformParameter( "lutTexture" ) )
+				for( auto & i : tileShader.m_lutTextures )
 				{
-					const GLuint lutTextureUnit = tileShader.m_shader->uniformParameter( "lutTexture" )->textureUnit;
-					glUniform1i( tileShader.m_shader->uniformParameter( "lutTexture" )->location, lutTextureUnit );
-					glActiveTexture( GL_TEXTURE0 + lutTextureUnit );
-					glBindTexture( GL_TEXTURE_3D, tileShader.m_lut3dTextureID );
+					glActiveTexture( GL_TEXTURE0 + i.textureUnit );
+					glBindTexture( i.type, i.textureID );
+					glUniform1i( tileShader.m_shader->uniformParameter( i.samplerName )->location, i.textureUnit );
 				}
 			}
 
@@ -279,15 +454,25 @@ class ImageGadget::TileShader : public IECore::RefCounted
 
 				const TileShader &m_tileShader;
 				GLint m_previousProgram;
-
 		};
 
 	private :
 
-		GLuint m_lut3dTextureID;
+
+		struct LutTexture
+		{
+			unsigned textureID;
+			std::string samplerName;
+			unsigned type;
+			GLuint textureUnit;
+		};
+		std::vector<LutTexture> m_lutTextures;
+
 		IECoreGL::ShaderPtr m_shader;
+
 		GLuint m_channelTextureUnits[4];
 		GLint m_activeParameterLocation;
+
 		IECore::MurmurHash m_hash;
 
 		static const char *vertexSource()
@@ -358,7 +543,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				"		);\n"
 				"	}\n"
 				"	OUTCOLOR = vec4( pow( OUTCOLOR.rgb * multiply, vec3( power ) ), OUTCOLOR.a );\n"
-				"	OUTCOLOR = OCIODisplay( OUTCOLOR, lutTexture );\n"
+				"	OUTCOLOR = OCIODisplay( OUTCOLOR );\n"
 				"	if( activeParam )\n"
 				"	{\n"
 				"		vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );\n"
