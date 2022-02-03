@@ -105,10 +105,10 @@ const Gaffer::IntPlug *LUT::directionPlug() const
 
 size_t LUT::supportedExtensions( std::vector<std::string> &extensions )
 {
-	extensions.reserve( OpenColorIO::FileTransform::getNumFormats() );
-	for( int i = 0; i < OpenColorIO::FileTransform::getNumFormats(); ++i )
+	extensions.reserve( OCIO_NAMESPACE::FileTransform::GetNumFormats() );
+	for( int i = 0; i < OCIO_NAMESPACE::FileTransform::GetNumFormats(); ++i )
 	{
-		extensions.push_back( OpenColorIO::FileTransform::getFormatExtensionByIndex( i ) );
+		extensions.push_back( OCIO_NAMESPACE::FileTransform::GetFormatExtensionByIndex( i ) );
 	}
 
 	return extensions.size();
@@ -132,7 +132,7 @@ void LUT::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h )
 	interpolationPlug()->hash( h );
 }
 
-OpenColorIO::ConstTransformRcPtr LUT::transform() const
+OCIO_NAMESPACE::ConstTransformRcPtr LUT::transform() const
 {
 	std::string fileName = fileNamePlug()->getValue();
 
@@ -140,22 +140,22 @@ OpenColorIO::ConstTransformRcPtr LUT::transform() const
 	// have a valid LUT file.
 	if( fileName.empty() )
 	{
-		return OpenColorIO::FileTransformRcPtr();
+		return OCIO_NAMESPACE::FileTransformRcPtr();
 	}
 
-	OpenColorIO::FileTransformRcPtr result = OpenColorIO::FileTransform::Create();
+	OCIO_NAMESPACE::FileTransformRcPtr result = OCIO_NAMESPACE::FileTransform::Create();
 	result->setSrc( fileName.c_str() );
 
 	switch( (Direction)directionPlug()->getValue() )
 	{
 		case Forward :
 		{
-			result->setDirection( OpenColorIO::TRANSFORM_DIR_FORWARD );
+			result->setDirection( OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD );
 			break;
 		}
 		case Inverse :
 		{
-			result->setDirection( OpenColorIO::TRANSFORM_DIR_INVERSE );
+			result->setDirection( OCIO_NAMESPACE::TRANSFORM_DIR_INVERSE );
 			break;
 		}
 	}
@@ -164,22 +164,22 @@ OpenColorIO::ConstTransformRcPtr LUT::transform() const
 	{
 		case Best :
 		{
-			result->setInterpolation( OpenColorIO::INTERP_BEST );
+			result->setInterpolation( OCIO_NAMESPACE::INTERP_BEST );
 			break;
 		}
 		case Nearest :
 		{
-			result->setInterpolation( OpenColorIO::INTERP_NEAREST );
+			result->setInterpolation( OCIO_NAMESPACE::INTERP_NEAREST );
 			break;
 		}
 		case Linear :
 		{
-			result->setInterpolation( OpenColorIO::INTERP_LINEAR );
+			result->setInterpolation( OCIO_NAMESPACE::INTERP_LINEAR );
 			break;
 		}
 		case Tetrahedral :
 		{
-			result->setInterpolation( OpenColorIO::INTERP_TETRAHEDRAL );
+			result->setInterpolation( OCIO_NAMESPACE::INTERP_TETRAHEDRAL );
 			break;
 		}
 	}

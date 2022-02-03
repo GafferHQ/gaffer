@@ -157,8 +157,8 @@ ImageReader::ImageReader( const std::string &name )
 	addChild( colorSpace );
 	colorSpace->inPlug()->setInput( oiioReader->outPlug() );
 	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
-	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
-	colorSpace->outputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
+	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
+	colorSpace->outputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
 	colorSpace->processUnpremultipliedPlug()->setValue( true );
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 }
