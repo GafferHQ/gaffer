@@ -58,9 +58,9 @@ CDL::CDL( const std::string &name )
 
 	addChild( new IntPlug(
 		"direction", Plug::In,
-		OpenColorIO::TRANSFORM_DIR_FORWARD,
-		OpenColorIO::TRANSFORM_DIR_FORWARD,
-		OpenColorIO::TRANSFORM_DIR_INVERSE
+		OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD,
+		OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD,
+		OCIO_NAMESPACE::TRANSFORM_DIR_INVERSE
 	) );
 }
 
@@ -149,14 +149,21 @@ void CDL::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h )
 	directionPlug()->hash( h );
 }
 
-OpenColorIO::ConstTransformRcPtr CDL::transform() const
+OCIO_NAMESPACE::ConstTransformRcPtr CDL::transform() const
 {
-	OpenColorIO::CDLTransformRcPtr result = OpenColorIO::CDLTransform::Create();
-	result->setSlope( &slopePlug()->getValue()[0] );
-	result->setOffset( &offsetPlug()->getValue()[0] );
-	result->setPower( &powerPlug()->getValue()[0] );
+	OCIO_NAMESPACE::CDLTransformRcPtr result = OCIO_NAMESPACE::CDLTransform::Create();
+
+#if OCIO_VERSION_HEX > 0x02000000
+	using ColorType = Imath::Color3<double>;
+#else
+	using ColorType = Imath::Color3f;
+#endif
+
+	result->setSlope( ColorType( slopePlug()->getValue() ).getValue() );
+	result->setOffset( ColorType( offsetPlug()->getValue() ).getValue() );
+	result->setPower( ColorType( powerPlug()->getValue() ).getValue() );
 	result->setSat( saturationPlug()->getValue() );
-	result->setDirection( (OpenColorIO::TransformDirection)directionPlug()->getValue() );
+	result->setDirection( (OCIO_NAMESPACE::TransformDirection)directionPlug()->getValue() );
 
 	return result;
 }

@@ -112,7 +112,7 @@ void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::Mu
 	h.append( view );
 }
 
-OpenColorIO::ConstTransformRcPtr DisplayTransform::transform() const
+OCIO_NAMESPACE::ConstTransformRcPtr DisplayTransform::transform() const
 {
 	std::string colorSpace = inputColorSpacePlug()->getValue();
 	std::string display = displayPlug()->getValue();
@@ -122,11 +122,17 @@ OpenColorIO::ConstTransformRcPtr DisplayTransform::transform() const
 	// have valid inputs
 	if( colorSpace.empty() || display.empty() || view.empty() )
 	{
-		return OpenColorIO::DisplayTransformRcPtr();
+		return OCIO_NAMESPACE::ConstTransformRcPtr();
 	}
 
-	OpenColorIO::DisplayTransformRcPtr result = OpenColorIO::DisplayTransform::Create();
+#if OCIO_VERSION_HEX > 0x02000000
+	OCIO_NAMESPACE::DisplayViewTransformRcPtr result = OCIO_NAMESPACE::DisplayViewTransform::Create();
+	result->setSrc( colorSpace.c_str() );
+#else
+	OCIO_NAMESPACE::DisplayTransformRcPtr result = OCIO_NAMESPACE::DisplayTransform::Create();
 	result->setInputColorSpaceName( colorSpace.c_str() );
+#endif
+
 	result->setDisplay( display.c_str() );
 	result->setView( view.c_str() );
 

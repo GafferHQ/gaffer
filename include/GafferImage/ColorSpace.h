@@ -70,7 +70,7 @@ class GAFFERIMAGE_API ColorSpace : public OpenColorIOTransform
 
 		bool affectsTransform( const Gaffer::Plug *input ) const override;
 		void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		OpenColorIO::ConstTransformRcPtr transform() const override;
+		OCIO_NAMESPACE::ConstTransformRcPtr transform() const override;
 
 	private :
 
