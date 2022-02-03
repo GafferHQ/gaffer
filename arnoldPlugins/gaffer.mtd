@@ -1408,12 +1408,18 @@
 
 [node ramp_float]
 
-	gaffer.nodeMenu.category STRING "Utility"
+	# Hidden, because we don't have support for
+	# array parameters or a UI to match Arnold's
+	# interpolation modes.
+	gaffer.nodeMenu.category STRING ""
 
 
 [node ramp_rgb]
 
-	gaffer.nodeMenu.category STRING "Utility"
+	# Hidden, because we don't have support for
+	# array parameters or a UI to match Arnold's
+	# interpolation modes.
+	gaffer.nodeMenu.category STRING ""
 
 
 [node random]

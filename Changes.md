@@ -1,6 +1,11 @@
 0.62.x.x
 ========
 
+Improvements
+------------
+
+- Node menu : Removed unsupported Arnold shaders `ramp_rgb` and `ramp_float`. The OSL `ColorSpline` and `FloatSpline` shaders should be used instead.
+
 API
 ---
 
