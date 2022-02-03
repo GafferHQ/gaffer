@@ -53,7 +53,7 @@ void GafferTest::testRandomPerf()
 	InternedString varName = "varName";
 
 	Gaffer::RandomPtr random = new Gaffer::Random();
-	random->contextEntryPlug()->setValue( varName.string() );
+	random->seedVariablePlug()->setValue( varName.string() );
 
 	Context::EditableScope scope( base.get() );
 	for( int i = 0; i < 100000; ++i )

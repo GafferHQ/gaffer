@@ -48,7 +48,7 @@ class RandomTest( GafferTest.TestCase ) :
 	def testHashes( self ) :
 
 		r = Gaffer.Random()
-		self.assertHashesValid( r, inputsToIgnore = [ r["contextEntry"], ] )
+		self.assertHashesValid( r, inputsToIgnore = [ r["seedVariable"], ] )
 
 	def testOutFloat( self ) :
 
@@ -80,7 +80,7 @@ class RandomTest( GafferTest.TestCase ) :
 	def testContext( self ) :
 
 		r = Gaffer.Random()
-		r["contextEntry"].setValue( "frame" )
+		r["seedVariable"].setValue( "frame" )
 
 		c = Gaffer.Context()
 
@@ -119,10 +119,10 @@ class RandomTest( GafferTest.TestCase ) :
 
 		f1 = r["outFloat"].getValue()
 
-		r["contextEntry"].setValue( "frame" )
+		r["seedVariable"].setValue( "frame" )
 		self.assertNotEqual( f1, r["outFloat"].getValue() )
 
-		r["contextEntry"].setValue( "oops!" )
+		r["seedVariable"].setValue( "oops!" )
 		self.assertEqual( f1, r["outFloat"].getValue() )
 
 	def testAffects( self ) :

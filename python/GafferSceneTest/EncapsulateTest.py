@@ -250,7 +250,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["random"] = Gaffer.Random()
-		script["random"]["contextEntry"].setValue( "collect:rootName" )
+		script["random"]["seedVariable"].setValue( "collect:rootName" )
 
 		script["sphere"] = GafferScene.Sphere()
 		script["sphere"]["radius"].setInput( script["random"]["outFloat"] )

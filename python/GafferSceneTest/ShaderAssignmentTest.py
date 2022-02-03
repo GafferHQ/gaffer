@@ -506,7 +506,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		# And this should hold true even if the switch has a context-varying
 		# index.
 		random = Gaffer.Random()
-		random["contextEntry"].setValue( "frame" )
+		random["seedVariable"].setValue( "frame" )
 		switch["index"].setInput( random["outFloat"] )
 		self.assertFalse( assignment["shader"].acceptsInput( switch["out"] ) )
 

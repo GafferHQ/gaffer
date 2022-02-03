@@ -21,6 +21,7 @@ Breaking Changes
   - Moved all Python classes into the `Gaffer.Signals` submodule.
   - Deprecated the default value for the `scoped` argument to `Signal.connect()`. Pass `scoped = True` to maintain the previous behaviour, or consider using an unscoped connection.
 - Replaced all usage of `boost::optional` with `std::optional`.
+- Random : Renamed `contextEntry` plug to `seedVariable`. Old `.gfr` files will be converted automatically on loading.
 
 Build
 -----

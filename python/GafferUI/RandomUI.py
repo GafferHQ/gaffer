@@ -74,7 +74,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"contextEntry" : [
+		"seedVariable" : [
 
 			"description",
 			"""

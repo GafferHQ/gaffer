@@ -260,7 +260,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["parameters"]["base_color"].setInput( n["out"] )
 
 		r = Gaffer.Random()
-		r["contextEntry"].setValue( "a" )
+		r["seedVariable"].setValue( "a" )
 
 		n["parameters"]["amplitude"].setInput( r["outFloat"] )
 
