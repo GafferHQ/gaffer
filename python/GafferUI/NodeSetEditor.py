@@ -182,7 +182,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 	# All implementations must first call the base class implementation.
 	def _updateFromSet( self ) :
 
-		self.__dirtyTitle()
+		pass
 
 	# May be called to ensure that _updateFromSet() is called
 	# immediately if a lazy update has been scheduled but not
@@ -201,29 +201,30 @@ class NodeSetEditor( GafferUI.Editor ) :
 		else :
 			result = [ _prefix ]
 
-		# Only add node names if we're pinned in some way shape or form
-		if self.getNodeSet() != self.scriptNode().focusSet() and self.getNodeSet() != self.scriptNode().selection():
+		pinned = self.getNodeSet() != self.scriptNode().focusSet() and self.getNodeSet() != self.scriptNode().selection()
 
-			result.append( " [" )
+		#if pinned :
+		result.append( " [" )
 
-			numNames = min( _maxNodes, len( self.__nodeSet ) )
-			if numNames :
+		numNames = min( _maxNodes, len( self.__nodeSet ) )
+		if numNames :
 
-				if _reverseNodes :
-					nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
-					nodes.reverse()
-				else :
-					nodes = self.__nodeSet[:numNames]
+			if _reverseNodes :
+				nodes = self.__nodeSet[len(self.__nodeSet)-numNames:]
+				nodes.reverse()
+			else :
+				nodes = self.__nodeSet[:numNames]
 
-				for i, node in enumerate( nodes ) :
-					result.append( node )
-					if i < numNames - 1 :
-						result.append( ", " )
+			for i, node in enumerate( nodes ) :
+				result.append( node )
+				if i < numNames - 1 :
+					result.append( ", " )
 
-				if _ellipsis and len( self.__nodeSet ) > _maxNodes :
-					result.append( "..." )
+			if _ellipsis and len( self.__nodeSet ) > _maxNodes :
+				result.append( "..." )
 
-			result.append( "]" )
+		#if pinned :
+		result.append( "]" )
 
 		return result
 
@@ -234,6 +235,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 		self.__nameChangedConnections = []
 		self.__titleFormat = None
 
+		print( "DIRTYING TITLE", self )
 		self.titleChangedSignal()( self )
 
 	def __setNodeSetInternal( self, nodeSet, callUpdateFromSet ) :
@@ -270,6 +272,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 	def __membersChanged( self, set, member ) :
 
+		self.__dirtyTitle()
 		self.__lazyUpdate()
 
 	@GafferUI.LazyMethod()

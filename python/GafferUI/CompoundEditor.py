@@ -720,6 +720,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		if not GafferUI._qtObjectIsValid( self._qtWidget() ) :
 			return
 
+		print( "SETTING LABEL", editor, editor.getTitle() )
 		self.setLabel( editor, editor.getTitle() )
 
 	def __currentTabChanged( self, tabbedContainer, currentEditor ) :
