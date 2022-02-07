@@ -263,7 +263,22 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			// map building that needs to happen when a connection is made to the color parameter )
 			AiNodeResetParameter( node, "color" );
 		}
-		AiNodeLinkOutput( sourceNode, sourceName.c_str(), node, parameterName.c_str() );
+
+		const AtString parameterNameArnold( parameterName.c_str() );
+		const uint8_t paramType = AiParamGetType(
+			AiNodeEntryLookUpParameter(
+				AiNodeGetNodeEntry( node ), parameterNameArnold
+			)
+		);
+
+		if( paramType == AI_TYPE_NODE )
+		{
+			AiNodeSetPtr( node, parameterNameArnold, sourceNode );
+		}
+		else
+		{
+			AiNodeLinkOutput( sourceNode, sourceName.c_str(), node, parameterName.c_str() );
+		}
 	}
 
 	nodes.push_back( node );
