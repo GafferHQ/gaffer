@@ -154,6 +154,7 @@ def __featuresSummary( plug ) :
 		( "ignoreDisplacement", "Disp" ),
 		( "ignoreBump", "Bump" ),
 		( "ignoreSSS", "SSS" ),
+		( "ignoreImagers", "Imagers" ),
 	) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( label + ( " Off " if plug[childName]["value"].getValue() else " On" ) )
@@ -856,6 +857,17 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Disables all subsurface scattering.
+			""",
+
+			"layout:section", "Features",
+
+		],
+
+		"options.ignoreImagers" : [
+
+			"description",
+			"""
+			Disables all imagers.
 			""",
 
 			"layout:section", "Features",

@@ -112,6 +112,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_displacement", new IECore::BoolData( false ), false, "ignoreDisplacement" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_bump", new IECore::BoolData( false ), false, "ignoreBump" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_sss", new IECore::BoolData( false ), false, "ignoreSSS" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:ignore_imagers", new IECore::BoolData( false ), false, "ignoreImagers" ) );
 
 	// Searchpath parameters
 
