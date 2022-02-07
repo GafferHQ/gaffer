@@ -1,3 +1,13 @@
+
+0.61.2.x (relative to 0.61.2.0) 
+========
+
+Fixes
+-----
+
+- SceneViewInspector : Improved performance when viewing complex scenes.
+
+
 0.61.2.0 (relative to 0.61.1.1)
 ========
 
