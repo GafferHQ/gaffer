@@ -58,12 +58,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		if GafferTest.inCI() and [ int( v ) for v in arnold.AiGetVersion() ] == [ 7, 0, 0, 0 ] :
-			# Skipping due to multiple-render-session bugs in Arnold 7.0.0.0. We have
-			# reported the bug with a small repro and it is confirmed as fixed for the
-			# upcoming 7.0.0.1 release.
-			self.skipTest( "Exposes Arnold bug" )
-
 	def assertReferSameNode( self, a, b ):
 		self.assertEqual( arnold.addressof( a.contents ), arnold.addressof( b.contents ) )
 
