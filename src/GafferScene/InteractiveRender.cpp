@@ -54,18 +54,17 @@
 #include "IECore/NullObject.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 #include "tbb/mutex.h"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
-
-
 
 namespace
 {

@@ -49,11 +49,12 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/container/flat_set.hpp"
 #include "boost/regex.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;

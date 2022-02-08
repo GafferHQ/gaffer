@@ -45,9 +45,10 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/ParameterisedInterface.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace GafferCortex;
 
 template<typename BaseType>

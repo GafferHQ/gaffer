@@ -48,9 +48,10 @@
 #include "Gaffer/Switch.h"
 
 #include "boost/algorithm/string/replace.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 

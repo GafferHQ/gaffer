@@ -48,12 +48,13 @@
 
 #include "OSL/oslcomp.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/filesystem.hpp"
 
 #include <fstream>
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace OSL;
 using namespace Gaffer;

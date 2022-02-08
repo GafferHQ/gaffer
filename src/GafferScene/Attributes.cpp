@@ -37,9 +37,10 @@
 
 #include "GafferScene/Attributes.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/logic/tribool.hpp"
 
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;

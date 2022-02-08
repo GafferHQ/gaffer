@@ -49,13 +49,14 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
 using namespace GafferUI;
 using namespace Gaffer;
 using namespace IECore;
 using namespace Imath;
+using namespace boost::placeholders;
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////

@@ -47,7 +47,7 @@
 
 #include "IECore/Exception.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/depth_first_search.hpp"

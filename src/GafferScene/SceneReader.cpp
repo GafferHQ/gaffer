@@ -46,9 +46,10 @@
 #include "IECore/InternedString.h"
 #include "IECore/StringAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;

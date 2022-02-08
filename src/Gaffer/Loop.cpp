@@ -39,7 +39,7 @@
 #include "Gaffer/ContextAlgo.h"
 #include "Gaffer/MetadataAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 namespace Gaffer
 {

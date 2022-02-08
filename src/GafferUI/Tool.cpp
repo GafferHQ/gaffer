@@ -38,7 +38,7 @@
 
 #include "GafferUI/View.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace Gaffer;
 using namespace GafferUI;

@@ -44,7 +44,7 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/sequenced_index.hpp"

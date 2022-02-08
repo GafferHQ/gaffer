@@ -48,6 +48,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
+#include "boost/mpl/vector.hpp"
+
 using namespace std;
 using namespace boost::python;
 using namespace Gaffer;

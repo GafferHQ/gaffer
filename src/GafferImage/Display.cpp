@@ -49,7 +49,7 @@
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"

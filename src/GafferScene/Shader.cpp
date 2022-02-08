@@ -50,10 +50,11 @@
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/lexical_cast.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace GafferScene;
 using namespace Gaffer;

@@ -63,7 +63,6 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/bind.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "boost/filesystem/operations.hpp"

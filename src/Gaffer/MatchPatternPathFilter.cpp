@@ -42,8 +42,9 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 
 static IECore::InternedString g_namePropertyName( "name" );

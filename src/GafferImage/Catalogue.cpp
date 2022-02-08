@@ -54,7 +54,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/lexical_cast.hpp"
@@ -64,6 +64,7 @@
 #include <thread>
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;

@@ -52,9 +52,10 @@
 #include "IECore/CompoundData.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferUI;
 

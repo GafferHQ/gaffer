@@ -55,10 +55,11 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/asio.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/lexical_cast.hpp"
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferScene;

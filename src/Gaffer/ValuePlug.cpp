@@ -45,7 +45,7 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/format.hpp"
 
 #include "tbb/enumerable_thread_specific.h"

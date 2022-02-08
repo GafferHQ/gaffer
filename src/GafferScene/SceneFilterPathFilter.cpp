@@ -42,8 +42,9 @@
 
 #include "Gaffer/Context.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
+using namespace boost::placeholders;
 using namespace GafferScene;
 
 SceneFilterPathFilter::SceneFilterPathFilter( FilterPtr sceneFilter, IECore::CompoundDataPtr userData )

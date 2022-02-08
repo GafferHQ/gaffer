@@ -45,7 +45,7 @@
 #include "Gaffer/Switch.h"
 #include "Gaffer/UndoScope.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace IECore;
 using namespace Gaffer;

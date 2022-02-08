@@ -52,7 +52,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "boost/filesystem/path.hpp"
@@ -61,6 +61,7 @@
 
 #include <unistd.h>
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////

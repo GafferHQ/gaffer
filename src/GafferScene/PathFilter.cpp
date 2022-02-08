@@ -41,11 +41,12 @@
 
 #include "Gaffer/Context.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 
 using namespace GafferScene;
 using namespace Gaffer;
 using namespace IECore;
+using namespace boost::placeholders;
 using namespace std;
 
 namespace

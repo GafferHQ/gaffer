@@ -41,10 +41,11 @@
 #include "IECore/FileSequence.h"
 #include "IECore/FileSequenceFunctions.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/filesystem.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
 

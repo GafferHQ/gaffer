@@ -36,9 +36,10 @@
 
 #include "GafferUI/NameGadget.h"
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+using namespace boost::placeholders;
 using namespace GafferUI;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NameGadget );

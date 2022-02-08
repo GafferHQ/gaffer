@@ -53,7 +53,7 @@
 #include "IECore/NullObject.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/random_access_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -62,6 +62,7 @@
 #include <cassert>
 #include <sstream>
 
+using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace Imath;

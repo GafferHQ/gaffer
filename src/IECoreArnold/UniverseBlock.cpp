@@ -37,7 +37,7 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 
-#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem.hpp"
 #include "boost/tokenizer.hpp"
 
 #include "ai_metadata.h"
