@@ -5,6 +5,7 @@ Features
 --------
 
 - RandomChoice : Added new node for choosing a random value from a list of weighted choices.
+- ArnoldImager : Added new node for adding Arnold imagers to the scene globals.
 
 Improvements
 ------------

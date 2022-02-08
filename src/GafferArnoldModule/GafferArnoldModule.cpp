@@ -43,6 +43,7 @@
 #include "GafferArnold/ArnoldCameraShaders.h"
 #include "GafferArnold/ArnoldColorManager.h"
 #include "GafferArnold/ArnoldDisplacement.h"
+#include "GafferArnold/ArnoldImager.h"
 #include "GafferArnold/ArnoldLight.h"
 #include "GafferArnold/ArnoldMeshLight.h"
 #include "GafferArnold/ArnoldOptions.h"
@@ -125,4 +126,12 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	;
 	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
 
+	{
+		scope s = GafferBindings::DependencyNodeClass<ArnoldImager>();
+		enum_<ArnoldImager::Mode>( "Mode" )
+			.value( "Replace", ArnoldImager::Mode::Replace )
+			.value( "InsertFirst", ArnoldImager::Mode::InsertFirst )
+			.value( "InsertLast", ArnoldImager::Mode::InsertLast )
+		;
+	}
 }

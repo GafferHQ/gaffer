@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,34 +34,58 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDIMAGER_H
+#define GAFFERARNOLD_ARNOLDIMAGER_H
+
+#include "GafferArnold/Export.h"
+#include "GafferArnold/TypeIds.h"
+
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/ShaderPlug.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+class GAFFERARNOLD_API ArnoldImager : public GafferScene::GlobalsProcessor
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
-	ArnoldAtmosphereTypeId = 110910,
-	ArnoldBackgroundTypeId = 110911,
-	ArnoldCameraShadersTypeId = 110912,
-	ArnoldLightFilterTypeId = 110913,
-	ArnoldColorManagerTypeId = 110914,
-	ArnoldImagerTypeId = 110915,
 
-	LastTypeId = 110924
+	public :
+
+		ArnoldImager( const std::string &name=defaultName<ArnoldImager>() );
+		~ArnoldImager() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldImager, ArnoldImagerTypeId, GafferScene::GlobalsProcessor );
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+		enum class Mode
+		{
+			Replace,
+			InsertFirst,
+			InsertLast
+		};
+
+		GafferScene::ShaderPlug *imagerPlug();
+		const GafferScene::ShaderPlug *imagerPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+	protected :
+
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ArnoldImager )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDIMAGER_H
