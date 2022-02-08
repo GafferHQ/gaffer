@@ -63,6 +63,10 @@ class GAFFERARNOLD_API ArnoldShader : public GafferScene::Shader
 
 		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 
+	protected :
+
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
+
 	private :
 
 		// Shader metadata is stored in a "shader" member of the result and

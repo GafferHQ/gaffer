@@ -278,6 +278,20 @@ Gaffer::Plug *setupClosurePlug( const IECore::InternedString &parameterName, Gaf
 	return plug.get();
 }
 
+Gaffer::Plug *setupNodePlug( const AtNodeEntry *nodeEntry, const InternedString &parameterName, GraphComponent *plugParent, Plug::Direction direction )
+{
+	if( AiNodeEntryGetType( nodeEntry ) == AI_NODE_DRIVER && parameterName == "input" )
+	{
+		return setupPlug( parameterName, plugParent, direction );
+	}
+	else
+	{
+		// We don't know what type of Arnold node this parameter expects to be
+		// connected to.
+		return nullptr;
+	}
+}
+
 const string nodeName ( Gaffer::GraphComponent *plugParent )
 {
 	const Gaffer::Node *node = IECore::runTimeCast<const Gaffer::Node>( plugParent );
@@ -514,6 +528,16 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		case AI_TYPE_CLOSURE :
 
 			plug = setupClosurePlug(
+				AiParamGetName( parameter ).c_str(),
+				plugParent,
+				direction
+			);
+			break;
+
+		case AI_TYPE_NODE :
+
+			plug = setupNodePlug(
+				node,
 				AiParamGetName( parameter ).c_str(),
 				plugParent,
 				direction
