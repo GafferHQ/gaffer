@@ -277,26 +277,75 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Attributes history
 
-		with Gaffer.Context() as c :
-			c.setFrame( 20 )
-			history = GafferScene.SceneAlgo.history( transform["out"]["attributes"], "/group/plane" )
+		for tests in range( 2 ):
 
-		for plug, scenePath in [
-			( transform["out"], "/group/plane" ),
-			( transform["in"], "/group/plane" ),
-			( group["out"], "/group/plane" ),
-			( group["in"][0], "/plane" ),
-			( attributes["out"], "/plane" ),
-			( attributes["in"], "/plane" ),
-			( plane["out"], "/plane" ),
-		] :
-			self.assertEqual( history.scene, plug )
-			self.assertEqual( history.context.getFrame(), 20 )
-			self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
-			self.assertFalse( any( n.startswith( "__" ) for n in history.context.names() ) )
-			history = history.predecessors[0] if history.predecessors else None
+			with Gaffer.Context() as c :
+				c.setFrame( 20 )
+				history = GafferScene.SceneAlgo.history( transform["out"]["attributes"], "/group/plane" )
 
-		self.assertIsNone( history )
+			for plug, scenePath in [
+				( transform["out"], "/group/plane" ),
+				( transform["in"], "/group/plane" ),
+				( group["out"], "/group/plane" ),
+				( group["in"][0], "/plane" ),
+				( attributes["out"], "/plane" ),
+				( attributes["in"], "/plane" ),
+				( plane["out"], "/plane" ),
+			] :
+				self.assertEqual( history.scene, plug )
+				self.assertEqual( history.context.getFrame(), 20 )
+				self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
+				self.assertFalse( any( n.startswith( "__" ) for n in history.context.names() ) )
+				self.assertLessEqual( len( history.predecessors ), 1 )
+				history = history.predecessors[0] if history.predecessors else None
+
+			self.assertIsNone( history )
+
+			# Before running the same test again, set up an expression that pulls an unrelated piece of a
+			# scene plug, before running this test again.  This isn't part of attribute history,  so it
+			# shouldn't affect the result
+
+			attributes["sourceScene"] = GafferScene.Sphere()
+			attributes["boundQuery"] = GafferScene.BoundQuery()
+			attributes["boundQuery"]["scene"].setInput( attributes["sourceScene"]["out"] )
+			attributes["boundQuery"]["location"].setValue( "/sphere" )
+
+			attributes["expression"] = Gaffer.Expression()
+			attributes["expression"].setExpression(
+				'b = parent["boundQuery"]["bound"]; parent["attributes"]["NameValuePlug"]["value"] = b.size()[0]'
+			)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHistoryPerformance( self ) :
+
+		plane = GafferScene.Plane( "Plane" )
+		plane["divisions"].setValue( imath.V2i( 600 ) )
+
+		planeFilter = GafferScene.PathFilter( "PathFilter" )
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer( "Instancer" )
+		instancer["in"].setInput( plane["out"] )
+		instancer["prototypes"].setInput( plane["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+
+		allFilter = GafferScene.PathFilter( "PathFilter1" )
+		allFilter["paths"].setValue( IECore.StringVectorData( [ '/...' ] ) )
+
+		setNode = GafferScene.Set( "Set" )
+		setNode["in"].setInput( instancer["out"] )
+		setNode["filter"].setInput( allFilter["out"] )
+
+		attributesFilter = GafferScene.SetFilter()
+		attributesFilter["setExpression"].setValue( "set" )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( setNode["out"] )
+		attributes["filter"].setInput( attributesFilter["out"] )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			history = GafferScene.SceneAlgo.history( attributes["out"]["attributes"], "/plane" )
 
 	def testHistoryWithNoComputes( self ) :
 

@@ -175,7 +175,11 @@ class FocusGadget : public Gadget
 
 		bool buttonPressed( GadgetPtr gadget, const ButtonEvent &event )
 		{
-			toggleFocus();
+			if( event.buttons==ButtonEvent::Left )
+			{
+				toggleFocus();
+			}
+
 			return true;
 		}
 
@@ -195,9 +199,13 @@ class FocusGadget : public Gadget
 
 		bool buttonDoubleClick( GadgetPtr gadget, const ButtonEvent &event )
 		{
-			// A user might rapidly click on the focus to toggle on and off - it's more consistent if
-			// all clicks are treated the same, even if they come fast enough to be classified as a "double click"
-			toggleFocus();
+			if( event.buttons==ButtonEvent::Left )
+			{
+				// A user might rapidly click on the focus to toggle on and off - it's more consistent if
+				// all clicks are treated the same, even if they come fast enough to be classified as a "double click"
+				toggleFocus();
+			}
+
 			return true;
 		}
 

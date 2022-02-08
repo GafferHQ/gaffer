@@ -53,6 +53,7 @@ StandardAttributes::StandardAttributes( const std::string &name )
 
 	attributes->addChild( new Gaffer::NameValuePlug( "scene:visible", new IECore::BoolData( true ), false, "visibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "doubleSided", new IECore::BoolData( true ), false, "doubleSided" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "render:displayColor", new IECore::Color3fData( Imath::Color3f( 1 ) ), false, "displayColor" ) );
 
 	// motion blur
 

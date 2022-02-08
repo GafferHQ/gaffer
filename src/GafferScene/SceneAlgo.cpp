@@ -403,46 +403,52 @@ class CapturingMonitor : public Monitor
 		void processStarted( const Process *process ) override
 		{
 			const Plug *p = process->plug();
+
+			CapturedProcess::Ptr capturedProcess;
+			ProcessOrScope entry;
 			if( !p->parent<ScenePlug>() || p->getName() != m_scenePlugChildName )
 			{
-				// Need to hold a lock while inserting a nullptr sentinel in m_processMap
-				// so child Process's can tell they're not being monitored
-				Mutex::scoped_lock lock( m_mutex );
-				m_processMap.insert( ProcessMap::value_type( process, nullptr ) );
-				return;
-			}
-
-			{
-				// Need a lock while checking if our parent is null ( which would mean we're
-				// not being monitored ).  This is terrible for perf, hopefully an improvement will come soon
-				Mutex::scoped_lock lock( m_mutex );
-				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-				if( it != m_processMap.end() && !it->second )
-				{
-					m_processMap[process] = nullptr;
-					return;
-				}
-			}
-
-			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
-			capturedProcess->type = process->type();
-			capturedProcess->plug = p;
-			capturedProcess->destinationPlug = process->destinationPlug();
-			capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
-
-			Mutex::scoped_lock lock( m_mutex );
-			m_processMap[process] = capturedProcess.get();
-
-			ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-			if( it != m_processMap.end() )
-			{
-				it->second->children.push_back( std::move( capturedProcess ) );
+				// Parents may spawn other processes in support of the requested plug. This is one
+				// of these other plugs that isn't directly the requested plug.  Instead of creating
+				// a CapturedProcess record, we instead create a Monitor::Scope that turns off this
+				// monitor, so that the child computations that we don't need to monitor can go faster.
+				//
+				// It's crucial that this Scope gets destructed while leaving this process, so that the
+				// order of the stack is preserved - if this happens out of order, the stack will be
+				// corrupted, and weird crashes will happen.  But as long as it is created in
+				// processStarted, and released in processFinished, everything should line up.
+				entry = std::make_unique<Monitor::Scope>( this, false );
 			}
 			else
 			{
-				// Either `process->parent()` was null, or was started
-				// before we were made active via `Monitor::Scope`.
-				m_rootProcesses.push_back( std::move( capturedProcess ) );
+				capturedProcess = std::make_unique<CapturedProcess>();
+				capturedProcess->type = process->type();
+				capturedProcess->plug = p;
+				capturedProcess->destinationPlug = process->destinationPlug();
+				capturedProcess->context = new Context( *process->context(), /* omitCanceller = */ true );
+				entry = capturedProcess.get();
+			}
+
+			Mutex::scoped_lock lock( m_mutex );
+			m_processMap[process] = std::move( entry );
+
+			if( capturedProcess )
+			{
+				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
+				if( it != m_processMap.end() )
+				{
+					CapturedProcess * const * parent = boost::get< CapturedProcess* >( &it->second );
+					if( parent && *parent )
+					{
+						(*parent)->children.push_back( std::move( capturedProcess ) );
+					}
+				}
+				else
+				{
+					// Either `process->parent()` was null, or was started
+					// before we were made active via `Monitor::Scope`.
+					m_rootProcesses.push_back( std::move( capturedProcess ) );
+				}
 			}
 		}
 
@@ -457,7 +463,8 @@ class CapturingMonitor : public Monitor
 		typedef tbb::spin_mutex Mutex;
 
 		Mutex m_mutex;
-		typedef boost::unordered_map<const Process *, CapturedProcess *> ProcessMap;
+		typedef boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope > > ProcessOrScope;
+		typedef boost::unordered_map< const Process *, ProcessOrScope > ProcessMap;
 		ProcessMap m_processMap;
 		CapturedProcess::PtrVector m_rootProcesses;
 		IECore::InternedString m_scenePlugChildName;
@@ -501,13 +508,7 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 
 	for( const auto &p : process->children )
 	{
-		// Parents may spawn other processes in support of the requested plug.
-		// We don't want these to show up in history output, so we only include
-		// ones that are directly in service of the requested plug.
-		if( p->plug->parent<ScenePlug>() && p->plug->getName() == scenePlugChildName )
-		{
-			historyWalk( p.get(), scenePlugChildName, parent );
-		}
+		historyWalk( p.get(), scenePlugChildName, parent );
 	}
 
 	return result;
