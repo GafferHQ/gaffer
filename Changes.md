@@ -6,6 +6,11 @@ Improvements
 
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes.
 
+Fixes
+-----
+
+- Graph UI : Don't toggle focus on right click
+
 0.61.2.0 (relative to 0.61.1.1)
 ========
 
