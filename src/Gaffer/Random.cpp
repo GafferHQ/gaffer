@@ -59,7 +59,7 @@ Random::Random( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new IntPlug( "seed", Plug::In, 0, 0 ) );
-	addChild( new StringPlug( "contextEntry" ) );
+	addChild( new StringPlug( "seedVariable" ) );
 
 	addChild( new V2fPlug( "floatRange", Plug::In, V2f( 0, 1 ) ) );
 	addChild( new FloatPlug( "outFloat", Plug::Out ) );
@@ -86,12 +86,12 @@ const IntPlug *Random::seedPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-StringPlug *Random::contextEntryPlug()
+StringPlug *Random::seedVariablePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const StringPlug *Random::contextEntryPlug() const
+const StringPlug *Random::seedVariablePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
@@ -170,7 +170,7 @@ void Random::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	if( input == seedPlug() || input == contextEntryPlug() )
+	if( input == seedPlug() || input == seedVariablePlug() )
 	{
 		outputs.push_back( outFloatPlug() );
 		for( ValuePlug::Iterator componentIt( outColorPlug() ); !componentIt.done(); ++componentIt )
@@ -274,18 +274,18 @@ Imath::Color3f Random::randomColor( unsigned long int seed ) const
 void Random::hashSeed( const Context *context, IECore::MurmurHash &h ) const
 {
 	seedPlug()->hash( h );
-	std::string contextEntry = contextEntryPlug()->getValue();
-	if( contextEntry.size() )
+	const std::string seedVariable = seedVariablePlug()->getValue();
+	if( seedVariable.size() )
 	{
-		h.append( context->variableHash( contextEntry ).h1() );
+		h.append( context->variableHash( seedVariable ).h1() );
 	}
 }
 
 unsigned long int Random::computeSeed( const Context *context ) const
 {
 	unsigned long int seed = seedPlug()->getValue();
-	std::string contextEntry = contextEntryPlug()->getValue();
-	if( contextEntry.size() )
+	const std::string seedVariable = seedVariablePlug()->getValue();
+	if( seedVariable.size() )
 	{
 		// \todo:  It is wasteful to call getAsData, allocating a fresh data here.
 		// We should be able to just use `seed += context->variableHash( contextEntry ).h1()`,
@@ -293,7 +293,7 @@ unsigned long int Random::computeSeed( const Context *context ) const
 		// entry name as the address of an internal string.  If we come up with a way to do
 		// fast consistent hashes of InternedString ( ie. the proposal of storing a hash in
 		// the InternedString table ) then we should switch this to the less wasteful version
-		IECore::DataPtr contextData = context->getAsData( contextEntry, nullptr );
+		IECore::DataPtr contextData = context->getAsData( seedVariable, nullptr );
 		if( contextData )
 		{
 			IECore::MurmurHash hash = contextData->Object::hash();

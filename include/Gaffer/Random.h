@@ -59,8 +59,8 @@ class GAFFER_API Random : public ComputeNode
 
 		IntPlug *seedPlug();
 		const IntPlug *seedPlug() const;
-		StringPlug *contextEntryPlug();
-		const StringPlug *contextEntryPlug() const;
+		StringPlug *seedVariablePlug();
+		const StringPlug *seedVariablePlug() const;
 
 		V2fPlug *floatRangePlug();
 		const V2fPlug *floatRangePlug() const;
