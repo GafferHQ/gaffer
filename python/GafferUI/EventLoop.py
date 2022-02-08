@@ -159,6 +159,9 @@ class EventLoop( object ) :
 		# environment, which could mess with our own style (on GNOME for instance,
 		# our icons can come out the wrong size).
 		style = QtWidgets.QApplication.setStyle( "Fusion" )
+		# Stop icons/fonts being tiny on high-dpi monitors. Must be set before
+		# the application is created.
+		QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_EnableHighDpiScaling )
 		assert( style is not None )
 		__qtApplication = QtWidgets.QApplication( [ "gaffer" ] )
 		# Fixes laggy interaction with tablets, equivalent to the old
