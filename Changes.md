@@ -5,11 +5,7 @@ Improvements
 ------------
 
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes.
-
-Fixes
------
-
-- Graph UI : Don't toggle focus on right click
+- GraphEditor : The focus widget now ignores right clicks, avoiding situations where attempting to open a context menu could accidentally change focus.
 
 0.61.2.0 (relative to 0.61.1.1)
 ========
