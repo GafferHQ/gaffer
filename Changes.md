@@ -6,6 +6,7 @@ Improvements
 
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes.
 - GraphEditor : The focus widget now ignores right clicks, avoiding situations where attempting to open a context menu could accidentally change focus.
+- StandardAttributes : Added `attributes.displayColor` plug, for controlling the colour of objects in the Viewer.
 
 0.61.2.0 (relative to 0.61.1.1)
 ========

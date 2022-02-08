@@ -45,6 +45,8 @@ def __attributesSummary( plug ) :
 		info.append( "Visible" if plug["visibility"]["value"].getValue() else "Invisible" )
 	if plug["doubleSided"]["enabled"].getValue() :
 		info.append( "Double Sided" if plug["doubleSided"]["value"].getValue() else "Single Sided" )
+	if plug["displayColor"]["enabled"].getValue() :
+		info.append( "Display Color" )
 
 	return ", ".join( info )
 
@@ -111,6 +113,22 @@ Gaffer.Metadata.registerNode(
 			Whether or not the object can be seen from both sides.
 			Single sided objects appear invisible when seen from
 			the back.
+			""",
+
+			"layout:section", "Attributes",
+
+		],
+
+		"attributes.displayColor" : [
+
+			"description",
+			"""
+			The default colour used to display the object in the absence
+			of a specific shader assignment. Commonly used to control
+			basic object appearance in the Viewer.
+
+			> Tip : For more detailed control of object appearance in the
+			> Viewer, use the OpenGLAttributes node.
 			""",
 
 			"layout:section", "Attributes",
