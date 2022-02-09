@@ -17,6 +17,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed gnomon, which went missing in Gaffer 0.61.0.0.
 - VectorDataWidget : Fixed header visibility when `setHeader()` is called after construction.
 
 API
