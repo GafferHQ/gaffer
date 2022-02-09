@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,69 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_RANDOM_H
-#define GAFFER_RANDOM_H
-
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/NumericPlug.h"
+#ifndef GAFFER_RANDOMCHOICE_INL
+#define GAFFER_RANDOMCHOICE_INL
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-class GAFFER_API Random : public ComputeNode
+template<typename T>
+T *RandomChoice::choicesValuesPlug()
 {
+	ValuePlug *c = choicesPlug();
+	if( c->children().size() == 2 )
+	{
+		return c->getChild<T>( 1 );
+	}
+	return nullptr;
+}
 
-	public :
+template<typename T>
+const T *RandomChoice::choicesValuesPlug() const
+{
+	const ValuePlug *c = choicesPlug();
+	if( c->children().size() == 2 )
+	{
+		return c->getChild<T>( 1 );
+	}
+	return nullptr;
+}
 
-		Random( const std::string &name=defaultName<Random>() );
-		~Random() override;
+template<typename T>
+T *RandomChoice::outPlug()
+{
+	return IECore::runTimeCast<T>( outPlugInternal() );
+}
 
-		GAFFER_NODE_DECLARE_TYPE( Gaffer::Random, RandomTypeId, ComputeNode );
-
-		IntPlug *seedPlug();
-		const IntPlug *seedPlug() const;
-		StringPlug *contextEntryPlug();
-		const StringPlug *contextEntryPlug() const;
-
-		V2fPlug *floatRangePlug();
-		const V2fPlug *floatRangePlug() const;
-		FloatPlug *outFloatPlug();
-		const FloatPlug *outFloatPlug() const;
-
-		Color3fPlug *baseColorPlug();
-		const Color3fPlug *baseColorPlug() const;
-		FloatPlug *huePlug();
-		const FloatPlug *huePlug() const;
-		FloatPlug *saturationPlug();
-		const FloatPlug *saturationPlug() const;
-		FloatPlug *valuePlug();
-		const FloatPlug *valuePlug() const;
-		Color3fPlug *outColorPlug();
-		const Color3fPlug *outColorPlug() const;
-
-		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		Imath::Color3f randomColor( unsigned long int seed ) const;
-
-	protected :
-
-		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
-		void compute( ValuePlug *output, const Context *context ) const override;
-
-	private :
-
-		void hashSeed( const Context *context, IECore::MurmurHash &h ) const;
-		unsigned long int computeSeed( const Context *context ) const;
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( Random )
+template<typename T>
+const T *RandomChoice::outPlug() const
+{
+	return IECore::runTimeCast<const T>( outPlugInternal() );
+}
 
 } // namespace Gaffer
 
-#endif // GAFFER_RANDOM_H
+#endif // GAFFER_RANDOMCHOICE_INL

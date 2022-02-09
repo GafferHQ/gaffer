@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,52 +34,66 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_RANDOM_H
-#define GAFFER_RANDOM_H
+#ifndef GAFFER_RANDOMCHOICE_H
+#define GAFFER_RANDOMCHOICE_H
 
-#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-class GAFFER_API Random : public ComputeNode
+class GAFFER_API RandomChoice : public ComputeNode
 {
 
 	public :
 
-		Random( const std::string &name=defaultName<Random>() );
-		~Random() override;
+		RandomChoice( const std::string &name=defaultName<RandomChoice>() );
+		~RandomChoice() override;
 
-		GAFFER_NODE_DECLARE_TYPE( Gaffer::Random, RandomTypeId, ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( Gaffer::RandomChoice, RandomChoiceTypeId, ComputeNode );
+
+		/// Sets up the node to output the specified plug type. The passed plug
+		/// is used as a template, but will not be parented to the node
+		/// itself - typically you will pass a plug which you will connect to
+		/// the node after calling `setup()`.
+		/// \undoable
+		void setup( const ValuePlug *plug );
+		/// Returns true if `plug` is suitable for passing to `setup()`. Not
+		/// all plug types are supported.
+		static bool canSetup( const ValuePlug *plug );
 
 		IntPlug *seedPlug();
 		const IntPlug *seedPlug() const;
-		StringPlug *contextEntryPlug();
-		const StringPlug *contextEntryPlug() const;
 
-		V2fPlug *floatRangePlug();
-		const V2fPlug *floatRangePlug() const;
-		FloatPlug *outFloatPlug();
-		const FloatPlug *outFloatPlug() const;
+		StringPlug *seedVariablePlug();
+		const StringPlug *seedVariablePlug() const;
 
-		Color3fPlug *baseColorPlug();
-		const Color3fPlug *baseColorPlug() const;
-		FloatPlug *huePlug();
-		const FloatPlug *huePlug() const;
-		FloatPlug *saturationPlug();
-		const FloatPlug *saturationPlug() const;
-		FloatPlug *valuePlug();
-		const FloatPlug *valuePlug() const;
-		Color3fPlug *outColorPlug();
-		const Color3fPlug *outColorPlug() const;
+		/// Compound plug that groups the `choices.values` and `choices.weights`
+		/// plugs.
+		ValuePlug *choicesPlug();
+		const ValuePlug *choicesPlug() const;
+
+		/// The type of the `choices.values` plug is dictated by the type of
+		/// `outPlug`. For example, `choices.values` is a StringVectorDataPlug when
+		/// `out` is a StringPlug.
+		template<typename T=ValuePlug>
+		T *choicesValuesPlug();
+		template<typename T=ValuePlug>
+		const T *choicesValuesPlug() const;
+
+		FloatVectorDataPlug *choicesWeightsPlug();
+		const FloatVectorDataPlug *choicesWeightsPlug() const;
+
+		/// The type of the `out` plug matches the type passed to `setup()`.
+		template<typename T=ValuePlug>
+		T *outPlug();
+		template<typename T=ValuePlug>
+		const T *outPlug() const;
 
 		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-		Imath::Color3f randomColor( unsigned long int seed ) const;
 
 	protected :
 
@@ -88,15 +102,17 @@ class GAFFER_API Random : public ComputeNode
 
 	private :
 
-		void hashSeed( const Context *context, IECore::MurmurHash &h ) const;
-		unsigned long int computeSeed( const Context *context ) const;
+		ValuePlug *outPlugInternal();
+		const ValuePlug *outPlugInternal() const;
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( Random )
+IE_CORE_DECLAREPTR( RandomChoice )
 
 } // namespace Gaffer
 
-#endif // GAFFER_RANDOM_H
+#include "Gaffer/RandomChoice.inl"
+
+#endif // GAFFER_RANDOMCHOICE_H

@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.2.0)
 ========
 
+Features
+--------
+
+- RandomChoice : Added new node for choosing a random value from a list of weighted choices.
+
 Improvements
 ------------
 
@@ -8,6 +13,19 @@ Improvements
 - GraphEditor : The focus widget now ignores right clicks, avoiding situations where attempting to open a context menu could accidentally change focus.
 - StandardAttributes : Added `attributes.displayColor` plug, for controlling the colour of objects in the Viewer.
 - UI : The UI is now scaled automatically for high-resolution monitors on Linux (#2157). Set the `QT_ENABLE_HIGHDPI_SCALING` environment variable to `0` to disable.
+
+Fixes
+-----
+
+- VectorDataWidget : Fixed header visibility when `setHeader()` is called after construction.
+
+API
+---
+
+- VectorDataPlugValueWidget :
+  - Added support for showing plugs with children, with each child forming a column in the UI.
+  - Added `vectorDataPlugValueWidget:elementDefaultValue` metadata, used to provide the initial
+    value for newly added rows.
 
 0.61.2.0 (relative to 0.61.1.1)
 ========

@@ -95,7 +95,6 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.__tableView = _TableView( minimumVisibleRows = minimumVisibleRows )
 
-		self.__tableView.horizontalHeader().setVisible( bool( header ) )
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
@@ -265,6 +264,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__header = header
 		else :
 			self.__header = None
+
+		self.__tableView.horizontalHeader().setVisible( bool( header ) )
 
 	def getHeader( self ):
 

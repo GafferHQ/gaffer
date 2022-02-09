@@ -164,6 +164,7 @@ from .NameSwitchTest import NameSwitchTest
 from .SpreadsheetTest import SpreadsheetTest
 from .ShufflePlugTest import ShufflePlugTest
 from .EditScopeTest import EditScopeTest
+from .RandomChoiceTest import RandomChoiceTest
 
 from .IECorePreviewTest import *
 
