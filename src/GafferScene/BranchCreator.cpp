@@ -1172,7 +1172,6 @@ IECore::ConstDataPtr BranchCreator::computeMapping( const Gaffer::Context *conte
 BranchCreator::ConstBranchesDataPtr BranchCreator::branches( const Gaffer::Context *context ) const
 {
 	ScenePlug::GlobalScope globalScope( context );
-	globalScope.remove( SceneAlgo::historyIDContextName() );
 	return static_pointer_cast<const BranchesData>( branchesPlug()->getValue() );
 }
 
