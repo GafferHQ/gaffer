@@ -2590,9 +2590,6 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertTrue( "Permission denied" in mh.messages[0].message )
 
-	# This test runs OK in isolation, but previous uses of ArnoldRenderer seem
-	# to stop Arnold from writing the profile file.
-	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] == [ 7, 0, 0 ], "Profiling broken in Arnold 7" )
 	def testStatsAndLog( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -2641,6 +2638,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertTrue( "ray counts" in stats )
 
+		# This test runs OK in isolation, but previous uses of ArnoldRenderer seem
+		# to stop Arnold from writing the profile file.
+		if int(arnold.AiGetVersion()[0]) == 7 :
+			self.skipTest( "Profiling broken in Arnold 7" )
+
 		with open( self.temporaryDirectory() + "/test/test_profile.json", "r" ) as profileHandle :
 			stats = json.load( profileHandle )["traceEvents"]
 			driverEvents = [ x for x in stats if x["name"] == "ieCoreArnold:display:testBeauty" ]
@@ -2685,10 +2687,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 				# We should have at least 1 message from our invalid option plus
 				# _something_ from the renderer's own output stream.
-				if renderType == RenderType.SceneDescription and arnold.AiGetVersion()[:3] == [ '7', '0', '0' ] :
+				if renderType == RenderType.SceneDescription and int(arnold.AiGetVersion()[0]) == 7 :
 					# A bug in Arnold associates the `[ ass ] Writing...` message with the wrong render session
 					# in the message callback.
-					pass
+					self.skipTest( "SceneDescription Messaging broken in Arnold 7" )
 				else :
 					self.assertGreater( len(handler.messages), 1, msg=str(renderType) )
 

@@ -6,6 +6,11 @@ Improvements
 
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes.
 
+Build
+-----
+
+- Arnold 7.1 Support
+
 0.61.2.0 (relative to 0.61.1.1)
 ========
 
