@@ -116,6 +116,11 @@ class GAFFER_API ThreadState
 
 		static const ThreadState &current();
 
+		const Context *context() const
+		{
+			return m_context;
+		}
+
 	private :
 
 		friend class Process;

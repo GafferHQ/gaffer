@@ -235,7 +235,8 @@ class ValuePlug::HashProcess : public Process
 			// using a HashProcess instance.
 
 			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
-			const Context *currentContext = Context::current();
+			const ThreadState &threadState = ThreadState::current();
+			const Context *currentContext = threadState.context();
 			const HashProcessKey processKey( p, plug, currentContext, p->m_dirtyCount, computeNode, computeNode ? computeNode->hashCachePolicy( p ) : CachePolicy::Uncached );
 
 			if( processKey.cachePolicy == CachePolicy::Uncached )
@@ -574,6 +575,9 @@ class ValuePlug::ComputeProcess : public Process
 			// one per context, computed via ComputeNode::compute(). Pull the value out of our cache, or compute
 			// it with a ComputeProcess.
 
+			const ThreadState &threadState = ThreadState::current();
+			const Context *currentContext = threadState.context();
+
 			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
 			const ComputeProcessKey processKey( p, plug, computeNode, computeNode ? computeNode->computeCachePolicy( p ) : CachePolicy::Uncached, precomputedHash );
 
@@ -616,7 +620,7 @@ class ValuePlug::ComputeProcess : public Process
 			}
 			else
 			{
-				return g_cache.get( processKey, Context::current()->canceller() );
+				return g_cache.get( processKey, currentContext->canceller() );
 			}
 		}
 
