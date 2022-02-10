@@ -21,7 +21,10 @@ Fixes
 
 - Viewer : Fixed gnomon, which went missing in Gaffer 0.61.0.0.
 - PathListingWidget : Fixed hangs triggered by hiding a widget while Python-based columns were being queried.
-- VectorDataWidget : Fixed header visibility when `setHeader()` is called after construction.
+- VectorDataWidget :
+  - Fixed header visibility when `setHeader()` is called after construction.
+  - Fixed errors displaying vectors of differing lengths. Note : it is not yet possible to _edit_ vectors of differing lengths.
+- PrimitiveInspector : Fixed errors displaying Constant primitive variables with differing array lengths.
 
 API
 ---
