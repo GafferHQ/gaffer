@@ -183,6 +183,8 @@ class GAFFER_API ValuePlug : public Plug
 		/// > Note : Limits are applied on a per-thread basis as and
 		/// > when each thread is used to compute a hash.
 		static void setHashCacheSizeLimit( size_t maxEntriesPerThread );
+		/// Returns the total number of entries in both global and per-thread hash caches
+		static size_t hashCacheTotalUsage();
 		/// Clears the hash cache.
 		/// > Note : Clearing occurs on a per-thread basis as and when
 		/// > each thread next accesses the cache.

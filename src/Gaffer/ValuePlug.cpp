@@ -350,6 +350,17 @@ class ValuePlug::HashProcess : public Process
 			}
 		}
 
+		static size_t totalCacheUsage()
+		{
+			size_t usage = g_globalCache.currentCost();
+			tbb::enumerable_thread_specific<ThreadData>::iterator it, eIt;
+			for( it = g_threadData.begin(), eIt = g_threadData.end(); it != eIt; ++it )
+			{
+				usage += it->cache.currentCost();
+			}
+			return usage;
+		}
+
 		static void dirtyLegacyCache()
 		{
 			if( g_hashCacheMode != HashCacheMode::Standard )
@@ -1226,6 +1237,11 @@ void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
 void ValuePlug::clearHashCache()
 {
 	HashProcess::clearCache();
+}
+
+size_t ValuePlug::hashCacheTotalUsage()
+{
+	return HashProcess::totalCacheUsage();
 }
 
 void ValuePlug::setHashCacheMode( ValuePlug::HashCacheMode hashCacheMode )

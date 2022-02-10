@@ -277,7 +277,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Attributes history
 
-		for tests in range( 2 ):
+		def runTest():
 
 			with Gaffer.Context() as c :
 				c.setFrame( 20 )
@@ -301,18 +301,30 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertIsNone( history )
 
-			# Before running the same test again, set up a bound query that pulls an unrelated piece of a
-			# scene plug, before running this test again.  This isn't part of attribute history,  so it
-			# shouldn't affect the result
+		runTest()
 
-			attributes["attributes"].addChild( Gaffer.NameValuePlug( "test", imath.V3f( 0 ) ) )
+		# Before running the same test again, set up a bound query that pulls an unrelated piece of a
+		# scene plug, before running this test again.  This isn't part of attribute history,  so it
+		# shouldn't affect the result
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test", imath.V3f( 0 ) ) )
 
-			sourceScene = GafferScene.Sphere()
-			boundQuery = GafferScene.BoundQuery()
-			boundQuery["scene"].setInput( sourceScene["out"] )
-			boundQuery["location"].setValue( "/sphere" )
+		sourceScene = GafferScene.Sphere()
+		boundQuery = GafferScene.BoundQuery()
+		boundQuery["scene"].setInput( sourceScene["out"] )
+		boundQuery["location"].setValue( "/sphere" )
 
-			attributes["attributes"]["NameValuePlug1"]["value"].setInput( boundQuery["center"] )
+		attributes["attributes"]["NameValuePlug1"]["value"].setInput( boundQuery["center"] )
+
+
+		runTest()
+
+		# Test running the test while everything is already cached still works, and doesn't add any
+		# new entries to the cache
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		before = Gaffer.ValuePlug.hashCacheTotalUsage()
+		runTest()
+		self.assertEqual( Gaffer.ValuePlug.hashCacheTotalUsage(), before )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testHistoryPerformance( self ) :
