@@ -510,6 +510,14 @@ class GnomonGadget : public GafferUI::Gadget
 
 	protected :
 
+		Imath::Box3f renderBound() const override
+		{
+			// We have no fixed object-space bound.
+			Box3f b;
+			b.makeInfinite();
+			return b;
+		}
+
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const final
 		{
 			if( layer != Layer::Main )
