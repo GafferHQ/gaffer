@@ -21,7 +21,9 @@ Fixes
 - VectorDataWidget :
   - Fixed header visibility when `setHeader()` is called after construction.
   - Fixed errors displaying vectors of differing lengths. Note : it is not yet possible to _edit_ vectors of differing lengths.
-- PrimitiveInspector : Fixed errors displaying Constant primitive variables with differing array lengths.
+- PrimitiveInspector :
+  - Fixed errors displaying Constant primitive variables with differing array lengths.
+  - Fixed header tooltip formatting to match the SceneInspector.
 
 API
 ---
