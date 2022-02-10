@@ -37,19 +37,13 @@
 import os
 import sys
 
-pythonVariant = os.environ.get( "PYTHON_VARIANT", None )
+variant = os.environ.get( "GAFFER_VARIANT", None )
 for a in sys.argv :
-	if a.startswith( "PYTHON_VARIANT=" ) :
-		pythonVariant = a[15:]
+	if a.startswith( "GAFFER_VARIANT=" ) :
+		variant = a[15:]
 
-pythonSuffix = {
-	"2" : "Python2",
-	"3" : "Python3",
-	None : ""
-}[pythonVariant]
-
-BUILD_DIR = os.path.expanduser( "~/dev/build/gaffer" + pythonSuffix )
-BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" + pythonSuffix )
+BUILD_DIR = os.path.expanduser( "~/dev/build/gaffer" + variant )
+BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" + variant )
 
 ENV_VARS_TO_IMPORT = "PATH"
 DELIGHT_ROOT = os.environ["DELIGHT"]
