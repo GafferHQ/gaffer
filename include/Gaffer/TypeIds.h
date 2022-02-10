@@ -142,6 +142,7 @@ enum TypeId
 	M33fVectorDataPlugTypeId = 110095,
 	ScriptNodeFocusSetTypeId = 110096,
 	AnimationKeyTypeId = 110097,
+	RandomChoiceTypeId = 110098,
 
 	LastTypeId = 110159,
 

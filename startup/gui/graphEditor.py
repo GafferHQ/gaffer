@@ -60,6 +60,7 @@ Gaffer.Metadata.registerValue( Gaffer.BoxIO, "nodeGadget:color", imath.Color3f( 
 Gaffer.Metadata.registerValue( Gaffer.EditScope, "nodeGadget:color", imath.Color3f( 0.1876, 0.3908, 0.6 ) )
 
 Gaffer.Metadata.registerValue( Gaffer.Random, "nodeGadget:color", imath.Color3f( 0.45, 0.3, 0.3 ) )
+Gaffer.Metadata.registerValue( Gaffer.RandomChoice, "nodeGadget:color", imath.Color3f( 0.45, 0.3, 0.3 ) )
 Gaffer.Metadata.registerValue( Gaffer.Expression, "nodeGadget:color", imath.Color3f( 0.3, 0.45, 0.3 ) )
 Gaffer.Metadata.registerValue( Gaffer.Animation, "nodeGadget:color", imath.Color3f( 0.3, 0.3, 0.45 ) )
 Gaffer.Metadata.registerValue( Gaffer.Spreadsheet, "nodeGadget:color", imath.Color3f( 0.69, 0.5445, 0.2208 ) )

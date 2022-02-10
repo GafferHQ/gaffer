@@ -42,15 +42,67 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/Random.h"
+#include "Gaffer/RandomChoice.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static Imath::Color3f randomColor( Random &r, int seed )
+namespace
+{
+
+Imath::Color3f randomColor( Random &r, int seed )
 {
 	return r.randomColor( std::max( seed, 0 ) );
 }
+
+void setupWrapper( RandomChoice &r, const Gaffer::ValuePlug &p )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return r.setup( &p );
+}
+
+class RandomChoiceSerialiser : public NodeSerialiser
+{
+
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+	{
+		const RandomChoice *node = child->parent<RandomChoice>();
+		if( child == node->outPlug() )
+		{
+			// We'll serialise a `setup()` call to construct this.
+			return false;
+		}
+		return NodeSerialiser::childNeedsConstruction( child, serialisation );
+	}
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		const RandomChoice *node = static_cast<const RandomChoice *>( graphComponent );
+		if( !node->outPlug() )
+		{
+			// `RandomChoice::setup()` hasn't been called yet.
+			return result;
+		}
+
+		// Add a call to `setup()` to recreate the plugs.
+
+		if( result.size() )
+		{
+			result += "\n";
+		}
+
+		const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( node->outPlug() );
+		result += identifier + ".setup( " + plugSerialiser->constructor( node->outPlug(), serialisation ) + " )\n";
+
+		return result;
+	}
+
+};
+
+} // namespace
 
 void GafferModule::bindRandom()
 {
@@ -58,5 +110,12 @@ void GafferModule::bindRandom()
 	DependencyNodeClass<Random>()
 		.def( "randomColor", &randomColor )
 	;
+
+	DependencyNodeClass<RandomChoice>()
+		.def( "setup", &setupWrapper )
+		.def( "canSetup", &RandomChoice::canSetup ).staticmethod( "canSetup" )
+	;
+
+	Serialisation::registerSerialiser( RandomChoice::staticTypeId(), new RandomChoiceSerialiser );
 
 }
