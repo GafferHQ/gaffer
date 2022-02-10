@@ -842,7 +842,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if parent.isValid() :
 			return 0
 
-		return len( self.__data[0] )
+		return max( [ len( d ) for d in self.__data ] )
 
 	def columnCount( self, parent = QtCore.QModelIndex() ) :
 
@@ -906,7 +906,8 @@ class _Model( QtCore.QAbstractTableModel ) :
 			role == QtCore.Qt.DisplayRole or
 			role == QtCore.Qt.EditRole
 		) :
-			return column.accessor.getElement( index.row(), column.relativeColumnIndex )
+			if index.row() < len( column.accessor.data() ) :
+				return column.accessor.getElement( index.row(), column.relativeColumnIndex )
 
 		return GafferUI._Variant.toVariant( None )
 
