@@ -508,6 +508,7 @@ static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_shapeKey( "nodeGadget:shape" );
+static IECore::InternedString g_focusGadgetVisibleKey( "nodeGadget:focusGadgetVisible" );
 static IECore::InternedString g_iconKey( "icon" );
 static IECore::InternedString g_iconScaleKey( "iconScale" );
 static IECore::InternedString g_errorGadgetName( "__error" );
@@ -664,6 +665,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node, bool auxiliary  )
 	updateNodeEnabled();
 	updateIcon();
 	updateShape();
+	updateFocusGadgetVisibility();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -1218,6 +1220,10 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::InternedString key )
 			dirty( DirtyType::Render );
 		}
 	}
+	else if( key == g_focusGadgetVisibleKey )
+	{
+		updateFocusGadgetVisibility();
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -1354,6 +1360,12 @@ bool StandardNodeGadget::updateShape()
 	m_oval = oval;
 	static_cast<FocusGadget *>( m_focusGadget.get() )->setOval( oval );
 	return true;
+}
+
+void StandardNodeGadget::updateFocusGadgetVisibility()
+{
+	auto d = Metadata::value<IECore::BoolData>( node(), g_focusGadgetVisibleKey );
+	m_focusGadget->setVisible( !d || d->readable() );
 }
 
 StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )

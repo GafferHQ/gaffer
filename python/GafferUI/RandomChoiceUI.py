@@ -58,6 +58,7 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "r",
+	"nodeGadget:focusGadgetVisible", False,
 
 	"layout:activator:isSetup", lambda node : "out" in node,
 	"layout:activator:isNotSetup", lambda node : "out" not in node,

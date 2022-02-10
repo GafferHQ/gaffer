@@ -58,6 +58,7 @@ Gaffer.Metadata.registerNode(
 	"nodeGadget:shape", "oval",
 	"uiEditor:nodeGadgetTypes", IECore.StringVectorData( [ "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" ] ),
 	"auxiliaryNodeGadget:label", "e",
+	"nodeGadget:focusGadgetVisible", False,
 
 	plugs = {
 

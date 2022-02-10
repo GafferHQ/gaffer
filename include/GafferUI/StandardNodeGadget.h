@@ -162,6 +162,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
+		void updateFocusGadgetVisibility();
 		void updateTextDimming();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
