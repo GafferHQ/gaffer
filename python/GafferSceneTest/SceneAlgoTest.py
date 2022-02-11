@@ -346,6 +346,44 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			history = GafferScene.SceneAlgo.history( attributes["out"]["attributes"], "/plane" )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHistoryPerformanceAlreadyCached( self ) :
+
+		plane = GafferScene.Plane( "Plane" )
+		plane["divisions"].setValue( imath.V2i( 300 ) )
+
+		planeFilter = GafferScene.PathFilter( "PathFilter" )
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		instancer = GafferScene.Instancer( "Instancer" )
+		instancer["in"].setInput( plane["out"] )
+		instancer["prototypes"].setInput( plane["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+		instancer["seedEnabled"].setValue( True )
+
+		allFilter = GafferScene.PathFilter()
+		allFilter["paths"].setValue( IECore.StringVectorData( [ '/...' ] ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( instancer["out"] )
+		parent["child"][0].setInput( plane["out"] )
+		parent["filter"].setInput( allFilter["out"] )
+
+		parent["out"].attributesHash( "/plane/instances/plane/1000" )
+
+		# This history call should perform only the hashes necessary for attribute history, while pulling
+		# results for anything but the attributes plug from the hash cache.  ( In particular, this has
+		# been set up so that the hash of parent.branches is quite expensive, and this will fail if we
+		# don't use the cache for that )
+		with GafferTest.TestRunner.PerformanceScope() :
+			h = GafferScene.SceneAlgo.history( parent["out"]["attributes"], "/plane/instances/plane/1000" )
+
+		# Make sure that despite not evaluating all the inputs for performance reasons, we do get the
+		# source in the correct context
+		while h.predecessors:
+			h = h.predecessors[-1]
+		self.assertEqual( h.context["seed"], 5 )
+
 	def testHistoryWithNoComputes( self ) :
 
 		switch = Gaffer.Switch()
