@@ -172,7 +172,7 @@ jobs:
 
     - name: Build and test Arnold extension
       run: |
-        for arnoldVersion in 6.2.0.1 7.0.0.0
+        for arnoldVersion in 6.2.0.1 7.0.0.2
         do
           # Install Arnold
           ./.github/workflows/main/installArnold.sh $arnoldVersion

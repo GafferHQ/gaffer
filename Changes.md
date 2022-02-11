@@ -37,6 +37,11 @@ API
   - Added `vectorDataPlugValueWidget:elementDefaultValue` metadata, used to provide the initial
     value for newly added rows.
 
+Build
+-----
+
+- Arnold 7.1 Support
+
 0.61.2.0 (relative to 0.61.1.1)
 ========
 
