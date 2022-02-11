@@ -85,6 +85,14 @@ using namespace boost::python;
 using namespace boost::posix_time;
 using namespace Gaffer;
 
+#if PY_MAJOR_VERSION < 3
+static bool PyGILState_Check()
+{
+	extern PyThreadState *_PyThreadState_Current;
+	return PyGILState_GetThisThreadState() == _PyThreadState_Current;
+}
+#endif
+
 namespace
 {
 
@@ -860,7 +868,27 @@ class PathModel : public QAbstractItemModel
 		// queue of pending edits.
 		void cancelUpdate( bool flushPendingEdits = true )
 		{
-			m_updateTask.reset(); // Implicitly calls `cancelAndWait()`.
+			if( PyGILState_Check() )
+			{
+				// Resetting the update task implicitly calls `cancelAndWait()`.
+				// If we hold the GIL, we need to release it first, in case the
+				// Path class is Python-based and needs to acquire the GIL to
+				// respond to cancellation.
+				//
+				// In our own bindings we would release the GIL at the
+				// transition point from Python to C++, rather than in the guts
+				// here. But several functions called by PySide bindings arrive
+				// here, and PySide isn't releasing the GIL before calling into
+				// C++. One such culprit is `QWidget.setParent()` being called
+				// from Python and leading to `PathModel::eventFilter()` in C++.
+				IECorePython::ScopedGILRelease gilRelease;
+				m_updateTask.reset();
+			}
+			else
+			{
+				m_updateTask.reset();
+			}
+
 			if( flushPendingEdits )
 			{
 				QCoreApplication::sendPostedEvents( this, EditEvent::staticType() );
