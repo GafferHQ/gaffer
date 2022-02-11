@@ -333,6 +333,15 @@ void resetNode( AtNode *node )
 		AiNodeResetParameter( node, name );
 	}
 	AiParamIteratorDestroy( it );
+
+	AtUserParamIterator *itUser = AiNodeGetUserParamIterator( node );
+	while ( !AiUserParamIteratorFinished( itUser ) )
+	{
+		const AtUserParamEntry *param = AiUserParamIteratorGetNext( itUser );
+		const char *name = AiUserParamGetName( param );
+		AiNodeResetParameter( node, name );
+	}
+	AiUserParamIteratorDestroy( itUser );
 }
 
 } // namespace
