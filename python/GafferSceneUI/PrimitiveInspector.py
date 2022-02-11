@@ -46,23 +46,14 @@ import GafferSceneUI
 import collections
 
 def _getPrimvarToolTip( primVarName, primvar ) :
-	toolTip = primVarName + " : "
 
-	_type = type( primvar.data )
+	toolTip = primVarName + " : " + primvar.data.typeName()
+	if hasattr( primvar.data, "getInterpretation" ) :
+		toolTip += " (" + str( primvar.data.getInterpretation() ) + ")"
 
 	if primvar.indices :
-		toolTip += "indexed "
-
-	if IECore.isSequenceDataType( primvar.data ) :
-		_type = IECore.valueTypeFromSequenceType( _type )
-		toolTip += "array "
-
-	toolTip += _type.__name__
-
-	try :
-		toolTip += " (" + str( primvar.data.getInterpretation() ) + ")"
-	except :
-		pass
+		numElements = len( primvar.data )
+		toolTip += " ( Indexed : {0} element{1} )".format( numElements, "" if numElements == 1 else "s" )
 
 	return toolTip
 
