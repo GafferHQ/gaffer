@@ -48,7 +48,7 @@ Improvements
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes.
 - GraphEditor :
   - The focus widget now ignores right clicks, avoiding situations where attempting to open a context menu could accidentally change focus.
-  - Removed the focus widget from Expression, Random and Animation nodes.
+  - Removed the focus widget from Expression, Random, Spreadsheet and Animation nodes.
 - StandardAttributes : Added `attributes.displayColor` plug, for controlling the colour of objects in the Viewer.
 - UI : The UI is now scaled automatically for high-resolution monitors on Linux (#2157). Set the `QT_ENABLE_HIGHDPI_SCALING` environment variable to `0` to disable.
 
