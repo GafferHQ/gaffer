@@ -37,6 +37,7 @@
 
 import unittest
 import functools
+import time
 
 import IECore
 
@@ -883,6 +884,47 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		w.setSelectedPaths( [ p.copy().setFromString( "/a/c" ) ] )
 		self.assertEqual( { str( s ) for s in w.getSelectedPaths() }, { "/a/c" } )
+
+	def testHidingCancellation( self ) :
+
+		# Custom column that never returns from `cellData()`
+		# (unless cancelled).
+		class SleepingColumn( GafferUI.PathColumn ) :
+
+			cellDataCalled = False
+
+			def __init__( self ) :
+
+				GafferUI.PathColumn.__init__( self )
+
+			def cellData( self, path, canceller ) :
+
+				SleepingColumn.cellDataCalled = True
+
+				while True :
+					time.sleep( 0.01 )
+					IECore.Canceller.check( canceller )
+
+			def headerData( self, canceller ) :
+
+				return self.CellData( value = "Title" )
+
+		with GafferUI.Window() as window :
+			GafferUI.PathListingWidget(
+				Gaffer.DictPath( { "a" : 10 }, "/" ),
+				columns = [
+					GafferUI.PathListingWidget.defaultNameColumn,
+					SleepingColumn(),
+				]
+			)
+
+		# Trigger a background update by showing the widget.
+		window.setVisible( True )
+		self.waitForIdle()
+		self.assertTrue( SleepingColumn.cellDataCalled )
+
+		# Cancel the update by hiding it.
+		window.setVisible( False )
 
 	@staticmethod
 	def __emitPathChanged( widget ) :

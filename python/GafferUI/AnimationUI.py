@@ -54,6 +54,7 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
 	"auxiliaryNodeGadget:label", "a",
+	"nodeGadget:focusGadgetVisible", False,
 
 	plugs = {
 
