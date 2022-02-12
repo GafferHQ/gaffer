@@ -244,6 +244,23 @@ class ValuePlug::HashProcess : public Process
 				HashProcess process( processKey );
 				return process.m_result;
 			}
+			else if( Process::forceMonitoring( threadState, plug, ValuePlug::HashProcess::staticType ) )
+			{
+				HashProcess process( processKey );
+				if(
+					processKey.cachePolicy == CachePolicy::TaskCollaboration ||
+					processKey.cachePolicy == CachePolicy::TaskIsolation
+				)
+				{
+					g_globalCache.set( processKey, process.m_result, 1 );
+				}
+				else
+				{
+					ThreadData &threadData = g_threadData.local();
+					threadData.cache.set( processKey, process.m_result, 1 );
+				}
+				return process.m_result;
+			}
 			else
 			{
 				// Perform any pending adjustments to our thread-local cache.
@@ -473,7 +490,7 @@ class ValuePlug::HashProcess : public Process
 
 };
 
-const IECore::InternedString ValuePlug::HashProcess::staticType( "computeNode:hash" );
+const IECore::InternedString ValuePlug::HashProcess::staticType( ValuePlug::hashProcessType() );
 tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_aligned_allocator<ValuePlug::HashProcess::ThreadData>, tbb::ets_key_per_instance > ValuePlug::HashProcess::g_threadData;
 // Default limit corresponds to a cost of roughly 25Mb per thread.
 std::atomic_size_t ValuePlug::HashProcess::g_cacheSizeLimit( 128000 );
@@ -584,6 +601,12 @@ class ValuePlug::ComputeProcess : public Process
 			if( processKey.cachePolicy == CachePolicy::Uncached )
 			{
 				return ComputeProcess( processKey ).m_result;
+			}
+			else if( Process::forceMonitoring( threadState, plug, ValuePlug::ComputeProcess::staticType ) )
+			{
+				ComputeProcess process( processKey );
+				g_cache.set( processKey, process.m_result, process.m_result->memoryUsage() );
+				return process.m_result;
 			}
 			else if( processKey.cachePolicy == CachePolicy::Legacy )
 			{
@@ -730,7 +753,7 @@ class ValuePlug::ComputeProcess : public Process
 
 };
 
-const IECore::InternedString ValuePlug::ComputeProcess::staticType( "computeNode:compute" );
+const IECore::InternedString ValuePlug::ComputeProcess::staticType( ValuePlug::computeProcessType() );
 ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( cacheGetter, 1024 * 1024 * 1024 * 1, ValuePlug::ComputeProcess::Cache::RemovalCallback(), /* cacheErrors = */ false ); // 1 gig
 
 //////////////////////////////////////////////////////////////////////////
@@ -1213,4 +1236,16 @@ void ValuePlug::setHashCacheMode( ValuePlug::HashCacheMode hashCacheMode )
 ValuePlug::HashCacheMode ValuePlug::getHashCacheMode()
 {
 	return HashProcess::getHashCacheMode();
+}
+
+const IECore::InternedString &ValuePlug::hashProcessType()
+{
+	static IECore::InternedString g_hashProcessType( "computeNode:hash" );
+	return g_hashProcessType;
+}
+
+const IECore::InternedString &ValuePlug::computeProcessType()
+{
+	static IECore::InternedString g_computeProcessType( "computeNode:compute" );
+	return g_computeProcessType;
 }

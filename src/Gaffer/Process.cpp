@@ -174,6 +174,23 @@ void Process::emitError( const std::string &error, const Plug *source ) const
 	}
 }
 
+bool Process::forceMonitoringInternal( const ThreadState &s, const Plug *plug, const IECore::InternedString &processType )
+{
+	if( s.m_monitors )
+	{
+		for( const auto &m : *s.m_monitors )
+		{
+			if( m->forceMonitoring( plug, processType ) )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 // ProcessException
 //////////////////////////////////////////////////////////////////////////

@@ -75,6 +75,8 @@ class GAFFER_API Monitor : public IECore::RefCounted
 
 			private :
 
+				void initializeMightForce();
+
 				MonitorSet m_monitors;
 
 		};
@@ -93,6 +95,16 @@ class GAFFER_API Monitor : public IECore::RefCounted
 		virtual void processStarted( const Process *process ) = 0;
 		/// Implementations must be safe to call concurrently.
 		virtual void processFinished( const Process *process ) = 0;
+
+		/// Must return true if forceMonitoring will ever return true from this Monitor
+		/// \todo : In order to efficently support a monitor that only forces monitoring during
+		/// compute processes, we would need to make this specific to processType - this will
+		/// perhaps be easier if we switch to using a type id instead of a string.
+		virtual bool mightForceMonitoring();
+
+		/// Return true to force the monitored process to run, rather than using employing caches that
+		/// may allow skipping the execution ( obviously, this is much slower than using the caches )
+		virtual bool forceMonitoring( const Gaffer::Plug *plug, const IECore::InternedString &processType );
 
 };
 

@@ -216,6 +216,11 @@ class GAFFER_API ValuePlug : public Plug
 			return m_dirtyCount;
 		}
 
+		/// Process type tags.  In the future, it might make more sense to
+		/// use an id registry here, rather than strings.
+		static const IECore::InternedString &hashProcessType();
+		static const IECore::InternedString &computeProcessType();
+
 	protected :
 
 		/// This constructor must be used by all derived classes which wish

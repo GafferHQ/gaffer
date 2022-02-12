@@ -12,6 +12,7 @@ API
 - Signals :
   - Added a new Signals namespace with Signal, Connection, ScopedConnection and Trackable classes. This provides significant performance and memory usage improvements over the old `boost::signals` library.
   - Removed usage of `boost::signals::detail::unusable` as a substitute for the `void` return type in the Signal bindings. Custom SlotCallers may now use a standard `void` return type.
+- Monitor : Subclasses may now override `mightForceMonitoring` and `forceMonitoring` in order to ensure the monitored processes always run, instead of being skipped when they are cached
 
 Breaking Changes
 ----------------
