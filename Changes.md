@@ -30,6 +30,9 @@ Fixes
   - Fixed errors displaying Constant primitive variables with differing array lengths.
   - Fixed header tooltip formatting to match the SceneInspector.
 - LightEditor : Fixed column widths. This was only an issue in Qt 5.12 builds, not the official GafferHQ builds.
+- USD :
+  - Fixed `Failed to load attribute` warnings caused by attributes without an authored value.
+  - Fixed loading of Houdini-style paired primitive variables used to represent varying-length-arrays per vertex/face.
 
 API
 ---
@@ -43,7 +46,8 @@ API
 Build
 -----
 
-- Arnold 7.1 Support
+- Cortex : Updated to version 10.3.2.0.
+- Arnold : Added source compatibility for Arnold 7.1.
 
 0.61.2.0 (relative to 0.61.1.1)
 ========
