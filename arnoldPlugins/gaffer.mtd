@@ -2128,7 +2128,7 @@
 
 	primaryInput STRING "input"
 
-[node imager_denoiser_oidn]
+[node imager_denoiser_optix]
 
 	primaryInput STRING "input"
 
