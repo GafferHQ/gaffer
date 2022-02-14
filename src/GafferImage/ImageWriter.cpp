@@ -64,7 +64,12 @@
 
 #include <memory>
 
+#ifndef _MSC_VER
 #include <sys/utsname.h>
+#else
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
 #include <zlib.h>
 
 OIIO_NAMESPACE_USING
@@ -1240,6 +1245,7 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	// Add common attribs to the spec
 	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
 	spec.attribute( "Software", software );
+#ifndef _MSC_VER
 	struct utsname info;
 	if ( !uname( &info ) )
 	{
@@ -1249,6 +1255,19 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	{
 		spec.attribute( "Artist", artist );
 	}
+#else
+	char computerName[MAX_COMPUTERNAME_LENGTH + 1];
+	DWORD computerNameSize = sizeof( computerName ) / sizeof( computerName[0] );
+	bool computerNameSuccess = GetComputerNameA( computerName, &computerNameSize );
+	if( computerNameSuccess )
+	{
+		spec.attribute("HostComputer", computerName );
+	}
+	if ( const char *artist = getenv( "USERNAME" ) )
+	{
+		spec.attribute( "Artist", artist );
+	}
+#endif
 	std::string document = "untitled";
 	if ( const ScriptNode *script = node->ancestor<ScriptNode>() )
 	{
