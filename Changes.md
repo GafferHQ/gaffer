@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.3.0)
+========
+
+Improvements
+------------
+
+- GraphEditor : The focus gadget is now toggled when the button is released rather than when it is pressed. This helps avoid accidental toggling when performing marquee selection.
+
 0.61.3.0 (relative to 0.61.2.0)
 ========
 

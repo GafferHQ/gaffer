@@ -117,6 +117,7 @@ class FocusGadget : public Gadget
 				m_mouseOver( false )
 		{
 			buttonPressSignal().connect( boost::bind( &FocusGadget::buttonPressed, this, ::_1,  ::_2 ) );
+			buttonReleaseSignal().connect( boost::bind( &FocusGadget::buttonRelease, this, ::_1,  ::_2 ) );
 			enterSignal().connect( boost::bind( &FocusGadget::mouseEntered, this, ::_1,  ::_2 ) );
 			leaveSignal().connect( boost::bind( &FocusGadget::mouseLeft, this, ::_1,  ::_2 ) );
 			buttonDoubleClickSignal().connect( boost::bind( &FocusGadget::buttonDoubleClick, this, ::_1,  ::_2 ) );
@@ -174,7 +175,12 @@ class FocusGadget : public Gadget
 
 		bool buttonPressed( GadgetPtr gadget, const ButtonEvent &event )
 		{
-			if( event.buttons==ButtonEvent::Left )
+			return true;
+		}
+
+		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
+		{
+			if( m_mouseOver && event.button == ButtonEvent::Left )
 			{
 				toggleFocus();
 			}
