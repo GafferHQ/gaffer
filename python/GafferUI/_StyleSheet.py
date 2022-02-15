@@ -837,19 +837,13 @@ _styleSheet = string.Template(
 	QHeaderView::section {
 		border: 1px solid $backgroundLowlight;
 		border-radius: 0;
-		padding: 3px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+		padding-left: 3px;
+		padding-right: 3px;
 		font-weight: bold;
 		margin: 0px;
 		background-color: $tintLighter;
-	}
-
-	/* For some reason, in Qt 5.12+ we're seeing extra vertical space in the */
-	/* horizontal headers. Fixing the size here doesn't seem right, but have */
-	/* been unable to work out where it is coming from.                      */
-	_TableView QHeaderView::section:horizontal,
-	*[gafferClass="GafferUI.PathListingWidget"] QHeaderView::section::horizontal
-	{
-		height: 13px;
 	}
 
 	_TableView QHeaderView::section:vertical:first {

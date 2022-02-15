@@ -65,6 +65,7 @@ Fixes
 - PrimitiveInspector :
   - Fixed errors displaying Constant primitive variables with differing array lengths.
   - Fixed header tooltip formatting to match the SceneInspector.
+- LightEditor : Fixed column widths. This was only an issue in Qt 5.12 builds, not the official GafferHQ builds.
 
 API
 ---
