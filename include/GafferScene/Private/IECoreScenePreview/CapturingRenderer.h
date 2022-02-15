@@ -54,7 +54,7 @@ namespace IECoreScenePreview
 /// If the Bool `cr:unrenderable` attribute is set to true at a location, then
 /// calls to object, light, lightFilter, camera, etc... for that location will
 /// return nullptr rather than a valid ObjectInterface.
-class IECORESCENE_API CapturingRenderer : public Renderer
+class GAFFERSCENE_API CapturingRenderer : public Renderer
 {
 
 	public :
@@ -71,7 +71,7 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 		/// Introspection
 		/// =============
 
-		class CapturedAttributes : public AttributesInterface
+		class GAFFERSCENE_API CapturedAttributes : public AttributesInterface
 		{
 
 			public :
@@ -92,7 +92,7 @@ class IECORESCENE_API CapturingRenderer : public Renderer
 
 		IE_CORE_DECLAREPTR( CapturedAttributes );
 
-		class CapturedObject : public ObjectInterface
+		class GAFFERSCENE_API CapturedObject : public ObjectInterface
 		{
 
 			public :

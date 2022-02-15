@@ -58,7 +58,7 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 		/// A custom plug to hold the name of an output channel and the
 		/// name of an input channel to shuffle into it. Add instances
 		/// of these to the Shuffle::channelsPlug() to define the shuffle.
-		class ChannelPlug : public Gaffer::ValuePlug
+		class GAFFERIMAGE_API ChannelPlug : public Gaffer::ValuePlug
 		{
 
 			public :

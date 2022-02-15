@@ -86,7 +86,7 @@ class GAFFERCORTEX_API ParameterisedHolder : public BaseType
 		void setParameterisedValues();
 
 		/// \todo Is this even needed? Can we just use an UndoScope instead?
-		class ParameterModificationContext
+		class GAFFERCORTEX_API ParameterModificationContext
 		{
 			public :
 				ParameterModificationContext( Ptr parameterisedHolder );

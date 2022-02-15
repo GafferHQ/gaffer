@@ -97,7 +97,7 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 		static const IECore::InternedString inputSceneContextName;
 
 		/// Provides the input scene for a filter evaluation
-		struct SceneScope : public Gaffer::Context::EditableScope
+		struct GAFFERSCENE_API SceneScope : public Gaffer::Context::EditableScope
 		{
 			SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug );
 			private :

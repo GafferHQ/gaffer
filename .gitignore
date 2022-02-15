@@ -8,6 +8,13 @@
 *.tmp
 *.desktop
 *.code-workspace
+*.obj
+*.pyd
+*.pdb
+*.dll
+*.lib
+*.ilk
+*.exp
 .gafferBackups
 .idea
 .sconf_temp

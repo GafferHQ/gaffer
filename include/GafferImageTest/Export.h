@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,50 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_CONTEXTSANITISER_H
-#define GAFFERSCENETEST_CONTEXTSANITISER_H
+#ifndef GAFFERIMAGETEST_EXPORT_H
+#define GAFFERIMAGETEST_EXPORT_H
 
-#include "GafferSceneTest/Export.h"
+#include "IECore/Export.h"
 
-#include "Gaffer/Monitor.h"
-#include "Gaffer/Plug.h"
+// define GAFFERIMAGETEST_API macro based on whether or not we are compiling
+// GafferImageTest, or including headers for linking to it. the GAFFERIMAGETEST_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferImageTest_EXPORTS
+	#define GAFFERIMAGETEST_API IECORE_EXPORT
+#else
+	#define GAFFERIMAGETEST_API IECORE_IMPORT
+#endif
 
-#include "tbb/concurrent_unordered_set.h"
-
-namespace GafferSceneTest
-{
-
-/// A monitor which warns about common context handling mistakes.
-class GAFFERSCENETEST_API ContextSanitiser : public Gaffer::Monitor
-{
-
-	public :
-
-		ContextSanitiser();
-
-		IE_CORE_DECLAREMEMBERPTR( ContextSanitiser )
-
-	protected :
-
-		void processStarted( const Gaffer::Process *process ) override;
-		void processFinished( const Gaffer::Process *process ) override;
-
-	private :
-
-		/// First is the upstream plug where the problem was detected. Second
-		/// is the plug from the parent process responsible for calling upstream.
-		typedef std::pair<Gaffer::ConstPlugPtr, Gaffer::ConstPlugPtr> PlugPair;
-		typedef std::pair<PlugPair, IECore::InternedString> Warning;
-
-		void warn( const Gaffer::Process &process, const IECore::InternedString &contextVariable );
-
-		typedef tbb::concurrent_unordered_set<Warning> WarningSet;
-		WarningSet m_warningsEmitted;
-
-};
-
-IE_CORE_DECLAREPTR( ContextSanitiser )
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_CONTEXTSANITISER_H
+#endif // #ifndef GAFFERIMAGETEST_EXPORT_H

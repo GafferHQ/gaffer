@@ -1103,12 +1103,12 @@ class SceneView::Camera : public Signals::Trackable
 			lightFilter->setExpressionPlug()->setValue( "__lights" );
 
 			m_distantApertureAttributeQuery->scenePlug()->setInput( view->inPlug<ScenePlug>() );
-			FloatPlugPtr defaultFloatPlug = new Gaffer::FloatPlug();
+			FloatPlugPtr defaultFloatPlug = new Gaffer::FloatPlug( "defaultFloatPlug" );
 			m_distantApertureAttributeQuery->setup( defaultFloatPlug.get() );
 			m_distantApertureAttributeQuery->attributePlug()->setValue( "gl:light:lookThroughAperture" );
 			m_distantApertureAttributeQuery->defaultPlug()->setInput( lightLookThroughDefaultDistantAperturePlug() );
 			m_clippingPlanesAttributeQuery->scenePlug()->setInput( view->inPlug<ScenePlug>() );
-			V2fPlugPtr defaultV2fPlug = new Gaffer::V2fPlug();
+			V2fPlugPtr defaultV2fPlug = new Gaffer::V2fPlug( "defaultV2fPlug" );
 			m_clippingPlanesAttributeQuery->setup( defaultV2fPlug.get() );
 			m_clippingPlanesAttributeQuery->attributePlug()->setValue( "gl:light:lookThroughClippingPlanes" );
 			m_clippingPlanesAttributeQuery->defaultPlug()->setInput( lightLookThroughDefaultClippingPlanesPlug() );

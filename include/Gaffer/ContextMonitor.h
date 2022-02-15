@@ -71,7 +71,7 @@ class GAFFER_API ContextMonitor : public Monitor
 
 		IE_CORE_DECLAREMEMBERPTR( ContextMonitor )
 
-		struct Statistics
+		struct GAFFER_API Statistics
 		{
 
 			size_t numUniqueContexts() const;

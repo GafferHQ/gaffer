@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGETEST_CONTEXTSANITISER_H
 #define GAFFERIMAGETEST_CONTEXTSANITISER_H
 
+#include "GafferImageTest/Export.h"
+
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Plug.h"
 
@@ -46,7 +48,7 @@ namespace GafferImageTest
 {
 
 /// A monitor which warns about common context handling mistakes.
-class GAFFER_API ContextSanitiser : public Gaffer::Monitor
+class GAFFERIMAGETEST_API ContextSanitiser : public Gaffer::Monitor
 {
 
 	public :

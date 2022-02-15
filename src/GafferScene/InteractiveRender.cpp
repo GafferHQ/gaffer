@@ -325,7 +325,7 @@ void InteractiveRender::update()
 		m_controller.reset(
 			new RenderController( adaptedInPlug(), effectiveContext(), m_renderer )
 		);
-		m_controller->setMinimumExpansionDepth( limits<size_t>::max() );
+		m_controller->setMinimumExpansionDepth( numeric_limits<size_t>::max() );
 		m_controller->updateRequiredSignal().connect(
 			boost::bind( &InteractiveRender::update, this )
 		);

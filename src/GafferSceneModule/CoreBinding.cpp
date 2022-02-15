@@ -399,7 +399,7 @@ void GafferSceneModule::bindCore()
 				(
 					arg( "name" ) = GraphComponent::defaultName<SceneProcessor>(),
 					arg( "minInputs" ),
-					arg( "maxInputs" ) = Imath::limits<size_t>::max()
+					arg( "maxInputs" ) = std::numeric_limits<size_t>::max()
 				)
 			)
 		)

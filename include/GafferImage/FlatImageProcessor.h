@@ -58,7 +58,7 @@ class GAFFERIMAGE_API FlatImageProcessor : public ImageProcessor
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.
-		FlatImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
+		FlatImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = std::numeric_limits<size_t>::max() );
 		~FlatImageProcessor() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::FlatImageProcessor, FlatImageProcessorTypeId, ImageProcessor );

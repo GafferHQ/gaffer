@@ -64,7 +64,7 @@ class GAFFER_API ArrayPlug : public Plug
 			Direction direction = In,
 			PlugPtr element = nullptr,
 			size_t minSize = 1,
-			size_t maxSize = Imath::limits<size_t>::max(),
+			size_t maxSize = std::numeric_limits<size_t>::max(),
 			unsigned flags = Default,
 			bool resizeWhenInputsChange = true
 		);

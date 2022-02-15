@@ -40,6 +40,8 @@
 
 #include "GafferImage/ImageNode.h"
 
+#include <limits>
+
 namespace Gaffer
 {
 
@@ -64,7 +66,7 @@ class GAFFERIMAGE_API ImageProcessor : public ImageNode
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.
-		ImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
+		ImageProcessor( const std::string &name, size_t minInputs, size_t maxInputs = std::numeric_limits<size_t>::max() );
 		~ImageProcessor() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageProcessor, ImageProcessorTypeId, ImageNode );
