@@ -58,7 +58,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 	uncategorisedMenuItems = []
 	with IECoreArnold.UniverseBlock( writable = False ) :
 
-		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER )
+		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT | arnold.AI_NODE_COLOR_MANAGER | arnold.AI_NODE_DRIVER )
 
 		while not arnold.AiNodeEntryIteratorFinished( it ) :
 
@@ -83,9 +83,19 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLight, nodeName )
 				else :
 					nodeCreator = GafferArnold.ArnoldMeshLight
-			else :
+			elif arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_COLOR_MANAGER :
 				menuPath = "Globals/Color Manager"
 				nodeCreator = functools.partial( __colorManagerCreator, shaderName, nodeName )
+				displayName = displayName.replace( "Color Manager ", "" )
+			else :
+				assert( arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_DRIVER )
+				# Imagers don't yet have their own node type, but we can
+				# identify them using metadata.
+				if __aiMetadataGetStr( nodeEntry, "", "subtype" ) != "imager" :
+					continue
+				menuPath = "Globals/Imager"
+				nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader, nodeName )
+				displayName = displayName.replace( "Imager ", "" )
 
 			if category :
 				menuPath += "/" + category.strip( "/" )

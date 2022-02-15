@@ -3452,6 +3452,85 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertAlmostEqual( arnold.AiArrayGetFlt( array, 0 ), c1.calculateFieldOfView().x, delta = 0.00001 )
 			self.assertAlmostEqual( arnold.AiArrayGetFlt( array, 1 ), c2.calculateFieldOfView().x, delta = 0.00001 )
 
+	def testImager( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		# Create an output
+
+		r.output(
+			"test1",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/beauty1.exr", "exr", "rgba", {}
+			)
+		)
+
+		# Specify the imagers
+
+		r.option(
+			"ai:imager",
+			IECoreScene.ShaderNetwork(
+				{
+					"exposure" : IECoreScene.Shader(
+						"imager_exposure", "ai:imager",
+						{ "exposure" : 2.5 },
+					),
+					"lensEffects" : IECoreScene.Shader(
+						"imager_lens_effects", "ai:imager",
+						{ "bloom_radius" : 5 },
+					),
+				},
+				connections = [
+					( "exposure", ( "lensEffects", "input" ) )
+				],
+				output = "lensEffects",
+			)
+		)
+
+		# Create a second output
+
+		r.output(
+			"test2",
+			IECoreScene.Output(
+				self.temporaryDirectory() + "/beauty2.exr", "exr", "rgba", {}
+			)
+		)
+
+		r.render()
+		del r
+
+		# We expect the imager to be applied to both outputs (independent of
+		# creation order).
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			drivers = self.__allNodes( universe, type = arnold.AI_NODE_DRIVER, nodeEntryName = "driver_exr" )
+			self.assertEqual( len( drivers ), 2 )
+
+			for driver in drivers :
+
+				lensEffects = arnold.AiNodeGetPtr( driver, "input" )
+				self.assertIsNotNone( lensEffects )
+				self.assertEqual(
+					arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( lensEffects ) ),
+					"imager_lens_effects",
+				)
+				self.assertEqual( arnold.AiNodeGetInt( lensEffects, "bloom_radius" ), 5 )
+
+				exposure = arnold.AiNodeGetPtr( lensEffects, "input" )
+				self.assertIsNotNone( exposure )
+				self.assertEqual(
+					arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( exposure ) ),
+					"imager_exposure",
+				)
+				self.assertEqual( arnold.AiNodeGetFlt( exposure, "exposure" ), 2.5 )
+
 	@staticmethod
 	def __m44f( m ) :
 

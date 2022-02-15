@@ -2104,3 +2104,53 @@
 	[attr linear_chromaticities]
 		# Disable because we don't support array plugs yet
 		gaffer.plugType STRING ""
+
+# Standard Arnold Imagers
+##########################################################################
+
+[node imager_color_correct]
+
+	primaryInput STRING "input"
+
+[node imager_color_curves]
+
+	primaryInput STRING "input"
+
+	# Hide, because we don't support array parameters, or have a spline
+	# UI to match Arnold's interpolation.
+	gaffer.nodeMenu.category STRING ""
+
+[node imager_denoiser_noice]
+
+	primaryInput STRING "input"
+
+[node imager_denoiser_oidn]
+
+	primaryInput STRING "input"
+
+[node imager_denoiser_optix]
+
+	primaryInput STRING "input"
+
+[node imager_exposure]
+
+	primaryInput STRING "input"
+
+[node imager_lens_effects]
+
+	primaryInput STRING "input"
+
+[node imager_light_mixer]
+
+	primaryInput STRING "input"
+
+	# Hide, because we don't support array parameters.
+	gaffer.nodeMenu.category STRING ""
+
+[node imager_tonemap]
+
+	primaryInput STRING "input"
+
+[node imager_white_balance]
+
+	primaryInput STRING "input"

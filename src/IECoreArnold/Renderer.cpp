@@ -301,6 +301,7 @@ const AtString g_filtersArnoldString( "filters" );
 const AtString g_funcPtrArnoldString( "funcptr" );
 const AtString g_ginstanceArnoldString( "ginstance" );
 const AtString g_ignoreMotionBlurArnoldString( "ignore_motion_blur" );
+const AtString g_inputArnoldString( "input" );
 const AtString g_lightGroupArnoldString( "light_group" );
 const AtString g_shadowGroupArnoldString( "shadow_group" );
 const AtString g_linearArnoldString( "linear" );
@@ -595,6 +596,11 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 				}
 			}
+		}
+
+		void updateImager( AtNode *imager )
+		{
+			AiNodeSetPtr( m_driver.get(), g_inputArnoldString, imager );
 		}
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
@@ -2875,6 +2881,7 @@ IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
 IECore::InternedString g_backgroundOptionName( "ai:background" );
 IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
 IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
+IECore::InternedString g_imagerOptionName( "ai:imager" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -3123,6 +3130,7 @@ class ArnoldGlobals
 			m_colorManager.reset();
 			m_atmosphere.reset();
 			m_background.reset();
+			m_imager.reset();
 			m_defaultCamera.reset();
 			// Destroy the universe while our message callback is
 			// still active, so we catch any Arnold shutdown messages.
@@ -3389,6 +3397,22 @@ class ArnoldGlobals
 				AiNodeSetPtr( options, g_backgroundArnoldString, m_background ? m_background->root() : nullptr );
 				return;
 			}
+			else if( name == g_imagerOptionName )
+			{
+				m_imager = nullptr;
+				if( value )
+				{
+					if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
+					{
+						m_imager = m_shaderCache->get( d, nullptr );
+					}
+				}
+				for( const auto &output : m_outputs )
+				{
+					output.second->updateImager( m_imager ? m_imager->root() : nullptr );
+				}
+				return;
+			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
 			{
 				m_aovShaders.erase( name );
@@ -3485,7 +3509,9 @@ class ArnoldGlobals
 			{
 				try
 				{
-					m_outputs[name] = new ArnoldOutput( m_universeBlock->universe(), name, output, nodeDeleter( m_renderType ) );
+					ArnoldOutputPtr o = new ArnoldOutput( m_universeBlock->universe(), name, output, nodeDeleter( m_renderType ) );
+					o->updateImager( m_imager ? m_imager->root() : nullptr );
+					m_outputs[name] = o;
 				}
 				catch( const std::exception &e )
 				{
@@ -3957,6 +3983,7 @@ class ArnoldGlobals
 		ArnoldShaderPtr m_colorManager;
 		ArnoldShaderPtr m_atmosphere;
 		ArnoldShaderPtr m_background;
+		ArnoldShaderPtr m_imager;
 
 		std::string m_cameraName;
 		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
