@@ -41,6 +41,7 @@ Features
 --------
 
 - RandomChoice : Added new node for choosing a random value from a list of weighted choices.
+- ArnoldImager : Added new node for adding Arnold imagers to the scene globals.
 
 Improvements
 ------------
@@ -51,6 +52,7 @@ Improvements
   - Removed the focus widget from Expression, Random, Spreadsheet and Animation nodes.
 - StandardAttributes : Added `attributes.displayColor` plug, for controlling the colour of objects in the Viewer.
 - UI : The UI is now scaled automatically for high-resolution monitors on Linux (#2157). Set the `QT_ENABLE_HIGHDPI_SCALING` environment variable to `0` to disable.
+- ArnoldOptions : Added `ignore_imagers` option.
 
 Fixes
 -----

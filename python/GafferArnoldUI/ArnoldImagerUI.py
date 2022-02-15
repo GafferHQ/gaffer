@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,27 +34,62 @@
 #
 ##########################################################################
 
-from .ArnoldShaderTest import ArnoldShaderTest
-from .ArnoldRenderTest import ArnoldRenderTest
-from .ArnoldOptionsTest import ArnoldOptionsTest
-from .ArnoldAttributesTest import ArnoldAttributesTest
-from .ArnoldVDBTest import ArnoldVDBTest
-from .ArnoldLightTest import ArnoldLightTest
-from .ArnoldMeshLightTest import ArnoldMeshLightTest
-from .InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from .ArnoldDisplacementTest import ArnoldDisplacementTest
-from .LightToCameraTest import LightToCameraTest
-from .ArnoldAOVShaderTest import ArnoldAOVShaderTest
-from .ArnoldAtmosphereTest import ArnoldAtmosphereTest
-from .ArnoldBackgroundTest import ArnoldBackgroundTest
-from .ArnoldTextureBakeTest import ArnoldTextureBakeTest
-from .ModuleTest import ModuleTest
-from .ArnoldShaderBallTest import ArnoldShaderBallTest
-from .ArnoldCameraShadersTest import ArnoldCameraShadersTest
-from .ArnoldLightFilterTest import ArnoldLightFilterTest
-from .ArnoldColorManagerTest import ArnoldColorManagerTest
-from .ArnoldImagerTest import ArnoldImagerTest
+import Gaffer
+import GafferArnold
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferArnold.ArnoldImager,
+
+	"description",
+	"""
+	Assigns an imager. This is stored as an `ai:imager` option in Gaffer's
+	globals, and applied to all render outputs.
+
+	> Tip : Use the `layer_selection` parameter on each imager to control
+	> which AOVs the imager applies to.
+	""",
+
+	plugs = {
+
+		"imager" : [
+
+			"description",
+			"""
+			The imager to be assigned. The output of an ArnoldShader node
+			holding an imager should be connected here. Multiple imagers may be
+			assigned at once by chaining them together via their `input`
+			parameters, and then assigning the final imager via the ArnoldImager
+			node.
+			""",
+
+			"noduleLayout:section", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"mode" : [
+
+			"description",
+			"""
+			The mode used to combine the `imager` input with any imagers that
+			already exist in the globals.
+
+			- Replace : Removes all pre-existing imagers, and replaces them with
+			  the new ones.
+			- InsertFirst : Inserts the new imagers so that they will be run before
+			  any pre-existing imagers.
+			- InsertLast : Inserts the new imagers so that they will be run after
+			  any pre-existing imagers.
+			""",
+
+			"preset:Replace", GafferArnold.ArnoldImager.Mode.Replace,
+			"preset:InsertFirst", GafferArnold.ArnoldImager.Mode.InsertFirst,
+			"preset:InsertLast", GafferArnold.ArnoldImager.Mode.InsertLast,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+	}
+
+)

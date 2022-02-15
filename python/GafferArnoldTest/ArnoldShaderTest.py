@@ -871,5 +871,43 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 			]
 		)
 
+	def testLoadImager( self ) :
+
+		node = GafferArnold.ArnoldShader()
+		node.loadShader( "imager_exposure" )
+
+		self.assertEqual( node["type"].getValue(), "ai:imager" )
+		self.assertEqual( node["name"].getValue(), "imager_exposure" )
+		self.assertEqual(
+			list( node["parameters"].keys() ),
+			[ "input", "enable", "layer_selection", "exposure" ]
+		)
+
+	def testImagerConnections( self ) :
+
+		imager1 = GafferArnold.ArnoldShader()
+		imager1.loadShader( "imager_exposure" )
+
+		imager2 = GafferArnold.ArnoldShader()
+		imager2.loadShader( "imager_exposure" )
+
+		userDataFloat = GafferArnold.ArnoldShader()
+		userDataFloat.loadShader( "user_data_float" )
+
+		# Arnold imagers don't accept connections from shaders. They only accept
+		# inputs to the `input` parameter, and only then from the output of
+		# another imager.
+
+		self.assertFalse( imager1["parameters"]["exposure"].acceptsInput( userDataFloat["out"] ) )
+		self.assertFalse( imager1["parameters"]["input"].acceptsInput( imager1["out"] ) )
+		self.assertFalse( imager1["parameters"]["input"].acceptsInput( userDataFloat["out"] ) )
+		self.assertTrue( imager1["parameters"]["input"].acceptsInput( imager2["out"] ) )
+
+		# Connections between _input_ parameters are OK though, because they are
+		# handled in Gaffer rather than Arnold.
+
+		self.assertTrue( imager1["parameters"]["exposure"].acceptsInput( userDataFloat["parameters"]["default"] ) )
+		self.assertTrue( userDataFloat["parameters"]["default"].acceptsInput( imager1["parameters"]["exposure"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
