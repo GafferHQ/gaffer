@@ -102,7 +102,7 @@ enum TypeId
 	DisplayTransformTypeId = 110806,
 	FormatPlugTypeId = 110807,
 	OffsetTypeId = 110808,
-	ImagePrimitiveProcessorTypeId = 110809, // Obsolete - available for reuse
+	FormatQueryTypeId = 110809,
 	BlurTypeId = 110810,
 	ShapeTypeId = 110811,
 	TextTypeId = 110812,

@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.3.0)
 ========
 
+Features
+--------
+
+- FormatQuery : Added new node for querying the format of an image and outputting its displayWindow, pixelAspect, center and size.
+
 Improvements
 ------------
 
