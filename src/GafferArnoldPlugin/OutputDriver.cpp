@@ -106,13 +106,21 @@ void driverParameters( AtList *params, AtNodeEntry *nentry )
 	AiMetaDataSetStr( nentry, nullptr, "maya.translator", "ie" );
 }
 
+#if ARNOLD_VERSION_NUM < 70100
 void driverInitialize( AtNode *node )
+#else
+void driverInitialize( AtRenderSession *session, AtNode *node )
+#endif
 {
 	AiDriverInitialize( node, true );
 	AiNodeSetLocalData( node, new LocalData );
 }
 
+#if ARNOLD_VERSION_NUM < 70100
 void driverUpdate( AtNode *node )
+#else
+void driverUpdate( AtRenderSession *session, AtNode *node )
+#endif
 {
 }
 

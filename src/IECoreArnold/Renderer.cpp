@@ -366,6 +366,7 @@ const AtString g_widthArnoldString( "width" );
 const AtString g_xresArnoldString( "xres" );
 const AtString g_yresArnoldString( "yres" );
 const AtString g_filterMapArnoldString( "filtermap" );
+const AtString g_universeArnoldString( "universe" );
 const AtString g_uvRemapArnoldString( "uv_remap" );
 
 } // namespace
@@ -3088,14 +3089,26 @@ class ArnoldGlobals
 			if( m_messageHandler )
 			{
 				m_messageCallbackId = AiMsgRegisterCallback( &messageCallback, m_consoleFlags, this );
+#if ARNOLD_VERSION_NUM < 70100
 				AiMsgSetConsoleFlags( m_renderSession.get(), AI_LOG_NONE );
+#else
+				AiMsgSetConsoleFlags( m_universeBlock->universe(), AI_LOG_NONE );
+#endif
 			}
 			else
 			{
+#if ARNOLD_VERSION_NUM < 70100
 				AiMsgSetConsoleFlags( m_renderSession.get(), m_consoleFlags );
+#else
+				AiMsgSetConsoleFlags( m_universeBlock->universe(), m_consoleFlags );
+#endif
 			}
 
+#if ARNOLD_VERSION_NUM < 70100
 			AiMsgSetLogFileFlags( m_renderSession.get(), m_logFileFlags );
+#else
+			AiMsgSetLogFileFlags( m_universeBlock->universe(), m_logFileFlags );
+#endif
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
@@ -3729,12 +3742,20 @@ class ArnoldGlobals
 				}
 				else
 				{
+#if ARNOLD_VERSION_NUM < 70100
 					AiMsgSetConsoleFlags( m_renderSession.get(), flags );
+#else
+					AiMsgSetConsoleFlags( m_universeBlock->universe(), flags );
+#endif
 				}
 			}
 			else
 			{
+#if ARNOLD_VERSION_NUM < 70100
 				AiMsgSetLogFileFlags( m_renderSession.get(), flags );
+#else
+				AiMsgSetLogFileFlags( m_universeBlock->universe(), flags );
+#endif
 			}
 
 			return true;
@@ -3883,7 +3904,17 @@ class ArnoldGlobals
 		{
 			const ArnoldGlobals *that = static_cast<ArnoldGlobals *>( userPtr );
 
-#if ARNOLD_VERSION_NUM >= 70000
+#if ARNOLD_VERSION_NUM >= 70100
+			// We get given messages from all render sessions, but can filter them based on the `universe` metadata.
+			void *universe = nullptr;
+			if( AiParamValueMapGetPtr( metadata, g_universeArnoldString, &universe ) )
+			{
+				if( universe != that->m_universeBlock->universe() )
+				{
+					return;
+				}
+			}
+#elif ARNOLD_VERSION_NUM >= 70000
 			// We get given messages from all render sessions, but can filter them based on the
 			// `render_session` metadata.
 			void *renderSession = nullptr;
