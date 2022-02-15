@@ -79,7 +79,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		tableView.verticalHeader().setVisible( False )
 
 		self.__horizontalHeader = GafferUI.Widget( QtWidgets.QHeaderView( QtCore.Qt.Horizontal, tableView ) )
-		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft )
+		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )
 		tableView.setHorizontalHeader( self.__horizontalHeader._qtWidget() )
 		self.__horizontalHeader.buttonPressSignal().connect( Gaffer.WeakMethod( self.__headerButtonPress ), scoped = False )
 
