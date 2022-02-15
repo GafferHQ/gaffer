@@ -111,5 +111,6 @@ from . import DeepTidyUI
 from . import DeepHoldoutUI
 from . import DeepRecolorUI
 from . import SaturationUI
+from . import FormatQueryUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )
