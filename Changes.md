@@ -6,6 +6,11 @@ Improvements
 
 - GraphEditor : The focus gadget is now toggled when the button is released rather than when it is pressed. This helps avoid accidental toggling when performing marquee selection.
 
+Fixes
+-----
+
+- InteractiveArnoldRender : Fixed warnings when editing a parameter of a light with a connected OSL shader.
+
 0.61.3.0 (relative to 0.61.2.0)
 ========
 
