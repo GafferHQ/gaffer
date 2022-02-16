@@ -840,9 +840,10 @@ if env["ARNOLD_ROOT"] :
 		kickEnv = env["ENV"].copy()
 		kickEnv["PATH"] = os.pathsep.join( [ os.path.join( env["ARNOLD_ROOT"], "bin" ), kickEnv["PATH"] ] )
 		kickOutput = subprocess.check_output(
-			[ "kick", "-nodes" ],
+			"kick -nodes",
 			env = kickEnv,
 			universal_newlines = True,
+			shell = True
 		)
 
 		nodeDefRegex = re.compile( r"\s*([a-zA-Z0-9_]+)\s+(driver|color_manager|driver|filter|light|operator|options|override|shader|shape)" )
