@@ -34,6 +34,16 @@ Build
 - Moved minimum required C++ standard to C++17.
 - Updated to GCC 9.3.1 for Linux builds.
 
+0.61.x.x (relative to 0.61.3.0)
+========
+
+- GraphEditor : The focus gadget is now toggled when the button is released rather than when it is pressed. This helps avoid accidental toggling when performing marquee selection.
+
+Fixes
+-----
+
+- InteractiveArnoldRender : Fixed warnings when editing a parameter of a light with a connected OSL shader.
+
 0.61.3.0 (relative to 0.61.2.0)
 ========
 
