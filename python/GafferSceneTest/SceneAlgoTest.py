@@ -301,19 +301,18 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertIsNone( history )
 
-			# Before running the same test again, set up an expression that pulls an unrelated piece of a
+			# Before running the same test again, set up a bound query that pulls an unrelated piece of a
 			# scene plug, before running this test again.  This isn't part of attribute history,  so it
 			# shouldn't affect the result
 
-			attributes["sourceScene"] = GafferScene.Sphere()
-			attributes["boundQuery"] = GafferScene.BoundQuery()
-			attributes["boundQuery"]["scene"].setInput( attributes["sourceScene"]["out"] )
-			attributes["boundQuery"]["location"].setValue( "/sphere" )
+			attributes["attributes"].addChild( Gaffer.NameValuePlug( "test", imath.V3f( 0 ) ) )
 
-			attributes["expression"] = Gaffer.Expression()
-			attributes["expression"].setExpression(
-				'b = parent["boundQuery"]["bound"]; parent["attributes"]["NameValuePlug"]["value"] = b.size()[0]'
-			)
+			sourceScene = GafferScene.Sphere()
+			boundQuery = GafferScene.BoundQuery()
+			boundQuery["scene"].setInput( sourceScene["out"] )
+			boundQuery["location"].setValue( "/sphere" )
+
+			attributes["attributes"]["NameValuePlug1"]["value"].setInput( boundQuery["center"] )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testHistoryPerformance( self ) :
