@@ -177,7 +177,7 @@ IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
 // ArnoldLightVisualiser implementation
 //////////////////////////////////////////////////////////////////////////
 
-class GAFFERSCENEUI_API ArnoldLightVisualiser : public GafferSceneUI::StandardLightVisualiser
+class ArnoldLightVisualiser : public GafferSceneUI::StandardLightVisualiser
 {
 
 	public :
