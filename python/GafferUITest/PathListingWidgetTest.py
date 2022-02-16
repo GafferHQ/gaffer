@@ -235,7 +235,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		w = GafferUI.PathListingWidget(
+			p,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
 		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getSelection().isEmpty() )
@@ -278,7 +282,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		w = GafferUI.PathListingWidget(
+			p,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
 		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getSelection().isEmpty() )
@@ -307,7 +315,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		p = Gaffer.DictPath( d, "/" )
 
-		w = GafferUI.PathListingWidget( p, allowMultipleSelection = True, displayMode = GafferUI.PathListingWidget.DisplayMode.Tree )
+		w = GafferUI.PathListingWidget(
+			p,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
 		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		self.assertTrue( w.getSelection().isEmpty() )
@@ -331,7 +343,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		}
 
 		p = Gaffer.DictPath( d, "/" )
-		w = GafferUI.PathListingWidget( p, allowMultipleSelection=True )
+		w = GafferUI.PathListingWidget( p, selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows )
 		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
 
 		c = GafferTest.CapturingSlot( w.selectionChangedSignal() )
