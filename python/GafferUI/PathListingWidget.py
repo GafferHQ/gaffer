@@ -87,12 +87,13 @@ class PathListingWidget( GafferUI.Widget ) :
 	)
 
 	DisplayMode = IECore.Enum.create( "List", "Tree" )
+	SelectionMode = IECore.Enum.create( "Row", "Rows", "Cell", "Cells" )
 
 	def __init__(
 		self,
 		path,
 		columns = defaultFileSystemColumns,
-		allowMultipleSelection = False,
+		selectionMode = SelectionMode.Row,
 		displayMode = DisplayMode.List,
 		sortable = True,
 		horizontalScrollMode = GafferUI.ScrollMode.Never,
@@ -122,7 +123,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		# directly in `__buttonPress`, `__buttonRelease` and `__keyPress`.
 
 		self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.NoSelection )
-		self.__allowMultipleSelection = allowMultipleSelection
+		self.__selectionMode = selectionMode
 		self.__lastShiftSelectedIndex = None
 
 		# Set up our various signals.
@@ -322,7 +323,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	def setSelection( self, paths, scrollToFirst=True, expandNonLeaf=True ) :
 
 		assert( isinstance( paths, IECore.PathMatcher ) )
-		if not self.__allowMultipleSelection and paths.size() > 1 :
+		if self.__selectionMode == self.SelectionMode.Row and paths.size() > 1 :
 			raise ValueError( "More than one path selected" )
 
 		_GafferUI._pathListingWidgetSetSelection(
@@ -499,7 +500,7 @@ class PathListingWidget( GafferUI.Widget ) :
 				return True
 
 			newPath = str( self.__pathForIndex( newIndex ) )
-			if event.modifiers == event.Modifiers.Shift and self.__allowMultipleSelection :
+			if event.modifiers == event.Modifiers.Shift and self.__selectionMode == self.SelectionMode.Rows :
 				selection = self.getSelection()
 				selected = selection.match( newPath ) & IECore.PathMatcher.Result.ExactMatch
 				if selected :
@@ -564,7 +565,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		selection = self.getSelection()
 
-		if event.modifiers & event.Modifiers.Shift and self.__allowMultipleSelection :
+		if event.modifiers & event.Modifiers.Shift and self.__selectionMode == self.SelectionMode.Rows :
 			last = self.__lastShiftSelectedIndex
 			if last is not None and last.isValid() :
 				# Convert from persistent index
@@ -593,7 +594,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			if selected :
 				selection.removePath( path )
 			else :
-				if not self.__allowMultipleSelection :
+				if self.__selectionMode != self.SelectionMode.Rows :
 					selection.clear()
 				selection.addPath( path )
 			# Although we're managing our own selection state, we

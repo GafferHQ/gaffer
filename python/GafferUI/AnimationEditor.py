@@ -140,7 +140,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			Gaffer.DictPath( {}, "/" ), # placeholder, updated in `_updateFromSet()`.
 			columns = ( GafferUI.PathListingWidget.defaultNameColumn, ),
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			allowMultipleSelection=True
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 		)
 
 		self.__curveList._qtWidget().setMinimumSize( 160, 0 )

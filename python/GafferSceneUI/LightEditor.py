@@ -104,7 +104,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
 				columns = [ _GafferSceneUI._LightEditorLocationNameColumn() ],
-				allowMultipleSelection = True,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
 			self.__pathListing.setDragPointer( "objects" )
