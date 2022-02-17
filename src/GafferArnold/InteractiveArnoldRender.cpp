@@ -51,7 +51,7 @@ using namespace GafferArnold;
 namespace
 {
 
-typedef boost::unordered_set<InteractiveArnoldRender *> InstanceSet;
+using InstanceSet = boost::unordered_set<InteractiveArnoldRender *>;
 InstanceSet &instances()
 {
 	static InstanceSet i;

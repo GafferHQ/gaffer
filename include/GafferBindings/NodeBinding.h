@@ -70,7 +70,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 {
 	public :
 
-		typedef T WrappedType;
+		using WrappedType = T;
 
 		template<typename... Args>
 		NodeWrapper( PyObject *self, Args&&... args )

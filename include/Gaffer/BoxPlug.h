@@ -56,9 +56,9 @@ class GAFFER_API BoxPlug : public ValuePlug
 
 	public :
 
-		typedef T ValueType;
-		typedef typename IECore::BoxTraits<T>::BaseType PointType;
-		typedef CompoundNumericPlug<PointType> ChildType;
+		using ValueType = T;
+		using PointType = typename IECore::BoxTraits<T>::BaseType;
+		using ChildType = CompoundNumericPlug<PointType>;
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( BoxPlug<T>, ValuePlug );
 
@@ -108,11 +108,11 @@ class GAFFER_API BoxPlug : public ValuePlug
 
 };
 
-typedef BoxPlug<Imath::Box2i> Box2iPlug;
-typedef BoxPlug<Imath::Box3i> Box3iPlug;
+using Box2iPlug = BoxPlug<Imath::Box2i>;
+using Box3iPlug = BoxPlug<Imath::Box3i>;
 
-typedef BoxPlug<Imath::Box2f> Box2fPlug;
-typedef BoxPlug<Imath::Box3f> Box3fPlug;
+using Box2fPlug = BoxPlug<Imath::Box2f>;
+using Box3fPlug = BoxPlug<Imath::Box3f>;
 
 IE_CORE_DECLAREPTR( Box2iPlug );
 IE_CORE_DECLAREPTR( Box3iPlug );

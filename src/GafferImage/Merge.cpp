@@ -268,7 +268,7 @@ inline MergeRegion tileRegion( int i, const Box2i &boundA, const Box2i &boundB, 
 
 struct MergeFunctor
 {
-	typedef void ReturnType;
+	using ReturnType = void;
 
 	// Merge channelData based on the current Op
 	// Based on our convention for merges we output to channelDataB and alphaDataB - we accumulate to the
@@ -481,7 +481,7 @@ struct MergeFunctor
 
 struct PassthroughHashFunctor
 {
-	typedef void ReturnType;
+	using ReturnType = void;
 
 	// There are two completely different strategies we can use for determining a channelData hash
 	// The first is to append hashes for everything that affects the current tile, producing a fully
@@ -552,7 +552,7 @@ struct PassthroughHashFunctor
 
 struct MergeDataWindowFunctor
 {
-	typedef void ReturnType;
+	using ReturnType = void;
 
 
 	// Merge two datawindows based on the current Op

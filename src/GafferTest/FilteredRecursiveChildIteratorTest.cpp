@@ -87,7 +87,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	// predicate specifies that we'll recurse over everything to find them.
 	//////////////////////////////////////////////////////////////////////////
 
-	typedef FilteredRecursiveChildIterator<PlugPredicate<>, TypePredicate<GraphComponent> > DeepRecursivePlugIterator;
+	using DeepRecursivePlugIterator = FilteredRecursiveChildIterator<PlugPredicate<>, TypePredicate<GraphComponent>>;
 	std::vector<PlugPtr> plugs;
 	for( DeepRecursivePlugIterator it( a.get() ); !it.done(); it++ )
 	{
@@ -104,7 +104,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	GAFFERTEST_ASSERT( plugs[6] == g );
 	GAFFERTEST_ASSERT( plugs[7] == h );
 
-	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveFloatPlugIterator;
+	using DeepRecursiveFloatPlugIterator = FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, FloatPlug>, TypePredicate<GraphComponent>>;
 	plugs.clear();
 	for( DeepRecursiveFloatPlugIterator it( a.get() ); !it.done(); it++ )
 	{
@@ -116,7 +116,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	GAFFERTEST_ASSERT( plugs[1] == g );
 	GAFFERTEST_ASSERT( plugs[2] == h );
 
-	typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, TypePredicate<GraphComponent> > DeepRecursiveOutputFloatPlugIterator;
+	using DeepRecursiveOutputFloatPlugIterator = FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, FloatPlug>, TypePredicate<GraphComponent>>;
 	plugs.clear();
 	for( DeepRecursiveOutputFloatPlugIterator it( a.get() ); !it.done(); it++ )
 	{
@@ -131,7 +131,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	// recursing to plugs owned by child nodes of the node we're interested in.
 	//////////////////////////////////////////////////////////////////////////
 
-	typedef FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<> > ShallowRecursivePlugIterator;
+	using ShallowRecursivePlugIterator = FilteredRecursiveChildIterator<PlugPredicate<>, PlugPredicate<>>;
 	plugs.clear();
 	for( ShallowRecursivePlugIterator it( a.get() ); !it.done(); it++ )
 	{

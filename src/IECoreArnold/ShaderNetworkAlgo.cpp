@@ -72,10 +72,10 @@ const AtString g_nameArnoldString( "name" );
 template<typename Spline>
 void setSplineParameter( AtNode *node, const std::string &name, const Spline &spline )
 {
-	typedef vector<typename Spline::XType> PositionsVector;
-	typedef vector<typename Spline::YType> ValuesVector;
-	typedef TypedData<PositionsVector> PositionsData;
-	typedef TypedData<ValuesVector> ValuesData;
+	using PositionsVector = vector<typename Spline::XType>;
+	using ValuesVector = vector<typename Spline::YType>;
+	using PositionsData = TypedData<PositionsVector>;
+	using ValuesData = TypedData<ValuesVector>;
 
 	typename PositionsData::Ptr positionsData = new PositionsData;
 	typename ValuesData::Ptr valuesData = new ValuesData;
@@ -112,7 +112,7 @@ void setSplineParameter( AtNode *node, const std::string &name, const Spline &sp
 	AiNodeSetStr( node, AtString( ( name + "Basis" ).c_str() ), basis );
 }
 
-typedef boost::unordered_map<ShaderNetwork::Parameter, AtNode *> ShaderMap;
+using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, AtNode *>;
 
 // Equivalent to Python's `s.partition( c )[0]`.
 InternedString partitionStart( const InternedString &s, char c )

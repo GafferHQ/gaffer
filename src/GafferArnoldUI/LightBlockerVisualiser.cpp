@@ -74,7 +74,7 @@ T parameter( InternedString metadataTarget, const IECore::CompoundData *paramete
 		return defaultValue;
 	}
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *parameterData = parameters->member<DataType>( parameterName->readable() ) )
 	{
 		return parameterData->readable();

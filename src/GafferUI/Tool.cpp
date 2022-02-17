@@ -85,8 +85,8 @@ const View *Tool::view() const
 namespace
 {
 
-typedef std::map<std::string, Tool::ToolCreator> NamedCreators;
-typedef std::map<IECore::TypeId, NamedCreators> PerViewCreators;
+using NamedCreators = std::map<std::string, Tool::ToolCreator>;
+using PerViewCreators = std::map<IECore::TypeId, NamedCreators>;
 
 NamedCreators &namedCreators( IECore::TypeId viewType )
 {

@@ -128,7 +128,7 @@ bool isCompoundNumericPlug( const Gaffer::Plug *plug )
 	}
 }
 
-typedef boost::unordered_set<const Shader *> ShaderSet;
+using ShaderSet = boost::unordered_set<const Shader *>;
 
 struct CycleDetector
 {
@@ -549,7 +549,7 @@ class Shader::NetworkBuilder
 			IECore::MurmurHash hash;
 		};
 
-		typedef std::map<const Shader *, HandleAndHash> ShaderMap;
+		using ShaderMap = std::map<const Shader *, HandleAndHash>;
 		ShaderMap m_shaders;
 
 		ShaderSet m_downstreamShaders; // Used for detecting cycles

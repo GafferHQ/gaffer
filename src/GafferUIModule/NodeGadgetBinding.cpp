@@ -170,7 +170,7 @@ list framed( BackdropNodeGadget &b )
 
 void GafferUIModule::bindNodeGadget()
 {
-	typedef NodeGadgetWrapper<NodeGadget> Wrapper;
+	using Wrapper = NodeGadgetWrapper<NodeGadget>;
 
 	NodeGadgetClass<NodeGadget, Wrapper>()
 		.def( "node", (Gaffer::Node *(NodeGadget::*)())&NodeGadget::node, return_value_policy<CastToIntrusivePtr>() )

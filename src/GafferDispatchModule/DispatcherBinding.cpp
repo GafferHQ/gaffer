@@ -126,7 +126,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		// functions because TaskBatch is a protected member of Dispatcher.
 		//////////////////////////////////////////////////////////////////////////
 
-		typedef Dispatcher::TaskBatch TaskBatch;
+		using TaskBatch = Dispatcher::TaskBatch;
 
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{

@@ -277,14 +277,15 @@ class GAFFER_API Animation : public ComputeNode
 
 				void throwIfStateNotAsExpected( const CurvePlug*, bool, float ) const;
 
-				typedef boost::intrusive::avl_set_member_hook<
+				using Hook = boost::intrusive::avl_set_member_hook<
 					boost::intrusive::link_mode<
-#					ifndef NDEBUG
-					boost::intrusive::safe_link
-#					else
-					boost::intrusive::normal_link
-#					endif
-					> > Hook;
+#						ifndef NDEBUG
+							boost::intrusive::safe_link
+#						else
+							boost::intrusive::normal_link
+#						endif
+					>
+				>;
 
 				struct Dispose
 				{
@@ -440,15 +441,15 @@ class GAFFER_API Animation : public ComputeNode
 
 				struct TimeKey
 				{
-					typedef float type;
+					using type = float;
 					type operator()( const Animation::Key& ) const; // NOTE : must NEVER throw
 				};
 
-				typedef boost::intrusive::member_hook< Key, Key::Hook, &Key::m_hook > KeyHook;
-				typedef boost::intrusive::key_of_value< TimeKey > KeyOfValue;
+				using KeyHook = boost::intrusive::member_hook<Key, Key::Hook, &Key::m_hook>;
+				using KeyOfValue = boost::intrusive::key_of_value<TimeKey>;
 
-				typedef boost::intrusive::avl_set< Key, KeyHook, KeyOfValue > Keys;
-				typedef boost::intrusive::avl_multiset< Key, KeyHook, KeyOfValue > InactiveKeys;
+				using Keys = boost::intrusive::avl_set<Key, KeyHook, KeyOfValue>;
+				using InactiveKeys = boost::intrusive::avl_multiset< Key, KeyHook, KeyOfValue>;
 
 				static ConstExtrapolatorPtr CurvePlug::* const m_extrapolators[ 2 ];
 

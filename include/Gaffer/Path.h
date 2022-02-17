@@ -76,7 +76,7 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 
 	public :
 
-		typedef std::vector<IECore::InternedString> Names;
+		using Names = std::vector<IECore::InternedString>;
 
 		Path( PathFilterPtr filter = nullptr );
 		Path( const std::string &path, PathFilterPtr filter = nullptr );

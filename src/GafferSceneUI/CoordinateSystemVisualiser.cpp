@@ -53,7 +53,7 @@ class CoordinateSystemVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef IECoreScene::CoordinateSystem ObjectType;
+		using ObjectType = IECoreScene::CoordinateSystem;
 
 		CoordinateSystemVisualiser()
 		{

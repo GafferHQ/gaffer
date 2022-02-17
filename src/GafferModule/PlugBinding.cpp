@@ -99,7 +99,7 @@ PlugPtr source( Plug &p )
 
 void GafferModule::bindPlug()
 {
-	typedef PlugWrapper<Plug> Wrapper;
+	using Wrapper = PlugWrapper<Plug>;
 
 	PlugClass<Plug, Wrapper> c;
 	{

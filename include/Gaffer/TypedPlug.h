@@ -51,7 +51,7 @@ class IECORE_EXPORT TypedPlug : public ValuePlug
 
 	public :
 
-		typedef T ValueType;
+		using ValueType = T;
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TypedPlug<T>, ValuePlug );
 
@@ -88,17 +88,17 @@ class IECORE_EXPORT TypedPlug : public ValuePlug
 
 	private :
 
-		typedef IECore::TypedData<T> DataType;
-		typedef typename DataType::Ptr DataTypePtr;
+		using DataType = IECore::TypedData<T>;
+		using DataTypePtr = typename DataType::Ptr;
 
 };
 
-typedef TypedPlug<bool> BoolPlug;
-typedef TypedPlug<Imath::M33f> M33fPlug;
-typedef TypedPlug<Imath::M44f> M44fPlug;
-typedef TypedPlug<Imath::Box2f> AtomicBox2fPlug;
-typedef TypedPlug<Imath::Box3f> AtomicBox3fPlug;
-typedef TypedPlug<Imath::Box2i> AtomicBox2iPlug;
+using BoolPlug = TypedPlug<bool>;
+using M33fPlug = TypedPlug<Imath::M33f>;
+using M44fPlug = TypedPlug<Imath::M44f>;
+using AtomicBox2fPlug = TypedPlug<Imath::Box2f>;
+using AtomicBox3fPlug = TypedPlug<Imath::Box3f>;
+using AtomicBox2iPlug = TypedPlug<Imath::Box2i>;
 
 IE_CORE_DECLAREPTR( BoolPlug );
 IE_CORE_DECLAREPTR( M33fPlug );

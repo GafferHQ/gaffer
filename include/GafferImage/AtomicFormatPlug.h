@@ -45,7 +45,7 @@
 namespace GafferImage
 {
 
-typedef Gaffer::TypedPlug<GafferImage::Format> AtomicFormatPlug;
+using AtomicFormatPlug = Gaffer::TypedPlug<GafferImage::Format>;
 
 IE_CORE_DECLAREPTR( AtomicFormatPlug );
 

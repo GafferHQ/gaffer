@@ -111,7 +111,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		void setContext( Gaffer::ContextPtr context ) override;
 
-		typedef std::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
+		using DisplayTransformCreator = std::function<GafferImage::ImageProcessorPtr ()>;
 
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
 		static void registeredDisplayTransforms( std::vector<std::string> &names );
@@ -164,7 +164,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		void insertDisplayTransform();
 
-		typedef std::map<std::string, GafferImage::ImageProcessorPtr> DisplayTransformMap;
+		using DisplayTransformMap = std::map<std::string, GafferImage::ImageProcessorPtr>;
 		DisplayTransformMap m_displayTransforms;
 
 		ImageGadgetPtr m_imageGadget;
@@ -175,7 +175,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;
 
-		typedef std::map<std::string, DisplayTransformCreator> DisplayTransformCreatorMap;
+		using DisplayTransformCreatorMap = std::map<std::string, DisplayTransformCreator>;
 		static DisplayTransformCreatorMap &displayTransformCreators();
 
 		static ViewDescription<ImageView> g_viewDescription;

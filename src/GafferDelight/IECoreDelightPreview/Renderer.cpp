@@ -95,7 +95,7 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
 	{
 		return d->readable();
@@ -122,7 +122,7 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost, cons
 	}
 }
 
-typedef IECorePreview::LRUCache<std::string, std::string> ShaderSearchPathCache;
+using ShaderSearchPathCache = IECorePreview::LRUCache<std::string, std::string>;
 ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 } // namespace
@@ -232,8 +232,8 @@ class DelightHandle
 
 };
 
-typedef std::shared_ptr<DelightHandle> DelightHandleSharedPtr;
-typedef std::weak_ptr<DelightHandle> DelightHandleWeakPtr;
+using DelightHandleSharedPtr = std::shared_ptr<DelightHandle>;
+using DelightHandleWeakPtr = std::weak_ptr<DelightHandle>;
 
 } // namespace
 
@@ -561,7 +561,7 @@ class ShaderCache : public IECore::RefCounted
 		NSIContext_t m_context;
 		DelightHandle::Ownership m_ownership;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, DelightShaderPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, DelightShaderPtr>;
 		Cache m_cache;
 
 };
@@ -737,7 +737,7 @@ class AttributesCache : public IECore::RefCounted
 
 		ShaderCachePtr m_shaderCache;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, DelightAttributesPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, DelightAttributesPtr>;
 		Cache m_cache;
 
 };
@@ -843,7 +843,7 @@ class InstanceCache : public IECore::RefCounted
 		NSIContext_t m_context;
 		DelightHandle::Ownership m_ownership;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, DelightHandleSharedPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, DelightHandleSharedPtr>;
 		Cache m_cache;
 
 };
@@ -1482,7 +1482,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		unordered_map<InternedString, ConstDelightOutputPtr> m_outputs;
 
-		typedef unordered_map<string, ConstCameraPtr> CameraMap;
+		using CameraMap = unordered_map<string, ConstCameraPtr>;
 		CameraMap m_cameras;
 		tbb::spin_mutex m_camerasMutex;
 

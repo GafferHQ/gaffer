@@ -93,7 +93,7 @@ class GAFFERUI_API NoduleLayout : public Gadget
 		Gadget *customGadget( const std::string &name );
 		const Gadget *customGadget( const std::string &name ) const;
 
-		typedef std::function<GadgetPtr ( Gaffer::GraphComponentPtr )> CustomGadgetCreator;
+		using CustomGadgetCreator = std::function<GadgetPtr ( Gaffer::GraphComponentPtr )>;
 		/// Registers a custom gadget type that can be added to the layout using
 		/// "noduleLayout:customGadget:*"" metadata entries.
 		static void registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator );
@@ -113,10 +113,10 @@ class GAFFERUI_API NoduleLayout : public Gadget
 			GadgetPtr gadget;
 		};
 		// Either a plug or the name of a custom widget
-		typedef boost::variant<const Gaffer::Plug *, IECore::InternedString> GadgetKey;
+		using GadgetKey = boost::variant<const Gaffer::Plug *, IECore::InternedString>;
 		// Map from plugs and custom gadget names to the gadgets
 		// that represent them.
-		typedef std::map<GadgetKey, TypeAndGadget> GadgetMap;
+		using GadgetMap = std::map<GadgetKey, TypeAndGadget>;
 		GadgetMap m_gadgets;
 
 		void childAdded( Gaffer::GraphComponent *child );

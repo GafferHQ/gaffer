@@ -60,7 +60,7 @@ namespace
 
 void loadMetadata( const std::string &pluginPaths )
 {
-	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+	using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 	#ifdef _WIN32
 		const char *separator = ";";
 	#else

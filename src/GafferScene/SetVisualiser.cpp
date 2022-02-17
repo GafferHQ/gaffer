@@ -65,7 +65,7 @@ bool internedStringCompare( InternedString a, InternedString b )
 	return a.string() < b.string();
 }
 
-typedef std::pair<StringAlgo::MatchPattern, ConstColor3fDataPtr> Override;
+using Override = std::pair<StringAlgo::MatchPattern, ConstColor3fDataPtr>;
 std::vector<Override> unpackOverrides( const CompoundDataPlug *plug )
 {
 	std::vector<Override> overrides;

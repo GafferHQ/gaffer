@@ -72,7 +72,7 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 
 	protected :
 
-		typedef ScenePlug::ScenePath ScenePath;
+		using ScenePath = ScenePlug::ScenePath;
 
 		/// Implemented to call the hash*() methods below whenever output is part of a ScenePlug and the node is enabled.
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;

@@ -124,7 +124,7 @@ class ProceduralVisualiser : public BoundVisualiser
 
 	public :
 
-		typedef IECoreScenePreview::Procedural ObjectType;
+		using ObjectType = IECoreScenePreview::Procedural;
 
 	protected :
 
@@ -139,7 +139,7 @@ class ExternalProceduralVisualiser : public BoundVisualiser
 
 	public :
 
-		typedef IECoreScene::ExternalProcedural ObjectType;
+		using ObjectType = IECoreScene::ExternalProcedural;
 
 	protected :
 

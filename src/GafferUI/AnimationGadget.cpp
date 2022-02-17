@@ -314,18 +314,18 @@ private:
 
 	struct MemberCompare
 	{
-		typedef bool result_type;
+		using result_type = bool;
 		bool operator()( const Gaffer::Set::Member* const lhs, const Gaffer::Animation::KeyPtr& rhs ) const { return lhs < rhs.get(); }
 		bool operator()( const Gaffer::Animation::KeyPtr& lhs, const Gaffer::Set::Member* const rhs ) const { return lhs.get() < rhs; }
 	};
 
-	typedef boost::multi_index::multi_index_container<
+	using KeyContainer = boost::multi_index::multi_index_container<
 		Gaffer::Animation::KeyPtr,
 		boost::multi_index::indexed_by<
 			boost::multi_index::ordered_unique< boost::multi_index::identity< Gaffer::Animation::KeyPtr > >,
 			boost::multi_index::random_access<>
 		>
-	> KeyContainer;
+	>;
 
 	struct ConnectionData
 	{
@@ -334,9 +334,9 @@ private:
 		unsigned int m_count;
 	};
 
-	typedef std::map<
+	using CurveConnectionMap = std::map<
 		const Gaffer::Animation::CurvePlug*, ConnectionData
-	> CurveConnectionMap;
+	>;
 
 	KeyContainer m_keys;
 	CurveConnectionMap m_connections;

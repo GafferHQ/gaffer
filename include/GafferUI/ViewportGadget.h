@@ -218,7 +218,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 				void end();
 
 				bool m_depthSort;
-				typedef std::unique_ptr<IECoreGL::Selector> SelectorPtr;
+				using SelectorPtr = std::unique_ptr<IECoreGL::Selector>;
 				SelectorPtr m_selector;
 				std::vector<IECoreGL::HitRecord> &m_selection;
 

@@ -445,7 +445,7 @@ class ValuePlug::HashProcess : public Process
 
 		// Global cache. We use this for heavy hash computations that will spawn subtasks,
 		// so that the work and the result is shared among all threads.
-		typedef IECorePreview::LRUCache<HashCacheKey, IECore::MurmurHash, IECorePreview::LRUCachePolicy::TaskParallel, HashProcessKey> GlobalCache;
+		using GlobalCache = IECorePreview::LRUCache<HashCacheKey, IECore::MurmurHash, IECorePreview::LRUCachePolicy::TaskParallel, HashProcessKey>;
 		static GlobalCache g_globalCache;
 		static std::atomic<uint64_t> g_legacyGlobalDirtyCount;
 
@@ -455,7 +455,7 @@ class ValuePlug::HashProcess : public Process
 		// Per-thread cache. This is our default cache, used for hash computations that are
 		// presumed to be lightweight. Using a per-thread cache limits the contention among
 		// threads.
-		typedef IECorePreview::LRUCache<HashCacheKey, IECore::MurmurHash, IECorePreview::LRUCachePolicy::Serial, HashProcessKey> Cache;
+		using Cache = IECorePreview::LRUCache<HashCacheKey, IECore::MurmurHash, IECorePreview::LRUCachePolicy::Serial, HashProcessKey>;
 
 		struct ThreadData
 		{
@@ -719,7 +719,7 @@ class ValuePlug::ComputeProcess : public Process
 
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
 		// for that hash. This allows us to cache results for faster repeat evaluation
-		typedef IECorePreview::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr, IECorePreview::LRUCachePolicy::TaskParallel, ComputeProcessKey> Cache;
+		using Cache = IECorePreview::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr, IECorePreview::LRUCachePolicy::TaskParallel, ComputeProcessKey>;
 		static Cache g_cache;
 
 		IECore::ConstObjectPtr m_result;

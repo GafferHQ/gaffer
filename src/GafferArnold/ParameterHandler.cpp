@@ -74,7 +74,7 @@ const AtString g_ClosurePlugArnoldString( "ClosurePlug" );
 template<typename PlugType>
 Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
-	typedef typename PlugType::ValueType ValueType;
+	using ValueType = typename PlugType::ValueType;
 
 	ValueType defaultValue = 0;
 	ValueType minValue = Imath::limits<ValueType>::min();
@@ -191,8 +191,8 @@ Gaffer::Plug *setupTypedPlug( const AtNodeEntry *node, const AtParamEntry *param
 template<typename PlugType>
 Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
-	typedef typename PlugType::ValueType ValueType;
-	typedef typename ValueType::BaseType BaseType;
+	using ValueType = typename PlugType::ValueType;
+	using BaseType = typename ValueType::BaseType;
 
 	ValueType defaultValue( 1 );
 

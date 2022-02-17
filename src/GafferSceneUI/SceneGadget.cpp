@@ -75,7 +75,7 @@ SceneGadget::SceneGadget()
 		m_updateErrored( false ),
 		m_renderRequestPending( false )
 {
-	typedef CompoundObject::ObjectMap::value_type Option;
+	using Option = CompoundObject::ObjectMap::value_type;
 	CompoundObjectPtr openGLOptions = new CompoundObject;
 	openGLOptions->members().insert( {
 		Option( "gl:primitive:wireframeColor", new Color4fData( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) ),

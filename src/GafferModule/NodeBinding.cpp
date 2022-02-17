@@ -108,7 +108,7 @@ struct ErrorSlotCaller
 
 void GafferModule::bindNode()
 {
-	typedef NodeWrapper<Node> NodeWrapper;
+	using NodeWrapper = NodeWrapper<Node>;
 
 	{
 		scope s = NodeClass<Node, NodeWrapper>()
@@ -126,13 +126,13 @@ void GafferModule::bindNode()
 
 	Serialisation::registerSerialiser( Node::staticTypeId(), new NodeSerialiser() );
 
-	typedef SerialiserWrapper<NodeSerialiser> NodeSerialiserWrapper;
+	using NodeSerialiserWrapper = SerialiserWrapper<NodeSerialiser>;
 	SerialiserClass<NodeSerialiser, Serialisation::Serialiser, NodeSerialiserWrapper>( "NodeSerialiser" );
 
-	typedef DependencyNodeWrapper<DependencyNode> DependencyNodeWrapper;
+	using DependencyNodeWrapper = DependencyNodeWrapper<DependencyNode>;
 	DependencyNodeClass<DependencyNode, DependencyNodeWrapper>();
 
-	typedef ComputeNodeWrapper<ComputeNode> ComputeNodeWrapper;
+	using ComputeNodeWrapper = ComputeNodeWrapper<ComputeNode>;
 	DependencyNodeClass<ComputeNode, ComputeNodeWrapper>();
 
 }

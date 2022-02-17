@@ -87,7 +87,7 @@ class GAFFER_API PerformanceMonitor : public Monitor
 
 		};
 
-		typedef boost::unordered_map<ConstPlugPtr, Statistics> StatisticsMap;
+		using StatisticsMap = boost::unordered_map<ConstPlugPtr, Statistics>;
 
 		const StatisticsMap &allStatistics() const;
 		const Statistics &plugStatistics( const Plug *plug ) const;
@@ -110,7 +110,7 @@ class GAFFER_API PerformanceMonitor : public Monitor
 			// Stack of durations pointing into the statistics map.
 			// The top of the stack is the duration we're billing the
 			// current chunk of time to.
-			typedef std::stack<boost::chrono::nanoseconds *> DurationStack;
+			using DurationStack = std::stack<boost::chrono::nanoseconds *>;
 			DurationStack durationStack;
 			// The last time measurement we made.
 			boost::chrono::high_resolution_clock::time_point then;

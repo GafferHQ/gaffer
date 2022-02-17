@@ -171,7 +171,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0
 
 void GafferUIModule::bindGadget()
 {
-	typedef GadgetWrapper<Gadget> Wrapper;
+	using Wrapper = GadgetWrapper<Gadget>;
 
 	scope s = GadgetClass<Gadget, Wrapper>()
 		.def( init<>() )

@@ -100,7 +100,7 @@ class Environment
 
 	private :
 
-		typedef boost::container::flat_map<IECore::InternedString, IECore::InternedString> Map;
+		using Map = boost::container::flat_map<IECore::InternedString, IECore::InternedString>;
 		Map m_map;
 
 };

@@ -55,7 +55,7 @@ using namespace GafferScene;
 void GafferSceneModule::bindTransform()
 {
 
-	typedef ComputeNodeWrapper<FilteredSceneProcessor> Wrapper;
+	using Wrapper = ComputeNodeWrapper<FilteredSceneProcessor>;
 	GafferBindings::DependencyNodeClass<FilteredSceneProcessor, Wrapper>()
 		.def( init<const std::string &, IECore::PathMatcher::Result>(
 				(

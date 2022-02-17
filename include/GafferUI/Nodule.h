@@ -79,7 +79,7 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 		/// this case nullptr will be returned.
 		static NodulePtr create( Gaffer::PlugPtr plug );
 
-		typedef std::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;
+		using NoduleCreator = std::function<NodulePtr ( Gaffer::PlugPtr )>;
 		/// Registers a Nodule subclass, optionally registering it as the default
 		/// nodule type for a particular type of plug.
 		static void registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType = IECore::InvalidTypeId );
@@ -102,10 +102,10 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 
 		Gaffer::PlugPtr m_plug;
 
-		typedef std::map<std::string, NoduleCreator> TypeNameCreatorMap;
+		using TypeNameCreatorMap = std::map<std::string, NoduleCreator>;
 		static TypeNameCreatorMap &typeNameCreators();
 
-		typedef std::map<IECore::TypeId, NoduleCreator> PlugCreatorMap;
+		using PlugCreatorMap = std::map<IECore::TypeId, NoduleCreator>;
 		static PlugCreatorMap &plugCreators();
 
 };

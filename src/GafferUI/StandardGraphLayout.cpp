@@ -671,7 +671,7 @@ class LayoutEngine
 		// or on one of the two 45 degree diagonals. We represent such
 		// directions as integer vectors, where the x and y coordinates may
 		// only have values of -1, 0 or +1.
-		typedef V2s Direction;
+		using Direction = V2s;
 
 		Direction direction( const V3f &v )
 		{
@@ -719,24 +719,24 @@ class LayoutEngine
 			Direction idealDirection;
 		};
 
-		typedef boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS, Vertex, Edge> Graph;
+		using Graph = boost::adjacency_list<boost::listS, boost::listS, boost::bidirectionalS, Vertex, Edge>;
 
-		typedef Graph::vertex_descriptor VertexDescriptor;
-		typedef Graph::edge_descriptor EdgeDescriptor;
+		using VertexDescriptor = Graph::vertex_descriptor;
+		using EdgeDescriptor = Graph::edge_descriptor;
 
-		typedef Graph::vertex_iterator VertexIterator;
-		typedef std::pair<VertexIterator, VertexIterator> VertexIteratorRange;
+		using VertexIterator = Graph::vertex_iterator;
+		using VertexIteratorRange = std::pair<VertexIterator, VertexIterator>;
 
-		typedef Graph::in_edge_iterator InEdgeIterator;
-		typedef std::pair<InEdgeIterator, InEdgeIterator> InEdgeIteratorRange;
+		using InEdgeIterator = Graph::in_edge_iterator;
+		using InEdgeIteratorRange = std::pair<InEdgeIterator, InEdgeIterator>;
 
-		typedef Graph::out_edge_iterator OutEdgeIterator;
-		typedef std::pair<OutEdgeIterator, OutEdgeIterator> OutEdgeIteratorRange;
+		using OutEdgeIterator = Graph::out_edge_iterator;
+		using OutEdgeIteratorRange = std::pair<OutEdgeIterator, OutEdgeIterator>;
 
-		typedef Graph::edge_iterator EdgeIterator;
-		typedef std::pair<EdgeIterator, EdgeIterator> EdgeIteratorRange;
+		using EdgeIterator = Graph::edge_iterator;
+		using EdgeIteratorRange = std::pair<EdgeIterator, EdgeIterator>;
 
-		typedef std::map<const Node *, VertexDescriptor> NodesToVertices;
+		using NodesToVertices = std::map<const Node *, VertexDescriptor>;
 
 		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection )
 		{
@@ -841,7 +841,7 @@ class LayoutEngine
 
 			// find colliding bounds, and add constraints to separate them
 
-			typedef vector<Box2f>::const_iterator BoundIterator;
+			using BoundIterator = vector<Box2f>::const_iterator;
 			vector<BoundIterator> intersectingBounds;
 			for( BoundIterator it = bounds.begin(), eIt = bounds.end(); it != eIt; ++it )
 			{

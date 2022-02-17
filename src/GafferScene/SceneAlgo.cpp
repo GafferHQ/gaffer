@@ -362,8 +362,8 @@ namespace
 struct CapturedProcess
 {
 
-	typedef std::unique_ptr<CapturedProcess> Ptr;
-	typedef vector<Ptr> PtrVector;
+	using Ptr = std::unique_ptr<CapturedProcess>;
+	using PtrVector = vector<Ptr>;
 
 	InternedString type;
 	ConstPlugPtr plug;
@@ -460,11 +460,13 @@ class CapturingMonitor : public Monitor
 
 	private :
 
-		typedef tbb::spin_mutex Mutex;
+		using Mutex = tbb::spin_mutex;
 
 		Mutex m_mutex;
-		typedef boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope > > ProcessOrScope;
-		typedef boost::unordered_map< const Process *, ProcessOrScope > ProcessMap;
+
+		using ProcessOrScope = boost::variant<CapturedProcess *, std::unique_ptr< Monitor::Scope>>;
+		using ProcessMap = boost::unordered_map<const Process *, ProcessOrScope>;
+
 		ProcessMap m_processMap;
 		CapturedProcess::PtrVector m_rootProcesses;
 		IECore::InternedString m_scenePlugChildName;
@@ -1092,7 +1094,7 @@ Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
 namespace
 {
 
-typedef boost::container::flat_map<string, SceneAlgo::RenderAdaptor> RenderAdaptors;
+using RenderAdaptors = boost::container::flat_map<string, SceneAlgo::RenderAdaptor>;
 
 RenderAdaptors &renderAdaptors()
 {

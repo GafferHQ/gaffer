@@ -209,8 +209,8 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	// a node remaining outside, we need to reroute the connection
 	// via a promoted plug. This mapping maps source plugs (be they
 	// internal or external) to promoted plugs.
-	typedef std::pair<const Plug *, Plug *> PlugPair;
-	typedef std::map<const Plug *, Plug *> PlugMap;
+	using PlugPair = std::pair<const Plug *, Plug *>;
+	using PlugMap = std::map<const Plug *, Plug *>;
 	PlugMap plugMap;
 
 	for( size_t i = 0, e = verifiedChildNodes->size(); i < e; i++ )
@@ -249,7 +249,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 				Plug::OutputContainer outputs = plug->outputs();
 				if( !outputs.empty() )
 				{
-					typedef Plug::OutputContainer::const_iterator OutputIterator;
+					using OutputIterator = Plug::OutputContainer::const_iterator;
 					for( OutputIterator oIt = outputs.begin(), eIt = outputs.end(); oIt != eIt; oIt++ )
 					{
 						Plug *output = *oIt;

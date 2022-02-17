@@ -53,7 +53,7 @@ class ClippingPlaneVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef IECoreScene::ClippingPlane ObjectType;
+		using ObjectType = IECoreScene::ClippingPlane;
 
 		ClippingPlaneVisualiser()
 		{

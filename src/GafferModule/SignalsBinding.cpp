@@ -97,7 +97,7 @@ struct SlotCallRange
 struct PythonResultCombiner
 {
 
-	typedef object result_type;
+	using result_type = object;
 
 	PythonResultCombiner()
 		:	combiner( object() )
@@ -153,7 +153,7 @@ void bind( const char *name )
 	;
 
 	// bind the appropriate result range type so the custom result combiner can get the slot results.
-	typedef SlotCallRange<typename Signal::SlotCallIterator> Range;
+	using Range = SlotCallRange<typename Signal::SlotCallIterator>;
 	boost::python::class_<Range>( "__SignalResultRange", no_init )
 		.def( "__iter__", &Range::iter, return_self<>() )
 #if PY_MAJOR_VERSION >= 3

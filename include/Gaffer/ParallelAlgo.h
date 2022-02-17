@@ -60,7 +60,7 @@ namespace ParallelAlgo
 /// > Caution : If calling a member function, you _must_ guarantee that
 /// > the class instance will still be alive when the member function is
 /// > called. Typically this means binding `this` via a smart pointer.
-typedef std::function<void ()> UIThreadFunction;
+using UIThreadFunction = std::function<void ()>;
 GAFFER_API void callOnUIThread( const UIThreadFunction &function );
 
 /// Push/pop a handler to service requests made to `callOnUIThread()`. We
@@ -69,7 +69,7 @@ GAFFER_API void callOnUIThread( const UIThreadFunction &function );
 /// > Note : This is an implementation detail. It is only exposed to allow
 /// > emulation of the UI in unit tests, and theoretically to allow an
 /// > alternative UI framework to be connected.
-typedef std::function<void ( const UIThreadFunction & )> UIThreadCallHandler;
+using UIThreadCallHandler = std::function<void ( const UIThreadFunction & )>;
 GAFFER_API void pushUIThreadCallHandler( const UIThreadCallHandler &handler );
 GAFFER_API void popUIThreadCallHandler();
 
@@ -79,7 +79,7 @@ GAFFER_API void popUIThreadCallHandler();
 /// `BackgroundTask`, allowing the background work to be cancelled
 /// explicitly. Implicit cancellation is also performed using the `subject`
 /// argument : see the `BackgroundTask` documentation for details.
-typedef std::function<void ()> BackgroundFunction;
+using BackgroundFunction = std::function<void ()>;
 GAFFER_API std::unique_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, BackgroundFunction function );
 
 } // namespace ParallelAlgo

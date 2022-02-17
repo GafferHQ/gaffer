@@ -52,7 +52,7 @@ namespace Detail
 
 struct MemberAcceptanceCombiner
 {
-	typedef bool result_type;
+	using result_type = bool;
 
 	template<typename InputIterator>
 	bool operator()( InputIterator first, InputIterator last ) const
@@ -152,16 +152,16 @@ class GAFFER_API StandardSet : public Gaffer::Set
 
 		MemberAcceptanceSignal m_memberAcceptanceSignal;
 
-		typedef boost::multi_index::multi_index_container<
+		using MemberContainer = boost::multi_index::multi_index_container<
 			MemberPtr,
 			boost::multi_index::indexed_by<
 				boost::multi_index::ordered_unique<boost::multi_index::identity<MemberPtr> >,
 				boost::multi_index::random_access<>
 			>
-		> MemberContainer;
+		> ;
 
-		typedef const MemberContainer::nth_index<0>::type OrderedIndex;
-		typedef const MemberContainer::nth_index<1>::type SequencedIndex;
+		using OrderedIndex = const MemberContainer::nth_index<0>::type;
+		using SequencedIndex = const MemberContainer::nth_index<1>::type;
 
 		MemberContainer m_members;
 		bool m_removeOrphans;

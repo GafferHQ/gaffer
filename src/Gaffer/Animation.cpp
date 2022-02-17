@@ -90,7 +90,7 @@ private:
 	/// Implement to compute the effective scale of the specified tangent
 	virtual double effectiveScale( const Tangent& tangent, double dt, double dv ) const;
 
-	typedef std::vector< ConstInterpolatorPtr > Container;
+	using Container = std::vector<ConstInterpolatorPtr>;
 	static const Container& get();
 
 	Animation::Interpolation m_interpolation;

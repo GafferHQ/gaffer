@@ -76,19 +76,19 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 
 		void setContext( Gaffer::ContextPtr context ) override;
 
-		typedef std::function<GafferScene::InteractiveRenderPtr ()> RendererCreator;
+		using RendererCreator = std::function<GafferScene::InteractiveRenderPtr ()>;
 		static void registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator );
 		static void deregisterRenderer( const std::string &shaderPrefix );
 
-		typedef std::function<Gaffer::NodePtr ()> SceneCreator;
+		using SceneCreator = std::function<Gaffer::NodePtr ()>;
 		static void registerScene( const std::string &shaderPrefix, const std::string &name, SceneCreator sceneCreator );
 		static void registerScene( const std::string &shaderPrefix, const std::string &name, const std::string &referenceFileName );
 		static void registeredScenes( const std::string &shaderPrefix, std::vector<std::string> &names );
 
 	private :
 
-		typedef std::pair<std::string, std::string> PrefixAndName;
-		typedef std::map<PrefixAndName, Gaffer::NodePtr> Scenes;
+		using PrefixAndName = std::pair<std::string, std::string>;
+		using Scenes = std::map<PrefixAndName, Gaffer::NodePtr>;
 
 		GafferImage::Display *display();
 		const GafferImage::Display *display() const;

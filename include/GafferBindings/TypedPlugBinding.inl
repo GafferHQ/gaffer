@@ -69,7 +69,7 @@ template<typename T, typename TWrapper>
 TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
 	:	PlugClass<T, TWrapper>( docString )
 {
-	typedef typename T::ValueType V;
+	using V = typename T::ValueType;
 
 	this->def(
 		boost::python::init<const std::string &, Gaffer::Plug::Direction, const V &, unsigned>(

@@ -81,7 +81,7 @@ class GAFFERCORTEX_API CompoundParameterHandler : public ParameterHandler
 		Gaffer::PlugPtr m_plug;
 
 		ParameterHandler *handler( IECore::Parameter *child, bool createIfMissing = false );
-		typedef std::map<IECore::ParameterPtr, ParameterHandlerPtr> HandlerMap;
+		using HandlerMap = std::map<IECore::ParameterPtr, ParameterHandlerPtr>;
 		HandlerMap m_handlers;
 
 		static ParameterHandlerDescription<CompoundParameterHandler, IECore::CompoundParameter> g_description;

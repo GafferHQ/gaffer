@@ -48,7 +48,7 @@ using namespace Gaffer::ContextAlgo;
 namespace
 {
 
-typedef boost::container::flat_map<IECore::TypeId, vector<InternedString>> GlobalScopeMap;
+using GlobalScopeMap = boost::container::flat_map<IECore::TypeId, vector<InternedString>>;
 GlobalScopeMap &globalScopeMap()
 {
 	static GlobalScopeMap g_m;

@@ -86,7 +86,7 @@ class GAFFER_API StringPlug : public ValuePlug
 
 	public :
 
-		typedef std::string ValueType;
+		using ValueType = std::string;
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::StringPlug, StringPlugTypeId, ValuePlug );
 

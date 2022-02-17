@@ -79,7 +79,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		};
 
-		typedef std::map<IECore::InternedString, Transform> Transforms;
+		using Transforms = std::map<IECore::InternedString, Transform>;
 
 		/// Append a unique hash representing this shading engine to `h`.
 		void hash( IECore::MurmurHash &h ) const;
@@ -97,7 +97,7 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		bool m_timeNeeded;
 		std::vector<IECore::InternedString> m_contextVariablesNeeded;
 
-		typedef boost::container::flat_set<std::string> AttributesNeededContainer;
+		using AttributesNeededContainer = boost::container::flat_set<std::string>;
 		AttributesNeededContainer m_attributesNeeded;
 
 		// Set to true if the shader reads attributes who's name is not know at compile time

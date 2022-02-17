@@ -205,9 +205,9 @@ void emitPlugValueChangedSignals( IECore::TypeId ancestorTypeId, const StringAlg
 // Value storage for string targets
 // ================================
 
-typedef std::pair<InternedString, Metadata::ValueFunction> NamedValue;
+using NamedValue = std::pair<InternedString, Metadata::ValueFunction>;
 
-typedef multi_index::multi_index_container<
+using Values = multi_index::multi_index_container<
 	NamedValue,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
@@ -215,9 +215,9 @@ typedef multi_index::multi_index_container<
 		>,
 		multi_index::sequenced<>
 	>
-> Values;
+>;
 
-typedef std::map<IECore::InternedString, Values> MetadataMap;
+using MetadataMap = std::map<IECore::InternedString, Values>;
 
 MetadataMap &metadataMap()
 {
@@ -231,10 +231,10 @@ MetadataMap &metadataMap()
 struct GraphComponentMetadata
 {
 
-	typedef std::pair<InternedString, Metadata::GraphComponentValueFunction> NamedValue;
-	typedef std::pair<InternedString, Metadata::PlugValueFunction> NamedPlugValue;
+	using NamedValue = std::pair<InternedString, Metadata::GraphComponentValueFunction>;
+	using NamedPlugValue = std::pair<InternedString, Metadata::PlugValueFunction>;
 
-	typedef multi_index::multi_index_container<
+	using Values = multi_index::multi_index_container<
 		NamedValue,
 		multi_index::indexed_by<
 			multi_index::ordered_unique<
@@ -242,9 +242,9 @@ struct GraphComponentMetadata
 			>,
 			multi_index::sequenced<>
 		>
-	> Values;
+	>;
 
-	typedef multi_index::multi_index_container<
+	using PlugValues = multi_index::multi_index_container<
 		NamedPlugValue,
 		multi_index::indexed_by<
 			multi_index::ordered_unique<
@@ -252,16 +252,16 @@ struct GraphComponentMetadata
 			>,
 			multi_index::sequenced<>
 		>
-	> PlugValues;
+	>;
 
-	typedef map<StringAlgo::MatchPatternPath, PlugValues> PlugPathsToValues;
+	using PlugPathsToValues = map<StringAlgo::MatchPatternPath, PlugValues>;
 
 	Values values;
 	PlugPathsToValues plugPathsToValues;
 
 };
 
-typedef std::map<IECore::TypeId, GraphComponentMetadata> GraphComponentMetadataMap;
+using GraphComponentMetadataMap = std::map<IECore::TypeId, GraphComponentMetadata>;
 
 GraphComponentMetadataMap &graphComponentMetadataMap()
 {
@@ -284,7 +284,7 @@ struct NamedInstanceValue
 	bool persistent;
 };
 
-typedef multi_index::multi_index_container<
+using InstanceValues = multi_index::multi_index_container<
 	NamedInstanceValue,
 	multi_index::indexed_by<
 		multi_index::ordered_unique<
@@ -292,9 +292,9 @@ typedef multi_index::multi_index_container<
 		>,
 		multi_index::sequenced<>
 	>
-> InstanceValues;
+>;
 
-typedef concurrent_hash_map<const GraphComponent *, InstanceValues *> InstanceMetadataMap;
+using InstanceMetadataMap = concurrent_hash_map<const GraphComponent *, InstanceValues *>;
 
 InstanceMetadataMap &instanceMetadataMap()
 {
@@ -327,7 +327,7 @@ InstanceValues *instanceMetadata( const GraphComponent *instance, bool createIfM
 // It's valid to register null as an instance value and expect it to override
 // any non-null registration. We use OptionalData as a way of distinguishing
 // between an explicit registration of null and no registration at all.
-typedef std::optional<ConstDataPtr> OptionalData;
+using OptionalData = std::optional<ConstDataPtr>;
 
 OptionalData instanceValue( const GraphComponent *instance, InternedString key, bool *persistent = nullptr )
 {

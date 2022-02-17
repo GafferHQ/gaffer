@@ -373,7 +373,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		// Returns nullptr if variable doesn't exist.
 		const Value *internalGetIfExists( const IECore::InternedString &name ) const;
 
-		typedef boost::container::flat_map<IECore::InternedString, Value> Map;
+		using Map = boost::container::flat_map<IECore::InternedString, Value>;
 
 		Map m_map;
 		ChangedSignal *m_changedSignal;
@@ -385,7 +385,7 @@ class GAFFER_API Context : public IECore::RefCounted
 		// alive at least as long as the m_map used for actual accesses is using it, though it may
 		// hold data longer than it is actually in use.  ( ie. a fast pointer based set through
 		// EditableScope could overwrite a variable without updating m_allocMap )
-		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr > AllocMap;
+		using AllocMap = boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr>;
 		AllocMap m_allocMap;
 
 };

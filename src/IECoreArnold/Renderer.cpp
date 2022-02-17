@@ -100,8 +100,8 @@ using namespace IECoreArnold;
 namespace
 {
 
-typedef std::shared_ptr<AtNode> SharedAtNodePtr;
-typedef bool (*NodeDeleter)( AtNode *);
+using SharedAtNodePtr = std::shared_ptr<AtNode>;
+using NodeDeleter = bool (*)( AtNode * );
 
 bool nullNodeDeleter( AtNode *node )
 {
@@ -149,7 +149,7 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
 	{
 		return d->readable();
@@ -768,7 +768,7 @@ class ShaderCache : public IECore::RefCounted
 		AtUniverse *m_universe;
 		AtNode *m_parentNode;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr>;
 		Cache m_cache;
 };
 
@@ -1640,7 +1640,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		template<typename T>
 		static T attributeValue( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T &defaultValue )
 		{
-			typedef IECore::TypedData<T> DataType;
+			using DataType = IECore::TypedData<T>;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : defaultValue;
 		}
@@ -1648,7 +1648,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		template<typename T>
 		static std::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 		{
-			typedef IECore::TypedData<T> DataType;
+			using DataType = IECore::TypedData<T>;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : std::optional<T>();
 		}
@@ -2059,7 +2059,7 @@ class InstanceCache : public IECore::RefCounted
 		AtUniverse *m_universe;
 		AtNode *m_parentNode;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedAtNodePtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, SharedAtNodePtr>;
 		Cache m_cache;
 
 };
@@ -2776,7 +2776,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 
 		IECore::ConstCompoundObjectPtr m_attributesToInherit;
 
-		typedef tbb::spin_mutex NodesCreatedMutex;
+		using NodesCreatedMutex = tbb::spin_mutex;
 		NodesCreatedMutex m_nodesCreatedMutex;
 		vector<AtNode *> m_nodesCreated;
 
@@ -3971,11 +3971,11 @@ class ArnoldGlobals
 		IECore::MessageHandlerPtr m_messageHandler;
 		std::optional<unsigned> m_messageCallbackId;
 
-		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
+		using OutputMap = std::map<IECore::InternedString, ArnoldOutputPtr>;
 		OutputMap m_outputs;
 		int m_interactiveOutput; // Negative if not yet set.
 
-		typedef std::map<IECore::InternedString, ArnoldShaderPtr> AOVShaderMap;
+		using AOVShaderMap = std::map<IECore::InternedString, ArnoldShaderPtr>;
 		AOVShaderMap m_aovShaders;
 
 		ArnoldShaderPtr m_colorManager;
@@ -3984,7 +3984,7 @@ class ArnoldGlobals
 		ArnoldShaderPtr m_imager;
 
 		std::string m_cameraName;
-		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
+		using CameraMap = tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr>;
 		CameraMap m_cameras;
 		SharedAtNodePtr m_defaultCamera;
 		std::string m_subdivDicingCameraName;

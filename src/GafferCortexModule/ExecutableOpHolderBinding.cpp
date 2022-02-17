@@ -54,7 +54,7 @@ using namespace GafferDispatchBindings;
 using namespace GafferCortex;
 using namespace GafferCortexModule;
 
-typedef ParameterisedHolderWrapper< TaskNodeWrapper<ExecutableOpHolder> > ExecutableOpHolderWrapper;
+using ExecutableOpHolderWrapper = ParameterisedHolderWrapper<TaskNodeWrapper<ExecutableOpHolder> >;
 
 static IECore::OpPtr getOp( ExecutableOpHolder &n )
 {

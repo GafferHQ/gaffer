@@ -51,8 +51,8 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 
 	public :
 
-		typedef typename Predicate::ChildType ChildType;
-		typedef boost::iterator_adaptor<FilteredRecursiveChildIterator<Predicate, RecursionPredicate>, RecursiveChildIterator, const typename Predicate::ChildType::Ptr> BaseIterator;
+		using ChildType = typename Predicate::ChildType;
+		using BaseIterator = boost::iterator_adaptor<FilteredRecursiveChildIterator<Predicate, RecursionPredicate>, RecursiveChildIterator, const typename Predicate::ChildType::Ptr>;
 
 		FilteredRecursiveChildIterator()
 			:	BaseIterator(),

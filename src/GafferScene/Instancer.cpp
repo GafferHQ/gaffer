@@ -505,7 +505,7 @@ class Instancer::EngineData : public Data
 			}
 		}
 
-		typedef std::map< InternedString, boost::unordered_set< IECore::MurmurHash > > PrototypeHashes;
+		using PrototypeHashes = std::map<InternedString, boost::unordered_set<IECore::MurmurHash>>;
 
 		// In order to compute the number of variations, we compute a unique hash for every context we use
 		// for evaluating prototypes.  So that we can track which sources are responsible for variations,
@@ -635,7 +635,7 @@ class Instancer::EngineData : public Data
 
 	private :
 
-		typedef std::function<DataPtr ( size_t )> AttributeCreator;
+		using AttributeCreator = std::function<DataPtr ( size_t )>;
 
 		struct MakeAttributeCreator
 		{
@@ -819,7 +819,7 @@ class Instancer::EngineData : public Data
 		const std::vector<Imath::V3f> *m_scales;
 		const std::vector<float> *m_uniformScales;
 
-		typedef std::unordered_map <int, size_t> IdsToPointIndices;
+		using IdsToPointIndices = std::unordered_map <int, size_t>;
 		IdsToPointIndices m_idsToPointIndices;
 
 		boost::container::flat_map<InternedString, AttributeCreator> m_attributeCreators;
@@ -1792,8 +1792,8 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &sourcePath, const S
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
 
-		typedef vector<InternedString>::const_iterator Iterator;
-		typedef blocked_range<Iterator> Range;
+		using Iterator = vector<InternedString>::const_iterator;
+		using Range = blocked_range<Iterator>;
 
 		task_group_context taskGroupContext( task_group_context::isolated );
 		return parallel_reduce(

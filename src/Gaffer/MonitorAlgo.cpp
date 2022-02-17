@@ -63,7 +63,7 @@ namespace
 struct InvalidMetric
 {
 
-	typedef size_t ResultType;
+	using ResultType = size_t;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -79,7 +79,7 @@ struct InvalidMetric
 struct HashCountMetric
 {
 
-	typedef size_t ResultType;
+	using ResultType = size_t;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -95,7 +95,7 @@ struct HashCountMetric
 struct ComputeCountMetric
 {
 
-	typedef size_t ResultType;
+	using ResultType = size_t;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -111,7 +111,7 @@ struct ComputeCountMetric
 struct HashDurationMetric
 {
 
-	typedef boost::chrono::duration<double> ResultType;
+	using ResultType = boost::chrono::duration<double>;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -127,7 +127,7 @@ struct HashDurationMetric
 struct ComputeDurationMetric
 {
 
-	typedef boost::chrono::duration<double> ResultType;
+	using ResultType = boost::chrono::duration<double>;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -143,7 +143,7 @@ struct ComputeDurationMetric
 struct TotalDurationMetric
 {
 
-	typedef boost::chrono::duration<double> ResultType;
+	using ResultType = boost::chrono::duration<double>;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -159,7 +159,7 @@ struct TotalDurationMetric
 struct PerHashDurationMetric
 {
 
-	typedef boost::chrono::duration<double> ResultType;
+	using ResultType = boost::chrono::duration<double>;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -175,7 +175,7 @@ struct PerHashDurationMetric
 struct PerComputeDurationMetric
 {
 
-	typedef boost::chrono::duration<double> ResultType;
+	using ResultType = boost::chrono::duration<double>;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -191,7 +191,7 @@ struct PerComputeDurationMetric
 struct HashesPerComputeMetric
 {
 
-	typedef double ResultType;
+	using ResultType = double;
 
 	ResultType operator() ( const PerformanceMonitor::Statistics &s ) const
 	{
@@ -323,7 +323,7 @@ struct FormatStatistics
 	{
 	}
 
-	typedef std::string ResultType;
+	using ResultType = std::string;
 
 	template<typename Metric>
 	std::string operator() ( const Metric &metric ) const
@@ -372,7 +372,7 @@ struct FormatTotalStatistics
 	{
 	}
 
-	typedef std::pair< std::string, std::string > ResultType;
+	using ResultType = std::pair<std::string, std::string>;
 
 	template<typename Metric>
 	ResultType operator() ( const Metric &metric ) const
@@ -423,7 +423,7 @@ struct Annotate
 	{
 	}
 
-	typedef void ResultType;
+	using ResultType = void;
 
 	template<typename Metric>
 	ResultType operator() ( const Metric &metric ) const

@@ -309,7 +309,7 @@ struct ChildrenReorderedSlotCaller
 
 void GafferModule::bindGraphComponent()
 {
-	typedef GraphComponentWrapper<GraphComponent> Wrapper;
+	using Wrapper = GraphComponentWrapper<GraphComponent>;
 
 	scope s = GraphComponentClass<GraphComponent, Wrapper>()
 		.def( init<>() )

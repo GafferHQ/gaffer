@@ -93,7 +93,7 @@ class GAFFERUI_API Tool : public Gaffer::Node
 		//@{
 		/// Creates a Tool for the specified View.
 		static ToolPtr create( const std::string &toolName, View *view );
-		typedef std::function<ToolPtr ( View * )> ToolCreator;
+		using ToolCreator = std::function<ToolPtr ( View * )>;
 		/// Registers a function which will return a Tool instance for a
 		/// view of a specific type.
 		static void registerTool( const std::string &toolName, IECore::TypeId viewType, ToolCreator creator );

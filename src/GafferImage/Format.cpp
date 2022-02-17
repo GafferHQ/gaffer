@@ -43,7 +43,7 @@ using namespace GafferImage;
 namespace
 {
 
-typedef std::map<std::string, Format> FormatMap;
+using FormatMap = std::map<std::string, Format>;
 
 FormatMap &formatMap()
 {

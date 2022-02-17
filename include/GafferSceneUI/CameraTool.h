@@ -96,7 +96,7 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 		void setCameraCenterOfInterest( const GafferScene::ScenePlug::ScenePath &camera, float centerOfInterest );
 		float getCameraCenterOfInterest( const GafferScene::ScenePlug::ScenePath &camera ) const;
 
-		typedef std::unordered_map<std::string, float> CameraCentersOfInterest;
+		using CameraCentersOfInterest = std::unordered_map<std::string, float>;
 		CameraCentersOfInterest m_cameraCentersOfInterest;
 
 		static ToolDescription<CameraTool, SceneView> g_toolDescription;

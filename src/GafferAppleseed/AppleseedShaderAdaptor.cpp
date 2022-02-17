@@ -67,7 +67,7 @@ IECore::InternedString g_closureParameterName( "in_input" );
 IECore::InternedString g_colorParameterName( "in_color" );
 IECore::InternedString g_scalarParameterName( "in_scalar" );
 
-typedef tbb::concurrent_hash_map<std::string, OSLQuery::Parameter *> ParameterMap;
+using ParameterMap = tbb::concurrent_hash_map<std::string, OSLQuery::Parameter *>;
 
 ParameterMap &parameterMap()
 {

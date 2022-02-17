@@ -132,7 +132,7 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 
 		// Key is the NodeGadget at the destination end of the connections
 		// tracked by `Connections.dirty`.
-		typedef std::unordered_map<const NodeGadget *, Connections> NodeGadgetConnections;
+		using NodeGadgetConnections = std::unordered_map<const NodeGadget *, Connections>;
 		mutable NodeGadgetConnections m_nodeGadgetConnections;
 
 		// An auxiliary connection that we will draw.

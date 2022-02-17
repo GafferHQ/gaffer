@@ -111,7 +111,7 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 		};
 
-		typedef std::vector<Task> Tasks;
+		using Tasks = std::vector<Task>;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
 

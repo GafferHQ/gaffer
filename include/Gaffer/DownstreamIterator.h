@@ -229,7 +229,7 @@ class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, con
 
 		};
 
-		typedef std::vector<Level> Levels;
+		using Levels = std::vector<Level>;
 		Levels m_stack;
 		const Plug *m_root;
 		bool m_pruned;

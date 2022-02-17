@@ -56,8 +56,9 @@ using namespace IECoreGLPreview;
 
 namespace
 {
-typedef std::pair<float, V3f> Knot;
-typedef std::vector<Knot> KnotVector;
+
+using Knot = std::pair<float, V3f>;
+using KnotVector = std::vector<Knot>;
 
 const char *faceCameraVertexSource()
 {

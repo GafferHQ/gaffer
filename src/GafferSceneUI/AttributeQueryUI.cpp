@@ -127,12 +127,15 @@ private:
 	Gaffer::ConstValuePlugPtr m_plug;
 };
 
-typedef boost::multi_index_container<
+using MenuItemContainer = boost::multi_index_container<
 	MenuItem,
 	boost::multi_index::indexed_by<
 		boost::multi_index::random_access<>,
 		boost::multi_index::ordered_non_unique<
-			boost::multi_index::const_mem_fun< MenuItem, const std::string&, & MenuItem::getName > > > > MenuItemContainer;
+			boost::multi_index::const_mem_fun<MenuItem, const std::string&, & MenuItem::getName>
+		>
+	>
+>;
 
 struct PlugAdder : GafferUI::PlugAdder
 {

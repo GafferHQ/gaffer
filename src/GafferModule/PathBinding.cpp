@@ -452,7 +452,7 @@ PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &
 
 void GafferModule::bindPath()
 {
-	typedef PathWrapper<Path> Wrapper;
+	using Wrapper = PathWrapper<Path>;
 
 	{
 		scope s = PathClass<Path, Wrapper>()

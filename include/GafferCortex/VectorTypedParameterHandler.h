@@ -53,8 +53,8 @@ class GAFFERCORTEX_API VectorTypedParameterHandler : public ParameterHandler
 
 		IE_CORE_DECLAREMEMBERPTR( VectorTypedParameterHandler<ParameterType> );
 
-		typedef typename ParameterType::ObjectType DataType;
-		typedef Gaffer::TypedObjectPlug<DataType> PlugType;
+		using DataType = typename ParameterType::ObjectType;
+		using PlugType = Gaffer::TypedObjectPlug<DataType>;
 
 		VectorTypedParameterHandler( typename ParameterType::Ptr parameter );
 		~VectorTypedParameterHandler() override;

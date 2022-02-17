@@ -85,7 +85,7 @@ class GAFFER_API Action : public IECore::RunTimeTyped
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Action, ActionTypeId, IECore::RunTimeTyped );
 
-		typedef std::function<void ()> Function;
+		using Function = std::function<void ()>;
 
 		/// Enacts the specified action by calling doAction() and
 		/// adding it to the undo queue in the appropriate ScriptNode.

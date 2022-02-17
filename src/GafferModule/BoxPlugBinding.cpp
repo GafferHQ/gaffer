@@ -71,9 +71,9 @@ typename T::ValueType getValue( const T *plug )
 template<typename T>
 void bind()
 {
-	typedef typename T::ValueType V;
-	typedef typename T::PointType P;
-	typedef typename P::BaseType B;
+	using V = typename T::ValueType;
+	using P = typename T::PointType;
+	using B = typename P::BaseType;
 
 	PlugClass<T>()
 		.def( init<const std::string &, Plug::Direction, const V&, unsigned>(

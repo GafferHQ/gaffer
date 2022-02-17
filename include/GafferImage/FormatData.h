@@ -50,7 +50,7 @@ namespace IECore
 namespace GafferImage
 {
 
-typedef IECore::FormatData FormatData;
+using FormatData = IECore::FormatData;
 IE_CORE_DECLAREPTR( FormatData );
 
 } // namespace GafferImage

@@ -94,8 +94,8 @@ class Serial
 
 	public :
 
-		typedef typename LRUCache::CacheEntry CacheEntry;
-		typedef typename LRUCache::KeyType Key;
+		using CacheEntry = typename LRUCache::CacheEntry;
+		using Key = typename LRUCache::KeyType;
 
 		struct Item
 		{
@@ -114,7 +114,7 @@ class Serial
 			mutable size_t handleCount;
 		};
 
-		typedef boost::multi_index_container<
+		using MapAndList = boost::multi_index_container<
 			Item,
 			boost::multi_index::indexed_by<
 				// First index is equivalent to std::unordered_map,
@@ -125,10 +125,10 @@ class Serial
 				// Second index is equivalent to std::list.
 				boost::multi_index::sequenced<>
 			>
-		> MapAndList;
+		>;
 
-		typedef typename MapAndList::iterator MapIterator;
-		typedef typename MapAndList::template nth_index<1>::type List;
+		using MapIterator = typename MapAndList::iterator;
+		using List = typename MapAndList::template nth_index<1>::type;
 
 		Serial()
 			:	currentCost( 0 )
@@ -302,9 +302,9 @@ class Parallel
 
 	public :
 
-		typedef typename LRUCache::CacheEntry CacheEntry;
-		typedef typename LRUCache::KeyType Key;
-		typedef std::atomic<typename LRUCache::Cost> AtomicCost;
+		using CacheEntry = typename LRUCache::CacheEntry;
+		using Key = typename LRUCache::KeyType;
+		using AtomicCost = std::atomic<typename LRUCache::Cost>;
 
 		struct Item
 		{
@@ -314,7 +314,7 @@ class Parallel
 			Key key;
 			mutable CacheEntry cacheEntry;
 			// Mutex to protect cacheEntry.
-			typedef tbb::spin_rw_mutex Mutex;
+			using Mutex = tbb::spin_rw_mutex;
 			mutable Mutex mutex;
 			// Flag used in second-chance algorithm.
 			mutable std::atomic_bool recentlyUsed;
@@ -328,7 +328,7 @@ class Parallel
 		// container, but split our storage into multiple bins with a
 		// container in each bin. This way concurrent operations do not
 		// contend on a lock unless they happen to target the same bin.
-		typedef boost::multi_index::multi_index_container<
+		using Map = boost::multi_index::multi_index_container<
 			Item,
 			boost::multi_index::indexed_by<
 				// Equivalent to std::unordered_map, using Item::key
@@ -345,9 +345,9 @@ class Parallel
 					boost::multi_index::member<Item, Key, &Item::key>
 				>
 			>
-		> Map;
+		>;
 
-		typedef typename Map::iterator MapIterator;
+		using MapIterator = typename Map::iterator;
 
 		struct Bin
 		{
@@ -355,11 +355,11 @@ class Parallel
 			Bin( const Bin &other ) : map( other.map ) {}
 			Bin &operator = ( const Bin &other ) { map = other.map; return *this; }
 			Map map;
-			typedef tbb::spin_rw_mutex Mutex;
+			using Mutex = tbb::spin_rw_mutex;
 			Mutex mutex;
 		};
 
-		typedef std::vector<Bin> Bins;
+		using Bins = std::vector<Bin>;
 
 		Parallel()
 		{
@@ -619,7 +619,7 @@ class Parallel
 			return m_bins[binIndex];
 		};
 
-		typedef tbb::spin_mutex PopMutex;
+		using PopMutex = tbb::spin_mutex;
 		PopMutex m_popMutex;
 		size_t m_popBinIndex;
 		MapIterator m_popIterator;
@@ -648,9 +648,9 @@ class TaskParallel
 
 	public :
 
-		typedef typename LRUCache::CacheEntry CacheEntry;
-		typedef typename LRUCache::KeyType Key;
-		typedef std::atomic<typename LRUCache::Cost> AtomicCost;
+		using CacheEntry = typename LRUCache::CacheEntry;
+		using Key = typename LRUCache::KeyType;
+		using AtomicCost = std::atomic<typename LRUCache::Cost>;
 
 		struct Item
 		{
@@ -660,7 +660,7 @@ class TaskParallel
 			Key key;
 			mutable CacheEntry cacheEntry;
 			// Mutex to protect cacheEntry.
-			typedef TaskMutex Mutex;
+			using Mutex = TaskMutex;
 			mutable Mutex mutex;
 			// Flag used in second-chance algorithm.
 			mutable std::atomic_bool recentlyUsed;
@@ -674,7 +674,7 @@ class TaskParallel
 		// container, but split our storage into multiple bins with a
 		// container in each bin. This way concurrent operations do not
 		// contend on a lock unless they happen to target the same bin.
-		typedef boost::multi_index::multi_index_container<
+		using Map = boost::multi_index::multi_index_container<
 			Item,
 			boost::multi_index::indexed_by<
 				// Equivalent to std::unordered_map, using Item::key
@@ -691,9 +691,9 @@ class TaskParallel
 					boost::multi_index::member<Item, Key, &Item::key>
 				>
 			>
-		> Map;
+		>;
 
-		typedef typename Map::iterator MapIterator;
+		using MapIterator = typename Map::iterator;
 
 		struct Bin
 		{
@@ -701,11 +701,11 @@ class TaskParallel
 			Bin( const Bin &other ) : map( other.map ) {}
 			Bin &operator = ( const Bin &other ) { map = other.map; return *this; }
 			Map map;
-			typedef tbb::spin_rw_mutex Mutex;
+			using Mutex = tbb::spin_rw_mutex;
 			Mutex mutex;
 		};
 
-		typedef std::vector<Bin> Bins;
+		using Bins = std::vector<Bin>;
 
 		TaskParallel()
 		{
@@ -1023,7 +1023,7 @@ class TaskParallel
 			return m_bins[binIndex];
 		};
 
-		typedef tbb::spin_mutex PopMutex;
+		using PopMutex = tbb::spin_mutex;
 		PopMutex m_popMutex;
 		size_t m_popBinIndex;
 		MapIterator m_popIterator;

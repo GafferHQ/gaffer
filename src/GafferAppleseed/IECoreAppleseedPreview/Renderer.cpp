@@ -240,7 +240,7 @@ class AppleseedRendererBase : public IECoreScenePreview::Renderer
 		ShaderCachePtr m_shaderCache;
 		InstanceMasterCachePtr m_instanceMasterCache;
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, string> ProceduralCache;
+		using ProceduralCache = tbb::concurrent_hash_map<IECore::MurmurHash, string>;
 		ProceduralCache m_proceduralCache;
 
 		float m_shutterOpenTime;
@@ -261,8 +261,8 @@ namespace
 
 // appleseed projects are not thread-safe.
 // We need to protect project edits with locks.
-typedef boost::mutex MutexType;
-typedef boost::lock_guard<boost::mutex> LockGuardType;
+using MutexType = boost::mutex;
+using LockGuardType = boost::lock_guard<boost::mutex>;
 
 MutexType g_projectMutex;
 MutexType g_sceneMutex;
@@ -755,7 +755,7 @@ class ShaderCache : public RefCounted
 
 	private :
 
-		typedef tbb::concurrent_hash_map<MurmurHash, AppleseedShaderPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<MurmurHash, AppleseedShaderPtr>;
 		Cache m_cache;
 		asr::Project &m_project;
 		bool m_isInteractive;
@@ -1112,7 +1112,7 @@ class InstanceMasterCache : public IECore::RefCounted
 
 	private :
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, InstanceMasterPtr> Cache;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, InstanceMasterPtr>;
 		Cache m_cache;
 };
 

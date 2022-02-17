@@ -56,7 +56,7 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
-typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
+using Tokenizer = boost::tokenizer<boost::char_separator<char> >;
 
 GAFFER_NODE_DEFINE_TYPE( SceneReader );
 

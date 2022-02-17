@@ -153,12 +153,12 @@ void copyDeepArea(
 	}
 }
 
-typedef std::shared_ptr<ImageOutput> ImageOutputPtr;
+using ImageOutputPtr = std::shared_ptr<ImageOutput>;
 
 class TileSampleOffsetsProcessor
 {
 	public:
-		typedef ConstIntVectorDataPtr Result;
+		using Result = ConstIntVectorDataPtr;
 
 		TileSampleOffsetsProcessor() {}
 
@@ -171,7 +171,7 @@ class TileSampleOffsetsProcessor
 class TileChannelDataProcessor
 {
 	public:
-		typedef ConstFloatVectorDataPtr Result;
+		using Result = ConstFloatVectorDataPtr;
 
 		TileChannelDataProcessor() {}
 
@@ -185,7 +185,7 @@ struct V2iHash
 {
 	std::size_t operator()( const V2i &i ) const
 	{
-		typedef std::pair<float, float> Hashable;
+		using Hashable = std::pair<float, float>;
 		return boost::hash<Hashable>()( Hashable( i.x, i.y ) );
 	}
 };
@@ -193,7 +193,7 @@ struct V2iHash
 class SampleOffsetsAccumulator
 {
 	public:
-		typedef std::unordered_map<Imath::V2i, ConstIntVectorDataPtr, V2iHash> Result;
+		using Result = std::unordered_map<Imath::V2i, ConstIntVectorDataPtr, V2iHash>;
 
 		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets )
 		{

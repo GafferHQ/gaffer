@@ -289,10 +289,10 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 			Gaffer::Signals::ScopedConnection noduleAddedConnection;
 			Gaffer::Signals::ScopedConnection noduleRemovedConnection;
 		};
-		typedef std::map<const Gaffer::Node *, NodeGadgetEntry> NodeGadgetMap;
+		using NodeGadgetMap = std::map<const Gaffer::Node *, NodeGadgetEntry>;
 		NodeGadgetMap m_nodeGadgets;
 
-		typedef std::map<const Nodule *, ConnectionGadget *> ConnectionGadgetMap;
+		using ConnectionGadgetMap = std::map<const Nodule *, ConnectionGadget *>;
 		ConnectionGadgetMap m_connectionGadgets;
 
 		enum DragMode
