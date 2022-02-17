@@ -60,7 +60,14 @@ struct VisibilityChangedSlotCaller
 {
 	void operator()( boost::python::object slot, GadgetPtr g )
 	{
-		slot( g );
+		try
+		{
+			slot( g );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
 	}
 };
 
@@ -74,8 +81,7 @@ struct ButtonSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // also clears the python error status
-			return false;
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };
@@ -90,7 +96,7 @@ struct EnterLeaveSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // also clears the python error status
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };
@@ -105,8 +111,7 @@ struct DragBeginSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // also clears the python error status
-			return nullptr;
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };
@@ -121,8 +126,7 @@ struct DragDropSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // also clears the python error status
-			return false;
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };
@@ -137,8 +141,7 @@ struct KeySlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // also clears the python error status
-			return false;
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };

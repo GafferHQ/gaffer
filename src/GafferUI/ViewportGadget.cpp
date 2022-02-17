@@ -1163,7 +1163,7 @@ ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
 	return m_preRenderSignal;
 }
 
-ViewportGadget::RenderRequestSignal &ViewportGadget::renderRequestSignal()
+ViewportGadget::UnarySignal &ViewportGadget::renderRequestSignal()
 {
 	return m_renderRequestSignal;
 }

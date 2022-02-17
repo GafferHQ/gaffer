@@ -129,8 +129,8 @@ class GAFFER_API ScriptNode : public Node
 		/// be active while those operations are being performed.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		using ActionSignal = Signals::Signal<void ( ScriptNode *, const Action *, Action::Stage stage )>;
-		using UndoAddedSignal = Signals::Signal<void ( ScriptNode * )> ;
+		using ActionSignal = Signals::Signal<void ( ScriptNode *, const Action *, Action::Stage stage ), Signals::CatchingCombiner<void>>;
+		using UndoAddedSignal = Signals::Signal<void ( ScriptNode * ), Signals::CatchingCombiner<void>>;
 		bool undoAvailable() const;
 		void undo();
 		bool redoAvailable() const;

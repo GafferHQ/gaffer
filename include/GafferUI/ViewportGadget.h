@@ -60,7 +60,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 	public :
 
-		using UnarySignal = Gaffer::Signals::Signal<void (ViewportGadget *)>;
+		using UnarySignal = Gaffer::Signals::Signal<void (ViewportGadget *), Gaffer::Signals::CatchingCombiner<void>>;
 
 		ViewportGadget( GadgetPtr primaryChild = nullptr );
 		~ViewportGadget() override;
@@ -243,8 +243,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// the viewport or its children.
 		UnarySignal &preRenderSignal();
 
-		using RenderRequestSignal = Gaffer::Signals::Signal<void ( ViewportGadget * )>;
-		RenderRequestSignal &renderRequestSignal();
+		UnarySignal &renderRequestSignal();
 
 	private :
 
@@ -339,7 +338,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		UnarySignal m_viewportChangedSignal;
 		UnarySignal m_cameraChangedSignal;
 		UnarySignal m_preRenderSignal;
-		RenderRequestSignal m_renderRequestSignal;
+		UnarySignal m_renderRequestSignal;
 
 };
 

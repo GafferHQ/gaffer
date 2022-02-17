@@ -13,6 +13,17 @@ API
 - Signals :
   - Added a new Signals namespace with Signal, Connection, ScopedConnection and Trackable classes. This provides significant performance and memory usage improvements over the old `boost::signals` library.
   - Removed usage of `boost::signals::detail::unusable` as a substitute for the `void` return type in the Signal bindings. Custom SlotCallers may now use a standard `void` return type.
+  - The following signals now use a `CatchingCombiner` so that exceptions in one slot will not interfere with calls to other slots :
+    - ApplicationRoot : ClipboardSignal.
+    - GraphComponent : UnarySignal and BinarySignal.
+    - Gadget : VisibilityChangedSignal, EnterLeaveSignal and IdleSignal.
+    - Node : UnaryPlugSignal, BinaryPlugSignal.
+    - ScriptNode : ActionSignal, UndoAddedSignal.
+    - ViewportGadget : UnarySignal.
+  - The following signals now handle exceptions thrown from C++ slots as well as Python slots :
+    - Gadget : ButtonSignal, DragBeginSignal, DragDropSignal, KeySignal.
+  - The following signals no longer suppress exceptions thrown from Python slots :
+    - StandardSet : MemberAcceptanceSignal.
 - Monitor : Subclasses may now override `mightForceMonitoring` and `forceMonitoring` in order to ensure the monitored processes always run, instead of being skipped when they are cached
 - ValuePlug : Added `hashCacheTotalUsage()` function.
 
@@ -28,6 +39,7 @@ Breaking Changes
   - Remove the `Gaffer/CatchingSignalCombiner.h` header file. CatchingSignalCombiner can now be found as `Signals::CatchingCombiner` in `Gaffer/Signals.h`.
   - Moved all Python classes into the `Gaffer.Signals` submodule.
   - Deprecated the default value for the `scoped` argument to `Signal.connect()`. Pass `scoped = True` to maintain the previous behaviour, or consider using an unscoped connection.
+- ViewportGadget : Removed `RenderRequestSignal` type. Use the identical `UnarySignal` instead.
 - Replaced all usage of `boost::optional` with `std::optional`.
 - Random : Renamed `contextEntry` plug to `seedVariable`. Old `.gfr` files will be converted automatically on loading.
 - SceneAlgo : Removed `historyIDContextName()` function. `history()` no longer uses an ID in the context to ensure fresh evaluations, it instead uses `Monitor::forceMonitoring()` to temporarily disable caching.

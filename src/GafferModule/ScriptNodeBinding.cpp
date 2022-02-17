@@ -496,7 +496,7 @@ struct ActionSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 
@@ -513,7 +513,7 @@ struct UndoAddedSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 

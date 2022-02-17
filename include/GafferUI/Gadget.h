@@ -137,7 +137,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
 		bool visible( Gadget *relativeTo = nullptr ) const;
-		using VisibilityChangedSignal = Gaffer::Signals::Signal<void ( Gadget * )>;
+		using VisibilityChangedSignal = Gaffer::Signals::Signal<void ( Gadget * ), Gaffer::Signals::CatchingCombiner<void>>;
 		/// Emitted when the result of `Gadget::visible()` changes.
 		VisibilityChangedSignal &visibilityChangedSignal();
 		/// Sets whether or not this Gadget is enabled. Disabled gadgets
@@ -219,7 +219,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// The signal triggered by the mouse wheel.
 		ButtonSignal &wheelSignal();
 
-		using EnterLeaveSignal = Gaffer::Signals::Signal<void ( Gadget *, const ButtonEvent &event )>;
+		using EnterLeaveSignal = Gaffer::Signals::Signal<void ( Gadget *, const ButtonEvent &event ), Gaffer::Signals::CatchingCombiner<void>>;
 		/// The signal triggered when the mouse enters the Gadget.
 		EnterLeaveSignal &enterSignal();
 		/// The signal triggered when the mouse leaves the Gadget.
@@ -260,7 +260,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		/// A signal emitted when the host event loop is idle. Connections
 		/// to this should be limited in duration because idle events consume
 		/// CPU when the program would otherwise be inactive.
-		using IdleSignal = Gaffer::Signals::Signal<void ()>;
+		using IdleSignal = Gaffer::Signals::Signal<void (), Gaffer::Signals::CatchingCombiner<void>>;
 		static IdleSignal &idleSignal();
 		//@}
 
