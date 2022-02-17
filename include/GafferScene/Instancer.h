@@ -50,9 +50,8 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 	public :
 
 
-		/// Compound plug for representing an image format in a way
-		/// easily edited by users, with individual child plugs for
-		/// each aspect of the format.
+		/// Compound plug for representing context variables to be created
+		/// by the Instancer. These should be parented to `contextVariablesPlug()`.
 		class GAFFERSCENE_API ContextVariablePlug : public Gaffer::ValuePlug
 		{
 
