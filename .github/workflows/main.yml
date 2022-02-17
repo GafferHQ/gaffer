@@ -105,6 +105,12 @@ jobs:
         # Force inkscape < 1.0 until SConstruct is updated
         brew install --cask xquartz &&
         brew install --cask ./config/brew/Casks/inkscape.rb
+        # Brew installs all manner of headers into `/usr/local/include`, including
+        # OpenEXR and Imath versions that conflict with our own. We can't stop Clang
+        # finding them because Clang is hardcoded to look in `/usr/local/include`
+        # _before_ anything we specify with `-isystem`, despite documentation to the
+        # contrary. So we nuke the headers.
+        rm -rf /usr/local/include/*
       if: runner.os == 'macOS'
 
     - name: Install toolchain (Linux)
