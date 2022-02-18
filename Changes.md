@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- LightEditor/SceneViewInspector : Improved performance when viewing complex scenes, by improving cache usage during history queries.
 - Node menu : Removed unsupported Arnold shaders `ramp_rgb` and `ramp_float`. The OSL `ColorSpline` and `FloatSpline` shaders should be used instead.
 
 API
@@ -13,7 +14,7 @@ API
   - Added a new Signals namespace with Signal, Connection, ScopedConnection and Trackable classes. This provides significant performance and memory usage improvements over the old `boost::signals` library.
   - Removed usage of `boost::signals::detail::unusable` as a substitute for the `void` return type in the Signal bindings. Custom SlotCallers may now use a standard `void` return type.
 - Monitor : Subclasses may now override `mightForceMonitoring` and `forceMonitoring` in order to ensure the monitored processes always run, instead of being skipped when they are cached
-- ValuePlug : Added `hashCacheTotalUsage()` function
+- ValuePlug : Added `hashCacheTotalUsage()` function.
 
 Breaking Changes
 ----------------
@@ -29,7 +30,7 @@ Breaking Changes
   - Deprecated the default value for the `scoped` argument to `Signal.connect()`. Pass `scoped = True` to maintain the previous behaviour, or consider using an unscoped connection.
 - Replaced all usage of `boost::optional` with `std::optional`.
 - Random : Renamed `contextEntry` plug to `seedVariable`. Old `.gfr` files will be converted automatically on loading.
-- SceneAlgo : `historyIDContextName()` function removed.  `history()` no longer uses an ID in the context to ensure fresh evaluations, it instead uses Monitor::forceMonitoring to temporarily disable caching.
+- SceneAlgo : Removed `historyIDContextName()` function. `history()` no longer uses an ID in the context to ensure fresh evaluations, it instead uses `Monitor::forceMonitoring()` to temporarily disable caching.
 
 Build
 -----
