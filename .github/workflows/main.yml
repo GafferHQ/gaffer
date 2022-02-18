@@ -207,21 +207,38 @@ jobs:
 
     - name: Build and test Arnold extension
       run: |
-        for arnoldVersion in 6.2.0.1 7.0.0.2
-        do
-          # Install Arnold
-          ./.github/workflows/main/installArnold.py --version $arnoldVersion
-          export ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot/$arnoldVersion
-          # Build Arnold extension
-          scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
-          # Test Arnold extension
-          echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-          ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest"
-          echo "::remove-matcher owner=unittest::"
+        import subprocess
+        import sys
+        import os
+
+        for arnoldVersion in [ "6.2.0.1", "7.0.0.2" ] :
+          arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
+          os.environ["ARNOLD_ROOT"] =  arnoldRoot
+
+          subprocess.check_call(
+            [
+              sys.executable,
+              ".github/workflows/main/installArnold.py",
+              "--version",
+              arnoldVersion
+            ]
+          )
+          #Build Arnold extension
+          subprocess.check_call( "scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
+
+          if os.name != "nt" :
+            # Test Arnold extension
+            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
+            print( "::remove-matcher owner=unittest::" )
+          
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.
-          echo ARNOLD_ROOT=$ARNOLD_ROOT >> $GITHUB_ENV
-        done
+          with open( os.environ["GITHUB_ENV"], "a" ) as f :
+            print( "Setting $ARNOLD_ROOT to '%s'" % arnoldRoot )
+            f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
+        
+      shell: python
 
     - name: Build Docs and Package
       # We currently experience sporadic hangs in the docs builds (mac), this
