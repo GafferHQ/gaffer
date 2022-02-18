@@ -171,6 +171,9 @@ struct ThreadablePathHashAccumulator
 	std::atomic<uint64_t> m_h1Accum, m_h2Accum;
 };
 
+IECore::InternedString g_hashProcessType( ValuePlug::hashProcessType() );
+IECore::InternedString g_computeProcessType( ValuePlug::computeProcessType() );
+
 } // namespace
 
 std::unordered_set<FilteredSceneProcessor *> GafferScene::SceneAlgo::filteredNodes( Filter *filter )
@@ -458,6 +461,24 @@ class CapturingMonitor : public Monitor
 			m_processMap.erase( process );
 		}
 
+		bool mightForceMonitoring() override
+		{
+			return true;
+		}
+
+		virtual bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
+		{
+			if(
+				processType == g_hashProcessType &&
+				plug->parent<ScenePlug>() && plug->getName() == m_scenePlugChildName
+			)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
 	private :
 
 		using Mutex = tbb::spin_mutex;
@@ -475,8 +496,6 @@ class CapturingMonitor : public Monitor
 
 IE_CORE_DECLAREPTR( CapturingMonitor )
 
-std::atomic<uint64_t> g_historyID( 0 );
-
 SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedString scenePlugChildName, SceneAlgo::History *parent )
 {
 	// Add a history item for each plug in the input chain
@@ -490,9 +509,7 @@ SceneAlgo::History::Ptr historyWalk( const CapturedProcess *process, InternedStr
 		ScenePlug *scene = plug->parent<ScenePlug>();
 		if( scene && plug == scene->getChild( scenePlugChildName ) )
 		{
-			ContextPtr cleanContext = new Context( *process->context );
-			cleanContext->remove( SceneAlgo::historyIDContextName() );
-			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, cleanContext );
+			SceneAlgo::History::Ptr history = new SceneAlgo::History( scene, process->context );
 			if( !result )
 			{
 				result = history;
@@ -690,12 +707,6 @@ ShaderTweaks *shaderTweaksWalk( const SceneAlgo::AttributeHistory *h )
 
 } // namespace
 
-InternedString SceneAlgo::historyIDContextName()
-{
-	static InternedString s( "__sceneAlgoHistory:id" );
-	return s;
-}
-
 SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path )
 {
 	if( !scenePlugChild->parent<ScenePlug>() )
@@ -708,9 +719,6 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 	CapturingMonitorPtr monitor = new CapturingMonitor( scenePlugChild->getName() );
 	{
 		ScenePlug::PathScope pathScope( Context::current(), &path );
-		uint64_t historyID = g_historyID++;
-		// Trick to bypass the hash cache and get a full upstream evaluation.
-		pathScope.set( historyIDContextName(), &historyID );
 		Monitor::Scope monitorScope( monitor );
 		scenePlugChild->hash();
 	}

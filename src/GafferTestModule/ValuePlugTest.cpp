@@ -53,6 +53,15 @@ using namespace Gaffer;
 namespace
 {
 
+void repeatGetValue( const IntPlug *plug, int iterations )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	for( int i = 0; i < iterations; i++ )
+	{
+		plug->getValue();
+	}
+}
+
 // Call getValue() on the given plug many times in parallel.
 //
 // Evaluating the same value over and over again is obviously not useful,
@@ -96,6 +105,7 @@ void parallelGetValueWithVar( const IntPlug *plug, int iterations, const IECore:
 
 void GafferTestModule::bindValuePlugTest()
 {
+	def( "repeatGetValue", &repeatGetValue );
 	def( "parallelGetValue", &parallelGetValue );
 	def( "parallelGetValue", &parallelGetValueWithVar );
 }

@@ -661,10 +661,22 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertTrue( n["user"]["c"]["i"].getInput() is None )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testCacheOverhead( self ) :
+
+		m = GafferTest.MultiplyNode()
+		m["product"].getValue()
+
+		# This should be about the fastest we can pull an item from the cache - a single float that is already cached
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.repeatGetValue( m["product"], 5000000 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContentionForOneItem( self ) :
 		m = GafferTest.MultiplyNode()
+		m["product"].getValue()
 
-		GafferTest.parallelGetValue( m["product"], 10000000 )
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.parallelGetValue( m["product"], 10000000 )
 
 	def testIsSetToDefault( self ) :
 

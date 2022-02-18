@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,98 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Monitor.h"
-
-#include "Gaffer/Process.h"
-
-using namespace Gaffer;
-
-Monitor::Monitor()
+namespace Gaffer
 {
-}
 
-Monitor::~Monitor()
+inline bool Process::forceMonitoring( const ThreadState &s, const Plug *plug, const IECore::InternedString &processType )
 {
-}
-
-Monitor::Scope::Scope( const MonitorPtr &monitor, bool active )
-	:	ThreadState::Scope( (bool)monitor )
-{
-	if( !m_threadState )
+	if( s.m_mightForceMonitoring )
 	{
-		// We didn't push state because `monitor` was null.
-		return;
+		return Process::forceMonitoringInternal( s, plug, processType );
 	}
 
-	m_monitors = *m_threadState->m_monitors;
-	if( active )
-	{
-		m_monitors.insert( monitor );
-	}
-	else
-	{
-		m_monitors.erase( monitor );
-	}
-
-	m_threadState->m_monitors = &m_monitors;
-	initializeMightForce();
-}
-
-Monitor::Scope::Scope( const MonitorSet &monitors, bool active )
-	:	ThreadState::Scope( !monitors.empty() )
-{
-	if( !m_threadState )
-	{
-		// We didn't push state because `monitors` is empty.
-		return;
-	}
-
-	m_monitors = *m_threadState->m_monitors;
-	if( active )
-	{
-		for( const auto &m : monitors )
-		{
-			m_monitors.insert( m );
-		}
-	}
-	else
-	{
-		for( const auto &m : monitors )
-		{
-			m_monitors.erase( m );
-		}
-	}
-
-	m_threadState->m_monitors = &m_monitors;
-	initializeMightForce();
-}
-
-void Monitor::Scope::initializeMightForce()
-{
-	bool mightForceMonitoring = false;
-	for( const auto &m : m_monitors )
-	{
-		mightForceMonitoring |= m->mightForceMonitoring();
-	}
-	m_threadState->m_mightForceMonitoring = mightForceMonitoring;
-}
-
-Monitor::Scope::~Scope()
-{
-}
-
-const Monitor::MonitorSet &Monitor::current()
-{
-	return *ThreadState::current().m_monitors;
-}
-
-
-bool Monitor::mightForceMonitoring()
-{
 	return false;
 }
 
-bool Monitor::forceMonitoring( const Gaffer::Plug *plug, const IECore::InternedString &processType )
-{
-	return false;
-}
+} // Gaffer

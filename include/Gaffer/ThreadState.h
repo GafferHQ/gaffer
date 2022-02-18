@@ -38,6 +38,7 @@
 #define GAFFER_THREADSTATE_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/Plug.h"
 
 #include "IECore/RefCounted.h"
 
@@ -116,6 +117,11 @@ class GAFFER_API ThreadState
 
 		static const ThreadState &current();
 
+		const Context *context() const
+		{
+			return m_context;
+		}
+
 	private :
 
 		friend class Process;
@@ -127,6 +133,7 @@ class GAFFER_API ThreadState
 		const Context *m_context;
 		const Process *m_process;
 		const MonitorSet *m_monitors;
+		bool m_mightForceMonitoring;
 
 		static const MonitorSet g_defaultMonitors;
 		static const ThreadState g_defaultState;

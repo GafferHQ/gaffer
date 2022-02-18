@@ -357,24 +357,25 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		# Force CameraTool update, since it is done lazily just prior to render.
 		view.viewportGadget().preRenderSignal()( view.viewportGadget() )
 
-		with Gaffer.ContextMonitor() as cm :
+		with Gaffer.PerformanceMonitor() as pm :
 
 			view.viewportGadget().setCameraTransform(
 				imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 			)
 
-			# Force update
-			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+			# The change to the viewport camera should have been mirrored
+			# onto the Camera node by the CameraTool.
+			self.assertEqual(
+				script["camera"]["transform"]["translate"].getValue(),
+				imath.V3f( 1, 2, 3 )
+			)
 
-		# We do not want the CameraTool to have performed a `SceneAlgo::history`
+		# We do not want the CameraTool to have performed a `SceneAlgo::history()`
 		# query during the edit, as they can be expensive and aren't suitable
-		# for repeated use during drags etc.
-		self.assertNotIn( GafferScene.SceneAlgo.historyIDContextName(), cm.combinedStatistics().variableNames() )
+		# for repeated use during drags etc. Any use of `history()` will show
+		# up in our PerformanceMonitor.
 
-		self.assertEqual(
-			script["camera"]["transform"]["translate"].getValue(),
-			imath.V3f( 1, 2, 3 )
-		)
+		self.assertEqual( len( pm.allStatistics() ), 0 )
 
 if __name__ == "__main__":
 	unittest.main()
