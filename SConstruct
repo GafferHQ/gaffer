@@ -1232,16 +1232,6 @@ libraries = {
 
 	},
 
-	"IECoreScene" : {
-
-		"classStubs" : [
-
-			( "ReadProcedural", "procedurals/read" ),
-
-		],
-
-	},
-
 }
 
 # Add on OpenGL libraries to definitions - these vary from platform to platform
