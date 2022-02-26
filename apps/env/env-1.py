@@ -114,7 +114,7 @@ class env( Gaffer.Application ) :
 		command = list( args["arguments"][i:] )
 		if command :
 			try :
-				return subprocess.call( command, env=env )
+				return subprocess.call( command, env=env, shell=False if os.name != "nt" else True )
 			except OSError as e :
 				sys.stderr.write( "gaffer env : %s : %s\n" % ( " ".join( command ), e.strerror ) )
 				return 1
