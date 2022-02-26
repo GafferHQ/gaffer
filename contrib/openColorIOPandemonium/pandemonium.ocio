@@ -1,0 +1,68 @@
+ocio_profile_version: 1
+
+search_path: luts
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  color_picking: linear
+  color_timing: linear
+  compositing_log: linear
+  data: raw
+  default: raw
+  matte_paint: linear
+  reference: linear
+  scene_linear: linear
+  texture_paint: linear
+
+displays:
+  default:
+    - !<View> {name: pandemonium, colorspace: pandemonium}
+    - !<View> {name: linear, colorspace: linear}
+
+active_displays: [default]
+active_views: [sRGB]
+
+colorspaces:
+  - !<ColorSpace>
+    name: linear
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Scene-linear, high dynamic range. Used for rendering and compositing.
+    isdata: false
+    allocation: lg2
+    allocationvars: [-15, 6]
+
+  # I wasn't sure how to make sure that a range of possible ColorSpace's would all be handled correctly
+  # by our GPU path, so I made a single "worst possible ColorSpace".  It contains a sequence of a bunch of
+  # 1D luts, 3D luts, matrices, CDL, and gamma adjustments, several of which contain unreasonably high
+  # frequency variation, which will exaggerate any errors.
+  #
+  # With the new OCIO2 GPU path, it is now possible to get a perfect match to the CPU path, if you make 2
+  # modifications:
+  #  * switch ImageGadget to use INTENSITY32F instead of INTENSITY16F for image tiles
+  #  * switch pandemoniumBig.cube to use tetrahedral interpolation.  OCIO itself has a loss of precision when
+  #    using linear interpolation of 3D luts on the GPU, because it uses the default GPU 3D texture filter,
+  #    which is approximate
+  - !<ColorSpace>
+    name: pandemonium
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Test OCIO to the max with transform that aggressively does everything
+    isdata: false
+    allocation: uniform
+    allocationvars: [-0.125, 1.125]
+    from_reference: !<GroupTransform>
+     children:
+       - !<FileTransform> { src: "pandemoniumLarge1D.spi1d", interpolation: linear }
+       - !<CDLTransform> {power: [1, 0.8, 1]}
+       - !<FileTransform> { src: "pandemoniumSmall.cube", interpolation: tetrahedral }
+       - !<FileTransform> { src: "pandemoniumMatrix.spimtx" }
+       - !<FileTransform> { src: "pandemoniumColor1D.spi1d", interpolation: best }
+       - !<ExponentTransform> {value: [1, 1.8, 1, 1]}
+       - !<FileTransform> { src: "pandemoniumBig.cube", interpolation: linear }
+       - !<FileTransform> { src: "pandemoniumSmall1D.spi1d", interpolation: linear }
