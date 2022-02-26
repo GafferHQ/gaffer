@@ -186,6 +186,9 @@ class GAFFERUI_API View : public Gaffer::Node
 
 	private :
 
+		void toolsChildAdded( Gaffer::GraphComponent *child ) const;
+		void toolPlugSet( Gaffer::Plug *plug ) const;
+
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
