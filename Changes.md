@@ -18,6 +18,7 @@ API
 ---
 
 - Tool : Added support for subclassing in Python.
+- View : Added `tools()` method which returns a container of all connected Tools.
 - Container : Added constructor with a `name` argument.
 
 0.61.3.0 (relative to 0.61.2.0)

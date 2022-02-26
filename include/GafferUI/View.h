@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_VIEW_H
 #define GAFFERUI_VIEW_H
 
+#include "GafferUI/Tool.h"
 #include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Node.h"
@@ -115,6 +116,11 @@ class GAFFERUI_API View : public Gaffer::Node
 		/// Subclasses are responsible for presenting their content in this viewport.
 		ViewportGadget *viewportGadget();
 		const ViewportGadget *viewportGadget() const;
+
+		/// All Tools connected to this View. Use `Tool::registeredTools()` to
+		/// query the available tools and `Tool::create()` to add a tool.
+		ToolContainer *tools();
+		const ToolContainer *tools() const;
 
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////

@@ -40,6 +40,7 @@
 #include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
 
+#include "Gaffer/Container.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -89,6 +90,11 @@ class GAFFERUI_API Tool : public Gaffer::Node
 		Gaffer::BoolPlug *activePlug();
 		const Gaffer::BoolPlug *activePlug() const;
 
+		/// The Tool constructor automatically parents the tool to
+		/// the`View::toolsContainer()`. After that, the tool may not be
+		/// reparented.
+		bool acceptsParent( const GraphComponent *potentialParent ) const override;
+
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
 		//@{
@@ -125,11 +131,15 @@ class GAFFERUI_API Tool : public Gaffer::Node
 
 	private :
 
-		View *m_view;
+		/// \todo Remove.
+		View *m_unused;
 
 		static size_t g_firstPlugIndex;
 
 };
+
+using ToolContainer = Gaffer::Container<Gaffer::Node, Tool>;
+IE_CORE_DECLAREPTR( ToolContainer );
 
 } // namespace GafferUI
 

@@ -58,12 +58,17 @@ View::View( const std::string &name, Gaffer::PlugPtr inPlug )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
 	addChild( new Plug( "editScope" ) );
-
+	addChild( new ToolContainer( "tools" ) );
 	setContext( new Context() );
 }
 
 View::~View()
 {
+	// Clear tools. This causes any connections from plugs on the View to plugs
+	// on the Tool to be removed now, while `Tool::view()` is still valid. This
+	// avoids exceptions that would otherwise be caused by Tools responding to
+	// `plugDirtiedSignal()` _after_ they've been removed from the View.
+	tools()->clearChildren();
 }
 
 Gaffer::Plug *View::editScopePlug()
@@ -74,6 +79,16 @@ Gaffer::Plug *View::editScopePlug()
 const Gaffer::Plug *View::editScopePlug() const
 {
 	return getChild<Plug>( g_firstPlugIndex + 1 );
+}
+
+ToolContainer *View::tools()
+{
+	return getChild<ToolContainer>( g_firstPlugIndex + 2 );
+}
+
+const ToolContainer *View::tools() const
+{
+	return getChild<ToolContainer>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::EditScope *View::editScope()

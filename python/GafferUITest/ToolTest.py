@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import gc
+import six
 import unittest
 
 import IECore
@@ -45,27 +47,58 @@ import GafferUITest
 
 class ToolTest( GafferUITest.TestCase ) :
 
+	class TestTool( GafferUI.Tool ) :
+
+		def __init__( self, view, name = "TestTool" ) :
+
+			GafferUI.Tool.__init__( self, view, name )
+
+	IECore.registerRunTimeTyped( TestTool, typeName = "GafferUITest::TestTool" )
+	GafferUI.Tool.registerTool( "TestTool", GafferUITest.ViewTest.MyView, TestTool )
+
 	def testDerivingInPython( self ) :
-
-		class TestTool( GafferUI.Tool ) :
-
-			def __init__( self, view, name = "TestTool" ) :
-
-				GafferUI.Tool.__init__( self, view, name )
-
-		IECore.registerRunTimeTyped( TestTool, typeName = "GafferUITest::TestTool" )
-		GafferUI.Tool.registerTool( "TestTool", GafferUITest.ViewTest.MyView, TestTool )
 
 		self.assertIn( "TestTool", GafferUI.Tool.registeredTools( GafferUITest.ViewTest.MyView ) )
 
 		view = GafferUITest.ViewTest.MyView()
 		tool = GafferUI.Tool.create( "TestTool", view )
-		self.assertIsInstance( tool, TestTool )
+		self.assertIsInstance( tool, self.TestTool )
 		self.assertIsInstance( tool, GafferUI.Tool )
 		self.assertTrue( tool.view() is view )
 
-		Gaffer.Metadata.registerValue( TestTool, "test", 10 )
+		Gaffer.Metadata.registerValue( self.TestTool, "test", 10 )
 		self.assertEqual( Gaffer.Metadata.value( tool, "test" ), 10 )
+
+	def testToolContainerParenting( self ) :
+
+		# When a tool is created, it is automatically parented to the View's
+		# tool container.
+		view1 = GafferUITest.ViewTest.MyView()
+		tool = GafferUI.Tool.create( "TestTool", view1 )
+		self.assertTrue( tool.parent().isSame( view1["tools"] ) )
+		self.assertTrue( tool.view().isSame( view1 ) )
+		self.assertTrue( tool.acceptsParent( tool.parent() ) )
+
+		# After that, it can't be reparented to another view. This simplifies
+		# tool implementation substantially.
+		view2 = GafferUITest.ViewTest.MyView()
+		self.assertFalse( tool.acceptsParent( view2["tools"] ) )
+
+		# Tool containers don't accept any other children.
+		self.assertFalse( view2["tools"].acceptsChild( Gaffer.Node() ) )
+
+	def testToolOutlivingView( self ) :
+
+		view = GafferUITest.ViewTest.MyView()
+		tool = GafferUI.Tool.create( "TestTool", view )
+		del view
+		while gc.collect() :
+			pass
+		IECore.RefCounted.collectGarbage()
+
+		self.assertIsNone( tool.parent() )
+		with six.assertRaisesRegex( self, RuntimeError, "View not found" ) :
+			tool.view()
 
 if __name__ == "__main__":
 	unittest.main()

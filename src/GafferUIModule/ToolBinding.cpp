@@ -100,4 +100,6 @@ void GafferUIModule::bindTool()
 		.def( "registeredTools", &registeredTools )
 		.staticmethod( "registeredTools" )
 	;
+
+	GafferBindings::NodeClass<ToolContainer>();
 }
