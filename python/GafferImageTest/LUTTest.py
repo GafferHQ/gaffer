@@ -71,12 +71,6 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), inverse )
 		self.assertNotEqual( forward, inverse )
 
-		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Nearest )
-		tet = GafferImage.ImageAlgo.image( o["out"] )
-		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), tet )
-		self.assertNotEqual( forward, tet )
-		self.assertNotEqual( inverse, tet )
-
 	def testBadFileName( self ) :
 
 		n = GafferImage.ImageReader()
