@@ -118,13 +118,25 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 
 			self.__splittingMessageHandler.__enter__()
 
-		def __exit__( self, type, value, traceback ) :
+		def __exit__( self, type, value, tb ) :
 
 			self.__splittingMessageHandler.__exit__( type, value, traceback )
 
 			result = False
 			if type is not None and self.__handleExceptions :
-				self.__capturingMessageHandler.handle( IECore.Msg.Level.Error, self.__kw.get( "title", "Error" ), str( value ) )
+				self.__capturingMessageHandler.handle(
+					IECore.Msg.Level.Error, self.__kw.get( "title", "Error" ),
+					"\n".join( traceback.format_exception_only( type, value ) )
+				)
+				self.__capturingMessageHandler.handle(
+					IECore.Msg.Level.Debug, "Traceback",
+					"\n".join(
+						traceback.format_list(
+							traceback.extract_tb( tb )
+						)
+					)
+				)
+
 				result = True
 
 			if len( self.__capturingMessageHandler.messages ) :
