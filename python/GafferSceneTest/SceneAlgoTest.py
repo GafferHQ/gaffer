@@ -326,6 +326,16 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		runTest()
 		self.assertEqual( Gaffer.ValuePlug.hashCacheTotalUsage(), before )
 
+		# Test that even the processes that aren't reading the cache still write to the cache, by
+		# making sure that a subsequent attributeHash doesn't need to do anything
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		with Gaffer.PerformanceMonitor() as pm :
+			with Gaffer.Context() as c :
+				c.setFrame( 20 )
+				transform["out"].attributesHash( "/group/plane" )
+		self.assertEqual( pm.combinedStatistics().hashCount, 0 )
+
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testHistoryPerformance( self ) :
 
