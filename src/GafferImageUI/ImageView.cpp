@@ -1465,6 +1465,13 @@ void ImageView::insertConverter( Gaffer::NodePtr converter )
 	NodePtr preprocessor = getPreprocessor();
 	Plug::OutputContainer outputsToRestore = preprocessor->getChild<ImagePlug>( "in" )->outputs();
 
+	/// \todo Replacing the `in` plug like this is bogus. It breaks the ordering
+	/// of children (the original is removed and the replacement is added at the
+	/// end) and forces accessors like `View::tools()` to perform lookups using
+	/// names rather than indices. We only want to do a one-off setup of
+	/// converters anyway, so it might make more sense to pass the converter to
+	/// the `ImageView` constructor so we can pass an appropriate plug to the
+	/// View constructor in the first place.
 	PlugPtr newPreprocessorInput = converterInput->createCounterpart( "in", Plug::In );
 	preprocessor->setChild( "in", newPreprocessorInput );
 	newPreprocessorInput->setInput( newInput );

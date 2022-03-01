@@ -62,6 +62,9 @@ bool exclusive( const Tool *tool )
 	return !d || d->readable();
 }
 
+const InternedString g_editScopeName( "editScope" );
+const InternedString g_toolsName( "tools" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -78,8 +81,8 @@ View::View( const std::string &name, Gaffer::PlugPtr inPlug )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
-	addChild( new Plug( "editScope" ) );
-	addChild( new ToolContainer( "tools" ) );
+	addChild( new Plug( g_editScopeName ) );
+	addChild( new ToolContainer( g_toolsName ) );
 	setContext( new Context() );
 
 	tools()->childAddedSignal().connect( boost::bind( &View::toolsChildAdded, this, ::_2 ) );
@@ -96,22 +99,25 @@ View::~View()
 
 Gaffer::Plug *View::editScopePlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	/// \todo Fix ImageView so it doesn't reorder plugs, and then
+	/// perform lookups with indices rather than names. See comment
+	/// in `ImageView::insertConverter()`.
+	return getChild<Plug>( g_editScopeName );
 }
 
 const Gaffer::Plug *View::editScopePlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	return getChild<Plug>( g_editScopeName );
 }
 
 ToolContainer *View::tools()
 {
-	return getChild<ToolContainer>( g_firstPlugIndex + 2 );
+	return getChild<ToolContainer>( g_toolsName );
 }
 
 const ToolContainer *View::tools() const
 {
-	return getChild<ToolContainer>( g_firstPlugIndex + 2 );
+	return getChild<ToolContainer>( g_toolsName );
 }
 
 Gaffer::EditScope *View::editScope()
