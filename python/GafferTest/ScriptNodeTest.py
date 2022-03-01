@@ -1701,5 +1701,65 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( cs, [ ( s.context(), "frame" ) ] * 5 )
 		self.assertEqual( s.context().getFrame(), 50 )
 
+	def testDeletingNodeRemovesFocus( self ) :
+
+		s = Gaffer.ScriptNode()
+		n = Gaffer.Node()
+		s["n"] = n
+
+		# Set focus, and check all expected signals are emitted.
+
+		focusChanges = GafferTest.CapturingSlot( s.focusChangedSignal() )
+		memberRemovals = GafferTest.CapturingSlot( s.focusSet().memberRemovedSignal() )
+		memberAdditions = GafferTest.CapturingSlot( s.focusSet().memberAddedSignal() )
+
+		s.setFocus( n )
+		self.assertEqual( s.getFocus(), n )
+
+		self.assertEqual( focusChanges, [ ( s, n ) ] )
+		self.assertEqual( memberRemovals, [] )
+		self.assertEqual( memberAdditions, [ ( s.focusSet(), n ) ] )
+
+		# Delete focus node, and check focus is lost and all expected signals
+		# are emitted.
+
+		del focusChanges[:]
+		del memberRemovals[:]
+		del memberAdditions[:]
+
+		del s["n"]
+		self.assertIsNone( s.getFocus() )
+
+		self.assertEqual( focusChanges, [ ( s, None ) ] )
+		self.assertEqual( memberRemovals, [ ( s.focusSet(), n ) ] )
+		self.assertEqual( memberAdditions, [] )
+
+		del focusChanges[:]
+		del memberRemovals[:]
+		del memberAdditions[:]
+
+		# Repeat, but this time with focus node inside a box.
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = n
+
+		s.setFocus( n )
+		self.assertEqual( s.getFocus(), n )
+
+		self.assertEqual( focusChanges, [ ( s, n ) ] )
+		self.assertEqual( memberRemovals, [] )
+		self.assertEqual( memberAdditions, [ ( s.focusSet(), n ) ] )
+
+		del focusChanges[:]
+		del memberRemovals[:]
+		del memberAdditions[:]
+
+		del s["b"]["n"]
+		self.assertIsNone( s.getFocus() )
+
+		self.assertEqual( focusChanges, [ ( s, None ) ] )
+		self.assertEqual( memberRemovals, [ ( s.focusSet(), n ) ] )
+		self.assertEqual( memberAdditions, [] )
+
 if __name__ == "__main__":
 	unittest.main()
