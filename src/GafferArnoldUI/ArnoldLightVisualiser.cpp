@@ -50,6 +50,9 @@
 #include "IECore/TypedData.h"
 #include "IECore/VectorTypedData.h"
 
+#include "ai_version.h"
+#include "ai_shader_lights.h"
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreGLPreview;
