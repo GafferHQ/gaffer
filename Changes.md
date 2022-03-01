@@ -42,6 +42,7 @@ Build
 ========
 
 - GraphEditor : The focus gadget is now toggled when the button is released rather than when it is pressed. This helps avoid accidental toggling when performing marquee selection.
+- ErrorDialogue : Improved error text for SyntaxError exceptions, and added debug log messages containing Python stack traces.
 
 Fixes
 -----
