@@ -7,6 +7,11 @@ Improvements
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes, by improving cache usage during history queries.
 - Node menu : Removed unsupported Arnold shaders `ramp_rgb` and `ramp_float`. The OSL `ColorSpline` and `FloatSpline` shaders should be used instead.
 
+Fixes
+-----
+
+- ScriptContainer : Fixed `typeName()`, which was omitting the `Gaffer::` prefix.
+
 API
 ---
 
@@ -26,6 +31,7 @@ API
     - StandardSet : MemberAcceptanceSignal.
 - Monitor : Subclasses may now override `mightForceMonitoring` and `forceMonitoring` in order to ensure the monitored processes always run, instead of being skipped when they are cached
 - ValuePlug : Added `hashCacheTotalUsage()` function.
+- ScriptContainer : Added Python binding.
 
 Breaking Changes
 ----------------
