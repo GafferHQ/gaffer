@@ -45,6 +45,15 @@
 namespace Gaffer
 {
 
+/// The FileSystemPath class provides cross-platform file path functions.
+/// Paths can be a native formatted path - elements are separated by "/"
+/// on Linux and MacOS and "\" on Windows - or by the Gaffer standard
+/// path separator "/" on all platforms.
+///
+/// The root of a FileSystemPath will be "" for relative paths. On Linux and
+/// MacOS, an absolute path root will be "/".
+/// On Windows, an absolute path root will be either "<driveLetter>:/" for
+/// drive-letter paths, or "//<serverName>/" for UNC paths.
 class GAFFER_API FileSystemPath : public Path
 {
 
@@ -82,6 +91,9 @@ class GAFFER_API FileSystemPath : public Path
 		// a FileSequence.
 		IECore::FileSequencePtr fileSequence() const;
 
+		// Returns the path converted to the OS native format
+		std::string nativeString() const;
+
 		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "", bool includeSequenceFilter = false );
 
 	protected :
@@ -89,6 +101,13 @@ class GAFFER_API FileSystemPath : public Path
 		void doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const override;
 
 	private :
+
+#ifdef _MSC_VER
+
+		/// Sets the path root and names in generic format from an OS native path string
+		void rootAndNames( const std::string &string, IECore::InternedString &root, Names &names ) const override;
+
+#endif
 
 		bool m_includeSequences;
 

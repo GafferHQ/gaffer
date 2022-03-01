@@ -62,6 +62,7 @@
 	#include "aclapi.h"
 #endif
 
+#include <regex>
 #include <sys/stat.h>
 
 using namespace std;
@@ -180,14 +181,17 @@ static InternedString g_modificationTimePropertyName( "fileSystem:modificationTi
 static InternedString g_sizePropertyName( "fileSystem:size" );
 static InternedString g_frameRangePropertyName( "fileSystem:frameRange" );
 
+static std::regex g_driveLetterPattern{ "[A-Za-z]:" };
+
 FileSystemPath::FileSystemPath( PathFilterPtr filter, bool includeSequences )
 	:	Path( filter ), m_includeSequences( includeSequences )
 {
 }
 
 FileSystemPath::FileSystemPath( const std::string &path, PathFilterPtr filter, bool includeSequences )
-	:	Path( path, filter ), m_includeSequences( includeSequences )
+	:	Path( filter ), m_includeSequences( includeSequences )
 {
+	setFromString( path );
 }
 
 FileSystemPath::FileSystemPath( const Names &names, const IECore::InternedString &root, PathFilterPtr filter, bool includeSequences )
@@ -257,7 +261,7 @@ FileSequencePtr FileSystemPath::fileSequence() const
 
 	FileSequencePtr sequence = nullptr;
 	/// \todo Add cancellation support to `ls`.
-	IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
+	IECore::ls( this->nativeString(), sequence, /* minSequenceSize = */ 1 );
 	return sequence;
 }
 
@@ -463,7 +467,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 	{
 		IECore::Canceller::check( canceller );
 		std::vector<FileSequencePtr> sequences;
-		IECore::ls( p.string(), sequences, /* minSequenceSize */ 1 );
+		IECore::ls( this->nativeString(), sequences, /* minSequenceSize */ 1 );
 		for( std::vector<FileSequencePtr>::iterator it = sequences.begin(); it != sequences.end(); ++it )
 		{
 			IECore::Canceller::check( canceller );
@@ -544,4 +548,64 @@ PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::strin
 	result->addFilter( searchFilter );
 
 	return result;
+}
+
+#ifdef _MSC_VER
+
+void FileSystemPath::rootAndNames(const std::string &string, InternedString &root, Names &names ) const
+{
+	std::string sanitizedString = string;
+
+	// If `string` is coming from a PathMatcher, it will always have a single leading slash.
+	// On Windows, check to see if the first element is a drive letter path and strip the leading
+	// slash if so.
+	if( sanitizedString.size() && sanitizedString[0] == '/' )
+	{
+		Names splitPath;
+		StringAlgo::tokenize(sanitizedString, '/', splitPath);
+		if( splitPath.size() )
+		{
+			const std::string firstElement = splitPath[0].string();
+			if( std::regex_match( firstElement, g_driveLetterPattern ) )
+			{
+				sanitizedString.erase( sanitizedString.begin(), sanitizedString.begin() + 1 );
+			}
+		}
+	}
+
+	const path convertedPath( sanitizedString );
+	root = convertedPath.root_path().generic_string();
+
+	path::const_iterator startIt = convertedPath.begin();
+
+	// path iteration includes the root name and directory, if present
+	if( convertedPath.has_root_name() )
+	{
+		++startIt;
+	}
+
+	if( convertedPath.has_root_directory() )
+	{
+		++startIt;
+	}
+
+	for( path::const_iterator it = startIt, eIt = convertedPath.end(); it != eIt; ++it )
+	{
+		names.push_back( it->string() );
+	}
+}
+
+#endif
+
+std::string FileSystemPath::nativeString() const
+{
+#ifndef _MSC_VER
+	return string();
+#endif
+
+	path p( string() );
+	// This is used instead of `nativeString()` because `nativeString()` on Windows
+	// returns a `wstring`.
+	p.make_preferred();
+	return p.string();
 }

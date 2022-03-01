@@ -532,6 +532,7 @@ void GafferModule::bindPath()
 				arg( "includeSequenceFilter" ) = false
 			)
 		)
+		.def( "nativeString", &FileSystemPath::nativeString )
 		.staticmethod( "createStandardFilter" )
 	;
 
