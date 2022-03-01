@@ -77,6 +77,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		p = Gaffer.FileSystemPath( __file__, filter = f )
 		self.assertTrue( p.getFilter().isSame( f ) )
 
+	@unittest.skipIf( os.name == "nt", "Windows does not support symbolic links." )
 	def testBrokenSymbolicLinks( self ) :
 
 		os.symlink( self.temporaryDirectory() + "/nonExistent", self.temporaryDirectory() + "/broken" )
@@ -98,6 +99,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		# since we said it was valid, it ought to have some info
 		self.assertIsNotNone( l.info() )
 
+	@unittest.skipIf( os.name == "nt", "Windows does not support symbolic links." )
 	def testSymLinkInfo( self ) :
 
 		with open( self.temporaryDirectory() + "/a", "w" ) as f :
