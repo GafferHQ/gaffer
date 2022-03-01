@@ -43,7 +43,7 @@ namespace Gaffer
 {
 
 template<typename Base, typename T>
-class Container : public Base
+class IECORE_EXPORT Container : public Base
 {
 
 	public :
@@ -92,7 +92,5 @@ class Container : public Base
 
 
 } // namespace Gaffer
-
-#include "Gaffer/Container.inl"
 
 #endif // GAFFER_CONTAINER_H

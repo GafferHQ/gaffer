@@ -41,6 +41,7 @@
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/BackgroundTask.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/Container.inl"
 #include "Gaffer/Context.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/MetadataAlgo.h"
@@ -72,6 +73,7 @@ namespace Gaffer
 {
 
 GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
+template class Container<GraphComponent, ScriptNode>;
 
 }
 
