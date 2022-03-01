@@ -163,13 +163,20 @@ struct DefaultSlotCaller<Gaffer::Signals::Signal<Result( Args... ), Combiner>>
 
 	Result operator()( boost::python::object slot, Args&&... args )
 	{
-		if constexpr( std::is_void_v<Result> )
+		try
 		{
-			slot( std::forward<Args>( args )... );
+			if constexpr( std::is_void_v<Result> )
+			{
+				slot( std::forward<Args>( args )... );
+			}
+			else
+			{
+				return boost::python::extract<Result>( slot( std::forward<Args>( args )... ) )();
+			}
 		}
-		else
+		catch( const boost::python::error_already_set &e )
 		{
-			return boost::python::extract<Result>( slot( std::forward<Args>( args )... ) )();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 

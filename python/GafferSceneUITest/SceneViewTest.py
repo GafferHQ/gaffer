@@ -274,6 +274,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		# Work around "Internal C++ object (PySide.QtWidgets.QWidget) already deleted" error. In an
 		# ideal world we'll fix this, but it's unrelated to what we're testing here.
+		viewer.setNodeSet( Gaffer.StandardSet() )
 		window.removeChild( viewer )
 
 	def testFrame( self ) :

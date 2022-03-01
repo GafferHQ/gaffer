@@ -68,7 +68,7 @@ struct UnaryPlugSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };
@@ -84,7 +84,7 @@ struct BinaryPlugSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			PyErr_PrintEx( 0 ); // clears the error status
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 	}
 };

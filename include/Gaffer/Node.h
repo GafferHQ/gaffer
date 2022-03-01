@@ -74,8 +74,8 @@ class GAFFER_API Node : public GraphComponent
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Node, NodeTypeId, GraphComponent );
 
-		using UnaryPlugSignal = Signals::Signal<void (Plug *)>;
-		using BinaryPlugSignal = Signals::Signal<void (Plug *, Plug *)>;
+		using UnaryPlugSignal = Signals::Signal<void (Plug *), Signals::CatchingCombiner<void>>;
+		using BinaryPlugSignal = Signals::Signal<void (Plug *, Plug *), Signals::CatchingCombiner<void>>;
 
 		/// @name Plug signals
 		/// These signals are emitted on events relating to child Plugs

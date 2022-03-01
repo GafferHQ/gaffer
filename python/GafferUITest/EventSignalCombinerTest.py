@@ -35,8 +35,6 @@
 ##########################################################################
 
 import unittest
-import sys
-import six
 
 import IECore
 
@@ -101,7 +99,7 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 
 		# We don't want exceptions in one slot to prevent the
 		# invocation of other slots. But we do want the errors from
-		# those slots being printed to stderr.
+		# those slots to be printed as warnings.
 
 		s = GafferUI.Gadget.ButtonSignal()
 		s.connect( self.exceptionSlot, scoped = False )
@@ -110,16 +108,16 @@ class EventSignalCombinerTest( GafferUITest.TestCase ) :
 		self.assertEqual( self.exceptionSlotCalled, False )
 		self.assertEqual( self.trueSlotCalled, False )
 
-		tmpStdErr = six.moves.cStringIO()
-		sys.stderr = tmpStdErr
-		try :
+		with IECore.CapturingMessageHandler() as mh :
 			self.assertEqual( s( None, GafferUI.ButtonEvent() ), True )
-		finally :
-			sys.stderr = sys.__stderr__
 
-		self.assertIn( "oops", tmpStdErr.getvalue() )
 		self.assertEqual( self.exceptionSlotCalled, True )
 		self.assertEqual( self.trueSlotCalled, True )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( mh.messages[0].context, "EventSignalCombiner", IECore.Msg.Level.Error )
+		self.assertIn( "Exception", mh.messages[0].message )
+		self.assertIn( "oops", mh.messages[0].message )
 
 if __name__ == "__main__":
 	unittest.main()

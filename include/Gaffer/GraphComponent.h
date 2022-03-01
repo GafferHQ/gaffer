@@ -87,8 +87,8 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
-		using UnarySignal = Signals::Signal<void (GraphComponent *)>;
-		using BinarySignal = Signals::Signal<void (GraphComponent *, GraphComponent *)>;
+		using UnarySignal = Signals::Signal<void (GraphComponent *), Signals::CatchingCombiner<void>>;
+		using BinarySignal = Signals::Signal<void (GraphComponent *, GraphComponent *), Signals::CatchingCombiner<void>>;
 		using ChildrenReorderedSignal = Signals::Signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), Signals::CatchingCombiner<void>>;
 
 		/// @name Naming

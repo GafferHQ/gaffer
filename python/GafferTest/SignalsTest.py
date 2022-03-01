@@ -37,9 +37,6 @@
 
 import unittest
 import weakref
-import sys
-import six
-import gc
 import functools
 import imath
 
@@ -223,18 +220,16 @@ class SignalsTest( GafferTest.TestCase ) :
 		t = T( s )
 		w = weakref.ref( t )
 
-		realStdErr = sys.stderr
-		sio = six.moves.cStringIO()
-		try :
-			sys.stderr = sio
+		with IECore.CapturingMessageHandler() as mh :
 			s.addChild( Gaffer.Node() )
-		finally :
-			sys.stderr = realStdErr
 
 		del t
 
 		self.assertIsNone( w(), None )
-		self.assertIn( "Exception", sio.getvalue() )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( mh.messages[0].context, "Emitting signal", IECore.Msg.Level.Error )
+		self.assertIn( "Exception", mh.messages[0].message )
 
 	def test0Arity( self ) :
 
