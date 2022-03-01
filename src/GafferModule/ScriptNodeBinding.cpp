@@ -541,6 +541,9 @@ struct FocusChangedSlotCaller
 
 void GafferModule::bindScriptNode()
 {
+
+	GraphComponentClass<ScriptContainer>();
+
 	boost::python::scope s = NodeClass<ScriptNode, ScriptNodeWrapper>()
 		.def( "applicationRoot", &applicationRoot )
 		.def( "selection", &selection )

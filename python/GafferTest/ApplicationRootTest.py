@@ -136,6 +136,11 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		self.assertEqual( len( d ), 2 )
 		self.assertEqual( a.getClipboardContents(), IECore.IntData( 20 ) )
 
+	def testScriptContainer( self ) :
+
+		a = Gaffer.ApplicationRoot()
+		self.assertIsInstance( a["scripts"], Gaffer.ScriptContainer )
+
 	def tearDown( self ) :
 
 		for f in [

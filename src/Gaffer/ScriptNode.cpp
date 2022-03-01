@@ -72,7 +72,7 @@ using namespace Gaffer;
 namespace Gaffer
 {
 
-GAFFER_DECLARECONTAINERSPECIALISATIONS( ScriptContainer, ScriptContainerTypeId )
+GAFFER_DECLARECONTAINERSPECIALISATIONS( Gaffer::ScriptContainer, ScriptContainerTypeId )
 template class Container<GraphComponent, ScriptNode>;
 
 }
