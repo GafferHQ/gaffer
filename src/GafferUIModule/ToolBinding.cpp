@@ -84,6 +84,12 @@ boost::python::list registeredTools( IECore::TypeId viewType )
 	return result;
 }
 
+ToolPtr createWrapper( const std::string &toolName, View &view )
+{
+	ScopedGILRelease gilRelease;
+	return Tool::create( toolName, &view );
+}
+
 } // namespace
 
 void GafferUIModule::bindTool()
@@ -93,7 +99,7 @@ void GafferUIModule::bindTool()
 	GafferBindings::NodeClass<Tool, ToolWrapper>( nullptr, no_init )
 		.def( init<View *, const std::string &>() )
 		.def( "view", (View *(Tool::*)())&Tool::view, return_value_policy<CastToIntrusivePtr>() )
-		.def( "create", &Tool::create )
+		.def( "create", &createWrapper )
 		.staticmethod( "create" )
 		.def( "registerTool", &registerTool )
 		.staticmethod( "registerTool" )
