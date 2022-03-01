@@ -239,8 +239,6 @@ const IECore::InternedString g_framesPerSecond( "framesPerSecond" );
 
 } // namespace
 
-
-// \todo : Should we merge this with NumericBookmarkSet?
 class ScriptNode::FocusSet : public Gaffer::Set
 {
 
@@ -256,7 +254,7 @@ class ScriptNode::FocusSet : public Gaffer::Set
 				{
 					NodePtr oldNode = m_node;
 					m_node.reset();
-					oldNode->parentChangedSignal().disconnect( boost::bind( &FocusSet::parentChanged, this, ::_1 ) );
+					oldNode->parentChangedSignal().disconnect( boost::bind( &FocusSet::parentChanged, this, ::_1, ::_2 ) );
 					memberRemovedSignal()( this, oldNode.get() );
 				}
 
@@ -264,7 +262,7 @@ class ScriptNode::FocusSet : public Gaffer::Set
 
 				if( node )
 				{
-					node->parentChangedSignal().connect( boost::bind( &FocusSet::parentChanged, this, ::_1 ) );
+					node->parentChangedSignal().connect( boost::bind( &FocusSet::parentChanged, this, ::_1, ::_2 ) );
 					memberAddedSignal()( this, node );
 				}
 			}
@@ -299,16 +297,25 @@ class ScriptNode::FocusSet : public Gaffer::Set
 		}
 		//@}
 
-		void parentChanged( GraphComponent *member )
+	private :
+
+		void parentChanged( GraphComponent *member, GraphComponent *oldParent )
 		{
 			assert( member == m_node );
 			if( !m_node->parent() )
 			{
 				setNode( nullptr );
+				ScriptNode *script = IECore::runTimeCast<ScriptNode>( oldParent );
+				if( !script )
+				{
+					script = oldParent->ancestor<ScriptNode>();
+				}
+				if( script )
+				{
+					script->focusChangedSignal()( script, nullptr );
+				}
 			}
 		}
-
-	private :
 
 		Gaffer::NodePtr m_node;
 };
