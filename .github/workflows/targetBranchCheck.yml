@@ -1,0 +1,9 @@
+name: Target branch check
+on: [ pull_request ]
+jobs:
+  check:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Check target branch
+      run: .github/workflows/targetBranchCheck/checkTargetBranch.py
+
