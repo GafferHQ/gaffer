@@ -56,6 +56,16 @@ Build
 
 - Moved minimum required C++ standard to C++17.
 - Updated to GCC 9.3.1 for Linux builds.
+- Updated to GafferHQ/dependencies 5.0.0 :
+  - Boost : Updated to version 1.76.0.
+  - Alembic : Updated to version 1.8.3.
+  - TBB : Updated to version 2020.3.
+  - USD : Updated to version 21.11.
+  - OpenImageIO : Updated to version 2.3.11.0.
+  - OpenShadingLanguage : Updated to version 1.11.17.0.
+  - OpenVDB : Updated to version 9.0.0.
+  - OpenColorIO : Updated to version 2.1.1.
+  - Cortex : Updated to version 10.4.0.0.
 
 0.61.4.0 (relative to 0.61.3.0)
 ========
