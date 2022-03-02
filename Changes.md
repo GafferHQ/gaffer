@@ -68,6 +68,7 @@ Fixes
 - GraphEditor : Fixed bug which could prevent the active node highlighting updating when the focus node was deleted.
 - InteractiveArnoldRender : Fixed warnings when editing a parameter of a light with a connected OSL shader.
 - ScriptNode : Fixed bug which meant that `focusChangedSignal()` wasn't emitted when the focus node was deleted.
+- Viewer : Fixed visualisation of IES lights.
 
 0.61.3.0 (relative to 0.61.2.0)
 ========
