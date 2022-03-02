@@ -1,11 +1,6 @@
 0.62.x.x
 ========
 
-Features
---------
-
-- GafferImage : Added new node for querying the format of an image and outputting its displayWindow, pixelAspect, center and size.
-
 Improvements
 ------------
 
@@ -63,6 +58,14 @@ Build
 
 0.61.x.x (relative to 0.61.3.0)
 ========
+
+Features
+--------
+
+- FormatQuery : Added new node for querying the format of an image and outputting its displayWindow, pixelAspect, center and size.
+
+Improvements
+------------
 
 - GraphEditor : The focus gadget is now toggled when the button is released rather than when it is pressed. This helps avoid accidental toggling when performing marquee selection.
 - ErrorDialogue : Improved error text for SyntaxError exceptions, and added debug log messages containing Python stack traces.
