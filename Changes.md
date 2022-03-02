@@ -1,6 +1,11 @@
 0.62.x.x
 ========
 
+Features
+--------
+
+- GafferImage : Added new node for querying the format of an image and outputting its displayWindow, pixelAspect, center and size.
+
 Improvements
 ------------
 
