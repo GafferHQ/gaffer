@@ -29,7 +29,7 @@ API
     - Gadget : ButtonSignal, DragBeginSignal, DragDropSignal, KeySignal.
   - The following signals no longer suppress exceptions thrown from Python slots :
     - StandardSet : MemberAcceptanceSignal.
-- Monitor : Subclasses may now override `mightForceMonitoring` and `forceMonitoring` in order to ensure the monitored processes always run, instead of being skipped when they are cached
+- Monitor : Subclasses may now override `mightForceMonitoring()` and `forceMonitoring()` in order to ensure the monitored processes always run, instead of being skipped when they are cached.
 - ValuePlug : Added `hashCacheTotalUsage()` function.
 - ScriptContainer : Added Python binding.
 
