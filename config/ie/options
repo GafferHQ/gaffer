@@ -100,7 +100,7 @@ else:
 	registryVersion = gafferRegistryVersion()
 
 gafferReg = IEEnv.registry["apps"]["gaffer"][registryVersion][IEEnv.platform()]
-gafferBuildVariant = getOption( "GAFFER_BUILD_VARIANT", "py2" )
+gafferBuildVariant = getOption( "GAFFER_BUILD_VARIANT", "py3" )
 qtVersion = gafferReg["qtVersion"]
 pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
 qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
