@@ -20,6 +20,13 @@ Fixes
 - ScriptNode : Fixed bug which meant that `focusChangedSignal()` wasn't emitted when the focus node was deleted.
 - Viewer : Fixed visualisation of IES lights.
 
+API
+---
+
+- Tool : Added support for subclassing in Python.
+- View : Added `tools()` method which returns a container of all connected Tools.
+- Container : Added constructor with a `name` argument.
+
 0.61.3.0 (relative to 0.61.2.0)
 ========
 
@@ -421,6 +428,11 @@ Fixes
 
 - Viewer : Fixed drawing of CoordinateSystems (bug introduced in 0.60.0.0).
 - ErrorDialogue : Fixed Python 3 incompatibility in `displayException()`.
+
+API
+---
+
+- Tool : Added the ability to create Tool subclasses in Python.
 
 0.60.6.1 (relative to 0.60.6.0)
 ========

@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_VIEW_H
 #define GAFFERUI_VIEW_H
 
+#include "GafferUI/Tool.h"
 #include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Node.h"
@@ -116,6 +117,11 @@ class GAFFERUI_API View : public Gaffer::Node
 		ViewportGadget *viewportGadget();
 		const ViewportGadget *viewportGadget() const;
 
+		/// All Tools connected to this View. Use `Tool::registeredTools()` to
+		/// query the available tools and `Tool::create()` to add a tool.
+		ToolContainer *tools();
+		const ToolContainer *tools() const;
+
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
 		//@{
@@ -179,6 +185,9 @@ class GAFFERUI_API View : public Gaffer::Node
 		};
 
 	private :
+
+		void toolsChildAdded( Gaffer::GraphComponent *child ) const;
+		void toolPlugSet( Gaffer::Plug *plug ) const;
 
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
