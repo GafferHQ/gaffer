@@ -56,7 +56,7 @@ Build
 - Moved minimum required C++ standard to C++17.
 - Updated to GCC 9.3.1 for Linux builds.
 
-0.61.x.x (relative to 0.61.3.0)
+0.61.4.0 (relative to 0.61.3.0)
 ========
 
 Features
