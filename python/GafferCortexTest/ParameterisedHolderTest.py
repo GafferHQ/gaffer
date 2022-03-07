@@ -1003,7 +1003,14 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
-		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 10 )
+		# capture the message that will be emitted by the signal handler
+		with IECore.CapturingMessageHandler() as mh :
+			ph["parameters"]["driver"].setValue( 10 )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "Ooops!" in mh.messages[0].message )
+		# the value was still set
+		self.assertEqual( ph["parameters"]["driver"].getValue(), 10 )
 
 	def testParameterInvalidWhenParameterChangedRaises( self ) :
 
@@ -1045,11 +1052,13 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph.setParameterised( c )
 
 		with IECore.CapturingMessageHandler() as mh :
-			# We want the original exception to be the visible one.
-			six.assertRaisesRegex( self, RuntimeError, "Ooops!", ph["parameters"]["driver"].setValue, 1 )
-		# And we want the secondary exception to be reported as a message.
-		self.assertEqual( len( mh.messages ), 1 )
+			ph["parameters"]["driver"].setValue( 1 )
+
+		self.assertEqual( len( mh.messages ), 2 )
+		# we want the exception to be reported as a message.
 		self.assertTrue( "Value is not an instance of \"IntData\"" in mh.messages[0].message )
+		# and we want the parameterChanged exception as a message
+		self.assertTrue( "Ooops!" in mh.messages[1].message )
 
 	def testTypeNamePrefixes( self ) :
 
