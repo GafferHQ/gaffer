@@ -46,6 +46,7 @@
 
 #include "boost/lexical_cast.hpp"
 #include "tbb/parallel_for.h"
+#include <random>
 #include <unordered_set>
 
 using namespace std;
@@ -202,6 +203,9 @@ std::tuple<int,int,int,int> GafferTest::countContextHash32Collisions( int contex
 {
 	std::unordered_set<uint32_t> used[4];
 
+	std::default_random_engine randomEngine( seed );
+	std::uniform_int_distribution<> distribution( 0, RAND_MAX );
+
 	InternedString a( "a" );
 	InternedString numberNames[40];
 	for( int i = 0; i < 40; i++ )
@@ -209,7 +213,6 @@ std::tuple<int,int,int,int> GafferTest::countContextHash32Collisions( int contex
 		numberNames[i] = InternedString( i );
 	}
 
-	unsigned int rand_seed = seed;
 	int collisions[4] = {0,0,0,0};
 	for( int i = 0; i < contexts; i++ )
 	{
@@ -238,7 +241,7 @@ std::tuple<int,int,int,int> GafferTest::countContextHash32Collisions( int contex
 		{
 			for( int j = 0; j < 20; j++ )
 			{
-				c.set( numberNames[j], rand_r( &rand_seed ) );
+				c.set( numberNames[j], distribution( randomEngine ) );
 			}
 		}
 

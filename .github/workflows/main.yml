@@ -12,13 +12,6 @@ on:
   release:
       types: [published]
 
-defaults:
-  run:
-    # Using bash because it supports the BASH_ENV
-    # variable that the GafferHQ/build Docker image
-    # uses to set up software packages.
-    shell: bash
-
 jobs:
 
   build:
@@ -91,11 +84,9 @@ jobs:
     container: ${{ matrix.containerImage }}
 
     env:
-      DISPLAY: ":99.0"
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
-      LD_PRELOAD: libSegFault.so
 
     steps:
 
@@ -123,6 +114,19 @@ jobs:
         Xvfb :99 -screen 0 1280x1024x24 &
         metacity&
         useradd -m testUser
+        echo LD_PRELOAD=libSegFault.so >> $GITHUB_ENV
+        # The Docker container configures bash shells such that they enable the
+        # software collections we want. If we could set GitHub's
+        # `defaults.run.shell` to `bash` then all our build steps would pick up
+        # this environment automatically. But we can't do that because it
+        # breaks the build on Windows, and we can't configure a different shell
+        # per platform because GitHub won't allow it. But we can run _this_
+        # Linux-only step in bash, and transfer the environment out to be used
+        # in later steps.
+        echo $PATH > $GITHUB_PATH
+        echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH >> $GITHUB_ENV
+        echo DISPLAY=:99.0 >> $GITHUB_ENV
+      shell: bash
       if: runner.os == 'Linux'
 
     - name: 'Install Python Modules'
@@ -177,21 +181,38 @@ jobs:
 
     - name: Build and test Arnold extension
       run: |
-        for arnoldVersion in 6.2.0.1 7.0.0.2
-        do
-          # Install Arnold
-          ./.github/workflows/main/installArnold.py --version $arnoldVersion
-          export ARNOLD_ROOT=$GITHUB_WORKSPACE/arnoldRoot/$arnoldVersion
-          # Build Arnold extension
-          scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
-          # Test Arnold extension
-          echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-          ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest"
-          echo "::remove-matcher owner=unittest::"
+        import subprocess
+        import sys
+        import os
+
+        for arnoldVersion in [ "6.2.0.1", "7.0.0.2" ] :
+          arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
+          os.environ["ARNOLD_ROOT"] =  arnoldRoot
+
+          subprocess.check_call(
+            [
+              sys.executable,
+              ".github/workflows/main/installArnold.py",
+              "--version",
+              arnoldVersion
+            ]
+          )
+          #Build Arnold extension
+          subprocess.check_call( "scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
+
+          if os.name != "nt" :
+            # Test Arnold extension
+            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
+            print( "::remove-matcher owner=unittest::" )
+
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.
-          echo ARNOLD_ROOT=$ARNOLD_ROOT >> $GITHUB_ENV
-        done
+          with open( os.environ["GITHUB_ENV"], "a" ) as f :
+            print( "Setting $ARNOLD_ROOT to '%s'" % arnoldRoot )
+            f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
+
+      shell: python
 
     - name: Build Docs and Package
       # We currently experience sporadic hangs in the docs builds (mac), this

@@ -120,7 +120,7 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 
 };
 
-#ifndef Gaffer_EXPORTS
+#if !defined( Gaffer_EXPORTS ) && !defined( _MSC_VER )
 
 extern template class TypedObjectPlug<IECore::Object>;
 extern template class TypedObjectPlug<IECore::BoolVectorData>;
