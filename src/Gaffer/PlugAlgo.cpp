@@ -467,6 +467,14 @@ IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
 			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
 		case M33fPlugTypeId :
 			return new M33fData( static_cast<const M33fPlug *>( plug )->getValue() );
+		case NameValuePlugTypeId : {
+			CompoundDataPtr result = new CompoundData;
+			for( auto &childPlug : ValuePlug::Range( *plug ) )
+			{
+				result->writable()[childPlug->getName()] = extractDataFromPlug( childPlug.get() );
+			}
+			return result;
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
