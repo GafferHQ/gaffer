@@ -77,7 +77,6 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"preset:Best", GafferImage.LUT.Interpolation.Best,
-			"preset:Nearest", GafferImage.LUT.Interpolation.Nearest,
 			"preset:Linear", GafferImage.LUT.Interpolation.Linear,
 			"preset:Tetrahedral", GafferImage.LUT.Interpolation.Tetrahedral,
 
