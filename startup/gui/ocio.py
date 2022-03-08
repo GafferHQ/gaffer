@@ -66,7 +66,7 @@ Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section
 
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent = False )
 for view in config.getViews( defaultDisplay ) :
-	Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "preset:" + view, view, persistent = False )
+	Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], str( "preset:" + view ), view, persistent = False )
 
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:section", "OCIO Context", persistent = False )
@@ -78,21 +78,24 @@ Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "lay
 
 def __setDisplayTransform() :
 
-	d = OCIO.DisplayTransform()
-	d.setInputColorSpaceName( OCIO.Constants.ROLE_SCENE_LINEAR )
+	d = OCIO.DisplayViewTransform()
+	d.setSrc( OCIO.ROLE_SCENE_LINEAR )
 	d.setDisplay( defaultDisplay )
 	d.setView( preferences["displayColorSpace"]["view"].getValue() )
 
-	context = config.getCurrentContext().createEditableCopy()
+	# \todo : Should be `context = copy.deepcopy( config.getCurrentContext() )`
+	# once https://github.com/AcademySoftwareFoundation/OpenColorIO/pull/1575 gets merged into OCIO2.1.2
+	context = OCIO.Context( searchPaths = list( config.getCurrentContext().getSearchPaths() ), workingDir = config.getCurrentContext().getWorkingDir(), environmentMode = config.getCurrentContext().getEnvironmentMode(), stringVars = dict( config.getCurrentContext().getStringVars() ) )
 	for variable in preferences["displayColorSpace"]["context"] :
 		if variable["enabled"].getValue() :
-			context.setStringVar( variable["name"].getValue(), variable["value"].getValue() )
+			context[ variable["name"].getValue() ] = variable["value"].getValue()
 
-	processor = config.getProcessor( d, context = context )
+	processor = config.getProcessor( transform = d, context = context, direction = OCIO.TRANSFORM_DIR_FORWARD )
+	cpuProcessor = processor.getDefaultCPUProcessor()
 
 	def f( c ) :
 
-		cc = processor.applyRGB( [ c.r, c.g, c.b ] )
+		cc = cpuProcessor.applyRGB( [ c.r, c.g, c.b ] )
 		return imath.Color3f( *cc )
 
 	GafferUI.DisplayTransform.set( f )
@@ -116,7 +119,7 @@ def __displayTransformCreator( name ) :
 
 	result = GafferImage.DisplayTransform()
 	result["channels"].setValue( "[RGB] *.[RGB]" )
-	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
+	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.ROLE_SCENE_LINEAR ).getName() )
 	result["display"].setValue( defaultDisplay )
 	result["view"].setValue( name )
 

@@ -71,7 +71,7 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		/// Returns the OCIO processor for this node, taking into account
 		/// the current Gaffer context and the OCIO context specified by
 		/// `contextPlug()`. Returns nullptr if this node is a no-op.
-		OpenColorIO::ConstProcessorRcPtr processor() const;
+		OCIO_NAMESPACE::ConstProcessorRcPtr processor() const;
 		/// Returns a hash that uniquely represents the result of calling
 		/// `processor()` in the current context.
 		IECore::MurmurHash processorHash() const;
@@ -107,11 +107,11 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		/// Derived classes must implement this to return a valid OpenColorIO
 		/// Transform which can be used by an OpenColorIO Processor or a null
 		/// pointer if no processing should take place.
-		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
+		virtual OCIO_NAMESPACE::ConstTransformRcPtr transform() const = 0;
 
 	private :
 
-		OpenColorIO::ConstContextRcPtr ocioContext( OpenColorIO::ConstConfigRcPtr config ) const;
+		OCIO_NAMESPACE::ConstContextRcPtr ocioContext( OCIO_NAMESPACE::ConstConfigRcPtr config ) const;
 
 		static size_t g_firstPlugIndex;
 		bool m_hasContextPlug;

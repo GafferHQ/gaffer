@@ -1310,12 +1310,12 @@ ImageWriter::ImageWriter( const std::string &name )
 	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
 	addChild( colorSpaceChild );
 
-	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
-	colorSpaceUnpremultedChild->inputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
+	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
+	colorSpaceUnpremultedChild->inputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
 	colorSpaceUnpremultedChild->inPlug()->setInput( inPlug() );
 	colorSpaceUnpremultedChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
 
-	colorSpaceChild->inputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
+	colorSpaceChild->inputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
 	colorSpaceChild->inPlug()->setInput( inPlug() );
 
 	colorSpaceChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );

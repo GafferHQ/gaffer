@@ -146,7 +146,6 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Controls whether to use the fast GPU path for applying exposure, gamma, and displayTransform.
-			Much faster, but may suffer loss of accuracy in some corner cases.
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
@@ -845,9 +844,9 @@ class _LutGPUPlugValueWidget( GafferUI.PlugValueWidget ) :
 		text = "# LUT Mode\n\n"
 		if self.__button.getEnabled():
 			if self.getPlug().getValue():
-				text += "Running LUT on GPU ( fast mode )."
+				text += "Running LUT on GPU."
 			else:
-				text += "Running LUT on CPU ( slow but accurate mode )."
+				text += "Running LUT on CPU."
 			text += "\n\nAlt+G to toggle"
 		else:
 			text += "GPU not supported by current DisplayTransform"
@@ -879,8 +878,8 @@ class _LutGPUPlugValueWidget( GafferUI.PlugValueWidget ) :
 		gpuSupported = isinstance( GafferImageUI.ImageView.createDisplayTransform( n ), GafferImage.OpenColorIOTransform )
 		m = IECore.MenuDefinition()
 		for name, value in [
-			( "GPU (fast)", True ),
-			( "CPU (accurate)", False )
+			( "GPU", True ),
+			( "CPU", False )
 		] :
 			m.append(
 				"/" + name,

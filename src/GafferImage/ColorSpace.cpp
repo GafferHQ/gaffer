@@ -104,7 +104,7 @@ void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHa
 	outputSpacePlug()->hash( h );
 }
 
-OpenColorIO::ConstTransformRcPtr ColorSpace::transform() const
+OCIO_NAMESPACE::ConstTransformRcPtr ColorSpace::transform() const
 {
 	string inputSpace( inputSpacePlug()->getValue() );
 	string outputSpace( outputSpacePlug()->getValue() );
@@ -113,10 +113,10 @@ OpenColorIO::ConstTransformRcPtr ColorSpace::transform() const
 	// actually changing the color space.
 	if( ( inputSpace == outputSpace ) || inputSpace.empty() || outputSpace.empty() )
 	{
-		return OpenColorIO::ColorSpaceTransformRcPtr();
+		return OCIO_NAMESPACE::ColorSpaceTransformRcPtr();
 	}
 
-	OpenColorIO::ColorSpaceTransformRcPtr result = OpenColorIO::ColorSpaceTransform::Create();
+	OCIO_NAMESPACE::ColorSpaceTransformRcPtr result = OCIO_NAMESPACE::ColorSpaceTransform::Create();
 	result->setSrc( inputSpace.c_str() );
 	result->setDst( outputSpace.c_str() );
 

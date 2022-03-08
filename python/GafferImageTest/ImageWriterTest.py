@@ -483,6 +483,19 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			for key in overrideMetadata :
 				expectedMetadata[key] = overrideMetadata[key]
 
+			if removeAlpha:
+				# If we're not writing alpha, we can't expect to see OIIO's automatically added alpha type
+				# metadata get read in.  This should be compatible with both current OIIO, and also in the
+				# future once we upgrade to OIIO 2.3.12, and it gets renamed from tga: to targa:
+				try:
+					del expectedMetadata[ "tga:alpha_type" ]
+				except:
+					pass
+				try:
+					del expectedMetadata["targa:alpha_type" ]
+				except:
+					pass
+
 			self.__addExpectedIPTCMetadata( writerMetadata, expectedMetadata )
 
 			for metaName in expectedMetadata.keys() :
