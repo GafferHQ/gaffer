@@ -131,9 +131,6 @@ class GAFFERUI_API Tool : public Gaffer::Node
 
 	private :
 
-		/// \todo Remove.
-		View *m_unused;
-
 		static size_t g_firstPlugIndex;
 
 };
