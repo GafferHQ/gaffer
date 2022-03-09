@@ -44,6 +44,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Version.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ClippingPlane.h"
@@ -1447,13 +1448,7 @@ ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *sc
 	const Node *node = scene->node();
 	const ScriptNode *script = node->scriptNode();
 
-	param->writable()["header:gaffer:version"] = new StringData(
-		boost::str(
-			boost::format( "%1%.%2%.%3%.%4%" )
-				% GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION
-				% GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION
-		)
-	);
+	param->writable()["header:gaffer:version"] = new StringData( Gaffer::versionString() );
 
 	// Include the path to the render node to allow tools to back-track from the image
 	param->writable()["header:gaffer:sourceScene"] = new StringData( scene->relativeName( script ) );

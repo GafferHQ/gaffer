@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,28 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_VERSION_H
-#define GAFFER_VERSION_H
+#include "Gaffer/Version.h"
 
-#include "Gaffer/Export.h"
+#include "boost/format.hpp"
 
-#include <string>
-
-#define GAFFER_MILESTONE_VERSION !GAFFER_MILESTONE_VERSION!
-#define GAFFER_MAJOR_VERSION !GAFFER_MAJOR_VERSION!
-#define GAFFER_MINOR_VERSION !GAFFER_MINOR_VERSION!
-#define GAFFER_PATCH_VERSION !GAFFER_PATCH_VERSION!
-
-#define MAKE_GAFFER_COMPATIBILITY_VERSION( MILESTONE_VERSION, MAJOR_VERSION ) \
-	( MILESTONE_VERSION * 1000 + MAJOR_VERSION  )
-
-#define GAFFER_COMPATIBILITY_VERSION ( MAKE_GAFFER_COMPATIBILITY_VERSION( GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION ) )
-
-namespace Gaffer
+std::string Gaffer::versionString()
 {
-
-GAFFER_API std::string versionString();
-
-} // namespace Gaffer
-
-#endif // GAFFER_VERSION_H
+	return boost::str(
+		boost::format( "Gaffer %1%.%2%.%3%.%4%" ) %
+			GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION
+	);
+}

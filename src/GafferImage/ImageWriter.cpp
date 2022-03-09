@@ -46,6 +46,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Version.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
@@ -1243,8 +1244,7 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	setImageSpecFormatOptions( node, &spec, fileFormatName );
 
 	// Add common attribs to the spec
-	std::string software = ( boost::format( "Gaffer %d.%d.%d.%d" ) % GAFFER_MILESTONE_VERSION % GAFFER_MAJOR_VERSION % GAFFER_MINOR_VERSION % GAFFER_PATCH_VERSION ).str();
-	spec.attribute( "Software", software );
+	spec.attribute( "Software", std::string( "Gaffer " ) + Gaffer::versionString() );
 #ifndef _MSC_VER
 	struct utsname info;
 	if ( !uname( &info ) )
