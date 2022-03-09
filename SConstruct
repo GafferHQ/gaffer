@@ -341,10 +341,6 @@ env = Environment(
 	options = options,
 
 	CPPDEFINES = [
-		( "GAFFER_MILESTONE_VERSION", "$GAFFER_MILESTONE_VERSION" ),
-		( "GAFFER_MAJOR_VERSION", "$GAFFER_MAJOR_VERSION" ),
-		( "GAFFER_MINOR_VERSION", "$GAFFER_MINOR_VERSION" ),
-		( "GAFFER_PATCH_VERSION", "$GAFFER_PATCH_VERSION" ),
 		( "BOOST_FILESYSTEM_VERSION", "3" ),
 		"BOOST_FILESYSTEM_NO_DEPRECATED",
 		# Boost has deprecated `boost/bind.hpp` in favour of
@@ -1403,21 +1399,31 @@ for libraryName, libraryDef in libraries.items() :
 		"!GAFFER_PATCH_VERSION!" : "$GAFFER_PATCH_VERSION",
 	}
 
-	headers = (
-		glob.glob( "include/" + libraryName + "/*.h" ) +
-		glob.glob( "include/" + libraryName + "/*.inl" ) +
-		glob.glob( "include/" + libraryName + "/*/*.h" ) +
-		glob.glob( "include/" + libraryName + "/*/*.inl" )
-	)
+	def processHeaders( env, libraryName ) :
 
-	for header in headers :
-		headerInstall = env.Substfile(
-			os.path.join( installRoot, header ),
-			header,
-			SUBST_DICT = fileSubstitutions
+		headers = (
+			glob.glob( "include/" + libraryName + "/*.h" ) +
+			glob.glob( "include/" + libraryName + "/*.inl" ) +
+			glob.glob( "include/" + libraryName + "/*/*.h" ) +
+			glob.glob( "include/" + libraryName + "/*/*.inl" )
 		)
 
-		libEnv.Alias( "build", headerInstall )
+		for headerIn in glob.glob( "include/" + libraryName + "/*.h.in" ) :
+			header = env.Substfile(
+				os.path.splitext( headerIn )[0],
+				headerIn,
+				SUBST_DICT = fileSubstitutions
+			)
+			headers.append( str( header[0] ) )
+
+		for header in headers :
+			headerInstall = env.InstallAs(
+				os.path.join( installRoot, header ),
+				header
+			)
+			env.Alias( "build", headerInstall )
+
+	processHeaders( libEnv, libraryName )
 
 	# bindings library
 
@@ -1438,18 +1444,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# bindings header install
 
-	bindingsHeaders = (
-		glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
-		glob.glob( "include/" + libraryName + "Bindings/*.inl" )
-	)
-
-	for header in bindingsHeaders :
-		headerInstall = env.Substfile(
-			os.path.join( installRoot, header ),
-			header,
-			SUBST_DICT = fileSubstitutions
-		)
-		bindingsEnv.Alias( "build", headerInstall )
+	processHeaders( bindingsEnv, libraryName + "Bindings" )
 
 	# python module binary component
 
