@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Spreadsheet : Fixed errors computing `resolvedRows` when the Spreadsheet contains a NameValuePlug (#4583).
+- Viewer : Fixed points drawing mode for CurvesPrimitives.
 
 API
 ---
@@ -13,6 +14,11 @@ API
 - View : Added `tools()` method which returns a container of all connected Tools.
 - Container : Added constructor with a `name` argument.
 - PlugAlgo : Added support for NameValuePlug in `extractDataFromPlug()`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.3.3.0.
 
 0.61.4.0 (relative to 0.61.3.0)
 ========
