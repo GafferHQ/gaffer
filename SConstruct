@@ -457,6 +457,11 @@ if env["PLATFORM"] != "win32" :
 			if gccVersion >= [ 9, 2 ] :
 				env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
 
+			env.Append(
+				CXXFLAGS = [ "-pthread" ],
+				SHLINKFLAGS = [ "-pthread", "-Wl,--no-undefined" ],
+			)
+
 		env["GAFFER_PLATFORM"] = "linux"
 
 	env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
@@ -781,6 +786,7 @@ basePythonEnv.Append(
 		"boost_python$BOOST_PYTHON_LIB_SUFFIX",
 		"IECorePython$CORTEX_PYTHON_LIB_SUFFIX",
 		"Gaffer",
+		"python$PYTHON_ABI_VERSION",
 	],
 
 )
@@ -1245,7 +1251,8 @@ for library in ( "GafferUI", "GafferScene", "GafferSceneUI", "GafferImageUI" ) :
 	elif env["PLATFORM"] == "win32" :
 		libraries[library]["envAppends"]["LIBS"].append( "opengl32" )
 	else :
-		libraries[library]["envAppends"]["LIBS"].append( "GL" )
+		libraries[library]["envAppends"]["LIBS"].append( [ "GL", "GLX" ] )
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( [ "GL", "GLX" ] )
 	libraries[library]["envAppends"]["LIBS"].append( "GLEW$GLEW_LIB_SUFFIX" )
 
 # Add on Qt libraries to definitions - these vary from platform to platform
@@ -1290,8 +1297,7 @@ if os.path.exists( env.subst("$VTUNE_ROOT") ):
 			[ systemIncludeArgument, "$VTUNE_ROOT/include", "-DGAFFER_VTUNE" ]
 		)
 		libraries[library]["envAppends"].setdefault( "LIBPATH", [] ).extend( [ "$VTUNE_ROOT/lib64" ] )
-		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "ittnotify" ] )
-
+		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "ittnotify", "dl" ] )
 
 		libraries[library].setdefault( "pythonEnvAppends", {} )
 		libraries[library]["pythonEnvAppends"].setdefault( "CXXFLAGS", [] ).extend( [ "-DGAFFER_VTUNE" ] )
