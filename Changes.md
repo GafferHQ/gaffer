@@ -33,6 +33,7 @@ API
 - Monitor : Subclasses may now override `mightForceMonitoring()` and `forceMonitoring()` in order to ensure the monitored processes always run, instead of being skipped when they are cached.
 - ValuePlug : Added `hashCacheTotalUsage()` function.
 - ScriptContainer : Added Python binding.
+- Version.h : Added `versionString()` function.
 
 Breaking Changes
 ----------------

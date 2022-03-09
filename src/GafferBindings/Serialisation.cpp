@@ -46,6 +46,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/Spreadsheet.h"
+#include "Gaffer/Version.h"
 
 #include "IECorePython/ScopedGILLock.h"
 

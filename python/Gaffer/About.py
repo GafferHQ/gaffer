@@ -65,6 +65,11 @@ class About :
 		return !GAFFER_PATCH_VERSION!
 
 	@staticmethod
+	def versionSuffix() :
+
+		return "!GAFFER_VERSION_SUFFIX!"
+
+	@staticmethod
 	def compatibilityVersion() :
 
 		return About.milestoneVersion() * 1000 + About.majorVersion()
@@ -72,7 +77,10 @@ class About :
 	@staticmethod
 	def versionString() :
 
-		return "%d.%d.%d.%d" % ( About.milestoneVersion(), About.majorVersion(), About.minorVersion(), About.patchVersion() )
+		return "{}.{}.{}.{}{}".format(
+			About.milestoneVersion(), About.majorVersion(), About.minorVersion(),
+			About.patchVersion(), About.versionSuffix()
+		)
 
 	@staticmethod
 	def copyright() :

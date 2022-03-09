@@ -55,6 +55,7 @@ gafferMilestoneVersion = 0 # for announcing major milestones - may contain all o
 gafferMajorVersion = 62 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
+gafferVersionSuffix = "a1" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
@@ -122,7 +123,7 @@ options.Add(
 options.Add(
 	"BUILD_DIR",
 	"The destination directory in which the build will be made.",
-	os.path.join( ".", "build", "gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}" ),
+	os.path.join( ".", "build", "gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}${GAFFER_VERSION_SUFFIX}-${GAFFER_PLATFORM}" ),
 )
 
 options.Add(
@@ -136,7 +137,7 @@ options.Add(
 options.Add(
 	"INSTALL_DIR",
 	"The destination directory for the installation.",
-	os.path.join( ".", "install", "gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}" ),
+	os.path.join( ".", "install", "gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}${GAFFER_VERSION_SUFFIX}-${GAFFER_PLATFORM}" ),
 )
 
 options.Add(
@@ -327,6 +328,7 @@ options.Add( "GAFFER_MILESTONE_VERSION", "Milestone version", str( gafferMilesto
 options.Add( "GAFFER_MAJOR_VERSION", "Major version", str( gafferMajorVersion ) )
 options.Add( "GAFFER_MINOR_VERSION", "Minor version", str( gafferMinorVersion ) )
 options.Add( "GAFFER_PATCH_VERSION", "Patch version", str( gafferPatchVersion ) )
+options.Add( "GAFFER_VERSION_SUFFIX", "Version suffix", str( gafferVersionSuffix ) )
 
 ###############################################################################################
 # Basic environment object. All the other environments will be based on this.
@@ -341,10 +343,6 @@ env = Environment(
 	options = options,
 
 	CPPDEFINES = [
-		( "GAFFER_MILESTONE_VERSION", "$GAFFER_MILESTONE_VERSION" ),
-		( "GAFFER_MAJOR_VERSION", "$GAFFER_MAJOR_VERSION" ),
-		( "GAFFER_MINOR_VERSION", "$GAFFER_MINOR_VERSION" ),
-		( "GAFFER_PATCH_VERSION", "$GAFFER_PATCH_VERSION" ),
 		( "BOOST_FILESYSTEM_VERSION", "3" ),
 		"BOOST_FILESYSTEM_NO_DEPRECATED",
 		# Boost has deprecated `boost/bind.hpp` in favour of
@@ -1407,23 +1405,34 @@ for libraryName, libraryDef in libraries.items() :
 		"!GAFFER_MAJOR_VERSION!" : "$GAFFER_MAJOR_VERSION",
 		"!GAFFER_MINOR_VERSION!" : "$GAFFER_MINOR_VERSION",
 		"!GAFFER_PATCH_VERSION!" : "$GAFFER_PATCH_VERSION",
+		"!GAFFER_VERSION_SUFFIX!" : "$GAFFER_VERSION_SUFFIX",
 	}
 
-	headers = (
-		glob.glob( "include/" + libraryName + "/*.h" ) +
-		glob.glob( "include/" + libraryName + "/*.inl" ) +
-		glob.glob( "include/" + libraryName + "/*/*.h" ) +
-		glob.glob( "include/" + libraryName + "/*/*.inl" )
-	)
+	def processHeaders( env, libraryName ) :
 
-	for header in headers :
-		headerInstall = env.Substfile(
-			os.path.join( installRoot, header ),
-			header,
-			SUBST_DICT = fileSubstitutions
+		headers = (
+			glob.glob( "include/" + libraryName + "/*.h" ) +
+			glob.glob( "include/" + libraryName + "/*.inl" ) +
+			glob.glob( "include/" + libraryName + "/*/*.h" ) +
+			glob.glob( "include/" + libraryName + "/*/*.inl" )
 		)
 
-		libEnv.Alias( "build", headerInstall )
+		for headerIn in glob.glob( "include/" + libraryName + "/*.h.in" ) :
+			header = env.Substfile(
+				os.path.splitext( headerIn )[0],
+				headerIn,
+				SUBST_DICT = fileSubstitutions
+			)
+			headers.append( str( header[0] ) )
+
+		for header in headers :
+			headerInstall = env.InstallAs(
+				os.path.join( installRoot, header ),
+				header
+			)
+			env.Alias( "build", headerInstall )
+
+	processHeaders( libEnv, libraryName )
 
 	# bindings library
 
@@ -1444,18 +1453,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# bindings header install
 
-	bindingsHeaders = (
-		glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
-		glob.glob( "include/" + libraryName + "Bindings/*.inl" )
-	)
-
-	for header in bindingsHeaders :
-		headerInstall = env.Substfile(
-			os.path.join( installRoot, header ),
-			header,
-			SUBST_DICT = fileSubstitutions
-		)
-		bindingsEnv.Alias( "build", headerInstall )
+	processHeaders( bindingsEnv, libraryName + "Bindings" )
 
 	# python module binary component
 
