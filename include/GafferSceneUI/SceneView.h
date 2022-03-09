@@ -45,6 +45,7 @@
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferUI/FPSGadget.h"
 #include "GafferUI/View.h"
 
 #include <functional>
@@ -139,6 +140,8 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		std::unique_ptr<Grid> m_grid;
 		class Gnomon;
 		std::unique_ptr<Gnomon> m_gnomon;
+		class FPS;
+		std::unique_ptr<FPS> m_fps;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;

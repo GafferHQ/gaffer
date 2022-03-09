@@ -1,6 +1,11 @@
 0.62.0.0a1
 ==========
 
+Features
+--------
+
+- Scene Viewer : Added FPS counter option to Gadget menu
+
 Improvements
 ------------
 
