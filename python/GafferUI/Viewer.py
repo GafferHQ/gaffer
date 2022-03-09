@@ -140,11 +140,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__gadgetWidget.addOverlay( verticalToolbars )
 
 		self.__views = []
-		# Indexed by view instance. We would prefer to simply
-		# store tools as python attributes on the view instances
-		# themselves, but we can't because that would create
-		# circular references. Maybe it makes sense to be able to
-		# query tools from a view anyway?
 		self.__currentView = None
 
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
@@ -356,9 +351,6 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.tools.sort( key = lambda v : Gaffer.Metadata.value( v, "order" ) if Gaffer.Metadata.value( v, "order" ) is not None else 999 )
 
 			for t in self.tools :
-				t.plugSetSignal().connect( Gaffer.WeakMethod( self.__toolPlugSet, fallbackResult = lambda plug : None ), scoped = False )
-
-			for t in self.tools :
 				t.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__toolPlugDirtied, fallbackResult = lambda plug : None ), scoped = False )
 
 			with GafferUI.ListContainer( spacing = 1 ) as self.widgets :
@@ -385,22 +377,6 @@ class _ToolChooser( GafferUI.Frame ) :
 				autoActivate = Gaffer.Metadata.value( self.tools[0], "viewer:shouldAutoActivate" )
 				if autoActivate is None or autoActivate :
 					self.tools[0]["active"].setValue( True )
-
-		def __toolPlugSet( self, plug ) :
-
-			## \todo It feels like the View should probably own
-			# the tools and do this work itself.
-
-			tool = plug.node()
-			if plug != tool["active"] :
-				return
-
-			if not plug.getValue() or Gaffer.Metadata.value( tool, "tool:exclusive" ) == False :
-				return
-
-			for t in self.tools :
-				if not t.isSame( tool ) and Gaffer.Metadata.value( t, "tool:exclusive" ) != False :
-					t["active"].setValue( False )
 
 		def __toolPlugDirtied( self, plug ) :
 

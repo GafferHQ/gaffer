@@ -43,12 +43,36 @@
 
 #include "GafferBindings/NodeBinding.h"
 
+#include "IECorePython/ExceptionAlgo.h"
+
 using namespace std;
 using namespace boost::python;
 using namespace IECorePython;
 using namespace GafferUI;
 
-static boost::python::list registeredTools( IECore::TypeId viewType )
+namespace
+{
+
+void registerTool( const std::string &toolName, IECore::TypeId viewType, object toolCreator )
+{
+	Tool::registerTool(
+		toolName,
+		viewType,
+		[toolCreator] ( View *view ) -> ToolPtr {
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				return extract<ToolPtr>( toolCreator( ViewPtr( view ) ) );
+			}
+			catch( const boost::python::error_already_set &e )
+			{
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
+}
+
+boost::python::list registeredTools( IECore::TypeId viewType )
 {
 	vector<string> tools;
 	Tool::registeredTools( viewType, tools );
@@ -60,13 +84,28 @@ static boost::python::list registeredTools( IECore::TypeId viewType )
 	return result;
 }
 
+ToolPtr createWrapper( const std::string &toolName, View &view )
+{
+	ScopedGILRelease gilRelease;
+	return Tool::create( toolName, &view );
+}
+
+} // namespace
+
 void GafferUIModule::bindTool()
 {
-	GafferBindings::NodeClass<Tool>( nullptr, no_init )
+	using ToolWrapper = GafferBindings::NodeWrapper<Tool>;
+
+	GafferBindings::NodeClass<Tool, ToolWrapper>( nullptr, no_init )
+		.def( init<View *, const std::string &>() )
 		.def( "view", (View *(Tool::*)())&Tool::view, return_value_policy<CastToIntrusivePtr>() )
-		.def( "create", &Tool::create )
+		.def( "create", &createWrapper )
 		.staticmethod( "create" )
+		.def( "registerTool", &registerTool )
+		.staticmethod( "registerTool" )
 		.def( "registeredTools", &registeredTools )
 		.staticmethod( "registeredTools" )
 	;
+
+	GafferBindings::NodeClass<ToolContainer>();
 }

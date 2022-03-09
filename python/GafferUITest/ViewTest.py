@@ -53,6 +53,8 @@ class ViewTest( GafferUITest.TestCase ) :
 
 			self["in"].setInput( viewedPlug )
 
+	IECore.registerRunTimeTyped( MyView, typeName = "GafferUITest::MyView" )
+
 	def testFactory( self ) :
 
 		node = GafferTest.AddNode()

@@ -1123,5 +1123,85 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertEqual( script2["box"]["rows"][0]["cells"].keys(), script["box"]["rows"][0]["cells"].keys() )
 		self.assertEqual( script2["box"]["node"]["rows"][0]["cells"].keys(), script["box"]["node"]["rows"][0]["cells"].keys() )
 
+	def testNameValuePlugResolvedRows( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn(
+			Gaffer.NameValuePlug( nameDefault = "c1Name", valueDefault = 1, defaultEnabled = True, name = "c1" ),
+			adoptEnabledPlug = True,
+		)
+		s["rows"].addColumn(
+			Gaffer.NameValuePlug( nameDefault = "c2Name", valueDefault = 2, defaultEnabled = True, name = "c2" ),
+			adoptEnabledPlug = False,
+		)
+		s["rows"].addColumn(
+			Gaffer.NameValuePlug( nameDefault = "c3Name", valueDefault = 3, name = "c3" )
+		)
+
+		s["rows"].addRows( 2 )
+		s["rows"][1]["name"].setValue( "row1" )
+		s["rows"][2]["name"].setValue( "row2" )
+
+		def assertExpectedValues( expected ) :
+
+			resolved = s["resolvedRows"].getValue()
+			self.assertEqual( set( expected.keys() ), set( resolved.keys() ) )
+
+			for name, expectedRow in expected.items() :
+
+				row = resolved[name]
+				self.assertEqual( set( row.keys() ), set( expectedRow.keys() ) )
+
+				for key, value in row.items() :
+					self.assertEqual(
+						value, IECore.CompoundData( expectedRow[key] )
+					)
+
+		assertExpectedValues( {
+			"row1" : {
+				"c1" : { "name" : "c1Name", "value" : 1, "enabled" : True },
+				"c2" : { "name" : "c2Name", "value" : 2, "enabled" : True },
+				"c3" : { "name" : "c3Name", "value" : 3 },
+			},
+			"row2" : {
+				"c1" : { "name" : "c1Name", "value" : 1, "enabled" : True },
+				"c2" : { "name" : "c2Name", "value" : 2, "enabled" : True },
+				"c3" : { "name" : "c3Name", "value" : 3 },
+			}
+		} )
+
+		s["rows"]["row1"]["cells"]["c1"]["value"]["value"].setValue( 11 )
+		s["rows"]["row2"]["cells"]["c3"]["value"]["name"].setValue( "newName" )
+
+		assertExpectedValues( {
+			"row1" : {
+				"c1" : { "name" : "c1Name", "value" : 11, "enabled" : True },
+				"c2" : { "name" : "c2Name", "value" : 2, "enabled" : True },
+				"c3" : { "name" : "c3Name", "value" : 3 },
+			},
+			"row2" : {
+				"c1" : { "name" : "c1Name", "value" : 1, "enabled" : True },
+				"c2" : { "name" : "c2Name", "value" : 2, "enabled" : True },
+				"c3" : { "name" : "newName", "value" : 3 },
+			}
+		} )
+
+		s["rows"]["row1"]["cells"]["c1"]["value"]["enabled"].setValue( False )
+		s["rows"]["row1"]["cells"]["c2"]["value"]["enabled"].setValue( False )
+		s["rows"]["row1"]["cells"]["c2"]["value"]["value"].setValue( 22 )
+
+		assertExpectedValues( {
+			"row1" : {
+				"c1" : { "name" : "c1Name", "value" : 1, "enabled" : True },
+				"c2" : { "name" : "c2Name", "value" : 22, "enabled" : False },
+				"c3" : { "name" : "c3Name", "value" : 3 },
+			},
+			"row2" : {
+				"c1" : { "name" : "c1Name", "value" : 1, "enabled" : True },
+				"c2" : { "name" : "c2Name", "value" : 2, "enabled" : True },
+				"c3" : { "name" : "newName", "value" : 3 },
+			}
+		} )
+
 if __name__ == "__main__":
 	unittest.main()

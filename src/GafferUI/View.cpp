@@ -39,14 +39,38 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/EditScope.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Plug.h"
 
 #include "boost/bind/bind.hpp"
 #include "boost/lexical_cast.hpp"
 
 using namespace boost::placeholders;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+bool exclusive( const Tool *tool )
+{
+	auto d = Metadata::value<BoolData>( tool, "tool:exclusive" );
+	return !d || d->readable();
+}
+
+const InternedString g_editScopeName( "editScope" );
+const InternedString g_toolsName( "tools" );
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// View
+//////////////////////////////////////////////////////////////////////////
 
 GAFFER_NODE_DEFINE_TYPE( View );
 
@@ -58,23 +82,43 @@ View::View( const std::string &name, Gaffer::PlugPtr inPlug )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	setChild( "in", inPlug );
-	addChild( new Plug( "editScope" ) );
-
+	addChild( new Plug( g_editScopeName ) );
+	addChild( new ToolContainer( g_toolsName ) );
 	setContext( new Context() );
+
+	tools()->childAddedSignal().connect( boost::bind( &View::toolsChildAdded, this, ::_2 ) );
 }
 
 View::~View()
 {
+	// Clear tools. This causes any connections from plugs on the View to plugs
+	// on the Tool to be removed now, while `Tool::view()` is still valid. This
+	// avoids exceptions that would otherwise be caused by Tools responding to
+	// `plugDirtiedSignal()` _after_ they've been removed from the View.
+	tools()->clearChildren();
 }
 
 Gaffer::Plug *View::editScopePlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	/// \todo Fix ImageView so it doesn't reorder plugs, and then
+	/// perform lookups with indices rather than names. See comment
+	/// in `ImageView::insertConverter()`.
+	return getChild<Plug>( g_editScopeName );
 }
 
 const Gaffer::Plug *View::editScopePlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 1 );
+	return getChild<Plug>( g_editScopeName );
+}
+
+ToolContainer *View::tools()
+{
+	return getChild<ToolContainer>( g_toolsName );
+}
+
+const ToolContainer *View::tools() const
+{
+	return getChild<ToolContainer>( g_toolsName );
 }
 
 Gaffer::EditScope *View::editScope()
@@ -200,4 +244,32 @@ void View::registerView( IECore::TypeId plugType, ViewCreator creator )
 void View::registerView( const IECore::TypeId nodeType, const std::string &plugPath, ViewCreator creator )
 {
 	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
+}
+
+void View::toolsChildAdded( Gaffer::GraphComponent *child ) const
+{
+	auto tool = static_cast<Tool *>( child ); // Type guaranteed by `ToolContainer::acceptsChild()`
+	tool->plugSetSignal().connect( boost::bind( &View::toolPlugSet, this, ::_1 ) );
+}
+
+void View::toolPlugSet( Gaffer::Plug *plug ) const
+{
+	auto tool = plug->ancestor<Tool>();
+	if( plug != tool->activePlug() )
+	{
+		return;
+	}
+
+	if( !tool->activePlug()->getValue() || !exclusive( tool ) )
+	{
+		return;
+	}
+
+	for( auto &t : Tool::Range( *tools() ) )
+	{
+		if( t != tool && exclusive( t.get() ) )
+		{
+			t->activePlug()->setValue( false );
+		}
+	}
 }

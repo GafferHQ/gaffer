@@ -38,6 +38,7 @@
 #define GAFFER_CONTAINER_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/GraphComponent.h"
 
 namespace Gaffer
 {
@@ -51,6 +52,9 @@ class IECORE_EXPORT Container : public Base
 		IE_CORE_DECLAREMEMBERPTR( Container );
 
 		Container();
+		/// \todo Default name to `defaultName<Container>()` and remove default
+		/// constructor above.
+		Container( const std::string &name );
 		~Container() override;
 
 		//! @name RunTimeTyped interface

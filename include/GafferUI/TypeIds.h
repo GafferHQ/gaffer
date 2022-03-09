@@ -83,6 +83,7 @@ enum TypeId
 	AnimationGadgetTypeId = 110288,
 	AnnotationsGadgetTypeId = 110289,
 	GraphGadgetSetPositionsActionTypeId = 110290,
+	ToolContainerTypeId = 110291,
 
 	LastTypeId = 110450
 };

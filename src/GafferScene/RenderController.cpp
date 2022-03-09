@@ -1232,6 +1232,7 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 	CompoundObjectPtr boundAttributes = new CompoundObject;
 	boundAttributes->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
 	boundAttributes->members()["gl:primitive:solid"] = new BoolData( false );
+	boundAttributes->members()["gl:primitive:points"] = new BoolData( false );
 	boundAttributes->members()["gl:primitive:wireframe"] = new BoolData( true );
 	boundAttributes->members()["gl:primitive:wireframeColor"] = new Color4fData( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) );
 	m_boundAttributes = m_renderer->attributes( boundAttributes.get() );
