@@ -619,5 +619,20 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
 		self.assertNotIn( "c:promotable", Gaffer.Metadata.registeredValues( p ) )
 
+	def testExtractDataFromNameValuePlug( self ) :
+
+		withEnabled = Gaffer.NameValuePlug( "test", 10, defaultEnabled = True )
+		withoutEnabled = Gaffer.NameValuePlug( "test", 20 )
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.extractDataFromPlug( withEnabled ),
+			IECore.CompoundData( { "name" : "test", "value" : 10, "enabled" : True } )
+		)
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.extractDataFromPlug( withoutEnabled ),
+			IECore.CompoundData( { "name" : "test", "value" : 20 } )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

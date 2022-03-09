@@ -1,12 +1,18 @@
 0.61.x.x (relative to 0.61.4.0)
 ========
 
+Fixes
+-----
+
+- Spreadsheet : Fixed errors computing `resolvedRows` when the Spreadsheet contains a NameValuePlug (#4583).
+
 API
 ---
 
 - Tool : Added support for subclassing in Python.
 - View : Added `tools()` method which returns a container of all connected Tools.
 - Container : Added constructor with a `name` argument.
+- PlugAlgo : Added support for NameValuePlug in `extractDataFromPlug()`.
 
 0.61.4.0 (relative to 0.61.3.0)
 ========
