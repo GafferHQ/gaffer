@@ -1,10 +1,13 @@
-0.62.0.0a1
-==========
+0.62.x.x (relative to 0.62.0.0a1)
+========
 
 Features
 --------
 
-- Scene Viewer : Added FPS counter option to Gadget menu
+- Viewer : Added FPS counter option to Gadget menu.
+
+0.62.0.0a1
+==========
 
 Improvements
 ------------
