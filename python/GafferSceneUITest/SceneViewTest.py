@@ -449,5 +449,39 @@ class SceneViewTest( GafferUITest.TestCase ) :
 			imath.V2f( 0.0001, 1 )
 		)
 
+		# Except for othographic camera, which can accept negative values even.
+
+		view["camera"]["freeCamera"].setValue( "top" )
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( -1, 1 ) )
+		self.assertEqual(
+			view["camera"]["clippingPlanes"].getValue(),
+			imath.V2f( -1, 1 )
+		)
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( -1, 1 )
+		)
+
+	def testChangingFreeCameraUpdatesPlugs( self ) :
+
+		sphere = GafferScene.Sphere()
+		view = GafferUI.View.create( sphere["out"] )
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		perspectiveClippingPlanes = view.viewportGadget().getCamera().getClippingPlanes()
+		self.assertEqual(
+			perspectiveClippingPlanes, view["camera"]["clippingPlanes"].getValue()
+		)
+
+		view["camera"]["freeCamera"].setValue( "top" )
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		topClippingPlanes = view.viewportGadget().getCamera().getClippingPlanes()
+		self.assertNotEqual( topClippingPlanes, perspectiveClippingPlanes )
+		self.assertEqual(
+			topClippingPlanes, view["camera"]["clippingPlanes"].getValue()
+		)
+
 if __name__ == "__main__":
 	unittest.main()

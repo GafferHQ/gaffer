@@ -69,9 +69,13 @@
 #include "IECore/AngleConversion.h"
 #include "IECore/VectorTypedData.h"
 
+#include "OpenEXR/ImathMatrixAlgo.h"
+
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
+
+#include <unordered_map>
 
 using namespace std;
 using namespace Imath;
@@ -1027,6 +1031,95 @@ class CameraOverlay : public GafferUI::Gadget
 
 IE_CORE_DECLAREPTR( CameraOverlay )
 
+struct FreeCamera
+{
+
+	static FreeCamera createFromViewport( const ViewportGadget *viewport )
+	{
+		return {
+			viewport->getCamera()->copy(),
+			viewport->getCameraTransform(),
+			viewport->getCenterOfInterest()
+		};
+	}
+
+	static FreeCamera createOrthographic( int viewAxis )
+	{
+		CameraPtr camera = new Camera;
+		camera->setProjection( "orthographic" );
+		camera->setClippingPlanes( V2f( -100000, 100000 ) );
+		camera->setAperture( V2f( 20 ) );
+		camera->setFilmFit( Camera::FilmFit::Fit );
+
+		M44f transform;
+		switch( viewAxis )
+		{
+			case 0 :
+				transform = computeLocalFrame( V3f( 0 ), V3f( 0, 0, -1 ), V3f( 1, 0, 0 ) );
+				break;
+			case 1 :
+				transform = computeLocalFrame( V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 1, 0 ) );
+				break;
+			case 2 :
+				transform = computeLocalFrame( V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 0, 1 ) );
+				break;
+		}
+
+		return {
+			camera,
+			transform,
+			1.0f
+		};
+	}
+
+	void applyToViewport( ViewportGadget *viewport ) const
+	{
+		viewport->setCamera( camera.get() );
+		viewport->setCameraTransform( transform );
+		viewport->setCenterOfInterest( centerOfInterest );
+		viewport->setTumblingEnabled( camera->getProjection() == "perspective" );
+	}
+
+	void applyToPlugs( FloatPlug *fieldOfViewPlug, V2fPlug *clippingPlanesPlug )
+	{
+		clippingPlanesPlug->setValue( camera->getClippingPlanes() );
+		if( camera->getProjection() == "perspective" )
+		{
+			fieldOfViewPlug->setValue( camera->calculateFieldOfView()[0] );
+		}
+	}
+
+	void updateFromPlugs( FloatPlug *fieldOfViewPlug, V2fPlug *clippingPlanesPlug )
+	{
+		V2f clippingPlanes = clippingPlanesPlug->getValue();
+		if( camera->getProjection() == "perspective" )
+		{
+			clippingPlanes[0] = std::max( clippingPlanes[0], 0.0001f );
+			clippingPlanes[1] = std::max( clippingPlanes[1], 0.0001f );
+		}
+		if( clippingPlanes[1] < clippingPlanes[0] )
+		{
+			std::swap( clippingPlanes[0], clippingPlanes[1] );
+		}
+		else if( clippingPlanes[1] == clippingPlanes[0] )
+		{
+			clippingPlanes[1] += 0.001;
+		}
+		camera->setClippingPlanes( clippingPlanes );
+
+		if( camera->getProjection() == "perspective" )
+		{
+			// Adjust aperture to match FOV
+			camera->setFocalLengthFromFieldOfView( fieldOfViewPlug->getValue() );
+		}
+	}
+
+	IECoreScene::CameraPtr camera;
+	M44f transform;
+	float centerOfInterest;
+
+};
+
 } // namespace
 
 class SceneView::Camera : public boost::signals::trackable
@@ -1040,9 +1133,6 @@ class SceneView::Camera : public boost::signals::trackable
 				m_lightToCamera( new LightToCamera ),
 				m_distantApertureAttributeQuery( new AttributeQuery ),
 				m_clippingPlanesAttributeQuery( new AttributeQuery ),
-				m_originalCamera( m_view->viewportGadget()->getCamera()->copy() ),
-				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
-				m_originalCenterOfInterest( m_view->viewportGadget()->getCenterOfInterest() ),
 				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
@@ -1051,6 +1141,8 @@ class SceneView::Camera : public boost::signals::trackable
 			// Set up our plugs
 
 			ValuePlugPtr plug = new ValuePlug( "camera", Plug::In, Plug::Default & ~Plug::AcceptsInputs );
+
+			plug->addChild( new StringPlug( "freeCamera", Plug::In, "perspective", Plug::Default & ~Plug::AcceptsInputs ) );
 
 			plug->addChild(
 				new Gaffer::FloatPlug(
@@ -1066,7 +1158,7 @@ class SceneView::Camera : public boost::signals::trackable
 				new Gaffer::V2fPlug(
 					"clippingPlanes", Plug::In,
 					V2f( 0.1, 100000 ),
-					V2f( 0.0001 ),
+					V2f( Imath::limits<float>::min() ),
 					V2f( Imath::limits<float>::max() ),
 					Plug::Default & ~Plug::AcceptsInputs
 				)
@@ -1125,6 +1217,13 @@ class SceneView::Camera : public boost::signals::trackable
 			view->viewportGadget()->setChild( "__cameraOverlay", m_overlay );
 			m_overlay->setVisible( false );
 
+			// Initialise the free cameras
+
+			m_freeCameras["perspective"] = FreeCamera::createFromViewport( m_view->viewportGadget() );
+			m_freeCameras["side"] = FreeCamera::createOrthographic( 0 );
+			m_freeCameras["top"] = FreeCamera::createOrthographic( 1 );
+			m_freeCameras["front"] = FreeCamera::createOrthographic( 2 );
+
 			// Connect to the signals we need
 
 			m_lightToCamera->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
@@ -1168,54 +1267,64 @@ class SceneView::Camera : public boost::signals::trackable
 			return m_lightToCamera->outPlug();
 		}
 
+		Gaffer::StringPlug *freeCameraPlug()
+		{
+			return plug()->getChild<Gaffer::StringPlug>( 0 );
+		}
+
+		const Gaffer::StringPlug *freeCameraPlug() const
+		{
+			return plug()->getChild<Gaffer::StringPlug>( 0 );
+		}
+
 		Gaffer::FloatPlug *fieldOfViewPlug()
 		{
-			return plug()->getChild<Gaffer::FloatPlug>( 0 );
+			return plug()->getChild<Gaffer::FloatPlug>( 1 );
 		}
 
 		const Gaffer::FloatPlug *fieldOfViewPlug() const
 		{
-			return plug()->getChild<Gaffer::FloatPlug>( 0 );
+			return plug()->getChild<Gaffer::FloatPlug>( 1 );
 		}
 
 		Gaffer::V2fPlug *clippingPlanesPlug()
 		{
-			return plug()->getChild<Gaffer::V2fPlug>( 1 );
+			return plug()->getChild<Gaffer::V2fPlug>( 2 );
 		}
 
 		const Gaffer::V2fPlug *clippingPlanesPlug() const
 		{
-			return plug()->getChild<Gaffer::V2fPlug>( 1 );
+			return plug()->getChild<Gaffer::V2fPlug>( 2 );
 		}
 
 		const Gaffer::BoolPlug *lookThroughEnabledPlug() const
 		{
-			return plug()->getChild<BoolPlug>( 2 );
+			return plug()->getChild<BoolPlug>( 3 );
 		}
 
 		const Gaffer::StringPlug *lookThroughCameraPlug() const
 		{
-			return plug()->getChild<StringPlug>( 3 );
+			return plug()->getChild<StringPlug>( 4 );
 		}
 
 		const Gaffer::FloatPlug *lightLookThroughDefaultDistantAperturePlug() const
 		{
-			return plug()->getChild<FloatPlug>( 4 );
+			return plug()->getChild<FloatPlug>( 5 );
 		}
 
 		Gaffer::FloatPlug *lightLookThroughDefaultDistantAperturePlug()
 		{
-			return plug()->getChild<FloatPlug>( 4 );
+			return plug()->getChild<FloatPlug>( 5 );
 		}
 
 		const Gaffer::V2fPlug *lightLookThroughDefaultClippingPlanesPlug() const
 		{
-			return plug()->getChild<V2fPlug>( 5 );
+			return plug()->getChild<V2fPlug>( 6 );
 		}
 
 		Gaffer::V2fPlug *lightLookThroughDefaultClippingPlanesPlug()
 		{
-			return plug()->getChild<V2fPlug>( 5 );
+			return plug()->getChild<V2fPlug>( 6 );
 		}
 
 		SceneGadget *sceneGadget()
@@ -1241,35 +1350,33 @@ class SceneView::Camera : public boost::signals::trackable
 
 		void plugSet( Gaffer::Plug *plug )
 		{
-			if(
-				plug != clippingPlanesPlug() &&
-				plug != fieldOfViewPlug()
+			if( plug == freeCameraPlug() )
+			{
+				// Choice of free camera changed. Update settings plugs to
+				// show its parameters.
+				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
+				freeCamera().applyToPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
+			}
+			else if(
+				plug == clippingPlanesPlug() ||
+				plug == fieldOfViewPlug()
 			)
 			{
-				return;
+				// Camera settings changed. Transfer onto free camera.
+				freeCamera().updateFromPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
+				// `updateFromPlugs()` applies constraints to clipping planes. Apply them
+				// back to the plugs.
+				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
+				freeCamera().applyToPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
+				// Schedule viewport update.
+				m_lookThroughCameraDirty = true;
+				m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 			}
-
-			V2f clippingPlanes = clippingPlanesPlug()->getValue();
-			if( clippingPlanes[1] < clippingPlanes[0] )
-			{
-				std::swap( clippingPlanes[0], clippingPlanes[1] );
-			}
-			else if( clippingPlanes[1] == clippingPlanes[0] )
-			{
-				clippingPlanes[1] += 0.001;
-			}
-			m_originalCamera->setClippingPlanes( clippingPlanes );
-
-			// Adjust aperture to match FOV
-			m_originalCamera->setFocalLengthFromFieldOfView( fieldOfViewPlug()->getValue() );
-
-			m_lookThroughCameraDirty = true;
-			m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 		}
 
 		void plugDirtied( Gaffer::Plug *plug )
 		{
-			if( plug != lookThroughEnabledPlug() && !lookThroughEnabledPlug()->getValue() )
+			if( plug != lookThroughEnabledPlug() && plug != freeCameraPlug() && !lookThroughEnabledPlug()->getValue() )
 			{
 				// No need to do anything if we're turned off.
 				return;
@@ -1281,7 +1388,8 @@ class SceneView::Camera : public boost::signals::trackable
 				plug == scenePlug()->objectPlug() ||
 				plug == scenePlug()->transformPlug() ||
 				plug == lookThroughEnabledPlug() ||
-				plug == lookThroughCameraPlug()
+				plug == lookThroughCameraPlug() ||
+				plug == freeCameraPlug()
 			)
 			{
 				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
@@ -1299,15 +1407,11 @@ class SceneView::Camera : public boost::signals::trackable
 		{
 			if( !lookThroughEnabledPlug()->getValue() )
 			{
-				IECoreScene::ConstCameraPtr camera = m_view->viewportGadget()->getCamera();
+				FreeCamera &freeCam = freeCamera();
+				freeCam = FreeCamera::createFromViewport( m_view->viewportGadget() );
 
 				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
-				clippingPlanesPlug()->setValue( camera->getClippingPlanes() );
-				fieldOfViewPlug()->setValue( camera->calculateFieldOfView()[0] );
-
-				m_originalCamera = camera->copy();
-				m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
-				m_originalCenterOfInterest = m_view->viewportGadget()->getCenterOfInterest();
+				freeCam.applyToPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
 
 				// We assume that if the viewport camera is set explicitly before
 				// the first frame is drawn, we shouldn't do any automatic framing.
@@ -1327,6 +1431,19 @@ class SceneView::Camera : public boost::signals::trackable
 			}
 		}
 
+		FreeCamera &freeCamera()
+		{
+			const string name = freeCameraPlug()->getValue();
+			auto it = m_freeCameras.find( name );
+			if( it != m_freeCameras.end() )
+			{
+				return it->second;
+			}
+
+			IECore::msg( IECore::Msg::Warning, "SceneView", boost::format( "Free camera \"%1%\" does not exist" ) % name );
+			return m_freeCameras.at( "perspective" );
+		}
+
 		void updateLookThroughCamera()
 		{
 			if( !m_lookThroughCameraDirty )
@@ -1339,9 +1456,7 @@ class SceneView::Camera : public boost::signals::trackable
 			if( !lookThroughEnabledPlug()->getValue() )
 			{
 				BlockedConnection cameraChangedBlock( m_viewportCameraChangedConnection );
-				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
-				m_view->viewportGadget()->setCameraTransform( m_originalCameraTransform );
-				m_view->viewportGadget()->setCenterOfInterest( m_originalCenterOfInterest );
+				freeCamera().applyToViewport( m_view->viewportGadget() );
 				m_view->viewportGadget()->setCameraEditable( true );
 				m_view->deleteObjectFilter()->pathsPlug()->setToDefault();
 				sceneGadget()->setBlockingPaths( IECore::PathMatcher() );
@@ -1415,6 +1530,7 @@ class SceneView::Camera : public boost::signals::trackable
 			m_view->viewportGadget()->setCameraTransform( cameraTransform );
 
 			m_view->viewportGadget()->setCameraEditable( false );
+			m_view->viewportGadget()->setTumblingEnabled( true ); // For when CameraTool calls `setCameraEditable( true )`.
 			m_view->deleteObjectFilter()->pathsPlug()->setToDefault();
 
 			// When looking through a camera, we delete the camera, since the overlay
@@ -1597,13 +1713,9 @@ class SceneView::Camera : public boost::signals::trackable
 		boost::signals::scoped_connection m_viewportCameraChangedConnection;
 		boost::signals::scoped_connection m_contextChangedConnection;
 
-		/// The default viewport camera - we store this so we can
-		/// return to it after looking through a scene camera.
-		// TODO - "original" seems like a weird names for this, since it doesn't stay original, it gets
-		// whenever we move the viewport camera.  What about m_freeCamera?
-		IECoreScene::CameraPtr m_originalCamera;
-		M44f m_originalCameraTransform;
-		float m_originalCenterOfInterest;
+		// Cameras that don't exist in the Gaffer scene, so are
+		// always available for use.
+		std::unordered_map<std::string, FreeCamera> m_freeCameras;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;
