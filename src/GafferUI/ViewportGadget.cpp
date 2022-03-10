@@ -847,14 +847,25 @@ void ViewportGadget::setCenterOfInterest( float centerOfInterest )
 	m_cameraController->setCenterOfInterest( centerOfInterest );
 }
 
+float ViewportGadget::getCenterOfInterest() const
+{
+	return m_cameraController->getCenterOfInterest();
+}
+
 float ViewportGadget::getCenterOfInterest()
 {
 	return m_cameraController->getCenterOfInterest();
 }
 
+
 void ViewportGadget::setMaxPlanarZoom( const Imath::V2f &scale )
 {
 	m_cameraController->setMaxPlanarZoom( scale );
+}
+
+Imath::V2f ViewportGadget::getMaxPlanarZoom() const
+{
+	return m_cameraController->getMaxPlanarZoom();
 }
 
 Imath::V2f ViewportGadget::getMaxPlanarZoom()

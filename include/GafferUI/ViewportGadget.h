@@ -129,12 +129,16 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// The center of interest is the depth (in camera space)
 		/// of a pivot about which the Alt+drag camera motion operates.
 		void setCenterOfInterest( float centerOfInterest );
+		float getCenterOfInterest() const;
+		/// \todo Remove.
 		float getCenterOfInterest();
 
 		// The max planar zoom is the maximum pixel size in viewport pixels
 		// that a unit distance can be expanded to.  Used to avoid zooming
 		// in so close that the gadgets don't make any sense.
 		void setMaxPlanarZoom( const Imath::V2f &scale );
+		Imath::V2f getMaxPlanarZoom() const;
+		/// \todo Remove.
 		Imath::V2f getMaxPlanarZoom();
 
 		void frame( const Imath::Box3f &box );
