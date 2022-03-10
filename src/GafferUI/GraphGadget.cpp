@@ -1045,11 +1045,7 @@ void GraphGadget::updateActive()
 
 	if( !focusPlugs.size() )
 	{
-		Gaffer::ParallelAlgo::callOnUIThread(
-			[this] {
-				this->applyActive( nullptr, nullptr );
-			}
-		);
+		applyActive( nullptr, nullptr );
 		return;
 	}
 
