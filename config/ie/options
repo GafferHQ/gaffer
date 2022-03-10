@@ -195,7 +195,7 @@ sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.
 # set where we'll put things
 ##########################################################################
 
-versionString = "${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}"
+versionString = "${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}${GAFFER_VERSION_SUFFIX}"
 if getOption( "RELEASE", "0" )=="1" :
 	buildRoot = "/tmp/gafferBuilds"
 	installRoot = "/software"
