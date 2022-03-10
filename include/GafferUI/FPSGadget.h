@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,60 +34,38 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERUI_FPSGADGET_H
+#define GAFFERUI_FPSGADGET_H
+
+#include "GafferUI/Gadget.h"
+
+#include <chrono>
+#include <list>
 
 namespace GafferUI
 {
 
-enum TypeId
+class GAFFERUI_API FPSGadget : public Gadget
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	AuxiliaryConnectionsGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	AuxiliaryNodeGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	ConnectionCreatorTypeId = 110272,
-	CompoundNumericNoduleTypeId = 110273,
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
-	PlugAdderTypeId = 110283,
-	NoduleLayoutTypeId = 110284,
-	TranslateHandleTypeId = 110285,
-	ScaleHandleTypeId = 110286,
-	RotateHandleTypeId = 110287,
-	AnimationGadgetTypeId = 110288,
-	AnnotationsGadgetTypeId = 110289,
-	GraphGadgetSetPositionsActionTypeId = 110290,
-	ToolContainerTypeId = 110291,
-	FPSGadgetTypeId = 110292,
 
-	LastTypeId = 110450
+	public :
+
+		FPSGadget( Imath::V3f defaultPosition = Imath::V3f( 5.0f, 50.0f, 0.0f ) );
+		~FPSGadget() override;
+
+		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::FPSGadget, FPSGadgetTypeId, Gadget );
+
+	protected :
+		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override;
+		unsigned layerMask() const override;
+		Imath::Box3f renderBound() const override;
+
+	private :
+		mutable std::list< std::chrono::time_point<std::chrono::high_resolution_clock> > m_timeBuffer;
 };
+
+IE_CORE_DECLAREPTR( FPSGadget )
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#endif // GAFFERUI_FPSGADGET_H

@@ -761,6 +761,56 @@ class SceneView::Gnomon : public Signals::Trackable
 
 };
 
+class SceneView::FPS : public Signals::Trackable
+{
+
+	public :
+
+		FPS( SceneView *view )
+			:	m_view( view ), m_gadget( new FPSGadget() )
+		{
+			ValuePlugPtr plug = new ValuePlug( "fps" );
+			view->addChild( plug );
+
+			plug->addChild( new BoolPlug( "visible", Plug::In, false ) );
+
+			view->viewportGadget()->setChild( "__fps", m_gadget );
+
+			view->plugDirtiedSignal().connect( boost::bind( &FPS::plugDirtied, this, ::_1 ) );
+
+			update();
+		}
+
+		Gaffer::ValuePlug *plug()
+		{
+			return m_view->getChild<Gaffer::ValuePlug>( "fps" );
+		}
+
+		const Gaffer::ValuePlug *plug() const
+		{
+			return m_view->getChild<Gaffer::ValuePlug>( "fps" );
+		}
+
+	private :
+
+		void plugDirtied( Gaffer::Plug *plug )
+		{
+			if( plug == this->plug() )
+			{
+				update();
+			}
+		}
+
+		void update()
+		{
+			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
+		}
+
+		SceneView *m_view;
+		FPSGadgetPtr m_gadget;
+
+};
+
 //////////////////////////////////////////////////////////////////////////
 // SceneView::Camera implementation
 //////////////////////////////////////////////////////////////////////////
@@ -1677,6 +1727,7 @@ SceneView::SceneView( const std::string &name )
 	m_camera.reset( new Camera( this ) );
 	m_grid.reset( new Grid( this ) );
 	m_gnomon.reset( new Gnomon( this ) );
+	m_fps.reset( new FPS( this ) );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.

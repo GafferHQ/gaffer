@@ -228,6 +228,12 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "",
 
+		],
+
+		"fps" : [
+
+			"plugValueWidget:type", "",
+
 		]
 
 	}
@@ -863,6 +869,14 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"checkBox" : self.getPlug().node()["inspector"]["visible"].getValue(),
 				"command" : self.getPlug().node()["inspector"]["visible"].setValue,
 				"shortCut" : "I"
+			}
+		)
+
+		m.append(
+			"/Show FPS",
+			{
+				"checkBox" : self.getPlug().node()["fps"]["visible"].getValue(),
+				"command" : self.getPlug().node()["fps"]["visible"].setValue,
 			}
 		)
 
