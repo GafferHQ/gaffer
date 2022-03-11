@@ -432,65 +432,64 @@ class _PlugTableView( GafferUI.Widget ) :
 
 				self.__applyColumnVisibility()
 
-	def __dragEnter( self, widget, event ) :
+	# Returns a function that should be called to complete a drop for the
+	# specified event, or `None` if dropping is not possible.
+	def __dropFunction( self, event ) :
 
 		if Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
-			return False
+			return None
 
-		if not isinstance( event.data, ( Gaffer.Plug, IECore.Data ) ) :
-			return False
+		destinationPlug = self.plugAt( event.line.p0 )
+		if destinationPlug is None :
+			return None
 
-		return True
+		if isinstance( event.data, IECore.Data ) :
+			if _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] ) :
+				return functools.partial(
+					_ClipboardAlgo.pasteCells,
+					event.data, [ [ destinationPlug ] ],
+					self.ancestor( GafferUI.PlugValueWidget ).getContext().getTime()
+				)
+		elif isinstance( event.data, Gaffer.Plug ) :
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
+			if self.__canConnect( sourcePlug, targetPlug ) :
+				return functools.partial( targetPlug.setInput, sourcePlug )
+
+		return None
+
+	def __dragEnter( self, widget, event ) :
+
+		return self.__dropFunction( event ) is not None
 
 	def __dragMove( self, widget, event ) :
 
-		destinationPlug = self.plugAt( event.line.p0 )
-		selectionModel = self._qtWidget().selectionModel()
-
-		if destinationPlug is None :
-			selectionModel.clear()
-			return
-
-		select = False
-		if isinstance( event.data, IECore.Data ) :
-			select = _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] )
+		if self.__dropFunction( event ) is None :
+			self._qtWidget().selectionModel().clear()
 		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
-			select = self.__canConnect( sourcePlug, targetPlug )
-
-		if select :
-			selectionModel.select(
-				self._qtWidget().model().indexForPlug( destinationPlug ),
+			self._qtWidget().selectionModel().setCurrentIndex(
+				self._qtWidget().model().indexForPlug( self.plugAt( event.line.p0 ) ),
 				QtCore.QItemSelectionModel.SelectCurrent
 			)
-		else :
-			selectionModel.clear()
+
+		return True
 
 	def __dragLeave( self, widget, event ) :
 
 		self._qtWidget().selectionModel().clear()
+		return True
 
 	def __drop( self, widget, event ) :
 
-		destinationPlug = self.plugAt( event.line.p0 )
+		# Update the selection in case the drag position changed
+		# since last `__dragMove` (not sure this is necessary).
+		self.__dragMove( widget, event )
 
-		if isinstance( event.data, IECore.Data ) :
-			if not _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] ) :
-				return False
-			with Gaffer.UndoScope( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
-				context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
-				_ClipboardAlgo.pasteCells( event.data, [ [ destinationPlug ] ], context.getTime() )
-		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
-			if not self.__canConnect( sourcePlug, targetPlug ) :
-				return False
-			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
-				targetPlug.setInput( sourcePlug )
+		dropFunction = self.__dropFunction( event )
+		if dropFunction is None :
+			return True
 
-		index = self._qtWidget().model().indexForPlug( destinationPlug )
-		selectionModel = self._qtWidget().selectionModel()
-		selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
-		selectionModel.setCurrentIndex( index, QtCore.QItemSelectionModel.ClearAndSelect )
+		with Gaffer.UndoScope( self._qtWidget().model().rowsPlug().ancestor( Gaffer.ScriptNode ) ) :
+			dropFunction()
 
 		# People regularly have spreadsheets in separate windows. Ensure the
 		# sheet has focus after drop has concluded. It will have returned to
