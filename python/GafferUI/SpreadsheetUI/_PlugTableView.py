@@ -432,6 +432,37 @@ class _PlugTableView( GafferUI.Widget ) :
 
 				self.__applyColumnVisibility()
 
+	__DropMode = IECore.Enum.create( "Set", "Add", "Remove" )
+	def __dropMode( self, destinationPlug, event ) :
+
+		if (
+			isinstance( destinationPlug, Gaffer.Spreadsheet.CellPlug ) and
+			isinstance( destinationPlug["value"], Gaffer.StringVectorDataPlug ) and
+			isinstance( event.data, IECore.StringVectorData )
+		) :
+			if event.modifiers == event.Modifiers.Shift :
+				return self.__DropMode.Add
+			elif event.modifiers == event.Modifiers.Control :
+				return self.__DropMode.Remove
+
+		return self.__DropMode.Set
+
+	def __dropData( self, destinationPlug, event ) :
+
+		mode = self.__dropMode( destinationPlug, event )
+		if mode == self.__DropMode.Set :
+			return event.data
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			strings = set( destinationPlug["value"].getValue() )
+
+		if mode == self.__DropMode.Add :
+			strings.update( event.data )
+		elif mode == self.__DropMode.Remove :
+			strings.difference_update( event.data )
+
+		return IECore.StringVectorData( sorted( strings ) )
+
 	# Returns a function that should be called to complete a drop for the
 	# specified event, or `None` if dropping is not possible.
 	def __dropFunction( self, event ) :
@@ -444,10 +475,11 @@ class _PlugTableView( GafferUI.Widget ) :
 			return None
 
 		if isinstance( event.data, IECore.Data ) :
-			if _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] ) :
+			dropData = self.__dropData( destinationPlug, event )
+			if _ClipboardAlgo.canPasteCells( dropData, [ [ destinationPlug ] ] ) :
 				return functools.partial(
 					_ClipboardAlgo.pasteCells,
-					event.data, [ [ destinationPlug ] ],
+					dropData, [ [ destinationPlug ] ],
 					self.ancestor( GafferUI.PlugValueWidget ).getContext().getTime()
 				)
 		elif isinstance( event.data, Gaffer.Plug ) :
@@ -459,23 +491,37 @@ class _PlugTableView( GafferUI.Widget ) :
 
 	def __dragEnter( self, widget, event ) :
 
-		return self.__dropFunction( event ) is not None
+		if self.__dropFunction( event ) is not None :
+			self.__dragEnterPointer = GafferUI.Pointer.getCurrent()
+			return True
+		else :
+			return False
 
 	def __dragMove( self, widget, event ) :
 
 		if self.__dropFunction( event ) is None :
 			self._qtWidget().selectionModel().clear()
+			GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 		else :
+			destinationPlug = self.plugAt( event.line.p0 )
 			self._qtWidget().selectionModel().setCurrentIndex(
-				self._qtWidget().model().indexForPlug( self.plugAt( event.line.p0 ) ),
+				self._qtWidget().model().indexForPlug( destinationPlug ),
 				QtCore.QItemSelectionModel.SelectCurrent
 			)
+			mode = self.__dropMode( destinationPlug, event )
+			if mode == self.__DropMode.Add :
+				GafferUI.Pointer.setCurrent( "add" )
+			elif mode == self.__DropMode.Remove :
+				GafferUI.Pointer.setCurrent( "remove" )
+			else :
+				GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 
 		return True
 
 	def __dragLeave( self, widget, event ) :
 
 		self._qtWidget().selectionModel().clear()
+		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 		return True
 
 	def __drop( self, widget, event ) :
@@ -483,6 +529,8 @@ class _PlugTableView( GafferUI.Widget ) :
 		# Update the selection in case the drag position changed
 		# since last `__dragMove` (not sure this is necessary).
 		self.__dragMove( widget, event )
+
+		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 
 		dropFunction = self.__dropFunction( event )
 		if dropFunction is None :
