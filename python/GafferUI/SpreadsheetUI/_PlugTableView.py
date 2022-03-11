@@ -537,21 +537,6 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		return True
 
-	def __positionInCellGrid( self, position ) :
-
-		# The event coordinate origin includes the header view.
-		# Queries to indexAt etc... need the origin to be in the
-		# table view itself.
-
-		cellPosition = imath.V3f( position )
-
-		if self._qtWidget().verticalHeader().isVisible() :
-			cellPosition.x -= self._qtWidget().verticalHeader().frameRect().width()
-		if self._qtWidget().horizontalHeader().isVisible() :
-			cellPosition.y -= self._qtWidget().horizontalHeader().frameRect().height()
-
-		return cellPosition
-
 	def __buttonPress( self, widget, event ) :
 
 		if event.buttons != event.Buttons.Right :
