@@ -14,6 +14,7 @@ API
 - TextGadget :
   - Added Python binding for `setDimmed()`.
   - Added missing `getDimmed()` accessor.
+- Pointer : Added `add` and `remove` pointers for use with `setCurrent()`.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
