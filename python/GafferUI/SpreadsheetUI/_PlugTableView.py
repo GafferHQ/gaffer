@@ -440,22 +440,15 @@ class _PlugTableView( GafferUI.Widget ) :
 		if not isinstance( event.data, ( Gaffer.Plug, IECore.Data ) ) :
 			return False
 
-		self.__currentDragDestinationPlug = None
 		return True
 
 	def __dragMove( self, widget, event ) :
 
 		destinationPlug = self.plugAt( event.line.p0 )
-
-		if self.__currentDragDestinationPlug == destinationPlug :
-			return
-
-		self.__currentDragDestinationPlug = destinationPlug
-
 		selectionModel = self._qtWidget().selectionModel()
-		selectionModel.clear()
 
-		if destinationPlug is None:
+		if destinationPlug is None :
+			selectionModel.clear()
 			return
 
 		select = False
@@ -470,15 +463,14 @@ class _PlugTableView( GafferUI.Widget ) :
 				self._qtWidget().model().indexForPlug( destinationPlug ),
 				QtCore.QItemSelectionModel.SelectCurrent
 			)
+		else :
+			selectionModel.clear()
 
 	def __dragLeave( self, widget, event ) :
 
-		self.__currentDragDestinationPlug = None
 		self._qtWidget().selectionModel().clear()
 
 	def __drop( self, widget, event ) :
-
-		self.__currentDragDestinationPlug = None
 
 		destinationPlug = self.plugAt( event.line.p0 )
 
