@@ -1514,6 +1514,8 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() + "/test2.gfr" )
 		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
 
+		os.chmod( fileName, stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH )
+
 	def testDisableContextVariable( self ) :
 
 		s = Gaffer.ScriptNode()
