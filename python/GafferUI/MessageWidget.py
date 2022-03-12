@@ -248,7 +248,6 @@ class _MessageHandler( IECore.MessageHandler ) :
 		IECore.MessageHandler.__init__( self )
 
 		self._forwarder = IECore.CompoundMessageHandler()
-		self.__processingEvents = False
 
 		# using a weak reference because we're owned by the MessageWidget,
 		# so we mustn't have a reference back.
@@ -261,40 +260,7 @@ class _MessageHandler( IECore.MessageHandler ) :
 		w = self.__messageWidget()
 
 		if w :
-
-			application = QtWidgets.QApplication.instance()
-
-			if QtCore.QThread.currentThread() == application.thread() :
-
-				w._addMessage( level, context, msg )
-
-				# Code like GafferCortexUI.OpDialogue has the option to run the op on the
-				# main thread. We want to update the ui as they occur, so we force the
-				# event loop to clear here. As processEvents may result in re-entry to this
-				# function (the called code may desire to log another message through this
-				# handler), we must guard against recursion so we don't run out of stack).
-				if not self.__processingEvents :
-					try :
-						self.__processingEvents = True
-						# Calling processEvents can cause almost anything to be executed,
-						# including idle callbacks that might build UIs. We must push an
-						# empty parent so that any widgets created will not be inadvertently
-						# parented to the wrong thing.
-						## \todo Calling `processEvents()` has also caused problems in the
-						# past where a simple error message has then led to idle callbacks
-						# being triggered which in turn triggered a graph evaluation. Having
-						# a message handler lead to arbitarary code execution is not good! Is
-						# there some way we can update the UI without triggering arbitrary
-						# code evaluation?
-						w._pushParent( None )
-						application.processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
-						w._popParent()
-					finally :
-						self.__processingEvents = False
-
-			else :
-
-				GafferUI.EventLoop.executeOnUIThread( functools.partial( w._addMessage, level, context, msg ) )
+			GafferUI.EventLoop.executeOnUIThread( functools.partial( w._addMessage, level, context, msg ) )
 
 		else :
 			# the widget has died. bad things are probably afoot so its best
