@@ -1132,7 +1132,7 @@ class SceneView::Camera : public boost::signals::trackable
 			view->plugDirtiedSignal().connect( boost::bind( &Camera::plugDirtied, this, ::_1 ) );
 			view->viewportGadget()->preRenderSignal().connect( boost::bind( &Camera::preRender, this ) );
 			view->viewportGadget()->viewportChangedSignal().connect( boost::bind( &Camera::viewportChanged, this ) );
-			view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &Camera::viewportCameraChanged, this ) );
+			m_viewportCameraChangedConnection = view->viewportGadget()->cameraChangedSignal().connect( boost::bind( &Camera::viewportCameraChanged, this ) );
 
 			connectToViewContext();
 			view->contextChangedSignal().connect( boost::bind( &Camera::connectToViewContext, this ) );
@@ -1263,13 +1263,8 @@ class SceneView::Camera : public boost::signals::trackable
 			// Adjust aperture to match FOV
 			m_originalCamera->setFocalLengthFromFieldOfView( fieldOfViewPlug()->getValue() );
 
-			if( !m_lookThroughCamera )
-			{
-				// We don't want to call updateLookThroughCamera, because this would overwrite
-				// the camera transform, which may be currently edited by the viewportGadget,
-				// so instead we manually update just the camera
-				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
-			}
+			m_lookThroughCameraDirty = true;
+			m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 		}
 
 		void plugDirtied( Gaffer::Plug *plug )
@@ -1290,12 +1285,6 @@ class SceneView::Camera : public boost::signals::trackable
 			)
 			{
 				m_lookThroughCameraDirty = m_viewportCameraDirty = true;
-				if( plug == lookThroughEnabledPlug() && lookThroughEnabledPlug()->getValue() )
-				{
-					m_originalCamera = m_view->viewportGadget()->getCamera()->copy();
-					m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
-					m_originalCenterOfInterest = m_view->viewportGadget()->getCenterOfInterest();
-				}
 				m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 			}
 		}
@@ -1310,12 +1299,15 @@ class SceneView::Camera : public boost::signals::trackable
 		{
 			if( !lookThroughEnabledPlug()->getValue() )
 			{
-				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
-
 				IECoreScene::ConstCameraPtr camera = m_view->viewportGadget()->getCamera();
-				clippingPlanesPlug()->setValue( camera->getClippingPlanes() );
 
+				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
+				clippingPlanesPlug()->setValue( camera->getClippingPlanes() );
 				fieldOfViewPlug()->setValue( camera->calculateFieldOfView()[0] );
+
+				m_originalCamera = camera->copy();
+				m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
+				m_originalCenterOfInterest = m_view->viewportGadget()->getCenterOfInterest();
 			}
 		}
 
@@ -1344,6 +1336,7 @@ class SceneView::Camera : public boost::signals::trackable
 			m_lookThroughCamera = nullptr;
 			if( !lookThroughEnabledPlug()->getValue() )
 			{
+				BlockedConnection cameraChangedBlock( m_viewportCameraChangedConnection );
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
 				m_view->viewportGadget()->setCameraTransform( m_originalCameraTransform );
 				m_view->viewportGadget()->setCenterOfInterest( m_originalCenterOfInterest );
@@ -1599,6 +1592,7 @@ class SceneView::Camera : public boost::signals::trackable
 		std::vector< Gaffer::ConstNodePtr > m_internalNodes;
 
 		boost::signals::scoped_connection m_plugSetConnection;
+		boost::signals::scoped_connection m_viewportCameraChangedConnection;
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		/// The default viewport camera - we store this so we can

@@ -26,6 +26,7 @@ API
   - Added const overloads of `getCenterOfInterest()` and `getMaxPlanarZoom()`. The non-const versions will be removed in a future version.
   - Added `setTumblingEnabled()` and `getTumblingEnabled()` methods.
   - Added `setDollyingEnabled()` and `getDollyingEnabled()` methods.
+  - `cameraChangedSignal()` is now emitted by `setCenterOfInterest()` in addition to `setCamera()` and `setCameraTransform()`.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
