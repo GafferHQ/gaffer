@@ -335,6 +335,18 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
+	def testInitialClippingPlanes( self ) :
+
+		sphere = GafferScene.Sphere()
+		view = GafferUI.View.create( sphere["out"] )
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( 1, 10 )
+		)
+
 	def testClippingPlanesAndFOV( self ) :
 
 		script = Gaffer.ScriptNode()

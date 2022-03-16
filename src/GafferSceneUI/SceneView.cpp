@@ -1308,20 +1308,22 @@ class SceneView::Camera : public boost::signals::trackable
 				m_originalCamera = camera->copy();
 				m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
 				m_originalCenterOfInterest = m_view->viewportGadget()->getCenterOfInterest();
+
+				// We assume that if the viewport camera is set explicitly before
+				// the first frame is drawn, we shouldn't do any automatic framing.
+				m_framed = true;
 			}
 		}
 
 		void preRender()
 		{
-			if( !m_framed )
+			updateLookThroughCamera();
+			updateViewportCameraAndOverlay();
+
+			if( !m_framed && !lookThroughEnabledPlug()->getValue() )
 			{
 				m_view->viewportGadget()->frame( m_view->framingBound() );
 				m_framed = true;
-			}
-			else
-			{
-				updateLookThroughCamera();
-				updateViewportCameraAndOverlay();
 			}
 		}
 
