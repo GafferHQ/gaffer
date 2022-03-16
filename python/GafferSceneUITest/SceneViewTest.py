@@ -404,5 +404,38 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		assertDefaultCamera()
 
+	def testClippingPlaneConstraints( self ) :
+
+		sphere = GafferScene.Sphere()
+		view = GafferUI.View.create( sphere["out"] )
+
+		# Far must be greater than near
+
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 10, 1 ) )
+		self.assertEqual(
+			view["camera"]["clippingPlanes"].getValue(),
+			imath.V2f( 1, 10 )
+		)
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( 1, 10 )
+		)
+
+		# Values must be 0.0001 at a minimum
+
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 0, 1 ) )
+		self.assertEqual(
+			view["camera"]["clippingPlanes"].getValue(),
+			imath.V2f( 0.0001, 1 )
+		)
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( 0.0001, 1 )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
