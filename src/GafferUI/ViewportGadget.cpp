@@ -126,7 +126,10 @@ class ViewportGadget::CameraController : public boost::noncopyable
 	public :
 
 		CameraController()
-			:	m_planarMovement( true ), m_tumblingEnabled( true ), m_maxPlanarZoom( 0.0f ), m_sourceCamera( new IECoreScene::Camera() ), m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ), m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
+			:	m_planarMovement( true ), m_tumblingEnabled( true ), m_dollyingEnabled( true ),
+				m_maxPlanarZoom( 0.0f ), m_sourceCamera( new IECoreScene::Camera() ),
+				m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ),
+				m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
 		{
 		}
 
@@ -175,6 +178,16 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		bool getTumblingEnabled() const
 		{
 			return m_tumblingEnabled;
+		}
+
+		void setDollyingEnabled( bool dollyingEnabled )
+		{
+			m_dollyingEnabled = dollyingEnabled;
+		}
+
+		bool getDollyingEnabled() const
+		{
+			return m_dollyingEnabled;
 		}
 
 		void setTransform( const M44f &transform )
@@ -569,6 +582,11 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 		void dolly( const Imath::V2f &p, bool variableAspect )
 		{
+			if( !m_dollyingEnabled )
+			{
+				return;
+			}
+
 			V2i resolution = m_viewportResolution;
 			V2f dv = V2f( (p - m_motionStart) ) / resolution;
 			float d = dv.x - dv.y;
@@ -630,6 +648,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		// ( and m_sourceCamera will be null ).
 		bool m_planarMovement;
 		bool m_tumblingEnabled;
+		bool m_dollyingEnabled;
 
 		Imath::V2f m_maxPlanarZoom;
 
@@ -881,6 +900,16 @@ void ViewportGadget::setTumblingEnabled( bool tumblingEnabled )
 bool ViewportGadget::getTumblingEnabled() const
 {
 	return m_cameraController->getTumblingEnabled();
+}
+
+void ViewportGadget::setDollyingEnabled( bool dollyingEnabled )
+{
+	m_cameraController->setDollyingEnabled( dollyingEnabled );
+}
+
+bool ViewportGadget::getDollyingEnabled() const
+{
+	return m_cameraController->getDollyingEnabled();
 }
 
 void ViewportGadget::setMaxPlanarZoom( const Imath::V2f &scale )

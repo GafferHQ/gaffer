@@ -190,6 +190,12 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		void setTumblingEnabled( bool tumblingEnabled );
 		bool getTumblingEnabled() const;
 
+		/// If dollying is enabled (and `getCameraEditable()` is true), the user
+		/// can move the camera forwards and backwards using Alt+right-drag or
+		/// the mouse wheel.
+		void setDollyingEnabled( bool dollyingEnabled );
+		bool getDollyingEnabled() const;
+
 		/// Moves the camera to view the box using the specified view direction.
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );
