@@ -193,6 +193,8 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// If dollying is enabled (and `getCameraEditable()` is true), the user
 		/// can move the camera forwards and backwards using Alt+right-drag or
 		/// the mouse wheel.
+		/// > Note : Orthographic cameras are "dollied" by adjusting the aperture
+		/// > rather than moving the camera.
 		void setDollyingEnabled( bool dollyingEnabled );
 		bool getDollyingEnabled() const;
 

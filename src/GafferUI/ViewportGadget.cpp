@@ -141,6 +141,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			}
 			m_clippingPlanes = camera->getClippingPlanes();
 			m_sourceCamera = camera;
+			m_orthoAperture = camera->getAperture();
 		}
 
 		IECoreScene::ConstCameraPtr getCamera() const
@@ -150,6 +151,10 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			{
 				viewportCamera->setProjection( "orthographic" );
 				viewportCamera->setAperture( m_planarScale * V2f( m_viewportResolution[0], m_viewportResolution[1] ) );
+			}
+			else if( viewportCamera->getProjection() == "orthographic" )
+			{
+				viewportCamera->setAperture( m_orthoAperture );
 			}
 			viewportCamera->setResolution( m_viewportResolution );
 			viewportCamera->setClippingPlanes( m_clippingPlanes );
@@ -309,9 +314,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				}
 				else
 				{
-					// Orthographic. Note that we are not altering the projection, so we may still not
-					// be able to see the entire bound, if the ortho camera has too small an aperture to
-					// see the whole bound at once.
+					// Orthographic.
 
 					// Translate to front of box.
 					// We need to clamp the near clipping plane to >= 0.0f because
@@ -325,6 +328,13 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					// they framed. Translate back some more to make
 					// room to tumble around the entire bound.
 					m_centerOfInterest += cBox.size().length();
+
+					// If dollying is enabled, then we have permission to modify the
+					// aperture. Adjust it so that we can see the whole bound.
+					if( getDollyingEnabled() )
+					{
+						m_orthoAperture = V2f( cBox.size().x, cBox.size().y );
+					}
 				}
 			}
 
@@ -443,6 +453,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_motionMatrix = m_transform;
 			m_motionPlanarScale = m_planarScale;
 			m_motionCenterOfInterest = m_centerOfInterest;
+			m_motionOrthoAperture = m_orthoAperture;
 		}
 
 		/// Updates the camera position based on a changed mouse position. Can only
@@ -632,7 +643,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				t.translate( V3f( offset.x, offset.y, 0 ) );
 				m_transform = t;
 			}
-			else
+			else if( m_sourceCamera->getProjection()=="perspective" )
 			{
 				m_centerOfInterest = m_motionCenterOfInterest * expf( -1.9f * d );
 
@@ -640,6 +651,12 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				t.translate( V3f( 0, 0, m_centerOfInterest - m_motionCenterOfInterest ) );
 
 				m_transform = t;
+			}
+			else
+			{
+				// Orthographic
+				const float newWidth = std::max( m_orthoAperture.x * expf( -1.9f * d ), 0.01f );
+				m_orthoAperture = m_motionOrthoAperture * newWidth / m_orthoAperture.x;
 			}
 		}
 
@@ -665,6 +682,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		Imath::V2f m_clippingPlanes;
 		float m_centerOfInterest;
 		M44f m_transform;
+		Imath::V2f m_orthoAperture;
 
 		// Motion state
 		MotionType m_motionType;
@@ -672,6 +690,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		Imath::M44f m_motionMatrix;
 		float m_motionCenterOfInterest;
 		Imath::V2f m_motionPlanarScale;
+		Imath::V2f m_motionOrthoAperture;
 
 		ZoomAxis m_zoomAxis;
 };
