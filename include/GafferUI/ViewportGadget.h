@@ -185,6 +185,11 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// \todo Remove.
 		float getCenterOfInterest();
 
+		/// If tumbling is enabled, the user can rotate the camera
+		/// freely using Alt+left-drag.
+		void setTumblingEnabled( bool tumblingEnabled );
+		bool getTumblingEnabled() const;
+
 		/// Moves the camera to view the box using the specified view direction.
 		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) );

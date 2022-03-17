@@ -126,7 +126,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 	public :
 
 		CameraController()
-			:	m_planarMovement( true ), m_maxPlanarZoom( 0.0f ), m_sourceCamera( new IECoreScene::Camera() ), m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ), m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
+			:	m_planarMovement( true ), m_tumblingEnabled( true ), m_maxPlanarZoom( 0.0f ), m_sourceCamera( new IECoreScene::Camera() ), m_viewportResolution( 640, 480 ), m_planarScale( 1.0f ), m_clippingPlanes( 0.01f, 100000.0f ), m_centerOfInterest( 1.0f )
 		{
 		}
 
@@ -165,6 +165,16 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		bool getPlanarMovement() const
 		{
 			return m_planarMovement;
+		}
+
+		void setTumblingEnabled( bool tumblingEnabled )
+		{
+			m_tumblingEnabled = tumblingEnabled;
+		}
+
+		bool getTumblingEnabled() const
+		{
+			return m_tumblingEnabled;
 		}
 
 		void setTransform( const M44f &transform )
@@ -530,6 +540,11 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 		void tumble( const Imath::V2f &p )
 		{
+			if( !m_tumblingEnabled )
+			{
+				return;
+			}
+
 			V2f d = p - m_motionStart;
 
 			V3f centerOfInterestInWorld = V3f( 0, 0, -m_centerOfInterest ) * m_motionMatrix;
@@ -614,6 +629,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		// between world units and pixels, independ of viewport resolution
 		// ( and m_sourceCamera will be null ).
 		bool m_planarMovement;
+		bool m_tumblingEnabled;
 
 		Imath::V2f m_maxPlanarZoom;
 
@@ -857,6 +873,15 @@ float ViewportGadget::getCenterOfInterest()
 	return m_cameraController->getCenterOfInterest();
 }
 
+void ViewportGadget::setTumblingEnabled( bool tumblingEnabled )
+{
+	m_cameraController->setTumblingEnabled( tumblingEnabled );
+}
+
+bool ViewportGadget::getTumblingEnabled() const
+{
+	return m_cameraController->getTumblingEnabled();
+}
 
 void ViewportGadget::setMaxPlanarZoom( const Imath::V2f &scale )
 {
