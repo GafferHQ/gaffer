@@ -678,9 +678,11 @@ class SceneView::Gnomon : public boost::signals::trackable
 			yzPlane->setTransform( M44f().rotate( V3f( 0, -M_PI / 2.0f, 0 ) ) );
 			xzPlane->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
 
-			m_gadget->setChild( "xy", xyPlane );
-			m_gadget->setChild( "yz", yzPlane );
-			m_gadget->setChild( "xz", xzPlane );
+			// Gadget names correspond to the names of the free cameras they
+			// will switch to when pressed.
+			m_gadget->setChild( "front", xyPlane );
+			m_gadget->setChild( "side", yzPlane );
+			m_gadget->setChild( "top", xzPlane );
 
 			xyPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
 			yzPlane->buttonPressSignal().connect( boost::bind( &Gnomon::buttonPress, this, ::_1, ::_2 ) );
@@ -717,7 +719,10 @@ class SceneView::Gnomon : public boost::signals::trackable
 
 		void plugDirtied( Gaffer::Plug *plug )
 		{
-			if( plug == this->plug() )
+			if(
+				plug == this->plug() ||
+				plug == m_view->cameraPlug()->getChild<BoolPlug>( "lookThroughEnabled" )
+			)
 			{
 				update();
 			}
@@ -726,6 +731,11 @@ class SceneView::Gnomon : public boost::signals::trackable
 		void update()
 		{
 			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
+			const bool planesVisible = !m_view->cameraPlug()->getChild<BoolPlug>( "lookThroughEnabled" )->getValue();
+			for( auto &name : { "top", "front", "side" } )
+			{
+				m_gadget->getChild<Gadget>( name )->setVisible( planesVisible );
+			}
 		}
 
 		bool buttonPress( Gadget *gadget, const ButtonEvent &event )
@@ -740,22 +750,10 @@ class SceneView::Gnomon : public boost::signals::trackable
 				return true;
 			}
 
-			V3f direction( 0, 0, -1 );
-			V3f upVector( 0, 1, 0 );
-
-			if( gadget->getName() == "yz" )
-			{
-				direction = V3f( -1, 0, 0 );
-			}
-			else if( gadget->getName() == "xz" )
-			{
-				direction = V3f( 0, -1, 0 );
-				upVector = V3f( -1, 0, 0 );
-			}
-
-			/// \todo We should probably have default persp/top/front/side cameras
-			/// in the SceneView, and then we could toggle between them here.
-			m_view->viewportGadget()->frame( m_view->framingBound(), direction, upVector );
+			auto freeCameraPlug = m_view->cameraPlug()->getChild<StringPlug>( "freeCamera" );
+			freeCameraPlug->setValue(
+				freeCameraPlug->getValue() == "perspective" ? gadget->getName() : "perspective"
+			);
 
 			return true;
 		}

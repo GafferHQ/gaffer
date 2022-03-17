@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Viewer : Added standard Top, Front and Side orthographic cameras, accessible from the Camera menu (#4523).
+- Viewer :
+  - Added standard Top, Front and Side orthographic cameras, accessible from the Camera menu (#4523).
+  - Clicking on the gnomon now toggles between the standard orthographic cameras and the perspective camera.
 - Spreadsheet : Improved drag and drop of lists of strings. <kbd>Shift</kbd> may now be held to add to the current list, and <kbd>Control</kbd> may be held to remove from the current list (#3894). This is particularly useful when a PathFilter has been added to a spreadsheet.
 
 Fixes
