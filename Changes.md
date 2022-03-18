@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.5.0)
+========
+
+Fixes
+-----
+
+- Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
+
 0.61.5.0 (relative to 0.61.4.0)
 ========
 
