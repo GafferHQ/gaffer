@@ -164,11 +164,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					if not plug.node().isChildEdit( row ) :
 						self.__addRowButton.setVisible( False )
 						break
-
-			# Because dragging plugs to the add button involves making
-			# an output connection from the spreadsheet, it doesn't make
-			# sense to allow it on promoted plugs.
-			if not isinstance( plug.node(), Gaffer.Spreadsheet ) :
+				# Likewise, we don't support the addition of new columns at all.
 				self.__addColumnButton.setVisible( False )
 
 			self.__statusLabel = GafferUI.Label(
@@ -334,11 +330,17 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addColumnButtonDragEnter( self, addButton, event ) :
 
-		if isinstance( event.data, Gaffer.ValuePlug ) and event.data.getInput() is None :
-			addButton.setHighlighted( True )
-			return True
+		if not isinstance( event.data, Gaffer.ValuePlug ) or event.data.getInput() is not None :
+			return False
 
-		return False
+		if not isinstance( self.getPlug().node(), Gaffer.Spreadsheet ) :
+			# Dropping plugs involves making an output connection from
+			# the spreadsheet, which we don't want to do for a promoted
+			# plug.
+			return False
+
+		addButton.setHighlighted( True )
+		return True
 
 	def __addColumnButtonDragLeave( self, addButton, event ) :
 
