@@ -159,8 +159,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# Currently we only allow new rows to be added to references
 				# that had no rows when they were exported. We don't want to
 				# get into merge hell trying to combine user-added and referenced
-				# rows, particularly as we are planning to add row-reordering
-				# features in future.
+				# rows, especially given the row-reordering feature.
 				for row in plug.children()[1:] :
 					if not plug.node().isChildEdit( row ) :
 						self.__addRowButton.setVisible( False )
