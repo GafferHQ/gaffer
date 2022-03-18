@@ -361,7 +361,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 			self.assertEqual(
 				view["camera"]["clippingPlanes"].getValue(),
-				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
+				view.viewportGadget().getCamera().getClippingPlanes()
 			)
 			self.assertAlmostEqual(
 				view["camera"]["fieldOfView"].getValue(),
