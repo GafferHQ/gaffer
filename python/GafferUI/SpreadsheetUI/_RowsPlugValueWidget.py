@@ -226,6 +226,15 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return cls.__addRowButtonMenuSignal
 
+	__addColumnButtonMenuSignal = None
+	@classmethod
+	def addColumnButtonMenuSignal( cls ) :
+
+		if cls.__addColumnButtonMenuSignal is None :
+			cls.__addColumnButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addColumnButtonMenuSignal
+
 	def _updateFromPlug( self ) :
 
 		editable = self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
@@ -302,6 +311,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				menuDefinition.append(
 					label, { "command" : functools.partial( Gaffer.WeakMethod( self.__addColumn ), plugType = plugType ), "active" : True }
 				)
+
+		self.addColumnButtonMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
 
