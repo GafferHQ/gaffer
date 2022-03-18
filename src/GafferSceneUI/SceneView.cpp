@@ -1045,21 +1045,22 @@ struct FreeCamera
 	{
 		CameraPtr camera = new Camera;
 		camera->setProjection( "orthographic" );
-		camera->setClippingPlanes( V2f( -100000, 100000 ) );
+		camera->setClippingPlanes( V2f( 0, 100000 ) );
 		camera->setAperture( V2f( 20 ) );
 		camera->setFilmFit( Camera::FilmFit::Fit );
 
+		const float offset = 1000;
 		M44f transform;
 		switch( viewAxis )
 		{
 			case 0 :
-				transform = computeLocalFrame( V3f( 0 ), V3f( 0, 0, -1 ), V3f( 1, 0, 0 ) );
+				transform = computeLocalFrame( V3f( offset, 0, 0 ), V3f( 0, 0, -1 ), V3f( 1, 0, 0 ) );
 				break;
 			case 1 :
-				transform = computeLocalFrame( V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 1, 0 ) );
+				transform = computeLocalFrame( V3f( 0, offset, 0 ), V3f( 1, 0, 0 ), V3f( 0, 1, 0 ) );
 				break;
 			case 2 :
-				transform = computeLocalFrame( V3f( 0 ), V3f( 1, 0, 0 ), V3f( 0, 0, 1 ) );
+				transform = computeLocalFrame( V3f( 0, 0, offset ), V3f( 1, 0, 0 ), V3f( 0, 0, 1 ) );
 				break;
 		}
 
