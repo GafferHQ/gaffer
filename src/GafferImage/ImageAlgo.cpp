@@ -144,6 +144,44 @@ const std::string GafferImage::ImageAlgo::channelNameB( "B" );
 const std::string GafferImage::ImageAlgo::channelNameZ( "Z" );
 const std::string GafferImage::ImageAlgo::channelNameZBack( "ZBack" );
 
+void ImageAlgo::sortChannelNames( std::vector< std::string > &channelNames )
+{
+	std::sort( channelNames.begin(), channelNames.end(), []( const std::string &a, const std::string &b ){
+
+		std::string layerA = layerName( a );
+		std::string layerB = layerName( b );
+		if( layerA != layerB )
+		{
+			return layerA < layerB;
+		}
+
+		// The channels are in the same layer, so we need to compare the base names
+		std::string baseA = baseName( a );
+		std::string baseB = baseName( b );
+
+		// Assign indices based on which of RGBA the channel is ( or npos if it's a custom name )
+		size_t aIndex = std::string::npos;
+		if( baseA.size() == 1 )
+		{
+			aIndex = std::string("RGBA").find( baseA );
+		}
+		size_t bIndex = std::string::npos;
+		if( baseB.size() == 1 )
+		{
+			bIndex = std::string("RGBA").find( baseB );
+		}
+
+		if( aIndex != bIndex )
+		{
+			return aIndex < bIndex;
+		}
+
+		// Both channels are custom names, so use alphabetical order based on channel name
+		return baseA < baseB;
+	} );
+
+}
+
 IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug )
 {
 	if( imagePlug->deepPlug()->getValue() )
