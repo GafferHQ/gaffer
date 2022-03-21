@@ -1139,6 +1139,9 @@ class _PlugTableView( GafferUI.Widget ) :
 		if not plugs or any( Gaffer.MetadataAlgo.readOnly( p ) for p in plugs ) :
 			return
 
+		if any( not p.settable() for p in plugs ) :
+			return
+
 		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
 			checked = sole( [ plug.getValue() for plug in plugs ] )
 		with Gaffer.UndoScope( next( iter( plugs ) ).ancestor( Gaffer.ScriptNode ) ) :

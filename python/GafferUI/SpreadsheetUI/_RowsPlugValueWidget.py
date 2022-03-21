@@ -159,17 +159,12 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# Currently we only allow new rows to be added to references
 				# that had no rows when they were exported. We don't want to
 				# get into merge hell trying to combine user-added and referenced
-				# rows, particularly as we are planning to add row-reordering
-				# features in future.
+				# rows, especially given the row-reordering feature.
 				for row in plug.children()[1:] :
 					if not plug.node().isChildEdit( row ) :
 						self.__addRowButton.setVisible( False )
 						break
-
-			# Because dragging plugs to the add button involves making
-			# an output connection from the spreadsheet, it doesn't make
-			# sense to allow it on promoted plugs.
-			if not isinstance( plug.node(), Gaffer.Spreadsheet ) :
+				# Likewise, we don't support the addition of new columns at all.
 				self.__addColumnButton.setVisible( False )
 
 			self.__statusLabel = GafferUI.Label(
@@ -226,6 +221,15 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			cls.__addRowButtonMenuSignal = _AddButtonMenuSignal()
 
 		return cls.__addRowButtonMenuSignal
+
+	__addColumnButtonMenuSignal = None
+	@classmethod
+	def addColumnButtonMenuSignal( cls ) :
+
+		if cls.__addColumnButtonMenuSignal is None :
+			cls.__addColumnButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addColumnButtonMenuSignal
 
 	def _updateFromPlug( self ) :
 
@@ -304,6 +308,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					label, { "command" : functools.partial( Gaffer.WeakMethod( self.__addColumn ), plugType = plugType ), "active" : True }
 				)
 
+		self.addColumnButtonMenuSignal()( menuDefinition, self )
+
 		return menuDefinition
 
 	def __addColumn( self, menu, plugType ) :
@@ -324,11 +330,17 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addColumnButtonDragEnter( self, addButton, event ) :
 
-		if isinstance( event.data, Gaffer.ValuePlug ) and event.data.getInput() is None :
-			addButton.setHighlighted( True )
-			return True
+		if not isinstance( event.data, Gaffer.ValuePlug ) or event.data.getInput() is not None :
+			return False
 
-		return False
+		if not isinstance( self.getPlug().node(), Gaffer.Spreadsheet ) :
+			# Dropping plugs involves making an output connection from
+			# the spreadsheet, which we don't want to do for a promoted
+			# plug.
+			return False
+
+		addButton.setHighlighted( True )
+		return True
 
 	def __addColumnButtonDragLeave( self, addButton, event ) :
 

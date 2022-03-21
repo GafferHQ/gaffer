@@ -80,3 +80,33 @@ def decoration( plug ) :
 def addRowButtonMenuSignal() :
 
 	return _RowsPlugValueWidget.addRowButtonMenuSignal()
+
+## Signal emitted when the "add column" button is pressed. Slots
+# may be connected to customise the menu that is shown, and are
+# called with the following arguments :
+#
+# - `menuDefinition` : The `IECore.MenuDefinition` to be edited.
+# - `widget` : The PlugValueWidget for the spreadsheet. Access
+#   the `RowsPlug` itself via `widget.getPlug()`.
+#
+# Example :
+#
+# ```
+# def customAddColumnMenu( menuDefinition, widget ) :
+#
+# 	def addColumn( rowsPlug ) :
+#
+# 		with Gaffer.UndoScope( rowsPlug.ancestor( Gaffer.ScriptNode ) ) :
+# 			rowsPlug.addColumn( Gaffer.StringPlug( "custom", defaultValue = "custom" ) )
+#
+# 	menuDefinition.append( "/CustomDivider", { "divider" : True } )
+# 	menuDefinition.append( "/Custom", { "command" : functools.partial( addColumn, widget.getPlug() ) } )
+#
+# GafferUI.SpreadsheetUI.addColumnButtonMenuSignal().connect( customAddColumnMenu, scoped = False )
+# ```
+#
+# > Tip : The `menuDefinition` will already contain a set of default
+# > menu items. These may be removed by calling `menuDefinition.clear()`.
+def addColumnButtonMenuSignal() :
+
+	return _RowsPlugValueWidget.addColumnButtonMenuSignal()
