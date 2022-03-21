@@ -1,3 +1,16 @@
+0.61.x.x (relative to 0.61.5.0)
+========
+
+Fixes
+-----
+
+- Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
+
+API
+---
+
+- SpreadsheetUI : Added `addColumnButtonMenuSignal()`, which can be used to customise the column creation menu for spreadsheets.
+
 0.61.5.0 (relative to 0.61.4.0)
 ========
 
