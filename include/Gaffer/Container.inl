@@ -41,11 +41,6 @@ namespace Gaffer
 {
 
 template<typename Base, typename T>
-Container<Base, T>::Container()
-{
-}
-
-template<typename Base, typename T>
 Container<Base, T>::Container( const std::string &name )
 	:	Base( name )
 {
