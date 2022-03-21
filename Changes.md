@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- GraphEditor : Fixed active-branch-highlighting bug, where newly created GraphEditors wouldn't update correctly until the focus node was set again.
 - Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
 
 API

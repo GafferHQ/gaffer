@@ -1773,5 +1773,53 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		canceller.cancel()
 		t.wait()
 
+	def assertHighlighting( self, graphGadget, expectedState ) :
+
+		# Highlighting is performed as a background task, so we have
+		# to wait for it to finish. We allow up to 2s for this to happen,
+		# to account for CI workers under heavy load.
+		timeout = time.time() + 2
+
+		while True :
+			self.waitForIdle()
+			actualState = {
+				k : not graphGadget.nodeGadget( graphGadget.getRoot()[k] ).getContents().getDimmed()
+				for k in expectedState.keys()
+			}
+			if actualState == expectedState :
+				return
+			elif time.time() > timeout :
+				# Emit descriptive failure
+				self.assertEqual( actualState, expectedState )
+
+	def testDirtyTrackingForInitialFocusNode( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["add1"] = GafferTest.AddNode()
+		script["add2"] = GafferTest.AddNode()
+
+		script["switch"] = Gaffer.Switch()
+		script["switch"].setup( script["add1"]["op1"] )
+		script["switch"]["in"][0].setInput( script["add1"]["sum"] )
+		script["switch"]["in"][1].setInput( script["add2"]["sum"] )
+
+		script.setFocus( script["switch"] )
+
+		with GafferUI.Window() as window :
+			graphGadget = GafferUI.GraphGadget( script )
+			gadgetWidget = GafferUI.GadgetWidget( graphGadget )
+
+		# Initially we expect the left branch of the switch to be highlighted.
+
+		window.setVisible( True )
+		self.assertHighlighting( graphGadget, { "switch" : True, "add1" : True, "add2" : False } )
+
+		# If we switch to the right branch, we expect the highlighting to
+		# follow suit.
+
+		script["switch"]["index"].setValue( 1 )
+		self.assertHighlighting( graphGadget, { "switch" : True, "add1" : False, "add2" : True } )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -215,7 +215,8 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		void rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
 		void selectionMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
 		void selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped *member );
-		void focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node );
+		void updateFocusPlugDirtiedConnection();
+		void focusChanged();
 		void focusPlugDirtied( Gaffer::Plug *plug );
 		void scriptContextChanged( const Gaffer::Context *context, const IECore::InternedString& );
 		void filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *member );
