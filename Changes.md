@@ -10,6 +10,9 @@ API
 ---
 
 - SpreadsheetUI : Added `addColumnButtonMenuSignal()`, which can be used to customise the column creation menu for spreadsheets.
+- TextGadget :
+  - Added Python binding for `setDimmed()`.
+  - Added missing `getDimmed()` accessor.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
