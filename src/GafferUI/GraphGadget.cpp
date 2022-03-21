@@ -1320,16 +1320,6 @@ void GraphGadget::selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped
 
 void GraphGadget::focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node )
 {
-	if( !node || findNodeGadget( node ) )
-	{
-		// We don't currently rely on dirtying specific children for rendering, so
-		// we can just dirty the top level for triggering a render.  If we switched
-		// to something where renderLayer prepared caches that needed invalidating
-		// by DirtyType::Render, then we could need to find both the previous
-		// focussed Gadget and the next focussed Gadget and dirty them specifically.
-		dirty( DirtyType::Render );
-	}
-
 	if( node )
 	{
 		m_focusPlugDirtiedConnection = node->plugDirtiedSignal().connect(
