@@ -92,11 +92,6 @@ void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
 	SceneAlgo::parallelTraverse( scenePlug, f );
 }
 
-void GafferSceneTest::traverseScene( GafferScene::ScenePlug *scenePlug )
-{
-	traverseScene( const_cast<const ScenePlug *>( scenePlug ) );
-}
-
 Signals::Connection GafferSceneTest::connectTraverseSceneToPlugDirtiedSignal( const GafferScene::ConstScenePlugPtr &scene )
 {
 	const Node *node = scene->node();

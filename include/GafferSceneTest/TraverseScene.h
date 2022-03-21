@@ -50,8 +50,6 @@ namespace GafferSceneTest
 /// threads to process different children. It's useful to use this in test cases to exercise
 /// any thread related crashes, and also in profiling for performance improvement.
 GAFFERSCENETEST_API void traverseScene( const GafferScene::ScenePlug *scenePlug );
-/// \todo Remove.
-GAFFERSCENETEST_API void traverseScene( GafferScene::ScenePlug *scenePlug );
 
 /// Arranges for traverseScene() to be called every time the scene is dirtied. This is useful
 /// for exposing bugs caused by things like InteractiveRender and SceneView, where threaded
