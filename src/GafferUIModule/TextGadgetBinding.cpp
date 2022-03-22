@@ -53,5 +53,7 @@ void GafferUIModule::bindTextGadget()
 		.def( init<const std::string &>() )
 		.def( "getText", &TextGadget::getText, return_value_policy<copy_const_reference>() )
 		.def( "setText", &TextGadget::setText )
+		.def( "setDimmed", &TextGadget::setDimmed )
+		.def( "getDimmed", &TextGadget::getDimmed )
 	;
 }

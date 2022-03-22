@@ -541,7 +541,7 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 				boost::bind( &GraphGadget::selectionMemberRemoved, this, ::_1, ::_2 )
 			);
 			m_focusChangedConnection = m_scriptNode->focusChangedSignal().connect(
-				boost::bind( &GraphGadget::focusChanged, this, ::_1, ::_2 )
+				boost::bind( &GraphGadget::focusChanged, this )
 			);
 			m_scriptContextChangedConnection = m_scriptNode->context()->changedSignal().connect(
 				boost::bind( &GraphGadget::scriptContextChanged, this, ::_1, ::_2 )
@@ -553,6 +553,7 @@ void GraphGadget::setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 			m_selectionMemberAddedConnection.disconnect();
 			m_focusChangedConnection.disconnect();
 		}
+		updateFocusPlugDirtiedConnection();
 	}
 
 	if( filter != m_filter )
@@ -1315,19 +1316,9 @@ void GraphGadget::selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped
 	}
 }
 
-void GraphGadget::focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node )
+void GraphGadget::updateFocusPlugDirtiedConnection()
 {
-	if( !node || findNodeGadget( node ) )
-	{
-		// We don't currently rely on dirtying specific children for rendering, so
-		// we can just dirty the top level for triggering a render.  If we switched
-		// to something where renderLayer prepared caches that needed invalidating
-		// by DirtyType::Render, then we could need to find both the previous
-		// focussed Gadget and the next focussed Gadget and dirty them specifically.
-		dirty( DirtyType::Render );
-	}
-
-	if( node )
+	if( Gaffer::Node *node = m_scriptNode->getFocus() )
 	{
 		m_focusPlugDirtiedConnection = node->plugDirtiedSignal().connect(
 			boost::bind( &GraphGadget::focusPlugDirtied, this, ::_1 )
@@ -1335,9 +1326,13 @@ void GraphGadget::focusChanged( Gaffer::ScriptNode *script, Gaffer::Node *node )
 	}
 	else
 	{
-		m_focusPlugDirtiedConnection = Gaffer::Signals::ScopedConnection();
+		m_focusPlugDirtiedConnection.disconnect();
 	}
+}
 
+void GraphGadget::focusChanged()
+{
+	updateFocusPlugDirtiedConnection();
 	dirtyActive();
 }
 

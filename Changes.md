@@ -84,15 +84,27 @@ Build
 0.61.x.x (relative to 0.61.5.0)
 ========
 
+Improvements
+------------
+
+- Spreadsheet : Improved drag and drop of lists of strings. <kbd>Shift</kbd> may now be held to add to the current list, and <kbd>Control</kbd> may be held to remove from the current list (#3894). This is particularly useful when a PathFilter has been added to a spreadsheet.
+
 Fixes
 -----
 
+- GraphEditor : Fixed active-branch-highlighting bug, where newly created GraphEditors wouldn't update correctly until the focus node was set again.
 - Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
+- MessageWidget : Modified so that we no longer trigger UI updates while handling messages. This fixes some weird behaviour in rare cases when UI elements were evaluated in the wrong context.
 
 API
 ---
 
 - SpreadsheetUI : Added `addColumnButtonMenuSignal()`, which can be used to customise the column creation menu for spreadsheets.
+- TextGadget :
+  - Added Python binding for `setDimmed()`.
+  - Added missing `getDimmed()` accessor.
+- Pointer : Added `add` and `remove` pointers for use with `setCurrent()`.
+- MessageWidget : We no longer update the UI immediately when a message is emitted on the UI thread. If you have a slow process that you want to receive messages from interactively, you should run it on a background thread (perhaps using BackgroundTaskDialogue). If you have old code that runs something slow on the UI thread, it will still run, but you will only see messages from it once it finishes.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========

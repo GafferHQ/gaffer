@@ -30,6 +30,8 @@
 				"moveDiagonallyUp", # \todo prefix with 'pointer'
 				'pointerTarget',
 				'pointerCrossHair',
+				"pointerAdd",
+				"pointerRemove",
 			]
 		},
 
