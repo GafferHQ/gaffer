@@ -53,7 +53,6 @@ class SetIterator;
 
 /// Set provides an abstract base class for an arbitrary collection
 /// of IECore::RunTimeTyped objects.
-/// \todo Provide an iterator wrapping member().
 class GAFFER_API Set : public IECore::RunTimeTyped, public Signals::Trackable
 {
 
