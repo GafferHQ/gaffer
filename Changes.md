@@ -11,6 +11,7 @@ Fixes
 
 - GraphEditor : Fixed active-branch-highlighting bug, where newly created GraphEditors wouldn't update correctly until the focus node was set again.
 - Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
+- MessageWidget : Modified so that we no longer trigger UI updates while handling messages. This fixes some weird behaviour in rare cases when UI elements were evaluated in the wrong context.
 
 API
 ---
@@ -20,6 +21,7 @@ API
   - Added Python binding for `setDimmed()`.
   - Added missing `getDimmed()` accessor.
 - Pointer : Added `add` and `remove` pointers for use with `setCurrent()`.
+- MessageWidget : We no longer update the UI immediately when a message is emitted on the UI thread. If you have a slow process that you want to receive messages from interactively, you should run it on a background thread (perhaps using BackgroundTaskDialogue). If you have old code that runs something slow on the UI thread, it will still run, but you will only see messages from it once it finishes.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
