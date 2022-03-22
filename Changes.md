@@ -36,7 +36,7 @@ API
     - ApplicationRoot : ClipboardSignal.
     - GraphComponent : UnarySignal and BinarySignal.
     - Gadget : VisibilityChangedSignal, EnterLeaveSignal and IdleSignal.
-    - Node : UnaryPlugSignal, BinaryPlugSignal.
+    - Node : UnaryPlugSignal, BinaryPlugSignal, ErrorSignal.
     - ScriptNode : ActionSignal, UndoAddedSignal.
     - ViewportGadget : UnarySignal.
   - The following signals now handle exceptions thrown from C++ slots as well as Python slots :

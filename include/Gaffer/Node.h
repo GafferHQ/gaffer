@@ -143,7 +143,10 @@ class GAFFER_API Node : public GraphComponent
 		/// specifies the original source of the error, since it may be being
 		/// propagated downstream from an original upstream error. The error
 		/// argument is a description of the problem.
-		using ErrorSignal = Signals::Signal<void ( const Plug *plug, const Plug *source, const std::string &error )>;
+		using ErrorSignal = Signals::Signal<
+			void ( const Plug *plug, const Plug *source, const std::string &error ),
+			Signals::CatchingCombiner<void>
+		>;
 		/// Signal emitted when an error occurs while processing this node.
 		/// This is intended to allow UI elements to display errors that occur
 		/// during processing triggered by other parts of the UI.
