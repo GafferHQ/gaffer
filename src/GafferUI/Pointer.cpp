@@ -65,6 +65,8 @@ static Registry &registry()
 		r["detachedPanel"] = new Pointer( "pointerDetachedPanel.png", Imath::V2i( 12, 13 ) );
 		r["target"] = new Pointer( "pointerTarget.png", Imath::V2i( 14 ) );
 		r["crossHair"] = new Pointer( "pointerCrossHair.png", Imath::V2i( 14 ) );
+		r["add"] = new Pointer( "pointerAdd.png", Imath::V2i( 18, 11 ) );
+		r["remove"] = new Pointer( "pointerRemove.png", Imath::V2i( 18, 11 ) );
 	}
 	return r;
 }

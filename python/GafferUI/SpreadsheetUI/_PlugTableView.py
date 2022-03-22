@@ -432,73 +432,112 @@ class _PlugTableView( GafferUI.Widget ) :
 
 				self.__applyColumnVisibility()
 
-	def __dragEnter( self, widget, event ) :
+	__DropMode = IECore.Enum.create( "Set", "Add", "Remove" )
+	def __dropMode( self, destinationPlug, event ) :
+
+		if (
+			isinstance( destinationPlug, Gaffer.Spreadsheet.CellPlug ) and
+			isinstance( destinationPlug["value"], Gaffer.StringVectorDataPlug ) and
+			isinstance( event.data, IECore.StringVectorData )
+		) :
+			if event.modifiers == event.Modifiers.Shift :
+				return self.__DropMode.Add
+			elif event.modifiers == event.Modifiers.Control :
+				return self.__DropMode.Remove
+
+		return self.__DropMode.Set
+
+	def __dropData( self, destinationPlug, event ) :
+
+		mode = self.__dropMode( destinationPlug, event )
+		if mode == self.__DropMode.Set :
+			return event.data
+
+		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+			strings = set( destinationPlug["value"].getValue() )
+
+		if mode == self.__DropMode.Add :
+			strings.update( event.data )
+		elif mode == self.__DropMode.Remove :
+			strings.difference_update( event.data )
+
+		return IECore.StringVectorData( sorted( strings ) )
+
+	# Returns a function that should be called to complete a drop for the
+	# specified event, or `None` if dropping is not possible.
+	def __dropFunction( self, event ) :
 
 		if Gaffer.MetadataAlgo.readOnly( self._qtWidget().model().rowsPlug() ) :
-			return False
+			return None
 
-		if not isinstance( event.data, ( Gaffer.Plug, IECore.Data ) ) :
-			return False
+		destinationPlug = self.plugAt( event.line.p0 )
+		if destinationPlug is None :
+			return None
 
-		self.__currentDragDestinationPlug = None
-		return True
+		if isinstance( event.data, IECore.Data ) :
+			dropData = self.__dropData( destinationPlug, event )
+			if _ClipboardAlgo.canPasteCells( dropData, [ [ destinationPlug ] ] ) :
+				return functools.partial(
+					_ClipboardAlgo.pasteCells,
+					dropData, [ [ destinationPlug ] ],
+					self.ancestor( GafferUI.PlugValueWidget ).getContext().getTime()
+				)
+		elif isinstance( event.data, Gaffer.Plug ) :
+			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
+			if self.__canConnect( sourcePlug, targetPlug ) :
+				return functools.partial( targetPlug.setInput, sourcePlug )
+
+		return None
+
+	def __dragEnter( self, widget, event ) :
+
+		if self.__dropFunction( event ) is not None :
+			self.__dragEnterPointer = GafferUI.Pointer.getCurrent()
+			return True
+		else :
+			return False
 
 	def __dragMove( self, widget, event ) :
 
-		destinationPlug = self.plugAt( event.line.p0 )
-
-		if self.__currentDragDestinationPlug == destinationPlug :
-			return
-
-		self.__currentDragDestinationPlug = destinationPlug
-
-		selectionModel = self._qtWidget().selectionModel()
-		selectionModel.clear()
-
-		if destinationPlug is None:
-			return
-
-		select = False
-		if isinstance( event.data, IECore.Data ) :
-			select = _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] )
+		if self.__dropFunction( event ) is None :
+			self._qtWidget().selectionModel().clear()
+			GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
-			select = self.__canConnect( sourcePlug, targetPlug )
-
-		if select :
-			selectionModel.select(
+			destinationPlug = self.plugAt( event.line.p0 )
+			self._qtWidget().selectionModel().setCurrentIndex(
 				self._qtWidget().model().indexForPlug( destinationPlug ),
 				QtCore.QItemSelectionModel.SelectCurrent
 			)
+			mode = self.__dropMode( destinationPlug, event )
+			if mode == self.__DropMode.Add :
+				GafferUI.Pointer.setCurrent( "add" )
+			elif mode == self.__DropMode.Remove :
+				GafferUI.Pointer.setCurrent( "remove" )
+			else :
+				GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+
+		return True
 
 	def __dragLeave( self, widget, event ) :
 
-		self.__currentDragDestinationPlug = None
 		self._qtWidget().selectionModel().clear()
+		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+		return True
 
 	def __drop( self, widget, event ) :
 
-		self.__currentDragDestinationPlug = None
+		# Update the selection in case the drag position changed
+		# since last `__dragMove` (not sure this is necessary).
+		self.__dragMove( widget, event )
 
-		destinationPlug = self.plugAt( event.line.p0 )
+		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
 
-		if isinstance( event.data, IECore.Data ) :
-			if not _ClipboardAlgo.canPasteCells( event.data, [ [ destinationPlug ] ] ) :
-				return False
-			with Gaffer.UndoScope( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
-				context = self.ancestor( GafferUI.PlugValueWidget ).getContext()
-				_ClipboardAlgo.pasteCells( event.data, [ [ destinationPlug ] ], context.getTime() )
-		else :
-			sourcePlug, targetPlug = self.__connectionPlugs( event.data, destinationPlug )
-			if not self.__canConnect( sourcePlug, targetPlug ) :
-				return False
-			with Gaffer.UndoScope( targetPlug.ancestor( Gaffer.ScriptNode ) ) :
-				targetPlug.setInput( sourcePlug )
+		dropFunction = self.__dropFunction( event )
+		if dropFunction is None :
+			return True
 
-		index = self._qtWidget().model().indexForPlug( destinationPlug )
-		selectionModel = self._qtWidget().selectionModel()
-		selectionModel.select( index, QtCore.QItemSelectionModel.ClearAndSelect )
-		selectionModel.setCurrentIndex( index, QtCore.QItemSelectionModel.ClearAndSelect )
+		with Gaffer.UndoScope( self._qtWidget().model().rowsPlug().ancestor( Gaffer.ScriptNode ) ) :
+			dropFunction()
 
 		# People regularly have spreadsheets in separate windows. Ensure the
 		# sheet has focus after drop has concluded. It will have returned to
@@ -545,21 +584,6 @@ class _PlugTableView( GafferUI.Widget ) :
 			return False
 
 		return True
-
-	def __positionInCellGrid( self, position ) :
-
-		# The event coordinate origin includes the header view.
-		# Queries to indexAt etc... need the origin to be in the
-		# table view itself.
-
-		cellPosition = imath.V3f( position )
-
-		if self._qtWidget().verticalHeader().isVisible() :
-			cellPosition.x -= self._qtWidget().verticalHeader().frameRect().width()
-		if self._qtWidget().horizontalHeader().isVisible() :
-			cellPosition.y -= self._qtWidget().horizontalHeader().frameRect().height()
-
-		return cellPosition
 
 	def __buttonPress( self, widget, event ) :
 
