@@ -87,6 +87,11 @@ void TextGadget::setDimmed( bool dimmed )
 	}
 }
 
+bool TextGadget::getDimmed() const
+{
+	return m_dimmed;
+}
+
 Imath::Box3f TextGadget::bound() const
 {
 	return m_bound;

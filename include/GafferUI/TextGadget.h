@@ -59,6 +59,7 @@ class GAFFERUI_API TextGadget : public Gadget
 		void setText( const std::string &text );
 
 		void setDimmed( bool dimmed );
+		bool getDimmed() const;
 
 		Imath::Box3f bound() const override;
 

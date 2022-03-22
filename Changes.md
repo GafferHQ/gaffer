@@ -4,12 +4,16 @@
 Fixes
 -----
 
+- GraphEditor : Fixed active-branch-highlighting bug, where newly created GraphEditors wouldn't update correctly until the focus node was set again.
 - Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
 
 API
 ---
 
 - SpreadsheetUI : Added `addColumnButtonMenuSignal()`, which can be used to customise the column creation menu for spreadsheets.
+- TextGadget :
+  - Added Python binding for `setDimmed()`.
+  - Added missing `getDimmed()` accessor.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
