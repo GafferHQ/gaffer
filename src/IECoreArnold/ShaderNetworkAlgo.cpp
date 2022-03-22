@@ -45,7 +45,6 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
-#include "IECore/SplineData.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -60,57 +59,10 @@ using namespace IECoreArnold;
 namespace
 {
 
-const AtString g_catmullRomArnoldString( "catmull-rom" );
-const AtString g_bezierArnoldString( "bezier" );
-const AtString g_bsplineArnoldString( "bspline" );
-const AtString g_linearArnoldString( "linear" );
 const AtString g_outputArnoldString( "output" );
 const AtString g_shaderNameArnoldString( "shadername" );
 const AtString g_oslArnoldString( "osl" );
 const AtString g_nameArnoldString( "name" );
-
-template<typename Spline>
-void setSplineParameter( AtNode *node, const std::string &name, const Spline &spline )
-{
-	using PositionsVector = vector<typename Spline::XType>;
-	using ValuesVector = vector<typename Spline::YType>;
-	using PositionsData = TypedData<PositionsVector>;
-	using ValuesData = TypedData<ValuesVector>;
-
-	typename PositionsData::Ptr positionsData = new PositionsData;
-	typename ValuesData::Ptr valuesData = new ValuesData;
-
-	PositionsVector &positions = positionsData->writable();
-	ValuesVector &values = valuesData->writable();
-	positions.reserve( spline.points.size() );
-	values.reserve( spline.points.size() );
-
-	for( typename Spline::PointContainer::const_iterator it = spline.points.begin(), eIt = spline.points.end(); it != eIt; ++it )
-	{
-		positions.push_back( it->first );
-		values.push_back( it->second );
-	}
-
-
-	AtString basis( g_catmullRomArnoldString );
-	if( spline.basis == Spline::Basis::bezier() )
-	{
-		basis = g_bezierArnoldString;
-	}
-	else if( spline.basis == Spline::Basis::bSpline() )
-	{
-		basis = g_bsplineArnoldString;
-	}
-	else if( spline.basis == Spline::Basis::linear() )
-	{
-		basis = g_linearArnoldString;
-	}
-
-	GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
-	ParameterAlgo::setParameter( node, ( name + "Positions" ).c_str(), positionsData.get() );
-	ParameterAlgo::setParameter( node, ( name + "Values" ).c_str(), valuesData.get() );
-	AiNodeSetStr( node, AtString( ( name + "Basis" ).c_str() ), basis );
-}
 
 using ShaderMap = boost::unordered_map<ShaderNetwork::Parameter, AtNode *>;
 
@@ -200,7 +152,11 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	// Set the shader parameters
 
-	for( const auto &namedParameter : shader->parameters() )
+	IECore::ConstCompoundDataPtr expandedParameters = IECoreScene::ShaderNetworkAlgo::expandSplineParameters(
+		shader->parametersData()
+	);
+
+	for( const auto &namedParameter : expandedParameters->readable() )
 	{
 		string parameterName;
 		if( isOSLShader )
@@ -212,19 +168,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			parameterName = namedParameter.first.string();
 		}
 
-		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
-		{
-			setSplineParameter( node, parameterName, splineData->readable() );
-		}
-		else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( namedParameter.second.get() ) )
-		{
-			setSplineParameter( node, parameterName, splineData->readable() );
-			continue;
-		}
-		else
-		{
-			ParameterAlgo::setParameter( node, AtString( parameterName.c_str() ), namedParameter.second.get() );
-		}
+		ParameterAlgo::setParameter( node, AtString( parameterName.c_str() ), namedParameter.second.get() );
 	}
 
 	// Recurse through input connections

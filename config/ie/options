@@ -95,7 +95,7 @@ targetAppVersion = None
 
 if int( getOption( "IE_STOMP_VERSION", "0" ) ):
 	registryVersion = os.environ["GAFFER_COMPATIBILITY_VERSION"] + ".0.0"
-	GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION, GAFFER_MINOR_VERSION, GAFFER_PATH_VERSION = os.environ["GAFFER_VERSION"].rstrip( "dev" ).split( "." )
+	GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION, GAFFER_MINOR_VERSION, GAFFER_PATCH_VERSION = os.environ["GAFFER_VERSION"].rstrip( "dev" ).split( "." )
 else:
 	registryVersion = gafferRegistryVersion()
 
