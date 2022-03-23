@@ -39,6 +39,7 @@
 #define GAFFER_PATH_H
 
 #include "Gaffer/Export.h"
+#include "Gaffer/PathFilter.h"
 #include "Gaffer/Signals.h"
 #include "Gaffer/TypeIds.h"
 
