@@ -145,7 +145,6 @@ Gaffer.Metadata.registerNode(
 			"layout:activator:lookThroughDisabled", lambda plug : not plug["lookThroughEnabled"].getValue(),
 			"layout:activator:cameraIsFreePerspective", lambda plug : not plug["lookThroughEnabled"].getValue() and plug["freeCamera"].getValue() == "perspective",
 			"layout:section:Free Camera:collapsed", False,
-			"layout:section:Free Camera:summary", lambda plug : plug["freeCamera"].getValue().title(),
 			"layout:section:Light Look Through:collapsed", False,
 
 		],

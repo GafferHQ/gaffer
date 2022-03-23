@@ -1045,7 +1045,6 @@ struct FreeCamera
 	{
 		CameraPtr camera = new Camera;
 		camera->setProjection( "orthographic" );
-		camera->setClippingPlanes( V2f( 0, 100000 ) );
 		camera->setAperture( V2f( 20 ) );
 		camera->setFilmFit( Camera::FilmFit::Fit );
 
@@ -1091,11 +1090,6 @@ struct FreeCamera
 	void updateFromPlugs( FloatPlug *fieldOfViewPlug, V2fPlug *clippingPlanesPlug )
 	{
 		V2f clippingPlanes = clippingPlanesPlug->getValue();
-		if( camera->getProjection() == "perspective" )
-		{
-			clippingPlanes[0] = std::max( clippingPlanes[0], 0.0001f );
-			clippingPlanes[1] = std::max( clippingPlanes[1], 0.0001f );
-		}
 		if( clippingPlanes[1] < clippingPlanes[0] )
 		{
 			std::swap( clippingPlanes[0], clippingPlanes[1] );
@@ -1132,7 +1126,7 @@ class SceneView::Camera : public boost::signals::trackable
 				m_lightToCamera( new LightToCamera ),
 				m_distantApertureAttributeQuery( new AttributeQuery ),
 				m_clippingPlanesAttributeQuery( new AttributeQuery ),
-				m_lookThroughCameraDirty( false ),
+				m_lookThroughCameraDirty( true ),
 				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
@@ -1157,7 +1151,7 @@ class SceneView::Camera : public boost::signals::trackable
 				new Gaffer::V2fPlug(
 					"clippingPlanes", Plug::In,
 					V2f( 0.1, 100000 ),
-					V2f( Imath::limits<float>::min() ),
+					V2f( 0.0001 ),
 					V2f( Imath::limits<float>::max() ),
 					Plug::Default & ~Plug::AcceptsInputs
 				)
@@ -1222,6 +1216,11 @@ class SceneView::Camera : public boost::signals::trackable
 			m_freeCameras["side"] = FreeCamera::createOrthographic( 0 );
 			m_freeCameras["top"] = FreeCamera::createOrthographic( 1 );
 			m_freeCameras["front"] = FreeCamera::createOrthographic( 2 );
+
+			for( auto &camera : m_freeCameras )
+			{
+				camera.second.updateFromPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
+			}
 
 			// Connect to the signals we need
 
@@ -1349,20 +1348,16 @@ class SceneView::Camera : public boost::signals::trackable
 
 		void plugSet( Gaffer::Plug *plug )
 		{
-			if( plug == freeCameraPlug() )
-			{
-				// Choice of free camera changed. Update settings plugs to
-				// show its parameters.
-				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
-				freeCamera().applyToPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
-			}
-			else if(
+			if(
 				plug == clippingPlanesPlug() ||
 				plug == fieldOfViewPlug()
 			)
 			{
-				// Camera settings changed. Transfer onto free camera.
-				freeCamera().updateFromPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
+				// Camera settings changed. Transfer onto free cameras.
+				for( auto &camera : m_freeCameras )
+				{
+					camera.second.updateFromPlugs( fieldOfViewPlug(), clippingPlanesPlug() );
+				}
 				// `updateFromPlugs()` applies constraints to clipping planes. Apply them
 				// back to the plugs.
 				BlockedConnection plugValueSetBlocker( m_plugSetConnection );
