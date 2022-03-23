@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import six
 
 import IECore
 
@@ -387,6 +388,27 @@ class NodeTest( GafferTest.TestCase ) :
 			list( GafferTest.AddNode.RecursiveRange( n ) ),
 			[ n["a"], n["c"], n["d"]["e"] ],
 		)
+
+	def testErrorSignal( self ) :
+
+		node = GafferTest.BadNode()
+
+		def badSlot( plug, sourcePlug, error ) :
+
+			raise RuntimeError( "Bad slot" )
+
+		node.errorSignal().connect( badSlot, scoped = False )
+		cs = GafferTest.CapturingSlot( node.errorSignal() )
+
+		with IECore.CapturingMessageHandler() as mh :
+			with six.assertRaisesRegex( self, RuntimeError, "Compute did not set plug value" ) :
+				node["out3"].getValue()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertEqual( mh.messages[0].context, "Emitting signal" )
+		self.assertIn( "Bad slot", mh.messages[0].message )
+		self.assertEqual( len( cs ), 1 )
 
 if __name__ == "__main__" :
 	unittest.main()
