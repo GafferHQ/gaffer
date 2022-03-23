@@ -320,7 +320,10 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					// The user might want to tumble around the thing
 					// they framed. Translate back some more to make
 					// room to tumble around the entire bound.
-					m_centerOfInterest += cBox.size().length();
+					if( getTumblingEnabled() )
+					{
+						m_centerOfInterest += cBox.size().length();
+					}
 
 					// If dollying is enabled, then we have permission to modify the
 					// aperture. Adjust it so that we can see the whole bound.
