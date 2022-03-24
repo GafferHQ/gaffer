@@ -167,6 +167,13 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# Likewise, we don't support the addition of new columns at all.
 				self.__addColumnButton.setVisible( False )
 
+			if Gaffer.Metadata.value( plug, "spreadsheet:columnsNeedSerialisation" ) == False :
+				# This metadata is set by custom nodes which create their
+				# columns in a constructor. If users were to add their own
+				# columns, they wouldn't be serialised correctly, so we hide the
+				# button.
+				self.__addColumnButton.setVisible( False )
+
 			self.__statusLabel = GafferUI.Label(
 				"",
 				parenting = {
