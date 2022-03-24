@@ -451,6 +451,10 @@ Reference::~Reference()
 void Reference::load( const std::string &fileName )
 {
 	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
+
+	std::string genericFileName = fileName;
+	std::replace( genericFileName.begin(), genericFileName.end(), '\\', '/' );
+
 	IECore::SearchPath sp( s ? s : "" );
 	boost::filesystem::path path = sp.find( fileName );
 	if( path.empty() )
@@ -466,7 +470,7 @@ void Reference::load( const std::string &fileName )
 
 	Action::enact(
 		this,
-		boost::bind( &Reference::loadInternal, ReferencePtr( this ), fileName ),
+		boost::bind( &Reference::loadInternal, ReferencePtr( this ), genericFileName ),
 		boost::bind( &Reference::loadInternal, ReferencePtr( this ), m_fileName )
 	);
 }

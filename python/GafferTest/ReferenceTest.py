@@ -874,8 +874,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"] = Gaffer.Reference()
 		self.assertEqual( s["r"].fileName(), "" )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
-		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( os.path.join( self.temporaryDirectory(), "test.grf" ) )
+		self.assertEqual(
+			s["r"].fileName(),
+			self.temporaryDirectory().replace( "\\", "/" ) + "/test.grf"
+		)
 
 	def testUndo( self ) :
 
@@ -899,9 +902,15 @@ class ReferenceTest( GafferTest.TestCase ) :
 			s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( "p" in s["r"] )
-		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() + "/test.grf" )
+		self.assertEqual(
+			s["r"].fileName(),
+			self.temporaryDirectory().replace( "\\", "/" ) + "/test.grf"
+		)
 		self.assertTrue( len( states ), 1 )
-		self.assertEqual( states[0], State( [ "user", "p" ], self.temporaryDirectory() + "/test.grf" ) )
+		self.assertEqual(
+			states[0], State( [ "user", "p" ],
+			self.temporaryDirectory().replace( "\\", "/" ) + "/test.grf" )
+		)
 
 		s.undo()
 		self.assertEqual( s["r"].fileName(), "" )
@@ -911,9 +920,15 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s.redo()
 		self.assertTrue( "p" in s["r"] )
-		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() + "/test.grf" )
+		self.assertEqual(
+			s["r"].fileName(),
+			self.temporaryDirectory().replace( "\\", "/" ) + "/test.grf"
+		)
 		self.assertTrue( len( states ), 3 )
-		self.assertEqual( states[2], State( [ "user", "p" ], self.temporaryDirectory() + "/test.grf" ) )
+		self.assertEqual(
+			states[2], State( [ "user", "p" ],
+			self.temporaryDirectory().replace( "\\", "/" ) + "/test.grf" )
+		)
 
 	def testUserPlugsNotReferenced( self ) :
 
@@ -1078,8 +1093,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		fileB = os.path.join( boxPathB, referenceFile )
 		boxB.exportForReference( fileB )
 
-		searchPathA = ":".join( [boxPathA, boxPathB] )
-		searchPathB = ":".join( [boxPathB, boxPathA] )
+		searchPathA = os.pathsep.join( [boxPathA, boxPathB] )
+		searchPathB = os.pathsep.join( [boxPathB, boxPathA] )
 
 		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
 		s["r"] = Gaffer.Reference()
