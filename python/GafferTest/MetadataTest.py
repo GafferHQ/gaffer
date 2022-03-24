@@ -1052,7 +1052,8 @@ class MetadataTest( GafferTest.TestCase ) :
 	@staticmethod
 	def testPythonUnload() :
 
-		subprocess.check_call( [ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/unloadExceptionScript.py" ] )
+		executable = "gaffer" if os.name != "nt" else "gaffer.cmd"
+		subprocess.check_call( [ executable, "python", os.path.join( os.path.dirname( __file__ ), "pythonScripts", "unloadExceptionScript.py" ) ] )
 
 	def testWildcardsAndDot( self ) :
 
