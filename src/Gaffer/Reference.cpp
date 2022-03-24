@@ -36,6 +36,7 @@
 
 #include "Gaffer/Reference.h"
 
+#include "Gaffer/FileSystemPath.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
@@ -451,8 +452,11 @@ Reference::~Reference()
 void Reference::load( const std::string &fileName )
 {
 	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
+
+	const std::string genericFileName = FileSystemPath( fileName ).string();
+
 	IECore::SearchPath sp( s ? s : "" );
-	boost::filesystem::path path = sp.find( fileName );
+	boost::filesystem::path path = sp.find( genericFileName );
 	if( path.empty() )
 	{
 		throw Exception( "Could not find file '" + fileName + "'" );
@@ -466,7 +470,7 @@ void Reference::load( const std::string &fileName )
 
 	Action::enact(
 		this,
-		boost::bind( &Reference::loadInternal, ReferencePtr( this ), fileName ),
+		boost::bind( &Reference::loadInternal, ReferencePtr( this ), genericFileName ),
 		boost::bind( &Reference::loadInternal, ReferencePtr( this ), m_fileName )
 	);
 }
