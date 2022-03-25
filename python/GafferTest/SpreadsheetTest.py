@@ -1203,5 +1203,20 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			}
 		} )
 
+	def testRemoveRowRemovesConnections( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.FloatPlug( "a" ) )
+		spreadsheet["rows"].addColumn( Gaffer.FloatPlug( "b" ) )
+		row = spreadsheet["rows"].addRow()
+
+		add = GafferTest.AddNode()
+		add["op1"].setInput( row["cells"]["a"]["value"] )
+		row["cells"]["b"]["value"].setInput( add["sum"] )
+
+		spreadsheet["rows"].removeRow( row )
+		self.assertIsNone( row["cells"]["b"]["value"].getInput() )
+		self.assertIsNone( add["op1"].getInput() )
+
 if __name__ == "__main__":
 	unittest.main()
