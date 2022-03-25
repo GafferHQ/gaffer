@@ -35,6 +35,7 @@
 ##########################################################################
 
 import collections
+import functools
 
 import Gaffer
 
@@ -55,7 +56,16 @@ from Gaffer._NodeAlgo import *
 # Presets registered with the "preset:<name>" form take precedence. The
 # "en masse" form can be useful where metadata is computed dynamically
 # and the available presets will vary from instance to instance of a node.
+#
+# For a compound plug, it is considered to have a preset availiable if all
+# child plugs have the same preset available
 def presets( plug ) :
+	if not hasattr( plug, "setValue" ):
+		# For compound plugs, return presets that are present on all children
+		if plug.children():
+			return functools.reduce( __intersectLists, [ __presets( i ).keys() for i in plug.children()] )
+		else:
+			return []
 
 	return list( __presets( plug ).keys() )
 
@@ -63,20 +73,28 @@ def presets( plug ) :
 # Returns None if no preset is applied.
 def currentPreset( plug ) :
 
+	matchingPresets = []
 	if not hasattr( plug, "getValue" ) :
+		# For compound plugs, this is a bit tricky, since with a compound preset, some child plugs could
+		# have the same value for multiple presets.  This means we can't narrow it down right away - we
+		# need to track all presets that could potentially match the plugs we've considered so far
+		if plug.children():
+			matchingPresets = functools.reduce( __intersectLists, [ __matchingPresets( i ) for i in plug.children()] )
+	else:
+		matchingPresets = __matchingPresets( plug )
+
+	if matchingPresets:
+		return matchingPresets[0]
+	else:
 		return None
-
-	value = plug.getValue()
-	for presetName, presetValue in __presets( plug ).items() :
-		if value == presetValue :
-			return presetName
-
-	return None
 
 ## Applies the named preset to the plug.
 def applyPreset( plug, presetName ) :
-
-	plug.setValue( __presets( plug )[presetName] )
+	if not hasattr( plug, "setValue" ) :
+		for i in plug.children():
+			applyPreset( i, presetName )
+	else:
+		plug.setValue( __presets( plug )[presetName] )
 
 def __presets( plug ) :
 
@@ -104,6 +122,13 @@ def __presets( plug ) :
 			return __presets( plug )
 
 	return result
+
+def __matchingPresets( plug ) :
+	value = plug.getValue()
+	return [ k for k, v in __presets( plug ).items() if v == value ]
+
+def __intersectLists( a, b ) :
+	return [ i for i in a if i in b ]
 
 ##########################################################################
 # User defaults

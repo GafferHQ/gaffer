@@ -236,6 +236,61 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( p ), "b" )
 		self.assertEqual( p.getValue(), 20 )
 
+	def testCompoundPlugPresets( self ) :
+
+		node = GafferTest.CompoundPlugNode()
+
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["p"] ), [] )
+
+		Gaffer.Metadata.registerValue(
+			node["p"]["f"], "presetNames",
+			IECore.StringVectorData( [ "a", "b", "c", "d" ] )
+		)
+
+
+		# Note that duplicate values for these presets are OK, as long as they are differentiated by
+		# different values on the preset for the other plug
+		Gaffer.Metadata.registerValue(
+			node["p"]["f"], "presetValues",
+			IECore.FloatVectorData( [ 1.0, 2.0, 2.0, 1.0 ] )
+		)
+
+		# Presets only exist one child, so no presets on parent
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["p"] ), [] )
+
+		Gaffer.Metadata.registerValue( node["p"]["s"], "preset:a", "aa" )
+
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["p"] ), [ "a" ] )
+
+		Gaffer.Metadata.registerValue( node["p"]["s"], "preset:b", "bbbb" )
+		Gaffer.Metadata.registerValue( node["p"]["s"], "preset:c", "BLEHBLEH" )
+		Gaffer.Metadata.registerValue( node["p"]["s"], "preset:d", "BLEHBLEH" )
+
+		# Now that both children have presets, all presets are available on the parent
+		self.assertEqual( Gaffer.NodeAlgo.presets( node["p"] ), [ "a", "b", "c", "d" ] )
+
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["p"] ), None )
+
+		Gaffer.NodeAlgo.applyPreset( node["p"], "a" )
+		self.assertEqual( node["p"]["f"].getValue(), 1.0 )
+		self.assertEqual( node["p"]["s"].getValue(), "aa" )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["p"] ), "a" )
+
+		Gaffer.NodeAlgo.applyPreset( node["p"], "b" )
+		self.assertEqual( node["p"]["f"].getValue(), 2.0 )
+		self.assertEqual( node["p"]["s"].getValue(), "bbbb" )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["p"] ), "b" )
+
+		Gaffer.NodeAlgo.applyPreset( node["p"], "c" )
+		self.assertEqual( node["p"]["f"].getValue(), 2.0 )
+		self.assertEqual( node["p"]["s"].getValue(), "BLEHBLEH" )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["p"] ), "c" )
+
+		Gaffer.NodeAlgo.applyPreset( node["p"], "d" )
+		self.assertEqual( node["p"]["f"].getValue(), 1.0 )
+		self.assertEqual( node["p"]["s"].getValue(), "BLEHBLEH" )
+		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["p"] ), "d" )
+
 	def __visitationGraph( self ) :
 
 		# L1_1     L1_2
