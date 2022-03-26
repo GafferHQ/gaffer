@@ -463,5 +463,103 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( reader["out"], constant["out"] )
 
+	def testLayerNames( self ):
+
+		reader = GafferImage.ImageReader()
+		def validateChannels( channels ):
+			self.assertEqual( [ i for i in reader["out"].channelNames() ], [ i[0] for i in channels ] )
+			for name, value in channels:
+				self.assertAlmostEqual( reader["out"].channelData( name, imath.V2i( 0 ) )[0], value, places = 3 )
+
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers1.exr" )
+
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "character.R", 0.4 ), ( "character.G", 0.5 ), ( "character.B", 0.6 ) ] )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+		validateChannels( [ ( "rgba.main.R", 0.1 ), ( "rgba.main.G", 0.2 ), ( "rgba.main.B", 0.3 ), ( "character.main.red", 0.4 ), ( "character.main.green", 0.5 ), ( "character.main.blue", 0.6 ) ] )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
+		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "red", 0.4 ), ( "green", 0.5 ), ( "blue", 0.6 ) ] )
+
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers2.exr" )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "Z", 0.4 ) ] )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+		validateChannels( [ ( "rgba_main.R", 0.1 ), ( "rgba_main.G", 0.2 ), ( "rgba_main.B", 0.3 ), ( "depth_main.depth.Z", 0.4 ) ] )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
+		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "depth.Z", 0.4 ) ] )
+
+		# The EXR spec allows enormous flexibility in the naming of parts, since the part name is not used
+		# at all.  We can't handle all of this with our heuristics - if one of the default channels is stored
+		# in an unrecognized part name, then we assume that this part is a Nuke layer name, and incorrectly
+		# prefix it.  We haven't seen this in practice though - usually the main part name will be named
+		# something like "RGB" or "rgba" or "main", which we recognize.  If you have an EXR with weird part
+		# names though, you can load it correctly by switching channelInterpretation from Default to
+		# Specification
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/weirdPartNames.exr" )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+		validateChannels( [
+			( "part0.R", 0.1 ), ( "part1.G", 0.2 ), ( "part2.B", 0.3 ), ( "layer.R", 0.4 ),
+			( "part3.A", 0.4 ), ( "layer.G", 0.5 ), ( "layer.B", 0.6 ), ( "layer.A", 1.0 )
+		] )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+		validateChannels( [
+			( "part0.R", 0.1 ), ( "part1.G", 0.2 ), ( "part2.B", 0.3 ), ( "part2.layer.R", 0.4 ),
+			( "part3.A", 0.4 ), ( "part3.layer.G", 0.5 ), ( "part4.layer.B", 0.6 ), ( "part5.layer.A", 1.0 )
+		] )
+		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
+		validateChannels( [
+			( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "layer.R", 0.4 ),
+			( "A", 0.4 ), ( "layer.G", 0.5 ), ( "layer.B", 0.6 ), ( "layer.A", 1.0 )
+		] )
+
+	def testWithChannelTestImage( self ):
+		reference = self.channelTestImage()
+
+		reader = GafferImage.ImageReader()
+
+		for n in [ "SinglePart", "PartPerLayer", "NukeSinglePart", "NukePartPerLayer" ]:
+
+			reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTest" + n + ".exr" )
+
+			# The default channel interpretation should work fine with files coming from Nuke, or from a
+			# spec compliant writer ( like Gaffer's new default )
+			reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+			self.assertImagesEqual( reader["out"], reference["out"], ignoreMetadata = True, ignoreChannelNamesOrder = n.startswith( "Nuke" ), maxDifference = 0.0002 )
+
+
+			reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
+			if n == "NukeSinglePart":
+				# Reading a single part Nuke file based on the spec gives weird channel names
+				self.assertEqual( list( reader["out"].channelNames() ), [ "R", "G", "B", "A", "character.red", "character.green", "character.blue", "character.alpha", "character.Z", "character.ZBack", "character.custom", "character.mask", "depth.Z", "other.ZBack", "other.custom", "other.mask" ] )
+			elif n == "NukePartPerLayer":
+				# Trying to open a Nuke multipart file according to the spec goes very badly, since the
+				# channel names aren't unique ( since Nuke incorrectly expects them to be prefixed ).  Check
+				# we get warnings about duplicate channels
+				with IECore.CapturingMessageHandler() as mh :
+					reader["out"].channelNames()
+				self.assertTrue( len( mh.messages ) )
+				self.assertTrue( mh.messages[0].message.startswith( "Ignoring channel" ) )
+
+			else:
+				self.assertImagesEqual( reader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002 )
+
+			reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+			if n == "PartPerLayer":
+				# Using the Legacy mode on a spec compliant EXR adds incorrect prefixes
+				self.assertEqual( list( reader["out"].channelNames() ), [ "character." + i if i.startswith( "character." ) else i for i in reference["out"].channelNames() ] )
+			elif n == "NukeSinglePart":
+				# Single part nuke files were dealt with almost OK, except for the weird "other" and "depth" prefixes
+				self.assertEqual( list( reader["out"].channelNames() ), [ "R", "G", "B", "A", "character.red", "character.green", "character.blue", "character.alpha", "character.Z", "character.ZBack", "character.custom", "character.mask", "depth.Z", "other.ZBack", "other.custom", "other.mask" ] )
+			elif n == "NukePartPerLayer":
+				# Multi part Nuke files were dealt with very badly ... I'm a bit surprised by how messy this is.
+				# We had special cases for parts named "rgba" or "depth", but they don't trigger here because
+				# Nuke adds view prefixes.  I'm confused by why the legacy code has these branches that don't do
+				# anything in practice ... maybe they were written for an older version of Nuke that didn't suffix
+				# with the view name
+				self.assertEqual( list( reader["out"].channelNames() ), [ "rgba.main.R", "rgba.main.G", "rgba.main.B", "rgba.main.A", "character.main.red", "character.main.green", "character.main.blue", "character.main.alpha", "character.main.Z", "character.main.ZBack", "character.main.custom", "character.main.mask", "depth.main.Z", "other.main.ZBack", "other.main.custom", "other.main.mask" ] )
+			else:
+				# The only complex files it actually dealt with properly were single part, standards compliant files
+				self.assertImagesEqual( reader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002 )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -122,6 +122,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"channelInterpretation" : [
+			"description",
+			"Documented in ImageReader, where it is exposed to users."
+		],
+
 	}
 
 )

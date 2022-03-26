@@ -42,6 +42,7 @@
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImageReader.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -56,7 +57,7 @@
 #include "OpenImageIO/imagecache.h"
 #include "OpenImageIO/deepdata.h"
 
-#include "boost/algorithm/string/predicate.hpp"
+#include <boost/algorithm/string.hpp>
 #include "boost/bind/bind.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/regex.hpp"
@@ -122,6 +123,106 @@ V2i coordinateDivide( V2i a, V2i b )
 	return V2i( coordinateDivide( a.x, b.x ), coordinateDivide( a.y, b.y ) );
 }
 
+std::string channelNameFromEXR( std::string view, std::string part, std::string channel, bool useHeuristics )
+{
+	if( !useHeuristics )
+	{
+		// This is correct way to do things, according to the EXR spec.  The channel name is the channel name,
+		// and is not affected by anything else.  The only special case we need to handle is removing the view
+		// from the name in the case of single part multiview files.
+		return channel;
+	}
+
+	// But if useHeuristics is on, try to figure out which of the dozen incorrect interpretations of the EXR spec
+	// this might adhere to
+	std::vector< std::string > layerTokens;
+	bool partUnderscoreSplit = false;
+	string baseName;
+
+	std::string layer = ImageAlgo::layerName( channel );
+	if( layer.size() )
+	{
+		// If there is a layer name in the channel, then we can assume that it at least follows the EXR
+		// spec that far, and we don't need to consider prefixing on the part name
+		baseName = ImageAlgo::baseName( channel );
+		boost::split( layerTokens, layer, boost::is_any_of(".") );
+	}
+	else
+	{
+		baseName = channel;
+
+		// No layer name in the channel, so try setting the layer name from the part name
+		boost::split( layerTokens, part, boost::is_any_of(".") );
+		if( layerTokens.size() == 1 )
+		{
+			// There are no period seperators in the part name.  We've seen a few examples
+			// of underscore seperators used in part names, so try that
+			boost::split( layerTokens, part, boost::is_any_of("_") );
+			partUnderscoreSplit = layerTokens.size() > 1;
+		}
+	}
+
+	layerTokens.erase( std::remove_if( layerTokens.begin(), layerTokens.end(),
+		[ view, baseName ](const std::string &i )
+		{
+			// Remove any tokens from the layer name that are useless.  This is usually
+			// because they are alternate names for the default layer - Nuke puts channels
+			// from the default layer in layers named "rgba", "depth", or "other", depending
+			// on the channel name.  If a token matches the view name, we assume it's a view
+			// token, and can be removed ( we represent views seperately ).
+			std::string lower = boost::algorithm::to_lower_copy( i);
+			return lower == "main" || lower == "rgb" || lower == "rgba" || lower == "other"
+				|| ( lower == "depth" && baseName == "Z" ) || i == view;
+		}
+	), layerTokens.end() );
+
+
+	// Handle Nuke's horrible channel names
+	if( baseName == "red" )
+	{
+		baseName = "R";
+	}
+	else if( baseName == "green" )
+	{
+		baseName = "G";
+	}
+	else if( baseName == "blue" )
+	{
+		baseName = "B";
+	}
+	else if( baseName == "alpha" )
+	{
+		baseName = "A";
+	}
+
+	if( layerTokens.size() == 0 )
+	{
+		// If we've removed all tokens, that means the channels are actually in the main layer, even though
+		// they may have had a weird name in the file.
+		return baseName;
+	}
+	else if( partUnderscoreSplit )
+	{
+		// It doesn't really make sense to split on underscores, they're not really layer seperators, but
+		// we have seen some software that uses underscores in the part names.  This is actually totally fair
+		// according to the spec, since part names don't actually mean anything - it would load fine with
+		// channelInterpretation = Specification.  But it would go wrong in the Default heuristic mode, because
+		// we would think that the part name is a weird Nuke layer name if it doesn't match one of the default
+		// part names we recognize.  So we split on underscores, and hopefully what we're left with is a part
+		// name and view name we recognize, and we hit the previous branch ( an example we've seen where this
+		// would work is rgba_main ).  But if we aren't able to fully get rid of the layerTokens, we shouldn't
+		// output half of a name with an underscore in it ( that would be confusing ).  So fall back to just
+		// concatenating part name and base name
+		return part + "." + baseName;
+	}
+	else
+	{
+		// In the default case, we reassemble a name using any layer tokens we haven't discarded as useless.
+		return boost::algorithm::join( layerTokens, "." ) + "." + baseName;
+	}
+
+}
+
 // This class handles storing a file handle, and reading data from it in a way compatible with how we want
 // to store it on plugs.
 //
@@ -159,7 +260,7 @@ class File
 	public:
 
 		// Create a File handle object for an image input and image spec
-		File( std::unique_ptr<ImageInput> imageInput, ImageSpec imageSpec, const std::string &infoFileName )
+		File( std::unique_ptr<ImageInput> imageInput, ImageSpec imageSpec, const std::string &infoFileName, ImageReader::ChannelInterpretation channelNaming )
 			: m_imageInput( std::move( imageInput ) ), m_imageSpec( imageSpec )
 		{
 			std::vector<std::string> channelNames;
@@ -169,6 +270,10 @@ class File
 			// we store m_imageSpec together with m_imageInput, since a stero image would have one
 			// m_imageInput, but could need two separate image specs ( different data windows for the two eyes seem
 			// reasonable )
+			//
+			// \todo - should we actually be using separate File handle objects for different views?  Ideally,
+			// we wouldn't force loading of both views when only one may be needed - in fact, we should be doing
+			// the same for layers iff the layers are stored in separate parts.
 			ImageSpec currentSpec = m_imageSpec;
 			int subImageIndex = 0;
 			do {
@@ -195,25 +300,35 @@ class File
 
 				OIIO::string_view subImageName = currentSpec.get_string_attribute( "name", "" );
 
-				// Weird hack to match the behaviour of other applications that use multipart EXRs.
-				// According to the standard, we should always prefix with the layer name, but several
-				// other applications ignore the layer name in cases like a subimage named "RGB" containing
-				// channels R, G and B.
-				// This is currently extremely permissive, simply blanking out any subimage name that matches
-				// "rgb", "rgba", or "depth" in upper or lower case.  Perhaps we should be more selective and
-				// only handle certain channels ( ie. only R, G, B within "rgb", and only Z within "depth" ).
-				// Nuke actually has an extra special case where it creates a channel named rgb_extra.channelName
-				// if it finds an unexpected channel name within "rgb" - but this just seems weird?  For the
-				// moment, this permissive version feels easiest
-				if( boost::iequals( subImageName, "RGBA" ) || boost::iequals( subImageName, "RGB" ) || boost::iequals( subImageName, "depth" ) )
-				{
-					subImageName = "";
-				}
-
 
 				for( const auto &n : currentSpec.channelnames )
 				{
-					std::string channelName = ImageAlgo::channelName( subImageName, n );
+					std::string channelName;
+					if( channelNaming == ImageReader::ChannelInterpretation::Legacy )
+					{
+						// ImageAlgo::channelName just sticks together the layer and channel name
+						// It's wrong in general to pass the subImageName as the layer, since the EXR spec
+						// says the layer name is included in the channel name, and the subImageName should
+						// not be meaningful to the channel name.  This just matches what we used to do -
+						// with a minimal effort to clear out sub image name if it is main.
+						// channelNameFromEXR has a more thorough heuristic for the Default channelNaming mode
+						std::string legacySubImageName = subImageName;
+
+						if( boost::iequals( legacySubImageName, "RGBA" ) || boost::iequals( legacySubImageName, "RGB" ) || boost::iequals( legacySubImageName, "depth" ) )
+						{
+							legacySubImageName = "";
+						}
+
+						channelName = ImageAlgo::channelName( legacySubImageName, n );
+					}
+					else
+					{
+						channelName = channelNameFromEXR(
+							"", subImageName.str(), n,
+							channelNaming != ImageReader::ChannelInterpretation::Specification
+						);
+					}
+
 					auto mapEntry = m_channelMap.find( channelName );
 					if( mapEntry != m_channelMap.end() )
 					{
@@ -669,11 +784,13 @@ struct CacheEntry
 };
 
 
-CacheEntry fileCacheGetter( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller )
+CacheEntry fileCacheGetter( const std::pair< std::string, ImageReader::ChannelInterpretation> &fileNameAndChannelInterpretation, size_t &cost, const IECore::Canceller *canceller )
 {
 	cost = 1;
 
 	CacheEntry result;
+
+	const std::string &fileName = fileNameAndChannelInterpretation.first;
 
 	ImageSpec imageSpec;
 	std::unique_ptr<ImageInput> imageInput( ImageInput::create( fileName ) );
@@ -694,12 +811,12 @@ CacheEntry fileCacheGetter( const std::string &fileName, size_t &cost, const IEC
 		throw IECore::Exception( "OpenImageIOReader : " + fileName + " : GafferImage does not support 3D pixel arrays " );
 	}
 
-	result.file.reset( new File( std::move( imageInput ), imageSpec, fileName ) );
+	result.file.reset( new File( std::move( imageInput ), imageSpec, fileName, fileNameAndChannelInterpretation.second ) );
 
 	return result;
 }
 
-using FileHandleCache = IECorePreview::LRUCache<std::string, CacheEntry>;
+using FileHandleCache = IECorePreview::LRUCache< std::pair< std::string, ImageReader::ChannelInterpretation >, CacheEntry>;
 
 FileHandleCache *fileCache()
 {
@@ -710,7 +827,7 @@ FileHandleCache *fileCache()
 // Returns the file handle container for the given filename in the current
 // context. Throws if the file is invalid, and returns null if
 // the filename is empty.
-FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode mode, const OpenImageIOReader *node, const Context *context )
+FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode mode, ImageReader::ChannelInterpretation channelNaming, const OpenImageIOReader *node, const Context *context )
 {
 	if( fileName.empty() )
 	{
@@ -720,7 +837,7 @@ FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode
 	const std::string resolvedFileName = context->substitute( fileName );
 
 	FileHandleCache *cache = fileCache();
-	CacheEntry cacheEntry = cache->get( resolvedFileName );
+	CacheEntry cacheEntry = cache->get( std::make_pair( resolvedFileName, channelNaming ) );
 	if( !cacheEntry.file )
 	{
 		if( mode == OpenImageIOReader::Black )
@@ -749,7 +866,7 @@ FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode
 				Context::EditableScope holdScope( context );
 				holdScope.setFrame( *fIt );
 
-				return retrieveFile( fileName, OpenImageIOReader::Error, node, holdScope.context() );
+				return retrieveFile( fileName, OpenImageIOReader::Error, channelNaming, node, holdScope.context() );
 			}
 
 			// if we got here, there was no suitable file sequence
@@ -809,6 +926,7 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
+	addChild( new IntPlug( "channelInterpretation", Plug::In, (int)ImageReader::ChannelInterpretation::Default, /* min */ (int)ImageReader::ChannelInterpretation::Legacy, /* max */ (int)ImageReader::ChannelInterpretation::Specification ) );
 	addChild( new ObjectVectorPlug( "__tileBatch", Plug::Out, new ObjectVector ) );
 
 	plugSetSignal().connect( boost::bind( &OpenImageIOReader::plugSet, this, ::_1 ) );
@@ -858,14 +976,24 @@ const Gaffer::IntVectorDataPlug *OpenImageIOReader::availableFramesPlug() const
 	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::IntPlug *OpenImageIOReader::channelInterpretationPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *OpenImageIOReader::channelInterpretationPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::ObjectVectorPlug *OpenImageIOReader::tileBatchPlug()
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::ObjectVectorPlug *OpenImageIOReader::tileBatchPlug() const
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 4 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
 }
 
 void OpenImageIOReader::setOpenFilesLimit( size_t maxOpenFiles )
@@ -911,12 +1039,12 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 		outputs.push_back( availableFramesPlug() );
 	}
 
-	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
+	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() || input == channelInterpretationPlug() )
 	{
 		outputs.push_back( tileBatchPlug() );
 	}
 
-	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
+	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() || input == channelInterpretationPlug() )
 	{
 		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
@@ -944,6 +1072,7 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 		hashFileName( c.context(), h );
 		refreshCountPlug()->hash( h );
 		missingFrameModePlug()->hash( h );
+		channelInterpretationPlug()->hash( h );
 	}
 }
 
@@ -977,7 +1106,9 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 		c.remove( g_tileBatchIndexContextName );
 
 		std::string fileName = fileNamePlug()->getValue();
-		FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, c.context() );
+		MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+		ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+		FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, c.context() );
 
 		if( !file )
 		{
@@ -1043,7 +1174,8 @@ GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *con
 	// match the format of the Hold frame.
 	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
 	mode = ( mode == Black ) ? Hold : mode;
-	FilePtr file = retrieveFile( fileName, mode, this, context );
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, mode, channelNaming, this, context );
 	if( !file )
 	{
 		return FormatPlug::getDefaultFormat( context );
@@ -1070,7 +1202,9 @@ void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, co
 Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
-	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
 	if( !file )
 	{
 		return parent->dataWindowPlug()->defaultValue();
@@ -1093,7 +1227,9 @@ void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, cons
 IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
-	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
 	if( !file )
 	{
 		return parent->metadataPlug()->defaultValue();
@@ -1148,12 +1284,15 @@ void OpenImageIOReader::hashChannelNames( const GafferImage::ImagePlug *output, 
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
+	channelInterpretationPlug()->hash( h );
 }
 
 IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
-	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
 	if( !file )
 	{
 		return parent->channelNamesPlug()->defaultValue();
@@ -1172,7 +1311,9 @@ void OpenImageIOReader::hashDeep( const GafferImage::ImagePlug *output, const Ga
 bool OpenImageIOReader::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
-	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
 	if( !file )
 	{
 		return false;
@@ -1191,6 +1332,7 @@ void OpenImageIOReader::hashSampleOffsets( const GafferImage::ImagePlug *output,
 		hashFileName( context, h );
 		refreshCountPlug()->hash( h );
 		missingFrameModePlug()->hash( h );
+		channelInterpretationPlug()->hash( h );
 	}
 }
 
@@ -1198,7 +1340,9 @@ IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Ima
 {
 	ImagePlug::GlobalScope c( context );
 	std::string fileName = fileNamePlug()->getValue();
-	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
 
 	if( !file || !file->imageSpec().deep )
 	{
@@ -1243,6 +1387,7 @@ void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, c
 		hashFileName( context, h );
 		refreshCountPlug()->hash( h );
 		missingFrameModePlug()->hash( h );
+		channelInterpretationPlug()->hash( h );
 	}
 }
 
@@ -1250,7 +1395,9 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 {
 	ImagePlug::GlobalScope c( context );
 	std::string fileName = fileNamePlug()->getValue();
-	FilePtr file = retrieveFile( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
 
 	if( !file )
 	{

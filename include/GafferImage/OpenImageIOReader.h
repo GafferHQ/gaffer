@@ -82,6 +82,9 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 		Gaffer::IntVectorDataPlug *availableFramesPlug();
 		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
 
+		Gaffer::IntPlug *channelInterpretationPlug();
+		const Gaffer::IntPlug *channelInterpretationPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		static void setOpenFilesLimit( size_t maxOpenFiles );

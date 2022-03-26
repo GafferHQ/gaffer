@@ -223,6 +223,32 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"channelInterpretation" : [
+
+			"description",
+			"""
+			Controls how we create channels based on the contents of the file.  Unfortunately,
+			some software, such as Nuke, does not produce EXR files which follow the EXR specification,
+			so the mode "Default" uses heuristics to guess what the channels mean.
+
+			"Default" mode should support most files coming from either Nuke or standards compliant software.
+			It can't handle every possibility in the spec though - in corner cases, it could get confused and
+			think something comes from Nuke, and incorrectly prepend the part name to the channel name.
+
+			If you know your EXR is compliant, you can "EXR Specification" mode which disables the heuristics,
+			and just uses the channel names directly from the file.
+
+			"Legacy" mode matches Gaffer <= 0.61 behaviour for compatibility reasons - it should not be used.
+			""",
+
+			"preset:Legacy", GafferImage.ImageReader.ChannelInterpretation.Legacy,
+			"preset:Default", GafferImage.ImageReader.ChannelInterpretation.Default,
+			"preset:EXR Specification", GafferImage.ImageReader.ChannelInterpretation.Specification,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 	}
 
 )
