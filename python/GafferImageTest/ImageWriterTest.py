@@ -1219,7 +1219,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			w[fileFormat]["dataType"].setValue( dataType )
 
 			capturedArguments.clear()
-			w.execute()
+			w["task"].execute()
 
 			self.assertEqual( len( capturedArguments ), 4 )
 			self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
@@ -1340,19 +1340,19 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setInput( writer["fileName"] )
 
 		# Not in DWA mode, so no level specified.
-		writer.execute()
+		writer["task"].execute()
 		self.assertNotIn( "openexr:dwaCompressionLevel", reader["out"].metadata() )
 
 		# DWAA mode should specify level.
 		writer["openexr"]["compression"].setValue( "dwaa" )
-		writer.execute()
+		writer["task"].execute()
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
 		self.assertEqual( reader["out"].metadata()["openexr:dwaCompressionLevel"].value, 100.0 )
 
 		# As should DWAB.
 		writer["openexr"]["compression"].setValue( "dwab" )
 		writer["openexr"]["dwaCompressionLevel"].setValue( 110 )
-		writer.execute()
+		writer["task"].execute()
 		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
 		self.assertEqual( reader["out"].metadata()["openexr:dwaCompressionLevel"].value, 110.0 )
 

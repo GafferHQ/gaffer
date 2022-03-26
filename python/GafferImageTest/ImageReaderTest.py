@@ -441,7 +441,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 			w["fileName"].setValue( "{0}/{1}.{2}".format( self.temporaryDirectory(), dataType, ext ) )
 			w[fileFormat]["dataType"].setValue( dataType )
-			w.execute()
+			w["task"].execute()
 
 			capturedArguments.clear()
 			r["out"].channelData( "R", imath.V2i( 0 ) ) # Triggers call to color space function
