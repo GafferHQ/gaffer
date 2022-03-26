@@ -42,6 +42,22 @@ import GafferImageUI
 import GafferImage
 from . import OpenColorIOTransformUI
 
+
+layoutVariableDesc = """
+			Special context variables available for setting layout plugs:
+
+			* `${imageWriter:viewName}` : The current view
+			* `${imageWriter:channelName}` : The current channel name
+			* `${imageWriter:layerName}` : The prefix of the channel name
+			* `${imageWriter:baseName}` : The suffix of the channel name
+			* `${imageWriter:standardPartName}` : Like the layerName, but set to "rgba" instead of empty for the main layer
+			* `${imageWriter:nukeViewName}` : Like viewName, but set to "main" when there is no current view
+			* `${imageWriter:nukeLayerName}` : Like layerName, but set to "depth" for "Z", and "other" for custom channels of the main layer
+			* `${imageWriter:nukeBaseName}` : Like baseName, but set to "red", "green", "blue", "alpha" instead of RGBA for layers other than the main layer.
+			* `${imageWriter:nukePartName}` : Like standardPartName, but set to "depth" for "Z", and "other" for custom channels of the main layer
+
+"""
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageWriter,
@@ -112,6 +128,85 @@ Gaffer.Metadata.registerNode(
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		],
+
+		"layout" : [
+
+			"description",
+			"""
+			Controls where channels are placed in the file, including how they are named.
+			"Single part" writes all channels to the same part ( all interleaved ).
+			"Part per layer" writes a separate part for each layer, so they may be loaded
+			independently for better performance, and is the default.  "Part per view" is
+			a compromise, where layers are not separated, but views are separated, so that
+			stereo files can use independent data windows.
+
+			There is also the option to use a layout that tries to match Nuke's default
+			conventions, including various oddities done by Nuke.  The Nuke presets
+			match "Part per Layer", "Part per View", and "Single Part", but use Nuke's
+			naming conventions.  They also do weird and incorrect Nuke things like:
+			omitting the layer name from the channel name, putting custom channels of
+			base layer in a part named "other", renaming RGB to red/green/blue in some layers.
+
+			There is also the option to use a layout that matches Nuke's default
+			behaviour, but does not conform to the EXR specification. The Nuke presets
+			match "Part per Layer", "Part per View", and "Single Part" respectively, but with
+			the following deviations from the specification :
+
+			* The layer name is omitted from the channel name
+			* Custom channels from the main layer are placed in a part named other
+			* The channel Z from the main layer is placed in a part named depth
+			* The RGBA channels from secondary layers are renamed to red, green, blue, and alpha
+			* When writing single part stereo, the view name comes before the layer name
+
+			You may also pick "custom", and set up your own layout.  This allows for things
+			like a mixed layout that is partially EXR spec compliant, and partially Nuke.  Or
+			you could use a expression to group some layers together in the same part.
+
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom", True,
+
+		],
+		"layout.viewName" : [
+
+			"description",
+			"""
+			Specifies the name of the view to be stored in EXR's view metadata.
+			Only useful when different views are written to different parts.
+			""" + layoutVariableDesc,
+
+			# The presets for this are useful in testing and scripting when the UI isn't loaded,
+			# so we register them in src/GafferImage/ImageWriter.cpp
+
+		],
+		"layout.partName" : [
+
+			"description",
+			"""
+			Specifies the name to be stored in EXR's part name metadata.
+
+			If different channels are given different part names, then a multipart
+			file is produced.
+			""" + layoutVariableDesc,
+
+			# The presets for this are useful in testing and scripting when the UI isn't loaded,
+			# so we register them in src/GafferImage/ImageWriter.cpp
+
+		],
+		"layout.channelName" : [
+
+			"description",
+			"""
+			Specifies the channel name to be given to EXR.  To match the standard, this should just
+			be exactly the Gaffer channel name.  But some other software like Nuke omits the layer prefix,
+			and assumes that the part name will be prefixed to the channel.
+			""" + layoutVariableDesc,
+
+			# The presets for this are useful in testing and scripting when the UI isn't loaded,
+			# so we register them in src/GafferImage/ImageWriter.cpp
+
 		],
 
 		"out" : [

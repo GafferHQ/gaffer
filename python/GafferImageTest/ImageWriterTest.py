@@ -41,6 +41,7 @@ import shutil
 import functools
 import datetime
 import six
+import subprocess
 import imath
 
 import IECore
@@ -1414,6 +1415,184 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "Ignoring metadata \"name\" because it conflicts with OpenImageIO.", warnings )
 		self.assertIn( "Ignoring metadata \"oiio:subimagename\" because it conflicts with OpenImageIO.", warnings )
 		self.assertIn( "Ignoring metadata \"oiio:subimages\" because it conflicts with OpenImageIO.", warnings )
+
+	def testReproduceProductionSamples( self ):
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 16, 16, 1.000 ) )
+		constant["expression"] = Gaffer.Expression()
+		constant["expression"].setExpression(
+			'import imath; parent["color"] = imath.Color4f( 0.4, 0.5, 0.6, 1 ) if context.get( "collect:layerName", "" ) != "" else imath.Color4f( 0.1, 0.2, 0.3, 0.4 )'
+		)
+
+		deleteChannels = GafferImage.DeleteChannels()
+		deleteChannels["in"].setInput( constant["out"] )
+		deleteChannels["channels"].setValue( '[A]' )
+
+		collect = GafferImage.CollectImages()
+		collect["in"].setInput( deleteChannels["out"] )
+		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'character', '' ] ) )
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( collect["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["layout"]["viewName"].setValue( 'main' )
+		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}.main' )
+		writer["layout"]["channelName"].setValue( '${imageWriter:nukeBaseName}' )
+		writer["task"].execute()
+
+		refReader = GafferImage.ImageReader()
+		refReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers1.exr" )
+
+		rereader = GafferImage.ImageReader()
+		rereader["channelInterpretation"].setInput( refReader["channelInterpretation"] )
+		rereader["fileName"].setInput( writer["fileName"] )
+
+		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
+		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
+
+		shuffleDepth = GafferImage.Shuffle()
+		shuffleDepth["in"].setInput( constant["out"] )
+		shuffleDepth["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
+		shuffleDepth["channels"]["channel"]["out"].setValue( 'depth.Z' )
+		shuffleDepth["channels"]["channel"]["in"].setValue( 'A' )
+
+		deleteChannels["in"].setInput( shuffleDepth["out"] )
+		writer["in"].setInput( deleteChannels["out"] )
+		writer["openexr"]["dataType"].setValue( 'float' )
+
+		writer["layout"]["viewName"].setValue( 'main' )
+		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}_main' )
+		writer["expression"] = Gaffer.Expression()
+		writer["expression"].setExpression(
+			'c = context["imageWriter:baseName"]; parent["layout"]["channelName"] = "depth.Z" if c == "Z" else c'
+		)
+		writer["task"].execute()
+
+		refReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers2.exr" )
+		refReader["refreshCount"].setValue( 2 )
+		rereader["refreshCount"].setValue( 2 )
+
+		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
+		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
+
+	def testReproduceWeirdPartNames( self ):
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 16, 16, 1.000 ) )
+		constant["expression"] = Gaffer.Expression()
+		constant["expression"].setExpression(
+			'import imath; parent["color"] = imath.Color4f( 0.4, 0.5, 0.6, 1 ) if context.get( "collect:layerName", "" ) != "" else imath.Color4f( 0.1, 0.2, 0.3, 0.4 )'
+		)
+
+		collect = GafferImage.CollectImages()
+		collect["in"].setInput( constant["out"] )
+		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'layer', '' ] ) )
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( collect["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}.main' )
+		writer["layout"]["channelName"].setValue( '${imageWriter:layerName}.${imageWriter:baseName}' )
+		writer["expression"] = Gaffer.Expression()
+		writer["expression"].setExpression(
+			'c = context["imageWriter:baseName"]; l = context["imageWriter:layerName"]; parent["layout"]["partName"] = "part%i" % ( "RGBA".find(c) + 2 * ( l == "layer" ) )'
+		)
+		writer["task"].execute()
+
+		refReader = GafferImage.ImageReader()
+		refReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/weirdPartNames.exr" )
+
+		rereader = GafferImage.ImageReader()
+		rereader["channelInterpretation"].setInput( refReader["channelInterpretation"] )
+		rereader["fileName"].setInput( writer["fileName"] )
+
+		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
+		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
+		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
+
+	def testWithChannelTestImage( self ):
+
+		# Helper function that extracts the part of the header we care about from exrheader
+		def usefulHeader( path ):
+			r = subprocess.check_output( ["exrheader", path ], universal_newlines=True ).splitlines()[2:]
+
+			# Skip header lines that change every run, or between software, and compression ( since we're
+			# not testing for that ), and chunkCount ( since it depends on compression ).  "version" is
+			# something Nuke sets that we're not worrying about
+			#
+			# TODO - We currently omit view, because Nuke is setting it even in non-stereo files.
+			# This suggests a problem for the next PR where we actually deal with stereo - I had planned
+			# to differentiate between files with "stereo supported, one current view", and "no stereo".
+			# Since Nuke is setting the view by default, the reader shouldn't create a view if there
+			# is one view in the file.  Perhaps if channelInterpretation = Specification, then having one
+			# view set should put us in stereo-active mode?
+			r = [ i for i in r if not (
+				( i + " " ).split( " " )[0] in [ "Artist", "DocumentName", "HostComputer", "Software", "capDate", "compression", "chunkCount", "version", "view" ] or i.startswith( "nuke" )
+			) ]
+
+			# We don't care about the difference between 16 and 32 bit floats
+			r = [ i.replace( "32-bit floating-point", "16-bit floating-point" ) for i in r ]
+
+
+			# Now a very hacky part - we need the main part to be first, but otherwise, the order
+			# of parts doesn't matter, so sort the later parts by name
+			parts = [ [] ]
+			partNames = [ "X" ]
+
+			for i in r:
+				if i.startswith( " part " ):
+					if i[6] != "0":
+						parts.append( [] )
+						partNames.append( "X" )
+						continue
+				parts[-1].append( i )
+				if i.startswith( "name " ):
+					partNames[-1] = i
+			parts[-1].append( "" ) # An extra empty line at the end keeps things consistent for the last part
+
+			r = parts[0]
+			partNum = 1
+			for n, p in sorted( zip( partNames[1:], parts[1:] ) ):
+				r.append( " part %i:" % partNum )
+				r += p
+				partNum += 1
+
+			return r
+
+
+		reference = self.channelTestImage()
+
+		writePath = os.path.join( self.temporaryDirectory(), "test.exr" )
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( reference["out"] )
+		writer["fileName"].setValue( writePath )
+
+		rereader = GafferImage.ImageReader()
+		rereader["fileName"].setValue( writePath )
+		rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+
+		# Test that the presets produce the expected files, including that they match files produced by Nuke
+		# if appropriate
+		for layout, referenceFile in [
+				( "Single Part", "SinglePart" ), ( "Part per Layer", "PartPerLayer" ),
+				( "Nuke/Interleave Channels, Layers and Views", "NukeSinglePart" ), ( "Nuke/Interleave Channels", "NukePartPerLayer" )
+			]:
+
+			Gaffer.NodeAlgo.applyPreset( writer["layout"], layout )
+
+			writer["task"].execute()
+			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
+			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout.startswith( "Nuke" ) )
+			header = usefulHeader( writePath )
+			refHeader = usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTest" + referenceFile + ".exr" ) )
+
+			self.assertEqual( header, refHeader )
 
 if __name__ == "__main__":
 	unittest.main()
