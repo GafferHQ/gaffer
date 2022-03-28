@@ -9,6 +9,9 @@ Improvements
   - Clicking on the gnomon now toggles between the standard orthographic cameras and the perspective camera.
 - CameraTool : The "dolly" operation (<kbd>Alt</kbd>+right-drag) no longer moves orthographic cameras (or distant lights) along their Z axis. This was confusing, as there was no visual feedback in the viewer due to the nature of the projection. Instead, dollying is disabled until such a time as the CameraTool can make appropriate aperture edits in the node graph.
 - Spreadsheet : Improved drag and drop of lists of strings. <kbd>Shift</kbd> may now be held to add to the current list, and <kbd>Control</kbd> may be held to remove from the current list (#3894). This is particularly useful when a PathFilter has been added to a spreadsheet.
+- USD :
+  - Added support for SdfAssetPath attributes, which are now loaded as StringData attributes containing the resolved asset path.
+  - Improved loading speed for stages where the same material is bound to many prims. This gives a 10x improvement when loading the Moana Island scene.
 
 Fixes
 -----
@@ -20,6 +23,9 @@ Fixes
   - The `removeOutputs()` method now also removes any outputs from child plugs. This is consistent with the `setInput()` method, which has always managed child plug inputs.
   - Fixed bug which meant that child output connections were not removed when a plug was removed from a node.
 - Expression : Fixed error when updating an expression which was previously connected to a deleted spreadsheet row (#4614).
+- ResamplePrimitiveVariables : Fixed vertex-to-varying and varying-to-vertex resampling of V2f primitive variables on CurvesPrimitives.
+- Arnold : Fixed rendering of curves with V2f vertex primitive variables.
+- USD : Fixed loading of materials containing shaders with exposed inputs.
 
 API
 ---
@@ -35,6 +41,11 @@ API
   - Added `setTumblingEnabled()` and `getTumblingEnabled()` methods.
   - Added `setDollyingEnabled()` and `getDollyingEnabled()` methods.
   - `cameraChangedSignal()` is now emitted by `setCenterOfInterest()` in addition to `setCamera()` and `setCameraTransform()`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.3.4.0.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
