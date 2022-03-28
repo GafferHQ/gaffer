@@ -1,4 +1,4 @@
-0.61.x.x (relative to 0.61.5.0)
+0.61.6.0 (relative to 0.61.5.0)
 ========
 
 Improvements
