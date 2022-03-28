@@ -545,10 +545,6 @@ void Plug::removeOutputs()
 		Plug *p = *it++;
 		p->setInput( nullptr );
 	}
-	for( auto &child : Range( *this ) )
-	{
-		child->removeOutputs();
-	}
 }
 
 const Plug::OutputContainer &Plug::outputs() const

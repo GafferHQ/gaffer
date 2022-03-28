@@ -1494,48 +1494,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferTest.parallelGetValue( s["n"]["user"]["p"], 100 )
 
-	def testRemoveDrivenSpreadsheetRow( self ) :
 
-		s = Gaffer.ScriptNode()
-
-		# Expression drives column "b" from column "a"
-
-		s["spreadsheet"] = Gaffer.Spreadsheet()
-		s["spreadsheet"]["rows"].addColumn( Gaffer.FloatPlug( "a", defaultValue = 1 ) )
-		s["spreadsheet"]["rows"].addColumn( Gaffer.FloatPlug( "b" ) )
-		row = s["spreadsheet"]["rows"].addRow()
-
-		s["expression"] = Gaffer.Expression()
-		s["expression"].setExpression(
-			inspect.cleandoc(
-				"""
-				import imath
-				a = parent["spreadsheet"]["rows"]["row1"]["cells"]["a"]["value"]
-				parent["spreadsheet"]["rows"]["row1"]["cells"]["b"]["value"] = a * 2
-				"""
-			)
-		)
-
-		self.assertEqual( row["cells"]["b"]["value"].getValue(), 2 )
-
-		# Remove row that is connected to expression. The expression
-		# should be updated to show that the plugs have been disconnected.
-
-		s["spreadsheet"]["rows"].removeRow( row )
-
-		self.assertIsNone( row["cells"]["b"]["value"].getInput() )
-		self.assertEqual( row["cells"]["a"]["value"].outputs(), () )
-
-		self.assertEqual(
-			s["expression"].getExpression()[0],
-			inspect.cleandoc(
-				"""
-				import imath
-				a = 1.0
-				__disconnected = a * 2
-				"""
-			)
-		)
 
 if __name__ == "__main__":
 	unittest.main()
