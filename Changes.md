@@ -19,9 +19,6 @@ Fixes
 - GraphEditor : Fixed active-branch-highlighting bug, where newly created GraphEditors wouldn't update correctly until the focus node was set again.
 - Spreadsheet : Fixed attempts to edit non-editable plugs when double-clicking on a boolean cell.
 - MessageWidget : Modified so that we no longer trigger UI updates while handling messages. This fixes some weird behaviour in rare cases when UI elements were evaluated in the wrong context.
-- Plug :
-  - The `removeOutputs()` method now also removes any outputs from child plugs. This is consistent with the `setInput()` method, which has always managed child plug inputs.
-  - Fixed bug which meant that child output connections were not removed when a plug was removed from a node.
 - Expression : Fixed error when updating an expression which was previously connected to a deleted spreadsheet row (#4614).
 - ResamplePrimitiveVariables : Fixed vertex-to-varying and varying-to-vertex resampling of V2f primitive variables on CurvesPrimitives.
 - Arnold : Fixed rendering of curves with V2f vertex primitive variables.
