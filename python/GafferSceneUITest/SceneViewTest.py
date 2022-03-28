@@ -336,6 +336,18 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
+	def testInitialClippingPlanes( self ) :
+
+		sphere = GafferScene.Sphere()
+		view = GafferUI.View.create( sphere["out"] )
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( 1, 10 )
+		)
+
 	def testClippingPlanesAndFOV( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -350,7 +362,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 			self.assertEqual(
 				view["camera"]["clippingPlanes"].getValue(),
-				view.viewportGadget().getCamera().parameters()["clippingPlanes"].value
+				view.viewportGadget().getCamera().getClippingPlanes()
 			)
 			self.assertAlmostEqual(
 				view["camera"]["fieldOfView"].getValue(),
@@ -404,6 +416,64 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view["camera"]["lookThroughEnabled"].setValue( False )
 
 		assertDefaultCamera()
+
+	def testClippingPlaneConstraints( self ) :
+
+		sphere = GafferScene.Sphere()
+		view = GafferUI.View.create( sphere["out"] )
+
+		# Far must be greater than near
+
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 10, 1 ) )
+		self.assertEqual(
+			view["camera"]["clippingPlanes"].getValue(),
+			imath.V2f( 1, 10 )
+		)
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( 1, 10 )
+		)
+
+		# Values must be 0.0001 at a minimum
+
+		view["camera"]["clippingPlanes"].setValue( imath.V2f( 0, 1 ) )
+		self.assertEqual(
+			view["camera"]["clippingPlanes"].getValue(),
+			imath.V2f( 0.0001, 1 )
+		)
+
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual(
+			view.viewportGadget().getCamera().getClippingPlanes(),
+			imath.V2f( 0.0001, 1 )
+		)
+
+	def testChangingClippingPlanesUpdatesAllFreeCameras( self ) :
+
+		sphere = GafferScene.Sphere()
+		view = GafferUI.View.create( sphere["out"] )
+
+		expectedClippingPlanes = view["camera"]["clippingPlanes"].getValue()
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual( view.viewportGadget().getCamera().getClippingPlanes(), expectedClippingPlanes )
+
+		view["camera"]["freeCamera"].setValue( "top" )
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual( view.viewportGadget().getCamera().getClippingPlanes(), expectedClippingPlanes )
+		self.assertEqual( view["camera"]["clippingPlanes"].getValue(), expectedClippingPlanes )
+
+		expectedClippingPlanes = imath.V2f( 1, 10 )
+		view["camera"]["clippingPlanes"].setValue( expectedClippingPlanes )
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual( view.viewportGadget().getCamera().getClippingPlanes(), expectedClippingPlanes )
+		self.assertEqual( view["camera"]["clippingPlanes"].getValue(), expectedClippingPlanes )
+
+		view["camera"]["freeCamera"].setValue( "perspective" )
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() ) # Force update
+		self.assertEqual( view.viewportGadget().getCamera().getClippingPlanes(), expectedClippingPlanes )
+		self.assertEqual( view["camera"]["clippingPlanes"].getValue(), expectedClippingPlanes )
 
 if __name__ == "__main__":
 	unittest.main()

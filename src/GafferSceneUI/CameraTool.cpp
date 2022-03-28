@@ -291,9 +291,12 @@ void CameraTool::preRenderEnd()
 		}
 	}
 
-	view()->viewportGadget()->setCameraEditable(
-		!lookThroughEnabledPlug()->getValue() ||
-		selectionEditable
+	const bool lookThroughEnabled = lookThroughEnabledPlug()->getValue();
+	view()->viewportGadget()->setCameraEditable( !lookThroughEnabled || selectionEditable );
+	// We can't "dolly" an orthographic camera because that modifies the aperture,
+	// and we can't currently reflect aperture edits into the node graph.
+	view()->viewportGadget()->setDollyingEnabled(
+		!lookThroughEnabled || view()->viewportGadget()->getCamera()->getProjection() == "perspective"
 	);
 
 	if( selectionEditable )
