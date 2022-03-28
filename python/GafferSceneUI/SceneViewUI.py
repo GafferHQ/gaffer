@@ -141,7 +141,22 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:divider", True,
 			"toolbarLayout:label", "",
 			"layout:activator:hidden", lambda plug : False,
+			"layout:activator:lookThroughEnabled", lambda plug : plug["lookThroughEnabled"].getValue(),
+			"layout:activator:lookThroughDisabled", lambda plug : not plug["lookThroughEnabled"].getValue(),
+			"layout:activator:cameraIsFreePerspective", lambda plug : not plug["lookThroughEnabled"].getValue() and plug["freeCamera"].getValue() == "perspective",
+			"layout:section:Free Camera:collapsed", False,
 			"layout:section:Light Look Through:collapsed", False,
+
+		],
+
+		"camera.freeCamera" : [
+
+			"description",
+			"""
+			Chooses the default camera to be used when `camera.lookThroughEnabled` is off.
+			""",
+
+			"layout:visibilityActivator", "hidden"
 
 		],
 
@@ -152,6 +167,9 @@ Gaffer.Metadata.registerNode(
 			The field of view for the viewport's default perspective camera.
 			""",
 
+			"layout:section", "Free Camera",
+			"layout:activator", "cameraIsFreePerspective",
+
 		],
 
 		"camera.clippingPlanes" : [
@@ -161,10 +179,14 @@ Gaffer.Metadata.registerNode(
 			The near and far clipping planes for the viewport's default perspective camera.
 			""",
 
+			"layout:section", "Free Camera",
+			"layout:activator", "lookThroughDisabled",
+
 		],
 
 		"camera.lightLookThroughDefaultDistantAperture" : [
 			"layout:section", "Light Look Through",
+			"layout:activator", "lookThroughEnabled",
 			"label", "Default Distant Aperture",
 			"description",
 			"""
@@ -176,6 +198,7 @@ Gaffer.Metadata.registerNode(
 
 		"camera.lightLookThroughDefaultClippingPlanes" : [
 			"layout:section", "Light Look Through",
+			"layout:activator", "lookThroughEnabled",
 			"label", "Default Clipping Planes",
 			"description",
 			"""
@@ -612,17 +635,28 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m = IECore.MenuDefinition()
 
 		if self.getPlug()["lookThroughEnabled"].getValue() :
+			currentFree = None
 			currentLookThrough = self.getPlug()["lookThroughCamera"].getValue()
 		else :
+			currentFree = self.getPlug()["freeCamera"].getValue()
 			currentLookThrough = None
 
-		m.append(
-			"/Default",
-			{
-				"checkBox" : currentLookThrough is None,
-				"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), None )
-			}
-		)
+		for freeCamera in [
+			"perspective",
+			"top",
+			"front",
+			"side"
+		] :
+
+			m.append(
+				"/" + freeCamera.title(),
+				{
+					"checkBox" : freeCamera == currentFree,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__free ), freeCamera )
+				}
+			)
+
+		m.append( "/FreeCameraDivider", { "divider" : True } )
 
 		m.append(
 			"/Render Camera",
@@ -665,10 +699,15 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return m
 
+	def __free( self, freeCamera, *unused ) :
+
+		self.getPlug()["lookThroughEnabled"].setValue( False )
+		self.getPlug()["freeCamera"].setValue( freeCamera )
+
 	def __lookThrough( self, path, *unused ) :
 
-		self.getPlug()["lookThroughEnabled"].setValue( path is not None )
-		self.getPlug()["lookThroughCamera"].setValue( path or "" )
+		self.getPlug()["lookThroughEnabled"].setValue( True )
+		self.getPlug()["lookThroughCamera"].setValue( path )
 
 	def __browse( self ) :
 

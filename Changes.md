@@ -4,6 +4,10 @@
 Improvements
 ------------
 
+- Viewer :
+  - Added standard Top, Front and Side orthographic cameras, accessible from the Camera menu (#4523).
+  - Clicking on the gnomon now toggles between the standard orthographic cameras and the perspective camera.
+- CameraTool : The "dolly" operation (<kbd>Alt</kbd>+right-drag) no longer moves orthographic cameras (or distant lights) along their Z axis. This was confusing, as there was no visual feedback in the viewer due to the nature of the projection. Instead, dollying is disabled until such a time as the CameraTool can make appropriate aperture edits in the node graph.
 - Spreadsheet : Improved drag and drop of lists of strings. <kbd>Shift</kbd> may now be held to add to the current list, and <kbd>Control</kbd> may be held to remove from the current list (#3894). This is particularly useful when a PathFilter has been added to a spreadsheet.
 
 Fixes
@@ -26,6 +30,11 @@ API
   - Added missing `getDimmed()` accessor.
 - Pointer : Added `add` and `remove` pointers for use with `setCurrent()`.
 - MessageWidget : We no longer update the UI immediately when a message is emitted on the UI thread. If you have a slow process that you want to receive messages from interactively, you should run it on a background thread (perhaps using BackgroundTaskDialogue). If you have old code that runs something slow on the UI thread, it will still run, but you will only see messages from it once it finishes.
+- ViewportGadget :
+  - Added const overloads of `getCenterOfInterest()` and `getMaxPlanarZoom()`. The non-const versions will be removed in a future version.
+  - Added `setTumblingEnabled()` and `getTumblingEnabled()` methods.
+  - Added `setDollyingEnabled()` and `getDollyingEnabled()` methods.
+  - `cameraChangedSignal()` is now emitted by `setCenterOfInterest()` in addition to `setCamera()` and `setCameraTransform()`.
 
 0.61.5.0 (relative to 0.61.4.0)
 ========
