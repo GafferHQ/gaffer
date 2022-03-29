@@ -153,7 +153,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		if node is not None :
 			self.__plug = next( GafferScene.ScenePlug.RecursiveOutputRange( node ), None )
 			if self.__plug is not None :
-				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ) )
+				self.__plugParentChangedConnection = self.__plug.parentChangedSignal().connect( Gaffer.WeakMethod( self.__plugParentChanged ), scoped = True )
 
 		self.__settingsNode["in"].setInput( self.__plug )
 
