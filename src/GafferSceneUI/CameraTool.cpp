@@ -239,12 +239,20 @@ const TransformTool::Selection &CameraTool::cameraSelection()
 	ScenePlug::ScenePath cameraPath = this->cameraPath();
 	if( !cameraPath.empty() )
 	{
-		m_cameraSelection = TransformTool::Selection(
+		TransformTool::Selection candidateSelection(
 			scenePlug(),
 			cameraPath,
 			view()->getContext(),
 			view()->editScope()
 		);
+		// TransformTool::Selection will fall back to editing
+		// a parent path if it can't edit the `cameraPath`.
+		// Parent edits are not suitable for the camera tool, so
+		// we reject them.
+		if( candidateSelection.path() == cameraPath )
+		{
+			m_cameraSelection = candidateSelection;
+		}
 	}
 
 	m_cameraSelectionDirty = false;

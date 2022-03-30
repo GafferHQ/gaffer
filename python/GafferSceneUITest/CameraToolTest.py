@@ -35,6 +35,7 @@
 ##########################################################################
 
 import math
+import os
 
 import imath
 
@@ -47,6 +48,16 @@ import GafferSceneUI
 
 class CameraToolTest( GafferUITest.TestCase ) :
 
+	def assertCameraEditable( self, view, cameraEditable ) :
+
+		# Force update, since everything is done lazily in the SceneView
+		view.viewportGadget().preRenderSignal()( view.viewportGadget() )
+
+		self.assertEqual(
+			view.viewportGadget().getCameraEditable(),
+			cameraEditable
+		)
+
 	def testCameraEditability( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -55,44 +66,34 @@ class CameraToolTest( GafferUITest.TestCase ) :
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["camera"]["out"] )
 
-		def assertCameraEditable( cameraEditable ) :
-
-			# Force update, since everything is done lazily in the SceneView
-			view.viewportGadget().preRenderSignal()( view.viewportGadget() )
-
-			self.assertEqual(
-				view.viewportGadget().getCameraEditable(),
-				cameraEditable
-			)
-
-		assertCameraEditable( True )
+		self.assertCameraEditable( view, True )
 
 		view["camera"]["lookThroughEnabled"].setValue( True )
 		view["camera"]["lookThroughCamera"].setValue( "/camera" )
-		assertCameraEditable( False )
+		self.assertCameraEditable( view, False )
 
 		tool = GafferSceneUI.CameraTool( view )
 		tool["active"].setValue( True )
-		assertCameraEditable( True )
+		self.assertCameraEditable( view, True )
 
 		tool["active"].setValue( False )
-		assertCameraEditable( False )
+		self.assertCameraEditable( view, False )
 
 		tool["active"].setValue( True )
-		assertCameraEditable( True )
+		self.assertCameraEditable( view, True )
 
 		Gaffer.MetadataAlgo.setReadOnly( script["camera"]["transform"]["scale"], True )
-		assertCameraEditable( True )
+		self.assertCameraEditable( view, True )
 
 		Gaffer.MetadataAlgo.setReadOnly( script["camera"]["transform"]["translate"]["x"], True )
-		assertCameraEditable( False )
+		self.assertCameraEditable( view, False )
 		Gaffer.MetadataAlgo.setReadOnly( script["camera"]["transform"]["translate"]["x"], False )
-		assertCameraEditable( True )
+		self.assertCameraEditable( view, True )
 
 		Gaffer.MetadataAlgo.setReadOnly( script["camera"]["transform"]["rotate"]["x"], True )
-		assertCameraEditable( False )
+		self.assertCameraEditable( view, False )
 		Gaffer.MetadataAlgo.setReadOnly( script["camera"]["transform"]["rotate"]["x"], False )
-		assertCameraEditable( True )
+		self.assertCameraEditable( view, True )
 
 	def testEditTransform( self ) :
 
@@ -375,6 +376,55 @@ class CameraToolTest( GafferUITest.TestCase ) :
 			script["camera"]["transform"]["translate"].getValue(),
 			imath.V3f( 1, 2, 3 )
 		)
+
+	def testDontEditParentLocations( self ) :
+
+		# We can edit this camera, because the Camera node provides
+		# a transform for just that camera.
+
+		script = Gaffer.ScriptNode()
+
+		script["camera"] = GafferScene.Camera()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["camera"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+		view["camera"]["lookThroughEnabled"].setValue( True )
+		view["camera"]["lookThroughCamera"].setValue( "/group/camera" )
+
+		tool = GafferSceneUI.CameraTool( view )
+		tool["active"].setValue( True )
+		self.assertCameraEditable( view, True )
+
+		# But we can't edit an an identical camera coming from a
+		# cache, because the SceneReader only provides control over
+		# the top-level transform. We don't want to edit that because
+		# it would move other objects too.
+
+		script["sceneWriter"] = GafferScene.SceneWriter()
+		script["sceneWriter"]["in"].setInput( script["group"]["out"] )
+		script["sceneWriter"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.usda" ) )
+		script["sceneWriter"]["task"].execute()
+
+		script["sceneReader"] = GafferScene.SceneReader()
+		script["sceneReader"]["fileName"].setInput( script["sceneWriter"]["fileName"] )
+
+		view["in"].setInput( script["sceneReader"]["out"] )
+		self.assertCameraEditable( view, False )
+
+		# If we add an EditScope, then we _can_ move the camera, provided
+		# the view has been told to use it.
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["sceneReader"]["out"] )
+		script["editScope"]["in"].setInput( script["sceneReader"]["out"] )
+
+		view["in"].setInput( script["editScope"]["out"] )
+		self.assertCameraEditable( view, False )
+
+		view["editScope"].setInput( script["editScope"]["out"] )
+		self.assertCameraEditable( view, True )
 
 if __name__ == "__main__":
 	unittest.main()
