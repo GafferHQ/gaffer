@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.6.0)
+========
+
+Fixes
+-----
+
+- TransformTool : Fixed glitch that could cause a more distant handle to be drawn on top of a closer one.
+
 0.61.6.0 (relative to 0.61.5.0)
 ========
 
