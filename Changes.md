@@ -9,6 +9,7 @@ Improvements
 Fixes
 -----
 
+- ArnoldRender : Fixed crash caused by lights with a non-existent shader.
 - TransformTool : Fixed glitch that could cause a more distant handle to be drawn on top of a closer one.
 
 0.61.6.0 (relative to 0.61.5.0)

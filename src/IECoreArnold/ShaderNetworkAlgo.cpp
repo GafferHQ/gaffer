@@ -397,7 +397,11 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 
 bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork )
 {
-	assert( nodes.size() );
+	if( !nodes.size() )
+	{
+		return false;
+	}
+
 	AtUniverse *universe = AiNodeGetUniverse( nodes.back() );
 	AtNode *parentNode = AiNodeGetParent( nodes.back() );
 	const std::string &name = AiNodeGetName( nodes.back() );
