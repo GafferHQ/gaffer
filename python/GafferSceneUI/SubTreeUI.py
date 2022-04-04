@@ -70,13 +70,12 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Causes the root location to also be kept in the
-			output scene, in addition to its children. For
-			instance, if the scene contains only
-			/city/street/house and the root is set to /city/street,
-			then the new scene will by default contain only /house -
-			but the includeRoot setting will cause it to contain
-			/street/house instead.
+			Causes the root location to also be kept in the output scene, in
+			addition to its children. For instance, if the scene contains only
+			`/city/street/house` and the root is set to `/city/street`, then the
+			new scene will by default contain only `/house` - but the
+			`includeRoot` setting will cause it to contain `/street/house`
+			instead.
 			""",
 
 		],
