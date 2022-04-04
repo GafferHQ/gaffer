@@ -353,18 +353,22 @@ IECore::ConstPathMatcherDataPtr SubTree::computeSet( const IECore::InternedStrin
 	}
 
 	PathMatcherDataPtr outputSetData = new PathMatcherData;
-	outputSetData->writable().addPaths( inputSet.subTree( root ), prefix );
+	PathMatcher subTree = inputSet.subTree( root );
+	if( !prefix.size() )
+	{
+		// Avoid putting `/` in the output set. This would be vexing because the
+		// root location isn't visible in the HierarchyView and nodes don't
+		// operate on it. It would also be impossible to Group multiple inputs
+		// with mixed root memberships, because the root membership has to be
+		// transferred onto the single `/group` location.
+		/// \todo Should this be enforced more centrally in SceneNode, in the same
+		/// way that the no-transform-at-root and no-attributes-at-root rules are?
+		subTree.removePath( ScenePath() );
+	}
+	outputSetData->writable().addPaths( subTree, prefix );
 
 	if( inheritSetMembershipPlug()->getValue() && root.size() )
 	{
-		// Remove `/`, because we will be putting all top-level children in
-		// explicitly anyway.
-		/// \todo Arguably we should be removing `/` even when not inheriting
-		/// set membership. The user can't select or see `/` and nodes can't modify
-		/// its transform or attributes. So including it is a potential cause of
-		/// confusion.
-		outputSetData->writable().removePath( ScenePath() );
-
 		const unsigned match = inputSet.match( root );
 		if( match & ( PathMatcher::AncestorMatch | PathMatcher::ExactMatch ) )
 		{
