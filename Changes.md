@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- Arnold : Added support for Arnold 7.1.
 - SubTree : Added `inheritTransform`, `inheritAttributes` and `inheritSetMembership` plugs.
 
 Fixes
