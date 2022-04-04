@@ -9,7 +9,7 @@ Features
 Breaking Changes
 ----------------
 
-- Removed `OSLShader::prepareSplineCVsForOSL()`. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
+- OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
 
 0.62.0.0a1
 ==========
