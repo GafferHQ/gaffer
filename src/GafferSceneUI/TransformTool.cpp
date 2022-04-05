@@ -151,6 +151,17 @@ class HandlesGadget : public Gadget
 
 	protected :
 
+		Imath::Box3f renderBound() const override
+		{
+			// We need `renderLayer()` to be called any time it will
+			// be called for one of our children. Our children claim
+			// infinite bounds to account for their raster scale, so
+			// we must too.
+			Box3f b;
+			b.makeInfinite();
+			return b;
+		}
+
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
 			if( layer != Layer::MidFront )

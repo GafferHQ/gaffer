@@ -70,16 +70,47 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Causes the root location to also be kept in the
-			output scene, in addition to its children. For
-			instance, if the scene contains only
-			/city/street/house and the root is set to /city/street,
-			then the new scene will by default contain only /house -
-			but the includeRoot setting will cause it to contain
-			/street/house instead.
+			Causes the root location to also be kept in the output scene, in
+			addition to its children. For instance, if the scene contains only
+			`/city/street/house` and the root is set to `/city/street`, then the
+			new scene will by default contain only `/house` - but the
+			`includeRoot` setting will cause it to contain `/street/house`
+			instead.
 			""",
 
-		]
+		],
+
+		"inheritTransform" : [
+
+			"description",
+			"""
+			Maintains the subtree's world-space position by applying the `root`
+			location's full transform to the subtree's children.
+			"""
+
+		],
+
+		"inheritAttributes" : [
+
+			"description",
+			"""
+			Maintains the subtree's attributes (including shader assignments) by
+			applying the `root` location's full attributes to the subtree's
+			children.
+			"""
+
+		],
+
+		"inheritSetMembership" : [
+
+			"description",
+			"""
+			Maintains the subtree's membership in sets by transferring the
+			`root` location's memberships to the subtree's children.
+			"""
+
+
+		],
 
 	}
 

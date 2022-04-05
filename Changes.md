@@ -81,6 +81,22 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
+0.61.x.x (relative to 0.61.6.0)
+========
+
+Improvements
+------------
+
+- Arnold : Added support for Arnold 7.1.
+- SubTree : Added `inheritTransform`, `inheritAttributes` and `inheritSetMembership` plugs.
+
+Fixes
+-----
+
+- ArnoldRender : Fixed crash caused by lights with a non-existent shader.
+- TransformTool : Fixed glitch that could cause a more distant handle to be drawn on top of a closer one.
+- CameraTool : Fixed bug which allowed a parent of the camera to be moved, instead of the camera itself. This was particularly evident when looking through a camera loaded from a SceneReader, where the entire scene would be moved unexpectedly.
+
 0.61.6.0 (relative to 0.61.5.0)
 ========
 
