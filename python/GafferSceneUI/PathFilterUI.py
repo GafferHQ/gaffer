@@ -68,24 +68,24 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The list of paths to the locations to be matched by the filter.
-			A path is formed by a sequence of names separated by '/', and
+			A path is formed by a sequence of names separated by `/`, and
 			specifies the hierarchical position of a location within the scene.
 			Paths may use Gaffer's standard wildcard characters to match
 			multiple locations.
 
-			The '*' wildcard matches any sequence of characters within
+			The `*` wildcard matches any sequence of characters within
 			an individual name, but never matches across names separated
-			by a '/'.
+			by a `/`.
 
-			 - /robot/*Arm matches /robot/leftArm, /robot/rightArm and
-			   /robot/Arm. But does not match /robot/limbs/leftArm or
-			   /robot/arm.
+			 - `/robot/*Arm` matches `/robot/leftArm`, `/robot/rightArm` and
+			   `/robot/Arm`. But does not match `/robot/limbs/leftArm` or
+			   `/robot/arm`.
 
-			The "..." wildcard matches any sequence of names, and can be
+			The `...` wildcard matches any sequence of names, and can be
 			used to match locations no matter where they are parented in
 			the hierarchy.
 
-			 - /.../house matches /house, /street/house and /city/street/house.
+			 - `/.../house` matches `/house`, `/street/house` and `/city/street/house`.
 			""",
 
 			"nodule:type", "",
