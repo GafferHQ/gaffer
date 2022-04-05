@@ -3531,6 +3531,47 @@ class RendererTest( GafferTest.TestCase ) :
 				)
 				self.assertEqual( arnold.AiNodeGetFlt( exposure, "exposure" ), 2.5 )
 
+	def testEditEmptyShaderNetwork( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Make a light with a shader that doesn't exist.
+		badLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "NonexistentShader", "ai:light", {} ), }, output = "light" )
+		with IECore.CapturingMessageHandler() as mh :
+			light = r.light(
+				"test",
+				None,
+				r.attributes(
+					IECore.CompoundObject( {
+						"ai:light" : badLightShader
+					} )
+				)
+			)
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertIn( """Couldn't load shader "NonexistentShader""", mh.messages[0].message )
+
+		# Try to replace it with a shader that does exist. This
+		# should fail, because lights must be updated in place
+		# and that's not possible if there was no light node in
+		# the first place.
+		quadLightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "quad_light", "ai:light", {} ), }, output = "light" )
+		self.assertFalse(
+			light.attributes(
+				r.attributes(
+					IECore.CompoundObject( {
+						"ai:light" : quadLightShader
+					} )
+				)
+			)
+		)
+
+		# Must delete objects before the renderer.
+		del light
+
 	@staticmethod
 	def __m44f( m ) :
 
