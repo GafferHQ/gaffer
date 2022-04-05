@@ -982,7 +982,10 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 	// for us, because the connections will have been removed along
 	// with the plug. So we search for an internal image which has
 	// no input connection.
-	bool removed = false;
+
+	// `maybe_unused` keeps the compiler happy when release builds omit the
+	// `assert()`.
+	[[maybe_unused]] bool removed = false;
 	for( auto &c : children() )
 	{
 		if( auto *internalImage = dynamic_cast<InternalImage *>( c.get() ) )
@@ -997,7 +1000,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 			}
 		}
 	}
-	assert( removed ); (void)removed;
+	assert( removed );
 
 	// Now we go through and shuffle everything down
 	// to fill the hole in the switch inputs.
