@@ -619,20 +619,196 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
 		self.assertNotIn( "c:promotable", Gaffer.Metadata.registeredValues( p ) )
 
-	def testExtractDataFromNameValuePlug( self ) :
+	def testGetValueFromNameValuePlug( self ) :
 
 		withEnabled = Gaffer.NameValuePlug( "test", 10, defaultEnabled = True )
 		withoutEnabled = Gaffer.NameValuePlug( "test", 20 )
 
 		self.assertEqual(
-			Gaffer.PlugAlgo.extractDataFromPlug( withEnabled ),
+			Gaffer.PlugAlgo.getValueAsData( withEnabled ),
 			IECore.CompoundData( { "name" : "test", "value" : 10, "enabled" : True } )
 		)
 
 		self.assertEqual(
-			Gaffer.PlugAlgo.extractDataFromPlug( withoutEnabled ),
+			Gaffer.PlugAlgo.getValueAsData( withoutEnabled ),
 			IECore.CompoundData( { "name" : "test", "value" : 20 } )
 		)
+
+	def testGetValueAsData( self ) :
+
+		n = Gaffer.Node()
+		n.addChild( Gaffer.FloatPlug( "floatPlug", defaultValue = 2.0 ) )
+		n.addChild(
+			Gaffer.V3fPlug(
+				"v3fPlug",
+				defaultValue = imath.V3f( 1.0, 2.0, 3.0 ),
+				interpretation = IECore.GeometricData.Interpretation.Point
+			)
+		)
+		n.addChild( Gaffer.FloatVectorDataPlug( "floatVectorPlug", defaultValue = IECore.FloatVectorData( [ 1.0, 2.0, 3.0 ] ) ) )
+		n.addChild( Gaffer.Box2iPlug( "box2iPlug", defaultValue = imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) ) )
+		s = Gaffer.SplineDefinitionff(
+			(
+				( 0, 0 ),
+				( 0.2, 0.3 ),
+				( 0.4, 0.9 ),
+				( 1, 1 ),
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		)
+		n.addChild( Gaffer.SplineffPlug( "splinePlug", defaultValue = s ) )
+
+		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["floatPlug"] ), IECore.FloatData( 2.0 ) )
+		self.assertEqual(
+			Gaffer.PlugAlgo.getValueAsData( n["v3fPlug"] ),
+			IECore.V3fData( imath.V3f( 1, 2, 3 ), IECore.GeometricData.Interpretation.Point )
+		)
+		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["floatVectorPlug"] ), IECore.FloatVectorData( [ 1.0, 2.0, 3.0 ] ) )
+		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["box2iPlug"] ), IECore.Box2iData( imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) ) )
+		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["splinePlug"] ), IECore.SplineffData( s.spline() ) )
+
+
+	def testSetValueFromData( self ) :
+
+		n = Gaffer.Node()
+		n.addChild( Gaffer.FloatPlug( "floatPlug" ) )
+		n.addChild( Gaffer.Color3fPlug( "color3fPlug" ) )
+		n.addChild( Gaffer.Color4fPlug( "color4fPlug" ) )
+		n.addChild( Gaffer.V3fPlug( "v3fPlug" ) )
+		n.addChild( Gaffer.Box2iPlug( "box2iPlug" ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData( n["floatPlug"], IECore.FloatData( 5.0 ) )
+		self.assertTrue( r )
+		self.assertEqual( n["floatPlug"].getValue(), 5.0 )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["color3fPlug"],
+			IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) )
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["color3fPlug"].getValue(), imath.Color3f( 1.0, 2.0, 3.0 ) )
+
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["color4fPlug"],
+			IECore.Color4fData( imath.Color4f( 1.0, 2.0, 3.0, 4.0) ),
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["color4fPlug"].getValue(), imath.Color4f( 1.0, 2.0, 3.0, 4.0 ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["color4fPlug"],
+			IECore.Color3fData( imath.Color3f( 5.0, 6.0, 7.0) )
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["color4fPlug"].getValue(), imath.Color4f( 5.0, 6.0, 7.0, 1.0 ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["color4fPlug"],
+			IECore.FloatData( 8.0 )
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["color4fPlug"].getValue(), imath.Color4f( 8.0, 8.0, 8.0, 1.0 ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["v3fPlug"],
+			IECore.V2fData( imath.V2f( 1.0, 2.0 ) ),
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["v3fPlug"].getValue(), imath.V3f( 1.0, 2.0, 0.0 ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["box2iPlug"],
+			IECore.Box2iData( imath.Box2i( imath.V2i (1.0 ), imath.V2i( 2.0 ) ) )
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["box2iPlug"].getValue(), imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["floatPlug"],
+			IECore.V3fData( imath.V3f( 1.0, 2.0, 3.0 ) )
+		)
+		self.assertFalse( r )
+
+	def testSetLeafValueFromData( self ) :
+
+		n = Gaffer.Node()
+		n.addChild( Gaffer.FloatPlug( "floatPlug" ) )
+		n.addChild( Gaffer.Color3fPlug( "color3fPlug" ) )
+		n.addChild( Gaffer.Color4fPlug( "color4fPlug" ) )
+		n.addChild( Gaffer.Box2iPlug( "box2iPlug" ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["color3fPlug"],
+			n["color3fPlug"]["g"],
+			IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) ),
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["color3fPlug"].getValue(), imath.Color3f( 0.0, 2.0, 0.0 ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["color4fPlug"],
+			n["color4fPlug"]["a"],
+			IECore.Color3fData( imath.Color3f( 4.0, 5.0, 6.0 ) )
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["color4fPlug"].getValue(), imath.Color4f( 0.0, 0.0, 0.0, 1.0 ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["box2iPlug"],
+			n["box2iPlug"]["min"]["x"],
+			IECore.Box2iData( imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) )
+		)
+		self.assertTrue( r )
+		defaultBox2i = imath.Box2i()
+		self.assertEqual(
+			n["box2iPlug"].getValue(),
+			imath.Box2i(
+				imath.V2i( 1.0, defaultBox2i.min().y ),
+				imath.V2i( defaultBox2i.max().x, defaultBox2i.max().y )
+			)
+		)
+
+		r = Gaffer.PlugAlgo.setValueFromData( n["floatPlug"], n["floatPlug"], IECore.FloatData( 1.0 ) )
+		self.assertTrue( r )
+		self.assertEqual( n["floatPlug"].getValue(), 1.0 )
+
+		self.assertRaises(
+			RuntimeError,
+			Gaffer.PlugAlgo.setValueFromData,
+			n["box2iPlug"],
+			n["box2iPlug"]["min"],
+			IECore.V2iData( imath.V2i( 1.0 ) )
+		)
+
+	def testCanSetPlugFromValue( self ) :
+		compatiblePlugs = [
+			Gaffer.BoolPlug(),
+			Gaffer.FloatPlug(),
+			Gaffer.IntPlug(),
+			Gaffer.BoolVectorDataPlug( "bv", Gaffer.Plug.Direction.In, IECore.BoolVectorData( [] ) ),
+			Gaffer.FloatVectorDataPlug( "fv", Gaffer.Plug.Direction.In, IECore.FloatVectorData( [] ) ),
+			Gaffer.IntVectorDataPlug( "iv", Gaffer.Plug.Direction.In, IECore.IntVectorData( [] ) ),
+			Gaffer.StringPlug(),
+			Gaffer.StringVectorDataPlug( "sv", Gaffer.Plug.Direction.In, IECore.StringVectorData( [] ) ),
+			Gaffer.InternedStringVectorDataPlug( "isv", Gaffer.Plug.Direction.In, IECore.InternedStringVectorData( [] ) ),
+			Gaffer.Color3fPlug(),
+			Gaffer.Color4fPlug(),
+			Gaffer.V3fPlug(),
+			Gaffer.V3iPlug(),
+			Gaffer.V2fPlug(),
+			Gaffer.V2iPlug(),
+			Gaffer.Box3fPlug(),
+			Gaffer.Box3iPlug(),
+			Gaffer.Box2fPlug(),
+			Gaffer.Box2iPlug(),
+		]
+
+		for p in compatiblePlugs :
+			self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( p ) )
+
+		self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( Gaffer.NameValuePlug() ) )
+
 
 if __name__ == "__main__":
 	unittest.main()

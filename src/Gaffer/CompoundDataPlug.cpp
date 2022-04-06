@@ -188,5 +188,5 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const NameValuePlug *parame
 		return nullptr;
 	}
 
-	return PlugAlgo::extractDataFromPlug( valuePlug( parameterPlug ) );
+	return PlugAlgo::getValueAsData( valuePlug( parameterPlug ) );
 }

@@ -1083,7 +1083,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 		CompoundObjectPtr defaults = new CompoundObject;
 		for( const auto &cellPlug : CellPlug::Range( *rowsPlug()->defaultRow()->cellsPlug() ) )
 		{
-			defaults->members()[cellPlug->getName()] = PlugAlgo::extractDataFromPlug( cellPlug->valuePlug() );
+			defaults->members()[cellPlug->getName()] = PlugAlgo::getValueAsData( cellPlug->valuePlug() );
 		}
 
 		CompoundObjectPtr result = new CompoundObject;
@@ -1106,7 +1106,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 			{
 				if( cellPlug->enabledPlug()->getValue() )
 				{
-					cells->members()[cellPlug->getName()] = PlugAlgo::extractDataFromPlug( cellPlug->valuePlug() );
+					cells->members()[cellPlug->getName()] = PlugAlgo::getValueAsData( cellPlug->valuePlug() );
 				}
 				else
 				{

@@ -63,10 +63,33 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 	return PlugAlgo::createPlugFromData( name, direction, flags, value );
 }
 
-IECore::DataPtr extractDataFromPlug( const ValuePlug *plug )
+IECore::DataPtr getValueAsData( const ValuePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return PlugAlgo::extractDataFromPlug( plug );
+	return PlugAlgo::getValueAsData( &plug );
+}
+
+IECore::DataPtr extractDataFromPlug( const ValuePlug &plug )
+{
+	return getValueAsData( plug );
+}
+
+bool setLeafValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, const IECore::Data *value )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return PlugAlgo::setValueFromData( plug, leafPlug, value );
+}
+
+bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return PlugAlgo::setValueFromData( plug, value );
+}
+
+bool canSetValueFromData( const ValuePlug *plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return PlugAlgo::canSetValueFromData( plug );
 }
 
 PlugPtr promote( Plug &plug, Plug *parent, const IECore::StringAlgo::MatchPattern &excludeMetadata )
@@ -87,8 +110,6 @@ void unpromote( Plug &plug )
 	PlugAlgo::unpromote( &plug );
 }
 
-
-
 } // namespace
 
 void GafferModule::bindPlugAlgo()
@@ -100,6 +121,10 @@ void GafferModule::bindPlugAlgo()
 	def( "replacePlug", &replacePlug, ( arg( "parent" ), arg( "plug" ) ) );
 	def( "createPlugFromData", &createPlugFromData );
 	def( "extractDataFromPlug", &extractDataFromPlug );
+	def( "getValueAsData", &getValueAsData );
+	def( "setValueFromData", &setLeafValueFromData );
+	def( "setValueFromData", &setValueFromData );
+	def( "canSetValueFromData", &canSetValueFromData );
 
 	def( "canPromote", &PlugAlgo::canPromote, ( arg( "plug" ), arg( "parent" ) = object() ) );
 	def( "promote", &promote, ( arg( "plug" ), arg( "parent" ) = object(), arg( "excludeMetadata" ) = "layout:*" ) );

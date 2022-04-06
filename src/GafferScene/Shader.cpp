@@ -855,7 +855,7 @@ IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) cons
 {
 	if( const Gaffer::ValuePlug *valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
 	{
-		return Gaffer::PlugAlgo::extractDataFromPlug( valuePlug );
+		return Gaffer::PlugAlgo::getValueAsData( valuePlug );
 	}
 
 	return nullptr;

@@ -119,7 +119,7 @@ IECoreScene::ConstShaderNetworkPtr AppleseedLight::computeLight( const Gaffer::C
 	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( modelPlug()->getValue(), "as:light" );
 	for( ValuePlug::InputIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		shader->parameters()[(*it)->getName()] = PlugAlgo::extractDataFromPlug( it->get() );
+		shader->parameters()[(*it)->getName()] = PlugAlgo::getValueAsData( it->get() );
 	}
 
 	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork();

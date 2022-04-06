@@ -61,7 +61,22 @@ GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
 GAFFER_API ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value );
 
 /// Extracts a Data value from a plug previously created with createPlugFromData().
+/// \deprecated Use `getValueAsData` instead.
 GAFFER_API IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
+
+/// Returns a Data value from a plug.
+GAFFER_API IECore::DataPtr getValueAsData( const ValuePlug *plug );
+
+/// Sets the value of an existing plug to the specified data.
+/// Returns `true` on success and `false` on failure.
+GAFFER_API bool setValueFromData( ValuePlug *plug, const IECore::Data *value );
+
+/// Overload for use in `ComputeNode::compute()` implementations, where values may only
+/// be set on leaf plugs.
+GAFFER_API bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, const IECore::Data *value );
+
+/// Returns true if the given plug's value can be set from Data
+GAFFER_API bool canSetValueFromData( const ValuePlug *plug );
 
 /// Promotion
 /// =========

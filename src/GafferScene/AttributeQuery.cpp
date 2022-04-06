@@ -35,6 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/AttributeQuery.h"
+
+#include "Gaffer/PlugAlgo.h"
+
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -52,227 +55,6 @@ using namespace Gaffer;
 
 namespace
 {
-
-template<typename PlugType>
-bool setNumericPlugValue( PlugType *plug, const Object *value )
-{
-	switch( value->typeId() )
-	{
-		case FloatDataTypeId :
-			plug->setValue( static_cast<const FloatData *>( value )->readable() );
-			return true;
-		case IntDataTypeId :
-			plug->setValue( static_cast<const IntData *>( value )->readable() );
-			return true;
-		case BoolDataTypeId :
-			plug->setValue( static_cast<const BoolData *>( value )->readable() );
-			return true;
-		default :
-			return false;
-	}
-}
-
-template<typename PlugType, typename ValueType>
-bool setCompoundNumericPlugValue( const PlugType *parent, typename PlugType::ChildType *child, const ValueType &value )
-{
-	for( size_t i = 0; i < parent->children().size(); ++i )
-	{
-		if( child == parent->getChild( i ) )
-		{
-			if( i < ValueType::dimensions() )
-			{
-				child->setValue( value[i] );
-			}
-			else
-			{
-				// 1 for the alpha of Color4f, 0 for everthing else
-				child->setValue( i == 3 ? 1 : 0 );
-			}
-			return true;
-		}
-	}
-	return false;
-}
-
-template<typename PlugType>
-bool setCompoundNumericPlugValue( const PlugType *parent, Gaffer::ValuePlug *child, const Object *value )
-{
-	auto typedChild = assertedStaticCast<typename PlugType::ChildType>( child );
-
-	switch( value->typeId() )
-	{
-		case Color4fDataTypeId :
-			return setCompoundNumericPlugValue( parent, typedChild, static_cast<const Color4fData *>( value )->readable() );
-		case Color3fDataTypeId :
-			return setCompoundNumericPlugValue( parent, typedChild, static_cast<const Color3fData *>( value )->readable() );
-		case V3fDataTypeId :
-			return setCompoundNumericPlugValue( parent, typedChild, static_cast<const V3fData *>( value )->readable() );
-		case V2fDataTypeId :
-			return setCompoundNumericPlugValue( parent, typedChild, static_cast<const V2fData *>( value )->readable() );
-		case V3iDataTypeId :
-			return setCompoundNumericPlugValue( parent, typedChild, static_cast<const V3iData *>( value )->readable() );
-		case V2iDataTypeId :
-			return setCompoundNumericPlugValue( parent, typedChild, static_cast<const V2iData *>( value )->readable() );
-		case FloatDataTypeId :
-		case IntDataTypeId :
-		case BoolDataTypeId :
-			if( parent->children().size() < 4 || child != parent->getChild( 3 ) )
-			{
-				return setNumericPlugValue( typedChild, value );
-			}
-			else
-			{
-				typedChild->setValue( 1 );
-				return true;
-			}
-		default :
-			return false;
-	}
-}
-
-template<typename PlugType, typename ValueType>
-bool setBoxPlugValue( const PlugType *boxPlug, typename PlugType::ChildType::ChildType *plug, const ValueType &value )
-{
-	if( plug->parent() == boxPlug->minPlug() )
-	{
-		return setCompoundNumericPlugValue( boxPlug->minPlug(), plug, value.min );
-	}
-	else
-	{
-		return setCompoundNumericPlugValue( boxPlug->maxPlug(), plug, value.max );
-	}
-}
-
-template<typename PlugType>
-bool setBoxPlugValue( const PlugType *boxPlug, Gaffer::ValuePlug *plug, const Object *value )
-{
-	auto typedPlug = assertedStaticCast<typename PlugType::ChildType::ChildType>( plug );
-	switch( value->typeId() )
-	{
-		case Box3fDataTypeId :
-			return setBoxPlugValue( boxPlug, typedPlug, static_cast<const Box3fData *>( value )->readable() );
-		case Box2fDataTypeId :
-			return setBoxPlugValue( boxPlug, typedPlug, static_cast<const Box2fData *>( value )->readable() );
-		case Box3iDataTypeId :
-			return setBoxPlugValue( boxPlug, typedPlug, static_cast<const Box3iData *>( value )->readable() );
-		case Box2iDataTypeId :
-			return setBoxPlugValue( boxPlug, typedPlug, static_cast<const Box2iData *>( value )->readable() );
-		default :
-			return false;
-	}
-}
-
-template<typename PlugType>
-bool setTypedObjectPlugValue( PlugType *plug, const Object *value )
-{
-	if( auto typedValue = runTimeCast<const typename PlugType::ValueType>( value ) )
-	{
-		plug->setValue( typedValue );
-		return true;
-	}
-	return false;
-}
-
-bool canSetPlugType( const Gaffer::TypeId pid )
-{
-	bool result = false;
-
-	switch( pid )
-	{
-		case Gaffer::BoolPlugTypeId:
-		case Gaffer::FloatPlugTypeId:
-		case Gaffer::IntPlugTypeId:
-		case Gaffer::BoolVectorDataPlugTypeId:
-		case Gaffer::FloatVectorDataPlugTypeId:
-		case Gaffer::IntVectorDataPlugTypeId:
-		case Gaffer::StringPlugTypeId:
-		case Gaffer::StringVectorDataPlugTypeId:
-		case Gaffer::InternedStringVectorDataPlugTypeId:
-		case Gaffer::Color3fPlugTypeId:
-		case Gaffer::Color4fPlugTypeId:
-		case Gaffer::V3fPlugTypeId:
-		case Gaffer::V3iPlugTypeId:
-		case Gaffer::V2fPlugTypeId:
-		case Gaffer::V2iPlugTypeId:
-		case Gaffer::Box3fPlugTypeId:
-		case Gaffer::Box3iPlugTypeId:
-		case Gaffer::Box2fPlugTypeId:
-		case Gaffer::Box2iPlugTypeId:
-		case Gaffer::ObjectPlugTypeId:
-			result = true;
-			break;
-		default:
-			break;
-	}
-
-	return result;
-}
-
-bool setPlugFromObject( const Gaffer::Plug* const vplug, Gaffer::ValuePlug* const plug, const IECore::Object* const object )
-{
-	assert( vplug != 0 );
-	assert( plug != 0 );
-	assert( object != 0 );
-
-	switch( static_cast<Gaffer::TypeId>( vplug->typeId() ) )
-	{
-		case Gaffer::BoolPlugTypeId:
-			return setNumericPlugValue( static_cast<BoolPlug *>( plug ), object );
-		case Gaffer::FloatPlugTypeId:
-			return setNumericPlugValue( static_cast<FloatPlug *>( plug ), object );
-		case Gaffer::IntPlugTypeId:
-			return setNumericPlugValue( static_cast<IntPlug *>( plug ), object );
-		case Gaffer::BoolVectorDataPlugTypeId:
-			return setTypedObjectPlugValue( static_cast<BoolVectorDataPlug *>( plug ), object );
-		case Gaffer::FloatVectorDataPlugTypeId:
-			return setTypedObjectPlugValue( static_cast<FloatVectorDataPlug *>( plug ), object );
-		case Gaffer::IntVectorDataPlugTypeId:
-			return setTypedObjectPlugValue( static_cast<IntVectorDataPlug *>( plug ), object );
-		case Gaffer::StringPlugTypeId:
-			switch( object->typeId() )
-			{
-				case IECore::StringDataTypeId:
-					IECore::assertedStaticCast< Gaffer::StringPlug >( plug )->setValue(
-						IECore::assertedStaticCast< const IECore::StringData >( object )->readable() );
-					return true;
-				case IECore::InternedStringDataTypeId:
-					IECore::assertedStaticCast< Gaffer::StringPlug >( plug )->setValue(
-						IECore::assertedStaticCast< const IECore::InternedStringData >( object )->readable().value() );
-					return true;
-				default:
-					return false;
-			}
-		case Gaffer::StringVectorDataPlugTypeId:
-			return setTypedObjectPlugValue( static_cast<StringVectorDataPlug *>( plug ), object );
-		case Gaffer::InternedStringVectorDataPlugTypeId:
-			return setTypedObjectPlugValue( static_cast<InternedStringVectorDataPlug *>( plug ), object );
-		case Gaffer::ObjectPlugTypeId:
-			IECore::assertedStaticCast< Gaffer::ObjectPlug >( plug )->setValue( object );
-			return true;
-		case Gaffer::Color3fPlugTypeId:
-			return setCompoundNumericPlugValue( static_cast<const Color3fPlug *>( vplug ), plug, object );
-		case Gaffer::Color4fPlugTypeId:
-			return setCompoundNumericPlugValue( static_cast<const Color4fPlug *>( vplug ), plug, object );
-		case Gaffer::V3fPlugTypeId:
-			return setCompoundNumericPlugValue( static_cast<const V3fPlug *>( vplug ), plug, object );
-		case Gaffer::V3iPlugTypeId:
-			return setCompoundNumericPlugValue( static_cast<const V3iPlug *>( vplug ), plug, object );
-		case Gaffer::V2fPlugTypeId:
-			return setCompoundNumericPlugValue( static_cast<const V2fPlug *>( vplug ), plug, object );
-		case Gaffer::V2iPlugTypeId:
-			return setCompoundNumericPlugValue( static_cast<const V2iPlug *>( vplug ), plug, object );
-		case Gaffer::Box3fPlugTypeId:
-			return setBoxPlugValue( static_cast<const Box3fPlug *>( vplug ), plug, object );
-		case Gaffer::Box3iPlugTypeId:
-			return setBoxPlugValue( static_cast<const Box3iPlug *>( vplug ), plug, object );
-		case Gaffer::Box2fPlugTypeId:
-			return setBoxPlugValue( static_cast<const Box2fPlug *>( vplug ), plug, object );
-		case Gaffer::Box2iPlugTypeId:
-			return setBoxPlugValue( static_cast<const Box2iPlug *>( vplug ), plug, object );
-		default:
-			return false;
-	}
-}
 
 Gaffer::Plug const* correspondingPlug( const Gaffer::Plug* const parent, const Gaffer::Plug* const child, const Gaffer::Plug* const other )
 {
@@ -415,7 +197,8 @@ bool AttributeQuery::canSetup( const Gaffer::ValuePlug* const plug ) const
 	const bool success =
 		( plug != nullptr ) &&
 		( ! isSetup() ) &&
-		( canSetPlugType( static_cast< Gaffer::TypeId >( plug->typeId() ) ) );
+		( PlugAlgo::canSetValueFromData( plug ) || (Gaffer::TypeId)plug->typeId() == ObjectPlugTypeId )
+	;
 
 	return success;
 }
@@ -601,13 +384,30 @@ void AttributeQuery::compute( Gaffer::ValuePlug* const output, const Gaffer::Con
 			const IECore::ConstObjectPtr object = internalObjectPlug()->getValue();
 			assert( object );
 
-			if(
-				( object->isEqualTo( IECore::NullObject::defaultNullObject() ) ) ||
-				( ! setPlugFromObject( vplug, output, object.get() ) ) )
+			if( !object->isEqualTo( IECore::NullObject::defaultNullObject() ) )
 			{
-				output->setFrom( IECore::assertedStaticCast< const Gaffer::ValuePlug >(
-					correspondingPlug( vplug, output, defaultPlug() ) ) );
+				bool success = false;
+
+				if( auto objectPlug = runTimeCast<ObjectPlug>( output ) )
+				{
+					objectPlug->setValue( object );
+					success = true;
+				}
+				else
+				{
+					if( const Data *value = runTimeCast<const Data>( object.get() ) )
+					{
+						success = PlugAlgo::setValueFromData( vplug, output, value );
+					}
+				}
+
+				if( success )
+				{
+					return;
+				}
 			}
+
+			output->setFrom( static_cast<const Gaffer::ValuePlug *>(correspondingPlug( vplug, output, defaultPlug() ) ) );
 		}
 	}
 }
