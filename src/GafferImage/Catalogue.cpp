@@ -977,11 +977,32 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 		return;
 	}
 
-	Image *image = static_cast<Image *>( graphComponent );
-	// This causes the image to disconnect from
-	// the switch automatically.
-	removeChild( imageNode( image ) );
-	// So now we go through and shuffle everything down
+	// Remove the InternalImage corresponding to the external Image
+	// plug that was removed. We can't call `imageNode()` to find this
+	// for us, because the connections will have been removed along
+	// with the plug. So we search for an internal image which has
+	// no input connection.
+
+	// `maybe_unused` keeps the compiler happy when release builds omit the
+	// `assert()`.
+	[[maybe_unused]] bool removed = false;
+	for( auto &c : children() )
+	{
+		if( auto *internalImage = dynamic_cast<InternalImage *>( c.get() ) )
+		{
+			if( !internalImage->fileNamePlug()->getInput() )
+			{
+				assert( !removed );
+				// This causes the image to disconnect from
+				// the switch automatically.
+				removeChild( internalImage );
+				removed = true;
+			}
+		}
+	}
+	assert( removed );
+
+	// Now we go through and shuffle everything down
 	// to fill the hole in the switch inputs.
 	/// \todo Should there be an ArrayPlug method to do this for us?
 	ArrayPlug *plug = imageSwitch()->inPlugs();

@@ -1071,5 +1071,29 @@ class PlugTest( GafferTest.TestCase ) :
 			set( Gaffer.Plug.RecursiveRange( node1 ) ) | set( Gaffer.Plug.RecursiveRange( node2 ) )
 		)
 
+	def testRemoveOutputsRemovesChildOutputs( self ) :
+
+		p1 = Gaffer.V2iPlug()
+		p2 = Gaffer.V2iPlug()
+
+		p2["x"].setInput( p1["x"] )
+		self.assertEqual( p2["x"].getInput(), p1["x"] )
+
+		p1.removeOutputs()
+		self.assertIsNone( p2["x"].getInput() )
+
+	def testRemovePlugRemovesChildOutputs( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.V2iPlug()
+		n["p2"] = Gaffer.V2iPlug()
+
+		n["p2"]["x"].setInput( n["p1"]["x"] )
+		self.assertEqual( n["p2"]["x"].getInput(), n["p1"]["x"] )
+
+		p1 = n["p1"] # Keep alive, so destruction of `p1` doesn't remove outputs.
+		del n["p1"]  # Removal alone should be enough to do that.
+		self.assertIsNone( n["p2"]["x"].getInput() )
+
 if __name__ == "__main__":
 	unittest.main()
