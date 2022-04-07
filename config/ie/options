@@ -59,11 +59,12 @@ def getOption( name, default ) :
 # parse SConstruct file for the gafferVersion
 ##########################################################################
 
-def gafferRegistryVersion() :
+## \todo: this is duplicated from ./installAll but can we centralize it instead?
+def gafferVersionFromScons() :
 
 	import re
 	sconsFile = "SConstruct"
-	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion"]
+	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion", "gafferMinorVersion", "gafferPatchVersion"]
 	varsToFind = list(versionVars)
 
 	varsFound = {}
@@ -81,7 +82,32 @@ def gafferRegistryVersion() :
 	if varsToFind:
 		raise Exception( "Could not find the gaffer version in the SConstruct file. Please review the parsing rules." )
 
-	return varsFound["gafferMilestoneVersion"] + "." + varsFound["gafferMajorVersion"] + ".0.0"
+	return ".".join( [varsFound[k] for k in versionVars] )
+
+
+def gafferRegistryVersion( gafferVersion ) :
+
+	# have to do local imports for some reason on the options file
+	import distutils
+	import IEEnv
+
+	gafferCompatibilityVersion = ".".join( gafferVersion.split( "." )[:2] )
+	looseGafferVersion = distutils.version.LooseVersion( gafferVersion )
+	registryVersions = list( IEEnv.registry["apps"]["gaffer"].keys() )
+	# only keep entries that have the expected elements
+	registryVersions = [x for x in registryVersions if len( x.split( "." ) ) == 4]
+	# only keep those that are of the same compatibility version
+	registryVersions = [x for x in registryVersions if x.startswith( gafferCompatibilityVersion + "." )]
+	# only keep those that are the same or older than the one we are installing
+	registryVersions = [x for x in registryVersions if looseGafferVersion >= distutils.version.LooseVersion( x )]
+	# sort the remaining entries by LooseVersion, and pick the first one
+	registryVersions.sort( key=distutils.version.LooseVersion, reverse=True )
+
+	if not registryVersions:
+		raise Exception( "Could not find a matching registry entry for {}".format( gafferVersion ) )
+
+	registryVersion = registryVersions[0]
+	return registryVersion
 
 
 cortexVersion = getOption( "CORTEX_VERSION", os.environ["CORTEX_VERSION"] )
@@ -94,11 +120,12 @@ targetApp = getOption( "APP", None )
 targetAppVersion = None
 
 if int( getOption( "IE_STOMP_VERSION", "0" ) ):
-	registryVersion = os.environ["GAFFER_COMPATIBILITY_VERSION"] + ".0.0"
+	gafferVersion = os.environ["GAFFER_VERSION"]
 	GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION, GAFFER_MINOR_VERSION, GAFFER_PATH_VERSION = os.environ["GAFFER_VERSION"].rstrip( "dev" ).split( "." )
 else:
-	registryVersion = gafferRegistryVersion()
+	gafferVersion = gafferVersionFromScons()
 
+registryVersion = gafferRegistryVersion( gafferVersion )
 gafferReg = IEEnv.registry["apps"]["gaffer"][registryVersion][IEEnv.platform()]
 gafferBuildVariant = getOption( "GAFFER_BUILD_VARIANT", "py2" )
 qtVersion = gafferReg["qtVersion"]
