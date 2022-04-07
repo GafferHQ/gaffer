@@ -1,10 +1,12 @@
-0.61.x.x ( relative to 0.61.7.0 )
+
+0.61.x.x (relative to 0.61.7.0)
 ========
 
 Fixes
 -----
 
 - ArnoldRender : Fixed volume motion rendering by setting options.reference_time ( requires Arnold 7.1 to function correctly )
+- NameValuePlug : Fixed bug where making a connection by drag and drop would connect the `name` plug as well as `enabled` and `value`. This caused confusion because making connections like `overscanLeft -> overscanRight` on the StandardOptions node meant that _both_ plugs ended up specifying the left overscan option.
 
 0.61.7.0 (relative to 0.61.6.0)
 ========
