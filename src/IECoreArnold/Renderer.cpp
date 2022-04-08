@@ -325,6 +325,7 @@ const AtString g_pluginSearchPathArnoldString( "plugin_searchpath" );
 const AtString g_polymeshArnoldString("polymesh");
 const AtString g_rasterArnoldString( "raster" );
 const AtString g_receiveShadowsArnoldString( "receive_shadows" );
+const AtString g_referenceTimeString( "reference_time" );
 const AtString g_regionMinXArnoldString( "region_min_x" );
 const AtString g_regionMaxXArnoldString( "region_max_x" );
 const AtString g_regionMinYArnoldString( "region_min_y" );
@@ -3538,6 +3539,12 @@ class ArnoldGlobals
 			AiNodeSetInt(
 				options, g_aaSeedArnoldString,
 				m_aaSeed.get_value_or( m_frame.get_value_or( 1 ) )
+			);
+
+			// Set the reference time, so that volume motion will use the correct reference
+			AiNodeSetFlt(
+				options, g_referenceTimeString,
+				m_frame.value_or( 1 )
 			);
 
 			AtNode *dicingCamera = nullptr;
