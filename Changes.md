@@ -1,3 +1,11 @@
+0.61.x.x ( relative to 0.61.7.0 )
+========
+
+Fixes
+-----
+
+- ArnoldRender : Fixed volume motion rendering by setting options.reference_time ( requires Arnold 7.1 to function correctly )
+
 0.61.7.0 (relative to 0.61.6.0)
 ========
 
