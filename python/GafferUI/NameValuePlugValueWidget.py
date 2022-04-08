@@ -67,6 +67,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 			)
 			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+			nameWidget.dropSignal().connect( 0, Gaffer.WeakMethod( self.__drop ), scoped = False )
 		else :
 			nameWidget = GafferUI.StringPlugValueWidget( { plug["name"] for plug in self.getPlugs() } )
 			nameWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
@@ -142,6 +143,27 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__row[0].setEnabled( enabled is True )
 
 			self.__row[-1].setEnabled( enabled is True )
+
+	def __drop( self, widget, event ) :
+
+		if not isinstance( event.data, Gaffer.Plug ) :
+			return False
+
+		# The PlugValueWidget base class for the label has accepted a drag from
+		# a plug, and it is about to connect it to our plug in
+		# `PlugValueWidget.__drop()`. But we don't want our `name` plug to be
+		# connected, because it isn't user-facing and we need it to keep its
+		# original value. So we do our own drop handling to connect all the
+		# child plugs _except_ `name`.
+
+		widget.setHighlighted( False )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).node().scriptNode() ) :
+			for p in self.getPlugs() :
+				for c in p.children() :
+					if c.getName() != "name" :
+						c.setInput( event.data[c.getName()] )
+
+		return True
 
 GafferUI.PlugValueWidget.registerType( Gaffer.NameValuePlug, NameValuePlugValueWidget )
 
