@@ -89,6 +89,15 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
+0.61.x.x (relative to 0.61.7.0)
+========
+
+Fixes
+-----
+
+- ArnoldRender : Fixed volume motion rendering by setting `options.reference_time`. This had been broken by changes in Arnold `7.0.0.3`, but Arnold `7.1.0.0` or later is required for the fix to work.
+- NameValuePlug : Fixed bug where making a connection by drag and drop would connect the `name` plug as well as `enabled` and `value`. This caused confusion because making connections like `overscanLeft -> overscanRight` on the StandardOptions node meant that _both_ plugs ended up specifying the left overscan option.
+
 0.61.7.0 (relative to 0.61.6.0)
 ========
 
