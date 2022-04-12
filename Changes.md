@@ -13,7 +13,9 @@ Fixes
   - The `removeOutputs()` method now also removes any outputs from child plugs. This is consistent with the `setInput()` method, which has always managed child plug inputs.
   - Fixed bug which meant that child output connections were not removed when a plug was removed from a node.
 - Expression : Fixed error when updating an expression which was previously connected to a deleted spreadsheet row (#4614).
-- ViewportGadget : Fixed `setCenterOfInterest()` so that it doesn't emit `cameraChangedSignal()` if the center of interest is unchanged.
+- ViewportGadget :
+  - Fixed `setCenterOfInterest()` so that it doesn't emit `cameraChangedSignal()` if the center of interest is unchanged.
+  - Added GIL release in `setViewport()` Python bindings.
 
 Breaking Changes
 ----------------
