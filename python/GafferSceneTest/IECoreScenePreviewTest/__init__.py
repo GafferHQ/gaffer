@@ -35,6 +35,7 @@
 ##########################################################################
 
 from .CapturingRendererTest import CapturingRendererTest
+from .CompoundRendererTest import CompoundRendererTest
 
 if __name__ == "__main__":
 	import unittest

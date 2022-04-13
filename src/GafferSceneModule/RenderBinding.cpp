@@ -41,6 +41,7 @@
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/Private/IECoreScenePreview/CapturingRenderer.h"
+#include "GafferScene/Private/IECoreScenePreview/CompoundRenderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -200,6 +201,17 @@ void render( Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	renderer.render();
+}
+
+RendererPtr compoundRendererConstructor( object pythonRenderers )
+{
+	std::vector<RendererPtr> renderers;
+	container_utils::extend_container( renderers, pythonRenderers );
+	if( renderers.size() != 2 )
+	{
+		throw IECore::Exception( "Expected 2 renderers" );
+	}
+	return new CompoundRenderer( { renderers[0], renderers[1] } );
 }
 
 class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>
@@ -449,6 +461,10 @@ void GafferSceneModule::bindRender()
 		;
 
 		CompoundDataMapFromDict();
+
+		IECorePython::RefCountedClass<CompoundRenderer, Renderer>( "CompoundRenderer" )
+			.def( "__init__", make_constructor( compoundRendererConstructor, default_call_policies(), arg( "renderers" ) ) )
+		;
 
 		IECorePython::RunTimeTypedClass<IECoreScenePreview::Procedural, ProceduralWrapper>()
 			.def( init<>() )
