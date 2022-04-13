@@ -132,6 +132,10 @@ bool driverSupportsPixelType( const AtNode *node, uint8_t pixelType )
 		case AI_TYPE_RGBA :
 		case AI_TYPE_FLOAT :
 		case AI_TYPE_VECTOR :
+		case AI_TYPE_UINT :
+			// Note : Our "support" for UINT is sketchy. `IECore::DisplayDriver`
+			// only deals in floats, but we just cast the pointers and rely on
+			// the display driver knowing to cast back.
 			return true;
 		default:
 			return false;
@@ -188,6 +192,7 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 				channelNames.push_back( namePrefix + "A" );
 				break;
 			case AI_TYPE_FLOAT :
+			case AI_TYPE_UINT :
 				// no need for prefix because it's not a compound type
 #if ARNOLD_VERSION_NUM >= 70000
 				channelNames.push_back( name.c_str() );
@@ -311,6 +316,7 @@ void driverWriteBucket( AtNode *node, struct AtOutputIterator *iterator, struct 
 					numChannels = 4;
 					break;
 				case AI_TYPE_FLOAT :
+				case AI_TYPE_UINT :
 					numChannels = 1;
 					break;
 			}
