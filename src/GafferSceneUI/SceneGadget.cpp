@@ -38,17 +38,27 @@
 
 #include "GafferUI/ViewportGadget.h"
 
+#include "GafferScene/Private/IECoreScenePreview/CompoundRenderer.h"
+#include "GafferScene/SceneAlgo.h"
+
 #include "Gaffer/BackgroundTask.h"
 
 #include "boost/bind/bind.hpp"
 
+#include "tbb/enumerable_thread_specific.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreGL;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
 
 namespace
 {
@@ -63,17 +73,73 @@ float lineariseDepthBufferSample( float bufferDepth, float *m )
 	return ( 2.0f * n * f ) / ( f + n - ( bufferDepth * 2.0f - 1.0f ) * ( f - n ) );
 }
 
+/// \todo Could this find a home in SceneAlgo?
+Box3f sceneBound( const ScenePlug *scene, const PathMatcher *include, const PathMatcher *exclude )
+{
+	tbb::enumerable_thread_specific<Box3f> threadBounds;
+
+	auto f = [&exclude, &threadBounds] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+
+		const unsigned m = exclude ? exclude->match( path ) : (unsigned)PathMatcher::NoMatch;
+		if( m & PathMatcher::ExactMatch )
+		{
+			// Stop traversal to omit this location and all its descendants.
+			return false;
+		}
+		else if( m & PathMatcher::DescendantMatch )
+		{
+			// We'll be excluding a descendant, so can't take the bound at
+			// this point, but do want to continue traversal to get the
+			// bounds of the non-excluded descendants.
+			return true;
+		}
+		else
+		{
+			// Not excluding. Get the bound for this location (which will include
+			// its descendants) and prune traversal.
+			Box3f bound = scene->boundPlug()->getValue();
+			bound = transform( bound, scene->fullTransform( path ) );
+			threadBounds.local().extendBy( bound );
+			return false;
+		}
+	};
+
+	if( include )
+	{
+		SceneAlgo::filteredParallelTraverse( scene, *include, f );
+	}
+	else
+	{
+		SceneAlgo::parallelTraverse( scene, f );
+	}
+
+	return threadBounds.combine(
+		[] ( const Box3f b1, const Box3f b2 ) {
+			Box3f bc;
+			bc.extendBy( b1 );
+			bc.extendBy( b2 );
+			return bc;
+		}
+	);
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // SceneGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+const ConstStringDataPtr g_cameraName = new StringData( "/__sceneGadget:camera" );
+const ConstCompoundObjectPtr g_emptyCompoundObject = new CompoundObject();
+
+} // namespace
+
 SceneGadget::SceneGadget()
 	:	Gadget( defaultName<SceneGadget>() ),
 		m_paused( false ),
-		m_renderer( IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ) ),
-		m_controller( nullptr, nullptr, m_renderer ),
 		m_updateErrored( false ),
 		m_renderRequestPending( false )
 {
@@ -84,14 +150,11 @@ SceneGadget::SceneGadget()
 		Option( "gl:primitive:pointColor", new Color4fData( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) ),
 		Option( "gl:primitive:pointWidth", new FloatData( 2.0f ) )
 	} );
-	setOpenGLOptions( openGLOptions.get() );
-
-	m_controller.updateRequiredSignal().connect(
-		boost::bind( &SceneGadget::dirty, this, DirtyType::Layout )
-	);
+	m_openGLOptions = openGLOptions;
 
 	visibilityChangedSignal().connect( boost::bind( &SceneGadget::visibilityChanged, this ) );
 
+	setRenderer( "OpenGL" );
 	setContext( new Context );
 }
 
@@ -104,42 +167,42 @@ SceneGadget::~SceneGadget()
 
 void SceneGadget::setScene( GafferScene::ConstScenePlugPtr scene )
 {
-	m_controller.setScene( scene );
+	m_controller->setScene( scene );
 }
 
 const GafferScene::ScenePlug *SceneGadget::getScene() const
 {
-	return m_controller.getScene();
+	return m_controller->getScene();
 }
 
 void SceneGadget::setContext( Gaffer::ConstContextPtr context )
 {
-	m_controller.setContext( context );
+	m_controller->setContext( context );
 }
 
 const Gaffer::Context *SceneGadget::getContext() const
 {
-	return m_controller.getContext();
+	return m_controller->getContext();
 }
 
 void SceneGadget::setExpandedPaths( const IECore::PathMatcher &expandedPaths )
 {
-	m_controller.setExpandedPaths( expandedPaths );
+	m_controller->setExpandedPaths( expandedPaths );
 }
 
 const IECore::PathMatcher &SceneGadget::getExpandedPaths() const
 {
-	return m_controller.getExpandedPaths();
+	return m_controller->getExpandedPaths();
 }
 
 void SceneGadget::setMinimumExpansionDepth( size_t depth )
 {
-	m_controller.setMinimumExpansionDepth( depth );
+	m_controller->setMinimumExpansionDepth( depth );
 }
 
 size_t SceneGadget::getMinimumExpansionDepth() const
 {
-	return m_controller.getMinimumExpansionDepth();
+	return m_controller->getMinimumExpansionDepth();
 }
 
 void SceneGadget::setPaused( bool paused )
@@ -159,7 +222,7 @@ void SceneGadget::setPaused( bool paused )
 		}
 		stateChangedSignal()( this );
 	}
-	else if( m_controller.updateRequired() )
+	else if( m_controller->updateRequired() )
 	{
 		dirty( DirtyType::Bound );
 	}
@@ -209,7 +272,7 @@ SceneGadget::State SceneGadget::state() const
 		return Paused;
 	}
 
-	return m_controller.updateRequired() ? Running : Complete;
+	return m_controller->updateRequired() ? Running : Complete;
 }
 
 SceneGadget::SceneGadgetSignal &SceneGadget::stateChangedSignal()
@@ -224,6 +287,82 @@ void SceneGadget::waitForCompletion()
 	{
 		m_updateTask->wait();
 	}
+}
+
+void SceneGadget::setRenderer( IECore::InternedString name )
+{
+	if( name == m_rendererName )
+	{
+		return;
+	}
+
+	// Cancel any updates/renders we're currently doing.
+
+	cancelUpdateAndPauseRenderer();
+
+	// Make new renderer, controller and output buffer.
+
+	m_rendererName = name;
+	IECoreScenePreview::RendererPtr newRenderer;
+	if( m_rendererName == "OpenGL" )
+	{
+		newRenderer = IECoreScenePreview::Renderer::create( m_rendererName, IECoreScenePreview::Renderer::Interactive );
+		m_outputBuffer.reset();
+	}
+	else
+	{
+		newRenderer = new IECoreScenePreview::CompoundRenderer( {
+			IECoreScenePreview::Renderer::create( "OpenGL", IECoreScenePreview::Renderer::Interactive ),
+			IECoreScenePreview::Renderer::create( m_rendererName, IECoreScenePreview::Renderer::Interactive ),
+		} );
+		ConstBoolDataPtr renderObjectsData = new BoolData( false );
+		newRenderer->option( "gl:renderObjects", renderObjectsData.get() );
+		m_outputBuffer = std::make_unique<OutputBuffer>( newRenderer.get() );
+		m_outputBuffer->bufferChangedSignal().connect( boost::bind( &SceneGadget::bufferChanged, this ) );
+	}
+
+	auto newController = std::make_unique<RenderController>(
+		m_controller ? m_controller->getScene() : nullptr,
+		m_controller ? m_controller->getContext() : nullptr,
+		newRenderer
+	);
+
+	if( m_controller )
+	{
+		newController->setExpandedPaths( m_controller->getExpandedPaths() );
+		newController->setMinimumExpansionDepth( m_controller->getMinimumExpansionDepth() );
+	}
+
+	// Replace old controller and renderer, being careful to delete controller
+	// and camera first, since ObjectInterfaces must be deleted _before_ the
+	// renderer.
+
+	m_controller = std::move( newController );
+	m_camera.reset();
+	m_renderer = newRenderer;
+
+	m_controller->updateRequiredSignal().connect(
+		boost::bind( &SceneGadget::dirty, this, DirtyType::Layout )
+	);
+
+	// Give our OpenGL options, selection and viewport camera to the new
+	// renderer.
+
+	setSelection( getSelection() );
+
+	ConstCompoundObjectPtr openGLOptions = getOpenGLOptions();
+	m_openGLOptions = nullptr; // Force update
+	setOpenGLOptions( openGLOptions.get() );
+
+	if( ancestor<ViewportGadget>() )
+	{
+		updateCamera();
+	}
+}
+
+IECore::InternedString SceneGadget::getRenderer()
+{
+	return m_rendererName;
 }
 
 void SceneGadget::setOpenGLOptions( const IECore::CompoundObject *options )
@@ -291,6 +430,55 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 
 bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path, V3f &hitPoint ) const
 {
+	if( m_updateErrored )
+	{
+		return false;
+	}
+
+	float depth = std::numeric_limits<float>::max();
+	bool hit = openGLObjectAt( lineInGadgetSpace, path, depth );
+
+	auto viewportGadget = ancestor<ViewportGadget>();
+	if( m_outputBuffer )
+	{
+		const V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p1, this );
+		float bufferDepth;
+		if( uint32_t id = m_outputBuffer->idAt( rasterPosition / viewportGadget->getViewport(), bufferDepth ) )
+		{
+			if( bufferDepth < depth )
+			{
+				if( auto bufferPath = m_controller->pathForID( id ) )
+				{
+					depth = bufferDepth;
+					path = *bufferPath;
+					hit = true;
+				}
+			}
+		}
+	}
+
+	if( !hit )
+	{
+		return false;
+	}
+
+	V3f viewDir;
+	const M44f cameraWorldTransform = viewportGadget->getCameraTransform();
+	const M44f cameraTransform = cameraWorldTransform * fullTransform().inverse();
+	cameraTransform.multDirMatrix( V3f( 0.0f, 0.0f, -1.0f ), viewDir );
+
+	const V3f traceDir = lineInGadgetSpace.normalizedDirection();
+
+	depth /= max( 0.00001f, viewDir.dot( traceDir ) );
+
+	const V3f origin = V3f( 0.0f ) * cameraTransform;
+	hitPoint = origin + ( traceDir * depth );
+
+	return true;
+}
+
+bool SceneGadget::openGLObjectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path, float &depth ) const
+{
 	float projectionMatrix[16];
 
 	std::vector<IECoreGL::HitRecord> selection;
@@ -300,7 +488,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 		//  a real-world depth from the buffer. We do this here in case
 		//  SelectionScope ever affects the matrix/planes.
 		glGetFloatv( GL_PROJECTION_MATRIX, projectionMatrix );
-		renderScene();
+		m_renderer->command( "gl:renderToCurrentContext", IECore::CompoundDataMap() );
 	}
 
 	if( !selection.size() )
@@ -326,24 +514,7 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 	}
 
 	path = *PathMatcher::Iterator( paths.begin() );
-
-	// Notes:
-	//  - depthMin is in respect to +ve z, we're looking down -z, so we need to invert it.
-	//  - depthMin is orthogonal to the camera's xy plane not from its origin.
-	//  - There may be intermediate transforms between us and the ViewportGadget.
-
-	V3f viewDir;
-	const M44f cameraWorldTransform = ancestor<ViewportGadget>()->getCameraTransform();
-	const M44f cameraTransform = cameraWorldTransform * fullTransform().inverse();
-	cameraTransform.multDirMatrix( V3f( 0.0f, 0.0f, -1.0f ), viewDir );
-
-	const V3f traceDir = lineInGadgetSpace.normalizedDirection();
-
-	float hitDepth = - lineariseDepthBufferSample( depthMin, projectionMatrix );
-	hitDepth /= max( 0.00001f, viewDir.dot( traceDir ) );
-
-	const V3f origin = V3f( 0.0f ) * cameraTransform;
-	hitPoint = origin + ( traceDir * hitDepth );
+	depth = -lineariseDepthBufferSample( depthMin, projectionMatrix );
 
 	return true;
 }
@@ -354,11 +525,15 @@ size_t SceneGadget::objectsAt(
 	IECore::PathMatcher &paths
 ) const
 {
+	if( m_updateErrored )
+	{
+		return false;
+	}
 
 	vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		renderScene();
+		m_renderer->command( "gl:renderToCurrentContext", IECore::CompoundDataMap() );
 	}
 
 	UIntVectorDataPtr ids = new UIntVectorData;
@@ -370,7 +545,16 @@ size_t SceneGadget::objectsAt(
 	PathMatcher selectedPaths = convertSelection( ids );
 	paths.addPaths( selectedPaths );
 
-	return selectedPaths.size();
+	if( m_outputBuffer )
+	{
+		auto viewportGadget = ancestor<ViewportGadget>();
+		Box2f ndcBox;
+		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner0InGadgetSpace, this ) / viewportGadget->getViewport() );
+		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner1InGadgetSpace, this ) / viewportGadget->getViewport() );
+		paths.addPaths( m_controller->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) ) );
+	}
+
+	return paths.size();
 }
 
 IECore::PathMatcher SceneGadget::convertSelection( IECore::UIntVectorDataPtr ids ) const
@@ -426,6 +610,10 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 	m_selection = selection;
 	ConstDataPtr d = new IECore::PathMatcherData( selection );
 	m_renderer->option( "gl:selection", d.get() );
+	if( m_outputBuffer )
+	{
+		m_outputBuffer->setSelection( m_controller->idsForPaths( selection ) );
+	}
 	dirty( DirtyType::Render );
 }
 
@@ -434,19 +622,41 @@ Imath::Box3f SceneGadget::selectionBound() const
 	return bound( true, nullptr );
 }
 
-Imath::Box3f SceneGadget::bound( bool selected, const PathMatcher *omitted ) const
+Imath::Box3f SceneGadget::bound( bool selected, const PathMatcher *userOmitted ) const
 {
-	DataPtr d;
-	if( omitted )
+	if( m_updateErrored )
 	{
-		d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( selected ) }, { "omitted", new PathMatcherData( *omitted ) } } );
-	}
-	else
-	{
-		d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( selected ) } } );
+		return Box3f();
 	}
 
-	return static_cast<Box3fData *>( d.get() )->readable();
+	// We never want to include the bounds for the camera we make
+	// ourselves.
+
+	PathMatcher omitted;
+	if( userOmitted )
+	{
+		omitted.addPaths( *userOmitted );
+	}
+	omitted.addPath( g_cameraName->readable() );
+
+	// Get bounds from OpenGL renderer. This gives us the bounds for any
+	// visualisations, and when it is the sole renderer it also gets the scene
+	// bounds cheaply, without any need to perform computations.
+
+	ConstDataPtr d = m_renderer->command( "gl:queryBound", { { "selection", new BoolData( selected ) }, { "omitted", new PathMatcherData( omitted ) } } );
+	Box3f result = static_cast<const Box3fData *>( d.get() )->readable();
+
+	// If we're using another renderer as well, then the GL renderer won't have
+	// bounds for any expanded geometry. There's no way to query bounds from the
+	// other renderer, so we resort to computing bounds from the scene itself.
+
+	if( m_rendererName != "OpenGL" )
+	{
+		Context::Scope scope( getContext() );
+		result.extendBy( sceneBound( getScene(), selected ? &m_selection : nullptr, &omitted ) );
+	}
+
+	return result;
 }
 
 std::string SceneGadget::getToolTip( const IECore::LineSegment3f &line ) const
@@ -468,17 +678,17 @@ std::string SceneGadget::getToolTip( const IECore::LineSegment3f &line ) const
 
 Imath::Box3f SceneGadget::bound() const
 {
-	if( m_updateErrored )
-	{
-		return Box3f();
-	}
-	DataPtr d = m_renderer->command( "gl:queryBound" );
-	return static_cast<Box3fData *>( d.get() )->readable();
+	return bound( /* selection = */ false );
 }
 
 void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
 	if( layer != Layer::Main )
+	{
+		return;
+	}
+
+	if( m_updateErrored )
 	{
 		return;
 	}
@@ -489,7 +699,11 @@ void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 	}
 
 	const_cast<SceneGadget *>( this )->updateRenderer();
-	renderScene();
+	if( m_outputBuffer )
+	{
+		m_outputBuffer->render();
+	}
+	m_renderer->command( "gl:renderToCurrentContext", IECore::CompoundDataMap() );
 }
 
 unsigned SceneGadget::layerMask() const
@@ -522,7 +736,7 @@ void SceneGadget::updateRenderer()
 		m_updateTask.reset();
 	}
 
-	if( !m_controller.updateRequired() )
+	if( !m_controller->updateRequired() )
 	{
 		return;
 	}
@@ -533,6 +747,15 @@ void SceneGadget::updateRenderer()
 		{
 			return;
 		}
+
+		if( progress == BackgroundTask::Completed )
+		{
+			// Start render now, rather than on UI thread, to avoid latency.
+			// We want pixels to be available as soon as possible.
+			m_renderer->option( "camera", g_cameraName.get() );
+			m_renderer->render();
+		}
+
 		bool shouldRequestRender = !m_renderRequestPending.exchange( true );
 		bool shouldEmitStateChange =
 			progress == BackgroundTask::Completed ||
@@ -564,11 +787,13 @@ void SceneGadget::updateRenderer()
 
 	};
 
+	m_renderer->pause();
+
 	if( !m_blockingPaths.isEmpty() )
 	{
 		try
 		{
-			m_controller.updateMatchingPaths( m_blockingPaths );
+			m_controller->updateMatchingPaths( m_blockingPaths );
 		}
 		catch( std::exception &e )
 		{
@@ -578,7 +803,7 @@ void SceneGadget::updateRenderer()
 	}
 
 	m_updateErrored = false;
-	m_updateTask = m_controller.updateInBackground( progressCallback, m_priorityPaths );
+	m_updateTask = m_controller->updateInBackground( progressCallback, m_priorityPaths );
 	stateChangedSignal()( this );
 
 	// Give ourselves a 0.1s grace period in which we block
@@ -590,19 +815,66 @@ void SceneGadget::updateRenderer()
 	m_updateTask->waitFor( 0.1 );
 }
 
-void SceneGadget::renderScene() const
+void SceneGadget::updateCamera()
 {
-	if( m_updateErrored )
+	cancelUpdateAndPauseRenderer();
+
+	m_camera.reset();
+	const ViewportGadget *viewport = ancestor<ViewportGadget>();
+	IECoreScenePreview::Renderer::AttributesInterfacePtr cameraAttributes = m_renderer->attributes( g_emptyCompoundObject.get() );
+	m_camera = m_renderer->camera( g_cameraName->readable(), viewport->getCamera().get(), cameraAttributes.get() );
+	m_camera->transform( viewport->getCameraTransform() );
+
+	if( !m_controller->updateRequired() )
 	{
-		return;
+		m_renderer->render();
 	}
-	m_renderer->command( "gl:renderToCurrentContext" );
+	else
+	{
+		// Render will be started by next update
+	}
+}
+
+void SceneGadget::bufferChanged()
+{
+	// Using `thisRef` to stop us dying before our UI thread call is scheduled.
+	ParallelAlgo::callOnUIThread(
+		[thisRef = Ptr( this )] {
+			thisRef->Gadget::dirty( DirtyType::Render );
+		}
+	);
 }
 
 void SceneGadget::visibilityChanged()
 {
-	if( !visible() && m_updateTask )
+	m_viewportChangedConnection.disconnect();
+	m_viewportCameraChangedConnection.disconnect();
+	if( visible() )
+	{
+		if( auto viewport = ancestor<ViewportGadget>() )
+		{
+			m_viewportChangedConnection = viewport->viewportChangedSignal().connect(
+				boost::bind( &SceneGadget::updateCamera, this )
+			);
+			m_viewportCameraChangedConnection = viewport->cameraChangedSignal().connect(
+				boost::bind( &SceneGadget::updateCamera, this )
+			);
+		}
+	}
+	else
+	{
+		cancelUpdateAndPauseRenderer();
+	}
+}
+
+void SceneGadget::cancelUpdateAndPauseRenderer()
+{
+	if( m_updateTask )
 	{
 		m_updateTask->cancelAndWait();
+	}
+	if( m_renderer )
+	{
+		m_renderer->pause();
 	}
 }

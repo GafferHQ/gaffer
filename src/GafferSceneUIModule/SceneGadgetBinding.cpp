@@ -112,6 +112,17 @@ struct SceneGadgetSlotCaller
 	}
 };
 
+void setRenderer( SceneGadget &g, IECore::InternedString name )
+{
+	ScopedGILRelease gilRelease;
+	g.setRenderer( name );
+}
+
+std::string getRenderer( SceneGadget &g )
+{
+	return g.getRenderer().string();
+}
+
 IECore::CompoundObjectPtr getOpenGLOptions( const SceneGadget &g )
 {
 	return g.getOpenGLOptions()->copy();
@@ -164,6 +175,8 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "state", &SceneGadget::state )
 		.def( "stateChangedSignal", &SceneGadget::stateChangedSignal, return_internal_reference<1>() )
 		.def( "waitForCompletion", &waitForCompletion )
+		.def( "setRenderer", &setRenderer )
+		.def( "getRenderer", &getRenderer )
 		.def( "setOpenGLOptions", &SceneGadget::setOpenGLOptions )
 		.def( "getOpenGLOptions", &getOpenGLOptions )
 		.def( "setSelectionMask", &SceneGadget::setSelectionMask )
