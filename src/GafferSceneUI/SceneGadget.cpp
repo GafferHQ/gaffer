@@ -594,7 +594,7 @@ void SceneGadget::renderScene() const
 	{
 		return;
 	}
-	m_renderer->render();
+	m_renderer->command( "gl:renderToCurrentContext" );
 }
 
 void SceneGadget::visibilityChanged()
