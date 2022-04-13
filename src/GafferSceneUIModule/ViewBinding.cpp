@@ -108,6 +108,31 @@ boost::python::list registeredShadingModes()
 	return result;
 }
 
+void sceneViewRegisterRenderer( const std::string &name, object settingsCreator )
+{
+	SceneView::registerRenderer(
+		name,
+		// Deliberately "leaking" `settingsCreator` because this lambda will be
+		// stored in a static map which will be destroyed _after_ Python is shutdown,
+		// at which point deleting a PyObject will crash.
+		[settingsCreator = new object( settingsCreator )] {
+			IECorePython::ScopedGILLock gilLock;
+			SceneProcessorPtr result = extract<SceneProcessorPtr>( (*settingsCreator)() );
+			return result;
+		}
+	);
+}
+
+boost::python::list sceneViewRegisteredRenderers()
+{
+	boost::python::list result;
+	for( auto &r : SceneView::registeredRenderers() )
+	{
+		result.append( r );
+	}
+	return result;
+}
+
 void frame( SceneView &view, PathMatcher &filter, Imath::V3f &direction )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -287,6 +312,10 @@ void GafferSceneUIModule::bindViews()
 		.def( "frame", &frame, ( boost::python::arg_( "filter" ), boost::python::arg_( "direction" ) = Imath::V3f( -0.64, -0.422, -0.64 ) ) )
 		.def( "expandSelection", &expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
 		.def( "collapseSelection", &collapseSelection )
+		.def( "registerRenderer", &sceneViewRegisterRenderer )
+		.staticmethod( "registerRenderer" )
+		.def( "registeredRenderers", &sceneViewRegisteredRenderers )
+		.staticmethod( "registeredRenderers" )
 		.def( "registerShadingMode", &registerShadingMode )
 		.staticmethod( "registerShadingMode" )
 		.def( "registeredShadingModes", &registeredShadingModes )
