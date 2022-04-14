@@ -116,6 +116,8 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 
 	private :
 
+		std::shared_ptr<void> retrieveFile( const Gaffer::Context *context, bool holdForBlack = false ) const;
+
 		Gaffer::ObjectVectorPlug *tileBatchPlug();
 		const Gaffer::ObjectVectorPlug *tileBatchPlug() const;
 

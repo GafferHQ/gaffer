@@ -824,63 +824,6 @@ FileHandleCache *fileCache()
 	return c;
 }
 
-// Returns the file handle container for the given filename in the current
-// context. Throws if the file is invalid, and returns null if
-// the filename is empty.
-FilePtr retrieveFile( std::string &fileName, OpenImageIOReader::MissingFrameMode mode, ImageReader::ChannelInterpretation channelNaming, const OpenImageIOReader *node, const Context *context )
-{
-	if( fileName.empty() )
-	{
-		return nullptr;
-	}
-
-	const std::string resolvedFileName = context->substitute( fileName );
-
-	FileHandleCache *cache = fileCache();
-	CacheEntry cacheEntry = cache->get( std::make_pair( resolvedFileName, channelNaming ) );
-	if( !cacheEntry.file )
-	{
-		if( mode == OpenImageIOReader::Black )
-		{
-			// we can simply return nullptr and rely on the
-			// compute methods to return default plug values.
-			return nullptr;
-		}
-		else if( mode == OpenImageIOReader::Hold )
-		{
-			ConstIntVectorDataPtr frameData = node->availableFramesPlug()->getValue();
-			const std::vector<int> &frames = frameData->readable();
-			if( frames.size() )
-			{
-				std::vector<int>::const_iterator fIt = std::lower_bound( frames.begin(), frames.end(), (int)context->getFrame() );
-
-				// decrement to get the previous frame, unless
-				// this is the first frame, in which case we
-				// hold to the beginning of the sequence
-				if( fIt != frames.begin() )
-				{
-					fIt--;
-				}
-
-				// setup a context with the new frame
-				Context::EditableScope holdScope( context );
-				holdScope.setFrame( *fIt );
-
-				return retrieveFile( fileName, OpenImageIOReader::Error, channelNaming, node, holdScope.context() );
-			}
-
-			// if we got here, there was no suitable file sequence
-			throw IECore::Exception( *(cacheEntry.error) );
-		}
-		else
-		{
-			throw IECore::Exception( *(cacheEntry.error) );
-		}
-	}
-
-	return cacheEntry.file;
-}
-
 boost::container::flat_set<ustring> g_metadataBlacklist = {
 	// These two attributes are used by OIIO/EXR to specify the names of
 	// subimages. We don't want to load them because :
@@ -1105,10 +1048,7 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 		Gaffer::Context::EditableScope c( context );
 		c.remove( g_tileBatchIndexContextName );
 
-		std::string fileName = fileNamePlug()->getValue();
-		MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-		ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-		FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, c.context() );
+		FilePtr file = std::static_pointer_cast<File>( retrieveFile( c.context() ) );
 
 		if( !file )
 		{
@@ -1169,13 +1109,9 @@ void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const 
 
 GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
 	// when we're in MissingFrameMode::Black we still want to
-	// match the format of the Hold frame.
-	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	mode = ( mode == Black ) ? Hold : mode;
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, mode, channelNaming, this, context );
+	// match the format of the Hold frame, so pass true for holdForBlack.
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context, true ) );
 	if( !file )
 	{
 		return FormatPlug::getDefaultFormat( context );
@@ -1201,10 +1137,7 @@ void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, co
 
 Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 	if( !file )
 	{
 		return parent->dataWindowPlug()->defaultValue();
@@ -1226,10 +1159,7 @@ void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, cons
 
 IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 	if( !file )
 	{
 		return parent->metadataPlug()->defaultValue();
@@ -1289,10 +1219,7 @@ void OpenImageIOReader::hashChannelNames( const GafferImage::ImagePlug *output, 
 
 IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 	if( !file )
 	{
 		return parent->channelNamesPlug()->defaultValue();
@@ -1310,10 +1237,7 @@ void OpenImageIOReader::hashDeep( const GafferImage::ImagePlug *output, const Ga
 
 bool OpenImageIOReader::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 	if( !file )
 	{
 		return false;
@@ -1339,10 +1263,7 @@ void OpenImageIOReader::hashSampleOffsets( const GafferImage::ImagePlug *output,
 IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	ImagePlug::GlobalScope c( context );
-	std::string fileName = fileNamePlug()->getValue();
-	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 
 	if( !file || !file->imageSpec().deep )
 	{
@@ -1394,10 +1315,7 @@ void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, c
 IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	ImagePlug::GlobalScope c( context );
-	std::string fileName = fileNamePlug()->getValue();
-	MissingFrameMode missingFrameMode = (MissingFrameMode)missingFrameModePlug()->getValue();
-	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
-	FilePtr file = retrieveFile( fileName, missingFrameMode, channelNaming, this, context );
+	FilePtr file = std::static_pointer_cast<File>( retrieveFile( context ) );
 
 	if( !file )
 	{
@@ -1442,4 +1360,74 @@ void OpenImageIOReader::plugSet( Gaffer::Plug *plug )
 	{
 		fileCache()->clear();
 	}
+}
+
+// Returns the file handle container for the current context, by evaluating the appropriate plugs.
+// Throws if the file is invalid, and returns null if the filename is empty.
+std::shared_ptr<void> OpenImageIOReader::retrieveFile( const Context *context, bool holdForBlack ) const
+{
+	std::string fileName = fileNamePlug()->getValue();
+	if( fileName.empty() )
+	{
+		return nullptr;
+	}
+
+	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	if( holdForBlack && mode == Black )
+	{
+		// For some outputs, like "format", we need to hold the value of an adjacent frame when we're
+		// going to return black pixels
+		mode = Hold;
+	}
+	ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+
+	const std::string resolvedFileName = context->substitute( fileName );
+
+	FileHandleCache *cache = fileCache();
+	CacheEntry cacheEntry = cache->get( std::make_pair( resolvedFileName, channelNaming ) );
+	if( !cacheEntry.file )
+	{
+		if( mode == OpenImageIOReader::Black )
+		{
+			// we can simply return nullptr and rely on the
+			// compute methods to return default plug values.
+			return nullptr;
+		}
+		else if( mode == OpenImageIOReader::Hold )
+		{
+			ConstIntVectorDataPtr frameData = availableFramesPlug()->getValue();
+			const std::vector<int> &frames = frameData->readable();
+			if( frames.size() )
+			{
+				std::vector<int>::const_iterator fIt = std::lower_bound( frames.begin(), frames.end(), (int)context->getFrame() );
+
+				// decrement to get the previous frame, unless
+				// this is the first frame, in which case we
+				// hold to the beginning of the sequence
+				if( fIt != frames.begin() )
+				{
+					fIt--;
+				}
+
+				// setup a context with the new frame
+				Context::EditableScope holdScope( context );
+				holdScope.setFrame( *fIt );
+
+				const std::string resolvedFileNameHeld = holdScope.context()->substitute( fileName );
+				cacheEntry = cache->get( std::make_pair( resolvedFileNameHeld, channelNaming ) );
+			}
+
+			// if we got here, there was no suitable file sequence, or we weren't able to open the held frame
+			if( !cacheEntry.file )
+			{
+				throw IECore::Exception( *(cacheEntry.error) );
+			}
+		}
+		else
+		{
+			throw IECore::Exception( *(cacheEntry.error) );
+		}
+	}
+
+	return cacheEntry.file;
 }
