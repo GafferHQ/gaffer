@@ -880,8 +880,12 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				return querySelectedObjects( parameters );
 			}
+			else if( boost::starts_with( name.string(), "gl:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+			}
 
-			throw IECore::Exception( "Unknown command" );
+			return nullptr;
 		}
 
 	private :

@@ -4208,8 +4208,12 @@ class ArnoldRenderer final : public ArnoldRendererBase
 				AiUniverseCacheFlush( m_universe, flags );
 				return nullptr;
 			}
+			else if( boost::starts_with( name.string(), "ai:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+			}
 
-			throw IECore::Exception( "Unknown command" );
+			return nullptr;
 		}
 
 	private :

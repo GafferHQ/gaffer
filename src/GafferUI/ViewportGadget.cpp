@@ -880,6 +880,10 @@ void ViewportGadget::setCameraEditable( bool editable )
 
 void ViewportGadget::setCenterOfInterest( float centerOfInterest )
 {
+	if( centerOfInterest == m_cameraController->getCenterOfInterest() )
+	{
+		return;
+	}
 	m_cameraController->setCenterOfInterest( centerOfInterest );
 	m_cameraChangedSignal( this );
 }

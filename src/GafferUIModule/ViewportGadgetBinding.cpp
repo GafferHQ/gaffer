@@ -59,6 +59,12 @@ GadgetPtr getPrimaryChild( ViewportGadget &v )
 	return v.getPrimaryChild();
 }
 
+void setViewport( ViewportGadget &v, const Imath::V2i &viewport )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	v.setViewport( viewport );
+}
+
 void setCamera( ViewportGadget &v, IECoreScene::Camera &camera )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -149,7 +155,7 @@ void GafferUIModule::bindViewportGadget()
 		.def( "setPrimaryChild", &ViewportGadget::setPrimaryChild )
 		.def( "getPrimaryChild", &getPrimaryChild )
 		.def( "getViewport", &ViewportGadget::getViewport, return_value_policy<copy_const_reference>() )
-		.def( "setViewport", &ViewportGadget::setViewport )
+		.def( "setViewport", &setViewport )
 		.def( "viewportChangedSignal", &ViewportGadget::viewportChangedSignal, return_internal_reference<1>() )
 		.def( "getPlanarMovement", &ViewportGadget::getPlanarMovement )
 		.def( "setPlanarMovement", &ViewportGadget::setPlanarMovement )
