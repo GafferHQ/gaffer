@@ -16,6 +16,11 @@ Build
 0.61.8.0 (relative to 0.61.7.0)
 ========
 
+Features
+--------
+
+- ShaderQuery : Added new node for querying parameters from a shader at a location.
+
 Improvements
 ------------
 
