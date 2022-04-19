@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,48 +34,57 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_CREATEVIEWS_H
+#define GAFFERIMAGE_CREATEVIEWS_H
 
-#include "BufferAlgoBinding.h"
-#include "CatalogueBinding.h"
-#include "ChannelDataProcessorBinding.h"
-#include "CoreBinding.h"
-#include "DeepNodeBinding.h"
-#include "FilterAlgoBinding.h"
-#include "FilterBinding.h"
-#include "IOBinding.h"
-#include "ImageAlgoBinding.h"
-#include "ImageProcessorBinding.h"
-#include "MetadataBinding.h"
-#include "MultiViewBinding.h"
-#include "OpenColorIOTransformBinding.h"
-#include "ShapeBinding.h"
-#include "TransformBinding.h"
-#include "UtilityNodeBinding.h"
-#include "WarpBinding.h"
+#include "GafferImage/ImageNode.h"
 
-using namespace boost::python;
-using namespace GafferImageModule;
+#include "Gaffer/Switch.h"
 
-BOOST_PYTHON_MODULE( _GafferImage )
+namespace GafferImage
 {
 
-	bindCore();
-	bindImageProcessor();
-	bindTransforms();
-	bindMetadata();
-	bindIO();
-	bindWarp();
-	bindShape();
-	bindFilters();
-	bindOpenColorIOTransform();
-	bindChannelDataProcessor();
-	bindDeepNodes();
-	bindUtilityNodes();
-	bindCatalogue();
-	bindImageAlgo();
-	bindBufferAlgo();
-	bindFilterAlgo();
-	bindMultiView();
+class GAFFERIMAGE_API CreateViews : public ImageNode
+{
 
-}
+	public :
+
+		CreateViews( const std::string &name=defaultName<CreateViews>() );
+		~CreateViews() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::CreateViews, CreateViewsTypeId, ImageNode );
+
+		Gaffer::ArrayPlug *viewsPlug();
+		const Gaffer::ArrayPlug *viewsPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+
+		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+
+		// Computes index used by internal switch
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+	private :
+
+		Gaffer::IntPlug *indexPlug();
+		const Gaffer::IntPlug *indexPlug() const;
+
+		Gaffer::Switch *switchNode();
+		const Gaffer::Switch *switchNode() const;
+
+		void synchronizeSwitch();
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( CreateViews )
+
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_CREATEVIEWS_H
