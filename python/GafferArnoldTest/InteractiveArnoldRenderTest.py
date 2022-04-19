@@ -375,6 +375,58 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
+	def testMeshLightFilterChange( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["catalogue"] = GafferImage.Catalogue()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["cube"] = GafferScene.Cube()
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphere"]["out"] )
+		s["group"]["in"][1].setInput( s["cube"]["out"] )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ '/group/sphere' ] ) )
+
+		s["meshLight"] = GafferArnold.ArnoldMeshLight()
+		s["meshLight"]["in"].setInput( s["group"]["out"] )
+		s["meshLight"]["filter"].setInput( s["filter"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"]["in"].setInput( s["meshLight"]["out"] )
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		s["render"] = self._createInteractiveRender()
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+
+		# Start rendering.
+
+		s["render"]["state"].setValue( s["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		# Switch which object is tagged as a mesh light. This used to trigger a
+		# crash.
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ '/group/cube' ] ) )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		s["render"]["state"].setValue( s["render"].State.Stopped )
+
 	def _createConstantShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()

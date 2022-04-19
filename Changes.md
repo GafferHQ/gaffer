@@ -5,6 +5,7 @@
 Fixes
 -----
 
+- InteractiveArnoldRender : Fixed crash triggered by changing the filter on an ArnoldMeshLight.
 - ArnoldRender : Fixed volume motion rendering by setting `options.reference_time`. This had been broken by changes in Arnold `7.0.0.3`, but Arnold `7.1.0.0` or later is required for the fix to work.
 - NameValuePlug : Fixed bug where making a connection by drag and drop would connect the `name` plug as well as `enabled` and `value`. This caused confusion because making connections like `overscanLeft -> overscanRight` on the StandardOptions node meant that _both_ plugs ended up specifying the left overscan option.
 
