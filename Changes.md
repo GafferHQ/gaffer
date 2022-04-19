@@ -17,6 +17,7 @@ Improvements
 Fixes
 -----
 
+- ArnoldMeshLight : Fixed bug which caused `ai:autobump_visibility` attributes to be inadvertently modified.
 - Plug :
   - The `removeOutputs()` method now also removes any outputs from child plugs. This is consistent with the `setInput()` method, which has always managed child plug inputs.
   - Fixed bug which meant that child output connections were not removed when a plug was removed from a node.
@@ -37,6 +38,7 @@ Breaking Changes
 - ImageReader : Changed the default interpretation of channel names in multi-part OpenEXR files. Set the `channelInterpretation` plug to `Legacy` to preserve the old behaviour.
 - ImageWriter : Multi-part OpenEXR files are now written by default. Set the `layout` plug to `Single Part` to write a single-part file instead.
 - OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
+- ArnoldMeshLight : The `ai:autobump_visibility` attributes are no longer modified. Use a separate ArnoldAttributes node if necessary.
 
 0.62.0.0a1
 ==========

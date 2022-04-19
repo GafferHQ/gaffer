@@ -64,10 +64,16 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].attributes( "/group/sphere" )["ai:light"].outputShader().name, "mesh_light" )
 		self.assertTrue( "ai:light" not in l["out"].attributes( "/group/plane" ) )
 
+		# Make sure we set the visibility attributes we expect.
 		for v in ( "shadow", "diffuse_transmit", "specular_transmit", "volume", "diffuse_reflect", "specular_reflect", "subsurface" ) :
 			v = "ai:visibility:" + v
 			self.assertEqual( l["out"].attributes( "/group/sphere" )[v].value, False )
 			self.assertTrue( v not in l["out"].attributes( "/group/plane" ) )
+
+		# Make sure that we don't set any unexpected attributes.
+		for k in l["out"].attributes( "/group/sphere" ).keys() :
+			self.assertFalse( k.startswith( "ai:autobump" ) )
+		self.assertEqual( len( l["out"].attributes( "/group/sphere" ) ), 8 )
 
 		self.assertEqual( set( l["out"].set( "__lights" ).value.paths() ), { "/group/sphere" } )
 

@@ -69,7 +69,11 @@ ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
 	attributes->filterPlug()->setInput( filterPlug() );
 	for( NameValuePlug::Iterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
-		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) && (*it)->getName() != "cameraVisibility" )
+		if(
+			boost::ends_with( (*it)->getName().string(), "Visibility" ) &&
+			(*it)->getName().string().find( "AutoBump" ) == std::string::npos &&
+			(*it)->getName() != "cameraVisibility"
+		)
 		{
 			(*it)->enabledPlug()->setValue( true );
 			(*it)->valuePlug<BoolPlug>()->setValue( false );
