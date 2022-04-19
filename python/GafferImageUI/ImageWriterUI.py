@@ -141,13 +141,6 @@ Gaffer.Metadata.registerNode(
 			a compromise, where layers are not separated, but views are separated, so that
 			stereo files can use independent data windows.
 
-			There is also the option to use a layout that tries to match Nuke's default
-			conventions, including various oddities done by Nuke.  The Nuke presets
-			match "Part per Layer", "Part per View", and "Single Part", but use Nuke's
-			naming conventions.  They also do weird and incorrect Nuke things like:
-			omitting the layer name from the channel name, putting custom channels of
-			base layer in a part named "other", renaming RGB to red/green/blue in some layers.
-
 			There is also the option to use a layout that matches Nuke's default
 			behaviour, but does not conform to the EXR specification. The Nuke presets
 			match "Part per Layer", "Part per View", and "Single Part" respectively, but with
