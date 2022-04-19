@@ -4,7 +4,15 @@
 Features
 --------
 
+- ImageReader : Improved support for multi-part OpenEXR files, including fixes for reading many non-standard-conforming files from 3rd party software (#4559). The new `channelInterpretation` plug controls the naming of channels loaded from multi-part files.
+- ImageWriter : Added support for writing multi-part OpenEXR files using a new `layout` plug. This includes presets for standard conforming single-part and multi-part files, and several presets that match Nuke's behaviour.
 - Viewer : Added FPS counter option to Gadget menu.
+
+Improvements
+------------
+
+- ChannelPlugValueWidget : Improved the ordering of channel names presented in the menu.
+- PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
 
 Fixes
 -----
@@ -17,9 +25,17 @@ Fixes
   - Fixed `setCenterOfInterest()` so that it doesn't emit `cameraChangedSignal()` if the center of interest is unchanged.
   - Added GIL release in `setViewport()` Python bindings.
 
+API
+---
+
+- ImageAlgo : Added `sortChannelNames()` function.
+- NodeAlgo : Added support for presets on compound plugs. If all child plugs have a particular preset then the parent plug is considered to have it too, and calling `applyPreset( parent, preset )` will apply it to all the children.
+
 Breaking Changes
 ----------------
 
+- ImageReader : Changed the default interpretation of channel names in multi-part OpenEXR files. Set the `channelInterpretation` plug to `Legacy` to preserve the old behaviour.
+- ImageWriter : Multi-part OpenEXR files are now written by default. Set the `layout` plug to `Single Part` to write a single-part file instead.
 - OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
 
 0.62.0.0a1
