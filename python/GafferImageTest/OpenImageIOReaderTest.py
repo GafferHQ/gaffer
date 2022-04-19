@@ -510,7 +510,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 				offsetOut['offset'].setValue( offset )
 				offsetIn['offset'].setValue( -offset )
 
-				w.execute()
+				w["task"].execute()
 				rBack['refreshCount'].setValue( rBack['refreshCount'].getValue() + 1 )
 
 				self.assertImagesEqual( r["out"], offsetIn["out"], ignoreMetadata = True )

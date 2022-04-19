@@ -87,6 +87,16 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 			ClampToFrame,
 		};
 
+		/// Defines how we get channel names from the information stored in a file.
+		/// Because some software like Nuke fails to follow the spec, the Default
+		/// mode employs heuristics to try and guess the intention.
+		enum class ChannelInterpretation
+		{
+			Legacy,
+			Default,
+			Specification,
+		};
+
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
 
@@ -111,6 +121,9 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 
 		Gaffer::StringPlug *colorSpacePlug();
 		const Gaffer::StringPlug *colorSpacePlug() const;
+
+		Gaffer::IntPlug *channelInterpretationPlug();
+		const Gaffer::IntPlug *channelInterpretationPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

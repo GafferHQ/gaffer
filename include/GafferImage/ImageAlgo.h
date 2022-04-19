@@ -102,6 +102,14 @@ bool channelExists( const ImagePlug *image, const std::string &channelName );
 /// Returns true if the specified channel exists in channelNames
 bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
 
+/// We don't usually need to sort channel names, but it's useful to put them in a
+/// consistent order when displaying in the UI or writing to file.
+/// Our sort rules are:
+/// * channels not in a layer come first
+/// * the channels RGBA are sorted in that order, and come before any other channels in the same layer
+/// * otherwise, things are sorted alphabetically
+GAFFERIMAGE_API void sortChannelNames( std::vector< std::string > &channelNames );
+
 /// Default channel names
 /// ==============================
 ///

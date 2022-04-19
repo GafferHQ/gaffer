@@ -165,6 +165,12 @@ void GafferImageModule::bindIO()
 			.value( "BlackOutside", ImageReader::BlackOutside )
 			.value( "ClampToFrame", ImageReader::ClampToFrame )
 		;
+
+		enum_<ImageReader::ChannelInterpretation>( "ChannelInterpretation" )
+			.value( "Legacy", ImageReader::ChannelInterpretation::Legacy )
+			.value( "Default", ImageReader::ChannelInterpretation::Default )
+			.value( "Specification", ImageReader::ChannelInterpretation::Specification )
+		;
 	}
 
 	{

@@ -44,6 +44,7 @@
 #include "GafferImage/ImagePlug.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Version.h"
@@ -58,6 +59,7 @@
 
 #include "OpenColorIO/OpenColorIO.h"
 
+#include "boost/algorithm/string.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/functional/hash.hpp"
 
@@ -257,11 +259,13 @@ class FlatTileWriter
 				ImageOutputPtr out,
 				const std::string &fileName,
 				const Imath::Box2i &processWindow,
-				const GafferImage::Format &format
+				const GafferImage::Format &format,
+				const std::vector< std::string > &channels
 			) :
 				m_out( out ),
 				m_fileName( fileName ),
 				m_format( format ),
+				m_channels( channels ),
 				m_spec( m_out->spec() ),
 				m_processWindow( processWindow ),
 				m_inputTilesBounds( Imath::Box2i( ImagePlug::tileOrigin( processWindow.min ), ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) ) ),
@@ -300,7 +304,7 @@ class FlatTileWriter
 
 		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, ConstFloatVectorDataPtr data )
 		{
-			const size_t channelIndex = std::find( m_spec.channelnames.begin(), m_spec.channelnames.end(), channelName ) - m_spec.channelnames.begin();
+			const size_t channelIndex = std::find( m_channels.begin(), m_channels.end(), channelName ) - m_channels.begin();
 
 			const Imath::Box2i inTileBounds( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
 
@@ -323,12 +327,12 @@ class FlatTileWriter
 					vector<float> &tile = m_tilesData[tileIndex]->writable();
 					if( tile.empty() )
 					{
-						tile.resize( m_spec.tile_width * m_spec.tile_height * m_spec.channelnames.size(), 0. );
+						tile.resize( m_spec.tile_width * m_spec.tile_height * m_channels.size(), 0. );
 					}
 
 					Imath::Box2i copyArea( BufferAlgo::intersection( m_processWindow, BufferAlgo::intersection( inTileBounds, outTileBnds ) ) );
 
-					copyBufferArea( &data->readable()[0], inTileBounds, &tile[0], outTileBnds, channelIndex, m_spec.channelnames.size(), true, copyArea );
+					copyBufferArea( &data->readable()[0], inTileBounds, &tile[0], outTileBnds, channelIndex, m_channels.size(), true, copyArea );
 				}
 			}
 
@@ -346,7 +350,7 @@ class FlatTileWriter
 		{
 			if( m_blackTile == nullptr )
 			{
-				m_blackTile = new IECore::FloatVectorData( std::vector<float>( m_spec.tile_width * m_spec.tile_height * m_spec.channelnames.size(), 0. ) );
+				m_blackTile = new IECore::FloatVectorData( std::vector<float>( m_spec.tile_width * m_spec.tile_height * m_channels.size(), 0. ) );
 			}
 
 			return m_blackTile;
@@ -380,7 +384,7 @@ class FlatTileWriter
 
 		inline bool lastChannelOfTile( const size_t channelIndex )
 		{
-			return channelIndex == ( m_spec.channelnames.size() - 1 );
+			return channelIndex == ( m_channels.size() - 1 );
 		}
 
 		void flagFilledTiles( const Imath::Box2i &inTileBounds )
@@ -441,6 +445,7 @@ class FlatTileWriter
 		ImageOutputPtr m_out;
 		const std::string &m_fileName;
 		const GafferImage::Format &m_format;
+		const std::vector< std::string > &m_channels;
 		const ImageSpec m_spec;
 		const Imath::Box2i m_processWindow;
 		const Imath::Box2i m_inputTilesBounds;
@@ -471,16 +476,18 @@ class FlatScanlineWriter
 				ImageOutputPtr out,
 				const std::string &fileName,
 				const Imath::Box2i &processWindow,
-				const GafferImage::Format &format
+				const GafferImage::Format &format,
+				const std::vector< std::string > &channels
 			) :
 				m_out( out ),
 				m_fileName( fileName ),
 				m_format( format ),
+				m_channels( channels ),
 				m_spec( m_out->spec() ),
 				m_processWindow( processWindow ),
 				m_tilesBounds( Imath::Box2i( ImagePlug::tileOrigin( processWindow.min ), ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) ) )
 		{
-			m_scanlinesData.resize( m_spec.width * ImagePlug::tileSize() * m_spec.channelnames.size(), 0.0 );
+			m_scanlinesData.resize( m_spec.width * ImagePlug::tileSize() * m_channels.size(), 0.0 );
 
 			writeInitialBlankScanlines();
 		}
@@ -502,7 +509,7 @@ class FlatScanlineWriter
 
 		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, ConstFloatVectorDataPtr data )
 		{
-			const size_t channelIndex = std::find( m_spec.channelnames.begin(), m_spec.channelnames.end(), channelName ) - m_spec.channelnames.begin();
+			const size_t channelIndex = std::find( m_channels.begin(), m_channels.end(), channelName ) - m_channels.begin();
 
 			const Imath::Box2i inTileBounds( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
 			const Imath::Box2i exrInTileBounds( m_format.toEXRSpace( inTileBounds ) );
@@ -517,7 +524,7 @@ class FlatScanlineWriter
 
 			Imath::Box2i copyArea( BufferAlgo::intersection( m_processWindow, BufferAlgo::intersection( inTileBounds, scanlinesBounds ) ) );
 
-			copyBufferArea( &data->readable()[0], inTileBounds, &m_scanlinesData[0], scanlinesBounds, channelIndex, m_spec.channelnames.size(), true, copyArea );
+			copyBufferArea( &data->readable()[0], inTileBounds, &m_scanlinesData[0], scanlinesBounds, channelIndex, m_channels.size(), true, copyArea );
 
 			if( lastTileOfRow( channelIndex, tileOrigin ) )
 			{
@@ -538,12 +545,12 @@ class FlatScanlineWriter
 
 		inline bool lastTileOfRow( const size_t channelIndex, const Imath::V2i &tileOrigin ) const
 		{
-			return channelIndex == ( m_spec.channelnames.size() - 1 ) && tileOrigin.x == ( m_tilesBounds.max.x - ImagePlug::tileSize() ) ;
+			return channelIndex == ( m_channels.size() - 1 ) && tileOrigin.x == ( m_tilesBounds.max.x - ImagePlug::tileSize() ) ;
 		}
 
 		void writeScanlines( const int exrYBegin, const int exrYEnd, const int scanlinesYOffset = 0 ) const
 		{
-			if ( !m_out->write_scanlines( exrYBegin, exrYEnd, 0, TypeDesc::FLOAT, &m_scanlinesData[0] + ( scanlinesYOffset * m_spec.width * m_spec.channelnames.size() ) ) )
+			if ( !m_out->write_scanlines( exrYBegin, exrYEnd, 0, TypeDesc::FLOAT, &m_scanlinesData[0] + ( scanlinesYOffset * m_spec.width * m_channels.size() ) ) )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % m_fileName % m_out->geterror() ) );
 			}
@@ -552,7 +559,7 @@ class FlatScanlineWriter
 		void writeBlankScanlines( int yBegin, int yEnd )
 		{
 			float *scanlines = &m_scanlinesData[0];
-			memset( scanlines, 0, sizeof(float) * m_spec.width * std::min( ImagePlug::tileSize(), yEnd - yBegin ) * m_spec.channelnames.size() );
+			memset( scanlines, 0, sizeof(float) * m_spec.width * std::min( ImagePlug::tileSize(), yEnd - yBegin ) * m_channels.size() );
 			while( yBegin < yEnd )
 			{
 				const int numLines = std::min( yEnd - yBegin, ImagePlug::tileSize() );
@@ -581,6 +588,7 @@ class FlatScanlineWriter
 		ImageOutputPtr m_out;
 		const std::string &m_fileName;
 		const GafferImage::Format &m_format;
+		const std::vector< std::string > &m_channels;
 		const ImageSpec m_spec;
 		const Imath::Box2i &m_processWindow;
 		const Imath::Box2i m_tilesBounds;
@@ -603,11 +611,13 @@ class DeepTileWriter
 				const std::string &fileName,
 				const Imath::Box2i &processWindow,
 				const GafferImage::Format &format,
+				const std::vector< std::string > &channels,
 				const SampleOffsetsAccumulator::Result &sampleOffsets
 			) :
 				m_out( out ),
 				m_fileName( fileName ),
 				m_format( format ),
+				m_channels( channels ),
 				m_spec( m_out->spec() ),
 				m_processWindow( processWindow ),
 				m_sampleOffsets( sampleOffsets ),
@@ -632,7 +642,7 @@ class DeepTileWriter
 
 		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, ConstFloatVectorDataPtr data )
 		{
-			const size_t channelIndex = std::find( m_spec.channelnames.begin(), m_spec.channelnames.end(), channelName ) - m_spec.channelnames.begin();
+			const size_t channelIndex = std::find( m_channels.begin(), m_channels.end(), channelName ) - m_channels.begin();
 
 			const Imath::Box2i inTileBounds( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
 
@@ -675,7 +685,7 @@ class DeepTileWriter
 				}
 			}
 
-			if( channelIndex == ( m_spec.channelnames.size() - 1 ) )
+			if( channelIndex == ( m_channels.size() - 1 ) )
 			{
 				flagFilledTiles( inTileBounds );
 				writeFilledTiles();
@@ -766,16 +776,16 @@ class DeepTileWriter
 			{
 				// Init with format specified per channel
 				curTile.init(
-					numPixels, m_spec.channelnames.size(),
-					m_spec.channelformats, m_spec.channelnames
+					numPixels, m_channels.size(),
+					m_spec.channelformats, m_channels
 				);
 			}
 			else
 			{
 				// Init with global format
 				curTile.init(
-					numPixels, m_spec.channelnames.size(),
-					m_spec.format, m_spec.channelnames
+					numPixels, m_channels.size(),
+					m_spec.format, m_channels
 				);
 			}
 
@@ -835,6 +845,7 @@ class DeepTileWriter
 		ImageOutputPtr m_out;
 		const std::string &m_fileName;
 		const GafferImage::Format &m_format;
+		const std::vector< std::string > &m_channels;
 		const ImageSpec m_spec;
 		const Imath::Box2i m_processWindow;
 		const SampleOffsetsAccumulator::Result &m_sampleOffsets;
@@ -866,11 +877,13 @@ class DeepScanlineWriter
 				const std::string &fileName,
 				const Imath::Box2i &processWindow,
 				const GafferImage::Format &format,
+				const std::vector< std::string > &channels,
 				const SampleOffsetsAccumulator::Result &sampleOffsets
 			) :
 				m_out( out ),
 				m_fileName( fileName ),
 				m_format( format ),
+				m_channels( channels ),
 				m_spec( m_out->spec() ),
 				m_processWindow( processWindow ),
 				m_sampleOffsets( sampleOffsets )
@@ -898,7 +911,7 @@ class DeepScanlineWriter
 
 		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, ConstFloatVectorDataPtr data )
 		{
-			const size_t channelIndex = std::find( m_spec.channelnames.begin(), m_spec.channelnames.end(), channelName ) - m_spec.channelnames.begin();
+			const size_t channelIndex = std::find( m_channels.begin(), m_channels.end(), channelName ) - m_channels.begin();
 
 			const Imath::Box2i inTileBounds( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
 
@@ -918,7 +931,7 @@ class DeepScanlineWriter
 
 			// Do the write once we receive the final tile for this row
 			V2i maxTileOrigin = ImagePlug::tileOrigin( m_processWindow.max - V2i( 1 ) );
-			if( channelIndex == ( m_spec.channelnames.size() - 1 ) && tileOrigin.x == maxTileOrigin.x )
+			if( channelIndex == ( m_channels.size() - 1 ) && tileOrigin.x == maxTileOrigin.x )
 			{
 				writeDeepScanlines();
 			}
@@ -947,16 +960,16 @@ class DeepScanlineWriter
 			{
 				// Init with format specified per channel
 				m_deepData.init(
-					m_spec.width * nextScanlines, m_spec.channelnames.size(),
-					m_spec.channelformats, m_spec.channelnames
+					m_spec.width * nextScanlines, m_channels.size(),
+					m_spec.channelformats, m_channels
 				);
 			}
 			else
 			{
 				// Init with global format
 				m_deepData.init(
-					m_spec.width * nextScanlines, m_spec.channelnames.size(),
-					m_spec.format, m_spec.channelnames
+					m_spec.width * nextScanlines, m_channels.size(),
+					m_spec.format, m_channels
 				);
 			}
 
@@ -1014,6 +1027,7 @@ class DeepScanlineWriter
 		ImageOutputPtr m_out;
 		const std::string &m_fileName;
 		const GafferImage::Format &m_format;
+		const std::vector< std::string > &m_channels;
 		const ImageSpec m_spec;
 		const Imath::Box2i m_processWindow;
 		const SampleOffsetsAccumulator::Result &m_sampleOffsets;
@@ -1282,6 +1296,141 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	return spec;
 }
 
+// Remove leading, trailing, or repeated dot seperators
+std::string cleanExcessDots( std::string name )
+{
+	auto last = std::unique( name.begin(), name.end(), []( char a, char b ) {
+		return a == '.' && b == '.';
+	} );
+	name.erase( last, name.end() );
+
+	boost::trim_right_if( name, boost::is_any_of(".") );
+	boost::trim_left_if( name, boost::is_any_of(".") );
+
+	return name;
+}
+
+// Get the EXR names for the view, part, and channel for a Gaffer channel
+std::tuple< std::string, std::string, std::string > viewPartChannelName( const ImageWriter *node, const std::string &view, const std::string &gafferChannel )
+{
+	std::string layer = ImageAlgo::layerName( gafferChannel );
+	std::string baseName = ImageAlgo::baseName( gafferChannel );
+
+	std::string nukeViewName = view;
+	if( nukeViewName == "" )
+	{
+		nukeViewName = "main";
+	}
+
+	// "imageWriter:nukeBaseName" is a base channel name matching Nuke - in complete contradiction to the spec,
+	// layers other than the main one have the channel names RGBA written as "red", "green", "blue", "alpha"
+	string nukeBaseName = baseName;
+	string nukeLayerName = layer;
+	if( layer.size() )
+	{
+		if( nukeBaseName == "R" ) nukeBaseName = "red";
+		else if( nukeBaseName == "G" ) nukeBaseName = "green";
+		else if( nukeBaseName == "B" ) nukeBaseName = "blue";
+		else if( nukeBaseName == "A" ) nukeBaseName = "alpha";
+	}
+	else
+	{
+		if( baseName == "Z" )
+		{
+			nukeLayerName = "depth";
+		}
+		else if(
+			baseName == "R" ||
+			baseName == "G" ||
+			baseName == "B" ||
+			baseName == "A"
+		)
+		{
+			// Nuke actually lets these layers be in the default part
+		}
+		else
+		{
+			nukeLayerName = "other";
+		}
+	}
+
+	// For use in naming parts, it's useful to have a layer name that is set to "rgba" for channels that
+	// are in the default layer.
+	std::string standardPartName = layer.size() ? layer : "rgba";
+	std::string nukePartName = nukeLayerName.size() ? nukeLayerName : "rgba";
+
+	Context::EditableScope namingContext( Context::current() );
+	namingContext.set( "imageWriter:viewName", &view );
+	namingContext.set( "imageWriter:channelName", &gafferChannel );
+	namingContext.set( "imageWriter:standardPartName", &standardPartName );
+	namingContext.set( "imageWriter:layerName", &layer );
+	namingContext.set( "imageWriter:baseName", &baseName );
+	namingContext.set( "imageWriter:nukeViewName", &nukeViewName );
+	namingContext.set( "imageWriter:nukePartName", &nukePartName );
+	namingContext.set( "imageWriter:nukeLayerName", &nukeLayerName );
+	namingContext.set( "imageWriter:nukeBaseName", &nukeBaseName );
+
+	return std::make_tuple(
+		cleanExcessDots( node->layoutViewNamePlug()->getValue() ),
+		cleanExcessDots( node->layoutPartNamePlug()->getValue() ),
+		cleanExcessDots( node->layoutChannelNamePlug()->getValue() )
+	);
+}
+
+struct MetadataRegistration
+{
+	void registerPreset( const std::string &name, const std::string &view, const std::string &part, const std::string &channel )
+	{
+		Gaffer::Metadata::registerValue( ImageWriter::staticTypeId(), "layout.viewName", name, new IECore::StringData( view ) );
+		Gaffer::Metadata::registerValue( ImageWriter::staticTypeId(), "layout.partName", name, new IECore::StringData( part ) );
+		Gaffer::Metadata::registerValue( ImageWriter::staticTypeId(), "layout.channelName", name, new IECore::StringData( channel ) );
+	}
+
+	MetadataRegistration()
+	{
+		// These presets are useful in testing and scripting when the UI isn't loaded, so we register
+		// them here instead of in the UI file
+
+		registerPreset( "preset:Part per Layer",
+			"${imageWriter:viewName}",
+			"${imageWriter:standardPartName}.${imageWriter:viewName}",
+			"${imageWriter:layerName}.${imageWriter:baseName}"
+		);
+
+		registerPreset( "preset:Part per View",
+			"${imageWriter:viewName}",
+			"${imageWriter:viewName}",
+			"${imageWriter:layerName}.${imageWriter:baseName}"
+		);
+
+		registerPreset( "preset:Single Part",
+			"",
+			"",
+			"${imageWriter:layerName}.${imageWriter:viewName}.${imageWriter:baseName}"
+		);
+
+		registerPreset( "preset:Nuke/Interleave Channels",
+			"${imageWriter:viewName}",
+			"${imageWriter:nukePartName}.${imageWriter:nukeViewName}",
+			"${imageWriter:nukeBaseName}"
+		);
+
+		registerPreset( "preset:Nuke/Interleave Channels and Layers",
+			"${imageWriter:viewName}",
+			"${imageWriter:nukeViewName}",
+			"${imageWriter:nukeLayerName}.${imageWriter:nukeBaseName}"
+		);
+
+		registerPreset( "preset:Nuke/Interleave Channels, Layers and Views",
+			"",
+			"",
+			"${imageWriter:viewName}.${imageWriter:nukeLayerName}.${imageWriter:nukeBaseName}"
+		);
+	}
+};
+
+MetadataRegistration g_metadataRegistration;
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1319,6 +1468,12 @@ ImageWriter::ImageWriter( const std::string &name )
 	colorSpaceChild->inPlug()->setInput( inPlug() );
 
 	colorSpaceChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
+
+	ValuePlugPtr layoutPlug = new ValuePlug( "layout" );
+	layoutPlug->addChild( new StringPlug( "viewName", Plug::In, "${imageWriter:viewName}" ) );
+	layoutPlug->addChild( new StringPlug( "partName", Plug::In, "${imageWriter:standardPartName}.${imageWriter:viewName}" ) );
+	layoutPlug->addChild( new StringPlug( "channelName", Plug::In, "${imageWriter:layerName}.${imageWriter:baseName}" ) );
+	addChild( layoutPlug );
 
 	createFileFormatOptionsPlugs();
 }
@@ -1460,6 +1615,36 @@ GafferImage::ColorSpace *ImageWriter::colorSpaceNode()
 const GafferImage::ColorSpace *ImageWriter::colorSpaceNode() const
 {
 	return getChild<ColorSpace>( g_firstPlugIndex+6 );
+}
+
+Gaffer::StringPlug *ImageWriter::layoutViewNamePlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 0 );
+}
+
+const Gaffer::StringPlug *ImageWriter::layoutViewNamePlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 0 );
+}
+
+Gaffer::StringPlug *ImageWriter::layoutPartNamePlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 1 );
+}
+
+const Gaffer::StringPlug *ImageWriter::layoutPartNamePlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 1 );
+}
+
+Gaffer::StringPlug *ImageWriter::layoutChannelNamePlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 2 );
+}
+
+const Gaffer::StringPlug *ImageWriter::layoutChannelNamePlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 2 );
 }
 
 Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string &fileFormat )
@@ -1647,25 +1832,9 @@ void ImageWriter::execute() const
 		throw IECore::Exception( "No channels to write" );
 	}
 
-	bool hasAlpha = false;
-	spec.nchannels = channelsToWrite.size();
-	spec.channelnames.clear();
-	for( vector<string>::const_iterator it = channelsToWrite.begin(), eIt = channelsToWrite.end(); it != eIt; ++it )
-	{
-		spec.channelnames.push_back( *it );
-		// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
-		if( *it == "A" )
-		{
-			hasAlpha = true;
-			spec.alpha_channel = it - channelsToWrite.begin();
-		}
-		else if( *it == "Z" )
-		{
-			spec.z_channel = it - channelsToWrite.begin();
-		}
-	}
-
-	setImageSpecFormatChannelOptions( this, &spec, out->format_name() );
+	// Sort the channel names so that they get written in a consistent order, with the
+	// basic RGBA channels coming first
+	ImageAlgo::sortChannelNames( channelsToWrite );
 
 	// Create the directory we need and open the file
 
@@ -1675,7 +1844,104 @@ void ImageWriter::execute() const
 		boost::filesystem::create_directories( directory );
 	}
 
-	if ( out->open( fileName, spec ) )
+	// Write out the channel data
+
+	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );
+	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
+	const Imath::Box2i processDataWindow( BufferAlgo::intersection( imageDataWindow, dataWindow ) );
+
+	struct Part
+	{
+		std::string name;
+		std::string view;
+		std::vector< std::string > channels;
+		std::vector< std::string > channelNames;
+	};
+
+	std::vector< Part > parts;
+
+	std::string currentView = "";
+
+	for( const string &i : channelsToWrite )
+	{
+		const auto & [ viewName, partName, channelName ] = viewPartChannelName( this, currentView, i );
+
+		// Note that `partName = partName` is a hack to get around an issue with capturing from a
+		// structured binding.  GCC allows it, but the C++17 spec doesn't, and it doesn't work in our
+		// Mac compiler.  Once we're on C++20, it is explicitly supported, and we can remove the ` = partName`
+		size_t partIndex = std::distance(
+			parts.begin(),
+			std::find_if( parts.begin(), parts.end(), [partName = partName] (Part const& p) { return p.name == partName; } )
+		);
+
+		if( partIndex >= parts.size() )
+		{
+			parts.push_back( { partName, viewName, {}, {} } );
+		}
+		else
+		{
+			if( parts[partIndex].view != viewName )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot write views \"%s\" and \"%s\" both to image part \"%s\"" ) % parts[partIndex].view % viewName % partName ) );
+			}
+		}
+
+		parts[ partIndex ].channels.push_back( i );
+		parts[ partIndex ].channelNames.push_back( channelName );
+	}
+
+	if( parts.size() > 1 && !out->supports( "multiimage" ) )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Cannot write multiple parts to this image format: \"%s\"" ) % fileName ) );
+	}
+
+	bool hasAlpha = false;
+	std::vector< ImageSpec > specs;
+	for( const Part &part : parts )
+	{
+		specs.push_back( spec );
+		if( part.view.size() )
+		{
+			specs.back().attribute("view", part.view );
+		}
+		if( part.name.size() )
+		{
+			specs.back().attribute("oiio:subimagename", part.name );
+		}
+		specs.back().nchannels = part.channels.size();
+		specs.back().channelnames.clear();
+		for( size_t channelIndex = 0; channelIndex < part.channelNames.size(); channelIndex++ )
+		{
+			const std::string& channelName = part.channelNames[channelIndex];
+			specs.back().channelnames.push_back( channelName );
+			// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
+			if( channelName == "A" )
+			{
+				hasAlpha = true;
+				specs.back().alpha_channel = channelIndex;
+			}
+			else if( channelName == "Z" )
+			{
+				specs.back().z_channel = channelIndex;
+			}
+		}
+
+		setImageSpecFormatChannelOptions( this, &specs.back(), out->format_name() );
+	}
+
+	const ColorSpace *appropriateColorSpaceNode = hasAlpha ? colorSpaceUnpremultedNode() : colorSpaceNode();
+
+	bool success;
+	if( parts.size() > 1 )
+	{
+		success = out->open( fileName, specs.size(), &specs[0] );
+	}
+	else
+	{
+		success = out->open( fileName, specs[0] );
+	}
+
+	if( success )
 	{
 		IECore::msg( IECore::MessageHandler::Info, this->relativeName( this->scriptNode() ), "Writing " + fileName );
 	}
@@ -1684,50 +1950,50 @@ void ImageWriter::execute() const
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
 
-	// Write out the channel data
-
-	const ColorSpace *appropriateColorSpaceNode = hasAlpha ? colorSpaceUnpremultedNode() : colorSpaceNode();
-
-	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );
-	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
-	const Imath::Box2i processDataWindow( BufferAlgo::intersection( imageDataWindow, dataWindow ) );
-
-	if( !deep )
+	for( size_t partIndex = 0; partIndex < parts.size(); partIndex++ )
 	{
-		TileChannelDataProcessor processor;
-
-		if ( spec.tile_width == 0 )
+		if( partIndex != 0 )
 		{
-			FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
-			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
-			flatScanlineWriter.finish();
+			out->open( fileName, specs[partIndex], ImageOutput::AppendSubimage );
+		}
+
+		if( !deep )
+		{
+			TileChannelDataProcessor processor;
+
+			if ( specs[partIndex].tile_width == 0 )
+			{
+				FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels );
+				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+				flatScanlineWriter.finish();
+			}
+			else
+			{
+				FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels );
+				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+				flatTileWriter.finish();
+			}
+
 		}
 		else
 		{
-			FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
-			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
-			flatTileWriter.finish();
-		}
+			TileSampleOffsetsProcessor sampleOffsetsProcessor;
 
-	}
-	else
-	{
-		TileSampleOffsetsProcessor sampleOffsetsProcessor;
+			SampleOffsetsAccumulator sampleOffsetsAccumulator;
+			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), sampleOffsetsProcessor, sampleOffsetsAccumulator, processDataWindow );
 
-		SampleOffsetsAccumulator sampleOffsetsAccumulator;
-		ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), sampleOffsetsProcessor, sampleOffsetsAccumulator, processDataWindow );
+			TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
 
-		TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
-
-		if( spec.tile_width == 0 )
-		{
-			DeepScanlineWriter deepScanlineWriter( out, fileName, processDataWindow, imageFormat, sampleOffsetsAccumulator.m_sampleOffsets );
-			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, channelDataProcessor, deepScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
-		}
-		else
-		{
-			DeepTileWriter deepTileWriter( out, fileName, processDataWindow, imageFormat, sampleOffsetsAccumulator.m_sampleOffsets );
-			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), spec.channelnames, channelDataProcessor, deepTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+			if( specs[partIndex].tile_width == 0 )
+			{
+				DeepScanlineWriter deepScanlineWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels, sampleOffsetsAccumulator.m_sampleOffsets );
+				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, channelDataProcessor, deepScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+			}
+			else
+			{
+				DeepTileWriter deepTileWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels, sampleOffsetsAccumulator.m_sampleOffsets );
+				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, channelDataProcessor, deepTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+			}
 		}
 	}
 

@@ -360,7 +360,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 
 		w["fileName"].setValue( testFile )
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 
 
 	def testSampleOffsets( self ) :

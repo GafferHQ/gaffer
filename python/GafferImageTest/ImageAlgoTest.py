@@ -273,5 +273,23 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			numTilesX * numTilesY * 4
 		)
 
+	def testSortChannelNames( self ):
+
+		# Sort RGBA
+		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "R", "A", "B", "G" ] ), [ "R", "G", "B", "A" ] )
+
+		# Sort RGBA	before other channels
+		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "A", "Arc", "Z", "ZSomethingElse", "H", "Bark", "G", "ZBack", "custom", "F", "R", "B" ] ), [ "R", "G", "B", "A", "Arc", "Bark", "F", "H", "Z", "ZBack", "ZSomethingElse", "custom" ] )
+
+		# Sort default layer before named layers
+		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "A", "G", "A.G", "B.B", "A.R", "B.R", "B", "R", "A.B", "B.G" ] ), [ "R", "G", "B", "A", "A.R", "A.G", "A.B", "B.R", "B.G", "B.B" ] )
+
+		# Sort hierarchical layers
+		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "Y.X.Y", "Y.X.X", "Y", "X", "X.X", "X.Y" ] ), [ "X", "Y", "X.X", "X.Y", "Y.X.X", "Y.X.Y" ] )
+
+		# Default alphabetical sort puts capital letters before lowercase ( dunno if this is good or not, but
+		# worth documenting )
+		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "x", "X", "x.x", "X.X", "X.x", "x.X" ] ), ["X", "x", "X.X", "X.x", "x.X", "x.x"] )
+
 if __name__ == "__main__":
 	unittest.main()

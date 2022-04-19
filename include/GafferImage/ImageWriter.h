@@ -89,6 +89,15 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 		Gaffer::StringPlug *colorSpacePlug();
 		const Gaffer::StringPlug *colorSpacePlug() const;
 
+		Gaffer::StringPlug *layoutViewNamePlug();
+		const Gaffer::StringPlug *layoutViewNamePlug() const;
+
+		Gaffer::StringPlug *layoutPartNamePlug();
+		const Gaffer::StringPlug *layoutPartNamePlug() const;
+
+		Gaffer::StringPlug *layoutChannelNamePlug();
+		const Gaffer::StringPlug *layoutChannelNamePlug() const;
+
 		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
 		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
 

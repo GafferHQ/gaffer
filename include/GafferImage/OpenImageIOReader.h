@@ -82,6 +82,9 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 		Gaffer::IntVectorDataPlug *availableFramesPlug();
 		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
 
+		Gaffer::IntPlug *channelInterpretationPlug();
+		const Gaffer::IntPlug *channelInterpretationPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		static void setOpenFilesLimit( size_t maxOpenFiles );
@@ -112,6 +115,8 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 	private :
+
+		std::shared_ptr<void> retrieveFile( const Gaffer::Context *context, bool holdForBlack = false ) const;
 
 		Gaffer::ObjectVectorPlug *tileBatchPlug();
 		const Gaffer::ObjectVectorPlug *tileBatchPlug() const;

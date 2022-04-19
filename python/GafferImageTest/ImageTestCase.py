@@ -151,6 +151,30 @@ class ImageTestCase( GafferTest.TestCase ) :
 	def deepImage( self ):
 		return self.DeepImage()
 
+	## Returns an image node with a set of channels that is good for testing read/write
+	def channelTestImage( self ) :
+
+		channelTestImage = GafferImage.CollectImages()
+		channelTestImage["Constant"] = GafferImage.Constant()
+		channelTestImage["Constant"]["format"].setValue( GafferImage.Format( 16, 16, 1.000 ) )
+		channelTestImage["Constant"]["Expression"] = Gaffer.Expression()
+		channelTestImage["Constant"]["Expression"].setExpression( """
+import imath
+parent["color"] = imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) if context.get( "collect:layerName", "" ) != "" else imath.Color4f( 0.1, 0.2, 0.3, 0.4 )
+""" )
+
+		channelTestImage["Shuffle"] = GafferImage.Shuffle()
+		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "Z", "R" ) )
+		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "ZBack", "G" ) )
+		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "custom", "A" ) )
+		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "mask", "B" ) )
+		channelTestImage["Shuffle"]["in"].setInput( channelTestImage["Constant"]["out"] )
+
+		channelTestImage["in"].setInput( channelTestImage["Shuffle"]["out"] )
+		channelTestImage["rootLayers"].setValue( IECore.StringVectorData( [ '', 'character' ] ) )
+
+		return channelTestImage
+
 	def assertRaisesDeepNotSupported( self, node ) :
 
 		flat = GafferImage.Constant()
