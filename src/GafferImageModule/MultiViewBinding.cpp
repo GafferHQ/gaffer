@@ -37,6 +37,7 @@
 #include "MultiViewBinding.h"
 
 #include "GafferImage/CreateViews.h"
+#include "GafferImage/SelectView.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -48,5 +49,6 @@ void GafferImageModule::bindMultiView()
 {
 
 	DependencyNodeClass<CreateViews>();
+	DependencyNodeClass<SelectView>();
 
 }

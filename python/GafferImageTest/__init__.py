@@ -106,6 +106,7 @@ from .ContextSanitiserTest import ContextSanitiserTest
 from .SaturationTest import SaturationTest
 from .FormatQueryTest import FormatQueryTest
 from .CreateViewsTest import CreateViewsTest
+from .SelectViewTest import SelectViewTest
 
 if __name__ == "__main__":
 	import unittest
