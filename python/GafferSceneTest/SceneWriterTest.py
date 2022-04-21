@@ -373,5 +373,24 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( sceneReader["out"].object( "/plane" )["test"].data.value, 10 )
 		self.assertEqual( sceneReader["out"].attributes( "/plane" ), IECore.CompoundObject() )
 
+	def testUSDDoubleSidedAttribute( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["attributes"]["doubleSided"]["enabled"].setValue( True )
+		attributes["attributes"]["doubleSided"]["value"].setValue( True )
+
+		sceneWriter = GafferScene.SceneWriter()
+		sceneWriter["in"].setInput( attributes["out"] )
+		sceneWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.usda" ) )
+		sceneWriter["task"].execute()
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setInput( sceneWriter["fileName"] )
+
+		self.assertEqual( sceneReader["out"].attributes( "/sphere" ), sceneWriter["in"].attributes( "/sphere" ) )
+
 if __name__ == "__main__":
 	unittest.main()
